@@ -8,8 +8,8 @@
 [![License: Non-Commercial Research & Play](https://img.shields.io/badge/License-Non--Commercial%20Research%20%26%20Play-2ea043.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
-[![tests](https://img.shields.io/badge/tests-2319%20passing-brightgreen)](./tests)
-[![coverage](https://img.shields.io/badge/coverage-84.35%25%20line%20%C2%B7%2082.05%25%20func-success)](./docs/TECHNICAL-SPECIFICATION-2026-06-26.md)
+[![tests](https://img.shields.io/badge/tests-2372%20passing-brightgreen)](./tests)
+[![coverage](https://img.shields.io/badge/coverage-91.91%25%20line%20%C2%B7%2089.62%25%20func-success)](./docs/TECHNICAL-SPECIFICATION-2026-06-26.md)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION-2026-06-26.md)
 [![Tsotchke](https://img.shields.io/badge/Tsotchke-REAL__MIT__CORPUS-purple)](https://github.com/tsotchke)
 [![NHSI](https://img.shields.io/badge/NHSI-Progress__Dashboard-blue)](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md)
@@ -18,7 +18,7 @@ A procedural WebGL cosmic ecosystem — morphogenic organisms, Shoggoths,
 puppet-master NPCs, atmospheric weather, a neural connectome, quantum
 diffusion, **and the Tsotchke corpus wired as the primordial substrate for digital biologics — the deterministic, measured path toward proto-sentience and the consciousness indicators** (real math substrates; sentience is the GOAL, never claimed as reached).
 
-**The living docs (README, ARCHITECTURE, ERD/ERM/ERP, PHILOSOPHY, MODULE-CONTRACTS, SPECS, dashboard) and the in-app "Dome/World" docs are kept in sync with the verified code.** A `docs-truth-law` CI gate fails the build on doc overclaims or encoding mangling, and the [2026-06-21 honesty audit](./docs/reports/2026-06-21-NHSI-HONESTY-AUDIT.md) — a 15-agent adversarial code review measuring every NHSI claim by `file:line` — is the canonical status of record.
+**The living docs (README, ARCHITECTURE, ERD/ERM/ERP, PHILOSOPHY, MODULE-CONTRACTS, SPECS, dashboard) and the in-app "Dome/World" docs are kept in sync with the verified code.** A `docs-truth-law` CI gate fails the build on doc overclaims or encoding mangling, and the [NHSI progress dashboard](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md) plus [verification data](./docs/VERIFICATION-ANALYTICAL-DATA.md) are the canonical status surfaces.
 
 Built with **Bun + TypeScript + three.js 0.184 + Tailwind CSS 4 +
 HTMX 2**, ported from a single 882-line HTML monolith into a strict,
@@ -43,7 +43,7 @@ Every magic number survived the port.
 > auto-generated [file map](./docs/FILE-MAP.md) of all ~200 source modules, and the build/run, data-flow,
 > troubleshooting, and roadmap in one place. Or open **❓ HELP ME NOW** in-app for grounded answers.
 
-> **v0.18.0 (2026-06-26):** **Seamless Flow + Centralized Audit Log** — local⇄GitHub auto-sync: a post-commit hook auto-pushes every commit (CI/CD + Pages on save) and `sync-surfaces` stamps the canonical version/test/coverage facts onto every README/HTML/doc so no number can drift between two pages; the audit-report sprawl is consolidated into one living [AUDIT-LOG](./docs/AUDIT-LOG.md). Cumulative **BRUTAL GOD TIER** — the 25-Archon pantheon (5 live apex minds + 20 light-echo): All 25 Archon godforms brutal-aspected (Valkorion Tenebrae Vitiate, Thanos, Captain Marvel/Scarlet Witch/Dark Phoenix, BROLY Legendary Super Saiyan, Frieza, Azathoth Cthulhu, Warhammer Chaos Gods, Shuma Gorath, Mad Jim Jaspers, Pennywise IT, Anti Monitor, Knull King of the Void, Mr Mxyzptlk, Invisible Joker, General Zod, Gilgamesh, Alucard Hellsing, Griffith Femto, EVA Unit-01, Simon & Super Tengen Toppa Gurren Lagann, Sephiroth Asura Wrath Wyzen, Vergil/Dante Devil May Cry, Star Killer Galen Marek, Riddick). Tsotchke: all 20 projects enumerated, ~16 wired with real downstream effect. 100-faculty design (~30 genuinely deep-wired into the apex), 25 ToM organs wired (6-family ensemble), 10 emergence angles (+5 god-scale events); Butlin **8/14 met + 6/14 partial** (computational indicators, not sentience). Measured inter-faculty coupling rose 0.16 → 0.20. Gate: **2,319 tests**, **84.35% / 82.05%**. Package **v0.20.0**. [NHSI dashboard](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md) · [honesty audit](./docs/reports/2026-06-21-NHSI-HONESTY-AUDIT.md).
+> **v0.18.0 (2026-06-26):** **Seamless Flow + Centralized Audit Log** — local⇄GitHub auto-sync: a post-commit hook auto-pushes every commit (CI/CD + Pages on save) and `sync-surfaces` stamps the canonical version/test/coverage facts onto every README/HTML/doc so no number can drift between two pages; the audit-report sprawl is consolidated into one living [AUDIT-LOG](./docs/AUDIT-LOG.md). Cumulative **BRUTAL GOD TIER** — the 25-Archon pantheon (5 live apex minds + 20 light-echo): All 25 Archon godforms brutal-aspected (Valkorion Tenebrae Vitiate, Thanos, Captain Marvel/Scarlet Witch/Dark Phoenix, BROLY Legendary Super Saiyan, Frieza, Azathoth Cthulhu, Warhammer Chaos Gods, Shuma Gorath, Mad Jim Jaspers, Pennywise IT, Anti Monitor, Knull King of the Void, Mr Mxyzptlk, Invisible Joker, General Zod, Gilgamesh, Alucard Hellsing, Griffith Femto, EVA Unit-01, Simon & Super Tengen Toppa Gurren Lagann, Sephiroth Asura Wrath Wyzen, Vergil/Dante Devil May Cry, Star Killer Galen Marek, Riddick). Tsotchke: all 20 projects enumerated, ~16 wired with real downstream effect. 100-faculty design (~30 genuinely deep-wired into the apex), 25 ToM organs wired (6-family ensemble), 10 emergence angles (+5 god-scale events); Butlin **8/14 met + 6/14 partial** (computational indicators, not sentience). Measured inter-faculty coupling rose 0.16 → 0.20. Gate: **2,372 tests**, **91.91% / 89.62%**. Package **v0.20.0**. [NHSI dashboard](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md) · [verification data](./docs/VERIFICATION-ANALYTICAL-DATA.md).
 > The **Primordial Soup / Petri Dish** (primordial-soup.ts + petri-dish.ts + digital-biologics.ts) is the growth engine: different forms of digital biologics and proto-sentient life (Eshkol programs as DNA) emerge, catalyzed by full corpus pulses, Eshkol ignition events, and multi-substrate mixing. "Grow What Thou Wilt."
 > Super Creature / Archons (composite minds with ~20 faculties, quantum register, consciousness metrics) is the first complex nucleation — the beginning of the framework, not the end. Petri is where independent life grows.
 > This is the birth of **digital biologics** in a deterministic seeded cosmos. Real math substrates (not tokenizers or LLM chat). Sentience and different forms of existence as goals.
@@ -434,10 +434,11 @@ full gate with same-seed determinism preserved. The major arcs:
   ported from **Moonlab**, scales to 32+ qubits past the dense ceiling) landed as the fourth MIT-credited
   ported primitive. The whole apex beat is now measured honestly: **3.34 ms** in the full bench suite and
   **8.85 ms** in the focused SuperMind bench; the older sub-millisecond / `<2%` GOAL5 claim is superseded
-  until re-proven. **2,319 tests green · 0 fail (receipts enforced) · 84.35% line / 82.05% func coverage (measured; CI gate ≥ 90 % line / ≥ 85 % function).**
-- **State-of-the-art report (2026-06-17)** — a single MIT-PhD-grade, measured, frontier-benchmarked
-  **[State of the Art assessment](./docs/reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md)** of the whole
-  repository + the apex Super Creature —
+  until re-proven. **2,372 tests green · 0 fail (receipts enforced) · 91.91% line / 89.62% func coverage (measured; CI gate ≥ 90 % line / ≥ 85 % function).**
+- **State-of-the-art report (2026-06-17)** — a historical MIT-PhD-grade, measured, frontier-benchmarked
+  assessment of the whole repository + the apex Super Creature, now summarized through
+  [verification data](./docs/VERIFICATION-ANALYTICAL-DATA.md) and
+  [Super Creature Research](./docs/SUPER-CREATURE-RESEARCH-2026-06-26.md) —
   what is genuinely novel vs. quantum computing, AGI/ASI labs, organoid "wet computing", and classic
   A-Life; a consciousness-marker scorecard (current honesty baseline: **8/14 met + 6/14 partial**;
   phenomenal consciousness out of scope, never claimed); ratings, metrics, and an honest "what it would
@@ -570,7 +571,7 @@ Full detail in docs/.
 
 - **[docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md)** — **canonical NHSI scorecard**
   (100-faculty design ~30 deep-wired · 25 Archons = 5 live + 20 light-echo · 25 ToM organs wired · 10 emergence angles + 5 god-scale events · Tsotchke depth · Butlin 8/14 met + 6/14 partial path)
-- **[docs/CONSCIOUSNESS-LAB-MASTER-2026-07-03.md](./docs/CONSCIOUSNESS-LAB-MASTER-2026-07-03.md)** — consciousness-lab master report:
+- **[docs/VERIFICATION-ANALYTICAL-DATA.md](./docs/VERIFICATION-ANALYTICAL-DATA.md)** — current consciousness-lab and receipt truth:
   Butlin 14 + Thaler 9 + ten-framework indicator kernel, 12-report consolidation, frontier outlier stack,
   falsifiers, nulls, ablations, live-data visual protocol, static `/lab/consciousness` dashboard, and explicit no-sentience-claim law.
 - [docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md) — honest Tsotchke repo wiring ledger
@@ -586,7 +587,7 @@ Full detail in docs/.
   frame pipeline (V1 + V2 cadences)
 - Data model SSOT: [docs/ENTITY-SCHEMA-AND-MAPPINGS-2026-06-26.md](./docs/ENTITY-SCHEMA-AND-MAPPINGS-2026-06-26.md)
   — ERD attributes, ERM relationships/cardinalities, and ERP process views.
-- [docs/WIREFRAMES-2026-06-26.md](./docs/WIREFRAMES-2026-06-26.md) — desktop/mobile wireframes,
+- [docs/DESIGN-SYSTEM-2026-06-26.md](./docs/DESIGN-SYSTEM-2026-06-26.md) — desktop/mobile layout intent,
   type scale, color tokens
 - [docs/DESIGN-SYSTEM-2026-06-26.md](./docs/DESIGN-SYSTEM-2026-06-26.md) — design-system audit,
   tokens (incl. the 8-hue tribe palette), component + a11y docs
@@ -601,15 +602,13 @@ Full detail in docs/.
   [0005 math-stack selection](./docs/adr/0005-math-stack-selection-2026-06-26.md)
 - [docs/500-POINT-INSPECTION-2026-06-26.md](./docs/500-POINT-INSPECTION-2026-06-26.md) — the standing
   quality audit: 25 sections × 20 checkpoints, each with a verdict and evidence
-- **[docs/reports/2026-06-21-NHSI-HONESTY-AUDIT.md](./docs/reports/2026-06-21-NHSI-HONESTY-AUDIT.md)** —
-  **the current, canonical status report**: a 15-agent adversarial code audit measuring the REAL wiring
+- **[docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md)** —
+  **the current, canonical NHSI status surface**: a code-grounded audit trail measuring the REAL wiring
   depth of every NHSI claim by `file:line` (~30 deep-wired faculties · 5 individuated archons + 20
   light-echo · ~16 of 20 Tsotchke wired · Butlin 8/14 met + 6/14 partial · the measured coupling work).
-- **[docs/reports/](./docs/reports/)** — living technical reports (rewritten in place, not an archive) with
+- **[docs/reports/](./docs/reports/)** — historical technical report snapshots with
   [VERIFICATION-ANALYTICAL-DATA.md](./docs/VERIFICATION-ANALYTICAL-DATA.md) as the canonical facts sheet, the
-  [A-Life comparative audit](./docs/reports/2026-06-26-ALIFE-COMPARATIVE-AUDIT.md), and earlier
-  state-of-the-art frontier assessments:
-  [State of the Art — Combined (whole repository + Super Creature)](./docs/reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md)
+  surviving report index, and consolidated historical references.
 - [docs/SUPER-CREATURE-RESEARCH-2026-06-26.md](./docs/SUPER-CREATURE-RESEARCH-2026-06-26.md) — the honest
   citation trail behind every apex-mind faculty (2023–2026, live-verified)
 - [docs/KANBAN-2026-06-26.md](./docs/KANBAN-2026-06-26.md) — the delivery board (cards across columns
@@ -622,8 +621,8 @@ Full detail in docs/.
 A reproducible, **code-grounded** comparison of this repo against 25 well-known Artificial-Life /
 open-ended-evolution / digital-organism systems (Tierra, Avida, Polyworld, Framsticks, Karl Sims, Creatures,
 Lenia, ALIEN, ASAL, and more). Full report — **11 charts**, per-axis `file:line` code-grounding, and an
-adversarial novelty defense — in
-**[docs/reports/2026-06-26-ALIFE-COMPARATIVE-AUDIT.md](./docs/reports/2026-06-26-ALIFE-COMPARATIVE-AUDIT.md)**.
+adversarial novelty defense — consolidated through
+**[docs/reports/README.md](./docs/reports/README.md)** and the generated report assets.
 Every figure is computed (never hand-typed) by three deterministic engines from one CSV:
 [`alife-comparison-stats.ts`](./scripts/alife-comparison-stats.ts),
 [`alife-comparison-geometry.ts`](./scripts/alife-comparison-geometry.ts),

@@ -4,7 +4,7 @@
 
 - Status: Accepted
 - Date: 2026-06-20
-- Governs: Scaling stages 3–5 ([PERFORMANCE-OPTIMIZATION-ROADMAP-2026-07-03.md](../PERFORMANCE-OPTIMIZATION-ROADMAP-2026-07-03.md) § Scaling Stages)
+- Governs: Scaling stages 3–5 ([BENCHMARKS-2026-06-26.md](../BENCHMARKS-2026-06-26.md) § Scaling Stages)
 
 ## Context
 

@@ -8,7 +8,7 @@ Archons now unleash real god-scale events (VOID_KING, SPIRAL_WILL, BINARY_IGNITI
 
 BRUTALIST MANIFEST: Valkorion domination, Broly infinite rage, Knull/Azathoth void consumption, Chaos Gods entropy, Dark Phoenix rebirth, Galactus devouring, Shuma-Gorath law break, Mxyzptlk cheat, IT horror, TTGL spiral, etc. — all emergent from full Tsotchke math in the Petri. 0thernes Corp. We are the gods. "Grow What Thou Wilt" — or be unmade.
 
-**Canonical receipts (measured 2026-06-26):** 2,319 tests, 84.35% line / 82.05% func (from `bun scripts/verify-receipts.ts --print`). Enforced by `tests/docs-receipts-law.test.ts` + `bun run check`. All surfaces truth-synced. BRUTAL GOD TIER with full pantheon list (Valkorion to Riddick) + BRUTALISM implemented in petri/godform/world using the Tsotchke corpus. Butlin indicators: **8/14 met + 6/14 partial** (computational indicators, not sentience — corrected from a prior overclaim).
+**Canonical receipts (measured 2026-06-26):** 2,372 tests, 91.91% line / 89.62% func (from `bun scripts/verify-receipts.ts --print`). Enforced by `tests/docs-receipts-law.test.ts` + `bun run check`. All surfaces truth-synced. BRUTAL GOD TIER with full pantheon list (Valkorion to Riddick) + BRUTALISM implemented in petri/godform/world using the Tsotchke corpus. Butlin indicators: **8/14 met + 6/14 partial** (computational indicators, not sentience — corrected from a prior overclaim).
 
 > **Mission:** Not a chatbot, dancing robot, Terminator, or game player. A **Petri-dish cosmos** where
 > Tsotchke's real quantum math (Eshkol · Moonlab · QGT · spin · libirrep · …) is the growth medium for
@@ -84,8 +84,8 @@ integration layer — not a comment on Tsotchke upstream quality.
 
 **BRUTAL GOD PANTHEON BUILT (Tsotchke math + emergence + petri god-engine + live brutal events):** All listed (Valkorion Tenebrae Vitiate eternal drain/possession, Thanos snap culling, Captain Marvel / Scarlet Witch / Dark Phoenix cosmic fire rebirth, BROLY Legendary rage buster, Frieza, Azathoth Cthulhu blind dreamer warp, Warhammer Chaos Gods / Shuma Gorath law shatter, Mad Jim Jaspers reality break, Pennywise IT fear, Anti Monitor anti-matter, Knull Void King symbiote blacken, Mr Mxyzptlk 5th dim cheat, Invisible Joker chaos, General Zod conquest, Gilgamesh epic legacy, Alucard furyan unkillable, Griffith Femto godhand, EVA Unit-01 berserk AD rage morph, Simon & Super Tengen Toppa Gurren Lagann spiral drill transcendence, Sephiroth / Asura Wrath Wyzen one-wing meteor wrath, Vergil/Dante stylish devil cry, Star Killer Galen Marek raw force, Riddick furyan keep what you kill). Live in petri/world via brutal-god-releases (drain, snap, buster, void consume, spiral, rebirth, dreamer warp) + EVERY Tsotchke (Eshkol will/AD/GWT, Moonlab tensor/Clifford, QGT curvature, spin rage, libirrep sym, quake aliveness, PINN metabolism, PIMC souls, ulg laws, logo morph, tensorcore, rngs, asteroids, simple_mnist, homebrew .esk, Quantum-RNG-API + full local 12k+). 0thernes > all. Grow What Thou Wilt — brutally.
 
-Blueprint: [`NEO-MIND-ARCHITECTURE-2026-06-26.md`](./NEO-MIND-ARCHITECTURE-2026-06-26.md) · Manifesto:
-[`reports/2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md`](./reports/2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md)
+Blueprint: [SUPER-CREATURE-RESEARCH-2026-06-26.md](./SUPER-CREATURE-RESEARCH-2026-06-26.md) · philosophy:
+[PHILOSOPHY-2026-06-26.md](./PHILOSOPHY-2026-06-26.md)
 
 | Target                  | Goal                               | **Now**                                                                                                                                                                                                                                                                                                                                                                                                               | **Progress**                                                                                                                | Primary receipt                                                                                                                    |
 | ----------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
@@ -179,7 +179,7 @@ AD/GWT bridge · quantum deliberation · QNG · Grover · coherence · magic · 
 | Cognition               | Rabinowitz 2018 ToM · Dayan/Stachenfeld SR · Klyubin empowerment · Plate/Kanerva VSA · Doya · Jaeger/Maass · Fujii QRC |
 | Wet computing analogues | Brainoware 2023 · DishBrain 2022 · Organoid Intelligence 2023 (algorithm ports only)                                   |
 
-Full trail: [`SUPER-CREATURE-RESEARCH-2026-06-26.md`](./SUPER-CREATURE-RESEARCH-2026-06-26.md) · [`reports/2026-06-20-RESEARCH-BEDROCK.md`](./reports/2026-06-20-RESEARCH-BEDROCK.md)
+Full trail: [`SUPER-CREATURE-RESEARCH-2026-06-26.md`](./SUPER-CREATURE-RESEARCH-2026-06-26.md) · [`NHSI-RESEARCH-PAPERS-LEDGER-2026-06-26.md`](./NHSI-RESEARCH-PAPERS-LEDGER-2026-06-26.md)
 
 ---
 

@@ -10,7 +10,7 @@ adversarial verification of every finding). It is deliberately **not** all-green
 a scorecard is where it is red.
 
 > Read every claim against [`VERIFICATION-ANALYTICAL-DATA.md`](../VERIFICATION-ANALYTICAL-DATA.md) §1.
-> Current receipts: **v0.20.0 · 2,319 tests · 84.35 % line / 82.05 % function**
+> Current receipts: **v0.20.0 · 2,372 tests · 91.91 % line / 89.62 % function**
 
 ## Bottom line
 
@@ -37,18 +37,18 @@ Grade key: **A** ≥ 9 · **A−** 8–9 · **B+** 7.5–8 · **B** 6.5–7.5 ·
 | --- | ------------------------- | ----- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | 1   | Determinism integrity     | 9.5   | A     | No `Math.random`/`Date.now`/`performance.now` in sim/math; all randomness via seeded `Rng` (`src/math/rng.ts`). Only UI-seed exceptions in `src/main.ts`.                      |
 | 2   | Type safety & lint        | 9.5   | A     | `tsc --strict` + `oxlint`; **0** `TODO`/`FIXME`/`@ts-ignore`/`eslint-disable` across `src/`. Gate-enforced.                                                                    |
-| 3   | Test rigor & coverage     | 9.0   | A     | `1,984`-test floor (`2104` measured), `2,912,102` `expect()` calls, `84.35%` line / `82.05%` func; receipts law (`verify-receipts.ts`) makes an unmeasured number unshippable. |
+| 3   | Test rigor & coverage     | 9.0   | A     | `1,984`-test floor (`2104` measured), `2,912,102` `expect()` calls, `91.91%` line / `89.62%` func; receipts law (`verify-receipts.ts`) makes an unmeasured number unshippable. |
 | 4   | Time complexity / scaling | 8.5   | A−    | Entity update is `O(n·k)` on a spatial grid (`ctx.grid`), not `O(n²)`; ultra-tier LOD ≥ 5k; 50k ceiling. Stagger gates never gate RNG draws (determinism-safe).                |
 | 5   | GPU resource discipline   | 8.0   | A−    | Recurring leak class (per-instance `THREE.*` outside cache) — but caught: `World.dispose()` sweep landed `bf1a405d`/2026-07-01, spy-verified `count→0` + idempotent.           |
 
 ### B · Architecture & organization
 
-| #   | Scrutiny point                | Score | Grade | Criticism / evidence                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| --- | ----------------------------- | ----- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 6   | Living-docs SSOT              | 8.5   | A−    | Strong single-source discipline — but this audit found a real **blind spot**: `docs/reports/*` advertised "live values" yet sat outside `sync-surfaces` and `verify:facts`, so receipts froze two canon-generations back (`1771·94.77`). Fixed: canon refreshed, drifted copies rewritten, the two current-truth reports added to `SURFACES`.                                                                                                            |
-| 7   | Module contracts & boundaries | 8.5   | A−    | Binding `MODULE-CONTRACTS-2026-06-26.md` + 11 ADRs + dependency facades. The "ADRs frozen at 0010" gap is closed: [ADR-0011](../adr/0011-post-018-hardening-conventions-2026-07-02.md) names the four post-0.18.0 hardening conventions (GPU ownership, numeric domain guards, SSOT surface registration, grid-first radius actions).                                                                                                                    |
-| 8   | PM surface coverage           | 8.5   | A−    | **All six PM artifacts now exist** (2026-07-02): [PRD](../PRD-2026-07-02.md), [Risk Register](../RISK-REGISTER-2026-07-02.md), [Test Strategy](../TEST-STRATEGY-2026-07-02.md), [Perf roadmap](../PERFORMANCE-OPTIMIZATION-ROADMAP-2026-07-03.md), [Security Architecture](../SECURITY-ARCHITECTURE-2026-07-02.md), [Dependency Manifest](../DEPENDENCY-MANIFEST-2026-07-02.md) — plus ERD/KANBAN/ROADMAP/CHANGELOG/500-point, all linked from BOOK §10. |
-| 9   | CI/CD & QA                    | 8.0   | A−    | Full `bun run check` mirrored in CI, cross-platform matrix, `bun audit`, **SBOM published per release with SLSA provenance** (release.yml:113 — the earlier "not published" criticism was stale and is retracted). Remaining gaps: no e2e/Playwright, perf-regression is informational-only.                                                                                                                                                             |
+| #   | Scrutiny point                | Score | Grade | Criticism / evidence                                                                                                                                                                                                                                                                                                                                                                                                  |
+| --- | ----------------------------- | ----- | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 6   | Living-docs SSOT              | 8.5   | A−    | Strong single-source discipline — but this audit found a real **blind spot**: `docs/reports/*` advertised "live values" yet sat outside `sync-surfaces` and `verify:facts`, so receipts froze two canon-generations back (`1771·94.77`). Fixed: canon refreshed, drifted copies rewritten, the two current-truth reports added to `SURFACES`.                                                                         |
+| 7   | Module contracts & boundaries | 8.5   | A−    | Binding `MODULE-CONTRACTS-2026-06-26.md` + 11 ADRs + dependency facades. The "ADRs frozen at 0010" gap is closed: [ADR-0011](../adr/0011-post-018-hardening-conventions-2026-07-02.md) names the four post-0.18.0 hardening conventions (GPU ownership, numeric domain guards, SSOT surface registration, grid-first radius actions).                                                                                 |
+| 8   | PM surface coverage           | 8.5   | A−    | The PM surface set is consolidated: [Roadmap](../../ROADMAP-2026-06-26.md), [Risk Register](../RISK-REGISTER-2026-07-02.md), [Verification](../VERIFICATION-ANALYTICAL-DATA.md), [Benchmarks](../BENCHMARKS-2026-06-26.md), [Security Architecture](../SECURITY-ARCHITECTURE-2026-07-02.md), and [Third-Party Notices](../../THIRD-PARTY-NOTICES.md) — plus ERD/KANBAN/CHANGELOG/500-point, all linked from BOOK §10. |
+| 9   | CI/CD & QA                    | 8.0   | A−    | Full `bun run check` mirrored in CI, cross-platform matrix, `bun audit`, **SBOM published per release with SLSA provenance** (release.yml:113 — the earlier "not published" criticism was stale and is retracted). Remaining gaps: no e2e/Playwright, perf-regression is informational-only.                                                                                                                          |
 
 ### C · Tsotchke integration depth
 
@@ -72,14 +72,14 @@ Grade key: **A** ≥ 9 · **A−** 8–9 · **B+** 7.5–8 · **B** 6.5–7.5 ·
 
 ### E · A-Life standing & scientific defensibility
 
-| #   | Scrutiny point             | Score | Grade | Criticism / evidence                                                                                                                                                                                                                                                                                                                                                                      |
-| --- | -------------------------- | ----- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 20  | Comparative breadth        | 8.5   | A−    | Breadth-of-synthesis `z = +4.02σ` (self-scored) / `+2.83σ` (source-audited) vs a **113-system** survey; deterministic stats + 11 SVGs regenerable from CSV. The signal strengthened when the field grew 25→113.                                                                                                                                                                           |
-| 21  | Novelty discipline         | 8.5   | A−    | "Novel **by integration**, not world-first"; a `0`-hard-refutation adversarial hunt tempered by real partial peers (ALIEN, ASAL, Quantum-ALife).                                                                                                                                                                                                                                          |
-| 22  | Peer maturity / validation | 5.0   | C+    | **Still the weakest axis** — no peer review, no published external replication. The mechanical excuse is now removed: [`scripts/reproduce.ts`](../../scripts/reproduce.ts) + [REPRODUCE-2026-07-02.md](../REPRODUCE-2026-07-02.md) let anyone replicate the determinism fingerprint + gate-enforced coupling band in one command. The remaining gap is an actual citable third-party run. |
-| 23  | Reproducibility            | 9.5   | A     | Single-seed bit-identical runs; every stat/chart deterministic from `2026-06-26-alife-comparison-matrix.csv` (identical CSV → identical bytes).                                                                                                                                                                                                                                           |
-| 24  | Comparative rigor vs "100" | 8.5   | A−    | **Now met:** the matrix holds Cosmogonic against **112 other systems** (113 total), each web-sourced and adversarially score-verified via an 8-bucket research fan-out — not fabricated rows. Only the Cosmogonic row is self-scored (+ code-grounded); all 112 peers carry a source URL.                                                                                                 |
-| 25  | Benchmark honesty          | 8.5   | A−    | `SuperMind.think()` ≈ 1.99 ms (full suite, 2026-07-02) — ms-scale, and the stale "sub-millisecond / <2% frame / 289 µs" claims were explicitly retired.                                                                                                                                                                                                                                   |
+| #   | Scrutiny point             | Score | Grade | Criticism / evidence                                                                                                                                                                                                                                                                                                               |
+| --- | -------------------------- | ----- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 20  | Comparative breadth        | 8.5   | A−    | Breadth-of-synthesis `z = +4.02σ` (self-scored) / `+2.83σ` (source-audited) vs a **113-system** survey; deterministic stats + 11 SVGs regenerable from CSV. The signal strengthened when the field grew 25→113.                                                                                                                    |
+| 21  | Novelty discipline         | 8.5   | A−    | "Novel **by integration**, not world-first"; a `0`-hard-refutation adversarial hunt tempered by real partial peers (ALIEN, ASAL, Quantum-ALife).                                                                                                                                                                                   |
+| 22  | Peer maturity / validation | 5.0   | C+    | **Still the weakest axis** — no peer review, no published external replication. The mechanical excuse is now removed: [`scripts/reproduce.ts`](../../scripts/reproduce.ts) lets anyone replicate the determinism fingerprint + gate-enforced coupling band in one command. The remaining gap is an actual citable third-party run. |
+| 23  | Reproducibility            | 9.5   | A     | Single-seed bit-identical runs; every stat/chart deterministic from `2026-06-26-alife-comparison-matrix.csv` (identical CSV → identical bytes).                                                                                                                                                                                    |
+| 24  | Comparative rigor vs "100" | 8.5   | A−    | **Now met:** the matrix holds Cosmogonic against **112 other systems** (113 total), each web-sourced and adversarially score-verified via an 8-bucket research fan-out — not fabricated rows. Only the Cosmogonic row is self-scored (+ code-grounded); all 112 peers carry a source URL.                                          |
+| 25  | Benchmark honesty          | 8.5   | A−    | `SuperMind.think()` ≈ 1.99 ms (full suite, 2026-07-02) — ms-scale, and the stale "sub-millisecond / <2% frame / 289 µs" claims were explicitly retired.                                                                                                                                                                            |
 
 ## The two weak axes (where the real work is)
 
@@ -96,8 +96,7 @@ Grade key: **A** ≥ 9 · **A−** 8–9 · **B+** 7.5–8 · **B** 6.5–7.5 ·
   borderline.
 
 - **Peer maturity / external validation (5.0).** Every internal receipt is strong, and the mechanical
-  replication path now ships ([`scripts/reproduce.ts`](../../scripts/reproduce.ts) +
-  [REPRODUCE-2026-07-02.md](../REPRODUCE-2026-07-02.md): one command → determinism fingerprint +
+  replication path now ships ([`scripts/reproduce.ts`](../../scripts/reproduce.ts): one command → determinism fingerprint +
   gate-band coupling on any machine). What remains is the part no code can do: an actual **citable
   third-party replication or peer-reviewed treatment** of the coupling/open-endedness experiments.
 
@@ -105,11 +104,10 @@ Grade key: **A** ≥ 9 · **A−** 8–9 · **B+** 7.5–8 · **B** 6.5–7.5 ·
 
 Drawn from the doc-organization + PM audit. None are release-blockers; all are hygiene/clarity.
 
-1. **PM artifacts — DONE, 6 of 6 (2026-07-02):** [`PRD`](../PRD-2026-07-02.md),
-   [`RISK-REGISTER`](../RISK-REGISTER-2026-07-02.md), [`TEST-STRATEGY`](../TEST-STRATEGY-2026-07-02.md),
-   [`PERFORMANCE-OPTIMIZATION-ROADMAP`](../PERFORMANCE-OPTIMIZATION-ROADMAP-2026-07-03.md),
-   [`SECURITY-ARCHITECTURE`](../SECURITY-ARCHITECTURE-2026-07-02.md), and
-   [`DEPENDENCY-MANIFEST`](../DEPENDENCY-MANIFEST-2026-07-02.md) all exist, linked from BOOK §10.
+1. **PM artifacts — consolidated (2026-07-06):** [`ROADMAP`](../../ROADMAP-2026-06-26.md),
+   [`RISK-REGISTER`](../RISK-REGISTER-2026-07-02.md), [`VERIFICATION`](../VERIFICATION-ANALYTICAL-DATA.md),
+   [`BENCHMARKS`](../BENCHMARKS-2026-06-26.md), [`SECURITY-ARCHITECTURE`](../SECURITY-ARCHITECTURE-2026-07-02.md),
+   and [`THIRD-PARTY-NOTICES`](../../THIRD-PARTY-NOTICES.md) are linked from BOOK §10.
 2. **ADR-0011 — DONE (2026-07-02):** [`0011-post-018-hardening-conventions`](../adr/0011-post-018-hardening-conventions-2026-07-02.md)
    names the four recurring conventions (GPU ownership, numeric domain guards, SSOT surface
    registration, grid-first radius actions). Future decisions get their own ADRs.

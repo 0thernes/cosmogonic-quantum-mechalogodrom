@@ -10,7 +10,7 @@ use, how to enable it, and the safety boundary.
 > **Architecture line (binding):** the Copilot is a NON-deterministic _shell organ_ — it lives in
 > `server.ts` + `src/server/{copilot,ai-sandbox}.ts` + `src/ui/copilot.ts`, makes network calls, and
 > reads the wall clock. It never imports or touches simulation state, so the seeded determinism
-> golden is unaffected (ADR 0004 · [PRE-2016-AI-2026-06-26.md](PRE-2016-AI-2026-06-26.md)
+> golden is unaffected (ADR 0004 · [AI-SUBSYSTEM-2026-06-26.md](AI-SUBSYSTEM-2026-06-26.md)
 > Part II). In-world "minds" are a different thing entirely — deterministic pre-2016 game AI.
 
 ## What it can and cannot do

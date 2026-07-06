@@ -329,12 +329,12 @@ logs remain in `docs/DAILY_RUNS/*`.
 
 ## Canonical report pointers
 
-| Topic            | Living document                                                                                                                     |
-| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| Facts / receipts | [VERIFICATION-ANALYTICAL-DATA.md](./VERIFICATION-ANALYTICAL-DATA.md)                                                                |
-| SOTA assessment  | [reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md](./reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md)                                |
-| NHSI honesty     | [reports/2026-06-21-NHSI-HONESTY-AUDIT.md](./reports/2026-06-21-NHSI-HONESTY-AUDIT.md)                                              |
-| A-Life matrix    | [reports/2026-06-26-ALIFE-COMPARATIVE-AUDIT.md](./reports/2026-06-26-ALIFE-COMPARATIVE-AUDIT.md)                                    |
-| Tsotchke         | [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md)                                                  |
-| UI backlog       | [FRONTEND-ACTION-PLAN.md](./FRONTEND-ACTION-PLAN.md) · [UI-UX-DEEP-DIVE-AUDIT-2026-06-27.md](./UI-UX-DEEP-DIVE-AUDIT-2026-06-27.md) |
-| Benchmarks/bugs  | [MEGA-MASTER-DEEP-DIVE-RESEARCH-REPORT-2026-06-27.md](./MEGA-MASTER-DEEP-DIVE-RESEARCH-REPORT-2026-06-27.md) §10–11                 |
+| Topic            | Living document                                                                    |
+| ---------------- | ---------------------------------------------------------------------------------- |
+| Facts / receipts | [VERIFICATION-ANALYTICAL-DATA.md](./VERIFICATION-ANALYTICAL-DATA.md)               |
+| SOTA assessment  | [VERIFICATION-ANALYTICAL-DATA.md](./VERIFICATION-ANALYTICAL-DATA.md)               |
+| NHSI honesty     | [NHSI-PROGRESS-DASHBOARD-2026-06-26.md](./NHSI-PROGRESS-DASHBOARD-2026-06-26.md)   |
+| A-Life matrix    | [PEER-REVIEW-META-ANALYSIS.md](./PEER-REVIEW-META-ANALYSIS.md)                     |
+| Tsotchke         | [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md) |
+| UI backlog       | [UI-UX-DEEP-DIVE-AUDIT-2026-06-27.md](./UI-UX-DEEP-DIVE-AUDIT-2026-06-27.md)       |
+| Benchmarks/bugs  | [BENCHMARKS-2026-06-26.md](./BENCHMARKS-2026-06-26.md)                             |

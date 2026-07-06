@@ -56,4 +56,4 @@ Roadmap. `apex_kernels.hpp` + `apex_golden.cpp` are the contract and its checker
 GPU/native compute path for the field/dense tiers (so the manifold's `native-declared` parameters
 become genuinely computed) is the next step. Until then the TS oracle runs the capped live tier and
 declares the rest honestly (see
-[`docs/APEX-1B-SUBSTRATE-ARCHITECTURE-2026-07-01.md`](../../docs/APEX-1B-SUBSTRATE-ARCHITECTURE-2026-07-01.md)).
+[`docs/NOVELTY-SCIENTIFIC-EDGE-AND-CONTRIBUTIONS-2026-06-26.md`](../../docs/NOVELTY-SCIENTIFIC-EDGE-AND-CONTRIBUTIONS-2026-06-26.md)).

@@ -2,7 +2,7 @@
 
 # UI/UX Deep-Dive Audit (living index)
 
-**Canonical backlog:** [FRONTEND-ACTION-PLAN.md](./FRONTEND-ACTION-PLAN.md) · **Receipts:**
+**Canonical backlog:** this UI/UX audit index · **Receipts:**
 [docs/AUDIT-LOG.md](./AUDIT-LOG.md) passes 2–8 · **Gate:** `bun run check`
 
 **Scope:** simulation shell, center HUD / panel dock, satellite pages (Docs/Spec/Lab), Super Creature /

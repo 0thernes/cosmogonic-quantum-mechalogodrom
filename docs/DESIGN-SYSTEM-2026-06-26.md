@@ -5,7 +5,7 @@
 Audit + token reference + component documentation for the void/cyan glass UI.
 Sources of truth: `src/styles/app.css` (`@theme static` tokens) and
 `index.html` (utility classes). Layout anchors live in
-[WIREFRAMES-2026-06-26.md](WIREFRAMES-2026-06-26.md). The audit below was run against the v1 UI
+the former `WIREFRAMES-2026-06-26.md` layout notes. The audit below was run against the v1 UI
 (pre-remediation); the **Remediation record** documents what the V2 pass fixed.
 
 ---

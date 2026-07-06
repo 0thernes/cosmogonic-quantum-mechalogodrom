@@ -1538,7 +1538,7 @@ sim=1 and within each sim variant.
 ## V9 — AGImAGNOSIS: minds, lineage, factions, artifacts, Copilot
 
 The era that gives the world intelligence, using pre-transformer techniques only (research:
-[PRE-2016-AI-2026-06-26.md](./PRE-2016-AI-2026-06-26.md); reference:
+[AI-SUBSYSTEM-2026-06-26.md](./AI-SUBSYSTEM-2026-06-26.md); reference:
 [AI-SUBSYSTEM-2026-06-26.md](AI-SUBSYSTEM-2026-06-26.md)). HARD LINE: in-world minds are DETERMINISTIC (seeded classical
 AI in `src/sim/**`); the live LLM Copilot is a NON-deterministic shell organ (`src/server/**`,
 `src/ui/copilot.ts`) fenced out of sim logic — it can never touch `SimState` or the RNG stream.
@@ -1572,7 +1572,7 @@ Copilot are constructed boot-stream-neutral and never write sim state, so the go
 
 ### V9 acceptance
 
-Full `bun run check` green: prettier → tsc strict → oxlint → 2319 tests (0 fail, 300-frame golden
+Full `bun run check` green: prettier → tsc strict → oxlint → 2372 tests (0 fail, 300-frame golden
 included) → build. The Copilot sandbox verified live (allow: `git log`, file reads; deny:
 path-escape, `git push`, `legacy/`, shell redirection).
 

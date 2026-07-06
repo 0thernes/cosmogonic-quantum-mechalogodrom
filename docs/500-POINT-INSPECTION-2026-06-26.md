@@ -28,7 +28,7 @@ Provenance: [MODULE-CONTRACTS-2026-06-26.md](./MODULE-CONTRACTS-2026-06-26.md) Â
 | 8   | Audio                   | 20   | 0    | Web Audio procedural engine             |
 | 9   | UI / observatory        | 18   | 2    | HTMX + Tailwind; a11y gates             |
 | 10  | NHSI / consciousness    | 20   | 0    | Butlin honest framing                   |
-| 11  | Tsotchke integration    | 19   | 1    | 20 corpus, ~16 wired; 4 fenced          |
+| 11  | Tsotchke integration    | 19   | 1    | 20 corpus, ~16 wired; 3 fenced          |
 | 12  | Apex / super-mind       | 20   | 0    | Deep-wired faculties tested             |
 | 13  | CI / gates              | 20   | 0    | `bun run check` full pipeline           |
 | 14  | Security                | 19   | 1    | No secrets in frontend                  |
@@ -45,6 +45,6 @@ Provenance: [MODULE-CONTRACTS-2026-06-26.md](./MODULE-CONTRACTS-2026-06-26.md) Â
 | 25  | Living docs hygiene     | 20   | 0    | No archive forks                        |
 
 **WARN themes (14):** native engine not fully in-loop; observatory size; coupling mean still low regime;
-external peer validation thin. See [NHSI-HONESTY-AUDIT](./reports/2026-06-21-NHSI-HONESTY-AUDIT.md).
+external peer validation thin. See [NHSI-PROGRESS-DASHBOARD](./NHSI-PROGRESS-DASHBOARD-2026-06-26.md).
 
 **Regenerate detail:** prior 500-line checklist in git history pre-2026-07-06 compress pass.

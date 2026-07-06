@@ -29,7 +29,7 @@ cosmos: the same morphotypes, the same monolith hums, the same lore.
 BRUTALISM: raw, direct, god-like power — Emperor Valkorion Tenebrae Vitiate (immortal will), Thanos (devour), Dr. Manhattan (cosmic), Galactus (consume), Jean Grey Dark Phoenix (rebirth fire), Broly Legendary Super Saiyan (rage), Frieza (brutal), Azathoth Cthulhu (dream void), Warhammer Chaos Gods (madness war), Shuma-Gorath (chaos lord), Mad Jim Jaspers (reality), Pennywise IT (fear), Anti-Monitor (anti-matter), Knull (void king), Mr. Mxyzptlk (cartoon god), Invisible Joker (chaos plan), General Zod (conquer), Gilgamesh (epic), Alucard (no-life king), Griffith Femto (eclipse god), EVA Unit-01 (berserk), Simon + Super Tengen Toppa Gurren Lagann (spiral drill), Sephiroth (one wing), Asura Wrath Wyzen (divine wrath), Vergil/Dante (devil cry), Starkiller (force god), Riddick (furyan).
 Tsotchke REAL (Eshkol will, Moonlab sim power, QGT warp, spin chaos, irrep form, quake aliveness). Super Creature spark only; full corpus grows independent alien/NHSI brutal god biologics from all earth species + myth/god/comic/sci-fi. 0thernes Corp gods creating the simulation now. Unfathomable. Grow What Thou Wilt. BRUTALISM is the aesthetic of raw power.
 Tsotchke is real substrate, not decoration. Progress lives in [`NHSI-PROGRESS-DASHBOARD-2026-06-26.md`](./NHSI-PROGRESS-DASHBOARD-2026-06-26.md) and the
-[`2026-06-21 NHSI Manifesto`](./reports/2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md). Tsotchke is
+the 2026-06-21 NHSI manifesto line of thought. Tsotchke is
 real substrate, not decoration — depth ledger: [`TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md).
 
 Names of
