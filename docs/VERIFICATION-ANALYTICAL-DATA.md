@@ -50,10 +50,10 @@ Rewritten in place when the facts change (per the binding "Living docs, no archi
 
 | Class            | Surfaces                                                                                                                         |
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| Root MD          | `README.md`, `ROADMAP-2026-06-26.md`, `CHANGELOG.md`, `CLAUDE.md`, `AGENTS-2026-06-26.md`, `HANDOFF-2026-06-26.md`, …            |
+| Root MD          | `README.md`, `ROADMAP-2026-06-26.md`, `CHANGELOG.md`, `CLAUDE.md`, `AGENTS-2026-06-26.md`, …                                     |
 | Steering         | `CLAUDE.md`, `AGENTS-2026-06-26.md`, `masters/*.xml` (3), `docs/PHILOSOPHY-2026-06-26.md`, `docs/MODULE-CONTRACTS-2026-06-26.md` |
-| Progress / truth | `docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md`, `docs/reports/2026-06-26-CURRENT-TRUTH-BASELINE.md`                                |
-| Consciousness    | `docs/PATH-TO-14-14-CONSCIOUSNESS-INDICATORS-2026-06-26.md`, `docs/reports/2026-06-21-NHSI-HONESTY-AUDIT.md`                     |
+| Progress / truth | `docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md`, `docs/VERIFICATION-ANALYTICAL-DATA.md` (this file)                                 |
+| Consciousness    | `docs/CONSCIOUSNESS-LAB-MASTER-2026-07-03.md`, `docs/reports/2026-06-21-NHSI-HONESTY-AUDIT.md`                                   |
 | HTML surfaces    | `index.html`, `docs.html`, `specs.html` (+ `lab/`)                                                                               |
 | Tsotchke         | `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md` (authoritative), `THIRD-PARTY-NOTICES.md`                                          |
 | Diagrams         | `docs/ERD-2026-06-26.md`, `docs/ERM-2026-06-26.md`, `docs/ERP-2026-06-26.md`, `docs/ARCHITECTURE-2026-06-26.md`                  |
@@ -62,17 +62,17 @@ Rewritten in place when the facts change (per the binding "Living docs, no archi
 
 ## 3 · Audit findings (2026-06-26)
 
-| #   | Severity                   | Where                                        | Issue                                                                                                                                                                                          | Resolution                                                                                                       |
-| --- | -------------------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| A   | **P0 gate-RED**            | `.github/copilot-instructions-2026-06-26.md` | markdown tables collapsed by the external `hacklm-memory` tool → fails `prettier --check` (first gate stage) in the working tree                                                               | `prettier --write` (re-pad tables)                                                                               |
-| B   | reconciled (not a bug)     | `scripts/canonical-receipts.ts`              | `CANONICAL_TEST_COUNT` is a floor (1477→1771→1984 as suites grew) vs a file-rich measured count (2104 on 2026-07-01)                                                                           | floor semantics confirmed correct; the published headline floor is now **1984** (`--print` never auto-raises it) |
-| C   | **P0 gate-RED**            | `CHANGELOG.md`, `docs/KANBAN-2026-06-26.md`  | 3 dead relative links into the deleted `docs/audit-2026-06-15/` folder (consolidated into AUDIT-LOG by `e51a376`)                                                                              | repoint to `docs/AUDIT-LOG.md`                                                                                   |
-| C2  | P1 test-hygiene            | `tests/doc-links.test.ts`                    | `SKIP` set omitted `.claude/` → the test scanned nested worktree copies and false-failed                                                                                                       | add `.claude`, `legacy`, `site`, `coverage` to `SKIP`                                                            |
-| D   | P1 doc-rot                 | `docs/KANBAN-2026-06-26.md`                  | mojibake: `×11/`×7/``×1 (orphaned-emoji fragments), `—`×34 used as `—`, plus `¦`/`–`/`©º`— slipped the encoding gate (orphaned fragments aren't double-encoding;`U+201D` is a legit codepoint) | byte-precise normalize: drop corrupted emoji prefixes, restore `—`/`–` separators                                |
-| E   | P2 count-drift             | `docs/KANBAN-2026-06-26.md:17`               | "ALL **19** Tsotchke repos" — only outlier vs the canonical "20 corpus projects" everywhere                                                                                                    | `19 → 20`                                                                                                        |
-| F   | flag (history)             | `HANDOFF-2026-06-26.md`                      | a dated **2026-06-19** daily-run report framed as "Current repo status" (942 tests / v0.10.4)                                                                                                  | left as historical snapshot (editing the numbers would falsify the 2026-06-19 record); not current truth         |
-| G   | flag (cleanliness)         | repo root                                    | stray debug logs tracked at root (`.gate.log`, `.gate.baseline.log`, `.audit-gate.log`, `law.log`, `law_error.txt`, `tsc.log`, `tscout.txt`, `receipts_print.txt`)                             | noted for cleanup                                                                                                |
-| H   | flag (fidelity, not a bug) | `src/math/curvature-aware-qng.ts`            | `computeChristoffelSymbols` sets `dg=0`, so the general N×N "curvature-aware" path reduces to ordinary QNG                                                                                     | honestly documented as a simplification; no NaN / wrong shape; noted so the caveat is visible                    |
+| #   | Severity                   | Where                                                      | Issue                                                                                                                                                                                          | Resolution                                                                                                       |
+| --- | -------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| A   | **P0 gate-RED**            | `.github/copilot-instructions-2026-06-26.md`               | markdown tables collapsed by the external `hacklm-memory` tool → fails `prettier --check` (first gate stage) in the working tree                                                               | `prettier --write` (re-pad tables)                                                                               |
+| B   | reconciled (not a bug)     | `scripts/canonical-receipts.ts`                            | `CANONICAL_TEST_COUNT` is a floor (1477→1771→1984 as suites grew) vs a file-rich measured count (2104 on 2026-07-01)                                                                           | floor semantics confirmed correct; the published headline floor is now **1984** (`--print` never auto-raises it) |
+| C   | **P0 gate-RED**            | `CHANGELOG.md`, `docs/KANBAN-2026-06-26.md`                | 3 dead relative links into the deleted `docs/audit-2026-06-15/` folder (consolidated into AUDIT-LOG by `e51a376`)                                                                              | repoint to `docs/AUDIT-LOG.md`                                                                                   |
+| C2  | P1 test-hygiene            | `tests/doc-links.test.ts`                                  | `SKIP` set omitted `.claude/` → the test scanned nested worktree copies and false-failed                                                                                                       | add `.claude`, `legacy`, `site`, `coverage` to `SKIP`                                                            |
+| D   | P1 doc-rot                 | `docs/KANBAN-2026-06-26.md`                                | mojibake: `×11/`×7/``×1 (orphaned-emoji fragments), `—`×34 used as `—`, plus `¦`/`–`/`©º`— slipped the encoding gate (orphaned fragments aren't double-encoding;`U+201D` is a legit codepoint) | byte-precise normalize: drop corrupted emoji prefixes, restore `—`/`–` separators                                |
+| E   | P2 count-drift             | `docs/KANBAN-2026-06-26.md:17`                             | "ALL **19** Tsotchke repos" — only outlier vs the canonical "20 corpus projects" everywhere                                                                                                    | `19 → 20`                                                                                                        |
+| F   | **RESOLVED (2026-07-06)**  | `HANDOFF-2026-06-26.md`, `research_receipts-2026-06-26.md` | stale present-tense continuity artifacts (942–1172 tests) duplicated AUDIT-LOG + VERIFICATION                                                                                                  | deleted; history preserved in AUDIT-LOG + CHANGELOG                                                              |
+| G   | flag (cleanliness)         | repo root                                                  | stray debug logs tracked at root (`.gate.log`, `.gate.baseline.log`, `.audit-gate.log`, `law.log`, `law_error.txt`, `tsc.log`, `tscout.txt`, `receipts_print.txt`)                             | noted for cleanup                                                                                                |
+| H   | flag (fidelity, not a bug) | `src/math/curvature-aware-qng.ts`                          | `computeChristoffelSymbols` sets `dg=0`, so the general N×N "curvature-aware" path reduces to ordinary QNG                                                                                     | honestly documented as a simplification; no NaN / wrong shape; noted so the caveat is visible                    |
 
 **Finding D2 — master governance XML mojibake (root cause + fix).** All three `masters/*.xml` files
 (the EXECUTOR / ARCHITECT / PHYSICIST steering docs read before every change) each carried ~150
@@ -134,7 +134,7 @@ the filename; the remaining 20 are name-pinned (below).** Each renamed doc also 
   `index.html` / `docs.html` / `specs.html` (GitHub Pages), `.github/**`, `.memory/**` (hacklm tool).
 - **Hardcoded in scripts / gates** (`sync-surfaces.ts`, `docs-truth-law.test.ts`, `gen-filemap`):
   `ARCHITECTURE`, `KANBAN`, `ERD`/`ERM`/`ERP`, `MODULE-CONTRACTS`, `FILE-MAP`, `TECHNICAL-SPECIFICATION`,
-  `PHILOSOPHY`, `NHSI-PROGRESS-DASHBOARD`, `PATH-TO-14-14-…`, `SUPER-CREATURE-RESEARCH`, `BENCHMARKS`,
+  `PHILOSOPHY`, `NHSI-PROGRESS-DASHBOARD`, `CONSCIOUSNESS-LAB-MASTER-2026-07-03.md`, `SUPER-CREATURE-RESEARCH`, `BENCHMARKS`,
   `TSOTCHKE-INTEGRATION-MAP` — renaming reds the gate / breaks the live sync machinery.
 - **Convention-critical / heavily-linked**: `AUDIT-LOG.md`, this ledger, `TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`.
 - **Numbered ADRs** (`docs/adr/000X-*`, referenced as "ADR-0009"), **legacy/** (verbatim), and
@@ -216,13 +216,10 @@ Confirms §5 and adds four items §5 did not cover:
   Clebsch-Gordan / Wigner-D / spherical-harmonic bodies are coarse placeholders, never imported by
   sim/cognition; the exact, test-verified math is `irrep.ts` (the file §5 hardened for j>=7). Prevents
   future mis-wiring.
-- **`HANDOFF.md` + `research_receipts.md`** — were stale present-tense (v0.10.4 / 942-1183 tests).
-  Added historical banners pointing to current truth (`canonical-receipts.ts` / the dashboard).
-- **RESOLVED (Butlin membership, F1):** reconciled to one canonical Butlin-14 set across the honesty audit, PATH-TO-14-14, and the dashboard — **8 met** {GWT-1, GWT-3, GWT-4, PP-1, HOT-1, HOT-2, AST-1, AE-1} / **6 partial** {RPT-1, RPT-2, GWT-2, HOT-3, HOT-4, AE-2}; RPT-1 moved to partial (recurrence is architected, not learned). _Original finding:_ the headline `8/14 met + 6/14 partial` is consistent everywhere, but the
-  prose enumerations disagree on _which_: `reports/2026-06-21-NHSI-HONESTY-AUDIT.md:183-184` lists **9**
-  met names; `PATH-TO-14-14:5` lists only 5 explicit partials. The repo meets _9/14 by its own
-  enumerations_ yet headlines a conservative _8_. Which single indicator is borderline (AST-1 or RPT-1)
-  is an **owner ruling**; the 8/14 floor is kept everywhere until then.
+- **`HANDOFF.md` + `research_receipts.md`** — **RESOLVED (2026-07-06):** deleted after consolidating into
+  AUDIT-LOG + VERIFICATION; canonical facts live in `canonical-receipts.ts` / this file.
+- **RESOLVED (Butlin membership, F1):** reconciled to one canonical Butlin-14 set across the honesty audit,
+  CONSCIOUSNESS-LAB-MASTER, and the dashboard — **8 met** {GWT-1, GWT-3, GWT-4, PP-1, HOT-1, HOT-2, AST-1, AE-1} / **6 partial** {RPT-1, RPT-2, GWT-2, HOT-3, HOT-4, AE-2}; RPT-1 moved to partial (recurrence is architected, not learned).
 
 ---
 

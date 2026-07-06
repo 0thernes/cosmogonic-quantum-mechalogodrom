@@ -11,6 +11,35 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-07-06 (pass 7) — Doc/test consolidation: fewer files, fewer lines (v0.20.0)
+
+Owner brief: deep audit of markdown + tests + workers — merge redundant docs, delete stale duplicates,
+fix receipt drift, net **fewer** files and lines.
+
+### Deleted markdown (merged or superseded)
+
+- `HANDOFF-2026-06-26.md`, `research_receipts-2026-06-26.md` → history in AUDIT-LOG + VERIFICATION
+- `docs/GOAL5-SWARM-HANDOFF-2026-06-19.md`, `docs/GOAL5-RESEARCH-RECEIPTS-2026-06-26.md` → TSOTCHKE-INTEGRATION-MAP
+- `docs/PLAN-2026-06-30-UI-SIM-POLISH.md`, `docs/EXECUTION-PLAN-2026-06-30-POLISH-25-ITEMS-VP-COO.md` → FRONTEND-ACTION-PLAN
+- `docs/reports/2026-06-26-CURRENT-TRUTH-BASELINE.md` → VERIFICATION-ANALYTICAL-DATA §1
+- `docs/PERFORMANCE-TARGETS-2026-07-02.md`, `docs/SCALING-ROADMAP-2026-06-26.md` → PERFORMANCE-OPTIMIZATION-ROADMAP
+- Consciousness cluster (6 files) → `docs/CONSCIOUSNESS-LAB-MASTER-2026-07-03.md`
+- `tests/README.md` → `docs/TEST-STRATEGY-2026-07-02.md` §7
+
+### Deleted orphans (not run by Bun)
+
+- `tests/worker-pool`, `tests/graphics-abstraction.test`, `tests/transform-feedback` (extensionless dupes)
+- `src/core/worker` (orphan duplicate of worker-pool)
+- `tests/wilderness-chunks.test.ts` → merged into `tests/wilderness.test.ts`
+
+### Reference + receipt fixes
+
+- `scripts/sync-surfaces.ts` — removed HANDOFF, research_receipts, CURRENT-TRUTH-BASELINE from SURFACES
+- Stale **92.13%** coverage in PRD + scrutiny scorecard → canonical **83.95% / 81.57%**
+- Cross-links repointed across BOOK, README, reports, ADR 0010, NHSI dashboard, lab JSON, consciousness kernel
+
+---
+
 ## 2026-07-05 (pass 6) — Zero-degradation mandate: full neural/visual fidelity + all-core workers (v0.20.0)
 
 Owner brief: nothing may degrade graphics, color, rendering detail, or neural intelligence; utilize all
@@ -1716,7 +1745,7 @@ matrix + the full findings table live in
 
 - Restored the `C:\Users\Alexa\Downloads\COSMOGONIC REPORTS` archive into canonical repo location
   `docs/reports/` so the reports ship with the local/GitHub repo instead of living only in Downloads.
-- Added [`reports/2026-06-26-CURRENT-TRUTH-BASELINE.md`](./reports/2026-06-26-CURRENT-TRUTH-BASELINE.md)
+- Added canonical facts sheet [`VERIFICATION-ANALYTICAL-DATA.md`](./VERIFICATION-ANALYTICAL-DATA.md) (supersedes the retired current-truth baseline)
   and stamped the restored historical reports with a current-baseline warning.
 - Added the A-Life comparative audit and scoring matrix:
   [`reports/2026-06-26-ALIFE-COMPARATIVE-AUDIT.md`](./reports/2026-06-26-ALIFE-COMPARATIVE-AUDIT.md) and
@@ -1791,7 +1820,7 @@ the current truth baseline supersedes conflicting old counts or overclaims.
 - **Comprehensive assessment:** [`reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md`](./reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md) (+ `-WHOLE-REPO`, `-SUPER-CREATURE`).
 - **NHSI:** [`reports/2026-06-21-NHSI-HONESTY-AUDIT.md`](./reports/2026-06-21-NHSI-HONESTY-AUDIT.md) (honesty scorecard — gate-referenced) · [`reports/2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md`](./reports/2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md) · [`reports/2026-06-20-RESEARCH-BEDROCK.md`](./reports/2026-06-20-RESEARCH-BEDROCK.md) · [`reports/2026-06-20-SUPER-REPORT-PATH-TO-NHSI-AND-SENTIENCE.md`](./reports/2026-06-20-SUPER-REPORT-PATH-TO-NHSI-AND-SENTIENCE.md) · [`reports/2026-06-20-ROADMAP-TO-NHSI-AND-SENTIENCE.xml`](./reports/2026-06-20-ROADMAP-TO-NHSI-AND-SENTIENCE.xml).
 - **A-Life:** [`reports/2026-06-26-ALIFE-COMPARATIVE-AUDIT.md`](./reports/2026-06-26-ALIFE-COMPARATIVE-AUDIT.md) · [`reports/2026-06-26-alife-comparison-matrix.csv`](./reports/2026-06-26-alife-comparison-matrix.csv).
-- **Tsotchke:** living map [`TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md) · novelty/scientific edge [`NOVELTY-SCIENTIFIC-EDGE-AND-CONTRIBUTIONS-2026-06-26.md`](./NOVELTY-SCIENTIFIC-EDGE-AND-CONTRIBUTIONS-2026-06-26.md) · wave receipts in [`GOAL5-RESEARCH-RECEIPTS-2026-06-26.md`](./GOAL5-RESEARCH-RECEIPTS-2026-06-26.md).
+- **Tsotchke:** living map [`TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md) · novelty/scientific edge [`NOVELTY-SCIENTIFIC-EDGE-AND-CONTRIBUTIONS-2026-06-26.md`](./NOVELTY-SCIENTIFIC-EDGE-AND-CONTRIBUTIONS-2026-06-26.md).
 
 ## 2026-06-26 — Roadmap Fulfillment: P1 Harness + Coupling Scaffold
 

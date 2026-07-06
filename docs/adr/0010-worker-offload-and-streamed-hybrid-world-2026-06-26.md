@@ -4,7 +4,7 @@
 
 - Status: Accepted
 - Date: 2026-06-20
-- Governs: Scaling roadmap Stages 3–5 (`docs/SCALING-ROADMAP-2026-06-26.md`)
+- Governs: Scaling stages 3–5 ([PERFORMANCE-OPTIMIZATION-ROADMAP-2026-07-03.md](../PERFORMANCE-OPTIMIZATION-ROADMAP-2026-07-03.md) § Scaling Stages)
 
 ## Context
 
@@ -98,4 +98,4 @@ path; they run the wilderness, which is explicitly outside the golden.
 - **3c** — camera-streamed chunks: the world grows (load near / freeze far).
 - **5** — move the wilderness kernels to WebGPU compute for 100k–1M.
 
-See also: ADR 0004 (deterministic RNG), ADR 0002 (three.js rendering), `docs/SCALING-ROADMAP-2026-06-26.md`.
+See also: ADR 0004 (deterministic RNG), ADR 0002 (three.js rendering), `docs/PERFORMANCE-OPTIMIZATION-ROADMAP-2026-07-03.md`.

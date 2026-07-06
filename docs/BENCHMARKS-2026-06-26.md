@@ -346,8 +346,8 @@ superseded:
 - **Frame-budget status:** the `<2%` GOAL5 target is **still not met** — 5× `think()` at ~9.77 ms is ~58%
   of a 16.67 ms frame, which is why the 5 minds run staggered (not all per frame) beside 20 cheaper
   light-echoes. It remains a remediation target until a fresh optimization pass re-proves `<2%`. Treat the
-  old `1.875% / <2%` claim as stale (see `docs/reports/2026-06-26-CURRENT-TRUTH-BASELINE.md` and
-  `docs/PERFORMANCE-TARGETS-2026-07-02.md`).
+  old `1.875% / <2%` claim as stale (see `docs/VERIFICATION-ANALYTICAL-DATA.md` and
+  `docs/PERFORMANCE-OPTIMIZATION-ROADMAP-2026-07-03.md`).
 
 Bodies: per-frame O(1) updates (prebuilt geo, uniform drives) add negligible (<0.1% measured indirect).
 

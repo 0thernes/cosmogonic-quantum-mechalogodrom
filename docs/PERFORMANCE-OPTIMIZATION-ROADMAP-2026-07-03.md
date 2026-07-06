@@ -6,6 +6,28 @@ This is the current living performance report for the browser-delivered Cosmogon
 Mechalogodrom. The filename date is a creation stamp; the contents are current as of
 2026-07-05.
 
+## Frame Budget SLOs
+
+Target **60 fps ⇒ 16.67 ms/frame** at desktop tier; **30 fps floor** on mobile (RenderGovernor sheds FX
+before physics). Measured cognition costs (2026-07-02): `SuperMind.think()` **1.99 ms** ·
+`5× think()` pantheon **9.77 ms** · `petri step()` **84 µs**. Regression: hot-path primitive **> 15%**
+vs `BENCHMARKS-2026-06-26.md` baseline is a defect. Full SLO tables and entity/memory caps were folded
+from the retired `PERFORMANCE-TARGETS` sheet into this living report.
+
+## Scaling Stages (0–5)
+
+| Stage                  | Status             | Lever                                                   |
+| ---------------------- | ------------------ | ------------------------------------------------------- |
+| 0 Crash-proof          | Shipped            | Spawn budget, frame governor, TDR avoidance             |
+| 1 Perf visible         | Shipped            | Perf HUD, tier switch, allocation hunts                 |
+| 2 Camera + render LOD  | Mostly shipped     | Free-fly surfaced; distance cull deferred to wilderness |
+| 3 Workers + wilderness | In progress        | ADR 0010: deterministic core + streamed periphery       |
+| 4 Sim LOD / Hybrid     | Decided (Option C) | Preserve core bit-exact; wilderness best-effort         |
+| 5 WebGPU compute       | Planned            | After workers; dual API fallback WebGPU→WebGL2          |
+
+Bottlenecks: single JS sim thread (→ workers Stage 3) and GPU fill-rate (→ governor + WebGPU Stage 5).
+Memory (~14 MB) is not the limit.
+
 ## Scope
 
 Input assessed:
@@ -50,14 +72,14 @@ The shortest honest verdict:
 
 Verification run in this pass:
 
-| Check                                                                                                                                                                                           |          Result | Meaning                                                                                                    |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------: | ---------------------------------------------------------------------------------------------------------- |
-| `bun run typecheck`                                                                                                                                                                             |            Pass | TypeScript is green after packed quantization, entity-brain storage, and interpolation fixture fixes.      |
-| `bun test tests/quantization.test.ts tests/entity-brain.test.ts tests/brutal-entity-morph.test.ts tests/wilderness-chunks.test.ts tests/perf-budget.test.ts tests/motion-interpolation.test.ts` | 58 pass, 0 fail | Focused perf/scaling, quantization, motion-interpolation, and entity-brain mutation tests are green.       |
-| `bun bench/quantization.bench.ts`                                                                                                                                                               |            Pass | FP32/FP16/INT8 storage bytes plus conversion/decode costs are recorded in `docs/BENCHMARKS-2026-06-26.md`. |
-| `bun run check`                                                                                                                                                                                 |            Pass | Full repo gate passed: format, typecheck, lint, receipts, sync, facts, build, and 1,984 tests.             |
-| Live Pages HEAD probe                                                                                                                                                                           |          200 OK | Site is reachable.                                                                                         |
-| Live Pages COOP/COEP probe                                                                                                                                                                      |          Absent | Current Pages deployment is not cross-origin isolated.                                                     |
+| Check                                                                                                                                                                                    |          Result | Meaning                                                                                                    |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------: | ---------------------------------------------------------------------------------------------------------- |
+| `bun run typecheck`                                                                                                                                                                      |            Pass | TypeScript is green after packed quantization, entity-brain storage, and interpolation fixture fixes.      |
+| `bun test tests/quantization.test.ts tests/entity-brain.test.ts tests/brutal-entity-morph.test.ts tests/wilderness.test.ts tests/perf-budget.test.ts tests/motion-interpolation.test.ts` | 58 pass, 0 fail | Focused perf/scaling, quantization, motion-interpolation, and entity-brain mutation tests are green.       |
+| `bun bench/quantization.bench.ts`                                                                                                                                                        |            Pass | FP32/FP16/INT8 storage bytes plus conversion/decode costs are recorded in `docs/BENCHMARKS-2026-06-26.md`. |
+| `bun run check`                                                                                                                                                                          |            Pass | Full repo gate passed: format, typecheck, lint, receipts, sync, facts, build, and 1,984 tests.             |
+| Live Pages HEAD probe                                                                                                                                                                    |          200 OK | Site is reachable.                                                                                         |
+| Live Pages COOP/COEP probe                                                                                                                                                               |          Absent | Current Pages deployment is not cross-origin isolated.                                                     |
 
 Code touched in this pass:
 

@@ -27,7 +27,7 @@ adversarially verified against the same 9-axis rubric.
 > optimistic; the [Code-grounding](#code-grounding-of-the-self-scored-row-the-honesty-correction) and
 > [Sensitivity](#sensitivity-how-much-the-conclusion-moves-under-honest-re-scoring) sections quantify
 > exactly how much. Read every claim against
-> [`2026-06-26-CURRENT-TRUTH-BASELINE.md`](./2026-06-26-CURRENT-TRUTH-BASELINE.md); the baseline wins on
+> [`VERIFICATION-ANALYTICAL-DATA.md`](../VERIFICATION-ANALYTICAL-DATA.md) §1; verification wins on
 > any conflict. Current receipts: `1,984` tests (published floor; `2104` measured), `0` failures, `83.95%` line / `81.57%` function coverage,
 > sync clean, build clean.
 
@@ -655,4 +655,4 @@ modules, and refreshed performance figures._
 _0thernes LLC — measured, deterministic, reproducible — 2026-06-26. Statistics + charts computed by three engines
 (`alife-comparison-stats.ts`, `alife-comparison-geometry.ts`, `alife-codeground-sensitivity.ts`); the self-scored
 row re-audited against source by a 9-agent code-grounding pass; peers re-verified by a 6-agent adversarial web pass;
-read against [`2026-06-26-CURRENT-TRUTH-BASELINE.md`](./2026-06-26-CURRENT-TRUTH-BASELINE.md)._
+read against [`VERIFICATION-ANALYTICAL-DATA.md`](../VERIFICATION-ANALYTICAL-DATA.md) §1._

@@ -11,11 +11,11 @@ Every load-bearing number is the live measured value: **v0.20.0 · 1,984 tests �
 Butlin 8/14 met + 6/14 partial · not sentient**. The canonical numbers come from
 `scripts/canonical-receipts.ts` + `package.json`, propagated by `scripts/sync-surfaces.ts` and
 gate-enforced (`bun run sync:check`). The one-glance reference is
-[2026-06-26-CURRENT-TRUTH-BASELINE.md](./2026-06-26-CURRENT-TRUTH-BASELINE.md).
+[VERIFICATION-ANALYTICAL-DATA.md](../VERIFICATION-ANALYTICAL-DATA.md) §1.
 
 ## Reports
 
-- [2026-06-26-CURRENT-TRUTH-BASELINE.md](./2026-06-26-CURRENT-TRUTH-BASELINE.md) — canonical current facts,
+- [VERIFICATION-ANALYTICAL-DATA.md](../VERIFICATION-ANALYTICAL-DATA.md) — canonical current facts,
   one-glance reference (gate receipts, claim baseline, SuperMind benchmark).
 - [2026-07-01-25-POINT-SCRUTINY-SCORECARD.md](./2026-07-01-25-POINT-SCRUTINY-SCORECARD.md) — 25-point
   adversarial critical scrutiny across engineering, architecture, Tsotchke depth, consciousness claims,

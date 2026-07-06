@@ -63,7 +63,6 @@ const SURFACES = [
   'docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md',
   'bible.html',
   'docs/reports/README.md',
-  'docs/reports/2026-06-26-CURRENT-TRUTH-BASELINE.md',
   'docs/reports/2026-06-21-NHSI-HONESTY-AUDIT.md',
   'docs/reports/2026-06-20-RESEARCH-BEDROCK.md',
   'docs/reports/2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md',
@@ -76,8 +75,6 @@ const SURFACES = [
   'docs/PRD-2026-07-02.md',
   'docs/MEGA-MASTER-DEEP-DIVE-RESEARCH-REPORT-2026-06-27.md',
   'docs/BOOK-2026-06-26.md',
-  'HANDOFF-2026-06-26.md',
-  'research_receipts-2026-06-26.md',
 ];
 
 /** Apply receipts (test count + coverage) propagation. */
@@ -166,12 +163,12 @@ function syncReceipts(s: string): string {
       .replace(/"([0-9],[0-9]{3}) tests, 0 failing"/g, `"${TEST_COMMA} tests, 0 failing"`)
       .replace(/"([0-9]{2}\.[0-9]{2})% line coverage"/g, `"${LINE}% line coverage"`)
       .replace(
-        /Coverage line ≥ 0\.90\s+\|\s+✅ [0-9]{2}\.[0-9]{2}%/g,
-        `Coverage line ≥ 0.90                   | ✅ ${LINE}%`,
+        /Coverage line ≥ 0\.90(\s+\|\s+✅ )[0-9]{2}\.[0-9]{2}%/g,
+        `Coverage line ≥ 0.90$1${LINE}%`,
       )
       .replace(
-        /Coverage func ≥ 0\.85\s+\|\s+✅ [0-9]{2}\.[0-9]{2}%/g,
-        `Coverage func ≥ 0.85                   | ✅ ${FUNC}%`,
+        /Coverage func ≥ 0\.85(\s+\|\s+✅ )[0-9]{2}\.[0-9]{2}%/g,
+        `Coverage func ≥ 0.85$1${FUNC}%`,
       )
       .replace(/\*\*~95 \/ ~92\*\*/g, `**~${LINE} / ~${FUNC}**`)
   );

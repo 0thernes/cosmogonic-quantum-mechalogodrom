@@ -101,6 +101,6 @@ this list.
 
 ---
 
-_Companion to `docs/SCALING-ROADMAP-2026-06-26.md`, `docs/reports/2026-06-20-RESEARCH-BEDROCK.md`,
+_Companion to `docs/PERFORMANCE-OPTIMIZATION-ROADMAP-2026-07-03.md`, `docs/reports/2026-06-20-RESEARCH-BEDROCK.md`,
 `docs/reports/2026-06-20-SUPER-REPORT-PATH-TO-NHSI-AND-SENTIENCE.md`, and ADR 0010. Build against this
 list. No consciousness/ASI claim is made; the goal is measurable emergence with receipts._

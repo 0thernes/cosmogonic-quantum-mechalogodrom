@@ -9,8 +9,8 @@ A-Life standing. Each point is scored `0–10` (higher = more defensible), grade
 adversarial verification of every finding). It is deliberately **not** all-green — the honest value of
 a scorecard is where it is red.
 
-> Read every claim against [`2026-06-26-CURRENT-TRUTH-BASELINE.md`](./2026-06-26-CURRENT-TRUTH-BASELINE.md).
-> Current receipts: **v0.20.0 · 1,984 tests** (published floor; `2104` measured) **· 92.13% line / 89.66%
+> Read every claim against [`VERIFICATION-ANALYTICAL-DATA.md`](../VERIFICATION-ANALYTICAL-DATA.md) §1.
+> Current receipts: **v0.20.0 · 1,984 tests** (published floor; `2104` measured) **· 83.95% line / 81.57%
 > function · Butlin 8/14 met + 6/14 partial · not sentient.**
 
 ## Bottom line
@@ -44,12 +44,12 @@ Grade key: **A** ≥ 9 · **A−** 8–9 · **B+** 7.5–8 · **B** 6.5–7.5 ·
 
 ### B · Architecture & organization
 
-| #   | Scrutiny point                | Score | Grade | Criticism / evidence                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| --- | ----------------------------- | ----- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 6   | Living-docs SSOT              | 8.5   | A−    | Strong single-source discipline — but this audit found a real **blind spot**: `docs/reports/*` advertised "live values" yet sat outside `sync-surfaces` and `verify:facts`, so receipts froze two canon-generations back (`1771·94.77`). Fixed: canon refreshed, drifted copies rewritten, the two current-truth reports added to `SURFACES`.                                                                                               |
-| 7   | Module contracts & boundaries | 8.5   | A−    | Binding `MODULE-CONTRACTS-2026-06-26.md` + 11 ADRs + dependency facades. The "ADRs frozen at 0010" gap is closed: [ADR-0011](../adr/0011-post-018-hardening-conventions-2026-07-02.md) names the four post-0.18.0 hardening conventions (GPU ownership, numeric domain guards, SSOT surface registration, grid-first radius actions).                                                                                                       |
-| 8   | PM surface coverage           | 8.5   | A−    | **All six PM artifacts now exist** (2026-07-02): [PRD](../PRD-2026-07-02.md), [Risk Register](../RISK-REGISTER-2026-07-02.md), [Test Strategy](../TEST-STRATEGY-2026-07-02.md), [Perf Targets](../PERFORMANCE-TARGETS-2026-07-02.md), [Security Architecture](../SECURITY-ARCHITECTURE-2026-07-02.md), [Dependency Manifest](../DEPENDENCY-MANIFEST-2026-07-02.md) — plus ERD/KANBAN/ROADMAP/CHANGELOG/500-point, all linked from BOOK §10. |
-| 9   | CI/CD & QA                    | 8.0   | A−    | Full `bun run check` mirrored in CI, cross-platform matrix, `bun audit`, **SBOM published per release with SLSA provenance** (release.yml:113 — the earlier "not published" criticism was stale and is retracted). Remaining gaps: no e2e/Playwright, perf-regression is informational-only.                                                                                                                                                |
+| #   | Scrutiny point                | Score | Grade | Criticism / evidence                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| --- | ----------------------------- | ----- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 6   | Living-docs SSOT              | 8.5   | A−    | Strong single-source discipline — but this audit found a real **blind spot**: `docs/reports/*` advertised "live values" yet sat outside `sync-surfaces` and `verify:facts`, so receipts froze two canon-generations back (`1771·94.77`). Fixed: canon refreshed, drifted copies rewritten, the two current-truth reports added to `SURFACES`.                                                                                                            |
+| 7   | Module contracts & boundaries | 8.5   | A−    | Binding `MODULE-CONTRACTS-2026-06-26.md` + 11 ADRs + dependency facades. The "ADRs frozen at 0010" gap is closed: [ADR-0011](../adr/0011-post-018-hardening-conventions-2026-07-02.md) names the four post-0.18.0 hardening conventions (GPU ownership, numeric domain guards, SSOT surface registration, grid-first radius actions).                                                                                                                    |
+| 8   | PM surface coverage           | 8.5   | A−    | **All six PM artifacts now exist** (2026-07-02): [PRD](../PRD-2026-07-02.md), [Risk Register](../RISK-REGISTER-2026-07-02.md), [Test Strategy](../TEST-STRATEGY-2026-07-02.md), [Perf roadmap](../PERFORMANCE-OPTIMIZATION-ROADMAP-2026-07-03.md), [Security Architecture](../SECURITY-ARCHITECTURE-2026-07-02.md), [Dependency Manifest](../DEPENDENCY-MANIFEST-2026-07-02.md) — plus ERD/KANBAN/ROADMAP/CHANGELOG/500-point, all linked from BOOK §10. |
+| 9   | CI/CD & QA                    | 8.0   | A−    | Full `bun run check` mirrored in CI, cross-platform matrix, `bun audit`, **SBOM published per release with SLSA provenance** (release.yml:113 — the earlier "not published" criticism was stale and is retracted). Remaining gaps: no e2e/Playwright, perf-regression is informational-only.                                                                                                                                                             |
 
 ### C · Tsotchke integration depth
 
@@ -108,7 +108,7 @@ Drawn from the doc-organization + PM audit. None are release-blockers; all are h
 
 1. **PM artifacts — DONE, 6 of 6 (2026-07-02):** [`PRD`](../PRD-2026-07-02.md),
    [`RISK-REGISTER`](../RISK-REGISTER-2026-07-02.md), [`TEST-STRATEGY`](../TEST-STRATEGY-2026-07-02.md),
-   [`PERFORMANCE-TARGETS`](../PERFORMANCE-TARGETS-2026-07-02.md),
+   [`PERFORMANCE-OPTIMIZATION-ROADMAP`](../PERFORMANCE-OPTIMIZATION-ROADMAP-2026-07-03.md),
    [`SECURITY-ARCHITECTURE`](../SECURITY-ARCHITECTURE-2026-07-02.md), and
    [`DEPENDENCY-MANIFEST`](../DEPENDENCY-MANIFEST-2026-07-02.md) all exist, linked from BOOK §10.
 2. **ADR-0011 — DONE (2026-07-02):** [`0011-post-018-hardening-conventions`](../adr/0011-post-018-hardening-conventions-2026-07-02.md)

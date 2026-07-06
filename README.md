@@ -37,7 +37,7 @@ Every magic number survived the port.
 
 - **GitHub Pages (DOCS / SPECS / LABS):** https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/ (index.html + docs.html + specs.html + lab/index.html ; built via scripts/build-pages.ts with ?v= cache-bust and subpath rewrite)
 - **Local dev server:** http://localhost:3000/ (bun dev; serves /docs → docs page, /spec → specs, /lab → lab; full interactive + /api/audit)
-- All MD links (./docs/...) resolve correctly in source, app, and Pages. No broken domains. Verified in build-pages.ts, server.ts, README, docs/\*.md, HANDOFF-2026-06-26.md.
+- All MD links (./docs/...) resolve correctly in source, app, and Pages. No broken domains. Verified in build-pages.ts, server.ts, README, docs/\*.md.
 
 > — **New here? Read [THE BOOK](./docs/BOOK-2026-06-26.md)** — the master index over every doc, an
 > auto-generated [file map](./docs/FILE-MAP.md) of all ~200 source modules, and the build/run, data-flow,
@@ -607,8 +607,8 @@ Full detail in docs/.
   **the current, canonical status report**: a 15-agent adversarial code audit measuring the REAL wiring
   depth of every NHSI claim by `file:line` (~30 deep-wired faculties · 5 individuated archons + 20
   light-echo · ~16 of 20 Tsotchke wired · Butlin 8/14 met + 6/14 partial · the measured coupling work).
-- **[docs/reports/](./docs/reports/)** — living technical reports (rewritten in place, not an archive) with a
-  [current truth baseline](./docs/reports/2026-06-26-CURRENT-TRUTH-BASELINE.md), the
+- **[docs/reports/](./docs/reports/)** — living technical reports (rewritten in place, not an archive) with
+  [VERIFICATION-ANALYTICAL-DATA.md](./docs/VERIFICATION-ANALYTICAL-DATA.md) as the canonical facts sheet, the
   [A-Life comparative audit](./docs/reports/2026-06-26-ALIFE-COMPARATIVE-AUDIT.md), and earlier
   state-of-the-art frontier assessments:
   [State of the Art — Combined (whole repository + Super Creature)](./docs/reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md)

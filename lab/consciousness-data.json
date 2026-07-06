@@ -3,12 +3,7 @@
   "generatedAt": "2026-07-03T00:00:00.000Z",
   "seed": 539363075,
   "claim": "indicatorOnly",
-  "sourceDocs": [
-    "docs/CONSCIOUSNESS-LAB-MASTER-2026-07-03.md",
-    "docs/CONSCIOUSNESS-LAB-DEEP-RESEARCH-2026-07-03.md",
-    "docs/CONSCIOUSNESS-LAB-FRONTIER-OUTLIER-STACK-2026-07-03.md",
-    "docs/CONSCIOUSNESS-LAB-12-REPORT-CONSOLIDATION-2026-07-03.md"
-  ],
+  "sourceDocs": ["docs/CONSCIOUSNESS-LAB-MASTER-2026-07-03.md"],
   "frameworks": [
     {
       "id": "butlin14",

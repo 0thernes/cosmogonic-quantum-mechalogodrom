@@ -4,11 +4,8 @@
 **Scope:** Butlin 14 + Thaler 9 + eight additional consciousness frameworks for Cosmogonic creature/entity wiring.
 **Status:** research architecture and falsifiable instrumentation, not a sentience claim.
 
-**Companion sources:**
-Deep research dossier: `docs/CONSCIOUSNESS-LAB-DEEP-RESEARCH-2026-07-03.md`
-Frontier outlier stack: `docs/CONSCIOUSNESS-LAB-FRONTIER-OUTLIER-STACK-2026-07-03.md`
-12-report consolidation: `docs/CONSCIOUSNESS-LAB-12-REPORT-CONSOLIDATION-2026-07-03.md`
-Glossary/claim contract: `docs/CONSCIOUSNESS-GLOSSARY-INDEX-2026-07-03.md`
+This document is the canonical consciousness-lab doctrine (framework stack, Butlin-14 path, claim
+contract, falsifiers, and lab routes). Prior companion dossiers were merged here on 2026-07-06.
 
 This document is the first hard scaffold for a Cosmogonic consciousness lab: a multi-theory, multi-metric, seed-replayable testbed for every creature, entity, shoggoth, puppeteer, Mechalogodrom, Super Creature, APEX Abomination, pantheon, connectome titan, NHI matrix, three-brain apex mecha, glyph, archon godform, and plant-form.
 
@@ -20,7 +17,40 @@ The binding rule is simple: no decorative consciousness. A framework counts only
 - **Claimable today:** computational indicators, structural correlates, causal proxy mechanisms, and reproducible changes in behavior under intervention.
 - **Anchor local receipt:** `bun test tests\butlin-indicators.test.ts tests\thaler-sentience.test.ts` passed on 2026-07-03 with 28 tests, 0 failures, 121 expects.
 - **Kernel/lab local receipt:** `bun test tests\consciousness-kernel.test.ts tests\consciousness-lab.test.ts tests\butlin-indicators.test.ts tests\thaler-sentience.test.ts` passed on 2026-07-03 with 45 tests, 0 failures, 5139 expects.
-- **Current repo honesty baseline:** the older canonical dashboard language remains `8/14 met + 6/14 partial` for Butlin depth, while the newer tests verify all 14 indicator names have explicit receipt surfaces. Treat "structurally addressed and test-covered" as a different claim from "fully met."
+- **Current repo honesty baseline:** `8/14 met + 6/14 partial` for Butlin depth (2026-06-21 adversarial
+  audit, `file:line` in `super-mind.ts`). Tests verify all 14 indicator names have receipt surfaces.
+  "Structurally addressed and test-covered" ≠ "fully met." Phenomenal sentience is **not** claimed.
+
+## Butlin 14 Indicator Path (F0 anchor)
+
+**Framework:** Butlin et al. (2023) arXiv:2308.08708 · **Score:** **8/14 met + 6/14 partial** ·
+**Target:** all 14 structurally addressed with causal, ablation-sensitive wiring — not sentience.
+
+| Indicator | Theory                | Status      | Primary receipt                                  |
+| --------- | --------------------- | ----------- | ------------------------------------------------ |
+| GWT-1/3/4 | GNW                   | Met         | `attention-controller.ts`, `super-mind.ts`       |
+| GWT-2     | GNW                   | Partial     | capacity-limited workspace competition thin      |
+| PP-1      | Predictive Processing | Met         | `active-inference.ts`                            |
+| HOT-1/2   | HOT                   | Met         | `metacognition.ts`, `super-mind.ts`              |
+| HOT-3/4   | HOT                   | Partial     | empowerment vote; qualia read-out only           |
+| AE-1      | Agency                | Met         | GOAP closed loop in `super-mind.ts`              |
+| AE-2      | Agency                | Partial     | body morphology; internal body-model thin        |
+| IIT       | IIT                   | Met/Partial | classical+quantum Φ; min-cut on quantum register |
+| AST-1     | AST                   | Met         | self-model + attention schema                    |
+| RPT-1/2   | Recurrent Processing  | Partial     | architected recurrence; scene model thin         |
+
+Full audit: [`reports/2026-06-21-NHSI-HONESTY-AUDIT.md`](./reports/2026-06-21-NHSI-HONESTY-AUDIT.md).
+Thaler nine-marker path: `src/sim/thaler-sentience.ts` + `tests/thaler-sentience.test.ts`.
+
+## Claim Status Words (binding)
+
+| Term                                 | Allowed meaning                                                             |
+| ------------------------------------ | --------------------------------------------------------------------------- |
+| Computational indicator              | Measurable mechanism associated with a theory — not experience.             |
+| Met / Partial                        | Present + causal + tested vs thin/proxy/incomplete.                         |
+| Phenomenal consciousness / Sentience | **Not claimed.**                                                            |
+| Proof                                | Deterministic code receipt + test + falsifier — not proof of experience.    |
+| Singularity moment                   | Replayable multi-framework convergence — evidence, not consciousness proof. |
 
 ## The Ten Framework Stack
 
@@ -128,17 +158,13 @@ Visual set:
 | Adversarial perturbation  | Test resilience.                                           | Entity recovers or degrades gracefully under noise/damage.                       |
 | Negative claim check      | Preserve honesty.                                          | No UI/doc string claims sentience or phenomenal consciousness.                   |
 
-## GitHub Markdown And Page Plan
+## Lab Routes And Data Feeds
 
-1. **Markdown source:** this file becomes the canonical lab doctrine.
-2. **Glossary source:** `docs/CONSCIOUSNESS-GLOSSARY-INDEX-2026-07-03.md` becomes the term contract.
-3. **Deep research source:** `docs/CONSCIOUSNESS-LAB-DEEP-RESEARCH-2026-07-03.md` becomes the defensibility, source, and falsifier dossier.
-4. **Frontier source:** `docs/CONSCIOUSNESS-LAB-FRONTIER-OUTLIER-STACK-2026-07-03.md` becomes the harder outlier-theory and "unknown unknowns" test dossier.
-5. **Report-corpus source:** `docs/CONSCIOUSNESS-LAB-12-REPORT-CONSOLIDATION-2026-07-03.md` becomes the ingestion ledger for the 12 external deep-research reports.
-6. **Page route:** `lab/consciousness.html` is the first static GitHub Pages screen with metric braid, framework heatmap, falsifier ledger, and honesty banner.
-7. **Second page route:** `lab/sentience.html` is the headless mass-analytics screen: seed sweeps, convergence/reward null separation, ablation load, entity traces, and export buttons with no Dome renderer.
-8. **Data feeds:** `lab/consciousness-data.json` exposes deterministic entity snapshots, framework scores, ablation results, event windows, seed, and source docs; `lab/sentience-data.json` exposes deterministic multi-seed sweep summaries, framework aggregates, sampled entity telemetry, and entity-framework edges.
-9. **Proof routes:** `/api/consciousness-lab` and `/api/sentience-lab` serve the same feeds locally; Pages serves the tracked JSON without a live server.
+- **Canonical markdown:** this file (doctrine, Butlin path, claim contract, source ledger).
+- **Pages:** `lab/consciousness.html` (metric braid, heatmap, falsifier ledger) · `lab/sentience.html`
+  (headless seed sweeps, null controls, CSV/JSON export).
+- **JSON feeds:** `lab/consciousness-data.json` · `lab/sentience-data.json` (deterministic snapshots).
+- **Local APIs:** `/api/consciousness-lab` · `/api/sentience-lab`.
 
 ## Source Ledger
 

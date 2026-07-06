@@ -527,12 +527,7 @@ export function generateConsciousnessDashboardData(seed = 0x20260703): Conscious
     generatedAt: '2026-07-03T00:00:00.000Z',
     seed,
     claim: 'indicatorOnly',
-    sourceDocs: Object.freeze([
-      'docs/CONSCIOUSNESS-LAB-MASTER-2026-07-03.md',
-      'docs/CONSCIOUSNESS-LAB-DEEP-RESEARCH-2026-07-03.md',
-      'docs/CONSCIOUSNESS-LAB-FRONTIER-OUTLIER-STACK-2026-07-03.md',
-      'docs/CONSCIOUSNESS-LAB-12-REPORT-CONSOLIDATION-2026-07-03.md',
-    ]),
+    sourceDocs: Object.freeze(['docs/CONSCIOUSNESS-LAB-MASTER-2026-07-03.md']),
     frameworks: FRAMEWORK_IDS.map((id) => {
       const meta = FRAMEWORKS[id];
       return {

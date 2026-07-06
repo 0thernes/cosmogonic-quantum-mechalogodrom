@@ -118,6 +118,6 @@ Conscious-agent/Interface ✦ · Holonomic brain ✦
 
 ---
 
-_Companion to `docs/EMERGENCE-BLOCKERS-2026-06-26.md`, `docs/SCALING-ROADMAP-2026-06-26.md`,
+_Companion to `docs/EMERGENCE-BLOCKERS-2026-06-26.md`, `docs/PERFORMANCE-OPTIMIZATION-ROADMAP-2026-07-03.md`,
 `docs/reports/2026-06-20-RESEARCH-BEDROCK.md`, and `docs/adr/0010-...`. Existence-proof + instrument;
 no consciousness/ASI claim. Grow what thou wilt — and measure ruthlessly._

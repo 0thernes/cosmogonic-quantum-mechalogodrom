@@ -58,3 +58,21 @@ sandbox security). New load-bearing features add their falsifiable test here.
 Every substantive change lands with a **falsifiable** test that would fail if the change regressed —
 prove disposal with a `spyOn(THREE.Material.prototype,'dispose')` + `count→0`, prove a fix with the exact
 input that used to break. Comment-theater ("Ralph 10×") is not a test. `bun run check` must be green.
+
+## 7 · Run commands and layout
+
+```bash
+bun test                  # full suite
+bun test tests/rng.test.ts  # single file
+bun run verify:receipts   # measure + enforce canonical count/coverage
+bun run check             # full gate (format · tsc · lint · tests · sync · facts · build)
+```
+
+| Area        | Pattern                                | Examples                                                                   |
+| ----------- | -------------------------------------- | -------------------------------------------------------------------------- |
+| Pure math   | `tests/*.test.ts` matching `src/math/` | `rng`, `scalar`, `quantum`, `irrep`                                        |
+| Simulation  | `tests/*` matching `src/sim/`          | `super-mind`, `phyla`, `petri-*`, `tsotchke-*`                             |
+| UI static   | lifecycle/ergonomics without DOM       | `ui-lifecycle-static`, `ui-ergonomics`, `help-knowledge`                   |
+| Doc law     | receipt/link/truth gates               | `doc-links`, `docs-receipts-law`, `docs-truth-law`, `docs-consistency-law` |
+| Determinism | golden + same-seed                     | `determinism`, `feature-determinism`, `drivesuper-determinism`             |
+| Benchmarks  | `bench/*.bench.ts`                     | `bun run bench` (not part of `bun test` gate count)                        |

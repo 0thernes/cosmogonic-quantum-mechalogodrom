@@ -36,7 +36,7 @@ substantive change; they are personas of one discipline and they outrank vibes:
   source, never by piling on another copy. **Point-in-time exceptions** (keep their historical numbers
   by policy — exactly the `verify-canonical-facts.ts` EXCLUDE list): `CHANGELOG.md`, `docs/AUDIT-LOG.md`
   entries, `docs/DAILY_RUNS/*` session logs, `docs/ln/*`, and `docs/MEGA-MASTER-*`. Everything else —
-  including the dated-name root files (`HANDOFF-`, `AGENTS-`, `research_receipts-2026-06-26`) and all of
+  including the dated-name root file `AGENTS-2026-06-26.md` and all of
   `docs/reports/` — is LIVING: the date in a filename is a creation stamp, not an archive marker.
 - **Seamless local↔GitHub:** `core.hooksPath=.githooks` (wired by the `prepare` script on install).
   pre-commit auto-syncs surfaces + normalizes encoding; post-commit auto-pushes **HEAD to
