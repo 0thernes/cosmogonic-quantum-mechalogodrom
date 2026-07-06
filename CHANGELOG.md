@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.6] — 2026-07-06
+
+Clean release-tag repair.
+
+- Superseded the polluted `v0.21.5` release tag, which briefly pointed at an unbranched concurrent
+  commit with a stale lower test floor, by cutting a clean forward patch release from the branch
+  commit that preserves the `2,360` test floor and portable `84.64% / 82.21%` release receipt.
+- Re-synced README/docs/specs/bible/lab version markers to the clean `v0.21.6` public release surface.
+
 ## [0.21.5] — 2026-07-06
 
 Portable release-receipt floor.

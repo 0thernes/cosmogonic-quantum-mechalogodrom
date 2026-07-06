@@ -11,11 +11,12 @@ changed and why.
 
 ---
 
-## 2026-07-06 (pass 16) — 113-system A-Life truth surfaces + v0.21.5 repair
+## 2026-07-06 (pass 17) — clean release-tag repair + v0.21.6
 
-On top of the v0.21.0 V123 perf sweep: doc/deploy truth refresh only. A later remote release commit
-temporarily regressed public metadata to v0.21.1 and an older receipt floor; v0.21.5 restored the living
-surfaces to the current portable release receipts.
+On top of the v0.21.0 V123 perf sweep: doc/deploy truth refresh only. A concurrent `v0.21.5` tag drift
+briefly pointed the public release tag at an unbranched commit with a stale lower test floor.
+v0.21.6 supersedes it without rewriting the published tag and keeps the living surfaces on the current
+portable release receipts.
 
 ### A-Life
 
@@ -24,7 +25,7 @@ surfaces to the current portable release receipts.
 
 ### Surfaces
 
-- Consciousness + Sentience Lab URLs; issue template contact links; CHANGELOG through 0.21.5.
+- Consciousness + Sentience Lab URLs; issue template contact links; CHANGELOG through 0.21.6.
 
 ### Gate
 

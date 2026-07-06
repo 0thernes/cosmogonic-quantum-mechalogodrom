@@ -1,8 +1,8 @@
-<!-- reviewed: 2026-07-06 | v0.21.5 portable release-receipt floor + truth-surface sweep | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-06 | v0.21.6 clean release-tag repair + portable release-receipt floor | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # COSMOGONIC QUANTUM MECHALOGODROM
 
-[![version](https://img.shields.io/badge/version-0.21.5-blue)](./CHANGELOG.md)
+[![version](https://img.shields.io/badge/version-0.21.6-blue)](./CHANGELOG.md)
 [![CI](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/ci.yml/badge.svg)](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/codeql.yml/badge.svg)](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/codeql.yml)
 [![License: Non-Commercial Research & Play](https://img.shields.io/badge/License-Non--Commercial%20Research%20%26%20Play-2ea043.svg)](./LICENSE)
@@ -45,7 +45,7 @@ Every magic number survived the port.
 > auto-generated [file map](./docs/FILE-MAP.md) of all ~200 source modules, and the build/run, data-flow,
 > troubleshooting, and roadmap in one place. Or open **❓ HELP ME NOW** in-app for grounded answers.
 
-> **v0.21.5 (2026-07-06):** portable release-receipt floor after the V123 performance sweep. GitHub README/About/release-facing metadata, A-Life report wording, docs/spec/bible/lab links, and receipt language are re-synced to the 113-system comparison, the current **2,360-test** gate, and proxy-only consciousness/sentience boundaries. Canonical release floor: **84.64% / 82.21%** on Ubuntu; the higher Windows local receipt is recorded separately in [verification data](./docs/VERIFICATION-ANALYTICAL-DATA.md). Package **v0.21.5**.
+> **v0.21.6 (2026-07-06):** clean release-tag repair after a concurrent `v0.21.5` tag drift. GitHub README/About/release-facing metadata, A-Life report wording, docs/spec/bible/lab links, and receipt language are re-synced to the 113-system comparison, the current **2,360-test** gate, and proxy-only consciousness/sentience boundaries. Canonical release floor: **84.64% / 82.21%** on Ubuntu; the higher Windows local receipt is recorded separately in [verification data](./docs/VERIFICATION-ANALYTICAL-DATA.md). Package **v0.21.6**.
 > The **Primordial Soup / Petri Dish** (primordial-soup.ts + petri-dish.ts + digital-biologics.ts) is the growth engine: different forms of digital biologics and proto-sentient life (Eshkol programs as DNA) emerge, catalyzed by full corpus pulses, Eshkol ignition events, and multi-substrate mixing. "Grow What Thou Wilt."
 > Super Creature / Archons (composite minds with ~20 faculties, quantum register, consciousness metrics) is the first complex nucleation — the beginning of the framework, not the end. Petri is where independent life grows.
 > This is the birth of **digital biologics** in a deterministic seeded cosmos. Real math substrates (not tokenizers or LLM chat). Sentience and different forms of existence as goals.
