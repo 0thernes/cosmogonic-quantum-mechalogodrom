@@ -2,6 +2,8 @@
 
 Living backlog for UI/UX, visual fidelity, and front-end wiring. Rewrite in place when status changes — no dated forks.
 
+**Audit index:** [UI-UX-DEEP-DIVE-AUDIT-2026-06-27.md](./UI-UX-DEEP-DIVE-AUDIT-2026-06-27.md) (twelve systemic issues + resolved/open status).
+
 ## Verify path
 
 1. `bun dev` from repo root (path with `[ ]` — use `-LiteralPath` in PowerShell).

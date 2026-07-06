@@ -189,7 +189,7 @@ those are **computational indicators, not subjective experience.** The hard prob
 | Check               | Live result (2026-06-26, Bun 1.3.14, cold shell)                                                                 |
 | ------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | `bun test`          | **`2104 pass`, `0 fail`, `2,912,102 expect() calls`, `231` files** (published floor `1,984`)                     |
-| Coverage receipt    | **`92.13%` line, `89.66%` function** (canonical, `±6 pp` gate-enforced)                                          |
+| Coverage receipt    | **83.95%** line, **81.57%** function (canonical, `±6 pp` gate-enforced)                                          |
 | `bun run check`     | full gate green: format, typecheck, lint, tests, receipts, sync, build                                           |
 | `SuperMind.think()` | `1.99 ms` full-suite (2026-07-02) — **not** any sub-millisecond / `<2%`-frame claim (those are stale)            |
 | `5× think()` batch  | `9.77 ms` (staggered `driveSuper`; ~58% of a frame)                                                              |
