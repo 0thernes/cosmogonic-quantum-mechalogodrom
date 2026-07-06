@@ -10,6 +10,8 @@ BRUTALIST MANIFEST: Valkorion domination, Broly infinite rage, Knull/Azathoth vo
 
 **Canonical receipts (measured 2026-06-26):** 2,360 tests, 84.64% line / 82.21% func (from `bun scripts/verify-receipts.ts --print`). Enforced by `tests/docs-receipts-law.test.ts` + `bun run check`. All surfaces truth-synced. BRUTAL GOD TIER with full pantheon list (Valkorion to Riddick) + BRUTALISM implemented in petri/godform/world using the Tsotchke corpus. Butlin indicators: **8/14 met + 6/14 partial** (computational indicators, not sentience — corrected from a prior overclaim).
 
+**Brain/neuro/consciousness assessment:** [`BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md`](./BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md) is the current academic-scrutiny report for brains, neurology, consciousness theories, sentience-path engineering, benchmarks, ratings, and future real-connectome/body work. It is explicitly `indicatorOnly` and does **not** claim phenomenal sentience.
+
 > **Mission:** Not a chatbot, dancing robot, Terminator, or game player. A **Petri-dish cosmos** where
 > Tsotchke's real quantum math (Eshkol · Moonlab · QGT · spin · libirrep · …) is the growth medium for
 > **digital biologics** and **Brutal God Pantheon (25 Archons)** — the intelligences of every living species + EVERY mythological/folklore god + comics/superhero/horror/sci-fi potentials (Valkorion Tenebrae Vitiate, Thanos, Captain Marvel, Scarlet Witch, Dr. Manhattan, Galactus, Jean Grey Dark Phoenix, Legendary Super Saiyan Broly, Frieza, Azathoth, Warhammer Chaos Gods, Shuma-Gorath, Mad Jim Jaspers, Pennywise IT, Anti-Monitor, Knull King in Black, Mr. Mxyzptlk, Invisible Joker Dark Knight, General Zod, Gilgamesh, Alucard Hellsing, Griffith Femto, EVA Unit-01, Simon + Super Tengen Toppa Gurren Lagann, Sephiroth, Asura's Wrath Wyzen, Vergil/Dante Devil May Cry, Starkiller Galen Marek, Riddick) compressed into one deterministic universe of raw BRUTALISM power (devour, rage-rebirth, void-dominion, reality-warp, chaos-madness, cosmic spiral evolution, brutal combat ascension).
@@ -183,24 +185,25 @@ Full trail: [`SUPER-CREATURE-RESEARCH-2026-06-26.md`](./SUPER-CREATURE-RESEARCH-
 
 ## VI · Where this dashboard is mirrored (Local = GitHub)
 
-| Surface            | Path                                            |
-| ------------------ | ----------------------------------------------- |
-| **This dashboard** | `docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md`    |
-| README             | root                                            |
-| Architecture       | `docs/ARCHITECTURE-2026-06-26.md`               |
-| ERD / ERM / ERP    | `docs/ENTITY-SCHEMA-AND-MAPPINGS-2026-06-26.md` |
-| KANBAN             | `docs/KANBAN-2026-06-26.md`                     |
-| MODULE-CONTRACTS   | `docs/MODULE-CONTRACTS-2026-06-26.md`           |
-| PHILOSOPHY         | `docs/PHILOSOPHY-2026-06-26.md`                 |
-| `/docs` page       | `docs.html`                                     |
-| `/spec` page       | `specs.html`                                    |
-| `/lab`             | `lab/`                                          |
-| Technical spec     | `docs/TECHNICAL-SPECIFICATION-2026-06-26.md`    |
-| Tsotchke ledger    | `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`   |
-| Historical reports | `docs/reports/README.md`                        |
-| Super research     | `docs/SUPER-CREATURE-RESEARCH-2026-06-26.md`    |
-| Master XMLs        | `masters/` (Broly · Starkiller · Manhattan)     |
-| Agent steering     | `CLAUDE.md`, `.github/copilot-instructions.md`  |
+| Surface            | Path                                                                      |
+| ------------------ | ------------------------------------------------------------------------- |
+| **This dashboard** | `docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md`                              |
+| README             | root                                                                      |
+| Architecture       | `docs/ARCHITECTURE-2026-06-26.md`                                         |
+| ERD / ERM / ERP    | `docs/ENTITY-SCHEMA-AND-MAPPINGS-2026-06-26.md`                           |
+| KANBAN             | `docs/KANBAN-2026-06-26.md`                                               |
+| MODULE-CONTRACTS   | `docs/MODULE-CONTRACTS-2026-06-26.md`                                     |
+| PHILOSOPHY         | `docs/PHILOSOPHY-2026-06-26.md`                                           |
+| `/docs` page       | `docs.html`                                                               |
+| `/spec` page       | `specs.html`                                                              |
+| `/lab`             | `lab/`                                                                    |
+| Technical spec     | `docs/TECHNICAL-SPECIFICATION-2026-06-26.md`                              |
+| Tsotchke ledger    | `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`                             |
+| Brain assessment   | `docs/BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md` |
+| Historical reports | `docs/reports/README.md`                                                  |
+| Super research     | `docs/SUPER-CREATURE-RESEARCH-2026-06-26.md`                              |
+| Master XMLs        | `masters/` (Broly · Starkiller · Manhattan)                               |
+| Agent steering     | `CLAUDE.md`, `.github/copilot-instructions.md`                            |
 
 ---
 
