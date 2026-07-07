@@ -701,9 +701,9 @@ flowchart TD
 
 | Pass | Scope | Deliverable |
 |------|-------|-------------|
-| **Pass 1 (this doc)** | Synthesize 6 sources; reconcile facts; unified brain/theory/Tsotchke/ratings/roadmap | `MEGA-MASTER-...-PASS-1-2026-07-06.md` |
-| **Pass 2** | Every folder, every module: read/write graph, test coverage map, hot-path authority | Module-level brain wiring atlas |
-| **Pass 3** | Machine-readable evidence matrix; white-paper draft; figure regeneration commands | `brain-evidence-matrix.json` + preprint skeleton |
+| **Pass 1** | Synthesize 6 sources; unified verdict | [`MEGA-MASTER-...-PASS-1-2026-07-06.md`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-1-2026-07-06.md) |
+| **Pass 2** | Module atlas, world wiring, test matrix, math inventory | [`MEGA-MASTER-...-PASS-2-2026-07-06.md`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-2-2026-07-06.md) |
+| **Pass 3** | Full `brain-evidence-matrix.json`, preprint skeleton, promotion matrix | Planned |
 
 ---
 

@@ -10,7 +10,7 @@ BRUTALIST MANIFEST: Valkorion domination, Broly infinite rage, Knull/Azathoth vo
 
 **Canonical receipts (measured 2026-06-26):** 2,360 tests, 84.64% line / 82.21% func (from `bun scripts/verify-receipts.ts --print`). Enforced by `tests/docs-receipts-law.test.ts` + `bun run check`. All surfaces truth-synced. BRUTAL GOD TIER with full pantheon list (Valkorion to Riddick) + BRUTALISM implemented in petri/godform/world using the Tsotchke corpus. Butlin indicators: **8/14 met + 6/14 partial** (computational indicators, not sentience — corrected from a prior overclaim).
 
-**Brain/neuro/consciousness assessment:** [`MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-1-2026-07-06.md`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-1-2026-07-06.md) is the **Pass 1 of 3** mega-synthesis combining five prior agent reports + this dashboard into one unified academic-scrutiny assessment (brains, neurology, consciousness theories, Tsotchke wiring, benchmarks, ratings, multi-perspective reasoning, future connectome/body work). Detail layer: [`BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md`](./BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md). Both are explicitly `indicatorOnly` and do **not** claim phenomenal sentience.
+**Brain/neuro/consciousness assessment:** [`MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-2-2026-07-06.md`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-2-2026-07-06.md) is **Pass 2 of 3** — module atlas, `world.ts` wiring receipts, authority tiers, full `src/sim/` + `src/math/` inventories, 72-file test matrix, wiring gaps, and [`brain-evidence-matrix-pass2.json`](./reports/assets/brain-evidence-matrix-pass2.json). Pass 1 synthesis: [`MEGA-MASTER-...-PASS-1-2026-07-06.md`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-1-2026-07-06.md). Detail layer: [`BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md`](./BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md). All explicitly `indicatorOnly` — no phenomenal sentience claims.
 
 **Local archive drafts:** `MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS1-2026-07-06.md`, `MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS2-2026-07-06.md`, `MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS3-2026-07-06.md`, and `MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md` are preserved as local research drafts, not public release targets. Their Pass-1 source reconciliation, Pass-2 evidence hardening, Pass-3 world-neurology gap closure, and Final Hurrah capstone material are folded into the current tracked audit/master pair below.
 
@@ -206,8 +206,9 @@ Full trail: [`SUPER-CREATURE-RESEARCH-2026-06-26.md`](./SUPER-CREATURE-RESEARCH-
 | `/lab`             | `lab/`                                                                    |
 | Technical spec     | `docs/TECHNICAL-SPECIFICATION-2026-06-26.md`                              |
 | Tsotchke ledger    | `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`                             |
-| Mega assessment (Pass 1/3) | `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-1-2026-07-06.md` |
-| Brain assessment detail    | `docs/BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md` |
+| Mega assessment Pass 2/3 | `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-2-2026-07-06.md` |
+| Mega assessment Pass 1/3 | `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-1-2026-07-06.md` |
+| Brain evidence matrix (preview) | `docs/reports/assets/brain-evidence-matrix-pass2.json` |
 | Historical reports | `docs/reports/README.md`                                                  |
 | Super research     | `docs/SUPER-CREATURE-RESEARCH-2026-06-26.md`                              |
 | Master XMLs        | `masters/` (Broly · Starkiller · Manhattan)                               |
