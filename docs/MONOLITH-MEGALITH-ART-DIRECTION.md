@@ -10,12 +10,15 @@
 
 There are **three** distinct megalith structures, all cut from the same images, all strict monochrome:
 
-1. **The TOWER** — the tall skyscraper that dominates the skyline, always present.
-   [`src/sim/god-colossus.ts`](../src/sim/god-colossus.ts) (`GodColossus`). A **chaotic brutalist
-   ACCRETION** of cubes + glossy spheres placed by a density field (dense core, thinning up), with a
-   power‑law size spread (a few colossal cantilevered blocks), the aperiodic quasicrystal point set
-   mapped in as glossy metal cubes, and a white genesis core — a jagged irregular mass (NOT a tiered
-   cone, NOT a star crown, NOT an ornament ring). Full black→silver→white tonal range.
+1. **The TOWER** — the colossal fractal god that dominates the skyline, always present.
+   [`src/sim/god-colossus.ts`](../src/sim/god-colossus.ts) (`GodColossus`). NOT a block-tower: one
+   bounding box + one `ShaderMaterial` **RAYMARCHING a morphing Mandelbulb fractal deity**, a
+   distance-estimated spherical power-fold whose exponent BREATHES (roughly 5 to 11 with world-chaos)
+   inside a non-linear **domain warp** (helical twist + bend + curved ripple), so every surface is
+   curved: NO flat face, NO straight edge, NO cube anywhere. The aperiodic quasicrystal set survives
+   only as three orbit-trap seeds, not blocks. Colour is an **orbit-trap cosine palette of a thousand
+   ever-changing hues** (twin cosine layers + iridescent shimmer, phase-drifting with
+   time/chaos/entropy): NOT monochrome.
 2. **The TEMPLE** — the level‑100 ascension end‑state that rises only when a super creature ascends.
    [`src/sim/monolith-temple.ts`](../src/sim/monolith-temple.ts) (`MonolithTemple` /
    `MonolithMegalith`). A Menger‑sponge core caged in a voxel lattice, with a black void throat that

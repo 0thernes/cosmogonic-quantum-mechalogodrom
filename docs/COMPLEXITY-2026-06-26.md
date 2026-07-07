@@ -10,12 +10,12 @@ unless marked otherwise.
 
 | Symbol | Meaning                                                                                                                               |
 | ------ | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `n`    | Live entities — capped at `quality.maxEntities` (tier ladder 650 / 2,000 / 5,000 / 10,000)                                            |
+| `n`    | Live entities — capped at `quality.maxEntities` (tier ladder 1,000 / 2,000 / 5,000 / 10,000 / 25,000 / 50,000)                        |
 | `k`    | Items returned by one `SpatialHash.query` (bounded by local density)                                                                  |
 | `C`    | Cells scanned by a query = `(2⌈r/s⌉ + 1)²` for radius `r`, cell size `s` = `GRID_CELL` 16 (`ULTRA_GRID_CELL` 10 above 5,000 entities) |
 | `c`    | Occupied grid cells (≤ `n`)                                                                                                           |
-| `q`    | Quantum particles — `quality.quantumCount` (3,500 phone … 8,000 ultra)                                                                |
-| `L`    | Connectome link cap — `quality.maxLinks` (2,200 phone … 6,000 ultra)                                                                  |
+| `q`    | Quantum particles — `quality.quantumCount` (3,500 phone … 10,000 mega)                                                                |
+| `L`    | Connectome link cap — `quality.maxLinks` (12,000 phone … 600,000 mega)                                                                |
 | `m`    | Monoliths (16, fixed)                                                                                                                 |
 | `s`    | Shoggoths (100, 16 mobile)                                                                                                            |
 | `p`    | Pipelines (21) × packets (3–6 each), fixed                                                                                            |

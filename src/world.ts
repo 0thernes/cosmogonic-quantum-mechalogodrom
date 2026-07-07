@@ -2434,10 +2434,10 @@ export class World {
   }
 
   /**
-   * V48: restore the prime's EVOLUTION from localStorage + apply the real wall-clock days elapsed since
-   * the last save — the "daemon-cron / updates every 24h", so the monster grows even while you are away.
-   * Browser-only + fully guarded; this META-organ lives OUTSIDE the deterministic sim (it touches only
-   * the super creature's power/look, never the population golden), so the `Date.now` use is contained.
+   * V105: super-creature EVOLUTION is session-only — every browser reload starts fresh with no
+   * cross-reload carryover. This META-organ lives OUTSIDE the deterministic sim (it touches only the
+   * super creature's power/look, never the population golden) and reads NO wall-clock: the earlier V48
+   * `Date.now` idle-growth catch-up was removed, so `loadEvolution` merely clears any legacy save.
    */
   private loadEvolution(): SuperEvolution {
     // V105: every browser reload resets super-creature evolution — fresh start, no carryover.

@@ -111,19 +111,19 @@ Each major claim maps to a test or metric — this document.
 
 ### 14. Comparative ALife benchmarks (20)
 
-| #           | Checkpoint                                        | CQM anchor               |
-| ----------- | ------------------------------------------------- | ------------------------ |
-| 14.1        | Tierra comparison (population scale)              | 50k vs ~1k               |
-| 14.2        | Avida comparison (determinism)                    | Seeded RNG, golden hash  |
-| 14.3        | Lenia comparison (continuous dynamics)            | RD tiles in WildBeyond   |
-| 14.4        | Polyworld comparison (neural nets)                | 25k glyph brains         |
-| 14.5        | Boids comparison (flocking)                       | Wolfpack behavior        |
-| 14.6        | Open-endedness metrics (Bedau/Packard)            | `open-endedness.ts`      |
-| 14.7        | Browser-native advantage (zero install)           | Bun + WebGL              |
-| 14.8        | Quantum layer uniqueness                          | Tsotchke statevector sim |
-| 14.9        | Multi-currency economy comparison                 | 4-currency market        |
-| 14.10       | Brain observatory comparison                      | 4-tab neural observatory |
-| 14.11–14.20 | _(extend: Neural Darwinism, Heap of Souls, etc.)_ | TBD                      |
+| #           | Checkpoint                                        | CQM anchor                      |
+| ----------- | ------------------------------------------------- | ------------------------------- |
+| 14.1        | Tierra comparison (population scale)              | 50k vs ~1k                      |
+| 14.2        | Avida comparison (determinism)                    | Seeded RNG, golden hash         |
+| 14.3        | Lenia comparison (continuous dynamics)            | RD tiles in WildBeyond          |
+| 14.4        | Polyworld comparison (neural nets)                | 25k glyph brains                |
+| 14.5        | Boids comparison (flocking)                       | Wolfpack behavior               |
+| 14.6        | Open-endedness metrics (Bedau/Packard)            | `open-endedness.ts`             |
+| 14.7        | Browser-native advantage (zero install)           | Bun + WebGL                     |
+| 14.8        | Quantum layer uniqueness                          | Tsotchke statevector sim        |
+| 14.9        | Multi-currency economy comparison                 | 2-currency + 2-commodity market |
+| 14.10       | Brain observatory comparison                      | 4-tab neural observatory        |
+| 14.11–14.20 | _(extend: Neural Darwinism, Heap of Souls, etc.)_ | TBD                             |
 
 ### 15. Neuroscience plausibility (20)
 
@@ -225,14 +225,14 @@ _(Expand to 50+ rows with names/emails in a private CRM — not committed to rep
 
 ## Comparative benchmark scaffold (to be filled with literature scores)
 
-| System          | Population | Determinism | Brain model       | Economy    | Quantum layer   | Browser-native  | Open-endedness metrics |
-| --------------- | ---------- | ----------- | ----------------- | ---------- | --------------- | --------------- | ---------------------- |
-| CQM (this repo) | 50k        | Seeded      | 25k–5M            | 4-currency | Statevector sim | Yes (Bun+WebGL) | Bedau/Packard live     |
-| Tierra          | ~1k        | Seeded      | None              | No         | No              | No              | Bedau/Packard          |
-| Avida           | ~3.6k      | Seeded      | Digital organisms | No         | No              | No              | Complexity metrics     |
-| Lenia           | ~100       | Seeded      | Continuous CA     | No         | No              | No (Python)     | Variety metrics        |
-| Polyworld       | ~100       | Seeded      | Neural nets       | No         | No              | No (C++)        | Behavioral diversity   |
-| Boids++         | ~1k        | Seeded      | None              | No         | No              | No              | Flocking metrics       |
+| System          | Population | Determinism | Brain model       | Economy                  | Quantum layer   | Browser-native  | Open-endedness metrics |
+| --------------- | ---------- | ----------- | ----------------- | ------------------------ | --------------- | --------------- | ---------------------- |
+| CQM (this repo) | 50k        | Seeded      | 25k–5M            | 2-currency + 2-commodity | Statevector sim | Yes (Bun+WebGL) | Bedau/Packard live     |
+| Tierra          | ~1k        | Seeded      | None              | No                       | No              | No              | Bedau/Packard          |
+| Avida           | ~3.6k      | Seeded      | Digital organisms | No                       | No              | No              | Complexity metrics     |
+| Lenia           | ~100       | Seeded      | Continuous CA     | No                       | No              | No (Python)     | Variety metrics        |
+| Polyworld       | ~100       | Seeded      | Neural nets       | No                       | No              | No (C++)        | Behavioral diversity   |
+| Boids++         | ~1k        | Seeded      | None              | No                       | No              | No              | Flocking metrics       |
 
 ---
 
@@ -241,7 +241,7 @@ _(Expand to 50+ rows with names/emails in a private CRM — not committed to rep
 - **H1 (Determinism):** Same seed + same browser engine produces byte-identical population trajectories. Falsified by golden-hash mismatch.
 - **H2 (Diversity):** Shannon diversity of entity morphotypes remains >2.0 over 10k ticks. Falsified by monoculture collapse.
 - **H3 (Brain coupling):** Glyph brain motor outputs correlate with visual displacement (r > 0.3). Falsified by disconnect.
-- **H4 (Economy stability):** Four-currency market reaches non-zero equilibrium. Falsified by currency collapse to zero.
+- **H4 (Economy stability):** 2-currency + 2-commodity market reaches non-zero equilibrium. Falsified by currency collapse to zero.
 - **H5 (Emergence):** Open-endedness metrics (Bedau/Packard) show non-decreasing novelty over 10k ticks. Falsified by plateau.
 
 ---

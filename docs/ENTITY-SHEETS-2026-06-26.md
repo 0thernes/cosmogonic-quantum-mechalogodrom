@@ -138,8 +138,8 @@ _Always exactly 5 (ORACLE-Σ, STARKILLER-Ω, MANHATTAN-Φ, BROLY-Ψ, VOID-Λ) wi
   remaining twins (≤3, energy-gated). _Next: damage/combat, the camera following the hero, deeper
   power-effects; vision/sound from real world queries._
 - **Silhouette (V32, `sim/super-body.ts`):** a freakish many-eyed colossus — a faceted crystalline
-  CORE (R≈6, ½-Titan class) wrapped in a wireframe ARCHITECTURE cage, ringed by a corona of **16
-  glowing EYES** (iris + void pupil), stabbed through by **11 radial SPIKE-ARMS**, and orbited by **3
+  CORE (R≈6, ½-Titan class) wrapped in a wireframe ARCHITECTURE cage, ringed by a corona of **24
+  glowing EYES** (iris + void pupil), stabbed through by **13 radial SPIKE-ARMS**, and orbited by **3
   chrome RINGS** (the halo-mechanism). Reads instantly as the apex authority — verified on screen.
 - **Material language (V32):** a hand-written **god-jewel shader** (patched `MeshStandardMaterial`, real
   scene lighting): object-space **fBm crystalline relief** + worn-jewel roughness + **thin-film

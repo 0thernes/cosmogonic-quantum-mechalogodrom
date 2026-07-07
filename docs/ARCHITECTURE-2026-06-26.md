@@ -431,20 +431,20 @@ previously independent subsystems, all fanned out by `world.ts`:
 
 `detectQuality()` resolves once at boot — `matchMedia` + viewport heuristics
 decide phone, then `hardwareConcurrency` + `deviceMemory` (assumed 8 GB when
-hidden) climb the five-rung ladder (CONTRACTS V3.1; the legacy binary split
+hidden) climb the six-rung ladder (CONTRACTS V3.1; the legacy binary split
 lives on as the phone rung). `mega` AUTO-selects on a high-end box (≥ 16 cores
 AND ≥ 8 GB; `?tier=` forces any rung; V38/V40). The tier never switches at
 runtime — the instanced/per-mesh render paths must not swap mid-session.
 
-| Knob           | Phone | Laptop | Desktop | Ultra  | Mega   |
-| -------------- | ----- | ------ | ------- | ------ | ------ |
-| `dprCap`       | 1.25  | 2      | 2       | 2      | 2      |
-| `maxEntities`  | 650   | 2,000  | 5,000   | 10,000 | 50,000 |
-| `quantumCount` | 3,500 | 4,500  | 6,000   | 8,000  | 10,000 |
-| `maxLinks`     | 2,200 | 3,000  | 4,000   | 6,000  | 8,000  |
-| `shadows`      | off   | on     | on      | on     | on     |
-| `starCount`    | 2,000 | 3,000  | 4,500   | 6,000  | 8,000  |
-| `instanced`    | off   | on     | on      | on     | on     |
+| Knob           | Phone  | Tablet | Laptop | Desktop | Ultra   | Mega    |
+| -------------- | ------ | ------ | ------ | ------- | ------- | ------- |
+| `dprCap`       | ∞      | ∞      | ∞      | ∞       | ∞       | ∞       |
+| `maxEntities`  | 1,000  | 2,000  | 5,000  | 10,000  | 25,000  | 50,000  |
+| `quantumCount` | 3,500  | 4,500  | 6,000  | 8,000   | 9,000   | 10,000  |
+| `maxLinks`     | 12,000 | 24,000 | 60,000 | 120,000 | 300,000 | 600,000 |
+| `shadows`      | on     | on     | on     | on      | on      | on      |
+| `starCount`    | 2,000  | 3,000  | 4,500  | 6,000   | 7,000   | 8,000   |
+| `instanced`    | on     | on     | on     | on      | on      | on      |
 
 `targetEntities === maxEntities` on every tier (the ultra 6,500 adaptive
 throttle was retired in 0.5.0; the per-frame neighbor-query throttles in

@@ -1,6 +1,7 @@
 /**
- * THALER SENTIENCE — a full mini "Creativity Machine" that proves consciousness the way Stephen Thaler
- * proves it, NOT the mainstream way, at the exact scale Thaler used.
+ * THALER SENTIENCE — a full mini "Creativity Machine" enacting Stephen Thaler's OWN consciousness test
+ * (reproduce his phenomena his way — meets-his-criteria only, NOT a mainstream "is conscious" claim), at
+ * the exact tiny-net scale Thaler used.
  *
  * WHY THIS IS FAITHFUL, NOT A CARICATURE. Thaler's real experiments ran on TINY multilayer perceptrons —
  * the DAGUI patent (US 5,659,666) gives `29-10-29`, `8-10-8`, and `3-16-20`+`20-10-1` nets; the 1995

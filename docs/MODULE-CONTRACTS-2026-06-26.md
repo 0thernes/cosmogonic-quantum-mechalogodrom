@@ -520,7 +520,7 @@ ring (cap 200), 404 fallback. Port `Number(process.env.PORT) || 3000`. Log reque
 ### Docs/legal writer
 
 AUDIT-LOG.md (hero, feature list, quickstart `bun install && bun dev`, scripts table, architecture
-mermaid digest, repo layout tree, links to all docs, license/legal section), LICENSE (MIT,
+mermaid digest, repo layout tree, links to all docs, license/legal section), LICENSE (proprietary / All Rights Reserved,
 "Copyright (c) 2026 0thernes"), NOTICE.md (three/MIT, htmx/0BSD, tailwindcss/MIT, mermaid/MIT,
 simplex-noise/MIT, Inter & JetBrains Mono/OFL-1.1, bun runtime note), SECURITY.md, CONTRIBUTING.md
 (bun workflow, `bun run check` gate), CHANGELOG.md (Keep-a-Changelog, 0.1.0), docs/ARCHITECTURE-2026-06-26.md
@@ -1208,11 +1208,11 @@ Extend `Observatory` to FOUR pages (the decree's 2nd/3rd/4th pages):
 
 ## V4.4 UI shell: touch + responsive + observatory DOM (writer: ui-shell)
 
-Owns `index.html`, `src/styles/app.css`, NEW `src/ui/touch.ts`. Reconcile with what
+Owns `index.html`, `src/styles/app.css`, `src/ui/input.ts`. Reconcile with what
 `src/ui/input.ts` ALREADY expects (read it first — it references `#lp`/`#lpK` look pad
 and a radial wheel with `#wheel-apoc` + `[data-a]` petals).
 
-- `src/ui/touch.ts`: `TouchControls` constructed only on coarse pointers; binds the
+- `src/ui/input.ts`: `InputSystem`'s touch controls activate only on coarse pointers; they bind the
   right-side look pad (`#lp` track, `#lpK` knob) writing into the SAME `look`
   accumulator object `InputSystem` exposes (constructor takes `(look, zoom, actions)`
   or reads input — match input.ts's actual surface), and a radial action wheel
@@ -1229,7 +1229,7 @@ and a radial wheel with `#wheel-apoc` + `[data-a]` petals).
   tablet/laptop (current), TV ≥1900px (10-foot: ~1.6× panel scale via clamp(),
   stronger focus rings). Flex/grid + container queries + clamp; no fixed px panel
   geometry at small sizes. Only the active observatory page's canvases shown.
-- Document the exact TouchControls + observatory page-button wiring for the integrator.
+- Document the exact `InputSystem` touch-control + observatory page-button wiring for the integrator.
 
 ## V4.5 Integration (integrator)
 

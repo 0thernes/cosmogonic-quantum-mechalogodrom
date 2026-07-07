@@ -223,15 +223,15 @@ broadcasts hallucinated utterances) — wired into `world.ts`, guarded, determin
 
 ### 7.1 Model parameter sizes (measured)
 
-| Mind                                    | Network                                    | Parameters                          |
-| --------------------------------------- | ------------------------------------------ | ----------------------------------- |
-| Organism brain (× up to 50,000)         | TinyMLP 6→6→4                              | **70 weights**                      |
-| Faction brain (× 8 archetypes)          | TinyMLP 6→6→4                              | 70 weights                          |
-| NHI intuition gene                      | TinyMLP 5→6→7                              | 85 weights                          |
-| NHI alien voice                         | Markov 12×12                               | 144 weights                         |
-| Super Creature minds (GOAL5: 5 Archons) | 5× composite · 12 sub-nets · 5 stages × 25 | ~10,081 weights each (~50.4k total) |
-| Super Creature quantum minds            | 5× 6-qubit statevector + Clifford reflex   | 64 complex + 32q stabilizer each    |
-| Quantum register (puppet-master, × 100) | 5-qubit statevector                        | 32 complex amplitudes (256 B)       |
+| Mind                                              | Network                                    | Parameters                          |
+| ------------------------------------------------- | ------------------------------------------ | ----------------------------------- |
+| Organism brain (× up to 50,000)                   | TinyMLP 6→6→4                              | **70 weights**                      |
+| Faction brain (× 8 archetypes)                    | TinyMLP 6→6→4                              | 70 weights                          |
+| NHI intuition gene                                | TinyMLP 5→6→7                              | 85 weights                          |
+| NHI alien voice                                   | Markov 12×12                               | 144 weights                         |
+| Super Creature minds (GOAL5: 5 Archons)           | 5× composite · 12 sub-nets · 5 stages × 25 | ~10,081 weights each (~50.4k total) |
+| Super Creature quantum minds                      | 5× 6-qubit statevector + Clifford reflex   | 64 complex + 16q stabilizer each    |
+| Quantum register (1 shared, puppet-master-driven) | 5-qubit statevector                        | 32 complex amplitudes (256 B)       |
 
 **Whole-world neural mass at the 50k mega ceiling ≈ 3.5 million parameters** (≈ 50,000 × 70 organism
 brains, plus the 5×~10,081-weight Super Creature / Archon composites (GOAL5), the 8 faction brains, and the apex NHI mind),
@@ -271,9 +271,9 @@ reading from AND writing to the others (a negotiated plan-vote, not parallel gad
 **VSA/HRR holographic memory**, and a quantum core wired into the decision loop — the genuine statevector
 **min-cut Φ**, **Quantum Reservoir Computing** (Fujii–Nakajima), a **Lindblad/GKSL deliberation qubit**,
 **Grover** amplitude amplification, and **Quantum Natural Gradient** descent on its own Fubini–Study
-geometry. The Aaronson–Gottesman **Clifford stabilizer tableau** (ported from Moonlab; 32+ qubits) is a
-fourth MIT-credited primitive. **Current measured cost (2026-06-26):** `SuperMind.think()` is **3.34 ms**
-in the full bench suite and **8.85 ms** in the focused SuperMind bench; the old sub-millisecond figures are
+geometry. The Aaronson–Gottesman **Clifford stabilizer tableau** (ported from Moonlab; 16 qubits) is a
+fourth MIT-credited primitive. **Current measured cost (2026-06-26):** `SuperMind.think()` is **1.99 ms**
+in the full bench suite and **9.77 ms** for the 5× `think()` batch; the old sub-millisecond figures are
 superseded. Full frontier assessment in [docs/reports/](reports/) and current numbers in
 [BENCHMARKS-2026-06-26.md](BENCHMARKS-2026-06-26.md).
 

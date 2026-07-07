@@ -7,9 +7,10 @@
  * the parallel editor's, or a future contributor's) reintroduces a non-deterministic call into the sim
  * layer, long before it could silently break "one seed, one cosmos".
  *
- * `src/world.ts` is intentionally NOT covered here: it carries the single documented, try-guarded
- * `Date.now()` exception (the V48 super-evolution wall-clock catch-up, an explicit META-layer outside
- * the population golden). The sim layer proper has zero such exceptions.
+ * `src/world.ts` is intentionally NOT covered here: it sits OUTSIDE the `src/sim/**` + `src/math/**`
+ * trust boundary (the app/meta layer, not sim/math primitives). It once carried a single try-guarded
+ * `Date.now()` exception (the V48 super-evolution wall-clock catch-up) — removed at V105, so no
+ * wall-clock read remains there either. The sim layer proper has zero such exceptions.
  */
 import { describe, expect, test } from 'bun:test';
 
