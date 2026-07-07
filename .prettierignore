@@ -17,6 +17,24 @@ src/generated/
 # Generated A-Life comparison assets (SVG charts + stats JSON emitted by
 # scripts/alife-comparison-stats.ts). Re-running the generator must never trip the formatter.
 docs/reports/assets
+# Local archived/generated monster reports kept in this checkout for provenance. They are excluded
+# by .git/info/exclude and are not part of the tracked release artifact; keep Prettier on the current
+# consolidated report pair instead of these superseded local copies.
+docs/FILE-AUDIT-16-FILES-2026-07-07.md
+docs/MASTER-ASSESSMENT-2026-07-07.html
+docs/MASTER-ASSESSMENT-2026-07-07.md
+docs/MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md
+docs/MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS1-2026-07-06.md
+docs/MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS2-2026-07-06.md
+docs/MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS3-2026-07-06.md
+docs/MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.html
+docs/MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.md
+docs/SUPER-REPORT-2026-07-06.md
+docs/SUPER-REPORT-2ND-PASS-2026-07-06.md
+docs/SUPER-REPORT-3RD-PASS-2026-07-06.md
+docs/SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.html
+docs/SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.md
+docs/SUPER-REPORT-ULTIMATE-MEGA-2026-07-06.md
 # Throwaway scratch/verify scripts a session leaves in the root (e.g. __verify_*.ts). They are not in
 # tsc's `include` nor oxlint's scope, but `prettier --check .` scans them and a stray one breaks the
 # LOCAL gate. Ignore the `__`-prefixed scratch convention so the daily gate stays robust to cruft.

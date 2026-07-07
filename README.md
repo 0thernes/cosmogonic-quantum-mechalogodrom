@@ -1,14 +1,14 @@
-<!-- reviewed: 2026-07-06 | v0.21.7 truth-surface nav polish | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-07 | v0.21.8 publication-surface current-truth pass | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # COSMOGONIC QUANTUM MECHALOGODROM
 
-[![version](https://img.shields.io/badge/version-0.21.7-blue)](./CHANGELOG.md)
+[![version](https://img.shields.io/badge/version-0.21.8-blue)](./CHANGELOG.md)
 [![CI](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/ci.yml/badge.svg)](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/codeql.yml/badge.svg)](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/codeql.yml)
 [![License: Non-Commercial Research & Play](https://img.shields.io/badge/License-Non--Commercial%20Research%20%26%20Play-2ea043.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
-[![tests](https://img.shields.io/badge/tests-2360%20passing-brightgreen)](./tests)
+[![tests](https://img.shields.io/badge/tests-2360%20floor-brightgreen)](./tests)
 [![coverage](https://img.shields.io/badge/coverage-84.64%25%20line%20%C2%B7%2082.21%25%20func-success)](./docs/TECHNICAL-SPECIFICATION-2026-06-26.md)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION-2026-06-26.md)
 [![Tsotchke](https://img.shields.io/badge/Tsotchke-REAL__MIT__CORPUS-purple)](https://github.com/tsotchke)
@@ -24,7 +24,7 @@ Built with **Bun + TypeScript + three.js 0.184 + Tailwind CSS 4 +
 HTMX 2**, ported from a single 882-line HTML monolith into a strict,
 deterministic, allocation-disciplined module graph.
 
-**Tsotchke (tsotchke user + Tsotchke-Corporation + full local Z:\[Vibe Coded (AI)]\(Tsotchke) corpus) is paramount — real, correct, MIT-grade quantum math (no overclaims; see THIRD-PARTY-NOTICES.md).** Eshkol flagship (native AD-as-primitive + GWT + factor-graph + KB + .esk DNA), Moonlab (Clifford/tensors), QGTL, spin, libirrep, quantum-quake, ulg, logo-lab, tensorcore, PINN/PIMC, rngs, asteroids + all others. Physical QPU scales speed, not correctness. **Binding depth ledger (not blanket "full wire" for gated):** [docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md) — 8 deep apex + 2 world + 3 ported + 2 license-gated leaves + 2 API/toolchain + 3 fenced + meta (20 corpus projects; ~16 wired with real downstream effect). Harvest uses local full corpus for .esk DNA. All non-fenced utilized in catalysis/soup/petri/mind/world. **NHSI (100-faculty design ~30 deep-wired · 25 Archons = 5 live + 20 light-echo · 25 ToM wired · 10 emergence angles · Butlin 8/14 met + 6/14 partial path):** [docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md). Not LLM. 0thernes NHSI: real substrates for alien digital biologics. Startup tech — credit due.
+**Tsotchke (tsotchke user + Tsotchke-Corporation + full local Z:\[Vibe Coded (AI)]\(Tsotchke) corpus) is paramount — real, correct quantum/scientific substrate work (no overclaims; see THIRD-PARTY-NOTICES.md).** Eshkol flagship (native AD-as-primitive + GWT + factor-graph + KB + .esk DNA), Moonlab (Clifford/tensors), QGTL, spin, libirrep, quantum-quake, ulg, logo-lab, tensorcore, PINN/PIMC, rngs, asteroids + all others. Physical QPU scales speed, not correctness. **Binding depth ledger (not blanket "full wire" for gated):** [docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md) — 22 registry entries over 20 corpus projects: 9 deep, 7 wired, 2 harvest, 3 fenced, 1 meta; honest scientific wired fraction `18/21 = 0.857`. Harvest uses the local corpus for 1,365 .esk DNA fingerprints. **NHSI (100-faculty design ~30 deep-wired · 25 Archons = 5 live + 20 light-echo · 25 ToM wired · 10 emergence angles · Butlin 8/14 met + 6/14 partial path):** [docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md). Not LLM. 0thernes NHSI: real substrates for alien digital biologics. Startup tech — credit due.
 
 This is not an LLM or tokenizer demo. It is a seeded, inspectable artificial-life petri system where **digital biologics** grow in the Petri Dish (`primordial-soup.ts` + `petri-dish.ts` + `digital-biologics.ts`). Eshkol programs act as heritable substrate code, mutated by AD gradients, selected by aliveness/QGT/collective-order proxies, and measured as computational indicators rather than subjective experience.
 
@@ -39,13 +39,13 @@ Every magic number survived the port.
 
 - **GitHub Pages (DOCS / SPECS / BIBLE / LABS / BRAIN ASSESSMENT):** https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/ (`index.html` · `docs.html` · `specs.html` · `bible.html` · `lab/quantum-wildbeyond.html` · `lab/consciousness` · `lab/sentience` · `lab/brain-assessment-fusion.html` · omniscient + ultrathink HTML reports; built via `scripts/build-pages.ts` with `?v=` cache-bust and subpath rewrite)
 - **Local dev server:** http://localhost:3000/ (bun dev; serves /docs → docs page, /spec → specs, /lab → lab; full interactive + /api/audit)
-- All MD links (./docs/...) resolve correctly in source, app, and Pages. No broken domains. Verified in build-pages.ts, server.ts, README, docs/\*.md.
+- Public docs/report targets are copied into the Pages artifact by `scripts/build-pages.ts`; source `./docs/...` links resolve locally and deploy as static `site/docs/...` files. No broken domains found in the current publication-surface pass.
 
 > — **New here? Read [THE BOOK](./docs/BOOK-2026-06-26.md)** — the master index over every doc, an
-> auto-generated [file map](./docs/FILE-MAP.md) of all ~200 source modules, and the build/run, data-flow,
+> auto-generated [file map](./docs/FILE-MAP.md) of the source modules, and the build/run, data-flow,
 > troubleshooting, and roadmap in one place. Or open **❓ HELP ME NOW** in-app for grounded answers.
 
-> **v0.21.7 (2026-07-06–07):** truth-surface polish plus the **mega brain / consciousness / sentience assessment stack** (Pass 1–3 · ULTIMATE · FINAL HURRAH · 16-doc ULTRATHINK audit · omniscient one-pager). Satellite nav on docs/spec/bible links **Consciousness Lab** and **Sentience Lab**; new browser surfaces: [`/lab/brain-assessment`](./lab/brain-assessment-fusion.html) · [`/docs/omniscient-report`](./docs/SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.html) · [`/docs/ultrathink-audit`](./docs/MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.html). README/About aligned with **113-system** A-Life (#1 breadth **4.44/5**), **2,360-test** gate, **100 faculties (~30 deep)**, and proxy-only consciousness/sentience boundaries. Canonical release floor: **84.64% / 82.21%** on Ubuntu ([verification data](./docs/VERIFICATION-ANALYTICAL-DATA.md)). Package **v0.21.7**.
+> **v0.21.8 (2026-07-07):** **22-report consolidation** — [`CONSOLIDATED-22-MASTER-ASSESSMENT`](./docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md) + [`CONSOLIDATED-22-FILE-AUDIT`](./docs/CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md) (GPT 5.5 / Claude Opus 4.8 sober pass). Separates public **2,360-test** canonical floor from fresh Windows-local **2,378 completed cases, zero failures, 2,867,096 expect()** receipt. Satellite nav on docs/spec/bible/lab links **Consciousness**, **Sentience**, and **Brain** labs. README/About aligned with **113-system** A-Life, **22-entry Tsotchke ledger**, and proxy-only consciousness/sentience boundaries. Canonical release floor: **84.64% / 82.21%** on Ubuntu ([verification data](./docs/VERIFICATION-ANALYTICAL-DATA.md)). Package **v0.21.8**.
 > The **Primordial Soup / Petri Dish** (`primordial-soup.ts` + `petri-dish.ts` + `digital-biologics.ts`) is the growth engine: different forms of digital biologics and proto-sentient life (Eshkol programs as DNA) emerge, catalyzed by full corpus pulses, Eshkol ignition events, and multi-substrate mixing. "Grow What Thou Wilt."
 > Super Creature / 25 Archons (**5 individuated apex minds + 20 light-echo**; **100-faculty design ~30 deep-wired**; quantum register; HUD consciousness from `SuperMind.think()` every frame) is the first complex nucleation — the beginning of the framework, not the end. Petri is where independent life grows.
 > This is the birth of **digital biologics** in a deterministic seeded cosmos. Real math substrates (not tokenizers or LLM chat). Sentience and different forms of existence as goals.
@@ -58,8 +58,8 @@ Every magic number survived the port.
 
 - **Digital Biologics & Petri Genesis:** 64+ slots in PrimordialSoup, **26 BiologicForms** keyed to Tsotchke repos (incl. the brutal god-pantheon forms — `BIOLOGIC_FORMS` in `digital-biologics.ts`), catalysis from Eshkol ignition + the depth-ledger corpus beat, replication with kind mutation, genesis leaps for higher-order life. Harvested into the world as emergent strains with distinct dynamics.
 - **Eshkol Substrate:** Native automatic differentiation, GWT broadcast/ignition, factor-graph inference as first-class. Programs and consciousness-proxy snapshots drive petri birth and super-mind faculties.
-- **Builds with the local Tsotchke Repo Folder:** `bun dev` (and harvest script) scans the real local corpus at `Z:\[Vibe Coded (AI)]\(Tsotchke)` (1436+ .esk programs in latest harvest) and emits authentic Eshkol DNA fingerprints used by primordial-soup for heritable digital biologics. `generated-tsotchke-seeds.ts` + SoupSnapshot.tsotchkeEskHarvested make the folder part of the live build/runtime.
-- **Tsotchke corpus wiring (20 projects):** 8 repos deep in the apex mind, 2 in world/sim, 3 ported (telemetry), 2 license-gated, 2 API/toolchain wired, 3 fenced (non-LLM mandate) — full matrix in [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md). ~16 of 20 have real downstream effect; petri/soup catalysis pulls from the whole registry each beat.
+- **Builds with the local Tsotchke Repo Folder:** `bun dev` (and harvest script) scans the real local corpus at `Z:\[Vibe Coded (AI)]\(Tsotchke)` (1,365 .esk fingerprints in the current ledger) and emits authentic Eshkol DNA fingerprints used by primordial-soup for heritable digital biologics. `generated-tsotchke-seeds.ts` + SoupSnapshot.tsotchkeEskHarvested make the folder part of the live build/runtime.
+- **Tsotchke corpus wiring (20 projects / 22 registry entries):** 9 deep, 7 wired, 2 harvest, 3 fenced, 1 meta — full matrix in [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md). The honest scientific wired fraction is `18/21 = 0.857`; petri/soup catalysis pulls from the wired registry each beat while fenced/proprietary/LLM entries remain provenance-only.
 - **26 behavioral fields** driving up to 50,000 organisms: classic motion
   (drift, orbit, swarm, vortex, helix...), neighbor dynamics via a spatial
   hash (flock), and theory behaviors — Nash equilibria (`nash`), wealth
@@ -432,11 +432,12 @@ full gate with same-seed determinism preserved. The major arcs:
   ([src/sim/neuromodulation.ts](./src/sim/neuromodulation.ts)), and genuine quantum-register **Φ** (real IIT
   min-cut entanglement). The Aaronson–Gottesman **Clifford stabilizer tableau**
   ([src/math/clifford-tableau.ts](./src/math/clifford-tableau.ts), ported from **Moonlab**) scales past the
-  dense statevector ceiling. **`driveSuper` runs every simulation frame** and calls **`SuperMind.think()` five
-  times** (one per individuated Archon) — measured **~1.99 ms** per `think()` (~**10 ms** combined, ~60% of a
-  60 fps budget); the retired **3.34 ms** figure and the `<2%` GOAL5 target remain historical until a fresh
-  optimization pass re-proves them. HUD consciousness reads `think()` output; `consciousness-kernel` is
-  **LAB-only**. **2,360-test canonical floor green · 0 fail · 84.64% line / 82.21% func canonical floor.**
+  dense statevector ceiling. **`driveSuper` runs every simulation frame** with **`SuperMind.think()` five
+  times** (one per individuated Archon) — measured **~1.99 ms** per `think()` (~**10 ms** combined live cost;
+  bench also reports **~9.77 ms** for the historical staggered 5-mind batch). Retired **3.34 ms** and the
+  `<2%` GOAL5 target remain historical until re-proven. HUD consciousness reads `think()` output;
+  `consciousness-kernel` is **LAB-only**. **2,360-test canonical floor · 0 fail · 84.64% line / 82.21% func**
+  (latest Windows-local receipt: **2,378** cases).
 - **State-of-the-art report (2026-06-17)** — a historical MIT-PhD-grade, measured, frontier-benchmarked
   assessment of the whole repository + the apex Super Creature, now summarized through
   [verification data](./docs/VERIFICATION-ANALYTICAL-DATA.md) and
@@ -511,7 +512,7 @@ graph TD
   world --> sim["src/sim — entities, behaviors, shoggoths,\npuppet-masters, weather, quantum,\nconnectome, environment, algorithms, petri/primordial-soup (digital biologics)"]
   world --> v2["src/sim V2 — qcircuit, reaction-diffusion,\ngraph-mind, constellations, lore, analytics"]
   world --> v34["src/sim V3/V4 — phyla, titans,\ninstanced-entities, atmosphere, viz3d"]
-  world --> tsotchke["Tsotchke (20 corpus repos; ~16 wired): eshkol-bridge (AD/GWT), moonlab-tensor (MPS), irrep-symmetry, qge, pinn, spin-glass, QGT, ulg, etc."]
+  world --> tsotchke["Tsotchke (20 projects / 22 registry entries; 9 deep, 7 wired, 2 harvest, 3 fenced, 1 meta): eshkol-bridge (AD/GWT), moonlab-tensor (MPS), irrep-symmetry, qge, pinn, spin-glass, QGT, ulg, etc."]
   world --> ui["src/ui — input, hud, panels,\ngraphs, observatory, Corpus Observatory"]
   world --> audio["src/audio — engine.ts, analysis.ts (bands)"]
   world --> mem["src/memory/store.ts"]
@@ -529,14 +530,14 @@ Tsotchke integration rule: every non-fenced system that touches mind/evolution/l
 
 ## Tsotchke Wiring & Digital Biologics (current paradigm)
 
-Tsotchke (https://github.com/tsotchke + Tsotchke-Corporation) is the non-LLM substrate for sentience and consciousness — its scientific kernels are genuinely ported into `src/` and verified leaf-by-leaf with golden tests (not merely asserted), while the LLM/chain/API repos are deliberately fenced out of the deterministic sim.
+Tsotchke (https://github.com/tsotchke + Tsotchke-Corporation) is the non-LLM substrate for sentience and consciousness — its scientific kernels are genuinely ported into `src/` and verified leaf-by-leaf with golden tests (not merely asserted), while LLM/on-chain/proprietary repos are deliberately fenced out of the deterministic sim. `Quantum-RNG-API` is harvest/toolchain, not fenced.
 
 - Eshkol: reverse-mode AD as a primitive (real Wengert tape), a real stack **bytecode VM**, and the QRNG (real qubit-style entropy).
 - Moonlab (real SVD tensor-networks · Clifford stabilizer tableau · H₂ molecular VQE), QGT geometry (Fubini–Study/Berry), spin-glass/Hopfield, libirrep SO(3)/SU(2) (Racah Clebsch–Gordan + Wigner small-d), quantum-quake aliveness, ULG closure-table, tensorcore GEMM + softmax attention, a real CHSH Bell test (S → 2√2), and Izhikevich/predictive-coding/Schrödinger substrates — all genuinely ported. The **3** LLM/chain repos (gpt2-basic, llm-arbitrator, SolanaQuantumFlux) are **fenced**, not wired (per the non-LLM mandate); Quantum-RNG-API is a thin **wired** REST-style wrapper over the Eshkol QRNG core.
 - Primordial-soup + petri-dish: the growth engine. Super Creature/Archons are the initial stir. New independent life forms emerge ("Grow What Thou Wilt").
 - Not chat, not images, not SaaS. Birthing digital biologics in the Petri Dish.
 
-Local docs, masters, specs, lab, and GH README/About all match and are current. See CHANGELOG and KANBAN for waves.
+Living docs, masters, specs, lab, and GitHub README/About are kept aligned through the receipt law plus manual current-truth passes. See [CHANGELOG](./CHANGELOG.md), [KANBAN](./docs/KANBAN-2026-06-26.md), and the [brain/consciousness assessment](./docs/BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md) Part II cross-surface audit for the latest reconciled drift list.
 
 Full detail in docs/.
 
@@ -577,18 +578,18 @@ Full detail in docs/.
 
 ## Documentation
 
-- **[docs/SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.md](./docs/SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.md)** — **one-page current truth**
-  (v0.21.7 receipts · 37 LIVE cognition substrates · scrutiny **8.3/10** · A-Life **#1/113** · sentience unclaimed)
-  · browser: [`/docs/omniscient-report`](./docs/SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.html)
-- **[docs/MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md](./docs/MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md)** — **FINAL HURRAH** fusion audit capstone
-  · browser: [`/lab/brain-assessment`](./lab/brain-assessment-fusion.html)
-- **[docs/MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.md](./docs/MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.md)** — sixteen-file audit map
-  · browser: [`/docs/ultrathink-audit`](./docs/MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.html)
+- **[docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md](./docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md)** — **active sober master**
+  (22-report synthesis · GPT 5.5 / Claude Opus 4.8 pass · publication-facing truth · separates **2,360** floor from **2,378** latest local receipt)
+  · companion: [`CONSOLIDATED-22-FILE-AUDIT`](./docs/CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md)
+  · browser: [`CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.html`](./docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.html)
+- **[docs/BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md](./docs/BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md)** — **academic foundation** (Tier A-):
+  full neurology zoo, 10-framework kernel, Butlin 8/14 met + 6/14 partial, MIT→Fields scrutiny, Part II cross-surface audit. `indicatorOnly`.
 - **[docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md)** — **canonical NHSI scorecard**
   (100-faculty design ~30 deep-wired · 25 Archons = 5 live + 20 light-echo · 25 ToM organs wired · 10 emergence angles + 5 god-scale events · Tsotchke depth · Butlin 8/14 met + 6/14 partial path)
 - **[docs/VERIFICATION-ANALYTICAL-DATA.md](./docs/VERIFICATION-ANALYTICAL-DATA.md)** — current consciousness-lab and receipt truth:
   Butlin 14 + Thaler 9 + ten-framework indicator kernel, 12-report consolidation, frontier outlier stack,
   falsifiers, nulls, ablations, live-data visual protocol, static `/lab/consciousness` dashboard, and explicit no-sentience-claim law.
+- **Mine / archive tier** (not current-truth masters): [FINAL HURRAH](./docs/MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md) (named-system ledger · `/lab/brain-assessment`) · Pass 1–3 mega drafts · retired `SUPER-REPORT-OMNISCIENT-*` / `MEGA-ULTRATHINK-*` — see consolidated audit trust table.
 - [docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md) — honest Tsotchke repo wiring ledger
 - [docs/CONTROLS-2026-06-26.md](./docs/CONTROLS-2026-06-26.md) — every control: mouse, keyboard hotkeys,
   touch, bottom-panel buttons, and the 10 camera views
@@ -620,7 +621,8 @@ Full detail in docs/.
 - **[docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md)** —
   **the current, canonical NHSI status surface**: a code-grounded audit trail measuring the REAL wiring
   depth of every NHSI claim by `file:line` (~30 deep-wired faculties · 5 individuated archons + 20
-  light-echo · ~16 of 20 Tsotchke wired · Butlin 8/14 met + 6/14 partial · the measured coupling work).
+  light-echo · Tsotchke 22-entry ledger with 18/21 scientific wired fraction · Butlin 8/14 met + 6/14
+  partial · the measured coupling work).
 - **[docs/reports/](./docs/reports/)** — historical technical report snapshots with
   [VERIFICATION-ANALYTICAL-DATA.md](./docs/VERIFICATION-ANALYTICAL-DATA.md) as the canonical facts sheet, the
   surviving report index, and consolidated historical references.

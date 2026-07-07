@@ -58,7 +58,7 @@ the opt-in heavyweight backend for fracture/mass/inertia/crowd scale.
 
 - **+** The C++ + active-physics mandate is met with a real, compiling, GPU-running binary — verified
   on an NVIDIA RTX 5070 Ti (a 30-step vs 420-step capture shows collided/clustered arrangements).
-- **+** The web app is untouched and still passes its full gate (published floor 2,295 tests).
+- **+** The web app is untouched and still passes its full gate (published floor 2,360 tests).
 - **−** Two render codebases to keep in aesthetic sync (the GLSL jewel BRDF is intentionally mirrored
   in both `src/sim/instanced-entities.ts` and `native/src/shaders.h`).
 - **−** The native target is not yet in CI (local-build + offscreen-capture verification for now).

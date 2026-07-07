@@ -86,13 +86,13 @@ nash, market, lorenz`). They split, age, die (weather-tuned lifespan), and feed 
   purses; wealth drives how OFTEN each meddles — rich = reshape/stoke more often + loom larger + glow
   brighter, broke = fall quiet (relative to the live mean; verified 181→435 spread, ~32/~32 split).
 
-## 4. TITAN — the ten colossi
+## 4. TITAN — the twenty colossi
 
-- **Biology:** 10 fixed colossal intelligences with an **economy/war layer**: each has matter, energy,
-  entropy ledgers and a 10×10 relation matrix (truce / alliance / war).
-- **Behavior:** roam the mid-field; accrue resources; play an iterated PD over all 45 pairs →
-  alliances/wars. **Wealth now steers diplomacy (V16):** a titan far richer in AURUM/UMBRA is
-  emboldened to raid (→ war), a poorer one appeases — so the economy decides who marches. _Next:
+- **Biology:** 20 fixed colossal intelligences with an **economy/war layer**: each has matter, energy,
+  entropy ledgers and a 20×20 relation matrix (truce / alliance / war).
+- **Behavior:** roam the mid-field; accrue resources; play an iterated PD over all C(20,2) = 190
+  pairs → alliances/wars. **Wealth now steers diplomacy (V16):** a titan far richer in AURUM/UMBRA
+  is emboldened to raid (→ war), a poorer one appeases — so the economy decides who marches. _Next:
   explicit patron→proxy funding + trade blocs._
 - **Silhouette:** the obelisk ring in the VIZ3D instrument panel encodes them as towers; in-world they
   are the largest roaming bodies.

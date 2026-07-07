@@ -1,4 +1,4 @@
-<!-- reviewed: 2026-06-27 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-07 | publication-surface current-truth pass | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # Changelog
 
@@ -8,6 +8,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.21.8] — 2026-07-07
+
+- Publication-surface current-truth pass after the 22-report audit:
+  - Updated README/About-facing metadata to separate the `2,360` public release floor from the
+    fresh Windows-local `2,378 completed cases, zero failures, 2,867,096 expect()` receipt.
+  - Added discoverable links to the active consolidated 22-report master/audit from Docs, Spec,
+    Bible, Lab, Consciousness Lab, Sentience Lab, and the reports index.
+  - Refreshed public codebase census wording to the current `bun run metrics` output:
+    730 tracked authored files, 193,174 tracked authored lines, 584 TypeScript files, 288 `src/`
+    TypeScript files, 8 native C/C++ headers/sources, and 255 test files.
+  - Corrected public Titan wording from the stale 10-Titan/45-pair text to the current
+    20-Titan/190-pair source truth.
+  - Replaced older `~16 wired` Tsotchke shorthand with the registry-derived
+    22-entry ledger: 9 deep, 7 wired, 2 harvest, 3 fenced, 1 meta, and `18/21 = 0.857`
+    scientific wired fraction.
+  - Aligned release packaging with GitHub Pages by building the release tarball from `site/`
+    after `bun run pages`, so Docs, Specs, Bible, Lab, Consciousness Lab, Sentience Lab, and
+    copied `docs/` report targets ship in the release artifact.
+  - Added Prettier ignores for local-only archived monster reports already excluded from git, keeping
+    the full formatter gate focused on tracked/current surfaces and the consolidated 22-report pair.
 
 ## [0.21.7] — 2026-07-06
 
@@ -33,7 +54,7 @@ Clean release-tag repair.
 Portable release-receipt floor.
 
 - Re-floored canonical coverage to the Ubuntu release gate measurement: `2,360` tests, `84.64%` line, `82.21%` function.
-- Kept the higher Windows receipt (`92.02%` line / `89.65%` function) documented as an environment-specific local measurement, not the portable release floor.
+- Kept the higher Windows receipt (`92.01%` line / `89.65%` function) documented as an environment-specific local measurement, not the portable release floor.
 - Cut a new patch version because `v0.21.4` already existed at the failing release-gate commit.
 
 ## [0.21.4] — 2026-07-06
@@ -670,7 +691,7 @@ See src/sim/primordial-soup.ts, petri-dish.ts, tsotchke-registry.ts for the livi
 - Imported `docs/audit-2026-06-20-deep-dive/` census CSVs (12,444 Tsotchke files, 721 `.esk` programs).
 - New corpus leaves: `logo-turtle.ts`, `asteroids-physics.ts`, `classical-contrast.ts`, `perceptron-baseline.ts`, `corpus-audit-receipts.ts`.
 - Petri dish + primordial soup wired with logo-lab morph, asteroids motility, classical entropy gap, perceptron tagging.
-- Registry/corpus bindings updated to dedicated leaves (20 mirrors; 4 LLM/API repos fenced).
+- Registry/corpus bindings updated to dedicated leaves (20 corpus projects / 22 registry entries; 3 fenced LLM/on-chain/proprietary entries; Quantum-RNG-API is harvest/toolchain).
 - Gate: **1,564 tests · 95.81% line / 92.87% func**.
 
 - Per-Archon **petri dishes** wired in `world.ts` (catalysis via Eshkol beat + `petriDishBeat` + growth multiplier on pantheon vitality).

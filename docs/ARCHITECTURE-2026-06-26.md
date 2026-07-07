@@ -12,13 +12,13 @@ modify, and share it freely for any non-commercial purpose, provided you keep th
 © 0thernes notices (don't claim it as your own). Commercial / for-profit use needs
 written permission. See [LICENSE](../LICENSE).
 
-**Tsotchke Paramount (depth-ledger wire):** the 20-project Tsotchke corpus (~16 wired, fenced repos provenance-only) from tsotchke user + Tsotchke-Corporation org (Eshkol COMPLETE spec: AD primitive + Consciousness Engine §17 KB/factor-graph/GWT/ignition/broadcast + .esk programs as heritable substrate; Moonlab; QGTL; spin nets; libirrep; quantum-quake; PINN/PIMC; ulg; logo-lab; tensorcore; rngs; asteroids; etc.) are the non-negotiable primordial substrate where wired. Petri (primordial-soup + petri-dish + digital-biologics) grows independent digital biologics/sentience proxies. 25 Archons with brutal god powers (Valkorion, Thanos, Dark Phoenix, Galactus, Broly, Azathoth, Chaos Gods, Shuma Gorath, Mad Jim Jaspers, Pennywise, Anti-Monitor, Knull, Mr Mxyzptlk, Joker, Zod, Gilgamesh, Alucard, Griffith, EVA-01, Gurren Lagann, Sephiroth, Vergil, Dante, Starkiller, Riddick) — 5 individuated apex minds + 20 live light-echo. Super Creature = initial Godform/spark only. "Grow What Thou Wilt."
+**Tsotchke Paramount (depth-ledger wire):** the 20-project / 22-registry-entry Tsotchke corpus (`9 deep`, `7 wired`, `2 harvest`, `3 fenced`, `1 meta`; scientific wired fraction `18/21`) from tsotchke user + Tsotchke-Corporation org (Eshkol COMPLETE spec: AD primitive + Consciousness Engine §17 KB/factor-graph/GWT/ignition/broadcast + .esk programs as heritable substrate; Moonlab; QGTL; spin nets; libirrep; quantum-quake; PINN/PIMC; ulg; logo-lab; tensorcore; rngs; asteroids; etc.) is the non-negotiable primordial substrate where licensed and ported. Fenced repos remain provenance-only, not sim wiring. Petri (primordial-soup + petri-dish + digital-biologics) grows independent digital biologics/sentience proxies. 25 Archons with brutal god powers (Valkorion, Thanos, Dark Phoenix, Galactus, Broly, Azathoth, Chaos Gods, Shuma Gorath, Mad Jim Jaspers, Pennywise, Anti-Monitor, Knull, Mr Mxyzptlk, Joker, Zod, Gilgamesh, Alucard, Griffith, EVA-01, Gurren Lagann, Sephiroth, Vergil, Dante, Starkiller, Riddick) — 5 individuated apex minds + 20 live light-echo. Super Creature = initial Godform/spark only. "Grow What Thou Wilt."
 
 **Build with the actual Tsotchke folder:** `scripts/harvest-tsotchke-corpus.ts` walks the real local corpus and emits authentic .esk DNA (see generated-tsotchke-seeds.ts + ESK_SAMPLE_PROGRAMS). 26 BIOLOGIC_FORMS keyed across the corpus. Multi-theory consciousness proxies (GNW + real IIT Φ + FEP + Berry/QGT geometry + spin order + irrep symmetry) measurable live. Full bleeding-edge novelty assessment: [AUDIT-LOG.md](AUDIT-LOG.md). Non-fenced mind/evolution/life systems read AND write the wired Tsotchke substrates per PHILOSOPHY. Fenced LLM repos never enter sim. 0.18.0+ master expansion.
 
 ## Design rules (enforced, not aspirational)
 
-**Documentation sync note (all must match):** README, this ARCHITECTURE-2026-06-26.md, ENTITY-SCHEMA-AND-MAPPINGS-2026-06-26.md, PHILOSOPHY-2026-06-26.md, MODULE-CONTRACTS-2026-06-26.md, TECHNICAL-SPECIFICATION-2026-06-26.md / SPECS, KANBAN, BOOK-2026-06-26.md, AI-SUBSYSTEM-2026-06-26.md, reports, masters/ references, LABS (lab/), and in-app "Dome/World" docs (observatory, help-system, copilot, /docs page via docs-page.ts + mermaid) are fully updated and consistent with code + GitHub. Local == GH. Accurate, truthful, current. Tsotchke full wiring + digital biologics petri as core.
+**Documentation sync note (all must match):** README, this ARCHITECTURE-2026-06-26.md, ENTITY-SCHEMA-AND-MAPPINGS-2026-06-26.md, PHILOSOPHY-2026-06-26.md, MODULE-CONTRACTS-2026-06-26.md, TECHNICAL-SPECIFICATION-2026-06-26.md / SPECS, KANBAN, BOOK-2026-06-26.md, AI-SUBSYSTEM-2026-06-26.md, reports, masters/ references, LABS (lab/), and in-app "Dome/World" docs (observatory, help-system, copilot, /docs page via docs-page.ts + mermaid) must stay consistent with code, generated Pages, and GitHub. Current truth is depth-classed Tsotchke wiring + digital biologics petri as core; do not collapse fenced/provenance entries into blanket full-depth wiring.
 
 **Tsotchke Petri Genesis (current paradigm):** Tsotchke's _scientific_ repos (Eshkol primary for AD/VM/QRNG, Moonlab for SVD tensor-networks/Clifford/H₂ VQE, QGTL geometry, spin-based NN, libirrep, quantum-quake, PINN, PIMC, ulg, logo-lab, tensorcore) are genuinely ported into `src/` and wired as the substrate for digital biologics — each verified leaf-by-leaf with golden tests, not asserted. The three LLM/chain repos (gpt2-basic, llm-arbitrator, SolanaQuantumFlux) are **deliberately fenced** out of the deterministic sim (registry wiring 0), never "wired"; Quantum-RNG-API is a thin **wired** REST-style wrapper over the Eshkol QRNG core (not fenced). The primordial soup / petri dish (primordial-soup.ts + digital-biologics.ts) grows different forms of life from these real kernels. Super Creature is the first spark / initial architecture. Sentience and consciousness via real mathematical substrates in a seeded deterministic world. "Grow What Thou Wilt." A leaf still using a heuristic rather than a full port (e.g. classical-contrast, eshkol-workspace) is tracked honestly in the audit, not credited as a real port.
 
@@ -85,19 +85,19 @@ graph TD
     viz3d["viz3d.ts<br/>Viz3DSystem (holographic data sculptures)"]
   end
 
-  subgraph tsotchke["Tsotchke Full Corpus Wiring (paramount, non-negotiable — ALL repos)"]
-    registry["tsotchke-registry.ts<br/>20 corpus projects: ~16 wired+verified (Eshkol flagship + Moonlab + QGTL + spin + libirrep + quake + PINN/PIMC + ulg + logo-lab + tensorcore + ...), 3 LLM/chain fenced (wiring 0; Quantum-RNG-API is wired)"]
+  subgraph tsotchke["Tsotchke Depth-Ledger Wiring (paramount, non-negotiable by class)"]
+    registry["tsotchke-registry.ts<br/>20 projects / 22 entries: 9 deep, 7 wired, 2 harvest, 3 fenced, 1 meta; scientific wired fraction 18/21"]
     facade["tsotchke-facade.ts<br/>Re-exports + bridges"]
     eshkolb["eshkol-bridge.ts + workspace<br/>Consciousness engine (AD primitive, GWT broadcast/ignition, inference)"]
-    soup["primordial-soup.ts + petri-dish.ts + digital-biologics<br/>Petri dish birthing digital biologics (EshkolProgram genomes + full corpus catalysis + AD mutation)"]
+    soup["primordial-soup.ts + petri-dish.ts + digital-biologics<br/>Petri dish birthing digital biologics (EshkolProgram genomes + depth-ledger catalysis + AD mutation)"]
     godf["godform.ts + super-*<br/>Archon biases + faculties from Tsotchke substrates"]
-    moonlabt["moonlab-tensor + qge-physics + irrep-symmetry + ...<br/>Every Tsotchke repo contributes real kernels to life, physics, form, aliveness"]
+    moonlabt["moonlab-tensor + qge-physics + irrep-symmetry + ...<br/>Depth-classed Tsotchke entries contribute kernels, harvest DNA, or fenced provenance"]
   end
 
   subgraph simv12["src/sim — Tsotchke Petri Genesis (0.12+) — Digital Biologics"]
-    biologics["digital-biologics.ts<br/>BiologicForm enum (26 kinds from all Tsotchke repos)<br/>birthBiologic · fullCorpusSentience"]
-    soup["primordial-soup.ts<br/>Petri Dish / Primordial Soup (128 slots)<br/>catalysis from Eshkol ignition + full corpus<br/>replicate · genesisBoost · harvestEmergent"]
-    tsotchke["tsotchke-*.ts (registry/facade/corpus/bridge)<br/>Full wiring of Eshkol + Moonlab + QGTL + spin + libirrep + quake + PINN + PIMC + ulg + logo + tensorcore + ..."]
+    biologics["digital-biologics.ts<br/>BiologicForm enum (26 kinds from the depth ledger)<br/>birthBiologic · corpusCatalyzedSentience"]
+    soup["primordial-soup.ts<br/>Petri Dish / Primordial Soup (128 slots)<br/>catalysis from Eshkol ignition + depth-ledger corpus<br/>replicate · genesisBoost · harvestEmergent"]
+    tsotchke["tsotchke-*.ts (registry/facade/corpus/bridge)<br/>Depth-classed wiring of Eshkol + Moonlab + QGTL + spin + libirrep + quake + PINN + PIMC + ulg + logo + tensorcore + ..."]
     petriDish["Petri as growth engine — Super Creature is only the first spark"]
   end
 
@@ -181,7 +181,7 @@ graph TD
 
   %% Tsotchke Petri core loop (0.12+)
   super-mind -. "Archon consc + substrates" .-> petri
-  petri -. "catalysis + Eshkol ignition + full corpus" .-> digital-biologics
+  petri -. "catalysis + Eshkol ignition + depth-ledger corpus" .-> digital-biologics
   digital-biologics -. "harvest emergent life" .-> entities
   digital-biologics -. "new forms (sentience goals)" .-> world
 
@@ -375,7 +375,7 @@ shared `SpatialHash`, shared `Rng`) and explicit constructor references
 
 **All repos wired**: Moonlab (tensors/MPO/Clifford), quantum_geometric_tensor (QGT/Berry), spin_based (instinct glass), libirrep (symmetry/forms), quantum-quake (aliveness/physics), ulg (laws), logo-lab (morph), PINN/PIMC (physics), tensorcore, etc. Mapped in `tsotchke-registry.ts` (22 slug entries, wiring scores, substrate vectors). Fenced LLM ones stay out of sim.
 
-**Petri Dish / Primordial Soup**: The growth engine. `primordial-soup.ts` + `petri-dish.ts` use full corpus for catalysis, mutation (Eshkol AD-inspired), GWT ignition births, speciation. Super Creature/Archons are the initial sparks; independent digital biologics emerge ("Grow What Thou Wilt").
+**Petri Dish / Primordial Soup**: The growth engine. `primordial-soup.ts` + `petri-dish.ts` use the depth-ledger corpus for catalysis, mutation (Eshkol AD-inspired), GWT ignition births, speciation. Super Creature/Archons are the initial sparks; independent digital biologics emerge ("Grow What Thou Wilt").
 
 **Super Creature / Godform**: Starting framework only. Expanded to use Eshkol sentience, full Tsotchke for "biologics" beyond classic ecosystem. New life forms via soup.
 

@@ -9,7 +9,7 @@
     <title>Docs — Cosmogonic Quantum Mechalogodrom</title>
     <meta
       name="description"
-      content="Report page: file/folder architecture, ERD/ERM/ERP data model, frame pipeline, and the V1-V100 evolution of the Cosmogonic Quantum Mechalogodrom."
+      content="Current architecture docs for Cosmogonic Quantum Mechalogodrom: module graph, ERD/ERM/ERP, 22-report audit links, Tsotchke depth ledger, and proxy-only consciousness/sentience lab surfaces."
     />
     <meta name="theme-color" content="#030612" />
     <link
@@ -627,7 +627,7 @@
         <span class="badge">ui <b>HTMX + Tailwind</b></span>
         <span class="badge">entities <b>50k</b></span>
         <span class="badge">phyla <b>10</b></span>
-        <span class="badge">titans <b>10</b></span>
+        <span class="badge">titans <b>20</b></span>
         <span class="badge">algorithms <b>25</b></span>
         <span class="badge">songs <b>6</b></span>
         <span class="badge">license <b>Non-commercial research &amp; play</b></span>
@@ -681,7 +681,7 @@
 │   │   ├─ <span class="file">instanced-entities.ts</span> <span class="note">instanced PBR pools (per-instance color + emissive vec4)</span>
 │   │   ├─ <span class="file">shoggoths.ts</span>   <span class="note">drifting Lorenz-ish predators with tendrils</span>
 │   │   ├─ <span class="file">puppet-masters.ts</span> <span class="note">100 NPC intelligences (14 mobile) — 3 named heroes + WRAITH hands</span>
-│   │   ├─ <span class="file">titans.ts</span>      <span class="note">10 colossal economies waging an iterated prisoner's dilemma</span>
+│   │   ├─ <span class="file">titans.ts</span>      <span class="note">20 colossal economies waging an iterated prisoner's dilemma</span>
 │   │   ├─ <span class="file">weather.ts</span>     <span class="note">weather state machine (CLEAR..FOG..STORM..VOID..AURORA)</span>
 │   │   ├─ <span class="file">quantum.ts</span>     <span class="note">QuantumCloud — point cloud that implodes on register collapse</span>
 │   │   ├─ <span class="file">qcircuit.ts</span>    <span class="note">QuantumCircuitSystem — gate sequences, bands to the cloud</span>
@@ -740,7 +740,7 @@
 ├─ <span class="file">tsconfig.json</span>        <span class="note">strict TypeScript configuration</span>
 ├─ <span class="file">bunfig.toml</span>          <span class="note">Bun config — Tailwind plugin wiring</span>
 ├─ <span class="file">.prettierrc</span>          <span class="note">prettier — 100 cols, single quotes, semicolons</span>
-├─ <span class="file">CHANGELOG.md</span>         <span class="note">version history → 0.21.7 (Tsotchke full) / V100+</span>
+├─ <span class="file">CHANGELOG.md</span>         <span class="note">version history → 0.21.8 (Tsotchke full) / V100+</span>
 └─ <span class="file">README.md</span>            <span class="note">project overview + quickstart</span></pre>
       </div>
       <p><a class="totop" href="#architecture">&uarr; top</a></p>
@@ -901,7 +901,7 @@ erDiagram
   PUPPET_MASTER }o--|| QUANTUM_REGISTER : "gate signatures (rx / h+cz / x+swap)"
   ENTITY }o--|| RD_FIELD : "deaths perturb at ground UV (onDeath)"
   WEATHER ||--o{ RD_FIELD : "tunes feed / kill / diffusion"
-  TITAN }o--o{ TITAN : "iterated prisoners dilemma (45 pairs)"
+  TITAN }o--o{ TITAN : "iterated prisoners dilemma (190 pairs)"
   TITAN ||--o{ AUDIT_EVENT : "war strikes chronicled"
   GRAPH_TRIBE ||--o{ ENTITY : "members (setGroup write-back)"
   GRAPH_TRIBE ||--|| LORE_NAME : "named (kind = tribe)"
@@ -1072,7 +1072,7 @@ erDiagram
               <td>TITAN</td>
               <td>name, energy, matter, entropy, strategy</td>
               <td>
-                harvests/conscripts N ENTITY (M:N); plays 9 other TITAN in the 45-pair dilemma
+                harvests/conscripts N ENTITY (M:N); plays 19 other TITAN in the 190-pair dilemma
                 (M:N); war strikes chronicled by AUDIT_EVENT
               </td>
             </tr>
@@ -1247,9 +1247,9 @@ sequenceDiagram
         <h3>V3 &mdash; Pantheon <span class="ver">(0.3.0)</span></h3>
         <p>
           The taxonomy gains a layer above morphotypes: 10 <strong>phyla</strong> (hue bands,
-          geometry families, behavior pools, home sectors) minting 250 morphotypes, and 10 colossal
+          geometry families, behavior pools, home sectors) minting 250 morphotypes, and 20 colossal
           <strong>titans</strong> running a global economy and waging an iterated prisoner's dilemma
-          over all 45 pairs &mdash; staggered so at most one pair plays per frame, full coverage
+          over all 190 pairs &mdash; staggered so at most one pair plays per frame, full coverage
           every 600-frame cycle. Arena scale split into three knobs; instanced PBR pools carry
           per-instance emissive; the snapshot unified for the panel and observatory.
         </p>
@@ -1291,7 +1291,7 @@ sequenceDiagram
       <div class="era e2">
         <h3>
           V7&ndash;V100 &mdash; The Living Era
-          <span class="ver">(0.7.0 &rarr; 0.21.7, Tsotchke Petri full, current)</span>
+          <span class="ver">(0.7.0 &rarr; 0.21.8, Tsotchke Petri full, current)</span>
         </h3>
         <p>
           Twelve further contract-governed waves, all additive behind the full gate with same-seed
@@ -1307,10 +1307,12 @@ sequenceDiagram
           organisms, and the always-active <strong>Super Creature</strong> (the beginning only): a
           composite mind plus quantum register. The true growth engine is the
           <strong>Primordial Soup / Petri Dish</strong> (primordial-soup.ts + petri-dish.ts +
-          digital-biologics.ts) where full Tsotchke corpus (all repos: Eshkol as the non-LLM
-          consciousness language with AD/GWT/.esk, Moonlab, QGT, spin, irrep, quake, ulg, logo-lab +
-          every mirror) births independent digital biologics and proto-sentient life. "Grow What
-          Thou Wilt." Not LLM/tokenizer. Different forms of existence.
+          digital-biologics.ts) where the Tsotchke ledger's 20 corpus projects / 22 registry entries
+          contribute by depth class: 9 deep, 7 wired, 2 harvest, 3 fenced, 1 meta, with an honest
+          18/21 scientific wired fraction. Eshkol supplies the non-LLM consciousness-proxy substrate
+          with AD/GWT/.esk; Moonlab, QGT, spin, irrep, quake, ulg, logo-lab, and the other
+          non-fenced entries bias independent digital biologics. Fenced entries remain provenance
+          only. "Grow What Thou Wilt." Not LLM/tokenizer. Different forms of existence.
           (<code>src/sim/super-qubits.ts</code>). Singularities now warp space-time behind a
           gravitational-lens post-FX; CHAOS MODE imposes a Lorenz quantum storm; the apex levels to
           100 and raises an ascension temple; the titans became 4D freak-geometry; and the HUD was
@@ -1541,7 +1543,20 @@ sequenceDiagram
         <ul>
           <li>
             <a href="./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md">NHSI Progress Dashboard</a> ·
-            measured targets vs. receipts (Local = GitHub)
+            measured targets vs. receipts (public floor + local Windows receipt separated)
+          </li>
+          <li>
+            <a href="./docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md"
+              >Consolidated 22-report master</a
+            >
+            · current truth across README/About/release-facing reports, brain/consciousness audits,
+            and public Pages drift
+          </li>
+          <li>
+            <a href="./docs/CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md"
+              >Consolidated 22-file audit ledger</a
+            >
+            · file trust tiers, stale claims, and publication-readiness gaps
           </li>
           <li>
             <a href="./docs/reports/README.md">Retired Reports & Audits</a> · historical 0thernes
@@ -1553,56 +1568,59 @@ sequenceDiagram
           </li>
         </ul>
         <p class="muted" style="margin-top: 8px">
-          Gate: <b>2,360 tests / 0 fail</b> · <b>84.64% line / 82.21% func</b> · v0.21.7 · Butlin
-          8/14 met + 6/14 partial scaffolding (not phenomenal sentience)
+          Gate: <b>2,360 tests / 0 fail</b> · <b>84.64% line / 82.21% func</b> · v0.21.8 · Butlin
+          8/14 met + 6/14 partial scaffolding (not phenomenal sentience). Latest local receipt
+          observed in the consolidated audit: <b>2,378 completed cases, zero failures</b>.
         </p>
       </div>
       <p><a class="totop" href="#architecture">&uarr; top</a></p>
 
       <h2 id="brain-assessment"><span class="tag">BRN</span>Brain / consciousness assessment stack (2026-07-07)</h2>
       <p>
-        Seven-agent and sixteen-file audits consolidated the living-world census, <code>world.ts</code>
-        wiring, and benchmark receipts. HUD consciousness reads <code>SuperMind.think()</code> (five calls per
-        simulation frame in <code>driveSuper</code>); <code>consciousness-kernel</code> is LAB-only. The JSON
-        matrix lists <b>37 LIVE</b> cognition substrates — use the tier taxonomy (LIVE_POLICY · LIVE_FRAME ·
-        LAB · DECORATIVE), not unreceipted brain counts.
+        The sober current master is the <b>22-report consolidation</b> (GPT 5.5 / Claude Opus 4.8 pass) —
+        not any single prior mega-draft. HUD consciousness reads <code>SuperMind.think()</code> (five calls per
+        simulation frame in <code>driveSuper</code>); <code>consciousness-kernel</code> is LAB-only. Use the
+        consolidated trust table for tier labels (promote · mine · archive).
       </p>
       <div class="card">
         <ul>
           <li>
-            <a href="./docs/SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.md"
-              >Omniscient one-pager</a
+            <a href="./docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md"
+              >Consolidated 22-report master</a
             >
-            — current truth summary · browser:
-            <a href="/docs/omniscient-report">/docs/omniscient-report</a>
+            — active publication-facing truth · browser:
+            <a href="./docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.html"
+              >HTML companion</a
+            >
+          </li>
+          <li>
+            <a href="./docs/CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md"
+              >22-file audit ledger</a
+            >
+            — trust tiers, stale claims, receipt drift (2,360 floor vs 2,378 latest local)
+          </li>
+          <li>
+            <a href="./docs/BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md"
+              >Academic brain/neurology assessment</a
+            >
+            — Tier A- foundation
           </li>
           <li>
             <a href="./docs/MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md"
-              >FINAL HURRAH capstone</a
+              >FINAL HURRAH</a
             >
-            — fusion audit · browser: <a href="/lab/brain-assessment">/lab/brain-assessment</a>
+            — mine for named-system ledger (Tier C+) · browser:
+            <a href="/lab/brain-assessment">/lab/brain-assessment</a>
           </li>
-          <li>
-            <a href="./docs/MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.md">16-doc ULTRATHINK audit</a>
-            — browser: <a href="/docs/ultrathink-audit">/docs/ultrathink-audit</a>
-          </li>
-          <li>
-            Pass 1–3 assessments:
-            <a href="./docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-1-2026-07-06.md">Pass 1</a>
-            ·
-            <a href="./docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-2-2026-07-06.md">Pass 2</a>
-            ·
-            <a href="./docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-3-2026-07-06.md">Pass 3</a>
-            ·
-            <a href="./docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-ULTIMATE-2026-07-07.md"
-              >ULTIMATE</a
-            >
+          <li class="muted">
+            Archive tier (do not promote): Omniscient · ULTRATHINK · ULTIMATE mega-drafts — see audit trust
+            table
           </li>
         </ul>
         <p class="muted" style="margin-top: 8px">
           Apex perf (measured 2026-07-02): single <code>SuperMind.think()</code>
-          <b>≈ 1.99 ms/iter</b> · five Archon beats per frame ≈ <b>10 ms</b> combined · retired
-          <b>3.34 ms</b> figure · scrutiny <b>8.3/10</b> · sentience <b>not claimed</b>.
+          <b>≈ 1.99 ms/iter</b> · five Archon beats per frame ≈ <b>10 ms</b> combined · scrutiny
+          <b>8.3/10</b> · sentience <b>not claimed</b>.
         </p>
       </div>
 
@@ -1640,8 +1658,7 @@ sequenceDiagram
         <p class="muted" style="margin-top: 8px">
           Gate at time of writing: <b>2,360 tests / 0 fail</b> ·
           <b>84.64% line / 82.21% func</b> coverage · apex <code>think()</code> + Tsotchke biologics
-          Petri · <b>≈ 1.99 ms/think</b> (5×/frame in <code>driveSuper</code>; retired 3.34 ms) · v0.21.7 @ current · all docs
-          + GH match.
+          Petri · <b>≈ 1.99 ms/think</b> (5×/frame in <code>driveSuper</code>; ~9.77 ms staggered batch in bench) · v0.21.8 @ current · README/About/Release surfaces verified as separate publication targets.
         </p>
       </div>
       <div class="card">

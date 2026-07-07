@@ -53,7 +53,7 @@
     <metric name="archons" value="25-Archon pantheon = 5 individuated apex SuperMinds + 20 live light-echo" source="src/sim/super-mind.ts; PantheonSociety"/>
     <metric name="theoryOfMind" value="25 organs wired as a 6-family ensemble (additive/bayesian/recursive/temporal/deception/coalition)" source="docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md"/>
     <metric name="emergenceAngles" value="10 angles wired (+ 5 god-scale release EVENTS - events, not additional angles)" source="src/sim/open-endedness.ts; docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md"/>
-    <metric name="tsotchkeCorpus" value="20 corpus projects; ~16 wired with real downstream effect (8 deep in the apex mind, 4 in the petri growth engine)" source="docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md"/>
+    <metric name="tsotchkeCorpus" value="20 corpus projects / 22 registry entries; 9 deep, 7 wired, 2 harvest, 3 fenced, 1 meta; scientific wired fraction 18/21" source="docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md"/>
     <metric name="butlinIndicators" value="8/14 met + 6/14 partial" note="computational INDICATORS, not sentience; the hard problem is untouched" source="Butlin et al. 2023, arXiv:2308.08708; docs SUPER-CREATURE-RESEARCH"/>
     <metric name="determinism" value="one mulberry32 seed; Math.random/Date.now GLOB-banned in sim/math" source="tests/determinism-law.test.ts"/>
   </baseline>
@@ -193,7 +193,7 @@
   <!-- =================== COMPETITIVE POSITIONING (honest) =================== -->
   <competitivePosition>
     <winsOn axis="determinism">One 32-bit mulberry32 seed -> bit-exact universe + identical mental states. PROVEN.</winsOn>
-    <winsOn axis="integration-density">~16 wired Tsotchke corpus projects + ~20 coupled cited theories (cognitive + quantum) in one tested artifact. Novel by integration; no comparable single system found.</winsOn>
+    <winsOn axis="integration-density">18/21 scientific Tsotchke entries wired or harvested/studied by class + ~20 coupled cited theories (cognitive + quantum) in one tested artifact. Novel by integration; no comparable single system found.</winsOn>
     <winsOn axis="cost-access">Single laptop iGPU (10,000 agents @ 60fps, 50,000 ceiling); fully inspectable. vs datacenter / iEEG / wetware.</winsOn>
     <winsOn axis="timeliness">A post-Cogitate hybrid testbed the consciousness-science field just declared it needs.</winsOn>
     <losesTo who="frontier labs (OpenAI/Anthropic/DeepMind/Meta/xAI)" axis="capability" margin="~5e6x parameters; language/reasoning best-in-class"/>

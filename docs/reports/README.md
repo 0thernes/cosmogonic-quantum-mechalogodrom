@@ -1,19 +1,28 @@
-<!-- reviewed: 2026-07-06 | historical snapshot policy | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-07 | historical snapshot policy + active 22-report index | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # Reports
 
 Technical reports and audits for Cosmogonic Quantum Mechalogodrom. Dated filenames (`2026-*`) are
 **historical worldline snapshots** when present — they preserve evidence from their authoring pass.
 **Current** gate receipts: [VERIFICATION-ANALYTICAL-DATA.md](../VERIFICATION-ANALYTICAL-DATA.md) §1 ·
-`scripts/canonical-receipts.ts` (v0.21.7 · **2,360-test floor** · **84.64 % / 82.21 %** coverage).
+`scripts/canonical-receipts.ts` (v0.21.8 · **2,360-test floor** · **84.64 % / 82.21 %** coverage).
+Latest Windows-local receipt observed by the current audit: **2,378 completed cases, zero failures, 2,867,096
+expect() calls**.
 
 ## Reports
 
 - [VERIFICATION-ANALYTICAL-DATA.md](../VERIFICATION-ANALYTICAL-DATA.md) — canonical current facts.
-- [MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md](../MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md) — **FINAL HURRAH** fusion audit capstone; browser: `/lab/brain-assessment`.
-- [MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-3-2026-07-06.md](../MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-3-2026-07-06.md) — living-world census (Pass 3).
-- [SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.md](../SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.md) — **one-page current truth**; browser: `/docs/omniscient-report`.
-- [MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.md](../MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.md) — sixteen-file audit; browser: `/docs/ultrathink-audit`.
+- [CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md](../CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md)
+  — **active** 22-report master synthesis (GPT 5.5 / Claude Opus 4.8 sober pass).
+- [CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md](../CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md)
+  — active file-trust ledger for stale claims, omitted handles, and public-page gaps.
+- [CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.html](../CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.html)
+  — condensed browser companion for the current master.
+- [BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md](../BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md)
+  — canonical academic foundation (Tier A- after cleanup).
+- [MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md](../MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md)
+  — **mine** for named-system ledger (Tier C+); browser: `/lab/brain-assessment`.
+- Historical / archive tier (do not promote as current truth): `SUPER-REPORT-OMNISCIENT-*`, `MEGA-ULTRATHINK-*`, Pass 1–3 mega drafts — see consolidated audit trust table.
 - [2026-07-01-25-POINT-SCRUTINY-SCORECARD.md](./2026-07-01-25-POINT-SCRUTINY-SCORECARD.md) — 25-point
   adversarial scrutiny (overall 8.3/10). Chart:
   [assets/scrutiny-25-scorecard.svg](./assets/scrutiny-25-scorecard.svg).

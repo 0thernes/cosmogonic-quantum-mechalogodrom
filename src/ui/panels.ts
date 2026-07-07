@@ -156,7 +156,7 @@ export class TelemetryPanel {
     this.et.textContent = `${s.temperature.toFixed(0)}C`;
     this.es.textContent = String(s.shoggoths);
     this.ep.textContent = String(s.puppeteers);
-    this.etn.textContent = String(s.titans); // V3: the ten colossi
+    this.etn.textContent = String(s.titans); // V3+: titan colossi roster
     this.nhic.textContent = String(s.nhi); // V13: launched NHI super-minds
     // V4 aliveness as a %, plus its named tier (F-SENTIENCE-VAR: DORMANT…TRANSCENDENT).
     this.snt.textContent = `${Math.round(s.sentience * 100)}% ${sentienceTier(s.sentience)}`;

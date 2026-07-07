@@ -1,5 +1,5 @@
 /**
- * TITANS (CONTRACTS V3.3) — 10 colossal roaming intelligences running a global economy and
+ * TITANS (CONTRACTS V3.3) — 20 colossal roaming intelligences running a global economy and
  * waging game-theoretic war over the cosmos.
  *
  * Each titan is a scaled shoggoth-class rig (distinct silhouette composited from the shared
@@ -9,7 +9,7 @@
  * CONSUMES size-scaled upkeep per economy tick; and WASTES entropy as ground scars exposed
  * through `wantsPerturb` / `drainPerturb` (routed to the injected rd facade).
  *
- * Diplomacy is an iterated prisoner's dilemma over all 45 unordered pairs, STAGGERED so at
+ * Diplomacy is an iterated prisoner's dilemma over all C(TITAN_COUNT, 2) unordered pairs, STAGGERED so at
  * most one pair plays (and one separate pair strike-checks) per frame — full matrix coverage
  * every 600-frame cycle with no frame spike. Recent-window defection counts derive the pair
  * relation (TRUCE/ALLIANCE/WAR); WAR acts on the half-cycle offset cadence as territory
@@ -589,7 +589,7 @@ function relationOf(h: PairHistory): number {
 }
 
 /**
- * Owns the 10 titans: silhouettes, roaming, the {energy, matter, entropy} economy, the
+ * Owns the 20 titans: silhouettes, roaming, the {energy, matter, entropy} economy, the
  * staggered pairwise diplomacy, and war strikes. Construct once in world.ts after the
  * EntityManager; call `update(dt, t)` every frame AFTER `ctx.state.frame` is incremented
  * (all cadences key off it), and `drainPerturb()` once per frame after the RD step.
@@ -620,7 +620,7 @@ export class TitanSystem implements DomeFeeder {
   private portalCullSeq = 0;
   /** Titan-specific fractal-displaced geometries (spiky crystalline bodies), cached per shared geo-type. */
   private readonly titanGeoCache = new Map<number, THREE.BufferGeometry>();
-  /** 45 pair histories, indexed by the PAIR_A/PAIR_B tables. */
+  /** PAIR_COUNT pair histories, indexed by the PAIR_A/PAIR_B tables. */
   private readonly histories: PairHistory[] = [];
   /** REUSED ledger rows backing the public `ledger` view. */
   private readonly led: TitanLedgerEntry[] = [];
@@ -633,7 +633,7 @@ export class TitanSystem implements DomeFeeder {
   /** World-owned NHI birth hook; null in tests/headless sims. */
   private procreationSink: ((x: number, y: number, z: number) => void) | null = null;
 
-  /** Builds the 10 colossi (boot-time allocation; ctx.rng draws are boot cadence). */
+  /** Builds the TITAN_COUNT colossi (boot-time allocation; ctx.rng draws are boot cadence). */
   constructor(ctx: SimContext, entities: EntityManager, lore: TitanLore, rd: TitanRd) {
     this.ctx = ctx;
     this.entities = entities;
@@ -655,7 +655,7 @@ export class TitanSystem implements DomeFeeder {
     for (let p = 0; p < PAIR_COUNT; p++) this.histories.push(createHistory());
   }
 
-  /** Number of titans (constant 10 — telemetry). */
+  /** Number of titans (constant TITAN_COUNT — telemetry). */
   get count(): number {
     return this.titans.length;
   }
@@ -774,7 +774,7 @@ export class TitanSystem implements DomeFeeder {
   /**
    * PRODUCE hook: the integrator calls this when the quantum register collapses
    * (qcircuit.lastCollapse changes). Every titan witnesses the global collapse and
-   * banks {@link WITNESS_ENERGY}. O(10), allocation-free.
+   * banks {@link WITNESS_ENERGY}. O(TITAN_COUNT), allocation-free.
    */
   onCollapseWitness(): void {
     for (let i = 0; i < this.titans.length; i++) {
@@ -807,10 +807,10 @@ export class TitanSystem implements DomeFeeder {
   }
 
   /**
-   * Per-frame advance: roaming + animation for all 10 titans (pure trig, zero rng), then the
+   * Per-frame advance: roaming + animation for all TITAN_COUNT titans (pure trig, zero rng), then the
    * internally cadenced economy tick (one titan per {@link ECON_STAGGER} frames), one
    * diplomacy pair slot and one strike-check slot (never the same frame — the half-cycle
-   * offset is coprime-safe), and an O(10) ledger refresh.
+   * offset is coprime-safe), and an O(TITAN_COUNT) ledger refresh.
    * O(titans) per frame + O(n) on the single ticking titan's harvest scan; allocation-free
    * outside event-driven spawn/audit calls.
    */
@@ -1018,7 +1018,7 @@ export class TitanSystem implements DomeFeeder {
     parent.add(mesh);
   }
 
-  /** Five distinct silhouette archetypes × two size tiers = 10 distinguishable colossi. */
+  /** Five distinct silhouette archetypes × territorial/social roles = TITAN_COUNT distinguishable colossi. */
   private buildSilhouette(
     i: number,
     s: number,
@@ -1262,10 +1262,10 @@ export class TitanSystem implements DomeFeeder {
   }
 
   /**
-   * V67 CLASH: titans no longer silently overlap. Every frame the 45 pairs are distance-checked
+   * V67 CLASH: titans no longer silently overlap. Every frame the PAIR_COUNT pairs are distance-checked
    * (cheap); when two come within {@link TITAN_TOUCH_K}·(sizeA+sizeB) they SOFT-REPEL apart and the
    * contact spikes both titans' entropy by {@link TITAN_CLASH_HEAT}·overlap — which drives uMenace, so
-   * the colliding colossi visibly WRITHE + BLAZE (the freak-geometry light show). No rng; O(45).
+   * the colliding colossi visibly WRITHE + BLAZE (the freak-geometry light show). No rng; O(PAIR_COUNT).
    */
   private titanClash(): void {
     const titans = this.titans;
@@ -1377,7 +1377,7 @@ export class TitanSystem implements DomeFeeder {
 
   /**
    * Bankruptcy: replicator-dynamics strategy mutation. Population shares come from the live
-   * 10-titan strategy census, fitness from the diplomacy payoff EMA; the new strategy is
+   * TITAN_COUNT strategy census, fitness from the diplomacy payoff EMA; the new strategy is
    * sampled from the post-step distribution with one seeded draw. Mutation-free dynamics:
    * extinct strategies cannot respawn (corner states absorb — documented in games.ts).
    */
@@ -1531,7 +1531,7 @@ export class TitanSystem implements DomeFeeder {
     });
   }
 
-  /** Refresh the REUSED ledger rows from titan state. O(10) field writes, allocation-free. */
+  /** Refresh the REUSED ledger rows from titan state. O(TITAN_COUNT) field writes, allocation-free. */
   private refreshLedger(): void {
     for (let i = 0; i < this.titans.length; i++) {
       const ti = this.titans[i];

@@ -151,6 +151,7 @@ import { grayScottResidual, pinnLoss } from './pinn-residual';
 import { pathWeight } from './pimc-paths';
 import { qrngApiDrawFrom } from './quantum-rng-api';
 import { homebrewEshkolBeat } from './homebrew-eshkol';
+import { TSOTCHKE_HARVEST } from './generated-tsotchke-seeds';
 import { TopDownPerception } from './topdown-perception';
 import { QualitySpace } from './quality-space';
 import { MemoryOrchestra } from './memory-orchestra';
@@ -994,7 +995,7 @@ export class SuperMind {
     this.imagined.set(this.cur);
 
     // ── STAGE 3 · REASON · distil the winner + a 5-deep recursive world model (predictor) ────────
-    // WIRED Eshkol AD tape (from full Tsotchke corpus AUTODIFF/vm_ad + vm_symbolic_ad.c, reverse mode for multi-var error, 32-level tape, dual numbers) for better predictor/surprise. Det, prealloc. Moonlab tensor for quantum scaling.
+    // WIRED Eshkol AD tape (from the depth-classed Tsotchke corpus AUTODIFF/vm_ad + vm_symbolic_ad.c, reverse mode for multi-var error, 32-level tape, dual numbers) for better predictor/surprise. Det, prealloc. Moonlab tensor for quantum scaling.
     const reason = this.reasoner.forward(this.imagined);
     this.pred.set(this.latent);
     for (let d = 0; d < SUPER_DEPTHS; d++) this.pred.set(this.predictor.forward(this.pred));
@@ -1072,7 +1073,7 @@ export class SuperMind {
       cTriple.workspace * 0.4 + this.eshkolEngine.workspace * 0.35 + (gwtS[0] || 0) * 0.25,
     );
     this.cons.surprise = clamp01(this.cons.surprise + cTriple.inference * predErr * 0.02);
-    // Heartbeat small: additional Eshkol AD/Moonlab tensor note for Archons from full corpus.
+    // Heartbeat small: additional Eshkol AD/Moonlab tensor note for Archons from the depth-ledger corpus.
     this.predictedSalience = unit(this.pred[0] ?? 0);
     const lrErr = this.learnedRecurrence.step(this.latent, this.pred);
     this.learnedRecurrence.blendIntoLatent(this.imagined, clamp01(0.1 * (1 - lrErr)));
@@ -1461,7 +1462,7 @@ export class SuperMind {
     for (let pi = 1; pi < 8; pi++)
       this.pimcPath[pi] = clamp01((this.pimcPath[pi - 1] ?? 0) * 0.7 + novelty * 0.3);
     const pimcW = pathWeight(this.pimcPath, 2.5 + surprise, (x) => (x - 0.5) * (x - 0.5));
-    const hb = homebrewEshkolBeat(1436, this.cliffordBeat, this.noiseSeed);
+    const hb = homebrewEshkolBeat(TSOTCHKE_HARVEST.eskCount, this.cliffordBeat, this.noiseSeed);
     const apiDraw = qrngApiDrawFrom(this.eshkol);
     drives.REST += 0.06 * pinnHealth * (1 - s[1]);
     drives.EXPLORE += 0.08 * pimcW * (1 - (s[1] ?? 0));

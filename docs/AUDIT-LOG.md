@@ -11,6 +11,12 @@ changed and why.
 
 ---
 
+## 2026-07-07 (pass 26) — merge CONSOLIDATED-22 as canonical truth (GPT 5.5 / Opus 4.8)
+
+Merged `origin/main` v0.21.8 consolidation: `CONSOLIDATED-22-MASTER-ASSESSMENT` + `CONSOLIDATED-22-FILE-AUDIT` promoted over OMNISCIENT/ULTIMATE archive tier. README/docs/specs/bible/reports index realigned; retained 100-faculty / 20-titan / 1.99 ms truth-surface fixes from pass 25.
+
+---
+
 ## 2026-07-07 (pass 25) — README / About / GitHub Pages truth-surface refresh (5 passes)
 
 Pass 1: README (`100 faculties`, `20 titans`, brain assessment stack, `~1.99 ms` / 5×/frame), `package.json` description, `index.html` meta, `CHANGELOG` 0.21.7 bullets, `docs/reports/README.md` v0.21.7. Passes 2–5: `docs.html` brain-assessment section + retired `3.34 ms`; `specs.html` + `bible.html` faculty/perf copy; cross-nav **Brain** link on all six Pages surfaces; `scripts/build-pages.ts` deploys `lab/brain-assessment` + omniscient/ultrathink HTML.

@@ -10,8 +10,10 @@
  *   2. drops the self-contained `/lab` artifact at `site/lab/index.html`,
  *      plus the static consciousness-indicator dashboard at `site/lab/consciousness/index.html`
  *      and the headless sentience analytics dashboard at `site/lab/sentience/index.html`,
- *   3. copies `docs/reports/assets/` for ALife SVG metrics (relative paths in the gallery),
- *   4. rewrites the absolute nav links to be subpath-relative, and neutralizes the server-only
+ *   3. copies `docs/` into `site/docs/`, pruning local-only archived drafts, so public report links
+ *      resolve on Pages without stale ignored research artifacts,
+ *   4. copies `docs/reports/assets/` for ALife SVG metrics (relative paths in the gallery),
+ *   5. rewrites the absolute nav links to be subpath-relative, and neutralizes the server-only
  *      `/api/audit` poll (no server on Pages — leaving it would 404 every 5 s).
  *
  * The dev server (server.ts) is untouched: it keeps its absolute `/docs` `/lab` routes for local
@@ -22,6 +24,39 @@ import { cp, mkdir, readFile, writeFile, rename, rm } from 'node:fs/promises';
 const ROOT = new URL('../', import.meta.url);
 const DIST = new URL('dist/', ROOT);
 const SITE = new URL('site/', ROOT);
+
+const LOCAL_ONLY_DOC_ARTIFACTS = [
+  '2026-06-17-STATE-OF-THE-ART-COMBINED.md',
+  '2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md',
+  '2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md',
+  '2026-06-20-RESEARCH-BEDROCK.md',
+  '2026-06-20-ROADMAP-TO-NHSI-AND-SENTIENCE.xml',
+  '2026-06-20-SUPER-REPORT-PATH-TO-NHSI-AND-SENTIENCE.md',
+  '2026-06-21-NHSI-HONESTY-AUDIT.md',
+  '2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md',
+  '2026-06-26-ALIFE-COMPARATIVE-AUDIT.md',
+  '2026-06-26-alife-comparison-matrix.csv',
+  'CONSOLIDATED-16-FILE-AUDIT-CURRENT-2026-07-07.md',
+  'CONSOLIDATED-16-MASTER-ASSESSMENT-CURRENT-2026-07-07.html',
+  'CONSOLIDATED-16-MASTER-ASSESSMENT-CURRENT-2026-07-07.md',
+  'FILE-AUDIT-16-FILES-2026-07-07.md',
+  'MASTER-ASSESSMENT-2026-07-07.html',
+  'MASTER-ASSESSMENT-2026-07-07.md',
+  'MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md',
+  'MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS1-2026-07-06.md',
+  'MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS2-2026-07-06.md',
+  'MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS3-2026-07-06.md',
+  'MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.html',
+  'MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.md',
+  'README.md',
+  'SUPER-REPORT-2026-07-06.md',
+  'SUPER-REPORT-2ND-PASS-2026-07-06.md',
+  'SUPER-REPORT-3RD-PASS-2026-07-06.md',
+  'SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.html',
+  'SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.md',
+  'SUPER-REPORT-ULTIMATE-MEGA-2026-07-06.md',
+  'reports/2026-07-07',
+] as const;
 
 async function rewrite(
   file: string,
@@ -80,7 +115,15 @@ await cp(
   new URL('MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.html', SITE),
 );
 
-// 2b. ALife SVG assets for docs/specs gallery (repo-relative paths).
+// 2b. Public docs/report targets. Source pages link Markdown/HTML reports directly; publish them.
+await cp(new URL('docs/', ROOT), new URL('docs/', SITE), {
+  recursive: true,
+});
+for (const artifact of LOCAL_ONLY_DOC_ARTIFACTS) {
+  await rm(new URL(`docs/${artifact}`, SITE), { recursive: true, force: true });
+}
+
+// 2c. ALife SVG assets for docs/specs gallery (repo-relative paths).
 await cp(new URL('docs/reports/assets/', ROOT), new URL('docs/reports/assets/', SITE), {
   recursive: true,
 });
@@ -229,6 +272,7 @@ const navFromSentience: ReadonlyArray<readonly [string, string]> = base
 // Root-level pages: use absolute paths on CI, relative locally.
 const navRoot: ReadonlyArray<readonly [string, string]> = base
   ? [
+      ['href="/docs/', `href="${base}/docs/`],
       ['href="/docs"', `href="${base}/docs.html${q}"`],
       ['href="/spec"', `href="${base}/specs.html${q}"`],
       ['href="/bible"', `href="${base}/bible.html${q}"`],
@@ -239,6 +283,7 @@ const navRoot: ReadonlyArray<readonly [string, string]> = base
       ['href="/"', `href="${base}/index.html${q}"`],
     ]
   : [
+      ['href="/docs/', 'href="./docs/'],
       ['href="/docs"', `href="docs.html${q}"`],
       ['href="/spec"', `href="specs.html${q}"`],
       ['href="/bible"', `href="bible.html${q}"`],
@@ -292,5 +337,5 @@ await writeFile(new URL('404.html', SITE), notFound);
 await writeFile(new URL('.nojekyll', SITE), '');
 
 console.log(
-  `assembled Pages site -> site/ (index.html, docs.html, specs.html, lab/index.html, lab/consciousness/index.html, lab/sentience/index.html, lab/brain-assessment/index.html, docs/reports/assets/) · cache-bust v=${V}`,
+  `assembled Pages site -> site/ (index.html, docs.html, specs.html, lab/index.html, lab/consciousness/index.html, lab/sentience/index.html, lab/brain-assessment/index.html, docs/, docs/reports/assets/) · cache-bust v=${V}`,
 );

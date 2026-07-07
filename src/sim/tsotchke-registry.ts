@@ -1,7 +1,7 @@
 /**
  * TSOTCHKE CORPUS REGISTRY — BINDING LEDGER PER docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md
  * ALL repos/projects from tsotchke user + Tsotchke-Corporation org + full local Z:\[Vibe Coded (AI)]\(Tsotchke) corpus (12k+ files) MAPPED and UTILIZED as digital-biologic substrate.
- * Deep apex (8): Eshkol (AD/GWT/consciousness-engine + .esk DNA), Moonlab (Clifford/tensor), QGTL, spin NN, quantum_rng, libirrep, tensorcore, classical_rng.
+ * Deep apex (9): Eshkol (AD/GWT/consciousness-engine + .esk DNA), Moonlab (Clifford/tensor), QGTL, spin NN, quantum_rng, libirrep, tensorcore, classical_rng, classical-contrast.
  * World/sim (2): asteroids, simple_mnist.
  * Ported/telemetry (3): PINN, PIMC, quantum-quake (license notes apply; quake GPL quarantine per map).
  * License-gated leaves (2): ulg, logo-lab.
@@ -371,9 +371,12 @@ export const ARCHON_PRIMARY_REPOS: readonly TsotchkeRepoSlug[] = [
   'quantum-quake',
 ];
 
-/** FULL CORPUS BIOLOGICS CATALYSIS — **EVERY** Tsotchke repo and project from tsotchke user + Tsotchke-Corporation org (full 12k+ file corpus, 20+ mirrors: eshkol/eshkol_repo + research, moonlab, quantum_geometric_tensor, spin_based_neural_network, libirrep, quantum-quake, ulg, logo-lab, tensorcore, PINN, PIMC, quantum_rng, classical_rng, asteroids, simple_mnist, homebrew-eshkol, classical-contrast, + all other mirrors per tsotchke-directory-ledger.csv + sites + .github org) + fenced LLM/chain ones. Eshkol is the language of digital biologics and sentience (AD primitive, GWT, factor graphs, KB). Wired 1.0 scientific; all utilized in catalysis/soup/petri or study. Real, correct, MIT. Physical big QPU scales performance, not correctness. Startup reality — tech works.
- * Eshkol is the language of digital biologics and sentience (AD primitive, GWT, factor graphs, KB).
- * Wired 1.0 for live; Super Creature / Petri is the God primordial soup. Grow What Thou Wilt.
+/** FULL CORPUS BIOLOGICS CATALYSIS — registry-driven, not blanket "all deeply wired".
+ * Ledger truth: 20 corpus projects / 22 registry entries; 9 deep, 7 wired, 2 harvest, 3 fenced, 1 meta.
+ * The scientific wired fraction is 18/21 = 0.857. Fenced LLM/chain/proprietary entries stay
+ * provenance-only, while non-fenced entries with wiring > 0 contribute to catalysis/soup/petri.
+ * Eshkol supplies digital-biologic DNA and consciousness-proxy substrate signals (AD primitive,
+ * GWT, factor graphs, KB). Physical QPU scale would improve speed, not correctness.
  */
 export function fullTsotchkeBiologicsCatalysis(
   archonIdx: number,

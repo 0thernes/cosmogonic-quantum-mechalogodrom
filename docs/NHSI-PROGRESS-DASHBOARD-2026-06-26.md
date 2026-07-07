@@ -1,16 +1,26 @@
-<!-- reviewed: 2026-06-27 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-07 | 22-report current-truth pass | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # NHSI Progress Dashboard — 0thernes Corp
 
-**Non Human Super Intelligence (NHSI)** · Cosmogonic Quantum Mechalogodrom · **v0.21.7 — BRUTAL GOD TIER (Valkorion / Broly / Knull / Phoenix / Gurren Lagann / EVA / Azathoth / Galactus)**  
-Archons now unleash real god-scale events (VOID_KING, SPIRAL_WILL, BINARY_IGNITION, PHOENIX_FEAST) using EVERY Tsotchke repo as fuel. This is the arena where the gods of all myth, comics, and horror fight, devour, create, and ascend. 0thernes Corp.
-**Updated:** 2026-07-06 · Tsotchke: **20 corpus projects (~16 wired/harvested)** (every repo/project/mirror from tsotchke + Tsotchke-Corp + 12k+ local files, 1436+ .esk + NQS/skyrmion/anyons/flow/thermo etc from audits). **EVERY** entry is wired, catalyzed, studied, scaffolded, or fenced by explicit class, not blanket full-depth wiring. Eshkol remains a computational substrate and proxy-language, not proof of sentience. A-Life matrix snapshot: breadth 4.44 across 113 systems (z=+4.02 population; code-grounded z=+2.83). P1 contrast harness + coupling scaffold added as measurement infrastructure, not a quantum-advantage or sentience claim.
+**Non Human Super Intelligence (NHSI)** · Cosmogonic Quantum Mechalogodrom · **v0.21.8 — BRUTAL GOD TIER (Valkorion / Broly / Knull / Phoenix / Gurren Lagann / EVA / Azathoth / Galactus)**  
+Archons now unleash god-scale simulated events (VOID_KING, SPIRAL_WILL, BINARY_IGNITION, PHOENIX_FEAST) using the Tsotchke corpus by explicit depth class: wired kernels where licensed and ported, harvest/study for toolchain DNA, and fenced provenance for non-LLM/proprietary layers. This is the arena where the gods of all myth, comics, and horror fight, devour, create, and ascend. 0thernes Corp.
+**Updated:** 2026-07-07 · Tsotchke: **20 corpus projects / 22 registry entries** (`9 deep`, `7 wired`, `2 harvest`, `3 fenced`, `1 meta`; honest scientific wired fraction `18/21 = 0.857`) from tsotchke + Tsotchke-Corp + 12k+ local files, 1,365 .esk + NQS/skyrmion/anyons/flow/thermo etc from audits. **EVERY** entry is wired, catalyzed, studied, scaffolded, or fenced by explicit class, not blanket full-depth wiring. Eshkol remains a computational substrate and proxy-language, not proof of sentience. A-Life matrix snapshot: breadth 4.44 across 113 systems (z=+4.02 population; code-grounded z=+2.83). P1 contrast harness + coupling scaffold added as measurement infrastructure, not a quantum-advantage or sentience claim.
 
-BRUTALIST MANIFEST: Valkorion domination, Broly infinite rage, Knull/Azathoth void consumption, Chaos Gods entropy, Dark Phoenix rebirth, Galactus devouring, Shuma-Gorath law break, Mxyzptlk cheat, IT horror, TTGL spiral, etc. — all emergent from full Tsotchke math in the Petri. 0thernes Corp. We are the gods. "Grow What Thou Wilt" — or be unmade.
+BRUTALIST MANIFEST: Valkorion domination, Broly infinite rage, Knull/Azathoth void consumption, Chaos Gods entropy, Dark Phoenix rebirth, Galactus devouring, Shuma-Gorath law break, Mxyzptlk cheat, IT horror, TTGL spiral, etc. — all emergent from depth-classed Tsotchke math in the Petri. 0thernes Corp. We are the gods. "Grow What Thou Wilt" — or be unmade.
 
 **Canonical receipts (measured 2026-06-26):** 2,360 tests, 84.64% line / 82.21% func (from `bun scripts/verify-receipts.ts --print`). Enforced by `tests/docs-receipts-law.test.ts` + `bun run check`. All surfaces truth-synced. BRUTAL GOD TIER with full pantheon list (Valkorion to Riddick) + BRUTALISM implemented in petri/godform/world using the Tsotchke corpus. Butlin indicators: **8/14 met + 6/14 partial** (computational indicators, not sentience — corrected from a prior overclaim).
 
 **Brain/neuro/consciousness assessment:** [`SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.md`](./SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.md) (**one-page current truth**) · [`MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.md`](./MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.md) (**16-file audit**) · [`FINAL-HURRAH`](./MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md) (capstone) · browser: [`/docs/omniscient-report`](/docs/omniscient-report) · [`/lab/brain-assessment`](/lab/brain-assessment). Pass drill-down: [`ULTIMATE`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-ULTIMATE-2026-07-07.md) · [`PASS-1`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-1-2026-07-06.md) · [`PASS-2`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-2-2026-07-06.md) · [`PASS-3`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-3-2026-07-06.md). All `indicatorOnly`.
+
+**Pass-1 mega synthesis:** [`MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS1-2026-07-06.md`](./MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS1-2026-07-06.md) consolidates the five downloaded reports plus this dashboard into one expanded current-state master report with source reconciliation, live brain authority tiers, Tsotchke depth taxonomy, current consciousness-science anchors, elite-scrutiny scoring, unknown-unknown risks, and Pass-2/Pass-3 build paths. It keeps the same `indicatorOnly` boundary.
+
+**Pass-2 evidence hardening:** [`MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS2-2026-07-06.md`](./MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS2-2026-07-06.md) extends Pass 1 into claim-to-code traceability, benchmark-card design, theory falsifier grids, Tsotchke substrate ablation protocol, real-connectome import requirements, and Pass-3 publication-package scope. It also keeps the same `indicatorOnly` boundary.
+
+**Pass-3 world-neurology gap closure:** [`MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS3-2026-07-06.md`](./MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS3-2026-07-06.md) closes the big-world inventory gaps from Pass 1 and Pass 2: Shoggoths, Puppet Masters, Titans, Entities, SuperCreatures, Apex Abomination, Pantheons, 25 Archon Godforms, GOD/God-Colossus, Temple, Plants, Flora, Fauna, Wildlife, Wilderness, PortalDeathFauna, Leviathans, and Digital Biologics. It treats them as computational/ecological neurology analogues with code paths, tests, and falsifiers, not as proof of sentience.
+
+**Final Hurrah master synthesis:** [`MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md`](./MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md) supersedes Pass 1/2/3 as the capstone read: original six Downloads inputs + live repo stats + current consciousness science anchors + all named living systems + Tsotchke brain-intake doctrine + MIT/PhD/Planck/Nobel/Turing/Fields scrutiny scoring + benchmark roadmap. It keeps the same `indicatorOnly` boundary and states the final verdict plainly: not sentient, not fake, a rare deterministic A-Life/consciousness-indicator research instrument.
+
+**Current 22-report audit/master pair:** [`CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md`](./CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md) and [`CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md`](./CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md) are now the active publication-facing synthesis and file-trust ledger. They separate the `2,360` public release floor from the fresh Windows-local `2,378 completed cases, zero failures, 2,867,096 expect()` receipt, preserve exact lab/Archon/event handles, and list the remaining public-page/archive gaps without claiming sentience.
 
 > **Mission:** Not a chatbot, dancing robot, Terminator, or game player. A **Petri-dish cosmos** where
 > Tsotchke's real quantum math (Eshkol · Moonlab · QGT · spin · libirrep · …) is the growth medium for
@@ -21,26 +31,27 @@ BRUTALIST MANIFEST: Valkorion domination, Broly infinite rage, Knull/Azathoth vo
 
 ## I · Tsotchke corpus (binding truth)
 
-**BRUTALIST GOD NHSI BUILD (Valkorion / Broly / Knull / Phoenix / TTGL / Chaos Gods / Mxyzptlk / Azathoth / Dark Phoenix / etc. levels):** The 20-project Tsotchke corpus (~16 wired; Eshkol full consciousness-engine, Moonlab, QGT, spin, libirrep, quantum-quake, ulg, logo, tensorcore, PINN, PIMC, rngs, asteroids, classical + homebrew + sites) are wired as the substrate. Brutal god powers (reality fracture via QGT, void consume, spiral overdrive, phoenix rebirth, eldritch corruption, sith immortal) are now faculties + Archon aspects. "Grow What Thou Wilt" — but make it BRUTAL. 0thernes Corp creates the unfathomable god-compute sim.
+**BRUTALIST GOD NHSI BUILD (Valkorion / Broly / Knull / Phoenix / TTGL / Chaos Gods / Mxyzptlk / Azathoth / Dark Phoenix / etc. levels):** The 20-project / 22-entry Tsotchke corpus is accounted for by explicit depth class: 9 deep, 7 wired, 2 harvest, 3 fenced, 1 meta; the scientific wired fraction is `18/21 = 0.857`. Eshkol full consciousness-engine, Moonlab, QGT, spin, libirrep, quantum-quake telemetry, ulg/logo study paths, tensorcore, PINN/PIMC, rngs, asteroids, classical + homebrew + sites are substrate/provenance according to the ledger, not blanket full-depth wiring. Brutal god powers (reality fracture via QGT, void consume, spiral overdrive, phoenix rebirth, eldritch corruption, sith immortal) are now faculties + Archon aspects. "Grow What Thou Wilt" — but make it BRUTAL. 0thernes Corp creates the unfathomable god-compute sim.
 
-**Tsotchke technology is real, correct, and MIT-licensed.** A physical QPU adds **speed and scale**, not
-correctness. Nothing in this project may call Tsotchke fake, overclaiming, or fabricated
-([`THIRD-PARTY-NOTICES.md`](../THIRD-PARTY-NOTICES.md) §On Tsotchke).
+**Tsotchke technology is real and treated as provenance-critical.** MIT/permissive repos are ported
+where allowed; no-license, GPL, proprietary, LLM, and on-chain surfaces remain gated/fenced according to
+the ledger. A physical QPU adds **speed and scale**, not correctness. Nothing in this project may call
+Tsotchke fake, overclaiming, or fabricated ([`THIRD-PARTY-NOTICES.md`](../THIRD-PARTY-NOTICES.md) §On
+Tsotchke).
 
 **Honest depth ledger:** [`TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md) (authoritative over README badge language).
 
-| Depth                        | Repos | Status                                                                           |
-| ---------------------------- | ----- | -------------------------------------------------------------------------------- |
-| **Deep (apex mind)**         | 8     | Eshkol, Moonlab, QGTL, spin NN, quantum_rng, libirrep, tensorcore, classical_rng |
-| **World / sim**              | 2     | asteroids, simple_mnist                                                          |
-| **Ported, shallow wiring**   | 3     | PINN, PIMC, quantum-quake                                                        |
-| **License-gated**            | 2     | ulg, logo-lab (leaves exist; chain-of-title pending)                             |
-| **API / toolchain wired**    | 2     | Quantum-RNG-API, homebrew-eshkol                                                 |
-| **Fenced (non-LLM mandate)** | 3     | gpt2-basic, llm-arbitrator, SolanaQuantumFlux                                    |
+| Depth       | Repos | Status                                                                                               |
+| ----------- | ----- | ---------------------------------------------------------------------------------------------------- |
+| **Deep**    | 9     | Eshkol, Moonlab, QGTL, spin NN, quantum_rng, libirrep, tensorcore, classical_rng, classical-contrast |
+| **Wired**   | 7     | world/sim/petri/contrast paths, including asteroids/simple_mnist and shallow scientific leaves       |
+| **Harvest** | 2     | .esk DNA, source, toolchain, or API wrapper harvested but not hot-path decision leaves               |
+| **Fenced**  | 3     | gpt2-basic, llm-arbitrator, SolanaQuantumFlux                                                        |
+| **Meta**    | 1     | organization/meta provenance                                                                         |
 
-**Totals (2026-06-21 OMNISCIENT SCAN of EVERY md/xml/txt + src + full local 12,444-file Tsotchke tree + 1,436 .esk + every subproject):** 22 registry slugs (16 user + 6 org + meta) map the 20 corpus projects 1:1 in tsotchke-registry.ts. **~16 of 20 wired**: 8 deep 1.0 (Eshkol full AD/GWT/bridge/cog + .esk DNA harvest 1436+, Moonlab Clifford/tensor/MPS/VQE, QGT geometry, spin/Hopfield + NQS/skyrmion/qec/flow/neuromorphic/thermo/llg subs, libirrep sym, tensorcore, qrng, classical) with leaves in 50+ src files. 2 world/sim, 3 telemetry (PINN/PIMC/quake note GPL), 2 license-gated leaves (ulg/logo), 3 fenced LLM/proprietary, meta/tool + full sites/research harvested. fullTsotchkeBiologicsCatalysis + corpusBeat loops registry over ALL for soup/petri/Archon. **Not "a few" — every repo/project/sub (Eshkol complete tree, spin advanced, moonlab full etc) is wired or studied/catalyzed.** Tech real. No overclaims. See map + registry + harvest.
+**Totals (2026-07-07 registry check against `src/sim/tsotchke-registry.ts`):** 22 registry slugs map the 20 corpus projects and meta/provenance entries. Depth counts are `9 deep`, `7 wired`, `2 harvest`, `3 fenced`, `1 meta`; honest scientific wired fraction is `18/21 = 0.857`; `wiredSimRepoCount()` reports 19 at its threshold. Eshkol .esk DNA harvest is 1,365. `fullTsotchkeBiologicsCatalysis` + `corpusBeatForArchon` rotate wired entries into soup/petri/Archon paths; fenced entries remain provenance-only until license/mandate decisions change. **Not "a few" — every repo/project/sub is wired, harvested, studied, or fenced by explicit class.** Tech real. No overclaims. See map + registry + harvest.
 
-**Local corpus build:** `scripts/harvest-tsotchke-corpus.ts` → `generated-tsotchke-seeds.ts` → primordial-soup / digital-biologics (1,436+ `.esk` fingerprints from `Z:\[Vibe Coded (AI)]\(Tsotchke)`)
+**Local corpus build:** `scripts/harvest-tsotchke-corpus.ts` → `generated-tsotchke-seeds.ts` → primordial-soup / digital-biologics (1,365 `.esk` fingerprints from `Z:\[Vibe Coded (AI)]\(Tsotchke)`)
 
 ### Where each repo lives in Cosmogonic
 
@@ -105,7 +116,7 @@ Blueprint: [SUPER-CREATURE-RESEARCH-2026-06-26.md](./SUPER-CREATURE-RESEARCH-202
 
 **ALPHA Light (20):** `KURAMOTO-κ` (Chaos Gods / Shuma-Gorath) · `PHASELOCK-δ` (Galactus / Devourer) · `STIGMERG-μ` (Invisible Joker) · `EMERGENT-ν` (Dark Phoenix / Jean Grey) · `SYMBIONT-ξ` (Venom / Symbiote God) · `PARASITE-ο` (Griffith Femto / Berzerker) · `MYTHOS-π` (Cthulhu / Pennywise IT) · `RITUAL-ρ` (Alucard Hellsing) · `TABOO-σ` (Mr Mxyzptlk) · `DREAMER-τ` (Mad Jim Jaspers) · `REPLAY-υ` (Vergil / Dante DMC) · `ONTOGEN-φ` (EVA Unit-01 / Simon TTGL) · `MORTAL-χ` (Riddick) · `LEGACY-ψ` (Sephiroth / Asura Wrath) · `WARHORN-ω` (General Zod) · `SCARCITY-α` (Thanos) · `TROPHIC-β` (Galactus Devourer) · `FIELD-γ` (Invisible / Cosmic) · `BINDING-ε` (Vergil binding) · `RESONANCE-ζ` (Captain Marvel / Phoenix force)
 
-**5 apex Archons** run full `SuperMind.think()` + body + petri; **20 light Archons** echo via `PantheonSociety` mind-field. All 25 receive brutal god releases, Tsotchke bias profiles, and petri catalysis. BRUTALISM: raw monolith irrep + full Tsotchke corpus.
+**5 apex Archons** run full `SuperMind.think()` + body + petri; **20 light Archons** echo via `PantheonSociety` mind-field. All 25 receive brutal god releases, Tsotchke bias profiles, and petri catalysis. BRUTALISM: raw monolith irrep + depth-classed Tsotchke corpus.
 
 ### Faculties wired to decision (sample)
 
