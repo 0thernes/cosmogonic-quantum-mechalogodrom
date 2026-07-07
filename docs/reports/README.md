@@ -5,12 +5,15 @@
 Technical reports and audits for Cosmogonic Quantum Mechalogodrom. Dated filenames (`2026-*`) are
 **historical worldline snapshots** when present — they preserve evidence from their authoring pass.
 **Current** gate receipts: [VERIFICATION-ANALYTICAL-DATA.md](../VERIFICATION-ANALYTICAL-DATA.md) §1 ·
-`scripts/canonical-receipts.ts` (v0.21.6 · **2,360-test floor** · **84.64 % / 82.21 %** coverage).
+`scripts/canonical-receipts.ts` (v0.21.7 · **2,360-test floor** · **84.64 % / 82.21 %** coverage).
 
 ## Reports
 
 - [VERIFICATION-ANALYTICAL-DATA.md](../VERIFICATION-ANALYTICAL-DATA.md) — canonical current facts.
 - [MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md](../MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md) — **FINAL HURRAH** fusion audit capstone; browser: `/lab/brain-assessment`.
+- [MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-3-2026-07-06.md](../MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-3-2026-07-06.md) — living-world census (Pass 3).
+- [SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.md](../SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.md) — **one-page current truth**; browser: `/docs/omniscient-report`.
+- [MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.md](../MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.md) — sixteen-file audit; browser: `/docs/ultrathink-audit`.
 - [2026-07-01-25-POINT-SCRUTINY-SCORECARD.md](./2026-07-01-25-POINT-SCRUTINY-SCORECARD.md) — 25-point
   adversarial scrutiny (overall 8.3/10). Chart:
   [assets/scrutiny-25-scorecard.svg](./assets/scrutiny-25-scorecard.svg).

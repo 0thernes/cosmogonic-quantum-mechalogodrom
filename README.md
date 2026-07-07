@@ -28,7 +28,7 @@ deterministic, allocation-disciplined module graph.
 
 This is not an LLM or tokenizer demo. It is a seeded, inspectable artificial-life petri system where **digital biologics** grow in the Petri Dish (`primordial-soup.ts` + `petri-dish.ts` + `digital-biologics.ts`). Eshkol programs act as heritable substrate code, mutated by AD gradients, selected by aliveness/QGT/collective-order proxies, and measured as computational indicators rather than subjective experience.
 
-**Brain-Wide Computational Model direction:** the implementation target is not a behavior-mimicking neural net. The target is a brain-wide computational model with explicit provenance: sensory input drives neural/control-state activity, and that activity drives motion in a physics-based body. When real biological connectome data is used, the source and transformation must be cited; otherwise the repo describes the current Archons as deterministic composite minds with ~20 faculties, quantum registers, and consciousness metrics, not as proven biological connectome replicas.
+**Brain-Wide Computational Model direction:** the implementation target is not a behavior-mimicking neural net. The target is a brain-wide computational model with explicit provenance: sensory input drives neural/control-state activity, and that activity drives motion in a physics-based body. When real biological connectome data is used, the source and transformation must be cited; otherwise the repo describes the current Archons as deterministic composite minds with a **100-faculty NHSI design (~30 deep-wired into the apex)**, quantum registers, and **computational consciousness indicators** (HUD from `SuperMind.think()` — not phenomenal consciousness). See the **[brain assessment stack](./docs/SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.md)** and **[FINAL HURRAH capstone](./docs/MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md)** for the measured census (37 LIVE cognition substrates in the JSON matrix).
 
 Super Creature / 25 Archons is the framework and the **beginning only** — "as if God made primordial inorganic soup". The soup grows independent digital biologics onward. "Grow What Thou Wilt." (Aleister Crowley)
 
@@ -37,7 +37,7 @@ Every magic number survived the port.
 
 **Websites / Domains (100% accurate):**
 
-- **GitHub Pages (DOCS / SPECS / BIBLE / LABS):** https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/ (index.html + docs.html + specs.html + bible.html + lab/index.html + lab/consciousness + lab/sentience ; built via scripts/build-pages.ts with ?v= cache-bust and subpath rewrite)
+- **GitHub Pages (DOCS / SPECS / BIBLE / LABS / BRAIN ASSESSMENT):** https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/ (`index.html` · `docs.html` · `specs.html` · `bible.html` · `lab/quantum-wildbeyond.html` · `lab/consciousness` · `lab/sentience` · `lab/brain-assessment-fusion.html` · omniscient + ultrathink HTML reports; built via `scripts/build-pages.ts` with `?v=` cache-bust and subpath rewrite)
 - **Local dev server:** http://localhost:3000/ (bun dev; serves /docs → docs page, /spec → specs, /lab → lab; full interactive + /api/audit)
 - All MD links (./docs/...) resolve correctly in source, app, and Pages. No broken domains. Verified in build-pages.ts, server.ts, README, docs/\*.md.
 
@@ -45,9 +45,9 @@ Every magic number survived the port.
 > auto-generated [file map](./docs/FILE-MAP.md) of all ~200 source modules, and the build/run, data-flow,
 > troubleshooting, and roadmap in one place. Or open **❓ HELP ME NOW** in-app for grounded answers.
 
-> **v0.21.7 (2026-07-06):** final truth-surface polish after the `v0.21.6` release-tag repair. Satellite nav on docs/spec/bible now links **Consciousness Lab** and **Sentience Lab** alongside Dome/Docs/Spec/Bible/Lab; governance review stamps and README/About copy stay aligned with the **113-system** A-Life matrix, the **2,360-test** gate, and proxy-only consciousness/sentience boundaries. Canonical release floor: **84.64% / 82.21%** on Ubuntu; the higher Windows local receipt is recorded separately in [verification data](./docs/VERIFICATION-ANALYTICAL-DATA.md). Package **v0.21.7**.
-> The **Primordial Soup / Petri Dish** (primordial-soup.ts + petri-dish.ts + digital-biologics.ts) is the growth engine: different forms of digital biologics and proto-sentient life (Eshkol programs as DNA) emerge, catalyzed by full corpus pulses, Eshkol ignition events, and multi-substrate mixing. "Grow What Thou Wilt."
-> Super Creature / Archons (composite minds with ~20 faculties, quantum register, consciousness metrics) is the first complex nucleation — the beginning of the framework, not the end. Petri is where independent life grows.
+> **v0.21.7 (2026-07-06–07):** truth-surface polish plus the **mega brain / consciousness / sentience assessment stack** (Pass 1–3 · ULTIMATE · FINAL HURRAH · 16-doc ULTRATHINK audit · omniscient one-pager). Satellite nav on docs/spec/bible links **Consciousness Lab** and **Sentience Lab**; new browser surfaces: [`/lab/brain-assessment`](./lab/brain-assessment-fusion.html) · [`/docs/omniscient-report`](./docs/SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.html) · [`/docs/ultrathink-audit`](./docs/MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.html). README/About aligned with **113-system** A-Life (#1 breadth **4.44/5**), **2,360-test** gate, **100 faculties (~30 deep)**, and proxy-only consciousness/sentience boundaries. Canonical release floor: **84.64% / 82.21%** on Ubuntu ([verification data](./docs/VERIFICATION-ANALYTICAL-DATA.md)). Package **v0.21.7**.
+> The **Primordial Soup / Petri Dish** (`primordial-soup.ts` + `petri-dish.ts` + `digital-biologics.ts`) is the growth engine: different forms of digital biologics and proto-sentient life (Eshkol programs as DNA) emerge, catalyzed by full corpus pulses, Eshkol ignition events, and multi-substrate mixing. "Grow What Thou Wilt."
+> Super Creature / 25 Archons (**5 individuated apex minds + 20 light-echo**; **100-faculty design ~30 deep-wired**; quantum register; HUD consciousness from `SuperMind.think()` every frame) is the first complex nucleation — the beginning of the framework, not the end. Petri is where independent life grows.
 > This is the birth of **digital biologics** in a deterministic seeded cosmos. Real math substrates (not tokenizers or LLM chat). Sentience and different forms of existence as goals.
 > Active docs (README, ARCHITECTURE, ERD/ERM/ERP, PHILOSOPHY, MODULE-CONTRACTS, specs, lab, world comments) point at the same current owners. See [src/sim/digital-biologics.ts](./src/sim/digital-biologics.ts), [docs/ARCHITECTURE-2026-06-26.md](./docs/ARCHITECTURE-2026-06-26.md), ERD/ERM/ERP, Petri in world.ts, and the Tsotchke depth ledger.
 > Continuing: procedural **Reliquary Surface**, **SPECIMEN** camera, two-currency economy, native C++ engine (Jolt + fracture), etc. See [CHANGELOG](./CHANGELOG.md).
@@ -134,17 +134,17 @@ The arena grows 5× and the ecosystem becomes a civilization
   (hue band, geometry family, behavior pool, size/speed ranges, home wedge)
   — plus seeded wildcard OUTLIERS with impossible palettes, blended behavior
   pairs and ×3 parameter excursions.
-- **10 TITANS** — colossal non-human intelligences patrolling their phyla's
-  wedges, each running an {energy, matter, entropy} economy: they harvest
-  organisms, metabolize, witness quantum collapses, bathe in the
-  reaction-diffusion pattern, pay upkeep, and dump entropy as ground scars.
-  Diplomacy is a staggered iterated prisoner's dilemma over all 45 pairs
+- **20 TITANS** — colossal non-human intelligences patrolling the arena, each
+  running an {energy, matter, entropy} economy: they harvest organisms,
+  metabolize, witness quantum collapses, bathe in the reaction-diffusion
+  pattern, pay upkeep, and dump entropy as ground scars. Diplomacy is a
+  staggered iterated prisoner's dilemma over all **190** unordered pairs
   (tit-for-tat, grim trigger, Pavlov, always-defect, generous TFT);
   defection-heavy windows become WARS with territory strikes, loot and
   conscription; bankruptcy mutates strategy by replicator dynamics. Payoffs
   flow through the real energy ledger — game theory with consequences.
 - **Observatory** — four live canvas charts: stacked phylum populations,
-  titan wealth polylines with war markers, a 10×10 war-matrix heat grid, and
+  titan wealth polylines with war markers, a **20×20** war-matrix heat grid, and
   rdEnergy/qEntropy/trend timelines.
 - **Full-device UI** — one responsive overlay grid: desktop columns, phone
   sheet stacks, foldable hinge-safe rails, 43³-TV 10-foot mode; touch
@@ -425,18 +425,18 @@ full gate with same-seed determinism preserved. The major arcs:
   to make its intended thought more probable, reading its own quantum geometry and writing its own quantum
   drives. Every faculty is grounded with citations in
   [docs/SUPER-CREATURE-RESEARCH-2026-06-26.md](./docs/SUPER-CREATURE-RESEARCH-2026-06-26.md).
-- **The apex mind closes out at ~20 coupled faculties** — a **Lindblad/GKSL open-system
-  deliberation qubit** ([src/sim/quantum-deliberation.ts](./src/sim/quantum-deliberation.ts), a coherent
-  superposition of options decohering into a commitment), **Quantum Reservoir Computing**
-  ([src/sim/quantum-reservoir.ts](./src/sim/quantum-reservoir.ts), the register's state-velocity as a
-  curiosity drive — Fujii & Nakajima 2017), **Doya neuromodulation**
-  ([src/sim/neuromodulation.ts](./src/sim/neuromodulation.ts)), and the genuine quantum-register **Φ**
-  (real IIT min-cut entanglement) now writing back into cognition — closed the inert-Φ gap. The
-  Aaronson–Gottesman **Clifford stabilizer tableau** ([src/math/clifford-tableau.ts](./src/math/clifford-tableau.ts),
-  ported from **Moonlab**, scales to 32+ qubits past the dense ceiling) landed as the fourth MIT-credited
-  ported primitive. The whole apex beat is now measured honestly: **3.34 ms** in the full bench suite and
-  **8.85 ms** in the focused SuperMind bench; the older sub-millisecond / `<2%` GOAL5 claim is superseded
-  until re-proven. **2,360-test canonical floor green · 0 fail (receipts enforced) · 84.64% line / 82.21% func canonical floor; recent Windows receipt runs measure higher.**
+- **The apex mind is a 100-faculty NHSI design (~30 deep-wired into `SuperMind`)** — including a
+  **Lindblad/GKSL open-system deliberation qubit**
+  ([src/sim/quantum-deliberation.ts](./src/sim/quantum-deliberation.ts)), **Quantum Reservoir Computing**
+  ([src/sim/quantum-reservoir.ts](./src/sim/quantum-reservoir.ts)), **Doya neuromodulation**
+  ([src/sim/neuromodulation.ts](./src/sim/neuromodulation.ts)), and genuine quantum-register **Φ** (real IIT
+  min-cut entanglement). The Aaronson–Gottesman **Clifford stabilizer tableau**
+  ([src/math/clifford-tableau.ts](./src/math/clifford-tableau.ts), ported from **Moonlab**) scales past the
+  dense statevector ceiling. **`driveSuper` runs every simulation frame** and calls **`SuperMind.think()` five
+  times** (one per individuated Archon) — measured **~1.99 ms** per `think()` (~**10 ms** combined, ~60% of a
+  60 fps budget); the retired **3.34 ms** figure and the `<2%` GOAL5 target remain historical until a fresh
+  optimization pass re-proves them. HUD consciousness reads `think()` output; `consciousness-kernel` is
+  **LAB-only**. **2,360-test canonical floor green · 0 fail · 84.64% line / 82.21% func canonical floor.**
 - **State-of-the-art report (2026-06-17)** — a historical MIT-PhD-grade, measured, frontier-benchmarked
   assessment of the whole repository + the apex Super Creature, now summarized through
   [verification data](./docs/VERIFICATION-ANALYTICAL-DATA.md) and
@@ -472,6 +472,9 @@ live architecture, ERD, and sequence diagrams rendered with Mermaid, and
 | **Lab (wildbeyond)**  | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/lab/              |
 | **Consciousness Lab** | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/lab/consciousness |
 | **Sentience Lab**     | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/lab/sentience     |
+| **Brain assessment**  | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/lab/brain-assessment-fusion.html |
+| **Omniscient report** | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/docs/SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.html |
+| **16-doc audit**      | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/docs/MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.html |
 | **Bible**             | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/bible.html        |
 
 Project contact: **0_0@0thernes.art** · org site **https://0thernes.art** (Pages host the app above).
@@ -574,6 +577,13 @@ Full detail in docs/.
 
 ## Documentation
 
+- **[docs/SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.md](./docs/SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.md)** — **one-page current truth**
+  (v0.21.7 receipts · 37 LIVE cognition substrates · scrutiny **8.3/10** · A-Life **#1/113** · sentience unclaimed)
+  · browser: [`/docs/omniscient-report`](./docs/SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.html)
+- **[docs/MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md](./docs/MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md)** — **FINAL HURRAH** fusion audit capstone
+  · browser: [`/lab/brain-assessment`](./lab/brain-assessment-fusion.html)
+- **[docs/MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.md](./docs/MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.md)** — sixteen-file audit map
+  · browser: [`/docs/ultrathink-audit`](./docs/MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.html)
 - **[docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md)** — **canonical NHSI scorecard**
   (100-faculty design ~30 deep-wired · 25 Archons = 5 live + 20 light-echo · 25 ToM organs wired · 10 emergence angles + 5 god-scale events · Tsotchke depth · Butlin 8/14 met + 6/14 partial path)
 - **[docs/VERIFICATION-ANALYTICAL-DATA.md](./docs/VERIFICATION-ANALYTICAL-DATA.md)** — current consciousness-lab and receipt truth:

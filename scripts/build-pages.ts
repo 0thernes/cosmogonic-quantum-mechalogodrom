@@ -62,6 +62,23 @@ await cp(
   new URL('lab/sentience-data.json', ROOT),
   new URL('lab/sentience/sentience-data.json', SITE),
 );
+await mkdir(new URL('lab/brain-assessment/', SITE), { recursive: true });
+await cp(
+  new URL('lab/brain-assessment-fusion.html', ROOT),
+  new URL('lab/brain-assessment/index.html', SITE),
+);
+await cp(
+  new URL('lab/brain-assessment-fusion.html', ROOT),
+  new URL('lab/brain-assessment-fusion.html', SITE),
+);
+await cp(
+  new URL('docs/SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.html', ROOT),
+  new URL('SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.html', SITE),
+);
+await cp(
+  new URL('docs/MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.html', ROOT),
+  new URL('MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.html', SITE),
+);
 
 // 2b. ALife SVG assets for docs/specs gallery (repo-relative paths).
 await cp(new URL('docs/reports/assets/', ROOT), new URL('docs/reports/assets/', SITE), {
@@ -98,6 +115,18 @@ const q = `?v=${V}`;
 const repo = process.env.GITHUB_REPOSITORY?.split('/')?.[1] || '';
 const base = repo ? `/${repo}` : ''; // e.g. "/cosmogonic-quantum-mechalogodrom" or "" (local)
 
+const brainNavBase = (b: string): ReadonlyArray<readonly [string, string]> => [
+  ['href="/lab/brain-assessment"', `href="${b}lab/brain-assessment/${q}"`],
+  [
+    'href="/docs/omniscient-report"',
+    `href="${b}SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.html${q}"`,
+  ],
+  [
+    'href="/docs/ultrathink-audit"',
+    `href="${b}MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.html${q}"`,
+  ],
+];
+
 // Lab page: use absolute paths on CI (bulletproof under project Pages subpath), relative locally.
 // CRITICAL: href="/" must be replaced LAST — it's a substring of href="/docs", href="/spec", etc.
 // If it runs first, it corrupts those into broken URLs (the GitHub Pages 404 bug).
@@ -108,6 +137,7 @@ const navFromLab: ReadonlyArray<readonly [string, string]> = base
       ['href="/bible"', `href="${base}/bible.html${q}"`],
       ['href="/lab/consciousness"', `href="${base}/lab/consciousness/${q}"`],
       ['href="/lab/sentience"', `href="${base}/lab/sentience/${q}"`],
+      ...brainNavBase(`${base}/`),
       ['href="/lab"', `href="${base}/lab/${q}"`],
       ['href="/lab/"', `href="${base}/lab/${q}"`],
       ['href="/"', `href="${base}/index.html${q}"`],
@@ -118,6 +148,15 @@ const navFromLab: ReadonlyArray<readonly [string, string]> = base
       ['href="/bible"', `href="../bible.html${q}"`],
       ['href="/lab/consciousness"', `href="./consciousness/${q}"`],
       ['href="/lab/sentience"', `href="./sentience/${q}"`],
+      ['href="/lab/brain-assessment"', `href="./brain-assessment/${q}"`],
+      [
+        'href="/docs/omniscient-report"',
+        `href="../SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.html${q}"`,
+      ],
+      [
+        'href="/docs/ultrathink-audit"',
+        `href="../MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.html${q}"`,
+      ],
       ['href="/lab"', `href="./${q}"`],
       ['href="/lab/"', `href="./${q}"`],
       ['href="/"', `href="../index.html${q}"`],
@@ -130,6 +169,7 @@ const navFromConsciousness: ReadonlyArray<readonly [string, string]> = base
       ['href="/bible"', `href="${base}/bible.html${q}"`],
       ['href="/lab/consciousness"', `href="${base}/lab/consciousness/${q}"`],
       ['href="/lab/sentience"', `href="${base}/lab/sentience/${q}"`],
+      ...brainNavBase(`${base}/`),
       ['href="/lab"', `href="${base}/lab/${q}"`],
       ['href="/lab/"', `href="${base}/lab/${q}"`],
       ['href="/"', `href="${base}/index.html${q}"`],
@@ -140,6 +180,15 @@ const navFromConsciousness: ReadonlyArray<readonly [string, string]> = base
       ['href="/bible"', `href="../../bible.html${q}"`],
       ['href="/lab/consciousness"', `href="./${q}"`],
       ['href="/lab/sentience"', `href="../sentience/${q}"`],
+      ['href="/lab/brain-assessment"', `href="../brain-assessment/${q}"`],
+      [
+        'href="/docs/omniscient-report"',
+        `href="../../SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.html${q}"`,
+      ],
+      [
+        'href="/docs/ultrathink-audit"',
+        `href="../../MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.html${q}"`,
+      ],
       ['href="/lab"', `href="../${q}"`],
       ['href="/lab/"', `href="../${q}"`],
       ['href="/"', `href="../../index.html${q}"`],
@@ -152,6 +201,7 @@ const navFromSentience: ReadonlyArray<readonly [string, string]> = base
       ['href="/bible"', `href="${base}/bible.html${q}"`],
       ['href="/lab/consciousness"', `href="${base}/lab/consciousness/${q}"`],
       ['href="/lab/sentience"', `href="${base}/lab/sentience/${q}"`],
+      ...brainNavBase(`${base}/`),
       ['href="/lab"', `href="${base}/lab/${q}"`],
       ['href="/lab/"', `href="${base}/lab/${q}"`],
       ['href="/"', `href="${base}/index.html${q}"`],
@@ -162,6 +212,15 @@ const navFromSentience: ReadonlyArray<readonly [string, string]> = base
       ['href="/bible"', `href="../../bible.html${q}"`],
       ['href="/lab/consciousness"', `href="../consciousness/${q}"`],
       ['href="/lab/sentience"', `href="./${q}"`],
+      ['href="/lab/brain-assessment"', `href="../brain-assessment/${q}"`],
+      [
+        'href="/docs/omniscient-report"',
+        `href="../../SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.html${q}"`,
+      ],
+      [
+        'href="/docs/ultrathink-audit"',
+        `href="../../MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.html${q}"`,
+      ],
       ['href="/lab"', `href="../${q}"`],
       ['href="/lab/"', `href="../${q}"`],
       ['href="/"', `href="../../index.html${q}"`],
@@ -175,6 +234,7 @@ const navRoot: ReadonlyArray<readonly [string, string]> = base
       ['href="/bible"', `href="${base}/bible.html${q}"`],
       ['href="/lab/consciousness"', `href="${base}/lab/consciousness/${q}"`],
       ['href="/lab/sentience"', `href="${base}/lab/sentience/${q}"`],
+      ...brainNavBase(`${base}/`),
       ['href="/lab"', `href="${base}/lab/${q}"`],
       ['href="/"', `href="${base}/index.html${q}"`],
     ]
@@ -184,6 +244,15 @@ const navRoot: ReadonlyArray<readonly [string, string]> = base
       ['href="/bible"', `href="bible.html${q}"`],
       ['href="/lab/consciousness"', `href="lab/consciousness/${q}"`],
       ['href="/lab/sentience"', `href="lab/sentience/${q}"`],
+      ['href="/lab/brain-assessment"', `href="lab/brain-assessment/${q}"`],
+      [
+        'href="/docs/omniscient-report"',
+        `href="SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.html${q}"`,
+      ],
+      [
+        'href="/docs/ultrathink-audit"',
+        `href="MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.html${q}"`,
+      ],
       ['href="/lab"', `href="lab/${q}"`],
       ['href="/"', `href="index.html${q}"`],
     ];
@@ -204,6 +273,7 @@ await rewrite('bible.html', navRoot);
 await rewrite('lab/index.html', navFromLab);
 await rewrite('lab/consciousness/index.html', navFromConsciousness);
 await rewrite('lab/sentience/index.html', navFromSentience);
+await rewrite('lab/brain-assessment/index.html', navFromLab);
 
 // 4. Drop a 404.html so GitHub Pages shows a branded fallback (not the raw GitHub 404).
 const notFound = `<!doctype html><html lang="en"><head><meta charset="utf-8">
@@ -222,5 +292,5 @@ await writeFile(new URL('404.html', SITE), notFound);
 await writeFile(new URL('.nojekyll', SITE), '');
 
 console.log(
-  `assembled Pages site -> site/ (index.html, docs.html, specs.html, lab/index.html, lab/consciousness/index.html, lab/sentience/index.html, docs/reports/assets/) · cache-bust v=${V}`,
+  `assembled Pages site -> site/ (index.html, docs.html, specs.html, lab/index.html, lab/consciousness/index.html, lab/sentience/index.html, lab/brain-assessment/index.html, docs/reports/assets/) · cache-bust v=${V}`,
 );

@@ -11,11 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.21.7] — 2026-07-06
 
-Truth-surface nav polish.
+Truth-surface nav polish and brain-assessment public surfaces.
 
 - Added **Consciousness Lab** links to the satellite nav on `docs.html`, `specs.html`, and `bible.html` (Sentience was already present on spec/bible; docs now lists both labs in header crumbs).
 - Bumped governance review stamps (`SECURITY`, `CONTRIBUTING`, `CODE_OF_CONDUCT`, `NOTICE`) to the `v0.21.7` truth surface.
 - README GitHub Pages bullet now names Bible + both lab surfaces explicitly.
+- **Brain assessment stack (2026-07-07 docs):** omniscient one-pager, FINAL HURRAH capstone, Pass 1–3 assessments, 16-doc ULTRATHINK audit; browser routes `/lab/brain-assessment`, `/docs/omniscient-report`, `/docs/ultrathink-audit`.
+- README/About refresh: **100 faculties (~30 deep)** (replacing stale ~20), **20 titans** (replacing 10), **~1.99 ms** per `SuperMind.think()` with **5×/frame** live cost (retired 3.34 ms), assessment doc links and GitHub Pages table rows.
 
 ## [0.21.6] — 2026-07-06
 

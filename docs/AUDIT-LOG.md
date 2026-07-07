@@ -11,6 +11,12 @@ changed and why.
 
 ---
 
+## 2026-07-07 (pass 25) — README / About / GitHub Pages truth-surface refresh (5 passes)
+
+Pass 1: README (`100 faculties`, `20 titans`, brain assessment stack, `~1.99 ms` / 5×/frame), `package.json` description, `index.html` meta, `CHANGELOG` 0.21.7 bullets, `docs/reports/README.md` v0.21.7. Passes 2–5: `docs.html` brain-assessment section + retired `3.34 ms`; `specs.html` + `bible.html` faculty/perf copy; cross-nav **Brain** link on all six Pages surfaces; `scripts/build-pages.ts` deploys `lab/brain-assessment` + omniscient/ultrathink HTML.
+
+---
+
 ## 2026-07-07 (pass 24) — 16-document ULTRATHINK audit + OMNISCIENT consolidation
 
 Total audit of sixteen user-referenced docs: `MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.md` + consolidated truth `SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.md` + HTML viewers at `/docs/ultrathink-audit` and `/docs/omniscient-report`. Added alias stubs (`MEGA-MASTER-BRAIN-*-PASS*`) and retired pointers for local `SUPER-REPORT-*` drafts.
