@@ -48,9 +48,15 @@ report/spec against `file:line` source, then shipped the confirmed corrections i
 - BENCHMARKS entity-cap numbers - measurements at a specific cap; relabeling would manufacture a false
   receipt. Needs a re-bench, not a doc edit.
 - RUNBOOK "0.10.4" - the last entry of a historical semver-progression list, not a current-version claim.
-- MEGA-MASTER PASS-1/2/3 trio - a purpose-separated 3-part series (synthesis / module-atlas / census)
-  that the NHSI dashboard declares primary; retire-vs-keep is an owner editorial call, pending decision.
-  The loop was confirmed paused during this sweep (zero fleet pushes; HEAD stayed even with origin/main).
+
+### MEGA-MASTER trio: refreshed per owner call
+
+The purpose-separated 3-part MEGA-MASTER series (synthesis / module-atlas / census), which the NHSI
+dashboard declares the primary brain assessment, was flagged as a retire-vs-keep editorial decision and
+put to the owner, who chose REFRESH over retire. Current-version refs bumped v0.21.7 -> v0.21.9, reviewed
+date -> 2026-07-07, series kept (`143bfb1`); PASS-2 also had a naive-arithmetic think() 5x-batch figure
+fixed 9.95 -> 9.77 ms. The loop was confirmed paused during the sweep (zero fleet pushes; HEAD stayed even
+with origin/main).
 
 ---
 
