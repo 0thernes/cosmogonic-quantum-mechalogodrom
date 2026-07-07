@@ -3,6 +3,7 @@
 Generated: 2026-07-07  
 Workspace: `Z:\[Vibe Coded (AI)]\CLAUDECODE\Cosmogonic Quantum Mechalogodrom`  
 Scope: the 22 user-listed Markdown and HTML report artifacts in `docs/`
+Browser companion: `docs/CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.html`
 
 ## Executive Verdict
 
@@ -19,6 +20,10 @@ single prior report. The accurate position is:
   GOD/GodColossus, Temple, flora/fauna/wildlife, and Tsotchke.
 - The biggest missing layer is not "content exists"; it is "content is unified,
   current, falsifiable, browser-valid, and publication-ready."
+- Second audit update: publication-facing docs now treat Pass-1/2/3/Final-Hurrah
+  mega drafts as local archive drafts, not public release links. Public truth is
+  the tracked consolidated 22 master/audit pair plus the BRAIN/VERIFICATION/NHSI
+  spine.
 
 ## Current Evidence Snapshot
 
@@ -27,16 +32,16 @@ This audit integrates three critic lanes:
 | Lane   | Focus                                       | Result                                                                                                                |
 | ------ | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | Hooke  | File staleness, contradictions, trust tiers | All 22 files exist; major scope, receipt, count, and overclaim drift found.                                           |
-| Pauli  | Gates, receipts, HTML/format validity       | Typecheck/lint/sync pass; fresh fifth-pass `verify:receipts` run reported 2,378 pass; one old HTML remains malformed. |
+| Pauli  | Gates, receipts, HTML/format validity       | Typecheck/lint/sync pass; fresh fifth-pass `verify:receipts` run reported 2,380 pass; one old HTML remains malformed. |
 | Singer | Coverage gaps and omitted named systems     | Named systems are covered but scattered; browser/public output and scientific controls remain weakest.                |
 
 Fresh fifth-pass verification receipt available to this audit set:
 
 | Item                              | Current observed value                                                                                                |
 | --------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `verify:receipts`                 | 2,378 pass / 0 fail, fresh fifth-pass verified receipt                                                                |
-| Expect calls                      | 2,867,096, fresh fifth-pass verified receipt                                                                          |
-| Test files                        | 255                                                                                                                   |
+| `verify:receipts`                 | 2,380 pass / 0 fail, fresh fifth-pass verified receipt                                                                |
+| Expect calls                      | 2,867,137, fresh fifth-pass verified receipt                                                                          |
+| Test files                        | 256                                                                                                                   |
 | Line coverage                     | 92.01%                                                                                                                |
 | Function coverage                 | 89.65%                                                                                                                |
 | `typecheck`                       | Passed                                                                                                                |
@@ -47,15 +52,20 @@ Fresh fifth-pass verification receipt available to this audit set:
 | Browser smoke                     | Not performed; Chrome/Edge exist by explicit path, but not as a one-command PATH/Playwright workflow                  |
 | Build                             | Not rerun by critic because build writes generated artifacts                                                          |
 
+Second audit repair note: the main rollout reran `bun run check` and `bun run
+pages` locally after fixing the dashboard and Bible link generation. Both passed.
+Remote CI/release still needs post-commit confirmation before `v0.21.8` is called
+fully published.
+
 Important distinction: `2,360` is the portable canonical floor embedded in sync
 surfaces. It is not the latest local receipt. `2,373` was a previous current
 receipt in the 16-file consolidation. The fresh fifth-pass verified local
-receipt available to this audit set is `2,378`.
+receipt available to this audit set is `2,380`.
 
 Post-write note: a final local `bun run verify:receipts` attempt after creating
 these consolidated artifacts timed out after 120 seconds and left no live
 `bun.exe` process. A later fifth-pass currentness lane completed the run and
-verified `2,378 pass / 0 fail / 2,867,096 expect() calls`; that supersedes the
+verified `2,380 pass / 0 fail / 2,867,137 expect() calls`; that supersedes the
 earlier timeout caveat for receipt wording.
 
 ## 22-File Trust Table
@@ -67,7 +77,7 @@ earlier timeout caveat for receipt wording.
 | 3   | `MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.md`                              | Tier C        | Mine for methodology, controls, claim linter | Strong but not the final current master.                                        |
 | 4   | `SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.html`                 | Tier E        | Do not promote                               | Malformed HTML near `<h4>Build Paths:</h3>`; overclaim-prone.                   |
 | 5   | `SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.md`                   | Tier E        | Archive rhetoric/draft                       | Stale scale counts and overclaim language.                                      |
-| 6   | `VERIFICATION-ANALYTICAL-DATA.md`                                                | Tier A        | Keep as evidence base                        | Current pass now separates 2,360 floor from 2,378 latest receipt.               |
+| 6   | `VERIFICATION-ANALYTICAL-DATA.md`                                                | Tier A        | Keep as evidence base                        | Current pass now separates 2,360 floor from 2,380 latest receipt.               |
 | 7   | `MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md` | Tier C+       | Mine heavily for named-system ledger         | Valuable coverage, but still needs sober falsifiability framing.                |
 | 8   | `NHSI-PROGRESS-DASHBOARD-2026-06-26.md`                                          | Tier A-       | Keep as progress dashboard                   | Dated June 26; must be refreshed for July 7 receipt/state.                      |
 | 9   | `SUPER-REPORT-ULTIMATE-MEGA-2026-07-06.md`                                       | Tier E        | Archive                                      | Stale scale counts and "complete/omniscient" wording.                           |
@@ -131,21 +141,22 @@ analysis evolved.
 
 ## Staleness and Defect Ledger
 
-| Defect                               | Severity | Where it appears                                                  | Current correction                                                                                                        |
-| ------------------------------------ | -------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| 16-file scope after scope grew to 22 | High     | `FILE-AUDIT-16`, `CONSOLIDATED-16-*`                              | Rename/update to 22-file scope.                                                                                           |
-| 2,360 called latest                  | High     | `VERIFICATION`, `MASTER-ASSESSMENT` family                        | `2,360` is floor; latest observed is `2,378`.                                                                             |
-| 2,373 / 2,376 called latest          | Medium   | `CONSOLIDATED-16-*`, earlier 22-file draft                        | Superseded by `2,378`.                                                                                                    |
-| Malformed HTML                       | High     | `SUPER-REPORT-OMNISCIENT...html`                                  | Fix mismatched heading tag near `<h4>Build Paths:</h3>` before browser use; its TOC anchors also need verification.       |
-| Format red                           | Medium   | Several super/master docs                                         | Prettier these files or archive them as unformatted drafts.                                                               |
-| Build status contradiction           | High     | `BRAIN...ASSESSMENT`, consolidated drafts                         | Treat build-green and build-red claims as time-boxed unless rerun.                                                        |
-| Public discoverability gap           | High     | `index.html`, `docs.html`, `specs.html` according to critic lanes | Public pages must link and publish the new `CONSOLIDATED-22-*` artifacts; current pass adds links plus Pages doc-copying. |
-| Stale scale counts                   | Medium   | `SUPER-REPORT-ULTIMATE`, `OMNISCIENT`, `MASTER` family            | Current tracked scale: 584 TS files, 135,813 TS lines, 8 C/C++ files, 730 tracked files.                                  |
-| Bad source path                      | Medium   | `SUPER-REPORT-2ND`                                                | Replace `super-mith.ts` with `super-mind.ts`.                                                                             |
-| Overclaim language                   | High     | `ULTIMATE`, `OMNISCIENT`, `MASTER`                                | Use proxy-consciousness and falsifiable benchmark language.                                                               |
-| Controls ambiguity                   | Medium   | Cross-report                                                      | `CONTROLS` is UI controls; scientific controls are ablations/nulls/seed sweeps/lab JSON/fact audits.                      |
-| Archive index                        | Resolved | `docs/reports/2026-07-07/INDEX.md`                                | 16 archived drafts now live under the index (pass 28).                                                                    |
-| Markdown/HTML parity gap             | Medium   | New consolidated HTML                                             | Browser HTML is a condensed companion view, not a complete mirror of the Markdown master; label it that way or expand it. |
+| Defect                               | Severity | Where it appears                                                      | Current correction                                                                                                                                |
+| ------------------------------------ | -------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 16-file scope after scope grew to 22 | High     | `FILE-AUDIT-16`, `CONSOLIDATED-16-*`                                  | Rename/update to 22-file scope.                                                                                                                   |
+| 2,360 called latest                  | High     | `VERIFICATION`, `MASTER-ASSESSMENT` family                            | `2,360` is floor; latest observed is `2,380`.                                                                                                     |
+| 2,373 / 2,376 called latest          | Medium   | `CONSOLIDATED-16-*`, earlier 22-file draft                            | Superseded by `2,380`.                                                                                                                            |
+| Malformed HTML                       | High     | `SUPER-REPORT-OMNISCIENT...html`                                      | Fix mismatched heading tag near `<h4>Build Paths:</h3>` before browser use; its TOC anchors also need verification.                               |
+| Format red                           | Medium   | Several super/master docs                                             | Prettier these files or archive them as unformatted drafts.                                                                                       |
+| Build status contradiction           | High     | `BRAIN...ASSESSMENT`, consolidated drafts                             | Treat build-green and build-red claims as time-boxed unless rerun.                                                                                |
+| Public discoverability gap           | High     | `index.html`, `docs.html`, `specs.html` according to critic lanes     | Public pages must link and publish the new `CONSOLIDATED-22-*` artifacts; current pass adds links plus Pages doc-copying.                         |
+| Pages Bible link gap                 | High     | `bible.html`, `scripts/gen-bible-corpus.ts`, `scripts/build-pages.ts` | Fixed in second audit: root docs are copied to Pages; source/script references go to GitHub blob URLs; new `bible-public-links` test guards this. |
+| Stale scale counts                   | Medium   | `SUPER-REPORT-ULTIMATE`, `OMNISCIENT`, `MASTER` family                | Current tracked scale: 585 TS files, 135,898 TS lines, 8 C/C++ files, 735 tracked files.                                                          |
+| Bad source path                      | Medium   | `SUPER-REPORT-2ND`                                                    | Replace `super-mith.ts` with `super-mind.ts`.                                                                                                     |
+| Overclaim language                   | High     | `ULTIMATE`, `OMNISCIENT`, `MASTER`                                    | Use proxy-consciousness and falsifiable benchmark language.                                                                                       |
+| Controls ambiguity                   | Medium   | Cross-report                                                          | `CONTROLS` is UI controls; scientific controls are ablations/nulls/seed sweeps/lab JSON/fact audits.                                              |
+| Archive index                        | Resolved | `docs/reports/2026-07-07/INDEX.md`                                    | 17 archived drafts now live under the index (pass 28).                                                                                            |
+| Markdown/HTML parity gap             | Medium   | New consolidated HTML                                                 | Browser HTML is a condensed companion view, not a complete mirror of the Markdown master; label it that way or expand it.                         |
 
 ## Second-Pass Miss Check Addendum
 
@@ -257,7 +268,7 @@ the coverage is distributed and uneven.
 ### Current Enough To Carry Forward
 
 - The 22-file scope.
-- The 2,378-pass fresh fifth-pass verified receipt.
+- The 2,380-pass fresh fifth-pass verified receipt.
 - The distinction between canonical floor and latest local receipt.
 - The proxy-consciousness framing.
 - The named-system coverage ledger from `FINAL-HURRAH` plus richer `PASS3`
@@ -282,7 +293,7 @@ the coverage is distributed and uneven.
 - Browser render fidelity of the generated HTML reports.
 - Public GitHub Pages parity with local docs.
 - Whether archived files have actually been copied under
-  `docs/reports/2026-07-07/`. **Resolved pass 28** — 16 files + `INDEX.md`.
+  `docs/reports/2026-07-07/`. **Resolved pass 28** — 17 files + `INDEX.md` (includes superseded `MASTER-ASSESSMENT`).
 - Whether all static pages have been regenerated after the Titan/source drift.
 
 ## Scientific and Academic Readiness Score
@@ -341,7 +352,7 @@ These are the high-value next moves:
 
 1. Make `CONSOLIDATED-22-*` the new active pair and archive the `16` pair.
 2. Keep `VERIFICATION-ANALYTICAL-DATA.md` sealed on the current split:
-   `2,360` is the portable floor and `2,378` is the fresh fifth-pass verified
+   `2,360` is the portable floor and `2,380` is the fresh fifth-pass verified
    receipt available to this audit set.
 3. Fix `SUPER-REPORT-OMNISCIENT...html` or archive it away from browser-ready
    surfaces.

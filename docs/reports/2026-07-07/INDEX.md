@@ -12,7 +12,7 @@
 
 All files below are **archived drafts** from the July 2026 multi-agent assessment pass. They may contain stale receipt counts, overclaim language, or malformed HTML. Preserved per living-docs law (point-in-time exception).
 
-## Archived reports (16 files)
+## Archived reports (17 files)
 
 | File                                                                                                                                                               | Tier | Notes                                                      |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---- | ---------------------------------------------------------- |
@@ -30,6 +30,7 @@ All files below are **archived drafts** from the July 2026 multi-agent assessmen
 | [SUPER-REPORT-2ND-PASS-2026-07-06.md](./SUPER-REPORT-2ND-PASS-2026-07-06.md)                                                                                       | D    | 2nd pass — superseded                                      |
 | [SUPER-REPORT-3RD-PASS-2026-07-06.md](./SUPER-REPORT-3RD-PASS-2026-07-06.md)                                                                                       | D    | 3rd pass — useful inventory, stale counts                  |
 | [SUPER-REPORT-ULTIMATE-MEGA-2026-07-06.md](./SUPER-REPORT-ULTIMATE-MEGA-2026-07-06.md)                                                                             | E    | Manifesto voice — do not promote                           |
+| [MASTER-ASSESSMENT-2026-07-07.md](./MASTER-ASSESSMENT-2026-07-07.md)                                                                                               | E    | Superseded thin master — use CONSOLIDATED-22 pair          |
 | [SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.md](./SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.md)                                     | E    | Overclaim-prone rhetoric                                   |
 | [SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.html](./SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.html)                                 | E    | Malformed HTML — archive only                              |
 

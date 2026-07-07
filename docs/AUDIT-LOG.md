@@ -11,6 +11,12 @@ changed and why.
 
 ---
 
+## 2026-07-07 (pass 29) — sync uploaded CONSOLIDATED-22 pair + 2,380 receipt
+
+Promoted newer GPT 5.5 / Opus 4.8 consolidated master/audit MD+HTML, VERIFICATION §1 latest receipt (2,380 / 256 files / 2,867,137 expect), TECH-SPEC scale counts; archived superseded `MASTER-ASSESSMENT-2026-07-07.md` + restored full SUPER-REPORT 3rd/Omniscient/Ultimate bodies in `docs/reports/2026-07-07/`.
+
+---
+
 ## 2026-07-07 (pass 28) — archive 16 mega-drafts + deploy archive index
 
 Moved 16 historical assessment drafts to `docs/reports/2026-07-07/` with `INDEX.md`; added CONSOLIDATED-22-FILE-AUDIT HTML; strategy/deployment meta docs; archive links on README + all six Pages surfaces; `build-pages.ts` now deploys archive folder.
