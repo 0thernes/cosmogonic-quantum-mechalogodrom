@@ -1,0 +1,468 @@
+{
+  "version": "brain-evidence-matrix-v1",
+  "generatedAt": "2026-07-06",
+  "packageVersion": "0.21.7",
+  "claim": "indicatorOnly",
+  "compositionRoot": {
+    "file": "src/world.ts",
+    "lines": 4771,
+    "simImportCount": 94
+  },
+  "authorityTiers": {
+    "LIVE": "Runs in World.update or driveSuper; reads and/or writes sim state",
+    "TELEMETRY": "Observability/HUD/getters; reads world, no substantive behavior writes",
+    "LAB": "Unit tests, scripts, lab harness only",
+    "SCAFFOLD": "Real code, partially wired or consumed by LIVE parents",
+    "DECORATIVE": "Visual/reactive only; no policy or think()"
+  },
+  "domains": [
+    "apex",
+    "population",
+    "antagonist",
+    "ecology",
+    "pantheon_god",
+    "petri_biologics",
+    "classical_ai",
+    "collective_emergence",
+    "death_portal",
+    "lab_offline"
+  ],
+  "substrates": [
+    {
+      "id": "super-mind",
+      "domain": "apex",
+      "file": "src/sim/super-mind.ts",
+      "lines": 1928,
+      "tier": "LIVE",
+      "controller": "think()",
+      "params": 10081,
+      "instances": 5,
+      "msPerThink": 1.99,
+      "tests": ["super-mind.test.ts", "super-mind-leaves.test.ts", "super-mind-learning.test.ts", "coupling-audit.test.ts", "butlin-indicators.test.ts"]
+    },
+    {
+      "id": "super-creature",
+      "domain": "apex",
+      "file": "src/sim/super-creature.ts",
+      "lines": 365,
+      "tier": "LIVE",
+      "controller": "think()",
+      "params": 1444,
+      "tests": ["super-creature.test.ts"]
+    },
+    {
+      "id": "super-body",
+      "domain": "apex",
+      "file": "src/sim/super-body.ts",
+      "lines": 1417,
+      "tier": "LIVE",
+      "controller": "motor executor",
+      "tests": ["super-body-control.test.ts", "super-body-morph.test.ts"]
+    },
+    {
+      "id": "apex-brain",
+      "domain": "apex",
+      "file": "src/sim/apex-brain.ts",
+      "lines": 2110,
+      "tier": "LIVE",
+      "controller": "tick()",
+      "designedNeurons": "1B+",
+      "liveNodeCap": 4096,
+      "organs": 11,
+      "tests": ["apex-brain.test.ts", "apex-harness.test.ts"]
+    },
+    {
+      "id": "mechalogodrom-brain",
+      "domain": "apex",
+      "file": "src/sim/mechalogodrom-brain.ts",
+      "lines": 349,
+      "tier": "LIVE",
+      "controller": "tick()",
+      "designedParams": 5000000,
+      "liveParams": 120000,
+      "writes": "visual+telemetry+morphic indirect",
+      "tests": ["mechalogodrom-brain.test.ts", "mechalogodrom-stdp.test.ts"]
+    },
+    {
+      "id": "glyph-brain",
+      "domain": "apex",
+      "file": "src/sim/glyph-brain.ts",
+      "lines": 290,
+      "tier": "LIVE",
+      "controller": "think()/thinkAll()",
+      "params": 25000,
+      "instances": 100,
+      "writes": "visual only",
+      "tests": ["glyph-brain.test.ts"]
+    },
+    {
+      "id": "entity-brain",
+      "domain": "population",
+      "file": "src/sim/entity-brain.ts",
+      "lines": 301,
+      "tier": "LIVE",
+      "controller": "thinkAll() TinyMLP",
+      "params": 70,
+      "scale": 50000,
+      "tests": ["entity-brain.test.ts", "gedanken-death.test.ts"]
+    },
+    {
+      "id": "entities",
+      "domain": "population",
+      "file": "src/sim/entities.ts",
+      "lines": 941,
+      "tier": "LIVE",
+      "controller": "26 behavior fields",
+      "tests": ["entities-dynamism.test.ts", "behaviors.test.ts"]
+    },
+    {
+      "id": "behaviors",
+      "domain": "population",
+      "file": "src/sim/behaviors.ts",
+      "lines": 475,
+      "tier": "LIVE",
+      "controller": "26 behavior handlers",
+      "tests": ["behaviors.test.ts"]
+    },
+    {
+      "id": "connectome",
+      "domain": "population",
+      "file": "src/sim/connectome.ts",
+      "lines": 388,
+      "tier": "LIVE",
+      "controller": "activation propagation",
+      "tests": ["connectome.test.ts"]
+    },
+    {
+      "id": "graph-mind",
+      "domain": "population",
+      "file": "src/sim/graph-mind.ts",
+      "lines": 192,
+      "tier": "LIVE",
+      "controller": "Louvain+PageRank",
+      "cadence": "240f/600f",
+      "tests": ["graph-mind.test.ts"]
+    },
+    {
+      "id": "genome",
+      "domain": "population",
+      "file": "src/sim/genome.ts",
+      "lines": 186,
+      "tier": "LIVE",
+      "controller": "heritable brain+traits",
+      "tests": ["genome.test.ts"]
+    },
+    {
+      "id": "nhi",
+      "domain": "population",
+      "file": "src/sim/nhi.ts",
+      "lines": 438,
+      "tier": "LIVE",
+      "controller": "think() GOAP+utility+85-param MLP",
+      "tests": ["nhi.test.ts"]
+    },
+    {
+      "id": "nhi-system",
+      "domain": "population",
+      "file": "src/sim/nhi-system.ts",
+      "lines": 97,
+      "tier": "LIVE",
+      "controller": "tick() orchestrator",
+      "tests": ["nhi-system.test.ts"]
+    },
+    {
+      "id": "nhi-body",
+      "domain": "population",
+      "file": "src/sim/nhi-body.ts",
+      "lines": 428,
+      "tier": "DECORATIVE",
+      "controller": "visual morph only",
+      "tests": ["nhi-body-ascension.test.ts"]
+    },
+    {
+      "id": "wilderness-population",
+      "domain": "population",
+      "file": "src/sim/wilderness-population.ts",
+      "lines": 349,
+      "tier": "LIVE",
+      "controller": "worker ambient entities",
+      "scale": "64 chunks x 128",
+      "note": "one-way boundary; non-golden",
+      "tests": ["wilderness.test.ts"]
+    },
+    {
+      "id": "shoggoths",
+      "domain": "antagonist",
+      "file": "src/sim/shoggoths.ts",
+      "lines": 743,
+      "tier": "LIVE",
+      "controller": "creatureDrive() FSM",
+      "scale": "100 desktop / 16 mobile",
+      "cognition": "flee/hunt/deceive/trade/ally via cognition.ts",
+      "economy": "ECON_SHOGGOTH_BASE 2000",
+      "tests": ["shoggoths.test.ts", "cognition.test.ts"]
+    },
+    {
+      "id": "puppet-masters",
+      "domain": "antagonist",
+      "file": "src/sim/puppet-masters.ts",
+      "lines": 477,
+      "tier": "LIVE",
+      "controller": "creatureDrive() + meddle FSM",
+      "scale": "3 named + mass cabal",
+      "cognition": "meddle urge; chaos/weather/mutate actions",
+      "economy": "ECON_PUPPET_BASE 3000",
+      "tests": ["puppet-masters.test.ts"]
+    },
+    {
+      "id": "titans",
+      "domain": "antagonist",
+      "file": "src/sim/titans.ts",
+      "lines": 1547,
+      "tier": "LIVE",
+      "controller": "IPD diplomacy + harvest",
+      "scale": 20,
+      "cognition": "iterated Prisoner's Dilemma; games.ts",
+      "economy": "ECON_TITAN_BASE 1000",
+      "tests": ["titans.test.ts", "titan-vitals.test.ts", "games.test.ts"]
+    },
+    {
+      "id": "leviathans",
+      "domain": "antagonist",
+      "file": "src/sim/leviathans.ts",
+      "lines": 350,
+      "tier": "LIVE",
+      "controller": "kinematic + singularity force",
+      "scale": 4,
+      "tests": ["leviathans.test.ts", "leviathan-surge.test.ts"]
+    },
+    {
+      "id": "singularities",
+      "domain": "antagonist",
+      "file": "src/sim/singularities.ts",
+      "lines": 1131,
+      "tier": "LIVE",
+      "controller": "cosmological hazard",
+      "tests": ["singularities.test.ts"]
+    },
+    {
+      "id": "cognition",
+      "domain": "antagonist",
+      "file": "src/sim/cognition.ts",
+      "lines": 78,
+      "tier": "LIVE",
+      "controller": "creatureDrive() pure kernel",
+      "consumers": ["shoggoths", "puppet-masters"],
+      "tests": ["cognition.test.ts"]
+    },
+    {
+      "id": "alien-flora",
+      "domain": "ecology",
+      "file": "src/sim/alien-flora.ts",
+      "lines": 722,
+      "tier": "LIVE",
+      "controller": "GPU wind/glow; comfort/graze",
+      "scale": "15000 plants / 50 species",
+      "coupling": "entities.attachFloraComfort/Graze",
+      "tests": ["alien-flora.test.ts"]
+    },
+    {
+      "id": "dome-feeding",
+      "domain": "ecology",
+      "file": "src/sim/dome-feeding.ts",
+      "lines": 212,
+      "tier": "LIVE",
+      "controller": "graze+eat policy",
+      "consumers": ["titans", "leviathans", "puppets"],
+      "tests": ["dome-feeding.test.ts"]
+    },
+    {
+      "id": "super-hunt",
+      "domain": "ecology",
+      "file": "src/sim/super-hunt.ts",
+      "lines": 226,
+      "tier": "LIVE",
+      "controller": "apex predator policy",
+      "tests": ["super-hunt.test.ts"]
+    },
+    {
+      "id": "portal-death-fauna",
+      "domain": "death_portal",
+      "file": "src/sim/portal-death-fauna.ts",
+      "lines": 185,
+      "tier": "LIVE",
+      "controller": "cull big fauna at portal",
+      "targets": ["shoggoths", "puppets", "titans", "leviathans"],
+      "tests": ["portal-death.test.ts"]
+    },
+    {
+      "id": "godform",
+      "domain": "pantheon_god",
+      "file": "src/sim/godform.ts",
+      "lines": 319,
+      "tier": "LIVE",
+      "controller": "25 Archon biases",
+      "archons": 25,
+      "tests": ["pantheon.test.ts", "tsotchke-wiring.test.ts"]
+    },
+    {
+      "id": "pantheon",
+      "domain": "pantheon_god",
+      "file": "src/sim/pantheon.ts",
+      "lines": 109,
+      "tier": "LIVE",
+      "controller": "beat() 20 light echoes",
+      "tests": ["pantheon.test.ts"]
+    },
+    {
+      "id": "eshkol-cognition",
+      "domain": "pantheon_god",
+      "file": "src/sim/eshkol-cognition.ts",
+      "lines": 131,
+      "tier": "LIVE",
+      "controller": "archonThink() Eshkol VM",
+      "tests": ["eshkol-cognition.test.ts"]
+    },
+    {
+      "id": "faculties-pantheon",
+      "domain": "pantheon_god",
+      "file": "src/sim/faculties-pantheon.ts",
+      "lines": 335,
+      "tier": "LIVE",
+      "designCount": 100,
+      "deepWired": 30,
+      "tests": ["faculties-pantheon.test.ts", "nhsi-pantheons.test.ts"]
+    },
+    {
+      "id": "tom-pantheon",
+      "domain": "pantheon_god",
+      "file": "src/sim/tom-pantheon.ts",
+      "lines": 406,
+      "tier": "LIVE",
+      "organs": 25,
+      "tests": ["tom-pantheon.test.ts"]
+    },
+    {
+      "id": "god-colossus",
+      "domain": "pantheon_god",
+      "file": "src/sim/god-colossus.ts",
+      "lines": 348,
+      "tier": "DECORATIVE",
+      "controller": "raymarched fractal deity",
+      "tests": ["god-colossus.test.ts"]
+    },
+    {
+      "id": "monolith-temple",
+      "domain": "pantheon_god",
+      "file": "src/sim/monolith-temple.ts",
+      "lines": 885,
+      "tier": "DECORATIVE",
+      "controller": "ascension portal visual",
+      "tests": ["monolith-temple.test.ts", "temple-code.test.ts"]
+    },
+    {
+      "id": "petri-dish",
+      "domain": "petri_biologics",
+      "file": "src/sim/petri-dish.ts",
+      "lines": 632,
+      "tier": "LIVE",
+      "tests": ["petri-open-endedness.test.ts", "petri-brutal-god-event.test.ts"]
+    },
+    {
+      "id": "primordial-soup",
+      "domain": "petri_biologics",
+      "file": "src/sim/primordial-soup.ts",
+      "lines": 253,
+      "tier": "LIVE",
+      "slots": 128,
+      "tests": ["tsotchke-facade.test.ts"]
+    },
+    {
+      "id": "digital-biologics",
+      "domain": "petri_biologics",
+      "file": "src/sim/digital-biologics.ts",
+      "lines": 359,
+      "tier": "SCAFFOLD",
+      "forms": 26,
+      "gap": "birthBiologic unwired",
+      "tests": ["digital-biologics.test.ts"]
+    },
+    {
+      "id": "ai-brains",
+      "domain": "classical_ai",
+      "file": "src/sim/ai/brains.ts",
+      "lines": 398,
+      "tier": "LIVE",
+      "controller": "TinyMLP GOAP utility Markov FSM",
+      "tests": ["brains.test.ts"]
+    },
+    {
+      "id": "factions",
+      "domain": "classical_ai",
+      "file": "src/sim/factions.ts",
+      "lines": 293,
+      "tier": "LAB",
+      "gap": "not imported by world or entities",
+      "tests": ["factions.test.ts"]
+    },
+    {
+      "id": "consciousness-kernel",
+      "domain": "lab_offline",
+      "file": "src/sim/consciousness-kernel.ts",
+      "lines": 870,
+      "tier": "LAB",
+      "frameworks": 10,
+      "tests": ["consciousness-kernel.test.ts"]
+    },
+    {
+      "id": "noosphere",
+      "domain": "collective_emergence",
+      "file": "src/sim/noosphere.ts",
+      "lines": 232,
+      "tier": "LIVE",
+      "tests": ["coupling-audit.test.ts"]
+    },
+    {
+      "id": "emergence-angles",
+      "domain": "collective_emergence",
+      "file": "src/sim/emergence-angles.ts",
+      "lines": 696,
+      "tier": "LIVE",
+      "angles": 10,
+      "godEvents": 5,
+      "tests": ["emergence-angles.test.ts", "brutal-god-releases.test.ts"]
+    },
+    {
+      "id": "chaos-field",
+      "domain": "collective_emergence",
+      "file": "src/sim/chaos-field.ts",
+      "lines": 246,
+      "tier": "LIVE",
+      "tests": ["chaos-field.test.ts"]
+    },
+    {
+      "id": "economy",
+      "domain": "collective_emergence",
+      "file": "src/sim/economy.ts",
+      "lines": 738,
+      "tier": "LIVE",
+      "tests": ["economy.test.ts"]
+    }
+  ],
+  "passAudit": {
+    "pass1Covered": ["verdict", "12 substrates shorthand", "theory matrix", "tsotchke", "ratings", "roadmap"],
+    "pass2Covered": ["world.ts", "driveSuper", "authority tiers apex-focused", "math inventory", "72 tests"],
+    "pass3Added": ["shoggoths", "puppets", "titans", "leviathans", "nhi", "flora", "wilderness", "god/temple", "dome-feeding", "full 185-module census", "gap audit vs 6 uploads"]
+  },
+  "gapsRemaining": [
+    {"id": "consciousness-kernel-not-in-world", "severity": "P1"},
+    {"id": "faculty-coupling-weak", "severity": "P1", "meanAbsCoupling": 0.27},
+    {"id": "digital-biologics-unwired", "severity": "P2"},
+    {"id": "factions-unwired", "severity": "P2"},
+    {"id": "xenomind-unwired", "severity": "P3"},
+    {"id": "vegetation-legacy-unused", "severity": "P3"},
+    {"id": "external-peer-replication", "severity": "P1", "score": 5.0}
+  ],
+  "butlin": {"met": 8, "partial": 6},
+  "alife": {"breadth": 4.44, "rank": 1, "nSystems": 113, "zScore": 4.02}
+}

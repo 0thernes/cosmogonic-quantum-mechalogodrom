@@ -11,6 +11,26 @@ changed and why.
 
 ---
 
+## 2026-07-06 (pass 21) — MEGA-MASTER brain assessment Pass 3 of 3 (complete)
+
+Omniscient living-world census: `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-3-2026-07-06.md` + `docs/reports/assets/brain-evidence-matrix.json` + `docs/reports/assets/sim-modules-census-pass3.csv`.
+
+### Content
+
+- Full antagonist cognition: shoggoths, puppet-masters (`creatureDrive`), titans (IPD), leviathans, singularities.
+- Population + ecology: entity-brains (50k), NHI (GOAP+MLP), wilderness, alien-flora (15k), dome-feeding, super-hunt.
+- Pantheon/GOD/Temple: 25 Archon godforms, 25 ToM organs, 100 faculties; god-colossus + monolith-temple flagged DECORATIVE.
+- Apex abomination stack: 5 SuperCreatures, ApexBrain, MechalogodromBrain, glyph-brains, abomination architecture.
+- Cross-domain coupling matrix; gap audit vs Pass 1/2 and six original agent uploads.
+- 185-module CSV census; preprint skeleton outline.
+- NHSI dashboard now links Pass 3 as primary assessment surface.
+
+### Claim boundary
+
+- Explicitly `indicatorOnly`; no phenomenal sentience claims.
+
+---
+
 ## 2026-07-06 (pass 20) — MEGA-MASTER brain assessment Pass 2 of 3
 
 Module-level deep dive: `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-2-2026-07-06.md` + preview `docs/reports/assets/brain-evidence-matrix-pass2.json`.
