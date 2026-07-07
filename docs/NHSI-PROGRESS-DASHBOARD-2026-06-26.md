@@ -10,7 +10,7 @@ BRUTALIST MANIFEST: Valkorion domination, Broly infinite rage, Knull/Azathoth vo
 
 **Canonical receipts (measured 2026-06-26):** 2,360 tests, 84.64% line / 82.21% func (from `bun scripts/verify-receipts.ts --print`). Enforced by `tests/docs-receipts-law.test.ts` + `bun run check`. All surfaces truth-synced. BRUTAL GOD TIER with full pantheon list (Valkorion to Riddick) + BRUTALISM implemented in petri/godform/world using the Tsotchke corpus. Butlin indicators: **8/14 met + 6/14 partial** (computational indicators, not sentience — corrected from a prior overclaim).
 
-**Brain/neuro/consciousness assessment:** [`MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md`](./MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md) is the **FINAL HURRAH capstone** — multi-agent fusion audit, code-grounded verification, tier taxonomy, W1–W14 gaps, browser view at [`/lab/brain-assessment`](/lab/brain-assessment). Prior layers: [`ULTIMATE`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-ULTIMATE-2026-07-07.md) · [`PASS-1`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-1-2026-07-06.md) · [`PASS-2`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-2-2026-07-06.md) · [`PASS-3`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-3-2026-07-06.md). All `indicatorOnly`.
+**Brain/neuro/consciousness assessment:** [`SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.md`](./SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.md) (**one-page current truth**) · [`MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.md`](./MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.md) (**16-file audit**) · [`FINAL-HURRAH`](./MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md) (capstone) · browser: [`/docs/omniscient-report`](/docs/omniscient-report) · [`/lab/brain-assessment`](/lab/brain-assessment). Pass drill-down: [`ULTIMATE`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-ULTIMATE-2026-07-07.md) · [`PASS-1`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-1-2026-07-06.md) · [`PASS-2`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-2-2026-07-06.md) · [`PASS-3`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-3-2026-07-06.md). All `indicatorOnly`.
 
 > **Mission:** Not a chatbot, dancing robot, Terminator, or game player. A **Petri-dish cosmos** where
 > Tsotchke's real quantum math (Eshkol · Moonlab · QGT · spin · libirrep · …) is the growth medium for
@@ -199,7 +199,10 @@ Full trail: [`SUPER-CREATURE-RESEARCH-2026-06-26.md`](./SUPER-CREATURE-RESEARCH-
 | `/lab`             | `lab/`                                                                    |
 | Technical spec     | `docs/TECHNICAL-SPECIFICATION-2026-06-26.md`                              |
 | Tsotchke ledger    | `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`                             |
-| Mega assessment ULTIMATE (capstone) | `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-ULTIMATE-2026-07-07.md` |
+| Omniscient one-pager + browser | `docs/SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.md` · `/docs/omniscient-report` |
+| 16-doc ULTRATHINK audit | `docs/MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.md` · `/docs/ultrathink-audit` |
+| FINAL HURRAH capstone + browser | `docs/MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md` · `/lab/brain-assessment` |
+| Mega assessment ULTIMATE | `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-ULTIMATE-2026-07-07.md` |
 | Mega assessment Pass 3/3 | `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-3-2026-07-06.md` |
 | Mega assessment Pass 2/3 | `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-2-2026-07-06.md` |
 | Mega assessment Pass 1/3 | `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-1-2026-07-06.md` |

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Omniscient Omnicognitive Ultimate — Current Truth · v0.21.7</title>
+    <meta name="theme-color" content="#081017" />
+    <style>
+      :root { color-scheme: dark; --bg: #071017; --panel: #0e1820; --line: #2d4650; --text: #e6f1f1; --muted: #9bb3b4; --cyan: #36d7d4; --gold: #e2b55f; --leaf: #7dbf8e; --rose: #e06b84; --warn: #e8a84a; --violet: #a885e6; }
+      body { margin: 0; font-family: Inter, system-ui, sans-serif; background: radial-gradient(circle at 20% 0%, rgba(168,133,230,0.1), transparent 40%), var(--bg); color: var(--text); line-height: 1.55; }
+      .shell { max-width: 900px; margin: 0 auto; padding: 16px 20px 48px; }
+      header { border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 20px; }
+      h1 { margin: 0; font-size: 1.15rem; color: var(--violet); }
+      .sub { color: var(--muted); font-size: 0.85rem; margin-top: 6px; }
+      nav { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+      nav a { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; padding: 6px 10px; border: 1px solid var(--line); border-radius: 6px; color: var(--muted); text-decoration: none; }
+      nav a:hover, nav a.active { color: var(--cyan); border-color: var(--cyan); }
+      .scores { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 20px; }
+      .score { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px; text-align: center; }
+      .score .v { font-size: 1.5rem; font-weight: 700; color: var(--cyan); }
+      .score .l { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; }
+      .score.w .v { color: var(--warn); }
+      #md { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 20px; }
+      #md h2 { color: var(--gold); }
+      #md blockquote { border-left: 3px solid var(--violet); padding-left: 12px; color: var(--muted); }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <header>
+        <h1>SUPER-REPORT — Omniscient Omnicognitive Ultimate</h1>
+        <div class="sub">Consolidated current truth · replaces local SUPER-REPORT drafts</div>
+        <nav>
+          <a href="/docs/omniscient-report" class="active">Omniscient summary</a>
+          <a href="/docs/ultrathink-audit">16-doc audit</a>
+          <a href="/lab/brain-assessment">FINAL HURRAH</a>
+          <a href="/">App</a>
+        </nav>
+      </header>
+      <div class="scores">
+        <div class="score"><div class="v">8.3</div><div class="l">Scrutiny</div></div>
+        <div class="score"><div class="v">4.44</div><div class="l">A-Life #1</div></div>
+        <div class="score w"><div class="v">6.0</div><div class="l">Coupling</div></div>
+        <div class="score"><div class="v">37</div><div class="l">LIVE JSON</div></div>
+        <div class="score"><div class="v">N/A</div><div class="l">Sentience</div></div>
+      </div>
+      <div id="md"><p style="color:var(--muted)">Loading…</p></div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+      fetch('/docs/omniscient-report.md').then(r => r.ok ? r.text() : Promise.reject()).then(md => {
+        document.getElementById('md').innerHTML = marked.parse(md);
+      }).catch(() => {
+        document.getElementById('md').innerHTML = '<p>Open via <code>bun dev</code> → <code>/docs/omniscient-report</code></p>';
+      });
+    </script>
+  </body>
+</html>

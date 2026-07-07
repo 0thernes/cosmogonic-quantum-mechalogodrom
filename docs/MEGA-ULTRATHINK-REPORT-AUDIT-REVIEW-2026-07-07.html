@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ULTRATHINK — 16-Document Audit · v0.21.7</title>
+    <meta name="theme-color" content="#081017" />
+    <style>
+      :root { color-scheme: dark; --bg: #071017; --panel: #0e1820; --line: #2d4650; --text: #e6f1f1; --muted: #9bb3b4; --cyan: #36d7d4; --gold: #e2b55f; --leaf: #7dbf8e; --rose: #e06b84; --warn: #e8a84a; }
+      body { margin: 0; font-family: Inter, system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.55; }
+      .shell { max-width: 1100px; margin: 0 auto; padding: 16px 20px 48px; }
+      header { border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 16px; }
+      h1 { margin: 0; font-size: 1.2rem; color: var(--gold); }
+      .sub { color: var(--muted); font-size: 0.85rem; margin-top: 6px; }
+      nav { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+      nav a { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; padding: 6px 10px; border: 1px solid var(--line); border-radius: 6px; color: var(--muted); text-decoration: none; }
+      nav a:hover, nav a.active { color: var(--cyan); border-color: var(--cyan); }
+      .banner { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; margin-bottom: 16px; font-size: 0.88rem; }
+      table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin: 12px 0; }
+      th, td { border: 1px solid var(--line); padding: 8px; text-align: left; vertical-align: top; }
+      th { background: #13222c; color: var(--cyan); }
+      .ok { color: var(--leaf); } .bad { color: var(--rose); } .warn { color: var(--warn); }
+      #md { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 20px; margin-top: 16px; }
+      #md h2 { color: var(--gold); border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+      #md code { background: #05090d; padding: 2px 5px; border-radius: 4px; }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <header>
+        <h1>MEGA-ULTRATHINK — Total Audit (16 documents)</h1>
+        <div class="sub">Which files are current vs stale · v0.21.7 · indicatorOnly</div>
+        <nav>
+          <a href="/docs/omniscient-report" class="">Omniscient summary</a>
+          <a href="/docs/ultrathink-audit" class="active">16-doc audit</a>
+          <a href="/lab/brain-assessment">FINAL HURRAH dashboard</a>
+          <a href="/">App</a>
+        </nav>
+      </header>
+      <div class="banner"><strong>Quick answer:</strong> Trust <span class="ok">VERIFICATION</span>, <span class="ok">FINAL HURRAH</span>, Pass 1–3. <span class="bad">Retire</span> local SUPER-REPORT drafts (now redirect stubs in repo).</div>
+      <table>
+        <thead><tr><th>File</th><th>Status</th><th>Verdict</th></tr></thead>
+        <tbody>
+          <tr><td>VERIFICATION-ANALYTICAL-DATA.md</td><td class="ok">SSOT</td><td>Trust numbers</td></tr>
+          <tr><td>FINAL-HURRAH-2026-07-07.md</td><td class="ok">Capstone</td><td>Read first</td></tr>
+          <tr><td>PASS 1–3 (CONSCIOUSNESS-BRAIN)</td><td class="ok">Current</td><td>Drill-down</td></tr>
+          <tr><td>BRAIN-NEUROLOGY</td><td class="warn">Partial</td><td>+ Pass 3 for fauna</td></tr>
+          <tr><td>SUPER-REPORT-* (4 files)</td><td class="bad">Retired</td><td>Use redirects in repo</td></tr>
+          <tr><td>OMNISCIENT-ULTIMATE (this stack)</td><td class="ok">New</td><td>One-page truth</td></tr>
+        </tbody>
+      </table>
+      <div id="md"><p style="color:var(--muted)">Loading full audit markdown…</p></div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+      fetch('/docs/ultrathink-audit.md').then(r => r.ok ? r.text() : Promise.reject()).then(md => {
+        document.getElementById('md').innerHTML = marked.parse(md);
+      }).catch(() => {
+        document.getElementById('md').innerHTML = '<p>Open via <code>bun dev</code> → <code>/docs/ultrathink-audit</code></p>';
+      });
+    </script>
+  </body>
+</html>

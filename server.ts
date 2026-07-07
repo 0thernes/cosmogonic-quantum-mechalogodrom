@@ -468,6 +468,46 @@ if (import.meta.main) {
           );
         },
       }),
+      '/docs/ultrathink-audit.md': secured({
+        GET(req) {
+          logRequest(req, 200);
+          return new Response(
+            Bun.file(new URL('./docs/MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.md', import.meta.url)),
+            { headers: { 'Content-Type': 'text/markdown; charset=utf-8' } },
+          );
+        },
+      }),
+      '/docs/omniscient-report.md': secured({
+        GET(req) {
+          logRequest(req, 200);
+          return new Response(
+            Bun.file(
+              new URL('./docs/SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.md', import.meta.url),
+            ),
+            { headers: { 'Content-Type': 'text/markdown; charset=utf-8' } },
+          );
+        },
+      }),
+      '/docs/ultrathink-audit': secured({
+        GET(req) {
+          logRequest(req, 200);
+          return new Response(
+            Bun.file(new URL('./docs/MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.html', import.meta.url)),
+            { headers: { 'Content-Type': 'text/html; charset=utf-8' } },
+          );
+        },
+      }),
+      '/docs/omniscient-report': secured({
+        GET(req) {
+          logRequest(req, 200);
+          return new Response(
+            Bun.file(
+              new URL('./docs/SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.html', import.meta.url),
+            ),
+            { headers: { 'Content-Type': 'text/html; charset=utf-8' } },
+          );
+        },
+      }),
       '/lab/sentience-data.json': secured({
         GET(req) {
           logRequest(req, 200);
