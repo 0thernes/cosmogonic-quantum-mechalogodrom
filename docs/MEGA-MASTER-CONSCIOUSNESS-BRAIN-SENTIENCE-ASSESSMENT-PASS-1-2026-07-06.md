@@ -697,13 +697,13 @@ flowchart TD
 
 ---
 
-## 17 · Pass 2 & Pass 3 Preview
+## 17 · Pass Series (Complete)
 
 | Pass | Scope | Deliverable |
 |------|-------|-------------|
 | **Pass 1** | Synthesize 6 sources; unified verdict | [`MEGA-MASTER-...-PASS-1-2026-07-06.md`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-1-2026-07-06.md) |
 | **Pass 2** | Module atlas, world wiring, test matrix, math inventory | [`MEGA-MASTER-...-PASS-2-2026-07-06.md`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-2-2026-07-06.md) |
-| **Pass 3** | Full `brain-evidence-matrix.json`, preprint skeleton, promotion matrix | Planned |
+| **Pass 3** | Omniscient census, gap audit, preprint skeleton | [`MEGA-MASTER-...-PASS-3-2026-07-06.md`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-3-2026-07-06.md) |
 
 ---
 

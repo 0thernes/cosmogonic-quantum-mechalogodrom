@@ -26,7 +26,7 @@ Pass 1 synthesized five agent reports into a unified verdict. **Pass 2 goes unde
 | **Wiring gaps** | 7 named gaps with severity and file receipts |
 | **`driveSuper` deep dive** | Verified call graph from `world.update()` |
 
-**Pass 3** will auto-generate the full `brain-evidence-matrix.json` from tests + ablation runs and draft the preprint skeleton.
+**Pass 3 (complete):** [`MEGA-MASTER-...-PASS-3-2026-07-06.md`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-3-2026-07-06.md) — omniscient living-world census (shoggoths, puppets, titans, leviathans, NHI, flora/fauna, pantheon/GOD/temple), full [`brain-evidence-matrix.json`](./reports/assets/brain-evidence-matrix.json), [`sim-modules-census-pass3.csv`](./reports/assets/sim-modules-census-pass3.csv), gap audit vs six uploads, preprint skeleton.
 
 ---
 
@@ -576,15 +576,19 @@ flowchart LR
 
 ---
 
-## 15 · Pass 3 Preview
+## 15 · Pass 3 (Complete)
 
-| Deliverable | Method |
+See [`MEGA-MASTER-...-PASS-3-2026-07-06.md`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-3-2026-07-06.md).
+
+| Deliverable | Status |
 |-------------|--------|
-| `brain-evidence-matrix.json` (full) | Generate from test receipts + ablation scripts |
-| `src/sim/*.ts` CSV | Every file: lines, tier, imports, exporters, test file |
-| Preprint skeleton | Methods + claims + falsifiers + repro bundle |
-| Partial-indicator promotion matrix | GWT-2, AE-2, HOT-3/4, RPT-1/2 with ablation data |
-| Wire consciousness-adapters | Live `superMindSnap` → lab telemetry bridge |
+| `brain-evidence-matrix.json` (full) | ✓ `docs/reports/assets/brain-evidence-matrix.json` |
+| `src/sim/*.ts` CSV | ✓ `docs/reports/assets/sim-modules-census-pass3.csv` |
+| Omniscient domain census | ✓ antagonist + ecology + pantheon + population |
+| Gap audit vs six uploads | ✓ §7 in Pass 3 |
+| Preprint skeleton | ✓ §10 in Pass 3 |
+| Partial-indicator promotion matrix | Deferred — needs ablation runs |
+| Wire consciousness-adapters | Deferred — W1 gap remains |
 
 ---
 
