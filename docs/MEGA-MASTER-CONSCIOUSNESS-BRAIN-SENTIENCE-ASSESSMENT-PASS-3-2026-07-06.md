@@ -1,8 +1,8 @@
-<!-- reviewed: 2026-07-06 | Pass 3 of 3 | v0.21.7 omniscient census + gap audit | canonical: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-07 | Pass 3 of 3 | v0.21.9 omniscient census + gap audit | canonical: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # MEGA-MASTER Assessment — Pass 3: Omniscient Census, Living-World Neurology & Gap Audit
 
-**Pass 3 of 3 (final)** · Cosmogonic Quantum Mechalogodrom **v0.21.7**  
+**Pass 3 of 3 (final)** · Cosmogonic Quantum Mechalogodrom **v0.21.9**  
 **Assessment date:** 2026-07-06  
 **Predecessors:** [`PASS-1`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-1-2026-07-06.md) · [`PASS-2`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-2-2026-07-06.md)  
 **Machine artifacts:** [`brain-evidence-matrix.json`](./reports/assets/brain-evidence-matrix.json) · [`sim-modules-census-pass3.csv`](./reports/assets/sim-modules-census-pass3.csv)  
@@ -28,7 +28,7 @@ Pass 1 unified six agent reports into a verdict. Pass 2 drilled `world.ts`, auth
 | **Gap audit**                    | Pass 1 vs Pass 2 vs Pass 3 vs six original uploads                                                                                             |
 | **Preprint skeleton**            | Methods, claims, falsifiers, repro bundle outline                                                                                              |
 
-**Headline correction vs stale agent reports:** This is **not** "5 brain systems." At v0.21.7 the dome runs **55+ LIVE cognition/policy modules** across **10 domains**, orchestrated by `src/world.ts` (4,771 lines, 94 `sim/` imports).
+**Headline correction vs stale agent reports:** This is **not** "5 brain systems." At v0.21.9 the dome runs **55+ LIVE cognition/policy modules** across **10 domains**, orchestrated by `src/world.ts` (4,771 lines, 94 `sim/` imports).
 
 ---
 
@@ -333,7 +333,7 @@ Pass 2 mapped 72 brain-related test files. Pass 3 adds explicit antagonist/ecolo
 | Stale claim (uploads)                  | Pass 3 truth                                    |
 | -------------------------------------- | ----------------------------------------------- |
 | "5 brain systems" (Devin, Antigravity) | **55+ LIVE cognition/policy modules**           |
-| v0.21.6 (Devin, Antigravity .md)       | **v0.21.7**                                     |
+| v0.21.6 (Devin, Antigravity .md)       | **v0.21.9**                                     |
 | A-Life 4.22/5 (Devin, Antigravity)     | **4.44/5, #1/113, z=+4.02**                     |
 | SuperMind ~3.34 ms (Antigravity)       | **~1.99 ms/beat (2026-07-02 receipt)**          |
 | `src/core/engine.ts` as oracle         | **`src/world.ts` is composition root**          |
@@ -488,4 +488,4 @@ Pass 3 proves **nothing cognitive was left off the map**: the dome's `world.ts` 
 
 ---
 
-_Pass 3 compiled 2026-07-06 · v0.21.7 · 0thernes Corp · indicatorOnly_
+_Pass 3 compiled 2026-07-06 · v0.21.9 · 0thernes Corp · indicatorOnly_

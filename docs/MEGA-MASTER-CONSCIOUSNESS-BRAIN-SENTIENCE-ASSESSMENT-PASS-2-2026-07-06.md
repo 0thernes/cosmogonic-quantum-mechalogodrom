@@ -1,8 +1,8 @@
-<!-- reviewed: 2026-07-06 | Pass 2 of 3 | v0.21.7 module atlas + wiring receipts | canonical: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-07 | Pass 2 of 3 | v0.21.9 module atlas + wiring receipts | canonical: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # MEGA-MASTER Assessment — Pass 2: Module Atlas, Wiring Receipts & Test Matrix
 
-**Pass 2 of 3** · Cosmogonic Quantum Mechalogodrom **v0.21.7**  
+**Pass 2 of 3** · Cosmogonic Quantum Mechalogodrom **v0.21.9**  
 **Assessment date:** 2026-07-06  
 **Predecessor:** [`MEGA-MASTER-...-PASS-1-2026-07-06.md`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-1-2026-07-06.md)  
 **Machine preview:** [`reports/assets/brain-evidence-matrix-pass2.json`](./reports/assets/brain-evidence-matrix-pass2.json)  
@@ -537,7 +537,7 @@ flowchart LR
 
 | Subsystem                   | Measurement              | Frame impact                       |
 | --------------------------- | ------------------------ | ---------------------------------- |
-| `SuperMind.think()`         | ~1.99 ms × 5             | ~9.95 ms (~60% of 16.67 ms budget) |
+| `SuperMind.think()`         | ~1.99 ms × 5             | ~9.77 ms (~58% of 16.67 ms budget) |
 | 50k `entityBrains.thinkAll` | ~60 ms total sim         | Dominates at mega tier             |
 | `connectome.update`         | O(links)                 | Hot at 8k links                    |
 | `consciousness-kernel`      | O(100) coupling          | Negligible — **not in frame loop** |
@@ -598,4 +598,4 @@ Pass 2 proves the architecture is **not decorative**: `world.ts` (4,771 lines) o
 
 ---
 
-_Pass 2 compiled 2026-07-06 · v0.21.7 · 0thernes Corp · indicatorOnly_
+_Pass 2 compiled 2026-07-06 · v0.21.9 · 0thernes Corp · indicatorOnly_

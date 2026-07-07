@@ -1,8 +1,8 @@
-<!-- reviewed: 2026-07-06 | Pass 1 of 3 | v0.21.7 mega-synthesis | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-07 | Pass 1 of 3 | v0.21.9 mega-synthesis | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # MEGA-MASTER Assessment — Brains, Neurology, Consciousness, Sentience-Path Engineering
 
-**Pass 1 of 3** · Cosmogonic Quantum Mechalogodrom **v0.21.7**  
+**Pass 1 of 3** · Cosmogonic Quantum Mechalogodrom **v0.21.9**  
 **Assessment date:** 2026-07-06  
 **Synthesis of:** Gemini Antigravity 3.5 Flash (×2) · Composer 2.5 · Devin SWE 1.6 · Codex GPT 5.5 · NHSI Progress Dashboard  
 **Canonical anchor:** [`VERIFICATION-ANALYTICAL-DATA.md`](./VERIFICATION-ANALYTICAL-DATA.md)  
@@ -77,9 +77,9 @@ All six inputs were merged; conflicts resolved against live canonical facts (`pa
 
 | Surface                   | Current truth                                             | Source                          |
 | ------------------------- | --------------------------------------------------------- | ------------------------------- |
-| Package version           | `0.21.7`                                                  | `package.json`                  |
+| Package version           | `0.21.9`                                                  | `package.json`                  |
 | Portable test floor       | `2,360`                                                   | `scripts/canonical-receipts.ts` |
-| Latest receipt            | `2,360 pass / 0 fail`, 255 test files, 2,866,429 expect() | `verify:receipts`               |
+| Latest receipt            | `2,360 pass / 0 fail`, 255 test files, 2,867,279 expect() | `verify:receipts`               |
 | Portable coverage floor   | `84.64%` line / `82.21%` function                         | `canonical-receipts.ts`         |
 | Windows receipt           | `92.02%` line / `89.65%` function                         | VERIFICATION §1                 |
 | Faculties (public design) | `100` (~30 deep-wired)                                    | `CANONICAL_FACULTIES`           |
@@ -725,5 +725,5 @@ Full trail: [`NHSI-RESEARCH-PAPERS-LEDGER-2026-06-26.md`](./NHSI-RESEARCH-PAPERS
 
 ---
 
-_Pass 1 compiled 2026-07-06 · Cosmogonic Quantum Mechalogodrom v0.21.7 · 0thernes Corp_
+_Pass 1 compiled 2026-07-06 · Cosmogonic Quantum Mechalogodrom v0.21.9 · 0thernes Corp_
 _License: Non-commercial research & play (© 0thernes, commercial rights reserved)_
