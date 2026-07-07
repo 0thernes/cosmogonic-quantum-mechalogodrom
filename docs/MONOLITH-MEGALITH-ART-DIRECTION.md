@@ -8,7 +8,9 @@
 
 ## The three megaliths (don't confuse them)
 
-There are **three** distinct megalith structures, all cut from the same images, all strict monochrome:
+There are **three** distinct megalith structures, all cut from the same brutalist images. Two hold the
+strict monochrome below (black / white / silver, zero hue); the **Tower** is the deliberate hue exception
+— an owner-directed reversal to a raymarched Mandelbulb in a thousand colours:
 
 1. **The TOWER** — the colossal fractal god that dominates the skyline, always present.
    [`src/sim/god-colossus.ts`](../src/sim/god-colossus.ts) (`GodColossus`). NOT a block-tower: one
@@ -27,7 +29,10 @@ There are **three** distinct megalith structures, all cut from the same images, 
 3. **The FLOATING monoliths** — sparse greebled megaliths drifting in the dome air.
    [`src/sim/floating-monoliths.ts`](../src/sim/floating-monoliths.ts) (`FloatingMonoliths`).
 
-Everything below applies to all three.
+Everything below — the strict-monochrome thesis and the grayscale build rules — applies to the **Temple**
+and the **Floating monoliths**. The **Tower** shares their GEOMETRY vocabulary (fractal self-similarity,
+orbit traps, no straight lines) but NOT their palette: it alone renders in the thousand-hue Mandelbulb
+colourway described in item 1 above.
 
 ---
 
