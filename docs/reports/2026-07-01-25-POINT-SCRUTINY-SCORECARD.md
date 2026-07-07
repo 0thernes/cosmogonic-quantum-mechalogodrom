@@ -10,7 +10,7 @@ adversarial verification of every finding). It is deliberately **not** all-green
 a scorecard is where it is red.
 
 > Read every claim against [`VERIFICATION-ANALYTICAL-DATA.md`](../VERIFICATION-ANALYTICAL-DATA.md) §1.
-> Current receipts: **v0.21.10 · canonical floor 2,360 tests · 84.64 % line / 82.21 % function**;
+> Current receipts: **v0.21.11 · canonical floor 2,360 tests · 84.64 % line / 82.21 % function**;
 > latest Windows-local gate on 2026-07-07 measured **2,378 completed cases · 0 failures ·
 > 2,867,096 `expect()` calls**. The portable coverage floor remains the synced canonical
 > `84.64 % / 82.21 %`; the latest Windows-local coverage receipt is recorded in the table below.

@@ -7,7 +7,7 @@
 > estimated. **Live:** <https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/> · **Spec page:**
 > `/spec` · **Architecture docs:** `/docs`
 
-**Version:** v0.21.10 · **Generated:** 2026-06-26 · **License:** Non-commercial research & play (© 0thernes; study / run / modify / share non-commercially, keep attribution, no for-profit use).
+**Version:** v0.21.11 · **Generated:** 2026-06-26 · **License:** Non-commercial research & play (© 0thernes; study / run / modify / share non-commercially, keep attribution, no for-profit use).
 **Gate:** 2,360 tests · 84.64% line / 82.21% func (canonical synced via verify-receipts 2026-06-26, receipts law enforced).
 **NHSI scorecard:** [NHSI-PROGRESS-DASHBOARD-2026-06-26.md](./NHSI-PROGRESS-DASHBOARD-2026-06-26.md) · **Tsotchke depth:** [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md)
 
@@ -36,10 +36,10 @@ Snapshot: **2026-07-07**. (Coverage + passing-test counts ARE SSOT-synced — se
 
 | Metric                                  | Value                                                                 |
 | --------------------------------------- | --------------------------------------------------------------------- |
-| Total tracked authored files            | **735**                                                               |
-| Total tracked authored lines            | **195,750**                                                           |
-| App source (`src/`)                     | 97,152 lines · 288 files                                              |
-| Tests (`tests/`)                        | 33,909 lines · 256 files                                              |
+| Total tracked authored files            | **741**                                                               |
+| Total tracked authored lines            | **198,769**                                                           |
+| App source (`src/`)                     | 97,161 lines · 288 files                                              |
+| Tests (`tests/`)                        | 33,945 lines · 256 files                                              |
 | Native C++ engine (`native/`, ADR-0007) | 1,773 lines · 12 files                                                |
 | Test : source ratio                     | 0.35 → **84.64% line / 82.21% func** coverage (`bun test --coverage`) |
 | Passing tests                           | **2,360** (canonical floor; 0 failing)                                |
@@ -51,35 +51,40 @@ Snapshot: **2026-07-07**. (Coverage + passing-test counts ARE SSOT-synced — se
 
 | Type                | Files | Lines   | Share   |
 | ------------------- | ----- | ------- | ------- |
-| TypeScript          | 585   | 135,898 | 69.42 % |
-| Markdown            | 66    | 18,194  | 9.29 %  |
-| HTML                | 10    | 14,537  | 7.43 %  |
-| JSON                | 11    | 9,706   | 4.96 %  |
-| PNG (shots)         | 4     | 9,552   | 4.88 %  |
-| CSS (Tailwind)      | 2     | 2,476   | 1.26 %  |
-| C/C++ hdr (`.h`)    | 4     | 934     | 0.48 %  |
-| CSV                 | 3     | 658     | 0.34 %  |
+| TypeScript          | 585   | 135,957 | 68.40 % |
+| Markdown            | 69    | 20,242  | 10.18 % |
+| HTML                | 10    | 14,574  | 7.33 %  |
+| JSON                | 13    | 10,382  | 5.22 %  |
+| PNG (shots)         | 4     | 9,552   | 4.81 %  |
+| CSS (Tailwind)      | 2     | 2,476   | 1.25 %  |
+| C/C++ hdr+impl      | 8     | 1,481   | 0.75 %  |
+| CSV                 | 4     | 844     | 0.42 %  |
 | XML (masters)       | 4     | 707     | 0.36 %  |
-| YAML · lock · other | 50    | ~3,088  | ~1.6 %  |
+| YAML · lock · other | 42    | ~2,554  | ~1.3 %  |
 
-**Code (TS + C++ + HTML + CSS) ≈ 154,392 lines ≈ 78.9 %**; documentation + config + assets ≈ 21.1 %.
+**Code (TS + C++ + HTML + CSS) ≈ 154,488 lines ≈ 77.7 %**; documentation + config + assets ≈ 22.3 %.
 
 ### 1.2 Lines by area
 
 | Area                                  | Files | Lines  |
 | ------------------------------------- | ----- | ------ |
-| `src/` (application)                  | 288   | 97,152 |
-| `tests/`                              | 256   | 33,909 |
-| `docs/`                               | 69    | 18,053 |
-| `lab/` (self-contained artifact)      | 5     | 13,225 |
-| repo root (README, LICENSE, configs)  | 27    | 11,376 |
+| `src/` (application)                  | 288   | 97,161 |
+| `tests/`                              | 256   | 33,945 |
+| `docs/`                               | 75    | 20,908 |
+| `lab/` (self-contained artifact)      | 5     | 13,241 |
+| repo root (README, LICENSE, configs)  | 27    | 11,453 |
 | `output/` (tracked visual receipts)   | 3     | 9,551  |
-| `scripts/`                            | 27    | 5,781  |
+| `scripts/`                            | 27    | 5,795  |
 | `legacy/` (preserved origin)          | 6     | 2,072  |
 | `native/` (C++ engine, ADR-0007)      | 12    | 1,773  |
 | `bench/`                              | 16    | 1,200  |
-| `.github/`                            | 11    | 851    |
+| `.github/`                            | 11    | 863    |
 | `masters/` (3 governing XML personas) | 3     | 477    |
+| `.memory/`                            | 5     | 167    |
+| `.vscode/`                            | 3     | 94     |
+| `.githooks/`                          | 2     | 57     |
+| `.claude/`                            | 1     | 11     |
+| `public/`                             | 1     | 1      |
 
 Detailed `src/` subsystem counts are intentionally generated on demand by `bun run metrics`; this
 section records only the current high-level measured areas to avoid stale hand-maintained internals.
@@ -387,7 +392,7 @@ atmosphere 276 · reaction-diffusion 273 · phyla 264 · analytics 252 · econom
 
 ## 13 · Positioning
 
-This is a ~96.9k-line TypeScript (+ optional C++/Jolt native engine) browser-native simulation that
+This is a ~97.2k-line app-source (+ optional C++/Jolt native engine) browser-native simulation that
 renders **up to 50,000 agents** (10,000 at 60 fps on a laptop iGPU with zero AI accelerator), is
 **bit-reproducible from one seed**, ships through a **full CI/CD gate** (2,360 tests, 84.64% line / 82.21% func coverage),
 and whose entire emergent intelligence weighs **≈ 14 MB — 1/50,000th of GPT-3** at the mega ceiling. It

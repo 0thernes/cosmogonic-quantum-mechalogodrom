@@ -20,7 +20,7 @@ Rewritten in place when the facts change (per the binding living-doc law in
 
 | Fact                                     | Canonical value                                                      | Source of truth                                                                                                    | Propagated by           |
 | ---------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------- |
-| Package version                          | `0.21.10`                                                            | `package.json` `version`                                                                                           | `sync-surfaces.ts`      |
+| Package version                          | `0.21.11`                                                            | `package.json` `version`                                                                                           | `sync-surfaces.ts`      |
 | Test count (floor)                       | `2360`                                                               | `scripts/canonical-receipts.ts`                                                                                    | `sync-surfaces.ts`      |
 | Line coverage                            | `84.64%`                                                             | `scripts/canonical-receipts.ts`                                                                                    | `sync-surfaces.ts`      |
 | Function coverage                        | `82.21%`                                                             | `scripts/canonical-receipts.ts`                                                                                    | `sync-surfaces.ts`      |
@@ -111,7 +111,7 @@ outside sim logic). Only fidelity caveat = Finding H above.
 
 Consistency that **passed** verification (no drift found): Butlin `8/14 met + 6/14 partial` (every
 current surface; the only `14/14` hits are in `legacy/` verbatim-preserved files + append-only CHANGELOG
-history with the correction logged), version `0.21.10` (matches `package.json` — the version SSOT), entity `50,000`, bioforms
+history with the correction logged), version `0.21.11` (matches `package.json` — the version SSOT), entity `50,000`, bioforms
 `26`, faculty/Archon/ToM/emergence counts, Tsotchke `20`.
 
 ---
@@ -374,7 +374,7 @@ verify:facts` = 0 drift / 80 surfaces, 0 git-conflict-markers tree-wide, 100% of
 | `native/**` (C++/Jolt: `.cpp`/`.h`/CMake)                                         | 6     | C++ engine agent                                         | no UB/leak/off-by-one; README claims match the build                                             |
 | HTML surfaces (`index/docs/specs/lab`)                                            | 5     | front-end agent                                          | dead NEO-MIND link + Voronoi legend FIXED; SSOT facts match                                      |
 | `masters/*.xml`                                                                   | 3     | steering agent                                           | well-formed; the two "14/14" are negated "not complete"                                          |
-| tracked Markdown (`*.md`, 60 non-legacy / 63 total)                               | 63    | doc-consistency agent + `verify:facts`                   | current truth surfaces reconciled; historical reports kept as worldline snapshots                |
+| tracked Markdown (`*.md`, 66 non-legacy / 69 total)                               | 69    | doc-consistency agent + `verify:facts`                   | current truth surfaces reconciled; historical reports kept as worldline snapshots                |
 | assets (`.svg`/`.json`/`.csv`/`.docx`/lockfile)                                   | misc  | generated/data                                           | build artifacts + data, out of correctness scope                                                 |
 
 Per-file manifest (every tracked file + its audit mechanism + status): `docs/reports/assets/audit-coverage-2026-06-26.csv` (reproducible).

@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.11] — 2026-07-07
+
+- Public docs truth repair after `v0.21.10`:
+  - Includes the post-tag monolith art-direction correction: Temple/Floating monoliths remain the
+    strict monochrome megaliths; the Tower/God-Colossus is the deliberate thousand-hue Mandelbulb
+    exception already shipped in code.
+  - Refreshes the measured codebase census on Spec/Bible/technical docs from `bun run metrics`:
+    `741` tracked authored files, `198,769` tracked authored lines, `585` TS files,
+    `135,957` TS lines, `288` `src/` files, and `256` test files.
+  - Keeps receipt language split: public release floor remains `2,360` tests with
+    `84.64% / 82.21%` coverage, while the latest Windows-local receipt remains separate.
+
 ## [0.21.10] — 2026-07-07
 
 - Post-`v0.21.9` current-truth release:
