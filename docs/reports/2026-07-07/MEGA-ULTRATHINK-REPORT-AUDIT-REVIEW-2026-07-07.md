@@ -15,7 +15,7 @@
 | Question | Answer |
 |----------|--------|
 | **What is the single best markdown to read now?** | [`MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md`](./MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md) |
-| **What is the single best “current facts only” page?** | [`VERIFICATION-ANALYTICAL-DATA.md`](./VERIFICATION-ANALYTICAL-DATA.md) §1 |
+| **What is the single best –current facts only— page?** | [`VERIFICATION-ANALYTICAL-DATA.md`](./VERIFICATION-ANALYTICAL-DATA.md) §1 |
 | **What is the consolidated one-pager for humans?** | [`SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.md`](./SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.md) |
 | **Are any of the sixteen authoritative on their own?** | **Seven yes** (in repo, current role). **Nine** are aliases, drafts, or should be retired locally. |
 | **Biggest stale risk on your Z: drive** | `SUPER-REPORT-*` drafts and duplicate `MEGA-MASTER-BRAIN-*` copies **out of sync** with GitHub `CONSCIOUSNESS-BRAIN-*` names. |
@@ -65,7 +65,7 @@
 |-------|-----------------|
 | Version `0.21.6` | **`0.21.7`** (`package.json`) |
 | A-Life breadth `4.22/5` | **`4.44/5`** |
-| “5 brain systems” | **37 LIVE** in JSON matrix; use tier taxonomy |
+| –5 brain systems— | **37 LIVE** in JSON matrix; use tier taxonomy |
 | SuperMind `~3.34 ms` only | **`~1.99 ms` single**; **~10 ms** if 5× every frame (live) |
 | `consciousness-kernel` drives HUD | **SuperMind.think()** drives HUD; kernel is **LAB** |
 | `mixed-state-qgt` wired | **Orphan** — no sim import |
@@ -75,10 +75,10 @@
 
 | Doc | Stale bit | Still valid? |
 |-----|-----------|--------------|
-| Pass 3 | “55+ LIVE modules” without method | **Downgrade** → 37 JSON + tier table |
+| Pass 3 | –55+ LIVE modules— without method | **Downgrade** → 37 JSON + tier table |
 | Pass 3 | Pipeline diagram DS→MB→GB order | **Wrong** — MB+GB before DS |
 | BRAIN-NEUROLOGY | No shoggoth/flora/NHI census | **Partial** — use Pass 3 |
-| BRAIN-NEUROLOGY | Mechalogodrom “visual only” | **Partial** — LIVE_FRAME tick |
+| BRAIN-NEUROLOGY | Mechalogodrom –visual only— | **Partial** — LIVE_FRAME tick |
 | ULTIMATE | Duplicates SSOT tables | **OK as narrative** — link VERIFICATION for numbers |
 | NHSI dashboard | Filename date 2026-06-26 | **OK** — name-pinned; content updated 2026-07-07 |
 
@@ -97,7 +97,7 @@
 | If you need… | Read (in order) |
 |--------------|-----------------|
 | **Canonical numbers only** | VERIFICATION §1 |
-| **“Where do we stand?”** | SUPER-REPORT-OMNISCIENT (1 page) → FINAL HURRAH |
+| **–Where do we stand?—** | SUPER-REPORT-OMNISCIENT (1 page) → FINAL HURRAH |
 | **Agent upload reconciliation** | FINAL HURRAH §2 + Pass 1 §2 |
 | **world.ts wiring** | Pass 2 |
 | **Shoggoths, titans, flora, NHI** | Pass 3 |

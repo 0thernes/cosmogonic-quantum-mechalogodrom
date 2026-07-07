@@ -12,13 +12,13 @@ BRUTALIST MANIFEST: Valkorion domination, Broly infinite rage, Knull/Azathoth vo
 
 **Brain/neuro/consciousness assessment (active):** [`CONSOLIDATED-22-MASTER-ASSESSMENT`](./CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md) · [`CONSOLIDATED-22-FILE-AUDIT`](./CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md) (GPT 5.5 / Claude Opus 4.8) · [`BRAIN-NEUROLOGY-ENGINEERING`](./BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md) · browser: [`CONSOLIDATED-22 HTML`](./CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.html) · [`/lab/brain-assessment`](/lab/brain-assessment) (FINAL HURRAH mine). Archive tier (do not promote): OMNISCIENT · ULTRATHINK · ULTIMATE mega-drafts. All `indicatorOnly`.
 
-**Pass-1 mega synthesis:** [`MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS1-2026-07-06.md`](./MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS1-2026-07-06.md) consolidates the five downloaded reports plus this dashboard into one expanded current-state master report with source reconciliation, live brain authority tiers, Tsotchke depth taxonomy, current consciousness-science anchors, elite-scrutiny scoring, unknown-unknown risks, and Pass-2/Pass-3 build paths. It keeps the same `indicatorOnly` boundary.
+**Pass-1 mega synthesis:** [`MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS1-2026-07-06.md`](./reports/2026-07-07/MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS1-2026-07-06.md) consolidates the five downloaded reports plus this dashboard into one expanded current-state master report with source reconciliation, live brain authority tiers, Tsotchke depth taxonomy, current consciousness-science anchors, elite-scrutiny scoring, unknown-unknown risks, and Pass-2/Pass-3 build paths. It keeps the same `indicatorOnly` boundary.
 
-**Pass-2 evidence hardening:** [`MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS2-2026-07-06.md`](./MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS2-2026-07-06.md) extends Pass 1 into claim-to-code traceability, benchmark-card design, theory falsifier grids, Tsotchke substrate ablation protocol, real-connectome import requirements, and Pass-3 publication-package scope. It also keeps the same `indicatorOnly` boundary.
+**Pass-2 evidence hardening:** [`MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS2-2026-07-06.md`](./reports/2026-07-07/MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS2-2026-07-06.md) extends Pass 1 into claim-to-code traceability, benchmark-card design, theory falsifier grids, Tsotchke substrate ablation protocol, real-connectome import requirements, and Pass-3 publication-package scope. It also keeps the same `indicatorOnly` boundary.
 
-**Pass-3 world-neurology gap closure:** [`MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS3-2026-07-06.md`](./MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS3-2026-07-06.md) closes the big-world inventory gaps from Pass 1 and Pass 2: Shoggoths, Puppet Masters, Titans, Entities, SuperCreatures, Apex Abomination, Pantheons, 25 Archon Godforms, GOD/God-Colossus, Temple, Plants, Flora, Fauna, Wildlife, Wilderness, PortalDeathFauna, Leviathans, and Digital Biologics. It treats them as computational/ecological neurology analogues with code paths, tests, and falsifiers, not as proof of sentience.
+**Pass-3 world-neurology gap closure:** [`MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS3-2026-07-06.md`](./reports/2026-07-07/MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS3-2026-07-06.md) closes the big-world inventory gaps from Pass 1 and Pass 2: Shoggoths, Puppet Masters, Titans, Entities, SuperCreatures, Apex Abomination, Pantheons, 25 Archon Godforms, GOD/God-Colossus, Temple, Plants, Flora, Fauna, Wildlife, Wilderness, PortalDeathFauna, Leviathans, and Digital Biologics. It treats them as computational/ecological neurology analogues with code paths, tests, and falsifiers, not as proof of sentience.
 
-**Final Hurrah master synthesis:** [`MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md`](./MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md) supersedes Pass 1/2/3 as the capstone read: original six Downloads inputs + live repo stats + current consciousness science anchors + all named living systems + Tsotchke brain-intake doctrine + MIT/PhD/Planck/Nobel/Turing/Fields scrutiny scoring + benchmark roadmap. It keeps the same `indicatorOnly` boundary and states the final verdict plainly: not sentient, not fake, a rare deterministic A-Life/consciousness-indicator research instrument.
+**Final Hurrah master synthesis:** [`MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md`](./reports/2026-07-07/MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md) supersedes Pass 1/2/3 as the capstone read: original six Downloads inputs + live repo stats + current consciousness science anchors + all named living systems + Tsotchke brain-intake doctrine + MIT/PhD/Planck/Nobel/Turing/Fields scrutiny scoring + benchmark roadmap. It keeps the same `indicatorOnly` boundary and states the final verdict plainly: not sentient, not fake, a rare deterministic A-Life/consciousness-indicator research instrument.
 
 **Current 22-report audit/master pair:** [`CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md`](./CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md) and [`CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md`](./CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md) are now the active publication-facing synthesis and file-trust ledger. They separate the `2,360` public release floor from the fresh Windows-local `2,378 completed cases, zero failures, 2,867,096 expect()` receipt, preserve exact lab/Archon/event handles, and list the remaining public-page/archive gaps without claiming sentience.
 
@@ -196,35 +196,35 @@ Full trail: [`SUPER-CREATURE-RESEARCH-2026-06-26.md`](./SUPER-CREATURE-RESEARCH-
 
 ## VI · Where this dashboard is mirrored (Local = GitHub)
 
-| Surface            | Path                                                                      |
-| ------------------ | ------------------------------------------------------------------------- |
-| **This dashboard** | `docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md`                              |
-| README             | root                                                                      |
-| Architecture       | `docs/ARCHITECTURE-2026-06-26.md`                                         |
-| ERD / ERM / ERP    | `docs/ENTITY-SCHEMA-AND-MAPPINGS-2026-06-26.md`                           |
-| KANBAN             | `docs/KANBAN-2026-06-26.md`                                               |
-| MODULE-CONTRACTS   | `docs/MODULE-CONTRACTS-2026-06-26.md`                                     |
-| PHILOSOPHY         | `docs/PHILOSOPHY-2026-06-26.md`                                           |
-| `/docs` page       | `docs.html`                                                               |
-| `/spec` page       | `specs.html`                                                              |
-| `/lab`             | `lab/`                                                                    |
-| Technical spec     | `docs/TECHNICAL-SPECIFICATION-2026-06-26.md`                              |
-| Tsotchke ledger    | `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`                             |
-| CONSOLIDATED-22 master + browser | `docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md` · `/docs/consolidated-22-master` |
-| CONSOLIDATED-22 file audit | `docs/CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md` · `/docs/consolidated-22-audit` |
-| FINAL HURRAH mine + browser | `docs/MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md` · `/lab/brain-assessment` (Tier C+) |
-| Archive: Omniscient / ULTRATHINK | `SUPER-REPORT-OMNISCIENT-*` · `MEGA-ULTRATHINK-*` — do not promote |
-| Mega assessment ULTIMATE | `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-ULTIMATE-2026-07-07.md` |
-| Mega assessment Pass 3/3 | `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-3-2026-07-06.md` |
-| Mega assessment Pass 2/3 | `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-2-2026-07-06.md` |
-| Mega assessment Pass 1/3 | `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-1-2026-07-06.md` |
-| Brain evidence matrix (JSON) | `docs/reports/assets/brain-evidence-matrix.json` |
-| Sim module census (CSV) | `docs/reports/assets/sim-modules-census-pass3.csv` |
-| Brain evidence matrix (preview) | `docs/reports/assets/brain-evidence-matrix-pass2.json` |
-| Historical reports | `docs/reports/README.md`                                                  |
-| Super research     | `docs/SUPER-CREATURE-RESEARCH-2026-06-26.md`                              |
-| Master XMLs        | `masters/` (Broly · Starkiller · Manhattan)                               |
-| Agent steering     | `CLAUDE.md`, `.github/copilot-instructions.md`                            |
+| Surface                          | Path                                                                                                                                         |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| **This dashboard**               | `docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md`                                                                                                 |
+| README                           | root                                                                                                                                         |
+| Architecture                     | `docs/ARCHITECTURE-2026-06-26.md`                                                                                                            |
+| ERD / ERM / ERP                  | `docs/ENTITY-SCHEMA-AND-MAPPINGS-2026-06-26.md`                                                                                              |
+| KANBAN                           | `docs/KANBAN-2026-06-26.md`                                                                                                                  |
+| MODULE-CONTRACTS                 | `docs/MODULE-CONTRACTS-2026-06-26.md`                                                                                                        |
+| PHILOSOPHY                       | `docs/PHILOSOPHY-2026-06-26.md`                                                                                                              |
+| `/docs` page                     | `docs.html`                                                                                                                                  |
+| `/spec` page                     | `specs.html`                                                                                                                                 |
+| `/lab`                           | `lab/`                                                                                                                                       |
+| Technical spec                   | `docs/TECHNICAL-SPECIFICATION-2026-06-26.md`                                                                                                 |
+| Tsotchke ledger                  | `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`                                                                                                |
+| CONSOLIDATED-22 master + browser | `docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md` · `/docs/consolidated-22-master`                                              |
+| CONSOLIDATED-22 file audit       | `docs/CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md` · `/docs/consolidated-22-audit`                                                      |
+| FINAL HURRAH mine + browser      | `docs/reports/2026-07-07/MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md` · `/lab/brain-assessment` (Tier C+) |
+| 2026-07-07 report archive        | [`docs/reports/2026-07-07/INDEX.md`](./reports/2026-07-07/INDEX.md) — Omniscient · ULTRATHINK · Pass 1–3 (do not promote)                    |
+| Mega assessment ULTIMATE         | `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-ULTIMATE-2026-07-07.md`                                                           |
+| Mega assessment Pass 3/3         | `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-3-2026-07-06.md`                                                             |
+| Mega assessment Pass 2/3         | `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-2-2026-07-06.md`                                                             |
+| Mega assessment Pass 1/3         | `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-1-2026-07-06.md`                                                             |
+| Brain evidence matrix (JSON)     | `docs/reports/assets/brain-evidence-matrix.json`                                                                                             |
+| Sim module census (CSV)          | `docs/reports/assets/sim-modules-census-pass3.csv`                                                                                           |
+| Brain evidence matrix (preview)  | `docs/reports/assets/brain-evidence-matrix-pass2.json`                                                                                       |
+| Historical reports               | `docs/reports/README.md`                                                                                                                     |
+| Super research                   | `docs/SUPER-CREATURE-RESEARCH-2026-06-26.md`                                                                                                 |
+| Master XMLs                      | `masters/` (Broly · Starkiller · Manhattan)                                                                                                  |
+| Agent steering                   | `CLAUDE.md`, `.github/copilot-instructions.md`                                                                                               |
 
 ---
 

@@ -449,9 +449,12 @@ if (import.meta.main) {
       '/lab/brain-assessment': secured({
         GET(req) {
           logRequest(req, 200);
-          return new Response(Bun.file(new URL('./lab/brain-assessment-fusion.html', import.meta.url)), {
-            headers: { 'Content-Type': 'text/html; charset=utf-8' },
-          });
+          return new Response(
+            Bun.file(new URL('./lab/brain-assessment-fusion.html', import.meta.url)),
+            {
+              headers: { 'Content-Type': 'text/html; charset=utf-8' },
+            },
+          );
         },
       }),
       '/docs/brain-assessment-fusion.md': secured({
@@ -460,7 +463,7 @@ if (import.meta.main) {
           return new Response(
             Bun.file(
               new URL(
-                './docs/MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md',
+                './docs/reports/2026-07-07/MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md',
                 import.meta.url,
               ),
             ),
@@ -472,7 +475,12 @@ if (import.meta.main) {
         GET(req) {
           logRequest(req, 200);
           return new Response(
-            Bun.file(new URL('./docs/MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.md', import.meta.url)),
+            Bun.file(
+              new URL(
+                './docs/reports/2026-07-07/MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.md',
+                import.meta.url,
+              ),
+            ),
             { headers: { 'Content-Type': 'text/markdown; charset=utf-8' } },
           );
         },
@@ -482,7 +490,10 @@ if (import.meta.main) {
           logRequest(req, 200);
           return new Response(
             Bun.file(
-              new URL('./docs/SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.md', import.meta.url),
+              new URL(
+                './docs/reports/2026-07-07/SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.md',
+                import.meta.url,
+              ),
             ),
             { headers: { 'Content-Type': 'text/markdown; charset=utf-8' } },
           );
@@ -492,7 +503,12 @@ if (import.meta.main) {
         GET(req) {
           logRequest(req, 200);
           return new Response(
-            Bun.file(new URL('./docs/MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.html', import.meta.url)),
+            Bun.file(
+              new URL(
+                './docs/reports/2026-07-07/MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.html',
+                import.meta.url,
+              ),
+            ),
             { headers: { 'Content-Type': 'text/html; charset=utf-8' } },
           );
         },
@@ -502,7 +518,10 @@ if (import.meta.main) {
           logRequest(req, 200);
           return new Response(
             Bun.file(
-              new URL('./docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.html', import.meta.url),
+              new URL(
+                './docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.html',
+                import.meta.url,
+              ),
             ),
             { headers: { 'Content-Type': 'text/html; charset=utf-8' } },
           );
@@ -512,7 +531,12 @@ if (import.meta.main) {
         GET(req) {
           logRequest(req, 200);
           return new Response(
-            Bun.file(new URL('./docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md', import.meta.url)),
+            Bun.file(
+              new URL(
+                './docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md',
+                import.meta.url,
+              ),
+            ),
             { headers: { 'Content-Type': 'text/markdown; charset=utf-8' } },
           );
         },
@@ -521,7 +545,9 @@ if (import.meta.main) {
         GET(req) {
           logRequest(req, 200);
           return new Response(
-            Bun.file(new URL('./docs/CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md', import.meta.url)),
+            Bun.file(
+              new URL('./docs/CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md', import.meta.url),
+            ),
             { headers: { 'Content-Type': 'text/markdown; charset=utf-8' } },
           );
         },
@@ -531,7 +557,10 @@ if (import.meta.main) {
           logRequest(req, 200);
           return new Response(
             Bun.file(
-              new URL('./docs/SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.html', import.meta.url),
+              new URL(
+                './docs/reports/2026-07-07/SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.html',
+                import.meta.url,
+              ),
             ),
             { headers: { 'Content-Type': 'text/html; charset=utf-8' } },
           );

@@ -25,7 +25,9 @@
         --violet: #a885e6;
         --warn: #e8a84a;
       }
-      * { box-sizing: border-box; }
+      * {
+        box-sizing: border-box;
+      }
       body {
         margin: 0;
         min-height: 100vh;
@@ -37,74 +39,213 @@
         font-family: Inter, ui-sans-serif, system-ui, sans-serif;
         line-height: 1.55;
       }
-      a { color: var(--cyan); }
-      .shell { width: min(1280px, calc(100vw - 24px)); margin: 0 auto; padding: 16px 0 48px; }
+      a {
+        color: var(--cyan);
+      }
+      .shell {
+        width: min(1280px, calc(100vw - 24px));
+        margin: 0 auto;
+        padding: 16px 0 48px;
+      }
       header {
-        position: sticky; top: 0; z-index: 10;
-        display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
-        padding: 12px 0; margin-bottom: 8px;
-        background: rgba(5, 9, 13, 0.85); backdrop-filter: blur(14px);
-        border-bottom: 1px solid rgba(255,255,255,0.08);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 0;
+        margin-bottom: 8px;
+        background: rgba(5, 9, 13, 0.85);
+        backdrop-filter: blur(14px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       }
-      h1 { margin: 0; font-size: 1.15rem; letter-spacing: 0.04em; }
-      .sub { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
-      nav { display: flex; flex-wrap: wrap; gap: 6px; }
+      h1 {
+        margin: 0;
+        font-size: 1.15rem;
+        letter-spacing: 0.04em;
+      }
+      .sub {
+        color: var(--muted);
+        font-size: 0.8rem;
+        margin-top: 4px;
+      }
+      nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
       nav a {
-        font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em;
-        padding: 6px 10px; border-radius: 6px; border: 1px solid var(--line);
-        color: var(--muted); text-decoration: none;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: 1px solid var(--line);
+        color: var(--muted);
+        text-decoration: none;
       }
-      nav a:hover { color: var(--cyan); border-color: var(--cyan); }
+      nav a:hover {
+        color: var(--cyan);
+        border-color: var(--cyan);
+      }
       .banner {
-        border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px;
-        background: linear-gradient(135deg, rgba(54,215,212,0.08), rgba(168,133,230,0.06)), var(--panel);
-        margin-bottom: 20px; font-size: 0.9rem;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 14px 16px;
+        background:
+          linear-gradient(135deg, rgba(54, 215, 212, 0.08), rgba(168, 133, 230, 0.06)), var(--panel);
+        margin-bottom: 20px;
+        font-size: 0.9rem;
       }
-      .banner strong { color: var(--gold); }
+      .banner strong {
+        color: var(--gold);
+      }
       .scores {
-        display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 10px;
         margin-bottom: 24px;
       }
       .score {
-        background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
-        padding: 12px; text-align: center;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 12px;
+        text-align: center;
       }
-      .score .val { font-size: 1.6rem; font-weight: 700; color: var(--cyan); }
-      .score .lbl { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
-      .score.warn .val { color: var(--warn); }
-      .score.good .val { color: var(--leaf); }
+      .score .val {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--cyan);
+      }
+      .score .lbl {
+        font-size: 0.7rem;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .score.warn .val {
+        color: var(--warn);
+      }
+      .score.good .val {
+        color: var(--leaf);
+      }
       section {
-        background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
-        padding: 16px 18px; margin-bottom: 16px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 16px 18px;
+        margin-bottom: 16px;
       }
       section h2 {
-        margin: 0 0 12px; font-size: 0.95rem; color: var(--gold);
-        text-transform: uppercase; letter-spacing: 0.1em;
+        margin: 0 0 12px;
+        font-size: 0.95rem;
+        color: var(--gold);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
       }
-      table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
-      th, td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
-      th { background: var(--panel-2); color: var(--cyan); font-weight: 600; }
-      tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
-      .tag { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 0.68rem; font-weight: 600; }
-      .tag.ok { background: rgba(125,191,142,0.2); color: var(--leaf); }
-      .tag.bad { background: rgba(224,107,132,0.2); color: var(--rose); }
-      .tag.warn { background: rgba(232,168,74,0.2); color: var(--warn); }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.82rem;
+      }
+      th,
+      td {
+        border: 1px solid var(--line);
+        padding: 8px 10px;
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        background: var(--panel-2);
+        color: var(--cyan);
+        font-weight: 600;
+      }
+      tr:nth-child(even) td {
+        background: rgba(255, 255, 255, 0.02);
+      }
+      .tag {
+        display: inline-block;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.68rem;
+        font-weight: 600;
+      }
+      .tag.ok {
+        background: rgba(125, 191, 142, 0.2);
+        color: var(--leaf);
+      }
+      .tag.bad {
+        background: rgba(224, 107, 132, 0.2);
+        color: var(--rose);
+      }
+      .tag.warn {
+        background: rgba(232, 168, 74, 0.2);
+        color: var(--warn);
+      }
       #md-content {
-        background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
-        padding: 20px 24px; margin-top: 20px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 20px 24px;
+        margin-top: 20px;
       }
-      #md-content h1,#md-content h2,#md-content h3 { color: var(--gold); }
-      #md-content h1 { font-size: 1.4rem; }
-      #md-content h2 { font-size: 1.1rem; margin-top: 1.6em; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
-      #md-content code { background: var(--panel-2); padding: 2px 5px; border-radius: 4px; font-size: 0.85em; }
-      #md-content pre { background: #05090d; border: 1px solid var(--line); padding: 12px; overflow-x: auto; border-radius: 6px; }
-      #md-content blockquote { border-left: 3px solid var(--violet); margin-left: 0; padding-left: 14px; color: var(--muted); }
-      .load-status { color: var(--muted); font-size: 0.85rem; padding: 12px; }
+      #md-content h1,
+      #md-content h2,
+      #md-content h3 {
+        color: var(--gold);
+      }
+      #md-content h1 {
+        font-size: 1.4rem;
+      }
+      #md-content h2 {
+        font-size: 1.1rem;
+        margin-top: 1.6em;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 6px;
+      }
+      #md-content code {
+        background: var(--panel-2);
+        padding: 2px 5px;
+        border-radius: 4px;
+        font-size: 0.85em;
+      }
+      #md-content pre {
+        background: #05090d;
+        border: 1px solid var(--line);
+        padding: 12px;
+        overflow-x: auto;
+        border-radius: 6px;
+      }
+      #md-content blockquote {
+        border-left: 3px solid var(--violet);
+        margin-left: 0;
+        padding-left: 14px;
+        color: var(--muted);
+      }
+      .load-status {
+        color: var(--muted);
+        font-size: 0.85rem;
+        padding: 12px;
+      }
       .pipeline {
-        font-family: ui-monospace, monospace; font-size: 0.75rem; line-height: 1.6;
-        background: #05090d; border: 1px solid var(--line); border-radius: 6px; padding: 12px; overflow-x: auto;
+        font-family: ui-monospace, monospace;
+        font-size: 0.75rem;
+        line-height: 1.6;
+        background: #05090d;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 12px;
+        overflow-x: auto;
       }
-      @media (max-width: 640px) { .scores { grid-template-columns: 1fr 1fr; } }
+      @media (max-width: 640px) {
+        .scores {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
     </style>
   </head>
   <body>
@@ -115,7 +256,9 @@
           <div class="sub">Tier C+ ledger · not the current master · v0.21.8 · indicatorOnly</div>
         </div>
         <nav>
-          <a href="./docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.html">22-report master</a>
+          <a href="./docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.html"
+            >22-report master</a
+          >
           <a href="./docs/CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md">File audit</a>
           <a href="#scores">Scores</a>
           <a href="#agents">Agents</a>
@@ -126,9 +269,11 @@
       </header>
 
       <div class="banner">
-        <strong>Claim boundary:</strong> Computational indicators only — not phenomenal consciousness,
-        not biological sentience. <strong>Current master:</strong>
-        <a href="./docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md">CONSOLIDATED-22-MASTER-ASSESSMENT</a>
+        <strong>Claim boundary:</strong> Computational indicators only — not phenomenal
+        consciousness, not biological sentience. <strong>Current master:</strong>
+        <a href="./docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md"
+          >CONSOLIDATED-22-MASTER-ASSESSMENT</a
+        >
         (GPT 5.5 / Claude Opus 4.8). This page mines FINAL HURRAH for named-system coverage only.
         Receipts:
         <a href="/docs/VERIFICATION-ANALYTICAL-DATA.md">VERIFICATION-ANALYTICAL-DATA.md</a>
@@ -136,29 +281,81 @@
       </div>
 
       <div class="scores" id="scores">
-        <div class="score good"><div class="val">8.3</div><div class="lbl">25-pt scrutiny</div></div>
-        <div class="score good"><div class="val">9.5</div><div class="lbl">Sentience discipline</div></div>
-        <div class="score good"><div class="val">4.44</div><div class="lbl">A-Life breadth #1/113</div></div>
-        <div class="score warn"><div class="val">6.0</div><div class="lbl">Faculty coupling</div></div>
-        <div class="score warn"><div class="val">5.0</div><div class="lbl">Peer validation</div></div>
-        <div class="score"><div class="val">37</div><div class="lbl">LIVE substrates (JSON)</div></div>
-        <div class="score"><div class="val">185</div><div class="lbl">sim modules</div></div>
-        <div class="score"><div class="val">8+6</div><div class="lbl">Butlin met+partial</div></div>
+        <div class="score good">
+          <div class="val">8.3</div>
+          <div class="lbl">25-pt scrutiny</div>
+        </div>
+        <div class="score good">
+          <div class="val">9.5</div>
+          <div class="lbl">Sentience discipline</div>
+        </div>
+        <div class="score good">
+          <div class="val">4.44</div>
+          <div class="lbl">A-Life breadth #1/113</div>
+        </div>
+        <div class="score warn">
+          <div class="val">6.0</div>
+          <div class="lbl">Faculty coupling</div>
+        </div>
+        <div class="score warn">
+          <div class="val">5.0</div>
+          <div class="lbl">Peer validation</div>
+        </div>
+        <div class="score">
+          <div class="val">37</div>
+          <div class="lbl">LIVE substrates (JSON)</div>
+        </div>
+        <div class="score">
+          <div class="val">185</div>
+          <div class="lbl">sim modules</div>
+        </div>
+        <div class="score">
+          <div class="val">8+6</div>
+          <div class="lbl">Butlin met+partial</div>
+        </div>
       </div>
 
       <section id="agents">
         <h2>Multi-agent critique (simulated panel)</h2>
         <table>
           <thead>
-            <tr><th>Agent</th><th>Failure mode</th><th>Caught in audit</th></tr>
+            <tr>
+              <th>Agent</th>
+              <th>Failure mode</th>
+              <th>Caught in audit</th>
+            </tr>
           </thead>
           <tbody>
-            <tr><td>Gemini Antigravity</td><td>Version lag, perf inflation, "5 brains"</td><td>→v0.21.8; 3.34→1.99 ms; tier atlas</td></tr>
-            <tr><td>Devin SWE 1.6</td><td>Under-count; miss ecology</td><td>Pass 3 census required</td></tr>
-            <tr><td>Composer 2.5</td><td>Tier drift; SSOT duplication</td><td>LIVE_FRAME vs LIVE_POLICY</td></tr>
-            <tr><td>Claude Opus 4.8</td><td>Prose without receipts</td><td>CONSOLIDATED-22 trust table</td></tr>
-            <tr><td>GPT 5.5</td><td>Kernel≈HUD; invent file:line</td><td>CONSOLIDATED-22 master + audit</td></tr>
-            <tr><td>Code audit</td><td>Bench ≠ live loop</td><td>5× SuperMind every frame</td></tr>
+            <tr>
+              <td>Gemini Antigravity</td>
+              <td>Version lag, perf inflation, "5 brains"</td>
+              <td>→v0.21.8; 3.34→1.99 ms; tier atlas</td>
+            </tr>
+            <tr>
+              <td>Devin SWE 1.6</td>
+              <td>Under-count; miss ecology</td>
+              <td>Pass 3 census required</td>
+            </tr>
+            <tr>
+              <td>Composer 2.5</td>
+              <td>Tier drift; SSOT duplication</td>
+              <td>LIVE_FRAME vs LIVE_POLICY</td>
+            </tr>
+            <tr>
+              <td>Claude Opus 4.8</td>
+              <td>Prose without receipts</td>
+              <td>CONSOLIDATED-22 trust table</td>
+            </tr>
+            <tr>
+              <td>GPT 5.5</td>
+              <td>Kernel≈HUD; invent file:line</td>
+              <td>CONSOLIDATED-22 master + audit</td>
+            </tr>
+            <tr>
+              <td>Code audit</td>
+              <td>Bench ≠ live loop</td>
+              <td>5× SuperMind every frame</td>
+            </tr>
           </tbody>
         </table>
       </section>
@@ -167,37 +364,111 @@
         <h2>Code-grounded verification</h2>
         <table>
           <thead>
-            <tr><th>Claim</th><th>Status</th><th>Receipt</th></tr>
+            <tr>
+              <th>Claim</th>
+              <th>Status</th>
+              <th>Receipt</th>
+            </tr>
           </thead>
           <tbody>
-            <tr><td>world.ts is composition root</td><td><span class="tag ok">✓</span></td><td>4,771 lines · 94 sim imports</td></tr>
-            <tr><td>driveSuper every frame</td><td><span class="tag ok">✓</span></td><td>world.ts:1810-1811</td></tr>
-            <tr><td>5× SuperMind.think() per frame</td><td><span class="tag ok">✓</span></td><td>world.ts:2535-2611</td></tr>
-            <tr><td>consciousness-kernel LAB-only</td><td><span class="tag ok">✓</span></td><td>not imported by world.ts</td></tr>
-            <tr><td>creatureDrive → shoggoths + puppets only</td><td><span class="tag ok">✓</span></td><td>cognition.ts:56</td></tr>
-            <tr><td>god-colossus + temple DECORATIVE</td><td><span class="tag ok">✓</span></td><td>shader/visual only</td></tr>
-            <tr><td>BENCHMARKS stagger as live behavior</td><td><span class="tag bad">STALE</span></td><td>bench ≠ world.ts loop</td></tr>
-            <tr><td>mixed-state-qgt wired</td><td><span class="tag bad">FALSE</span></td><td>Pass 1 error; orphan</td></tr>
+            <tr>
+              <td>world.ts is composition root</td>
+              <td><span class="tag ok">✓</span></td>
+              <td>4,771 lines · 94 sim imports</td>
+            </tr>
+            <tr>
+              <td>driveSuper every frame</td>
+              <td><span class="tag ok">✓</span></td>
+              <td>world.ts:1810-1811</td>
+            </tr>
+            <tr>
+              <td>5× SuperMind.think() per frame</td>
+              <td><span class="tag ok">✓</span></td>
+              <td>world.ts:2535-2611</td>
+            </tr>
+            <tr>
+              <td>consciousness-kernel LAB-only</td>
+              <td><span class="tag ok">✓</span></td>
+              <td>not imported by world.ts</td>
+            </tr>
+            <tr>
+              <td>creatureDrive → shoggoths + puppets only</td>
+              <td><span class="tag ok">✓</span></td>
+              <td>cognition.ts:56</td>
+            </tr>
+            <tr>
+              <td>god-colossus + temple DECORATIVE</td>
+              <td><span class="tag ok">✓</span></td>
+              <td>shader/visual only</td>
+            </tr>
+            <tr>
+              <td>BENCHMARKS stagger as live behavior</td>
+              <td><span class="tag bad">STALE</span></td>
+              <td>bench ≠ world.ts loop</td>
+            </tr>
+            <tr>
+              <td>mixed-state-qgt wired</td>
+              <td><span class="tag bad">FALSE</span></td>
+              <td>Pass 1 error; orphan</td>
+            </tr>
           </tbody>
         </table>
-        <p style="margin:12px 0 0;font-size:0.82rem;color:var(--muted)">Frame pipeline (verified order):</p>
-        <pre class="pipeline">puppets → shoggoths → titans → pantheon.beat → leviathans
+        <p style="margin: 12px 0 0; font-size: 0.82rem; color: var(--muted)">
+          Frame pipeline (verified order):
+        </p>
+        <pre class="pipeline">
+puppets → shoggoths → titans → pantheon.beat → leviathans
 → domeFeeding → mechalogodromBrain → glyphBrains
-→ entityBrains → connectome → nhi.tick → driveSuper (5× SuperMind + apexBrain)</pre>
+→ entityBrains → connectome → nhi.tick → driveSuper (5× SuperMind + apexBrain)</pre
+        >
       </section>
 
       <section id="gaps">
         <h2>Wiring gaps W1–W14</h2>
         <table>
-          <thead><tr><th>ID</th><th>Sev</th><th>Gap</th></tr></thead>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Sev</th>
+              <th>Gap</th>
+            </tr>
+          </thead>
           <tbody>
-            <tr><td>W1</td><td>P1</td><td>consciousness-kernel not in world (by design)</td></tr>
-            <tr><td>W2</td><td>P1</td><td>faculty coupling ~0.27</td></tr>
-            <tr><td>W3–W4</td><td>P2</td><td>digital-biologics unwired · factions unwired</td></tr>
-            <tr><td>W10</td><td>P1</td><td>external peer replication</td></tr>
-            <tr><td>W11</td><td>P2</td><td>GOAL5 frame budget (~10 ms apex)</td></tr>
-            <tr><td>W13</td><td>P2</td><td>BENCHMARKS stagger narrative stale</td></tr>
-            <tr><td>W14</td><td>P3</td><td>Pass series SSOT duplication</td></tr>
+            <tr>
+              <td>W1</td>
+              <td>P1</td>
+              <td>consciousness-kernel not in world (by design)</td>
+            </tr>
+            <tr>
+              <td>W2</td>
+              <td>P1</td>
+              <td>faculty coupling ~0.27</td>
+            </tr>
+            <tr>
+              <td>W3–W4</td>
+              <td>P2</td>
+              <td>digital-biologics unwired · factions unwired</td>
+            </tr>
+            <tr>
+              <td>W10</td>
+              <td>P1</td>
+              <td>external peer replication</td>
+            </tr>
+            <tr>
+              <td>W11</td>
+              <td>P2</td>
+              <td>GOAL5 frame budget (~10 ms apex)</td>
+            </tr>
+            <tr>
+              <td>W13</td>
+              <td>P2</td>
+              <td>BENCHMARKS stagger narrative stale</td>
+            </tr>
+            <tr>
+              <td>W14</td>
+              <td>P3</td>
+              <td>Pass series SSOT duplication</td>
+            </tr>
           </tbody>
         </table>
       </section>
@@ -205,19 +476,49 @@
       <section>
         <h2>Document map (your 12 references)</h2>
         <table>
-          <thead><tr><th>Local Z: filename</th><th>Repo status</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Local Z: filename</th>
+              <th>Repo status</th>
+            </tr>
+          </thead>
           <tbody>
-            <tr><td>FINAL-HURRAH-2026-07-07.md</td><td><span class="tag ok">This capstone</span></td></tr>
-            <tr><td>MEGA-MASTER-*-PASS1/2/3</td><td><span class="tag ok">Present (CONSCIOUSNESS-BRAIN naming)</span></td></tr>
-            <tr><td>BRAIN-NEUROLOGY-*.md</td><td><span class="tag ok">Present</span></td></tr>
-            <tr><td>VERIFICATION · NHSI · CONTROLS</td><td><span class="tag ok">Present</span></td></tr>
-            <tr><td>SUPER-REPORT-* (4 files)</td><td><span class="tag warn">Local-only</span> folded into passes</td></tr>
+            <tr>
+              <td>FINAL-HURRAH-2026-07-07.md</td>
+              <td><span class="tag ok">This capstone</span></td>
+            </tr>
+            <tr>
+              <td>MEGA-MASTER-*-PASS1/2/3</td>
+              <td><span class="tag ok">Present (CONSCIOUSNESS-BRAIN naming)</span></td>
+            </tr>
+            <tr>
+              <td>BRAIN-NEUROLOGY-*.md</td>
+              <td><span class="tag ok">Present</span></td>
+            </tr>
+            <tr>
+              <td>VERIFICATION · NHSI · CONTROLS</td>
+              <td><span class="tag ok">Present</span></td>
+            </tr>
+            <tr>
+              <td>SUPER-REPORT-* (4 files)</td>
+              <td><span class="tag warn">Local-only</span> folded into passes</td>
+            </tr>
           </tbody>
         </table>
       </section>
 
       <div id="full">
-        <h2 style="color:var(--gold);font-size:0.95rem;text-transform:uppercase;letter-spacing:0.1em;margin:24px 0 12px">Full markdown report</h2>
+        <h2
+          style="
+            color: var(--gold);
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin: 24px 0 12px;
+          "
+        >
+          Full markdown report
+        </h2>
         <div id="md-content"><p class="load-status">Loading full FINAL HURRAH markdown…</p></div>
       </div>
     </div>
@@ -228,17 +529,21 @@
         const el = document.getElementById('md-content');
         const paths = [
           '/docs/brain-assessment-fusion.md',
-          '../docs/MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md',
+          '../docs/reports/2026-07-07/MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md',
         ];
         let md = null;
         for (const p of paths) {
           try {
             const r = await fetch(p);
-            if (r.ok) { md = await r.text(); break; }
+            if (r.ok) {
+              md = await r.text();
+              break;
+            }
           } catch (_) {}
         }
         if (!md) {
-          el.innerHTML = '<p class="load-status">Could not fetch markdown. Open <code>docs/MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md</code> directly or run <code>bun dev</code> and visit <code>/lab/brain-assessment</code>.</p>';
+          el.innerHTML =
+            '<p class="load-status">Could not fetch markdown. Open <code>docs/reports/2026-07-07/MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md</code> directly or run <code>bun dev</code> and visit <code>/lab/brain-assessment</code>.</p>';
           return;
         }
         marked.setOptions({ gfm: true, breaks: false });

@@ -50,7 +50,7 @@
 
 ---
 
-## Tier taxonomy (use this, not “brain count”)
+## Tier taxonomy (use this, not –brain count—)
 
 | Tier | Meaning |
 |------|---------|

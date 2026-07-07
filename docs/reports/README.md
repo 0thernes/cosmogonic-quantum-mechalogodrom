@@ -20,9 +20,9 @@ expect() calls**.
   — condensed browser companion for the current master.
 - [BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md](../BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md)
   — canonical academic foundation (Tier A- after cleanup).
-- [MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md](../MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md)
+- [MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md](./reports/2026-07-07/MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md)
   — **mine** for named-system ledger (Tier C+); browser: `/lab/brain-assessment`.
-- Historical / archive tier (do not promote as current truth): `SUPER-REPORT-OMNISCIENT-*`, `MEGA-ULTRATHINK-*`, Pass 1–3 mega drafts — see consolidated audit trust table.
+- [2026-07-07 report archive index](./reports/2026-07-07/INDEX.md) — historical mega-drafts (Omniscient · ULTRATHINK · Pass 1–3); do not promote as current truth.
 - [2026-07-01-25-POINT-SCRUTINY-SCORECARD.md](./2026-07-01-25-POINT-SCRUTINY-SCORECARD.md) — 25-point
   adversarial scrutiny (overall 8.3/10). Chart:
   [assets/scrutiny-25-scorecard.svg](./assets/scrutiny-25-scorecard.svg).

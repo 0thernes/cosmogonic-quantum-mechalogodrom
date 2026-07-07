@@ -11,6 +11,12 @@ changed and why.
 
 ---
 
+## 2026-07-07 (pass 28) — archive 16 mega-drafts + deploy archive index
+
+Moved 16 historical assessment drafts to `docs/reports/2026-07-07/` with `INDEX.md`; added CONSOLIDATED-22-FILE-AUDIT HTML; strategy/deployment meta docs; archive links on README + all six Pages surfaces; `build-pages.ts` now deploys archive folder.
+
+---
+
 ## 2026-07-07 (pass 27) — scrub archive-tier promotion + stale perf refs
 
 README/NHSI/TECH-SPEC/brain-assessment lab demote OMNISCIENT/ULTRATHINK as current truth; promote CONSOLIDATED-22 links on all six Pages surfaces + server routes; fix TECH-SPEC 3.34→1.99 ms; retire world.ts frame-%4 stale comments; build-pages drops archive HTML root copies.
@@ -41,7 +47,7 @@ Multi-agent adversarial audit capstone: `docs/MEGA-MASTER-BRAIN-NEUROLOGY-CONSCI
 
 ### Content
 
-- Maps twelve user-referenced local docs to workspace canonical files (SUPER-REPORT-* = local-only).
+- Maps twelve user-referenced local docs to workspace canonical files (SUPER-REPORT-\* = local-only).
 - Simulated critique panel: Gemini, Devin, Composer, GPT, Opus + code-grounded subagents.
 - Authority tier taxonomy (LIVE_POLICY / LIVE_FRAME / TELEMETRY / LAB / SCAFFOLD / DECORATIVE).
 - Code verification receipts (driveSuper every frame, 5× SuperMind, kernel LAB-only, pipeline order).
