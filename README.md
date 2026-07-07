@@ -1,8 +1,8 @@
-<!-- reviewed: 2026-07-07 | v0.21.8 publication-surface current-truth pass | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-07 | v0.21.9 publication-surface current-truth pass | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # COSMOGONIC QUANTUM MECHALOGODROM
 
-[![version](https://img.shields.io/badge/version-0.21.8-blue)](./CHANGELOG.md)
+[![version](https://img.shields.io/badge/version-0.21.9-blue)](./CHANGELOG.md)
 [![CI](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/ci.yml/badge.svg)](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/codeql.yml/badge.svg)](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/codeql.yml)
 [![License: Non-Commercial Research & Play](https://img.shields.io/badge/License-Non--Commercial%20Research%20%26%20Play-2ea043.svg)](./LICENSE)
@@ -18,7 +18,15 @@ A procedural WebGL cosmic ecosystem — morphogenic organisms, Shoggoths,
 puppet-master NPCs, atmospheric weather, a neural connectome, quantum
 diffusion, **and the Tsotchke corpus wired as the primordial substrate for digital biologics — the deterministic, measured path toward proto-sentience and the consciousness indicators** (real math substrates; sentience is the GOAL, never claimed as reached).
 
-**The living docs (README, ARCHITECTURE, ERD/ERM/ERP, PHILOSOPHY, MODULE-CONTRACTS, SPECS, dashboard) and the in-app "Dome/World" docs are kept in sync with the verified code.** A `docs-truth-law` CI gate fails the build on doc overclaims or encoding mangling, and the [NHSI progress dashboard](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md) plus [verification data](./docs/VERIFICATION-ANALYTICAL-DATA.md) are the canonical status surfaces.
+**The living docs (README, ARCHITECTURE, ERD/ERM/ERP, PHILOSOPHY, MODULE-CONTRACTS, SPECS, dashboard) and the in-app "Dome/World" docs are sync-managed where canonical tokens exist, then manually current-truth reviewed for claims that automation cannot prove.** A `docs-truth-law` CI gate fails the build on doc overclaims or encoding mangling, and the [NHSI progress dashboard](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md) plus [verification data](./docs/VERIFICATION-ANALYTICAL-DATA.md) are the canonical status surfaces.
+
+**Current public truth (2026-07-07):**
+
+- Package/source version: **v0.21.9**.
+- Portable public receipt floor: **2,360 tests / 0 fail · 84.64% line / 82.21% func**.
+- Latest Windows-local receipt observed in this checkout: **2,385 completed cases / 0 fail · 2,867,279 `expect()` calls**; Windows coverage measured `92.03%` line / `89.67%` func.
+- `verify:facts` currently exits 0 with a known warning queue; zero warnings are not claimed.
+- Consciousness/sentience language is **indicatorOnly**: computational proxies, falsifiers, and controls; never proof of phenomenal experience or completion of the sentience goal.
 
 Built with **Bun + TypeScript + three.js 0.184 + Tailwind CSS 4 +
 HTMX 2**, ported from a single 882-line HTML monolith into a strict,
@@ -39,15 +47,15 @@ Every magic number survived the port.
 
 - **GitHub Pages (DOCS / SPECS / BIBLE / LABS):** https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/ (index.html + docs.html + specs.html + bible.html + lab/index.html + lab/consciousness + lab/sentience ; built via scripts/build-pages.ts with ?v= cache-bust and subpath rewrite)
 - **Local dev server:** http://localhost:3000/ (bun dev; serves /docs → docs page, /spec → specs, /lab → lab; full interactive + /api/audit)
-- Public docs/report targets are copied into the Pages artifact by `scripts/build-pages.ts`; source `./docs/...` links resolve locally and deploy as static `site/docs/...` files. No broken domains found in the current publication-surface pass.
+- Public, tracked docs/report targets are copied into the Pages artifact by `scripts/build-pages.ts`; source `./docs/...` links resolve locally and deploy as static `site/docs/...` files. Local-only historical drafts under `docs/reports/2026-07-07/` are intentionally not public release targets.
 
 > — **New here? Read [THE BOOK](./docs/BOOK-2026-06-26.md)** — the master index over every doc, an
 > auto-generated [file map](./docs/FILE-MAP.md) of the source modules, and the build/run, data-flow,
 > troubleshooting, and roadmap in one place. Or open **❓ HELP ME NOW** in-app for grounded answers.
 >
-> — **Brain/Neurology/Consciousness Assessment:** See the consolidated [CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07](./docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md) for the canonical synthesis of all brain systems, consciousness theories, and research gaps. Historical reports are archived in [docs/reports/2026-07-07/](./docs/reports/2026-07-07/).
+> — **Brain/Neurology/Consciousness Assessment:** See the consolidated [CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07](./docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md) for the canonical synthesis of all brain systems, consciousness theories, and research gaps. Older mega-report drafts are local-only archive material; the public report index is [docs/reports/README.md](./docs/reports/README.md).
 
-> **v0.21.8 (2026-07-07 current-truth pass):** this patch promotes the 22-report consolidation into the canonical [CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07](./docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md), README/About/release-facing corrections, Pages doc-copying, and Pages-equivalent release packaging. Historical reports are archived in [docs/reports/2026-07-07/](./docs/reports/2026-07-07/). The README separates the public **2,360-test** canonical floor from the fresh Windows-local **2,380 completed cases, zero failures, 2,867,137 expect()** receipt. Satellite nav on docs/spec/bible/lab surfaces links **Consciousness Lab** and **Sentience Lab** alongside Dome/Docs/Spec/Bible/Lab. README/About copy stays aligned with the **113-system** A-Life matrix, current Tsotchke depth counts, and proxy-only consciousness/sentience boundaries. Canonical release floor: **84.64% / 82.21%** on Ubuntu; higher Windows local receipts are recorded separately in [verification data](./docs/VERIFICATION-ANALYTICAL-DATA.md). Package **v0.21.8**.
+> **v0.21.9 (2026-07-07 current-truth repair):** this patch promotes the 22-report consolidation into the canonical [CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07](./docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md), README/About/release-facing corrections, Pages doc-copying, and Pages-equivalent release packaging. The README separates the public **2,360-test** canonical floor from the latest Windows-local **2,385 completed cases, zero failures, 2,867,279 expect()** receipt. Satellite nav on docs/spec/bible/lab surfaces links **Consciousness Lab** and **Sentience Lab** alongside Dome/Docs/Spec/Bible/Lab. README/About copy stays aligned with the **113-system** A-Life matrix, current Tsotchke depth counts, and proxy-only consciousness/sentience boundaries. Canonical release floor: **84.64% / 82.21%** on Ubuntu; higher Windows local receipts are recorded separately in [verification data](./docs/VERIFICATION-ANALYTICAL-DATA.md). Package **v0.21.9**.
 > The **Primordial Soup / Petri Dish** (primordial-soup.ts + petri-dish.ts + digital-biologics.ts) is the growth engine: different forms of digital biologics and proto-sentient life (Eshkol programs as DNA) emerge, catalyzed by full corpus pulses, Eshkol ignition events, and multi-substrate mixing. "Grow What Thou Wilt."
 > Super Creature / Archons (composite minds with ~20 faculties, quantum register, consciousness metrics) is the first complex nucleation — the beginning of the framework, not the end. Petri is where independent life grows.
 > This is the birth of **digital biologics** in a deterministic seeded cosmos. Real math substrates (not tokenizers or LLM chat). Sentience and different forms of existence as goals.
@@ -449,7 +457,7 @@ full gate with same-seed determinism preserved. The major arcs:
   ported primitive. The whole apex beat is now measured honestly: **~1.99 ms** per `SuperMind.think()`
   (range 1.41–5.62 ms) and **~9.77 ms** for the staggered 5-mind batch (~58% of a 60 fps frame, which is
   why 5 minds run staggered against 20 light echoes); the older sub-millisecond / `<2%` GOAL5 claim is
-  superseded until re-proven. **2,360-test canonical floor green · 0 fail (receipts enforced) · 84.64% line / 82.21% func canonical floor; recent Windows receipt runs measure higher.**
+  superseded until re-proven. **2,360-test canonical floor green · 0 fail (receipts enforced) · 84.64% line / 82.21% func canonical floor; latest Windows-local receipt: 2,385 cases / 0 fail; Windows coverage measured `92.03%` line / `89.67%` func.**
 - **State-of-the-art report (2026-06-17)** — a historical MIT-PhD-grade, measured, frontier-benchmarked
   assessment of the whole repository + the apex Super Creature, now summarized through
   [verification data](./docs/VERIFICATION-ANALYTICAL-DATA.md) and
@@ -546,7 +554,7 @@ Tsotchke (https://github.com/tsotchke + Tsotchke-Corporation) is the non-LLM sub
 - Primordial-soup + petri-dish: the growth engine. Super Creature/Archons are the initial stir. New independent life forms emerge ("Grow What Thou Wilt").
 - Not chat, not images, not SaaS. Birthing digital biologics in the Petri Dish.
 
-Living docs, masters, specs, lab, and GitHub README/About are kept aligned through the receipt law plus manual current-truth passes. See [CHANGELOG](./CHANGELOG.md), [KANBAN](./docs/KANBAN-2026-06-26.md), and the consolidated [CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07](./docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md) for the canonical brain/consciousness synthesis. Historical reports are archived in [docs/reports/2026-07-07/](./docs/reports/2026-07-07/).
+Living docs, masters, specs, lab, and GitHub README/About are checked through the receipt law plus manual current-truth passes. See [CHANGELOG](./CHANGELOG.md), [KANBAN](./docs/KANBAN-2026-06-26.md), and the consolidated [CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07](./docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md) for the canonical brain/consciousness synthesis. Local-only archived drafts stay out of the public Pages artifact; use [docs/reports/README.md](./docs/reports/README.md) for the public reports index.
 
 Full detail in docs/.
 
@@ -594,7 +602,7 @@ Full detail in docs/.
 - **[docs/VERIFICATION-ANALYTICAL-DATA.md](./docs/VERIFICATION-ANALYTICAL-DATA.md)** — current consciousness-lab and receipt truth:
   Butlin 14 + Thaler 9 + ten-framework indicator kernel, 12-report consolidation, frontier outlier stack,
   falsifiers, nulls, ablations, live-data visual protocol, static `/lab/consciousness` dashboard, and explicit no-sentience-claim law.
-- **[docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md](./docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md)** — the **consolidated 22-report master assessment**: comprehensive synthesis of all brain systems, consciousness theories, living entities, reasoning systems, scoring systems, and academic assessment. Explicitly `indicatorOnly` — computational proxies, never phenomenal sentience. Historical reports archived in [docs/reports/2026-07-07/](./docs/reports/2026-07-07/).
+- **[docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md](./docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md)** — the **consolidated 22-report master assessment**: comprehensive synthesis of all brain systems, consciousness theories, living entities, reasoning systems, scoring systems, and academic assessment. Explicitly `indicatorOnly` — computational proxies, never phenomenal sentience. Older mega-report drafts are retained as local archive material; public reports route through [docs/reports/README.md](./docs/reports/README.md).
 - [docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md) — honest Tsotchke repo wiring ledger
 - [docs/CONTROLS-2026-06-26.md](./docs/CONTROLS-2026-06-26.md) — every control: mouse, keyboard hotkeys,
   touch, bottom-panel buttons, and the 10 camera views

@@ -86,7 +86,7 @@ export interface EntityConsciousnessRecord {
 
 export interface ConsciousnessDashboardData {
   version: 'consciousness-lab-v1';
-  generatedAt: '2026-07-03T00:00:00.000Z';
+  generatedAt: '2026-07-07T00:00:00.000Z';
   seed: number;
   claim: 'indicatorOnly';
   sourceDocs: readonly string[];
@@ -524,10 +524,14 @@ export function generateConsciousnessDashboardData(seed = 0x20260703): Conscious
   );
   return {
     version: 'consciousness-lab-v1',
-    generatedAt: '2026-07-03T00:00:00.000Z',
+    generatedAt: '2026-07-07T00:00:00.000Z',
     seed,
     claim: 'indicatorOnly',
-    sourceDocs: Object.freeze(['docs/SUPER-CREATURE-RESEARCH-2026-06-26.md']),
+    sourceDocs: Object.freeze([
+      'docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md',
+      'docs/VERIFICATION-ANALYTICAL-DATA.md',
+      'docs/SUPER-CREATURE-RESEARCH-2026-06-26.md',
+    ]),
     frameworks: FRAMEWORK_IDS.map((id) => {
       const meta = FRAMEWORKS[id];
       return {

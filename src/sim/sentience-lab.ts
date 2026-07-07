@@ -97,7 +97,7 @@ export interface SentienceEntityFrameworkEdge {
 
 export interface SentienceLabData {
   version: 'sentience-lab-v1';
-  generatedAt: '2026-07-04T00:00:00.000Z';
+  generatedAt: '2026-07-07T00:00:00.000Z';
   claim: 'indicatorOnly';
   proofBoundary: string;
   rootSeed: number;
@@ -260,13 +260,17 @@ export function generateSentienceLabData(rootSeed = 0x20260704, seedCount = 32):
   const convergenceGaps = runSummaries.map((r) => r.convergenceGap);
   return {
     version: 'sentience-lab-v1',
-    generatedAt: '2026-07-04T00:00:00.000Z',
+    generatedAt: '2026-07-07T00:00:00.000Z',
     claim: 'indicatorOnly',
     proofBoundary:
       'Headless mass-run analytics over computational consciousness indicators; evidence of load-bearing mechanisms, not proof of phenomenal sentience.',
     rootSeed,
     seedBatch,
-    sourceDocs: Object.freeze(['docs/SUPER-CREATURE-RESEARCH-2026-06-26.md']),
+    sourceDocs: Object.freeze([
+      'docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md',
+      'docs/VERIFICATION-ANALYTICAL-DATA.md',
+      'docs/SUPER-CREATURE-RESEARCH-2026-06-26.md',
+    ]),
     sweep: {
       runs: reports.length,
       singularityRate: round(reports.filter((r) => r.singularityProven).length / runCount),

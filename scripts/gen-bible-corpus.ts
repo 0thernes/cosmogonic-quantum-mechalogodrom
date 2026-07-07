@@ -11,6 +11,8 @@ const BOOK = 'docs/BOOK-2026-06-26.md';
 const BIBLE = 'bible.html';
 const START = '<!-- CQM-BIBLE-CORPUS-START -->';
 const END = '<!-- CQM-BIBLE-CORPUS-END -->';
+const REPO_BLOB = 'https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/blob/main';
+const LOCAL_ONLY_PUBLIC_PREFIXES = ['/docs/reports/2026-07-07/'] as const;
 
 type Entry = { title: string; href: string; blurb: string; tier: string };
 
@@ -33,8 +35,16 @@ function parseBook(md: string): Entry[] {
     const [, title, rawPath, blurb] = row;
     if (!title || !rawPath) continue;
     let href = rawPath.replace(/^\.\//, 'docs/');
-    if (href.startsWith('docs/')) href = '/' + href.replace(/^docs\//, 'docs/');
-    else if (!href.startsWith('http') && !href.startsWith('/')) href = `/docs/${href}`;
+    if (href.startsWith('../src/') || href.startsWith('../scripts/')) {
+      href = `${REPO_BLOB}/${href.slice(3)}`;
+    } else if (href.startsWith('../')) {
+      href = `/${href.slice(3)}`;
+    } else if (href.startsWith('docs/')) {
+      href = '/' + href.replace(/^docs\//, 'docs/');
+    } else if (!href.startsWith('http') && !href.startsWith('/')) {
+      href = `/docs/${href}`;
+    }
+    if (LOCAL_ONLY_PUBLIC_PREFIXES.some((prefix) => href.startsWith(prefix))) continue;
     out.push({ title: title.trim(), href, blurb: (blurb ?? '').trim(), tier });
   }
   return out;
@@ -86,7 +96,7 @@ const EXTRA: Entry[] = [
   },
   {
     title: 'VENTURES — product horizon',
-    href: '/docs/ROADMAP-2026-06-26.md',
+    href: '/ROADMAP-2026-06-26.md',
     blurb: 'Multiplayer, accounts, outreach (aspirational).',
     tier: 'Research',
   },

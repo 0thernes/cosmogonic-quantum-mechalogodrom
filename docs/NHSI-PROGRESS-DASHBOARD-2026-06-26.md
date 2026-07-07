@@ -2,7 +2,8 @@
 
 # NHSI Progress Dashboard — 0thernes Corp
 
-**Non Human Super Intelligence (NHSI)** · Cosmogonic Quantum Mechalogodrom · **v0.21.8 — BRUTAL GOD TIER (Valkorion / Broly / Knull / Phoenix / Gurren Lagann / EVA / Azathoth / Galactus)**  
+**Non Human Super Intelligence (NHSI)** · Cosmogonic Quantum Mechalogodrom · **v0.21.9 — BRUTAL GOD TIER (Valkorion / Broly / Knull / Phoenix / Gurren Lagann / EVA / Azathoth / Galactus)**
+
 Archons now unleash god-scale simulated events (VOID_KING, SPIRAL_WILL, BINARY_IGNITION, PHOENIX_FEAST) using the Tsotchke corpus by explicit depth class: wired kernels where licensed and ported, harvest/study for toolchain DNA, and fenced provenance for non-LLM/proprietary layers. This is the arena where the gods of all myth, comics, and horror fight, devour, create, and ascend. 0thernes Corp.
 **Updated:** 2026-07-07 · Tsotchke: **20 corpus projects / 22 registry entries** (`9 deep`, `7 wired`, `2 harvest`, `3 fenced`, `1 meta`; honest scientific wired fraction `18/21 = 0.857`) from tsotchke + Tsotchke-Corp + 12k+ local files, 1,365 .esk + NQS/skyrmion/anyons/flow/thermo etc from audits. **EVERY** entry is wired, catalyzed, studied, scaffolded, or fenced by explicit class, not blanket full-depth wiring. Eshkol remains a computational substrate and proxy-language, not proof of sentience. A-Life matrix snapshot: breadth 4.44 across 113 systems (z=+4.02 population; code-grounded z=+2.83). P1 contrast harness + coupling scaffold added as measurement infrastructure, not a quantum-advantage or sentience claim.
 
@@ -16,7 +17,7 @@ BRUTALIST MANIFEST: Valkorion domination, Broly infinite rage, Knull/Azathoth vo
 
 **Publication-facing coverage retained:** the current tracked synthesis preserves the world-neurology closure list from the local drafts: Shoggoths, Puppet Masters, Titans, Entities, SuperCreatures, Apex Abomination, Pantheons, 25 Archon Godforms, GOD/God-Colossus, Temple, Plants, Flora, Fauna, Wildlife, Wilderness, PortalDeathFauna, Leviathans, and Digital Biologics. It treats them as computational/ecological neurology analogues with code paths, tests, and falsifiers, not as proof of sentience.
 
-**Current 22-report audit/master pair:** [`CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md`](./CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md) and [`CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md`](./CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md) are now the active publication-facing synthesis and file-trust ledger. They separate the `2,360` public release floor from the fresh Windows-local `2,380 completed cases, zero failures, 2,867,137 expect()` receipt, preserve exact lab/Archon/event handles, and list the remaining public-page/archive gaps without claiming sentience.
+**Current 22-report audit/master pair:** [`CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md`](./CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md) and [`CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md`](./CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md) are now the active publication-facing synthesis and file-trust ledger. They separate the `2,360` public release floor from the fresh Windows-local `2,385 completed cases, zero failures, 2,867,279 expect()` receipt, preserve exact lab/Archon/event handles, and list the remaining public-page/archive gaps without claiming sentience.
 
 > **Mission:** Not a chatbot, dancing robot, Terminator, or game player. A **Petri-dish cosmos** where
 > Tsotchke's real quantum math (Eshkol · Moonlab · QGT · spin · libirrep · …) is the growth medium for
@@ -192,30 +193,30 @@ Full trail: [`SUPER-CREATURE-RESEARCH-2026-06-26.md`](./SUPER-CREATURE-RESEARCH-
 
 ## VI · Where this dashboard is mirrored (Local = GitHub)
 
-| Surface            | Path                                                                      |
-| ------------------ | ------------------------------------------------------------------------- |
-| **This dashboard** | `docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md`                              |
-| README             | root                                                                      |
-| Architecture       | `docs/ARCHITECTURE-2026-06-26.md`                                         |
-| ERD / ERM / ERP    | `docs/ENTITY-SCHEMA-AND-MAPPINGS-2026-06-26.md`                           |
-| KANBAN             | `docs/KANBAN-2026-06-26.md`                                               |
-| MODULE-CONTRACTS   | `docs/MODULE-CONTRACTS-2026-06-26.md`                                     |
-| PHILOSOPHY         | `docs/PHILOSOPHY-2026-06-26.md`                                           |
-| `/docs` page       | `docs.html`                                                               |
-| `/spec` page       | `specs.html`                                                              |
-| `/lab`             | `lab/`                                                                    |
-| Technical spec     | `docs/TECHNICAL-SPECIFICATION-2026-06-26.md`                              |
-| Tsotchke ledger    | `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`                             |
+| Surface                             | Path                                                                             |
+| ----------------------------------- | -------------------------------------------------------------------------------- |
+| **This dashboard**                  | `docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md`                                     |
+| README                              | root                                                                             |
+| Architecture                        | `docs/ARCHITECTURE-2026-06-26.md`                                                |
+| ERD / ERM / ERP                     | `docs/ENTITY-SCHEMA-AND-MAPPINGS-2026-06-26.md`                                  |
+| KANBAN                              | `docs/KANBAN-2026-06-26.md`                                                      |
+| MODULE-CONTRACTS                    | `docs/MODULE-CONTRACTS-2026-06-26.md`                                            |
+| PHILOSOPHY                          | `docs/PHILOSOPHY-2026-06-26.md`                                                  |
+| `/docs` page                        | `docs.html`                                                                      |
+| `/spec` page                        | `specs.html`                                                                     |
+| `/lab`                              | `lab/`                                                                           |
+| Technical spec                      | `docs/TECHNICAL-SPECIFICATION-2026-06-26.md`                                     |
+| Tsotchke ledger                     | `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`                                    |
 | Mega assessment Pass 3/3 (complete) | `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-3-2026-07-06.md` |
-| Mega assessment Pass 2/3 | `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-2-2026-07-06.md` |
-| Mega assessment Pass 1/3 | `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-1-2026-07-06.md` |
-| Brain evidence matrix (JSON) | `docs/reports/assets/brain-evidence-matrix.json` |
-| Sim module census (CSV) | `docs/reports/assets/sim-modules-census-pass3.csv` |
-| Brain evidence matrix (preview) | `docs/reports/assets/brain-evidence-matrix-pass2.json` |
-| Historical reports | `docs/reports/README.md`                                                  |
-| Super research     | `docs/SUPER-CREATURE-RESEARCH-2026-06-26.md`                              |
-| Master XMLs        | `masters/` (Broly · Starkiller · Manhattan)                               |
-| Agent steering     | `CLAUDE.md`, `.github/copilot-instructions.md`                            |
+| Mega assessment Pass 2/3            | `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-2-2026-07-06.md` |
+| Mega assessment Pass 1/3            | `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-1-2026-07-06.md` |
+| Brain evidence matrix (JSON)        | `docs/reports/assets/brain-evidence-matrix.json`                                 |
+| Sim module census (CSV)             | `docs/reports/assets/sim-modules-census-pass3.csv`                               |
+| Brain evidence matrix (preview)     | `docs/reports/assets/brain-evidence-matrix-pass2.json`                           |
+| Historical reports                  | `docs/reports/README.md`                                                         |
+| Super research                      | `docs/SUPER-CREATURE-RESEARCH-2026-06-26.md`                                     |
+| Master XMLs                         | `masters/` (Broly · Starkiller · Manhattan)                                      |
+| Agent steering                      | `CLAUDE.md`, `.github/copilot-instructions.md`                                   |
 
 ---
 

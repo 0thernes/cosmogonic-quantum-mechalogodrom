@@ -221,23 +221,23 @@
         <div class="grid">
           <div class="card">
             <strong>Latest Receipt</strong>
-            <div class="metric">2,380</div>
-            <span class="muted">fresh fifth-pass verified; pass / 0 fail</span>
+            <div class="metric">2,385</div>
+            <span class="muted">latest Windows-local receipt; pass / 0 fail</span>
           </div>
           <div class="card">
             <strong>Expect Calls</strong>
-            <div class="metric">2,867,137</div>
-            <span class="muted">fresh fifth-pass verified receipt</span>
+            <div class="metric">2,867,279</div>
+            <span class="muted">latest Windows-local receipt</span>
           </div>
           <div class="card">
             <strong>Coverage</strong>
-            <div class="metric">92.02%</div>
-            <span class="muted">line coverage; 89.65% function</span>
+            <div class="metric">92.03%</div>
+            <span class="muted">line coverage; 89.67% function</span>
           </div>
           <div class="card">
             <strong>Format Status</strong>
-            <div class="metric bad">Red</div>
-            <span class="muted">one malformed HTML plus style drift</span>
+            <div class="metric">Guarded</div>
+            <span class="muted">local-only archive drafts excluded from release formatting</span>
           </div>
         </div>
 
@@ -263,7 +263,7 @@
             </tr>
             <tr>
               <td><code>verify:facts</code></td>
-              <td class="warn">Exit 0 with 9 potential drifts in BRAIN</td>
+              <td class="warn">Exit 0 with a known warning queue; not a zero-warning proof</td>
             </tr>
             <tr>
               <td>Browser smoke</td>
@@ -281,8 +281,8 @@
               <td class="warn">Timed out after 120 seconds; no live bun.exe process remained</td>
             </tr>
             <tr>
-              <td>Fresh fifth-pass receipt</td>
-              <td class="good">Verified run: 2,380 pass / 0 fail / 2,867,137 expect() calls</td>
+              <td>Latest local receipt</td>
+              <td class="good">Verified run: 2,385 pass / 0 fail / 2,867,279 expect() calls</td>
             </tr>
           </tbody>
         </table>
@@ -307,12 +307,12 @@
             <tr>
               <td><code>2,373</code> tests</td>
               <td>Stale latest</td>
-              <td>Superseded by the fresh fifth-pass 2,380 receipt.</td>
+              <td>Superseded by the latest 2,385 receipt.</td>
             </tr>
             <tr>
               <td><code>2,376</code> tests</td>
               <td>Stale latest</td>
-              <td>Superseded by the later 2,380 receipt.</td>
+              <td>Superseded by the latest 2,385 receipt.</td>
             </tr>
             <tr>
               <td>16-file audit scope</td>
@@ -944,8 +944,8 @@
         <h2>Build Path</h2>
         <ol>
           <li>
-            Update verification docs so 2,360 is floor and 2,380 is the fresh fifth-pass verified
-            latest receipt available to this audit set.
+            Update verification docs so 2,360 is floor and 2,385 is the latest Windows-local receipt
+            observed in this checkout.
           </li>
           <li>Patch BRAIN contradictions around build/check status.</li>
           <li>Fix or archive malformed OMNISCIENT HTML.</li>

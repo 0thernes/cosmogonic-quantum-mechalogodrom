@@ -35,6 +35,7 @@ docs/SUPER-REPORT-3RD-PASS-2026-07-06.md
 docs/SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.html
 docs/SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.md
 docs/SUPER-REPORT-ULTIMATE-MEGA-2026-07-06.md
+docs/reports/2026-07-07/
 # Throwaway scratch/verify scripts a session leaves in the root (e.g. __verify_*.ts). They are not in
 # tsc's `include` nor oxlint's scope, but `prettier --check .` scans them and a stray one breaks the
 # LOCAL gate. Ignore the `__`-prefixed scratch convention so the daily gate stays robust to cruft.

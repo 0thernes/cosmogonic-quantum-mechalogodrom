@@ -17,28 +17,30 @@ strong local verification receipts and rich named-system coverage. It does not
 yet have scientific proof of consciousness, browser-public parity, or a fully
 clean publication package.
 
-The fresh verification receipt available to this audit set is:
+The fresh verification receipt available to this current repair pass is:
 
-| Gate               | Current observed result                                                                         |
-| ------------------ | ----------------------------------------------------------------------------------------------- |
-| `bun run check`    | Passed locally on 2026-07-07 after the public-link/dashboard repair                             |
-| `bun run pages`    | Passed locally; Pages assembly now copies root public docs and prunes local-only archive drafts |
-| `verify:receipts`  | 2,380 pass / 0 fail, fresh local verified receipt                                               |
-| Expect calls       | 2,867,137, fresh local verified receipt                                                         |
-| Test files         | 256                                                                                             |
-| Coverage           | 92.01% line / 89.65% function                                                                   |
-| `typecheck`        | Passed                                                                                          |
-| `lint`             | Passed                                                                                          |
-| `sync:check`       | Passed at canonical floor wording                                                               |
-| `verify:facts`     | Exit 0, with known fuzzy denominator review warnings                                            |
-| 22-file formatting | Public tracked pair formatted; ignored local archive drafts are not release targets             |
-| Browser smoke      | Static Pages assembly checked; interactive browser/visual smoke still pending                   |
-| Remote release     | `v0.21.8` GitHub Release still pending until post-patch CI/tag repair completes                 |
+| Gate               | Current observed result                                                                                       |
+| ------------------ | ------------------------------------------------------------------------------------------------------------- |
+| `bun run check`    | Passed locally on 2026-07-07 after the public-link/dashboard repair                                           |
+| `bun run pages`    | Passed locally; Pages assembly now copies root public docs and prunes local-only archive drafts               |
+| `verify:receipts`  | 2,385 pass / 0 fail, latest local verified receipt                                                            |
+| Expect calls       | 2,867,279, latest local verified receipt                                                                      |
+| Test files         | 256                                                                                                           |
+| Coverage           | 92.03% line / 89.67% function                                                                                 |
+| `typecheck`        | Passed                                                                                                        |
+| `lint`             | Passed                                                                                                        |
+| `sync:check`       | Passed at canonical floor wording                                                                             |
+| `verify:facts`     | Exit 0, with known warning queue; not a zero-warning proof                                                    |
+| 22-file formatting | Public tracked pair formatted; ignored local archive drafts are not release targets                           |
+| Browser smoke      | Static Pages assembly checked; interactive browser/visual smoke still pending                                 |
+| Remote release     | `v0.21.9` is the publication target for this pass; GitHub Releases remain the live source for post-tag status |
 
 Important: `2,360` is the portable canonical floor. `2,373` and `2,376` were
-previous observed latest receipts. `2,380` is the fresh fifth-pass verified
-latest available to this audit set. Any document that calls `2,360`, `2,373`,
-or `2,376` the current latest is stale.
+previous observed latest receipts. `2,380` was the fifth-pass verified receipt
+available to the original audit set; `2,385` is the latest Windows-local receipt
+observed in this checkout. Any document that calls `2,360`, `2,373`, `2,376`, or
+`2,380` the current latest is stale unless it is explicitly describing a dated
+historical audit snapshot.
 
 Post-subagent note: a second audit found that one dashboard linked to ignored
 local archive drafts, which existed locally but not in a clean GitHub checkout.
@@ -267,7 +269,7 @@ hooks a reviewer would trace.
 
 `BRAIN II.9` recorded a specific prior local build finding: `bun run build`
 failed at `src/styles/app.css:0` with an out-of-range code point class of error;
-a CSS-content hypothesis was tested and rejected. The 0.21.8 publication pass
+a CSS-content hypothesis was tested and rejected. The 0.21.9 publication pass
 turns that from active blocker into fixed lesson: Tailwind v4 whole-repo
 auto-detection is disabled with `@import 'tailwindcss' source(none)`, and
 `app.css` explicitly scans only `src/`, the root HTML shells, and `lab/`. Current
@@ -414,8 +416,8 @@ prematurely makes it weaker. Placing it correctly makes it improvable.
 
 ### Phase A - Truth Lock
 
-- Keep `VERIFICATION` distinguished between the 2,360 floor and the fresh
-  fifth-pass 2,380 latest receipt.
+- Keep `VERIFICATION` distinguished between the 2,360 floor and the latest
+  Windows-local 2,385 receipt.
 - Keep `BRAIN` sealed after the current build/check and version-tail fixes.
 - Fix or archive malformed `OMNISCIENT` HTML.
 - Replace stale counts with current tracked counts.

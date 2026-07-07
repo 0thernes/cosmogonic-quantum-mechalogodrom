@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.9] — 2026-07-07
+
+- Publication/release truth repair after the v0.21.8 consolidation:
+  - Refreshed README, Docs, Spec, Bible, and consolidated 22-report surfaces to separate the
+    `2,360` portable public floor from the latest Windows-local
+    `2,385 completed cases, zero failures, 2,867,279 expect()` receipt.
+  - Reclassified `docs/reports/2026-07-07/` as a local-only archived-draft folder; public pages now
+    route through `docs/reports/README.md` plus the tracked `CONSOLIDATED-22-*` master/audit pair.
+  - Hardened `scripts/build-pages.ts` so consolidated docs are copied from their real `docs/`
+    source paths, with a regression test in `tests/bible-public-links.test.ts`.
+
 ## [0.21.8] — 2026-07-07
 
 - Publication-surface current-truth pass after the 22-report consolidation:
@@ -17,10 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     and academic assessment (MIT/PhD/Planck/Nobel/Turing/Fields) into a single reference document.
   - Added companion audit ledger [CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07](docs/CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md)
     — file-by-file audit of the 22 report artifacts and publication-surface gaps.
-  - Archived 12 historical reports in [docs/reports/2026-07-07/](docs/reports/2026-07-07/) with detailed index
-    — preserves all historical context while providing a clean current documentation structure.
+  - Moved historical mega-report drafts into the local-only `docs/reports/2026-07-07/` archive while
+    keeping the tracked public report index at [docs/reports/README.md](docs/reports/README.md).
   - Updated README/About-facing metadata to separate the `2,360` public release floor from the
-    fresh Windows-local `2,380 completed cases, zero failures, 2,867,137 expect()` receipt.
+    latest Windows-local `2,385 completed cases, zero failures, 2,867,279 expect()` receipt.
   - Added discoverable links to CONSOLIDATED-22-MASTER-ASSESSMENT and audit ledger from Docs, Spec,
     Bible, Lab, Consciousness Lab, Sentience Lab, and the reports index.
   - Refreshed public codebase census wording to the current `bun run metrics` output:

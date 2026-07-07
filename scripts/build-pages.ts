@@ -36,26 +36,34 @@ const LOCAL_ONLY_DOC_ARTIFACTS = [
   '2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md',
   '2026-06-26-ALIFE-COMPARATIVE-AUDIT.md',
   '2026-06-26-alife-comparison-matrix.csv',
-  'CONSOLIDATED-16-FILE-AUDIT-CURRENT-2026-07-07.md',
-  'CONSOLIDATED-16-MASTER-ASSESSMENT-CURRENT-2026-07-07.html',
-  'CONSOLIDATED-16-MASTER-ASSESSMENT-CURRENT-2026-07-07.md',
   'FILE-AUDIT-16-FILES-2026-07-07.md',
-  'MASTER-ASSESSMENT-2026-07-07.html',
   'MASTER-ASSESSMENT-2026-07-07.md',
-  'MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md',
-  'MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS1-2026-07-06.md',
-  'MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS2-2026-07-06.md',
-  'MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS3-2026-07-06.md',
-  'MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.html',
-  'MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.md',
-  'README.md',
-  'SUPER-REPORT-2026-07-06.md',
-  'SUPER-REPORT-2ND-PASS-2026-07-06.md',
-  'SUPER-REPORT-3RD-PASS-2026-07-06.md',
-  'SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.html',
-  'SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.md',
-  'SUPER-REPORT-ULTIMATE-MEGA-2026-07-06.md',
+  'MASTER-ASSESSMENT-2026-07-07.html',
+  'DOCUMENTATION-UPDATE-COMPLETION-SUMMARY-2026-07-07.md',
+  '5-PASS-DOCUMENTATION-UPDATE-STRATEGY-2026-07-07.md',
   'reports/2026-07-07',
+] as const;
+
+const PUBLIC_PAGE_DOCS = [
+  { source: 'CHANGELOG.md', target: 'CHANGELOG.md' },
+  { source: 'ROADMAP-2026-06-26.md', target: 'ROADMAP-2026-06-26.md' },
+  { source: 'THIRD-PARTY-NOTICES.md', target: 'THIRD-PARTY-NOTICES.md' },
+  {
+    source: 'docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md',
+    target: 'docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md',
+  },
+  {
+    source: 'docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.html',
+    target: 'docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.html',
+  },
+  {
+    source: 'docs/CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md',
+    target: 'docs/CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md',
+  },
+  {
+    source: 'docs/CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.html',
+    target: 'docs/CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.html',
+  },
 ] as const;
 
 async function rewrite(
@@ -110,6 +118,9 @@ for (const artifact of LOCAL_ONLY_DOC_ARTIFACTS) {
 await cp(new URL('docs/reports/assets/', ROOT), new URL('docs/reports/assets/', SITE), {
   recursive: true,
 });
+for (const { source, target } of PUBLIC_PAGE_DOCS) {
+  await cp(new URL(source, ROOT), new URL(target, SITE));
+}
 // Flat copy at site root — bulletproof on GitHub Pages (gallery tries assets/alife/ first).
 await cp(new URL('docs/reports/assets/', ROOT), new URL('assets/alife/', SITE), {
   recursive: true,
@@ -213,7 +224,10 @@ const navFromSentience: ReadonlyArray<readonly [string, string]> = base
 // Root-level pages: use absolute paths on CI, relative locally.
 const navRoot: ReadonlyArray<readonly [string, string]> = base
   ? [
+      ['href="/CHANGELOG.md"', `href="${base}/CHANGELOG.md"`],
       ['href="/docs/', `href="${base}/docs/`],
+      ['href="/ROADMAP-2026-06-26.md"', `href="${base}/ROADMAP-2026-06-26.md"`],
+      ['href="/THIRD-PARTY-NOTICES.md"', `href="${base}/THIRD-PARTY-NOTICES.md"`],
       ['href="/docs"', `href="${base}/docs.html${q}"`],
       ['href="/spec"', `href="${base}/specs.html${q}"`],
       ['href="/bible"', `href="${base}/bible.html${q}"`],
@@ -223,7 +237,10 @@ const navRoot: ReadonlyArray<readonly [string, string]> = base
       ['href="/"', `href="${base}/index.html${q}"`],
     ]
   : [
+      ['href="/CHANGELOG.md"', 'href="./CHANGELOG.md"'],
       ['href="/docs/', 'href="./docs/'],
+      ['href="/ROADMAP-2026-06-26.md"', 'href="./ROADMAP-2026-06-26.md"'],
+      ['href="/THIRD-PARTY-NOTICES.md"', 'href="./THIRD-PARTY-NOTICES.md"'],
       ['href="/docs"', `href="docs.html${q}"`],
       ['href="/spec"', `href="specs.html${q}"`],
       ['href="/bible"', `href="bible.html${q}"`],

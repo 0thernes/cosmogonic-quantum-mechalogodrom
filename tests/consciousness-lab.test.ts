@@ -5,6 +5,7 @@ import {
   type LabReport,
 } from '../src/sim/consciousness-lab';
 import { FRAMEWORK_COUNT } from '../src/sim/consciousness-kernel';
+import { generateConsciousnessDashboardData } from '../src/sim/consciousness-adapters';
 
 const REPORT: LabReport = runConsciousnessLab(1234);
 
@@ -79,5 +80,17 @@ describe('consciousness-lab: cross-seed robustness', () => {
     expect(sweep.emergenceRate).toBeGreaterThan(0.8);
     expect(sweep.singularityRate).toBeGreaterThanOrEqual(0.6);
     expect(sweep.claim).toBe('indicatorOnly');
+  });
+});
+
+describe('consciousness-lab: public feed metadata', () => {
+  test('dashboard data points at the current truth ledgers', () => {
+    const data = generateConsciousnessDashboardData();
+    expect(data.generatedAt).toBe('2026-07-07T00:00:00.000Z');
+    expect(data.claim).toBe('indicatorOnly');
+    expect(data.sourceDocs).toContain(
+      'docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md',
+    );
+    expect(data.sourceDocs).toContain('docs/VERIFICATION-ANALYTICAL-DATA.md');
   });
 });

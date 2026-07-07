@@ -18,8 +18,11 @@ describe('sentience-lab: headless analytics feed', () => {
     const b = generateSentienceLabData(0x20260704, 8);
     expect(JSON.stringify(a)).toBe(JSON.stringify(b));
     expect(a.version).toBe('sentience-lab-v1');
+    expect(a.generatedAt).toBe('2026-07-07T00:00:00.000Z');
     expect(a.claim).toBe('indicatorOnly');
     expect(a.proofBoundary).toContain('not proof of phenomenal sentience');
+    expect(a.sourceDocs).toContain('docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md');
+    expect(a.sourceDocs).toContain('docs/VERIFICATION-ANALYTICAL-DATA.md');
   });
 
   test('sweep statistics are bounded and report real structured-vs-null separation', () => {

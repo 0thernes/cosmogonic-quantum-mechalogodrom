@@ -29,44 +29,47 @@ single prior report. The accurate position is:
 
 This audit integrates three critic lanes:
 
-| Lane   | Focus                                       | Result                                                                                                                |
-| ------ | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| Hooke  | File staleness, contradictions, trust tiers | All 22 files exist; major scope, receipt, count, and overclaim drift found.                                           |
-| Pauli  | Gates, receipts, HTML/format validity       | Typecheck/lint/sync pass; fresh fifth-pass `verify:receipts` run reported 2,380 pass; one old HTML remains malformed. |
-| Singer | Coverage gaps and omitted named systems     | Named systems are covered but scattered; browser/public output and scientific controls remain weakest.                |
+| Lane   | Focus                                       | Result                                                                                                             |
+| ------ | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Hooke  | File staleness, contradictions, trust tiers | All 22 files exist; major scope, receipt, count, and overclaim drift found.                                        |
+| Pauli  | Gates, receipts, HTML/format validity       | Typecheck/lint/sync pass; fifth-pass `verify:receipts` reported 2,380 pass; current repair receipt moved to 2,385. |
+| Singer | Coverage gaps and omitted named systems     | Named systems are covered but scattered; browser/public output and scientific controls remain weakest.             |
 
-Fresh fifth-pass verification receipt available to this audit set:
+Latest verification receipt available to this current repair pass:
 
 | Item                              | Current observed value                                                                                                |
 | --------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `verify:receipts`                 | 2,380 pass / 0 fail, fresh fifth-pass verified receipt                                                                |
-| Expect calls                      | 2,867,137, fresh fifth-pass verified receipt                                                                          |
+| `verify:receipts`                 | 2,385 pass / 0 fail, latest Windows-local verified receipt                                                            |
+| Expect calls                      | 2,867,279, latest Windows-local verified receipt                                                                      |
 | Test files                        | 256                                                                                                                   |
-| Line coverage                     | 92.01%                                                                                                                |
-| Function coverage                 | 89.65%                                                                                                                |
+| Line coverage                     | 92.03%                                                                                                                |
+| Function coverage                 | 89.67%                                                                                                                |
 | `typecheck`                       | Passed                                                                                                                |
 | `lint`                            | Passed                                                                                                                |
 | `sync:check`                      | Passed at canonical floor wording                                                                                     |
-| `verify:facts`                    | Exit 0 with known fuzzy drift warnings; current full gate observed 14 warnings, no failures                           |
+| `verify:facts`                    | Exit 0 with known warning queue; not a zero-warning proof                                                             |
 | `format:check` / release surfaces | Green after local-only archived report forks were excluded from Prettier; current consolidated pair remains formatted |
 | Browser smoke                     | Not performed; Chrome/Edge exist by explicit path, but not as a one-command PATH/Playwright workflow                  |
 | Build                             | Not rerun by critic because build writes generated artifacts                                                          |
 
-Second audit repair note: the main rollout reran `bun run check` and `bun run
-pages` locally after fixing the dashboard and Bible link generation. Both passed.
-Remote CI/release still needs post-commit confirmation before `v0.21.8` is called
-fully published.
+Second audit repair note: the main rollout previously reran `bun run check` and
+`bun run pages` locally after fixing the dashboard and Bible link generation.
+A later README/Pages repair moved the latest local receipt to 2,385 and made the
+local archive exclusion explicit. Full publication status is defined by the
+post-commit tag/release confirmation for `v0.21.9`.
 
 Important distinction: `2,360` is the portable canonical floor embedded in sync
 surfaces. It is not the latest local receipt. `2,373` was a previous current
-receipt in the 16-file consolidation. The fresh fifth-pass verified local
-receipt available to this audit set is `2,380`.
+receipt in the 16-file consolidation. `2,380` was the fifth-pass receipt for the
+original audit set; the latest Windows-local receipt observed in this checkout is
+`2,385`.
 
 Post-write note: a final local `bun run verify:receipts` attempt after creating
 these consolidated artifacts timed out after 120 seconds and left no live
 `bun.exe` process. A later fifth-pass currentness lane completed the run and
-verified `2,380 pass / 0 fail / 2,867,137 expect() calls`; that supersedes the
-earlier timeout caveat for receipt wording.
+verified `2,380 pass / 0 fail / 2,867,137 expect() calls`; that superseded the
+earlier timeout caveat for that audit snapshot, and is now superseded by the
+2,385-case current repair receipt.
 
 ## 22-File Trust Table
 
@@ -77,7 +80,7 @@ earlier timeout caveat for receipt wording.
 | 3   | `MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.md`                              | Tier C        | Mine for methodology, controls, claim linter | Strong but not the final current master.                                        |
 | 4   | `SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.html`                 | Tier E        | Do not promote                               | Malformed HTML near `<h4>Build Paths:</h3>`; overclaim-prone.                   |
 | 5   | `SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.md`                   | Tier E        | Archive rhetoric/draft                       | Stale scale counts and overclaim language.                                      |
-| 6   | `VERIFICATION-ANALYTICAL-DATA.md`                                                | Tier A        | Keep as evidence base                        | Current pass now separates 2,360 floor from 2,380 latest receipt.               |
+| 6   | `VERIFICATION-ANALYTICAL-DATA.md`                                                | Tier A        | Keep as evidence base                        | Current pass now separates 2,360 floor from 2,385 latest receipt.               |
 | 7   | `MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md` | Tier C+       | Mine heavily for named-system ledger         | Valuable coverage, but still needs sober falsifiability framing.                |
 | 8   | `NHSI-PROGRESS-DASHBOARD-2026-06-26.md`                                          | Tier A-       | Keep as progress dashboard                   | Dated June 26; must be refreshed for July 7 receipt/state.                      |
 | 9   | `SUPER-REPORT-ULTIMATE-MEGA-2026-07-06.md`                                       | Tier E        | Archive                                      | Stale scale counts and "complete/omniscient" wording.                           |
@@ -144,8 +147,8 @@ analysis evolved.
 | Defect                               | Severity | Where it appears                                                      | Current correction                                                                                                                                |
 | ------------------------------------ | -------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 16-file scope after scope grew to 22 | High     | `FILE-AUDIT-16`, `CONSOLIDATED-16-*`                                  | Rename/update to 22-file scope.                                                                                                                   |
-| 2,360 called latest                  | High     | `VERIFICATION`, `MASTER-ASSESSMENT` family                            | `2,360` is floor; latest observed is `2,380`.                                                                                                     |
-| 2,373 / 2,376 called latest          | Medium   | `CONSOLIDATED-16-*`, earlier 22-file draft                            | Superseded by `2,380`.                                                                                                                            |
+| 2,360 called latest                  | High     | `VERIFICATION`, `MASTER-ASSESSMENT` family                            | `2,360` is floor; latest observed is `2,385`.                                                                                                     |
+| 2,373 / 2,376 / 2,380 called latest  | Medium   | `CONSOLIDATED-16-*`, earlier 22-file draft, original 22-file audit    | Superseded by `2,385` unless explicitly described as a dated audit snapshot.                                                                      |
 | Malformed HTML                       | High     | `SUPER-REPORT-OMNISCIENT...html`                                      | Fix mismatched heading tag near `<h4>Build Paths:</h3>` before browser use; its TOC anchors also need verification.                               |
 | Format red                           | Medium   | Several super/master docs                                             | Prettier these files or archive them as unformatted drafts.                                                                                       |
 | Build status contradiction           | High     | `BRAIN...ASSESSMENT`, consolidated drafts                             | Treat build-green and build-red claims as time-boxed unless rerun.                                                                                |
@@ -155,7 +158,7 @@ analysis evolved.
 | Bad source path                      | Medium   | `SUPER-REPORT-2ND`                                                    | Replace `super-mith.ts` with `super-mind.ts`.                                                                                                     |
 | Overclaim language                   | High     | `ULTIMATE`, `OMNISCIENT`, `MASTER`                                    | Use proxy-consciousness and falsifiable benchmark language.                                                                                       |
 | Controls ambiguity                   | Medium   | Cross-report                                                          | `CONTROLS` is UI controls; scientific controls are ablations/nulls/seed sweeps/lab JSON/fact audits.                                              |
-| Archive index mismatch               | Medium   | `docs/reports/2026-07-07/INDEX.md`                                    | Directory currently contains only `INDEX.md`; archive claims need verification.                                                                   |
+| Archive/public mismatch              | Medium   | `docs/reports/2026-07-07/INDEX.md`, public pages                      | The archive folder is local-only/ignored; public pages should link the tracked reports index and consolidated 22 pair instead.                    |
 | Markdown/HTML parity gap             | Medium   | New consolidated HTML                                                 | Browser HTML is a condensed companion view, not a complete mirror of the Markdown master; label it that way or expand it.                         |
 
 ## Second-Pass Miss Check Addendum
@@ -268,7 +271,7 @@ the coverage is distributed and uneven.
 ### Current Enough To Carry Forward
 
 - The 22-file scope.
-- The 2,380-pass fresh fifth-pass verified receipt.
+- The 2,385-pass latest Windows-local verified receipt.
 - The distinction between canonical floor and latest local receipt.
 - The proxy-consciousness framing.
 - The named-system coverage ledger from `FINAL-HURRAH` plus richer `PASS3`
@@ -281,6 +284,7 @@ the coverage is distributed and uneven.
 - "16 files" as the total requested universe.
 - "2,360 latest local receipt."
 - "2,373 latest local receipt."
+- "2,380 latest local receipt" unless explicitly tied to the dated fifth-pass audit snapshot.
 - Older half-sized Titan-count wording where source states 20.
 - "Around 400 TS files / 50,000 LOC / 7 C/C++ files / 254 test files."
 - "Complete omniscient omnicognitive" as a factual claim.
@@ -292,7 +296,7 @@ the coverage is distributed and uneven.
 - Clean production build status.
 - Browser render fidelity of the generated HTML reports.
 - Public GitHub Pages parity with local docs.
-- Whether archived files have actually been copied under
+- Whether local-only archived files should ever be promoted; current public Pages should not link
   `docs/reports/2026-07-07/`.
 - Whether all static pages have been regenerated after the Titan/source drift.
 
@@ -352,8 +356,8 @@ These are the high-value next moves:
 
 1. Make `CONSOLIDATED-22-*` the new active pair and archive the `16` pair.
 2. Keep `VERIFICATION-ANALYTICAL-DATA.md` sealed on the current split:
-   `2,360` is the portable floor and `2,380` is the fresh fifth-pass verified
-   receipt available to this audit set.
+   `2,360` is the portable floor and `2,385` is the latest Windows-local
+   receipt observed in this checkout.
 3. Fix `SUPER-REPORT-OMNISCIENT...html` or archive it away from browser-ready
    surfaces.
 4. Keep `bun run check` / `bun run build` green and note that build writes

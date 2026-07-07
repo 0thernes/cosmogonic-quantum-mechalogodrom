@@ -1,6 +1,6 @@
 {
   "version": "sentience-lab-v1",
-  "generatedAt": "2026-07-04T00:00:00.000Z",
+  "generatedAt": "2026-07-07T00:00:00.000Z",
   "claim": "indicatorOnly",
   "proofBoundary": "Headless mass-run analytics over computational consciousness indicators; evidence of load-bearing mechanisms, not proof of phenomenal sentience.",
   "rootSeed": 539363076,
@@ -10,7 +10,11 @@
     1946589880, 934865961, 2978192345, 3468676208, 2336127992, 470520861, 1506456329, 1381348964,
     1155702160, 3702511289, 2507020225, 836954224, 2070681280, 696015741, 3718869505, 3428778852
   ],
-  "sourceDocs": ["docs/SUPER-CREATURE-RESEARCH-2026-06-26.md"],
+  "sourceDocs": [
+    "docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md",
+    "docs/VERIFICATION-ANALYTICAL-DATA.md",
+    "docs/SUPER-CREATURE-RESEARCH-2026-06-26.md"
+  ],
   "sweep": {
     "runs": 32,
     "singularityRate": 1,
