@@ -10,6 +10,7 @@ Technical reports and audits for Cosmogonic Quantum Mechalogodrom. Dated filenam
 ## Reports
 
 - [VERIFICATION-ANALYTICAL-DATA.md](../VERIFICATION-ANALYTICAL-DATA.md) — canonical current facts.
+- [MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md](../MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md) — **FINAL HURRAH** fusion audit capstone; browser: `/lab/brain-assessment`.
 - [2026-07-01-25-POINT-SCRUTINY-SCORECARD.md](./2026-07-01-25-POINT-SCRUTINY-SCORECARD.md) — 25-point
   adversarial scrutiny (overall 8.3/10). Chart:
   [assets/scrutiny-25-scorecard.svg](./assets/scrutiny-25-scorecard.svg).

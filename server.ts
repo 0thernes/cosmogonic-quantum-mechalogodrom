@@ -446,6 +446,28 @@ if (import.meta.main) {
           });
         },
       }),
+      '/lab/brain-assessment': secured({
+        GET(req) {
+          logRequest(req, 200);
+          return new Response(Bun.file(new URL('./lab/brain-assessment-fusion.html', import.meta.url)), {
+            headers: { 'Content-Type': 'text/html; charset=utf-8' },
+          });
+        },
+      }),
+      '/docs/brain-assessment-fusion.md': secured({
+        GET(req) {
+          logRequest(req, 200);
+          return new Response(
+            Bun.file(
+              new URL(
+                './docs/MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md',
+                import.meta.url,
+              ),
+            ),
+            { headers: { 'Content-Type': 'text/markdown; charset=utf-8' } },
+          );
+        },
+      }),
       '/lab/sentience-data.json': secured({
         GET(req) {
           logRequest(req, 200);
