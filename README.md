@@ -86,6 +86,16 @@ Every magic number survived the port.
 - **Quantum cloud** of 3,500–10,000 particles with wavefunction wobble,
   collapse, and respawn; **neural connectome** of up to 2,200–8,000 links with
   partial GPU uploads.
+- **~15,000 procedural alien-flora plants** ([alien-flora.ts](./src/sim/alien-flora.ts)) across 50
+  species / 9 families / 7 biomes — a GPU-instanced trophic-affordance field the fauna graze and read
+  for cover.
+- **GOD / GodColossus** ([god-colossus.ts](./src/sim/god-colossus.ts)) — a raymarched, breathing
+  **Mandelbulb** deity (domain-warped, orbit-trap palette), the **ASCENSION monolith temple**, and
+  **NHI** autonomous mini-AIs.
+- **100 GlyphBrains** ([glyph-brain.ts](./src/sim/glyph-brain.ts)) — the Greek/Latin **alphabet
+  pantheon** as instanced glowing bodies across the upper dome; plus the namesake central
+  **Mechalogodrom** fusion-mind ([mechalogodrom-brain.ts](./src/sim/mechalogodrom-brain.ts), ~53,728
+  live params) uniting 10 bipolar titan-variant shells.
 - **6 procedural Web Audio songs** + a 100-voice synthesized SFX palette — no
   audio assets, just oscillators.
 - **Deterministic seeded RNG** (`mulberry32`) injected everywhere; the global
@@ -560,6 +570,8 @@ Full detail in docs/.
 │   │                    # puppet-masters · titans · weather · quantum · connectome ·
 │   │                    # environment · qcircuit · reaction-diffusion · graph-mind ·
 │   │                    # constellations · lore · analytics · atmosphere · viz3d
+│   │                    # + petri-dish · primordial-soup · digital-biologics · alien-flora · god-colossus ·
+│   │                    # monolith-temple · nhi · leviathans · glyph-brain · entity-brain · mechalogodrom · super-mind
 │   ├── audio/           # songs.ts (data) · engine.ts (scheduler + SFX) · analysis.ts (bands)
 │   ├── ui/              # graphs.ts · hud.ts · panels.ts · input.ts · observatory.ts
 │   ├── logging/         # logger.ts (ring buffer) · audit.ts (AuditTrail)
@@ -597,9 +609,8 @@ Full detail in docs/.
 - Data model SSOT: [docs/ENTITY-SCHEMA-AND-MAPPINGS-2026-06-26.md](./docs/ENTITY-SCHEMA-AND-MAPPINGS-2026-06-26.md)
   — ERD attributes, ERM relationships/cardinalities, and ERP process views.
 - [docs/DESIGN-SYSTEM-2026-06-26.md](./docs/DESIGN-SYSTEM-2026-06-26.md) — desktop/mobile layout intent,
-  type scale, color tokens
-- [docs/DESIGN-SYSTEM-2026-06-26.md](./docs/DESIGN-SYSTEM-2026-06-26.md) — design-system audit,
-  tokens (incl. the 8-hue tribe palette), component + a11y docs
+  type scale, color tokens, the design-system audit, and component + a11y docs (incl. the 8-hue tribe
+  palette)
 - [docs/COMPLEXITY-2026-06-26.md](./docs/COMPLEXITY-2026-06-26.md) — per-hot-path big-O budget
 - [docs/BENCHMARKS-2026-06-26.md](./docs/BENCHMARKS-2026-06-26.md) — measured mitata results for the
   deterministic core (RNG, scalar math, spatial hash, sort steps, quantum
