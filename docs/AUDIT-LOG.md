@@ -11,7 +11,21 @@ changed and why.
 
 ---
 
-## 2026-07-06 (pass 19) — MEGA-MASTER brain/consciousness assessment Pass 1 of 3
+## 2026-07-06 (pass 20) — MEGA-MASTER brain assessment Pass 2 of 3
+
+Module-level deep dive: `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-2-2026-07-06.md` + preview `docs/reports/assets/brain-evidence-matrix-pass2.json`.
+
+### Content
+
+- `world.ts` composition root anatomy (4,771 lines, 94 sim imports, verified frame pipeline).
+- Authority-tier atlas: LIVE / TELEMETRY / LAB / SCAFFOLD / FENCED for all brain substrates.
+- `driveSuper` read/write receipt with file:line citations.
+- Full `src/sim/` domain inventory (185 files, 59,500 lines) and `src/math/` (31 files, 6,468 lines).
+- 72 brain-related test files mapped (~900+ test blocks in cluster).
+- 7 named wiring gaps with severity (kernel offline, digital-biologics unwired, mixed-state-qgt orphan, etc.).
+- Native C++ split documented (gallery vs golden-vector oracle per ADR-0007).
+
+---
 
 Synthesized five prior agent reports (Gemini Antigravity ×2, Composer 2.5, Devin SWE 1.6, Codex GPT 5.5) plus the NHSI Progress Dashboard into a unified mega-assessment at `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-1-2026-07-06.md`.
 

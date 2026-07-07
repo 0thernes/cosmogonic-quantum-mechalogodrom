@@ -1,0 +1,200 @@
+{
+  "version": "brain-evidence-matrix-pass2-preview",
+  "generatedAt": "2026-07-06",
+  "packageVersion": "0.21.7",
+  "claim": "indicatorOnly",
+  "note": "Pass 2 preview — Pass 3 will auto-generate from tests + ablation receipts",
+  "compositionRoot": {
+    "file": "src/world.ts",
+    "lines": 4771,
+    "simImportCount": 94
+  },
+  "authorityTiers": {
+    "LIVE": "Reads sim state and writes behavior every frame or slow cadence",
+    "TELEMETRY": "Computes cognition but only visuals/HUD/audit",
+    "LAB": "Headless/offline only",
+    "SCAFFOLD": "Implemented+tested but not on world hot path",
+    "FENCED": "Deliberately excluded (LLM mandate / wiring 0)"
+  },
+  "substrates": [
+    {
+      "id": "super-mind",
+      "file": "src/sim/super-mind.ts",
+      "lines": 1928,
+      "params": 10081,
+      "tier": "LIVE",
+      "instances": 5,
+      "msPerThink": 1.99,
+      "reads": ["SuperPercept", "Tsotchke corpusPulse", "facultyBias", "tomMenace", "grid local crowding"],
+      "writes": ["SuperMindIntent.move", "noosphere", "stigmergy", "pantheon.depositApex", "emergenceAngles", "superBodies consciousness"],
+      "tests": ["super-mind.test.ts", "super-mind-leaves.test.ts", "super-mind-learning.test.ts", "coupling-audit.test.ts"],
+      "tsotchke": ["eshkol", "moonlab", "qgt", "spin", "libirrep", "quake", "ulg", "pinn", "pimc"],
+      "theories": ["GWT", "IIT", "FEP", "HOT", "AST", "ToM", "Thaler", "reservoir", "empowerment", "QNG"]
+    },
+    {
+      "id": "apex-brain",
+      "file": "src/sim/apex-brain.ts",
+      "lines": 2110,
+      "designedNeurons": "1B+ addressable",
+      "liveNodeCap": 4096,
+      "tier": "LIVE",
+      "reads": ["ApexPercept"],
+      "writes": ["noosphere.updateArchon", "foundationals.tickAndStore", "mechalogodrom.setApex"],
+      "tests": ["apex-brain.test.ts", "apex-harness.test.ts", "apex-consciousness-scaffold.test.ts"],
+      "organs": 11
+    },
+    {
+      "id": "entity-brain",
+      "file": "src/sim/entity-brain.ts",
+      "lines": 301,
+      "params": 70,
+      "tier": "LIVE",
+      "scale": 50000,
+      "reads": ["entity userData", "world chaos"],
+      "writes": ["entity.vel", "userData.act"],
+      "tests": ["entity-brain.test.ts", "gedanken-death.test.ts"]
+    },
+    {
+      "id": "connectome",
+      "file": "src/sim/connectome.ts",
+      "lines": 388,
+      "tier": "LIVE",
+      "reads": ["EntityManager", "spatial grid"],
+      "writes": ["userData.act propagation", "axon geometry", "pairs[]"],
+      "tests": ["connectome.test.ts"]
+    },
+    {
+      "id": "graph-mind",
+      "file": "src/sim/graph-mind.ts",
+      "lines": 192,
+      "tier": "LIVE",
+      "cadence": "240f communities / 600f PageRank",
+      "reads": ["connectome.pairs"],
+      "writes": ["userData.setGroup", "connectome palette", "emissive halo"],
+      "tests": ["graph-mind.test.ts"]
+    },
+    {
+      "id": "glyph-brain",
+      "file": "src/sim/glyph-brain.ts",
+      "lines": 290,
+      "params": 25000,
+      "instances": 100,
+      "tier": "TELEMETRY",
+      "writes": ["alphabetPantheon visual only"],
+      "tests": ["glyph-brain.test.ts"]
+    },
+    {
+      "id": "mechalogodrom-brain",
+      "file": "src/sim/mechalogodrom-brain.ts",
+      "lines": 349,
+      "designedParams": 5000000,
+      "liveParams": 120000,
+      "tier": "TELEMETRY",
+      "writes": ["mechalogodrom exterior visual", "morphicField imprint indirect chaos"],
+      "tests": ["mechalogodrom-brain.test.ts", "mechalogodrom-stdp.test.ts"]
+    },
+    {
+      "id": "consciousness-kernel",
+      "file": "src/sim/consciousness-kernel.ts",
+      "lines": 870,
+      "tier": "LAB",
+      "frameworks": 10,
+      "tests": ["consciousness-kernel.test.ts"]
+    },
+    {
+      "id": "consciousness-lab",
+      "file": "src/sim/consciousness-lab.ts",
+      "lines": 445,
+      "tier": "LAB",
+      "tests": ["consciousness-lab.test.ts"]
+    },
+    {
+      "id": "sentience-lab",
+      "file": "src/sim/sentience-lab.ts",
+      "lines": 293,
+      "tier": "LAB",
+      "seedBatch": 32,
+      "meanNullGap": 0,
+      "tests": ["sentience-lab.test.ts"]
+    },
+    {
+      "id": "faculties-pantheon",
+      "file": "src/sim/faculties-pantheon.ts",
+      "lines": 335,
+      "designCount": 100,
+      "deepWired": 30,
+      "tier": "LIVE",
+      "tests": ["faculties-pantheon.test.ts", "coupling-audit.test.ts"]
+    },
+    {
+      "id": "tom-pantheon",
+      "file": "src/sim/tom-pantheon.ts",
+      "lines": 406,
+      "organs": 25,
+      "families": 6,
+      "tier": "LIVE",
+      "tests": ["tom-pantheon.test.ts"]
+    },
+    {
+      "id": "petri-dish",
+      "file": "src/sim/petri-dish.ts",
+      "lines": 632,
+      "tier": "LIVE",
+      "tsotchkeRepos": 18,
+      "tests": ["petri-open-endedness.test.ts", "petri-brutal-god-event.test.ts"]
+    },
+    {
+      "id": "digital-biologics",
+      "file": "src/sim/digital-biologics.ts",
+      "lines": 359,
+      "tier": "SCAFFOLD",
+      "gap": "birthBiologic exported but unwired from petri hot path",
+      "tests": ["digital-biologics.test.ts"]
+    },
+    {
+      "id": "consciousness-adapters",
+      "file": "src/sim/consciousness-adapters.ts",
+      "lines": 546,
+      "tier": "SCAFFOLD",
+      "gap": "no live world telemetry feed yet",
+      "tests": ["consciousness-adapters.test.ts"]
+    }
+  ],
+  "wiringGaps": [
+    {
+      "id": "consciousness-kernel-not-in-world",
+      "severity": "P1",
+      "description": "10-framework kernel is lab-only; live consciousness scalars come from SuperMind"
+    },
+    {
+      "id": "digital-biologics-unwired",
+      "severity": "P2",
+      "description": "birthBiologic not called from petri-dish hot path"
+    },
+    {
+      "id": "mixed-state-qgt-no-sim-no-test",
+      "severity": "P2",
+      "file": "src/math/mixed-state-qgt.ts"
+    },
+    {
+      "id": "belief-propagation-unwired",
+      "severity": "P3",
+      "file": "src/math/belief-propagation.ts"
+    },
+    {
+      "id": "pantheon-breeding-off",
+      "severity": "P3",
+      "flag": "PANTHEON_BREEDING_LIVE = false"
+    }
+  ],
+  "coupling": {
+    "meanAbsCouplingLineage": [0.167, 0.183, 0.197, 0.27],
+    "gateFloor": 0.188,
+    "scorecard": 6.0
+  },
+  "butlin": {
+    "met": 8,
+    "partial": 6,
+    "doctrine": "8/14 met + 6/14 partial"
+  }
+}
