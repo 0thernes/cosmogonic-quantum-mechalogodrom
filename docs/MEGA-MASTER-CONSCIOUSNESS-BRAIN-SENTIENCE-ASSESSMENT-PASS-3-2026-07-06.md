@@ -477,7 +477,4 @@ Pass 3 proves **nothing cognitive was left off the map**: the dome's `world.ts` 
 | **1** | Synthesize 6 sources; unified verdict | `MEGA-MASTER-...-PASS-1-2026-07-06.md` |
 | **2** | Module atlas, world wiring, test matrix | `MEGA-MASTER-...-PASS-2-2026-07-06.md` |
 | **3** | Omniscient living-world census + gap audit | **this document** |
-
----
-
-*Pass 3 compiled 2026-07-06 · v0.21.7 · 0thernes Corp · indicatorOnly*
+| **ULTIMATE** | Capstone synthesis — everything unified | [`MEGA-MASTER-...-ULTIMATE-2026-07-07.md`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-ULTIMATE-2026-07-07.md) |
