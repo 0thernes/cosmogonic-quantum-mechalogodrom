@@ -106,14 +106,6 @@ await cp(
   new URL('lab/brain-assessment-fusion.html', ROOT),
   new URL('lab/brain-assessment-fusion.html', SITE),
 );
-await cp(
-  new URL('docs/SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.html', ROOT),
-  new URL('SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.html', SITE),
-);
-await cp(
-  new URL('docs/MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.html', ROOT),
-  new URL('MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.html', SITE),
-);
 
 // 2b. Public docs/report targets. Source pages link Markdown/HTML reports directly; publish them.
 await cp(new URL('docs/', ROOT), new URL('docs/', SITE), {
@@ -161,12 +153,8 @@ const base = repo ? `/${repo}` : ''; // e.g. "/cosmogonic-quantum-mechalogodrom"
 const brainNavBase = (b: string): ReadonlyArray<readonly [string, string]> => [
   ['href="/lab/brain-assessment"', `href="${b}lab/brain-assessment/${q}"`],
   [
-    'href="/docs/omniscient-report"',
-    `href="${b}SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.html${q}"`,
-  ],
-  [
-    'href="/docs/ultrathink-audit"',
-    `href="${b}MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.html${q}"`,
+    'href="/docs/consolidated-22-master"',
+    `href="${b}docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.html${q}"`,
   ],
 ];
 
@@ -193,12 +181,8 @@ const navFromLab: ReadonlyArray<readonly [string, string]> = base
       ['href="/lab/sentience"', `href="./sentience/${q}"`],
       ['href="/lab/brain-assessment"', `href="./brain-assessment/${q}"`],
       [
-        'href="/docs/omniscient-report"',
-        `href="../SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.html${q}"`,
-      ],
-      [
-        'href="/docs/ultrathink-audit"',
-        `href="../MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.html${q}"`,
+        'href="/docs/consolidated-22-master"',
+        `href="../docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.html${q}"`,
       ],
       ['href="/lab"', `href="./${q}"`],
       ['href="/lab/"', `href="./${q}"`],
@@ -225,12 +209,8 @@ const navFromConsciousness: ReadonlyArray<readonly [string, string]> = base
       ['href="/lab/sentience"', `href="../sentience/${q}"`],
       ['href="/lab/brain-assessment"', `href="../brain-assessment/${q}"`],
       [
-        'href="/docs/omniscient-report"',
-        `href="../../SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.html${q}"`,
-      ],
-      [
-        'href="/docs/ultrathink-audit"',
-        `href="../../MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.html${q}"`,
+        'href="/docs/consolidated-22-master"',
+        `href="../../docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.html${q}"`,
       ],
       ['href="/lab"', `href="../${q}"`],
       ['href="/lab/"', `href="../${q}"`],
@@ -257,12 +237,8 @@ const navFromSentience: ReadonlyArray<readonly [string, string]> = base
       ['href="/lab/sentience"', `href="./${q}"`],
       ['href="/lab/brain-assessment"', `href="../brain-assessment/${q}"`],
       [
-        'href="/docs/omniscient-report"',
-        `href="../../SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.html${q}"`,
-      ],
-      [
-        'href="/docs/ultrathink-audit"',
-        `href="../../MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.html${q}"`,
+        'href="/docs/consolidated-22-master"',
+        `href="../../docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.html${q}"`,
       ],
       ['href="/lab"', `href="../${q}"`],
       ['href="/lab/"', `href="../${q}"`],
@@ -291,12 +267,8 @@ const navRoot: ReadonlyArray<readonly [string, string]> = base
       ['href="/lab/sentience"', `href="lab/sentience/${q}"`],
       ['href="/lab/brain-assessment"', `href="lab/brain-assessment/${q}"`],
       [
-        'href="/docs/omniscient-report"',
-        `href="SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.html${q}"`,
-      ],
-      [
-        'href="/docs/ultrathink-audit"',
-        `href="MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.html${q}"`,
+        'href="/docs/consolidated-22-master"',
+        `href="docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.html${q}"`,
       ],
       ['href="/lab"', `href="lab/${q}"`],
       ['href="/"', `href="index.html${q}"`],

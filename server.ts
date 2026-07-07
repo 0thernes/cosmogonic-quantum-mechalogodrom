@@ -497,6 +497,35 @@ if (import.meta.main) {
           );
         },
       }),
+      '/docs/consolidated-22-master': secured({
+        GET(req) {
+          logRequest(req, 200);
+          return new Response(
+            Bun.file(
+              new URL('./docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.html', import.meta.url),
+            ),
+            { headers: { 'Content-Type': 'text/html; charset=utf-8' } },
+          );
+        },
+      }),
+      '/docs/consolidated-22-master.md': secured({
+        GET(req) {
+          logRequest(req, 200);
+          return new Response(
+            Bun.file(new URL('./docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md', import.meta.url)),
+            { headers: { 'Content-Type': 'text/markdown; charset=utf-8' } },
+          );
+        },
+      }),
+      '/docs/consolidated-22-audit.md': secured({
+        GET(req) {
+          logRequest(req, 200);
+          return new Response(
+            Bun.file(new URL('./docs/CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md', import.meta.url)),
+            { headers: { 'Content-Type': 'text/markdown; charset=utf-8' } },
+          );
+        },
+      }),
       '/docs/omniscient-report': secured({
         GET(req) {
           logRequest(req, 200);

@@ -28,7 +28,7 @@ deterministic, allocation-disciplined module graph.
 
 This is not an LLM or tokenizer demo. It is a seeded, inspectable artificial-life petri system where **digital biologics** grow in the Petri Dish (`primordial-soup.ts` + `petri-dish.ts` + `digital-biologics.ts`). Eshkol programs act as heritable substrate code, mutated by AD gradients, selected by aliveness/QGT/collective-order proxies, and measured as computational indicators rather than subjective experience.
 
-**Brain-Wide Computational Model direction:** the implementation target is not a behavior-mimicking neural net. The target is a brain-wide computational model with explicit provenance: sensory input drives neural/control-state activity, and that activity drives motion in a physics-based body. When real biological connectome data is used, the source and transformation must be cited; otherwise the repo describes the current Archons as deterministic composite minds with a **100-faculty NHSI design (~30 deep-wired into the apex)**, quantum registers, and **computational consciousness indicators** (HUD from `SuperMind.think()` — not phenomenal consciousness). See the **[brain assessment stack](./docs/SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.md)** and **[FINAL HURRAH capstone](./docs/MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md)** for the measured census (37 LIVE cognition substrates in the JSON matrix).
+**Brain-Wide Computational Model direction:** the implementation target is not a behavior-mimicking neural net. The target is a brain-wide computational model with explicit provenance: sensory input drives neural/control-state activity, and that activity drives motion in a physics-based body. When real biological connectome data is used, the source and transformation must be cited; otherwise the repo describes the current Archons as deterministic composite minds with a **100-faculty NHSI design (~30 deep-wired into the apex)**, quantum registers, and **computational consciousness indicators** (HUD from `SuperMind.think()` — not phenomenal consciousness). See the **[CONSOLIDATED-22 master assessment](./docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md)** (GPT 5.5 / Claude Opus 4.8 sober pass), **[academic brain assessment](./docs/BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md)**, and **[FINAL HURRAH named-system mine](./docs/MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md)** (`/lab/brain-assessment`).
 
 Super Creature / 25 Archons is the framework and the **beginning only** — "as if God made primordial inorganic soup". The soup grows independent digital biologics onward. "Grow What Thou Wilt." (Aleister Crowley)
 
@@ -37,7 +37,7 @@ Every magic number survived the port.
 
 **Websites / Domains (100% accurate):**
 
-- **GitHub Pages (DOCS / SPECS / BIBLE / LABS / BRAIN ASSESSMENT):** https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/ (`index.html` · `docs.html` · `specs.html` · `bible.html` · `lab/quantum-wildbeyond.html` · `lab/consciousness` · `lab/sentience` · `lab/brain-assessment-fusion.html` · omniscient + ultrathink HTML reports; built via `scripts/build-pages.ts` with `?v=` cache-bust and subpath rewrite)
+- **GitHub Pages (DOCS / SPECS / BIBLE / LABS):** https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/ (`index.html` · `docs.html` · `specs.html` · `bible.html` · `lab/` · `docs/CONSOLIDATED-22-*` reports; built via `scripts/build-pages.ts` with `?v=` cache-bust and subpath rewrite)
 - **Local dev server:** http://localhost:3000/ (bun dev; serves /docs → docs page, /spec → specs, /lab → lab; full interactive + /api/audit)
 - Public docs/report targets are copied into the Pages artifact by `scripts/build-pages.ts`; source `./docs/...` links resolve locally and deploy as static `site/docs/...` files. No broken domains found in the current publication-surface pass.
 
@@ -474,8 +474,8 @@ live architecture, ERD, and sequence diagrams rendered with Mermaid, and
 | **Consciousness Lab** | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/lab/consciousness |
 | **Sentience Lab**     | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/lab/sentience     |
 | **Brain assessment**  | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/lab/brain-assessment-fusion.html |
-| **Omniscient report** | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/docs/SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.html |
-| **16-doc audit**      | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/docs/MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.html |
+| **22-report master**  | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.html |
+| **22-file audit**       | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/docs/CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md |
 | **Bible**             | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/bible.html        |
 
 Project contact: **0_0@0thernes.art** · org site **https://0thernes.art** (Pages host the app above).

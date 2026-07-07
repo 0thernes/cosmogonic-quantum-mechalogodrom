@@ -10,7 +10,7 @@ BRUTALIST MANIFEST: Valkorion domination, Broly infinite rage, Knull/Azathoth vo
 
 **Canonical receipts (measured 2026-06-26):** 2,360 tests, 84.64% line / 82.21% func (from `bun scripts/verify-receipts.ts --print`). Enforced by `tests/docs-receipts-law.test.ts` + `bun run check`. All surfaces truth-synced. BRUTAL GOD TIER with full pantheon list (Valkorion to Riddick) + BRUTALISM implemented in petri/godform/world using the Tsotchke corpus. Butlin indicators: **8/14 met + 6/14 partial** (computational indicators, not sentience — corrected from a prior overclaim).
 
-**Brain/neuro/consciousness assessment:** [`SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.md`](./SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.md) (**one-page current truth**) · [`MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.md`](./MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.md) (**16-file audit**) · [`FINAL-HURRAH`](./MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md) (capstone) · browser: [`/docs/omniscient-report`](/docs/omniscient-report) · [`/lab/brain-assessment`](/lab/brain-assessment). Pass drill-down: [`ULTIMATE`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-ULTIMATE-2026-07-07.md) · [`PASS-1`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-1-2026-07-06.md) · [`PASS-2`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-2-2026-07-06.md) · [`PASS-3`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-3-2026-07-06.md). All `indicatorOnly`.
+**Brain/neuro/consciousness assessment (active):** [`CONSOLIDATED-22-MASTER-ASSESSMENT`](./CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md) · [`CONSOLIDATED-22-FILE-AUDIT`](./CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md) (GPT 5.5 / Claude Opus 4.8) · [`BRAIN-NEUROLOGY-ENGINEERING`](./BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md) · browser: [`CONSOLIDATED-22 HTML`](./CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.html) · [`/lab/brain-assessment`](/lab/brain-assessment) (FINAL HURRAH mine). Archive tier (do not promote): OMNISCIENT · ULTRATHINK · ULTIMATE mega-drafts. All `indicatorOnly`.
 
 **Pass-1 mega synthesis:** [`MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS1-2026-07-06.md`](./MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS1-2026-07-06.md) consolidates the five downloaded reports plus this dashboard into one expanded current-state master report with source reconciliation, live brain authority tiers, Tsotchke depth taxonomy, current consciousness-science anchors, elite-scrutiny scoring, unknown-unknown risks, and Pass-2/Pass-3 build paths. It keeps the same `indicatorOnly` boundary.
 
@@ -210,9 +210,10 @@ Full trail: [`SUPER-CREATURE-RESEARCH-2026-06-26.md`](./SUPER-CREATURE-RESEARCH-
 | `/lab`             | `lab/`                                                                    |
 | Technical spec     | `docs/TECHNICAL-SPECIFICATION-2026-06-26.md`                              |
 | Tsotchke ledger    | `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`                             |
-| Omniscient one-pager + browser | `docs/SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.md` · `/docs/omniscient-report` |
-| 16-doc ULTRATHINK audit | `docs/MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.md` · `/docs/ultrathink-audit` |
-| FINAL HURRAH capstone + browser | `docs/MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md` · `/lab/brain-assessment` |
+| CONSOLIDATED-22 master + browser | `docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md` · `/docs/consolidated-22-master` |
+| CONSOLIDATED-22 file audit | `docs/CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md` · `/docs/consolidated-22-audit` |
+| FINAL HURRAH mine + browser | `docs/MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md` · `/lab/brain-assessment` (Tier C+) |
+| Archive: Omniscient / ULTRATHINK | `SUPER-REPORT-OMNISCIENT-*` · `MEGA-ULTRATHINK-*` — do not promote |
 | Mega assessment ULTIMATE | `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-ULTIMATE-2026-07-07.md` |
 | Mega assessment Pass 3/3 | `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-3-2026-07-06.md` |
 | Mega assessment Pass 2/3 | `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-2-2026-07-06.md` |

@@ -11,6 +11,12 @@ changed and why.
 
 ---
 
+## 2026-07-07 (pass 27) — scrub archive-tier promotion + stale perf refs
+
+README/NHSI/TECH-SPEC/brain-assessment lab demote OMNISCIENT/ULTRATHINK as current truth; promote CONSOLIDATED-22 links on all six Pages surfaces + server routes; fix TECH-SPEC 3.34→1.99 ms; retire world.ts frame-%4 stale comments; build-pages drops archive HTML root copies.
+
+---
+
 ## 2026-07-07 (pass 26) — merge CONSOLIDATED-22 as canonical truth (GPT 5.5 / Opus 4.8)
 
 Merged `origin/main` v0.21.8 consolidation: `CONSOLIDATED-22-MASTER-ASSESSMENT` + `CONSOLIDATED-22-FILE-AUDIT` promoted over OMNISCIENT/ULTIMATE archive tier. README/docs/specs/bible/reports index realigned; retained 100-faculty / 20-titan / 1.99 ms truth-surface fixes from pass 25.

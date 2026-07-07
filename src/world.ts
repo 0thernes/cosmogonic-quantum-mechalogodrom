@@ -2470,7 +2470,7 @@ export class World {
     try {
       const s = this.state;
       // The pantheon is already beaten once per frame in update(); read its current snapshot here
-      // (driveSuper runs on a frame % 4 cadence) so the stigmergic field is not double-stepped.
+      // pantheon.beat runs once per frame in update(); read snapshot here so stigmergy is not double-stepped.
       const pantheonSnap = this.pantheon.snapshot();
       const collective = this.superCollective;
       this.pantheon.collectiveBias(0, collective);
@@ -2668,7 +2668,7 @@ export class World {
         }
       }
       // V-APEX: tick the Entropic Tesseract Hydra brain (10 organs + quantum + meta-paradox).
-      // The apex brain runs on the same driveSuper cadence (frame % 4), reading the world percept
+      // The apex brain runs every frame inside driveSuper, reading the world percept
       // and producing a plan + vitality + agony + transcendence. Its output feeds the noosphere
       // and the emergence angles, so the 10-organ brain genuinely influences the world.
       const ap = this.apexPercept;

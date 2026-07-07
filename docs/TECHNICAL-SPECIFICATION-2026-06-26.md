@@ -272,9 +272,10 @@ reading from AND writing to the others (a negotiated plan-vote, not parallel gad
 **min-cut Φ**, **Quantum Reservoir Computing** (Fujii–Nakajima), a **Lindblad/GKSL deliberation qubit**,
 **Grover** amplitude amplification, and **Quantum Natural Gradient** descent on its own Fubini–Study
 geometry. The Aaronson–Gottesman **Clifford stabilizer tableau** (ported from Moonlab; 32+ qubits) is a
-fourth MIT-credited primitive. **Current measured cost (2026-06-26):** `SuperMind.think()` is **3.34 ms**
-in the full bench suite and **8.85 ms** in the focused SuperMind bench; the old sub-millisecond figures are
-superseded. Full frontier assessment in [docs/reports/](reports/) and current numbers in
+fourth MIT-credited primitive. **Current measured cost (2026-07-02):** `SuperMind.think()` is **~1.99 ms**
+per beat (~**10 ms** combined when `driveSuper` runs five Archon beats per frame; **~9.77 ms** for the
+historical staggered 5-mind bench batch); retired **3.34 ms** figures are superseded. Full frontier
+assessment in [docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md](CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md) and current numbers in
 [BENCHMARKS-2026-06-26.md](BENCHMARKS-2026-06-26.md).
 
 ### 7.2 Contrast: this world vs. large language models
