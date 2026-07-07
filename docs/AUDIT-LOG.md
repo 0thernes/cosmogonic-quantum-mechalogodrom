@@ -11,6 +11,49 @@ changed and why.
 
 ---
 
+## 2026-07-07 (pass 23) - three-pass subagent audit + code-vs-doc truth-repair sweep
+
+Ran a three-pass subagent audit (48 agents across three Workflows) grading every current
+report/spec against `file:line` source, then shipped the confirmed corrections in one gated commit
+(`94766d4`).
+
+### Audit verdicts (verified against source)
+
+- **Substance is honest.** The determinism ban (Math.random / Date.now / performance.now in
+  `src/sim` + `src/math`) is comment-verified zero-hit AND gate-enforced (`tests/determinism-law.test.ts`);
+  the "wired vs scaffolded" ledger is 100% accurate (LAB-only kernels unimported, `birthBiologic`
+  unwired, glyph/god-colossus/temple decorative, super-mind/entity-brain/connectome/nhi live each
+  frame); Butlin 8/14-met + 6-partial holds (HOT-4 is stronger than its "partial" label); Tsotchke is
+  genuine math (9 deep leaves, 0 fenced imports, `corpusBrainAblation` load-bearing); the overclaim
+  discipline is clean repo-wide. VERIFICATION-ANALYTICAL-DATA.md is code-exact.
+- **`verify:facts` is report-only** (no process.exit/throw) - the one non-gating stage in `check`;
+  `docs-truth-law.test` + `sync:check` DO hard-gate. Documented behavior, not a regression.
+
+### Corrections shipped (`94766d4`, 14 files, gate green)
+
+- ARCHITECTURE quality-profile table regenerated to the 6-tier ladder from `quality.ts` (adds tablet
+  rung; maxLinks 12k-600k = 12x maxEntities; dprCap infinity; shadows/instanced on all tiers);
+  COMPLEXITY + ENTITY-SCHEMA ranges likewise; "five-rung" -> "six-rung".
+- TECH-SPEC section 7: Clifford reflex 32q -> 16q (`super-mind.ts:752`); puppet-master "x100 5-qubit
+  register" -> one shared QuantumCircuitSystem register; think() 3.34/8.85 -> 1.99/9.77 ms (BENCHMARKS).
+- ENTITY-SHEETS eyes 16 -> 24 / arms 11 -> 13; MODULE-CONTRACTS license MIT -> proprietary + phantom
+  `src/ui/touch.ts`/`TouchControls` -> real `src/ui/input.ts`/`InputSystem`; NOTICE `eshkol-vm-bytecode.ts`
+  -> `eshkol-vm.ts`; MONOLITH-ART retired V125 cube-tower/monochrome -> shipped raymarched Mandelbulb +
+  1000-hue orbit-trap palette; PEER-REVIEW 4-currency -> 2-currency + 2-commodity; FILE-MAP regen
+  (titans 20; Thaler header made self-qualifying); BRAIN `docs/docs` 404 link fixed; `world.ts` +
+  `determinism-law.test.ts` stale V48 `Date.now`-exception comments dropped (removed at V105).
+
+### Correctly NOT changed (receipts discipline)
+
+- BENCHMARKS entity-cap numbers - measurements at a specific cap; relabeling would manufacture a false
+  receipt. Needs a re-bench, not a doc edit.
+- RUNBOOK "0.10.4" - the last entry of a historical semver-progression list, not a current-version claim.
+- MEGA-MASTER PASS-1/2/3 trio - a purpose-separated 3-part series (synthesis / module-atlas / census)
+  that the NHSI dashboard declares primary; retire-vs-keep is an owner editorial call, pending decision.
+  The loop was confirmed paused during this sweep (zero fleet pushes; HEAD stayed even with origin/main).
+
+---
+
 ## 2026-07-07 (pass 22) - 22-report doc-sprawl consolidation
 
 Collapsed the competing "master assessment" sprawl in `docs/` (three rival 2026-07-07 master
