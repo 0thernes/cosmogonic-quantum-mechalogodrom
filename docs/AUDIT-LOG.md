@@ -11,6 +11,51 @@ changed and why.
 
 ---
 
+## 2026-07-07 (pass 22) - 22-report doc-sprawl consolidation
+
+Collapsed the competing "master assessment" sprawl in `docs/` (three rival 2026-07-07 master
+lineages plus a stack of process-logs, ~28 report-like files locally) down to the single canonical
+set, per the living-doc law (one topic = one file; `docs/reports/README.md`: "no forked copies, no
+archives folder").
+
+### Attribution (who authored the sprawl)
+
+- **Canonical, kept:** `CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md` + `-FILE-AUDIT`
+  (.md/.html) and `BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md`, riding on the
+  SSOT surfaces (VERIFICATION / NHSI-DASHBOARD / TECH-SPEC / CONTROLS / BOOK). The CONSOLIDATED-22 pair
+  is a joint **GPT-5.5** (sober depth-class framing, claim-linter) + **ClaudeCode Opus 4.8** (named-system
+  coverage) artifact; the BRAIN doc is the ClaudeCode 4-report merge.
+- **Hype / superseded drafts (18), removed from the working tree:** the SUPER-REPORT / OMNISCIENT /
+  ULTIMATE-MEGA / MASTER-ASSESSMENT / MEGA-ULTRATHINK / MEGA-MASTER-...PASS1-3 / FINAL-HURRAH /
+  CONSOLIDATED-16 series (Windsor SWE-1.6 + Devin + early ClaudeCode SUPER-REPORT passes; each
+  self-marked "superseded local draft"). These were **never committed** (no git history) - purely local
+  uncommitted cruft from the parallel fleet session, so GitHub never carried them. Moved to the
+  git-ignored local `docs/reports/2026-07-07/` folder as a browsable local archive.
+- **Process-logs, deleted from the tracked tree (4 committed + 1 untracked):**
+  `5-PASS-DOCUMENTATION-UPDATE-STRATEGY`, `DEPLOYMENT-INSTRUCTIONS`,
+  `DOCUMENTATION-UPDATE-COMPLETION-SUMMARY`, `DOCUMENTATION-UPDATE-CORRECTED-SUMMARY` (Devin scaffolding,
+  committed; the last two contradict each other) + the untracked `FINAL-CLEANUP-SUMMARY` (a 5th,
+  loop-spawned mid-session). Status snapshots masquerading as docs; their history lives here now.
+
+### Net
+
+- Tracked `docs/` report surface consolidated toward the 5 canonical files (was ~28 report-like files
+  locally). NOTE: a concurrent fleet loop committed a NEW
+  `MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-1/2/3` set to `main` during this pass (its
+  passes 19-21 below) - fresh sprawl not yet folded; needs the loop paused before a clean final sweep.
+- GitHub was already clean of the 18 older drafts; the local working tree now matches it.
+- Provenance: the 4 process-logs stay recoverable via git history; the 18 uncommitted drafts persist
+  only in the local `docs/reports/2026-07-07/` archive - to publish them, un-exclude the folder in
+  `.git/info/exclude` and `git add -f`.
+
+### Gate
+
+- No code paths touched. `doc-links` unaffected (drafts were prose mentions, not clickable links -
+  grep-verified 0 relative-link refs). `build-pages.ts` `LOCAL_ONLY` `rm --force` no-ops harmlessly on
+  the now-absent stale root entries (the `reports/2026-07-07` exclusion already covers the archive).
+
+---
+
 ## 2026-07-06 (pass 21) — MEGA-MASTER brain assessment Pass 3 of 3 (complete)
 
 Omniscient living-world census: `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-3-2026-07-06.md` + `docs/reports/assets/brain-evidence-matrix.json` + `docs/reports/assets/sim-modules-census-pass3.csv`.
