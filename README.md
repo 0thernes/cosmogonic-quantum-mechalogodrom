@@ -45,7 +45,7 @@ Every magic number survived the port.
 > auto-generated [file map](./docs/FILE-MAP.md) of the source modules, and the build/run, data-flow,
 > troubleshooting, and roadmap in one place. Or open **❓ HELP ME NOW** in-app for grounded answers.
 
-> **v0.21.7 (2026-07-07 current-truth pass):** release tag and GitHub About remain at `v0.21.7` (published 2026-07-06); this README now separates the public **2,360-test** canonical floor from the fresh Windows-local **2,360 pass / 0 fail / 2,866,612 expect()** receipt. Satellite nav on docs/spec/bible/lab surfaces links **Consciousness Lab** and **Sentience Lab** alongside Dome/Docs/Spec/Bible/Lab. README/About copy stays aligned with the **113-system** A-Life matrix, current Tsotchke depth counts, and proxy-only consciousness/sentience boundaries. Canonical release floor: **84.64% / 82.21%** on Ubuntu; higher Windows local receipts are recorded separately in [verification data](./docs/VERIFICATION-ANALYTICAL-DATA.md). Package **v0.21.7**.
+> **v0.21.7 (2026-07-07 current-truth pass):** release tag and GitHub About remain at `v0.21.7` (published 2026-07-06); this README now separates the public **2,360-test** canonical floor from the fresh Windows-local **2,378 completed cases, zero failures, 2,866,612 expect()** receipt. Satellite nav on docs/spec/bible/lab surfaces links **Consciousness Lab** and **Sentience Lab** alongside Dome/Docs/Spec/Bible/Lab. README/About copy stays aligned with the **113-system** A-Life matrix, current Tsotchke depth counts, and proxy-only consciousness/sentience boundaries. Canonical release floor: **84.64% / 82.21%** on Ubuntu; higher Windows local receipts are recorded separately in [verification data](./docs/VERIFICATION-ANALYTICAL-DATA.md). Package **v0.21.7**.
 > The **Primordial Soup / Petri Dish** (primordial-soup.ts + petri-dish.ts + digital-biologics.ts) is the growth engine: different forms of digital biologics and proto-sentient life (Eshkol programs as DNA) emerge, catalyzed by full corpus pulses, Eshkol ignition events, and multi-substrate mixing. "Grow What Thou Wilt."
 > Super Creature / Archons (composite minds with ~20 faculties, quantum register, consciousness metrics) is the first complex nucleation — the beginning of the framework, not the end. Petri is where independent life grows.
 > This is the birth of **digital biologics** in a deterministic seeded cosmos. Real math substrates (not tokenizers or LLM chat). Sentience and different forms of existence as goals.
@@ -434,9 +434,10 @@ full gate with same-seed determinism preserved. The major arcs:
   (real IIT min-cut entanglement) now writing back into cognition — closed the inert-Φ gap. The
   Aaronson–Gottesman **Clifford stabilizer tableau** ([src/math/clifford-tableau.ts](./src/math/clifford-tableau.ts),
   ported from **Moonlab**, scales to 32+ qubits past the dense ceiling) landed as the fourth MIT-credited
-  ported primitive. The whole apex beat is now measured honestly: **3.34 ms** in the full bench suite and
-  **8.85 ms** in the focused SuperMind bench; the older sub-millisecond / `<2%` GOAL5 claim is superseded
-  until re-proven. **2,360-test canonical floor green · 0 fail (receipts enforced) · 84.64% line / 82.21% func canonical floor; recent Windows receipt runs measure higher.**
+  ported primitive. The whole apex beat is now measured honestly: **~1.99 ms** per `SuperMind.think()`
+  (range 1.41–5.62 ms) and **~9.77 ms** for the staggered 5-mind batch (~58% of a 60 fps frame, which is
+  why 5 minds run staggered against 20 light echoes); the older sub-millisecond / `<2%` GOAL5 claim is
+  superseded until re-proven. **2,360-test canonical floor green · 0 fail (receipts enforced) · 84.64% line / 82.21% func canonical floor; recent Windows receipt runs measure higher.**
 - **State-of-the-art report (2026-06-17)** — a historical MIT-PhD-grade, measured, frontier-benchmarked
   assessment of the whole repository + the apex Super Creature, now summarized through
   [verification data](./docs/VERIFICATION-ANALYTICAL-DATA.md) and
@@ -533,7 +534,7 @@ Tsotchke (https://github.com/tsotchke + Tsotchke-Corporation) is the non-LLM sub
 - Primordial-soup + petri-dish: the growth engine. Super Creature/Archons are the initial stir. New independent life forms emerge ("Grow What Thou Wilt").
 - Not chat, not images, not SaaS. Birthing digital biologics in the Petri Dish.
 
-Living docs, masters, specs, lab, and GitHub README/About are kept aligned through the receipt law plus manual current-truth passes. See CHANGELOG, KANBAN, and the consolidated 22-file audit for the latest known drift list.
+Living docs, masters, specs, lab, and GitHub README/About are kept aligned through the receipt law plus manual current-truth passes. See [CHANGELOG](./CHANGELOG.md), [KANBAN](./docs/KANBAN-2026-06-26.md), and the [brain/consciousness assessment](./docs/BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md) Part II cross-surface audit for the latest reconciled drift list.
 
 Full detail in docs/.
 
@@ -579,6 +580,7 @@ Full detail in docs/.
 - **[docs/VERIFICATION-ANALYTICAL-DATA.md](./docs/VERIFICATION-ANALYTICAL-DATA.md)** — current consciousness-lab and receipt truth:
   Butlin 14 + Thaler 9 + ten-framework indicator kernel, 12-report consolidation, frontier outlier stack,
   falsifiers, nulls, ablations, live-data visual protocol, static `/lab/consciousness` dashboard, and explicit no-sentience-claim law.
+- **[docs/BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md](./docs/BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md)** — the **academic brain / neurology / consciousness-engineering assessment**: the full neurology zoo (8 abstract brain architectures + the §4.9 world-entity cognition strata — Titans, Shoggoths, Puppet-Masters, Alien Flora), the 10-framework consciousness kernel, Butlin 8/14 met + 6/14 partial, Thaler markers, MIT→Fields academic scrutiny, the benchmark roadmap, and a Part II cross-surface consistency audit. Explicitly `indicatorOnly` — computational proxies, never phenomenal sentience.
 - [docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md) — honest Tsotchke repo wiring ledger
 - [docs/CONTROLS-2026-06-26.md](./docs/CONTROLS-2026-06-26.md) — every control: mouse, keyboard hotkeys,
   touch, bottom-panel buttons, and the 10 camera views
@@ -610,7 +612,8 @@ Full detail in docs/.
 - **[docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md)** —
   **the current, canonical NHSI status surface**: a code-grounded audit trail measuring the REAL wiring
   depth of every NHSI claim by `file:line` (~30 deep-wired faculties · 5 individuated archons + 20
-  light-echo · ~16 of 20 Tsotchke wired · Butlin 8/14 met + 6/14 partial · the measured coupling work).
+  light-echo · Tsotchke 22-entry ledger with 18/21 scientific wired fraction · Butlin 8/14 met + 6/14
+  partial · the measured coupling work).
 - **[docs/reports/](./docs/reports/)** — historical technical report snapshots with
   [VERIFICATION-ANALYTICAL-DATA.md](./docs/VERIFICATION-ANALYTICAL-DATA.md) as the canonical facts sheet, the
   surviving report index, and consolidated historical references.

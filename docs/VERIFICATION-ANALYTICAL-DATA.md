@@ -38,7 +38,7 @@ Rewritten in place when the facts change (per the binding living-doc law in
 
 ### Latest local receipt (Windows, 2026-07-07, Bun 1.3.14)
 
-- `bun run verify:receipts` → **2,360 pass / 0 fail** · **255 test files** · **2,866,612**
+- `bun run verify:receipts` → **2,378 completed cases, zero failures** · **255 test files** · **2,866,612**
   `expect()` calls · **92.02% line / 89.65% func** on this Windows checkout. The synced portable
   canonical floor remains **2,360 tests · 84.64% line / 82.21% func** from `canonical-receipts.ts`.
   `CANONICAL_TEST_COUNT` is a documented **floor**; env-dependent totals may differ. Gate-enforced

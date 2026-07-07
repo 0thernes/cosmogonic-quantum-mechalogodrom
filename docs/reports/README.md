@@ -1,4 +1,4 @@
-<!-- reviewed: 2026-07-06 | historical snapshot policy | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-07 | historical snapshot policy + active 22-report index | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # Reports
 
@@ -6,10 +6,18 @@ Technical reports and audits for Cosmogonic Quantum Mechalogodrom. Dated filenam
 **historical worldline snapshots** when present — they preserve evidence from their authoring pass.
 **Current** gate receipts: [VERIFICATION-ANALYTICAL-DATA.md](../VERIFICATION-ANALYTICAL-DATA.md) §1 ·
 `scripts/canonical-receipts.ts` (v0.21.7 · **2,360-test floor** · **84.64 % / 82.21 %** coverage).
+Latest Windows-local receipt observed by the current audit: **2,378 completed cases, zero failures, 2,866,612
+expect() calls**.
 
 ## Reports
 
 - [VERIFICATION-ANALYTICAL-DATA.md](../VERIFICATION-ANALYTICAL-DATA.md) — canonical current facts.
+- [CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md](../CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md)
+  — active 22-report master synthesis and current publication-facing truth pass.
+- [CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md](../CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md)
+  — active file-trust ledger for stale claims, omitted handles, and public-page gaps.
+- [CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.html](../CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.html)
+  — condensed browser companion for the current master; not a full Markdown mirror.
 - [2026-07-01-25-POINT-SCRUTINY-SCORECARD.md](./2026-07-01-25-POINT-SCRUTINY-SCORECARD.md) — 25-point
   adversarial scrutiny (overall 8.3/10). Chart:
   [assets/scrutiny-25-scorecard.svg](./assets/scrutiny-25-scorecard.svg).

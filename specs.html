@@ -753,8 +753,8 @@ server.ts ──serves──▶  /  (app)   /docs   /spec   /lab   /lab/sentienc
           >
           ·
           <a href="./docs/CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md">22-file audit ledger</a>
-          · local receipt note: 2,360 pass / 0 fail / 2,866,612 expect() calls on the latest Windows
-          verification run.
+          · local receipt note: 2,378 completed cases, zero failures, 2,866,612 expect() calls on
+          the latest Windows verification run.
         </p>
         <p class="muted" style="margin-top: 10px">
           <b>Frontier report (2026-06-17):</b>
@@ -895,9 +895,10 @@ server.ts ──serves──▶  /  (app)   /docs   /spec   /lab   /lab/sentienc
         <p>
           <b>Gate (every commit):</b>
           <code>prettier → tsc strict → oxlint → 2,360-test floor → bun build</code>. Public release
-          floor is 84.64 % line / 82.21 % function; the latest Windows-local receipt records 2,360
-          pass / 0 fail with 84.64 % line / 82.21 % function. <b>Build:</b> Bun bundles 3 HTML
-          entrypoints (<code>index.html</code>, <code>docs.html</code>, <code>specs.html</code>) →
+          floor is 84.64 % line / 82.21 % function; the current audit separately records a
+          Windows-local receipt of 2,378 completed cases, zero failures, line coverage 92.02%, and
+          function coverage 89.65%. <b>Build:</b> Bun bundles 3 HTML entrypoints
+          (<code>index.html</code>, <code>docs.html</code>, <code>specs.html</code>) →
           <code>dist/</code>. <b>CI/CD:</b> GitHub Actions runs the gate + builds and deploys the
           real app to GitHub Pages on every push to <code>main</code>; tagged releases ship a
           tarball + CycloneDX SBOM. Three governing "master" personas encode the discipline: the

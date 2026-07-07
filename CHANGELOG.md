@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Publication-surface current-truth pass after the 22-report audit:
+  - Updated README/About-facing metadata to separate the `2,360` public release floor from the
+    fresh Windows-local `2,378 completed cases, zero failures, 2,866,612 expect()` receipt.
+  - Added discoverable links to the active consolidated 22-report master/audit from Docs, Spec,
+    Bible, Lab, Consciousness Lab, Sentience Lab, and the reports index.
+  - Refreshed public codebase census wording to the current `bun run metrics` output:
+    730 tracked authored files, 193,030 tracked authored lines, 584 TypeScript files, 286 `src/`
+    TypeScript files, 8 native C/C++ headers/sources, and 255 test files.
+  - Corrected public Titan wording from the stale 10-Titan/45-pair text to the current
+    20-Titan/190-pair source truth.
+  - Replaced older `~16 wired` Tsotchke shorthand with the registry-derived
+    22-entry ledger: 9 deep, 7 wired, 2 harvest, 3 fenced, 1 meta, and `18/21 = 0.857`
+    scientific wired fraction.
+
 ## [0.21.7] — 2026-07-06
 
 Truth-surface nav polish.
