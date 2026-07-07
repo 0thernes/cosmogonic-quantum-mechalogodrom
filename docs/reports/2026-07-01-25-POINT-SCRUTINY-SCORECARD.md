@@ -10,7 +10,7 @@ adversarial verification of every finding). It is deliberately **not** all-green
 a scorecard is where it is red.
 
 > Read every claim against [`VERIFICATION-ANALYTICAL-DATA.md`](../VERIFICATION-ANALYTICAL-DATA.md) §1.
-> Current receipts: **v0.21.7 · 2,360 tests · 84.64 % line / 82.21 % function**
+> Current receipts: **v0.21.8 · 2,360 tests · 84.64 % line / 82.21 % function**
 
 ## Bottom line
 

@@ -1,0 +1,969 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Consolidated 22-Report Master Assessment - 2026-07-07</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #101214;
+        --panel: #181b20;
+        --panel-2: #20252b;
+        --text: #eef2f5;
+        --muted: #aab5bf;
+        --line: #343b44;
+        --accent: #7dd3fc;
+        --accent-2: #a7f3d0;
+        --warn: #fbbf24;
+        --bad: #fb7185;
+        --good: #86efac;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font:
+          16px/1.55 system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          sans-serif;
+      }
+
+      main {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 32px 20px 64px;
+      }
+
+      header {
+        padding: 28px 0 18px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      h1,
+      h2,
+      h3 {
+        line-height: 1.15;
+        letter-spacing: 0;
+      }
+
+      h1 {
+        margin: 0 0 12px;
+        font-size: clamp(2rem, 5vw, 4.25rem);
+      }
+
+      h2 {
+        margin: 42px 0 14px;
+        font-size: clamp(1.45rem, 3vw, 2.1rem);
+      }
+
+      h3 {
+        margin: 26px 0 10px;
+        font-size: 1.15rem;
+      }
+
+      p {
+        max-width: 82ch;
+      }
+
+      a {
+        color: var(--accent);
+      }
+
+      .lede {
+        max-width: 76ch;
+        color: var(--muted);
+        font-size: 1.12rem;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+        gap: 12px;
+      }
+
+      .card {
+        min-height: 132px;
+        padding: 16px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+
+      .card strong {
+        display: block;
+        margin-bottom: 6px;
+      }
+
+      .metric {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: var(--accent-2);
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      .banner {
+        margin: 24px 0;
+        padding: 18px;
+        border: 1px solid var(--warn);
+        border-radius: 8px;
+        background: rgba(251, 191, 36, 0.08);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 16px 0 28px;
+        overflow-wrap: anywhere;
+      }
+
+      th,
+      td {
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        vertical-align: top;
+        text-align: left;
+      }
+
+      th {
+        background: var(--panel-2);
+      }
+
+      tr:nth-child(even) td {
+        background: rgba(255, 255, 255, 0.025);
+      }
+
+      .score {
+        display: grid;
+        grid-template-columns: 220px 1fr 56px;
+        gap: 10px;
+        align-items: center;
+        margin: 10px 0;
+      }
+
+      .bar {
+        height: 12px;
+        overflow: hidden;
+        background: #2b3138;
+        border-radius: 999px;
+      }
+
+      .fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      }
+
+      .warn {
+        color: var(--warn);
+      }
+
+      .bad {
+        color: var(--bad);
+      }
+
+      .good {
+        color: var(--good);
+      }
+
+      code {
+        padding: 0.1rem 0.25rem;
+        background: #252b33;
+        border-radius: 4px;
+      }
+
+      pre {
+        overflow-x: auto;
+        padding: 16px;
+        background: #0b0d0f;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+
+      footer {
+        margin-top: 48px;
+        padding-top: 24px;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <p class="muted">Generated 2026-07-07</p>
+        <h1>Consolidated 22-Report Browser Companion</h1>
+        <p class="lede">
+          A condensed browser view of the 22-report current-truth audit: what is relevant, what is
+          stale, what is scientifically defensible, and what needs proof before it can become a
+          publication-grade claim. The Markdown master remains the fuller source.
+        </p>
+      </header>
+
+      <section class="banner">
+        <strong>Truth banner:</strong> This project has a broad sentience-relevant proxy
+        architecture with strong local verification and extensive named-world coverage. It does not
+        prove consciousness or sentience. The next leap is falsifiable measurement, browser parity,
+        and cleaner report hygiene.
+      </section>
+
+      <section>
+        <h2>Current Evidence</h2>
+        <div class="grid">
+          <div class="card">
+            <strong>Latest Receipt</strong>
+            <div class="metric">2,378</div>
+            <span class="muted">fresh fifth-pass verified; pass / 0 fail</span>
+          </div>
+          <div class="card">
+            <strong>Expect Calls</strong>
+            <div class="metric">2,866,612</div>
+            <span class="muted">fresh fifth-pass verified receipt</span>
+          </div>
+          <div class="card">
+            <strong>Coverage</strong>
+            <div class="metric">92.02%</div>
+            <span class="muted">line coverage; 89.65% function</span>
+          </div>
+          <div class="card">
+            <strong>Format Status</strong>
+            <div class="metric bad">Red</div>
+            <span class="muted">one malformed HTML plus style drift</span>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Gate</th>
+              <th>Current observed result</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>typecheck</code></td>
+              <td class="good">Passed</td>
+            </tr>
+            <tr>
+              <td><code>lint</code></td>
+              <td class="good">Passed</td>
+            </tr>
+            <tr>
+              <td><code>sync:check</code></td>
+              <td class="good">Passed at canonical floor wording</td>
+            </tr>
+            <tr>
+              <td><code>verify:facts</code></td>
+              <td class="warn">Exit 0 with 9 potential drifts in BRAIN</td>
+            </tr>
+            <tr>
+              <td>Browser smoke</td>
+              <td class="warn">
+                Not performed; Chrome/Edge exist by explicit path, but not as a one-command
+                PATH/Playwright workflow
+              </td>
+            </tr>
+            <tr>
+              <td>Build</td>
+              <td class="warn">Not freshly rerun by critic because build writes artifacts</td>
+            </tr>
+            <tr>
+              <td>Post-write receipt rerun</td>
+              <td class="warn">Timed out after 120 seconds; no live bun.exe process remained</td>
+            </tr>
+            <tr>
+              <td>Fresh fifth-pass receipt</td>
+              <td class="good">Verified run: 2,378 pass / 0 fail / 2,866,612 expect() calls</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>What Is Current And What Is Stale</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Claim</th>
+              <th>Status</th>
+              <th>Correct handling</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>2,360</code> tests</td>
+              <td>Current as floor, stale as latest</td>
+              <td>Call it the portable canonical floor.</td>
+            </tr>
+            <tr>
+              <td><code>2,373</code> tests</td>
+              <td>Stale latest</td>
+              <td>Superseded by the fresh fifth-pass 2,378 receipt.</td>
+            </tr>
+            <tr>
+              <td><code>2,376</code> tests</td>
+              <td>Stale latest</td>
+              <td>Superseded by the later 2,378 receipt.</td>
+            </tr>
+            <tr>
+              <td>16-file audit scope</td>
+              <td>Stale</td>
+              <td>Requested scope is 22 files.</td>
+            </tr>
+            <tr>
+              <td>10 Titans</td>
+              <td>Stale in source comments and some docs</td>
+              <td>
+                Source truth is <code>TITAN_COUNT=20</code> / <code>TITANS=20</code>; stale 10
+                remains in <code>src/sim/titans.ts</code> comments, <code>docs.html</code>, and
+                <code>docs/ENTITY-SCHEMA-AND-MAPPINGS-2026-06-26.md</code>, while current
+                <code>specs.html</code> already says 20.
+              </td>
+            </tr>
+            <tr>
+              <td>Omniscient/complete/sentient</td>
+              <td>Unsafe overclaim</td>
+              <td>Use proxy-consciousness and falsifiable indicators.</td>
+            </tr>
+            <tr>
+              <td>Tsotchke wired into every repo</td>
+              <td>Unverified blanket claim</td>
+              <td>Require one receipt per repo/surface.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Second-Pass Miss Check</h2>
+        <p>
+          A second term-level scan found no missing top-level creature/world category, but it did
+          find under-covered substrate details that must carry forward in any serious master.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Missed or under-covered item</th>
+              <th>Correct handling</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Brain substrates</td>
+              <td>
+                Explicitly name SuperMind, EntityBrain, Connectome/GraphMind, GlyphBrain,
+                MechalogodromBrain, ApexBrain, Izhikevich spiking substrate, ConsciousnessKernel,
+                ConsciousnessLab, SentienceLab, MindField, Xenomind, Noosphere, and OmegaPoint.
+              </td>
+            </tr>
+            <tr>
+              <td>ApexBrain weird organs</td>
+              <td>
+                Preserve PrimeSieveLoom, AcousticMeatDrum, EntropicNecroMatrix, KleinBottleCortex,
+                PendulumHive, SlimeMoldHydra, ChronoWraith, QuantumTunnelLattice,
+                ThermodynamicEngine, CancerousOuroboros, and QuantumBrainOrgan.
+              </td>
+            </tr>
+            <tr>
+              <td>Meta-Paradox layer</td>
+              <td>
+                Preserve RetrocausalTargetPull, CantorDust, GodelResidual/GödelResidual,
+                PhantomPerception, ReverseAnthropicBudget, and WignerShield as bounded homages with
+                falsifiers.
+              </td>
+            </tr>
+            <tr>
+              <td>Theory and creativity anchors</td>
+              <td>
+                Carry Thaler/DABUS/Creativity Machine, CEMI, UAL, CTM, sensorimotor, projective, and
+                attention-schema terms without treating them as consciousness proof.
+              </td>
+            </tr>
+            <tr>
+              <td>External brain/wetware anchors</td>
+              <td>
+                Include DishBrain, Brainoware, Organoid Intelligence, EBRAINS / Virtual Brain Twin,
+                OpenWorm ConnectomeToolbox, AllenSDK / Allen visual coding, FlyWire, and MICrONS.
+              </td>
+            </tr>
+            <tr>
+              <td>Butlin status</td>
+              <td>
+                Preserve <code>8/14 met + 6/14 partial + 0 sentience</code>; do not flatten this to
+                generic indicator language.
+              </td>
+            </tr>
+            <tr>
+              <td>Tsotchke/Eshkol drift</td>
+              <td>
+                Track stale <code>.esk 1,436+</code> against corrected <code>1,365</code>; keep
+                <code>20 corpus projects / 22 registry slugs</code> separate from blanket
+                repo-wiring rhetoric. Preserve <code>18/21 = 85.7%</code> as the precise scientific
+                wiring fraction and flag <code>tsotchkeWiringCoverage() = 1.0</code> as inflated
+                because it averages only already-wired entries.
+              </td>
+            </tr>
+            <tr>
+              <td>ApexBrain drift</td>
+              <td>
+                Use <code>1B designed / LIVE_NODE_CAP = 4096</code> for ApexBrain, not stale
+                <code>5M/~600</code> wording.
+              </td>
+            </tr>
+            <tr>
+              <td>A-Life comparison</td>
+              <td>
+                Carry forward breadth <code>4.44</code>, population <code>z=+4.02</code>,
+                code-grounded <code>z=+2.83</code>, and the 113-system matrix only as cited measured
+                claims.
+              </td>
+            </tr>
+            <tr>
+              <td>Reasoning/test gaps</td>
+              <td>
+                The old zero-test claim for <code>unification.ts</code> is stale:
+                <code>tests/unification.test.ts</code> exists. Belief propagation and causal graph
+                are strong; ToT/predictor/level-k remain thin.
+              </td>
+            </tr>
+            <tr>
+              <td>Dead-code targets</td>
+              <td>
+                StrangeAttractor, TemporalCrystal, and the 26-form Biologic should be wire-or-retire
+                items.
+              </td>
+            </tr>
+            <tr>
+              <td>Ecology subclasses</td>
+              <td>
+                Name PortalDeathFauna, WildernessPopulation, Phyla, Morphotypes, AlienFlora, and
+                Vegetation rather than broad flora/fauna only.
+              </td>
+            </tr>
+            <tr>
+              <td>Pantheon internals</td>
+              <td>
+                Carry forward TomPantheon, FacultiesPantheon, GodformBias, PantheonSociety,
+                MindField, and Brutal God Releases as inspectable mechanisms.
+              </td>
+            </tr>
+            <tr>
+              <td>Build blocker specificity</td>
+              <td>
+                BRAIN records a prior build failure at <code>src/styles/app.css:0</code>, with
+                suspected <code>bun-plugin-tailwind ^0.1.2</code> + Bun 1.3.14 + Tailwind v4. This
+                needs a fresh dedicated reproduction pass.
+              </td>
+            </tr>
+            <tr>
+              <td>Real-connectome ladder</td>
+              <td>
+                Keep C. elegans/OpenWorm -> FlyWire adult fly -> MICrONS mouse visual cortex, with
+                degree-matched random, shuffled-sign, lesion-hub, checksum, license, and citation
+                controls.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Fourth-Pass Source Handles</h2>
+        <p>
+          A fresh subagent pass found no missing top-level world class, but it did find exact
+          handles and denominators that must remain visible for serious audit traceability.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Handle cluster</th>
+              <th>Preserve</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Policy and falsifiers</td>
+              <td>
+                Literal <code>indicatorOnly</code>; current lab values <code>runs=32</code>,
+                <code>singularityRate=1</code>, <code>emergenceRate=1</code>,
+                <code>ablationRate=0.40625</code>, <code>meanStructuredIndex=0.569244</code>,
+                <code>meanNullIndex=0.571825</code>, <code>meanNullGap=0</code>,
+                <code>meanConvergenceGap=0.062741</code>, <code>meanRewardGap=0.111229</code>,
+                <code>eventTotal=90</code>; and handles <code>singularityProven</code>,
+                <code>meanIndex</code>, <code>peakIndex</code>, <code>ablationProven</code>,
+                <code>setQuantumAblated</code>, and the <code>detect()</code> surrogate.
+              </td>
+            </tr>
+            <tr>
+              <td>Tsotchke proof and legal boundary</td>
+              <td>
+                <code>corpusBrainAblation(seed, frame)</code>, <code>corpusBrainScalar</code>, L1
+                distance <code>&gt; 1e-9</code>, all 18 wired scientific repos load-bearing in the
+                cited run; <code>quantum-quake</code> / <code>qge/</code> GPL-2.0 quarantine;
+                unblock order <code>ULG -&gt; logo-lab -&gt; PINN -&gt; PIMC</code>.
+              </td>
+            </tr>
+            <tr>
+              <td>Tsotchke pipeline</td>
+              <td>
+                <code>fullTsotchkeBiologicsCatalysis</code>, <code>corpusBeat</code>,
+                <code>harvest-tsotchke-corpus.ts</code>, <code>generated-tsotchke-seeds.ts</code>,
+                <code>primordial-soup.ts</code>, and <code>digital-biologics.ts</code>.
+              </td>
+            </tr>
+            <tr>
+              <td>Archons and event handles</td>
+              <td>
+                <code>VOID_KING</code>, <code>VOID_KING_AWAKENS</code>, <code>SPIRAL_WILL</code>,
+                <code>BINARY_IGNITION</code>, <code>PHOENIX_FEAST</code>,
+                <code>PHOENIX_FEAST_REBIRTH</code>; exact Archon handles <code>ORACLE-Σ</code>,
+                <code>STARKILLER-Ω</code>, <code>MANHATTAN-Φ</code>, <code>BROLY-Ψ</code>, and
+                <code>VOID-Λ</code>. ASCII aliases such as <code>ORACLE-Sigma</code> are publishing
+                fallbacks only.
+              </td>
+            </tr>
+            <tr>
+              <td>World denominators</td>
+              <td>
+                Shoggoths <code>100 / 16 strains</code>, Puppeteers <code>100 / 14 styles</code>,
+                Titans <code>20</code>, benchmark IDs
+                <code>B2</code>/<code>B3</code>/<code>B4</code>, <code>Leviathans</code>, alien
+                flora <code>15,000</code> desktop / <code>5,200</code> mobile,
+                <code>10,000</code> plants, <code>PHYLUM_COUNT=10</code>,
+                <code>MORPHS_PER_PHYLUM=25</code>, and <code>OUTLIER_RATE=0.01</code>.
+              </td>
+            </tr>
+            <tr>
+              <td>Engineering/governance handles</td>
+              <td>
+                ADR-0007 native denominator: 8 C/C++ files = 3 <code>.cpp</code> + 4
+                <code>.h</code> + 1 <code>.hpp</code>; computed-but-unread loops
+                <code>Mortality</code>, <code>MythRitual</code>, <code>latentSubstrate</code>;
+                <code>canonical-receipts.ts</code>, <code>sync-surfaces.ts</code>,
+                <code>FILE-MAP.md</code>, and <code>AUDIT-LOG.md</code>.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Third-Pass Semantic Coverage Delta</h2>
+        <p>
+          A third source-versus-consolidation pass found no missing top-level creature class, but it
+          did find exact source handles that were too compressed in the first master.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Delta</th>
+              <th>Source refs</th>
+              <th>Patch verdict</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Butlin indicator IDs</td>
+              <td>
+                <code>VERIFICATION:222</code>, <code>NHSI:152-168</code>,
+                <code>BRAIN:828-843</code>
+              </td>
+              <td>
+                Keep exact IDs: MET = <code>GWT-1</code>, <code>GWT-3</code>, <code>GWT-4</code>,
+                <code>PP-1</code>, <code>HOT-1</code>, <code>HOT-2</code>, <code>AST-1</code>,
+                <code>AE-1</code>; PARTIAL = <code>GWT-2</code>, <code>HOT-3</code>,
+                <code>HOT-4</code>, <code>AE-2</code>, <code>RPT-1</code>, <code>RPT-2</code>.
+              </td>
+            </tr>
+            <tr>
+              <td>SOAR / ACT-R bar</td>
+              <td><code>BRAIN:1533</code>, <code>BRAIN:1578-1592</code></td>
+              <td>
+                Carry the MIT-style verdict: broader than SOAR/ACT-R, but shallower in parsimony,
+                single-theory commitment, and human-data validation.
+              </td>
+            </tr>
+            <tr>
+              <td>Free Energy / AIF / Bayesian wording</td>
+              <td>
+                <code>SUPER-REPORT-2ND:121-125</code>, <code>BRAIN:598</code>,
+                <code>BRAIN:703-716</code>, <code>BRAIN:793</code>
+              </td>
+              <td>
+                Name variational free energy, expected free energy, Bayesian belief update, and the
+                one-sample epistemic-surrogate caveat.
+              </td>
+            </tr>
+            <tr>
+              <td>Ten-kernel framework IDs</td>
+              <td>
+                <code>BRAIN:178</code>, <code>BRAIN:628-634</code>, <code>BRAIN:642-652</code>,
+                <code>PASS3:456</code>
+              </td>
+              <td>
+                Preserve Butlin, Thaler, IIT-4, FEP/AIF, AST, CEMI, UAL, sensorimotor, projective,
+                and CTM as coupled F0-F9 axes, including weak UAL/projective ablation behavior.
+              </td>
+            </tr>
+            <tr>
+              <td>Metacognition / valence / qualia proxy</td>
+              <td>
+                <code>BRAIN:370</code>, <code>BRAIN:600</code>, <code>BRAIN:746</code>,
+                <code>BRAIN:834-836</code>, <code>BRAIN:899-925</code>
+              </td>
+              <td>
+                Keep confidence, control, synthetic affect, and quality-space as proxy variables;
+                explicitly deny felt qualia.
+              </td>
+            </tr>
+            <tr>
+              <td>Tsotchke exact substrate vocabulary</td>
+              <td>
+                <code>BRAIN:177</code>, <code>BRAIN:383-387</code>, <code>BRAIN:951-953</code>,
+                <code>BRAIN:966-984</code>, <code>BRAIN:1027-1053</code>, <code>NHSI:168</code>
+              </td>
+              <td>
+                Carry QGT/Fubini-Study/Berry, Moonlab Clifford/MPS/VQE, libirrep
+                Wigner-D/Clebsch-Gordan/QEC, spin-NN/Hopfield/SK/NQS, QRNG, PINN, PIMC, ULG,
+                TensorCore, Quantum-RNG-API, Quantum-Quake telemetry, and fenced SolanaQuantumFlux.
+              </td>
+            </tr>
+            <tr>
+              <td>Classical planning and learning handles</td>
+              <td>
+                <code>BRAIN:96</code>, <code>BRAIN:288</code>, <code>BRAIN:605-606</code>,
+                <code>BRAIN:835</code>, <code>BRAIN:854</code>
+              </td>
+              <td>
+                Keep GOAP, TinyMLP, successor representation, reservoir computing, and NHI/adapters
+                as explicit reasoning and planning handles.
+              </td>
+            </tr>
+            <tr>
+              <td>Ecological control vocabulary</td>
+              <td>
+                <code>PASS3:344-346</code>, <code>PASS3:375</code>, <code>BRAIN:514</code>,
+                <code>BRAIN:1162</code>, <code>PASS1:435</code>, <code>PASS2:411</code>
+              </td>
+              <td>
+                Preserve immune-system contrast, stigmergy, swarm/social fields,
+                docs-as-immune-system, homeostasis/control framing, and morphogenesis when tied to
+                source code.
+              </td>
+            </tr>
+            <tr>
+              <td>Archetypal/mythic precision</td>
+              <td>
+                <code>FINAL-HURRAH:227</code>, <code>PASS3:409</code>, <code>PASS1:428</code>,
+                <code>BRAIN:384</code>, <code>BRAIN:607</code>, <code>BRAIN:1029</code>,
+                <code>BRAIN:2218</code>
+              </td>
+              <td>
+                Treat Archons and mythic rosters as archetype-triggered deterministic bias fields or
+                persona skins over math, not literal powers.
+              </td>
+            </tr>
+            <tr>
+              <td>Exact alias spellings</td>
+              <td>
+                <code>MEGA-ULTRATHINK:172-173</code>, <code>MEGA-ULTRATHINK:460-467</code>,
+                <code>OMNISCIENT:59-79</code>, <code>NHSI:19</code>, <code>NHSI:23-26</code>,
+                <code>BRAIN:596</code>,
+                <code>BRAIN:945-953</code>
+              </td>
+              <td>
+                Preserve aliases: Alien Flora/AlienFlora, Puppet Masters/Puppeteers,
+                God-Colossus/GodColossus, Monolith Temple/MonolithTemple, Petri-Dish,
+                GlyphCreatures/GlyphBrain, Digital Biologics, TsotchkeBrainIntake, real connectome,
+                Butlin rubric, Cowan bound, QPU, and Sephiroth as a mythic roster name.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Named System Coverage</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>System</th>
+              <th>Coverage</th>
+              <th>Scientific framing</th>
+              <th>Needed proof</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Entities</td>
+              <td class="good">Strong</td>
+              <td>ALife agents with measurable behavior.</td>
+              <td>Per-entity memory, adaptation, and survival curves.</td>
+            </tr>
+            <tr>
+              <td>SuperCreatures</td>
+              <td class="good">Strong</td>
+              <td>Higher-capability agent layer.</td>
+              <td>Comparative controls against base entities.</td>
+            </tr>
+            <tr>
+              <td>Apex Abomination</td>
+              <td>Medium</td>
+              <td>Apex/anomaly pressure system.</td>
+              <td>Causal telemetry and event effect size.</td>
+            </tr>
+            <tr>
+              <td>Shoggoths</td>
+              <td>Medium-high</td>
+              <td>Plastic/adaptive agent class.</td>
+              <td>Mutation and plasticity curves under perturbation.</td>
+            </tr>
+            <tr>
+              <td>Puppeteers</td>
+              <td>Medium-high</td>
+              <td>Agency/control interference layer.</td>
+              <td>Command, resistance, and adaptation metrics.</td>
+            </tr>
+            <tr>
+              <td>Titans</td>
+              <td class="good">Strong but drifted</td>
+              <td>Large-scale agent class.</td>
+              <td>Source constants say 20; stale 10 remains in comments and some docs.</td>
+            </tr>
+            <tr>
+              <td>Pantheons and 25 Archons</td>
+              <td>Medium</td>
+              <td>Governance/mythic role taxonomy.</td>
+              <td>One metric and falsifier per Archon.</td>
+            </tr>
+            <tr>
+              <td>GOD / GodColossus</td>
+              <td class="warn">Weak-medium</td>
+              <td>Symbolic/reactive higher-order system.</td>
+              <td>Do not treat as consciousness proof without causal metrics.</td>
+            </tr>
+            <tr>
+              <td>Temple / Portal</td>
+              <td class="warn">Weak-medium</td>
+              <td>Environment/operator substrate.</td>
+              <td>Ablate it; if nothing changes, shrink the claim.</td>
+            </tr>
+            <tr>
+              <td>Flora / Fauna / Wildlife</td>
+              <td>Medium</td>
+              <td>Embodied ecology layer.</td>
+              <td>Population, niche, signal, and resource metrics.</td>
+            </tr>
+            <tr>
+              <td>Tsotchke</td>
+              <td>Medium-high</td>
+              <td>Integrator/meta-observer.</td>
+              <td>Surface-by-surface wiring receipts.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Scorecard</h2>
+        <div class="score">
+          <span>Local test evidence</span>
+          <div class="bar"><div class="fill" style="width: 91%"></div></div>
+          <strong>9.1</strong>
+        </div>
+        <div class="score">
+          <span>Named-world coverage</span>
+          <div class="bar"><div class="fill" style="width: 86%"></div></div>
+          <strong>8.6</strong>
+        </div>
+        <div class="score">
+          <span>Source/report traceability</span>
+          <div class="bar"><div class="fill" style="width: 72%"></div></div>
+          <strong>7.2</strong>
+        </div>
+        <div class="score">
+          <span>Scientific controls</span>
+          <div class="bar"><div class="fill" style="width: 70%"></div></div>
+          <strong>7.0</strong>
+        </div>
+        <div class="score">
+          <span>Consciousness rigor</span>
+          <div class="bar"><div class="fill" style="width: 68%"></div></div>
+          <strong>6.8</strong>
+        </div>
+        <div class="score">
+          <span>Publication hygiene</span>
+          <div class="bar"><div class="fill" style="width: 59%"></div></div>
+          <strong>5.9</strong>
+        </div>
+        <div class="score">
+          <span>Browser/public readiness</span>
+          <div class="bar"><div class="fill" style="width: 48%"></div></div>
+          <strong>4.8</strong>
+        </div>
+      </section>
+
+      <section>
+        <h2>Consciousness Theory Mapping</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Theory family</th>
+              <th>Repo-relevant indicator</th>
+              <th>Current fit</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Global workspace / GNWT</td>
+              <td>Shared state, attention, routing, cross-system reportability.</td>
+              <td>Partial; Tsotchke could support this if instrumented.</td>
+            </tr>
+            <tr>
+              <td>IIT</td>
+              <td>Irreducible causal coupling.</td>
+              <td>Weak until causal interventions are measured.</td>
+            </tr>
+            <tr>
+              <td>Recurrent processing</td>
+              <td>Persistent feedback loops.</td>
+              <td>Plausible, but needs explicit traces.</td>
+            </tr>
+            <tr>
+              <td>Predictive processing</td>
+              <td>Prediction error and world-model updates.</td>
+              <td>Partial unless errors are logged.</td>
+            </tr>
+            <tr>
+              <td>Active inference</td>
+              <td>Epistemic action and uncertainty reduction.</td>
+              <td>Promising future build path.</td>
+            </tr>
+            <tr>
+              <td>Higher-order theories</td>
+              <td>Self-state representation used by the system.</td>
+              <td>Weak unless self-models become explicit and causal.</td>
+            </tr>
+            <tr>
+              <td>Embodied cognition</td>
+              <td>Agent-environment coupling.</td>
+              <td>Strong world fit, benchmark maturity still needed.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Academic Scrutiny Ladder</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Scrutiny level</th>
+              <th>Rating</th>
+              <th>Verdict</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Internal engineering memo</td>
+              <td>8.4 / 10</td>
+              <td>Strong after consolidation.</td>
+            </tr>
+            <tr>
+              <td>Senior systems code review</td>
+              <td>7.4 / 10</td>
+              <td>Needs build/browser/status cleanup.</td>
+            </tr>
+            <tr>
+              <td>Graduate research artifact</td>
+              <td>6.6 / 10</td>
+              <td>Promising but incomplete theory-to-metric mapping.</td>
+            </tr>
+            <tr>
+              <td>PhD dissertation chapter</td>
+              <td>5.9 / 10</td>
+              <td>Needs literature review, ablations, and datasets.</td>
+            </tr>
+            <tr>
+              <td>MIT / Max Planck lab review</td>
+              <td>5.4 / 10</td>
+              <td>Interesting prototype, not yet a full research package.</td>
+            </tr>
+            <tr>
+              <td>Turing / Nobel / Fields</td>
+              <td>Not applicable</td>
+              <td>Wrong comparison class for the current evidence.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Build Path</h2>
+        <ol>
+          <li>
+            Update verification docs so 2,360 is floor and 2,378 is the fresh fifth-pass verified
+            latest receipt available to this audit set.
+          </li>
+          <li>Patch BRAIN contradictions around build/check status.</li>
+          <li>Fix or archive malformed OMNISCIENT HTML.</li>
+          <li>Regenerate or patch public pages and docs so Titan wording matches source.</li>
+          <li>Link the new CONSOLIDATED-22 artifacts from public docs/index surfaces.</li>
+          <li>
+            Label this HTML as a condensed browser companion or expand it into a full Markdown
+            mirror.
+          </li>
+          <li>
+            Add scientific controls: null worlds, ablations, seed sweeps, deterministic replay, and
+            telemetry JSON.
+          </li>
+          <li>
+            Create per-system benchmark cards for Entities, Shoggoths, Puppeteers, Titans, Archons,
+            Temple, ecology, and Tsotchke.
+          </li>
+          <li>
+            Browser-smoke the new HTML once Chrome/Edge explicit-path execution or local Playwright
+            tooling is wired as a repeatable command.
+          </li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>Final Standing</h2>
+        <p>
+          Cosmogonic is a serious, heavily imagined, increasingly instrumented ALife and
+          cognition-engineering world. It has enough architecture to deserve rigorous measurement.
+          It has enough report drift to require discipline. It has enough mythic language to be
+          beautiful and risky at the same time.
+        </p>
+        <p>
+          The strongest honest claim is that this repo contains a broad sentience-relevant proxy
+          architecture with strong local verification and extensive named-world coverage. The next
+          leap is to convert mythic/cognitive ontology into falsifiable, browser-valid,
+          receipt-backed science.
+        </p>
+      </section>
+
+      <footer>
+        Companion Markdown:
+        <a href="./CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md">
+          CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md
+        </a>
+        <br />
+        Companion Audit:
+        <a href="./CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md">
+          CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md
+        </a>
+      </footer>
+    </main>
+  </body>
+</html>

@@ -8,7 +8,21 @@
  * damping, pointer-media joystick layout, safe-area padding, and styling for
  * the server-rendered audit fragment.
  */
-@import 'tailwindcss';
+@import 'tailwindcss' source(none);
+/* BUILD FIX (P0 toolchain): Tailwind v4 otherwise auto-scans the ENTIRE repo for class candidates.
+   Some non-source markup in the tree (docs/*.md + masters/*.xml carry astral-plane glyphs; legacy/
+   holds a binary .docx) makes the plugin's candidate parser compute an out-of-range code point,
+   crashing `bun run build` at `app.css:0` ("Arguments contain a value that is out of range of code
+   points"). Fix: disable whole-repo auto-detection (`source(none)`) and explicitly scan ONLY the
+   class-bearing source — `src/`, the root HTML shells, and `lab/`. docs/, masters/, legacy/, native/
+   carry NO Tailwind classes (verified by grep), so nothing is dropped; this also makes the content
+   scan far faster. See Tailwind v4 "Detecting classes in source files" + THIRD-PARTY-NOTICES. */
+@source '../../src';
+@source '../../index.html';
+@source '../../docs.html';
+@source '../../specs.html';
+@source '../../bible.html';
+@source '../../lab';
 /* PERF/LOAD (v0.20.0): the @font-face declarations moved to src/styles/fonts.css, which index.html
    loads NON-render-blocking (media="print" → onload this.media='all'). Bun base64-inlines every
    CSS-referenced woff2 as a data: URI (~257KB / 210KB gzip of Latin-subset fonts); keeping them in
