@@ -39,7 +39,7 @@ Rewritten in place when the facts change (per the binding living-doc law in
 ### Latest local receipt (Windows, 2026-07-07, Bun 1.3.14)
 
 - `bun run verify:receipts` → **2,378 completed cases, zero failures** · **255 test files** · **2,866,612**
-  `expect()` calls · **92.02% line / 89.65% func** on this Windows checkout. The synced portable
+  `expect()` calls · **92.01% line / 89.65% func** on this Windows checkout. The synced portable
   canonical floor remains **2,360 tests · 84.64% line / 82.21% func** from `canonical-receipts.ts`.
   `CANONICAL_TEST_COUNT` is a documented **floor**; env-dependent totals may differ. Gate-enforced
   `verify:receipts` floors against the canonical ledger — regression beyond ±6 pp coverage fails CI.
@@ -346,7 +346,7 @@ verify:facts` = 0 drift / 80 surfaces, 0 git-conflict-markers tree-wide, 100% of
 | `src/ui/**`                                                                       | 20    | subsystems agent                                         | clean (3 cosmetic Low: DPR-on-monitor-move)                                                      |
 | `src/core,audio,server,memory,logging` + `main/types/docs-page` + `server.ts`     | ~14   | subsystems agent                                         | clean; security exceptionally hardened                                                           |
 | `src/styles/app.css`                                                              | 1     | front-end agent                                          | clean                                                                                            |
-| `tests/**`                                                                        | 255   | gate (2,360 pass) + tooling agent                        | healthy, 0 disabled, all assert                                                                  |
+| `tests/**`                                                                        | 255   | gate floor (2,360 tests) + tooling agent                 | healthy, 0 disabled, all assert                                                                  |
 | `scripts/**`                                                                      | 16    | scripts/tooling agents                                   | sound; **CI sync:check gap FIXED**, dead `.sync-receipts.cjs` removed                            |
 | `bench/**`                                                                        | 13    | tooling agent                                            | clean; aggregate now includes the P1 quantum-classical bench                                     |
 | `.github/workflows/*.yml` + issue/PR templates                                    | 8+    | CI agent                                                 | SHA-pinned, least-priv; `master`->`main` URLs FIXED; **gate now runs sync:check + verify:facts** |
@@ -456,8 +456,9 @@ FILE-MAP generator (`gen-filemap.ts`, filesystem `Glob('**/*.ts')` — `.ts` _mo
 TECH-SPEC §1 metrics table (`codebase-metrics.ts`, `git ls-files` tally that counts src **files**, so it
 adds `src/styles/app.css`: 200 `.ts` + 1 css = 201). Both are deterministic, regen-stable instruments of
 the same tree — the 1-file gap is exactly `app.css` (modules vs files). README's prose "~200 source
-modules" tracks the FILE-MAP module count. Do not hand-edit either generated value. (Like the `721`/`1436`
-`.esk` census-vs-harvest pair, two correct numbers measuring different things.)
+modules" tracks the FILE-MAP module count. Do not hand-edit either generated value. Likewise, keep the
+generated `.esk` harvest count anchored to `src/sim/generated-tsotchke-seeds.ts`; the current runtime
+harvest is **1,365** programs over **2,507** scanned files.
 
 **Verified-real but DEFERRED (recorded, not changed — owner call / by-design / risk):**
 

@@ -626,7 +626,7 @@
         <span class="badge">ui <b>HTMX + Tailwind</b></span>
         <span class="badge">entities <b>50k</b></span>
         <span class="badge">phyla <b>10</b></span>
-        <span class="badge">titans <b>10</b></span>
+        <span class="badge">titans <b>20</b></span>
         <span class="badge">algorithms <b>25</b></span>
         <span class="badge">songs <b>6</b></span>
         <span class="badge">license <b>Non-commercial research &amp; play</b></span>
@@ -680,7 +680,7 @@
 │   │   ├─ <span class="file">instanced-entities.ts</span> <span class="note">instanced PBR pools (per-instance color + emissive vec4)</span>
 │   │   ├─ <span class="file">shoggoths.ts</span>   <span class="note">drifting Lorenz-ish predators with tendrils</span>
 │   │   ├─ <span class="file">puppet-masters.ts</span> <span class="note">100 NPC intelligences (14 mobile) — 3 named heroes + WRAITH hands</span>
-│   │   ├─ <span class="file">titans.ts</span>      <span class="note">10 colossal economies waging an iterated prisoner's dilemma</span>
+│   │   ├─ <span class="file">titans.ts</span>      <span class="note">20 colossal economies waging an iterated prisoner's dilemma</span>
 │   │   ├─ <span class="file">weather.ts</span>     <span class="note">weather state machine (CLEAR..FOG..STORM..VOID..AURORA)</span>
 │   │   ├─ <span class="file">quantum.ts</span>     <span class="note">QuantumCloud — point cloud that implodes on register collapse</span>
 │   │   ├─ <span class="file">qcircuit.ts</span>    <span class="note">QuantumCircuitSystem — gate sequences, bands to the cloud</span>
@@ -1071,7 +1071,7 @@ erDiagram
               <td>TITAN</td>
               <td>name, energy, matter, entropy, strategy</td>
               <td>
-                harvests/conscripts N ENTITY (M:N); plays 9 other TITAN in the 45-pair dilemma
+                harvests/conscripts N ENTITY (M:N); plays 19 other TITAN in the 190-pair dilemma
                 (M:N); war strikes chronicled by AUDIT_EVENT
               </td>
             </tr>
@@ -1606,8 +1606,8 @@ sequenceDiagram
         <p class="muted" style="margin-top: 8px">
           Gate at time of writing: <b>2,360 tests / 0 fail</b> ·
           <b>84.64% line / 82.21% func</b> coverage · apex <code>think()</code> + Tsotchke biologics
-          Petri · <b>≈ 3.34 ms/beat</b> (full bench; 8.85 ms focused) · v0.21.7 @ current · all docs
-          + GH match.
+          Petri · <b>≈ 1.99 ms/beat</b> (full bench; ~9.77 ms staggered 5-mind batch) · v0.21.7 @
+          current · all docs + GH match.
         </p>
       </div>
       <div class="card">

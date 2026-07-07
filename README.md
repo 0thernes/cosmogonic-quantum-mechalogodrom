@@ -8,7 +8,7 @@
 [![License: Non-Commercial Research & Play](https://img.shields.io/badge/License-Non--Commercial%20Research%20%26%20Play-2ea043.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
-[![tests](https://img.shields.io/badge/tests-2360%20passing-brightgreen)](./tests)
+[![tests](https://img.shields.io/badge/tests-2360%20floor-brightgreen)](./tests)
 [![coverage](https://img.shields.io/badge/coverage-84.64%25%20line%20%C2%B7%2082.21%25%20func-success)](./docs/TECHNICAL-SPECIFICATION-2026-06-26.md)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION-2026-06-26.md)
 [![Tsotchke](https://img.shields.io/badge/Tsotchke-REAL__MIT__CORPUS-purple)](https://github.com/tsotchke)
@@ -39,7 +39,7 @@ Every magic number survived the port.
 
 - **GitHub Pages (DOCS / SPECS / BIBLE / LABS):** https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/ (index.html + docs.html + specs.html + bible.html + lab/index.html + lab/consciousness + lab/sentience ; built via scripts/build-pages.ts with ?v= cache-bust and subpath rewrite)
 - **Local dev server:** http://localhost:3000/ (bun dev; serves /docs → docs page, /spec → specs, /lab → lab; full interactive + /api/audit)
-- All MD links (./docs/...) resolve correctly in source, app, and Pages. No broken domains. Verified in build-pages.ts, server.ts, README, docs/\*.md.
+- Public docs/report targets are copied into the Pages artifact by `scripts/build-pages.ts`; source `./docs/...` links resolve locally and deploy as static `site/docs/...` files. No broken domains found in the current publication-surface pass.
 
 > — **New here? Read [THE BOOK](./docs/BOOK-2026-06-26.md)** — the master index over every doc, an
 > auto-generated [file map](./docs/FILE-MAP.md) of the source modules, and the build/run, data-flow,
@@ -527,7 +527,7 @@ Tsotchke integration rule: every non-fenced system that touches mind/evolution/l
 
 ## Tsotchke Wiring & Digital Biologics (current paradigm)
 
-Tsotchke (https://github.com/tsotchke + Tsotchke-Corporation) is the non-LLM substrate for sentience and consciousness — its scientific kernels are genuinely ported into `src/` and verified leaf-by-leaf with golden tests (not merely asserted), while the LLM/chain/API repos are deliberately fenced out of the deterministic sim.
+Tsotchke (https://github.com/tsotchke + Tsotchke-Corporation) is the non-LLM substrate for sentience and consciousness — its scientific kernels are genuinely ported into `src/` and verified leaf-by-leaf with golden tests (not merely asserted), while LLM/on-chain/proprietary repos are deliberately fenced out of the deterministic sim. `Quantum-RNG-API` is harvest/toolchain, not fenced.
 
 - Eshkol: reverse-mode AD as a primitive (real Wengert tape), a real stack **bytecode VM**, and the QRNG (real qubit-style entropy).
 - Moonlab (real SVD tensor-networks · Clifford stabilizer tableau · H₂ molecular VQE), QGT geometry (Fubini–Study/Berry), spin-glass/Hopfield, libirrep SO(3)/SU(2) (Racah Clebsch–Gordan + Wigner small-d), quantum-quake aliveness, ULG closure-table, tensorcore GEMM + softmax attention, a real CHSH Bell test (S → 2√2), and Izhikevich/predictive-coding/Schrödinger substrates — all genuinely ported. The **3** LLM/chain repos (gpt2-basic, llm-arbitrator, SolanaQuantumFlux) are **fenced**, not wired (per the non-LLM mandate); Quantum-RNG-API is a thin **wired** REST-style wrapper over the Eshkol QRNG core.

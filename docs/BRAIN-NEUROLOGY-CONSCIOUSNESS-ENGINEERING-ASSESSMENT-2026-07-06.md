@@ -49,9 +49,9 @@ Every value below is the SSOT figure from `scripts/canonical-receipts.ts` / `pac
 | -------------------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
 | **Version**                            | `0.21.7`                                                                                    | `package.json`                                          |
 | **Test floor (portable)**              | **2,360** pass / **0** fail                                                                 | `scripts/canonical-receipts.ts`                         |
-| **Latest local receipt (Windows)**     | 2,360 pass / 0 fail · **255** test files · **2,866,429** `expect()` calls                   | run 2026-07-06                                          |
+| **Latest local receipt (Windows)**     | 2,378 completed cases / 0 fail · **255** test files · **2,866,612** `expect()` calls        | run 2026-07-07                                          |
 | **Coverage floor — portable (Ubuntu)** | **84.64%** line / **82.21%** func                                                           | `scripts/canonical-receipts.ts` (gate floor, ±6 pp tol) |
-| **Coverage — local (Windows)**         | **92.02%** line / **89.65%** func                                                           | this checkout                                           |
+| **Coverage — local (Windows)**         | **92.01%** line / **89.65%** func                                                           | this checkout                                           |
 | **Faculties (public design)**          | **100** (~30 genuinely deep-wired into `SuperMind.think()`)                                 | `faculties-pantheon.ts` `FACULTY_COUNT`                 |
 | **Faculties (internal named layer)**   | **144** named entries (100 canonical + 44 brutal god-layer)                                 | `faculties-pantheon.ts` `FACULTY_NAMES.length`          |
 | **Archons**                            | **25** total = **5 apex** (full SuperMind + Body + Petri) + **20 light echoes** (Eshkol VM) | `godform.ts` `PANTHEON_SIZE`, `APEX_INDIVIDUATED`       |

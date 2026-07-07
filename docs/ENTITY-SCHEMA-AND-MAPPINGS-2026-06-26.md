@@ -94,7 +94,7 @@ erDiagram
 | `BEHAVIOR`             | `sim/behaviors.ts`                                 | behavior name (26)                      | 26                               |
 | `CONNECTOME` / `LINK`  | `sim/connectome.ts` + GPU buffers                  | link = (i, j) pair                      | links ≤ `maxLinks` (2,200…6,000) |
 | `GRAPH_MIND`/`TRIBE`   | `sim/graph-mind.ts` (graphology)                   | community index                         | tribes = Louvain count           |
-| `TITAN`                | `sim/titans.ts` + `math/games.ts`                  | titan id 0…9                            | 10                               |
+| `TITAN`                | `sim/titans.ts` + `math/games.ts`                  | titan id 0…19                           | 20                               |
 | `SHOGGOTH`             | `sim/shoggoths.ts`                                 | shoggoth id 0…99 (16 on mobile)         | 100                              |
 | `PUPPET_MASTER`        | `sim/puppet-masters.ts`                            | id 0…99 (3 named: AETHON/SELENE/KRONOS) | 100                              |
 | `QUANTUM_SUBSTRATE`    | `sim/quantum.ts`, `qcircuit.ts`, `math/quantum.ts` | register (n=5 → 32 amps)                | 1 cloud + 1 register + 1 circuit |
@@ -170,7 +170,7 @@ nonetheless, and the composition root (`world.ts`) is effectively its join
 engine. Diagrams below follow ERD (structure), ERM (relationship narrative),
 and ERP (process models).
 
-> **Scope (v0.21.7 TSOTCHKE + NHSI):** Per binding [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md): 8 deep apex + 2 world + 3 ported + 2 license-gated + 2 API + 3 fenced + meta. Full corpus enumerated; ~16 of 20 wired with real downstream effect. **100-faculty design (~30 deep-wired)**, **5 individuated apex + 20 light-echo Archons**, **25 ToM wired**, **10 emergence angles** (+5 god-scale events), **Butlin 8/14 met + 6/14 partial** (computational indicators, not sentience). Gate: 2,360 tests · 84.64% / 82.21%. Real MIT startup math. Not LLM. 0thernes NHSI.
+> **Scope (v0.21.7 TSOTCHKE + NHSI):** Per binding [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md): 20 corpus projects / 22 registry entries = 9 deep, 7 wired, 2 harvest, 3 fenced, 1 meta; honest non-meta scientific wired fraction `18/21 = 0.857`. Full corpus enumerated by explicit depth class, not blanket full-depth wiring. **100-faculty design (~30 deep-wired)**, **5 individuated apex + 20 light-echo Archons**, **25 ToM wired**, **10 emergence angles** (+5 god-scale events), **Butlin 8/14 met + 6/14 partial** (computational indicators, not sentience). Gate: 2,360 tests · 84.64% / 82.21%. Not LLM. 0thernes NHSI.
 
 #
 
