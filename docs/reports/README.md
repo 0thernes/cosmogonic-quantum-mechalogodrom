@@ -6,7 +6,7 @@ Technical reports and audits for Cosmogonic Quantum Mechalogodrom. Dated filenam
 **historical worldline snapshots** when present — they preserve evidence from their authoring pass.
 **Current** gate receipts: [VERIFICATION-ANALYTICAL-DATA.md](../VERIFICATION-ANALYTICAL-DATA.md) §1 ·
 `scripts/canonical-receipts.ts` (v0.21.8 · **2,360-test floor** · **84.64 % / 82.21 %** coverage).
-Latest Windows-local receipt observed by the current audit: **2,378 completed cases, zero failures, 2,867,096
+Latest Windows-local receipt observed by the current audit: **2,380 completed cases, zero failures, 2,867,137
 expect() calls**.
 
 ## Reports
@@ -18,6 +18,8 @@ expect() calls**.
   — active file-trust ledger for stale claims, omitted handles, and public-page gaps.
 - [CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.html](../CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.html)
   — condensed browser companion for the current master; not a full Markdown mirror.
+- [CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.html](../CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.html)
+  — browser companion for the current file-trust ledger; Markdown preserved verbatim.
 - [2026-07-01-25-POINT-SCRUTINY-SCORECARD.md](./2026-07-01-25-POINT-SCRUTINY-SCORECARD.md) — 25-point
   adversarial scrutiny (overall 8.3/10). Chart:
   [assets/scrutiny-25-scorecard.svg](./assets/scrutiny-25-scorecard.svg).

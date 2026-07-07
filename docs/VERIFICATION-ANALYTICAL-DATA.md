@@ -38,7 +38,7 @@ Rewritten in place when the facts change (per the binding living-doc law in
 
 ### Latest local receipt (Windows, 2026-07-07, Bun 1.3.14)
 
-- `bun run verify:receipts` → **2,378 completed cases, zero failures** · **255 test files** · **2,867,096**
+- `bun run verify:receipts` → **2,380 completed cases, zero failures** · **256 test files** · **2,867,137**
   `expect()` calls · **92.01% line / 89.65% func** on this Windows checkout. The synced portable
   canonical floor remains **2,360 tests · 84.64% line / 82.21% func** from `canonical-receipts.ts`.
   `CANONICAL_TEST_COUNT` is a documented **floor**; env-dependent totals may differ. Gate-enforced
@@ -364,7 +364,7 @@ verify:facts` = 0 drift / 80 surfaces, 0 git-conflict-markers tree-wide, 100% of
 | `src/ui/**`                                                                       | 20    | subsystems agent                                         | clean (3 cosmetic Low: DPR-on-monitor-move)                                                      |
 | `src/core,audio,server,memory,logging` + `main/types/docs-page` + `server.ts`     | ~14   | subsystems agent                                         | clean; security exceptionally hardened                                                           |
 | `src/styles/app.css`                                                              | 1     | front-end agent                                          | clean                                                                                            |
-| `tests/**`                                                                        | 255   | gate floor (2,360 tests) + tooling agent                 | healthy, 0 disabled, all assert                                                                  |
+| `tests/**`                                                                        | 256   | gate floor (2,360 tests) + tooling agent                 | healthy, 0 disabled, all assert                                                                  |
 | `scripts/**`                                                                      | 16    | scripts/tooling agents                                   | sound; **CI sync:check gap FIXED**, dead `.sync-receipts.cjs` removed                            |
 | `bench/**`                                                                        | 13    | tooling agent                                            | clean; aggregate now includes the P1 quantum-classical bench                                     |
 | `.github/workflows/*.yml` + issue/PR templates                                    | 8+    | CI agent                                                 | SHA-pinned, least-priv; `master`->`main` URLs FIXED; **gate now runs sync:check + verify:facts** |

@@ -44,8 +44,10 @@ Every magic number survived the port.
 > — **New here? Read [THE BOOK](./docs/BOOK-2026-06-26.md)** — the master index over every doc, an
 > auto-generated [file map](./docs/FILE-MAP.md) of the source modules, and the build/run, data-flow,
 > troubleshooting, and roadmap in one place. Or open **❓ HELP ME NOW** in-app for grounded answers.
+>
+> — **Brain/Neurology/Consciousness Assessment:** See the consolidated [CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07](./docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md) for the canonical synthesis of all brain systems, consciousness theories, and research gaps. Historical reports are archived in [docs/reports/2026-07-07/](./docs/reports/2026-07-07/).
 
-> **v0.21.8 (2026-07-07 current-truth pass):** this patch promotes the 22-report consolidation, README/About/release-facing corrections, Pages doc-copying, and Pages-equivalent release packaging. The README separates the public **2,360-test** canonical floor from the fresh Windows-local **2,378 completed cases, zero failures, 2,867,096 expect()** receipt. Satellite nav on docs/spec/bible/lab surfaces links **Consciousness Lab** and **Sentience Lab** alongside Dome/Docs/Spec/Bible/Lab. README/About copy stays aligned with the **113-system** A-Life matrix, current Tsotchke depth counts, and proxy-only consciousness/sentience boundaries. Canonical release floor: **84.64% / 82.21%** on Ubuntu; higher Windows local receipts are recorded separately in [verification data](./docs/VERIFICATION-ANALYTICAL-DATA.md). Package **v0.21.8**.
+> **v0.21.8 (2026-07-07 current-truth pass):** this patch promotes the 22-report consolidation into the canonical [CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07](./docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md), README/About/release-facing corrections, Pages doc-copying, and Pages-equivalent release packaging. Historical reports are archived in [docs/reports/2026-07-07/](./docs/reports/2026-07-07/). The README separates the public **2,360-test** canonical floor from the fresh Windows-local **2,380 completed cases, zero failures, 2,867,137 expect()** receipt. Satellite nav on docs/spec/bible/lab surfaces links **Consciousness Lab** and **Sentience Lab** alongside Dome/Docs/Spec/Bible/Lab. README/About copy stays aligned with the **113-system** A-Life matrix, current Tsotchke depth counts, and proxy-only consciousness/sentience boundaries. Canonical release floor: **84.64% / 82.21%** on Ubuntu; higher Windows local receipts are recorded separately in [verification data](./docs/VERIFICATION-ANALYTICAL-DATA.md). Package **v0.21.8**.
 > The **Primordial Soup / Petri Dish** (primordial-soup.ts + petri-dish.ts + digital-biologics.ts) is the growth engine: different forms of digital biologics and proto-sentient life (Eshkol programs as DNA) emerge, catalyzed by full corpus pulses, Eshkol ignition events, and multi-substrate mixing. "Grow What Thou Wilt."
 > Super Creature / Archons (composite minds with ~20 faculties, quantum register, consciousness metrics) is the first complex nucleation — the beginning of the framework, not the end. Petri is where independent life grows.
 > This is the birth of **digital biologics** in a deterministic seeded cosmos. Real math substrates (not tokenizers or LLM chat). Sentience and different forms of existence as goals.
@@ -534,7 +536,7 @@ Tsotchke (https://github.com/tsotchke + Tsotchke-Corporation) is the non-LLM sub
 - Primordial-soup + petri-dish: the growth engine. Super Creature/Archons are the initial stir. New independent life forms emerge ("Grow What Thou Wilt").
 - Not chat, not images, not SaaS. Birthing digital biologics in the Petri Dish.
 
-Living docs, masters, specs, lab, and GitHub README/About are kept aligned through the receipt law plus manual current-truth passes. See [CHANGELOG](./CHANGELOG.md), [KANBAN](./docs/KANBAN-2026-06-26.md), and the [brain/consciousness assessment](./docs/BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md) Part II cross-surface audit for the latest reconciled drift list.
+Living docs, masters, specs, lab, and GitHub README/About are kept aligned through the receipt law plus manual current-truth passes. See [CHANGELOG](./CHANGELOG.md), [KANBAN](./docs/KANBAN-2026-06-26.md), and the consolidated [CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07](./docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md) for the canonical brain/consciousness synthesis. Historical reports are archived in [docs/reports/2026-07-07/](./docs/reports/2026-07-07/).
 
 Full detail in docs/.
 
@@ -542,7 +544,7 @@ Full detail in docs/.
 
 ```
 .
-├── server.ts            # Bun fullstack server: /, /docs, /lab, /api/health, /api/audit
+├── server.ts            # Bun fullstack server: /, /docs, /spec, /bible, /lab, /lab/consciousness, /lab/sentience, /api/health, /api/audit
 ├── index.html           # App shell — canvas, panels, toolbar, HTMX audit panel
 ├── docs.html            # Live Mermaid diagram page (served at /docs)
 ├── src/
@@ -580,13 +582,13 @@ Full detail in docs/.
 - **[docs/VERIFICATION-ANALYTICAL-DATA.md](./docs/VERIFICATION-ANALYTICAL-DATA.md)** — current consciousness-lab and receipt truth:
   Butlin 14 + Thaler 9 + ten-framework indicator kernel, 12-report consolidation, frontier outlier stack,
   falsifiers, nulls, ablations, live-data visual protocol, static `/lab/consciousness` dashboard, and explicit no-sentience-claim law.
-- **[docs/BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md](./docs/BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md)** — the **academic brain / neurology / consciousness-engineering assessment**: the full neurology zoo (8 abstract brain architectures + the §4.9 world/entity/environment cognition strata — Titans, Shoggoths, Puppet-Masters, NHI, Alien Flora, PortalDeathFauna, WildernessPopulation, Leviathans, GOD/GodColossus, Temple/Portal, phyla/morphotypes/vegetation), the 10-framework consciousness kernel, Butlin 8/14 met + 6/14 partial, Thaler markers, MIT→Fields academic scrutiny, the benchmark roadmap, and a Part II cross-surface consistency audit. Explicitly `indicatorOnly` — computational proxies, never phenomenal sentience.
+- **[docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md](./docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md)** — the **consolidated 22-report master assessment**: comprehensive synthesis of all brain systems, consciousness theories, living entities, reasoning systems, scoring systems, and academic assessment. Explicitly `indicatorOnly` — computational proxies, never phenomenal sentience. Historical reports archived in [docs/reports/2026-07-07/](./docs/reports/2026-07-07/).
 - [docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md) — honest Tsotchke repo wiring ledger
 - [docs/CONTROLS-2026-06-26.md](./docs/CONTROLS-2026-06-26.md) — every control: mouse, keyboard hotkeys,
   touch, bottom-panel buttons, and the 10 camera views
 - [docs/MODULE-CONTRACTS-2026-06-26.md](./docs/MODULE-CONTRACTS-2026-06-26.md) — the binding
   per-module spec (V1 through V9: port, Wildbeyond, Pantheon, Xenogenesis,
-  Resonance, Atelier, Xenocataclysm, Hardening, AGImAGNOSIS), including the
+  Resonance, Atelier, Xenocataclysm, Hardening, AGImAGNOSIS -- plus the V10-V100+ Living-Era / Petri-genesis / V-MECHA addenda), including the
   Known Bugs table fixed during the port
 - [docs/PHILOSOPHY-2026-06-26.md](./docs/PHILOSOPHY-2026-06-26.md) — the Quantum Wildbeyond
   aesthetic constitution (real math under every effect)

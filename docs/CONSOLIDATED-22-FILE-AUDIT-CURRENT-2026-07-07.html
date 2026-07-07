@@ -1,3 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Consolidated 22-File Audit - 2026-07-07</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #101214;
+        --panel: #181b20;
+        --text: #eef2f5;
+        --muted: #aab5bf;
+        --line: #343b44;
+        --accent: #7dd3fc;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font:
+          15px/1.55 system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          sans-serif;
+      }
+      main {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 32px 20px 64px;
+      }
+      header {
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 18px;
+        margin-bottom: 24px;
+      }
+      h1 {
+        margin: 0 0 10px;
+        font-size: clamp(2rem, 5vw, 4rem);
+        line-height: 1.1;
+        letter-spacing: 0;
+      }
+      .lede {
+        color: var(--muted);
+        max-width: 76ch;
+      }
+      a {
+        color: var(--accent);
+      }
+      pre {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 22px;
+        font:
+          13px/1.5 ui-monospace,
+          SFMono-Regular,
+          Consolas,
+          'Liberation Mono',
+          monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Consolidated 22-File Audit</h1>
+        <p class="lede">
+          Browser companion for the current 22-file trust ledger. Markdown is preserved verbatim so
+          tables, file names, and audit language stay byte-faithful.
+        </p>
+        <p><a href="./CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md">Open Markdown source</a></p>
+      </header>
+      <pre>
 # Consolidated 22-File Audit - Current Truth Pass
 
 Generated: 2026-07-07  
@@ -75,7 +155,7 @@ earlier timeout caveat for receipt wording.
 | 1   | `FILE-AUDIT-16-FILES-2026-07-07.md`                                              | Tier E        | Historical audit only                        | Scope is 16 files, not 22; superseded.                                          |
 | 2   | `MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.html`                            | Tier C        | Browser companion to audit draft             | Needs validation against current receipt and static render checks.              |
 | 3   | `MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.md`                              | Tier C        | Mine for methodology, controls, claim linter | Strong but not the final current master.                                        |
-| 4   | `SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.html`                 | Tier E        | Do not promote                               | Malformed HTML near `<h4>Build Paths:</h3>`; overclaim-prone.                   |
+| 4   | `SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.html`                 | Tier E        | Do not promote                               | Malformed HTML near `&lt;h4&gt;Build Paths:&lt;/h3&gt;`; overclaim-prone.                   |
 | 5   | `SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.md`                   | Tier E        | Archive rhetoric/draft                       | Stale scale counts and overclaim language.                                      |
 | 6   | `VERIFICATION-ANALYTICAL-DATA.md`                                                | Tier A        | Keep as evidence base                        | Current pass now separates 2,360 floor from 2,380 latest receipt.               |
 | 7   | `MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md` | Tier C+       | Mine heavily for named-system ledger         | Valuable coverage, but still needs sober falsifiability framing.                |
@@ -141,22 +221,22 @@ analysis evolved.
 
 ## Staleness and Defect Ledger
 
-| Defect                               | Severity | Where it appears                                                      | Current correction                                                                                                                                |
-| ------------------------------------ | -------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 16-file scope after scope grew to 22 | High     | `FILE-AUDIT-16`, `CONSOLIDATED-16-*`                                  | Rename/update to 22-file scope.                                                                                                                   |
-| 2,360 called latest                  | High     | `VERIFICATION`, `MASTER-ASSESSMENT` family                            | `2,360` is floor; latest observed is `2,380`.                                                                                                     |
-| 2,373 / 2,376 called latest          | Medium   | `CONSOLIDATED-16-*`, earlier 22-file draft                            | Superseded by `2,380`.                                                                                                                            |
-| Malformed HTML                       | High     | `SUPER-REPORT-OMNISCIENT...html`                                      | Fix mismatched heading tag near `<h4>Build Paths:</h3>` before browser use; its TOC anchors also need verification.                               |
-| Format red                           | Medium   | Several super/master docs                                             | Prettier these files or archive them as unformatted drafts.                                                                                       |
-| Build status contradiction           | High     | `BRAIN...ASSESSMENT`, consolidated drafts                             | Treat build-green and build-red claims as time-boxed unless rerun.                                                                                |
-| Public discoverability gap           | High     | `index.html`, `docs.html`, `specs.html` according to critic lanes     | Public pages must link and publish the new `CONSOLIDATED-22-*` artifacts; current pass adds links plus Pages doc-copying.                         |
-| Pages Bible link gap                 | High     | `bible.html`, `scripts/gen-bible-corpus.ts`, `scripts/build-pages.ts` | Fixed in second audit: root docs are copied to Pages; source/script references go to GitHub blob URLs; new `bible-public-links` test guards this. |
-| Stale scale counts                   | Medium   | `SUPER-REPORT-ULTIMATE`, `OMNISCIENT`, `MASTER` family                | Current tracked scale: 585 TS files, 135,898 TS lines, 8 C/C++ files, 735 tracked files.                                                          |
-| Bad source path                      | Medium   | `SUPER-REPORT-2ND`                                                    | Replace `super-mith.ts` with `super-mind.ts`.                                                                                                     |
-| Overclaim language                   | High     | `ULTIMATE`, `OMNISCIENT`, `MASTER`                                    | Use proxy-consciousness and falsifiable benchmark language.                                                                                       |
-| Controls ambiguity                   | Medium   | Cross-report                                                          | `CONTROLS` is UI controls; scientific controls are ablations/nulls/seed sweeps/lab JSON/fact audits.                                              |
-| Archive index mismatch               | Medium   | `docs/reports/2026-07-07/INDEX.md`                                    | Directory currently contains only `INDEX.md`; archive claims need verification.                                                                   |
-| Markdown/HTML parity gap             | Medium   | New consolidated HTML                                                 | Browser HTML is a condensed companion view, not a complete mirror of the Markdown master; label it that way or expand it.                         |
+| Defect                               | Severity | Where it appears                                                  | Current correction                                                                                                        |
+| ------------------------------------ | -------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| 16-file scope after scope grew to 22 | High     | `FILE-AUDIT-16`, `CONSOLIDATED-16-*`                              | Rename/update to 22-file scope.                                                                                           |
+| 2,360 called latest                  | High     | `VERIFICATION`, `MASTER-ASSESSMENT` family                        | `2,360` is floor; latest observed is `2,380`.                                                                             |
+| 2,373 / 2,376 called latest          | Medium   | `CONSOLIDATED-16-*`, earlier 22-file draft                        | Superseded by `2,380`.                                                                                                    |
+| Malformed HTML                       | High     | `SUPER-REPORT-OMNISCIENT...html`                                  | Fix mismatched heading tag near `&lt;h4&gt;Build Paths:&lt;/h3&gt;` before browser use; its TOC anchors also need verification.       |
+| Format red                           | Medium   | Several super/master docs                                         | Prettier these files or archive them as unformatted drafts.                                                               |
+| Build status contradiction           | High     | `BRAIN...ASSESSMENT`, consolidated drafts                         | Treat build-green and build-red claims as time-boxed unless rerun.                                                        |
+| Public discoverability gap           | High     | `index.html`, `docs.html`, `specs.html` according to critic lanes | Public pages must link and publish the new `CONSOLIDATED-22-*` artifacts; current pass adds links plus Pages doc-copying. |
+| Pages Bible link gap                  | High     | `bible.html`, `scripts/gen-bible-corpus.ts`, `scripts/build-pages.ts` | Fixed in second audit: root docs are copied to Pages; source/script references go to GitHub blob URLs; new `bible-public-links` test guards this. |
+| Stale scale counts                   | Medium   | `SUPER-REPORT-ULTIMATE`, `OMNISCIENT`, `MASTER` family            | Current tracked scale: 585 TS files, 135,898 TS lines, 8 C/C++ files, 735 tracked files.                                  |
+| Bad source path                      | Medium   | `SUPER-REPORT-2ND`                                                | Replace `super-mith.ts` with `super-mind.ts`.                                                                             |
+| Overclaim language                   | High     | `ULTIMATE`, `OMNISCIENT`, `MASTER`                                | Use proxy-consciousness and falsifiable benchmark language.                                                               |
+| Controls ambiguity                   | Medium   | Cross-report                                                      | `CONTROLS` is UI controls; scientific controls are ablations/nulls/seed sweeps/lab JSON/fact audits.                      |
+| Archive index mismatch               | Medium   | `docs/reports/2026-07-07/INDEX.md`                                | Directory currently contains only `INDEX.md`; archive claims need verification.                                           |
+| Markdown/HTML parity gap             | Medium   | New consolidated HTML                                             | Browser HTML is a condensed companion view, not a complete mirror of the Markdown master; label it that way or expand it. |
 
 ## Second-Pass Miss Check Addendum
 
@@ -180,7 +260,7 @@ the audit.
 | A-Life comparative matrix           | `NHSI`, `BRAIN`                             | Include breadth `4.44`, population `z=+4.02`, code-grounded `z=+2.83`, and 113-system comparison as a measured comparative claim requiring citation.                                                                                                                                                                                                                                                                                                                                   |
 | Internal scale details              | `BRAIN`, `NHSI`                             | Include 5 apex + 20 light Archons, 100 GlyphBrains, 50k EntityBrains, ~53.7k-live STDP Mechalogodrom, and 144 faculties with about 30 wired as denominator-specific numbers.                                                                                                                                                                                                                                                                                                           |
 | Benchmark-card doctrine             | `PASS2`, `BRAIN`                            | Preserve the nine-card doctrine: claim, conditions, seeds, metrics, acceptance, falsifier; publish raw lift, normalized lift, ablation loss, null gap, cost ratio, stability, and contradiction flag.                                                                                                                                                                                                                                                                                  |
-| Real-connectome ladder              | `BRAIN`, `FINAL-HURRAH`                     | Keep the staged path: C. elegans/OpenWorm -> FlyWire adult fly -> MICrONS mouse visual cortex, with checksum/license/citation and controls.                                                                                                                                                                                                                                                                                                                                            |
+| Real-connectome ladder              | `BRAIN`, `FINAL-HURRAH`                     | Keep the staged path: C. elegans/OpenWorm -&gt; FlyWire adult fly -&gt; MICrONS mouse visual cortex, with checksum/license/citation and controls.                                                                                                                                                                                                                                                                                                                                            |
 | Real-connectome controls            | `BRAIN`                                     | Include degree-matched random graphs, shuffled signs, and lesion-hub controls.                                                                                                                                                                                                                                                                                                                                                                                                         |
 | Dead-code and thin-test gaps        | `BRAIN`                                     | Carry forward StrangeAttractor, TemporalCrystal, and the 26-form Biologic as wire-or-retire targets. Earlier reports saying `unification.ts` has 0 dedicated tests are now stale because `tests/unification.test.ts` exists; remaining reasoning gaps are ToT/predictor/level-k thinness, while belief propagation and causal graph are comparatively strong.                                                                                                                          |
 | Ecology subclasses                  | `PASS3`                                     | Include PortalDeathFauna, WildernessPopulation, Phyla, Morphotypes, AlienFlora, and Vegetation, not only broad flora/fauna labels.                                                                                                                                                                                                                                                                                                                                                     |
@@ -225,8 +305,8 @@ reports remain audit-grade rather than merely thematic.
 | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Exact policy handle                               | Preserve `indicatorOnly` as a literal policy handle, not only as prose like "indicator-only." It is the repo's boundary between computational indicators and phenomenal/sentience claims.                                                                                                                                                                                                                 |
 | Consciousness Lab falsifier metrics               | Carry exact falsifier handles and current lab values: `runs=32`, `singularityRate=1`, `emergenceRate=1`, `ablationRate=0.40625`, `meanStructuredIndex=0.569244`, `meanNullIndex=0.571825`, `meanNullGap=0`, `meanConvergenceGap=0.062741`, `meanRewardGap=0.111229`, `eventTotal=90`, `singularityProven`, `meanIndex`, `peakIndex`, `ablationProven`, `setQuantumAblated`, and the `detect()` surrogate. |
-| Tsotchke ablation method                          | Preserve `corpusBrainAblation(seed, frame)` alongside `corpusBrainScalar`; acceptance is per-repo L1 distance `> 1e-9`, with all 18 wired scientific repos load-bearing in the cited run.                                                                                                                                                                                                                 |
-| Tsotchke legal and license boundary               | Keep hard-stop details: `quantum-quake` / `qge/` is GPL-2.0 through QuakeSpasm / id Software lineage and is telemetry/quarantine only; no-license unblock order is `ULG -> logo-lab -> PINN -> PIMC`.                                                                                                                                                                                                     |
+| Tsotchke ablation method                          | Preserve `corpusBrainAblation(seed, frame)` alongside `corpusBrainScalar`; acceptance is per-repo L1 distance `&gt; 1e-9`, with all 18 wired scientific repos load-bearing in the cited run.                                                                                                                                                                                                                 |
+| Tsotchke legal and license boundary               | Keep hard-stop details: `quantum-quake` / `qge/` is GPL-2.0 through QuakeSpasm / id Software lineage and is telemetry/quarantine only; no-license unblock order is `ULG -&gt; logo-lab -&gt; PINN -&gt; PIMC`.                                                                                                                                                                                                     |
 | Tsotchke pipeline handles                         | Preserve `fullTsotchkeBiologicsCatalysis`, `corpusBeat`, `harvest-tsotchke-corpus.ts`, `generated-tsotchke-seeds.ts`, `primordial-soup.ts`, and `digital-biologics.ts`.                                                                                                                                                                                                                                   |
 | Brutal release event handles                      | Preserve `VOID_KING`, `VOID_KING_AWAKENS`, `SPIRAL_WILL`, `BINARY_IGNITION`, `PHOENIX_FEAST`, and `PHOENIX_FEAST_REBIRTH` as event handles, not extra consciousness evidence.                                                                                                                                                                                                                             |
 | Archon roster exactness                           | The 25-Archon layer should retain exact source handles `ORACLE-Σ`, `STARKILLER-Ω`, `MANHATTAN-Φ`, `BROLY-Ψ`, `VOID-Λ`, plus the 20 ALPHA names when a full appendix is built. ASCII aliases such as `ORACLE-Sigma` are publishing fallbacks only.                                                                                                                                                         |
@@ -384,3 +464,8 @@ The new canonical path should be:
 3. Use the matching HTML as the browser-facing view.
 4. Treat all earlier "ultimate", "omniscient", and "master" drafts as archived
    strata unless they are refreshed against the latest receipt and claim linter.
+</pre
+      >
+    </main>
+  </body>
+</html>

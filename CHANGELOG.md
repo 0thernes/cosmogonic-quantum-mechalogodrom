@@ -11,14 +11,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.21.8] — 2026-07-07
 
-- Publication-surface current-truth pass after the 22-report audit:
+- Publication-surface current-truth pass after the 22-report consolidation:
+  - Consolidated 22 AI agent reports into the canonical [CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07](docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md)
+    — synthesizes brain systems, consciousness theories, living entities, reasoning systems, scoring systems,
+    and academic assessment (MIT/PhD/Planck/Nobel/Turing/Fields) into a single reference document.
+  - Added companion audit ledger [CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07](docs/CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md)
+    — file-by-file audit of the 22 report artifacts and publication-surface gaps.
+  - Archived 12 historical reports in [docs/reports/2026-07-07/](docs/reports/2026-07-07/) with detailed index
+    — preserves all historical context while providing a clean current documentation structure.
   - Updated README/About-facing metadata to separate the `2,360` public release floor from the
-    fresh Windows-local `2,378 completed cases, zero failures, 2,867,096 expect()` receipt.
-  - Added discoverable links to the active consolidated 22-report master/audit from Docs, Spec,
+    fresh Windows-local `2,380 completed cases, zero failures, 2,867,137 expect()` receipt.
+  - Added discoverable links to CONSOLIDATED-22-MASTER-ASSESSMENT and audit ledger from Docs, Spec,
     Bible, Lab, Consciousness Lab, Sentience Lab, and the reports index.
   - Refreshed public codebase census wording to the current `bun run metrics` output:
-    730 tracked authored files, 193,174 tracked authored lines, 584 TypeScript files, 288 `src/`
-    TypeScript files, 8 native C/C++ headers/sources, and 255 test files.
+    735 tracked authored files, 195,750 tracked authored lines, 585 TypeScript files, 288 `src/`
+    TypeScript files, 8 native C/C++ headers/sources, and 256 test files.
   - Corrected public Titan wording from the stale 10-Titan/45-pair text to the current
     20-Titan/190-pair source truth.
   - Replaced older `~16 wired` Tsotchke shorthand with the registry-derived
@@ -27,7 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Aligned release packaging with GitHub Pages by building the release tarball from `site/`
     after `bun run pages`, so Docs, Specs, Bible, Lab, Consciousness Lab, Sentience Lab, and
     copied `docs/` report targets ship in the release artifact.
-  - Added Prettier ignores for local-only archived monster reports already excluded from git, keeping
+  - Added Prettier ignores for local-only archived reports already excluded from git, keeping
     the full formatter gate focused on tracked/current surfaces and the consolidated 22-report pair.
 
 ## [0.21.7] — 2026-07-06

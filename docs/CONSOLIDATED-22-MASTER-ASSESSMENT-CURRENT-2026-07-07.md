@@ -4,6 +4,7 @@ Current pass: 2026-07-07
 Workspace: `Z:\[Vibe Coded (AI)]\CLAUDECODE\Cosmogonic Quantum Mechalogodrom`  
 Companion audit: `docs/CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md`  
 Companion HTML: `docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.html`
+Audit HTML: `docs/CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.html`
 
 ## Current Truth Banner
 
@@ -16,48 +17,56 @@ strong local verification receipts and rich named-system coverage. It does not
 yet have scientific proof of consciousness, browser-public parity, or a fully
 clean publication package.
 
-The fresh fifth-pass verification receipt available to this audit set is:
+The fresh verification receipt available to this audit set is:
 
-| Gate               | Current observed result                                                                              |
-| ------------------ | ---------------------------------------------------------------------------------------------------- |
-| `verify:receipts`  | 2,378 pass / 0 fail, fresh fifth-pass verified receipt                                               |
-| Expect calls       | 2,867,096, fresh fifth-pass verified receipt                                                         |
-| Test files         | 255                                                                                                  |
-| Coverage           | 92.01% line / 89.65% function                                                                        |
-| `typecheck`        | Passed                                                                                               |
-| `lint`             | Passed                                                                                               |
-| `sync:check`       | Passed at canonical floor wording                                                                    |
-| `verify:facts`     | Exit 0, with 9 potential drifts in `BRAIN...ASSESSMENT`                                              |
-| 22-file formatting | Failed                                                                                               |
-| Browser smoke      | Not performed; Chrome/Edge exist by explicit path, but not as a one-command PATH/Playwright workflow |
-| Build status       | Not freshly rerun by critic because build writes artifacts                                           |
+| Gate               | Current observed result                                                                         |
+| ------------------ | ----------------------------------------------------------------------------------------------- |
+| `bun run check`    | Passed locally on 2026-07-07 after the public-link/dashboard repair                             |
+| `bun run pages`    | Passed locally; Pages assembly now copies root public docs and prunes local-only archive drafts |
+| `verify:receipts`  | 2,380 pass / 0 fail, fresh local verified receipt                                               |
+| Expect calls       | 2,867,137, fresh local verified receipt                                                         |
+| Test files         | 256                                                                                             |
+| Coverage           | 92.01% line / 89.65% function                                                                   |
+| `typecheck`        | Passed                                                                                          |
+| `lint`             | Passed                                                                                          |
+| `sync:check`       | Passed at canonical floor wording                                                               |
+| `verify:facts`     | Exit 0, with known fuzzy denominator review warnings                                            |
+| 22-file formatting | Public tracked pair formatted; ignored local archive drafts are not release targets             |
+| Browser smoke      | Static Pages assembly checked; interactive browser/visual smoke still pending                   |
+| Remote release     | `v0.21.8` GitHub Release still pending until post-patch CI/tag repair completes                 |
 
 Important: `2,360` is the portable canonical floor. `2,373` and `2,376` were
-previous observed latest receipts. `2,378` is the fresh fifth-pass verified
+previous observed latest receipts. `2,380` is the fresh fifth-pass verified
 latest available to this audit set. Any document that calls `2,360`, `2,373`,
 or `2,376` the current latest is stale.
 
-Post-write note: a final local `bun run verify:receipts` attempt after creating
-this consolidated set timed out after 120 seconds and left no live `bun.exe`
-process. A later fifth-pass currentness lane completed the run and verified
-`2,378 pass / 0 fail / 2,867,096 expect() calls`; that supersedes the earlier
-timeout caveat for receipt wording.
+Post-subagent note: a second audit found that one dashboard linked to ignored
+local archive drafts, which existed locally but not in a clean GitHub checkout.
+That link gap is fixed by making those drafts explicit local archives and by
+promoting the tracked 22-report master/audit pair as the publication target.
+`bible.html`/Pages link generation is also hardened so public pages no longer
+point at `/docs/../src` or `/docs/../scripts` paths.
 
 ## External Science Refresh
 
 The science frame was refreshed against current literature rather than relying
 only on local report wording.
 
-| Source                                                                   | Why it matters here                                                                                                                                                                               |
-| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Nature 2025 adversarial test of GNWT vs IIT                              | Directly compared Global Neuronal Workspace Theory and Integrated Information Theory; results challenged important predictions of both and emphasized quantitative, preregistered theory testing. |
-| Trends in Cognitive Sciences 2025 AI-consciousness indicators            | Argues for theory-derived indicators and warns against both over-attribution and under-attribution of consciousness in AI systems.                                                                |
-| Neuroscience and Biobehavioral Reviews 2025 active inference loop theory | Presents active inference/predictive processing as a computational consciousness theory with world models, inferential competition, and recurrent epistemic depth.                                |
-| Butlin et al. 2023 AI consciousness report                               | Offers a rigorous indicator-property method and surveys recurrent processing, global workspace, higher-order, predictive processing, and attention schema theories.                               |
+| Source                                                                                                                                                                                 | Why it matters here                                                                                                                                                                               |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Nature 2025 adversarial test of GNWT vs IIT, DOI `10.1038/s41586-025-08888-1`, <https://www.nature.com/articles/s41586-025-08888-1>                                                    | Directly compared Global Neuronal Workspace Theory and Integrated Information Theory; results challenged important predictions of both and emphasized quantitative, preregistered theory testing. |
+| Trends in Cognitive Sciences 2025 AI-consciousness indicators, DOI `10.1016/j.tics.2025.10.011`, <https://www.sciencedirect.com/science/article/pii/S1364661325002864>                 | Uses theory-derived indicators to inform credences about AI consciousness while warning against both over-attribution and under-attribution.                                                      |
+| Neuroscience and Biobehavioral Reviews 2025 active inference loop theory, DOI `10.1016/j.neubiorev.2025.106296`, <https://www.sciencedirect.com/science/article/pii/S0149763425002970> | Presents active inference/predictive processing as a proposed computational consciousness theory with world models, inferential competition, and recurrent epistemic depth.                       |
+| Butlin et al. 2023 AI consciousness report, DOI `10.48550/arXiv.2308.08708`, <https://arxiv.org/abs/2308.08708>                                                                        | Offers a rigorous indicator-property method and surveys recurrent processing, global workspace, higher-order, predictive processing, and attention schema theories.                               |
 
 Consequence for this repo: the right benchmark is not "does it sound alive?" The
 right benchmark is "which theory-derived indicators are implemented, measured,
 ablated, and falsified?"
+
+Hard boundary as of 2026-07-07: these sources support indicator-based
+assessment, not proof. GNWT/IIT remain unsettled after adversarial testing;
+active inference is a proposed theory rather than a consensus; and the Butlin
+indicator method can update credence, not certify phenomenal experience.
 
 ## What The 22 Files Are Really Saying
 
@@ -406,7 +415,7 @@ prematurely makes it weaker. Placing it correctly makes it improvable.
 ### Phase A - Truth Lock
 
 - Keep `VERIFICATION` distinguished between the 2,360 floor and the fresh
-  fifth-pass 2,378 latest receipt.
+  fifth-pass 2,380 latest receipt.
 - Keep `BRAIN` sealed after the current build/check and version-tail fixes.
 - Fix or archive malformed `OMNISCIENT` HTML.
 - Replace stale counts with current tracked counts.
