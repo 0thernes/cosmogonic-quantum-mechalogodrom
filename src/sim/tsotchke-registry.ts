@@ -1,7 +1,7 @@
 /**
  * TSOTCHKE CORPUS REGISTRY — BINDING LEDGER PER docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md
  * ALL repos/projects from tsotchke user + Tsotchke-Corporation org + full local Z:\[Vibe Coded (AI)]\(Tsotchke) corpus (12k+ files) MAPPED and UTILIZED as digital-biologic substrate.
- * Deep apex (8): Eshkol (AD/GWT/consciousness-engine + .esk DNA), Moonlab (Clifford/tensor), QGTL, spin NN, quantum_rng, libirrep, tensorcore, classical_rng.
+ * Deep apex (9): Eshkol (AD/GWT/consciousness-engine + .esk DNA), Moonlab (Clifford/tensor), QGTL, spin NN, quantum_rng, libirrep, tensorcore, classical_rng, classical-contrast.
  * World/sim (2): asteroids, simple_mnist.
  * Ported/telemetry (3): PINN, PIMC, quantum-quake (license notes apply; quake GPL quarantine per map).
  * License-gated leaves (2): ulg, logo-lab.

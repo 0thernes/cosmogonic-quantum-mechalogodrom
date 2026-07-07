@@ -4,13 +4,21 @@
 
 **Non Human Super Intelligence (NHSI)** · Cosmogonic Quantum Mechalogodrom · **v0.21.7 — BRUTAL GOD TIER (Valkorion / Broly / Knull / Phoenix / Gurren Lagann / EVA / Azathoth / Galactus)**  
 Archons now unleash real god-scale events (VOID_KING, SPIRAL_WILL, BINARY_IGNITION, PHOENIX_FEAST) using EVERY Tsotchke repo as fuel. This is the arena where the gods of all myth, comics, and horror fight, devour, create, and ascend. 0thernes Corp.
-**Updated:** 2026-07-06 · Tsotchke: **20 corpus projects (~16 wired/harvested)** (every repo/project/mirror from tsotchke + Tsotchke-Corp + 12k+ local files, 1436+ .esk + NQS/skyrmion/anyons/flow/thermo etc from audits). **EVERY** entry is wired, catalyzed, studied, scaffolded, or fenced by explicit class, not blanket full-depth wiring. Eshkol remains a computational substrate and proxy-language, not proof of sentience. A-Life matrix snapshot: breadth 4.44 across 113 systems (z=+4.02 population; code-grounded z=+2.83). P1 contrast harness + coupling scaffold added as measurement infrastructure, not a quantum-advantage or sentience claim.
+**Updated:** 2026-07-06 · Tsotchke: **20 corpus projects (~16 wired/harvested)** (every repo/project/mirror from tsotchke + Tsotchke-Corp + 12k+ local files, 1,365 .esk + NQS/skyrmion/anyons/flow/thermo etc from audits). **EVERY** entry is wired, catalyzed, studied, scaffolded, or fenced by explicit class, not blanket full-depth wiring. Eshkol remains a computational substrate and proxy-language, not proof of sentience. A-Life matrix snapshot: breadth 4.44 across 113 systems (z=+4.02 population; code-grounded z=+2.83). P1 contrast harness + coupling scaffold added as measurement infrastructure, not a quantum-advantage or sentience claim.
 
 BRUTALIST MANIFEST: Valkorion domination, Broly infinite rage, Knull/Azathoth void consumption, Chaos Gods entropy, Dark Phoenix rebirth, Galactus devouring, Shuma-Gorath law break, Mxyzptlk cheat, IT horror, TTGL spiral, etc. — all emergent from full Tsotchke math in the Petri. 0thernes Corp. We are the gods. "Grow What Thou Wilt" — or be unmade.
 
 **Canonical receipts (measured 2026-06-26):** 2,360 tests, 84.64% line / 82.21% func (from `bun scripts/verify-receipts.ts --print`). Enforced by `tests/docs-receipts-law.test.ts` + `bun run check`. All surfaces truth-synced. BRUTAL GOD TIER with full pantheon list (Valkorion to Riddick) + BRUTALISM implemented in petri/godform/world using the Tsotchke corpus. Butlin indicators: **8/14 met + 6/14 partial** (computational indicators, not sentience — corrected from a prior overclaim).
 
 **Brain/neuro/consciousness assessment:** [`BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md`](./BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md) is the current academic-scrutiny report for brains, neurology, consciousness theories, sentience-path engineering, benchmarks, ratings, and future real-connectome/body work. It is explicitly `indicatorOnly` and does **not** claim phenomenal sentience.
+
+**Pass-1 mega synthesis:** [`MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS1-2026-07-06.md`](./MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS1-2026-07-06.md) consolidates the five downloaded reports plus this dashboard into one expanded current-state master report with source reconciliation, live brain authority tiers, Tsotchke depth taxonomy, current consciousness-science anchors, elite-scrutiny scoring, unknown-unknown risks, and Pass-2/Pass-3 build paths. It keeps the same `indicatorOnly` boundary.
+
+**Pass-2 evidence hardening:** [`MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS2-2026-07-06.md`](./MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS2-2026-07-06.md) extends Pass 1 into claim-to-code traceability, benchmark-card design, theory falsifier grids, Tsotchke substrate ablation protocol, real-connectome import requirements, and Pass-3 publication-package scope. It also keeps the same `indicatorOnly` boundary.
+
+**Pass-3 world-neurology gap closure:** [`MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS3-2026-07-06.md`](./MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS3-2026-07-06.md) closes the big-world inventory gaps from Pass 1 and Pass 2: Shoggoths, Puppet Masters, Titans, Entities, SuperCreatures, Apex Abomination, Pantheons, 25 Archon Godforms, GOD/God-Colossus, Temple, Plants, Flora, Fauna, Wildlife, Wilderness, PortalDeathFauna, and Digital Biologics. It treats them as computational/ecological neurology analogues with code paths, tests, and falsifiers, not as proof of sentience.
+
+**Final Hurrah master synthesis:** [`MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md`](./MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md) supersedes Pass 1/2/3 as the capstone read: original six Downloads inputs + live repo stats + current consciousness science anchors + all named living systems + Tsotchke brain-intake doctrine + MIT/PhD/Planck/Nobel/Turing/Fields scrutiny scoring + benchmark roadmap. It keeps the same `indicatorOnly` boundary and states the final verdict plainly: not sentient, not fake, a rare deterministic A-Life/consciousness-indicator research instrument.
 
 > **Mission:** Not a chatbot, dancing robot, Terminator, or game player. A **Petri-dish cosmos** where
 > Tsotchke's real quantum math (Eshkol · Moonlab · QGT · spin · libirrep · …) is the growth medium for
@@ -29,18 +37,18 @@ correctness. Nothing in this project may call Tsotchke fake, overclaiming, or fa
 
 **Honest depth ledger:** [`TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md) (authoritative over README badge language).
 
-| Depth                        | Repos | Status                                                                           |
-| ---------------------------- | ----- | -------------------------------------------------------------------------------- |
-| **Deep (apex mind)**         | 8     | Eshkol, Moonlab, QGTL, spin NN, quantum_rng, libirrep, tensorcore, classical_rng |
-| **World / sim**              | 2     | asteroids, simple_mnist                                                          |
-| **Ported, shallow wiring**   | 3     | PINN, PIMC, quantum-quake                                                        |
-| **License-gated**            | 2     | ulg, logo-lab (leaves exist; chain-of-title pending)                             |
-| **API / toolchain wired**    | 2     | Quantum-RNG-API, homebrew-eshkol                                                 |
-| **Fenced (non-LLM mandate)** | 3     | gpt2-basic, llm-arbitrator, SolanaQuantumFlux                                    |
+| Depth                        | Repos | Status                                                                                               |
+| ---------------------------- | ----- | ---------------------------------------------------------------------------------------------------- |
+| **Deep (apex mind)**         | 9     | Eshkol, Moonlab, QGTL, spin NN, quantum_rng, libirrep, tensorcore, classical_rng, classical-contrast |
+| **World / sim**              | 2     | asteroids, simple_mnist                                                                              |
+| **Ported, shallow wiring**   | 3     | PINN, PIMC, quantum-quake                                                                            |
+| **License-gated**            | 2     | ulg, logo-lab (leaves exist; chain-of-title pending)                                                 |
+| **API / toolchain wired**    | 2     | Quantum-RNG-API, homebrew-eshkol                                                                     |
+| **Fenced (non-LLM mandate)** | 3     | gpt2-basic, llm-arbitrator, SolanaQuantumFlux                                                        |
 
-**Totals (2026-06-21 OMNISCIENT SCAN of EVERY md/xml/txt + src + full local 12,444-file Tsotchke tree + 1,436 .esk + every subproject):** 22 registry slugs (16 user + 6 org + meta) map the 20 corpus projects 1:1 in tsotchke-registry.ts. **~16 of 20 wired**: 8 deep 1.0 (Eshkol full AD/GWT/bridge/cog + .esk DNA harvest 1436+, Moonlab Clifford/tensor/MPS/VQE, QGT geometry, spin/Hopfield + NQS/skyrmion/qec/flow/neuromorphic/thermo/llg subs, libirrep sym, tensorcore, qrng, classical) with leaves in 50+ src files. 2 world/sim, 3 telemetry (PINN/PIMC/quake note GPL), 2 license-gated leaves (ulg/logo), 3 fenced LLM/proprietary, meta/tool + full sites/research harvested. fullTsotchkeBiologicsCatalysis + corpusBeat loops registry over ALL for soup/petri/Archon. **Not "a few" — every repo/project/sub (Eshkol complete tree, spin advanced, moonlab full etc) is wired or studied/catalyzed.** Tech real. No overclaims. See map + registry + harvest.
+**Totals (2026-06-21 OMNISCIENT SCAN of EVERY md/xml/txt + src + full local 12,444-file Tsotchke tree + 1,365 .esk + every subproject):** 22 registry slugs (16 user + 6 org + meta) map the 20 corpus projects 1:1 in tsotchke-registry.ts. **~16 of 20 wired**: 9 deep 1.0 (Eshkol full AD/GWT/bridge/cog + .esk DNA harvest 1,365, Moonlab Clifford/tensor/MPS/VQE, QGT geometry, spin/Hopfield + NQS/skyrmion/qec/flow/neuromorphic/thermo/llg subs, libirrep sym, tensorcore, qrng, classical) with leaves in 50+ src files. 2 world/sim, 3 telemetry (PINN/PIMC/quake note GPL), 2 license-gated leaves (ulg/logo), 3 fenced LLM/proprietary, meta/tool + full sites/research harvested. fullTsotchkeBiologicsCatalysis + corpusBeat loops registry over ALL for soup/petri/Archon. **Not "a few" — every repo/project/sub (Eshkol complete tree, spin advanced, moonlab full etc) is wired or studied/catalyzed.** Tech real. No overclaims. See map + registry + harvest.
 
-**Local corpus build:** `scripts/harvest-tsotchke-corpus.ts` → `generated-tsotchke-seeds.ts` → primordial-soup / digital-biologics (1,436+ `.esk` fingerprints from `Z:\[Vibe Coded (AI)]\(Tsotchke)`)
+**Local corpus build:** `scripts/harvest-tsotchke-corpus.ts` → `generated-tsotchke-seeds.ts` → primordial-soup / digital-biologics (1,365 `.esk` fingerprints from `Z:\[Vibe Coded (AI)]\(Tsotchke)`)
 
 ### Where each repo lives in Cosmogonic
 

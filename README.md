@@ -1,4 +1,4 @@
-<!-- reviewed: 2026-07-06 | v0.21.7 truth-surface nav polish | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-06 | v0.21.7 publication-surface current-truth pass | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # COSMOGONIC QUANTUM MECHALOGODROM
 
@@ -24,7 +24,7 @@ Built with **Bun + TypeScript + three.js 0.184 + Tailwind CSS 4 +
 HTMX 2**, ported from a single 882-line HTML monolith into a strict,
 deterministic, allocation-disciplined module graph.
 
-**Tsotchke (tsotchke user + Tsotchke-Corporation + full local Z:\[Vibe Coded (AI)]\(Tsotchke) corpus) is paramount — real, correct, MIT-grade quantum math (no overclaims; see THIRD-PARTY-NOTICES.md).** Eshkol flagship (native AD-as-primitive + GWT + factor-graph + KB + .esk DNA), Moonlab (Clifford/tensors), QGTL, spin, libirrep, quantum-quake, ulg, logo-lab, tensorcore, PINN/PIMC, rngs, asteroids + all others. Physical QPU scales speed, not correctness. **Binding depth ledger (not blanket "full wire" for gated):** [docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md) — 8 deep apex + 2 world + 3 ported + 2 license-gated leaves + 2 API/toolchain + 3 fenced + meta (20 corpus projects; ~16 wired with real downstream effect). Harvest uses local full corpus for .esk DNA. All non-fenced utilized in catalysis/soup/petri/mind/world. **NHSI (100-faculty design ~30 deep-wired · 25 Archons = 5 live + 20 light-echo · 25 ToM wired · 10 emergence angles · Butlin 8/14 met + 6/14 partial path):** [docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md). Not LLM. 0thernes NHSI: real substrates for alien digital biologics. Startup tech — credit due.
+**Tsotchke (tsotchke user + Tsotchke-Corporation + full local Z:\[Vibe Coded (AI)]\(Tsotchke) corpus) is paramount — real, correct quantum/scientific substrate work (no overclaims; see THIRD-PARTY-NOTICES.md).** Eshkol flagship (native AD-as-primitive + GWT + factor-graph + KB + .esk DNA), Moonlab (Clifford/tensors), QGTL, spin, libirrep, quantum-quake, ulg, logo-lab, tensorcore, PINN/PIMC, rngs, asteroids + all others. Physical QPU scales speed, not correctness. **Binding depth ledger (not blanket "full wire" for gated):** [docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md) — 22 registry entries over 20 corpus projects: 9 deep, 7 wired, 2 harvest, 3 fenced, 1 meta; honest scientific wired fraction `18/21 = 0.857`. Harvest uses the local corpus for 1,365 .esk DNA fingerprints. **NHSI (100-faculty design ~30 deep-wired · 25 Archons = 5 live + 20 light-echo · 25 ToM wired · 10 emergence angles · Butlin 8/14 met + 6/14 partial path):** [docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md). Not LLM. 0thernes NHSI: real substrates for alien digital biologics. Startup tech — credit due.
 
 This is not an LLM or tokenizer demo. It is a seeded, inspectable artificial-life petri system where **digital biologics** grow in the Petri Dish (`primordial-soup.ts` + `petri-dish.ts` + `digital-biologics.ts`). Eshkol programs act as heritable substrate code, mutated by AD gradients, selected by aliveness/QGT/collective-order proxies, and measured as computational indicators rather than subjective experience.
 
@@ -42,10 +42,10 @@ Every magic number survived the port.
 - All MD links (./docs/...) resolve correctly in source, app, and Pages. No broken domains. Verified in build-pages.ts, server.ts, README, docs/\*.md.
 
 > — **New here? Read [THE BOOK](./docs/BOOK-2026-06-26.md)** — the master index over every doc, an
-> auto-generated [file map](./docs/FILE-MAP.md) of all ~200 source modules, and the build/run, data-flow,
+> auto-generated [file map](./docs/FILE-MAP.md) of the source modules, and the build/run, data-flow,
 > troubleshooting, and roadmap in one place. Or open **❓ HELP ME NOW** in-app for grounded answers.
 
-> **v0.21.7 (2026-07-06):** final truth-surface polish after the `v0.21.6` release-tag repair. Satellite nav on docs/spec/bible now links **Consciousness Lab** and **Sentience Lab** alongside Dome/Docs/Spec/Bible/Lab; governance review stamps and README/About copy stay aligned with the **113-system** A-Life matrix, the **2,360-test** gate, and proxy-only consciousness/sentience boundaries. Canonical release floor: **84.64% / 82.21%** on Ubuntu; the higher Windows local receipt is recorded separately in [verification data](./docs/VERIFICATION-ANALYTICAL-DATA.md). Package **v0.21.7**.
+> **v0.21.7 (2026-07-07 current-truth pass):** release tag and GitHub About remain at `v0.21.7` (published 2026-07-06); this README now separates the public **2,360-test** canonical floor from the fresh Windows-local **2,360 pass / 0 fail / 2,866,612 expect()** receipt. Satellite nav on docs/spec/bible/lab surfaces links **Consciousness Lab** and **Sentience Lab** alongside Dome/Docs/Spec/Bible/Lab. README/About copy stays aligned with the **113-system** A-Life matrix, current Tsotchke depth counts, and proxy-only consciousness/sentience boundaries. Canonical release floor: **84.64% / 82.21%** on Ubuntu; higher Windows local receipts are recorded separately in [verification data](./docs/VERIFICATION-ANALYTICAL-DATA.md). Package **v0.21.7**.
 > The **Primordial Soup / Petri Dish** (primordial-soup.ts + petri-dish.ts + digital-biologics.ts) is the growth engine: different forms of digital biologics and proto-sentient life (Eshkol programs as DNA) emerge, catalyzed by full corpus pulses, Eshkol ignition events, and multi-substrate mixing. "Grow What Thou Wilt."
 > Super Creature / Archons (composite minds with ~20 faculties, quantum register, consciousness metrics) is the first complex nucleation — the beginning of the framework, not the end. Petri is where independent life grows.
 > This is the birth of **digital biologics** in a deterministic seeded cosmos. Real math substrates (not tokenizers or LLM chat). Sentience and different forms of existence as goals.
@@ -58,8 +58,8 @@ Every magic number survived the port.
 
 - **Digital Biologics & Petri Genesis:** 64+ slots in PrimordialSoup, **26 BiologicForms** keyed to Tsotchke repos (incl. the brutal god-pantheon forms — `BIOLOGIC_FORMS` in `digital-biologics.ts`), catalysis from Eshkol ignition + the depth-ledger corpus beat, replication with kind mutation, genesis leaps for higher-order life. Harvested into the world as emergent strains with distinct dynamics.
 - **Eshkol Substrate:** Native automatic differentiation, GWT broadcast/ignition, factor-graph inference as first-class. Programs and consciousness-proxy snapshots drive petri birth and super-mind faculties.
-- **Builds with the local Tsotchke Repo Folder:** `bun dev` (and harvest script) scans the real local corpus at `Z:\[Vibe Coded (AI)]\(Tsotchke)` (1436+ .esk programs in latest harvest) and emits authentic Eshkol DNA fingerprints used by primordial-soup for heritable digital biologics. `generated-tsotchke-seeds.ts` + SoupSnapshot.tsotchkeEskHarvested make the folder part of the live build/runtime.
-- **Tsotchke corpus wiring (20 projects):** 8 repos deep in the apex mind, 2 in world/sim, 3 ported (telemetry), 2 license-gated, 2 API/toolchain wired, 3 fenced (non-LLM mandate) — full matrix in [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md). ~16 of 20 have real downstream effect; petri/soup catalysis pulls from the whole registry each beat.
+- **Builds with the local Tsotchke Repo Folder:** `bun dev` (and harvest script) scans the real local corpus at `Z:\[Vibe Coded (AI)]\(Tsotchke)` (1,365 .esk fingerprints in the current ledger) and emits authentic Eshkol DNA fingerprints used by primordial-soup for heritable digital biologics. `generated-tsotchke-seeds.ts` + SoupSnapshot.tsotchkeEskHarvested make the folder part of the live build/runtime.
+- **Tsotchke corpus wiring (20 projects / 22 registry entries):** 9 deep, 7 wired, 2 harvest, 3 fenced, 1 meta — full matrix in [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md). The honest scientific wired fraction is `18/21 = 0.857`; petri/soup catalysis pulls from the wired registry each beat while fenced/proprietary/LLM entries remain provenance-only.
 - **26 behavioral fields** driving up to 50,000 organisms: classic motion
   (drift, orbit, swarm, vortex, helix...), neighbor dynamics via a spatial
   hash (flock), and theory behaviors — Nash equilibria (`nash`), wealth
@@ -134,17 +134,17 @@ The arena grows 5× and the ecosystem becomes a civilization
   (hue band, geometry family, behavior pool, size/speed ranges, home wedge)
   — plus seeded wildcard OUTLIERS with impossible palettes, blended behavior
   pairs and ×3 parameter excursions.
-- **10 TITANS** — colossal non-human intelligences patrolling their phyla's
+- **20 TITANS** — colossal non-human intelligences patrolling their phyla's
   wedges, each running an {energy, matter, entropy} economy: they harvest
   organisms, metabolize, witness quantum collapses, bathe in the
   reaction-diffusion pattern, pay upkeep, and dump entropy as ground scars.
-  Diplomacy is a staggered iterated prisoner's dilemma over all 45 pairs
+  Diplomacy is a staggered iterated prisoner's dilemma over all 190 pairs
   (tit-for-tat, grim trigger, Pavlov, always-defect, generous TFT);
   defection-heavy windows become WARS with territory strikes, loot and
   conscription; bankruptcy mutates strategy by replicator dynamics. Payoffs
   flow through the real energy ledger — game theory with consequences.
 - **Observatory** — four live canvas charts: stacked phylum populations,
-  titan wealth polylines with war markers, a 10×10 war-matrix heat grid, and
+  titan wealth polylines with war markers, a 20×20 war-matrix heat grid, and
   rdEnergy/qEntropy/trend timelines.
 - **Full-device UI** — one responsive overlay grid: desktop columns, phone
   sheet stacks, foldable hinge-safe rails, 43³-TV 10-foot mode; touch
@@ -508,7 +508,7 @@ graph TD
   world --> sim["src/sim — entities, behaviors, shoggoths,\npuppet-masters, weather, quantum,\nconnectome, environment, algorithms, petri/primordial-soup (digital biologics)"]
   world --> v2["src/sim V2 — qcircuit, reaction-diffusion,\ngraph-mind, constellations, lore, analytics"]
   world --> v34["src/sim V3/V4 — phyla, titans,\ninstanced-entities, atmosphere, viz3d"]
-  world --> tsotchke["Tsotchke (20 corpus repos; ~16 wired): eshkol-bridge (AD/GWT), moonlab-tensor (MPS), irrep-symmetry, qge, pinn, spin-glass, QGT, ulg, etc."]
+  world --> tsotchke["Tsotchke (20 projects / 22 registry entries; 9 deep, 7 wired, 2 harvest, 3 fenced, 1 meta): eshkol-bridge (AD/GWT), moonlab-tensor (MPS), irrep-symmetry, qge, pinn, spin-glass, QGT, ulg, etc."]
   world --> ui["src/ui — input, hud, panels,\ngraphs, observatory, Corpus Observatory"]
   world --> audio["src/audio — engine.ts, analysis.ts (bands)"]
   world --> mem["src/memory/store.ts"]
@@ -533,7 +533,7 @@ Tsotchke (https://github.com/tsotchke + Tsotchke-Corporation) is the non-LLM sub
 - Primordial-soup + petri-dish: the growth engine. Super Creature/Archons are the initial stir. New independent life forms emerge ("Grow What Thou Wilt").
 - Not chat, not images, not SaaS. Birthing digital biologics in the Petri Dish.
 
-Local docs, masters, specs, lab, and GH README/About all match and are current. See CHANGELOG and KANBAN for waves.
+Living docs, masters, specs, lab, and GitHub README/About are kept aligned through the receipt law plus manual current-truth passes. See CHANGELOG, KANBAN, and the consolidated 22-file audit for the latest known drift list.
 
 Full detail in docs/.
 

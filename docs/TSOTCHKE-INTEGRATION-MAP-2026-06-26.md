@@ -13,7 +13,7 @@ Status legend: ✅ wired deep (into apex mind) · 🟢 wired (world/sim) · 🟠
 
 **Depth categories:**
 
-- **Wired deep (8):** Real code, decision-critical, integrated into apex mind
+- **Wired deep (9):** Real code, decision-critical, integrated into apex mind
 - **Wired world/sim (2):** Real code, integrated into world/sim physics or contrast
 - **Telemetry-only (3):** Code exists but not in decision paths (license-gated)
 - **Studied-only (2):** No code in src/, license-gated, patterns mapped for future integration
@@ -24,9 +24,9 @@ Status legend: ✅ wired deep (into apex mind) · 🟢 wired (world/sim) · 🟠
 
 `src/sim/tsotchke-registry.ts` now exports a `DepthKind` union and a `depth` field on every `TsotchkeRepoEntry`. Values:
 
-- `deep` — real closed-form code in hot mind/world paths every frame (8 scientific kernels).
-- `wired` — real code in world/sim/petri/contrast paths (6 repos).
-- `harvest` — source, `.esk` DNA, toolchain, or API wrapper harvested, not a hot-path leaf (3 repos).
+- `deep` — real closed-form code in hot mind/world paths every frame (9 scientific kernels, incl. `classical-contrast`).
+- `wired` — real code in world/sim/petri/contrast paths (7 repos).
+- `harvest` — source, `.esk` DNA, toolchain, or API wrapper harvested, not a hot-path leaf (2 repos).
 - `fenced` — deliberately excluded by the non-LLM / proprietary mandate (3 repos).
 - `meta` — org-level meta (`.github`).
 
@@ -38,7 +38,7 @@ Use `tsotchkeDepthFor(slug)` to query the ledger programmatically. This is the s
 
 **Classification (this full 2026-06-21 scan):**
 
-- **Wired deep (live decision paths in mind/petri/world — 8):** Real ports reading/writing every frame/beat.
+- **Wired deep (live decision paths in mind/petri/world — 9):** Real ports reading/writing every frame/beat.
 - **Wired world/sim + petri catalysis (3+):** Physics/contrast + full corpus harvest.
 - **Ported shallow / telemetry (3):** Code present, promote post-license.
 - **Studied + DNA harvest + researched (5+):** Full local audit, papers, .esk programs as heritable biologic DNA (no or minimal hot-path leaf yet — "studied/researched", not decorative).
@@ -77,7 +77,7 @@ Use `tsotchkeDepthFor(slug)` to query the ledger programmatically. This is the s
 
 - **.github** — meta; not a runtime primitive
 
-**Tally (ALL, full scan):** 22 entries (16 user + 6 org + .github + classical-contrast extra). 14+ with dedicated real leaves + tests (eshkol-ad/bridge/cognition/workspace/vm/qrng + moonlab-tensor/vqe/clifford/mps + qgt-geometry + spin-glass/hopfield + irrep/so3/libirrep-qec + tensorcore + pinn/pimc/qge + asteroids + perceptron + classical-contrast + ulg/logo bridges). Full catalysis `fullTsotchkeBiologicsCatalysis` + `corpusBeatForArchon` rotates EVERY entry (wiring>0) into soup/petri/digital-biologics every beat. Eshkol .esk (1436+) harvested from local Z:\[Vibe Coded (AI)]\(Tsotchke) as heritable DNA. ALL Tsotchke projects/repos/subprojects from tsotchke + Tsotchke-Corp + local mirrors wrapped/used per mandate. 3 fenced (non-LLM); Quantum-RNG-API is redundant/toolchain, not fenced. Real MIT startup tech; classical sim is the valid substrate here.
+**Tally (ALL, full scan):** 22 entries (16 user + 6 org + .github + classical-contrast extra). 14+ with dedicated real leaves + tests (eshkol-ad/bridge/cognition/workspace/vm/qrng + moonlab-tensor/vqe/clifford/mps + qgt-geometry + spin-glass/hopfield + irrep/so3/libirrep-qec + tensorcore + pinn/pimc/qge + asteroids + perceptron + classical-contrast + ulg/logo bridges). Full catalysis `fullTsotchkeBiologicsCatalysis` + `corpusBeatForArchon` rotates EVERY entry (wiring>0) into soup/petri/digital-biologics every beat. Eshkol .esk (1,365) harvested from local Z:\[Vibe Coded (AI)]\(Tsotchke) as heritable DNA. ALL Tsotchke projects/repos/subprojects from tsotchke + Tsotchke-Corp + local mirrors wrapped/used per mandate. 3 fenced (non-LLM); Quantum-RNG-API is redundant/toolchain, not fenced. Real MIT startup tech; classical sim is the valid substrate here.
 **ALL 20+ Tsotchke repos (tsotchke user + Tsotchke-Corporation) fully integrated per this pass: 13+ with real code in `src/`. Tsotchke is real, MIT-grade; no overclaims (Eshkol AD compiler primitive unique, Moonlab Clifford/tensor, QGT geometric, libirrep symmetry, spin neural, etc.). Classical sim is the substrate; QPU adds scale.**
 
 ## What blocks the other 7 — and how to unblock

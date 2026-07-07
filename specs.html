@@ -434,7 +434,7 @@
 
     <header class="hero">
       <div class="wrap">
-        <div class="eyebrow">Technical Specification · v0.21.7 · measured 2026-06-26</div>
+        <div class="eyebrow">Technical Specification · v0.21.7 · current-truth pass 2026-07-07</div>
         <h1>Cosmogonic Quantum Mechalogodrom</h1>
         <p class="lede">
           A single-page TypeScript simulation — with an optional native <b>C++/Jolt</b> physics
@@ -463,12 +463,12 @@
         <h2><span class="tag">01</span> At a glance</h2>
         <div class="stats">
           <div class="stat">
-            <div class="n cy">79,319</div>
-            <div class="l">lines of code</div>
+            <div class="n cy">193,030</div>
+            <div class="l">tracked authored lines</div>
           </div>
           <div class="stat">
-            <div class="n">331</div>
-            <div class="l">files · 32 folders</div>
+            <div class="n">730</div>
+            <div class="l">tracked authored files</div>
           </div>
           <div class="stat">
             <div class="n gd">2,360</div>
@@ -498,53 +498,55 @@
       </section>
 
       <section>
-        <h2><span class="tag">02</span> Languages — 79,319 lines</h2>
+        <h2><span class="tag">02</span> Tracked census — 193,030 lines</h2>
         <div class="barrow">
           <span class="lab">TypeScript</span>
           <span class="track"
-            ><span class="fill" style="width: 64%; background: var(--accent)"></span
+            ><span class="fill" style="width: 70.34%; background: var(--accent)"></span
           ></span>
-          <span class="val">50,751 · 64.0%</span>
+          <span class="val">135,780 · 70.34%</span>
         </div>
         <div class="barrow">
           <span class="lab">Markdown (docs)</span>
           <span class="track"
-            ><span class="fill" style="width: 20.1%; background: var(--accent2)"></span
+            ><span class="fill" style="width: 8.94%; background: var(--accent2)"></span
           ></span>
-          <span class="val">15,965 · 20.1%</span>
+          <span class="val">17,251 · 8.94%</span>
         </div>
         <div class="barrow">
           <span class="lab">HTML</span>
           <span class="track"
-            ><span class="fill" style="width: 10.3%; background: var(--amber)"></span
+            ><span class="fill" style="width: 6.69%; background: var(--amber)"></span
           ></span>
-          <span class="val">8,190 · 10.3%</span>
+          <span class="val">12,907 · 6.69%</span>
         </div>
         <div class="barrow">
-          <span class="lab">C++ (native engine · gl-core · Jolt physics)</span>
+          <span class="lab">JSON / data feeds</span>
           <span class="track"
-            ><span class="fill" style="width: 1.6%; background: var(--good)"></span
+            ><span class="fill" style="width: 5.03%; background: var(--blue)"></span
           ></span>
-          <span class="val">1,644 · 1.6%</span>
+          <span class="val">9,706 · 5.03%</span>
         </div>
         <div class="barrow">
           <span class="lab">CSS (Tailwind src)</span>
           <span class="track"
-            ><span class="fill" style="width: 1.6%; background: var(--fuchsia)"></span
+            ><span class="fill" style="width: 1.28%; background: var(--fuchsia)"></span
           ></span>
-          <span class="val">1,644 · 1.6%</span>
+          <span class="val">2,462 · 1.28%</span>
         </div>
         <div class="barrow">
-          <span class="lab">XML (masters) / lock / config / other</span>
+          <span class="lab">Native C/C++ headers/sources</span>
           <span class="track"
-            ><span class="fill" style="width: 2.4%; background: var(--ink-faint)"></span
+            ><span class="fill" style="width: 0.77%; background: var(--good)"></span
           ></span>
-          <span class="val">1,644 · 2.4%</span>
+          <span class="val">1,481 · 0.77%</span>
         </div>
         <p class="muted" style="margin-top: 12px">
-          Code (TS + C++ + HTML + CSS) = <b>measured 2026-07-06</b>. Web-app source 94,494 lines
-          (285 TS modules), native C++/Jolt engine 1,327 (7 files), tests 33,605 (250 files), docs
-          9,237 (43 files). The quantum mind <b>ports</b> four primitives from external
+          Tracked authored census = <b>measured 2026-07-07</b> with <code>bun run metrics</code>.
+          Source area: 288 files / 97,126 lines; tracked TypeScript: 584 files / 135,780 lines;
+          <code>src/</code> TypeScript: 286 files; native C/C++: 8 files / 1,481 lines; tests: 255
+          files / 33,887 lines. These line totals are a moving commit snapshot, unlike the receipt
+          floor below. The quantum mind <b>ports</b> primitives from external
           <b>quantum-research repos</b> — the <b>Eshkol</b> qubit-RNG, the <b>Moonlab</b>/<b
             >QGTL</b
           >
@@ -745,6 +747,16 @@ server.ts ──serves──▶  /  (app)   /docs   /spec   /lab   /lab/sentienc
           · gate <b>2,360 tests</b>
         </p>
         <p class="muted" style="margin-top: 10px">
+          <b>Current consolidated audit:</b>
+          <a href="./docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md"
+            >22-report master assessment</a
+          >
+          ·
+          <a href="./docs/CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md">22-file audit ledger</a>
+          · local receipt note: 2,360 pass / 0 fail / 2,866,612 expect() calls on the latest Windows
+          verification run.
+        </p>
+        <p class="muted" style="margin-top: 10px">
           <b>Frontier report (2026-06-17):</b>
           <a
             href="https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/blob/main/docs/SUPER-CREATURE-RESEARCH-2026-06-26.md"
@@ -754,7 +766,7 @@ server.ts ──serves──▶  /  (app)   /docs   /spec   /lab   /lab/sentienc
         <p class="muted" style="margin-top: 10px">
           <b>The cast (measured counts).</b> Up to 50,000 organisms across 100 morphotypes (250 in
           phylum mode), each carrying a 70-weight brain + a 10-gene genome · 100 Shoggoths · 100
-          Puppet-masters (a 5-qubit quantum register each) · 10 Titans (4D freak-geometry) · 8
+          Puppet-masters (a 5-qubit quantum register each) · 20 Titans (4D freak-geometry) · 8
           faction archetypes · Leviathans, singularities + weather (the environment) · one
           always-active Super Creature trailed by a 100-drone wingman swarm · and the apex NHI
           super-mind that perceives, plans (GOAP), and manipulates them all.
@@ -882,14 +894,14 @@ server.ts ──serves──▶  /  (app)   /docs   /spec   /lab   /lab/sentienc
         <h2><span class="tag">09</span> Build, CI/CD &amp; quality</h2>
         <p>
           <b>Gate (every commit):</b>
-          <code>prettier → tsc strict → oxlint → 2,360 tests → bun build</code>. Coverage ≥ 90% line
-          / ≥ 85% function (measured 84.64% line / 82.21% func, `bun test --coverage`).
-          <b>Build:</b> Bun bundles 3 HTML entrypoints (<code>index.html</code>,
-          <code>docs.html</code>, <code>specs.html</code>) → <code>dist/</code>.
-          <b>CI/CD:</b> GitHub Actions runs the gate + builds and deploys the real app to GitHub
-          Pages on every push to <code>main</code>; tagged releases ship a tarball + CycloneDX SBOM.
-          Three governing "master" personas encode the discipline: the Executor, the Architect, the
-          Physicist.
+          <code>prettier → tsc strict → oxlint → 2,360-test floor → bun build</code>. Public release
+          floor is 84.64 % line / 82.21 % function; the latest Windows-local receipt records 2,360
+          pass / 0 fail with 84.64 % line / 82.21 % function. <b>Build:</b> Bun bundles 3 HTML
+          entrypoints (<code>index.html</code>, <code>docs.html</code>, <code>specs.html</code>) →
+          <code>dist/</code>. <b>CI/CD:</b> GitHub Actions runs the gate + builds and deploys the
+          real app to GitHub Pages on every push to <code>main</code>; tagged releases ship a
+          tarball + CycloneDX SBOM. Three governing "master" personas encode the discipline: the
+          Executor, the Architect, the Physicist.
         </p>
       </section>
 
