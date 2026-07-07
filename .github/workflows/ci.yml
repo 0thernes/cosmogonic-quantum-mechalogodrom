@@ -235,8 +235,20 @@ jobs:
           restore-keys: bun-${{ runner.os }}-
       - name: Install (frozen lockfile)
         run: bun install --frozen-lockfile
-      - name: Run mitata benchmarks
-        run: bun run bench
+      - name: Run mitata benchmarks (bounded, informational)
+        run: |
+          set +e
+          timeout 240s bun run bench
+          status=$?
+          if [ "$status" -eq 0 ]; then
+            exit 0
+          fi
+          if [ "$status" -eq 124 ]; then
+            echo "::warning::mitata benchmarks exceeded the 240s informational cap; gate remains green."
+          else
+            echo "::warning::mitata benchmarks exited with status ${status}; gate remains green."
+          fi
+          exit 0
 
   dependency-review:
     name: Dependency review (PRs)

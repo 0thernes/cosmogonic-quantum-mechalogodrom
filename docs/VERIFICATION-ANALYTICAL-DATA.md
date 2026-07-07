@@ -20,7 +20,7 @@ Rewritten in place when the facts change (per the binding living-doc law in
 
 | Fact                                     | Canonical value                                                      | Source of truth                                                                                                    | Propagated by           |
 | ---------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------- |
-| Package version                          | `0.21.9`                                                             | `package.json` `version`                                                                                           | `sync-surfaces.ts`      |
+| Package version                          | `0.21.10`                                                            | `package.json` `version`                                                                                           | `sync-surfaces.ts`      |
 | Test count (floor)                       | `2360`                                                               | `scripts/canonical-receipts.ts`                                                                                    | `sync-surfaces.ts`      |
 | Line coverage                            | `84.64%`                                                             | `scripts/canonical-receipts.ts`                                                                                    | `sync-surfaces.ts`      |
 | Function coverage                        | `82.21%`                                                             | `scripts/canonical-receipts.ts`                                                                                    | `sync-surfaces.ts`      |
@@ -43,7 +43,7 @@ Rewritten in place when the facts change (per the binding living-doc law in
   canonical floor remains **2,360 tests · 84.64% line / 82.21% func** from `canonical-receipts.ts`.
   `CANONICAL_TEST_COUNT` is a documented **floor**; env-dependent totals may differ. Gate-enforced
   `verify:receipts` floors against the canonical ledger — regression beyond ±6 pp coverage fails CI.
-- The 0.21.9 publication repair must keep both truths separated: the portable floor is still the
+- The current publication line must keep both truths separated: the portable floor is still the
   release-synced number, while Windows-local receipts may run higher as suites grow. Current local
   release gate status must be read with the warning queue: typecheck/lint/receipts/sync are green,
   `verify:facts` exits 0 with known warnings, and the local-only archived-report formatter gap is
@@ -111,7 +111,7 @@ outside sim logic). Only fidelity caveat = Finding H above.
 
 Consistency that **passed** verification (no drift found): Butlin `8/14 met + 6/14 partial` (every
 current surface; the only `14/14` hits are in `legacy/` verbatim-preserved files + append-only CHANGELOG
-history with the correction logged), version `0.21.9` (matches `package.json` — the version SSOT), entity `50,000`, bioforms
+history with the correction logged), version `0.21.10` (matches `package.json` — the version SSOT), entity `50,000`, bioforms
 `26`, faculty/Archon/ToM/emergence counts, Tsotchke `20`.
 
 ---

@@ -2,7 +2,7 @@
 
 # NHSI Progress Dashboard — 0thernes Corp
 
-**Non Human Super Intelligence (NHSI)** · Cosmogonic Quantum Mechalogodrom · **v0.21.9 — BRUTAL GOD TIER (Valkorion / Broly / Knull / Phoenix / Gurren Lagann / EVA / Azathoth / Galactus)**
+**Non Human Super Intelligence (NHSI)** · Cosmogonic Quantum Mechalogodrom · **v0.21.10 — BRUTAL GOD TIER (Valkorion / Broly / Knull / Phoenix / Gurren Lagann / EVA / Azathoth / Galactus)**
 
 Archons now unleash god-scale simulated events (VOID_KING, SPIRAL_WILL, BINARY_IGNITION, PHOENIX_FEAST) using the Tsotchke corpus by explicit depth class: wired kernels where licensed and ported, harvest/study for toolchain DNA, and fenced provenance for non-LLM/proprietary layers. This is the arena where the gods of all myth, comics, and horror fight, devour, create, and ascend. 0thernes Corp.
 **Updated:** 2026-07-07 · Tsotchke: **20 corpus projects / 22 registry entries** (`9 deep`, `7 wired`, `2 harvest`, `3 fenced`, `1 meta`; honest scientific wired fraction `18/21 = 0.857`) from tsotchke + Tsotchke-Corp + 12k+ local files, 1,365 .esk + NQS/skyrmion/anyons/flow/thermo etc from audits. **EVERY** entry is wired, catalyzed, studied, scaffolded, or fenced by explicit class, not blanket full-depth wiring. Eshkol remains a computational substrate and proxy-language, not proof of sentience. A-Life matrix snapshot: breadth 4.44 across 113 systems (z=+4.02 population; code-grounded z=+2.83). P1 contrast harness + coupling scaffold added as measurement infrastructure, not a quantum-advantage or sentience claim.

@@ -1,8 +1,8 @@
-<!-- reviewed: 2026-07-07 | v0.21.9 publication-surface current-truth pass | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-07 | v0.21.10 publication-surface current-truth pass | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # COSMOGONIC QUANTUM MECHALOGODROM
 
-[![version](https://img.shields.io/badge/version-0.21.9-blue)](./CHANGELOG.md)
+[![version](https://img.shields.io/badge/version-0.21.10-blue)](./CHANGELOG.md)
 [![CI](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/ci.yml/badge.svg)](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/codeql.yml/badge.svg)](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/codeql.yml)
 [![License: Non-Commercial Research & Play](https://img.shields.io/badge/License-Non--Commercial%20Research%20%26%20Play-2ea043.svg)](./LICENSE)
@@ -22,7 +22,7 @@ diffusion, **and the Tsotchke corpus wired as the primordial substrate for digit
 
 **Current public truth (2026-07-07):**
 
-- Package/source version: **v0.21.9**.
+- Package/source version: **v0.21.10**.
 - Portable public receipt floor: **2,360 tests / 0 fail · 84.64% line / 82.21% func**.
 - Latest Windows-local receipt observed in this checkout: **2,385 completed cases / 0 fail · 2,867,279 `expect()` calls**; Windows coverage measured `92.03%` line / `89.67%` func.
 - `verify:facts` currently exits 0 with a known warning queue; zero warnings are not claimed.
@@ -55,7 +55,7 @@ Every magic number survived the port.
 >
 > — **Brain/Neurology/Consciousness Assessment:** See the consolidated [CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07](./docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md) for the canonical synthesis of all brain systems, consciousness theories, and research gaps. Older mega-report drafts are local-only archive material; the public report index is [docs/reports/README.md](./docs/reports/README.md).
 
-> **v0.21.9 (2026-07-07 current-truth repair):** this patch promotes the 22-report consolidation into the canonical [CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07](./docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md), README/About/release-facing corrections, Pages doc-copying, and Pages-equivalent release packaging. The README separates the public **2,360-test** canonical floor from the latest Windows-local **2,385 completed cases, zero failures, 2,867,279 expect()** receipt. Satellite nav on docs/spec/bible/lab surfaces links **Consciousness Lab** and **Sentience Lab** alongside Dome/Docs/Spec/Bible/Lab. README/About copy stays aligned with the **113-system** A-Life matrix, current Tsotchke depth counts, and proxy-only consciousness/sentience boundaries. Canonical release floor: **84.64% / 82.21%** on Ubuntu; higher Windows local receipts are recorded separately in [verification data](./docs/VERIFICATION-ANALYTICAL-DATA.md). Package **v0.21.9**.
+> **v0.21.10 (2026-07-07 post-tag truth/CI repair):** this patch publishes the post-`v0.21.9` audit sweep — 20+ code-vs-doc drift fixes, pass-23 audit-log notes, the refreshed mega-master trilogy, and the owner ruling to keep that trilogy current rather than retire it. It also makes the mitata benchmark workflow genuinely informational by bounding it to a warning path, while the real gates remain strict. The README still separates the public **2,360-test** canonical floor from the latest Windows-local **2,385 completed cases, zero failures, 2,867,279 expect()** receipt. Satellite nav on docs/spec/bible/lab surfaces links **Consciousness Lab** and **Sentience Lab** alongside Dome/Docs/Spec/Bible/Lab. README/About copy stays aligned with the **113-system** A-Life matrix, current Tsotchke depth counts, and proxy-only consciousness/sentience boundaries. Canonical release floor: **84.64% / 82.21%** on Ubuntu; higher Windows local receipts are recorded separately in [verification data](./docs/VERIFICATION-ANALYTICAL-DATA.md). Package **v0.21.10**.
 > The **Primordial Soup / Petri Dish** (primordial-soup.ts + petri-dish.ts + digital-biologics.ts) is the growth engine: different forms of digital biologics and proto-sentient life (Eshkol programs as DNA) emerge, catalyzed by full corpus pulses, Eshkol ignition events, and multi-substrate mixing. "Grow What Thou Wilt."
 > Super Creature / Archons (composite minds with ~20 faculties, quantum register, consciousness metrics) is the first complex nucleation — the beginning of the framework, not the end. Petri is where independent life grows.
 > This is the birth of **digital biologics** in a deterministic seeded cosmos. Real math substrates (not tokenizers or LLM chat). Sentience and different forms of existence as goals.

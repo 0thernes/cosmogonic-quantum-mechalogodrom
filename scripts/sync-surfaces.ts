@@ -218,6 +218,11 @@ function syncVersion(s: string): string {
     s
       .replace(/Package\s+\*\*v?0\.[0-9]+\.[0-9]+\*\*/g, `Package **v${VERSION}**`)
       .replace(/Package\s+v?0\.[0-9]+\.[0-9]+/g, `Package v${VERSION}`)
+      .replace(
+        /Package\/source version:\s+\*\*v?0\.[0-9]+\.[0-9]+\*\*/g,
+        `Package/source version: **v${VERSION}**`,
+      )
+      .replace(/(`scripts\/canonical-receipts\.ts`\s+\(v)0\.[0-9]+\.[0-9]+/g, `$1${VERSION}`)
       .replace(/v?0\.[0-9]+\.[0-9]+\s+@\s+current/g, (m) =>
         m.includes('\n')
           ? m.replace(/v?0\.[0-9]+\.[0-9]+/, `v${VERSION}`)
@@ -254,6 +259,11 @@ function syncVersion(s: string): string {
         /Technical Specification · v0\.[0-9]+\.[0-9]+ ·/g,
         `Technical Specification · v${VERSION} ·`,
       )
+      .replace(
+        /Measured v0\.[0-9]+\.[0-9]+ technical specification/g,
+        `Measured v${VERSION} technical specification`,
+      )
+      .replace(/The v0\.[0-9]+\.[0-9]+ Mechalogodrom Bible/g, `The v${VERSION} Mechalogodrom Bible`)
       .replace(/· v0\.[0-9]+\.[0-9]+ · Butlin/g, `· v${VERSION} · Butlin`)
       .replace(/· \*\*v0\.[0-9]+\.[0-9]+ —/g, `· **v${VERSION} —`)
       .replace(/\*\*Version:\*\* `v0\.[0-9]+\.[0-9]+`/g, `**Version:** \`v${VERSION}\``)

@@ -1,4 +1,4 @@
-<!-- reviewed: 2026-07-07 | v0.21.9 truth-surface nav polish | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-07 | v0.21.10 truth-surface nav polish | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # NOTICE
 

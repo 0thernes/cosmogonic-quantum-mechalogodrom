@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.10] — 2026-07-07
+
+- Post-`v0.21.9` current-truth release:
+  - Publishes the mainline audit/source repairs that landed after the `v0.21.9` tag:
+    20+ code-vs-doc drift fixes, the pass-23 audit-log sweep, the mega-master trilogy refresh,
+    and the owner ruling to keep the refreshed trilogy rather than retire it.
+  - Keeps the full CI gates strict while making the mitata benchmark lane genuinely informational:
+    Ubuntu benchmarks are now bounded to a 240-second warning path instead of being allowed to
+    cancel an otherwise green release gate.
+  - Re-syncs README/About/Pages/spec/bible/public truth surfaces to package `v0.21.10` while
+    preserving the portable `2,360`-test floor and the separate Windows-local receipt split.
+
 ## [0.21.9] — 2026-07-07
 
 - Publication/release truth repair after the v0.21.8 consolidation:
