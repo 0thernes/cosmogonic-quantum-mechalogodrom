@@ -10,7 +10,7 @@ BRUTALIST MANIFEST: Valkorion domination, Broly infinite rage, Knull/Azathoth vo
 
 **Canonical receipts (measured 2026-06-26):** 2,360 tests, 84.64% line / 82.21% func (from `bun scripts/verify-receipts.ts --print`). Enforced by `tests/docs-receipts-law.test.ts` + `bun run check`. All surfaces truth-synced. BRUTAL GOD TIER with full pantheon list (Valkorion to Riddick) + BRUTALISM implemented in petri/godform/world using the Tsotchke corpus. Butlin indicators: **8/14 met + 6/14 partial** (computational indicators, not sentience — corrected from a prior overclaim).
 
-**Brain/neuro/consciousness assessment:** [`MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-3-2026-07-06.md`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-3-2026-07-06.md) is **Pass 3 of 3 (complete)** — omniscient living-world census (shoggoths, puppets, titans, leviathans, NHI, flora/fauna/wildlife, 25 Archon godforms, GOD/temple decorative split, apex abomination stack), full [`brain-evidence-matrix.json`](./reports/assets/brain-evidence-matrix.json), [`sim-modules-census-pass3.csv`](./reports/assets/sim-modules-census-pass3.csv), gap audit vs six agent uploads. Prior passes: [`PASS-1`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-1-2026-07-06.md) · [`PASS-2`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-2-2026-07-06.md). Detail layer: [`BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md`](./BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md). All explicitly `indicatorOnly` — no phenomenal sentience claims.
+**Brain/neuro/consciousness assessment:** [`MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-ULTIMATE-2026-07-07.md`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-ULTIMATE-2026-07-07.md) is the **ULTIMATE capstone** — full synthesis of Pass 1–3 plus Seven Furies manifesto, every-folder measured inventory (736 files · 135k TS lines), complete brain weird-ideas taxonomy, consciousness theory matrix, Tsotchke super-wiring, 25-point scrutiny, academic ladder (MIT→Fields), P0–P8 build path, benchmarks, preprint skeleton, and gap audit. Drill-down: [`PASS-1`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-1-2026-07-06.md) · [`PASS-2`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-2-2026-07-06.md) · [`PASS-3`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-3-2026-07-06.md). All explicitly `indicatorOnly` — no phenomenal sentience claims.
 
 > **Mission:** Not a chatbot, dancing robot, Terminator, or game player. A **Petri-dish cosmos** where
 > Tsotchke's real quantum math (Eshkol · Moonlab · QGT · spin · libirrep · …) is the growth medium for
@@ -199,7 +199,8 @@ Full trail: [`SUPER-CREATURE-RESEARCH-2026-06-26.md`](./SUPER-CREATURE-RESEARCH-
 | `/lab`             | `lab/`                                                                    |
 | Technical spec     | `docs/TECHNICAL-SPECIFICATION-2026-06-26.md`                              |
 | Tsotchke ledger    | `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`                             |
-| Mega assessment Pass 3/3 (complete) | `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-3-2026-07-06.md` |
+| Mega assessment ULTIMATE (capstone) | `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-ULTIMATE-2026-07-07.md` |
+| Mega assessment Pass 3/3 | `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-3-2026-07-06.md` |
 | Mega assessment Pass 2/3 | `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-2-2026-07-06.md` |
 | Mega assessment Pass 1/3 | `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-1-2026-07-06.md` |
 | Brain evidence matrix (JSON) | `docs/reports/assets/brain-evidence-matrix.json` |

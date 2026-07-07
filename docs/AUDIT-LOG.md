@@ -11,6 +11,27 @@ changed and why.
 
 ---
 
+## 2026-07-07 (pass 22) — MEGA-MASTER ULTIMATE capstone synthesis
+
+Final synthesis document: `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-ULTIMATE-2026-07-07.md`.
+
+### Content
+
+- Seven Furies manifesto (Broly, Starkiller, Valkorion, Gaelin Maerik, Dr. Manhattan, Reed Richards, Tony Stark).
+- Measured repo inventory: 736 files, 135,780 TS lines, 185 sim modules, 59 Tsotchke-touching sim files.
+- Complete brain weird-ideas taxonomy across apex, population, antagonist, ecology, pantheon, petri, lab tiers.
+- Neural scale hierarchy (mermaid), consciousness ten-framework matrix, Butlin 8/14+6.
+- Unified rating systems (25-point 8.3/10, A-Life 4.44/5, coupling ~0.27).
+- Multi-perspective reasoning grid (360°/270°/180°/90°), academic scrutiny ladder MIT→Fields.
+- P0–P8 build path, benchmarks now vs next, preprint skeleton, complete wiring gap checklist.
+- NHSI dashboard now links ULTIMATE as primary capstone.
+
+### Claim boundary
+
+- Explicitly `indicatorOnly`; no phenomenal sentience claims.
+
+---
+
 ## 2026-07-06 (pass 21) — MEGA-MASTER brain assessment Pass 3 of 3 (complete)
 
 Omniscient living-world census: `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-3-2026-07-06.md` + `docs/reports/assets/brain-evidence-matrix.json` + `docs/reports/assets/sim-modules-census-pass3.csv`.
