@@ -11,7 +11,7 @@
  * - **Titan economy obelisks** — 20 translucent six-sided prisms in an outer ring. Height tracks
  *   smoothed `matter`, emissive glow tracks `energy`, and hue shifts toward war-red as the
  *   titan's `war` count rises (peaceful titans keep their identity hue).
- * - **War network** — up to C(10,2)=45 line segments between obelisk tops, colored and faded by
+ * - **War network** — up to C(20,2)=190 line segments between obelisk tops, colored and faded by
  *   the pairwise `warMatrix` state (truce ⇒ hidden, alliance ⇒ cool teal, war ⇒ hot red).
  *
  * Determinism: placement is pure trigonometry of the loop index — the constructor draws ZERO
@@ -33,7 +33,7 @@ import type { SimContext } from '../types';
 const PHYLA = 10;
 /** Titan count — fixed at 20; obelisk ring + war matrix are sized for this. */
 const TITANS = 20;
-/** Unordered titan pairs: C(10, 2) = 45 — the war-network segment budget. */
+/** Unordered titan pairs: C(TITANS, 2) = 190 — the war-network segment budget. */
 const PAIR_COUNT = (TITANS * (TITANS - 1)) / 2;
 
 /** War-matrix cell states (mirror of titans.ts REL_*). */

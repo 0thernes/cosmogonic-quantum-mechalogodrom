@@ -124,7 +124,7 @@ import {
   petriDishView,
   petriGrowthMultiplier,
   type PetriDishState,
-} from './sim/godform'; // GOAL5 + TSOTCHKE full corpus (ralph 10x: Eshkol AD, Moonlab tensor, quake, irrep from (Tsotchke))
+} from './sim/godform'; // GOAL5 + TSOTCHKE depth-ledger corpus (ralph 10x: Eshkol AD, Moonlab tensor, quake, irrep from (Tsotchke))
 import { PantheonSociety, FIELD_DIM, ARCHON_CHANNELS } from './sim/pantheon';
 import { FacultiesPantheon } from './sim/faculties-pantheon';
 import { TomPantheon } from './sim/tom-pantheon';
@@ -1004,9 +1004,9 @@ export class World {
     // Boot scars: the Gray-Scott fixed point is uniform — seed a few
     // disturbances so the ground skin starts breathing (rd writer note).
     for (let i = 0; i < 4; i++) this.rd.perturb(this.rng(), this.rng());
-    // ── PANTHEON V3.3: the ten colossi and their economy/war layer ──
+    // ── PANTHEON V3.3+: the titan colossi and their economy/war layer ──
     this.titans = new TitanSystem(ctx, this.entities, this.lore, this.rd);
-    // F-ECONOMY V13: enrol the ten colossi as economic agents with titan-sized purses (their
+    // F-ECONOMY V13: enrol the current TitanSystem roster as economic agents with titan-sized purses (their
     // stature = a base weight + a per-titan bump). Draws only from `econRng`, so this never shifts
     // the main rng order — the world after this point is byte-identical to before the economy.
     for (let i = 0; i < this.titans.count; i++) {
@@ -1129,7 +1129,7 @@ export class World {
       // per-Archon bias from godform (research corpus applied: QGT geometry, Eshkol AD/consciousness, moonlab Clifford reflex) // bias available for mind/body distinction (5 unique)
       // child seed = master + archetype offset (golden prime mix for separation)
       const mindSeed = (master + i * 0x9e3779b1) >>> 0 || 1 + i;
-      const bias = getFullTsotchkeBias(i); // full corpus extension (Eshkol/Moonlab/Quake factors) // per-Archon (clifford/generative/chaos/narrative/color) — used in world percepts + mind ctor (godform exclusive)
+      const bias = getFullTsotchkeBias(i); // depth-ledger corpus extension (Eshkol/Moonlab/Quake factors) // per-Archon (clifford/generative/chaos/narrative/color) — used in world percepts + mind ctor (godform exclusive)
       // Tsotchke corpus wiring 10x: Moonlab tensor/MPO for 5-Archon group entanglement (mirrors/moonlab), Eshkol AD/GWT for percept bias, libirrep symmetry, ulg/quantum-quake hybrid aliveness (ulgHandoff, gwtBroadcast, hybridAliv).
       // Full local: Z:\[Vibe Coded (AI)]\(Tsotchke) — see docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md
       // Ralph 10x continue: quakeQge, mpo, gwt used in econ, pull, spawn for corpus aliveness.
@@ -2533,7 +2533,7 @@ export class World {
       // local crowding/threat from grid query at body pos; light/sound/chaos biased by godform.ts (exclusive).
       let primeMindOut: SuperMindIntent | null = null; // typed; avoid any per contract
       for (let i = 0; i < APEX_INDIVIDUATED; i++) {
-        const bias = getFullTsotchkeBias(i); // full corpus extension (Eshkol/Moonlab/Quake factors) // ARCHITECT rule: use the facade bias for differentiation
+        const bias = getFullTsotchkeBias(i); // depth-ledger corpus extension (Eshkol/Moonlab/Quake factors) // ARCHITECT rule: use the facade bias for differentiation
         this.superBodies[i]!.worldPosition(this.sv1);
         const lx = this.sv1.x,
           lz = this.sv1.z;

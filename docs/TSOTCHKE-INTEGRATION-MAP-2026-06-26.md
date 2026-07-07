@@ -117,7 +117,7 @@ assignment (ulg/logo-lab).
 
 ## The integration roadmap
 
-- **Now (unblocked):** the 8 deep + 2 world repos are live and tested.
+- **Now (unblocked):** the current ledger is `9 deep`, `7 wired`, `2 harvest`, `3 fenced`, `1 meta`, with a scientific wired fraction of `18/21`; fenced entries stay provenance-only.
 - **Owner action → then I wire (highest leverage):** clear chain-of-title + add LICENSE to **PINN / PIMC /
   ulg / logo-lab** → I port + wire them (ulg's law-graph and logo-lab's morphogenesis are the biggest new
   capabilities — world-rules-as-cognition + procedural body growth).

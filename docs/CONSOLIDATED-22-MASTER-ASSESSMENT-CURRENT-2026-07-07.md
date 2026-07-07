@@ -21,7 +21,7 @@ The fresh fifth-pass verification receipt available to this audit set is:
 | Gate               | Current observed result                                                                              |
 | ------------------ | ---------------------------------------------------------------------------------------------------- |
 | `verify:receipts`  | 2,378 pass / 0 fail, fresh fifth-pass verified receipt                                               |
-| Expect calls       | 2,866,612, fresh fifth-pass verified receipt                                                         |
+| Expect calls       | 2,867,096, fresh fifth-pass verified receipt                                                         |
 | Test files         | 255                                                                                                  |
 | Coverage           | 92.01% line / 89.65% function                                                                        |
 | `typecheck`        | Passed                                                                                               |
@@ -40,7 +40,7 @@ or `2,376` the current latest is stale.
 Post-write note: a final local `bun run verify:receipts` attempt after creating
 this consolidated set timed out after 120 seconds and left no live `bun.exe`
 process. A later fifth-pass currentness lane completed the run and verified
-`2,378 pass / 0 fail / 2,866,612 expect() calls`; that supersedes the earlier
+`2,378 pass / 0 fail / 2,867,096 expect() calls`; that supersedes the earlier
 timeout caveat for receipt wording.
 
 ## External Science Refresh
@@ -256,13 +256,15 @@ hooks a reviewer would trace.
 
 ### Build Blocker Specificity
 
-`BRAIN II.9` records a more specific prior local build finding than the first
-consolidation carried forward: `bun run build` failed at `src/styles/app.css:0`
-with an out-of-range code point class of error; a CSS-content hypothesis was
-tested and rejected; the suspected path is `bun-plugin-tailwind ^0.1.2` + Bun
-1.3.14 + Tailwind v4. This pass did not rerun build to completion, so this is
-not newly verified here. It should be treated as a prior local finding that
-deserves a dedicated toolchain reproduction pass.
+`BRAIN II.9` recorded a specific prior local build finding: `bun run build`
+failed at `src/styles/app.css:0` with an out-of-range code point class of error;
+a CSS-content hypothesis was tested and rejected. The 0.21.8 publication pass
+turns that from active blocker into fixed lesson: Tailwind v4 whole-repo
+auto-detection is disabled with `@import 'tailwindcss' source(none)`, and
+`app.css` explicitly scans only `src/`, the root HTML shells, and `lab/`. Current
+verification: `bun run pages` completes and assembles the static `site/` tree.
+Future reports should preserve this as a build-fix invariant, not as an active
+failure, unless a fresh build reopens it.
 
 ### Real-Connectome Ladder
 
@@ -278,21 +280,25 @@ explicit:
 
 ## Named System Assessment
 
-| System             | Status            | Scientific framing                    | Needed next proof                                                                                                                                                                            |
-| ------------------ | ----------------- | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Entities           | Strong            | ALife agents with measurable behavior | Per-entity memory/adaptation metrics.                                                                                                                                                        |
-| SuperCreatures     | Strong            | Higher-capability agent layer         | Compare against base-entity controls.                                                                                                                                                        |
-| Apex Abomination   | Medium            | Anomaly/apex pressure system          | Event telemetry and causal effect size.                                                                                                                                                      |
-| Shoggoths          | Medium-high       | Plastic/adaptive agent class          | Mutation/plasticity curve under controlled perturbation.                                                                                                                                     |
-| Puppeteers         | Medium-high       | Control/agency interference layer     | Command, resistance, and adaptation measurements.                                                                                                                                            |
-| Titans             | Strong, corrected | Large-scale agent class               | Source truth is `TITAN_COUNT=20` / `PAIR_COUNT=190`; stale public-page counts have been corrected, but future reports should cite the constants instead of restating the pair count by hand. |
-| Pantheons          | Medium            | Governance/mythic world layer         | Causal effect on entity behavior.                                                                                                                                                            |
-| 25 Archon Godforms | Medium            | Role taxonomy and symbolic attractors | One page per Archon: role, metric, falsifier.                                                                                                                                                |
-| GOD/GodColossus    | Weak-medium       | Symbolic/reactive higher-order system | Must remain symbolic unless measurable cognition emerges.                                                                                                                                    |
-| Temple/Portal      | Weak-medium       | Environment/operator substrate        | Falsifier: if removing it changes nothing, claim must shrink.                                                                                                                                |
-| Flora              | Medium            | Ecological substrate                  | Growth, signal, resource, and coupling metrics.                                                                                                                                              |
-| Fauna/Wildlife     | Medium            | Ecological agents                     | Population, niche, pursuit/avoidance, social metrics.                                                                                                                                        |
-| Tsotchke           | Medium-high       | Integrator/meta-observer              | Repo-by-repo and surface-by-surface wiring receipts.                                                                                                                                         |
+| System                             | Status            | Scientific framing                    | Needed next proof                                                                                                                                                                              |
+| ---------------------------------- | ----------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Entities                           | Strong            | ALife agents with measurable behavior | Per-entity memory/adaptation metrics.                                                                                                                                                          |
+| SuperCreatures                     | Strong            | Higher-capability agent layer         | Compare against base-entity controls.                                                                                                                                                          |
+| Apex Abomination                   | Medium            | Anomaly/apex pressure system          | Event telemetry and causal effect size.                                                                                                                                                        |
+| Shoggoths                          | Medium-high       | Plastic/adaptive agent class          | Mutation/plasticity curve under controlled perturbation.                                                                                                                                       |
+| Puppeteers                         | Medium-high       | Control/agency interference layer     | Command, resistance, and adaptation measurements.                                                                                                                                              |
+| Titans                             | Strong, corrected | Large-scale agent class               | Source truth is `TITAN_COUNT=20` / `PAIR_COUNT=190`; current source/public prose has been corrected, and future reports should cite the constants instead of restating the pair count by hand. |
+| NHIs                               | Strong            | Non-human intelligence agent layer    | Deterministic GOAP/utility/memory/Markov/TinyMLP minds with an orchestrator that applies manipulation, domination, swarm, mimicry, hunt, retreat, and broadcast intents.                       |
+| PortalDeathFauna                   | Medium            | Portal death/respawn ecology          | Measure death/respawn rates, portal immunity, and predator/prey perturbation effects.                                                                                                          |
+| Leviathans                         | Medium            | Large ecology/fauna pressure system   | Measure surge cadence, spatial territory, collision pressure, and population effect size.                                                                                                      |
+| Digital Biologics / PrimordialSoup | Medium-high       | Tsotchke Petri growth substrate       | Preserve `26` forms, source paths `primordial-soup.ts` / `digital-biologics.ts`, and ablate corpus catalysis versus controls.                                                                  |
+| Pantheons                          | Medium            | Governance/mythic world layer         | Causal effect on entity behavior.                                                                                                                                                              |
+| 25 Archon Godforms                 | Medium            | Role taxonomy and symbolic attractors | One page per Archon: role, metric, falsifier.                                                                                                                                                  |
+| GOD/GodColossus                    | Weak-medium       | Symbolic/reactive higher-order system | Must remain symbolic unless measurable cognition emerges.                                                                                                                                      |
+| Temple/Portal                      | Weak-medium       | Environment/operator substrate        | Falsifier: if removing it changes nothing, claim must shrink.                                                                                                                                  |
+| Flora                              | Medium            | Ecological substrate                  | Growth, signal, resource, and coupling metrics.                                                                                                                                                |
+| Fauna/Wildlife                     | Medium            | Ecological agents                     | Population, niche, pursuit/avoidance, social metrics.                                                                                                                                          |
+| Tsotchke                           | Medium-high       | Integrator/meta-observer              | Repo-by-repo and surface-by-surface wiring receipts.                                                                                                                                           |
 
 ## Consciousness Theory Mapping
 
@@ -399,19 +405,18 @@ prematurely makes it weaker. Placing it correctly makes it improvable.
 
 ### Phase A - Truth Lock
 
-- Update `VERIFICATION` to distinguish 2,360 floor from the fresh fifth-pass
-  2,378 latest receipt.
-- Patch `BRAIN` internal contradictions around build/check status.
+- Keep `VERIFICATION` distinguished between the 2,360 floor and the fresh
+  fifth-pass 2,378 latest receipt.
+- Keep `BRAIN` sealed after the current build/check and version-tail fixes.
 - Fix or archive malformed `OMNISCIENT` HTML.
 - Replace stale counts with current tracked counts.
 - Archive superseded 16-file and "ultimate" drafts without deleting provenance.
 
 ### Phase B - Browser/Public Parity
 
-- Regenerate static public pages.
-- Fix Titan count drift: source truth is `TITAN_COUNT=20` / `TITANS=20`, but
-  stale "10" text remains in `src/sim/titans.ts` comments, `docs.html`, and
-  `docs/ENTITY-SCHEMA-AND-MAPPINGS-2026-06-26.md`.
+- Regenerate static public pages after source/public prose changes.
+- Keep Titan count drift sealed: source truth is `TITAN_COUNT=20` / `TITANS=20`
+  and current public/source prose now uses 20 Titans / 190 pairs.
 - Link the new `CONSOLIDATED-22-*` artifacts from public docs/index surfaces if
   they are intended to be the active report pair.
 - Decide whether the HTML is a condensed browser companion or a full Markdown

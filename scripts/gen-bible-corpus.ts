@@ -61,6 +61,18 @@ const EXTRA: Entry[] = [
     tier: 'Research',
   },
   {
+    title: 'CONSOLIDATED-22-MASTER-ASSESSMENT — current master',
+    href: '/docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md',
+    blurb: 'Current 22-report synthesis: what is relevant, stale, defensible, and still missing.',
+    tier: 'Research',
+  },
+  {
+    title: 'CONSOLIDATED-22-FILE-AUDIT — trust ledger',
+    href: '/docs/CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md',
+    blurb: 'File-by-file audit of the 22 report artifacts and publication-surface gaps.',
+    tier: 'Research',
+  },
+  {
     title: 'KANBAN — in-flight work',
     href: '/docs/KANBAN-2026-06-26.md',
     blurb: 'Live task board.',

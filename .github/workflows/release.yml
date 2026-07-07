@@ -1,9 +1,9 @@
 name: Release
 
 # CD: on a semver tag (e.g. `v0.7.2`), run the full gate, build the static bundle, package
-# the deployable site (dist/ + the self-contained /lab artifact), and publish it as a GitHub
-# Release asset. Works on private repos (no Pages plan required); a downloadable PoC build per
-# version.
+# the deployable site (the same `site/` artifact assembled for GitHub Pages: app + docs/spec/bible
+# + lab/consciousness/sentience + copied docs/ report targets), and publish it as a GitHub Release
+# asset. Works on private repos (no Pages plan required); a downloadable PoC build per version.
 #
 # Trigger via tag push:    git tag v0.13.0 && git push origin v0.13.0
 # Trigger via UI dispatch: Actions → Release → Run workflow → enter version (e.g. v0.13.0)
@@ -115,11 +115,9 @@ jobs:
       - name: Full gate
         run: bun run check
 
-      - name: Package site (dist + lab)
+      - name: Assemble and package Pages-equivalent site
         run: |
-          mkdir -p site/lab
-          cp -r dist/* site/
-          cp lab/quantum-wildbeyond.html site/lab/index.html
+          bun run pages
           tar -czf cqm-${{ steps.ref.outputs.tag }}.tar.gz -C site .
 
       - name: Generate SBOM (CycloneDX, §21.420)

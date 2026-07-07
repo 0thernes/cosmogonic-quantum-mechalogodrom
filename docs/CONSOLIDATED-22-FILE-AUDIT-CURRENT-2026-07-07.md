@@ -32,20 +32,20 @@ This audit integrates three critic lanes:
 
 Fresh fifth-pass verification receipt available to this audit set:
 
-| Item                              | Current observed value                                                                               |
-| --------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `verify:receipts`                 | 2,378 pass / 0 fail, fresh fifth-pass verified receipt                                               |
-| Expect calls                      | 2,866,612, fresh fifth-pass verified receipt                                                         |
-| Test files                        | 255                                                                                                  |
-| Line coverage                     | 92.01%                                                                                               |
-| Function coverage                 | 89.65%                                                                                               |
-| `typecheck`                       | Passed                                                                                               |
-| `lint`                            | Passed                                                                                               |
-| `sync:check`                      | Passed at canonical floor wording                                                                    |
-| `verify:facts`                    | Exit 0 with 9 drift warnings in `BRAIN...ASSESSMENT`                                                 |
-| `format:check` / 22-file Prettier | Failed                                                                                               |
-| Browser smoke                     | Not performed; Chrome/Edge exist by explicit path, but not as a one-command PATH/Playwright workflow |
-| Build                             | Not rerun by critic because build writes generated artifacts                                         |
+| Item                              | Current observed value                                                                                                |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `verify:receipts`                 | 2,378 pass / 0 fail, fresh fifth-pass verified receipt                                                                |
+| Expect calls                      | 2,867,096, fresh fifth-pass verified receipt                                                                          |
+| Test files                        | 255                                                                                                                   |
+| Line coverage                     | 92.01%                                                                                                                |
+| Function coverage                 | 89.65%                                                                                                                |
+| `typecheck`                       | Passed                                                                                                                |
+| `lint`                            | Passed                                                                                                                |
+| `sync:check`                      | Passed at canonical floor wording                                                                                     |
+| `verify:facts`                    | Exit 0 with known fuzzy drift warnings; current full gate observed 14 warnings, no failures                           |
+| `format:check` / release surfaces | Green after local-only archived report forks were excluded from Prettier; current consolidated pair remains formatted |
+| Browser smoke                     | Not performed; Chrome/Edge exist by explicit path, but not as a one-command PATH/Playwright workflow                  |
+| Build                             | Not rerun by critic because build writes generated artifacts                                                          |
 
 Important distinction: `2,360` is the portable canonical floor embedded in sync
 surfaces. It is not the latest local receipt. `2,373` was a previous current
@@ -55,35 +55,35 @@ receipt available to this audit set is `2,378`.
 Post-write note: a final local `bun run verify:receipts` attempt after creating
 these consolidated artifacts timed out after 120 seconds and left no live
 `bun.exe` process. A later fifth-pass currentness lane completed the run and
-verified `2,378 pass / 0 fail / 2,866,612 expect() calls`; that supersedes the
+verified `2,378 pass / 0 fail / 2,867,096 expect() calls`; that supersedes the
 earlier timeout caveat for receipt wording.
 
 ## 22-File Trust Table
 
-| #   | Artifact                                                                         | Current trust | Use now                                      | Main issue                                                                    |
-| --- | -------------------------------------------------------------------------------- | ------------- | -------------------------------------------- | ----------------------------------------------------------------------------- |
-| 1   | `FILE-AUDIT-16-FILES-2026-07-07.md`                                              | Tier E        | Historical audit only                        | Scope is 16 files, not 22; superseded.                                        |
-| 2   | `MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.html`                            | Tier C        | Browser companion to audit draft             | Needs validation against current receipt and static render checks.            |
-| 3   | `MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.md`                              | Tier C        | Mine for methodology, controls, claim linter | Strong but not the final current master.                                      |
-| 4   | `SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.html`                 | Tier E        | Do not promote                               | Malformed HTML near `<h4>Build Paths:</h3>`; overclaim-prone.                 |
-| 5   | `SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.md`                   | Tier E        | Archive rhetoric/draft                       | Stale scale counts and overclaim language.                                    |
-| 6   | `VERIFICATION-ANALYTICAL-DATA.md`                                                | Tier A-       | Keep as evidence base, update                | Calls 2,360 latest; now should separate floor from latest receipt.            |
-| 7   | `MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md` | Tier C+       | Mine heavily for named-system ledger         | Valuable coverage, but still needs sober falsifiability framing.              |
-| 8   | `NHSI-PROGRESS-DASHBOARD-2026-06-26.md`                                          | Tier A-       | Keep as progress dashboard                   | Dated June 26; must be refreshed for July 7 receipt/state.                    |
-| 9   | `SUPER-REPORT-ULTIMATE-MEGA-2026-07-06.md`                                       | Tier E        | Archive                                      | Stale scale counts and "complete/omniscient" wording.                         |
-| 10  | `MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS3-2026-07-06.md`        | Tier C+       | Mine for world-neurology and benchmark cards | Strong details, not current gate authority.                                   |
-| 11  | `SUPER-REPORT-3RD-PASS-2026-07-06.md`                                            | Tier D        | Secondary archive                            | Useful historical synthesis, lower currentness.                               |
-| 12  | `SUPER-REPORT-2ND-PASS-2026-07-06.md`                                            | Tier D-       | Archive with caution                         | Contains bad path `src/sim/super-mith.ts`; actual is `src/sim/super-mind.ts`. |
-| 13  | `MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS2-2026-07-06.md`        | Tier C        | Mine selectively                             | Good mid-pass synthesis, superseded by Pass3/Final.                           |
-| 14  | `SUPER-REPORT-2026-07-06.md`                                                     | Tier D        | Secondary archive                            | Early draft, mostly superseded.                                               |
-| 15  | `MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS1-2026-07-06.md`        | Tier D        | Secondary archive                            | Early pass, superseded.                                                       |
-| 16  | `CONTROLS-2026-06-26.md`                                                         | Tier A-       | Keep, but label narrowly                     | UI/operator controls only; not scientific experimental controls.              |
-| 17  | `CONSOLIDATED-16-MASTER-ASSESSMENT-CURRENT-2026-07-07.html`                      | Tier B-       | Near-current draft only                      | 16-file scope and 2,373 receipt are stale.                                    |
-| 18  | `CONSOLIDATED-16-FILE-AUDIT-CURRENT-2026-07-07.md`                               | Tier B        | Use as issue map                             | Good sober audit, but 16-file scope and 2,373 receipt are stale.              |
-| 19  | `CONSOLIDATED-16-MASTER-ASSESSMENT-CURRENT-2026-07-07.md`                        | Tier B-       | Near-current draft only                      | Needs 22-file rename, current receipt, and stronger browser/claim caveats.    |
-| 20  | `BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md`             | Tier A-       | Canonical foundation after cleanup           | Very large and valuable, but internally contradicts build/check status.       |
-| 21  | `MASTER-ASSESSMENT-2026-07-07.html`                                              | Tier E        | Do not promote                               | Thin relative to full set; inherits stale floor/overclaim risk.               |
-| 22  | `MASTER-ASSESSMENT-2026-07-07.md`                                                | Tier E        | Do not promote                               | Uses older 2,360 framing and ends with overclaim-prone language.              |
+| #   | Artifact                                                                         | Current trust | Use now                                      | Main issue                                                                      |
+| --- | -------------------------------------------------------------------------------- | ------------- | -------------------------------------------- | ------------------------------------------------------------------------------- |
+| 1   | `FILE-AUDIT-16-FILES-2026-07-07.md`                                              | Tier E        | Historical audit only                        | Scope is 16 files, not 22; superseded.                                          |
+| 2   | `MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.html`                            | Tier C        | Browser companion to audit draft             | Needs validation against current receipt and static render checks.              |
+| 3   | `MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW-2026-07-07.md`                              | Tier C        | Mine for methodology, controls, claim linter | Strong but not the final current master.                                        |
+| 4   | `SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.html`                 | Tier E        | Do not promote                               | Malformed HTML near `<h4>Build Paths:</h3>`; overclaim-prone.                   |
+| 5   | `SUPER-REPORT-OMNISCIENT-OMNICOGNITIVE-ULTIMATE-2026-07-07.md`                   | Tier E        | Archive rhetoric/draft                       | Stale scale counts and overclaim language.                                      |
+| 6   | `VERIFICATION-ANALYTICAL-DATA.md`                                                | Tier A        | Keep as evidence base                        | Current pass now separates 2,360 floor from 2,378 latest receipt.               |
+| 7   | `MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md` | Tier C+       | Mine heavily for named-system ledger         | Valuable coverage, but still needs sober falsifiability framing.                |
+| 8   | `NHSI-PROGRESS-DASHBOARD-2026-06-26.md`                                          | Tier A-       | Keep as progress dashboard                   | Dated June 26; must be refreshed for July 7 receipt/state.                      |
+| 9   | `SUPER-REPORT-ULTIMATE-MEGA-2026-07-06.md`                                       | Tier E        | Archive                                      | Stale scale counts and "complete/omniscient" wording.                           |
+| 10  | `MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS3-2026-07-06.md`        | Tier C+       | Mine for world-neurology and benchmark cards | Strong details, not current gate authority.                                     |
+| 11  | `SUPER-REPORT-3RD-PASS-2026-07-06.md`                                            | Tier D        | Secondary archive                            | Useful historical synthesis, lower currentness.                                 |
+| 12  | `SUPER-REPORT-2ND-PASS-2026-07-06.md`                                            | Tier D-       | Archive with caution                         | Contains bad path `src/sim/super-mith.ts`; actual is `src/sim/super-mind.ts`.   |
+| 13  | `MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS2-2026-07-06.md`        | Tier C        | Mine selectively                             | Good mid-pass synthesis, superseded by Pass3/Final.                             |
+| 14  | `SUPER-REPORT-2026-07-06.md`                                                     | Tier D        | Secondary archive                            | Early draft, mostly superseded.                                                 |
+| 15  | `MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS1-2026-07-06.md`        | Tier D        | Secondary archive                            | Early pass, superseded.                                                         |
+| 16  | `CONTROLS-2026-06-26.md`                                                         | Tier A-       | Keep, but label narrowly                     | UI/operator controls only; not scientific experimental controls.                |
+| 17  | `CONSOLIDATED-16-MASTER-ASSESSMENT-CURRENT-2026-07-07.html`                      | Tier B-       | Near-current draft only                      | 16-file scope and 2,373 receipt are stale.                                      |
+| 18  | `CONSOLIDATED-16-FILE-AUDIT-CURRENT-2026-07-07.md`                               | Tier B        | Use as issue map                             | Good sober audit, but 16-file scope and 2,373 receipt are stale.                |
+| 19  | `CONSOLIDATED-16-MASTER-ASSESSMENT-CURRENT-2026-07-07.md`                        | Tier B-       | Near-current draft only                      | Needs 22-file rename, current receipt, and stronger browser/claim caveats.      |
+| 20  | `BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md`             | Tier A-       | Canonical foundation after cleanup           | Very large and valuable; current pass fixes build/check and version tail drift. |
+| 21  | `MASTER-ASSESSMENT-2026-07-07.html`                                              | Tier E        | Do not promote                               | Thin relative to full set; inherits stale floor/overclaim risk.                 |
+| 22  | `MASTER-ASSESSMENT-2026-07-07.md`                                                | Tier E        | Do not promote                               | Uses older 2,360 framing and ends with overclaim-prone language.                |
 
 ## Relevance Ranking
 
@@ -176,7 +176,7 @@ the audit.
 | Pantheon internals                  | `PASS3`, `NHSI`, `BRAIN`                    | Include TomPantheon, FacultiesPantheon, GodformBias, PantheonSociety, MindField, and Brutal God Releases as internal mechanisms.                                                                                                                                                                                                                                                                                                                                                       |
 | Tsotchke load-bearing proof         | `BRAIN`                                     | Preserve `corpusBrainScalar` ablation as the load-bearing test pattern for Tsotchke claims.                                                                                                                                                                                                                                                                                                                                                                                            |
 | License/legal matrix                | `BRAIN`, `NHSI`                             | Keep GPL/fenced/proprietary leaves separate from deeply wired MIT-compatible code.                                                                                                                                                                                                                                                                                                                                                                                                     |
-| Build blocker specificity           | `BRAIN II.9`                                | BRAIN records a specific build failure at `src/styles/app.css:0`, with CSS content exonerated and suspected toolchain path `bun-plugin-tailwind ^0.1.2` + Bun 1.3.14 + Tailwind v4. This pass did not reproduce that build, so treat it as a prior local finding needing a fresh build pass, not as a newly verified fact.                                                                                                                                                             |
+| Build blocker specificity           | `BRAIN II.9`, `src/styles/app.css`          | Prior `src/styles/app.css:0` Tailwind/Bun scanner failure is now fixed by `source(none)` plus explicit `@source` roots for `src/`, root HTML, and `lab/`. Treat it as a sealed build-fix invariant, not an active blocker, unless a fresh build reopens it.                                                                                                                                                                                                                            |
 
 Exact search-term note from the miss check: also preserve the terms
 `A-Life matrix`, breadth 4.44, code-grounded z=+2.83, Thaler,
@@ -220,7 +220,7 @@ reports remain audit-grade rather than merely thematic.
 | Brutal release event handles                      | Preserve `VOID_KING`, `VOID_KING_AWAKENS`, `SPIRAL_WILL`, `BINARY_IGNITION`, `PHOENIX_FEAST`, and `PHOENIX_FEAST_REBIRTH` as event handles, not extra consciousness evidence.                                                                                                                                                                                                                             |
 | Archon roster exactness                           | The 25-Archon layer should retain exact source handles `ORACLE-Σ`, `STARKILLER-Ω`, `MANHATTAN-Φ`, `BROLY-Ψ`, `VOID-Λ`, plus the 20 ALPHA names when a full appendix is built. ASCII aliases such as `ORACLE-Sigma` are publishing fallbacks only.                                                                                                                                                         |
 | Shoggoth/Puppeteer/Titan denominators             | Preserve Shoggoths `100 / 16 strains`, Puppeteers `100 / 14 styles`, Titans `20`, and benchmark IDs `B2` Shoggoth, `B3` Puppeteer, `B4` Titan.                                                                                                                                                                                                                                                            |
-| Leviathans                                        | Add `Leviathans` to the portal-fauna/world-neurology vocabulary. Earlier consolidation named `PortalDeathFauna` but did not keep this alias.                                                                                                                                                                                                                                                              |
+| Leviathans                                        | Preserve `Leviathans` as a standalone portal-fauna/world-neurology vocabulary handle alongside `PortalDeathFauna`, not only as generic fauna.                                                                                                                                                                                                                                                             |
 | Flora and phyla constants                         | Preserve `15,000` alien flora desktop, `5,200` mobile, `10,000` plants, `PHYLUM_COUNT=10`, `MORPHS_PER_PHYLUM=25`, and `OUTLIER_RATE=0.01` as ecology denominator handles.                                                                                                                                                                                                                                |
 | Native C++ denominator                            | Preserve the ADR-0007 native denominator: 8 C/C++ files = 3 `.cpp` + 4 `.h` + 1 `.hpp`; optional streamed tier, not JS-gated and not compiled in every gate.                                                                                                                                                                                                                                              |
 | Computed-but-unread loops                         | Preserve `Mortality`, `MythRitual`, and `latentSubstrate` as computed-but-unread coupling targets.                                                                                                                                                                                                                                                                                                        |
@@ -232,21 +232,25 @@ reports remain audit-grade rather than merely thematic.
 The requested world is broad. The 22 files do not omit the major categories, but
 the coverage is distributed and uneven.
 
-| System               | Covered?     | Best source among 22                          | Current audit read                                                                                                                                                                                                         |
-| -------------------- | ------------ | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Base Entities        | Yes          | `PASS3`, `FINAL-HURRAH`, `BRAIN`              | Strongest as measurable ALife agents. Need live behavior metrics tied to receipts.                                                                                                                                         |
-| SuperCreatures       | Yes          | `PASS2`, `PASS3`, `BRAIN`                     | Good as higher-capability agent layer. Needs clearer benchmark separation from base entities.                                                                                                                              |
-| Apex Abomination     | Yes          | `FINAL-HURRAH`, `PASS3`                       | Covered as apex/systemic threat or anomaly. Needs falsifiers and event telemetry.                                                                                                                                          |
-| Shoggoths            | Yes          | `FINAL-HURRAH`, `PASS3`                       | Covered, but should be framed as plastic/adaptive agent class, not mystical proof.                                                                                                                                         |
-| Puppeteers / Puppets | Yes          | `FINAL-HURRAH`, `PASS3`                       | Covered. Needs causal-control metrics: what is commanded, what resists, what adapts.                                                                                                                                       |
-| Titans               | Yes          | `FINAL-HURRAH`, `PASS3`, source/static checks | Covered. Source truth is `TITAN_COUNT=20` / `TITANS=20`; stale "10" remains in `src/sim/titans.ts` comments, `docs.html`, and `docs/ENTITY-SCHEMA-AND-MAPPINGS-2026-06-26.md`, while current `specs.html` already says 20. |
-| Pantheons            | Yes          | `FINAL-HURRAH`, `PASS3`                       | Covered as mythic/governance layer. Needs objective effects and doctrine-linting.                                                                                                                                          |
-| 25 Archon Godforms   | Yes          | `FINAL-HURRAH`, `PASS3`                       | Covered. Needs per-Archon behavioral inventory and current source cross-reference.                                                                                                                                         |
-| GOD / GodColossus    | Yes but weak | `PASS3`, `FINAL-HURRAH`                       | Must be symbolic/reactive unless falsifiable cognition metrics exist.                                                                                                                                                      |
-| Temple / Portal      | Yes but weak | `PASS3`, `FINAL-HURRAH`                       | Should be tested as environment/operator substrate, not consciousness evidence.                                                                                                                                            |
-| Plants / Flora       | Yes          | `PASS3`, `FINAL-HURRAH`                       | Present but under-benchmarked; needs growth, signal, and ecology metrics.                                                                                                                                                  |
-| Fauna / Wildlife     | Yes          | `PASS3`, `FINAL-HURRAH`                       | Present but under-benchmarked; needs population, interaction, and niche metrics.                                                                                                                                           |
-| Tsotchke             | Yes          | `BRAIN`, `FINAL-HURRAH`, `MEGA-ULTRATHINK`    | Central integration claim. Do not say wired into every repo without current evidence.                                                                                                                                      |
+| System                             | Covered?          | Best source among 22                          | Current audit read                                                                                                                                               |
+| ---------------------------------- | ----------------- | --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Base Entities                      | Yes               | `PASS3`, `FINAL-HURRAH`, `BRAIN`              | Strongest as measurable ALife agents. Need live behavior metrics tied to receipts.                                                                               |
+| SuperCreatures                     | Yes               | `PASS2`, `PASS3`, `BRAIN`                     | Good as higher-capability agent layer. Needs clearer benchmark separation from base entities.                                                                    |
+| Apex Abomination                   | Yes               | `FINAL-HURRAH`, `PASS3`                       | Covered as apex/systemic threat or anomaly. Needs falsifiers and event telemetry.                                                                                |
+| Shoggoths                          | Yes               | `FINAL-HURRAH`, `PASS3`                       | Covered, but should be framed as plastic/adaptive agent class, not mystical proof.                                                                               |
+| Puppeteers / Puppets               | Yes               | `FINAL-HURRAH`, `PASS3`                       | Covered. Needs causal-control metrics: what is commanded, what resists, what adapts.                                                                             |
+| Titans                             | Yes               | `FINAL-HURRAH`, `PASS3`, source/static checks | Covered. Source truth is `TITAN_COUNT=20` / `PAIR_COUNT=190`; current source/public prose has been corrected, while future reports should cite the constants.    |
+| NHIs                               | Yes, now promoted | `BRAIN`, source/static checks                 | Real NHI mind/body/orchestrator path (`nhi.ts`, `nhi-system.ts`, `world.ts`). Must be first-class in world-neurology, not swallowed by generic entity cognition. |
+| PortalDeathFauna                   | Yes               | `PASS3`, `FINAL-HURRAH`, source/static checks | Covered as portal death/respawn ecology; keep the handle distinct from broad fauna.                                                                              |
+| Leviathans                         | Yes               | `PASS3`, source/static checks                 | Covered as a large ecology/fauna pressure system; keep the handle distinct from broad fauna.                                                                     |
+| Digital Biologics / PrimordialSoup | Yes               | `BRAIN`, `NHSI`, source/static checks         | Covered as Tsotchke Petri growth substrate with `26` forms and `primordial-soup.ts` / `digital-biologics.ts` source handles.                                     |
+| Pantheons                          | Yes               | `FINAL-HURRAH`, `PASS3`                       | Covered as mythic/governance layer. Needs objective effects and doctrine-linting.                                                                                |
+| 25 Archon Godforms                 | Yes               | `FINAL-HURRAH`, `PASS3`                       | Covered. Needs per-Archon behavioral inventory and current source cross-reference.                                                                               |
+| GOD / GodColossus                  | Yes but weak      | `PASS3`, `FINAL-HURRAH`                       | Must be symbolic/reactive unless falsifiable cognition metrics exist.                                                                                            |
+| Temple / Portal                    | Yes but weak      | `PASS3`, `FINAL-HURRAH`                       | Should be tested as environment/operator substrate, not consciousness evidence.                                                                                  |
+| Plants / Flora                     | Yes               | `PASS3`, `FINAL-HURRAH`                       | Present but under-benchmarked; needs growth, signal, and ecology metrics.                                                                                        |
+| Fauna / Wildlife                   | Yes               | `PASS3`, `FINAL-HURRAH`                       | Present but under-benchmarked; needs population, interaction, and niche metrics.                                                                                 |
+| Tsotchke                           | Yes               | `BRAIN`, `FINAL-HURRAH`, `MEGA-ULTRATHINK`    | Central integration claim. Do not say wired into every repo without current evidence.                                                                            |
 
 ## What Is Current vs. Stale
 
@@ -336,16 +340,16 @@ Better replacements:
 These are the high-value next moves:
 
 1. Make `CONSOLIDATED-22-*` the new active pair and archive the `16` pair.
-2. Update `VERIFICATION-ANALYTICAL-DATA.md` so it says `2,360` is a floor and
-   `2,378` is the fresh fifth-pass verified receipt available to this audit
-   set.
+2. Keep `VERIFICATION-ANALYTICAL-DATA.md` sealed on the current split:
+   `2,360` is the portable floor and `2,378` is the fresh fifth-pass verified
+   receipt available to this audit set.
 3. Fix `SUPER-REPORT-OMNISCIENT...html` or archive it away from browser-ready
    surfaces.
-4. Rerun or intentionally skip `bun run build` with a clear note that it writes
+4. Keep `bun run check` / `bun run build` green and note that build writes
    generated artifacts.
 5. Browser-smoke the new HTML once a local browser is available.
-6. Regenerate or patch public pages so Titan wording and docs/specs match source,
-   and add discoverable links to the `CONSOLIDATED-22-*` artifacts.
+6. Keep public pages regenerated/patched so Titan wording and docs/specs match
+   source, and keep discoverable links to the `CONSOLIDATED-22-*` artifacts.
 7. Create one canonical "scientific controls" section that includes:
    ablations, null worlds, seed sweeps, deterministic replay, population
    statistics, survival curves, learning/adaptation deltas, and lab JSON receipts.

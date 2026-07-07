@@ -15,7 +15,7 @@ import { recombine } from './genome'; // genuine seeded crossover+mutation — c
 
 const clamp01 = (v: number): number => clamp(v, 0, 1);
 
-export const SOUP_SLOTS = 128; // Expanded 0.16: full Tsotchke corpus (local Z:\[Vibe Coded (AI)]\(Tsotchke) + GH) — Eshkol .esk programs as native heritable DNA for digital biologics.
+export const SOUP_SLOTS = 128; // Expanded 0.16: depth-classed Tsotchke corpus (local Z:\[Vibe Coded (AI)]\(Tsotchke) + GH) — Eshkol .esk programs as native heritable DNA for digital biologics.
 export const SOUP_GENOME_LEN = 24;
 
 /** Real Eshkol program DNA from corpus (gradient_descent_demo.esk core, AD-as-primitive). Used as heritable genome for soup strains. */
@@ -84,7 +84,7 @@ export class PrimordialSoup {
       this.genomes[i] = g;
       if (this.alive[i]) {
         // Built from the actual local Tsotchke Repo Folder via scripts/harvest-tsotchke-corpus.ts
-        // Real .esk programs (1436+) from Eshkol become heritable digital biologic DNA.
+        // Real .esk programs from the generated harvest become heritable digital biologic DNA.
         this.eshkolPrograms[i] = i % 3 === 0 ? getEshkolProgramFingerprint(i) : (s * 10000) >>> 0;
       }
     }
@@ -230,7 +230,7 @@ export class PrimordialSoup {
       symmetry: this.symmetry[i] ?? 0,
       consciousness: this.consciousness[i] ?? 0,
       alive: !!this.alive[i],
-      eshkolProgram: this.eshkolPrograms[i], // full Tsotchke corpus DNA (Eshkol .esk programs as heritable substrate)
+      eshkolProgram: this.eshkolPrograms[i], // Tsotchke depth-ledger DNA (Eshkol .esk programs as heritable substrate)
     };
   }
 }

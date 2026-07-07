@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Publication-surface current-truth pass after the 22-report audit:
   - Updated README/About-facing metadata to separate the `2,360` public release floor from the
-    fresh Windows-local `2,378 completed cases, zero failures, 2,866,612 expect()` receipt.
+    fresh Windows-local `2,378 completed cases, zero failures, 2,867,096 expect()` receipt.
   - Added discoverable links to the active consolidated 22-report master/audit from Docs, Spec,
     Bible, Lab, Consciousness Lab, Sentience Lab, and the reports index.
   - Refreshed public codebase census wording to the current `bun run metrics` output:

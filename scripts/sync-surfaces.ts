@@ -218,11 +218,15 @@ function syncVersion(s: string): string {
     s
       .replace(/Package\s+\*\*v?0\.[0-9]+\.[0-9]+\*\*/g, `Package **v${VERSION}**`)
       .replace(/Package\s+v?0\.[0-9]+\.[0-9]+/g, `Package v${VERSION}`)
-      .replace(/v?0\.[0-9]+\.[0-9]+\s+@\s+current/g, `v${VERSION} @ current`)
+      .replace(/v?0\.[0-9]+\.[0-9]+\s+@\s+current/g, (m) =>
+        m.includes('\n')
+          ? m.replace(/v?0\.[0-9]+\.[0-9]+/, `v${VERSION}`)
+          : `v${VERSION} @ current`,
+      )
       .replace(/version-0\.[0-9]+\.[0-9]+/g, `version-${VERSION}`)
       .replace(
         /reviewed:\s*[0-9-]{10}\s*\|\s*v0\.[0-9]+\.[0-9]+/g,
-        `reviewed: 2026-07-06 | v${VERSION}`,
+        `reviewed: 2026-07-07 | v${VERSION}`,
       )
       .replace(/(\| Package version\s+\|\s+`)0\.[0-9]+\.[0-9]+(`)/g, `$1${VERSION}$2`)
       // TECH-SPEC / spec-header "**Version:** vX.Y.Z" — the one current-version marker this missed,

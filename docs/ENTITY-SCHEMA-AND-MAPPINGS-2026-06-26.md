@@ -18,7 +18,7 @@ The Mechalogodrom has **no database**. Its "entities" live in scene graphs, type
 them each frame. The relational structure is real all the same, and modeling it makes the data flow
 auditable.
 
-> **Scope (current - Tsotchke Genesis):** Includes PRIMORDIAL_SOUP / DIGITAL_BIOLOGIC as core for Tsotchke-wired life/sentience. Accurate to the synced canonical facts. "Grow What Thou Wilt."
+> **Scope (current - Tsotchke Genesis):** Includes PRIMORDIAL_SOUP / DIGITAL_BIOLOGIC as core for Tsotchke-depth-classed life/sentience indicators. Accurate to the synced canonical facts. "Grow What Thou Wilt."
 
 ## Conceptual schema
 
@@ -28,13 +28,13 @@ erDiagram
   WORLD ||--o{ ENTITY : "owns the population"
   WORLD ||--|| CONNECTOME : "owns the neural web"
   WORLD ||--|| GRAPH_MIND : "owns the analytical cortex"
-  WORLD ||--o{ TITAN : "owns 10 game-theoretic minds"
+  WORLD ||--o{ TITAN : "owns 20 game-theoretic minds"
   WORLD ||--o{ SHOGGOTH : "owns 100 predators (16 mobile)"
   WORLD ||--o{ PUPPET_MASTER : "owns the event triggers"
   WORLD ||--|| QUANTUM_SUBSTRATE : "owns cloud + register + circuit"
   WORLD ||--|| RD_FIELD : "owns the living ground"
   WORLD ||--|| ATMOSPHERE : "owns sky + weather"
-  WORLD ||--|| PRIMORDIAL_SOUP : "owns the Petri Dish / digital biologics (full Tsotchke corpus: Eshkol + all 20+ repos)"
+  WORLD ||--|| PRIMORDIAL_SOUP : "owns the Petri Dish / digital biologics (depth-classed Tsotchke corpus)"
   PRIMORDIAL_SOUP ||--o{ DIGITAL_BIOLOGIC : "grows independent life forms & sentience substrates (Eshkol programs, Moonlab tensors, etc.)"
 
   PHYLUM ||--o{ MORPHOTYPE : "groups 25 morphs (+ outliers)"
@@ -57,7 +57,7 @@ erDiagram
   PUPPET_MASTER }o--|| WEATHER : "selects regime"
   PUPPET_MASTER }o--|| QUANTUM_REGISTER : "applies gate signature"
 
-  %% Full docs sync: ER* + ARCHITECTURE + README + PHILOSOPHY + CONTRACTS + SPECS + LABS + in-app match code + GH exactly. Current Tsotchke full + petri growth.
+  %% Full docs sync: ER* + ARCHITECTURE + README + PHILOSOPHY + CONTRACTS + SPECS + LABS + in-app match code + GH exactly. Current Tsotchke depth ledger + petri growth.
 
   WEATHER ||--o{ ENTITY : "wind + temperature -> lifespan"
   WEATHER ||--|| RD_FIELD : "tunes feed/kill/diffusion"
@@ -75,8 +75,8 @@ erDiagram
   ANALYTICS_WINDOW ||--o{ OMEN : "emits when |z| > 2.5"
   WORLD ||--o{ AUDIT_EVENT : "records actions"
   %% Tsotchke digital biologics: one compact relationship set, not three drifting diagrams.
-  TSOTCHKE_REGISTRY ||--o{ TSOTCHKE_SUBSTRATE : "20 corpus projects (Eshkol flagship + Moonlab + QGTL + spin_nn + libirrep + quake + PINN + PIMC + ulg + logo-lab + tensorcore + rngs + asteroids + classical + homebrew)"
-  PRIMORDIAL_SOUP ||--o{ SOUP_STRAIN : "digital biologics born (EshkolProgram + AD mutation + full corpus catalysis)"
+  TSOTCHKE_REGISTRY ||--o{ TSOTCHKE_SUBSTRATE : "20 projects / 22 entries: 9 deep, 7 wired, 2 harvest, 3 fenced, 1 meta"
+  PRIMORDIAL_SOUP ||--o{ SOUP_STRAIN : "digital biologics born (EshkolProgram + AD mutation + depth-ledger catalysis)"
   SOUP_STRAIN ||--|| ESHKOL_PROGRAM : "heritable program fingerprint (from biologicProgramFingerprint + AD gradients)"
   SOUP_STRAIN ||--o{ ENTITY : "emergent life injected into world with substrate-specific dynamics"
   SUPER_CREATURE ||--|| PRIMORDIAL_SOUP : "first complex form; soup is the ongoing genesis (God in the dish)"
@@ -204,7 +204,7 @@ erDiagram
   ANALYTICS_WINDOW }o--o{ LORE_NAME : "omens named (kind = omen)"
 
   WORLD ||--|| PRIMORDIAL_SOUP : "catalyzes via archons + corpus (petri dish)"
-  GODFORM ||--o{ TSOTCHKE_SUBSTRATE : "biases + pulses (all 20+ repos)"
+  GODFORM ||--o{ TSOTCHKE_SUBSTRATE : "biases + pulses (depth-classed corpus)"
   PRIMORDIAL_SOUP ||--o{ BIOLOGIC_STRAIN : "grows Eshkol/Moonlab/Irrep/Quake/PINN life"
   BIOLOGIC_STRAIN ||--o{ ENTITY : "harvestEmergent to world (new forms)"
   ESHKOL_ENGINE ||--|| BIOLOGIC_STRAIN : "KB + factor-graph + GWT sentience markers"
@@ -226,7 +226,7 @@ erDiagram
   %% Tsotchke Petri Genesis additions (0.12+)
   TSOTCHKE_SUBSTRATE ||--o{ BIOLOGIC : "powers (Eshkol AD/GWT, Moonlab tensor, QGT geom, spin order, irrep sym, quake unitary...)"
   PETRI_SOUP ||--o{ BIOLOGIC_STRAIN : "incubates 128 slots"
-  BIOLOGIC_STRAIN ||--|| BIOLOGIC_KIND : "one of 26 forms from full corpus"
+  BIOLOGIC_STRAIN ||--|| BIOLOGIC_KIND : "one of 26 forms from the depth-ledger corpus"
   BIOLOGIC_STRAIN ||--o{ ENTITY : "emerges into world (vitality gate)"
   SUPER_CREATURE ||--o{ PETRI_SOUP : "catalyzes via ignition + corpus beat (first spark only)"
   ARCHON ||--|| BIOLOGIC_STRAIN : "genesisBoost from high sentience"
@@ -242,15 +242,15 @@ erDiagram
   PHYSICS_BODY ||--|| SPECIMEN_SDF : "transform posed each frame (native ray-marcher)"
 
   %% Tsotchke Petri Genesis / Digital Biologics (0.12+ — paramount growth engine)
-  PRIMORDIAL_SOUP ||--o{ DIGITAL_BIOLOGIC : "catalyzes (Eshkol AD + GWT ignition + full corpus)"
+  PRIMORDIAL_SOUP ||--o{ DIGITAL_BIOLOGIC : "catalyzes (Eshkol AD + GWT ignition + depth-ledger corpus)"
   ARCHON }o--|| PRIMORDIAL_SOUP : "stirs with consciousness + substrate flux (beginning only)"
   DIGITAL_BIOLOGIC }o--o{ ENTITY : "harvestEmergent → world phyla / NHI / new life forms"
-  TSOTCHKE_SUBSTRATE ||--o{ DIGITAL_BIOLOGIC : "provides AD, GWT, spin, QGT, symmetry, aliveness, etc. (all 20+ repos)"
+  TSOTCHKE_SUBSTRATE ||--o{ DIGITAL_BIOLOGIC : "provides AD, GWT, spin, QGT, symmetry, aliveness, etc. by depth class"
   DIGITAL_BIOLOGIC ||--|| BIOLOGIC_PROGRAM : ".esk-like fingerprint + genome (Eshkol substrate)"
   PRIMORDIAL_SOUP ||--|| PETRI_STATE : "128 slots, vitality, sentience, speciation"
 
   WORLD ||--|| PETRI_DISH : "owns primordial soup for digital biologics"
-  PETRI_DISH ||--o{ SOUP_STRAIN : "incubates independent life from full Tsotchke corpus (Eshkol, Moonlab, spin, QGT, irrep, QGE...)"
+  PETRI_DISH ||--o{ SOUP_STRAIN : "incubates independent life from the depth-classed Tsotchke corpus (Eshkol, Moonlab, spin, QGT, irrep, QGE...)"
   SOUP_STRAIN ||--|| TSOTCHKE_SUBSTRATE : "catalyzed by (AD, GWT, tensor, symmetry, aliveness, geometry)"
   ARCHON ||--|| PETRI_DISH : "initial stir (Super Creature is the beginning)"
 
@@ -394,7 +394,7 @@ erDiagram
   PRIMORDIAL_SOUP {
     int slots "128"
     float[] vitality "strain health"
-    uint32[] eshkolProgram "program fingerprint from full corpus"
+    uint32[] eshkolProgram "program fingerprint from depth-ledger corpus"
   }
   SOUP_STRAIN {
     int id ""
@@ -414,7 +414,7 @@ erDiagram
     float biomass ""
     float phiSurrogate "IIT-like"
     float aliveness "QGE proxy"
-    float tsotchkeBiologicFlux "full corpus catalysis"
+    float tsotchkeBiologicFlux "depth-ledger catalysis"
   }
 
   TSOTCHKE_REGISTRY ||--o{ TSOTCHKE_SUBSTRATE : "maps all 20 corpus projects"
@@ -734,7 +734,7 @@ sequenceDiagram
 The order of a single `World.update(dt)`. Read-only projections (render, audio, UI) come last and
 never mutate sim state.
 
-**Tsotchke Petri / Digital Biologics cadence (full wiring):** After Archon/super-mind beats, petriDishBeat + primordial-soup update for Eshkol program execution, AD mutation, GWT ignition, flux. Biologics emerge/grow from all Tsotchke substrates (Eshkol language primary). Super Creature catalyzes only.
+**Tsotchke Petri / Digital Biologics cadence (depth-ledger wiring):** After Archon/super-mind beats, petriDishBeat + primordial-soup update for Eshkol program execution, AD mutation, GWT ignition, flux. Biologics emerge/grow from licensed/wired Tsotchke substrates (Eshkol language primary) while harvest/fenced entries remain classified honestly. Super Creature catalyzes only.
 
 ```mermaid
 flowchart TD
@@ -747,7 +747,7 @@ flowchart TD
   F --> G[Connectome.update<br/>cadence by population]
   G --> H[Titans + Shoggoths + PuppetMasters]
   H --> I[Quantum cloud + register drift]
-  I --> J[Tsotchke full corpus catalysis (registry beat + soup update)]
+  I --> J[Tsotchke depth-ledger catalysis (registry beat + soup update)]
   J --> K[PrimordialSoup / PetriDish step (Eshkol AD mutation, biologic birth, aliveness selection)]
   K --> L[Emergent DIGITAL_BIOLOGIC strains injected as new life forms]
   I --> RDcheck{RD step frame?<br/>every 2nd offset 1}

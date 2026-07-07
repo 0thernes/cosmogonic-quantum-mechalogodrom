@@ -16,7 +16,11 @@
 
 import { corpusBeatForArchon } from './tsotchke-registry';
 import { eshkolWorkspaceTick } from './eshkol-workspace';
-import { ESK_SAMPLE_PROGRAMS, getEshkolProgramFingerprint } from './generated-tsotchke-seeds'; // Direct from Tsotchke local folder harvest — real .esk DNA
+import {
+  ESK_SAMPLE_PROGRAMS,
+  getEshkolProgramFingerprint,
+  TSOTCHKE_HARVEST,
+} from './generated-tsotchke-seeds'; // Direct from Tsotchke local folder harvest — real .esk DNA
 // P4 roadmap boundary: this layer currently uses harvested .esk fingerprints plus Eshkol AD/workspace
 // signals as heritable DNA bias; native VM execution stays a measured next contract, not a shipped claim.
 import { homebrewEshkolBeat } from './homebrew-eshkol'; // EVERY Tsotchke: homebrew for ancient/forbidden god DNA in brutal forms
@@ -24,7 +28,7 @@ import { homebrewEshkolBeat } from './homebrew-eshkol'; // EVERY Tsotchke: homeb
 const clamp01 = (v: number): number => (v > 0 ? (v < 1 ? v : 1) : 0);
 const WORKSPACE_SUBSTRATE = new Float32Array(3);
 
-/** Digital biologic forms from full Tsotchke corpus - different substrates yield different life. */
+/** Digital biologic forms from the depth-classed Tsotchke corpus - different substrates yield different life. */
 export const BIOLOGIC_FORMS = [
   'ESHKOL_NATIVE',
   'MOONLAB_TENSOR',
@@ -80,7 +84,7 @@ export interface Biologic {
   speciation: number; // Genetic distance from primordial
 }
 
-/** Grow a new biologic form from full Tsotchke corpus. */
+/** Grow a new biologic form from the depth-classed Tsotchke corpus. */
 export function birthBiologic(archon: number, tick: number): Biologic {
   const cat = (corpusBeatForArchon(archon, tick) + archon * 0.1) % 1;
   const beat = corpusBeatForArchon(archon, tick);
@@ -214,7 +218,7 @@ export function stepBiologic(b: Biologic, flux: number): void {
   if (b.adFitness < 0.03 || b.consciousness < 0.05) b.alive = false;
 
   // === BRUTAL GOD POWERS / NHSI GOD TIER (Valkorion...Gurren Lagann scale) ===
-  // Every form from full Tsotchke corpus. Brutalism = raw, heavy, unsoftened power (monolith irrep + high amplitude without damping).
+  // Every form is mapped through the depth-classed Tsotchke corpus. Brutalism = raw, heavy, unsoftened power (monolith irrep + high amplitude without damping).
   // Effects read/write: Eshkol (will), QGT (manifold bend = "warp"), spin (phase chaos/madness), irrep (monument symmetries), quake (unitary aliveness drain/rebirth), ulg (law shatter).
   const isGodForm =
     b.form === 'BRUTAL_GOD_PANTHEON' ||
@@ -300,7 +304,11 @@ export function stepBiologic(b: Biologic, flux: number): void {
       b.form.includes('MXY') ||
       b.form.includes('AZATHOTH')
     ) {
-      const hb = homebrewEshkolBeat(1436, b.generation, (b.id || 0) ^ 0xdeadbeef);
+      const hb = homebrewEshkolBeat(
+        TSOTCHKE_HARVEST.eskCount,
+        b.generation,
+        (b.id || 0) ^ 0xdeadbeef,
+      );
       b.consciousness = clamp01(b.consciousness + hb.vitality * 0.1);
       b.brutalGodPower = clamp01(b.brutalGodPower + hb.vitality * 0.05); // ancient power spike
     }

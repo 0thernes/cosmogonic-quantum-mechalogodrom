@@ -7,7 +7,7 @@
 
 ## Executive Summary
 
-The Cosmogonic Quantum Mechalogodrom + full Tsotchke corpus integration is an ambitious, disciplined attempt to build a **deterministic Petri dish for digital biologics** whose "genetic" and "cognitive" substrates are drawn from real mathematical and computational primitives (not scaled transformers).
+The Cosmogonic Quantum Mechalogodrom + depth-ledger Tsotchke corpus integration is an ambitious, disciplined attempt to build a **deterministic Petri dish for digital biologics** whose "genetic" and "cognitive" substrates are drawn from real mathematical and computational primitives (not scaled transformers).
 
 **Strongest novelty:** Treating a homoiconic language with _compiler-native automatic differentiation + built-in consciousness primitives (GWT broadcast + active inference)_ as heritable, gradient-mutable programs inside a large-scale world simulation that also incorporates exact symmetry (libirrep), geometric quantum structure (QGT/Berry), spin-glass memory, path integrals, and procedural morphogenesis as first-class drivers of form and "aliveness."
 

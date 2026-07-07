@@ -70,8 +70,8 @@ export const HELP_KB: readonly HelpEntry[] = [
       'population',
       'phyla',
     ],
-    body: 'The biomass is instantiated from hundreds of deterministic morphotypes (10 phyla). Above them sit named powers: SHOGGOTHS (eldritch devourers), PUPPET-MASTERS (unseen hands that reshape the world), TITANS (ten colossi that ally and war), NHIs (apex super-minds), LEVIATHANS, and the SUPER CREATURE. Each has its own biology, silhouette, material, motion and economic role — see the bestiary. Up to 50,000 are active at once on a capable machine (auto-selected for ≥16 cores + ≥8 GB; `?tier=mega` forces it), and each carries its own compact 70-parameter neural brain (V42) that perceives its state + the world and steers it — so every one moves with individual, reactive character.',
-    see: ['docs/ENTITY-SHEETS.md'],
+    body: 'The biomass is instantiated from hundreds of deterministic morphotypes (10 phyla). Above them sit named powers: SHOGGOTHS (eldritch devourers), PUPPET-MASTERS (unseen hands that reshape the world), TITANS (20 colossi that ally and war across C(20,2)=190 diplomacy pairs), NHIs (apex super-minds), LEVIATHANS, and the SUPER CREATURE. Each has its own biology, silhouette, material, motion and economic role — see the bestiary. Up to 50,000 are active at once on a capable machine (auto-selected for ≥16 cores + ≥8 GB; `?tier=mega` forces it), and each carries its own compact 70-parameter neural brain (V42) that perceives its state + the world and steers it — so every one moves with individual, reactive character.',
+    see: ['docs/ENTITY-SHEETS-2026-06-26.md'],
   },
   {
     id: 'mechalogodrom',
@@ -295,7 +295,7 @@ export const HELP_KB: readonly HelpEntry[] = [
       'life forms',
       'not llm',
     ],
-    body: 'Tsotchke (Eshkol COMPLETE spec + native AD + GWT/§17 Consciousness Engine + all 21+ repos from tsotchke + Tsotchke-Corporation corpus + local Tsotchke Repo Folder as .esk DNA + kernel source) is the paramount non-LLM substrate for digital biologics and different forms of existence/sentience/consciousness. The Primordial Soup / Petri Dish (primordial-soup.ts + petri-dish.ts + digital-biologics.ts) is the God growth engine. Super Creature/5 Archons are the initial spark only ("as if God made primordial inorganic soup"); the soup grows independent biologics onward using Eshkol .esk programs (as heritable "DNA"), real AD mutation, GWT workspace ignition, full corpus catalysis (Moonlab, QGT, spin, irrep, quake, ulg, logo, PINN etc.). 26 BiologicForms. Living integration map + wave receipts (see docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md). EVERY repo wired. "Grow What Thou Wilt." Not LLM/tokenizer/chat/SaaS/therapy — real math life in the mechalogodrom. See README, ARCHITECTURE, ERD/ERM/ERP, masters, digital-biologics.ts.',
+    body: 'Tsotchke (Eshkol COMPLETE spec + native AD + GWT/§17 Consciousness Engine + the 20-project / 22-entry tsotchke + Tsotchke-Corporation corpus + local Tsotchke folder as .esk DNA + kernel source) is the paramount non-LLM substrate for digital biologics and consciousness indicators. The current ledger is explicit: 9 deep, 7 wired, 2 harvest, 3 fenced, 1 meta, with an 18/21 scientific wired fraction; fenced LLM/on-chain entries stay provenance-only. The Primordial Soup / Petri Dish (primordial-soup.ts + petri-dish.ts + digital-biologics.ts) is the God growth engine. Super Creature/5 Archons are the initial spark only ("as if God made primordial inorganic soup"); the soup grows independent biologics onward using Eshkol .esk programs (as heritable "DNA"), real AD mutation, GWT workspace ignition, and depth-classed corpus catalysis. 26 BiologicForms. "Grow What Thou Wilt." Not LLM/tokenizer/chat/SaaS/therapy — real math life in the mechalogodrom, still indicator-only rather than proof of sentience. See README, ARCHITECTURE, ERD/ERM/ERP, masters, digital-biologics.ts.',
     see: [
       'README.md',
       'docs/ARCHITECTURE-2026-06-26.md',

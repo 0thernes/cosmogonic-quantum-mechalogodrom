@@ -52,7 +52,7 @@ const FACTS: Fact[] = [
     name: 'Tsotchke project count',
     pattern: /\b(\d+)\s+(?:Tsotchke\s+)?(?:corpus\s+)?projects?\b/gi,
     allowed: new Set(['20', '22']), // 20 corpus (mirrors+flagship); 22 = the distinct GH repo count
-    note: '20 corpus projects (~16 wired); 22 = raw GH repo count — see TSOTCHKE-INTEGRATION-MAP',
+    note: '20 corpus projects / 22 registry entries; 9 deep, 7 wired, 2 harvest, 3 fenced, 1 meta; scientific wired fraction 18/21',
   },
   {
     name: 'Fenced Tsotchke repos',

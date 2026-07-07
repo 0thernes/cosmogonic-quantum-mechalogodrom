@@ -226,7 +226,7 @@
           </div>
           <div class="card">
             <strong>Expect Calls</strong>
-            <div class="metric">2,866,612</div>
+            <div class="metric">2,867,096</div>
             <span class="muted">fresh fifth-pass verified receipt</span>
           </div>
           <div class="card">
@@ -282,7 +282,7 @@
             </tr>
             <tr>
               <td>Fresh fifth-pass receipt</td>
-              <td class="good">Verified run: 2,378 pass / 0 fail / 2,866,612 expect() calls</td>
+              <td class="good">Verified run: 2,378 pass / 0 fail / 2,867,096 expect() calls</td>
             </tr>
           </tbody>
         </table>
@@ -321,12 +321,11 @@
             </tr>
             <tr>
               <td>10 Titans</td>
-              <td>Stale in source comments and some docs</td>
+              <td>Stale claim, fixed/sealed</td>
               <td>
-                Source truth is <code>TITAN_COUNT=20</code> / <code>TITANS=20</code>; stale 10
-                remains in <code>src/sim/titans.ts</code> comments, <code>docs.html</code>, and
-                <code>docs/ENTITY-SCHEMA-AND-MAPPINGS-2026-06-26.md</code>, while current
-                <code>specs.html</code> already says 20.
+                Source truth is <code>TITAN_COUNT=20</code> / <code>PAIR_COUNT=190</code>; current
+                source/public prose now uses 20 Titans / 190 pairs. Future reports should cite the
+                constants instead of restating stale pair counts by hand.
               </td>
             </tr>
             <tr>
@@ -735,9 +734,43 @@
             </tr>
             <tr>
               <td>Titans</td>
-              <td class="good">Strong but drifted</td>
+              <td class="good">Strong, corrected</td>
               <td>Large-scale agent class.</td>
-              <td>Source constants say 20; stale 10 remains in comments and some docs.</td>
+              <td>
+                Source constants say <code>TITAN_COUNT=20</code> and <code>PAIR_COUNT=190</code>.
+              </td>
+            </tr>
+            <tr>
+              <td>NHIs</td>
+              <td class="good">Strong</td>
+              <td>Non-human intelligence agent layer.</td>
+              <td>
+                Keep <code>nhi.ts</code> and <code>nhi-system.ts</code> first-class: GOAP,
+                utility/memory/Markov/TinyMLP minds with applied world intents.
+              </td>
+            </tr>
+            <tr>
+              <td>PortalDeathFauna</td>
+              <td>Medium</td>
+              <td>Portal death/respawn ecology.</td>
+              <td>Measure death/respawn rates, portal immunity, and perturbation effects.</td>
+            </tr>
+            <tr>
+              <td>Leviathans</td>
+              <td>Medium</td>
+              <td>Large ecology/fauna pressure system.</td>
+              <td>
+                Measure surge cadence, territory, collision pressure, and population effect size.
+              </td>
+            </tr>
+            <tr>
+              <td>Digital Biologics / PrimordialSoup</td>
+              <td>Medium-high</td>
+              <td>Tsotchke Petri growth substrate.</td>
+              <td>
+                Preserve <code>26</code> forms, <code>primordial-soup.ts</code> /
+                <code>digital-biologics.ts</code>, and corpus-catalysis ablations.
+              </td>
             </tr>
             <tr>
               <td>Pantheons and 25 Archons</td>
