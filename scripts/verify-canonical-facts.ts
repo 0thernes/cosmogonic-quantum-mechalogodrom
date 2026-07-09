@@ -29,9 +29,12 @@ interface Fact {
 const FACTS: Fact[] = [
   {
     name: 'Butlin scorecard (X/14)',
-    pattern: /\b(\d+)\s*\/\s*14\b/g,
-    allowed: new Set(['8', '6', '14']), // 8 met · 6 partial · 14 = the framework size
-    note: 'headline is 8/14 met + 6/14 partial; a bare 9/14 or 14/14 is drift/overclaim',
+    // Only scorecard framings (met/partial/failed/Butlin/indicator). Excludes "Puppeteers 100 / 14 styles",
+    // "ladder plant 0.42 → …", "500-point 486 / 14 / 0", and bare table "X / 14" denominators that are not Butlin.
+    pattern:
+      /\b(\d+)\s*\/\s*14\b(?=[^\n]{0,40}\b(?:met|partial|fail(?:ed)?|Butlin|indicator|scorecard)\b)|\b(?:met|partial|fail(?:ed)?|Butlin|indicator|scorecard)\b[^\n]{0,40}\b(\d+)\s*\/\s*14\b/gi,
+    allowed: new Set(['8', '6', '14', '0']), // 8 met · 6 partial · 14 framework · 0 failed is honest framing
+    note: 'headline is 8/14 met + 6/14 partial (+ 0/14 failed OK); a bare 9/14 or 14/14 is drift/overclaim',
   },
   {
     name: 'Entity ceiling',
@@ -65,9 +68,12 @@ const FACTS: Fact[] = [
   {
     name: 'Faculties (design)',
     // Exclude the apex-active framings (~20, ~30 deep-wired) that canonical-receipts explicitly permits.
-    pattern: /(?<![~\d])\b(\d+)[-\s]facult(?:y|ies)\b/gi,
-    allowed: new Set([String(CANONICAL_FACULTIES), '20', '30']),
-    note: `${CANONICAL_FACULTIES}-faculty design; ~20 apex-active / ~30 deep-wired are legit prose framings`,
+    // 144 is the documented expanded faculty bank (world.ts NHSI field + BRAIN dual denominator 100/144).
+    // Require a faculty token immediately after the number so table noise ("16 · Reservoir…") never matches.
+    // Exclude "N-faculty subset" (coupling-audit windows are not design totals).
+    pattern: /(?<![~\d])\b(\d+)(?:\/\d+)?[-\s]facult(?:y|ies)\b(?!\s+subset)/gi,
+    allowed: new Set([String(CANONICAL_FACULTIES), '20', '30', '144']),
+    note: `${CANONICAL_FACULTIES}-faculty design; ~20 apex-active / ~30 deep-wired / 144 expanded bank are legit prose framings`,
   },
   {
     name: 'Archon pantheon',

@@ -11,6 +11,25 @@ changed and why.
 
 ---
 
+## 2026-07-08 — audit follow-through (facts · birthBiologic · GOAL5 · apex seam)
+
+Shipped the four highest-leverage remediations from the full-stack audit (same day session):
+
+1. **`verify:facts` false positives silenced** — Butlin pattern now requires met/partial/failed/Butlin
+   context (allows honest `0/14 failed`); faculties allow the documented **144** expanded bank and
+   require a faculty token after the number (kills table-noise hits).
+2. **`birthBiologic` world-wired** — `petriDishBeat` ignition materializes full `birthBiologic`
+   records (not thin `M${morph}` stubs); each beat `stepBiologic`s full records and drops dead ones.
+3. **GOAL5 frame cut** — `SuperMind.think(p, 'full'|'echo')` + `apexThinkMode` round-robin: \*\*1 full
+   - 4 echo\*\* per frame in `world.driveSuper` (echo = 1×1 ToT + 1 predictor step). Amortized full
+     mind cost ~1/5 of the previous 5× full batch. Strict `<2%` still open; documented in BENCHMARKS.
+4. **World seam extract** — pure cadence helper lives in `src/sim/apex-cadence.ts` (first real split
+   out of the driveSuper god-path; further world.ts decomposition remains open).
+
+Tests: `tests/apex-cadence.test.ts`, super-mind echo determinism, digital-biologics petri wiring.
+
+---
+
 ## 2026-07-07 (pass 23) - three-pass subagent audit + code-vs-doc truth-repair sweep
 
 Ran a three-pass subagent audit (48 agents across three Workflows) grading every current

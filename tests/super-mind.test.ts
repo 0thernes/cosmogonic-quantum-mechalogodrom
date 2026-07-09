@@ -111,6 +111,22 @@ describe('SuperMind composite consciousness (V45)', () => {
     }
   }, 30000); // 200+ apex think() beats × the now-heavier 25-faculty stack; generous budget vs the 5s default
 
+  test('echo mode is deterministic, bounded, and cheaper than full (GOAL5 light path)', () => {
+    const a = new SuperMind(mulberry32(77));
+    const b = new SuperMind(mulberry32(77));
+    for (let i = 0; i < 20; i++) {
+      const p = percept({ threat: (i % 5) / 5, energy: 0.6, phase: i / 20 });
+      const ia = a.think(p, 'echo');
+      const ib = b.think(p, 'echo');
+      expect(JSON.stringify(ia)).toBe(JSON.stringify(ib));
+      expect(ia.plan).toBeTruthy();
+      for (const v of [ia.aggression, ia.curiosity, ia.dominance]) {
+        expect(v).toBeGreaterThanOrEqual(0);
+        expect(v).toBeLessThanOrEqual(1);
+      }
+    }
+  });
+
   test('drives + consciousness + quantum are all bounded; plan is always a real goal', () => {
     const m = new SuperMind(mulberry32(7));
     for (let i = 0; i < 40; i++) {

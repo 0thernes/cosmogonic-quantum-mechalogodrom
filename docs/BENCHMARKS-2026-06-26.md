@@ -342,12 +342,13 @@ superseded:
 
 - Single `SuperMind.think()`: **~1.99 ms** (full bench suite).
 - `SuperMind.snapshot()` (UI cadence): **~1.35 ms** — gated, not per-sim-frame.
-- `5× think()` batch (amortized `driveSuper` every-4-frames cadence): **~9.77 ms**.
-- **Frame-budget status:** the `<2%` GOAL5 target is **still not met** — 5× `think()` at ~9.77 ms is ~58%
-  of a 16.67 ms frame, which is why the 5 minds run staggered (not all per frame) beside 20 cheaper
-  light-echoes. It remains a remediation target until a fresh optimization pass re-proves `<2%`. Treat the
-  old `1.875% / <2%` claim as stale (see `docs/VERIFICATION-ANALYTICAL-DATA.md` and
-  `docs/BENCHMARKS-2026-06-26.md`).
+- `5× think()` batch (all-full, historical): **~9.77 ms**.
+- **Frame-budget status (2026-07-08 GOAL5 cut):** world `driveSuper` now runs **1 full + 4 echo** minds
+  per frame via `apexThinkMode` (`src/sim/apex-cadence.ts`). Echo mode keeps the same pipeline with
+  **1×1 Tree-of-Thought** (vs 5×5) and **1 predictor step** — same determinism contract, far less
+  imagination cost. Amortized full thinks = 1/frame (~1.99 ms ≈ 12% of 16.67 ms) instead of 5/frame
+  (~58%). The strict GOAL5 `<2%` target is **still not met**, but the multi-apex tax is cut by design
+  rather than left as five full minds. Re-bench after further cuts before claiming `<2%`.
 
 Bodies: per-frame O(1) updates (prebuilt geo, uniform drives) add negligible (<0.1% measured indirect).
 

@@ -41,6 +41,7 @@ import { libirrepSymmetry, symmetryModes } from './irrep-symmetry';
 import { moonlabTensorQualia } from './moonlab-tensor';
 import { perceptronTag } from './perceptron-baseline';
 import { shannonDiversity, richness, historicalNovelty } from './open-endedness';
+import { birthBiologic, stepBiologic, type Biologic } from './digital-biologics';
 const NUTRIENT_SLOTS = 12; // Expanded Petri for more digital biologics growth from full Tsotchke soup
 const SCRATCH_NUTRIENTS = new Float32Array(NUTRIENT_SLOTS);
 const SCRATCH_SALIENCE = new Float32Array(NUTRIENT_SLOTS);
@@ -76,7 +77,36 @@ export interface PetriDishState {
   eshkolSentientBorn: number;
   /** Full corpus catalysis: aggregate from all 20+ Tsotchke repos driving growth (not LLM). */
   tsotchkeBiologicFlux: number;
-  biologics: Array<{ brutalGodPower?: number; form?: string; vitality?: number }>;
+  /**
+   * Live digital-biologics population. Prefer full `birthBiologic` records
+   * (wired 2026-07-08) with a `vitality` bridge for brutal-release apply; thin
+   * `{form,vitality}` stubs remain accepted for tests/fixtures. Ring-capped at 64.
+   * Indexed fields beyond form/vitality are optional so fixtures stay loose.
+   */
+  biologics: Array<{
+    brutalGodPower?: number;
+    form?: string;
+    vitality?: number;
+    alive?: boolean;
+    id?: number;
+    program?: number | string;
+    adFitness?: number;
+    gwtIgnition?: number;
+    spinOrder?: number;
+    qgtCurvature?: number;
+    irrepSymmetry?: number;
+    quakeAliveness?: number;
+    ulgLawfulness?: number;
+    logoMorph?: number;
+    metalCompute?: number;
+    qrngEntropy?: number;
+    pinnResidual?: number;
+    pimcPath?: number;
+    asteroidDynamics?: number;
+    consciousness?: number;
+    generation?: number;
+    speciation?: number;
+  }>;
   godPower: number;
   /** Tsotchke wiring coverage: how much of corpus available (0-1). */
   wiringCoverage: number;
@@ -361,13 +391,29 @@ export function petriDishBeat(
     // Speciation using full Tsotchke (different forms of life)
     state.morphotype = ((state.morphotype || 0) + (state.eshkolSentientBorn % 3 === 0 ? 1 : 0)) % 7;
     state.geneticDivergence = Math.min(1, (state.geneticDivergence || 0) + 0.015 * bioFlux);
-    // Materialize the born strain into the LIVE population so it is no longer an always-empty
-    // array: this gives the open-endedness telemetry (speciesRichness/Diversity) real morphotype
-    // spread to measure AND makes the applyBrutalRelease pass above operate on real entities
-    // instead of a no-op. Deterministic (form/vitality derive from already-seeded morphotype/bioFlux);
-    // ring-capped so memory stays bounded.
-    state.biologics.push({ form: `M${state.morphotype}`, vitality: Math.min(1, bioFlux) });
+    // Materialize via the real digital-biologics birth leaf (was unwired — only tested).
+    // `birthBiologic` keys form + substrate metrics from the Tsotchke depth ledger; vitality
+    // mirrors consciousness for brutal-release apply. Deterministic; ring-capped at 64.
+    const born = birthBiologic(archonIdx, beat);
+    state.biologics.push({
+      ...born,
+      vitality: Math.min(1, born.consciousness * 0.6 + bioFlux * 0.4),
+    });
     if (state.biologics.length > 64) state.biologics.shift();
+  }
+
+  // Evolve full birthBiologic records each beat (substrate metrics + death).
+  // Thin stubs (tests/fixtures with only form/vitality) are left as-is.
+  for (let bi = 0; bi < state.biologics.length; bi++) {
+    const b = state.biologics[bi]!;
+    if (typeof b.adFitness !== 'number') continue; // not a full Biologic
+    if (b.alive === false) continue;
+    stepBiologic(b as Biologic, bioFlux);
+    b.vitality = Math.min(3, Math.max(0.01, b.consciousness ?? b.vitality ?? 0.01));
+  }
+  // Drop dead full-biologic strains so the ring doesn't fill with corpses.
+  if (state.biologics.some((b) => b.alive === false && typeof b.adFitness === 'number')) {
+    state.biologics = state.biologics.filter((b) => b.alive !== false);
   }
 
   if (state.beats > 0 && state.beats % 40 === 0 && state.biomass > 0.4 && state.complexity < 8) {

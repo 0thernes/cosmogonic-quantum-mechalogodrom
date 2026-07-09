@@ -837,9 +837,17 @@ export class SuperMind {
   }
 
   /** One full cognitive beat. Pure; returns the apex intent (drives + consciousness + quantum). */
-  think(p: SuperPercept): SuperMindIntent {
+  /**
+   * Full cognitive beat. `mode: 'echo'` is the GOAL5 light path — same pipeline,
+   * 1 depth × 1 imagination variant (instead of 5×5) and 1 predictor step — so
+   * non-active Archons stay live without the full Tree-of-Thought cost.
+   * Default `'full'` preserves every existing test / golden path.
+   */
+  think(p: SuperPercept, mode: 'full' | 'echo' = 'full'): SuperMindIntent {
     // Shallow copy so twin minds / reused percept literals stay bit-identical (topdown.apply mutates).
     const wp: SuperPercept = { ...p };
+    const thinkDepths = mode === 'echo' ? 1 : SUPER_DEPTHS;
+    const thinkVariants = mode === 'echo' ? 1 : SUPER_VARIANTS;
     // HOT-1: close the generative loop — last beat's top-down bias shapes this beat's percept.
     this.topdown.apply(wp);
     // ── STAGE 1 · PERCEIVE ──────────────────────────────────────────────────────────────────────
@@ -968,13 +976,13 @@ export class SuperMind {
     this.organSum[2] = Math.tanh(oa * inv * 2);
     this.organSum[3] = Math.tanh(ob * inv * 2);
 
-    // ── STAGE 2 · IMAGINE · Creativity Machine + Tree of Thought (5 depths × 5 variants = 25) ────
+    // ── STAGE 2 · IMAGINE · Creativity Machine + Tree of Thought (full: 5×5=25; echo: 1×1) ────
     this.cur.set(this.latent); // the broadcast-blended workspace latent (GWT re-entry feeds imagination)
     let peakNovelty = 0;
     let reasoningGain = 0;
-    for (let d = 0; d < SUPER_DEPTHS; d++) {
+    for (let d = 0; d < thinkDepths; d++) {
       let bestScore = -Infinity;
-      for (let v = 0; v < SUPER_VARIANTS; v++) {
+      for (let v = 0; v < thinkVariants; v++) {
         this.fillNoise();
         this.imgIn.set(this.cur, 0);
         this.imgIn.set(this.noise, LATENT);
@@ -994,11 +1002,11 @@ export class SuperMind {
     }
     this.imagined.set(this.cur);
 
-    // ── STAGE 3 · REASON · distil the winner + a 5-deep recursive world model (predictor) ────────
+    // ── STAGE 3 · REASON · distil the winner + recursive world model (full: 5 deep; echo: 1) ──
     // WIRED Eshkol AD tape (from the depth-classed Tsotchke corpus AUTODIFF/vm_ad + vm_symbolic_ad.c, reverse mode for multi-var error, 32-level tape, dual numbers) for better predictor/surprise. Det, prealloc. Moonlab tensor for quantum scaling.
     const reason = this.reasoner.forward(this.imagined);
     this.pred.set(this.latent);
-    for (let d = 0; d < SUPER_DEPTHS; d++) this.pred.set(this.predictor.forward(this.pred));
+    for (let d = 0; d < thinkDepths; d++) this.pred.set(this.predictor.forward(this.pred));
     const salience = clamp01(0.5 * s[1] + 0.3 * s[2] + 0.2 * Math.abs(this.pred[0] ?? 0));
     const surprise = clamp01(Math.abs(this.predictedSalience - salience));
     // Heartbeat: more Eshkol AD from corpus for predictor (dual error).
@@ -1239,7 +1247,7 @@ export class SuperMind {
     this.cons = {
       dreaming: clamp01(0.4 + 0.6 * novelty + bindGate),
       hallucinating: clamp01((novelty - 0.6) / 0.4 + bindGate),
-      reasoning: clamp01(reasoningGain / SUPER_DEPTHS + bindGate),
+      reasoning: clamp01(reasoningGain / thinkDepths + bindGate),
       feeling: this.valence,
       selfAware: clamp01(
         // #9/#37 UN-RAIL (2026-07-02): the raw sum sat pinned at the 1.0 clamp rail, where a constant

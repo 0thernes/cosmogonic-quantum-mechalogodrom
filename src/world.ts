@@ -113,6 +113,7 @@ import {
 import { rngContrast } from './sim/classical-contrast';
 import { apexOffworldScore } from './sim/apex-offworld-score';
 import { bellTestWithRng } from './math/quantum-qrng-full';
+import { apexThinkMode } from './sim/apex-cadence';
 import {
   GODFORMS,
   APEX_INDIVIDUATED,
@@ -1807,7 +1808,8 @@ export class World {
     // Full 60 Hz connectome: every frame rebuilds links, propagates activation, uploads GPU geometry.
     this.connectome.update(dt, t);
 
-    // 5 SUPER CREATURES (pantheon): driveSuper every frame — full archon mind cadence.
+    // 5 SUPER CREATURES (pantheon): driveSuper every frame — GOAL5 cadence inside
+    // (1 full Tree-of-Thought mind + 4 echo minds, round-robin; see apex-cadence.ts).
     this.driveSuper(bands.bass, bands.level, t, n);
 
     // ── V2 cadences (ARCHITECTURE-2026-06-26.md frame pipeline) ──
@@ -2608,7 +2610,8 @@ export class World {
           1,
         );
         p.phase = basePercept.phase;
-        const mindOut = this.superMinds[i]!.think(p);
+        // GOAL5: 1 full SuperMind.think + 4 echo (1×1 ToT) per frame, round-robin.
+        const mindOut = this.superMinds[i]!.think(p, apexThinkMode(s.frame, i, APEX_INDIVIDUATED));
         this.noosphere.updateArchon(
           i,
           mindOut.consciousness.phi,
