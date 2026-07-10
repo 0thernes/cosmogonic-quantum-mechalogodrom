@@ -29,7 +29,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Gated Pages/tags on successful CI; removed privileged shell interpolation; made release dispatch
     immutable/retry-safe; and required legal/security documents in Pages and release artifacts.
   - Added clean Ubuntu native CI for both fallback and default Jolt builds plus a live C++↔TypeScript
-    APEX oracle comparison; pinned FetchContent dependencies to immutable commits.
+    APEX oracle comparison; pinned FetchContent dependencies to immutable commits. The hosted gate
+    exposed libm drift in the chaotic pendulum, so its recurrence is now explicitly quantised at each
+    step and reproduces the same vectors on Windows and Ubuntu.
   - Expanded the CycloneDX SBOM to all reachable normal, optional, development, and peer dependencies,
     with runtime/development scopes and dependency-reference regression tests.
 - Includes the post-0.21.11 Three.js, Tailwind, Mermaid, Prettier, oxlint, TypeScript, and statistics

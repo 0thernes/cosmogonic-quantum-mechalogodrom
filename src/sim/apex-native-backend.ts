@@ -16,9 +16,11 @@
  *   itself here once it passes the golden vectors, and the accounting flips its `native-declared`
  *   parameters into genuinely computed ones.
  *
- * Floats are quantised (round to 1e-6) before hashing so a C++ build with different FP rounding still
- * reproduces the hash — cross-platform determinism at a defined tolerance, not fragile bit-equality.
- * Deterministic (seeded {@link Rng}; no `Math.random`/`Date.now`), DOM-free, allocation-light.
+ * Floats are quantised (round to 1e-6) before hashing. The positive-Lyapunov pendulum additionally
+ * quantises every recurrence step on that grid, because final-only rounding cannot undo amplified
+ * host-libm differences. This defines finite-precision cross-language determinism rather than fragile
+ * raw-double equality. Deterministic (seeded {@link Rng}; no `Math.random`/`Date.now`), DOM-free,
+ * allocation-light.
  *
  * @see native/apex/README.md  (the C/C++ side of this contract)
  * @see docs/ARCHITECTURE-2026-06-26.md
@@ -28,6 +30,18 @@ import { mulberry32 } from '../math/rng';
 
 /** Quantisation grid for cross-platform hashing (6 decimal places). */
 const QUANT = 1e6;
+
+/**
+ * Per-step grid for the chaotic pendulum kernel. Final-only quantisation is insufficient: one-libm-ulp
+ * `sin` differences amplify exponentially across the standard map before the final hash. Snapping
+ * every state transition on the public 1e-6 grid defines a finite-precision Chirikov recurrence and
+ * prevents sub-ULP host-libm differences from entering the chaotic feedback loop.
+ */
+const CHAOS_STATE_QUANT = QUANT;
+
+function quantizeChaosState(value: number): number {
+  return Math.floor(value * CHAOS_STATE_QUANT + 0.5) / CHAOS_STATE_QUANT;
+}
 
 /** A backend that can compute (or reproduce) the APEX heavy kernels. */
 export interface ApexKernelBackend {
@@ -166,15 +180,16 @@ export class ReferenceApexBackend implements ApexKernelBackend {
     const p = new Float64Array(N);
     const rng = mulberry32(seed >>> 0 || 1);
     for (let i = 0; i < N; i++) {
-      theta[i] = rng() * 2 * Math.PI;
-      p[i] = (rng() - 0.5) * 0.1;
+      theta[i] = quantizeChaosState(rng() * 2 * Math.PI);
+      p[i] = quantizeChaosState((rng() - 0.5) * 0.1);
     }
     const K = 2.7; // strong kick → positive-Lyapunov chaos (matches the PendulumHive)
     for (let t = 0; t < Math.max(1, steps); t++) {
       for (let i = 0; i < N; i++) {
-        const np = (p[i] ?? 0) + K * Math.sin(theta[i] ?? 0);
+        const kick = quantizeChaosState(Math.sin(theta[i] ?? 0));
+        const np = quantizeChaosState((p[i] ?? 0) + K * kick);
         p[i] = np;
-        theta[i] = ((theta[i] ?? 0) + np) % (2 * Math.PI);
+        theta[i] = quantizeChaosState(((theta[i] ?? 0) + np) % (2 * Math.PI));
       }
     }
     let h = (0x811c9dc5 ^ (seed >>> 0)) >>> 0;

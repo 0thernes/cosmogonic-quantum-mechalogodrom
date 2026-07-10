@@ -8,8 +8,9 @@
 // wrong; the oracle wins.
 //
 // Every function here mirrors the TS ReferenceApexBackend algorithm EXACTLY: the same mulberry32
-// stream, the same stencils, the same FNV-1a-over-quantised-floats hash (QUANT = 1e6). Header-only
-// to match native/src/physics.h. No external deps. Determinism law: seeded PRNG only, no time/entropy.
+// stream, the same stencils, the same FNV-1a-over-quantised-floats hash (QUANT = 1e6), and the same
+// per-step 1e-6 finite-precision recurrence for the chaotic pendulum. Header-only to match
+// native/src/physics.h. No external deps. Determinism law: seeded PRNG only, no time/entropy.
 //
 // Build the golden-vector printer:  see native/apex/README.md
 #pragma once
@@ -34,8 +35,12 @@ struct Mulberry32 {
 
 // ── FNV-1a over a quantised float — matches apex-native-backend.ts :: fnvFloat ───────────────────
 constexpr double QUANT = 1e6;
+constexpr double CHAOS_STATE_QUANT = QUANT;
 constexpr double PI = 3.141592653589793238462643383279502884;
 constexpr double INV_SQRT_2 = 0.707106781186547524400844362104849039;
+inline double quantize_chaos_state(double v) {
+    return std::floor(v * CHAOS_STATE_QUANT + 0.5) / CHAOS_STATE_QUANT;
+}
 inline uint32_t fnv_float(uint32_t h, double v) {
     if (!std::isfinite(v)) v = 0.0;
     int32_t qi = static_cast<int32_t>(std::llround(v * QUANT));
@@ -133,16 +138,17 @@ inline uint32_t pendulum_hash(int n, int steps, uint32_t seed) {
     std::vector<double> theta(N), p(N);
     Mulberry32 rng(seed == 0 ? 1u : seed);
     for (int i = 0; i < N; i++) {
-        theta[i] = rng.next() * 2 * PI;
-        p[i] = (rng.next() - 0.5) * 0.1;
+        theta[i] = quantize_chaos_state(rng.next() * 2 * PI);
+        p[i] = quantize_chaos_state((rng.next() - 0.5) * 0.1);
     }
     const double K = 2.7;
     int S = steps < 1 ? 1 : steps;
     for (int t = 0; t < S; t++)
         for (int i = 0; i < N; i++) {
-            double np = p[i] + K * std::sin(theta[i]);
+            double kick = quantize_chaos_state(std::sin(theta[i]));
+            double np = quantize_chaos_state(p[i] + K * kick);
             p[i] = np;
-            theta[i] = std::fmod(theta[i] + np, 2 * PI);
+            theta[i] = quantize_chaos_state(std::fmod(theta[i] + np, 2 * PI));
         }
     uint32_t h = 0x811c9dc5u ^ seed;
     for (int i = 0; i < N; i++) h = fnv_float(h, theta[i]);

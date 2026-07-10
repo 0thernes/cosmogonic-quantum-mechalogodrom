@@ -58,7 +58,7 @@ Jolt is the default backend; the built-in solver remains the explicitly tested n
 
 - **+** The C++ + active-physics mandate is met with a real, compiling, GPU-running binary — verified
   on an NVIDIA RTX 5070 Ti (a 30-step vs 420-step capture shows collided/clustered arrangements).
-- **+** The web app is untouched and still passes its full gate (published floor 2,360 tests).
+- **+** The web app is untouched and still passes its full gate (2,369 exact tracked tests).
 - **−** Two render codebases to keep in aesthetic sync (the GLSL jewel BRDF is intentionally mirrored
   in both `src/sim/instanced-entities.ts` and `native/src/shaders.h`).
 - **+** CI compiles the Jolt default and built-in fallback, runs CTest, and checks native APEX vectors
@@ -68,6 +68,8 @@ Jolt is the default backend; the built-in solver remains the explicitly tested n
 
 `cmake --build` → 100% link; `ctest` runs the embedded APEX vectors; and
 `bun scripts/verify-native-apex.ts <cqm_apex_golden>` performs the cross-language oracle check.
+The chaotic pendulum is a documented 1e-6 finite-precision recurrence so host-libm differences cannot
+amplify before hashing; Windows and Ubuntu vectors must remain identical.
 `cqm_native.exe --shot=out.bmp --frames=K` renders offscreen to BMP (`scripts/bmp2png.ts` → PNG for
 review). Determinism: same integer-hash seed → same dance.
 

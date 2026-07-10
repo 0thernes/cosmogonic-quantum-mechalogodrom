@@ -125,14 +125,14 @@ endif()
 if(MSVC)
   target_compile_options(cqm_native PRIVATE /W4 /permissive- /O2)
   if(BUILD_TESTING)
-    target_compile_options(cqm_apex_golden PRIVATE /W4 /permissive- /O2)
+    target_compile_options(cqm_apex_golden PRIVATE /W4 /permissive- /O2 /fp:strict)
   endif()
 else()
   # Reproducibility contracts require IEEE-safe math; unsafe floating-point reassociation can
   # invalidate finite/NaN semantics or cross-platform golden vectors.
   target_compile_options(cqm_native PRIVATE -Wall -Wextra -O3)
   if(BUILD_TESTING)
-    target_compile_options(cqm_apex_golden PRIVATE -Wall -Wextra -O2)
+    target_compile_options(cqm_apex_golden PRIVATE -Wall -Wextra -O2 -ffp-contract=off -fno-fast-math)
   endif()
 endif()
 

@@ -6,7 +6,8 @@
 //     [1,7,12345,0xabcdef]) console.log(s, apexGoldenVectors(s));"
 //
 // A native APEX backend is CORRECT only when every hash below equals the oracle's for every seed.
-// Build:  g++ -std=c++17 -O2 native/apex/apex_golden.cpp -o native/apex/apex_golden   (see README.md)
+// Build:  g++ -std=c++20 -O2 -ffp-contract=off -fno-fast-math native/apex/apex_golden.cpp
+//             -o native/apex/apex_golden   (use CMake for MSVC; see README.md)
 #include "apex_kernels.hpp"
 #include <array>
 #include <cstdio>
@@ -22,10 +23,10 @@ int main() {
     // Generated from the authoritative TypeScript oracle. Keeping the expected values in this
     // executable makes CTest a real reproduction gate rather than a printer that always exits zero.
     constexpr std::array<GoldenVector, 4> expected{{
-        {1u, 501561741u, 3775563453u, 4144909402u, 2195062741u},
-        {7u, 4231112027u, 2458804843u, 3277906024u, 1975459032u},
-        {12345u, 3498980949u, 989992069u, 1924624942u, 545640020u},
-        {0xabcdefu, 32012371u, 3235972451u, 3073622485u, 936246664u},
+        {1u, 501561741u, 3775563453u, 4144909402u, 3458245023u},
+        {7u, 4231112027u, 2458804843u, 3277906024u, 3498515028u},
+        {12345u, 3498980949u, 989992069u, 1924624942u, 3314660645u},
+        {0xabcdefu, 32012371u, 3235972451u, 3073622485u, 2915688813u},
     }};
 
     bool reproduced = true;

@@ -15,13 +15,14 @@ disagree, the C++ is wrong; the oracle wins. This is the same one-way boundary t
 native may compute or accelerate, but the deterministic TS worldline is the source of truth.
 
 `apex_kernels.hpp` mirrors the oracle algorithm exactly — the same `mulberry32` stream, the same
-stencils, the same FNV-1a-over-quantised-floats hash.
+stencils, the same FNV-1a-over-quantised-floats hash, and the same per-step 1e-6 pendulum recurrence.
 
 ## Verify reproduction
 
 ```sh
-# 1. Build the native golden-vector checker (header-only, no deps):
-g++ -std=c++20 -O2 native/apex/apex_golden.cpp -o native/apex/apex_golden      # or clang++ / MSVC
+# 1. Build the native golden-vector checker (header-only, no deps).
+#    These flags are part of the reproducibility contract; use CMake for MSVC.
+g++ -std=c++20 -O2 -ffp-contract=off -fno-fast-math native/apex/apex_golden.cpp -o native/apex/apex_golden
 
 # 2. Its embedded native constants must match the compiled kernels (non-zero on drift):
 ./native/apex/apex_golden
@@ -44,10 +45,12 @@ TypeScript, C++, or embedded-vector change cannot self-validate.
 
 ## Determinism note
 
-Cross-platform bit-exactness relies on the `QUANT = 1e6` quantisation absorbing benign FP-rounding
-differences between engines. Compile **without** `-ffast-math` for the kernels so IEEE rounding is
-preserved; the sibling render target follows the same safe rule. Where a platform
-still diverges after quantisation, the contract is defined at the quantised hash, not raw bits.
+Final-only quantisation cannot make a positive-Lyapunov map portable: a one-ulp `sin` difference grows
+before the hash sees it. The pendulum is therefore defined as a finite-precision Chirikov recurrence:
+initial state, sine kick, momentum, and wrapped angle are each snapped to `QUANT = 1e6`. TypeScript and
+C++ use the same `floor(x·QUANT + 0.5)` tie rule. The native gate also disables fast-math and floating
+point contraction. This is bit-exact on the tested Windows and Ubuntu toolchains; a truly universal
+all-libm proof would require a shared fixed-point sine and is not claimed.
 
 ## Status
 

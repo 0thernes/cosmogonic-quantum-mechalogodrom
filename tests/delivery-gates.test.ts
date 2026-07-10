@@ -48,6 +48,9 @@ describe('delivery gates fail closed', () => {
     const cmake = await text('native/CMakeLists.txt');
     expect(cmake).not.toContain('GIT_SHALLOW');
     expect(cmake).not.toContain('-ffast-math');
+    expect(cmake).toContain('/fp:strict');
+    expect(cmake).toContain('-ffp-contract=off');
+    expect(cmake).toContain('-fno-fast-math');
     expect(cmake.match(/GIT_TAG\s+[0-9a-f]{40}/g)?.length).toBe(4);
     expect(cmake).toContain('add_test(NAME cqm_apex_golden');
 
