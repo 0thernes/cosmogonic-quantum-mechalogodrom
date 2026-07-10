@@ -11,7 +11,7 @@
  */
 import * as THREE from 'three';
 import { clamp, dist2, dist2XZ } from '../math/scalar';
-import { ARENA, MONOLITH_CONFIG } from './constants';
+import { ARENA, MONOLITH_CONFIG, PLATFORM_FLOOR } from './constants';
 import type { Behavior } from './constants';
 import type { Entity, EntityData, SimContext } from '../types';
 
@@ -189,9 +189,11 @@ function sine(_e: Entity, u: EntityData, env: BehaviorEnv): void {
   u.vel.y += env.sinWF * 0.003 * env.sp2;
 }
 
-/** Floor bounce with constant gravity (legacy line 722). O(1). */
+/** Floor bounce with constant gravity (legacy line 722, rescaled to the platform floor). O(1). */
 function bounce(e: Entity, u: EntityData, _env: BehaviorEnv): void {
-  if (e.position.y < -8) u.vel.y = Math.abs(u.vel.y) * 0.8 + 0.05;
+  // Bounce off the platform floor. `<=` + epsilon (not the legacy `< -8`, from the old 65-unit arena):
+  // containment pins entities at exactly PLATFORM_FLOOR with vel.y zeroed, so a strict `<` would never fire.
+  if (e.position.y <= PLATFORM_FLOOR + 0.05) u.vel.y = Math.abs(u.vel.y) * 0.8 + 0.05;
   u.vel.y -= 0.001;
 }
 

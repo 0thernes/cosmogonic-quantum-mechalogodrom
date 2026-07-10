@@ -75,8 +75,9 @@ export class MorphicField {
       // ~1.93 — it saturated to the clamp ceiling every imprint instead of accumulating patterns.
       this.field[i] = (this.field[i] ?? 0) * (1 - FIELD_TAU) + l * gain * FIELD_TAU;
     }
-    // Moonlab MPO: compress field through bond-dim=4 MPO propagation
-    const mpo = moonlabMpoStep(this.field, 4, 4);
+    // Moonlab MPO: compress field through the MPO. chi=2 (not chi=4, which for a d=4 packing is
+    // full-rank → a lossless no-op giving a flat constant every imprint) so the compression truncates.
+    const mpo = moonlabMpoStep(this.field, 4, 2);
     this.field[0] = clamp01((this.field[0] ?? 0) + Math.abs(mpo) * 0.005);
 
     // libirrep SO(3) symmetry: enforce rotational equivariance on pairs
@@ -99,12 +100,24 @@ export class MorphicField {
    * Returns a 16D bias vector + scalar resonance strength.
    */
   readBias(latent: ArrayLike<number>): { bias: Float32Array; strength: number } {
-    // Moonlab tensor contract: similarity between creature latent and field
+    // Moonlab tensor contract: similarity between creature latent and field. A chi=4 contract on a
+    // 4-element (d=2) vector is a lossless (full-rank) truncation → a degenerate constant, so resonance
+    // was ~0.7 for ANY input and the world's chaos gate fired unconditionally. Weight the contract by a
+    // real cosine alignment (and truncate at chi=1) so `sim` genuinely varies with apex-vs-field alignment.
+    let dot = 0;
+    let na = 0;
+    let nb = 0;
     for (let i = 0; i < 4; i++) {
-      this.tA[i] = (latent[i] ?? 0) as number;
-      this.tB[i] = this.field[i] ?? 0;
+      const a = (latent[i] ?? 0) as number;
+      const b = this.field[i] ?? 0;
+      this.tA[i] = a;
+      this.tB[i] = b;
+      dot += a * b;
+      na += a * a;
+      nb += b * b;
     }
-    const sim = moonlabTensorContract(this.tA, this.tB, 4);
+    const cos = dot / (Math.sqrt(na * nb) + 1e-9);
+    const sim = cos * moonlabTensorContract(this.tA, this.tB, 1);
 
     // GWT broadcast: amplify resonance when field is coherent
     const gwtOut = gwtBroadcast([Math.abs(sim), this.fieldNorm()], [0.6, 0.4]);

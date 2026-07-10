@@ -2876,8 +2876,9 @@ export class World {
         }
       }
 
-      // FULL TSOTCHKE growth: incubate/harvest via update + snapshot (all repos in Petri for new biologics)
-      this.primordialSoup.update(0, s.frame, this.petriRng);
+      // FULL TSOTCHKE growth: channels 0..4 are already ticked in the per-archon loop above; the harvest
+      // is via snapshot at the frame % 120 cadence below. (Removed a redundant extra update(0) here that
+      // double-stepped channel 0 every frame — a 6th soup tick and a 2x catalysis bias toward archon 0.)
       // V-BREED: pantheon breeding rite (disabled V105 — visual dome only, no petri coupling).
       if (PANTHEON_BREEDING_LIVE && s.frame % 600 === 0 && s.frame > 0) {
         const [i, j] = nextBreedingPair(this.breedNonce);

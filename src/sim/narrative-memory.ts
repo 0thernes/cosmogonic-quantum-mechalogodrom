@@ -163,7 +163,7 @@ export class NarrativeMemory {
       const idx = (this.head - 1 - i + NARRATIVE_CAP) % NARRATIVE_CAP;
       const e = this.ring[idx];
       if (!e) continue;
-      const age = Math.max(0, (now - e.t + 1e9) % 1e9) / 1e9;
+      const age = Math.max(0, (now - e.t + 1e9) % 1e9) / 240;
       const rec = Math.exp(-age * 3) * recencyBias;
       const tagMatch = e.tag === currentPlanTag ? 1.2 : 1.0;
       const rel = e.confidence * e.scope * tagMatch * (0.6 + 0.4 * taskRelevance) * rec;

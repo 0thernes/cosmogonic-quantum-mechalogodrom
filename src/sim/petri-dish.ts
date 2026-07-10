@@ -202,9 +202,11 @@ export function petriDishBeat(
   SCRATCH_QGE.curvature = (sub[2] ?? 0.5) * primary.wiring;
   SCRATCH_QGE.geometricPhase = (beat * 0.07 + archonIdx * 0.31) % 6.2831853;
   const qgeOut = qgePhysicsStep(SCRATCH_QGE, SCRATCH_QGE_PARAMS, 0.016);
+  // Blend the genuine QFI-derived aliveness (now surfaced by qgePhysicsStep) with the substrate drive —
+  // previously the real aliveness was discarded and only curvature (a near-passthrough) reached here.
   state.aliveness = qgeAlivenessStep(
     state.aliveness,
-    qgeOut.curvature * 0.5 + (sub[2] ?? 0.5) * 0.5,
+    qgeOut.aliveness * 0.5 + (sub[2] ?? 0.5) * 0.5,
     beat,
   );
   // Wire the REAL computed QGT curvature into state — it was frozen at the init 0.5 and that stale value

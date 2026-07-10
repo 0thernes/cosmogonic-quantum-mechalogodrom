@@ -405,6 +405,35 @@ function tokenize(program: string): string[] {
     .filter((t) => t.length > 0);
 }
 
+/**
+ * Split a flat token list into top-level BALANCED spans — each span is one atom or one fully
+ * parenthesized group. This is what lets a form's sub-expressions be parsed recursively instead of
+ * being truncated at the first ')'.
+ */
+function splitSpans(tokens: string[]): string[][] {
+  const spans: string[][] = [];
+  let i = 0;
+  while (i < tokens.length) {
+    const t = tokens[i];
+    if (t === '(') {
+      let depth = 0;
+      const start = i;
+      do {
+        if (tokens[i] === '(') depth++;
+        else if (tokens[i] === ')') depth--;
+        i++;
+      } while (i < tokens.length && depth > 0);
+      spans.push(tokens.slice(start, i));
+    } else if (t === ')') {
+      i++; // stray close paren — skip
+    } else {
+      spans.push([t ?? '0']);
+      i++;
+    }
+  }
+  return spans;
+}
+
 function parseTokens(tokens: string[]): EshkolASTNode {
   if (tokens.length === 0) {
     return { type: 'literal', value: 0 };
@@ -416,48 +445,66 @@ function parseTokens(tokens: string[]): EshkolASTNode {
   }
 
   if (token === '(') {
-    // List expression
-    const rest = tokens.slice(1);
-    const closeIdx = rest.indexOf(')');
+    // Find the MATCHING close paren by depth (NOT the first ')', which for '(define (f x) body)'
+    // closed the parameter list and dropped the entire body — the bug that made every program eval 0).
+    let depth = 0;
+    let closeIdx = -1;
+    for (let i = 0; i < tokens.length; i++) {
+      if (tokens[i] === '(') depth++;
+      else if (tokens[i] === ')') {
+        depth--;
+        if (depth === 0) {
+          closeIdx = i;
+          break;
+        }
+      }
+    }
     if (closeIdx === -1) {
       return { type: 'literal', value: 0 };
     }
-    const exprTokens = rest.slice(0, closeIdx);
-
-    if (exprTokens.length === 0) {
+    const inner = tokens.slice(1, closeIdx); // tokens strictly between the outer parens
+    if (inner.length === 0) {
       return { type: 'literal', value: 0 };
     }
-
-    const op = exprTokens[0];
+    const op = inner[0];
     if (!op) {
       return { type: 'literal', value: 0 };
     }
 
     if (op === 'define') {
+      // (define (name params...) body...) — or the flat (define name body). The signature is the
+      // first span; unwrap it if it is a parenthesized (name params...) list.
+      const spans = splitSpans(inner.slice(1));
+      const sig = spans[0] ?? [];
+      const sigInner = sig[0] === '(' ? sig.slice(1, -1) : sig;
       return {
         type: 'define',
-        name: exprTokens[1] || 'anon',
-        params: exprTokens.slice(2, -1),
-        body: parseTokens(exprTokens.slice(-1)),
+        name: sigInner[0] || 'anon',
+        params: sigInner.slice(1),
+        body: parseTokens(spans[spans.length - 1] ?? ['0']),
       };
     } else if (op === 'if') {
+      const spans = splitSpans(inner.slice(1));
       return {
         type: 'if',
-        condition: parseTokens([exprTokens[1] || '0']),
-        consequent: parseTokens([exprTokens[2] || '0']),
-        alternate: exprTokens[3] ? parseTokens([exprTokens[3]]) : undefined,
+        condition: parseTokens(spans[0] ?? ['0']),
+        consequent: parseTokens(spans[1] ?? ['0']),
+        alternate: spans[2] ? parseTokens(spans[2]) : undefined,
       };
     } else if (op === 'let') {
+      const spans = splitSpans(inner.slice(1));
       return {
         type: 'let',
         bindings: [],
-        body: parseTokens([exprTokens[exprTokens.length - 1] || '0']),
+        body: parseTokens(spans[spans.length - 1] ?? ['0']),
       };
     } else {
+      // (op arg1 arg2 ...) — each argument is a full balanced sub-expression.
+      const argSpans = splitSpans(inner.slice(1));
       return {
         type: 'call',
         func: op,
-        args: exprTokens.slice(1).map((t) => parseTokens([t || '0'])),
+        args: argSpans.map((s) => parseTokens(s)),
       };
     }
   } else if (token === ')') {
@@ -488,15 +535,18 @@ export function eshkolCompile(ast: EshkolASTNode): EshkolBytecode[] {
         }
         break;
       case 'define':
-        bytecode.push({ op: 'DEF', args: [node.name, node.params.length] });
+        // Carry the parameter NAMES so the VM can bind them to the input argument.
+        bytecode.push({ op: 'DEF', args: [node.name, node.params.length, ...node.params] });
         compileNode(node.body);
         bytecode.push({ op: 'RET', args: [] });
         break;
       case 'call':
-        bytecode.push({ op: 'CALL', args: [node.func, node.args.length] });
+        // Stack-machine order: push the argument opcodes FIRST, then CALL (which pops them). Emitting
+        // CALL before the args made it splice an empty stack — every call evaluated on missing operands.
         for (const arg of node.args) {
           compileNode(arg);
         }
+        bytecode.push({ op: 'CALL', args: [node.func, node.args.length] });
         break;
       case 'literal':
         bytecode.push({ op: 'PUSH', args: [node.value] });
@@ -562,7 +612,8 @@ export function eshkolExecute(bytecode: EshkolBytecode[], input: number): number
       case 'CALL': {
         const func = instr.args[0] as string;
         const argCount = instr.args[1] as number;
-        const args = stack.splice(-argCount);
+        // Guard zero-arg calls: splice(-0) === splice(0) would clear the ENTIRE operand stack.
+        const args = argCount > 0 ? stack.splice(-argCount) : [];
         if (func === '+') {
           stack.push(args.reduce((a, b) => a + b, 0));
         } else if (func === '-') {
@@ -572,7 +623,9 @@ export function eshkolExecute(bytecode: EshkolBytecode[], input: number): number
         } else if (func === '/') {
           stack.push((args[0] ?? 0) / (args[1] ?? 1));
         } else {
-          stack.push(0);
+          // Unknown intrinsic (e.g. a corpus symbol like `unify`): a deterministic bounded fold of its
+          // args instead of a dead 0, so corpus programs produce a live, bounded, input-dependent value.
+          stack.push(Math.tanh(args.reduce((a, b) => a + b, 0)));
         }
         break;
       }
@@ -592,7 +645,11 @@ export function eshkolExecute(bytecode: EshkolBytecode[], input: number): number
       case 'RET':
         return stack.pop() ?? 0;
       case 'DEF':
-        // Define function (simplified)
+        // Bind each declared parameter name to the input argument so a program that reads its
+        // parameter (e.g. `(define (think state) state)`) actually receives the input, not 0.
+        for (let k = 2; k < instr.args.length; k++) {
+          env.set(instr.args[k] as string, input);
+        }
         break;
       case 'LAMBDA':
         // Create lambda (simplified)

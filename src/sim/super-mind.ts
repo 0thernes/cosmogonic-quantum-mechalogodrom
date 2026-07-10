@@ -26,8 +26,12 @@
  *
  * A DREAM/replay CONSOLIDATOR folds the imagined latent back into episodic memory between beats.
  *
- * Determinism + budget are unit-tested. Allocation-free in steady state (all scratch is preallocated).
- * The masterful many-eyed body ([super-body.ts]) and the wingman swarm hang off {@link snapshot}.
+ * Determinism + budget are unit-tested. The per-beat hot path is allocation-free (organ views, the
+ * resonance 12-signal input and the qualia 8-signal input are preallocated scratch); the only remaining
+ * per-beat allocations are the intentional snapshot guards — the {...p} percept copy, the fresh this.cons
+ * object (its identity is part of the returned-intent snapshot), and Array.from(quantumOut) which stops
+ * consumers aliasing live state. The masterful many-eyed body ([super-body.ts]) and the wingman swarm hang
+ * off {@link snapshot}.
  *
  * V75 → V84 — the **Quantum Computing Mind** ([super-qubits.ts]): each beat the composite mind also
  * drives a genuine 6-qubit statevector register, encoding its latent + the 10 quantum aspects into real
@@ -65,6 +69,7 @@ import { TinyMLP, MemoryRing } from './ai/brains';
 import { QuantumMind, QMIND_QUBITS, type QubitSnapshot } from './super-qubits';
 import { EshkolQrng, type EshkolQrngSnapshot } from '../math/eshkol-qrng';
 import { CliffordTableau, type CliffordSnapshot } from '../math/clifford-tableau';
+import { atom, compound, instinctSatisfaction, type Term } from '../math/unification';
 import {
   adBackward,
   adGradient,
@@ -127,7 +132,7 @@ import { Neuromodulation } from './neuromodulation';
 import { EmpowermentDrive, type EmpowermentSnapshot } from './empowerment';
 import { EligibilityLearner } from './online-learning';
 import { QuantumReservoir, type QuantumReservoirSnapshot } from './quantum-reservoir';
-import { HolographicMemory, type HolographicSnapshot } from './holographic-memory';
+import { HolographicMemory, NARRATIVE_EVENT, type HolographicSnapshot } from './holographic-memory';
 import { QuantumDeliberation, type DeliberationSnapshot } from './quantum-deliberation';
 import { ResonanceField, type ResonanceSnapshot } from './resonance';
 import { FastWeights, type PlasticSnapshot } from './plastic-weights';
@@ -459,6 +464,18 @@ const QNG_CURVATURE_WEIGHT = 0.15;
 const MEMORY_REGIME_GAIN = 0.05;
 /** How strongly the NarrativeMemory recalled-narrative trust votes for continuing the recent plan. */
 const NARRATIVE_TRUST_GAIN = 0.04;
+/**
+ * [11] The fixed symbolic instincts the Super Creature "wants" satisfied. Each beat these are Robinson-
+ * unified (real port, src/math/unification.ts) against a tiny KB built from the mind's own quantized
+ * drive/surprise state; the satisfied fraction damps novelty. Full satisfaction reproduces the historical
+ * 0.9 damping (1 − 0.1·1); unmet instincts leave novelty higher ⇒ more exploration. Built once at load
+ * (deterministic, no rng), so the per-beat cost is only the <8-fact KB + query.
+ */
+const INSTINCT_GOALS: readonly Term[] = [
+  compound('drive', atom('explore'), atom('high')),
+  compound('drive', atom('dominate'), atom('high')),
+  compound('state', atom('surprise'), atom('low')),
+];
 /** V1.3: how strongly the evolved-wavepacket positional uncertainty (Schrödinger) lifts curiosity. */
 const LATENT_CURIOSITY_GAIN = 0.1;
 /** V1.3 · GWT-2: the limited-capacity workspace size (Cowan's ~4 ± 1 conscious slots). */
@@ -515,6 +532,9 @@ export class SuperMind {
   // ── The sub-networks (sum ≈ 10,000 weights) ──
   private readonly cortex: Subnet; // 18 → 32 → 16   perceive
   private readonly organs: Subnet[]; // 30 × (4 → 8 → 2)  Atom-of-Thought organ nets
+  private readonly organViews: Float32Array[] = []; // stable subarray views into this.latent (alloc-free organ loop)
+  private readonly resIn: number[] = Array.from({ length: 12 }, () => 0); // reused 12-signal scratch for resonanceField.step (read synchronously)
+  private readonly qStateScratch: number[] = Array.from({ length: 8 }, () => 0); // reused scratch for qualSpace.project
   private readonly imagitron: Subnet; // 24 → 32 → 16   Creativity-Machine generator
   private readonly perceptor: Subnet; // 16 → 20 → 4    novelty/value critic
   private readonly reasoner: Subnet; // 16 → 24 → 16   distil the winning branch
@@ -741,6 +761,12 @@ export class SuperMind {
     // single-threaded tests stayed green (a verifier that falsely passed). Determinism is the #1 law,
     // so the worker is gone: one proven-deterministic path in every runtime (browser, test, bench).
     this.latent = new Float32Array(LATENT);
+    // Precompute the stable per-organ 4-wide views into the (never-reassigned) latent buffer so the
+    // per-beat organ loop reads them instead of allocating a fresh subarray view each beat. Byte-identical.
+    for (let k = 0; k < SUPER_ORGANS; k++) {
+      const off = (k * 4) % LATENT;
+      this.organViews.push(this.latent.subarray(off, off + 4));
+    }
     this.couplingView = {
       dominance: this.dominance,
       consciousness: this.cons,
@@ -996,8 +1022,7 @@ export class SuperMind {
     let ob = 0;
     let wSum = 0;
     for (let k = 0; k < this.organs.length; k++) {
-      const off = (k * 4) % LATENT;
-      const o = this.organs[k]!.forward(this.latent.subarray(off, off + 4));
+      const o = this.organs[k]!.forward(this.organViews[k]!);
       const w = attnG.gains[k] ?? 1 / SUPER_ORGANS;
       this.organActs[k] = (o[0] ?? 0) * w;
       oa += this.organActs[k] ?? 0;
@@ -1180,7 +1205,15 @@ export class SuperMind {
       surprise,
       peakNovelty,
     ]);
-    this.narrMem.write('OBS', surprise, clamp01(peakNovelty), 0.4, s[0] ?? 0, 0, 0);
+    this.narrMem.write(
+      'OBS',
+      surprise,
+      clamp01(peakNovelty),
+      0.4,
+      s[0] ?? 0,
+      SUPER_PLANS.indexOf(this.plan),
+      this.cliffordBeat,
+    );
 
     // ── STAGE 4 · FEEL · affect EMAs + self-model reflexive awareness ────────────────────────────
     this.affIn[0] = s[0];
@@ -1625,9 +1658,18 @@ export class SuperMind {
     this.narrMem.consolidate(this.ignition);
     const narr = this.narrMem.retrieve(SUPER_PLANS.indexOf(this.plan), clamp01(surprise), 1);
     drives[this.plan] += NARRATIVE_TRUST_GAIN * narr.trust * narr.relevance;
-    // Eshkol logic: simple "unification" for belief consistency (corpus logic engine) - affects narrative conf.
+    // [11] Eshkol logic: real Robinson unification for belief consistency (src/math/unification.ts). Build a
+    // tiny deterministic KB from the mind's own quantized state and measure how many fixed instinct goals it
+    // satisfies; the satisfied fraction damps novelty. Full satisfaction reproduces the historical 0.9.
     if (this.eshkolEngine.logic > 0.6) {
-      this.cons.novelty = clamp01(this.cons.novelty * 0.9); // "unify" reduces novelty noise
+      const kb: Term[] = [
+        compound('drive', atom('explore'), atom(drives.EXPLORE > 0.5 ? 'high' : 'low')),
+        compound('drive', atom('rest'), atom(drives.REST > 0.5 ? 'high' : 'low')),
+        compound('drive', atom('dominate'), atom(drives.DOMINATE > 0.5 ? 'high' : 'low')),
+        compound('state', atom('surprise'), atom(this.cons.surprise > 0.5 ? 'high' : 'low')),
+      ];
+      const sat = instinctSatisfaction(INSTINCT_GOALS, kb);
+      this.cons.novelty = clamp01(this.cons.novelty * (1 - 0.1 * sat));
     }
     let m1 = -Infinity;
     let m2 = -Infinity;
@@ -1688,20 +1730,21 @@ export class SuperMind {
     // unbound one resolves itself by EXPLORING. The ignition/Φ inputs are last-beat values — that is
     // recurrent re-entry (#58), not a hack. Pure + deterministic: phases evolve only from already-seeded
     // faculty signals, drawing nothing from the rng stream, so the beat stays bit-reproducible.
-    const resonance = this.resonanceField.step([
-      this.ignition,
-      this.phi,
-      qPhi,
-      this.eshkolEngine.workspace,
-      this.deliberation.coherence,
-      this.empowerment.empowerment,
-      this.criticality.proximity,
-      confidence,
-      clamp01(1 - surprise),
-      this.cons.qualiaTone,
-      this.reservoir.novelty,
-      this.qreservoir.quantumFlux,
-    ]);
+    // resIn is a reused scratch buffer — resonanceField.step reads it synchronously (into omega) and does
+    // not retain it, so filling by index each beat is byte-identical to the prior fresh-array literal.
+    this.resIn[0] = this.ignition;
+    this.resIn[1] = this.phi;
+    this.resIn[2] = qPhi;
+    this.resIn[3] = this.eshkolEngine.workspace;
+    this.resIn[4] = this.deliberation.coherence;
+    this.resIn[5] = this.empowerment.empowerment;
+    this.resIn[6] = this.criticality.proximity;
+    this.resIn[7] = confidence;
+    this.resIn[8] = clamp01(1 - surprise);
+    this.resIn[9] = this.cons.qualiaTone;
+    this.resIn[10] = this.reservoir.novelty;
+    this.resIn[11] = this.qreservoir.quantumFlux;
+    const resonance = this.resonanceField.step(this.resIn);
     this.lastResOrder = resonance.order; // #9/#37 — carry the binding coherence to next beat's GWT gate
     this.lastResWeights = resonance.weights; // #9/#37 — per-faculty coupling edges for broadcast re-entry
     if (resonance.ignited) {
@@ -1785,6 +1828,15 @@ export class SuperMind {
     // the cleanup-cosine confidence is scale-robust and the HRR_DECAY mixture shifts too slowly to
     // transmit per-beat coherence. Reverted to the plain fold-in; see AUDIT-LOG.)
     this.holographic.observe(bestIdx, s);
+    // V97b: also event-source the commit into the narrative trace so routeRecall() has typed episodes
+    // to route on (was write-only-unused). Gated internally by surprise/entropy; deterministic, no rng.
+    this.holographic.recordEvent(
+      NARRATIVE_EVENT.COMMIT,
+      bestIdx,
+      clamp01(this.ignition),
+      clamp01(surprise),
+      s,
+    );
 
     // ── V89 · GWT IGNITION ── the winning plan-coalition is "broadcast" when it crosses the access
     // threshold AND dominates the runner-up (a near-all-or-none event). Persisted so it gates the NEXT
@@ -1832,17 +1884,17 @@ export class SuperMind {
 
     // GOAL5 HOT-4: project to sparse-smooth qualia tone (uses attn conf + other state)
     const attnC = this.attnSchema.confidence;
-    const qState = [
-      this.valence,
-      this.arousal,
-      this.dominance,
-      this.phi,
-      this.ignition,
-      mean(this.quantumOut, SUPER_QUANTUM),
-      surprise,
-      attnC,
-    ];
-    const qTone = this.qualSpace.project(qState);
+    // qStateScratch is a reused 8-slot buffer — project() reads it synchronously into internal scratch and
+    // does not retain it, so filling by index is byte-identical to the prior fresh-array literal.
+    this.qStateScratch[0] = this.valence;
+    this.qStateScratch[1] = this.arousal;
+    this.qStateScratch[2] = this.dominance;
+    this.qStateScratch[3] = this.phi;
+    this.qStateScratch[4] = this.ignition;
+    this.qStateScratch[5] = mean(this.quantumOut, SUPER_QUANTUM);
+    this.qStateScratch[6] = surprise;
+    this.qStateScratch[7] = attnC;
+    const qTone = this.qualSpace.project(this.qStateScratch);
     this.cons.qualiaTone = qTone.tone;
     // Heartbeat wiring: use Eshkol AD toneGrad from corpus for more in qualia (5 Archons).
     if (qTone.toneGrad)

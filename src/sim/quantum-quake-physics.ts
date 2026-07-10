@@ -341,7 +341,11 @@ export function qgeAlivenessProxy(curvature: number, phase: number, alivenessFac
  * @returns updated QGE state with curvature clamped to [-1, 1].
  * @remarks O(P²·DIM); one perturbation (handful of 64-amplitude rebuilds) per call.
  */
-export function qgePhysicsStep(state: QGEState, parameters: number[], dt = 0.016): QGEState {
+export function qgePhysicsStep(
+  state: QGEState,
+  parameters: number[],
+  dt = 0.016,
+): QGEState & { aliveness: number } {
   const perturbation = qgePerturb(state, parameters, dt * 10);
   const curvature = state.curvature + dt * 0.1 * Math.sin(state.geometricPhase);
 
@@ -350,5 +354,8 @@ export function qgePhysicsStep(state: QGEState, parameters: number[], dt = 0.016
     momentum: perturbation.newMomentum,
     geometricPhase: perturbation.phaseShift,
     curvature: Math.max(-1, Math.min(1, curvature)),
+    // Surface the QFI-derived aliveness (previously computed by qgePerturb then discarded). NOT added
+    // to QGEState — that interface is the persistent feedback state; this is a per-step read-out.
+    aliveness: perturbation.aliveness,
   };
 }

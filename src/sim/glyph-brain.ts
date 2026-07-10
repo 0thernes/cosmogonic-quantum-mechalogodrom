@@ -133,6 +133,13 @@ export class GlyphBrain {
   private readonly outB = new Float32Array(64);
   private readonly organOut = new Float32Array(4);
   private readonly imgIn = new Float32Array(LATENT_DIM + NOISE_DIM);
+  /** [38] Dedicated outputs so the predictor/memory/meta faculties actually reach the snapshot. */
+  private readonly predOut = new Float32Array(LATENT_DIM);
+  private readonly memOut = new Float32Array(16);
+  private readonly metaIn = new Float32Array(LATENT_DIM + 3 + 4);
+  private readonly metaOut = new Float32Array(4);
+  /** [38] Pre-blend latent snapshot so the Hebbian plastic overlay can be read back deterministically. */
+  private readonly latentPrev = new Float32Array(LATENT_DIM);
   private beat = 0;
 
   constructor(index: number, seed: number) {
@@ -196,20 +203,40 @@ export class GlyphBrain {
     forwardSubnet(this.imagitron, this.imgIn, this.scratch, this.outB);
 
     forwardSubnet(this.perceptor, this.outB.subarray(0, LATENT_DIM), this.scratch, this.organOut);
-    const novelty = Math.abs(this.organOut[0] ?? 0);
+    let novelty = Math.abs(this.organOut[0] ?? 0);
 
     forwardSubnet(this.reasoner, this.outB.subarray(0, LATENT_DIM), this.scratch, this.outA);
 
-    // predictor emits LATENT_DIM(32) and memory emits 16 outputs — organOut is only length 4, so
-    // writing them there silently dropped outputs 4.. (a landmine for anyone wiring these). Target the
-    // size-64 outB, whose last read (line 201) is already past.
-    forwardSubnet(this.predictor, this.latent, this.scratch, this.outB);
-    forwardSubnet(this.memory, this.outA.subarray(0, LATENT_DIM), this.scratch, this.outB);
+    // [38] Predictor = world model: forecast this beat's latent from the PREVIOUS latent, then the L1 gap
+    // to the reasoned latent (outA) is prediction error → surprise, blended into novelty (the header's
+    // advertised 'error → surprise'). Memory net folds into activity below. Own outputs so nothing is lost.
+    forwardSubnet(this.predictor, this.latent, this.scratch, this.predOut);
+    forwardSubnet(this.memory, this.outA.subarray(0, LATENT_DIM), this.scratch, this.memOut);
+    let surprise = 0;
+    for (let i = 0; i < LATENT_DIM; i++) surprise += Math.abs(this.predOut[i]! - this.outA[i]!);
+    surprise /= LATENT_DIM;
+    novelty = Math.min(1, novelty * 0.7 + surprise * 0.6);
 
     forwardSubnet(this.affect, this.senses, this.scratch, this.organOut);
     const valence = this.organOut[0] ?? 0;
+    // Capture the 3 affect outputs before organOut is reused, so the meta self-monitor can read them.
+    const aff0 = this.organOut[0] ?? 0;
+    const aff1 = this.organOut[1] ?? 0;
+    const aff2 = this.organOut[2] ?? 0;
 
     forwardSubnet(this.motor, this.outA.subarray(0, LATENT_DIM), this.scratch, this.motorOut);
+
+    // [38] Meta self-monitor: reads reasoned latent + affect + motor and returns a self-model signal that
+    // modulates the spike threshold below (previously constructed + param-counted but never run).
+    for (let i = 0; i < LATENT_DIM; i++) this.metaIn[i] = this.outA[i] ?? 0;
+    this.metaIn[LATENT_DIM] = aff0;
+    this.metaIn[LATENT_DIM + 1] = aff1;
+    this.metaIn[LATENT_DIM + 2] = aff2;
+    this.metaIn[LATENT_DIM + 3] = this.motorOut[0] ?? 0;
+    this.metaIn[LATENT_DIM + 4] = this.motorOut[1] ?? 0;
+    this.metaIn[LATENT_DIM + 5] = this.motorOut[2] ?? 0;
+    this.metaIn[LATENT_DIM + 6] = this.motorOut[3] ?? 0;
+    forwardSubnet(this.meta, this.metaIn, this.scratch, this.metaOut);
 
     // 9) Hebbian plastic overlay (light, within-life)
     for (let i = 0; i < LATENT_DIM; i++) {
@@ -223,17 +250,30 @@ export class GlyphBrain {
       }
     }
 
-    // Update latent (blend old + new for temporal continuity)
+    // Update latent (blend old + new for temporal continuity). [38] Now also reads back the Hebbian plastic
+    // overlay (fast weights) — dot(plastic row i, pre-blend latent) — so the overlay that is updated every
+    // beat finally influences the forward state. plastic is clamped to ±0.5 so the term is bounded; tanh
+    // keeps the latent in (−1,1). latentPrev holds the consistent pre-blend latent for every row's dot.
+    this.latentPrev.set(this.latent.subarray(0, LATENT_DIM));
     for (let i = 0; i < LATENT_DIM; i++) {
-      this.latent[i] = (this.latent[i] ?? 0) * 0.6 + (this.outA[i] ?? 0) * 0.4;
+      let pdot = 0;
+      const row = i * LATENT_DIM;
+      for (let j = 0; j < LATENT_DIM; j++) pdot += this.plastic[row + j]! * this.latentPrev[j]!;
+      this.latent[i] = Math.tanh(
+        (this.latentPrev[i] ?? 0) * 0.6 + (this.outA[i] ?? 0) * 0.4 + 0.05 * pdot,
+      );
     }
 
-    // Activity = mean |latent| + organ contribution
+    // Activity = mean |latent| + organ contribution + [38] memory-net energy (mean |memOut|, small gain).
     let actSum = 0;
     for (let i = 0; i < LATENT_DIM; i++) actSum += Math.abs(this.latent[i]!);
-    const activity = Math.min(1, actSum / LATENT_DIM + organSum * 0.01);
+    let memAct = 0;
+    for (let i = 0; i < 16; i++) memAct += Math.abs(this.memOut[i]!);
+    memAct /= 16;
+    const activity = Math.min(1, actSum / LATENT_DIM + organSum * 0.01 + memAct * 0.15);
 
-    const spiking = activity > 0.5 && novelty > 0.3;
+    // [38] Meta self-monitor modulates the spike threshold (self-model raising/lowering excitability).
+    const spiking = activity > 0.5 - 0.1 * (this.metaOut[0] ?? 0) && novelty > 0.3;
 
     return {
       index: this.index,

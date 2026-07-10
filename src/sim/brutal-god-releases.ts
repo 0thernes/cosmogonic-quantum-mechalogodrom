@@ -211,6 +211,33 @@ export function applyBrutalRelease(
     warp = p * 0.5;
   }
 
+  if (release.effect.includes('shatter')) {
+    // SHUMA-GORATH / MAD JASPERS / SCARLET REALITY: reality shatter — a seeded per-entity vitality warp.
+    // (Previously this effect matched NO branch and returned all-zeros while still logging + bumping power.)
+    for (let i = 0; i < entities.length; i += 2) {
+      const ent = entities[i];
+      if (ent) {
+        const s = ((rngSeed + i * 7919) % 1000) / 1000;
+        ent.vitality = clamp(ent.vitality * (0.5 + s * p * 1.5), 0.01, 3.0);
+        consumed++;
+      }
+    }
+    warp = p * 0.6;
+  }
+
+  if (release.effect.includes('watchmaker') || release.effect.includes('time-loop')) {
+    // DR MANHATTAN: watchmaker time-loop — rewind a third of the population to baseline vitality.
+    // (Previously this effect matched NO branch and was an announced god event with zero effect.)
+    for (let i = 0; i < entities.length; i += 3) {
+      const ent = entities[i];
+      if (ent && ent.vitality !== 1) {
+        ent.vitality = 1.0;
+        reborn++;
+      }
+    }
+    warp = p * 0.4;
+  }
+
   const note = `${release.archetype} :: ${release.effect} (p=${p.toFixed(2)} via ${release.substrate})`;
   // BRUTALISM built: all listed (Valkorion to Riddick, Azathoth to Gurren, Knull to EVA) with live effects (drain, snap, rage buster, void consume, spiral drill, rebirth, dreamer warp) + EVERY Tsotchke repo fueling (deep + ported PINN/PIMC/quake + studied ulg/logo + homebrew/Quantum-RNG + full corpus in catalysis + brutal). 0thernes god-petri.
   return { consumed, reborn, warp, note };

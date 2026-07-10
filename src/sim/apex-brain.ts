@@ -1102,6 +1102,8 @@ class MetaParadoxLayer {
       this.psi[i] = r();
     }
     this.normalizePsi();
+    // Self-model init = current ψ, so beat 1's residual is well-defined (not a gap against zeros).
+    for (let i = 0; i < dim; i++) this.predicted[i] = this.psi[i]!;
     this.budget = Math.max(1, dim - 1); // cap the superposition breadth (reverse-anthropic)
     this.cantor = cantorDustAddresses(5); // 2^5 = 32 dust points
   }
@@ -1133,13 +1135,10 @@ class MetaParadoxLayer {
     // Retrocausal relaxation toward the fixed future state (|z−zT| is non-increasing — tested).
     for (let i = 0; i < this.dim; i++) this.z[i]! += this.alpha * (this.zT[i]! - this.z[i]!);
 
-    // Gödel self-reference residual: gap between the prior prediction and the realised z.
-    let res = 0;
-    for (let i = 0; i < this.dim; i++) res += Math.abs(this.z[i]! - this.predicted[i]!);
-    this.residual = res / this.dim;
-    // New self-prediction (a one-step linear self-model) — used next beat.
-    for (let i = 0; i < this.dim; i++)
-      this.predicted[i] = this.z[i]! + this.alpha * (this.zT[i]! - this.z[i]!);
+    // NOTE: the Gödel residual is now computed at the END of the beat (against the signal-driven ψ,
+    // not the closed-form z). The old z-based self-model was a perfect model of z's own update, so the
+    // residual collapsed to exactly 0 after beat 1, deadening every consumer. `this.residual` here holds
+    // the PREVIOUS beat's value (a deterministic 1-beat pipeline), fed into phantom + the ψ nudge below.
 
     // Phantom perception: structured read of z's near-zero ("vacuum") slots.
     let zeros = 0;
@@ -1198,6 +1197,21 @@ class MetaParadoxLayer {
       if (minI >= 0) this.psi[minI] = 0;
       this.normalizePsi();
     }
+
+    // Gödel self-reference residual: the gap between the realised (signal-driven) ψ and last beat's
+    // zero-input self-forecast — a genuine, non-degenerate self-model error created by the organ drive.
+    let res = 0;
+    for (let i = 0; i < this.dim; i++) res += Math.abs(this.psi[i]! - this.predicted[i]!);
+    this.residual = res / this.dim;
+    // Store next beat's zero-input forecast: what ψ would be if the incoming signal were 0 (0.85 decay,
+    // then the same L2 renormalisation ψ itself uses), so the residual measures the signal's departure.
+    let pn = 0;
+    for (let i = 0; i < this.dim; i++) {
+      this.predicted[i] = Math.abs(0.85 * this.psi[i]!);
+      pn += this.predicted[i]! * this.predicted[i]!;
+    }
+    pn = Math.sqrt(pn) || 1;
+    for (let i = 0; i < this.dim; i++) this.predicted[i]! /= pn;
   }
 
   superEntropy(): number {

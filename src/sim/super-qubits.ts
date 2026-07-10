@@ -266,9 +266,13 @@ export class QuantumMind {
     gwtC[2] = ftl;
     gwtC[3] = mut;
     const gwt = gwtBroadcast(gwtC, this.gwtSalience);
-    const dSup = makeEshkolDual(this.dSup, gwt[0] || 0);
-    this.dSup = clamp01(dSup.value + (gwt[1] || 0) * 0.01);
-    this.gateCount = this.applyCircuit(sup, ent, ftl, mut, latent, L);
+    // Apply the GWT-modulated drive to the REAL circuit (and keep the replay param in sync) — the
+    // modulation used to only overwrite this.dSup while applyCircuit ran the UNmodulated `sup`, so the
+    // corpus modulation was dead wiring and snapshot()'s QGT replayed a circuit that was never run.
+    const dSup = makeEshkolDual(sup, gwt[0] || 0);
+    const supMod = clamp01(dSup.value + (gwt[1] || 0) * 0.01);
+    this.dSup = supMod;
+    this.gateCount = this.applyCircuit(supMod, ent, ftl, mut, latent, L);
     // V1.1 — GOAL-DIRECTED AMPLITUDE AMPLIFICATION (Grover): bias the thought-collapse toward the mind's
     // INTENDED thought — the basis state whose bits are the signs of the world-model latent (the pattern
     // the mind is reaching for). The 'qudit-compute' aspect sets the focus: 0 rounds leaves the open
@@ -287,7 +291,7 @@ export class QuantumMind {
     // V93 — QUANTUM NATURAL GRADIENT self-optimization: descend the Fubini–Study geometry toward the
     // intended thought, nudge the persisted (sup,ent) bias for the NEXT beat, then RESTORE the evolved +
     // amplified state so the Born sample below is exactly the pre-self-opt state. Allocation-free; no RNG.
-    this.selfOptimizeStep(target, sup, ent, ftl, mut, latent, L);
+    this.selfOptimizeStep(target, supMod, ent, ftl, mut, latent, L);
     this.sampled = this.reg.sample(this.rng);
   }
 

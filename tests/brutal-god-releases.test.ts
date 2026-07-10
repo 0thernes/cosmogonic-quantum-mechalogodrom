@@ -134,6 +134,28 @@ describe('brutal god releases — apply side-effects on the petri', () => {
     expect(out.reborn).toBeGreaterThanOrEqual(Math.floor(1.0 * 5));
   });
 
+  test('reality-shatter warps a fraction deterministically (SHUMA/JASPERS/SCARLET)', () => {
+    const e = ents(20, 1);
+    const out = applyBrutalRelease(make('chaos-lord-reality-shatter'), e, 0.5, 3);
+    expect(out.consumed).toBeGreaterThan(0);
+    expect(out.warp).toBeCloseTo(0.9 * 0.6, 6);
+    for (const ent of e) expect(ent.vitality).toBeGreaterThanOrEqual(0.01);
+    // deterministic
+    const e2 = ents(20, 1);
+    const out2 = applyBrutalRelease(make('chaos-lord-reality-shatter'), e2, 0.5, 3);
+    expect(out2).toEqual(out);
+    expect(e2).toEqual(e);
+  });
+
+  test('watchmaker time-loop rewinds a third to baseline vitality (DR MANHATTAN)', () => {
+    const e = ents(9, 2.5);
+    const out = applyBrutalRelease(make('quantum-god-time-loop-watchmaker'), e, 0.5, 1);
+    expect(out.reborn).toBeGreaterThan(0);
+    expect(out.warp).toBeCloseTo(0.9 * 0.4, 6);
+    // every third entity (0,3,6) rewound to exactly 1.0
+    for (let i = 0; i < e.length; i += 3) expect(e[i]!.vitality).toBe(1.0);
+  });
+
   test('deterministic + total: same release/seed ⇒ identical mutations and finite tallies', () => {
     const rel = make('void-consume-anti-matter-dream');
     const e1 = ents(15);

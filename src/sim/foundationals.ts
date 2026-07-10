@@ -142,11 +142,17 @@ export class OrganInterconnect {
 
   /** Hebbian STDP update — organs that fire together wire together (within-life, bounded). */
   updatePlasticity(organActivity: Float32Array): void {
+    // Centre the correlation on the mean activity so anti-correlated pairs produce NEGATIVE plasticity.
+    // Raw products of [0,1]-clamped activities are always ≥0, making the weight update a one-way ratchet
+    // that saturated connection density (and the GWT/FND indicators) to 1.0 regardless of real structure.
+    let mean = 0;
+    for (let k = 0; k < 10; k++) mean += organActivity[k]!;
+    mean /= 10;
     for (let i = 0; i < 10; i++) {
       for (let j = 0; j < 10; j++) {
         if (i === j) continue;
         const idx = i * 10 + j;
-        const correlation = organActivity[i]! * organActivity[j]!;
+        const correlation = (organActivity[i]! - mean) * (organActivity[j]! - mean);
         this.plasticity[idx] = this.plasticity[idx]! * 0.95 + correlation * 0.05;
         // STDP: strengthen correlated, weaken anti-correlated
         this.weights[idx] = Math.max(
