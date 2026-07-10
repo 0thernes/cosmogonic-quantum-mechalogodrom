@@ -188,8 +188,7 @@ export class PantheonArchitecturePanel {
   private glyphCount = 0;
   private readonly onBrainSnap = (e: Event): void => {
     const detail = (e as CustomEvent).detail as
-      | { glyphs?: unknown[]; apexGrowth?: ApexGrowthStage | null }
-      | undefined;
+      { glyphs?: unknown[]; apexGrowth?: ApexGrowthStage | null } | undefined;
     if (detail?.apexGrowth) this.apexGrowth = detail.apexGrowth;
     const g = detail?.glyphs;
     if (!Array.isArray(g) || g.length === 0) return;

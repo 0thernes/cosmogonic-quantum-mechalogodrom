@@ -77,7 +77,7 @@ function toByte(cp: number): number {
 export function fixMojibake(input: string): string {
   const chars = Array.from(input);
   let out = '';
-  for (let i = 0; i < chars.length; ) {
+  for (let i = 0; i < chars.length;) {
     const cp = chars[i]!.codePointAt(0)!;
     const lead = isMojibakeLead(cp) ? toByte(cp) : -1;
     // UTF-8 multibyte lead bytes: 110xxxxx (C2-DF), 1110xxxx (E0-EF), 11110xxx (F0-F4)

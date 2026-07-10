@@ -77,8 +77,7 @@ export function isBlockedTop(name: string): boolean {
 
 /** Result of any sandbox tool call — a tagged union the route serializes to JSON. */
 export type SandboxResult =
-  | { ok: true; output: string; truncated: boolean }
-  | { ok: false; error: string };
+  { ok: true; output: string; truncated: boolean } | { ok: false; error: string };
 
 /**
  * Resolve a caller-supplied relative path against the repo root, rejecting anything that escapes
