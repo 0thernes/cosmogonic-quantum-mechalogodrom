@@ -11,6 +11,67 @@ changed and why.
 
 ---
 
+## 2026-07-10 — autonomous whole-repo audit (deps + 54 findings across 3 batches)
+
+A multi-agent audit (27 finder agents + adversarial verifiers) swept every file for bugs, dead
+compute, determinism violations, and efficiency. 69 findings survived verification; 54 were shipped
+across three gated commits (the rest were false-positives or intentional per owner-intent). All
+sim changes preserve the seeded-`Rng` determinism law and keep the determinism/reproduce goldens
+bit-green.
+
+### Dependency hygiene (`8066d59`, `548992d`, `da7cd8d`)
+
+three/@types/three 0.185.1, oxlint 1.73, prettier 3.9.5 (reformatted 14 files), mermaid 11.16,
+tailwind 4.3.2, simple-statistics 7.9.3, typescript 7.0.2. Straight to `main`, no PRs.
+
+### Batch 1+2 — 40 non-determinism-shifting fixes (`23e484d2`, 37 src + 1 new test)
+
+Correctness, guard, dispose-path, and hygiene fixes spanning `world.ts`, `audio/engine.ts`,
+`math/{clifford-tableau,libirrep-symmetry,quantization,schrodinger}.ts`, ~22 `sim/*` modules and
+9 `ui/*` panels. Added `tests/glyph-exterior.test.ts`.
+
+### Batch 3 — 14 determinism-shifting wires + perf (`9e17a8db`, 13 src + 1 test, +2 tests)
+
+- **tsotchke-deep-wire** — rewrote the Eshkol VM parse/compile/execute (matching-paren span split,
+  nested `define` signature unwrap, compile-args-before-CALL, param binding, unknown-func fallback)
+  so `eshkolExecute` returns real bounded values instead of 0.
+- **foundationals** — mean-centered the STDP correlation (was a one-way potentiation ratchet).
+- **apex-brain** — fixed the Gödel MetaParadox residual (was degenerate 0 after beat 1; now a
+  zero-input forecast vs. realized state, L2-renormalized).
+- **world** — dropped the redundant primordial-soup double-step (channels 0..4 already tick in the
+  archon loop).
+- **behaviors** — bounce off `PLATFORM_FLOOR`, not the stale `-8` literal.
+- **morphic-field** — cosine-weighted `readBias` + lossy MPO bond dim (was a constant `chi=4`).
+- **super-qubits** — modulate the circuit by the Eshkol dual + GWT (was applying the raw input).
+- **brutal-god-releases** — added the `shatter` and `watchmaker`/`time-loop` effect branches (+2
+  deterministic tests).
+- **quantum-quake / petri-dish** — thread the QGE `aliveness` into the substrate (was `curvature`).
+- **narrative-memory** — real recency decay (`age/240`, live plan-tag + `cliffordBeat` timestamp);
+  the old `/1e9` wrap made `exp(-age·3)≈1` always, so recency + tag-matching were inert.
+- **super-mind** — event-source the holographic `COMMIT` (turns the write-only narrative telemetry
+  — `narrativeEventCount`/`regimeShift`/`belief` on the snapshot — live); made the per-beat hot loop
+  allocation-free (precomputed organ views + reused resonance/qualia scratch, byte-identical); wired
+  the **real Robinson unification** faculty (`math/unification.ts`) into the belief-consistency gate
+  (was a scalar `logic>0.6 ⇒ ×0.9` threshold wearing the port's name; now a per-beat KB + instinct
+  goals, calibrated so full satisfaction reproduces the historical `×0.9`).
+- **glyph-brain** — wired the four dead faculties in the 100-brain per-beat loop: predictor →
+  prediction-error → surprise → novelty; memory-net energy → activity; meta self-monitor → spike
+  threshold; Hebbian plastic overlay → latent (tanh-bounded). ~⅓ of the advertised 25k-param brain
+  was computing and being discarded.
+
+### Deferred (owner call, not shipped)
+
+- **[23] instanced-entities motion-interpolation** — the "Phase 1.2 GPU Motion Interpolation" path is
+  provably inert (uploads `prevPos`+`simTick` every frame for a `mix()` that always returns the input,
+  ~160 KB/frame at the 10k tier). Correct fix is deletion, but it is a destructive feature-cut across
+  the shader, pool, and 3 `world.ts` call sites (+ deleting `tests/motion-interpolation.test.ts`) —
+  an owner decision, not a bug fix. Flagged here so it is not silently lost.
+
+Receipts: 2369 → 2371 tests, coverage floor unchanged (84.64% line / 82.21% func — Windows measured
+92.20/89.85). Full `bun run check` green on each commit.
+
+---
+
 ## 2026-07-08 — audit follow-through (facts · birthBiologic · GOAL5 · apex seam)
 
 Shipped the four highest-leverage remediations from the full-stack audit (same day session):
