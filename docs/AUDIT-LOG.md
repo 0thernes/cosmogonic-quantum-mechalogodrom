@@ -11,13 +11,13 @@ changed and why.
 
 ---
 
-## 2026-07-10 — autonomous whole-repo audit (deps + 54 findings across 3 batches)
+## 2026-07-10 — autonomous whole-repo audit (deps + ~60 findings across 5 batches)
 
 A multi-agent audit (27 finder agents + adversarial verifiers) swept every file for bugs, dead
-compute, determinism violations, and efficiency. 69 findings survived verification; 54 were shipped
-across three gated commits (the rest were false-positives or intentional per owner-intent). All
-sim changes preserve the seeded-`Rng` determinism law and keep the determinism/reproduce goldens
-bit-green.
+compute, determinism violations, and efficiency. 69 findings survived verification; ~60 were shipped
+across five gated commits (the rest were false-positives, already-fixed, or intentional per
+owner-intent; four are explicitly deferred below as owner-scoped). All sim changes preserve the
+seeded-`Rng` determinism law and keep the determinism/reproduce goldens bit-green.
 
 ### Dependency hygiene (`8066d59`, `548992d`, `da7cd8d`)
 
@@ -59,6 +59,40 @@ Correctness, guard, dispose-path, and hygiene fixes spanning `world.ts`, `audio/
   threshold; Hebbian plastic overlay → latent (tanh-bounded). ~⅓ of the advertised 25k-param brain
   was computing and being discarded.
 
+### Batch 4 — correctness + perf (`b8219955`-rebased commit)
+
+- **postfx [5]** — `setSize` now re-syncs `composer.setPixelRatio(renderer.getPixelRatio())`.
+  EffectComposer freezes its pixel ratio at construction, so moving the window to a monitor with a
+  different `devicePixelRatio` rendered the whole default lens/bloom chain at the boot-time DPR.
+- **super-mind [19]** — stopped building the full UI-cadence `QubitSnapshot` (4ⁿ-Pauli magic + 5× QGT
+  circuit rebuild + IIT min-cut) every beat × 5 archons just to read two scalars. New cheap
+  `coherenceL1Now()` (O(2ⁿ)) + `magicNormNow()` (O(4ⁿ), recomputed only on the full round-robin beat,
+  cached for echo). Default `'full'` path is byte-identical; only echo beats reuse the cached magic.
+- **super-neural [60] + pantheon-architecture-panel [61]** — hoisted the static Hamming-filtered axon
+  pair sets (88k→~22k, 51k→~12.7k) out of the per-frame `O(n²)` loops and throttled the pantheon
+  panel's unthrottled rAF to ~30 fps. Same drawn pairs, same order — render byte-identical.
+- **[4] wilderness worker-drop** and **[53] causal-graph per-beat alloc** were found already fixed in
+  the tree (Codex). Deferred sub-item: super-neural `spark()` gradient sprite-cache (needs in-browser
+  visual verification — the pair-hoist is the safe structural half).
+
+### Batch 5 — wire-more: dead-module activation + a latent divergence bug (this commit)
+
+Per the wire-more mandate, brought two dead BRUTALISM modules live with **bounded, deterministic,
+genuinely load-bearing** couplings (not metric-gaming) + determinism/boundedness tests:
+
+- **[44] temporal-crystal** — the discrete-time-crystal (Floquet MBL spin oscillator) is now stepped
+  each beat and its period-doubling order **leaky-pulled** into `cons.workspace` (the codebase EMA
+  idiom — non-ratcheting). Honestly characterized as an autonomous _drive-rigid_ oscillator (a real
+  DTC is rigid against the drive — the initial "stepped by arousal drives it" framing overclaimed and
+  was corrected). Surfaced on the SuperMind snapshot. New `tests/temporal-crystal.test.ts`.
+- **[24] strange-attractor** — the tri-attractor chaos field (Lorenz + Rössler + Rabinovich, RK4) is
+  stepped by arousal (a genuinely **drive-sensitive** input) and its chaos index feeds `curiosity`
+  (fresh per-beat sum ⇒ no ratchet). Surfaced on the snapshot. **Fixed a latent divergence bug**: the
+  RK4 integration reliably escaped to ±Infinity → NaN after ~400 steps (masked because the module was
+  dead); added a basin **re-injection** guard (`boundVec` — reset to the attractor seed on escape, not
+  clamp-and-stick, which would freeze the chaos dead-constant). Now bounded + genuinely varying over
+  2000+ steps. New `tests/strange-attractor.test.ts`.
+
 ### Deferred (owner call, not shipped)
 
 - **[23] instanced-entities motion-interpolation** — the "Phase 1.2 GPU Motion Interpolation" path is
@@ -66,9 +100,17 @@ Correctness, guard, dispose-path, and hygiene fixes spanning `world.ts`, `audio/
   ~160 KB/frame at the 10k tier). Correct fix is deletion, but it is a destructive feature-cut across
   the shader, pool, and 3 `world.ts` call sites (+ deleting `tests/motion-interpolation.test.ts`) —
   an owner decision, not a bug fix. Flagged here so it is not silently lost.
+- **[9] mixed-state-qgt** — the cheap wiring (purity/entropy of a depolarized pure state) is a
+  degenerate constant (state-independent), and the honest state-dependent mixed-state QGT needs a
+  parameter-family + finite-difference design (`O(P²d²)`) that is genuine owner-scoped work. Left dead
+  rather than ship a fake-signal telemetry.
+- **[37] dark-energy** — a genuinely world-LEVEL cosmological field (Λ → entity density / resources),
+  so it belongs in `world.ts` (Codex's active surface), not as a per-mind SuperMind faculty. Its
+  coupling to resource regeneration is a world-design decision. Deferred to avoid a bad semantic home
+  and a live-file collision.
 
-Receipts: 2369 → 2371 tests, coverage floor unchanged (84.64% line / 82.21% func — Windows measured
-92.20/89.85). Full `bun run check` green on each commit.
+Receipts: 2369 → **2389** tests (batches 1–3 → 2371; batch 5 adds 2 test files → 2389), coverage floor
+unchanged (84.64% line / 82.21% func — Windows measured higher). Full `bun run check` green on each commit.
 
 ---
 

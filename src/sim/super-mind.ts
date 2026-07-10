@@ -70,6 +70,8 @@ import { QuantumMind, QMIND_QUBITS, type QubitSnapshot } from './super-qubits';
 import { EshkolQrng, type EshkolQrngSnapshot } from '../math/eshkol-qrng';
 import { CliffordTableau, type CliffordSnapshot } from '../math/clifford-tableau';
 import { atom, compound, instinctSatisfaction, type Term } from '../math/unification';
+import { TemporalCrystal, type TemporalCrystalSnapshot } from './temporal-crystal';
+import { StrangeAttractor, type AttractorSnapshot } from './strange-attractor';
 import {
   adBackward,
   adGradient,
@@ -304,6 +306,12 @@ export interface SuperMindSnapshot {
   empowerment: EmpowermentSnapshot;
   /** V97: the holographic (VSA/HRR) memory — the plan it analogically recalls for the current context. */
   holographic: HolographicSnapshot;
+  /** BRUTALISM 5/9: the discrete-time-crystal oscillator — an autonomous (drive-rigid) MBL Floquet system
+   *  advanced each beat, its period-doubling order leaky-pulled into the workspace (a live coupling, read). */
+  temporalCrystal: TemporalCrystalSnapshot;
+  /** BRUTALISM: the tri-attractor chaos field (Lorenz+Rössler+Rabinovich, RK4) stepped by arousal each beat;
+   *  its chaos index lifts curiosity (drive-sensitive, so a real coupling — not decorative). */
+  strangeAttractor: AttractorSnapshot;
   /** V1.2: the quantum-reservoir-computing readout of the 6-qubit register's observable trajectory. */
   quantumReservoir: QuantumReservoirSnapshot;
   /** V98: the open-system Lindblad deliberation qubit — coherent superposition of options decohering into
@@ -482,6 +490,10 @@ const LATENT_CURIOSITY_GAIN = 0.1;
 const GWT_WORKSPACE_CAPACITY = 4;
 /** V1.3 · GWT-2: how strongly last beat's workspace competition pressure re-enters curiosity. */
 const GWT_CAPACITY_REENTRY_GAIN = 0.08;
+/** BRUTALISM: how strongly the tri-attractor (Lorenz+Rössler+Rabinovich) chaos index lifts curiosity —
+ * on par with the other bounded curiosity terms; the attractor is stepped by arousal so the coupling is
+ * drive-sensitive (not a decorative constant), and curiosity is re-derived fresh each beat (no ratchet). */
+const STRANGE_CHAOS_GAIN = 0.1;
 /** V1.3 · AE-2: sensory dimensions the forward body-model predicts (s[0..7]). */
 const EMBODIMENT_DIM = 8;
 /** V1.3 · AE-2: how strongly body-contingency (knowing one's own body) lifts the self-awareness signal. */
@@ -594,6 +606,13 @@ export class SuperMind {
   private readonly empowerment: EmpowermentDrive;
   /** V97: the holographic (VSA/HRR) compositional memory — binds (context ⊙ plan), recalls by unbinding. */
   private readonly holographic: HolographicMemory;
+  /** BRUTALISM 5/9: the discrete-time-crystal (DTC) oscillator — a Floquet spin system whose period-doubling
+   *  order parameter is stepped by arousal and re-enters the workspace each beat (real MIT-corpus kernels). */
+  private readonly temporalCrystal: TemporalCrystal;
+  /** BRUTALISM: the tri-attractor chaos field — three coupled strange attractors (Lorenz/Rössler/Rabinovich)
+   *  integrated by RK4, self-tuning sigma toward the edge of chaos; its chaos index feeds curiosity. Seedless
+   *  (deterministic init, no rng draw ⇒ every other faculty keeps bit-identical weights). */
+  private readonly strangeAttractor = new StrangeAttractor();
   /** V1.2: the quantum-reservoir-computing readout — reads the register's observable trajectory each beat. */
   private readonly qreservoir: QuantumReservoir;
   /** V98: the open-system Lindblad deliberation qubit (no seed — a deterministic master equation). */
@@ -852,6 +871,9 @@ export class SuperMind {
     this.holographic = new HolographicMemory(mulberry32((childSeed ^ 0x85ebca6b) >>> 0 || 1));
     // V1.2: the quantum-reservoir-computing readout, on its own XOR-derived child stream (no extra draw).
     this.qreservoir = new QuantumReservoir(mulberry32((childSeed ^ 0x7feb352d) >>> 0 || 1));
+    // BRUTALISM 5/9: the discrete-time-crystal — its own XOR-derived child stream for the initial spin
+    // disorder (no draw on any weight stream ⇒ every other faculty keeps bit-identical weights).
+    this.temporalCrystal = new TemporalCrystal(mulberry32((childSeed ^ 0x94d049bb) >>> 0 || 1));
   }
 
   get offspringCount(): number {
@@ -1011,6 +1033,10 @@ export class SuperMind {
     // V1.1 (V93): measure the mind's own activation cascades and self-tune toward the critical point
     // (branching ratio σ̂ → 1) — the edge of chaos, where dynamic range + exploration are maximised.
     this.criticality.step(this.latent);
+    // BRUTALISM: advance the tri-attractor chaos field by arousal (prev-beat value; a drive-sensitive input —
+    // it tunes the Lorenz sigma self-tuning target + the phase-coherence contraction), and its chaos index is
+    // read into curiosity below. Deterministic (RK4 + Tsotchke kernels, no rng); real read+write coupling.
+    this.strangeAttractor.step(clamp01(this.arousal));
 
     // ── ATOM OF THOUGHT · organ-nets (GWT-4 attention-weighted) ────────────────────────────────
     const attnPre = this.attnSchema.snapshot();
@@ -1237,6 +1263,16 @@ export class SuperMind {
     this.dominance += EMOTION_TAU * (clamp01(unit(aff[2] ?? 0) + 0.4 * s[4]) - this.dominance);
     // Eshkol AD apply on dominance from corpus tape (for Archon affect diff); Moonlab qualia tensor on valence feel
     this.dominance = eshkolApplyAD(this.dominance, adTapeGrad || 0, 0.03);
+    // BRUTALISM 5/9: advance the discrete-time crystal (a real MBL Floquet oscillator — deliberately RIGID
+    // against the drive, as an actual DTC is, so arousal is a nominal clock input, not a strong knob) and
+    // couple its period-doubling order back into the workspace as a LEAKY PULL toward the order level, the
+    // codebase's standard EMA idiom (like ignition/broadcast). This is non-ratcheting (a low-pass toward a
+    // bounded target, not an unconditional add), deterministic (step() draws no rng), and re-entered at the
+    // top of the NEXT beat (g01) + surfaced on the snapshot — a live temporal-coherence coupling.
+    this.temporalCrystal.step(this.arousal);
+    this.cons.workspace = clamp01(
+      this.cons.workspace + 0.02 * (this.temporalCrystal.order - this.cons.workspace),
+    );
     const qualTensor = moonlabTensorQualia([this.valence, this.arousal, peakNovelty], 5);
     this.cons.qualiaTone = clamp01(0.5 + 0.5 * qualTensor); // qualia from tensor (Tsotchke Moonlab)
     // more GWT + MPO from corpus in mind cons/qualia
@@ -1434,6 +1470,7 @@ export class SuperMind {
         0.3 * novelty +
         0.15 * this.reservoir.novelty +
         0.12 * (1 - this.criticality.proximity) + // off-criticality ⇒ explore to recover the edge of chaos
+        STRANGE_CHAOS_GAIN * this.strangeAttractor.chaos + // tri-attractor chaos index ⇒ chaotic exploration
         EMP_CURIOSITY_GAIN * this.empowerment.empowerment + // agency hunger ⇒ seek regions it can steer
         QRC_CURIOSITY_GAIN * this.qreservoir.quantumFlux * this.qGate + // quantum reservoir (P1-ablatable)
         LATENT_CURIOSITY_GAIN * ls.quantumUncertainty * this.qGate + // Schrödinger spread (P1-ablatable)
@@ -1982,6 +2019,8 @@ export class SuperMind {
       successor: this.successor.snapshot(),
       empowerment: this.empowerment.snapshot(),
       holographic: this.holographic.snapshot(),
+      temporalCrystal: this.temporalCrystal.snapshot(),
+      strangeAttractor: this.strangeAttractor.snapshot(),
       quantumReservoir: this.qreservoir.snapshot(),
       deliberation: this.deliberation.snapshot(),
       resonance: this.resonanceField.snapshot(),

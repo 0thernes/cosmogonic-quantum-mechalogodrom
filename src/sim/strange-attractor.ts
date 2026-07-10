@@ -22,6 +22,11 @@ import { moonlabTensorContract, eshkolADGradient, quakePerturb } from './tsotchk
 
 const DT = 0.002;
 
+// Basin re-injection seeds — the attractors' initial conditions; boundVec resets here on numerical escape.
+const LORENZ_SEED: Vec3 = { x: 0.1, y: 0.0, z: 0.0 };
+const ROSSLER_SEED: Vec3 = { x: 0.1, y: 0.0, z: 0.0 };
+const RABINOVICH_SEED: Vec3 = { x: 0.1, y: 0.0, z: 0.1 };
+
 function clamp(v: number, lo: number, hi: number): number {
   return v < lo ? lo : v > hi ? hi : v;
 }
@@ -58,6 +63,29 @@ function rabinovichDeriv(s: Vec3, gamma: number, delta: number): Vec3 {
     y: s.x * (3 * s.z + 1 - x2) + gamma * s.y,
     z: -2 * s.z * (delta + s.x * s.y),
   };
+}
+
+/**
+ * Numerical-escape guard: RK4 on the stiff Rabinovich-Fabrikant (and a quake-perturbed Lorenz) reliably runs
+ * off the attractor to ±Infinity → NaN after a few hundred steps for these parameters. A real strange
+ * attractor is bounded and ergodic, so when the state escapes (any component non-finite or beyond a generous
+ * physical extent `m` the healthy trajectory never reaches) we RE-INJECT it at the basin seed rather than
+ * clamp-and-stick — clamping alone freezes the trajectory on the rail and the chaos signal goes dead-constant,
+ * whereas re-injection keeps it genuinely varying. Deterministic. (Latent bug surfaced when the module was
+ * first wired live — see AUDIT-LOG; healthy chaos never trips this.)
+ */
+function boundVec(s: Vec3, m: number, seed: Vec3): Vec3 {
+  if (
+    !Number.isFinite(s.x) ||
+    !Number.isFinite(s.y) ||
+    !Number.isFinite(s.z) ||
+    Math.abs(s.x) > m ||
+    Math.abs(s.y) > m ||
+    Math.abs(s.z) > m
+  ) {
+    return { x: seed.x, y: seed.y, z: seed.z };
+  }
+  return s;
 }
 
 function rk4Step(s: Vec3, dt: number, deriv: (v: Vec3) => Vec3): Vec3 {
@@ -109,9 +137,24 @@ export class StrangeAttractor {
     this.beatCount++;
     // RK4 step all three
     const lSig = this.sigma;
-    this.lorenz = rk4Step(this.lorenz, DT, (s) => lorenzDeriv(s, lSig, this.rho, this.beta));
-    this.rossler = rk4Step(this.rossler, DT, (s) => rosslerDeriv(s, 0.2, 0.2, 5.7));
-    this.rabinovich = rk4Step(this.rabinovich, DT, (s) => rabinovichDeriv(s, 0.87, 0.1));
+    // Re-inject each attractor at its basin seed on numerical escape (esp. the stiff Rabinovich-Fabrikant) so
+    // the chaos can never diverge to NaN and poison the cognition that now reads it, yet stays genuinely
+    // varying (clamp-and-stick would freeze it dead-constant on the rail).
+    this.lorenz = boundVec(
+      rk4Step(this.lorenz, DT, (s) => lorenzDeriv(s, lSig, this.rho, this.beta)),
+      90,
+      LORENZ_SEED,
+    );
+    this.rossler = boundVec(
+      rk4Step(this.rossler, DT, (s) => rosslerDeriv(s, 0.2, 0.2, 5.7)),
+      60,
+      ROSSLER_SEED,
+    );
+    this.rabinovich = boundVec(
+      rk4Step(this.rabinovich, DT, (s) => rabinovichDeriv(s, 0.87, 0.1)),
+      15,
+      RABINOVICH_SEED,
+    );
 
     // Lyapunov proxy: running variance of |dX/dt| for Lorenz
     // lorenzDeriv is pure of (this.lorenz, …) — compute once, not 3× (byte-identical, fewer ops).
