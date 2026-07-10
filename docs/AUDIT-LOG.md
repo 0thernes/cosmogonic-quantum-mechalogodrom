@@ -93,24 +93,33 @@ genuinely load-bearing** couplings (not metric-gaming) + determinism/boundedness
   clamp-and-stick, which would freeze the chaos dead-constant). Now bounded + genuinely varying over
   2000+ steps. New `tests/strange-attractor.test.ts`.
 
-### Deferred (owner call, not shipped)
+### Batch 6 — the three former deferrals, resolved honestly (this commit)
 
-- **[23] instanced-entities motion-interpolation** — the "Phase 1.2 GPU Motion Interpolation" path is
-  provably inert (uploads `prevPos`+`simTick` every frame for a `mix()` that always returns the input,
-  ~160 KB/frame at the 10k tier). Correct fix is deletion, but it is a destructive feature-cut across
-  the shader, pool, and 3 `world.ts` call sites (+ deleting `tests/motion-interpolation.test.ts`) —
-  an owner decision, not a bug fix. Flagged here so it is not silently lost.
-- **[9] mixed-state-qgt** — the cheap wiring (purity/entropy of a depolarized pure state) is a
-  degenerate constant (state-independent), and the honest state-dependent mixed-state QGT needs a
-  parameter-family + finite-difference design (`O(P²d²)`) that is genuine owner-scoped work. Left dead
-  rather than ship a fake-signal telemetry.
-- **[37] dark-energy** — a genuinely world-LEVEL cosmological field (Λ → entity density / resources),
-  so it belongs in `world.ts` (Codex's active surface), not as a per-mind SuperMind faculty. Its
-  coupling to resource regeneration is a world-design decision. Deferred to avoid a bad semantic home
-  and a live-file collision.
+The owner directive is to handle everything; on review the earlier deferrals were over-cautious, so
+each was resolved to its honest maximum (without shipping any fake/degenerate signal):
 
-Receipts: 2369 → **2389** tests (batches 1–3 → 2371; batch 5 adds 2 test files → 2389), coverage floor
-unchanged (84.64% line / 82.21% func — Windows measured higher). Full `bun run check` green on each commit.
+- **[23] instanced-entities motion-interpolation — already fully resolved (Codex `b8219955`).** The
+  inert Phase 1.2 machinery (`instPrevPos`/`instSimTick`/`uRenderTime`/`uSimRate` + the ~160 KB/frame
+  uploads + the no-op `mix()`) is gone; `interpolatedPos` is now just `instanceMatrix[3].xyz`. Better
+  than the finding's "delete the test" — `tests/motion-interpolation.test.ts` was repurposed into a
+  **regression guard** asserting those attributes/uniforms stay undefined. No action needed.
+- **[37] dark-energy — WIRED into `world.ts`.** The quintessence Λ field now steps every apex beat with
+  energy density ← apex vitality and matter density ← live population fullness; when the universe
+  ACCELERATES (sparse + energetic ⇒ expansion > 0.85) it kindles a hair of collective chaos, in the
+  exact gated-boost class as the noosphere/morphic/gedanken couplings (chaos decays at ~1538 so it
+  never ratchets). `φ` is clamp-bounded — no divergence (verified over 3000 steps). Snapshot exposed
+  via `world.darkEnergySnapshot`. New long-run + drive-sensitivity tests.
+- **[9] mixed-state-qgt — gate-VERIFIED** (`tests/mixed-state-qgt.test.ts`). The finding's real harm
+  was "no test ⇒ the audit fixes silently rot"; that is now fixed — the Hermitian ρ + Im-sign, the
+  d²-vs-dim linear-entropy fix, the depolarizing-channel trace preservation, and a **non-degenerate
+  state-dependent** Bures QGT over a real parameter family are all locked in. A full register-scale
+  mixed-state QGT _consumer_ stays a genuine expensive UI-cadence design task (the cheap sim-signal is
+  degenerate, and reduced-state mixedness is already computed inline in super-qubits) — NOT shipped
+  rather than a fake or redundant signal.
+
+Receipts: 2369 → **2396** tests (batches 1–3 → 2371; batch 5 → 2389; batch 6 adds dark-energy +2 and
+mixed-state-qgt +5 → 2396), coverage floor unchanged (84.64% line / 82.21% func — Windows measured
+higher). Full `bun run check` green on each commit.
 
 ---
 

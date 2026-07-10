@@ -134,6 +134,7 @@ import { triggerBrutalRelease, applyBrutalRelease, getBrutalLore } from './sim/b
 import { EmergenceAnglesController } from './sim/emergence-angles';
 import { Mortality } from './sim/mortality';
 import { Stigmergy } from './sim/stigmergy';
+import { DarkEnergy, type DarkEnergySnapshot } from './sim/dark-energy';
 import { Noosphere } from './sim/noosphere';
 import { MorphicField, type MorphicSnapshot } from './sim/morphic-field';
 import { Symbiosis } from './sim/symbiosis';
@@ -360,6 +361,12 @@ export class World {
   private readonly morphicField = new MorphicField();
   /** Last morphic-field snapshot (telemetry); null until the first apex beat imprints. */
   private morphicSnap: MorphicSnapshot | null = null;
+  /** BRUTALISM: the dark-energy (quintessence Λ) field — a background cosmological expansion driven each
+   * apex beat by the apex vitality (energy density) + live population fullness (matter density). When the
+   * universe ACCELERATES it kindles a hair of collective chaos (a real field→world write). Deterministic. */
+  private readonly darkEnergy = new DarkEnergy();
+  /** Last dark-energy snapshot (telemetry); null until the first apex beat steps it. */
+  private darkEnergySnap: DarkEnergySnapshot | null = null;
   private readonly symbiosis: Symbiosis;
   /** Adaptive cadence counters for Phase 1.2 optimization - invisible to user */
   private readonly mythRitual: MythRitual;
@@ -770,6 +777,11 @@ export class World {
    *  bias) — the apex-imprinted cross-creature correlation field; null until the first apex beat. */
   get morphicSnapshot(): MorphicSnapshot | null {
     return this.morphicSnap;
+  }
+  /** BRUTALISM: live dark-energy (quintessence Λ) snapshot — cosmological constant, quintessence field,
+   *  equation of state + expansion rate; null until the first apex beat steps it. */
+  get darkEnergySnapshot(): DarkEnergySnapshot | null {
+    return this.darkEnergySnap;
   }
   private readonly apexPercept: ApexPercept = {
     threat: 0,
@@ -2774,6 +2786,22 @@ export class World {
         if (dreamHeat > 0.6) {
           s.chaos = Math.min(CHAOS_MAX, s.chaos + 0.02 * Math.min(1, dreamHeat - 0.6));
         }
+      }
+      // BRUTALISM: the dark-energy (quintessence Λ) cosmological field. Energy density ← apex vitality,
+      // matter density ← live population fullness. When the population is SPARSE + energetic the universe
+      // ACCELERATES (expansion → 1) and kindles a hair of collective chaos; when CROWDED it contracts
+      // (expansion → ~0.57) and the gate stays shut — a real population→cosmology→world loop in the exact
+      // gated-boost class as the noosphere/morphic/gedanken couplings above (chaos decays at ~1538, so the
+      // boost never ratchets). Deterministic (dark-energy draws no rng; φ is clamp-bounded, no divergence).
+      const matterDensity = clamp(
+        this.entities.list.length / Math.max(1, this.quality.maxEntities),
+        0,
+        1,
+      );
+      this.darkEnergy.step(clamp(this.lastApexThought.vitality, 0, 1), matterDensity);
+      this.darkEnergySnap = this.darkEnergy.snapshot();
+      if (this.darkEnergy.expansion > 0.85) {
+        s.chaos = Math.min(CHAOS_MAX, s.chaos + 0.02 * (this.darkEnergy.expansion - 0.85));
       }
       // Light Archons (5–24): deposit pantheon field into emergence angles 8–10 each apex beat.
       for (let a = 5; a < ARCHON_CHANNELS; a++) {
