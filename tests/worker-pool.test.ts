@@ -208,6 +208,17 @@ describe('Phase 3.1: Worker Pool', () => {
     expect(pool.getStats().totalWorkers).toBe(3);
     pool.dispose();
 
+    const concurrent = new WorkerPool({
+      maxWorkers: 1,
+      useSharedArrayBuffer: false,
+      qualityTier: 'desktop',
+    });
+    const initializing = concurrent.initialize('/fake-worker.js');
+    await expect(concurrent.initialize('/fake-worker.js')).rejects.toThrow(/initializ/);
+    await initializing;
+    expect(concurrent.getStats().totalWorkers).toBe(1);
+    concurrent.dispose();
+
     Object.defineProperty(globalThis, 'navigator', {
       configurable: true,
       value: { hardwareConcurrency: 2 },
@@ -385,7 +396,7 @@ describe('Phase 3.1: Worker Pool', () => {
       onmessage: ((event: MessageEvent) => void) | null = null;
       onerror: ((event: ErrorEvent) => void) | null = null;
       constructor(_url: string, _options?: WorkerOptions) {}
-      postMessage(msg: any): void {
+      postMessage(msg: WorkerTask & { generation: number; useSharedArrayBuffer: boolean }): void {
         // Mock processing the message and replying asynchronously
         setTimeout(() => {
           if (this.onmessage) {

@@ -61,6 +61,7 @@ describe('applyVizBenchmarks — GLSL injection structure (compilable)', () => {
       const uIdx = src.indexOf('uniform float u_entropy;');
       expect(uIdx).toBeGreaterThanOrEqual(0);
       expect(uIdx).toBeLessThan(mainIdx);
+      expect(src.match(/uniform float u_entropy;/g)).toHaveLength(1);
       // The uniform value is registered for three to upload.
       expect(shader.uniforms.u_entropy).toBeDefined();
     }

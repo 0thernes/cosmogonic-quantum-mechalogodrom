@@ -28,6 +28,14 @@ describe('digital biologics birth', () => {
     stepBiologic(b, 0.6);
     expect(a).toEqual(b);
     expect(a.generation).toBe(1);
+
+    const reality = birthBiologic(1, 7);
+    reality.form = 'REALITY_MXY';
+    reality.brutalGodPower = 1;
+    const curvatureBefore = reality.qgtCurvature;
+    stepBiologic(reality, 0.6);
+    expect(Number.isFinite(reality.qgtCurvature)).toBe(true);
+    expect(reality.qgtCurvature).toBeGreaterThan(curvatureBefore);
   });
 
   test('petri dish ignition can birth full Biologic records (world-wired path)', () => {

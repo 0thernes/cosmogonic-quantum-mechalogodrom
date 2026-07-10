@@ -102,6 +102,7 @@ export class WorkerPool {
   private readonly replacementDepthByWorker = new Map<Worker, number>();
   private nextTaskGeneration = 1;
   private lifecycleGeneration = 1;
+  private initializing = false;
   private disposed = false;
 
   constructor(config: WorkerPoolConfig) {
@@ -120,23 +121,31 @@ export class WorkerPool {
   /** Initialize the worker pool exactly once. */
   async initialize(workerScript: string): Promise<void> {
     if (this.disposed) throw new Error('Worker pool disposed');
-    if (this.workers.length > 0) throw new Error('Worker pool already initialized');
+    if (this.initializing || this.workers.length > 0)
+      throw new Error('Worker pool already initialized or initializing');
+    // Set synchronously before the first await: concurrent callers must not both pass the empty
+    // workers check and exceed maxWorkers.
+    this.initializing = true;
     this.workerScriptUrl = workerScript;
 
-    const lifecycle = this.lifecycleGeneration;
-    const workerCount = this.getWorkerCount();
-    for (let i = 0; i < workerCount; i++) {
-      const worker = await this.spawnWorker(0);
-      if (this.disposed || lifecycle !== this.lifecycleGeneration) {
-        this.replacementDepthByWorker.delete(worker);
-        worker.terminate();
-        return;
+    try {
+      const lifecycle = this.lifecycleGeneration;
+      const workerCount = this.getWorkerCount();
+      for (let i = 0; i < workerCount; i++) {
+        const worker = await this.spawnWorker(0);
+        if (this.disposed || lifecycle !== this.lifecycleGeneration) {
+          this.replacementDepthByWorker.delete(worker);
+          worker.terminate();
+          return;
+        }
+        // A test worker may report a queued startup failure before this await continuation. Never
+        // resurrect a worker that its error handler already retired.
+        if (!this.replacementDepthByWorker.has(worker)) continue;
+        this.workers.push(worker);
+        this.availableWorkers.push(worker);
       }
-      // A test worker may report a queued startup failure before this await continuation. Never
-      // resurrect a worker that its error handler already retired.
-      if (!this.replacementDepthByWorker.has(worker)) continue;
-      this.workers.push(worker);
-      this.availableWorkers.push(worker);
+    } finally {
+      this.initializing = false;
     }
   }
 

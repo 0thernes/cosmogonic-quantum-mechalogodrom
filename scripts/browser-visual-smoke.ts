@@ -16,6 +16,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT_DIR = join(ROOT, 'output', 'playwright');
 const RUNNER_DIR = join(OUT_DIR, 'npm-runner');
 const BROWSERS_DIR = join(RUNNER_DIR, 'ms-playwright');
+const NODE_EXECUTABLE = process.platform === 'win32' ? 'node.exe' : 'node';
 const PORT = Number(process.env.CQM_VISUAL_SMOKE_PORT ?? 3107);
 const VALID_TIERS = new Set(['phone', 'tablet', 'laptop', 'desktop', 'ultra', 'mega']);
 const TIERS = (process.env.CQM_VISUAL_SMOKE_TIERS ?? 'phone,desktop')
@@ -50,10 +51,6 @@ function killProcess(pid: number | undefined): void {
   process.kill(pid, 'SIGKILL');
 }
 
-function command(name: string): string {
-  return process.platform === 'win32' ? `${name}.cmd` : name;
-}
-
 function runChecked(label: string, exe: string, args: string[], cwd: string): void {
   console.log(`visual-smoke: ${label}`);
   const result = spawnSync(exe, args, {
@@ -61,32 +58,29 @@ function runChecked(label: string, exe: string, args: string[], cwd: string): vo
     env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: BROWSERS_DIR },
     stdio: 'inherit',
   });
-  if (result.status !== 0) fail(`${label} exited with ${result.status}`);
+  if (result.error) fail(`${label} failed to launch: ${result.error.message}`);
+  if (result.status !== 0) {
+    const outcome = result.status ?? `signal ${result.signal ?? 'unknown'}`;
+    fail(`${label} exited with ${outcome}`);
+  }
 }
 
 function ensurePlaywright(): void {
   mkdirSync(RUNNER_DIR, { recursive: true });
-  const packageJsonPath = join(RUNNER_DIR, 'package.json');
-  if (!existsSync(packageJsonPath)) {
-    writeFileSync(packageJsonPath, '{"private":true,"type":"module"}\n', 'utf8');
-  }
-  if (!existsSync(join(RUNNER_DIR, 'node_modules', 'playwright', 'package.json'))) {
-    runChecked(
-      'installing local Playwright package',
-      command('npm'),
-      ['install', '--no-save', 'playwright'],
-      RUNNER_DIR,
-    );
-  }
-  if (!existsSync(join(BROWSERS_DIR, '.chromium-ready'))) {
-    runChecked(
-      'installing Chromium browser for Playwright',
-      command('npx'),
-      ['playwright', 'install', 'chromium'],
-      RUNNER_DIR,
-    );
-    writeFileSync(join(BROWSERS_DIR, '.chromium-ready'), `${new Date().toISOString()}\n`, 'utf8');
-  }
+  const packagePath = join(ROOT, 'node_modules', 'playwright', 'package.json');
+  if (!existsSync(packagePath)) fail('pinned Playwright dependency missing — run `bun install`');
+  const cli = join(ROOT, 'node_modules', 'playwright', 'cli.js');
+  if (!existsSync(cli)) fail('pinned Playwright CLI missing — run `bun install`');
+  // The pinned CLI performs its own idempotent browser-presence check and install locking. Running
+  // it every smoke avoids a racy home-grown readiness marker and never resolves a mutable latest tag.
+  // Invoke the JavaScript entry point directly because Node cannot spawn a Windows .cmd shim without
+  // a shell; keeping shell execution disabled also avoids command-line re-parsing.
+  runChecked(
+    'ensuring pinned Chromium browser',
+    NODE_EXECUTABLE,
+    [cli, 'install', 'chromium'],
+    ROOT,
+  );
 }
 
 async function waitForHealth(stderr: () => string): Promise<void> {
@@ -630,8 +624,7 @@ process.on('exit', () => {
 try {
   await waitForHealth(() => stderr);
   console.log('visual-smoke: server healthy');
-  const node = process.platform === 'win32' ? 'node.exe' : 'node';
-  const child = spawn(node, [runnerPath], {
+  const child = spawn(NODE_EXECUTABLE, [runnerPath], {
     cwd: RUNNER_DIR,
     env: {
       ...process.env,

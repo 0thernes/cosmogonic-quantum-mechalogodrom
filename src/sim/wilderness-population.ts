@@ -164,6 +164,9 @@ export class WildernessPopulation {
    */
   update(cameraX: number, cameraZ: number, dt: number): void {
     if (this.disposed) return;
+    // A poisoned camera coordinate would otherwise create persistent `NaN,z` chunk keys and
+    // hundreds of non-finite entities. Reject before counters or chunk state can mutate.
+    if (!Number.isFinite(cameraX) || !Number.isFinite(cameraZ)) return;
     // Increment frame counter for deterministic timestamps
     this.frameCounter++;
 

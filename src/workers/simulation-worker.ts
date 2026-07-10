@@ -37,11 +37,39 @@ export interface WorkerResponse {
   error?: string;
 }
 
+function isWorkerMessage(value: unknown): value is WorkerMessage {
+  if (value === null || typeof value !== 'object') return false;
+  const message = value as Partial<WorkerMessage>;
+  return (
+    typeof message.id === 'string' &&
+    message.id.length > 0 &&
+    (message.type === 'simulation' || message.type === 'wilderness') &&
+    message.data instanceof Float32Array &&
+    typeof message.seed === 'number' &&
+    Number.isFinite(message.seed) &&
+    typeof message.dt === 'number' &&
+    Number.isFinite(message.dt) &&
+    (message.chunkId === undefined || typeof message.chunkId === 'string') &&
+    typeof message.generation === 'number' &&
+    Number.isSafeInteger(message.generation) &&
+    message.generation >= 0 &&
+    typeof message.useSharedArrayBuffer === 'boolean'
+  );
+}
+
 /**
  * Handle worker messages
  */
-self.onmessage = (event: MessageEvent<WorkerMessage>) => {
+self.onmessage = (event: MessageEvent<unknown>) => {
+  // Dedicated-worker messages come only from the owning Worker. Chromium represents that channel
+  // with an empty origin, while an explicitly reported foreign origin must still be rejected.
+  if (event.origin !== '' && event.origin !== self.origin) return;
+
   const message = event.data;
+  if (!isWorkerMessage(message)) {
+    console.warn('[simulation-worker] ignored malformed message');
+    return;
+  }
 
   try {
     let result: Float32Array;

@@ -64,11 +64,14 @@ function harvest(): Harvest {
         }
       };
       walk(base);
-    } catch {}
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      throw new Error(`[harvest-tsotchke] Failed while scanning ${base}: ${detail}`);
+    }
     // The first existing candidate (Eshkol/eshkol_repo) already contains every .esk file;
     // its parent (Eshkol) recursively re-enters eshkol_repo, so walking both double-counts
-    // every file. Stop after the first existing base. (break outside the try so a partial
-    // throw inside walk still stops the second walk.)
+    // every file. Stop after the first successfully scanned existing base; a traversal error
+    // aborts instead of emitting a plausible-looking partial census.
     break;
   }
 

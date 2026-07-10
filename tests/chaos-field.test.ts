@@ -129,6 +129,26 @@ describe('ChaosField (V62 CHAOS MODE)', () => {
     f.takeAlgoKick();
     expect(f.takeAlgoKick()).toBe(false);
   });
+
+  test('entanglement retires a dead endpoint without mutating its live partner', () => {
+    const f = new ChaosField(0xc1c1);
+    const dead = mkEntity(0, 0, 0);
+    const live = mkEntity(1, 0, 0);
+    dead.userData.alive = false;
+    dead.userData.vel.x = 100;
+    live.userData.vel.x = 2;
+    const internals = f as unknown as {
+      pairs: [Entity, Entity][];
+      pairTimer: number;
+      applyEntanglement(dt: number, list: readonly Entity[], intensity: number): void;
+    };
+    internals.pairs.push([dead, live]);
+    internals.pairTimer = 1;
+    internals.applyEntanglement(1 / 60, [live], 1);
+    expect(live.userData.vel.x).toBe(2);
+    expect(internals.pairs).toHaveLength(0);
+    expect(f.entangledCount).toBe(0);
+  });
 });
 
 /** Median of a numeric array (does not mutate the input). */

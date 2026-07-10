@@ -120,6 +120,8 @@ export interface EntityData {
   phylum: number;
   /** OUTLIER second behavior, temporally blended with `beh`; null for members. */
   beh2: Behavior | null;
+  /** O(1) lifecycle marker. False after EntityManager disposal; absent on lightweight test mocks. */
+  alive?: boolean;
   /**
    * F-NHI: true for a user-LAUNCHED non-human-intelligence being (Neo/"Matrix" powers — buoyant,
    * faster, age-immortal, and immune to singularity consumption). OPTIONAL/absent on every normal
@@ -127,10 +129,6 @@ export interface EntityData {
    * sets it. Read as `userData.isNhi === true`.
    */
   isNhi?: boolean;
-  /** Previous position for shader-side temporal smoothing. OPTIONAL so spawn literals stay compact. */
-  prevPos?: THREE.Vector3;
-  /** Timestamp for shader-side temporal smoothing. OPTIONAL (⇒ undefined). */
-  simTick?: number;
 }
 
 export interface Entity extends THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial> {

@@ -40,7 +40,38 @@ describe('UI lifecycle static contracts', () => {
     expect(code).toContain('deferredUiRetryTimer = window.setTimeout');
     expect(code).toContain('DEFERRED_UI_MAX_ATTEMPTS = 3');
     expect(code).toContain('attempts >= DEFERRED_UI_MAX_ATTEMPTS');
-    expect(code).toContain('if (deferredUiLoading || deferredUiPending.size === 0) return');
+    expect(code).toContain(
+      'if (!mainLifecycleActive() || deferredUiLoading || deferredUiPending.size === 0) return',
+    );
+    expect(code).toContain('const mainLifecycle = new AbortController()');
+    expect(code).toContain('mainLifecycle.abort()');
+    expect(code).toContain('deferredUiFallbackTimer = window.setTimeout');
+    expect((code.match(/2500\);/g) ?? []).length).toBe(1);
+    expect(code).toContain('signal: mainLifecycle.signal');
+    expect(code).toContain("document.removeEventListener('pointerdown', unlock)");
+    expect(code).toContain("document.removeEventListener('click', unlock)");
+    // HMR may abort while quality/WebGPU detection or a boot-loader paint yield is pending. Every
+    // continuation must stop before constructing a replacement World or scheduling its rAF loop.
+    expect(code).toMatch(
+      /const quality = await detectQuality\(\);\s*if \(!continueMainLifecycle\(\)\) return;/,
+    );
+    expect(
+      (code.match(/await bootPaint\(\);\s*if \(!continueMainLifecycle\(\)\) return;/g) ?? [])
+        .length,
+    ).toBe(2);
+    expect(code).toContain('if (!mainLifecycleActive()) return;');
+    expect(code).toContain('const doomedWorld = world;');
+    expect(code).toContain('const doomedEngine = engine;');
+    expect(code).toContain('disposeRuntimeObjects()');
+    // Idle work is actively cancelled where the browser supports it; already-started imports and
+    // Promise settlement callbacks are quarantined by the lifecycle signal and cannot enqueue retries.
+    expect(code).toContain('deferredUiIdleCallback = idleWindow.requestIdleCallback');
+    expect(code).toContain('cancelIdleCallback.call(window, deferredUiIdleCallback)');
+    expect(code).toContain('if (mainLifecycleActive()) loaded(name)');
+    expect(code).toContain('if (mainLifecycleActive()) failed(name)(err)');
+    expect(code).toMatch(
+      /Promise\.allSettled\(tasks\)\.finally\([\s\S]{0,180}if \(!mainLifecycleActive\(\)\) return;/,
+    );
   });
 
   test('brain slot visualizers are idempotent and accessible', () => {

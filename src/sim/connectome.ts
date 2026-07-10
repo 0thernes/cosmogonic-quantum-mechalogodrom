@@ -41,6 +41,13 @@ const WAVE1_HZ = 22;
 const WAVE2_HZ = 17;
 /** Hard clamp on the activation accumulator (see update loop). */
 const ACT_MAX = 4;
+/** Initial topology estimate: quality tiers budget roughly 12 links per live entity. */
+const INITIAL_LINKS_PER_ENTITY = 12;
+/** Small worlds still get enough room to avoid reallocating on their first dense neighborhood. */
+const MIN_LINK_CAPACITY = 256;
+/** Open-addressed id tables keep at most a 0.25 load factor. */
+const INDEX_CAPACITY_MULTIPLIER = 4;
+const MIN_INDEX_CAPACITY = 64;
 
 // Module-level scratch color — reused for every link (keeps update() allocation-free).
 const TMP_COLOR = new THREE.Color();
@@ -71,6 +78,23 @@ for (let k = 0; k <= LINK_SEG; k++) {
 /** Scratch for the LINK_SEG+1 polyline points (reused → update() stays allocation-free). */
 const TMP_PT = new Float32Array((LINK_SEG + 1) * 3);
 
+/** Geometric capacity bounded by `maximum`; returns 0 only for a zero-sized maximum. */
+function boundedCapacity(maximum: number, desired: number, floor: number): number {
+  if (maximum <= 0) return 0;
+  let capacity = Math.min(maximum, Math.max(1, floor));
+  const target = Math.min(maximum, Math.max(0, desired));
+  while (capacity < target) capacity = Math.min(maximum, capacity * 2);
+  return capacity;
+}
+
+/** Power-of-two hash-table capacity for a population-sized open-addressed map. */
+function indexCapacity(entityCount: number): number {
+  const required = Math.max(MIN_INDEX_CAPACITY, entityCount * INDEX_CAPACITY_MULTIPLIER);
+  let capacity = MIN_INDEX_CAPACITY;
+  while (capacity < required) capacity *= 2;
+  return capacity;
+}
+
 /**
  * Owns the connectome LineSegments. The caller decides rebuild cadence (legacy gated by
  * entity count: every 1/2/3 frames); each `update()` call performs one full rebuild.
@@ -83,16 +107,18 @@ export class Connectome {
    * `entities.list` index (a neighbor that died since the last grid rebuild is still drawn —
    * preserving V1 visuals — but yields no pair), so `pairCount <= links`.
    */
-  readonly pairs: Uint32Array;
   private readonly ctx: SimContext;
   private readonly entities: EntityManager;
   /** Link capacity (quality.maxLinks ≈ 12× maxEntities — scales with population). */
   private readonly maxLinks: number;
-  private readonly positions: Float32Array;
-  private readonly colors: Float32Array;
-  private readonly posAttr: THREE.BufferAttribute;
-  private readonly colAttr: THREE.BufferAttribute;
-  private readonly geo: THREE.BufferGeometry;
+  /** Currently allocated links; grows geometrically to maxLinks as the population/topology grows. */
+  private linkCapacity: number;
+  private positions: Float32Array;
+  private colors: Float32Array;
+  private pairBuffer: Uint32Array;
+  private posAttr: THREE.BufferAttribute;
+  private colAttr: THREE.BufferAttribute;
+  private geo: THREE.BufferGeometry;
   /** The scene LineSegments (retained so {@link dispose} can remove it + free its material). */
   private readonly lines: THREE.LineSegments;
   private linkCount = 0;
@@ -102,11 +128,12 @@ export class Connectome {
   /** Community lookup installed by GraphMind (null ⇒ V1 time-hue coloring). */
   private communityOf: ((entityIndex: number) => number) | null = null;
   // Open-addressed mesh-id → list-index table, generation-stamped so a refill never clears
-  // memory. Capacity is a power of two ≥ 4 × maxEntities (load factor ≤ 0.25 ⇒ probes always
-  // terminate). All three arrays are allocated once — the per-update refill is allocation-free.
-  private readonly idxKeys: Float64Array;
-  private readonly idxVals: Uint32Array;
-  private readonly idxGens: Uint32Array;
+  // memory. Capacity is a power of two ≥ 4 × the current population (load factor ≤ 0.25 ⇒
+  // probes always terminate). It grows geometrically with the population; steady-state refills are
+  // allocation-free.
+  private idxKeys: Float64Array;
+  private idxVals: Uint32Array;
+  private idxGens: Uint32Array;
   private idxGen = 0;
 
   /** Allocates the link buffers and adds the LineSegments to the scene (legacy 441-447). */
@@ -114,17 +141,23 @@ export class Connectome {
     this.ctx = ctx;
     this.entities = entities;
     this.maxLinks = ctx.quality.maxLinks;
-    this.positions = new Float32Array(this.maxLinks * LINK_FLOATS);
-    this.colors = new Float32Array(this.maxLinks * LINK_FLOATS);
-    this.pairs = new Uint32Array(this.maxLinks * 2);
-    let cap = 64;
-    while (cap < ctx.quality.maxEntities * 4) cap *= 2;
+    this.linkCapacity = boundedCapacity(
+      this.maxLinks,
+      entities.list.length * INITIAL_LINKS_PER_ENTITY,
+      MIN_LINK_CAPACITY,
+    );
+    this.positions = new Float32Array(this.linkCapacity * LINK_FLOATS);
+    this.colors = new Float32Array(this.linkCapacity * LINK_FLOATS);
+    this.pairBuffer = new Uint32Array(this.linkCapacity * 2);
+    const cap = indexCapacity(entities.list.length);
     this.idxKeys = new Float64Array(cap);
     this.idxVals = new Uint32Array(cap);
     this.idxGens = new Uint32Array(cap);
     this.geo = new THREE.BufferGeometry();
     this.posAttr = new THREE.BufferAttribute(this.positions, 3);
     this.colAttr = new THREE.BufferAttribute(this.colors, 3);
+    this.posAttr.setUsage(THREE.DynamicDrawUsage);
+    this.colAttr.setUsage(THREE.DynamicDrawUsage);
     this.geo.setAttribute('position', this.posAttr);
     this.geo.setAttribute('color', this.colAttr);
     this.geo.setDrawRange(0, 0);
@@ -176,6 +209,21 @@ export class Connectome {
     return this.pairTotal;
   }
 
+  /** Current topology-pair storage. It may be replaced after an update-triggered capacity growth. */
+  get pairs(): Uint32Array {
+    return this.pairBuffer;
+  }
+
+  /** Structural memory receipt: links currently allocated, never above the quality hard ceiling. */
+  get allocatedLinkCapacity(): number {
+    return this.linkCapacity;
+  }
+
+  /** Structural memory receipt: slots in the generation-stamped entity-id lookup table. */
+  get allocatedEntityIndexCapacity(): number {
+    return this.idxKeys.length;
+  }
+
   /** Structural performance receipt: CPU geometry/color floats written by the last rebuild. */
   get geometryFloatsWritten(): number {
     return this.geometryWriteTotal;
@@ -199,6 +247,64 @@ export class Connectome {
     this.communityOf = fn;
   }
 
+  /**
+   * Grow topology + render storage geometrically while retaining the scene LineSegments/material.
+   * The populated prefixes and current draw range survive the swap. Replacing and disposing the
+   * geometry releases old GPU buffers instead of leaking every intermediate capacity. Amortized O(1)
+   * per appended link; O(capacity) only on logarithmically many growth boundaries.
+   */
+  private ensureLinkCapacity(required: number): void {
+    if (required <= this.linkCapacity) return;
+    const nextCapacity = boundedCapacity(
+      this.maxLinks,
+      required,
+      Math.max(MIN_LINK_CAPACITY, this.linkCapacity * 2),
+    );
+    if (nextCapacity < required) {
+      throw new RangeError(
+        `Connectome link capacity ${required} exceeds maxLinks ${this.maxLinks}`,
+      );
+    }
+
+    const positions = new Float32Array(nextCapacity * LINK_FLOATS);
+    const colors = new Float32Array(nextCapacity * LINK_FLOATS);
+    const pairs = new Uint32Array(nextCapacity * 2);
+    positions.set(this.positions);
+    colors.set(this.colors);
+    pairs.set(this.pairBuffer);
+
+    const posAttr = new THREE.BufferAttribute(positions, 3);
+    const colAttr = new THREE.BufferAttribute(colors, 3);
+    posAttr.setUsage(THREE.DynamicDrawUsage);
+    colAttr.setUsage(THREE.DynamicDrawUsage);
+    const oldGeometry = this.geo;
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', posAttr);
+    geometry.setAttribute('color', colAttr);
+    geometry.setDrawRange(oldGeometry.drawRange.start, oldGeometry.drawRange.count);
+
+    this.positions = positions;
+    this.colors = colors;
+    this.pairBuffer = pairs;
+    this.posAttr = posAttr;
+    this.colAttr = colAttr;
+    this.geo = geometry;
+    this.linkCapacity = nextCapacity;
+    this.lines.geometry = geometry;
+    oldGeometry.dispose();
+  }
+
+  /** Grow the id→list-index table before refilling it for a larger live population. */
+  private ensureEntityIndexCapacity(entityCount: number): void {
+    const required = indexCapacity(entityCount);
+    if (required <= this.idxKeys.length) return;
+    this.idxKeys = new Float64Array(required);
+    this.idxVals = new Uint32Array(required);
+    this.idxGens = new Uint32Array(required);
+    // No entries need copying: update() immediately rebuilds the complete current generation.
+    this.idxGen = 0;
+  }
+
   /** Stamp `id → value` into the current generation of the lookup table. O(1) expected. */
   private idxInsert(id: number, value: number): void {
     const keys = this.idxKeys;
@@ -207,7 +313,7 @@ export class Connectome {
     const cap = keys.length;
     let h = (id % cap) >>> 0;
     let probes = 0;
-    // Load factor ≤ 0.25 (cap ≥ 4·maxEntities ≥ 4·list.length) ⇒ an empty slot always exists.
+    // Load factor ≤ 0.25 (ensureEntityIndexCapacity ran for list.length) ⇒ an empty slot exists.
     while (gens[h] === gen && keys[h] !== id) {
       h = h + 1 >= cap ? 0 : h + 1;
       if (++probes > cap) break;
@@ -254,9 +360,10 @@ export class Connectome {
   update(dt: number, t: number, mutateAct = true): void {
     const grid = this.ctx.grid;
     const list = this.entities.list;
-    const pos = this.positions;
-    const col = this.colors;
-    const pairs = this.pairs;
+    this.ensureEntityIndexCapacity(list.length);
+    let pos = this.positions;
+    let col = this.colors;
+    let pairs = this.pairBuffer;
     const communityOf = this.communityOf;
     const max = this.maxLinks;
     const drawWeb = this.lines.visible;
@@ -293,6 +400,13 @@ export class Connectome {
           const bi = this.idxFind(eb.id);
           // Undirected dedup: one segment per pair (both endpoints query at full population).
           if (bi >= 0 && ni >= bi) continue;
+          if (wI >= this.linkCapacity) {
+            this.ensureLinkCapacity(wI + 1);
+            // Growth replaces the typed arrays and attributes; refresh hot-loop aliases once.
+            pos = this.positions;
+            col = this.colors;
+            pairs = this.pairBuffer;
+          }
           if (bi >= 0) {
             pairs[pc * 2] = ni;
             pairs[pc * 2 + 1] = bi;

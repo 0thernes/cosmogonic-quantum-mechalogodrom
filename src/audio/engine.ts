@@ -131,6 +131,8 @@ export class AudioEngine {
   /** Hard-stop handler for tab close / navigation / minimize (pagehide fires where visibilitychange
    *  sometimes doesn't); retained so {@link dispose} can drop it. */
   private pagehideHandler: (() => void) | null = null;
+  /** Once disposed (for HMR/world teardown), this instance must never recreate browser resources. */
+  private disposed = false;
   private _musicOn = false;
   private _sfxOn = false;
   private _muted = false;
@@ -288,6 +290,7 @@ export class AudioEngine {
    * suspend/resume handler (Known Bug 3), both exactly once.
    */
   init(): void {
+    if (this.disposed) return;
     if (this.ctx) {
       if (this.ctx.state === 'suspended') void this.ctx.resume();
       return;
@@ -362,6 +365,8 @@ export class AudioEngine {
    * bound to the dead engine (the renderer side already disposed via Engine.dispose; this matches it).
    */
   dispose(): void {
+    if (this.disposed) return;
+    this.disposed = true;
     this.stopScheduler();
     if (this.ambientInterval !== null) {
       clearInterval(this.ambientInterval);
@@ -458,7 +463,12 @@ export class AudioEngine {
     this.wake(); // V122: a dozed master bus wakes on any audio button (USER #7)
     this._sfxOn = !this._sfxOn;
     if (this.ctx && this.sfxGain) {
-      this.sfxGain.gain.setTargetAtTime(this._sfxOn ? SFX_BASE : 0, this.ctx.currentTime, 0.1);
+      const t = this.ctx.currentTime;
+      // A social chorus leaves a future restore ramp on this AudioParam. Hold the computed
+      // value and cancel that timeline before applying user intent, otherwise the restore can
+      // run after an OFF toggle and make a logically disabled SFX bus audible again.
+      this.sfxGain.gain.cancelAndHoldAtTime(t);
+      this.sfxGain.gain.setTargetAtTime(this._sfxOn ? SFX_BASE : 0, t, 0.1);
     }
     return this._sfxOn;
   }
@@ -580,16 +590,13 @@ export class AudioEngine {
   playNhiSocial(socialLevel: number = 0.5): void {
     if (!this.ctx || !this.sfxGain || !this._sfxOn) return;
     const t = this.ctx.currentTime;
+    const level = Number.isFinite(socialLevel) ? Math.max(0, Math.min(1, socialLevel)) : 0;
     // Boost the SFX bus for this chorus, then restore to the CONSTANT base — never the live
     // (possibly mid-ramp) value, which let overlapping choruses ratchet the bus permanently
     // louder and let a queued restore override a mid-chorus toggleSfx. Cancel pending automation
     // first, then pin at the current value so cancelling mid-ramp doesn't click.
-    this.sfxGain.gain.cancelScheduledValues(t);
-    this.sfxGain.gain.setValueAtTime(this.sfxGain.gain.value, t);
-    this.sfxGain.gain.linearRampToValueAtTime(
-      Math.min(0.55, SFX_BASE + socialLevel * 0.25),
-      t + 0.08,
-    );
+    this.sfxGain.gain.cancelAndHoldAtTime(t);
+    this.sfxGain.gain.linearRampToValueAtTime(Math.min(0.55, SFX_BASE + level * 0.25), t + 0.08);
     this.sfxGain.gain.linearRampToValueAtTime(SFX_BASE, t + 0.45);
     this.playExtra('howl');
   }
@@ -1016,6 +1023,7 @@ export class AudioEngine {
   /** Reset the sleep timer so music keeps playing until sleepMs of continuous playback. */
   private resetSleepTimer(): void {
     this.clearSleepTimer();
+    if (this.disposed) return;
     this.sleepTimer = setTimeout(() => {
       this.sleepTimer = null;
       if (this._musicOn && !this._muted) {

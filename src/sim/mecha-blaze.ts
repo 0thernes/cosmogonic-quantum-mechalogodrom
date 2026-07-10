@@ -70,6 +70,8 @@ export class MechaBlaze {
   private cursor = 0;
   private active = true;
   private readonly respawns: { at: number; mi: number }[] = [];
+  private respawnHead = 0;
+  private readonly deathIndices: number[] = [];
   kills = 0;
 
   constructor(ctx: SimContext) {
@@ -97,7 +99,17 @@ export class MechaBlaze {
   }
 
   stats(): MechaBlazeStats {
-    return { kills: this.kills, pending: this.respawns.length, active: this.active };
+    return {
+      kills: this.kills,
+      pending: this.respawns.length - this.respawnHead,
+      active: this.active,
+    };
+  }
+
+  /** Cancel organisms queued by the pre-reset population so Genesis stays at one progenitor. */
+  clearPendingRespawns(): void {
+    this.respawns.length = 0;
+    this.respawnHead = 0;
   }
 
   /**
@@ -148,6 +160,7 @@ export class MechaBlaze {
   ): void {
     const list = entities.list;
     if (this.active && dt > 0) {
+      this.deathIndices.length = 0;
       for (let i = list.length - 1; i >= 0; i--) {
         const e = list[i];
         if (!e) continue;
@@ -162,18 +175,26 @@ export class MechaBlaze {
         if (dx * dx + dz * dz <= coneR * coneR) {
           this.ignite(p.x, p.y, p.z);
           const mi = e.userData.mi ?? 0;
-          // Measure the incinerated mind BEFORE disposal (weights + senses still live). Backwards scan
-          // ⇒ the disposeAt index shift never skips an unvisited organism.
+          // Measure the incinerated mind BEFORE post-scan batch disposal (weights + senses still live).
           onKill?.(e, i);
-          entities.disposeAt(i); // O(1); fires onDeath exactly once
+          this.deathIndices.push(i);
           this.respawns.push({ at: t + RESPAWN_DELAY, mi });
           this.kills++;
         }
       }
+      entities.disposeManyDescending(this.deathIndices);
     }
-    while (this.respawns.length > 0 && (this.respawns[0]?.at ?? Infinity) <= t) {
-      const r = this.respawns.shift();
+    while ((this.respawns[this.respawnHead]?.at ?? Infinity) <= t) {
+      const r = this.respawns[this.respawnHead++];
       if (r) entities.spawn(null, r.mi); // fresh random platform spot (rng-seeded)
+    }
+    if (this.respawnHead === this.respawns.length) {
+      this.respawns.length = 0;
+      this.respawnHead = 0;
+    } else if (this.respawnHead >= 64 && this.respawnHead * 2 >= this.respawns.length) {
+      this.respawns.copyWithin(0, this.respawnHead);
+      this.respawns.length -= this.respawnHead;
+      this.respawnHead = 0;
     }
     let anyAlive = false;
     for (let i = 0; i < POOL; i++) {

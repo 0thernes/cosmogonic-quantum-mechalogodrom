@@ -5,7 +5,7 @@
  * range tracks the non-truce relations, and construction draws nothing from the rng (so the
  * integrator can place it anywhere in the boot stream).
  */
-import { describe, expect, test } from 'bun:test';
+import { describe, expect, test, spyOn } from 'bun:test';
 import * as THREE from 'three';
 import { mulberry32 } from '../src/math/rng';
 import { SpatialHash } from '../src/math/spatial-hash';
@@ -91,6 +91,20 @@ function makeSnap(
 const ZERO_COUNTS = Array.from({ length: PHYLA }, () => 0);
 
 describe('construction', () => {
+  test('dispose detaches the panel and frees all owned GPU resources idempotently', () => {
+    const ctx = makeCtx('ultra', 10000);
+    const viz = new Viz3DSystem(ctx);
+    const geoDispose = spyOn(THREE.BufferGeometry.prototype, 'dispose');
+    const matDispose = spyOn(THREE.Material.prototype, 'dispose');
+    viz.dispose();
+    expect(ctx.scene.children.length).toBe(0);
+    expect(geoDispose.mock.calls.length).toBeGreaterThanOrEqual(3);
+    expect(matDispose.mock.calls.length).toBeGreaterThanOrEqual(PHYLA + TITANS + 1);
+    geoDispose.mockRestore();
+    matDispose.mockRestore();
+    expect(() => viz.dispose()).not.toThrow();
+  });
+
   test('builds headless without a DOM and adds objects to the scene', () => {
     const ctx = makeCtx('ultra', 10000);
     const viz = new Viz3DSystem(ctx);

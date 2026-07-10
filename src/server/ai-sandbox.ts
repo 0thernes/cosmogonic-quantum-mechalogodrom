@@ -12,8 +12,8 @@
  *  - {@link runReadOnly} — executes ONE simple command only if (a) its binary is on a tiny ALLOW
  *    list, (b) no token is on the DENY list, (c) it contains no shell metacharacter
  *    (`> < | & ; $ \` ( )` / newline) so there is no redirection, chaining, or subshell, and
- *    (d) every path-like argument resolves inside the repo root. `git`/`bun` get extra
- *    subcommand gating so read-only verbs are the only ones that run.
+ *    (d) every path-like argument resolves inside the repo root. `git` gets extra subcommand
+ *    gating so only read-only verbs run; arbitrary project executors such as Bun are not exposed.
  *
  * Server-only module (run by Bun, never bundled into the client). It writes NOTHING — there is no
  * code path here that creates, mutates, or deletes a file. A would-be attacker who fully controls
@@ -159,7 +159,6 @@ const ALLOWED_BINS = new Set([
   'cut',
   'nl',
   'git',
-  'bun',
 ]);
 
 /** Read-only `git` subcommands. `branch`/`tag` are allowed ONLY in list form (see validate). */
@@ -351,24 +350,6 @@ function validateCommand(raw: string): { ok: true; argv: string[] } | { ok: fals
       return { ok: false, error: `git ${sub} is allowed only in list form (no positional args)` };
     }
   }
-  if (bin === 'bun') {
-    const sub = argv[1] ?? '';
-    if (sub === 'test') {
-      /* allowed */
-    } else if (sub === 'run') {
-      const script = argv[2] ?? '';
-      // `check`/`bench` removed (audit HIGH): they run the build (writes dist/) and execute
-      // arbitrary project code — not read-only. Only the non-mutating scripts remain.
-      const ALLOWED_SCRIPTS = ['typecheck', 'lint', 'format:check'];
-      if (!ALLOWED_SCRIPTS.includes(script))
-        return { ok: false, error: `bun run "${script}" is not allowed` };
-    } else {
-      return {
-        ok: false,
-        error: `bun "${sub}" is not allowed (only test / run typecheck|lint|format:check)`,
-      };
-    }
-  }
   // Confine every positional path-like argument to the repo root AND apply the same private-area
   // block as the file tools. Previously this only checked for a `..` escape, so `run cat .env` /
   // `run cat legacy/x` read exactly the files read_file forbids (audit MEDIUM: the `run` tool
@@ -517,11 +498,16 @@ function gitGrepRequest(argv: string[]): { pattern: string; roots: string[] } | 
 }
 /**
  * The minimal, secret-free environment handed to sandboxed subprocesses. Deliberately EXCLUDES
- * `process.env` (which holds every LLM provider key) — only the system vars git/bun need to run.
+ * `process.env` (which holds every LLM provider key) — only the system variables native readers
+ * and Git need to run.
  * Closes the audit HIGH where the full env (all API keys) was injected into model-controlled procs.
  */
 function minimalEnv(): Record<string, string> {
-  const out: Record<string, string> = { GIT_PAGER: 'cat', PAGER: 'cat' };
+  const out: Record<string, string> = {
+    GIT_OPTIONAL_LOCKS: '0',
+    GIT_PAGER: 'cat',
+    PAGER: 'cat',
+  };
   for (const k of [
     'PATH',
     'Path',
@@ -543,6 +529,44 @@ function minimalEnv(): Record<string, string> {
   return out;
 }
 
+interface CappedText {
+  text: string;
+  truncated: boolean;
+}
+
+async function readCappedStream(
+  stream: ReadableStream<Uint8Array>,
+  limit: number,
+  onLimit: () => void,
+): Promise<CappedText> {
+  const reader = stream.getReader();
+  const decoder = new TextDecoder();
+  let text = '';
+  let bytes = 0;
+  let truncated = false;
+  try {
+    while (true) {
+      const chunk = await reader.read();
+      if (chunk.done) break;
+      const value = chunk.value;
+      const remaining = limit - bytes;
+      if (value.byteLength > remaining) {
+        if (remaining > 0) text += decoder.decode(value.subarray(0, remaining), { stream: true });
+        truncated = true;
+        onLimit();
+        await reader.cancel();
+        break;
+      }
+      bytes += value.byteLength;
+      text += decoder.decode(value, { stream: true });
+    }
+    text += decoder.decode();
+    return { text, truncated };
+  } finally {
+    reader.releaseLock();
+  }
+}
+
 /** Run a single read-only command, repo-confined, time-bounded, output-capped. Never writes. */
 export async function runReadOnly(raw: string): Promise<SandboxResult> {
   const v = validateCommand(raw);
@@ -561,19 +585,32 @@ export async function runReadOnly(raw: string): Promise<SandboxResult> {
       stderr: 'pipe',
       env: minimalEnv(),
     });
-    const timer = setTimeout(() => proc.kill(), RUN_TIMEOUT_MS);
-    const code = await proc.exited;
-    clearTimeout(timer);
-    const [out, err] = await Promise.all([
-      new Response(proc.stdout).text(),
-      new Response(proc.stderr).text(),
-    ]);
-    if (code !== 0 && out.length === 0 && err.length > 0) {
-      return { ok: false, error: err.trim().slice(0, 500) };
+    let timedOut = false;
+    const stopAtLimit = (): void => proc.kill();
+    const timer = setTimeout(() => {
+      timedOut = true;
+      proc.kill();
+    }, RUN_TIMEOUT_MS);
+    try {
+      const [code, [stdout, stderr]] = await Promise.all([
+        proc.exited,
+        Promise.all([
+          readCappedStream(proc.stdout, MAX_OUTPUT + 1, stopAtLimit),
+          readCappedStream(proc.stderr, MAX_OUTPUT + 1, stopAtLimit),
+        ]),
+      ]);
+      if (timedOut) return { ok: false, error: 'command timed out' };
+      const out = stdout.text;
+      const err = stderr.text;
+      if (code !== 0 && out.length === 0 && err.length > 0 && !stderr.truncated) {
+        return { ok: false, error: err.trim().slice(0, 500) };
+      }
+      const combined = out + (err ? `\n[stderr]\n${err}` : '');
+      const truncated = stdout.truncated || stderr.truncated || combined.length > MAX_OUTPUT;
+      return { ok: true, output: combined.slice(0, MAX_OUTPUT), truncated };
+    } finally {
+      clearTimeout(timer);
     }
-    const combined = out + (err ? `\n[stderr]\n${err}` : '');
-    const truncated = combined.length > MAX_OUTPUT;
-    return { ok: true, output: truncated ? combined.slice(0, MAX_OUTPUT) : combined, truncated };
   } catch (e) {
     return { ok: false, error: `execution failed: ${e instanceof Error ? e.message : String(e)}` };
   }
@@ -647,7 +684,7 @@ export const SANDBOX_TOOLS = [
     function: {
       name: 'run',
       description:
-        'Run ONE read-only shell command (e.g. "git log --oneline -5", "bun test", "ls src/sim"). ' +
+        'Run ONE read-only shell command (e.g. "git log --oneline -5", "git status --short", "ls src/sim"). ' +
         'Cannot modify, add, or delete anything; no redirection/chaining.',
       parameters: {
         type: 'object',

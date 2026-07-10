@@ -8,7 +8,7 @@
  *
  * Headless: three's Scene/BufferGeometry/PointsMaterial need no DOM until render.
  */
-import { describe, expect, test } from 'bun:test';
+import { describe, expect, test, spyOn } from 'bun:test';
 import * as THREE from 'three';
 import { mulberry32 } from '../src/math/rng';
 import { QuantumCloud } from '../src/sim/quantum';
@@ -75,6 +75,21 @@ function makeCtx(quantumCount: number): SimContext {
 }
 
 describe('QuantumCloud.implodeAt', () => {
+  test('dispose detaches the cloud and frees its geometry/material idempotently', () => {
+    const ctx = makeCtx(8);
+    const cloud = new QuantumCloud(ctx);
+    expect(ctx.scene.children.length).toBe(1);
+    const geoDispose = spyOn(THREE.BufferGeometry.prototype, 'dispose');
+    const matDispose = spyOn(THREE.Material.prototype, 'dispose');
+    cloud.dispose();
+    expect(ctx.scene.children.length).toBe(0);
+    expect(geoDispose).toHaveBeenCalledTimes(1);
+    expect(matDispose).toHaveBeenCalledTimes(1);
+    geoDispose.mockRestore();
+    matDispose.mockRestore();
+    expect(() => cloud.dispose()).not.toThrow();
+  });
+
   test('flags exactly the index % 32 === basis subset as collapsed', () => {
     const ctx = makeCtx(100);
     const cloud = new QuantumCloud(ctx);

@@ -9,6 +9,8 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
   auditPostOriginAllowed,
+  copilotEnabled,
+  developmentMode,
   makeRateLimiter,
   parseAuditBody,
   parseChatMessages,
@@ -277,6 +279,15 @@ describe('Copilot route guards — origin before quota', () => {
     const block = routeBlock('/api/chat');
     expect(block.indexOf('if (!auditPostOriginAllowed(req))')).toBeLessThan(
       block.indexOf('tryRemoveForClient(chatLimiters'),
+    );
+    expect(copilotEnabled(undefined)).toBe(false);
+    expect(copilotEnabled('0')).toBe(false);
+    expect(copilotEnabled('1')).toBe(true);
+    expect(developmentMode(undefined)).toBe(false);
+    expect(developmentMode('production')).toBe(false);
+    expect(developmentMode('development')).toBe(true);
+    expect(serverSource).toContain(
+      'const COPILOT_ENABLED = copilotEnabled(process.env.COPILOT_ENABLED)',
     );
   });
 

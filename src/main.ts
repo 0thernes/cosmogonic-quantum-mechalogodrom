@@ -83,13 +83,19 @@ const DEFERRED_UI_MAX_ATTEMPTS = 3;
 const deferredUiAttempts = new Map<DeferredUiModule, number>();
 let deferredUiLoading = false;
 let deferredUiRetryTimer: number | null = null;
+let deferredUiFallbackTimer: number | null = null;
+let deferredUiRunTimer: number | null = null;
+let deferredUiIdleCallback: number | null = null;
+/** Own every entrypoint listener so HMR cannot leave closures bound to a disposed world. */
+const mainLifecycle = new AbortController();
 
 function loadDeferredUi(): void {
-  if (deferredUiLoading || deferredUiPending.size === 0) return;
+  if (!mainLifecycleActive() || deferredUiLoading || deferredUiPending.size === 0) return;
   deferredUiLoading = true;
   const failed =
     (name: DeferredUiModule) =>
     (err: unknown): void => {
+      if (!mainLifecycleActive()) return;
       const attempts = deferredUiAttempts.get(name) ?? 0;
       if (attempts >= DEFERRED_UI_MAX_ATTEMPTS) deferredUiPending.delete(name);
       log.warn('deferred UI import failed', {
@@ -100,17 +106,27 @@ function loadDeferredUi(): void {
       });
     };
   const loaded = (name: DeferredUiModule): void => {
+    if (!mainLifecycleActive()) return;
     deferredUiPending.delete(name);
   };
   const run = (): void => {
+    if (!mainLifecycleActive()) {
+      deferredUiLoading = false;
+      return;
+    }
     const tasks: Promise<void>[] = [];
     const track = (name: DeferredUiModule, load: () => Promise<unknown>): void => {
-      if (!deferredUiPending.has(name)) return;
+      if (!mainLifecycleActive() || !deferredUiPending.has(name)) return;
       deferredUiAttempts.set(name, (deferredUiAttempts.get(name) ?? 0) + 1);
       tasks.push(
-        load()
-          .then(() => loaded(name))
-          .catch(failed(name)),
+        load().then(
+          () => {
+            if (mainLifecycleActive()) loaded(name);
+          },
+          (err: unknown) => {
+            if (mainLifecycleActive()) failed(name)(err);
+          },
+        ),
       );
     };
     track('copilot', () => import('./ui/copilot'));
@@ -123,31 +139,41 @@ function loadDeferredUi(): void {
     track('panel-edge-toggles', () => import('./ui/panel-edge-toggles'));
     void Promise.allSettled(tasks).finally(() => {
       deferredUiLoading = false;
+      if (!mainLifecycleActive()) return;
       // Successful modules stay removed from the pending set. A transient chunk failure gets one
       // bounded retry timer instead of being permanently suppressed by a one-shot global flag.
       if (deferredUiPending.size > 0 && deferredUiRetryTimer === null) {
         deferredUiRetryTimer = window.setTimeout(() => {
           deferredUiRetryTimer = null;
+          if (!mainLifecycleActive()) return;
           loadDeferredUi();
         }, DEFERRED_UI_RETRY_MS);
       }
     });
   };
-  const ric = (
-    window as unknown as {
-      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => void;
-    }
-  ).requestIdleCallback;
-  if (typeof ric === 'function') ric(run, { timeout: 1500 });
-  else setTimeout(run, 0);
+  const idleWindow = window as unknown as {
+    requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+  };
+  if (typeof idleWindow.requestIdleCallback === 'function') {
+    deferredUiIdleCallback = idleWindow.requestIdleCallback(
+      () => {
+        deferredUiIdleCallback = null;
+        run();
+      },
+      { timeout: 1500 },
+    );
+  } else {
+    deferredUiRunTimer = window.setTimeout(() => {
+      deferredUiRunTimer = null;
+      run();
+    }, 0);
+  }
 }
 
 const canvas = document.getElementById('c');
 if (!(canvas instanceof HTMLCanvasElement)) {
   throw new Error('boot failure: #c canvas element is missing');
 }
-
-const quality = await detectQuality();
 
 /**
  * A friendly full-screen card shown when the WebGL context can't be created — so the app degrades to a
@@ -185,7 +211,81 @@ let world: World | null = null;
 let rafId = 0;
 let resizeHandler: (() => void) | null = null;
 
+function mainLifecycleActive(): boolean {
+  return !mainLifecycle.signal.aborted;
+}
+
+/** Dispose only this module instance's runtime objects; null-first makes repeated abort cleanup safe. */
+function disposeRuntimeObjects(): void {
+  const doomedWorld = world;
+  world = null;
+  try {
+    doomedWorld?.dispose();
+  } catch {
+    /* world teardown is best-effort */
+  }
+
+  const doomedEngine = engine;
+  engine = null;
+  try {
+    doomedEngine?.dispose();
+  } catch {
+    /* engine teardown is best-effort */
+  }
+}
+
+/** Every asynchronous boot continuation must pass this gate before it can resurrect runtime state. */
+function continueMainLifecycle(): boolean {
+  if (mainLifecycleActive()) return true;
+  disposeRuntimeObjects();
+  return false;
+}
+
+/** Cancel all deferred-UI scheduling owned by this module instance. In-flight imports self-quarantine. */
+function cancelDeferredUiScheduling(): void {
+  if (deferredUiRetryTimer !== null) {
+    window.clearTimeout(deferredUiRetryTimer);
+    deferredUiRetryTimer = null;
+  }
+  if (deferredUiFallbackTimer !== null) {
+    window.clearTimeout(deferredUiFallbackTimer);
+    deferredUiFallbackTimer = null;
+  }
+  if (deferredUiRunTimer !== null) {
+    window.clearTimeout(deferredUiRunTimer);
+    deferredUiRunTimer = null;
+  }
+  if (deferredUiIdleCallback !== null) {
+    const cancelIdleCallback = (
+      window as unknown as { cancelIdleCallback?: (handle: number) => void }
+    ).cancelIdleCallback;
+    if (typeof cancelIdleCallback === 'function') {
+      cancelIdleCallback.call(window, deferredUiIdleCallback);
+    }
+    deferredUiIdleCallback = null;
+  }
+  deferredUiLoading = false;
+}
+
+/** Preserve the post-shell fallback while keeping it out of an aborted quality-detection continuation. */
+function scheduleDeferredUiFallback(): void {
+  if (!mainLifecycleActive() || deferredUiFallbackTimer !== null) return;
+  deferredUiFallbackTimer = window.setTimeout(() => {
+    deferredUiFallbackTimer = null;
+    if (!mainLifecycleActive()) return;
+    loadDeferredUi();
+  }, 2500);
+}
+
 async function boot(): Promise<void> {
+  const quality = await detectQuality();
+  if (!continueMainLifecycle()) return;
+
+  const tShell = performance.now();
+  initAppShell();
+  bootStage('shell', `${Math.max(1, Math.round(performance.now() - tShell))} ms`);
+  scheduleDeferredUiFallback();
+
   // V121 BOOT LOADER: stage the boot with paint yields so the overlay's 8 tiles fill with REAL
   // measured timings while the user watches — engine → seed → world → first light. Each `await
   // bootPaint()` guarantees the compositor presents the latest tile values before the next
@@ -199,12 +299,14 @@ async function boot(): Promise<void> {
   try {
     engine = new Engine(canvas as HTMLCanvasElement, quality);
   } catch (err) {
+    if (!continueMainLifecycle()) return;
     // The renderer (WebGLRenderer) failed to get a context — degrade gracefully instead of a hard crash.
     log.warn('WebGL boot failed', { error: err instanceof Error ? err.message : String(err) });
     bootAbort(); // the recovery card must never sit underneath the loading page
     showWebglRecovery(err);
     return;
   }
+  if (!continueMainLifecycle()) return;
   bootStage('engine', `${Math.round(performance.now() - tEngine)} ms`);
 
   const store = new MemoryStore();
@@ -219,22 +321,32 @@ async function boot(): Promise<void> {
   store.save(persisted);
   bootStage('seed', `0x${persisted.seed.toString(16).toUpperCase()}`);
   await bootPaint();
+  if (!continueMainLifecycle()) return;
 
   const audit = new AuditTrail();
   const tWorld = performance.now();
-  world = new World({ engine, quality, persisted, store, audit });
+  const activeEngine = engine;
+  if (!activeEngine) return;
+  world = new World({ engine: activeEngine, quality, persisted, store, audit });
+  if (!continueMainLifecycle()) return;
   bootStage('world', `${Math.round(performance.now() - tWorld)} ms`);
   bootStage('entities', `grows → ${quality.targetEntities.toLocaleString()}`);
   bootStage('pantheon', `${APEX_INDIVIDUATED} apex · ${ALPHABET_PANTHEON_SIZE} glyphs`);
   await bootPaint();
+  if (!continueMainLifecycle()) return;
 
   resizeHandler = (): void => engine?.onResize();
-  window.addEventListener('resize', resizeHandler);
+  window.addEventListener('resize', resizeHandler, { signal: mainLifecycle.signal });
 
   // Legacy parity: any first gesture unlocks audio (and restores persisted SFX).
-  const unlock = (): void => world?.unlock();
-  document.addEventListener('pointerdown', unlock, { once: true, passive: true });
-  document.addEventListener('click', unlock, { once: true, passive: true });
+  const unlock = (): void => {
+    document.removeEventListener('pointerdown', unlock);
+    document.removeEventListener('click', unlock);
+    world?.unlock();
+  };
+  const unlockOptions = { passive: true, signal: mainLifecycle.signal } as const;
+  document.addEventListener('pointerdown', unlock, unlockOptions);
+  document.addEventListener('click', unlock, unlockOptions);
 
   audit.record('boot', { session: persisted.sessions, seed: persisted.seed });
   log.info('boot', {
@@ -275,6 +387,7 @@ async function boot(): Promise<void> {
   let last = performance.now();
   let firstLight = false;
   function frame(now: number): void {
+    if (!mainLifecycleActive()) return;
     rafId = requestAnimationFrame(frame);
     const dt = Math.max(0, now - last) / 1000;
     last = now;
@@ -320,6 +433,7 @@ async function boot(): Promise<void> {
       });
     }
   }
+  if (!continueMainLifecycle()) return;
   rafId = requestAnimationFrame(frame);
   // ROBUSTNESS: the deferred click-to-open panels (⛓ ACCESS / ◈ STAGE II / 🗒 AUDIT toggles, copilot,
   // settings, …) load at FIRST LIGHT above — but first light rides requestAnimationFrame, which the
@@ -328,25 +442,24 @@ async function boot(): Promise<void> {
   // missing ⛓ ACCESS / ◈ STAGE II and 🗒 AUDIT can't open. loadDeferredUi() is idempotent (guarded by
   // its per-module pending set), so ALSO pull it in after a short timeout AND the instant the tab becomes visible
   // — whichever fires first — so the full UI is always present regardless of tab visibility / cadence.
-  window.setTimeout(loadDeferredUi, 2500);
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') loadDeferredUi();
-  });
+  document.addEventListener(
+    'visibilitychange',
+    () => {
+      if (document.visibilityState === 'visible') loadDeferredUi();
+    },
+    { signal: mainLifecycle.signal },
+  );
 }
 
-const tShell = performance.now();
-initAppShell();
-bootStage('shell', `${Math.max(1, Math.round(performance.now() - tShell))} ms`);
 void boot();
 
 // ROBUSTNESS (USER: the "docs-row buttons are gone / AUDIT is wrecked" symptom, intermittently): the
 // deferred click-to-open panels (⛓ ACCESS / ◈ STAGE II / 🗒 AUDIT / SETTINGS / HELP / COPILOT) mount only
 // when loadDeferredUi() runs at FIRST LIGHT — inside the rAF loop. But rAF can be DELAYED or never fire: a
 // backgrounded tab pauses rAF entirely, and a WebGL init failure never reaches first light. In those cases
-// the panels would stay permanently unmounted and their toolbar buttons never appear. A timer fallback
-// mounts them regardless — setTimeout DOES fire in a backgrounded tab (unlike rAF) — and loadDeferredUi is
-// idempotent (the per-module pending set), so on a normal load first-light still wins and this is a no-op.
-setTimeout(loadDeferredUi, 2500);
+// the panels would stay permanently unmounted and their toolbar buttons never appear. The post-shell
+// fallback scheduled inside boot fires in a backgrounded tab (unlike rAF); loadDeferredUi is idempotent,
+// so on a normal load first-light still wins and the timer becomes a no-op.
 
 // HMR teardown — THE fix for the dev WebGL-context leak. Before a hot-replaced module re-boots, stop the
 // rAF loop, drop listeners, and FREE the renderer/context (Engine.dispose → forceContextLoss). Without
@@ -359,13 +472,13 @@ setTimeout(loadDeferredUi, 2500);
 if (import.meta.hot) {
   import.meta.hot.dispose(() => {
     cancelAnimationFrame(rafId);
-    if (deferredUiRetryTimer !== null) clearTimeout(deferredUiRetryTimer);
-    if (resizeHandler) window.removeEventListener('resize', resizeHandler);
-    try {
-      (world as unknown as { dispose?: () => void } | null)?.dispose?.();
-    } catch {
-      /* world teardown is best-effort */
+    rafId = 0;
+    mainLifecycle.abort();
+    cancelDeferredUiScheduling();
+    if (resizeHandler) {
+      window.removeEventListener('resize', resizeHandler);
+      resizeHandler = null;
     }
-    engine?.dispose();
+    disposeRuntimeObjects();
   });
 }

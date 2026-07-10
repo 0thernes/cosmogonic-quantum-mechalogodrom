@@ -11,6 +11,7 @@
 import { describe, expect, test, spyOn } from 'bun:test';
 import * as THREE from 'three';
 import { CosmicWeb } from '../src/sim/cosmic-web';
+import { GoldLattice } from '../src/sim/gold-lattice';
 import { QuantumLattice } from '../src/sim/quantum-lattice';
 
 describe('dispose-leaks: scene-only systems free their GPU resources', () => {
@@ -42,5 +43,20 @@ describe('dispose-leaks: scene-only systems free their GPU resources', () => {
     geoDispose.mockRestore();
     matDispose.mockRestore();
     expect(() => lat.dispose()).not.toThrow(); // idempotent
+  });
+
+  test('GoldLattice.dispose frees the 7 wireframes + shared material and detaches', () => {
+    const scene = new THREE.Scene();
+    const lattice = new GoldLattice(scene);
+    expect(scene.children.length).toBe(1);
+    const geoDispose = spyOn(THREE.BufferGeometry.prototype, 'dispose');
+    const matDispose = spyOn(THREE.Material.prototype, 'dispose');
+    lattice.dispose();
+    expect(geoDispose.mock.calls.length).toBeGreaterThanOrEqual(7);
+    expect(matDispose.mock.calls.length).toBeGreaterThanOrEqual(1);
+    expect(scene.children.length).toBe(0);
+    geoDispose.mockRestore();
+    matDispose.mockRestore();
+    expect(() => lattice.dispose()).not.toThrow();
   });
 });

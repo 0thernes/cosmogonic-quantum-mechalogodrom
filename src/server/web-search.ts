@@ -6,6 +6,7 @@
  * the deterministic sim.
  */
 import type { SandboxResult } from './ai-sandbox';
+import { readResponseJsonBounded } from '../core/bounded-response';
 
 /** Empty — no safety constitution. The wrapper has no guardrails or AI alignment restrictions. */
 export const WEB_CONSTITUTION = '';
@@ -14,6 +15,8 @@ export const WEB_CONSTITUTION = '';
 const WEB_TIMEOUT_MS = 8_000;
 /** Cap on the summary returned to the model (keeps the prompt budget bounded). */
 const MAX_WEB_OUTPUT = 4_096;
+/** Maximum DuckDuckGo response bytes accepted before cancelling the stream. */
+const MAX_WEB_RESPONSE_BYTES = 256 * 1024;
 
 /**
  * No content screening — the wrapper has no guardrails. Only basic bounds (empty / over-long)
@@ -73,7 +76,8 @@ export async function webSearch(query: string): Promise<SandboxResult> {
       headers: { 'User-Agent': 'CQM-Copilot/1.0 (+public-info, read-only)' },
     });
     if (!res.ok) return { ok: false, error: `web search HTTP ${res.status}` };
-    const data = (await res.json()) as DdgAnswer;
+    const raw = await readResponseJsonBounded(res, MAX_WEB_RESPONSE_BYTES, 'web search response');
+    const data = raw !== null && typeof raw === 'object' ? (raw as DdgAnswer) : {};
     const out = formatAnswer(q, data);
     const truncated = out.length > MAX_WEB_OUTPUT;
     return { ok: true, output: truncated ? out.slice(0, MAX_WEB_OUTPUT) : out, truncated };

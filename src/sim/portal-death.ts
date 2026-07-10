@@ -61,6 +61,8 @@ export class PortalDeath {
   private active = false;
   /** Pending respawns: absolute sim time to fire, + the dead organism's morphotype (so like re-enters). */
   private readonly respawns: { at: number; mi: number }[] = [];
+  private respawnHead = 0;
+  private readonly deathIndices: number[] = [];
   kills = 0;
 
   constructor(ctx: SimContext) {
@@ -88,7 +90,17 @@ export class PortalDeath {
   }
 
   stats(): PortalDeathStats {
-    return { kills: this.kills, pending: this.respawns.length, active: this.active };
+    return {
+      kills: this.kills,
+      pending: this.respawns.length - this.respawnHead,
+      active: this.active,
+    };
+  }
+
+  /** Cancel organisms queued by the pre-reset population so Genesis stays at one progenitor. */
+  clearPendingRespawns(): void {
+    this.respawns.length = 0;
+    this.respawnHead = 0;
   }
 
   /**
@@ -128,8 +140,8 @@ export class PortalDeath {
   }
 
   /**
-   * Per-frame: (1) when armed, kill every organism inside the void sphere (backwards scan → safe index
-   * shift) and queue its respawn; (2) fire any due respawns ELSEWHERE; (3) advance + fade the burst.
+   * Per-frame: (1) when armed, find every organism inside the void sphere and remove all victims with
+   * one stable batch compaction; (2) fire due respawns ELSEWHERE; (3) advance + fade the burst.
    * `dt` is the sim delta (frozen dt = 0 ⇒ no kills/respawns, particles hold). O(n + POOL).
    */
   update(
@@ -140,6 +152,7 @@ export class PortalDeath {
   ): void {
     const list = entities.list;
     if (this.active && dt > 0) {
+      this.deathIndices.length = 0;
       for (let i = list.length - 1; i >= 0; i--) {
         const e = list[i];
         if (!e) continue;
@@ -153,16 +166,25 @@ export class PortalDeath {
           // V127 (USER): the gedanken death — let the world run Thaler's neural-death experiment on this
           // being's dying brain BEFORE it is disposed (its weights + senses are still live at index i).
           onKill?.(e, i);
-          entities.disposeAt(i); // O(1); fires onDeath exactly once
+          this.deathIndices.push(i);
           this.respawns.push({ at: t + RESPAWN_DELAY, mi });
           this.kills++;
         }
       }
+      entities.disposeManyDescending(this.deathIndices);
     }
     // Due deaths re-enter the world ELSEWHERE — spawn(null) = a fresh random platform spot (rng-seeded).
-    while (this.respawns.length > 0 && (this.respawns[0]?.at ?? Infinity) <= t) {
-      const r = this.respawns.shift();
+    while ((this.respawns[this.respawnHead]?.at ?? Infinity) <= t) {
+      const r = this.respawns[this.respawnHead++];
       if (r) entities.spawn(null, r.mi);
+    }
+    if (this.respawnHead === this.respawns.length) {
+      this.respawns.length = 0;
+      this.respawnHead = 0;
+    } else if (this.respawnHead >= 64 && this.respawnHead * 2 >= this.respawns.length) {
+      this.respawns.copyWithin(0, this.respawnHead);
+      this.respawns.length -= this.respawnHead;
+      this.respawnHead = 0;
     }
     // Advance + fade the burst (drag + gravity + a chaotic warp swirl; fade base colour by life fraction).
     let anyAlive = false;

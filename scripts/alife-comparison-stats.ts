@@ -19,6 +19,7 @@
  * Pure + deterministic: no Math.random / Date.now; identical CSV -> identical bytes out.
  */
 import { mean, standardDeviation, sampleCorrelation } from 'simple-statistics';
+import { escapeMarkupAttribute, escapeMarkupText } from './markup-escape';
 
 const ROOT = `${import.meta.dir}/..`;
 const CSV = `${ROOT}/docs/reports/2026-06-26-alife-comparison-matrix.csv`;
@@ -113,11 +114,10 @@ const COSMO = '#f59e0b';
 const MEANC = '#a78bfa';
 const NEAR = '#34d399';
 
-const esc = (s: string): string =>
-  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const esc = escapeMarkupText;
 
 function svgDoc(w: number, h: number, body: string, title: string): string {
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" font-family="ui-sans-serif,system-ui,Segoe UI,Roboto,sans-serif" role="img" aria-label="${esc(title)}">
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" font-family="ui-sans-serif,system-ui,Segoe UI,Roboto,sans-serif" role="img" aria-label="${escapeMarkupAttribute(title)}">
 <rect width="${w}" height="${h}" rx="14" fill="${BG}"/>
 ${body}
 </svg>`;

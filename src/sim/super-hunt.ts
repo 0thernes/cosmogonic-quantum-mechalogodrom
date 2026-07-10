@@ -7,8 +7,8 @@
  * {@link RESPAWN_DELAY} seconds later.
  *
  * ONE backwards scan of `entities.list` does BOTH jobs at once (per organism, per apex): eat it if inside
- * EAT_R of that apex, else track it as that apex's nearest prey for the steering pass. Backwards so a
- * `disposeAt` never shifts an unvisited index. Only ORGANISMS are prey here (plants are the dome-wide
+ * EAT_R of that apex, else track it as that apex's nearest prey for the steering pass. Victims are then
+ * removed by one stable batch compaction. Only ORGANISMS are prey here (plants are the dome-wide
  * feeding pass, item D); the Pantheon / mecha / other apexes are separate bodies and are never eaten.
  *
  * DETERMINISM (ADR 0004): distances are pure geometry; a respawn draws seeded `ctx.rng` via
@@ -58,6 +58,8 @@ export class SuperHunt {
   private readonly nearD2: number[] = [];
   private readonly hasNear: boolean[] = [];
   private readonly respawns: { at: number; mi: number }[] = [];
+  private respawnHead = 0;
+  private readonly deathIndices: number[] = [];
   eaten = 0;
 
   constructor(ctx: SimContext) {
@@ -80,7 +82,13 @@ export class SuperHunt {
   }
 
   stats(): SuperHuntStats {
-    return { eaten: this.eaten, pending: this.respawns.length };
+    return { eaten: this.eaten, pending: this.respawns.length - this.respawnHead };
+  }
+
+  /** Cancel organisms queued by the pre-reset population so Genesis stays at one progenitor. */
+  clearPendingRespawns(): void {
+    this.respawns.length = 0;
+    this.respawnHead = 0;
   }
 
   /** Green organic feed-puff of {@link PER_EAT} motes at `(x,y,z)` — a swallowed organism dissolving.
@@ -144,6 +152,7 @@ export class SuperHunt {
         this.hasNear[b] = false;
       }
       const list = entities.list;
+      this.deathIndices.length = 0;
       for (let i = list.length - 1; i >= 0; i--) {
         const e = list[i];
         if (!e) continue;
@@ -161,7 +170,7 @@ export class SuperHunt {
             // V127: the eaten organism's dying mind is MEASURED — the world runs Thaler's gedanken
             // neural-death on its 70-param brain BEFORE disposal (its weights + senses are still live).
             onEat?.(e, i);
-            entities.disposeAt(i); // O(1); backwards scan ⇒ index shift is safe
+            this.deathIndices.push(i);
             bodies[b]!.eat();
             this.respawns.push({ at: t + RESPAWN_DELAY, mi });
             this.eaten++;
@@ -175,6 +184,7 @@ export class SuperHunt {
         }
         if (consumed) continue;
       }
+      entities.disposeManyDescending(this.deathIndices);
       // Steer: pursue the nearest sensed prey, else resume the idle wander.
       for (let b = 0; b < nb; b++) {
         if (this.hasNear[b]) {
@@ -186,9 +196,17 @@ export class SuperHunt {
       }
     }
     // Eaten organisms re-enter ELSEWHERE (fresh random platform spot).
-    while (this.respawns.length > 0 && (this.respawns[0]?.at ?? Infinity) <= t) {
-      const r = this.respawns.shift();
+    while ((this.respawns[this.respawnHead]?.at ?? Infinity) <= t) {
+      const r = this.respawns[this.respawnHead++];
       if (r) entities.spawn(null, r.mi);
+    }
+    if (this.respawnHead === this.respawns.length) {
+      this.respawns.length = 0;
+      this.respawnHead = 0;
+    } else if (this.respawnHead >= 64 && this.respawnHead * 2 >= this.respawns.length) {
+      this.respawns.copyWithin(0, this.respawnHead);
+      this.respawns.length -= this.respawnHead;
+      this.respawnHead = 0;
     }
     // Advance + fade the feed-puffs (drift + slight rise + fade).
     let anyAlive = false;

@@ -327,6 +327,33 @@ describe('runAgent — bounded recovery window', () => {
     });
     expect(result.ok).toBe(false);
     expect(calls).toBe(MAX_PROVIDER_ATTEMPTS);
+
+    const excessiveCalls = Array.from({ length: 100 }, (_, index) => ({
+      id: `call-${index}`,
+      type: 'function',
+      function: { name: 'not_a_real_tool', arguments: '{}' },
+    }));
+    globalThis.fetch = (async () =>
+      Response.json({
+        choices: [{ message: { role: 'assistant', content: null, tool_calls: excessiveCalls } }],
+      })) as unknown as typeof fetch;
+    const fanout = await runAgent([{ role: 'user', content: 'hello' }], undefined, {
+      deadlineMs: 1_000,
+      maxProviderAttempts: 1,
+    });
+    expect(fanout.ok).toBe(false);
+    expect(fanout.steps).toHaveLength(0);
+
+    globalThis.fetch = (async () =>
+      new Response('{}', {
+        headers: { 'Content-Length': String(10 * 1024 * 1024) },
+      })) as unknown as typeof fetch;
+    const oversized = await runAgent([{ role: 'user', content: 'hello' }], undefined, {
+      deadlineMs: 1_000,
+      maxProviderAttempts: 1,
+    });
+    expect(oversized.ok).toBe(false);
+    expect(oversized.reply).toContain('response limit');
   });
 
   test('returns safely when the whole-turn deadline aborts a hanging provider', async () => {

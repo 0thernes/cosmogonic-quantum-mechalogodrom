@@ -1,14 +1,14 @@
-<!-- reviewed: 2026-07-10 | v0.21.12 publication-surface current-truth pass | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-10 | v0.21.13 publication-surface current-truth pass | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # COSMOGONIC QUANTUM MECHALOGODROM
 
-[![version](https://img.shields.io/badge/version-0.21.12-blue)](./CHANGELOG.md)
+[![version](https://img.shields.io/badge/version-0.21.13-blue)](./CHANGELOG.md)
 [![CI](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/ci.yml/badge.svg)](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/codeql.yml/badge.svg)](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/codeql.yml)
 [![License: Non-Commercial Research & Play](https://img.shields.io/badge/License-Non--Commercial%20Research%20%26%20Play-2ea043.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
-[![tests](https://img.shields.io/badge/tests-2371%20exact-brightgreen)](./tests)
+[![tests](https://img.shields.io/badge/tests-2381%20exact-brightgreen)](./tests)
 [![coverage](https://img.shields.io/badge/coverage-84.64%25%20line%20%C2%B7%2082.21%25%20func-success)](./docs/TECHNICAL-SPECIFICATION-2026-06-26.md)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION-2026-06-26.md)
 [![Tsotchke](https://img.shields.io/badge/Tsotchke-REAL__MIT__CORPUS-purple)](https://github.com/tsotchke)
@@ -22,8 +22,8 @@ diffusion, **and the Tsotchke corpus wired as the primordial substrate for digit
 
 **Current public truth (2026-07-10):**
 
-- Package/source version: **v0.21.12**.
-- Exact tracked-suite receipt: **2,371 tests / 0 fail**. Portable public coverage floor: **84.64% line / 82.21% func**.
+- Package/source version: **v0.21.13**.
+- Exact tracked-suite receipt: **2,381 tests / 0 fail**. Portable public coverage floor: **84.64% line / 82.21% func**.
 
 <!-- cqm-sync:local-measurement:start -->
 
@@ -349,9 +349,9 @@ full gate with same-seed determinism preserved. The major arcs:
   **wingman swarm**, **self-evolution** (XP → five ascension stages + a wall-clock
   daemon-cron), an **ACCESS PUZZLE** gate, **SUPERHERO** player mode (pilot it in
   1st/3rd person), and an offline-AI **diagnostics + recovery** pipeline.
-- **Scale & per-entity minds (V38–V42)** — the `mega` tier lifts the ceiling to
-  **50,000 organisms** (√N density scaling) with a 70-param neural controller
-  running on every entity.
+- **Scale & per-entity minds (V38–V42)** — the explicit `?tier=mega` stress rung lifts the ceiling to
+  **50,000 organisms** with a 70-param neural controller on every entity. Automatic detection stops
+  at the measured 10,000-entity desktop rung; the fixed platform makes 25k/50k experimental budgets.
 - **In-world AI (V36–V43)** — **HELP ME NOW** (a repo-grounded answer panel),
   **THE BOOK** (the navigable RAG repo index), and an in-world **web search**
   under a refuse-by-default safety constitution.

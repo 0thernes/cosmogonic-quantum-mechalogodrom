@@ -54,6 +54,17 @@ describe('SuperBodySystem flight + control (V41)', () => {
       const h = body.heading(new THREE.Vector3());
       expect(Number.isFinite(p.x + p.y + p.z)).toBe(true);
       expect(Number.isFinite(h.x + h.y + h.z)).toBe(true);
+
+      body.setControl(
+        Number.POSITIVE_INFINITY,
+        Number.NaN,
+        Number.POSITIVE_INFINITY,
+        -Infinity,
+        true,
+      );
+      for (let i = 0; i < 20; i++) body.update((200 + i) / 60, 1 / 60);
+      const defended = body.worldPosition(new THREE.Vector3());
+      expect(Number.isFinite(defended.x + defended.y + defended.z)).toBe(true);
     }
   });
 

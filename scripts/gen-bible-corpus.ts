@@ -6,6 +6,7 @@
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
+import { escapeMarkupAttribute, escapeMarkupText } from './markup-escape';
 
 const BOOK = 'docs/BOOK-2026-06-26.md';
 const BIBLE = 'bible.html';
@@ -40,7 +41,7 @@ function parseBook(md: string): Entry[] {
     } else if (href.startsWith('../')) {
       href = `/${href.slice(3)}`;
     } else if (href.startsWith('docs/')) {
-      href = '/' + href.replace(/^docs\//, 'docs/');
+      href = `/${href}`;
     } else if (!href.startsWith('http') && !href.startsWith('/')) {
       href = `/docs/${href}`;
     }
@@ -132,10 +133,10 @@ function render(entries: Entry[]): string {
   for (const tier of order) {
     const list = byTier.get(tier);
     if (!list?.length) continue;
-    parts.push(`<h3>${tier}</h3><dl>`);
+    parts.push(`<h3>${escapeMarkupText(tier)}</h3><dl>`);
     for (const e of list) {
       parts.push(
-        `<dt><a href="${e.href}">${e.title}</a></dt><dd>${e.blurb.replace(/</g, '&lt;')}</dd>`,
+        `<dt><a href="${escapeMarkupAttribute(e.href)}">${escapeMarkupText(e.title)}</a></dt><dd>${escapeMarkupText(e.blurb)}</dd>`,
       );
     }
     parts.push('</dl>');

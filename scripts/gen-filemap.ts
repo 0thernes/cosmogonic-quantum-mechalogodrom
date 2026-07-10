@@ -5,6 +5,7 @@
  * to fix a summary, fix the module's header and re-run. Part of the DOCUMENTATION / RAG BOOK (V37).
  */
 import { execFileSync } from 'node:child_process';
+import { escapeMarkdownTableCell } from './markup-escape';
 
 const ROOT = 'src';
 
@@ -69,7 +70,7 @@ out +=
 for (const dir of [...groups.keys()].sort()) {
   out += `## \`${dir}/\`\n\n| Module | What it does |\n| --- | --- |\n`;
   for (const { file, sum } of groups.get(dir) ?? []) {
-    out += `| \`${file}\` | ${sum.replace(/\|/g, '\\|')} |\n`;
+    out += `| \`${file}\` | ${escapeMarkdownTableCell(sum)} |\n`;
   }
   out += `\n`;
 }

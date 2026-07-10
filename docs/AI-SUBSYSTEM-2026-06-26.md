@@ -168,8 +168,9 @@ A side panel to "ask, learn, and talk about this world" with a free AI — stric
   model never gets a raw shell — only four gated tools: `read_file` / `list_dir` / `grep` (repo-
   confined; `legacy/`, `.git`, `.env`, `node_modules`, `dist`, and any `..` escape are blocked) and
   `run`, a single-command runner that is **default-deny**: the binary must be on a small ALLOW list,
-  no token may be on the DENY list (no `rm`/`mv`/`git commit|push`/`bun add`/redirection/…), there
-  must be no shell metacharacter, and `git`/`bun` are further subcommand-gated to read-only verbs.
+  no token may be on the DENY list (no `rm`/`mv`/`git commit|push`/package runner/redirection/…), there
+  must be no shell metacharacter, and `git` is further subcommand-gated to read-only verbs. Bun and
+  other project-code executors are not exposed because their flags can preload modules or write artifacts.
   It writes nothing. Verified live: `git log`/`read` allowed; path-escape, `git push`, `legacy/`,
   and `echo > file` all denied.
 - **`server.ts`** routes — `GET /api/copilot` (provider label), `POST /api/chat` (agent turn),

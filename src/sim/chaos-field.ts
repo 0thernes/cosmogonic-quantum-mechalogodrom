@@ -206,9 +206,17 @@ export class ChaosField {
     }
     this._entangled = 0;
     const g = 0.06 + I * 0.1;
-    for (const pr of this.pairs) {
+    let livePairs = 0;
+    for (let i = 0; i < this.pairs.length; i++) {
+      const pr = this.pairs[i];
+      if (!pr) continue;
       const ea = pr[0];
       const eb = pr[1];
+      // EntityManager marks an organism dead before it leaves every subsystem's retained
+      // references. Retire that pair immediately: a disposed mesh must not keep exchanging
+      // momentum/colour with a survivor for the remaining 3–7 second repick interval.
+      if (ea.userData.alive === false || eb.userData.alive === false) continue;
+      this.pairs[livePairs++] = pr;
       const ua = ea.userData.vel;
       const ub = eb.userData.vel;
       // Shared (mean) momentum — both partners are drawn toward it, so their dances mirror.
@@ -226,6 +234,7 @@ export class ChaosField {
       eb.material.color.lerp(ea.material.color, 0.05);
       this._entangled += 2;
     }
+    this.pairs.length = livePairs;
   }
 
   /** Choose up to ~2% of the population (capped) as random entangled pairs, stored by reference. */

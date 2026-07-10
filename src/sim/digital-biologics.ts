@@ -320,10 +320,8 @@ export function stepBiologic(b: Biologic, flux: number): void {
       b.form.includes('JOKER') ||
       b.form.includes('JASPERS')
     ) {
-      try {
-        // simulate mad draw for warp
-        b.qgtCurvature = clamp01(b.qgtCurvature + 0.06);
-      } catch {}
+      // simulate mad draw for warp
+      b.qgtCurvature = clamp01(b.qgtCurvature + 0.06);
     }
 
     // ulg "law of the old gods" shatter for Chaos Gods / Shuma / Azathoth

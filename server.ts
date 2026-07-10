@@ -48,12 +48,18 @@ const VERSION = (
 
 /**
  * The Copilot (LLM side-chat + read-only tool sandbox) can read repo source and run read-only
- * commands. It is therefore OPT-IN and OFF by default in production, so a public/hosted deploy never
- * exposes proprietary source (audit CRITICAL/HIGH). Enabled in development, or when COPILOT_ENABLED=1
- * is set explicitly.
+ * commands. It is therefore explicit-opt-in in every environment, so a documented `bun start` with
+ * no environment configuration cannot expose the tool surface accidentally.
  */
-const COPILOT_ENABLED =
-  process.env.NODE_ENV !== 'production' || process.env.COPILOT_ENABLED === '1';
+export function copilotEnabled(value: string | undefined): boolean {
+  return value === '1';
+}
+
+export function developmentMode(value: string | undefined): boolean {
+  return value === 'development';
+}
+
+const COPILOT_ENABLED = copilotEnabled(process.env.COPILOT_ENABLED);
 
 /** Maximum number of audit entries retained in memory (matches the client-side cap). */
 const AUDIT_CAP = 200;
@@ -435,7 +441,7 @@ function serveHtml(path: string): (req: Request) => Promise<Response> {
 if (import.meta.main) {
   const server = Bun.serve({
     port: Number(process.env.PORT) || 3000,
-    development: process.env.NODE_ENV !== 'production',
+    development: developmentMode(process.env.NODE_ENV),
     routes: {
       '/': index,
       '/docs': serveHtml('docs.html'),

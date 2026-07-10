@@ -114,6 +114,16 @@ describe('ai-sandbox: command gate is default-deny and write-free', () => {
 
   test('rejects unknown tool name', async () => {
     expect((await dispatchTool('not_a_real_tool', {})).ok).toBe(false);
+    for (const command of [
+      'bun test',
+      'bun test --update-snapshots',
+      'bun test --coverage --coverage-dir=outside',
+      'bun test --reporter=junit --reporter-outfile=package.json',
+      'bun test --preload=tests/setup.ts',
+      'bun run typecheck',
+    ]) {
+      expect((await runReadOnly(command)).ok, command).toBe(false);
+    }
   });
 
   test('grep rejects multi-token / empty patterns', async () => {
@@ -149,6 +159,18 @@ describe('ai-sandbox: success paths (the gate ALLOWS + executes valid read-only 
       const r = await runReadOnly('echo cosmogonic-sandbox-ok');
       expect(r.ok).toBe(true);
       if (r.ok) expect(r.output.trim()).toContain('cosmogonic-sandbox-ok');
+
+      // Exercise the real subprocess stream path with a source blob far larger than MAX_OUTPUT.
+      // The child must be stopped while streaming; buffering its complete output before slicing would
+      // make this boundary vulnerable to memory exhaustion from any verbose allowed command.
+      const capped = await runReadOnly('git show HEAD:src/world.ts');
+      expect(capped.ok).toBe(true);
+      if (capped.ok) {
+        expect(capped.truncated).toBe(true);
+        // MAX_OUTPUT is a byte boundary; decoded Unicode can occupy fewer JavaScript characters.
+        expect(capped.output.length).toBeGreaterThan(0);
+        expect(capped.output.length).toBeLessThanOrEqual(16 * 1024);
+      }
     },
     { timeout: 20_000 },
   );

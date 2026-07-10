@@ -1233,9 +1233,15 @@ export class SuperBodySystem {
 
   /** V41: feed the player's steer. mode 0 autopilot · 1 assist · 2 manual; (x,y,z) world dir; active = key/stick held. */
   setControl(mode: number, x: number, y: number, z: number, active: boolean): void {
-    this.ctrlMode = mode;
+    this.ctrlMode = Number.isFinite(mode) ? Math.max(0, Math.min(2, Math.trunc(mode))) : 0;
     this.ctrlActive = active;
-    this.ctrl.set(x, y, z);
+    // Input reaches this boundary from DOM CustomEvent detail as well as keyboard state. Reject
+    // non-finite values and clamp oversized axes before they can poison position/camera vectors.
+    this.ctrl.set(
+      Number.isFinite(x) ? Math.max(-1, Math.min(1, x)) : 0,
+      Number.isFinite(y) ? Math.max(-1, Math.min(1, y)) : 0,
+      Number.isFinite(z) ? Math.max(-1, Math.min(1, z)) : 0,
+    );
   }
 
   /** V41: the avatar's world position (for the chase / first-person camera). Writes + returns `out`. */

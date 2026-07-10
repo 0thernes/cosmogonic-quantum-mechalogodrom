@@ -1816,7 +1816,7 @@ export class World {
 
     // 5 SUPER CREATURES (pantheon): driveSuper every frame — GOAL5 cadence inside
     // (1 full Tree-of-Thought mind + 4 echo minds, round-robin; see apex-cadence.ts).
-    this.driveSuper(bands.bass, bands.level, t, n);
+    this.driveSuper(bands.bass, bands.level, t, n, dt);
 
     // ── V2 cadences (ARCHITECTURE-2026-06-26.md frame pipeline) ──
     if (s.frame % 30 === 0) {
@@ -2479,7 +2479,7 @@ export class World {
    * (via grid query on entities); economy uses per-purse wealth; light/sound enhanced with
    * archetype/pos bias. All 5 driven, all 5 bodies set. Deterministic (child seeds only).
    */
-  private driveSuper(bass: number, level: number, t: number, n: number): void {
+  private driveSuper(bass: number, level: number, t: number, n: number, dt: number): void {
     try {
       const s = this.state;
       // The pantheon is already beaten once per frame in update(); read its current snapshot here so the
@@ -3026,7 +3026,9 @@ export class World {
         0,
         1,
       );
-      this.superEvo.tick(1 / 60, vitality); // driveSuper now runs EVERY frame — real-time dt, not the removed 4-frame cadence
+      // driveSuper now runs every frame. Use the same clamped, time-scaled delta as the rest of the
+      // simulation; a fixed 1/60 made progression twice as fast at 120 Hz and half as fast at 30 Hz.
+      this.superEvo.tick(dt, vitality);
       this.superBody.setEvolution(this.superEvo.appearance());
       // V63: react to a 10-level milestone — a voice + a HUD toast announcing the new godlike power,
       // and at the LV100 apex the full ASCENSION end-state (the MONOLITH TEMPLE rises). Once each.
@@ -3052,11 +3054,9 @@ export class World {
       for (const hb of this.heroBodies) hb.body.setMind(hb.mind.snapshot());
       const hero0 = this.heroBodies[0];
       if (this.superheroState.active && hero0) {
-        this.superheroState.tick(
-          1 / 60, // driveSuper runs every frame now — real-time dt (was 4/60 for the removed 4-frame cadence)
-          hero0.mind.snapshot().emotion.dominance,
-          basePercept.threat,
-        );
+        // The removed four-frame cadence no longer needs a 4/60 compensation; the real frame delta
+        // keeps progression stable across refresh rates and respects the simulation time scale.
+        this.superheroState.tick(dt, hero0.mind.snapshot().emotion.dominance, basePercept.threat);
       }
     } catch (e) {
       void e;
@@ -4149,6 +4149,13 @@ export class World {
   private resetSim(): void {
     this.resetCount++; // V57: keep count for the HUD readout
     this.singularities.dispose(); // tear down any active cosmological effect
+    // Death/feeding systems retain delayed respawns by absolute sim time. Those organisms belong to
+    // the population being discarded; without clearing them they reappeared five seconds after a
+    // Genesis reset and bypassed the one-progenitor growth ramp.
+    this.domeFeeding.clearPendingRespawns();
+    this.mechaBlaze.clearPendingRespawns();
+    this.portalDeath.clearPendingRespawns();
+    this.superHunt.clearPendingRespawns();
     this.entities.reset(1); // USER: reset → ONE entity, never a 500-strong instant repopulation
     // V121: re-anchor the growth ramp at THIS moment with a base of 1, so the target climbs slowly
     // from the lone progenitor instead of yanking the manager straight back to a high target.

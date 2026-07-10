@@ -85,6 +85,24 @@ const actTrace = (entities: EntityManager): number[] => {
   return out;
 };
 
+function connectomeLines(ctx: SimContext): THREE.LineSegments[] {
+  return ctx.scene.children.filter(
+    (child): child is THREE.LineSegments => child instanceof THREE.LineSegments,
+  );
+}
+
+function arrangeDenseClique(entities: EntityManager): void {
+  for (let i = 0; i < entities.list.length; i++) {
+    const entity = entities.list[i];
+    if (entity) entity.position.set((i % 6) * 0.5, 0, Math.floor(i / 6) * 0.5);
+  }
+}
+
+function rebuildGrid(ctx: SimContext, entities: EntityManager): void {
+  ctx.grid.clear();
+  for (const entity of entities.list) if (entity) ctx.grid.insert(entity);
+}
+
 describe('Connectome — bounded link graph + finite activation, deterministic rebuild', () => {
   test('link count is a non-negative integer bounded by the tier maxLinks', () => {
     const { ctx, conn } = makeWorld(0x1100ab);
@@ -122,5 +140,105 @@ describe('Connectome — bounded link graph + finite activation, deterministic r
     expect(conn.webVisible).toBe(false);
     conn.setWebVisible(true);
     expect(conn.webVisible).toBe(true);
+  });
+
+  test('mega startup allocation follows the live population instead of the 600k-link ceiling', () => {
+    const ctx = makeCtx(0x5500bb);
+    ctx.quality.tier = 'mega';
+    ctx.quality.maxEntities = 50_000;
+    ctx.quality.targetEntities = 50_000;
+    ctx.quality.maxLinks = 600_000;
+    const liveAtBoot = 500;
+    const entities = {
+      list: Array.from({ length: liveAtBoot }, () => ({}) as Entity),
+    } as EntityManager;
+
+    const conn = new Connectome(ctx, entities);
+    const lines = connectomeLines(ctx)[0];
+    expect(lines).toBeDefined();
+    if (!lines) return;
+
+    // 12 links/live entity is the tier model; geometric rounding stays below 2x that estimate.
+    expect(conn.allocatedLinkCapacity).toBeGreaterThanOrEqual(liveAtBoot * 12);
+    expect(conn.allocatedLinkCapacity).toBeLessThan(liveAtBoot * 24);
+    expect(conn.allocatedLinkCapacity).toBeLessThan(ctx.quality.maxLinks / 50);
+    expect(conn.allocatedEntityIndexCapacity).toBeGreaterThanOrEqual(liveAtBoot * 4);
+    expect(conn.allocatedEntityIndexCapacity).toBeLessThan(liveAtBoot * 8);
+
+    const positions = lines.geometry.getAttribute('position');
+    const colors = lines.geometry.getAttribute('color');
+    const startupBytes =
+      positions.array.byteLength +
+      colors.array.byteLength +
+      conn.pairs.byteLength +
+      conn.allocatedEntityIndexCapacity * (8 + 4 + 4);
+    expect(startupBytes).toBeLessThan(3 * 1024 * 1024);
+    conn.dispose();
+  });
+
+  test('geometric growth preserves topology and render output without replacing the line/material', () => {
+    const ctx = makeCtx(0x6600cc);
+    ctx.quality.maxEntities = 1_024;
+    ctx.quality.targetEntities = 1_024;
+    ctx.quality.maxLinks = 1_024;
+    ctx.quality.instanced = true;
+    const entities = new EntityManager(ctx);
+    entities.reset(20);
+    arrangeDenseClique(entities);
+    rebuildGrid(ctx, entities);
+
+    const grown = new Connectome(ctx, entities);
+    const grownLines = connectomeLines(ctx)[0];
+    expect(grownLines).toBeDefined();
+    if (!grownLines) return;
+    grown.update(1 / 60, 1, false);
+    expect(grown.links).toBe(190); // 20 choose 2: dense but still below the 256-link floor.
+    expect(grown.allocatedLinkCapacity).toBe(256);
+    const originalMaterial = grownLines.material;
+    const originalGeometry = grownLines.geometry;
+    let originalGeometryDisposed = false;
+    originalGeometry.addEventListener('dispose', () => {
+      originalGeometryDisposed = true;
+    });
+
+    for (let i = 0; i < 4; i++) entities.spawn(new THREE.Vector3(), 0);
+    arrangeDenseClique(entities);
+    rebuildGrid(ctx, entities);
+    const reference = new Connectome(ctx, entities); // starts directly at the required 512 capacity.
+    const referenceLines = connectomeLines(ctx)[1];
+    expect(referenceLines).toBeDefined();
+    if (!referenceLines) return;
+
+    grown.update(1 / 60, 2, false);
+    reference.update(1 / 60, 2, false);
+
+    expect(grown.allocatedLinkCapacity).toBe(512);
+    expect(grown.allocatedEntityIndexCapacity).toBe(128);
+    expect(grown.links).toBe(276); // 24 choose 2 crosses the initial capacity boundary.
+    expect(grown.links).toBe(reference.links);
+    expect(grown.pairCount).toBe(reference.pairCount);
+    expect(grown.pairs.slice(0, grown.pairCount * 2)).toEqual(
+      reference.pairs.slice(0, reference.pairCount * 2),
+    );
+    expect(connectomeLines(ctx)[0]).toBe(grownLines);
+    expect(grownLines.material).toBe(originalMaterial);
+    expect(grownLines.geometry).not.toBe(originalGeometry);
+    expect(originalGeometryDisposed).toBe(true);
+    expect(grownLines.geometry.drawRange).toEqual(referenceLines.geometry.drawRange);
+
+    const activeFloats = grown.geometryFloatsWritten;
+    const grownPositions = grownLines.geometry.getAttribute('position').array as Float32Array;
+    const referencePositions = referenceLines.geometry.getAttribute('position')
+      .array as Float32Array;
+    const grownColors = grownLines.geometry.getAttribute('color').array as Float32Array;
+    const referenceColors = referenceLines.geometry.getAttribute('color').array as Float32Array;
+    expect(grownPositions.slice(0, activeFloats)).toEqual(
+      referencePositions.slice(0, activeFloats),
+    );
+    expect(grownColors.slice(0, activeFloats)).toEqual(referenceColors.slice(0, activeFloats));
+
+    grown.dispose();
+    reference.dispose();
+    entities.reset(0);
   });
 });

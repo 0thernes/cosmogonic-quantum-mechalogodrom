@@ -12,10 +12,10 @@ describe('resolveTier', () => {
     expect(resolveTier(true, 4, 4)).toBe('phone');
   });
 
-  test('V123 capability ladder: mega ≥16c+≥8GB, ultra ≥16c, desktop ≥10c, laptop ≥8c, tablet below', () => {
-    expect(resolveTier(false, 16, 8)).toBe('mega');
-    expect(resolveTier(false, 24, 32)).toBe('mega');
-    expect(resolveTier(false, 16, 4)).toBe('ultra'); // 16 cores but memory-starved: the 25k rung
+  test('automatic capability detection stops at the measured desktop rung', () => {
+    expect(resolveTier(false, 16, 8)).toBe('desktop');
+    expect(resolveTier(false, 24, 32)).toBe('desktop');
+    expect(resolveTier(false, 16, 4)).toBe('desktop');
     expect(resolveTier(false, 12, 16)).toBe('desktop');
     expect(resolveTier(false, 10, 8)).toBe('desktop');
     expect(resolveTier(false, 8, 16)).toBe('laptop');
@@ -67,14 +67,14 @@ describe('QUALITY_LADDER', () => {
     }
   });
 
-  test('mega is the 50k ceiling AND the auto top capability tier (V55 restored)', () => {
+  test('mega remains the explicit 50k stress ceiling, never an automatic tier', () => {
     expect(QUALITY_LADDER.mega.maxEntities).toBe(50000);
     expect(QUALITY_LADDER.mega.targetEntities).toBe(QUALITY_LADDER.mega.maxEntities);
     expect(QUALITY_LADDER.mega.instanced).toBeTrue();
     expect(QUALITY_LADDER.mega.maxEntities).toBeGreaterThan(QUALITY_LADDER.ultra.maxEntities);
-    expect(resolveTier(false, 64, 64)).toBe('mega');
-    expect(resolveTier(false, 128, 256)).toBe('mega');
-    // …but mobile never gets it, and memory-starved drops off mega.
+    expect(resolveTier(false, 64, 64)).toBe('desktop');
+    expect(resolveTier(false, 128, 256)).toBe('desktop');
+    // Mobile still wins, and no coarse capability report opts into the stress rung.
     expect(resolveTier(true, 64, 64)).toBe('phone');
     expect(resolveTier(false, 16, 4)).not.toBe('mega');
   });

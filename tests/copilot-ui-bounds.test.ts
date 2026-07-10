@@ -10,6 +10,7 @@ import {
   type CopilotMessage,
   type TranscriptRoot,
 } from '../src/ui/copilot';
+import { readResponseTextBounded } from '../src/core/bounded-response';
 
 const realFetch = globalThis.fetch;
 
@@ -51,6 +52,13 @@ describe('Copilot client resource bounds', () => {
     const started = performance.now();
     await expect(copilotFetch('https://example.invalid', {}, 5)).rejects.toThrow('timed out');
     expect(performance.now() - started).toBeLessThan(250);
+    await expect(
+      readResponseTextBounded(
+        new Response('small', { headers: { 'Content-Length': '1000' } }),
+        16,
+        'test response',
+      ),
+    ).rejects.toThrow('response limit');
   });
 
   test('caller cancellation is forwarded to the underlying request', async () => {

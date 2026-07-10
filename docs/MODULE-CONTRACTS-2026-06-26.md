@@ -2,7 +2,7 @@
 
 # Module Contracts
 
-**TSOTCHKE MASTER WIRE ERA (v0.21.12):** Tsotchke corpus is the substrate for digital biologics (see `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`). Eshkol AD/GWT + scientific kernels are wired; LLM repos fenced. Canonical facts: `docs/VERIFICATION-ANALYTICAL-DATA.md`.
+**TSOTCHKE MASTER WIRE ERA (v0.21.13):** Tsotchke corpus is the substrate for digital biologics (see `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`). Eshkol AD/GWT + scientific kernels are wired; LLM repos fenced. Canonical facts: `docs/VERIFICATION-ANALYTICAL-DATA.md`.
 
 Binding spec for every module in this repo. Writer agents and humans MUST conform exactly —
 `world.ts`/`main.ts` (the composition root) are written against these signatures, sight unseen.
@@ -1559,7 +1559,7 @@ Copilot are constructed boot-stream-neutral and never write sim state, so the go
 
 ### V9 acceptance
 
-Full `bun run check` green: prettier → tsc strict → oxlint → 2371 tests (0 fail, 300-frame golden
+Full `bun run check` green: prettier → tsc strict → oxlint → 2381 tests (0 fail, 300-frame golden
 included) → build. The Copilot sandbox verified live (allow: `git log`, file reads; deny:
 path-escape, `git push`, `legacy/`, shell redirection).
 

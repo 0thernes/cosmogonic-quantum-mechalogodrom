@@ -422,6 +422,7 @@ export class EntityManager {
       payoff: 0,
       phylum,
       beh2: m.beh2 ?? null,
+      alive: true,
     };
     if (!ctx.quality.instanced) ctx.scene.add(mesh);
     this.list.push(mesh);
@@ -438,9 +439,23 @@ export class EntityManager {
    * Does NOT remove the entity from `list`; use `disposeAt()` for that. O(1).
    */
   dispose(e: Entity): void {
+    e.userData.alive = false;
     // Instanced mode: the mesh was never added — remove() is a safe no-op there.
     this.ctx.scene.remove(e);
     e.material.dispose();
+  }
+
+  /** Apply per-organism accounting and release its owned render resources. O(1). */
+  private retire(e: Entity): void {
+    const dmi = e.userData.mi;
+    const inRange = dmi >= 0 && dmi < this.morphLive.length;
+    if (inRange) {
+      const cur = this.morphLive[dmi] ?? 0;
+      if (cur > 0) this.morphLive[dmi] = cur - 1;
+    }
+    const isExtinct = inRange ? (this.morphLive[dmi] ?? 0) === 0 : true;
+    if (isExtinct && this.ctx.state.mutations > 0) this.ctx.state.mutations--;
+    this.dispose(e);
   }
 
   /**
@@ -458,18 +473,7 @@ export class EntityManager {
     // per-morphotype counter — the previous whole-list rescan made a mass die-off / black-hole consume
     // O(deaths·n) ≈ O(n²). Post-decrement count === 0 ⇔ no other live entity shares this morphotype
     // (exactly what the rescan tested), so the `mutations` behaviour is byte-identical.
-    const dmi = e.userData.mi;
-    const inRange = dmi >= 0 && dmi < this.morphLive.length;
-    if (inRange) {
-      const cur = this.morphLive[dmi] ?? 0;
-      if (cur > 0) this.morphLive[dmi] = cur - 1;
-    }
-    const isExtinct = inRange ? (this.morphLive[dmi] ?? 0) === 0 : true;
-    if (isExtinct && this.ctx.state.mutations > 0) {
-      this.ctx.state.mutations--;
-    }
-
-    this.dispose(e);
+    this.retire(e);
     for (let j = index + 1; j < list.length; j++) {
       const next = list[j];
       if (next) list[j - 1] = next; // invariant: j < length ⇒ defined
@@ -477,6 +481,56 @@ export class EntityManager {
     list.length -= 1;
     const onDeath = this.onDeath;
     if (onDeath) onDeath(e.position.x, e.position.z);
+  }
+
+  /**
+   * Dispose a strictly-descending set of live indices with one stable compaction pass. Survivor
+   * order and descending death-callback order match repeated {@link disposeAt}, while `d` removals
+   * cost O(n + d), not O(d·n). The caller may reuse its index array.
+   */
+  disposeManyDescending(indices: readonly number[]): number {
+    const count = indices.length;
+    if (count === 0) return 0;
+    const list = this.list;
+    let previous = list.length;
+    for (let i = 0; i < count; i++) {
+      const index = indices[i] ?? -1;
+      if (!Number.isSafeInteger(index) || index < 0 || index >= list.length || index >= previous) {
+        throw new RangeError('disposeManyDescending requires unique in-range descending indices');
+      }
+      previous = index;
+    }
+
+    const deaths: Entity[] = [];
+    for (let i = 0; i < count; i++) {
+      const entity = list[indices[i]!];
+      if (!entity) throw new RangeError('disposeManyDescending encountered an empty live slot');
+      this.retire(entity);
+      deaths.push(entity);
+    }
+
+    let write = 0;
+    let killCursor = count - 1;
+    let nextKill = indices[killCursor];
+    for (let read = 0; read < list.length; read++) {
+      if (read === nextKill) {
+        killCursor--;
+        nextKill = killCursor >= 0 ? indices[killCursor] : undefined;
+        continue;
+      }
+      const entity = list[read];
+      if (entity) list[write++] = entity;
+    }
+    list.length = write;
+
+    const onDeath = this.onDeath;
+    if (onDeath) {
+      for (let i = 0; i < deaths.length; i++) {
+        const entity = deaths[i]!;
+        onDeath(entity.position.x, entity.position.z);
+      }
+    }
+    return count;
   }
 
   /**

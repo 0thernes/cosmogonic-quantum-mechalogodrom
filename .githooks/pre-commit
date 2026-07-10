@@ -11,11 +11,18 @@
 #     git config core.hooksPath .githooks
 set -eu
 
-# Generators operate on the worktree. Refuse to run when a tracked generated surface has an
-# unstaged edit, because auto-staging afterward would otherwise capture work outside this commit.
-if ! git diff --quiet -- '*.md' '*.xml' '*.html' package.json ':(exclude)legacy/**'; then
-  echo "pre-commit: unstaged documentation/truth-surface changes would be captured by generators." >&2
-  echo "Stage or stash those surface changes, then retry the commit." >&2
+# The gate executes the worktree, so it can prove the staged commit only when no tracked or
+# untracked non-ignored edits sit outside the index. This also prevents generator re-staging from
+# accidentally capturing another task's work.
+if ! git diff --quiet; then
+  echo "pre-commit: tracked unstaged changes make the staged commit unverifiable." >&2
+  echo "Stage or stash them, then retry the commit." >&2
+  exit 1
+fi
+UNTRACKED=$(git ls-files --others --exclude-standard)
+if [ -n "$UNTRACKED" ]; then
+  echo "pre-commit: untracked non-ignored files make the staged commit unverifiable:" >&2
+  printf '%s\n' "$UNTRACKED" >&2
   exit 1
 fi
 
@@ -46,4 +53,14 @@ if [ -n "$STAGED_FMT" ]; then
   done
   printf '%s\n' "$STAGED_FMT" | tr '\n' '\0' | xargs -0 bunx prettier --write >/dev/null
   printf '%s\n' "$STAGED_FMT" | tr '\n' '\0' | xargs -0 git add --
+fi
+
+# Binding repository law: nothing reaches the direct-main post-commit push without the same full
+# gate used by CI. Any generated tracked drift left by the gate must be reviewed and staged on a
+# second attempt; never auto-sweep it into this commit.
+bun run check
+if ! git diff --quiet; then
+  echo "pre-commit: the full gate changed tracked files; review, stage, and retry." >&2
+  git diff --name-only >&2
+  exit 1
 fi

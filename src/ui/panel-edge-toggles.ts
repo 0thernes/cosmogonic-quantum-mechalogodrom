@@ -86,14 +86,14 @@ const STYLE = `
   .cqm-edge-btn--left { left: calc(clamp(200px, 20vw, 280px) - 1px); }
   .cqm-edge-btn--right { right: calc(clamp(260px, 26vw, 400px) - 1px); }
 }
-/* Tablet 8-12" landscape (600-1400px): match app.css tablet grid columns */
-@media (min-width: 600px) and (max-width: 1400px) and (min-height: 521px) and (orientation: landscape) {
+/* Tablet 8-12" landscape (769-1400px): match app.css only while #ui is still a grid. */
+@media (min-width: 769px) and (max-width: 1400px) and (min-height: 521px) and (orientation: landscape) {
   .cqm-edge-btn { display: flex; }
   .cqm-edge-btn--left { left: calc(clamp(120px, 20vw, 190px) - 1px); }
   .cqm-edge-btn--right { right: calc(clamp(120px, 22vw, 210px) - 1px); }
 }
-/* Tablet portrait (600-1400px, coarse): match app.css tablet portrait grid columns */
-@media (min-width: 600px) and (max-width: 1400px) and (pointer: coarse) and (orientation: portrait) {
+/* Tablet portrait (769-1400px, coarse): match app.css only while #ui is still a grid. */
+@media (min-width: 769px) and (max-width: 1400px) and (pointer: coarse) and (orientation: portrait) {
   .cqm-edge-btn { display: flex; }
   .cqm-edge-btn--left { left: calc(50% - 1px); }
   .cqm-edge-btn--right { right: calc(50% - 1px); }

@@ -9,6 +9,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.13] — 2026-07-10
+
+- Security and boundedness:
+  - Made the optional Copilot and development server modes explicit opt-ins; removed project
+    executors from the read-only AI sandbox; bounded subprocess, provider, web-search, and browser-AI
+    response streams; and capped provider tool-call fanout across failover attempts.
+  - Escaped generated HTML/Markdown/SVG data by context, tightened worker message validation, and
+    excluded immutable unserved legacy artifacts from CodeQL instead of weakening live-source checks.
+- Runtime correctness and lifecycle:
+  - Sealed concurrent worker initialization, non-finite hero/camera input, HMR boot/deferred-import
+    resurrection, stale audio automation, disposed-audio reinitialization, and dead-entity chaos pairs.
+  - Made hero evolution consume the real clamped simulation delta; cleared delayed hazard respawns on
+    Genesis; added missing Gold/Quantum/Viz3D GPU teardown; and fixed rain volume/wrapping, ambient
+    restoration, brain roadmap scaling, and a duplicate GLSL uniform.
+- Scale and efficiency:
+  - Replaced the mega Connectome's roughly 182 MiB eager topology allocation with geometric live-size
+    capacity (under 3 MiB for the 500-entity boot population), preserving topology across growth.
+  - Removed ineffective instanced-motion attributes/uniforms and 16 bytes/entity/frame of dead uploads;
+    batched stable mass-death compaction and replaced quadratic respawn queue shifts with cursor drains.
+  - Stopped automatic quality selection at the measured 10k tier while retaining explicit 25k/50k
+    stress tiers until the fixed-platform composite budget is genuinely solved.
+- Delivery and dependency integrity:
+  - Made the repository hook run the complete gate against an exact clean index, made hook installation
+    fail closed inside worktrees, verified existing release tags against the CI-approved SHA, and made
+    dependency review cover direct-main pushes.
+  - Upgraded pinned GitHub actions, Playwright, GLM, Jolt Physics, and Dear ImGui; verified native
+    Jolt-enabled and fallback builds plus the TypeScript oracle; disabled incompatible Dependabot PR
+    creation under the repository's direct-main/no-PR delivery law.
+
 ## [0.21.12] — 2026-07-10
 
 - Runtime and determinism hardening:

@@ -58,16 +58,14 @@ FetchContent_Declare(
 )
 
 # ── GLM (math) ───────────────────────────────────────────────────────────────
-# GLM is header-only; 1.0.1 otherwise tries to build a (source-less) static lib
-# under newer CMake and fails with "No SOURCES given to target: glm". Force the
-# interface-only target so we just get the `glm::glm` headers.
+# GLM is header-only. Force the interface-only target so we only consume `glm::glm` headers.
 set(GLM_BUILD_LIBRARY OFF CACHE BOOL "" FORCE)
 set(GLM_BUILD_TESTS   OFF CACHE BOOL "" FORCE)
 set(GLM_BUILD_INSTALL OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(
   glm
   GIT_REPOSITORY https://github.com/g-truc/glm.git
-  GIT_TAG        0af55ccecd98d4e5a8d1fad7de25ba429d60e863 # immutable 1.0.1 tag commit
+  GIT_TAG        8d1fd52e5ab5590e2c81768ace50c72bae28f2ed # immutable 1.0.3 tag commit
 )
 
 FetchContent_MakeAvailable(glfw glm)
@@ -94,7 +92,7 @@ if(CQM_WITH_JOLT)
   FetchContent_Declare(
     JoltPhysics
     GIT_REPOSITORY https://github.com/jrouwe/JoltPhysics.git
-    GIT_TAG        a63aa3b8e24cf95f3fab2613f9a3015b164ef62c # immutable v5.2.0 tag commit
+    GIT_TAG        23dadd0e603f1b321142d4c74df07fce85064989 # immutable v5.5.0 tag commit
     SOURCE_SUBDIR  Build
   )
   FetchContent_MakeAvailable(JoltPhysics)
@@ -107,7 +105,7 @@ if(CQM_WITH_IMGUI)
   FetchContent_Declare(
     imgui
     GIT_REPOSITORY https://github.com/ocornut/imgui.git
-    GIT_TAG        f401021d5a5d56fe2304056c391e78f81c8d4b8f # immutable v1.91.5 tag commit
+    GIT_TAG        8936b58fe26e8c3da834b8f60b06511d537b4c63 # immutable v1.92.8 tag commit
   )
   FetchContent_MakeAvailable(imgui)
   target_sources(cqm_native PRIVATE

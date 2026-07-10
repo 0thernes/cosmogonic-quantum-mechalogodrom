@@ -113,6 +113,26 @@ describe('EntityManager.onDeath', () => {
     expect(fires).toBe(1);
   });
 
+  test('disposeManyDescending preserves survivor order and death callback order', () => {
+    const ctx = makeCtx(4, 50);
+    const entities = new EntityManager(ctx);
+    entities.reset(20);
+    const original = [...entities.list];
+    for (let i = 0; i < original.length; i++) original[i]!.position.x = i;
+    const killed = [19, 15, 10, 1];
+    const deaths: number[] = [];
+    entities.onDeath = (x) => deaths.push(x);
+
+    expect(entities.disposeManyDescending(killed)).toBe(killed.length);
+    expect(entities.list).toEqual(original.filter((_entity, index) => !killed.includes(index)));
+    expect(deaths).toEqual(killed);
+    for (const index of killed) expect(original[index]!.userData.alive).toBe(false);
+    for (const entity of entities.list) expect(entity.userData.alive).toBe(true);
+
+    expect(() => entities.disposeManyDescending([0, 1])).toThrow('descending indices');
+    expect(() => entities.disposeManyDescending([999])).toThrow('descending indices');
+  });
+
   test('reset() never fires onDeath (mass disposal is genesis, not death)', () => {
     const ctx = makeCtx(3, 50);
     const entities = new EntityManager(ctx);

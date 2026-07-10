@@ -461,8 +461,8 @@ when the window moved between monitors).
 and routes `/`, `/docs`, `/spec`, `/lab` (the self-contained p5.js artifact,
 served static and unbundled by design), `GET /api/health`, `GET|POST /api/audit`,
 plus the V9 Copilot surface — `GET /api/copilot`, `GET /api/copilot/health`,
-`POST /api/chat`, `POST /api/tool` — all gated behind `COPILOT_ENABLED` (OFF in
-production), with a 404 fallback. Hardening (0.2.1): `POST /api/audit` bodies are capped
+`POST /api/chat`, `POST /api/tool` — all gated behind explicit `COPILOT_ENABLED=1`
+(OFF by default in every environment), with a 404 fallback. Hardening (0.2.1): `POST /api/audit` bodies are capped
 at 8 KB (413 beyond), and the HTMX audit fragment HTML-escapes every
 user-controlled string with details truncated at storage time. Port
 `Number(process.env.PORT) || 3000`. Requests are logged via

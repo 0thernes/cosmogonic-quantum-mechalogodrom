@@ -1,0 +1,6 @@
+name: Cosmogonic CodeQL configuration
+
+# legacy/ is an immutable historical artifact: it is not imported, built, or served. Excluding it
+# keeps actionable analysis focused on maintained execution surfaces without rewriting provenance.
+paths-ignore:
+  - legacy/**

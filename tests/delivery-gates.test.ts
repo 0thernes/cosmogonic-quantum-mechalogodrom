@@ -1,6 +1,11 @@
 import { describe, expect, test } from 'bun:test';
 import { execFileSync } from 'node:child_process';
 import { labDataJsonReplacer, stabilizeLabNumber } from '../scripts/lab-data-json';
+import {
+  escapeMarkdownTableCell,
+  escapeMarkupAttribute,
+  escapeMarkupText,
+} from '../scripts/markup-escape';
 
 async function text(path: string): Promise<string> {
   return Bun.file(path).text();
@@ -14,6 +19,14 @@ describe('delivery gates fail closed', () => {
     expect(hook).not.toContain('|| true');
     expect(hook).not.toContain("git add -- '*.md'");
     expect(hook).toContain('git diff --name-only');
+    expect(hook).toContain('bun run check');
+    expect(hook).toContain('git ls-files --others --exclude-standard');
+
+    const packageManifest = JSON.parse(await text('package.json')) as {
+      scripts: Record<string, string>;
+    };
+    expect(packageManifest.scripts.prepare).toBe('bun scripts/install-hooks.ts');
+    expect(packageManifest.scripts.prepare).not.toContain('|| true');
   });
 
   test('Pages and automatic tags wait for a successful push CI run', async () => {
@@ -34,6 +47,13 @@ describe('delivery gates fail closed', () => {
     expect(autoTag).toContain('^[0-9]+\\.[0-9]+\\.[0-9]+$');
     expect(autoTag).toContain('gh workflow run release.yml --ref "$TAG"');
     expect(autoTag).toContain('Dispatch release idempotently');
+    expect(autoTag).toContain('EXISTING_SHA="$(git rev-list -n 1 "$TAG")"');
+    expect(autoTag).toContain('not CI-approved');
+
+    const ci = await text('.github/workflows/ci.yml');
+    expect(ci).toContain("github.event.before != '0000000000000000000000000000000000000000'");
+    expect(ci).toContain('base-ref:');
+    expect(ci).toContain('head-ref:');
   });
 
   test('release inputs and tags must exactly match the package manifest', async () => {
@@ -71,6 +91,28 @@ describe('delivery gates fail closed', () => {
 
     const crossLanguageGate = await text('scripts/verify-native-apex.ts');
     expect(crossLanguageGate).toContain("from '../src/sim/apex-native-backend'");
+
+    const codeqlWorkflow = await text('.github/workflows/codeql.yml');
+    const codeqlConfig = await text('.github/codeql/codeql-config.yml');
+    expect(codeqlWorkflow).toContain('config-file: ./.github/codeql/codeql-config.yml');
+    expect(codeqlConfig).toContain('legacy/**');
+
+    expect(escapeMarkupText(`&<>"'`)).toBe(`&amp;&lt;&gt;"'`);
+    expect(escapeMarkupAttribute(`&<>"'`)).toBe('&amp;&lt;&gt;&quot;&#39;');
+    expect(escapeMarkdownTableCell('a\\|b\nc')).toBe(String.raw`a\\\|b c`);
+
+    const metricsSource = await text('scripts/codebase-metrics.ts');
+    expect(metricsSource).not.toContain('statSync');
+    expect(metricsSource).toContain('failed to read tracked file');
+
+    const harvestSource = await text('scripts/harvest-tsotchke-corpus.ts');
+    expect(harvestSource).not.toContain('catch {}');
+    expect(harvestSource).toContain('plausible-looking partial census');
+
+    const simulationWorker = await text('src/workers/simulation-worker.ts');
+    expect(simulationWorker).toContain('MessageEvent<unknown>');
+    expect(simulationWorker).toContain("event.origin !== '' && event.origin !== self.origin");
+    expect(simulationWorker).toContain('isWorkerMessage(message)');
 
     // Exact values from the Windows/Ubuntu generated-artifact drift caught by hosted CI.
     expect(stabilizeLabNumber(0.38940480984070375)).toBe(stabilizeLabNumber(0.3894048098407037));

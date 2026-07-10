@@ -1,12 +1,4 @@
-/**
- * Phase 1.2: GPU Motion Interpolation tests.
- *
- * Verifies that:
- * 1. Motion vector attributes are correctly packed into instanced buffers
- * 2. Simulation tick timestamps are tracked correctly
- * 3. Quality-tier-specific simulation rates are applied
- * 4. The frame governor correctly decouples simulation from rendering
- */
+/** Instanced motion data-flow tests: instance matrices are the sole transform authority. */
 import { describe, expect, test } from 'bun:test';
 import * as THREE from 'three';
 import { mulberry32 } from '../src/math/rng';
@@ -97,8 +89,20 @@ function makeEntity(geo: THREE.BufferGeometry, userData: Partial<EntityData> = {
   return mesh as Entity;
 }
 
-describe('Phase 1.2: GPU Motion Interpolation', () => {
-  test('motion vector attributes are packed into instanced buffers', () => {
+function poolMesh(ctx: SimContext): THREE.InstancedMesh {
+  const mesh = ctx.scene.children.find((child) => child instanceof THREE.InstancedMesh);
+  expect(mesh).toBeInstanceOf(THREE.InstancedMesh);
+  return mesh as THREE.InstancedMesh;
+}
+
+function instancePosition(mesh: THREE.InstancedMesh, slot: number): THREE.Vector3 {
+  const matrix = new THREE.Matrix4();
+  mesh.getMatrixAt(slot, matrix);
+  return new THREE.Vector3().setFromMatrixPosition(matrix);
+}
+
+describe('Instanced entity motion data flow', () => {
+  test('instance matrix carries translation without redundant motion attributes', () => {
     const ctx = makeCtx(42);
     const renderer = new InstancedEntityRenderer(ctx);
     const geo = ctx.geos[0]!;
@@ -107,82 +111,44 @@ describe('Phase 1.2: GPU Motion Interpolation', () => {
 
     renderer.sync([entity], 'solid', { t: 0, chaos: 0, bass: 0, nightmare: 0 }, 15);
 
-    // Verify that the pool was created with motion attributes
-    const poolKey = 0; // geo index 0, transparent false
-    const pool = renderer['pools'][poolKey];
-    expect(pool).toBeDefined();
-    if (!pool) return;
-    expect(pool.prevPos).toBeDefined();
-    expect(pool.simTick).toBeDefined();
-
-    // Verify that the previous position was stored
-    const prevPosArr = pool.prevPos.array as Float32Array;
-    expect(prevPosArr[0]).toBeCloseTo(1); // x
-    expect(prevPosArr[1]).toBeCloseTo(2); // y
-    expect(prevPosArr[2]).toBeCloseTo(3); // z
-
-    // Verify that the sim tick was stored
-    const simTickArr = pool.simTick.array as Float32Array;
-    expect(simTickArr[0]).toBe(0);
+    const pool = poolMesh(ctx);
+    expect(instancePosition(pool, 0).toArray()).toEqual([1, 2, 3]);
+    expect(pool.geometry.getAttribute('instPrevPos')).toBeUndefined();
+    expect(pool.geometry.getAttribute('instSimTick')).toBeUndefined();
   });
 
-  test('simulation tick timestamps are tracked across frames', () => {
+  test('matrix translation tracks the latest simulation position across frames', () => {
     const ctx = makeCtx(42);
     const renderer = new InstancedEntityRenderer(ctx);
     const geo = ctx.geos[0]!;
     const entity = makeEntity(geo);
     entity.position.set(1, 2, 3);
 
-    // First frame at t=0
     renderer.sync([entity], 'solid', { t: 0, chaos: 0, bass: 0, nightmare: 0 }, 15);
+    const pool = poolMesh(ctx);
+    expect(instancePosition(pool, 0).toArray()).toEqual([1, 2, 3]);
 
-    // Move entity
     entity.position.set(2, 3, 4);
-
-    // Second frame at t=0.1
     renderer.sync([entity], 'solid', { t: 0.1, chaos: 0, bass: 0, nightmare: 0 }, 15);
 
-    const poolKey = 0;
-    const pool = renderer['pools'][poolKey];
-    if (!pool) return;
-    const simTickArr = pool.simTick.array as Float32Array;
-
-    // Verify that the sim tick was updated to the latest frame time
-    expect(simTickArr[0]).toBeCloseTo(0.1);
-
-    // Verify that the previous position was updated to the new position
-    const prevPosArr = pool.prevPos.array as Float32Array;
-    expect(prevPosArr[0]).toBeCloseTo(2); // x
-    expect(prevPosArr[1]).toBeCloseTo(3); // y
-    expect(prevPosArr[2]).toBeCloseTo(4); // z
+    expect(instancePosition(pool, 0).toArray()).toEqual([2, 3, 4]);
   });
 
-  test('quality-tier-specific simulation rates are applied', () => {
+  test('legacy simulation-rate argument remains accepted without shader clocks', () => {
     const ctx = makeCtx(42);
-    ctx.quality.simRate = 10; // Tablet rate
     const renderer = new InstancedEntityRenderer(ctx);
     const geo = ctx.geos[0]!;
     const entity = makeEntity(geo);
 
     renderer.sync([entity], 'solid', { t: 0, chaos: 0, bass: 0, nightmare: 0 }, 10);
 
-    // Verify that the sim rate uniform is set
-    expect(renderer['shaderUniforms'].uSimRate.value).toBe(10);
+    const uniforms = renderer['shaderUniforms'] as unknown as Record<string, unknown>;
+    expect(uniforms['uSimRate']).toBeUndefined();
+    expect(uniforms['uRenderTime']).toBeUndefined();
+    expect(instancePosition(poolMesh(ctx), 0).toArray()).toEqual([0, 0, 0]);
   });
 
-  test('render time uniform is updated each frame', () => {
-    const ctx = makeCtx(42);
-    const renderer = new InstancedEntityRenderer(ctx);
-    const geo = ctx.geos[0]!;
-    const entity = makeEntity(geo);
-
-    renderer.sync([entity], 'solid', { t: 0.5, chaos: 0, bass: 0, nightmare: 0 }, 15);
-
-    // Verify that the render time uniform is set
-    expect(renderer['shaderUniforms'].uRenderTime.value).toBe(0.5);
-  });
-
-  test('multiple entities pack motion vectors correctly', () => {
+  test('multiple entities pack independent matrix translations', () => {
     const ctx = makeCtx(42);
     const renderer = new InstancedEntityRenderer(ctx);
     const geo = ctx.geos[0]!;
@@ -201,33 +167,9 @@ describe('Phase 1.2: GPU Motion Interpolation', () => {
       15,
     );
 
-    const poolKey = 0;
-    const pool = renderer['pools'][poolKey];
-    if (!pool) return;
-    const prevPosArr = pool.prevPos.array as Float32Array;
-
-    // Verify all three positions are stored
-    expect(prevPosArr[0]).toBeCloseTo(1); // entity1 x
-    expect(prevPosArr[1]).toBeCloseTo(2); // entity1 y
-    expect(prevPosArr[2]).toBeCloseTo(3); // entity1 z
-    expect(prevPosArr[3]).toBeCloseTo(4); // entity2 x
-    expect(prevPosArr[4]).toBeCloseTo(5); // entity2 y
-    expect(prevPosArr[5]).toBeCloseTo(6); // entity2 z
-    expect(prevPosArr[6]).toBeCloseTo(7); // entity3 x
-    expect(prevPosArr[7]).toBeCloseTo(8); // entity3 y
-    expect(prevPosArr[8]).toBeCloseTo(9); // entity3 z
-  });
-
-  test('shader uniforms include motion interpolation parameters', () => {
-    const ctx = makeCtx(42);
-    const renderer = new InstancedEntityRenderer(ctx);
-
-    // Verify that the uniforms exist
-    expect(renderer['shaderUniforms'].uSimRate).toBeDefined();
-    expect(renderer['shaderUniforms'].uRenderTime).toBeDefined();
-
-    // Verify default values
-    expect(renderer['shaderUniforms'].uSimRate.value).toBe(60);
-    expect(renderer['shaderUniforms'].uRenderTime.value).toBe(0);
+    const pool = poolMesh(ctx);
+    expect(instancePosition(pool, 0).toArray()).toEqual([1, 2, 3]);
+    expect(instancePosition(pool, 1).toArray()).toEqual([4, 5, 6]);
+    expect(instancePosition(pool, 2).toArray()).toEqual([7, 8, 9]);
   });
 });

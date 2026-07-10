@@ -8,8 +8,7 @@
  * Each frame every feeder body GRAZES the flora at its own footprint (nibbling the plant biomass down —
  * the flora's shader shows it) and EATS any organism that wanders within {@link EAT_R} of it: the
  * organism bursts in a green feed-puff and re-enters the world ELSEWHERE {@link RESPAWN_DELAY} seconds
- * later. ONE backwards scan of `entities.list` handles the eating for ALL feeders at once (backwards so a
- * `disposeAt` never shifts an unvisited index).
+ * later. ONE backwards scan handles eating for ALL feeders, followed by one stable batch compaction.
  *
  * DETERMINISM (ADR 0004): grazing + eat tests are pure geometry; a respawn draws seeded `ctx.rng` via
  * {@link EntityManager.spawn}; the feed-puff VFX draws ZERO rng; the 5-second timer is sim-time based.
@@ -62,6 +61,8 @@ export class DomeFeeding {
   /** Flat feeder positions collected each frame (x,y,z per slot). */
   private readonly feederXYZ = new Float32Array(MAX_FEEDERS * 3);
   private readonly respawns: { at: number; mi: number }[] = [];
+  private respawnHead = 0;
+  private readonly deathIndices: number[] = [];
   eaten = 0;
 
   constructor(ctx: SimContext) {
@@ -84,7 +85,13 @@ export class DomeFeeding {
   }
 
   stats(): DomeFeedingStats {
-    return { eaten: this.eaten, pending: this.respawns.length };
+    return { eaten: this.eaten, pending: this.respawns.length - this.respawnHead };
+  }
+
+  /** Cancel organisms queued by the pre-reset population so Genesis stays at one progenitor. */
+  clearPendingRespawns(): void {
+    this.respawns.length = 0;
+    this.respawnHead = 0;
   }
 
   /** Green feed-puff of {@link PER_EAT} motes at `(x,y,z)`. Deterministic (index hashes, no rng). */
@@ -148,6 +155,7 @@ export class DomeFeeding {
       }
       // (2) eat organisms near ANY feeder — one backwards scan.
       if (fc > 0) {
+        this.deathIndices.length = 0;
         const list = entities.list;
         for (let i = list.length - 1; i >= 0; i--) {
           const e = list[i];
@@ -162,19 +170,28 @@ export class DomeFeeding {
               this.puff(p.x, p.y, p.z);
               const mi = e.userData.mi ?? 0;
               onKill?.(e, i); // measure the devoured mind BEFORE disposal (weights + senses still live)
-              entities.disposeAt(i); // O(1); backwards scan ⇒ index shift is safe
+              this.deathIndices.push(i);
               this.respawns.push({ at: t + RESPAWN_DELAY, mi });
               this.eaten++;
               break; // this organism is gone — stop checking feeders
             }
           }
         }
+        entities.disposeManyDescending(this.deathIndices);
       }
     }
     // (3) eaten organisms re-enter ELSEWHERE.
-    while (this.respawns.length > 0 && (this.respawns[0]?.at ?? Infinity) <= t) {
-      const r = this.respawns.shift();
+    while ((this.respawns[this.respawnHead]?.at ?? Infinity) <= t) {
+      const r = this.respawns[this.respawnHead++];
       if (r) entities.spawn(null, r.mi);
+    }
+    if (this.respawnHead === this.respawns.length) {
+      this.respawns.length = 0;
+      this.respawnHead = 0;
+    } else if (this.respawnHead >= 64 && this.respawnHead * 2 >= this.respawns.length) {
+      this.respawns.copyWithin(0, this.respawnHead);
+      this.respawns.length -= this.respawnHead;
+      this.respawnHead = 0;
     }
     // (4) advance + fade the feed-puffs.
     let anyAlive = false;

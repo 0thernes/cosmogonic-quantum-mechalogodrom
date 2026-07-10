@@ -46,14 +46,21 @@ jobs:
           echo "version=v$PACKAGE_VERSION" >> "$GITHUB_OUTPUT"
           echo "Detected version: v$PACKAGE_VERSION"
 
-      - name: Check if tag already exists
+      - name: Verify or reserve the version tag
         id: check
         env:
           TAG: ${{ steps.pkg.outputs.version }}
         run: |
-          if git ls-remote --tags origin "$TAG" | grep -q .; then
+          git fetch --force --tags origin
+          HEAD_SHA="$(git rev-parse HEAD)"
+          if git show-ref --verify --quiet "refs/tags/$TAG"; then
+            EXISTING_SHA="$(git rev-list -n 1 "$TAG")"
+            if [ "$EXISTING_SHA" != "$HEAD_SHA" ]; then
+              echo "::error::Tag $TAG already points to $EXISTING_SHA, not CI-approved $HEAD_SHA."
+              exit 1
+            fi
             echo "exists=true" >> "$GITHUB_OUTPUT"
-            echo "Tag $TAG already exists — skipping."
+            echo "Tag $TAG already points to CI-approved $HEAD_SHA — skipping creation."
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
             echo "Tag $TAG does NOT exist — will create."

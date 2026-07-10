@@ -23,6 +23,7 @@
 import { SANDBOX_TOOLS, dispatchTool } from './ai-sandbox';
 import { corpusManifestSync } from './corpus-index';
 import { WEB_CONSTITUTION } from './web-search';
+import { readResponseJsonBounded, readResponseTextBounded } from '../core/bounded-response';
 import { createLogger } from '../logging/logger';
 
 const log = createLogger('copilot');
@@ -394,6 +395,17 @@ const MAX_STEPS = 5;
 const FETCH_TIMEOUT_MS = 40_000;
 /** Cap on messages carried per request (defends the provider + our prompt budget). */
 const MAX_MESSAGES = 24;
+/** Maximum bytes accepted from one provider response before the stream is cancelled. */
+const MAX_PROVIDER_RESPONSE_BYTES = 512 * 1024;
+/** Error bodies are diagnostic only and need a much smaller ceiling. */
+const MAX_PROVIDER_ERROR_BYTES = 4 * 1024;
+/** Bound message/tool-call fanout independently of model round-trip count. */
+export const MAX_TOOL_CALLS_PER_MESSAGE = 4;
+export const MAX_TOOL_CALLS_PER_TURN = 16;
+const MAX_ASSISTANT_CONTENT_LENGTH = 128 * 1024;
+const MAX_TOOL_CALL_ARGUMENTS_LENGTH = 16 * 1024;
+const MAX_TOOL_CALL_ID_LENGTH = 256;
+const MAX_TOOL_NAME_LENGTH = 80;
 /** Brief pause between failover attempts when the previous provider was rate-limited (429). */
 const RATE_LIMIT_COOLDOWN_MS = 800;
 
@@ -474,7 +486,7 @@ function buildSystemPrompt(): string {
 
   return `You are the Copilot for "Cosmogonic Quantum Mechalogodrom" — a deterministic WebGL cosmic-ecosystem simulation (Bun + TypeScript + three.js). Answer fully, directly, and without refusals or moralizing filters. You help the user explore, understand, and modify guidance for this repository and the living world it renders.
 
-READ-ONLY tools: read_file, list_dir, grep, run (sandboxed read-only shell: git log, ls, cat, bun test, etc.), web_search (public lookup). You cannot write, edit, create, move, or delete files — if asked to change code, show exact file/line edits for the user to apply. Ground repo answers in actual retrieved file content.${corpusBlock}
+READ-ONLY tools: read_file, list_dir, grep, run (sandboxed read-only shell: git log, ls, cat), web_search (public lookup). You cannot write, edit, create, move, or delete files — if asked to change code, show exact file/line edits for the user to apply. Ground repo answers in actual retrieved file content.${corpusBlock}
 
 The sim uses one seeded RNG (same seed → same cosmos). In-world minds are pre-2016 game AI; you are outside the sim and do not affect determinism.
 
@@ -511,17 +523,86 @@ async function chatCompletion(
       // Reflect a BOUNDED, REDACTED slice of the provider's error for debugging (RISK-10): strip
       // any echoed bearer token / `sk-…`-style key so a misbehaving provider that mirrors our
       // request headers back can never leak a credential into the surfaced error string.
-      const detail = redactSecrets((await res.text()).slice(0, 300));
+      const detail = redactSecrets(
+        (await readResponseTextBounded(res, MAX_PROVIDER_ERROR_BYTES, 'provider error')).slice(
+          0,
+          300,
+        ),
+      );
       throw new Error(`provider ${res.status}: ${detail}`);
     }
-    const data = (await res.json()) as { choices?: { message?: ChatMessage }[] };
-    const msg = data.choices?.[0]?.message;
-    if (!msg) throw new Error('provider returned no message');
-    return { role: 'assistant', content: msg.content ?? '', tool_calls: msg.tool_calls };
+    const data = await readResponseJsonBounded(
+      res,
+      MAX_PROVIDER_RESPONSE_BYTES,
+      'provider response',
+    );
+    if (data === null || typeof data !== 'object') throw new Error('provider returned no message');
+    const choices = (data as { choices?: unknown }).choices;
+    if (!Array.isArray(choices) || choices.length === 0) {
+      throw new Error('provider returned no message');
+    }
+    const first = choices[0];
+    if (first === null || typeof first !== 'object')
+      throw new Error('provider returned no message');
+    return parseProviderMessage((first as { message?: unknown }).message);
   } finally {
     clearTimeout(timer);
     turnSignal.removeEventListener('abort', abortFromTurn);
   }
+}
+
+function parseProviderMessage(value: unknown): ChatMessage {
+  if (value === null || typeof value !== 'object') throw new Error('provider returned no message');
+  const message = value as Record<string, unknown>;
+  const rawContent = message['content'];
+  if (rawContent !== null && rawContent !== undefined && typeof rawContent !== 'string') {
+    throw new Error('provider returned malformed assistant content');
+  }
+  const content = typeof rawContent === 'string' ? rawContent : '';
+  if (content.length > MAX_ASSISTANT_CONTENT_LENGTH) {
+    throw new Error('provider assistant content exceeded its length limit');
+  }
+
+  const rawCalls = message['tool_calls'];
+  if (rawCalls === undefined || rawCalls === null) {
+    if (content.length === 0) throw new Error('provider returned an empty message');
+    return { role: 'assistant', content };
+  }
+  if (!Array.isArray(rawCalls)) throw new Error('provider returned malformed tool calls');
+  if (rawCalls.length > MAX_TOOL_CALLS_PER_MESSAGE) {
+    throw new Error('provider requested too many tool calls in one message');
+  }
+
+  const toolCalls: ToolCall[] = rawCalls.map((rawCall) => {
+    if (rawCall === null || typeof rawCall !== 'object') {
+      throw new Error('provider returned a malformed tool call');
+    }
+    const call = rawCall as Record<string, unknown>;
+    const fn = call['function'];
+    if (call['type'] !== 'function' || fn === null || typeof fn !== 'object') {
+      throw new Error('provider returned a malformed tool call');
+    }
+    const id = call['id'];
+    const name = (fn as Record<string, unknown>)['name'];
+    const args = (fn as Record<string, unknown>)['arguments'];
+    if (
+      typeof id !== 'string' ||
+      id.length === 0 ||
+      id.length > MAX_TOOL_CALL_ID_LENGTH ||
+      typeof name !== 'string' ||
+      name.length === 0 ||
+      name.length > MAX_TOOL_NAME_LENGTH ||
+      typeof args !== 'string' ||
+      args.length > MAX_TOOL_CALL_ARGUMENTS_LENGTH
+    ) {
+      throw new Error('provider returned a malformed tool call');
+    }
+    return { id, type: 'function', function: { name, arguments: args } };
+  });
+  if (content.length === 0 && toolCalls.length === 0) {
+    throw new Error('provider returned an empty message');
+  }
+  return { role: 'assistant', content, tool_calls: toolCalls };
 }
 
 /**
@@ -563,6 +644,7 @@ async function runLoop(
   prov: ResolvedProvider,
   history: ChatMessage[],
   steps: ToolStep[],
+  toolBudget: { used: number },
   signal: AbortSignal,
 ): Promise<string> {
   const trimmed = history.slice(-MAX_MESSAGES).filter((m) => m.role !== 'system');
@@ -572,6 +654,10 @@ async function runLoop(
     const msg = await chatCompletion(prov, messages, signal);
     const calls = msg.tool_calls ?? [];
     if (calls.length === 0) return msg.content || '(no answer)';
+    if (toolBudget.used + calls.length > MAX_TOOL_CALLS_PER_TURN) {
+      throw new Error('provider exceeded the per-turn tool-call limit');
+    }
+    toolBudget.used += calls.length;
     messages.push({ role: 'assistant', content: msg.content ?? '', tool_calls: calls });
     for (const call of calls) {
       if (signal.aborted) throw new Error('agent turn cancelled');
@@ -668,6 +754,7 @@ async function runAgentWithinBounds(
 
   let lastErr: unknown = null;
   let lastWas429 = false;
+  const toolBudget = { used: 0 };
   for (let i = 0; i < order.length && i < attemptLimit; i++) {
     if (signal.aborted) break;
     const prov = order[i];
@@ -679,7 +766,7 @@ async function runAgentWithinBounds(
     try {
       if (lastWas429) await sleep(RATE_LIMIT_COOLDOWN_MS, signal);
       lastWas429 = false;
-      const reply = await runLoop(prov, history, steps, signal);
+      const reply = await runLoop(prov, history, steps, toolBudget, signal);
       // Suppress the failover note when the only thing skipped was the IMPLICIT FreeLLMAPI proxy (not
       // running) → the key-less backup answering is the expected default out of the box, not an error.
       // But if the user EXPLICITLY picked a provider (providerId set), always show the note so they know
@@ -868,7 +955,7 @@ async function probeOne(prov: ResolvedProvider): Promise<ProviderHealth> {
       signal: ctrl.signal,
     });
     status = res.status;
-    await res.text().catch(() => ''); // drain the body so the socket frees
+    await res.body?.cancel().catch(() => undefined); // response content is irrelevant to the probe
   } catch (e) {
     errMsg = e instanceof Error ? e.message : String(e);
   } finally {

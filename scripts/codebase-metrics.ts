@@ -12,7 +12,7 @@
  * ordering. Excludes vendored / generated / nested-worktree trees.
  */
 import { execSync } from 'node:child_process';
-import { readFileSync, statSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 
 /** Tracked, authored files (excludes node_modules via git; we also drop generated/worktree noise). */
 function trackedFiles(): string[] {
@@ -28,7 +28,6 @@ function trackedFiles(): string[] {
 
 function lineCount(path: string): number {
   try {
-    if (statSync(path).size === 0) return 0;
     const text = readFileSync(path, 'utf8');
     if (text.length === 0) return 0;
     let n = 1;
@@ -36,8 +35,9 @@ function lineCount(path: string): number {
     // Trailing newline shouldn't count as an extra empty line.
     if (text.charCodeAt(text.length - 1) === 10) n--;
     return n;
-  } catch {
-    return 0;
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    throw new Error(`codebase-metrics: failed to read tracked file ${path}: ${detail}`);
   }
 }
 

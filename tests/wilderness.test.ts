@@ -68,6 +68,17 @@ describe('WildernessPopulation', () => {
       seen++;
     });
     expect(seen).toBe(pop.getEntityCount());
+
+    const chunksBeforeInvalidInput = pop.getActiveChunkCount();
+    const entitiesBeforeInvalidInput = pop.getEntityCount();
+    pop.update(Number.NaN, 0, 1 / 60);
+    pop.update(0, Number.POSITIVE_INFINITY, 1 / 60);
+    expect(pop.getActiveChunkCount()).toBe(chunksBeforeInvalidInput);
+    expect(pop.getEntityCount()).toBe(entitiesBeforeInvalidInput);
+    pop.forEachEntity((entity) => {
+      expect(Number.isFinite(entity.x)).toBe(true);
+      expect(Number.isFinite(entity.z)).toBe(true);
+    });
     pop.dispose();
   });
 

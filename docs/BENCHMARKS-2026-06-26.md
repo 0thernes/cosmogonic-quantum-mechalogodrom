@@ -206,6 +206,18 @@ with 10,000 left as the hard ceiling reachable on demand via bursts/apocalypse.
 
 ## Population scale to 50,000 (V38)
 
+> **Current-state correction (2026-07-10):** the √N arena expansion described in the historical V38
+> receipts below was removed by V123 to enforce the owner-critical hard ±540 platform boundary.
+> Consequently the old –density-flat— explanation and 25k/50k scaled rows are not current runtime
+> claims. Fresh component medians at 50k measured entity update+grid 39.93 ms, visible connectome
+> 76.32 ms, entity-brain 14.04 ms, instanced CPU sync 12.50 ms, and PageRank 34.62 ms before most world,
+> DOM, render, or GPU work. `resolveTier` now auto-stops at desktop (10k); `?tier=ultra` and
+> `?tier=mega` preserve the 25k/50k stress capabilities explicitly. The 2026-07-10 hardening pass also
+> changed mega Connectome startup from an eager ~182 MiB ceiling allocation to geometric live-size
+> capacity (8,192 link slots + 2,048 ID slots, under 3 MiB at the 500-entity boot population), removed
+> 16 bytes/entity/frame of ineffective instanced-motion uploads, and made hazard mass-death removal
+> stable O(n+d) with amortized O(1) respawn drains.
+
 The directive asks for **up to 50,000 entities**. Profiled with `bun bench/scale.ts` — a headless
 harness (the determinism-test fixture) that drives the real `world.ts` per-frame entity pipeline
 (`entities.update` + the spatial-hash rebuild) at a ladder of sizes and times ms/frame. Seed
@@ -215,7 +227,7 @@ harness (the determinism-test fixture) that drives the real `world.ts` per-frame
 `k ∝ density ∝ N`, so the `O(n·k)` loop is effectively `O(n²)`. Raw: 10k = 6.0 ms, 25k = 36 ms, 50k =
 **167 ms** (6 fps).
 
-**Fix (`entities.ts`, V38):** the spawn radius + containment radius scale by **√(maxEntities / 10000)**.
+**Historical V38 fix (no longer present):** the spawn radius + containment radius scaled by **√(maxEntities / 10000)**.
 The arena is a wide thin DISK, so areal density `∝ N / radius²`; scaling the radius by √N holds density
 (and thus `k`, and the query cost) roughly constant. Clamped to ≥ 1, so it is **exactly 1.0 at ≤ 10k** —
 every existing tier and the determinism golden stay byte-identical; only the opt-in `mega` tier spreads.
@@ -284,7 +296,7 @@ bodies are forced, and two clean probes receive the exact `|Δv| = G·dt/r²` (a
 double it). `k` is conservative here — the bench's legacy square spawn is denser at the core than the
 live phylum-disk spread, which puts a smaller fraction inside REACH.
 
-**Scope of the flatness (V7.5 audit refinement):** `k` is held population-flat only **above the 10k
+**Historical scope of the flatness (not current after V123):** `k` was held population-flat only **above the 10k
 knee**, where `EntityManager.densityScale = √(maxEntities/10000) > 1` spreads the arena to pin areal
 density. Below 10k `densityScale` clamps to 1, so the fixed arena's density (and `k`) rise with `n` —
 which is why the 2k–10k rows above show `k = n`. That regime is sub-millisecond and never the

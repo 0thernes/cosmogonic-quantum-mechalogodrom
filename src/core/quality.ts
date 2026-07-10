@@ -13,11 +13,10 @@ import { detectWebGpu } from './webgpu-detect';
  * - **tablet** — fine pointer, < 8 cores. 2,000 entities.
  * - **laptop** — fine pointer, 8-9 cores. 5,000 entities.
  * - **desktop** — ≥ 10 cores. 10,000 entities.
- * - **ultra** — 10,000-entity hard ceiling, instanced; FILLS that ceiling
- *   (`targetEntities === maxEntities`). V40: reachable via `?tier=ultra` (the ≥16-core auto path now
- *   goes to `mega`); the per-frame neighbor-query throttles in docs/BENCHMARKS-2026-06-26.md keep sim-CPU smooth.
- * - **mega** — ≥ 16 cores AND ≥ 8 GB reported memory. The directive's 50,000-entity ceiling and the
- *   **V40 AUTO default** for capable machines (no opt-in); √N density scaling bounds neighbour cost.
+ * - **ultra** — 25,000 entities, available via explicit `?tier=ultra` for profiling/experimentation.
+ * - **mega** — the explicit `?tier=mega` 50,000-entity stress ceiling. Neither high tier is selected
+ *   automatically: the hard ±540 platform intentionally removed the former √N arena expansion, and
+ *   current composite measurements exceed a 60 Hz frame budget above the 10,000-entity desktop rung.
  *
  * `targetEntities` is the steady-state population organic growth settles at;
  * `maxEntities` is the HARD ceiling all buffers are sized from. They are equal on every
@@ -94,9 +93,8 @@ export const QUALITY_LADDER: Readonly<
     simRate: 60,
   },
   mega: {
-    // V38 ceiling, V44 dropped to 25k, **V55 RESTORED to 50,000** — the earlier "50k crashes my
-    // machine" was actually the WebGL CONTEXT LEAK (fixed V49/V50). `?tier=mega` selects it; the
-    // EntityManager's √N density scale (entities.ts) keeps neighbour-query cost bounded.
+    // Explicit stress ceiling. The world remains hard-contained to the fixed platform, so this rung
+    // is never inferred from coarse core/memory counts; `?tier=mega` is the deliberate opt-in.
     dprCap: Number.POSITIVE_INFINITY,
     maxEntities: 50000,
     targetEntities: 50000,
@@ -127,10 +125,10 @@ const ADAPTIVE_CADENCE: Record<QualityTier, { neuralRate: number; connectomeRate
  * Pure tier resolution from the probed capabilities — exported so the ladder is
  * testable without a DOM. `memGB` defaults to 8 when the platform hides it. O(1).
  */
-export function resolveTier(isMobile: boolean, cores: number, memGB: number): QualityTier {
+export function resolveTier(isMobile: boolean, cores: number, _memGB: number): QualityTier {
   if (isMobile) return 'phone';
-  if (cores >= 16 && memGB >= 8) return 'mega';
-  if (cores >= 16) return 'ultra';
+  // Hardware-concurrency and device-memory counts do not measure the composite CPU/GPU budget.
+  // Auto-selection therefore stops at the measured 10k production rung; ultra/mega remain explicit.
   if (cores >= 10) return 'desktop';
   if (cores >= 8) return 'laptop';
   return 'tablet';
