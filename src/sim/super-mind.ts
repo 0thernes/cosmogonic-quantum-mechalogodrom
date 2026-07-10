@@ -1264,15 +1264,10 @@ export class SuperMind {
     // Eshkol AD apply on dominance from corpus tape (for Archon affect diff); Moonlab qualia tensor on valence feel
     this.dominance = eshkolApplyAD(this.dominance, adTapeGrad || 0, 0.03);
     // BRUTALISM 5/9: advance the discrete-time crystal (a real MBL Floquet oscillator — deliberately RIGID
-    // against the drive, as an actual DTC is, so arousal is a nominal clock input, not a strong knob) and
-    // couple its period-doubling order back into the workspace as a LEAKY PULL toward the order level, the
-    // codebase's standard EMA idiom (like ignition/broadcast). This is non-ratcheting (a low-pass toward a
-    // bounded target, not an unconditional add), deterministic (step() draws no rng), and re-entered at the
-    // top of the NEXT beat (g01) + surfaced on the snapshot — a live temporal-coherence coupling.
+    // against the drive, as an actual DTC is, so arousal is a nominal clock input, not a strong knob). Its
+    // period-doubling order is leaky-pulled into the workspace AFTER the workspace is finalised below (this
+    // beat's `this.cons` is reassigned at the STAGE-5 block, so coupling here would be a dead store).
     this.temporalCrystal.step(this.arousal);
-    this.cons.workspace = clamp01(
-      this.cons.workspace + 0.02 * (this.temporalCrystal.order - this.cons.workspace),
-    );
     const qualTensor = moonlabTensorQualia([this.valence, this.arousal, peakNovelty], 5);
     this.cons.qualiaTone = clamp01(0.5 + 0.5 * qualTensor); // qualia from tensor (Tsotchke Moonlab)
     // more GWT + MPO from corpus in mind cons/qualia
@@ -1900,6 +1895,13 @@ export class SuperMind {
       freeEnergy: aifPerc.freeEnergy,
     });
     this.cons.workspace = clamp01(this.eshkolEngine.workspace * this.ignition);
+    // BRUTALISM 5/9: NOW that workspace is finalised on the live `this.cons`, leaky-pull it toward the
+    // discrete-time crystal's period-doubling order (stepped above) — the codebase EMA idiom, non-ratcheting
+    // (a low-pass toward a bounded target). This is the value read at the top of the NEXT beat (g01) and
+    // surfaced on the snapshot, so the temporal-coherence coupling is genuinely live. Deterministic.
+    this.cons.workspace = clamp01(
+      this.cons.workspace + 0.02 * (this.temporalCrystal.order - this.cons.workspace),
+    );
 
     // ── V89 · IIT Φ-PROXY ── the participation/coherence ratio pr = (Σxᵢ)²/(M·Σxᵢ²) ∈ [0,1] of the named
     // module activations: 1 when the parts move as one (integrated), ≈1/M when one dominates, → 0 when they

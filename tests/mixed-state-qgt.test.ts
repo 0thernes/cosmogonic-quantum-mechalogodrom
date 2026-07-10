@@ -32,11 +32,17 @@ describe('mixed-state QGT — Hermitian ρ + depolarizing channel', () => {
     statevectorToDensityMatrix(re, im, 2, rhoRe, rhoIm);
     // Trace = 1
     expect(rhoRe[0]! + rhoRe[3]!).toBeCloseTo(1, 10);
-    // Hermitian: ρ_10 = conj(ρ_01) ⇒ equal real, opposite imag (the transpose-sign fix).
+    // Hermitian: ρ_10 = conj(ρ_01) ⇒ equal real, opposite imag.
     expect(rhoRe[1]!).toBeCloseTo(rhoRe[2]!, 12);
     expect(rhoIm[1]!).toBeCloseTo(-rhoIm[2]!, 12);
-    // Off-diagonal is genuinely complex (guards against a real-only regression).
-    expect(Math.abs(rhoIm[1]!)).toBeGreaterThan(1e-3);
+    // The ACTUAL Im SIGN — this is what pins the ρ-transpose fix. ρ_01 = ψ_0·conj(ψ_1) so for
+    // |ψ⟩ = cos(θ/2)|0⟩ + e^{iφ}sin(θ/2)|1⟩, Im(ρ_01) = −cos(θ/2)·sin(θ/2)·sin(φ) (strictly negative
+    // here). The pre-fix `ar·bi − ai·br` would give the OPPOSITE (positive) sign, so an anti-symmetry- or
+    // magnitude-only check (the earlier assertion) passed for BOTH ρ and ρᵀ — this does not.
+    const expectedIm01 = -Math.cos(1.2 / 2) * Math.sin(1.2 / 2) * Math.sin(0.7);
+    expect(expectedIm01).toBeLessThan(0);
+    expect(rhoIm[1]!).toBeCloseTo(expectedIm01, 10);
+    expect(rhoIm[1]!).toBeLessThan(0);
   });
 
   test('a pure state has purity 1 / linear-entropy 0 (locks the d²-vs-dim fix); depolarizing lowers it', () => {
@@ -67,14 +73,22 @@ describe('mixed-state QGT — finite-difference Bures geometry', () => {
     statevectorToDensityMatrix(re, im, dim, outRe, outIm);
   };
 
-  test('metric is symmetric with non-negative diagonal and finite volume', () => {
+  test('metric is symmetric + PSD and the Berry curvature is antisymmetric with zero diagonal', () => {
     const g = mixedStateQuantumGeometricTensor([0.8, 0.3], build, dim);
     expect(g.params).toBe(2);
-    expect(g.metric[0]![1]).toBeCloseTo(g.metric[1]![0]!, 9); // symmetric
-    expect(g.metric[0]![0]!).toBeGreaterThanOrEqual(-1e-9); // PSD diagonal
+    // Metric g = Re Q is symmetric with a non-negative diagonal and a PSD 2×2 minor (det ≥ 0).
+    expect(g.metric[0]![1]).toBeCloseTo(g.metric[1]![0]!, 9);
+    expect(g.metric[0]![0]!).toBeGreaterThanOrEqual(-1e-9);
     expect(g.metric[1]![1]!).toBeGreaterThanOrEqual(-1e-9);
+    const det = g.metric[0]![0]! * g.metric[1]![1]! - g.metric[0]![1]! * g.metric[1]![0]!;
+    expect(det).toBeGreaterThanOrEqual(-1e-9);
+    // Berry curvature Ω = Im Q must be antisymmetric with a zero diagonal — a genuine sign-sensitive
+    // property of the imaginary part (NOT the tautological fisher = 4·volume identity), so it also
+    // exercises the Im-sign path at the QGT level.
+    expect(g.berry[0]![0]!).toBeCloseTo(0, 9);
+    expect(g.berry[1]![1]!).toBeCloseTo(0, 9);
+    expect(g.berry[0]![1]!).toBeCloseTo(-g.berry[1]![0]!, 9);
     expect(Number.isFinite(g.volume)).toBe(true);
-    expect(g.fisher).toBeCloseTo(4 * g.volume, 9);
   });
 
   test('the geometry is genuinely STATE-DEPENDENT (not a degenerate constant)', () => {
