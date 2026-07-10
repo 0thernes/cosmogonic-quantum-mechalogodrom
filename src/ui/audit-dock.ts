@@ -612,8 +612,15 @@ function mountAuditToggle(doc: Document = document): void {
   // prior heartbeat first so a hot-reload can never stack duplicate intervals all re-rendering the dock.
   renderClientAudit(doc);
   if (auditHeartbeat !== null) clearInterval(auditHeartbeat);
+  // Skip the heartbeat's JSON parse + full DOM rebuild while the panel is closed (#aP is display:none
+  // without .audit-on) — it was churning hundreds of nodes every 1.5s into an invisible subtree. The
+  // open onClick already refreshes immediately, so nothing is stale when it opens.
   auditHeartbeat =
-    typeof setInterval === 'function' ? setInterval(() => renderClientAudit(doc), RENDER_MS) : null;
+    typeof setInterval === 'function'
+      ? setInterval(() => {
+          if (panel?.classList.contains('audit-on')) renderClientAudit(doc);
+        }, RENDER_MS)
+      : null;
 }
 
 mountAuditToggle();

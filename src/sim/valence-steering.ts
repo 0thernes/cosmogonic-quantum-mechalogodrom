@@ -196,10 +196,11 @@ export class ValenceSteering {
     const biased = actionValues.slice();
     if (_intensity < 0.1) return biased; // No valence, no bias
 
-    // If pain is high, bias toward actions with higher values (escape)
-    // If pleasure is high, bias toward actions with higher values (exploit)
-    const biasStrength = cfg.actionBias * _intensity;
-    const biasDirection = pleasure < 0 ? 1 : pleasure > 0 ? 1 : 0;
+    // Pain flattens the value spread (softmax exploration); pleasure sharpens it (exploitation).
+    // The old `< 0 ? 1 : > 0 ? 1 : 0` made both directions identical, erasing the asymmetry.
+    // Clamp to keep the pain-direction scale factor (1 - strength) positive — _intensity can reach √3.
+    const biasStrength = Math.min(0.9, cfg.actionBias * _intensity);
+    const biasDirection = pleasure < 0 ? -1 : pleasure > 0 ? 1 : 0;
 
     for (let i = 0; i < biased.length; i++) {
       const base = biased[i] ?? 0;

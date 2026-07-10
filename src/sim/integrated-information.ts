@@ -110,10 +110,13 @@ export function integratedInformation(
   let mip = 0;
   let sum = 0;
   let cuts = 0;
-  // Enumerate balanced subsets A of size `half` that contain qubit 0 (so A and B are counted once).
+  // Enumerate balanced subsets A that contain qubit 0 (so A and B are counted once). For odd n the
+  // two near-balanced sizes are floor(n/2) and ceil(n/2); fixing qubit 0 in A de-duplicates only when
+  // both sizes appear, so we must accept popcount == half AND == n-half (identical for even n).
   for (let mask = 0; mask < 1 << nQubits; mask++) {
     if ((mask & 1) === 0) continue; // fix qubit 0 in A
-    if (popcount(mask) !== half) continue;
+    const pc = popcount(mask);
+    if (pc !== half && pc !== nQubits - half) continue;
     const sl = subsystemLinearEntropy(re, im, nQubits, mask);
     sum += sl;
     cuts++;
@@ -203,11 +206,13 @@ export function classicalIntegratedInformation(
   let sumIntegration = 0;
   let cuts = 0;
 
-  // Evaluate balanced bipartitions (fix module 0 in A to avoid double-count)
+  // Evaluate balanced bipartitions (fix module 0 in A to avoid double-count). For odd M accept both
+  // near-balanced sizes floor(M/2) and M-floor(M/2) (identical for even M, e.g. the production M=8).
   const half = Math.floor(M / 2);
   for (let mask = 0; mask < 1 << M; mask++) {
     if ((mask & 1) === 0) continue; // fix module 0 in A
-    if (popcount(mask) !== half) continue;
+    const pc = popcount(mask);
+    if (pc !== half && pc !== M - half) continue;
 
     const aMask = mask;
     const bMask = ((1 << M) - 1) ^ mask;

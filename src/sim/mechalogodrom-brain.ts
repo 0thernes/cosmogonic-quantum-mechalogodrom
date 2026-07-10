@@ -14,10 +14,7 @@
  * @see docs/ARCHITECTURE-2026-06-26.md §Brain parameter scale
  */
 import { mulberry32, type Rng } from '../math/rng';
-import {
-  MECHALOGODROM_BRAIN_DESIGNED_PARAMS,
-  MECHALOGODROM_BRAIN_START_PARAMS,
-} from './apex-brain';
+import { MECHALOGODROM_BRAIN_DESIGNED_PARAMS } from './apex-brain';
 
 const VARIANT_COUNT = 10;
 const PERCEPT_DIM = 8;
@@ -263,7 +260,9 @@ export class MechalogodromBrain {
         p.fusion * 0.15,
     );
 
-    const roadmapProgress = clamp01(this.liveParams / MECHALOGODROM_BRAIN_START_PARAMS);
+    // 0..1 progress toward the 5M DESIGNED budget (matches the emitted roadmapParams and the doc
+    // at line 128). Dividing by START (250k) overstated progress ~20x against a 5M roadmap.
+    const roadmapProgress = clamp01(this.liveParams / MECHALOGODROM_BRAIN_DESIGNED_PARAMS);
 
     const indicators: MechalogodromIndicator[] = [
       {

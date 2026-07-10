@@ -48,7 +48,10 @@ const CHIPS: { label: string; q: string }[] = [
   { label: 'Singularities', q: 'black hole white hole grey hole entropy strangestar summon' },
   { label: 'N(2) Break Free', q: 'simulation N2 break free nightmare chaos' },
   { label: 'Apex brain', q: 'apex brain abomination million parameters super creature' },
-  { label: 'Render modes', q: 'render mode wireframe ghost neon solid visual' },
+  {
+    label: 'Render modes',
+    q: 'render mode wireframe ghost neon solid visual chrome hologram iridescent',
+  },
   { label: 'Lab & dome', q: 'lab quantum wildbeyond link dome broadcast' },
   { label: 'God events', q: 'god scale release emergence pantheon events' },
   { label: 'Gravitational lens', q: 'gravitational lens post processing singularity warp' },
@@ -100,54 +103,6 @@ const CHIPS: { label: string; q: string }[] = [
   { label: 'Quake QGE', q: 'quake qge quantum gravity estimator tsotchke' },
   { label: 'ULG / GWT', q: 'ulg gwt global workspace theory consciousness handoff' },
   { label: 'Post-FX / bloom', q: 'post processing bloom lens cinematic fx' },
-  {
-    label: 'Render modes',
-    q: 'render mode wireframe ghost neon solid visual chrome hologram iridescent',
-  },
-  { label: 'Sim settings', q: 'sim settings view speed render quality hud' },
-  { label: 'Bottom dock', q: 'bottom dock toolbar panels AI help audit' },
-  { label: 'Center HUD', q: 'center HUD panels architecture audit neural market' },
-  { label: 'God events', q: 'god scale release emergence pantheon events' },
-  { label: 'Faculties', q: '100 faculties pantheon cognitive modules NHSI' },
-  { label: 'Self-evolution', q: 'self evolution loop emergence complexity' },
-  { label: 'Apocalypse', q: 'apocalypse end world destruction event' },
-  { label: 'CHAOS mode', q: 'chaos mode lorenz quantum storm' },
-  { label: 'Reset & seed', q: 'deterministic seed rng reset sessions' },
-  { label: 'Docs & specs', q: 'where are docs module contracts specifications' },
-  { label: 'The math', q: 'what math science powers this quantum tsotchke' },
-  { label: 'Weather', q: 'weather wind temperature shoggoths environment' },
-  { label: 'War & conflict', q: 'war alliance truce titan conflict' },
-  { label: 'Mutations', q: 'mutations morphs evolution genetic' },
-  { label: 'Singularity', q: 'cosmological singularity black hole white hole' },
-  { label: 'Music & SFX', q: 'music song sfx audio sound' },
-  { label: 'Tsotchke', q: 'tsotchke quantum substrate eshkol moonlab qgtl' },
-  { label: '✦ AI Copilot', q: 'AI copilot free LLM chat read repo' },
-  { label: 'Quantum WildBeyond', q: 'quantum wildbeyond lab boards tiles' },
-  { label: 'Market ticker', q: 'market ticker economy aurum umbra prices' },
-  { label: 'Singularities', q: 'black hole white hole grey hole entropy strangestar summon' },
-  { label: 'N(2) Break Free', q: 'simulation N2 break free nightmare chaos' },
-  { label: 'Apex brain', q: 'apex brain abomination million parameters super creature' },
-  { label: 'GPU / instancing', q: 'instanced rendering quality tier mega ultra desktop' },
-  { label: 'Gravitational lens', q: 'gravitational lens post processing singularity warp' },
-  { label: 'Butlin indicators', q: 'butlin consciousness indicators sentience audit' },
-  { label: 'Lab & dome', q: 'lab quantum wildbeyond link dome broadcast' },
-  { label: 'Titans', q: 'titans roaming economy energy matter entropy war' },
-  { label: 'Settings ⚙', q: 'settings panel audio render sim chaos apocalypse' },
-  { label: 'Architecture', q: '101 super creatures architecture pantheon brood' },
-  { label: 'Dock panels', q: 'AI help audit neural market architect panels dock' },
-  { label: 'Explain this', q: 'overview what is this explain' },
-  { label: "I'm confused", q: 'how to play controls confused start' },
-  { label: 'Controls', q: 'keyboard controls movement camera how to play' },
-  { label: 'Observatory', q: 'what do the observatory charts graphs show' },
-  { label: 'Sorting field', q: 'how does sorting algorithm bubble field work' },
-  { label: 'Super creature', q: 'what is the super creature' },
-  { label: 'Economy', q: 'how does the economy and money work' },
-  { label: 'Mechalogodrom', q: 'what is the mechalogodrom center monster' },
-  { label: 'Alphabet dome', q: 'what are the 100 alphabet creatures' },
-  { label: 'Temple', q: 'what is the ascension shadow core temple' },
-  { label: 'NHSI / Neural', q: 'what is NHSI neural hierarchy observatory' },
-  { label: 'Archons', q: 'what are archon pantheons minds' },
-  { label: 'What is that?', q: 'what are these creatures entities' },
 ];
 
 const STYLE = `
@@ -265,7 +220,16 @@ export class HelpSystem {
     });
 
     const chips = this.panel.querySelector('[data-chips]') as HTMLElement;
+    // Dedupe by label: CHIPS accumulated accidental duplicate entries, which rendered every
+    // topic chip twice. Keep first-seen order (Map preserves insertion order) and the richest
+    // query when the same label recurs, so no unique chip and no richer search seed is lost.
+    const uniqueChips = new Map<string, { label: string; q: string }>();
     for (const c of CHIPS) {
+      const prev = uniqueChips.get(c.label);
+      if (!prev) uniqueChips.set(c.label, { label: c.label, q: c.q });
+      else if (c.q.length > prev.q.length) prev.q = c.q;
+    }
+    for (const c of uniqueChips.values()) {
       const b = doc.createElement('button');
       b.type = 'button';
       b.className = 'cqm-help-chip';

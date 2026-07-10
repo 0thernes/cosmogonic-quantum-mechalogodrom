@@ -139,7 +139,6 @@ export class QualitySpace {
     const norm = Math.sqrt(sum) + 1e-9;
     for (let d = 0; d < D; d++) out[d] = (out[d] ?? 0) / norm;
     const tone = Math.max(0, Math.min(1, 0.5 + 0.5 * (out[0] ?? 0)));
-    this.lastTone = tone;
     this.lastCode.set(out);
 
     // actively use mpo + gwt (Tsotchke Moonlab/Eshkol GWT) in tone calc for deeper HOT-4 qualia manifold wiring (instead of void ref)
@@ -151,6 +150,9 @@ export class QualitySpace {
       0,
       Math.min(1, tone + Math.abs(mpoAdj) * 0.01 + (gwtAdj[0] || 0) * 0.01),
     );
+    // Cache the FINAL tone the caller receives (was caching the pre-mpo/gwt `tone`, so snapshot()
+    // reported a value the mind never used).
+    this.lastTone = adjTone;
     return { tone: adjTone, code: out, toneGrad: toneGrad || 0 };
   }
 

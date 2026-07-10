@@ -370,6 +370,7 @@ export class PuppetMasterSystem implements PortalCullable, DomeFeeder {
     for (let i = 0; i < this.pms.length; i++) {
       const pm = this.pms[i];
       if (!pm) continue; // noUncheckedIndexedAccess: i < length
+      if (!pm.mesh.visible) continue; // portal-downed: dead (invisible) until respawn — don't meddle
       const cfg = pm.cfg;
       let boldness = 1;
       if (this.econWealth)

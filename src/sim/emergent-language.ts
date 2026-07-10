@@ -184,6 +184,9 @@ export class EmergentLanguage {
     // `this.nextSignId++` already advances the counter when signId is undefined; a second
     // increment here would skip every other id (0, 2, 4, …) and overstate the sign count.
     const id = signId ?? this.nextSignId++;
+    // Reserve an explicitly-supplied id so a later auto-generated sign can't mint the same id and
+    // create two Sign records sharing one id (which conflates decode/punish and inflates lexicon metrics).
+    if (id >= this.nextSignId) this.nextSignId = id + 1;
 
     const sign: Sign = {
       id,

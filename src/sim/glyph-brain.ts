@@ -200,8 +200,11 @@ export class GlyphBrain {
 
     forwardSubnet(this.reasoner, this.outB.subarray(0, LATENT_DIM), this.scratch, this.outA);
 
-    forwardSubnet(this.predictor, this.latent, this.scratch, this.organOut);
-    forwardSubnet(this.memory, this.outA.subarray(0, LATENT_DIM), this.scratch, this.organOut);
+    // predictor emits LATENT_DIM(32) and memory emits 16 outputs — organOut is only length 4, so
+    // writing them there silently dropped outputs 4.. (a landmine for anyone wiring these). Target the
+    // size-64 outB, whose last read (line 201) is already past.
+    forwardSubnet(this.predictor, this.latent, this.scratch, this.outB);
+    forwardSubnet(this.memory, this.outA.subarray(0, LATENT_DIM), this.scratch, this.outB);
 
     forwardSubnet(this.affect, this.senses, this.scratch, this.organOut);
     const valence = this.organOut[0] ?? 0;

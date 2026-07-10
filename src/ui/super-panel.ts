@@ -383,8 +383,12 @@ export class SuperPanel {
     this.meter.selfAware = bar(bars, 'Self-aware', '#ffd166', doc); // selfAware
     this.meter.novelty = bar(bars, 'Novelty', '#8dff9e', doc); // novelty
     this.meter.ignition = bar(bars, 'Ignition', '#ff7a45', doc); // ignition
-    this.meter.phi = bar(bars, 'Φ integ', '#5ad1c4', doc);
+    this.meter.phi = bar(bars, 'Φ (IIT)', '#5ad1c4', doc);
     this.meter.confidence = bar(bars, 'Confidence', '#ffa3d1', doc); // confidence
+    // GOAL5/USER-5 first-class composites — update() feeds setBar('integrity'/'integration')
+    // every telemetry beat; without these registrations both values were silently dropped.
+    this.meter.integrity = bar(bars, 'Integrity', '#9be7a8', doc);
+    this.meter.integration = bar(bars, 'Integration', '#7ad1ff', doc);
 
     // 5 Archons: bigger, legible, filled. Full params (VALENCE AROUSAL ... CONFIDENCE per user). No tiny 9px dead space.
     const archonsWrap = panel.querySelector('[data-archons]') as HTMLElement;

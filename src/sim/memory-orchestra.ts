@@ -87,7 +87,9 @@ export class MemoryOrchestra {
       let rel = 0;
       const d = e.data || [];
       for (let j = 0; j < Math.min(ctx.length, d.length); j++) rel += (ctx[j] || 0) * (d[j] || 0);
-      const age = 0.01 + (k + 1) / (this.len || 1);
+      // k=0 is the MOST RECENT record (loop walks head-1 backwards), so recency weight must DECREASE
+      // with k. The old `(k+1)/len` inverted it — newest scored lowest, oldest highest.
+      const age = 0.01 + (this.len - k) / (this.len || 1);
       const score = rel * (e.conf || 0) * age;
       // insert into top (small max, no sort)
       if (numScored < max) {

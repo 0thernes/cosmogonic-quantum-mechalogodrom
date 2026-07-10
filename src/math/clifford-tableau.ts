@@ -63,7 +63,7 @@ export class CliffordTableau {
   private readonly r: Uint8Array; // rows (sign bit)
   private lastSample = 0n;
   private _caMpsBond = 4; // Moonlab CA-MPS max_bond_dim from ca_mps.h for hybrid (Clifford D + MPS phi).
-  private _caMpsCurrentBond = 1; // current bond from tn_mps in CA-MPS create.
+  private _caMpsCurrentBond = 1; // current bond, derived 2^S from the half-cut entanglement (CA-MPS tn_mps semantics), capped at max_bond; refreshed in snapshot().
 
   constructor(n: number) {
     const nq = Math.max(1, Math.floor(n));
@@ -327,6 +327,9 @@ export class CliffordTableau {
     const n = this.n;
     const cut = Math.floor(n / 2);
     const ent = this.entanglementEntropy(cut);
+    // Live CA-MPS bond across the half-cut: a stabiliser state's exact bond is 2^S ebits (tn_mps
+    // semantics), capped at the CA-MPS max_bond_dim. Previously a frozen constant presented as live.
+    this._caMpsCurrentBond = Math.min(this._caMpsBond, 2 ** ent);
     // Mean stabiliser weight (how many qubits each generator touches) — a cheap correlation-spread proxy.
     const { x, z } = this;
     let weight = 0;

@@ -47,6 +47,8 @@ export class QuantumCloud {
   private readonly respawned: Int32Array;
   /** The Points material — retained so `setBreath()` can drive its size (audit fix B). */
   private readonly material: THREE.PointsMaterial;
+  /** The scene-attached point cloud — retained so `dispose()` can free its geometry + detach it. */
+  private readonly points: THREE.Points;
   private signalValue = 0;
   /** 32-entry band-hue buffer from QuantumCircuitSystem.bands(); null ⇒ legacy colors (V2). */
   private quantumBands: Float32Array | null = null;
@@ -98,12 +100,24 @@ export class QuantumCloud {
       sizeAttenuation: true,
       depthWrite: false,
     });
-    ctx.scene.add(new THREE.Points(geo, this.material));
+    this.points = new THREE.Points(geo, this.material);
+    ctx.scene.add(this.points);
   }
 
   /** Mean |psi| across all particles from the last update (legacy `qSig`, telemetry #v6). */
   get signal(): number {
     return this.signalValue;
+  }
+
+  /**
+   * HMR/World teardown: detach the point cloud from the scene and free its geometry + material.
+   * Idempotent, draws no rng, mutates no sim state — same recurring GPU dispose-leak class the
+   * binding resource law names (the cloud was previously leaked on every world reset).
+   */
+  dispose(): void {
+    this.ctx.scene.remove(this.points);
+    this.points.geometry.dispose();
+    this.material.dispose();
   }
 
   /**

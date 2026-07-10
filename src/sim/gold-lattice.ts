@@ -60,4 +60,16 @@ export class GoldLattice {
     }
     this.mat.opacity = 0.1 + 0.08 * (0.5 + 0.5 * Math.sin(t * 0.15));
   }
+
+  /**
+   * Free the 7 wireframe geometries + the shared material and detach the group. Mirrors the
+   * sibling QuantumLattice/CosmicWeb teardown so a World.dispose()/HMR reload doesn't orphan
+   * these on the GPU (the repo's recurring wireframe dispose-leak class).
+   */
+  dispose(): void {
+    for (const f of this.forms) f.geometry.dispose();
+    this.forms.length = 0;
+    this.mat.dispose();
+    this.group.parent?.remove(this.group);
+  }
 }

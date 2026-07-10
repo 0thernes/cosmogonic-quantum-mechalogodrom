@@ -45,7 +45,7 @@ export interface FacultyPhase {
 }
 
 /** Snapshot of the resonance state for the BRAIN view (UI cadence). */
-export interface ResonanceSnapshot {
+export interface IntegratorSnapshot {
   /** Number of faculties in the ensemble. */
   size: number;
   /** Overall coherence 0..1 (how aligned all phases are). */
@@ -196,7 +196,7 @@ export function computePhaseVariance(phases: FacultyPhase[]): number {
 export class ResonanceIntegrator {
   private config: ResonanceConfig;
   private phases: FacultyPhase[] = [];
-  private snapshotCache: ResonanceSnapshot | null = null;
+  private snapshotCache: IntegratorSnapshot | null = null;
 
   constructor(config: Partial<ResonanceConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
@@ -227,7 +227,7 @@ export class ResonanceIntegrator {
    * Get the current resonance state (UI cadence).
    * Computes coherence, coalition, and standing-wave status.
    */
-  snapshot(): ResonanceSnapshot {
+  snapshot(): IntegratorSnapshot {
     if (this.snapshotCache) return this.snapshotCache;
 
     const coherence = computeCoherence(this.phases);

@@ -62,14 +62,21 @@ const STYLE = `
   border-right: none;
 }
 /* When a column is hidden, its button stays at the very edge and flips its arrow. */
-#ui.col-hidden-left .ui-col-left {
-  display: none !important;
-}
 #ui.col-hidden-left .cqm-edge-btn--left {
   left: 0;
 }
-#ui.col-hidden-right .ui-col-right {
-  display: none !important;
+/* Column hiding only applies on the desktop/tablet grid (min-width: 769px). Below that,
+   app.css sheet mode (max-width: 768px) surfaces these columns via display:contents; an
+   unscoped display:none !important beat that rule and hid the panels permanently — and the
+   restore button is itself hidden below 599px, so shrinking/rotating into sheet mode left them
+   unreachable until a full reload. */
+@media (min-width: 769px) {
+  #ui.col-hidden-left .ui-col-left {
+    display: none !important;
+  }
+  #ui.col-hidden-right .ui-col-right {
+    display: none !important;
+  }
 }
 /* Show the buttons only on desktop/tablet grid layout (not phone sheet mode).
    Match the same breakpoints app.css uses to switch to sheet mode. */

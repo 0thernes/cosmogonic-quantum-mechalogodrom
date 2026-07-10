@@ -164,6 +164,11 @@ export class Viz3DSystem {
   private readonly netGeo: THREE.BufferGeometry;
   private readonly netMat: THREE.LineBasicMaterial;
 
+  /** Root group + the two shared unit geometries — retained so {@link dispose} can free them. */
+  private readonly root: THREE.Group;
+  private readonly towerGeo: THREE.BufferGeometry;
+  private readonly obeliskGeo: THREE.BufferGeometry;
+
   /** Heavy-cadence phase counter (towers smooth every call; obelisks/network every NET_CADENCE). */
   private tick = 0;
 
@@ -182,12 +187,15 @@ export class Viz3DSystem {
     const root = new THREE.Group();
     root.position.y = PANEL_Y;
     ctx.scene.add(root);
+    this.root = root;
 
     // Shared unit geometries — scaled per mesh; never mutated after construction.
     const towerGeo = new THREE.BoxGeometry(TOWER_SIDE, 1, TOWER_SIDE);
     towerGeo.translate(0, 0.5, 0); // anchor base at y=0 so Y-scale grows upward
     const obeliskGeo = new THREE.CylinderGeometry(OBELISK_R * 0.5, OBELISK_R, 1, OBELISK_SEG);
     obeliskGeo.translate(0, 0.5, 0);
+    this.towerGeo = towerGeo;
+    this.obeliskGeo = obeliskGeo;
 
     this.buildTowers(root, towerGeo);
     this.buildObelisks(root, obeliskGeo);
@@ -215,6 +223,21 @@ export class Viz3DSystem {
   /** Active phylum-tower count (test/telemetry hook). 10, or 5 on {@link lowDetail}. O(1). */
   get towersBuilt(): number {
     return this.towers.length;
+  }
+
+  /**
+   * HMR/World teardown: detach the floating panel and free its two shared geometries, every tower
+   * and obelisk material, and the war-network geometry + material. Same recurring GPU dispose-leak
+   * class the binding resource law names; this system was previously absent from World.dispose().
+   */
+  dispose(): void {
+    this.root.removeFromParent();
+    this.towerGeo.dispose();
+    this.obeliskGeo.dispose();
+    for (const t of this.towers) t.mat.dispose();
+    for (const o of this.obelisks) o.mat.dispose();
+    this.netGeo.dispose();
+    this.netMat.dispose();
   }
 
   /** Active titan-obelisk count (always {@link TITANS}). O(1). */

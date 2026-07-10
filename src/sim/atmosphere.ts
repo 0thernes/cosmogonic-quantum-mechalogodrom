@@ -190,9 +190,15 @@ export class AtmosphereSystem {
       const i3 = i * 3;
       const s = Math.sin(i * 41.17 + 13.91) * 24634.6345;
       const h = s - Math.floor(s);
+      // Three independent fract() samples so x/y/z decorrelate into a volume rather than a
+      // slanted sheet, and z stays in [0,1) (JS `%` keeps sign → half the drops fell off-arena).
+      const sy = Math.sin(i * 29.41 + 3.17) * 9173.33;
+      const hy = sy - Math.floor(sy);
+      const sz = Math.sin(i * 17.13 + 7.7) * 4131.7;
+      const hz = sz - Math.floor(sz);
       this.rainPos[i3] = (h - 0.5) * GROUND_EXTENT;
-      this.rainPos[i3 + 1] = h * 140 * ARENA_Y;
-      this.rainPos[i3 + 2] = (((Math.sin(i * 17.13 + 7.7) * 4131.7) % 1) - 0.5) * GROUND_EXTENT;
+      this.rainPos[i3 + 1] = hy * 140 * ARENA_Y;
+      this.rainPos[i3 + 2] = (hz - 0.5) * GROUND_EXTENT;
     }
     const rainGeo = new THREE.BufferGeometry();
     this.rainPosAttr = new THREE.BufferAttribute(this.rainPos, 3);
@@ -577,10 +583,12 @@ export class AtmosphereSystem {
         if (px !== undefined && py !== undefined && pz !== undefined) {
           let nx = px + windDrift * dt * 60;
           let ny = py - fallSpeed * dt;
-          const nz = pz + s.wind.z * 0.005 * dt * 60;
+          let nz = pz + s.wind.z * 0.005 * dt * 60;
           if (ny < 0) ny = topY;
           if (nx > halfR) nx -= GROUND_EXTENT;
           else if (nx < -halfR) nx += GROUND_EXTENT;
+          if (nz > halfR) nz -= GROUND_EXTENT;
+          else if (nz < -halfR) nz += GROUND_EXTENT;
           this.rainPos[i] = nx;
           this.rainPos[i + 1] = ny;
           this.rainPos[i + 2] = nz;

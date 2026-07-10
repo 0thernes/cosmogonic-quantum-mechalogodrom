@@ -563,6 +563,10 @@ class PendulumHive {
   private readonly mom: Float64Array;
   private readonly K: number; // kick strength (Chirikov); K≳1 ⇒ chaos
   private readonly coupling: number;
+  /** Cached Lyapunov exponent: lyapunov() reads no instance state (depends only on readonly K), so
+   *  it is a constant. view() runs on the per-frame snapshot path — recomputing the 800-step
+   *  transcendental loop every call (twice per snapshot) was pure waste. */
+  private lam: number | null = null;
 
   constructor(k = 24, kick = 2.7, coupling = 0.15, rng: Rng = mulberry32(2)) {
     this.k = k;
@@ -636,7 +640,8 @@ class PendulumHive {
   }
 
   view(): HiveView {
-    const lam = round4(this.lyapunov(800));
+    if (this.lam === null) this.lam = round4(this.lyapunov(800));
+    const lam = this.lam;
     let mp = 0;
     for (let i = 0; i < this.k; i++) mp += this.mom[i]!;
     return {
@@ -1869,6 +1874,9 @@ export class ApexBrain {
   private readonly loom: PrimeSieveLoom;
   private readonly drum: AcousticMeatDrum;
   private readonly necro: EntropicNecroMatrix;
+  /** Live necro node count — thought endpoints must span it (was hardcoded % 64, so at scales
+   *  where necro > 64 most edges were structurally unreachable). */
+  private readonly necroN: number;
   private readonly klein: KleinBottleCortex;
   private readonly hive: PendulumHive;
   private readonly hydra: SlimeMoldHydra;
@@ -1906,8 +1914,12 @@ export class ApexBrain {
     const qubits = Math.max(1, Math.min(s.qubits, 12)); // statevector = 2^q; cap at 4096 amplitudes
 
     this.loom = new PrimeSieveLoom(loomN);
-    this.drum = new AcousticMeatDrum(acousticN);
+    // Gentle damping (~0.4%/beat) bounds steady-state energy near O(1): tick() feeds a non-negative
+    // impulse every beat, so an UNDAMPED drum grows momentum/energy without bound and pegs the
+    // Foundationals drum channel (world.ts fndOrganActivity[1]) at a constant 1 shortly after boot.
+    this.drum = new AcousticMeatDrum(acousticN, { damping: 0.02 });
     this.necro = new EntropicNecroMatrix(necroN, sub(this.seed, 0x03));
+    this.necroN = necroN;
     this.klein = new KleinBottleCortex(kleinW, kleinH);
     this.hive = new PendulumHive(pendulumN, 2.7, 0.15, sub(this.seed, 0x05));
     this.hydra = new SlimeMoldHydra(slimeN);
@@ -1994,8 +2006,8 @@ export class ApexBrain {
     if (!this.off('thermo'))
       this.thermo.step((i) => ((i + this.beat) % 5 === 0 ? fireLevel : fireLevel * 0.2));
     // 3 Necro — think a thought along live edges; it burns out the path.
-    const src = (this.beat * 13) % 64;
-    const dst = (this.beat * 29 + 7) % 64;
+    const src = (this.beat * 13) % this.necroN;
+    const dst = (this.beat * 29 + 7) % this.necroN;
     const necroVit = this.off('necro') ? 1 : this.necro.step(src, dst);
     // 10 Ouroboros — grow limbs vs immune cull, pressure from heat + agony.
     const thermoView = this.thermo.view();

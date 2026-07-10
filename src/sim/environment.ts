@@ -31,7 +31,7 @@ const BRUTAL_GROUND_EMISSIVE = new THREE.Color(0x141416);
 const BRUTAL_LIGHT = new THREE.Color(0x9a9aa0); // cold overcast grey for the whole light rig
 const GROUND_BASE = new THREE.Color(0x080812);
 const GROUND_BASE_EMISSIVE = new THREE.Color(0x040410);
-const AMBIENT_BASE = new THREE.Color(0x0a0a22);
+const AMBIENT_BASE = new THREE.Color(0x1c1c3c); // matches the constructor's USER-lifted fill (0x1c1c3c @ 0.72)
 const SUN_BASE = new THREE.Color(0xffeedd);
 const LIGHT_BASE: readonly THREE.Color[] = [
   0xff0066, 0x00ffcc, 0xffaa00, 0x4488ff, 0xff2200, 0x8800ff,
@@ -915,7 +915,7 @@ export class EnvironmentSystem {
     this.groundMaterial.emissiveIntensity = lerp(this.groundBaseEmissiveIntensity, 0.06, g);
     // Ambient + sun: static lights → colour from base toward grey, intensity dimmed from base.
     this.ambient.color.copy(AMBIENT_BASE).lerp(BRUTAL_LIGHT, g);
-    this.ambient.intensity = lerp(0.55 * LEGACY_LIGHT_GAIN, 0.34 * LEGACY_LIGHT_GAIN, g);
+    this.ambient.intensity = lerp(0.72 * LEGACY_LIGHT_GAIN, 0.34 * LEGACY_LIGHT_GAIN, g);
     this.sun.color.copy(SUN_BASE).lerp(BRUTAL_LIGHT, g);
     this.sun.intensity = lerp(0.65 * LEGACY_LIGHT_GAIN, 0.42 * LEGACY_LIGHT_GAIN, g);
     // The lurid six-light rig: colour from each base toward grey (clean, no rainbow), intensity

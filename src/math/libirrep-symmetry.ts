@@ -8,10 +8,13 @@
  *   • {@link clebschGordan} and {@link wignerD} delegate to the exact, test-verified Racah/Wigner routines in
  *     {@link ./irrep} — one source of truth, no duplicated approximation.
  *   • {@link sphericalHarmonic} is the exact real Yₗᵐ via the associated-Legendre recurrence.
- *   • {@link libirrepSymmetry} — the ONE actually wired into the sim (`godform.ts`, `world.ts`,
- *     `morphic-field.ts`) — is now the exact normalized SU(2) Weyl character χⱼ(θ), a genuine
- *     representation-theory quantity, not a `cos` pattern. It recovers the true spinor physics: a 2π
+ *   • {@link libirrepSymmetry} — the exact normalized SU(2) Weyl character χⱼ(θ), a genuine
+ *     representation-theory quantity in [−1,1], not a `cos` pattern. It recovers the true spinor physics: a 2π
  *     rotation of a half-integer spin returns −1 (4π periodicity), which the old switch could never express.
+ *     NOTE: this χⱼ(θ) is NOT currently imported by any sim module (test-verified via
+ *     tests/libirrep-symmetry.test.ts only). The sim binds a DIFFERENT `libirrepSymmetry` — the SO(3)
+ *     multiplicity count (≥1, args `(irrepDeg, baseCount)`) from `sim/irrep-symmetry.ts` via
+ *     `sim/tsotchke-facade.ts`. Do NOT swap them: incompatible signature and range.
  *
  * MIT © tsotchke — see THIRD-PARTY-NOTICES.md.
  */

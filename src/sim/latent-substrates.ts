@@ -101,9 +101,18 @@ export interface LatentInputs {
   qualiaTone: number;
 }
 
+/**
+ * Shared causal graph: observe() fully overwrites all 8 node values each call and edges are immutable
+ * (updateWeight is never invoked), so a single reused instance yields output identical to the old
+ * per-call `new CausalGraph()` while eliminating the per-beat allocation of the graph + 9 edge objects
+ * (×5 archons × every driveSuper frame). The 5 archon calls are sequential (single-threaded), so their
+ * observe→do pairs never interleave.
+ */
+const SHARED_CAUSAL_GRAPH = new CausalGraph();
+
 /** One deterministic per-beat read of all three substrates from live super-mind signals. */
 export function latentSubstrateStep(inp: LatentInputs): LatentSubstrateState {
-  const g = new CausalGraph();
+  const g = SHARED_CAUSAL_GRAPH;
   g.observe(
     clamp01(inp.ignition),
     clamp01(inp.phi),

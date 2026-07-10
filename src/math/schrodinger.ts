@@ -57,11 +57,16 @@ export function expectationEnergy(psi: Wave, V: readonly number[], dx: number): 
   const inv = 1 / (dx * dx);
   let e = 0;
   for (let j = 0; j < n; j++) {
-    const left = j > 0 ? j - 1 : j;
-    const right = j < n - 1 ? j + 1 : j;
+    // Dirichlet walls: ψ outside the grid is 0 (the SAME operator cnStep evolves under). The old
+    // index-clamped neighbours substituted ψⱼ for the missing endpoint, a Neumann-like stencil that
+    // reported a non-conserved ⟨Ĥ⟩ whenever a packet reached the walls.
+    const lRe = j > 0 ? psi.re[j - 1]! : 0;
+    const lIm = j > 0 ? psi.im[j - 1]! : 0;
+    const rRe = j < n - 1 ? psi.re[j + 1]! : 0;
+    const rIm = j < n - 1 ? psi.im[j + 1]! : 0;
     // (Ĥψ)ⱼ = −½(ψ₊ −2ψ +ψ₋)/dx² + Vⱼψⱼ
-    const hRe = -0.5 * (psi.re[right]! - 2 * psi.re[j]! + psi.re[left]!) * inv + V[j]! * psi.re[j]!;
-    const hIm = -0.5 * (psi.im[right]! - 2 * psi.im[j]! + psi.im[left]!) * inv + V[j]! * psi.im[j]!;
+    const hRe = -0.5 * (rRe - 2 * psi.re[j]! + lRe) * inv + V[j]! * psi.re[j]!;
+    const hIm = -0.5 * (rIm - 2 * psi.im[j]! + lIm) * inv + V[j]! * psi.im[j]!;
     e += psi.re[j]! * hRe + psi.im[j]! * hIm; // Re(ψ* · Ĥψ)
   }
   return e;

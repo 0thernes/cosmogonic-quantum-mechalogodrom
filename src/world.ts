@@ -1404,6 +1404,9 @@ export class World {
     this.connectome.dispose(); // free the axon-web BufferGeometry + LineBasicMaterial
     this.cosmicWeb.dispose(); // free the cosmic-web points/lines geometries + PointsMaterial/LineBasicMaterial
     this.quantumLattice.dispose(); // free the 3 WireframeGeometry shells + shared LineBasicMaterial
+    this.goldLattice.dispose(); // free the 7 gold WireframeGeometry forms + shared LineBasicMaterial
+    this.quantum.dispose(); // free the quantum point-cloud BufferGeometry + PointsMaterial
+    this.viz3d.dispose(); // free the floating analytics panel: 2 shared geometries + tower/obelisk mats + war-net
     this.superHunt.dispose();
     this.domeFeeding.dispose();
     for (const b of this.superBodies) b.dispose();
@@ -2833,7 +2836,7 @@ export class World {
               );
               const release = triggerBrutalRelease(
                 a,
-                chaos,
+                chaos / CHAOS_MAX, // normalize raw 0..CHAOS_MAX to the 0..1 the release's convex weighting expects
                 spinO,
                 qgtC,
                 esh,
@@ -3022,7 +3025,7 @@ export class World {
         0,
         1,
       );
-      this.superEvo.tick(4 / 60, vitality);
+      this.superEvo.tick(1 / 60, vitality); // driveSuper now runs EVERY frame — real-time dt, not the removed 4-frame cadence
       this.superBody.setEvolution(this.superEvo.appearance());
       // V63: react to a 10-level milestone — a voice + a HUD toast announcing the new godlike power,
       // and at the LV100 apex the full ASCENSION end-state (the MONOLITH TEMPLE rises). Once each.
@@ -3049,7 +3052,7 @@ export class World {
       const hero0 = this.heroBodies[0];
       if (this.superheroState.active && hero0) {
         this.superheroState.tick(
-          4 / 60,
+          1 / 60, // driveSuper runs every frame now — real-time dt (was 4/60 for the removed 4-frame cadence)
           hero0.mind.snapshot().emotion.dominance,
           basePercept.threat,
         );
@@ -3549,10 +3552,11 @@ export class World {
         : mode === 'auto'
           ? Math.min(120, Math.max(40, n >> 5))
           : Math.min(28, Math.max(6, n >> 8));
-    // Treble = sparkle: the per-swap emissive flash brightens with the highs (4..8). Emissive is
+    // Treble = sparkle: the per-swap emissive flash brightens with the highs (2.4..3.2). Emissive is
     // purely visual (entities.update never feeds it back into positions/rng), so the swarm
-    // visibly sparkles ON THE BEAT without touching sim reproducibility (V7-beyond).
-    const flash = 4 + bands.treble * 4;
+    // visibly sparkles ON THE BEAT without touching sim reproducibility (V7-beyond). The range sits
+    // under the darker-palette ceiling so the max()-only write below never dims a brighter body.
+    const flash = 2.4 + bands.treble * 0.8;
     const push = 0.05 * this.chaosMul();
     let swaps = 0;
     for (let b = 0; b < batch; b++) {
@@ -3584,8 +3588,8 @@ export class World {
       // Brighter sparkle per swap so the field's working front reads as a shimmering light
       // show (entities.update fades it back). max(), not a hard set, so a swap can't DIM a body
       // the neural-activation cap or a belly pulse already pushed above 4. (audit 13b)
-      ea.material.emissiveIntensity = Math.min(Math.max(ea.material.emissiveIntensity, flash), 3.2);
-      eb.material.emissiveIntensity = Math.min(Math.max(eb.material.emissiveIntensity, flash), 3.2);
+      ea.material.emissiveIntensity = Math.max(ea.material.emissiveIntensity, flash);
+      eb.material.emissiveIntensity = Math.max(eb.material.emissiveIntensity, flash);
       if (swaps === 0) this.qc.onSortSwap(a0, a1); // one CNOT/frame (preserve coupling rate)
       swaps++;
     }

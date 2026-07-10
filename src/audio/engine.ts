@@ -43,6 +43,9 @@ import {
   type SfxSpec,
 } from './songs';
 
+/** The SFX bus's nominal "on" gain — the fixed level every transient boost must restore to. */
+const SFX_BASE = 0.3;
+
 /** Scale steps used by both chords and melody (legacy `fNotes`, line 550). */
 const F_NOTES: readonly number[] = [0, 2, 3, 5, 7, 8, 10, 12, 14, 15];
 
@@ -455,7 +458,7 @@ export class AudioEngine {
     this.wake(); // V122: a dozed master bus wakes on any audio button (USER #7)
     this._sfxOn = !this._sfxOn;
     if (this.ctx && this.sfxGain) {
-      this.sfxGain.gain.setTargetAtTime(this._sfxOn ? 0.3 : 0, this.ctx.currentTime, 0.1);
+      this.sfxGain.gain.setTargetAtTime(this._sfxOn ? SFX_BASE : 0, this.ctx.currentTime, 0.1);
     }
     return this._sfxOn;
   }
@@ -576,12 +579,18 @@ export class AudioEngine {
    */
   playNhiSocial(socialLevel: number = 0.5): void {
     if (!this.ctx || !this.sfxGain || !this._sfxOn) return;
-    const gain = this.sfxGain.gain.value;
-    // Temporarily boost the SFX bus for this chorus, then restore.
     const t = this.ctx.currentTime;
-    this.sfxGain.gain.setValueAtTime(gain, t);
-    this.sfxGain.gain.linearRampToValueAtTime(Math.min(0.55, gain + socialLevel * 0.25), t + 0.08);
-    this.sfxGain.gain.linearRampToValueAtTime(gain, t + 0.45);
+    // Boost the SFX bus for this chorus, then restore to the CONSTANT base — never the live
+    // (possibly mid-ramp) value, which let overlapping choruses ratchet the bus permanently
+    // louder and let a queued restore override a mid-chorus toggleSfx. Cancel pending automation
+    // first, then pin at the current value so cancelling mid-ramp doesn't click.
+    this.sfxGain.gain.cancelScheduledValues(t);
+    this.sfxGain.gain.setValueAtTime(this.sfxGain.gain.value, t);
+    this.sfxGain.gain.linearRampToValueAtTime(
+      Math.min(0.55, SFX_BASE + socialLevel * 0.25),
+      t + 0.08,
+    );
+    this.sfxGain.gain.linearRampToValueAtTime(SFX_BASE, t + 0.45);
     this.playExtra('howl');
   }
 

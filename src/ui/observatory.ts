@@ -1668,7 +1668,9 @@ export class Observatory {
     const ch = gridH / rows;
     const stride = strideFor(n, Math.max(2, (cw | 0) >> 1));
     const m = Math.floor((n - 1) / stride) + 1;
-    for (let s = 0; s < OBS_SERIES; s++) {
+    // Only the cols*rows cells that fit the 5×2 grid (= PHYLUM_COUNT); series 10..19 (titan charts
+    // elsewhere use OBS_SERIES=20) would render fully clipped below the canvas.
+    for (let s = 0; s < cols * rows; s++) {
       const gx = (s % cols) * cw;
       const gy = top + Math.floor(s / cols) * ch;
       // Faint cell frame so the 10 panels read as a grid.

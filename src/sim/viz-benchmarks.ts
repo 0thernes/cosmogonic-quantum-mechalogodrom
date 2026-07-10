@@ -15,8 +15,9 @@ const UV = `
 /** 25 distinct benchmark fragment bodies (mainImageN). */
 export const VIZ_BENCHMARKS_GLSL: string[] = [
   // 1 — Entropy gauge (radial needle)
+  // NOTE: u_entropy is declared once at global scope by applyVizBenchmarks' <common> injection.
+  // Declaring it here too made this one benchmark's program fail GLSL redefinition and render black.
   `
-  uniform float u_entropy;
   void mainImage1(out vec4 fragColor, in vec2 fragCoord, vec2 resolution) {
     ${UV}
     vec2 c = uv - vec2(0.5, 0.15);

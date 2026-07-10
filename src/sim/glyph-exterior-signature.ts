@@ -186,7 +186,10 @@ export function clampPantheonWander(out: { x: number; y: number; z: number }): {
   z: number;
 } {
   const maxR = PANTHEON_FLIGHT_MAX;
-  const minY = 6;
+  // This result is now a RELATIVE wander offset (added to the V123 velocity-nav position by the
+  // renderer), so the Y band must be a symmetric ±band, not an absolute [6, dome] floor — the old
+  // floor clipped every downward half-cycle flat at +6 and nulled a descend-intent motor. Ground/
+  // ceiling containment is enforced separately by the renderer's softLimit + ARENA_FLOOR/CEIL clamps.
   const maxY = PANTHEON_DOME_R * 0.42;
   const r2 = out.x * out.x + out.z * out.z;
   if (r2 > maxR * maxR) {
@@ -194,7 +197,7 @@ export function clampPantheonWander(out: { x: number; y: number; z: number }): {
     out.x *= s;
     out.z *= s;
   }
-  if (out.y < minY) out.y = minY;
-  else if (out.y > maxY) out.y = maxY;
+  if (out.y > maxY) out.y = maxY;
+  else if (out.y < -maxY) out.y = -maxY;
   return out;
 }

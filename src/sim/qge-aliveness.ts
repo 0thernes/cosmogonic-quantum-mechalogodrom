@@ -132,9 +132,10 @@ export function qgeWorldPerturb(aliveness: number, seed: number, amp = 0.12): nu
 /**
  * Fubini–Study distinguishability between two raw amplitude slices, normalized to [0,1].
  *
- * d = arccos(|⟨a|b⟩| / ‖a‖‖b‖) / π over real component vectors — a real projective-Hilbert distance
- * proxy (0 = identical ray, 1 = orthogonal). Used where callers only have a flat Float32Array slice
- * rather than a full {@link QGEState}. Signature & contract preserved: identical vectors ⇒ 0. O(n).
+ * d = arccos(|⟨a|b⟩| / ‖a‖‖b‖) / (π/2) over real component vectors — a real projective-Hilbert distance
+ * proxy (0 = identical ray, 1 = orthogonal). The |·| makes anti-parallel vectors (the SAME projective
+ * ray) distance 0 and orthogonal vectors exactly 1. Used where callers only have a flat Float32Array
+ * slice rather than a full {@link QGEState}. Signature & contract preserved: identical vectors ⇒ 0. O(n).
  */
 export function qgeFubiniProxy(a: Float32Array, b: Float32Array): number {
   let dot = 0;
@@ -149,5 +150,5 @@ export function qgeFubiniProxy(a: Float32Array, b: Float32Array): number {
     nb += y * y;
   }
   const denom = Math.sqrt(na * nb) || 1;
-  return Math.acos(Math.min(1, Math.max(-1, dot / denom))) / Math.PI;
+  return Math.acos(Math.min(1, Math.abs(dot) / denom)) / (Math.PI / 2);
 }

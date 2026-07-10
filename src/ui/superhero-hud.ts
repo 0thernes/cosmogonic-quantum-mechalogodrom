@@ -213,9 +213,18 @@ function stat(parent: HTMLElement, title: string, doc: Document): HTMLElement {
 export class SuperheroHud {
   private readonly root: HTMLElement;
   private readonly styleEl: HTMLStyleElement;
+  private readonly hostDoc: Document;
   private readonly resizeTarget: Window | null;
   private readonly resizeHandler: () => void;
   private readonly resizeObservers: ResizeObserver[] = [];
+  private readonly onKeydown = (e: KeyboardEvent): void => {
+    if (!this.active || this.root.classList.contains('closed')) return;
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      if (e.shiftKey) this.close();
+      else this.minimize();
+    }
+  };
   private readonly bars: Record<string, { fil: HTMLElement; num: HTMLElement }> = {};
   private readonly stats: Record<string, HTMLElement> = {};
   private readonly dots: Record<string, HTMLElement> = {};
@@ -227,6 +236,7 @@ export class SuperheroHud {
   private active = false;
 
   constructor(doc: Document = document) {
+    this.hostDoc = doc;
     doc.getElementById('cqm-hero')?.remove();
     doc.getElementById('cqm-hero-style')?.remove();
     const style = doc.createElement('style');
@@ -380,14 +390,9 @@ export class SuperheroHud {
     doc.body.appendChild(this.root);
 
     // V114: Escape minimizes the hero HUD; Shift+Escape closes it entirely.
-    doc.addEventListener('keydown', (e) => {
-      if (!this.active || this.root.classList.contains('closed')) return;
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        if (e.shiftKey) this.close();
-        else this.minimize();
-      }
-    });
+    // Bound field (not an inline closure) so dispose() can remove it — otherwise the handler
+    // and the whole HUD object graph leak on every construct/dispose (bun --hot) cycle.
+    doc.addEventListener('keydown', this.onKeydown);
 
     const sync = (): void => {
       syncHeroHudGutters(doc);
@@ -415,6 +420,7 @@ export class SuperheroHud {
   }
 
   dispose(): void {
+    this.hostDoc.removeEventListener('keydown', this.onKeydown);
     this.resizeTarget?.removeEventListener('resize', this.resizeHandler);
     for (const observer of this.resizeObservers) observer.disconnect();
     this.resizeObservers.length = 0;

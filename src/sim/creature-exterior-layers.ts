@@ -910,12 +910,14 @@ export class MechaExteriorAbomination {
       ln.rotation.y = -st * (0.07 + i * 0.012);
       ln.scale.setScalar(0.85 + fusion * 0.35 + 0.05 * Math.sin(st + i));
     }
-    const M = new THREE.Matrix4();
-    const P = new THREE.Vector3();
-    const Q = new THREE.Quaternion();
-    const S = new THREE.Vector3();
-    const E = new THREE.Euler();
-    const C = new THREE.Color();
+    // Reuse the module scratch (this method is self-contained — it calls no helper that also uses it)
+    // instead of allocating 6 THREE objects every frame.
+    const M = _M,
+      P = _P,
+      Q = _Q,
+      S = _S,
+      E = _E,
+      C = _C;
     for (let i = 0; i < this.cubeSwarm.count; i++) {
       this.cubeSwarm.getMatrixAt(i, M);
       M.decompose(P, Q, S);
@@ -1093,6 +1095,7 @@ const _P = new THREE.Vector3();
 const _Q = new THREE.Quaternion();
 const _S = new THREE.Vector3();
 const _E = new THREE.Euler();
+const _C = new THREE.Color();
 
 /** Sync unique exterior shell to body transform + per-glyph signature skew. */
 export function syncGlyphExteriorShell(

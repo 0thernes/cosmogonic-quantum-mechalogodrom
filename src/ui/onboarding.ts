@@ -62,11 +62,20 @@ export class OnboardingOverlay {
       this.root.setAttribute('aria-hidden', 'true');
     }
 
+    // Defined before the header so the header ✕ honours the "Don't show again" checkbox too —
+    // the closure reads [data-again] at click time, so it is safe before the checkbox is appended.
+    const close = (): void => {
+      const again =
+        (this.root.querySelector('[data-again]') as HTMLInputElement | null)?.checked ?? true;
+      if (again && store) store.setItem(KEY, '1');
+      this.close();
+    };
+
     box.appendChild(
       panelHeader({
         title: '⬡ COSMOGONIC',
         closeLabel: 'Close welcome',
-        onClose: () => this.close(),
+        onClose: close,
         doc,
       }),
     );
@@ -84,13 +93,6 @@ export class OnboardingOverlay {
       `<label><input type="checkbox" data-again /> Don't show again</label>` +
       `<button class="cqm-onb-go" type="button" data-go>Enter the world</button>`;
     box.appendChild(foot);
-
-    const close = (): void => {
-      const again =
-        (this.root.querySelector('[data-again]') as HTMLInputElement | null)?.checked ?? true;
-      if (again && store) store.setItem(KEY, '1');
-      this.close();
-    };
 
     (this.root.querySelector('[data-go]') as HTMLElement).addEventListener('click', close);
     wireClose(this.root, close);

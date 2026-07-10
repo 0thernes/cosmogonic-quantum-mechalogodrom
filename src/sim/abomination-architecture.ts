@@ -47,6 +47,11 @@ export class AbominationArchitecture {
   private readonly bridgeColor: Float32Array;
   private readonly bridgePosAttr: THREE.BufferAttribute;
   private readonly bridgeColorAttr: THREE.BufferAttribute;
+  /** Per-seed DRIFTED pose (angle/radius/y) captured in the slab loop each frame so the bridges
+   *  connect where the slabs actually ARE, not their static seed sites (which they drift away from). */
+  private readonly driftA = new Float32Array(ARCH_COUNT);
+  private readonly driftR = new Float32Array(ARCH_COUNT);
+  private readonly driftY = new Float32Array(ARCH_COUNT);
   private chaos = 0;
   private entropy = 0;
   private crowding = 0;
@@ -128,7 +133,12 @@ export class AbominationArchitecture {
       const a = s.a + angleDrift + Math.sin(safeT * 0.033 + s.phase) * 0.05 * drive;
       const r = s.r * radiusDrift * (1 + wobble * 0.025 * drive);
       const yDrift = Math.sin(safeT * 0.05 + s.phase * 1.3) * 34;
-      TMP_P.set(Math.cos(a) * r, s.y + yDrift + wobble * 9 * drive, Math.sin(a) * r);
+      const yPose = s.y + yDrift + wobble * 9 * drive;
+      // Record the drifted pose so the bridge loop below anchors to the migrated slabs, not the seeds.
+      this.driftA[i] = a;
+      this.driftR[i] = r;
+      this.driftY[i] = yPose;
+      TMP_P.set(Math.cos(a) * r, yPose, Math.sin(a) * r);
       TMP_E.set(
         Math.sin(safeT * 0.07 + s.phase) * 0.22,
         -a + Math.PI / 2 + safeT * 0.025 * (i % 2 === 0 ? 1 : -1),
@@ -151,18 +161,23 @@ export class AbominationArchitecture {
     this.slabMat.opacity = 0.09 + drive * 0.13;
 
     for (let i = 0; i < BRIDGE_COUNT; i++) {
-      const a = this.seeds[(i * 5) % ARCH_COUNT]!;
-      const b = this.seeds[(i * 11 + 17) % ARCH_COUNT]!;
+      const ia = (i * 5) % ARCH_COUNT;
+      const ib = (i * 11 + 17) % ARCH_COUNT;
+      const a = this.seeds[ia]!;
+      const b = this.seeds[ib]!;
       const w = Math.sin(safeT * 0.11 + i * 0.23) * drive;
-      const ao = a.a + w * 0.04;
-      const bo = b.a - w * 0.03;
+      // Anchor to the DRIFTED slab poses (captured above), not the static seed sites.
+      const ao = this.driftA[ia]! + w * 0.04;
+      const bo = this.driftA[ib]! - w * 0.03;
+      const ar = this.driftR[ia]!;
+      const br = this.driftR[ib]!;
       const o = i * 6;
-      this.bridgePos[o] = Math.cos(ao) * a.r;
-      this.bridgePos[o + 1] = a.y + w * 11;
-      this.bridgePos[o + 2] = Math.sin(ao) * a.r;
-      this.bridgePos[o + 3] = Math.cos(bo) * b.r;
-      this.bridgePos[o + 4] = b.y - w * 9;
-      this.bridgePos[o + 5] = Math.sin(bo) * b.r;
+      this.bridgePos[o] = Math.cos(ao) * ar;
+      this.bridgePos[o + 1] = this.driftY[ia]! + w * 11;
+      this.bridgePos[o + 2] = Math.sin(ao) * ar;
+      this.bridgePos[o + 3] = Math.cos(bo) * br;
+      this.bridgePos[o + 4] = this.driftY[ib]! - w * 9;
+      this.bridgePos[o + 5] = Math.sin(bo) * br;
       TMP_C.setHSL((a.hue + b.hue + this.entropy * 0.12) % 1, 1, 0.26 + drive * 0.1);
       this.bridgeColor[o] = TMP_C.r;
       this.bridgeColor[o + 1] = TMP_C.g;

@@ -976,7 +976,10 @@ export class AlphabetPantheonRender implements PortalImmune {
       this.glyphAccents.finish();
       this.glyphFilaments.finish();
       this.glyphSpores.finish();
-      if (halo) syncGlyphWireHalos(mesh, halo, this.brainActivity, list);
+      // Wire halos are a debug-only overlay, hidden by default (setWireHalosVisible(false)). Skip the
+      // ~100 per-frame Matrix4.decompose/compose when they're invisible; update() runs every frame, so
+      // they're correct within one frame of being toggled on.
+      if (halo && halo.visible) syncGlyphWireHalos(mesh, halo, this.brainActivity, list);
     }
     // USER: the apex BODY was glacially slow (rotation ~minutes) — it should be VERY MOBILE. V121:
     // the body phase is the RATE-integrated apexAnim clock (chaos/apex/Tsotchke modulate its SPEED,

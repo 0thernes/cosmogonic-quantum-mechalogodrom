@@ -469,6 +469,7 @@ export class ShoggothSystem implements PortalCullable {
     for (let si = 0; si < this.shogs.length; si++) {
       const sg = this.shogs[si];
       if (!sg) continue; // noUncheckedIndexedAccess: si < length, never actually undefined
+      if (!sg.group.visible) continue; // portal-downed: dead (invisible) until respawn — don't hunt/consume/spawn
       const g = sg.group;
       const p = g.position;
 

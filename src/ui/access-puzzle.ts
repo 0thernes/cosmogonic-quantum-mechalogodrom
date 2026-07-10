@@ -123,7 +123,6 @@ const GLYPHS = 'ｦｱｳｴｵｶｷｸｹｺﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓ0123
 
 const STYLE = `
 #cqm-acc-toggle{border-color:rgba(80,255,170,.55);background:linear-gradient(180deg,rgba(6,20,12,.92),rgba(4,12,8,.88));color:#7dffc0;
-  animation:cqm-acc-pulse 2.8s ease-in-out infinite}
   font:600 11px/1 var(--font-mono,ui-monospace,monospace);letter-spacing:.12em;height:42px;padding:0 12px;
   border-radius:21px;cursor:pointer;backdrop-filter:blur(6px);box-shadow:0 2px 14px rgba(0,0,0,.5);
   transition:transform .15s,background .15s;animation:cqm-acc-flick 2.2s steps(2) infinite}

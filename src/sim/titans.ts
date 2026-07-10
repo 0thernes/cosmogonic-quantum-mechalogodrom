@@ -819,6 +819,7 @@ export class TitanSystem implements DomeFeeder {
     for (let i = 0; i < this.titans.length; i++) {
       const ti = this.titans[i];
       if (!ti) continue; // invariant: dense array
+      if (!ti.group.visible) continue; // portal-downed: dead (invisible) until respawn
       this.roamAndAnimate(ti, dt, t);
       // F-HOLES: an active singularity tugs the colossi too. No-op when unattached/inactive (so
       // the determinism tests, which summon nothing, stay byte-identical); draws no rng.
@@ -1235,6 +1236,7 @@ export class TitanSystem implements DomeFeeder {
       for (let k = 0; k < titans.length; k++) {
         const tk = titans[k];
         if (!tk) continue;
+        if (!tk.group.visible) continue; // portal-downed: dead (invisible) — casts no aura
         const tp = tk.group.position;
         const dx = tp.x - ep.x;
         const dy = tp.y - ep.y;
@@ -1274,6 +1276,7 @@ export class TitanSystem implements DomeFeeder {
       const a = titans[PAIR_A[pi] ?? 0];
       const b = titans[PAIR_B[pi] ?? 0];
       if (!a || !b) continue;
+      if (!a.group.visible || !b.group.visible) continue; // portal-downed: dead (invisible) — no clash
       const ap = a.group.position;
       const bp = b.group.position;
       const dx = ap.x - bp.x;
@@ -1326,6 +1329,7 @@ export class TitanSystem implements DomeFeeder {
   private economyTick(k: number): void {
     const ti = this.titans[k];
     if (!ti) return; // invariant: k < TITAN_COUNT
+    if (!ti.group.visible) return; // portal-downed: dead (invisible) — don't harvest organisms
     const list = this.entities.list;
     const p = ti.group.position;
 

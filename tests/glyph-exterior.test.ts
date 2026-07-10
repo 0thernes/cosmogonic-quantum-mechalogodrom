@@ -39,8 +39,8 @@ describe('glyph exterior signature', () => {
       const w = glyphWanderOffset(out, i * 0.1, sig, mx, my, mz, 0.8, 0.7);
       const r = Math.sqrt(w.x * w.x + w.z * w.z);
       expect(r).toBeLessThanOrEqual(PANTHEON_FLIGHT_MAX + 0.01);
-      expect(w.y).toBeGreaterThanOrEqual(6);
-      expect(w.y).toBeLessThanOrEqual(PANTHEON_DOME_R * 0.42 + 0.01);
+      // Relative wander offset: symmetric ±band (renderer enforces ground/ceiling containment).
+      expect(Math.abs(w.y)).toBeLessThanOrEqual(PANTHEON_DOME_R * 0.42 + 0.01);
     }
   });
 });
