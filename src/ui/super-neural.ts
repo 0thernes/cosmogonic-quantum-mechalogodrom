@@ -133,6 +133,48 @@ function frame(ctx: CanvasRenderingContext2D, w: number, h: number, title: strin
   ctx.textAlign = 'left';
   ctx.fillText(title, 5, 4);
 }
+// [60] spark() ran a fresh createRadialGradient per call — thousands per frame in the MEGA-brain axon
+// pass, a heavy per-frame allocation + GC churn. Instead we bake each colour's radial falloff ONCE into a
+// small offscreen sprite (alpha 1 at the core → 0 at the rim) and blit it with globalAlpha carrying the
+// per-call opacity. The gradient profile is identical, so the render is visually equivalent; the colour is
+// quantised to /8 per channel so the cache is bounded (the axon hues vary continuously). Falls back to the
+// original gradient when there is no DOM (headless tests import this module but never call spark()).
+const SPARK_SPRITE_R = 32;
+const sparkSprites = new Map<string, HTMLCanvasElement | null>();
+function sparkSprite(rgb: string): HTMLCanvasElement | null {
+  const parts = rgb.split(',');
+  const q = (s: string | undefined): number =>
+    Math.min(255, Math.max(0, Math.round((parseInt(s ?? '255', 10) || 0) / 8) * 8));
+  const key = `${q(parts[0])},${q(parts[1])},${q(parts[2])}`;
+  const cached = sparkSprites.get(key);
+  if (cached !== undefined) return cached;
+  if (typeof document === 'undefined') {
+    sparkSprites.set(key, null);
+    return null;
+  }
+  const cv = document.createElement('canvas');
+  cv.width = SPARK_SPRITE_R * 2;
+  cv.height = SPARK_SPRITE_R * 2;
+  const sctx = cv.getContext('2d');
+  if (!sctx) {
+    sparkSprites.set(key, null);
+    return null;
+  }
+  const grad = sctx.createRadialGradient(
+    SPARK_SPRITE_R,
+    SPARK_SPRITE_R,
+    0,
+    SPARK_SPRITE_R,
+    SPARK_SPRITE_R,
+    SPARK_SPRITE_R,
+  );
+  grad.addColorStop(0, `rgba(${key},1)`);
+  grad.addColorStop(1, `rgba(${key},0)`);
+  sctx.fillStyle = grad;
+  sctx.fillRect(0, 0, SPARK_SPRITE_R * 2, SPARK_SPRITE_R * 2);
+  sparkSprites.set(key, cv);
+  return cv;
+}
 function spark(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -142,13 +184,23 @@ function spark(
   a: number,
 ): void {
   if (r <= 0) return;
-  const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-  g.addColorStop(0, `rgba(${rgb},${a.toFixed(3)})`);
-  g.addColorStop(1, `rgba(${rgb},0)`);
-  ctx.fillStyle = g;
-  ctx.beginPath();
-  ctx.arc(x, y, r, 0, Math.PI * 2);
-  ctx.fill();
+  const sprite = sparkSprite(rgb);
+  if (!sprite) {
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, `rgba(${rgb},${a.toFixed(3)})`);
+    g.addColorStop(1, `rgba(${rgb},0)`);
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+    return;
+  }
+  // Sprite core alpha is 1; multiply the existing globalAlpha by the per-call opacity so compositing
+  // matches the old rgba(rgb,a) fill (which itself composited against globalAlpha). Bilinear scale to 2r.
+  const prev = ctx.globalAlpha;
+  ctx.globalAlpha = prev * clamp01(a);
+  ctx.drawImage(sprite, x - r, y - r, r * 2, r * 2);
+  ctx.globalAlpha = prev;
 }
 function frac(x: number): number {
   return x - Math.floor(x);
