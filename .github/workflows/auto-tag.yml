@@ -1,45 +1,56 @@
 name: Auto-tag on version bump
 
-# Fires on every push to main. Reads the version from package.json;
+# Fires after successful CI for a push to main. Reads the version from package.json;
 # if the corresponding semver tag (e.g. v0.13.0) does not yet exist
-# it creates + pushes the tag, which in turn triggers the Release workflow.
+# it creates + pushes the tag, then idempotently dispatches the Release workflow at that immutable ref.
 #
 # This catches version bumps committed directly to main without a
 # separate `git tag && git push` step.
 
 on:
-  push:
-    branches: [main]
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
 
 permissions:
   contents: write # push the new tag
   actions: write # dispatch release.yml after the GITHUB_TOKEN-created tag is pushed
 
 concurrency:
-  group: auto-tag-${{ github.sha }}
+  group: auto-tag-${{ github.event.workflow_run.head_sha }}
   cancel-in-progress: true
 
 jobs:
   auto-tag:
     name: Tag if version bumped
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Read version from package.json
         id: pkg
         run: |
-          VERSION=$(node -p "require('./package.json').version")
-          echo "version=v$VERSION" >> "$GITHUB_OUTPUT"
-          echo "Detected version: v$VERSION"
+          PACKAGE_VERSION="$(node -p "require('./package.json').version")"
+          if [[ ! "$PACKAGE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::package.json version must be strict X.Y.Z semver (got: $PACKAGE_VERSION)."
+            exit 1
+          fi
+          echo "version=v$PACKAGE_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Detected version: v$PACKAGE_VERSION"
 
       - name: Check if tag already exists
         id: check
+        env:
+          TAG: ${{ steps.pkg.outputs.version }}
         run: |
-          TAG="${{ steps.pkg.outputs.version }}"
           if git ls-remote --tags origin "$TAG" | grep -q .; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
             echo "Tag $TAG already exists — skipping."
@@ -52,12 +63,22 @@ jobs:
         if: steps.check.outputs.exists == 'false'
         env:
           GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.pkg.outputs.version }}
         run: |
-          TAG="${{ steps.pkg.outputs.version }}"
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag "$TAG" HEAD
           git push origin "$TAG"
           echo "Created and pushed tag: $TAG"
-          gh workflow run release.yml -f version="$TAG"
+
+      - name: Dispatch release idempotently
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.pkg.outputs.version }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists — no dispatch needed."
+            exit 0
+          fi
+          gh workflow run release.yml --ref "$TAG" -f version="$TAG"
           echo "Dispatched Release workflow for: $TAG"

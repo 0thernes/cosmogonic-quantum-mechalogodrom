@@ -72,6 +72,7 @@ class ReliquaryPhysics {
   /** Seed `n` bodies (≤ cap) at deterministic shell positions with spin + inward drift. */
   void init(int n) {
     bodies_.clear();
+    maxClose_ = 0.0f;
     for (int i = 0; i < n; ++i) {
       Body b;
       const float h1 = hash(i * 3 + 1), h2 = hash(i * 3 + 2), h3 = hash(i * 3 + 7);
@@ -129,10 +130,12 @@ class ReliquaryPhysics {
   }
 
   int count() const { return static_cast<int>(bodies_.size()); }
+  float maxClosing() const { return maxClose_; }
   const std::vector<Body>& bodies() const { return bodies_; }
 
  private:
   std::vector<Body> bodies_;
+  float maxClose_ = 0.0f;
 
   void resolvePair(Body& a, Body& b) {
     const glm::vec3 d = b.pos - a.pos;
@@ -149,6 +152,8 @@ class ReliquaryPhysics {
     const glm::vec3 rv = b.vel - a.vel;
     const float vn = glm::dot(rv, nrm);
     if (vn >= 0.0f) return;
+    const float closing = glm::length(rv);
+    if (closing > maxClose_) maxClose_ = closing;
     const float jimp = -(1.0f + restitution) * vn / invSum;
     const glm::vec3 imp = jimp * nrm;
     a.vel -= imp * invA;

@@ -2,7 +2,7 @@
 
 # Module Contracts
 
-**TSOTCHKE MASTER WIRE ERA (v0.21.11):** Tsotchke corpus is the substrate for digital biologics (see `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`). Eshkol AD/GWT + scientific kernels are wired; LLM repos fenced. Canonical facts: `docs/VERIFICATION-ANALYTICAL-DATA.md`.
+**TSOTCHKE MASTER WIRE ERA (v0.21.12):** Tsotchke corpus is the substrate for digital biologics (see `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`). Eshkol AD/GWT + scientific kernels are wired; LLM repos fenced. Canonical facts: `docs/VERIFICATION-ANALYTICAL-DATA.md`.
 
 Binding spec for every module in this repo. Writer agents and humans MUST conform exactly —
 `world.ts`/`main.ts` (the composition root) are written against these signatures, sight unseen.
@@ -45,22 +45,22 @@ New systems (digital biologics, soup genesis) must follow real-math rule + read/
 
 ## Known bugs in the legacy file — fix during port
 
-| #   | Legacy lines          | Bug                                                                                        | Required fix                                                                                                                                      |
-| --- | --------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | 557                   | Music pitch multiplier `0.5+Math.floor(st/8)*0.5` grows unbounded — song drifts ultrasonic | Wrap octave: `0.5 + (Math.floor(st / 8) % 4) * 0.5`                                                                                               |
-| 2   | 588                   | Toggling music off leaves the scheduler interval running                                   | `clearInterval` on toggle-off                                                                                                                     |
-| 3   | 556                   | Scheduler keeps queueing oscillators while tab is hidden (burst on resume)                 | Guard callback with `document.hidden`; also suspend/resume AudioContext on `visibilitychange`                                                     |
-| 4   | 688, 695-696, 856-868 | `getElementById` + fresh `{length}` object every frame in the render loop                  | UI caches element refs once; sorting passes the pre-allocated `Float32Array` + live length                                                        |
-| 5   | 365                   | `SG.query` allocates a result array per call (hundreds/frame)                              | Shared reusable result buffer, documented "valid until next query"                                                                                |
-| 6   | 878                   | Resize never reapplies pixel ratio (monitor moves)                                         | `setPixelRatio(min(devicePixelRatio, dprCap))` in resize                                                                                          |
-| 7   | 124-129               | Icon-only toolbar buttons have no accessible name                                          | `aria-label` + `title` on every control                                                                                                           |
-| 8   | 625-631               | Joystick reads `touches[0]` — wrong finger under multi-touch                               | Track by pointer/touch identifier                                                                                                                 |
-| 9   | throughout            | `Math.random()` everywhere — non-reproducible                                              | Seeded `mulberry32` Rng injection (rule 7)                                                                                                        |
-| 10  | 614                   | Touch roll/tilt buttons rotate INVERSE of the Z/X/R/F keys they mirror                     | Signs must match keyboard: rleft→rz +1, rright→rz −1, tup→rx +1, tdown→rx −1                                                                      |
-| 11  | 606-607               | Held keys stick when window blurs (camera keeps flying, Space keeps bursting)              | `window.addEventListener('blur', clear-all-keys)` in InputSystem                                                                                  |
-| 12  | 841                   | `curve.getPointAt(t)` allocates a Vector3 per packet per frame                             | Pass target: `cu.getPointAt(t, pkt.position)`                                                                                                     |
-| 13  | 818-820               | Connectome uploads the full 4000-segment buffers even with few links                       | three 0.184: `attr.clearUpdateRanges(); attr.addUpdateRange(0, links * 6);` before `needsUpdate` (same for QuantumCloud color uploads if partial) |
-| 14  | 167, 584, 592         | `mutations` counter is write-only                                                          | Surface it: `TelemetrySnapshot.mutations` + telemetry row `#v8`                                                                                   |
+| #   | Legacy lines          | Bug                                                                                        | Required fix                                                                                                                                        |
+| --- | --------------------- | ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | 557                   | Music pitch multiplier `0.5+Math.floor(st/8)*0.5` grows unbounded — song drifts ultrasonic | Wrap octave: `0.5 + (Math.floor(st / 8) % 4) * 0.5`                                                                                                 |
+| 2   | 588                   | Toggling music off leaves the scheduler interval running                                   | `clearInterval` on toggle-off                                                                                                                       |
+| 3   | 556                   | Scheduler keeps queueing oscillators while tab is hidden (burst on resume)                 | Guard callback with `document.hidden`; also suspend/resume AudioContext on `visibilitychange`                                                       |
+| 4   | 688, 695-696, 856-868 | `getElementById` + fresh `{length}` object every frame in the render loop                  | UI caches element refs once; sorting passes the pre-allocated `Float32Array` + live length                                                          |
+| 5   | 365                   | `SG.query` allocates a result array per call (hundreds/frame)                              | Shared reusable result buffer, documented "valid until next query"                                                                                  |
+| 6   | 878                   | Resize never reapplies pixel ratio (monitor moves)                                         | `setPixelRatio(min(devicePixelRatio, dprCap))` in resize                                                                                            |
+| 7   | 124-129               | Icon-only toolbar buttons have no accessible name                                          | `aria-label` + `title` on every control                                                                                                             |
+| 8   | 625-631               | Joystick reads `touches[0]` — wrong finger under multi-touch                               | Track by pointer/touch identifier                                                                                                                   |
+| 9   | throughout            | `Math.random()` everywhere — non-reproducible                                              | Seeded `mulberry32` Rng injection (rule 7)                                                                                                          |
+| 10  | 614                   | Touch roll/tilt buttons rotate INVERSE of the Z/X/R/F keys they mirror                     | Signs must match keyboard: rleft→rz +1, rright→rz −1, tup→rx +1, tdown→rx −1                                                                        |
+| 11  | 606-607               | Held keys stick when window blurs (camera keeps flying, Space keeps bursting)              | `window.addEventListener('blur', clear-all-keys)` in InputSystem                                                                                    |
+| 12  | 841                   | `curve.getPointAt(t)` allocates a Vector3 per packet per frame                             | Pass target: `cu.getPointAt(t, pkt.position)`                                                                                                       |
+| 13  | 818-820               | Connectome uploads the full 4000-segment buffers even with few links                       | three 0.185.1: `attr.clearUpdateRanges(); attr.addUpdateRange(0, links * 6);` before `needsUpdate` (same for QuantumCloud color uploads if partial) |
+| 14  | 167, 584, 592         | `mutations` counter is write-only                                                          | Surface it: `TelemetrySnapshot.mutations` + telemetry row `#v8`                                                                                     |
 
 Also: the control pad gains yaw buttons (`data-a="yleft"`/`"yright"` → `camVel.ry` ±1) so touch
 users get the C/V yaw the keyboard has — this makes the legacy dead `camVel.ry` path live.
@@ -1559,7 +1559,7 @@ Copilot are constructed boot-stream-neutral and never write sim state, so the go
 
 ### V9 acceptance
 
-Full `bun run check` green: prettier → tsc strict → oxlint → 2360 tests (0 fail, 300-frame golden
+Full `bun run check` green: prettier → tsc strict → oxlint → 2369 tests (0 fail, 300-frame golden
 included) → build. The Copilot sandbox verified live (allow: `git log`, file reads; deny:
 path-escape, `git push`, `legacy/`, shell redirection).
 

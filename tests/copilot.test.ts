@@ -13,6 +13,8 @@ import {
   providerLabel,
   providerRecoveryPlan,
   resolveProvider,
+  runAgent,
+  MAX_PROVIDER_ATTEMPTS,
   type ProviderHealth,
 } from '../src/server/copilot';
 
@@ -51,6 +53,7 @@ const KEY_ENVS = [
   'TOGETHER_API_KEY_2',
 ];
 const saved = new Map<string, string | undefined>();
+const realFetch = globalThis.fetch;
 
 beforeEach(() => {
   for (const k of KEY_ENVS) {
@@ -59,6 +62,7 @@ beforeEach(() => {
   }
 });
 afterEach(() => {
+  globalThis.fetch = realFetch;
   for (const [k, v] of saved) {
     if (v === undefined) delete process.env[k];
     else process.env[k] = v;
@@ -306,5 +310,44 @@ describe('resolveProvider — default-deny resolution (security)', () => {
     expect(resolveProvider('custom').id).toBe('llm7'); // no CQM_LLM_ENDPOINT → default
     process.env['CQM_LLM_ENDPOINT'] = 'https://c.example/v1/chat/completions';
     expect(resolveProvider('custom').id).toBe('custom');
+  });
+});
+
+describe('runAgent — bounded recovery window', () => {
+  test('cannot expand provider attempts above the production ceiling', async () => {
+    let calls = 0;
+    globalThis.fetch = (async () => {
+      calls++;
+      return new Response('offline', { status: 503 });
+    }) as unknown as typeof fetch;
+
+    const result = await runAgent([{ role: 'user', content: 'hello' }], undefined, {
+      deadlineMs: 1_000,
+      maxProviderAttempts: Number.MAX_SAFE_INTEGER,
+    });
+    expect(result.ok).toBe(false);
+    expect(calls).toBe(MAX_PROVIDER_ATTEMPTS);
+  });
+
+  test('returns safely when the whole-turn deadline aborts a hanging provider', async () => {
+    let calls = 0;
+    globalThis.fetch = ((_input: RequestInfo | URL, init?: RequestInit) => {
+      calls++;
+      return new Promise<Response>((_resolve, reject) => {
+        const fail = (): void => reject(new Error('aborted'));
+        if (init?.signal?.aborted) fail();
+        else init?.signal?.addEventListener('abort', fail, { once: true });
+      });
+    }) as typeof fetch;
+
+    const started = performance.now();
+    const result = await runAgent([{ role: 'user', content: 'hello' }], undefined, {
+      deadlineMs: 10,
+      maxProviderAttempts: 3,
+    });
+    expect(result.ok).toBe(false);
+    expect(result.reply).toContain('deadline');
+    expect(performance.now() - started).toBeLessThan(250);
+    expect(calls).toBe(1);
   });
 });

@@ -3,19 +3,17 @@
  * measured, it is not real").
  *
  * The 10x scale-up to the ultra tier (10,000 entities) put the per-frame simulation cost on a
- * cliff dominated by the O(n·k) behavior loop's spatial-grid neighbor queries. After the
- * ultra-tier throttles landed (theory-stride 3, flock half-rate, 10-unit grid cell, connectome
- * cadence /6 — see docs/BENCHMARKS-2026-06-26.md "Ultra-tier 10k optimization") the sim-CPU portion of a
- * frame at the full 10k ceiling measures ≈ 18 ms on the reference machine. (The 6,500 adaptive
- * steady-state target that originally accompanied those throttles was retired in 0.5.0 —
- * `targetEntities === maxEntities` on every tier now; the throttles alone carry the 10k cost.)
+ * cliff dominated by the O(n·k) behavior loop's spatial-grid neighbor queries. The timing guard below
+ * intentionally measures only the entity-update slice it actually invokes. Connectome has its own
+ * production-scale structural receipt below: link topology and activation stay live when hidden, while
+ * geometry writes are provably zero. That separation keeps CI honest without pretending headless tests
+ * can measure GPU upload or render time.
  *
  * This experiment drives the EXACT EntityManager update loop + the world.ts grid-rebuild cadence
  * at a HIGH population and asserts the median per-frame wall time stays under a GENEROUS bound.
  * It is intentionally loose — CI runners are slower and noisier than the reference box, and this
- * test must not flake — but tight enough to catch a structural regression (e.g. re-running the
- * theory behaviors every frame, or restoring the every-frame connectome at 10k, which would
- * multiply the loop cost several-fold). It measures the MEDIAN of many frames so a single GC
+ * test must not flake — but tight enough to catch a structural regression in the invoked entity loop
+ * (for example, an accidental quadratic census). It measures the MEDIAN of many frames so a single GC
  * pause cannot fail it. This is a CPU-side guard only: it constructs no renderer and excludes
  * GPU draw cost (which the headless harness cannot measure), exactly like scripts/perf-probe.ts.
  */
@@ -28,6 +26,7 @@ import { createGeometryCache } from '../src/sim/geometry-cache';
 import { createMorphotypes } from '../src/sim/morphotypes';
 import { createPhyla } from '../src/sim/phyla';
 import { EntityManager } from '../src/sim/entities';
+import { Connectome } from '../src/sim/connectome';
 import { InstancedEntityRenderer } from '../src/sim/instanced-entities';
 import { LoreEngine } from '../src/sim/lore';
 import type { AuditTrail } from '../src/logging/audit';
@@ -38,6 +37,8 @@ import type { SuperPercept } from '../src/sim/super-creature';
 
 /** High population for the stress frame — the ultra-class regime where the cliff lived. */
 const POP = 8000;
+/** Desktop production population used by the non-timing connectome receipt. */
+const CONNECTOME_POP = 10000;
 
 /**
  * Generous per-frame wall-clock ceiling (ms) for the entity-update + grid-rebuild work at
@@ -109,7 +110,8 @@ function makeCtx(seed: number, maxEntities: number): SimContext {
       maxEntities,
       targetEntities: maxEntities,
       quantumCount: 10,
-      maxLinks: 6000,
+      // Production quality contract: the neural graph capacity scales at 12 links/entity.
+      maxLinks: maxEntities * 12,
       shadows: true,
       starCount: 10,
       quantization: getQuantizationConfig('ultra'),
@@ -173,6 +175,40 @@ describe('per-frame sim-CPU budget at the ultra tier', () => {
   }, 30000);
 });
 
+describe('production-scale connectome structural receipt', () => {
+  test(`hidden ${CONNECTOME_POP}-entity graph preserves topology + activation with zero geometry writes`, () => {
+    const ctx = makeCtx(0xc011ec7, CONNECTOME_POP);
+    const entities = new EntityManager(ctx);
+    entities.reset(CONNECTOME_POP);
+    expect(entities.list.length).toBe(CONNECTOME_POP);
+
+    // Seed an explicit positive activation field so the hidden pass must exercise (and preserve) propagation.
+    let before = 0;
+    for (let i = 0; i < entities.list.length; i++) {
+      const entity = entities.list[i];
+      if (!entity) continue;
+      entity.userData.act = 0.01 + (i % 7) * 0.001;
+      entity.userData.nW = 0.5;
+      before += entity.userData.act;
+      ctx.grid.insert(entity);
+    }
+
+    const connectome = new Connectome(ctx, entities);
+    connectome.setWebVisible(false);
+    connectome.update(1 / 60, 1);
+
+    let after = 0;
+    for (const entity of entities.list) if (entity) after += entity.userData.act;
+    expect(connectome.links).toBeGreaterThan(0);
+    expect(connectome.links).toBeLessThanOrEqual(ctx.quality.maxLinks);
+    expect(connectome.pairCount).toBeGreaterThan(0);
+    expect(connectome.pairCount).toBeLessThanOrEqual(connectome.links);
+    expect(after).toBeGreaterThan(before);
+    expect(connectome.geometryFloatsWritten).toBe(0);
+    connectome.dispose();
+  }, 30000);
+});
+
 describe('per-frame instanced-render sync budget at the ultra tier', () => {
   test(`InstancedEntityRenderer.sync at ${POP} entities stays under ${SYNC_BUDGET_MS}ms/frame (median)`, () => {
     const ctx = makeCtx(0x115ce5, POP);
@@ -207,6 +243,32 @@ describe('per-frame instanced-render sync budget at the ultra tier', () => {
 });
 
 describe('per-beat apex-mind cognitive budget', () => {
+  test('readCoupling reuses one borrowed view while tracking the latest beat', () => {
+    const mind = new SuperMind(mulberry32(0xc0a911));
+    const p: SuperPercept = {
+      energy: 0.55,
+      threat: 0.3,
+      crowding: 0.4,
+      chaos: 0.5,
+      wealthRel: 0.5,
+      preyClose: 0.45,
+      rivalClose: 0.3,
+      pull: 0.2,
+      light: 0.5,
+      sound: 0.4,
+      phase: 0.25,
+    };
+    const before = mind.readCoupling();
+    const latent = before.latent;
+    const quantum = before.quantum;
+    mind.think(p);
+    const after = mind.readCoupling();
+    expect(after).toBe(before);
+    expect(after.latent).toBe(latent);
+    expect(after.quantum).toBe(quantum);
+    expect(after.consciousness).toBe(mind.snapshot().consciousness);
+  });
+
   test(`SuperMind.think() stays under ${THINK_BUDGET_MS}ms/beat (median) — the 20+ faculty stack must not blow the frame`, () => {
     const mind = new SuperMind(mulberry32(0x5c11fe));
     const p: SuperPercept = {

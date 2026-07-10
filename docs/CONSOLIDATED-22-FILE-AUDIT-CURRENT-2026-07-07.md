@@ -5,6 +5,10 @@ Workspace: `Z:\[Vibe Coded (AI)]\CLAUDECODE\Cosmogonic Quantum Mechalogodrom`
 Scope: the 22 user-listed Markdown and HTML report artifacts in `docs/`
 Browser companion: `docs/CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.html`
 
+> **Snapshot boundary:** This file-trust audit and every receipt called "latest" inside it are
+> preserved as evidence from 2026-07-07. Current operational receipts live in
+> [`VERIFICATION-ANALYTICAL-DATA.md`](./VERIFICATION-ANALYTICAL-DATA.md).
+
 ## Executive Verdict
 
 The 22-file report fleet is rich but not clean. The best current answer is not any

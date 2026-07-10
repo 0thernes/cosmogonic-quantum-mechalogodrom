@@ -11,8 +11,9 @@ import {
   chunksInRadius,
   streamPlan,
 } from '../src/sim/wilderness-chunks';
-import { WildernessPopulation } from '../src/sim/wilderness-population';
+import { WildernessPopulation, simulateWildernessData } from '../src/sim/wilderness-population';
 import { WildernessRenderer } from '../src/sim/wilderness-render';
+import type { WorkerPool, WorkerResult, WorkerTask } from '../src/core/worker-pool';
 
 describe('wilderness chunk grid (Stage 3 / ADR 0010)', () => {
   test('chunkCoord floors world position into chunks', () => {
@@ -67,6 +68,119 @@ describe('WildernessPopulation', () => {
       seen++;
     });
     expect(seen).toBe(pop.getEntityCount());
+    pop.dispose();
+  });
+
+  test('coordinate-derived population seeds are load-order independent and chunk-distinct', () => {
+    const a = new WildernessPopulation(null, 0xabc123);
+    const b = new WildernessPopulation(null, 0xabc123);
+    // Both load 0,0, but at different points in their deterministic camera-radius traversal.
+    a.update(0, 0, 0);
+    b.update(100, 0, 0);
+
+    const a00 = a.getSnapshot('0,0');
+    const b00 = b.getSnapshot('0,0');
+    const a10 = a.getSnapshot('1,0');
+    expect(a00).not.toBeNull();
+    expect(b00).not.toBeNull();
+    expect(a10).not.toBeNull();
+    expect(a00!.positions).toEqual(b00!.positions);
+    expect(a00!.positions[7]).not.toBe(a10!.positions[7]);
+
+    a.dispose();
+    b.dispose();
+  });
+
+  test('shared kernel is deterministic and clamps invalid or oversized dt', () => {
+    const initial = new Float32Array([50, 0, 50, 1, 0, -0.5, 2, 123]);
+    const invalid = new Float32Array(initial);
+    simulateWildernessData(invalid, 77, '0,0', Number.NaN);
+    expect(invalid).toEqual(initial);
+
+    const oversized = new Float32Array(initial);
+    const capped = new Float32Array(initial);
+    simulateWildernessData(oversized, 77, '0,0', 10);
+    simulateWildernessData(capped, 77, '0,0', 0.05);
+    expect(oversized).toEqual(capped);
+
+    const replay = new Float32Array(initial);
+    simulateWildernessData(replay, 77, '0,0', 0.05);
+    expect(replay).toEqual(capped);
+  });
+
+  test('malformed and non-finite worker results fall back to the shared synchronous kernel', async () => {
+    let call = 0;
+    const malformedPool = {
+      executeAsync: async (task: WorkerTask): Promise<WorkerResult> => {
+        call++;
+        if (call % 2 === 0) {
+          return {
+            id: task.id,
+            type: task.type,
+            data: new Float32Array(Math.max(0, task.data.length - 1)),
+            success: true,
+          };
+        }
+        const bad = new Float32Array(task.data);
+        bad[0] = Number.NaN;
+        return { id: task.id, type: task.type, data: bad, success: true };
+      },
+    } as unknown as WorkerPool;
+
+    const sync = new WildernessPopulation(null, 0x13579bdf);
+    const asyncPop = new WildernessPopulation(malformedPool, 0x13579bdf);
+    sync.update(0, 0, 1 / 60);
+    asyncPop.update(0, 0, 1 / 60);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(asyncPop.getSnapshot('0,0')!.positions).toEqual(sync.getSnapshot('0,0')!.positions);
+    expect(call).toBeGreaterThan(0);
+    sync.dispose();
+    asyncPop.dispose();
+  });
+
+  test('worker backpressure keeps one active frame and only the newest queued frame', async () => {
+    type Deferred = {
+      task: WorkerTask;
+      resolve: (result: WorkerResult) => void;
+    };
+    const calls: Deferred[] = [];
+    const deferredPool = {
+      executeAsync: (task: WorkerTask): Promise<WorkerResult> =>
+        new Promise((resolve) => {
+          calls.push({ task, resolve });
+        }),
+    } as unknown as WorkerPool;
+    const pop = new WildernessPopulation(deferredPool, 0x2468ace0);
+
+    pop.update(0, 0, 1 / 60);
+    const callsPerFrame = calls.length;
+    expect(callsPerFrame).toBeGreaterThan(0);
+    for (let i = 0; i < 100; i++) pop.update(0, 0, 1 / 60);
+    expect(calls).toHaveLength(callsPerFrame);
+
+    for (const pending of calls.slice(0, callsPerFrame)) {
+      pending.resolve({
+        id: pending.task.id,
+        type: pending.task.type,
+        data: new Float32Array(0),
+        success: false,
+        error: 'synthetic fallback',
+      });
+    }
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(calls).toHaveLength(callsPerFrame * 2);
+    expect(calls[callsPerFrame]!.task.id).toContain('-101');
+
+    for (const pending of calls.slice(callsPerFrame)) {
+      pending.resolve({
+        id: pending.task.id,
+        type: pending.task.type,
+        data: new Float32Array(0),
+        success: false,
+      });
+    }
+    await new Promise((resolve) => setTimeout(resolve, 0));
     pop.dispose();
   });
 });

@@ -64,7 +64,7 @@ const MAX_ACTION_LEN = 120;
 /** Longest serialized `detail` STORED per entry (cap applied at parse time, not just render). */
 const MAX_DETAIL_LEN = 400;
 
-/** Longest accepted `POST /api/audit` body (declared bytes / read UTF-16 units); over ⇒ 413. */
+/** Longest accepted `POST /api/audit` body in bytes; over ⇒ 413. */
 const MAX_BODY_LEN = 8 * 1024;
 
 /** Largest |ts| representable by `Date` (ECMA-262 time-value range); beyond it toISOString throws. */
@@ -270,17 +270,52 @@ export async function readJsonBody(
   req: Request,
   cap: number,
 ): Promise<{ ok: true; value: unknown } | { ok: false; status: number; error: string }> {
+  const byteCap = Number.isFinite(cap) ? Math.max(0, Math.floor(cap)) : 0;
   const declared = req.headers.get('content-length');
-  if (declared !== null && Number.isFinite(Number(declared)) && Number(declared) > cap) {
+  if (declared !== null && Number.isFinite(Number(declared)) && Number(declared) > byteCap) {
     return { ok: false, status: 413, error: 'body too large' };
   }
-  let text: string;
-  try {
-    text = await req.text();
-  } catch {
-    return { ok: false, status: 400, error: 'unreadable body' };
+
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  const body = req.body;
+  if (body !== null) {
+    const reader = body.getReader();
+    let unreadable = false;
+    let oversized = false;
+    try {
+      while (true) {
+        const part = await reader.read();
+        if (part.done) break;
+        const value = part.value;
+        total += value.byteLength;
+        if (total > byteCap) {
+          oversized = true;
+          // Cancellation is best-effort and MUST NOT delay the 413 if an underlying stream's cancel
+          // hook stalls. No more chunks are read or retained after this point.
+          void reader.cancel('body too large').catch(() => {});
+          break;
+        }
+        chunks.push(value);
+      }
+    } catch {
+      unreadable = true;
+      // The 400 should not wait on a broken stream's cancellation hook.
+      void reader.cancel('unreadable body').catch(() => {});
+    } finally {
+      reader.releaseLock();
+    }
+    if (oversized) return { ok: false, status: 413, error: 'body too large' };
+    if (unreadable) return { ok: false, status: 400, error: 'unreadable body' };
   }
-  if (text.length > cap) return { ok: false, status: 413, error: 'body too large' };
+
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  const text = new TextDecoder().decode(bytes);
   try {
     return { ok: true, value: JSON.parse(text) };
   } catch {
@@ -561,36 +596,12 @@ if (import.meta.main) {
               { status: 429, headers: { 'Retry-After': '1' } },
             );
           }
-          // Reject oversized bodies before parsing: declared length first, then the
-          // actual read (covers chunked/undeclared bodies and lying headers).
-          const declared = req.headers.get('content-length');
-          if (
-            declared !== null &&
-            Number.isFinite(Number(declared)) &&
-            Number(declared) > MAX_BODY_LEN
-          ) {
-            logRequest(req, 413);
-            return Response.json({ ok: false, error: 'body too large' }, { status: 413 });
+          const body = await readJsonBody(req, MAX_BODY_LEN);
+          if (!body.ok) {
+            logRequest(req, body.status);
+            return Response.json({ ok: false, error: body.error }, { status: body.status });
           }
-          let text: string;
-          try {
-            text = await req.text();
-          } catch {
-            logRequest(req, 400);
-            return Response.json({ ok: false, error: 'unreadable body' }, { status: 400 });
-          }
-          if (text.length > MAX_BODY_LEN) {
-            logRequest(req, 413);
-            return Response.json({ ok: false, error: 'body too large' }, { status: 413 });
-          }
-          let body: unknown;
-          try {
-            body = JSON.parse(text);
-          } catch {
-            logRequest(req, 400);
-            return Response.json({ ok: false, error: 'invalid JSON' }, { status: 400 });
-          }
-          const entry = parseAuditBody(body);
+          const entry = parseAuditBody(body.value);
           if (!entry) {
             logRequest(req, 400);
             return Response.json(
@@ -685,7 +696,7 @@ if (import.meta.main) {
           // Optional free-LLM picker (server resolves the id → endpoint+key; default-deny on unknown).
           const rec = (body.value ?? {}) as Record<string, unknown>;
           const provider = typeof rec['provider'] === 'string' ? rec['provider'] : undefined;
-          const result = await runAgent(messages, provider);
+          const result = await runAgent(messages, provider, { signal: req.signal });
           logRequest(req, 200);
           return Response.json(result);
         },

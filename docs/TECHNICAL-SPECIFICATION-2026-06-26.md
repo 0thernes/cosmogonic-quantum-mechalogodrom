@@ -7,8 +7,8 @@
 > estimated. **Live:** <https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/> · **Spec page:**
 > `/spec` · **Architecture docs:** `/docs`
 
-**Version:** v0.21.11 · **Generated:** 2026-06-26 · **License:** Non-commercial research & play (© 0thernes; study / run / modify / share non-commercially, keep attribution, no for-profit use).
-**Gate:** 2,360 tests · 84.64% line / 82.21% func (canonical synced via verify-receipts 2026-06-26, receipts law enforced).
+**Version:** v0.21.12 · **Generated:** 2026-06-26 · **License:** Non-commercial research & play (© 0thernes; study / run / modify / share non-commercially, keep attribution, no for-profit use).
+**Gate:** 2,369 tests · 84.64% line / 82.21% func (canonical synced via verify-receipts 2026-06-26, receipts law enforced).
 **NHSI scorecard:** [NHSI-PROGRESS-DASHBOARD-2026-06-26.md](./NHSI-PROGRESS-DASHBOARD-2026-06-26.md) · **Tsotchke depth:** [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md)
 
 **Tsotchke depth ledger:** 20 Tsotchke corpus projects / 22 registry entries accounted for as `9 deep`, `7 wired`, `2 harvest`, `3 fenced`, `1 meta`, with scientific wired fraction `18/21` and fenced LLM/onchain repos kept provenance-only. Eshkol as consciousness-proxy language. Primordial soup / petri as growth engine for digital biologics and sentience markers. 25 Archons (5 individuated apex minds + 20 live light-echo) with brutal god aspects (Valkorion, Thanos, Dark Phoenix, Galactus, Broly, Azathoth, Chaos Gods, Shuma Gorath, Mad Jim Jaspers, Pennywise, Anti-Monitor, Knull, Mr Mxyzptlk, Joker, Zod, Gilgamesh, Alucard, Griffith, EVA-01, Gurren Lagann, Sephiroth, Vergil, Dante, Starkiller, Riddick). Super Creature beginning only. Accurate, truthful, current. Not LLM. "Grow What Thou Wilt."
@@ -32,17 +32,17 @@ seed**.
 These figures are **measured, not pinned** — line counts move every commit, so they are a dated
 snapshot rather than a gate-enforced receipt. Refresh them with `bun run metrics`
 ([`scripts/codebase-metrics.ts`](../scripts/codebase-metrics.ts), deterministic over `git ls-files`).
-Snapshot: **2026-07-07**. (Coverage + passing-test counts ARE SSOT-synced — see §1's last two rows.)
+Snapshot: **2026-07-10**. (Coverage + passing-test counts ARE SSOT-synced — see §1's last two rows.)
 
 | Metric                                  | Value                                                                 |
 | --------------------------------------- | --------------------------------------------------------------------- |
-| Total tracked authored files            | **741**                                                               |
-| Total tracked authored lines            | **198,769**                                                           |
-| App source (`src/`)                     | 97,161 lines · 288 files                                              |
-| Tests (`tests/`)                        | 33,945 lines · 256 files                                              |
-| Native C++ engine (`native/`, ADR-0007) | 1,773 lines · 12 files                                                |
-| Test : source ratio                     | 0.35 → **84.64% line / 82.21% func** coverage (`bun test --coverage`) |
-| Passing tests                           | **2,360** (canonical floor; 0 failing)                                |
+| Total tracked authored files            | **751**                                                               |
+| Total tracked authored lines            | **201,550**                                                           |
+| App source (`src/`)                     | 97,850 lines · 289 files                                              |
+| Tests (`tests/`)                        | 35,198 lines · 263 files                                              |
+| Native C++ engine (`native/`, ADR-0007) | 1,827 lines · 12 files                                                |
+| Test : source ratio                     | 0.36 → **84.64% line / 82.21% func** coverage (`bun test --coverage`) |
+| Passing tests                           | **2,369** (exact tracked suite; 0 failing)                            |
 
 (Excludes the vendored `node_modules/`, generated `dist/` · `coverage/` · `native/build/`, and nested
 `.claude/worktrees/` checkouts.)
@@ -51,34 +51,34 @@ Snapshot: **2026-07-07**. (Coverage + passing-test counts ARE SSOT-synced — se
 
 | Type                | Files | Lines   | Share   |
 | ------------------- | ----- | ------- | ------- |
-| TypeScript          | 585   | 135,957 | 68.40 % |
-| Markdown            | 69    | 20,242  | 10.18 % |
-| HTML                | 10    | 14,574  | 7.33 %  |
-| JSON                | 13    | 10,382  | 5.22 %  |
-| PNG (shots)         | 4     | 9,552   | 4.81 %  |
-| CSS (Tailwind)      | 2     | 2,476   | 1.25 %  |
-| C/C++ hdr+impl      | 8     | 1,481   | 0.75 %  |
+| TypeScript          | 595   | 138,396 | 68.67 % |
+| Markdown            | 69    | 20,327  | 10.09 % |
+| HTML                | 10    | 14,591  | 7.24 %  |
+| JSON                | 13    | 10,383  | 5.15 %  |
+| PNG (shots)         | 4     | 9,552   | 4.74 %  |
+| CSS (Tailwind)      | 2     | 2,476   | 1.23 %  |
+| C/C++ hdr+impl      | 8     | 1,520   | 0.75 %  |
 | CSV                 | 4     | 844     | 0.42 %  |
 | XML (masters)       | 4     | 707     | 0.36 %  |
-| YAML · lock · other | 42    | ~2,554  | ~1.3 %  |
+| YAML · lock · other | 42    | ~2,754  | ~1.4 %  |
 
-**Code (TS + C++ + HTML + CSS) ≈ 154,488 lines ≈ 77.7 %**; documentation + config + assets ≈ 22.3 %.
+**Code (TS + C++ + HTML + CSS) ≈ 156,983 lines ≈ 77.9 %**; documentation + config + assets ≈ 22.1 %.
 
 ### 1.2 Lines by area
 
 | Area                                  | Files | Lines  |
 | ------------------------------------- | ----- | ------ |
-| `src/` (application)                  | 288   | 97,161 |
-| `tests/`                              | 256   | 33,945 |
-| `docs/`                               | 75    | 20,908 |
+| `src/` (application)                  | 289   | 97,850 |
+| `tests/`                              | 263   | 35,198 |
+| `docs/`                               | 75    | 20,942 |
 | `lab/` (self-contained artifact)      | 5     | 13,241 |
-| repo root (README, LICENSE, configs)  | 27    | 11,453 |
+| repo root (README, LICENSE, configs)  | 27    | 11,568 |
 | `output/` (tracked visual receipts)   | 3     | 9,551  |
-| `scripts/`                            | 27    | 5,795  |
+| `scripts/`                            | 29    | 6,221  |
 | `legacy/` (preserved origin)          | 6     | 2,072  |
-| `native/` (C++ engine, ADR-0007)      | 12    | 1,773  |
-| `bench/`                              | 16    | 1,200  |
-| `.github/`                            | 11    | 863    |
+| `native/` (C++ engine, ADR-0007)      | 12    | 1,827  |
+| `bench/`                              | 16    | 1,260  |
+| `.github/`                            | 11    | 995    |
 | `masters/` (3 governing XML personas) | 3     | 477    |
 | `.memory/`                            | 5     | 167    |
 | `.vscode/`                            | 3     | 94     |
@@ -93,20 +93,20 @@ section records only the current high-level measured areas to avoid stale hand-m
 
 ## 2 · Technology stack & versions
 
-**Runtime & frameworks (5):** Bun `1.3.14` (runtime + bundler + test) · TypeScript `^6.0.3` (strict,
-`verbatimModuleSyntax`) · Three.js `^0.184.0` (WebGL2 renderer) · Tailwind CSS `^4.3.0` · HTMX
+**Runtime & frameworks (5):** Bun `1.3.14` (runtime + bundler + test) · TypeScript `7.0.2` (strict,
+`verbatimModuleSyntax`) · Three.js `0.185.1` (WebGL2 renderer) · Tailwind CSS `^4.3.2` · HTMX
 `^2.0.10`.
 
-**Production libraries (12):** three `^0.184.0` · mermaid `^11.15.0` · graphology `^0.26.0`
+**Production libraries (12):** three `0.185.1` · mermaid `^11.16.0` · graphology `^0.26.0`
 (+communities-louvain `^2.0.2`, +metrics `^2.4.0`) · d3-delaunay `^6.0.4` · simplex-noise `^4.0.3` ·
-simple-statistics `^7.9.0` · @noble/hashes `^2.2.0` · htmx.org `^2.0.10` · @fontsource-variable/inter
+simple-statistics `^7.9.3` · @noble/hashes `^2.2.0` · htmx.org `^2.0.10` · @fontsource-variable/inter
 `^5.2.8` · @fontsource/jetbrains-mono `^5.2.8`.
 
-**Dev tooling (10):** oxlint `^1.69.0` · prettier `^3.8.4` (+tailwind plugin) · tsc `^6.0.3` ·
+**Dev tooling (10):** oxlint `^1.73.0` · prettier `^3.9.5` (+tailwind plugin `^0.8.0`) · tsc `7.0.2` ·
 mitata `^1.0.34` (bench) · bun-plugin-tailwind `^0.1.2` · @types/{bun, three, d3-delaunay}.
 
-**22 declared dependencies resolve to 106 packages** (725 MB on disk) — a deliberately lean,
-facade-isolated tree (each dependency is behind an owned module with a documented escape route, per
+**22 declared dependencies resolve to 153 CycloneDX components** in the current frozen install graph —
+a facade-isolated tree with explicit runtime/development scopes and dependency references (see
 [ADR 0005](adr/0005-math-stack-selection-2026-06-26.md)).
 
 ---
@@ -344,7 +344,7 @@ Complexity classes are catalogued in [COMPLEXITY-2026-06-26.md](COMPLEXITY-2026-
 
 The single gate — `bun run check` — must pass before every commit:
 
-`prettier --check` → `tsc --noEmit` (strict) → `oxlint` → `bun test` (**2,360 tests, 0 fail**) →
+`prettier --check` → `tsc --noEmit` (strict) → `oxlint` → `bun test` (**2,369 tests, 0 fail**) →
 `bun scripts/build.ts`. Receipt regression guard: coverage must stay within the `verify:receipts` tolerance from the canonical **84.64% line / 82.21% func** floor; local Windows receipt runs may measure higher.
 Three governing "master" personas (`masters/*.xml`) encode the discipline: **the Executor** (finish
 everything, full gates), **the Architect** (contracts before code, exclusive ownership), **the
@@ -392,9 +392,9 @@ atmosphere 276 · reaction-diffusion 273 · phyla 264 · analytics 252 · econom
 
 ## 13 · Positioning
 
-This is a ~97.2k-line app-source (+ optional C++/Jolt native engine) browser-native simulation that
+This is a ~97.9k-line app-source (+ optional C++/Jolt native engine) browser-native simulation that
 renders **up to 50,000 agents** (10,000 at 60 fps on a laptop iGPU with zero AI accelerator), is
-**bit-reproducible from one seed**, ships through a **full CI/CD gate** (2,360 tests, 84.64% line / 82.21% func coverage),
+**bit-reproducible from one seed**, ships through a **full CI/CD gate** (2,369 tests, 84.64% line / 82.21% func coverage),
 and whose entire emergent intelligence weighs **≈ 14 MB — 1/50,000th of GPT-3** at the mega ceiling. It
 demonstrates that depth comes from **architecture,
 determinism, and engineering discipline**, not parameter count or hardware.

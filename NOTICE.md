@@ -1,4 +1,4 @@
-<!-- reviewed: 2026-07-07 | v0.21.11 truth-surface nav polish | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-07 | v0.21.12 truth-surface nav polish | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # NOTICE
 
@@ -16,7 +16,7 @@ under its own license as listed below.
 
 | Component                                                                                      | Version | License                | Copyright                                                             |
 | ---------------------------------------------------------------------------------------------- | ------- | ---------------------- | --------------------------------------------------------------------- |
-| [three](https://threejs.org)                                                                   | 0.184   | MIT                    | (c) 2010-2026 three.js authors                                        |
+| [three](https://threejs.org)                                                                   | 0.185.1 | MIT                    | (c) 2010-2026 three.js authors                                        |
 | [htmx.org](https://htmx.org)                                                                   | 2.x     | 0BSD (Zero-Clause BSD) | (c) Big Sky Software and contributors                                 |
 | [tailwindcss](https://tailwindcss.com)                                                         | 4.x     | MIT                    | (c) Tailwind Labs, Inc.                                               |
 | [mermaid](https://mermaid.js.org)                                                              | 11.x    | MIT                    | (c) Knut Sveidqvist and contributors                                  |
@@ -26,7 +26,7 @@ under its own license as listed below.
 | [graphology-metrics](https://github.com/graphology/graphology-metrics)                         | 2.4.0   | MIT                    | (c) 2016-present Guillaume Plique                                     |
 | [d3-delaunay](https://github.com/d3/d3-delaunay)                                               | 6.0.4   | ISC                    | (c) 2018-2021 Observable, Inc.; (c) 2021 Mapbox (embedded delaunator) |
 | [@noble/hashes](https://github.com/paulmillr/noble-hashes)                                     | 2.2.0   | MIT                    | (c) 2022 Paul Miller                                                  |
-| [simple-statistics](https://simple-statistics.github.io)                                       | 7.9.0   | ISC                    | (c) 2014 Tom MacWright                                                |
+| [simple-statistics](https://simple-statistics.github.io)                                       | 7.9.3   | ISC                    | (c) 2014 Tom MacWright                                                |
 
 ## Fonts (self-hosted via Fontsource)
 
@@ -44,7 +44,9 @@ by this project's proprietary license.
 The standalone lab artifact `lab/quantum-wildbeyond.html` loads
 [p5.js](https://p5js.org) (LGPL-2.1) from a public CDN at runtime. p5.js is not
 bundled, vendored, or redistributed by this project; it remains under its own
-license.
+license. The same lab requests Poppins and Lora from Google Fonts; both font
+families remain under SIL OFL 1.1 and are fetched by the visitor rather than
+redistributed in the release artifact.
 
 ## Ported / adapted algorithms and research substrates (source-level)
 

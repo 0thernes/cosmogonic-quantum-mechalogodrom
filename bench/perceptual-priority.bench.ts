@@ -112,4 +112,6 @@ group('Phase 1.3: Perceptual Priority Cascades', () => {
   });
 });
 
-run();
+if (import.meta.main) {
+  await run();
+}

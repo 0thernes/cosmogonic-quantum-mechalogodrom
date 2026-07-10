@@ -21,6 +21,28 @@ describe('UI lifecycle static contracts', () => {
     expect((code.match(/signal: this\.ac\.signal/g) ?? []).length).toBeGreaterThan(18);
   });
 
+  test('InputSystem teardown clears held state and the apocalypse timer before listeners', () => {
+    const code = src('src/ui/input.ts');
+    const start = code.indexOf('dispose(): void');
+    const end = code.indexOf('/** Live lowercase', start);
+    const dispose = code.slice(start, end);
+    expect(dispose).toContain('this.clearHeldInput()');
+    expect(dispose.indexOf('this.clearHeldInput()')).toBeLessThan(
+      dispose.indexOf('this.ac.abort()'),
+    );
+  });
+
+  test('deferred UI keeps failed modules pending and schedules a bounded retry', () => {
+    const code = src('src/main.ts');
+    expect(code).toContain('const deferredUiPending = new Set<DeferredUiModule>');
+    expect(code).toContain('deferredUiPending.delete(name)');
+    expect(code).toContain('Promise.allSettled(tasks)');
+    expect(code).toContain('deferredUiRetryTimer = window.setTimeout');
+    expect(code).toContain('DEFERRED_UI_MAX_ATTEMPTS = 3');
+    expect(code).toContain('attempts >= DEFERRED_UI_MAX_ATTEMPTS');
+    expect(code).toContain('if (deferredUiLoading || deferredUiPending.size === 0) return');
+  });
+
   test('brain slot visualizers are idempotent and accessible', () => {
     const code = src('src/ui/brain-slots.ts');
     expect(code).toContain('cqmBrainSlotsWired');

@@ -1,13 +1,13 @@
 /**
  * CANONICAL RECEIPTS -- the single source of truth for the repo's measured gate figures.
  *
- * Measured 2026-06-26 (Bun 1.3.14, cold shell); re-floored 2026-07-06 against the Ubuntu release gate
- * because Windows coverage measures higher on the same test count. Propagated to every public surface
- * and policed by `tests/docs-receipts-law.test.ts`. Dr. Manhattan's law: if it is not measured, it is not real.
+ * Count remeasured 2026-07-10 (Bun 1.3.14, tracked-only discovery); coverage remains the clean Ubuntu
+ * floor because Windows measures higher for the same suite. Propagated to every public surface and
+ * policed by `tests/docs-receipts-law.test.ts`. Dr. Manhattan's law: if it is not measured, it is not real.
  *
  * To update after adding/removing tests: `bun scripts/verify-receipts.ts --print`, paste here, re-sync.
  */
-export const CANONICAL_TEST_COUNT = 2360;
+export const CANONICAL_TEST_COUNT = 2369;
 export const CANONICAL_LINE_COV = '84.64';
 export const CANONICAL_FUNC_COV = '82.21';
 

@@ -36,6 +36,15 @@ option(CQM_WITH_JOLT  "Link Jolt Physics for rigid-body specimen dynamics" ON)
 option(CQM_WITH_IMGUI "Link Dear ImGui for an in-window debug HUD"          OFF)
 
 include(FetchContent)
+include(CTest)
+
+# Header-only APEX reproduction gate. This has no windowing/OpenGL dependency and compares the C++
+# kernels against fixed vectors emitted by the authoritative TypeScript oracle.
+if(BUILD_TESTING)
+  add_executable(cqm_apex_golden apex/apex_golden.cpp)
+  target_include_directories(cqm_apex_golden PRIVATE apex)
+  add_test(NAME cqm_apex_golden COMMAND cqm_apex_golden)
+endif()
 
 # ── GLFW (windowing/input) ───────────────────────────────────────────────────
 set(GLFW_BUILD_DOCS     OFF CACHE BOOL "" FORCE)
@@ -45,8 +54,7 @@ set(GLFW_INSTALL        OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(
   glfw
   GIT_REPOSITORY https://github.com/glfw/glfw.git
-  GIT_TAG        3.4
-  GIT_SHALLOW    TRUE
+  GIT_TAG        7b6aead9fb88b3623e3b3725ebb42670cbe4c579 # immutable peeled 3.4 commit
 )
 
 # ── GLM (math) ───────────────────────────────────────────────────────────────
@@ -59,8 +67,7 @@ set(GLM_BUILD_INSTALL OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(
   glm
   GIT_REPOSITORY https://github.com/g-truc/glm.git
-  GIT_TAG        1.0.1
-  GIT_SHALLOW    TRUE
+  GIT_TAG        0af55ccecd98d4e5a8d1fad7de25ba429d60e863 # immutable 1.0.1 tag commit
 )
 
 FetchContent_MakeAvailable(glfw glm)
@@ -87,8 +94,7 @@ if(CQM_WITH_JOLT)
   FetchContent_Declare(
     JoltPhysics
     GIT_REPOSITORY https://github.com/jrouwe/JoltPhysics.git
-    GIT_TAG        v5.2.0
-    GIT_SHALLOW    TRUE
+    GIT_TAG        a63aa3b8e24cf95f3fab2613f9a3015b164ef62c # immutable v5.2.0 tag commit
     SOURCE_SUBDIR  Build
   )
   FetchContent_MakeAvailable(JoltPhysics)
@@ -101,8 +107,7 @@ if(CQM_WITH_IMGUI)
   FetchContent_Declare(
     imgui
     GIT_REPOSITORY https://github.com/ocornut/imgui.git
-    GIT_TAG        v1.91.5
-    GIT_SHALLOW    TRUE
+    GIT_TAG        f401021d5a5d56fe2304056c391e78f81c8d4b8f # immutable v1.91.5 tag commit
   )
   FetchContent_MakeAvailable(imgui)
   target_sources(cqm_native PRIVATE
@@ -119,8 +124,16 @@ endif()
 
 if(MSVC)
   target_compile_options(cqm_native PRIVATE /W4 /permissive- /O2)
+  if(BUILD_TESTING)
+    target_compile_options(cqm_apex_golden PRIVATE /W4 /permissive- /O2)
+  endif()
 else()
-  target_compile_options(cqm_native PRIVATE -Wall -Wextra -O3 -ffast-math)
+  # Reproducibility contracts require IEEE-safe math; unsafe floating-point reassociation can
+  # invalidate finite/NaN semantics or cross-platform golden vectors.
+  target_compile_options(cqm_native PRIVATE -Wall -Wextra -O3)
+  if(BUILD_TESTING)
+    target_compile_options(cqm_apex_golden PRIVATE -Wall -Wextra -O2)
+  endif()
 endif()
 
 # MinGW: statically link the GCC/C++ runtimes so the .exe is self-contained

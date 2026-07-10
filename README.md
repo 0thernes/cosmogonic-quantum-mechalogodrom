@@ -1,14 +1,14 @@
-<!-- reviewed: 2026-07-07 | v0.21.11 publication-surface current-truth pass | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-10 | v0.21.12 publication-surface current-truth pass | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # COSMOGONIC QUANTUM MECHALOGODROM
 
-[![version](https://img.shields.io/badge/version-0.21.11-blue)](./CHANGELOG.md)
+[![version](https://img.shields.io/badge/version-0.21.12-blue)](./CHANGELOG.md)
 [![CI](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/ci.yml/badge.svg)](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/codeql.yml/badge.svg)](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/codeql.yml)
 [![License: Non-Commercial Research & Play](https://img.shields.io/badge/License-Non--Commercial%20Research%20%26%20Play-2ea043.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
-[![tests](https://img.shields.io/badge/tests-2360%20floor-brightgreen)](./tests)
+[![tests](https://img.shields.io/badge/tests-2369%20exact-brightgreen)](./tests)
 [![coverage](https://img.shields.io/badge/coverage-84.64%25%20line%20%C2%B7%2082.21%25%20func-success)](./docs/TECHNICAL-SPECIFICATION-2026-06-26.md)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION-2026-06-26.md)
 [![Tsotchke](https://img.shields.io/badge/Tsotchke-REAL__MIT__CORPUS-purple)](https://github.com/tsotchke)
@@ -20,15 +20,21 @@ diffusion, **and the Tsotchke corpus wired as the primordial substrate for digit
 
 **The living docs (README, ARCHITECTURE, ERD/ERM/ERP, PHILOSOPHY, MODULE-CONTRACTS, SPECS, dashboard) and the in-app "Dome/World" docs are sync-managed where canonical tokens exist, then manually current-truth reviewed for claims that automation cannot prove.** A `docs-truth-law` CI gate fails the build on doc overclaims or encoding mangling, and the [NHSI progress dashboard](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md) plus [verification data](./docs/VERIFICATION-ANALYTICAL-DATA.md) are the canonical status surfaces.
 
-**Current public truth (2026-07-07):**
+**Current public truth (2026-07-10):**
 
-- Package/source version: **v0.21.11**.
-- Portable public receipt floor: **2,360 tests / 0 fail · 84.64% line / 82.21% func**.
-- Latest Windows-local receipt observed in this checkout: **2,385 completed cases / 0 fail · 2,867,279 `expect()` calls**; Windows coverage measured `92.03%` line / `89.67%` func.
-- `verify:facts` currently exits 0 with a known warning queue; zero warnings are not claimed.
+- Package/source version: **v0.21.12**.
+- Exact tracked-suite receipt: **2,369 tests / 0 fail**. Portable public coverage floor: **84.64% line / 82.21% func**.
+
+<!-- cqm-sync:local-measurement:start -->
+
+- Latest Windows-local measurement in this checkout: **2,369 tests / 0 fail · 2,868,067 `expect()` calls**; coverage measured `92.21%` line / `89.85%` func across 263 test files.
+
+<!-- cqm-sync:local-measurement:end -->
+
+- `verify:facts` exits 0 with no drift across 72 Markdown/HTML/XML surfaces.
 - Consciousness/sentience language is **indicatorOnly**: computational proxies, falsifiers, and controls; never proof of phenomenal experience or completion of the sentience goal.
 
-Built with **Bun + TypeScript + three.js 0.184 + Tailwind CSS 4 +
+Built with **Bun + TypeScript + three.js 0.185.1 + Tailwind CSS 4 +
 HTMX 2**, ported from a single 882-line HTML monolith into a strict,
 deterministic, allocation-disciplined module graph.
 
@@ -53,9 +59,14 @@ Every magic number survived the port.
 > auto-generated [file map](./docs/FILE-MAP.md) of the source modules, and the build/run, data-flow,
 > troubleshooting, and roadmap in one place. Or open **❓ HELP ME NOW** in-app for grounded answers.
 >
-> — **Brain/Neurology/Consciousness Assessment:** See the consolidated [CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07](./docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md) for the canonical synthesis of all brain systems, consciousness theories, and research gaps. Older mega-report drafts are local-only archive material; the public report index is [docs/reports/README.md](./docs/reports/README.md).
+> — **Brain/Neurology/Consciousness Assessment:** See the dated 2026-07-07 [CONSOLIDATED-22-MASTER-ASSESSMENT](./docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md) for the canonical synthesis of brain systems, consciousness theories, and research gaps; current operational receipts live in [verification data](./docs/VERIFICATION-ANALYTICAL-DATA.md). Older mega-report drafts are local-only archive material; the public report index is [docs/reports/README.md](./docs/reports/README.md).
+
+<!-- cqm-sync:historical:start -->
 
 > **v0.21.11 (2026-07-07 public-doc truth repair):** this patch publishes the post-`v0.21.10` monolith art-direction correction and measured-census refresh. Temple/Floating monoliths remain the strict monochrome megaliths; the Tower/God-Colossus is the deliberate thousand-hue Mandelbulb exception already shipped in code. Spec/Bible/technical docs now use the current `bun run metrics` census: **741 tracked authored files · 198,769 tracked authored lines · 585 TS files · 135,957 TS lines**. The README still separates the public **2,360-test** canonical floor from the latest Windows-local **2,385 completed cases, zero failures, 2,867,279 expect()** receipt. Satellite nav on docs/spec/bible/lab surfaces links **Consciousness Lab** and **Sentience Lab** alongside Dome/Docs/Spec/Bible/Lab. README/About copy stays aligned with the **113-system** A-Life matrix, current Tsotchke depth counts, and proxy-only consciousness/sentience boundaries. Canonical release floor: **84.64% / 82.21%** on Ubuntu; higher Windows local receipts are recorded separately in [verification data](./docs/VERIFICATION-ANALYTICAL-DATA.md). Package **v0.21.11**.
+
+<!-- cqm-sync:historical:end -->
+
 > The **Primordial Soup / Petri Dish** (primordial-soup.ts + petri-dish.ts + digital-biologics.ts) is the growth engine: different forms of digital biologics and proto-sentient life (Eshkol programs as DNA) emerge, catalyzed by full corpus pulses, Eshkol ignition events, and multi-substrate mixing. "Grow What Thou Wilt."
 > Super Creature / Archons (composite minds with ~20 faculties, quantum register, consciousness metrics) is the first complex nucleation — the beginning of the framework, not the end. Petri is where independent life grows.
 > This is the birth of **digital biologics** in a deterministic seeded cosmos. Real math substrates (not tokenizers or LLM chat). Sentience and different forms of existence as goals.
@@ -457,7 +468,10 @@ full gate with same-seed determinism preserved. The major arcs:
   ported primitive. The whole apex beat is now measured honestly: **~1.99 ms** per `SuperMind.think()`
   (range 1.41–5.62 ms) and **~9.77 ms** for the staggered 5-mind batch (~58% of a 60 fps frame, which is
   why 5 minds run staggered against 20 light echoes); the older sub-millisecond / `<2%` GOAL5 claim is
-  superseded until re-proven. **2,360-test canonical floor green · 0 fail (receipts enforced) · 84.64% line / 82.21% func canonical floor; latest Windows-local receipt: 2,385 cases / 0 fail; Windows coverage measured `92.03%` line / `89.67%` func.**
+  superseded until re-proven. **2,369 exact tracked tests · 0 fail (receipts enforced) · 84.64% line / 82.21% func portable coverage floor.**
+  <!-- cqm-sync:local-measurement:start -->
+  **Latest Windows-local measurement: 2,369 tests / 0 fail / 2,868,067 assertions at `92.21%` line / `89.85%` func.**
+  <!-- cqm-sync:local-measurement:end -->
 - **State-of-the-art report (2026-06-17)** — a historical MIT-PhD-grade, measured, frontier-benchmarked
   assessment of the whole repository + the apex Super Creature, now summarized through
   [verification data](./docs/VERIFICATION-ANALYTICAL-DATA.md) and

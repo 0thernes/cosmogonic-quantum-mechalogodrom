@@ -397,9 +397,28 @@ const MAX_MESSAGES = 24;
 /** Brief pause between failover attempts when the previous provider was rate-limited (429). */
 const RATE_LIMIT_COOLDOWN_MS = 800;
 
-/** Resolve after `ms` milliseconds (used to pause between rate-limited failover attempts). */
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+/** Whole-turn wall-clock ceiling across provider failover and model/tool round-trips. */
+export const AGENT_TURN_DEADLINE_MS = 75_000;
+
+/** Maximum provider slots attempted by one user turn. */
+export const MAX_PROVIDER_ATTEMPTS = 3;
+
+/** Resolve after `ms`, or reject promptly when the containing turn is cancelled. */
+function sleep(ms: number, signal: AbortSignal): Promise<void> {
+  if (signal.aborted) return Promise.reject(new Error('agent turn cancelled'));
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(done, ms);
+    function done(): void {
+      signal.removeEventListener('abort', aborted);
+      resolve();
+    }
+    function aborted(): void {
+      clearTimeout(timer);
+      signal.removeEventListener('abort', aborted);
+      reject(new Error('agent turn cancelled'));
+    }
+    signal.addEventListener('abort', aborted, { once: true });
+  });
 }
 
 /** A chat message in the OpenAI wire shape (the subset we send/receive). */
@@ -435,6 +454,16 @@ export interface AgentResult {
   provider: string;
 }
 
+/** Optional cancellation/test bounds for one {@link runAgent} call. */
+export interface RunAgentOptions {
+  /** Caller cancellation, normally the incoming HTTP request signal. */
+  signal?: AbortSignal;
+  /** Whole-turn deadline; clamped to {@link AGENT_TURN_DEADLINE_MS}. */
+  deadlineMs?: number;
+  /** Provider attempts; clamped to {@link MAX_PROVIDER_ATTEMPTS}. */
+  maxProviderAttempts?: number;
+}
+
 /** Build the standing system prompt with the boot-scanned corpus manifest (RAG index). */
 function buildSystemPrompt(): string {
   const { manifest, count } = corpusManifestSync();
@@ -456,9 +485,13 @@ ${WEB_CONSTITUTION}`;
 async function chatCompletion(
   prov: ResolvedProvider,
   messages: ChatMessage[],
+  turnSignal: AbortSignal,
 ): Promise<ChatMessage> {
   if (!prov.endpoint) throw new Error('no provider configured');
   const ctrl = new AbortController();
+  const abortFromTurn = (): void => ctrl.abort();
+  if (turnSignal.aborted) ctrl.abort();
+  else turnSignal.addEventListener('abort', abortFromTurn, { once: true });
   const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
   try {
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -487,6 +520,7 @@ async function chatCompletion(
     return { role: 'assistant', content: msg.content ?? '', tool_calls: msg.tool_calls };
   } finally {
     clearTimeout(timer);
+    turnSignal.removeEventListener('abort', abortFromTurn);
   }
 }
 
@@ -529,15 +563,18 @@ async function runLoop(
   prov: ResolvedProvider,
   history: ChatMessage[],
   steps: ToolStep[],
+  signal: AbortSignal,
 ): Promise<string> {
   const trimmed = history.slice(-MAX_MESSAGES).filter((m) => m.role !== 'system');
   const messages: ChatMessage[] = [{ role: 'system', content: buildSystemPrompt() }, ...trimmed];
   for (let step = 0; step < MAX_STEPS; step++) {
-    const msg = await chatCompletion(prov, messages);
+    if (signal.aborted) throw new Error('agent turn cancelled');
+    const msg = await chatCompletion(prov, messages, signal);
     const calls = msg.tool_calls ?? [];
     if (calls.length === 0) return msg.content || '(no answer)';
     messages.push({ role: 'assistant', content: msg.content ?? '', tool_calls: calls });
     for (const call of calls) {
+      if (signal.aborted) throw new Error('agent turn cancelled');
       const args = parseArgs(call.function.arguments);
       const result = await dispatchTool(call.function.name, args);
       const output = result.ok ? result.output : `ERROR: ${result.error}`;
@@ -553,13 +590,17 @@ async function runLoop(
       });
     }
   }
-  const fin = await chatCompletion(prov, [
-    ...messages,
-    {
-      role: 'user',
-      content: 'Now give your final answer using what you gathered. Do not call more tools.',
-    },
-  ]);
+  const fin = await chatCompletion(
+    prov,
+    [
+      ...messages,
+      {
+        role: 'user',
+        content: 'Now give your final answer using what you gathered. Do not call more tools.',
+      },
+    ],
+    signal,
+  );
   return fin.content || '(no answer)';
 }
 
@@ -598,12 +639,17 @@ export function providerRecoveryPlan(): { id: string; label: string; keyed: bool
 }
 
 /**
- * Run one user turn. Tries the chosen provider first, then FAILS OVER through every other available
- * provider (key-less first) until one answers — so one dead/rate-limited endpoint no longer kills the
- * chat. Every tool call passes the ai-sandbox gate. Never throws to the route.
+ * Execute one bounded user turn. The caller owns the wall-clock timer and cancellation result; this
+ * worker stops provider failover at `attemptLimit` and propagates the shared abort signal through every
+ * model request. Every tool call still passes the default-deny ai-sandbox gate.
  */
-export async function runAgent(history: ChatMessage[], providerId?: string): Promise<AgentResult> {
-  const steps: ToolStep[] = [];
+async function runAgentWithinBounds(
+  history: ChatMessage[],
+  providerId: string | undefined,
+  steps: ToolStep[],
+  signal: AbortSignal,
+  attemptLimit: number,
+): Promise<AgentResult> {
   const chosen = resolveProvider(providerId);
   const order: ResolvedProvider[] = [];
   const seen = new Set<string>();
@@ -622,17 +668,18 @@ export async function runAgent(history: ChatMessage[], providerId?: string): Pro
 
   let lastErr: unknown = null;
   let lastWas429 = false;
-  for (let i = 0; i < order.length; i++) {
+  for (let i = 0; i < order.length && i < attemptLimit; i++) {
+    if (signal.aborted) break;
     const prov = order[i];
     if (!prov) continue;
     // If the previous provider was rate-limited (429), pause briefly before trying the next one.
     // This gives the rate-limit window a moment to reset — without it, rapid-fire attempts cascade
     // 429s across providers that share IP-based limits. Connection-refused (FreeLLMAPI not running)
     // does NOT trigger the delay (lastWas429 stays false).
-    if (lastWas429) await sleep(RATE_LIMIT_COOLDOWN_MS);
-    lastWas429 = false;
     try {
-      const reply = await runLoop(prov, history, steps);
+      if (lastWas429) await sleep(RATE_LIMIT_COOLDOWN_MS, signal);
+      lastWas429 = false;
+      const reply = await runLoop(prov, history, steps, signal);
       // Suppress the failover note when the only thing skipped was the IMPLICIT FreeLLMAPI proxy (not
       // running) → the key-less backup answering is the expected default out of the box, not an error.
       // But if the user EXPLICITLY picked a provider (providerId set), always show the note so they know
@@ -651,16 +698,90 @@ export async function runAgent(history: ChatMessage[], providerId?: string): Pro
       };
     } catch (e) {
       lastErr = e;
+      if (signal.aborted) break;
       const msg = e instanceof Error ? e.message : String(e);
       lastWas429 = /\b429\b/.test(msg);
     }
   }
+  const failure = signal.aborted
+    ? 'agent turn deadline or request cancellation reached'
+    : lastErr instanceof Error
+      ? lastErr.message
+      : String(lastErr ?? 'provider attempt limit reached');
+  const safeFailure = redactSecrets(failure).slice(0, 400);
   return {
     ok: false,
-    reply: `Every available AI provider was unreachable (${lastErr instanceof Error ? lastErr.message : String(lastErr)}). It may be rate-limited or disabled — try again shortly, or pick another provider in the header. Tip: set any one free API key (e.g. GROQ_API_KEY, GEMINI_API_KEY, or SAMBANOVA_API_KEY) for reliable, non-rate-limited answers — see docs/COPILOT-PROVIDERS-2026-06-26.md.`,
+    reply: `No AI provider answered within this turn's bounded recovery window (${safeFailure}). It may be rate-limited or disabled — try again shortly, or pick another provider in the header. Tip: set any one free API key (e.g. GROQ_API_KEY, GEMINI_API_KEY, or SAMBANOVA_API_KEY) for reliable answers — see docs/COPILOT-PROVIDERS-2026-06-26.md.`,
     steps,
     provider: order[0] ? `${order[0].model} @ ${safeHost(order[0].endpoint)}` : 'none',
   };
+}
+
+/**
+ * Run one user turn with a hard wall-clock deadline and a bounded provider failover budget. The
+ * optional bounds can only REDUCE the production ceilings, which keeps tests/callers from expanding
+ * resource use. Never throws to the route.
+ */
+export async function runAgent(
+  history: ChatMessage[],
+  providerId?: string,
+  options: RunAgentOptions = {},
+): Promise<AgentResult> {
+  const deadlineMs = Number.isFinite(options.deadlineMs)
+    ? Math.min(AGENT_TURN_DEADLINE_MS, Math.max(1, Math.floor(options.deadlineMs!)))
+    : AGENT_TURN_DEADLINE_MS;
+  const attemptLimit = Number.isFinite(options.maxProviderAttempts)
+    ? Math.min(MAX_PROVIDER_ATTEMPTS, Math.max(1, Math.floor(options.maxProviderAttempts!)))
+    : MAX_PROVIDER_ATTEMPTS;
+  const steps: ToolStep[] = [];
+  const ctrl = new AbortController();
+  let deadlineExpired = false;
+  const abortFromCaller = (): void => ctrl.abort();
+  if (options.signal?.aborted) ctrl.abort();
+  else options.signal?.addEventListener('abort', abortFromCaller, { once: true });
+
+  const chosen = resolveProvider(providerId);
+  const cancelledResult = (): AgentResult => ({
+    ok: false,
+    reply: deadlineExpired
+      ? `The AI turn exceeded its ${deadlineMs} ms deadline and was cancelled. Try again shortly or choose another provider.`
+      : 'The AI turn was cancelled because its client disconnected.',
+    steps: [...steps],
+    provider: chosen.endpoint ? `${chosen.model} @ ${safeHost(chosen.endpoint)}` : 'none',
+  });
+
+  if (ctrl.signal.aborted) {
+    options.signal?.removeEventListener('abort', abortFromCaller);
+    return cancelledResult();
+  }
+
+  let resolveCancellation: ((result: AgentResult) => void) | null = null;
+  const cancellation = new Promise<AgentResult>((resolve) => {
+    resolveCancellation = resolve;
+  });
+  const onAbort = (): void => resolveCancellation?.(cancelledResult());
+  ctrl.signal.addEventListener('abort', onAbort, { once: true });
+  const timer = setTimeout(() => {
+    deadlineExpired = true;
+    ctrl.abort();
+  }, deadlineMs);
+
+  const work = runAgentWithinBounds(history, providerId, steps, ctrl.signal, attemptLimit).catch(
+    (error: unknown): AgentResult => ({
+      ok: false,
+      reply: `The AI turn failed safely (${redactSecrets(error instanceof Error ? error.message : String(error))}).`,
+      steps: [...steps],
+      provider: chosen.endpoint ? `${chosen.model} @ ${safeHost(chosen.endpoint)}` : 'none',
+    }),
+  );
+
+  try {
+    return await Promise.race([work, cancellation]);
+  } finally {
+    clearTimeout(timer);
+    ctrl.signal.removeEventListener('abort', onAbort);
+    options.signal?.removeEventListener('abort', abortFromCaller);
+  }
 }
 
 /** The active default-provider label, for the UI to show on boot. */

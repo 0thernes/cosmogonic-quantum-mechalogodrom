@@ -34,9 +34,93 @@ interface AgentResult {
   provider: string;
 }
 type ToolResult = { ok: true; output: string; truncated?: boolean } | { ok: false; error: string };
-interface Msg {
+export interface CopilotMessage {
   role: 'user' | 'assistant';
   content: string;
+}
+type Msg = CopilotMessage;
+
+/** Maximum content retained for one user/assistant message. Mirrors the server-side cap. */
+export const COPILOT_MAX_MESSAGE_CHARS = 32 * 1024;
+
+/** Maximum messages retained client-side and sent on the next turn. */
+export const COPILOT_MAX_HISTORY_MESSAGES = 24;
+
+/** Total UTF-16 characters retained; even worst-case JSON escapes stay below the server byte cap. */
+export const COPILOT_MAX_HISTORY_CHARS = 40 * 1024;
+
+/** Maximum top-level transcript nodes retained in the panel. */
+export const COPILOT_MAX_TRANSCRIPT_NODES = 200;
+
+/** Maximum text rendered into one transcript message node. */
+export const COPILOT_MAX_RENDERED_CHARS = 64 * 1024;
+
+/** Hard ceiling for a browser request; the server agent has a slightly shorter whole-turn deadline. */
+export const COPILOT_REQUEST_TIMEOUT_MS = 80_000;
+
+const COPILOT_AUX_REQUEST_TIMEOUT_MS = 20_000;
+const COPILOT_STATIC_MODEL_TIMEOUT_MS = 12_000;
+
+/** Append one bounded history entry, evicting oldest context by both message count and total size. */
+export function appendCopilotHistory(history: CopilotMessage[], message: CopilotMessage): void {
+  const safeMessage = {
+    role: message.role,
+    content: message.content.slice(0, COPILOT_MAX_MESSAGE_CHARS),
+  };
+  history.push(safeMessage);
+  let totalChars = history.reduce((sum, item) => sum + item.content.length, 0);
+  while (
+    history.length > 1 &&
+    (history.length > COPILOT_MAX_HISTORY_MESSAGES || totalChars > COPILOT_MAX_HISTORY_CHARS)
+  ) {
+    totalChars -= history.shift()?.content.length ?? 0;
+  }
+}
+
+export interface TranscriptRoot {
+  readonly childElementCount: number;
+  readonly firstElementChild: { remove(): void } | null;
+}
+
+/** Evict oldest top-level transcript nodes until the DOM retention ceiling is satisfied. */
+export function trimCopilotTranscript(root: TranscriptRoot): void {
+  while (root.childElementCount > COPILOT_MAX_TRANSCRIPT_NODES) {
+    const oldest = root.firstElementChild;
+    if (!oldest) break;
+    oldest.remove();
+  }
+}
+
+/**
+ * Fetch with a real wall-clock timeout even when a test/polyfill ignores AbortSignal. Caller-provided
+ * signals are forwarded, and requested timeouts can only reduce the production ceiling.
+ */
+export async function copilotFetch(
+  input: RequestInfo | URL,
+  init: RequestInit = {},
+  timeoutMs: number = COPILOT_REQUEST_TIMEOUT_MS,
+): Promise<Response> {
+  const boundedTimeout = Number.isFinite(timeoutMs)
+    ? Math.min(COPILOT_REQUEST_TIMEOUT_MS, Math.max(1, Math.floor(timeoutMs)))
+    : COPILOT_REQUEST_TIMEOUT_MS;
+  if (init.signal?.aborted) throw new Error('Copilot request cancelled');
+
+  const ctrl = new AbortController();
+  const abortFromCaller = (): void => ctrl.abort();
+  init.signal?.addEventListener('abort', abortFromCaller, { once: true });
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  const timeout = new Promise<never>((_resolve, reject) => {
+    timer = setTimeout(() => {
+      ctrl.abort();
+      reject(new Error(`Copilot request timed out after ${boundedTimeout} ms`));
+    }, boundedTimeout);
+  });
+  try {
+    return await Promise.race([fetch(input, { ...init, signal: ctrl.signal }), timeout]);
+  } finally {
+    if (timer !== null) clearTimeout(timer);
+    init.signal?.removeEventListener('abort', abortFromCaller);
+  }
 }
 
 /**
@@ -110,11 +194,15 @@ async function askStaticAi(history: readonly Msg[], preferredModel?: string): Pr
   for (const m of STATIC_AI_MODELS) if (!order.includes(m)) order.push(m);
   for (const model of order) {
     try {
-      const res = await fetch(LLM7_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model, messages }),
-      });
+      const res = await copilotFetch(
+        LLM7_URL,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model, messages }),
+        },
+        COPILOT_STATIC_MODEL_TIMEOUT_MS,
+      );
       if (!res.ok) {
         lastErr = `llm7 ${res.status}`;
         continue;
@@ -156,15 +244,19 @@ async function probeStaticAi(): Promise<StaticProbe[]> {
     let status = 0;
     let errMsg = '';
     try {
-      const res = await fetch(LLM7_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model,
-          messages: [{ role: 'user', content: 'ping' }],
-          max_tokens: 1,
-        }),
-      });
+      const res = await copilotFetch(
+        LLM7_URL,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model,
+            messages: [{ role: 'user', content: 'ping' }],
+            max_tokens: 1,
+          }),
+        },
+        COPILOT_STATIC_MODEL_TIMEOUT_MS,
+      );
       status = res.status;
       await res.text().catch(() => ''); // drain so the socket frees
     } catch (e) {
@@ -253,7 +345,7 @@ async function enrichServerProviders(
   let healthMap = new Map<string, ProviderHealth>();
   let healthDefault = '';
   try {
-    const res = await fetch('/api/copilot/health');
+    const res = await copilotFetch('/api/copilot/health', {}, COPILOT_AUX_REQUEST_TIMEOUT_MS);
     const d = (await res.json()) as HealthResult;
     if (d.providers?.length) {
       healthMap = new Map(d.providers.map((p) => [p.id, p]));
@@ -500,6 +592,7 @@ function mount(): void {
   const input = document.createElement('textarea');
   input.placeholder = 'Ask about the cosmos… or /help';
   input.setAttribute('aria-label', 'Message the Copilot');
+  input.maxLength = COPILOT_MAX_MESSAGE_CHARS;
   const send = document.createElement('button');
   send.className = 'cqm-cop-send';
   send.type = 'button';
@@ -560,8 +653,12 @@ function mount(): void {
   const addMsg = (cls: string, text: string): HTMLElement => {
     const el = document.createElement('div');
     el.className = `cqm-cop-msg ${cls}`;
-    el.textContent = text;
+    el.textContent =
+      text.length > COPILOT_MAX_RENDERED_CHARS
+        ? `${text.slice(0, COPILOT_MAX_RENDERED_CHARS)}\n…`
+        : text;
     logEl.appendChild(el);
+    trimCopilotTranscript(logEl);
     scroll();
     return el;
   };
@@ -583,6 +680,7 @@ function mount(): void {
     pre.textContent = step.output.length > 4000 ? step.output.slice(0, 4000) + '\n…' : step.output;
     wrap.append(label, pre);
     logEl.appendChild(wrap);
+    trimCopilotTranscript(logEl);
     scroll();
   };
 
@@ -616,11 +714,15 @@ function mount(): void {
     }
     setBusy(true);
     try {
-      const res = await fetch('/api/tool', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tool: m.tool, args: { [m.key]: rest } }),
-      });
+      const res = await copilotFetch(
+        '/api/tool',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tool: m.tool, args: { [m.key]: rest } }),
+        },
+        COPILOT_AUX_REQUEST_TIMEOUT_MS,
+      );
       // No Bun server (static GitHub Pages) → the read-only sandbox doesn't exist here. Say so
       // clearly instead of throwing "Unexpected token <" on the 404 HTML. Freeform questions still
       // work (they call LLM7 directly from the browser); only the repo tools need `bun dev`.
@@ -648,11 +750,11 @@ function mount(): void {
   }
 
   async function ask(text: string): Promise<void> {
-    history.push({ role: 'user', content: text });
+    appendCopilotHistory(history, { role: 'user', content: text });
     setBusy(true);
     const thinking = addMsg('cqm-cop-sys', 'thinking…');
     try {
-      const res = await fetch('/api/chat', {
+      const res = await copilotFetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: history, provider: selectedProvider || undefined }),
@@ -668,7 +770,7 @@ function mount(): void {
           const reply = await askStaticAi(history, sel.value || selectedProvider || undefined);
           thinking.remove();
           addMsg('cqm-cop-ai', reply);
-          history.push({ role: 'assistant', content: reply });
+          appendCopilotHistory(history, { role: 'assistant', content: reply });
           if (!prov.textContent.includes('online'))
             prov.textContent = `llm7 · ${sel.value || 'static'}`;
         } catch {
@@ -685,7 +787,7 @@ function mount(): void {
       thinking.remove();
       for (const step of data.steps ?? []) addTool(step);
       addMsg('cqm-cop-ai', data.reply || '(no answer)');
-      history.push({ role: 'assistant', content: data.reply || '' });
+      appendCopilotHistory(history, { role: 'assistant', content: data.reply || '' });
       // Reflect which free LLM actually served this turn (makes a failover visible).
       if (data.provider) prov.textContent = data.provider;
       // Every provider failed → point the user at the diagnostics + recovery pipeline.
@@ -717,9 +819,10 @@ function mount(): void {
     h.textContent = '🩺 AI DIAGNOSTICS — probing providers…';
     card.appendChild(h);
     logEl.appendChild(card);
+    trimCopilotTranscript(logEl);
     scroll();
     try {
-      const res = await fetch('/api/copilot/health');
+      const res = await copilotFetch('/api/copilot/health', {}, COPILOT_AUX_REQUEST_TIMEOUT_MS);
       const d = (await res.json()) as HealthResult;
       card.replaceChildren();
       const h2 = document.createElement('h4');
@@ -822,7 +925,7 @@ function mount(): void {
 
   const submit = (): void => {
     if (busy) return;
-    const text = input.value.trim();
+    const text = input.value.trim().slice(0, COPILOT_MAX_MESSAGE_CHARS);
     if (!text) return;
     input.value = '';
     if (text.startsWith('/')) {
@@ -848,7 +951,7 @@ function mount(): void {
         'cqm-cop-sys',
         'Copilot online. I can read this repo and run read-only commands to answer questions about the cosmos and its code — but I can never change anything. Note: messages are sent to a free external AI.',
       );
-      fetch('/api/copilot')
+      copilotFetch('/api/copilot', {}, COPILOT_AUX_REQUEST_TIMEOUT_MS)
         .then((r) => {
           if (!r.ok) throw new Error(`HTTP ${r.status}`);
           return r.json() as Promise<{
@@ -938,7 +1041,7 @@ function mount(): void {
   });
 
   // Pre-populate provider list so OPTIONS shows models before first open (static + server).
-  void fetch('/api/copilot')
+  void copilotFetch('/api/copilot', {}, COPILOT_AUX_REQUEST_TIMEOUT_MS)
     .then(
       (r) =>
         r.json() as Promise<{
@@ -965,5 +1068,3 @@ if (typeof document !== 'undefined') {
     mount();
   }
 }
-
-export {};

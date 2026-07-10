@@ -11,7 +11,7 @@
  * - Supports SharedArrayBuffer for zero-copy where available
  */
 
-import { mulberry32, hashSeed } from '../math/rng';
+import { simulateWildernessData } from '../sim/wilderness-population';
 
 const workerSelf = self as unknown as {
   postMessage(message: WorkerResponse, transfer?: Transferable[]): void;
@@ -22,7 +22,9 @@ export interface WorkerMessage {
   type: 'simulation' | 'wilderness';
   data: Float32Array;
   seed: number;
+  dt: number;
   chunkId?: string;
+  generation: number;
   useSharedArrayBuffer: boolean;
 }
 
@@ -31,38 +33,8 @@ export interface WorkerResponse {
   type: 'simulation' | 'wilderness';
   data: Float32Array;
   success: boolean;
+  generation: number;
   error?: string;
-}
-
-/**
- * Simple simulation kernel for wilderness entities
- *
- * This is a placeholder implementation that will be extended with
- * actual brain evaluation logic. For now, it performs basic
- * position updates to demonstrate the worker infrastructure.
- */
-function simulateWilderness(data: Float32Array, seed: number, chunkId: string): Float32Array {
-  const rng = mulberry32(seed ^ hashSeed(chunkId));
-  const STRIDE = 8;
-  const dt = 1 / 60;
-
-  for (let i = 0; i + STRIDE <= data.length; i += STRIDE) {
-    let vx = data[i + 3] ?? 0;
-    let vy = data[i + 4] ?? 0;
-    let vz = data[i + 5] ?? 0;
-    const pulse = rng();
-    vx += (pulse - 0.5) * 0.04;
-    vy += (rng() - 0.5) * 0.02;
-    vz += (rng() - 0.5) * 0.04;
-    data[i] = (data[i] ?? 0) + vx * dt;
-    data[i + 1] = (data[i + 1] ?? 0) + vy * dt;
-    data[i + 2] = (data[i + 2] ?? 0) + vz * dt;
-    data[i + 3] = vx * 0.985;
-    data[i + 4] = vy * 0.985;
-    data[i + 5] = vz * 0.985;
-  }
-
-  return data;
 }
 
 /**
@@ -75,7 +47,12 @@ self.onmessage = (event: MessageEvent<WorkerMessage>) => {
     let result: Float32Array;
 
     if (message.type === 'wilderness') {
-      result = simulateWilderness(message.data, message.seed, message.chunkId || 'default');
+      result = simulateWildernessData(
+        message.data,
+        message.seed,
+        message.chunkId || '0,0',
+        message.dt,
+      );
     } else {
       // Simulation type - placeholder
       result = new Float32Array(message.data);
@@ -86,6 +63,7 @@ self.onmessage = (event: MessageEvent<WorkerMessage>) => {
       type: message.type,
       data: result,
       success: true,
+      generation: message.generation,
     };
 
     // Send response with transferable buffer
@@ -103,6 +81,7 @@ self.onmessage = (event: MessageEvent<WorkerMessage>) => {
       type: message.type,
       data: new Float32Array(0),
       success: false,
+      generation: message.generation,
       error: error instanceof Error ? error.message : String(error),
     };
 

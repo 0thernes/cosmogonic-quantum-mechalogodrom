@@ -12,6 +12,18 @@ import type { AuditEntry } from '../types';
 /** localStorage key. Versioned so future shape changes can re-key cleanly. */
 const STORAGE_KEY = 'cqm.audit.v1';
 
+/** Default number of audit entries retained by one trail. */
+const DEFAULT_MAX = 200;
+
+/** Hard ceiling for caller-configured audit retention. */
+const MAX_CONFIGURED_ENTRIES = 1_000;
+
+/** Normalize an optional capacity to a finite integer inside the documented resource ceiling. */
+function normalizedMax(value: number | undefined): number {
+  if (value === undefined || !Number.isFinite(value)) return DEFAULT_MAX;
+  return Math.min(MAX_CONFIGURED_ENTRIES, Math.max(1, Math.floor(value)));
+}
+
 /**
  * Resolve localStorage at call time (test shims patch `globalThis` after
  * module load); null when unavailable or when access itself throws (some
@@ -58,7 +70,7 @@ export class AuditTrail {
    */
   constructor(opts?: { endpoint?: string; max?: number }) {
     this.endpoint = opts?.endpoint ?? '/api/audit';
-    this.max = Math.max(1, Math.floor(opts?.max ?? 200));
+    this.max = normalizedMax(opts?.max);
     this.restore();
   }
 
@@ -126,14 +138,15 @@ export class AuditTrail {
     if (!Array.isArray(parsed)) {
       return;
     }
-    for (const blob of parsed) {
+    // Validate only the newest retainable window. A corrupt/old oversized array must not make boot
+    // walk thousands of entries that will be discarded immediately afterward.
+    const start = Math.max(0, parsed.length - this.max);
+    for (let i = start; i < parsed.length; i++) {
+      const blob = parsed[i];
       const entry = toEntry(blob);
       if (entry) {
         this.buf.push(entry);
       }
-    }
-    if (this.buf.length > this.max) {
-      this.buf.splice(0, this.buf.length - this.max);
     }
   }
 

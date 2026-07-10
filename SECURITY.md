@@ -1,4 +1,4 @@
-<!-- reviewed: 2026-07-07 | v0.21.11 truth-surface nav polish | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-07 | v0.21.12 truth-surface nav polish | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # Security Policy
 
@@ -51,12 +51,14 @@ The dev server is meant for `localhost`. If you expose it:
    the app uses behave better in secure contexts anyway.
 4. **`nosniff` + `Referrer-Policy: no-referrer` are now built in** on every
    response the server constructs (the JSON API + the `GET /api/audit` HTML
-   fragment). Still **add a CSP** for a public deploy — the app needs
-   `script-src 'self'`, `style-src 'self'`, and `connect-src 'self'
-https://api.llm7.io` (the keyless default the optional ✦ AI side-chat calls
-   from the browser; add any other free-LLM origins you enable in the picker).
-   Scripts, styles, and fonts are self-hosted (fonts via Fontsource), so that
-   LLM endpoint is the **only** third-party origin the app reaches at runtime.
+   fragment). Still **add and test a CSP** for a public deploy. The main Dome,
+   Docs, Spec, and Bible surfaces self-host scripts/styles/fonts; their optional
+   ✦ AI side-chat needs `connect-src 'self' https://api.llm7.io` plus any other
+   provider origins enabled in the picker. The standalone Wildbeyond lab also
+   loads SRI-pinned p5.js from `https://cdnjs.cloudflare.com` and Poppins/Lora
+   CSS/font files from `https://fonts.googleapis.com` and
+   `https://fonts.gstatic.com`; either self-host those assets or include those
+   exact origins in the lab-specific `script-src`, `style-src`, and `font-src`.
    Treat the side-chat as public — it sends the user's prompt to that
    third-party model, so do not paste secrets into it. CSP + `X-Frame-Options`
    are left to the deploy layer because they can break the bundled shell / an

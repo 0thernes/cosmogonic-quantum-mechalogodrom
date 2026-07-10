@@ -26,17 +26,17 @@ physics, screenshot export).
 
 ### Stack (best-in-class, self-provisioning)
 
-| Concern         | Choice                                                               | Rationale                                                         |
-| --------------- | -------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| Language        | **C++20**                                                            | The mandated core; modern, fast, RAII.                            |
-| Build           | **CMake + FetchContent**                                             | A fresh checkout builds with only a C++20 compiler + CMake + Git. |
-| Windowing       | **GLFW 3.4**                                                         | Industry-standard; FetchContent, links Win32/Cocoa/X11.           |
-| Math            | **GLM 1.0.1**                                                        | GLSL-style vec/quat/mat; header-only (`GLM_BUILD_LIBRARY OFF`).   |
-| GL loading      | hand-rolled 3.3-core loader (`gl_core.*`)                            | X-macro; **no Python/glad codegen step** → reliable build.        |
-| Rendering       | **OpenGL 3.3** SDF ray-marcher (one frag shader)                     | Carries far more ornate 4K detail than meshes; no texture assets. |
-| Physics         | **built-in impulse rigid-body** (`physics.h`), **active by default** | Guarantees live dynamics with zero external-fetch risk.           |
-| Physics (heavy) | **Jolt Physics 5.2** (`-DCQM_WITH_JOLT`)                             | Shipping-AAA (Horizon Forbidden West) backend upgrade.            |
-| Debug HUD       | **Dear ImGui 1.91** (`-DCQM_WITH_IMGUI`)                             | Optional in-window inspection.                                    |
+| Concern          | Choice                                                           | Rationale                                                         |
+| ---------------- | ---------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Language         | **C++20**                                                        | The mandated core; modern, fast, RAII.                            |
+| Build            | **CMake + FetchContent**                                         | A fresh checkout builds with only a C++20 compiler + CMake + Git. |
+| Windowing        | **GLFW 3.4**                                                     | Industry-standard; FetchContent, links Win32/Cocoa/X11.           |
+| Math             | **GLM 1.0.1**                                                    | GLSL-style vec/quat/mat; header-only (`GLM_BUILD_LIBRARY OFF`).   |
+| GL loading       | hand-rolled 3.3-core loader (`gl_core.*`)                        | X-macro; **no Python/glad codegen step** → reliable build.        |
+| Rendering        | **OpenGL 3.3** SDF ray-marcher (one frag shader)                 | Carries far more ornate 4K detail than meshes; no texture assets. |
+| Physics          | **Jolt Physics 5.2**, **active by default** (`CQM_WITH_JOLT=ON`) | Shipping-AAA rigid bodies, fracture, mass, and inertia.           |
+| Physics fallback | **built-in impulse rigid-body** (`-DCQM_WITH_JOLT=OFF`)          | Zero-extra-fetch deterministic fallback.                          |
+| Debug HUD        | **Dear ImGui 1.91** (`-DCQM_WITH_IMGUI`)                         | Optional in-window inspection.                                    |
 
 ### Toolchain provisioning
 
@@ -45,14 +45,14 @@ No compiler existed on the build machine (only CMake — no MSVC/LLVM/MinGW/SDK)
 GL app standalone, statically linked into a portable `cqm_native.exe`. (See [[native-engine-build]]
 memory + `../AUDIT-LOG.md` for paths.)
 
-### Physics is ACTIVE, not optional
+### Physics is active on both backends
 
-The earlier "Jolt wired behind a flag" was judged insufficient — physics must be **live**. So the
-built-in solver (`native/src/physics.h`) runs **every frame by default** and its transforms ARE what
+The earlier "Jolt wired behind a flag" was judged insufficient — physics must be **live**. The
+built-in solver (`native/src/physics.h`) established that contract first and its transforms ARE what
 the ray-marcher draws: each specimen is a rigid body in a harmonic gravity well, integrating linear +
 quaternion-angular state, resolving sphere-sphere collisions (restitution + positional correction +
-friction-induced spin), confined to a spherical case, damping into a churning cluster. Jolt remains
-the opt-in heavyweight backend for fracture/mass/inertia/crowd scale.
+friction-induced spin), confined to a spherical case, damping into a churning cluster. Since V18,
+Jolt is the default backend; the built-in solver remains the explicitly tested no-extra-fetch fallback.
 
 ## Consequences
 
@@ -61,12 +61,15 @@ the opt-in heavyweight backend for fracture/mass/inertia/crowd scale.
 - **+** The web app is untouched and still passes its full gate (published floor 2,360 tests).
 - **−** Two render codebases to keep in aesthetic sync (the GLSL jewel BRDF is intentionally mirrored
   in both `src/sim/instanced-entities.ts` and `native/src/shaders.h`).
-- **−** The native target is not yet in CI (local-build + offscreen-capture verification for now).
+- **+** CI compiles the Jolt default and built-in fallback, runs CTest, and checks native APEX vectors
+  against the current TypeScript oracle.
 
 ## Verification
 
-`cmake --build` → 100% link; `cqm_native.exe --shot=out.bmp --frames=K` renders offscreen to BMP
-(`scripts/bmp2png.ts` → PNG for review). Determinism: same integer-hash seed → same dance.
+`cmake --build` → 100% link; `ctest` runs the embedded APEX vectors; and
+`bun scripts/verify-native-apex.ts <cqm_apex_golden>` performs the cross-language oracle check.
+`cqm_native.exe --shot=out.bmp --frames=K` renders offscreen to BMP (`scripts/bmp2png.ts` → PNG for
+review). Determinism: same integer-hash seed → same dance.
 
 ## Update (V18, 2026-06-14) — Jolt is ON by default
 
@@ -89,5 +92,4 @@ velocities (the post-`Update` readback has the collision already resolved away);
 ~70% of the measured 2.24 u/s infall peak. Shards <0.42u are inert and growth is capped at 48 (shader
 `MAX_BODIES` 24→48). Deterministic (`rqHash`-seeded scatter): 18→24 bodies, identical across runs.
 
-Remaining: soft-body + crowd-scale; bring the native target into CI; render true 4K (3840×2160)
-plates from the Jolt sim.
+Remaining: soft-body + crowd-scale; render true 4K (3840×2160) plates from the Jolt sim.

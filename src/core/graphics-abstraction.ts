@@ -5,7 +5,7 @@
  * Provides capability detection, context initialization, and quality-tier-specific
  * API selection for progressive enhancement.
  *
- * Note: WebGPU support in Three.js is experimental as of v0.184.0. This abstraction
+ * Note: WebGPU support in Three.js remains an optional enhancement at the pinned v0.185.1. This abstraction
  * layer is designed for future WebGPU integration but currently defaults to WebGL2
  * for stability. Compute operations will use WebGL2 transform feedback as a bridge.
  *

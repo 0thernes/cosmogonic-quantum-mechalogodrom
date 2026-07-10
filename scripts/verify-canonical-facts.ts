@@ -8,7 +8,7 @@
  * ~80 docs + 5 HTML + 4 XML surfaces. This is the automated form of "make sure everything matches":
  * run `bun run verify:facts` to get a drift report (fact · file:line · found · expected).
  *
- * NOT a hard gate (prose is fuzzier than tokens): it REPORTS for human triage. Point-in-time records
+ * `--check` is a hard gate; without it the script remains a report for exploratory triage. Point-in-time records
  * (`docs/reports/2026-*`, `docs/ln/*`, `docs/DAILY_RUNS/*`, `CHANGELOG.md`, `docs/AUDIT-LOG.md`) keep
  * their historical numbers by policy and are excluded. Deterministic: sorted `git ls-files`.
  */
@@ -199,4 +199,5 @@ if (drifts.length === 0) {
     for (const h of f) console.log(`    ⚠ ${h.file}:${h.line}  found "${h.value}"  | ${h.text}`);
     console.log('');
   }
+  if (process.argv.includes('--check')) process.exitCode = 1;
 }

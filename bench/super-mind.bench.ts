@@ -1,19 +1,20 @@
 /**
  * SuperMind microbenchmarks — runnable standalone (`bun bench/super-mind.bench.ts`) or aggregated via
- * `bun bench/index.ts`. Measures the apex creature's two distinct cadences as the 1.1 faculty stack has
+ * `bun bench/index.ts`. Measures the apex creature's distinct runtime reads as the 1.1 faculty stack has
  * grown past twenty per-beat sub-systems — the "Functional Operations / Operational Function" budget:
  *
- *   • `think()`     — ONE full cognitive beat: the 5-stage / 5-depth / 25-variant Tree of Thought, the 30
+ *   • `think(full)` — ONE full cognitive beat: the 5-stage / 5-depth / 25-variant Tree of Thought, the 30
  *                     organ-nets, the 6-qubit `evolve()` + the per-beat quantum-natural-gradient + Grover
  *                     amplification, the spin-glass settle, active inference, ToM, neuromodulation, the
  *                     successor-representation look-ahead, empowerment, holographic recall — everything that
- *                     runs every simulation frame for the lone apex creature.
+ *                     runs for one rotating Archon each simulation frame; the other four use `echo`.
+ *   • `readCoupling()` — the borrowed, allocation-free state used by per-frame world couplings.
  *   • `snapshot()`  — the UI-cadence telemetry read: the full Quantum Geometric Tensor (QGTL), the quantum
  *                     "magic" (4ⁿ Pauli strings), integrated information + coherence — the heavier readouts
- *                     that run only when the BRAIN observatory is open, NEVER per simulation beat.
+ *                     materialized every 18 frames (36 mobile), NEVER per simulation beat.
  *
- * GOAL5: also measures the 5 parallel godform minds (distinct child seeds, per world.ts driveSuper cadence).
- * Amortized cost (5 think calls every 4 sim frames) must stay <2% of 16.67 ms frame per contract.
+ * GOAL5: also measures the exact per-frame 5-godform batch: one full mind + four echo minds, with the full
+ * slot rotating by frame. This is a per-frame cost, not an every-four-frames amortization.
  *
  * The fixture is seeded (`mulberry32(42)`) and warmed so the EMAs / reservoir / belief states settle to a
  * representative steady state; every benched call is deterministic and allocation-disciplined in `think()`.
@@ -42,16 +43,21 @@ const percept: SuperPercept = {
 for (let i = 0; i < 64; i++) mind.think(percept);
 
 group('super-mind: the apex composite mind', () => {
-  bench('think() — one full cognitive beat (all faculties, PER SIMULATION FRAME)', () => {
+  bench('think(full) — one rotating full cognitive beat', () => {
     do_not_optimize(mind.think(percept));
   });
 
-  bench(
-    'snapshot() — UI-cadence telemetry (QGT + magic + IIT; only when the BRAIN board is open)',
-    () => {
-      do_not_optimize(mind.snapshot());
-    },
-  );
+  bench('think(echo) — one of the four light minds in a frame', () => {
+    do_not_optimize(mind.think(percept, 'echo'));
+  });
+
+  bench('readCoupling() — borrowed allocation-free per-frame state', () => {
+    do_not_optimize(mind.readCoupling());
+  });
+
+  bench('snapshot() — 18f/36f UI-cadence deep telemetry (QGT + magic + IIT)', () => {
+    do_not_optimize(mind.snapshot());
+  });
 });
 
 // GOAL5 5-minds measurement (Dr Manhattan): replicate world.ts child-seed construction + drive cadence.
@@ -66,13 +72,15 @@ const fivePercepts: SuperPercept[] = Array.from({ length: 5 }, (_, i) => ({
   chaos: Math.min(1, percept.chaos + (i - 2) * 0.03), // godform bias proxy
   crowding: Math.min(1, percept.crowding + i * 0.02),
 }));
-for (let m of fiveMinds) for (let i = 0; i < 32; i++) m.think(fivePercepts[0]!); // settle each
+for (const m of fiveMinds) for (let i = 0; i < 32; i++) m.think(fivePercepts[0]!); // settle each
+let fullSlot = 0;
 
 group('GOAL5: 5 super minds (pantheon / godforms)', () => {
-  bench('5x think() batch (simulates driveSuper every-4f cadence; amortized frame cost)', () => {
+  bench('1x full + 4x echo (exact every-frame driveSuper cognition batch)', () => {
     for (let i = 0; i < 5; i++) {
-      do_not_optimize(fiveMinds[i]!.think(fivePercepts[i]!));
+      do_not_optimize(fiveMinds[i]!.think(fivePercepts[i]!, i === fullSlot ? 'full' : 'echo'));
     }
+    fullSlot = (fullSlot + 1) % fiveMinds.length;
   });
 });
 

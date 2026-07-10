@@ -1,10 +1,11 @@
 /**
- * Phase 1.2: GPU Motion Interpolation benchmark.
+ * Instanced entity-sync benchmark (legacy filename retained for command compatibility).
  *
- * Measures the performance impact of:
- * 1. Packing motion vectors into instanced buffers
- * 2. Running simulation at decoupled rates (15 Hz vs 60 Hz)
- * 3. Overall frame time with interpolation enabled
+ * The current World calls `InstancedEntityRenderer.sync` once per rendered frame and every shipped quality
+ * tier declares a 60 Hz simulation rate. Passing 15 vs 60 only changes one shader uniform; it does not
+ * decouple EntityManager updates or reduce this CPU rewrite. These cases therefore measure exactly what
+ * runs: current matrices plus color/emissive/vitals and the legacy motion-metadata lanes. They make no FPS,
+ * GPU-upload, or interpolation claim that a headless benchmark cannot verify.
  */
 import { bench, group, run } from 'mitata';
 import * as THREE from 'three';
@@ -96,52 +97,35 @@ function makeEntity(geo: THREE.BufferGeometry, x: number, y: number, z: number):
   return mesh as Entity;
 }
 
-function createEntities(count: number, geos: THREE.BufferGeometry[]): Entity[] {
+function createEntities(count: number, geos: THREE.BufferGeometry[], seed: number): Entity[] {
+  const rng = mulberry32(seed);
   const entities: Entity[] = [];
   for (let i = 0; i < count; i++) {
     const geo = geos[i % geos.length];
     if (!geo) continue;
-    const x = (Math.random() - 0.5) * 100;
-    const y = (Math.random() - 0.5) * 100;
-    const z = (Math.random() - 0.5) * 100;
+    const x = (rng() - 0.5) * 100;
+    const y = (rng() - 0.5) * 100;
+    const z = (rng() - 0.5) * 100;
     entities.push(makeEntity(geo, x, y, z));
   }
   return entities;
 }
 
-group('Phase 1.2: GPU Motion Interpolation', () => {
-  const ctx60Hz = makeCtx(42, 60);
-  const ctx15Hz = makeCtx(42, 15);
-  const renderer60Hz = new InstancedEntityRenderer(ctx60Hz);
-  const renderer15Hz = new InstancedEntityRenderer(ctx15Hz);
+group('instanced entity sync: full per-frame pool rewrite', () => {
+  const ctx = makeCtx(42, 60);
+  const renderer = new InstancedEntityRenderer(ctx);
 
   const entityCounts = [1000, 5000, 10000];
 
   for (const count of entityCounts) {
-    const entities = createEntities(count, ctx60Hz.geos);
+    const entities = createEntities(count, ctx.geos, 0x1a57a11 ^ count);
 
-    bench(`sync ${count} entities at 60 Hz (baseline)`, () => {
-      renderer60Hz.sync(entities, 'solid', { t: 0, chaos: 0, bass: 0, nightmare: 0 }, 60);
-    });
-
-    bench(`sync ${count} entities at 15 Hz (interpolation)`, () => {
-      renderer15Hz.sync(entities, 'solid', { t: 0, chaos: 0, bass: 0, nightmare: 0 }, 15);
+    bench(`sync ${count} current transforms + visual lanes`, () => {
+      renderer.sync(entities, 'solid', { t: 0, chaos: 0, bass: 0, nightmare: 0 }, 60);
     });
   }
-
-  // Benchmark the overhead of motion vector packing
-  const ctx = makeCtx(42, 15);
-  const renderer = new InstancedEntityRenderer(ctx);
-  const entities = createEntities(5000, ctx.geos);
-
-  bench('motion vector packing overhead (5000 entities)', () => {
-    renderer.sync(entities, 'solid', { t: 0, chaos: 0, bass: 0, nightmare: 0 }, 15);
-  });
-
-  // Benchmark render-only frames (no simulation)
-  bench('render-only frame (no simulation step)', () => {
-    renderer.sync(entities, 'solid', { t: 0.1, chaos: 0, bass: 0, nightmare: 0 }, 15);
-  });
 });
 
-run();
+if (import.meta.main) {
+  await run();
+}

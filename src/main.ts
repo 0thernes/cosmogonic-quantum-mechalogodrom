@@ -54,30 +54,84 @@ function initAppShell(): void {
  * V0.20.0 PERF/LOAD: import the self-mounting click-to-open panels AFTER first light, at idle, off the
  * boot critical path. Each module self-mounts on import (guarding document.readyState), so importing it
  * late is equivalent to importing it eagerly — the only difference is these ~131 KB no longer sit in the
- * render-blocking entry chunk (Bun splits each `import()` into its own lazily-fetched chunk). Runs once;
- * a failed lazy fetch is logged and swallowed so a network hiccup on a non-critical panel never breaks
- * the running cosmos. The literal specifiers are required for Bun's static import analysis.
+ * render-blocking entry chunk (Bun splits each `import()` into its own lazily-fetched chunk). Successful
+ * modules are mounted once; failed lazy fetches stay pending for a delayed retry so a transient chunk
+ * error never breaks the running cosmos. Literal specifiers are required for Bun's static analysis.
  */
-let deferredUiLoaded = false;
+type DeferredUiModule =
+  | 'copilot'
+  | 'access-puzzle'
+  | 'temple-access'
+  | 'help-system'
+  | 'audit-dock'
+  | 'onboarding'
+  | 'settings-panel'
+  | 'panel-edge-toggles';
+
+const deferredUiPending = new Set<DeferredUiModule>([
+  'copilot',
+  'access-puzzle',
+  'temple-access',
+  'help-system',
+  'audit-dock',
+  'onboarding',
+  'settings-panel',
+  'panel-edge-toggles',
+]);
+const DEFERRED_UI_RETRY_MS = 2_000;
+const DEFERRED_UI_MAX_ATTEMPTS = 3;
+const deferredUiAttempts = new Map<DeferredUiModule, number>();
+let deferredUiLoading = false;
+let deferredUiRetryTimer: number | null = null;
+
 function loadDeferredUi(): void {
-  if (deferredUiLoaded) return;
-  deferredUiLoaded = true;
-  const fail =
-    (name: string) =>
-    (err: unknown): void =>
+  if (deferredUiLoading || deferredUiPending.size === 0) return;
+  deferredUiLoading = true;
+  const failed =
+    (name: DeferredUiModule) =>
+    (err: unknown): void => {
+      const attempts = deferredUiAttempts.get(name) ?? 0;
+      if (attempts >= DEFERRED_UI_MAX_ATTEMPTS) deferredUiPending.delete(name);
       log.warn('deferred UI import failed', {
         module: name,
+        attempts,
+        exhausted: attempts >= DEFERRED_UI_MAX_ATTEMPTS,
         error: err instanceof Error ? err.message : String(err),
       });
+    };
+  const loaded = (name: DeferredUiModule): void => {
+    deferredUiPending.delete(name);
+  };
   const run = (): void => {
-    void import('./ui/copilot').catch(fail('copilot'));
-    void import('./ui/access-puzzle').catch(fail('access-puzzle'));
-    void import('./ui/temple-access').catch(fail('temple-access'));
-    void import('./ui/help-system').catch(fail('help-system'));
-    void import('./ui/audit-dock').catch(fail('audit-dock'));
-    void import('./ui/onboarding').catch(fail('onboarding'));
-    void import('./ui/settings-panel').catch(fail('settings-panel'));
-    void import('./ui/panel-edge-toggles').catch(fail('panel-edge-toggles'));
+    const tasks: Promise<void>[] = [];
+    const track = (name: DeferredUiModule, load: () => Promise<unknown>): void => {
+      if (!deferredUiPending.has(name)) return;
+      deferredUiAttempts.set(name, (deferredUiAttempts.get(name) ?? 0) + 1);
+      tasks.push(
+        load()
+          .then(() => loaded(name))
+          .catch(failed(name)),
+      );
+    };
+    track('copilot', () => import('./ui/copilot'));
+    track('access-puzzle', () => import('./ui/access-puzzle'));
+    track('temple-access', () => import('./ui/temple-access'));
+    track('help-system', () => import('./ui/help-system'));
+    track('audit-dock', () => import('./ui/audit-dock'));
+    track('onboarding', () => import('./ui/onboarding'));
+    track('settings-panel', () => import('./ui/settings-panel'));
+    track('panel-edge-toggles', () => import('./ui/panel-edge-toggles'));
+    void Promise.allSettled(tasks).finally(() => {
+      deferredUiLoading = false;
+      // Successful modules stay removed from the pending set. A transient chunk failure gets one
+      // bounded retry timer instead of being permanently suppressed by a one-shot global flag.
+      if (deferredUiPending.size > 0 && deferredUiRetryTimer === null) {
+        deferredUiRetryTimer = window.setTimeout(() => {
+          deferredUiRetryTimer = null;
+          loadDeferredUi();
+        }, DEFERRED_UI_RETRY_MS);
+      }
+    });
   };
   const ric = (
     window as unknown as {
@@ -272,7 +326,7 @@ async function boot(): Promise<void> {
   // browser PAUSES ENTIRELY for a hidden/background tab (and can stall on a very slow boot). Without a
   // fallback those controls never mount until the tab is focused, so the persistent-nav row is left
   // missing ⛓ ACCESS / ◈ STAGE II and 🗒 AUDIT can't open. loadDeferredUi() is idempotent (guarded by
-  // `deferredUiLoaded`), so ALSO pull it in after a short timeout AND the instant the tab becomes visible
+  // its per-module pending set), so ALSO pull it in after a short timeout AND the instant the tab becomes visible
   // — whichever fires first — so the full UI is always present regardless of tab visibility / cadence.
   window.setTimeout(loadDeferredUi, 2500);
   document.addEventListener('visibilitychange', () => {
@@ -291,7 +345,7 @@ void boot();
 // backgrounded tab pauses rAF entirely, and a WebGL init failure never reaches first light. In those cases
 // the panels would stay permanently unmounted and their toolbar buttons never appear. A timer fallback
 // mounts them regardless — setTimeout DOES fire in a backgrounded tab (unlike rAF) — and loadDeferredUi is
-// idempotent (the deferredUiLoaded flag), so on a normal load first-light still wins and this is a no-op.
+// idempotent (the per-module pending set), so on a normal load first-light still wins and this is a no-op.
 setTimeout(loadDeferredUi, 2500);
 
 // HMR teardown — THE fix for the dev WebGL-context leak. Before a hot-replaced module re-boots, stop the
@@ -305,6 +359,7 @@ setTimeout(loadDeferredUi, 2500);
 if (import.meta.hot) {
   import.meta.hot.dispose(() => {
     cancelAnimationFrame(rafId);
+    if (deferredUiRetryTimer !== null) clearTimeout(deferredUiRetryTimer);
     if (resizeHandler) window.removeEventListener('resize', resizeHandler);
     try {
       (world as unknown as { dispose?: () => void } | null)?.dispose?.();

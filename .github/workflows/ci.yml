@@ -81,8 +81,14 @@ jobs:
       - name: Cross-surface fact audit (no canonical-fact drift across surfaces)
         run: bun run verify:facts
 
+      - name: Generated file-map freshness
+        run: bun run filemap:check
+
       - name: Production build
         run: bun run build
+
+      - name: Generated artifact freshness
+        run: bun run generated:check
 
       - name: Upload dist artifact
         if: always()
@@ -134,16 +140,6 @@ jobs:
           key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
           restore-keys: bun-${{ runner.os }}-
 
-      - name: Cache build artifacts
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: |
-            dist/
-            node_modules/.cache/
-          key: build-${{ runner.os }}-${{ hashFiles('src/**', 'bun.lock') }}
-          restore-keys: |
-            build-${{ runner.os }}-
-
       - name: Install (frozen lockfile)
         run: bun install --frozen-lockfile
 
@@ -157,16 +153,17 @@ jobs:
         run: bun run lint
 
       - name: Unit tests + coverage + receipts law
-        # Single run: coverage threshold (bunfig.toml) + receipts parse share one transcript.
-        # Direct spawn (not stdin pipe) — reliable on Windows where pipe deadlocks are common.
-        # Parallel test execution for faster CI (Phase 1.3 optimization)
-        run: bun test --coverage 2>&1 | bun scripts/verify-receipts.ts --stdin
+        # The verifier owns the child process, preserves its exit code, and parses the same transcript.
+        run: bun run verify:receipts
 
       - name: Surface sync check (version + receipts propagated to every MD/HTML)
         run: bun run sync:check
 
       - name: Cross-surface fact audit (no canonical-fact drift across surfaces)
         run: bun run verify:facts
+
+      - name: Generated file-map freshness
+        run: bun run filemap:check
 
       - name: Production build
         run: bun run build
@@ -209,6 +206,55 @@ jobs:
       # Build + headless smoke. No `|| echo` mask: if the build or smoke check fails, this step fails.
       - name: Build + headless smoke
         run: bun run smoke
+
+  native:
+    name: Native C++ build + APEX reproduction
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Install OpenGL/GLFW build prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes libgl1-mesa-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev
+
+      - name: Set up Bun for the cross-language oracle
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: '1.3.14'
+
+      - name: Configure immutable native dependencies
+        run: >
+          cmake -S native -B native/build-ci
+          -DCMAKE_BUILD_TYPE=Release
+          -DCQM_WITH_JOLT=OFF
+          -DCQM_WITH_IMGUI=OFF
+          -DGLFW_BUILD_WAYLAND=OFF
+          -DBUILD_TESTING=ON
+
+      - name: Build native engine and reproduction gate
+        run: cmake --build native/build-ci --parallel 2
+
+      - name: Run native reproduction tests
+        run: ctest --test-dir native/build-ci --output-on-failure
+
+      - name: Compare native vectors to the live TypeScript oracle
+        run: bun scripts/verify-native-apex.ts native/build-ci/cqm_apex_golden
+
+      - name: Configure the default Jolt-enabled engine
+        run: >
+          cmake -S native -B native/build-jolt-ci
+          -DCMAKE_BUILD_TYPE=Release
+          -DCQM_WITH_IMGUI=OFF
+          -DGLFW_BUILD_WAYLAND=OFF
+          -DBUILD_TESTING=OFF
+
+      - name: Build the default Jolt-enabled engine
+        run: cmake --build native/build-jolt-ci --target cqm_native --parallel 2
 
   bench:
     name: Benchmarks (informational)
@@ -278,10 +324,8 @@ jobs:
     timeout-minutes: 10
     # Complements dependency-review (which only diffs a PR's NEW deps): bun audit scans the FULL
     # installed tree on every push/PR, so a CVE newly disclosed against an ALREADY-present dependency
-    # is surfaced too — the class of advisory a PR-diff review structurally cannot see. Non-blocking
-    # (like bench): a transitive LOW/MODERATE advisory is logged, not gate-failing; the second step
-    # isolates the serious tier (drop continue-on-error to hard-gate on HIGH/CRITICAL).
-    continue-on-error: true
+    # is surfaced too — the class of advisory a PR-diff review structurally cannot see. The all-tier
+    # scan is informational; HIGH/CRITICAL advisories fail the job.
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -300,6 +344,7 @@ jobs:
       - name: Install (frozen lockfile)
         run: bun install --frozen-lockfile
       - name: Audit dependencies (all advisories — informational)
+        continue-on-error: true
         run: bun audit
       - name: Flag HIGH/CRITICAL advisories
         run: bun audit --audit-level=high

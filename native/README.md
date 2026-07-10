@@ -20,7 +20,9 @@ translucency, and thin-film iridescence — all real `f(p, view, time)`.
 
 Built with **MinGW-w64 GCC 16.1** + CMake; rendered live on an **NVIDIA GeForce
 RTX 5070 Ti** (`GL_VERSION 3.3.0 NVIDIA`). The offscreen `--shot` path produced
-the `plate` and `hero` captures committed alongside the changelog.
+the `plate` and `hero` captures committed alongside the changelog. CI now compiles both the default
+Jolt backend and the built-in fallback, runs CTest, and compares native APEX vectors to the live
+TypeScript oracle.
 
 ## Frameworks
 
@@ -29,7 +31,7 @@ the `plate` and `hero` captures committed alongside the changelog.
 | Windowing       | **GLFW 3.4**                        | FetchContent (auto)                     |
 | Math            | **GLM 1.0.1**                       | FetchContent (auto, header-only)        |
 | GL loading      | hand-rolled 3.3-core loader         | `src/gl_core.*` (no codegen dependency) |
-| Physics (opt.)  | **Jolt Physics 5.2** (shipping-AAA) | `-DCQM_WITH_JOLT=ON`                    |
+| Physics         | **Jolt Physics 5.2** (shipping-AAA) | default; `-DCQM_WITH_JOLT=OFF` fallback |
 | Debug HUD (opt) | **Dear ImGui 1.91**                 | `-DCQM_WITH_IMGUI=ON`                   |
 
 ## Build
@@ -41,7 +43,8 @@ cmake -S . -B build -DCMAKE_BUILD_TYPE=Release      # add -G "MinGW Makefiles" w
 cmake --build build -j
 ```
 
-The first configure clones GLFW + GLM (one-time). On Windows + MinGW the result
+The first default configure clones GLFW + GLM + Jolt (one-time). Use
+`-DCQM_WITH_JOLT=OFF` for the self-contained impulse fallback. On Windows + MinGW the result
 is a self-contained `build/cqm_native.exe` (the GCC runtimes are statically
 linked).
 
@@ -68,9 +71,9 @@ BMP output converts to PNG with `bun ../scripts/bmp2png.ts in.bmp out.png`.
 
 ## C++ / TS Boundary (adversarial audit note)
 
-Native C++ (CMake + GLFW/GLM + optional Jolt + handrolled GL) is a **sibling reliquary only**:
+Native C++ (CMake + GLFW/GLM + default Jolt + handrolled GL) is a **sibling reliquary only**:
 
 - Ray-marched SDF gallery for the 5+ specimen archetypes (no shared runtime state with browser sim).
 - Offscreen `--shot` 4K capture + interactive orbit beyond browser caps.
-- Optional physics (Jolt) for plate settling demo.
+- Jolt physics (or the built-in fallback) for the plate-settling demo.
   The authoritative 5-Archon simulation (godform biases, SuperMind think, SuperBody update, quantum/Clifford/HOT/narrative, world drive loop, determinism via Rng) lives exclusively in `src/`. All hot paths enforce preallocated scratch, shared buffers, typed arrays, documented cadences — no per-frame `new`/`push`/`slice` in steady sim (snapshots for UI telemetry are the documented exception on slower cadence). C++ boundary is one-way viz export; no native engine drives creature minds or GOAL5 pantheon. See docs/adr/0007, MODULE-CONTRACTS, PHILOSOPHY (allocation-free hot, provenance).

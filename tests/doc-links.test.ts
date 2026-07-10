@@ -5,24 +5,36 @@
  * links are ignored. A trailing `#anchor` is allowed (only the file part is checked).
  */
 import { describe, expect, test } from 'bun:test';
-import { readdirSync, readFileSync, existsSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { readFileSync, existsSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 
 const ROOT = resolve(import.meta.dir, '..');
-// `.claude` holds transient git worktrees (whole-repo scratch copies); `legacy` is preserved
-// verbatim and never edited; `site`/`coverage` are build/report outputs. None are part of the
-// deliverable doc set, and scanning them false-fails on stale copies outside the canonical tree.
-const SKIP = new Set(['node_modules', '.git', 'dist', '.claude', 'legacy', 'site', 'coverage']);
 
-function markdownFiles(dir: string): string[] {
-  const out: string[] = [];
-  for (const e of readdirSync(dir, { withFileTypes: true })) {
-    if (SKIP.has(e.name)) continue;
-    const p = join(dir, e.name);
-    if (e.isDirectory()) out.push(...markdownFiles(p));
-    else if (e.name.endsWith('.md')) out.push(p);
+/**
+ * Return only version-controlled Markdown surfaces. O(f log f), where f is the tracked Markdown count.
+ *
+ * Walking the working tree made one Bun test per ignored CMake/FetchContent/worktree document, so the
+ * published test total changed with local build debris. Git is the repository boundary and is already
+ * required by the checkout, sync guard, hooks, and CI; fail loudly if that boundary cannot be read.
+ */
+function markdownFiles(): string[] {
+  let output: string;
+  try {
+    output = execFileSync('git', ['ls-files', '-z', '--', '*.md'], {
+      cwd: ROOT,
+      encoding: 'utf8',
+      maxBuffer: 16 * 1024 * 1024,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`doc-links: could not enumerate tracked Markdown with git (${message})`);
   }
-  return out;
+  return output
+    .split('\0')
+    .filter(Boolean)
+    .sort()
+    .map((rel) => join(ROOT, rel));
 }
 
 /** Remove fenced + inline code so example links inside them aren't treated as real links. */
@@ -40,7 +52,7 @@ function relativeLinks(md: string): string[] {
 }
 
 describe('documentation link integrity', () => {
-  const files = markdownFiles(ROOT);
+  const files = markdownFiles();
 
   test('the repo actually has a documentation set to check', () => {
     expect(files.length).toBeGreaterThan(10);

@@ -17,7 +17,15 @@ describe('Bible public link law', () => {
 
   test('root docs used by Bible are explicitly copied by the Pages assembler', async () => {
     const script = await Bun.file('scripts/build-pages.ts').text();
-    for (const rootDoc of ['CHANGELOG.md', 'ROADMAP-2026-06-26.md', 'THIRD-PARTY-NOTICES.md']) {
+    for (const rootDoc of [
+      'LICENSE',
+      'NOTICE.md',
+      'README.md',
+      'SECURITY.md',
+      'CHANGELOG.md',
+      'ROADMAP-2026-06-26.md',
+      'THIRD-PARTY-NOTICES.md',
+    ]) {
       expect(script).toContain(rootDoc);
     }
   });

@@ -45,6 +45,10 @@ const LOCAL_ONLY_DOC_ARTIFACTS = [
 ] as const;
 
 const PUBLIC_PAGE_DOCS = [
+  { source: 'LICENSE', target: 'LICENSE' },
+  { source: 'NOTICE.md', target: 'NOTICE.md' },
+  { source: 'README.md', target: 'README.md' },
+  { source: 'SECURITY.md', target: 'SECURITY.md' },
   { source: 'CHANGELOG.md', target: 'CHANGELOG.md' },
   { source: 'ROADMAP-2026-06-26.md', target: 'ROADMAP-2026-06-26.md' },
   { source: 'THIRD-PARTY-NOTICES.md', target: 'THIRD-PARTY-NOTICES.md' },
@@ -125,17 +129,9 @@ for (const { source, target } of PUBLIC_PAGE_DOCS) {
 await cp(new URL('docs/reports/assets/', ROOT), new URL('assets/alife/', SITE), {
   recursive: true,
 });
-// Satellite music widget for Lab (Docs/Spec bundle it via their entry modules).
-try {
-  await cp(new URL('dist/satellite-music.js', ROOT), new URL('satellite-music.js', SITE));
-} catch {
-  /* local build may not have run yet — CI always builds first */
-}
-try {
-  await cp(new URL('dist/alife-gallery.js', ROOT), new URL('alife-gallery.js', SITE));
-} catch {
-  /* local build may not have run yet */
-}
+// Satellite music + gallery are production entrypoints. Missing stable copies mean the build is partial.
+await cp(new URL('dist/satellite-music.js', ROOT), new URL('satellite-music.js', SITE));
+await cp(new URL('dist/alife-gallery.js', ROOT), new URL('alife-gallery.js', SITE));
 
 // 3. Rewrite absolute nav links → subpath-relative; neutralize the server-only audit poll.
 // V81: append a per-deploy `?v=` cache-buster to every cross-page nav link so a returning visitor never

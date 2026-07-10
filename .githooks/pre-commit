@@ -4,27 +4,46 @@
 #
 # 1. normalize-docs : reverse any UTF-8 -> Windows-1252 mojibake (docs-truth-law stays green).
 # 2. sync-surfaces  : propagate package.json `version` + canonical-receipts to every surface.
-# Both are idempotent and NON-blocking (exit 0 always) — they only clean/sync, never reject a commit.
+# Both are idempotent and fail closed. A commit must never publish stale or partially generated
+# truth surfaces merely because a generator or formatter failed.
 #
 # Enable once per clone (the `prepare` npm/bun script does this automatically on install):
 #     git config core.hooksPath .githooks
-bun scripts/normalize-docs.ts >/dev/null 2>&1 || true
-bun scripts/sync-surfaces.ts >/dev/null 2>&1 || true
-# Re-stage every surface the two hooks can touch so an auto-fix is never left unstaged. normalize-docs
-# globs ALL tracked .md + .xml (incl masters/*.xml + every root MD); sync-surfaces rewrites the MD/HTML
-# surfaces + package.json. The old explicit list missed masters/ and the root MDs, so a mojibake fix
-# there shipped uncommitted (then CI's docs-truth-law went RED). legacy/ is preserved verbatim — exclude it.
-git add -- '*.md' '*.xml' '*.html' package.json ':(exclude)legacy/**' 2>/dev/null || true
+set -eu
+
+# Generators operate on the worktree. Refuse to run when a tracked generated surface has an
+# unstaged edit, because auto-staging afterward would otherwise capture work outside this commit.
+if ! git diff --quiet -- '*.md' '*.xml' '*.html' package.json ':(exclude)legacy/**'; then
+  echo "pre-commit: unstaged documentation/truth-surface changes would be captured by generators." >&2
+  echo "Stage or stash those surface changes, then retry the commit." >&2
+  exit 1
+fi
+
+bun scripts/normalize-docs.ts >/dev/null
+bun scripts/sync-surfaces.ts >/dev/null
+# Re-stage only tracked surfaces changed by the generators. Untracked files are never swept into a
+# commit. legacy/ is preserved verbatim.
+CHANGED_SURFACES=$(git diff --name-only -- '*.md' '*.xml' '*.html' package.json ':(exclude)legacy/**')
+if [ -n "$CHANGED_SURFACES" ]; then
+  printf '%s\n' "$CHANGED_SURFACES" | tr '\n' '\0' | xargs -0 git add --
+fi
 # 3. prettier : auto-format every staged source/surface so NO writer (incl. an autonomous loop) can
 #    ship format-dirty code. This is the root-cause fix for the recurring "origin/main fails
 #    `prettier --check`" regression that turns CI red and blocks a fresh `bun run check`. Batched over
-#    the STAGED set only (fast — not the whole repo), then re-staged. Fully non-blocking: any prettier
-#    hiccup falls through to the status-quo commit and never rejects it.
+#    the STAGED set only (fast — not the whole repo), then re-staged. Formatter failures reject the
+#    commit so the repository cannot drift behind a false-green hook.
 STAGED_FMT=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null \
-  | grep -Ei '\.(ts|tsx|js|jsx|mjs|cjs|css|json|md|html)$' \
-  | grep -v '^legacy/' || true)
+  | grep -Ei '\.(ts|tsx|js|jsx|mjs|cjs|css|json|ya?ml|md|html)$' \
+  | grep -v '^legacy/' || :)
 if [ -n "$STAGED_FMT" ]; then
-  printf '%s\n' "$STAGED_FMT" | tr '\n' '\0' | xargs -0 bunx prettier --write >/dev/null 2>&1 || true
-  printf '%s\n' "$STAGED_FMT" | tr '\n' '\0' | xargs -0 git add -- 2>/dev/null || true
+  # Formatting happens in the worktree; a staged file with additional unstaged edits would be
+  # collapsed into one commit by the re-stage below. Detect that ambiguity before touching it.
+  printf '%s\n' "$STAGED_FMT" | while IFS= read -r file; do
+    if ! git diff --quiet -- "$file"; then
+      echo "pre-commit: $file has staged and unstaged edits; refusing to auto-format it." >&2
+      exit 1
+    fi
+  done
+  printf '%s\n' "$STAGED_FMT" | tr '\n' '\0' | xargs -0 bunx prettier --write >/dev/null
+  printf '%s\n' "$STAGED_FMT" | tr '\n' '\0' | xargs -0 git add --
 fi
-exit 0

@@ -87,7 +87,7 @@ export class ReactionDiffusionSystem {
    * emissiveMap. Stored as RGBA8 luminance derived from U each step (not a raw
    * R32F view): float-linear filtering is an optional WebGL2 extension, and an
    * R-channel texture would sample as (r, 0, 0) and tint the emissive red-only.
-   * RGBA8 is filterable on every device three 0.184 supports.
+   * RGBA8 is filterable on every device the pinned three 0.185.1 renderer supports.
    */
   readonly texture: THREE.DataTexture;
 

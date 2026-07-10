@@ -684,7 +684,7 @@ export class ShoggothSystem implements PortalCullable {
         }
       }
       if (ti > 0) {
-        // Known Bug 13 pattern: upload only the populated segment range (three 0.184 API).
+        // Known Bug 13 pattern: upload only the populated segment range (three 0.185.1 API).
         sg.tendrilAttr.clearUpdateRanges();
         sg.tendrilAttr.addUpdateRange(0, ti * 6);
         sg.tendrilAttr.needsUpdate = true;

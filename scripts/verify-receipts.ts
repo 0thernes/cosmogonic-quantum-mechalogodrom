@@ -3,14 +3,13 @@
  * verify-receipts.ts — the MEASUREMENT half of the receipts law (Dr. Manhattan's law in a script).
  *
  * Parses the real `bun test --coverage` output, compares it to the CANONICAL constants committed in
- * `scripts/canonical-receipts.ts`, and fails on drift. In normal package-script use, coverage output is
- * piped in via `--stdin` so the verifier does not need to spawn a nested process (some managed Windows
- * hosts deny that). Direct mode still runs `bun test --coverage` itself when child process spawning is
- * available.
+ * `scripts/canonical-receipts.ts`, and fails on drift. Normal package-script use owns one direct
+ * `bun test --coverage` child and preserves its status. Managed hosts that deny nested processes can
+ * capture that command themselves, then provide both its transcript and exit code explicitly.
  *
- *   bun --shell=system run verify:receipts:pipe
- *   bun scripts/verify-receipts.ts          # direct mode, if nested spawn is allowed
+ *   bun scripts/verify-receipts.ts
  *   bun scripts/verify-receipts.ts --print  # measure + print the canonical triple to paste
+ *   bun scripts/verify-receipts.ts --from-file coverage.txt --test-exit-code=0
  *
  * The companion fast test (`docs-receipts-law.test.ts`) then propagates the canon to every public surface.
  * Together they make it impossible to ship a test-count or coverage figure that was not measured.
@@ -19,7 +18,12 @@ import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { CANONICAL_TEST_COUNT, CANONICAL_LINE_COV, CANONICAL_FUNC_COV } from './canonical-receipts';
 
-function run(args: string[]): string {
+interface CoverageTranscript {
+  text: string;
+  exitCode: number | null;
+}
+
+function run(args: string[]): CoverageTranscript {
   const r = spawnSync('bun', args, {
     encoding: 'utf8',
     maxBuffer: 128 * 1024 * 1024,
@@ -29,30 +33,47 @@ function run(args: string[]): string {
   if (r.error) {
     throw new Error(
       `verify-receipts: could not spawn \`bun ${args.join(' ')}\` (${r.error.message}). ` +
-        'Use `bun --shell=system run verify:receipts:pipe` on hosts that deny nested spawn.',
+        'Capture that command with the host shell, then use --from-file <path> ' +
+        'and --test-exit-code=<status>.',
     );
   }
-  return `${r.stdout ?? ''}\n${r.stderr ?? ''}`;
+  return {
+    text: `${r.stdout ?? ''}\n${r.stderr ?? ''}`,
+    exitCode: r.status,
+  };
 }
 
-async function coverageOutput(): Promise<string> {
+function declaredExitCode(): number | null {
+  const prefix = '--test-exit-code=';
+  const arg = process.argv.find((value) => value.startsWith(prefix));
+  if (!arg) return null;
+  const value = Number(arg.slice(prefix.length));
+  if (!Number.isInteger(value) || value < 0) {
+    throw new Error('verify-receipts: --test-exit-code must be a non-negative integer');
+  }
+  return value;
+}
+
+async function coverageOutput(): Promise<CoverageTranscript> {
   const fromFileIdx = process.argv.indexOf('--from-file');
   if (fromFileIdx >= 0) {
     const path = process.argv[fromFileIdx + 1];
     if (!path) throw new Error('verify-receipts: --from-file requires a path');
-    return readFileSync(path, 'utf8');
+    return { text: readFileSync(path, 'utf8'), exitCode: declaredExitCode() };
   }
   if (process.argv.includes('--stdin')) {
     const text = await Bun.stdin.text();
     // Preserve the actual test transcript for humans/CI logs; parsing still happens below.
     process.stdout.write(text);
-    return text;
+    return { text, exitCode: declaredExitCode() };
   }
-  return run(['test', '--coverage']);
+  const transcript = run(['test', '--coverage']);
+  process.stdout.write(transcript.text);
+  return transcript;
 }
 
 /** One cold `bun test --coverage` transcript — count and coverage must share the same measurement. */
-function measureGate(out: string): { count: number; line: string; func: string } {
+export function measureGate(out: string): { count: number; line: string; func: string } {
   const failed = out.match(/(^|\n)\s*([0-9]+)\s+fail\b/);
   if (failed && Number(failed[2]) > 0) {
     throw new Error(`verify-receipts: coverage test run reported ${failed[2]} failing test(s)`);
@@ -76,69 +97,77 @@ function measureGate(out: string): { count: number; line: string; func: string }
   return { count, func: row[1], line: row[2] };
 }
 
-const printOnly = process.argv.includes('--print');
-
-const { count, line: lineCov, func: funcCov } = measureGate(await coverageOutput());
-const cov = { line: lineCov, func: funcCov };
-
-if (printOnly) {
-  console.log('Canonical receipts (paste into scripts/canonical-receipts.ts):');
-  // CANONICAL_TEST_COUNT is a FLOOR (min across environments), not an exact pin — parameterized
-  // doc/determinism tests count per-file, so the total differs by env (clean CI < a file-rich local
-  // tree). Never RAISE the floor automatically (that would red a leaner env); only lower it if a clean
-  // run drops below it (tests genuinely removed). This makes the receipts law robust to env + churn.
-  console.log(`  CANONICAL_TEST_COUNT = ${Math.min(count, CANONICAL_TEST_COUNT)};`);
-  console.log(`  CANONICAL_LINE_COV = '${cov.line}';`);
-  console.log(`  CANONICAL_FUNC_COV = '${cov.func}';`);
-  process.exit(0);
+/** Compare a measured transcript to the single canonical receipt. Pure for focused regression tests. */
+export function receiptProblems(
+  measured: { count: number; line: string; func: string },
+  testExitCode: number | null = 0,
+): string[] {
+  const problems: string[] = [];
+  if (testExitCode === null) {
+    problems.push('bun test --coverage did not report an exit status');
+  } else if (testExitCode !== 0) {
+    problems.push(`bun test --coverage exited with status ${testExitCode}`);
+  }
+  // Tracked-only documentation discovery makes the suite count identical in clean/local/CI checkouts.
+  // Exact equality now catches both mass deletion and unreceipted test additions; no stale escape floor.
+  if (measured.count !== CANONICAL_TEST_COUNT) {
+    problems.push(
+      `test count: canonical ${CANONICAL_TEST_COUNT} but gate measures ${measured.count} (re-measure and re-sync)`,
+    );
+  }
+  // Coverage varies by instrumenter/OS, so the portable Ubuntu measurement is a one-sided floor.
+  // Higher Windows coverage is valid; anything below the published floor is a real regression.
+  if (Number(measured.line) < Number(CANONICAL_LINE_COV)) {
+    problems.push(
+      `line coverage: portable floor ${CANONICAL_LINE_COV} but gate measures ${measured.line}`,
+    );
+  }
+  if (Number(measured.func) < Number(CANONICAL_FUNC_COV)) {
+    problems.push(
+      `function coverage: portable floor ${CANONICAL_FUNC_COV} but gate measures ${measured.func}`,
+    );
+  }
+  return problems;
 }
 
-const problems: string[] = [];
-// FLOOR, not exact equality: the measured count must be AT LEAST the floor. `bun test` runs EVERY
-// *.test.ts present in the working tree, so the total is env-dependent — a file-rich tree (untracked
-// swarm scratch, nested worktrees) measures hundreds more than a clean CI checkout (~1477). Pinning the
-// canonical to a file-rich measurement (e.g. 2162) reds every clean env, which is the CI-red war.
-//
-// The gate therefore floors against the LOWER of {the canonical constant, a baked-in PORTABLE floor}.
-// PORTABLE_TEST_FLOOR is a hardcoded, conservative minimum the LEANEST environment still clears, so an
-// inflated canonical (whoever last ran --print in a file-rich tree) can NEVER red a clean checkout —
-// while a genuine mass-deletion below the floor still fails loudly. The canonical constant remains the
-// published headline; this decouples the pass/fail decision from that mutable number on purpose.
-const PORTABLE_TEST_FLOOR = 1400;
-const effectiveFloor = Math.min(CANONICAL_TEST_COUNT, PORTABLE_TEST_FLOOR);
-if (count < effectiveFloor)
-  problems.push(
-    `test count: ${count} is BELOW the portable floor ${effectiveFloor} (tests genuinely removed? re-floor via --print)`,
-  );
-// Coverage % is environment-sensitive: Bun instruments a slightly different file set locally vs in
-// CI (observed ~4pp lower in CI), so EXACT cross-environment equality is unsatisfiable — it made
-// every tagged release build fail at this step. Per Dr. Manhattan's numerical canon ("never bare
-// === on derived floats; state tolerances explicitly"), the test count is enforced as a FLOOR (above)
-// and coverage within an explicit ±band — neither is checked for exact equality, precisely because both
-// vary by environment. Canonical stays the locally-measured headline that docs publish; this guards
-// against real regression without lying about float identity or pinning an env-dependent count.
-// Coverage % varies by OS/instrumentation set (Windows CI often measures several pp HIGHER than
-// Linux). Enforce a REGRESSION FLOOR only: measured must not drop more than COV_TOLERANCE_PP below
-// the published headline. Higher measurements are OK — they do not mean docs lied, only that the
-// env counted a different file set.
-const COV_TOLERANCE_PP = 6;
-if (Number(cov.line) < Number(CANONICAL_LINE_COV) - COV_TOLERANCE_PP)
-  problems.push(
-    `line coverage: canonical ${CANONICAL_LINE_COV} but gate measures ${cov.line} (dropped >${COV_TOLERANCE_PP}pp — regression)`,
-  );
-if (Number(cov.func) < Number(CANONICAL_FUNC_COV) - COV_TOLERANCE_PP)
-  problems.push(
-    `function coverage: canonical ${CANONICAL_FUNC_COV} but gate measures ${cov.func} (dropped >${COV_TOLERANCE_PP}pp — regression)`,
-  );
+async function main(): Promise<void> {
+  const printOnly = process.argv.includes('--print');
+  const transcript = await coverageOutput();
+  const measured = measureGate(transcript.text);
+  if (transcript.exitCode === null) {
+    throw new Error('verify-receipts: bun test --coverage did not report an exit status');
+  }
+  if (transcript.exitCode !== 0) {
+    throw new Error(
+      `verify-receipts: refusing to use a failed coverage run (exit ${transcript.exitCode})`,
+    );
+  }
 
-if (problems.length > 0) {
-  console.error('✗ receipts law: canonical constants have drifted from the measured gate:');
-  for (const p of problems) console.error(`   - ${p}`);
-  console.error('\n   Fix: run `bun scripts/verify-receipts.ts --print`, update the constants in');
-  console.error('   scripts/canonical-receipts.ts, then re-sync the surfaces. Never the reverse.');
-  process.exit(1);
+  if (printOnly) {
+    console.log('Canonical receipts (paste into scripts/canonical-receipts.ts):');
+    console.log(`  CANONICAL_TEST_COUNT = ${measured.count};`);
+    console.log(`  CANONICAL_LINE_COV = '${measured.line}';`);
+    console.log(`  CANONICAL_FUNC_COV = '${measured.func}';`);
+    return;
+  }
+
+  const problems = receiptProblems(measured, transcript.exitCode);
+  if (problems.length > 0) {
+    console.error('✗ receipts law: canonical constants have drifted from the measured gate:');
+    for (const problem of problems) console.error(`   - ${problem}`);
+    console.error(
+      '\n   Fix: run `bun scripts/verify-receipts.ts --print`, update the constants in',
+    );
+    console.error(
+      '   scripts/canonical-receipts.ts, then re-sync the surfaces. Never the reverse.',
+    );
+    process.exitCode = 1;
+    return;
+  }
+
+  console.log(
+    `✓ receipts law: ${measured.count} tests · ${measured.line}% line / ${measured.func}% function — exact count and portable coverage floor verified.`,
+  );
 }
 
-console.log(
-  `✓ receipts law: ${count} tests · ${cov.line}% line / ${cov.func}% function — canon matches reality.`,
-);
+if (import.meta.main) await main();

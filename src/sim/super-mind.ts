@@ -232,6 +232,20 @@ export interface Consciousness {
   qualiaTone: number; // HOT-4: sparse-smooth quality manifold scalar (proxy)
 }
 
+/**
+ * Borrowed, allocation-free view of the small SuperMind state used by runtime couplings.
+ *
+ * Unlike {@link SuperMindSnapshot}, this deliberately excludes deep telemetry. The returned object and
+ * its typed-array lanes are owned by the mind and mutate on the next cognitive beat; callers that need an
+ * immutable/UI record must use {@link SuperMind.snapshot} on their telemetry cadence instead.
+ */
+export interface SuperMindCouplingView {
+  dominance: number;
+  consciousness: Consciousness;
+  quantum: Float32Array;
+  latent: Float32Array;
+}
+
 /** The apex decision this beat (drives + consciousness + quantum aspects). */
 export interface SuperMindIntent {
   move: { x: number; y: number; z: number };
@@ -619,6 +633,8 @@ export class SuperMind {
   private readonly affIn = new Float32Array(12);
   private readonly quantumOut = new Float32Array(SUPER_QUANTUM);
   private readonly latent: Float32Array;
+  /** Stable borrowed view returned by readCoupling(); scalar/object references are refreshed on read. */
+  private readonly couplingView: SuperMindCouplingView;
   private readonly imagined = new Float32Array(LATENT);
   private readonly spinField = new Float32Array(SPIN_SIZE); // situational drive into the instinct lattice
   /** Bipolar probe buffer for Hopfield recall (no per-beat allocation). */
@@ -725,6 +741,12 @@ export class SuperMind {
     // single-threaded tests stayed green (a verifier that falsely passed). Determinism is the #1 law,
     // so the worker is gone: one proven-deterministic path in every runtime (browser, test, bench).
     this.latent = new Float32Array(LATENT);
+    this.couplingView = {
+      dominance: this.dominance,
+      consciousness: this.cons,
+      quantum: this.quantumOut,
+      latent: this.latent,
+    };
 
     this.paramCount =
       this.cortex.params +
@@ -806,6 +828,18 @@ export class SuperMind {
 
   get offspringCount(): number {
     return this.offspring;
+  }
+
+  /**
+   * Allocation-free runtime coupling read. The returned view is borrowed and live; do not retain it as
+   * immutable telemetry. This is the hot-path alternative to the deep, allocating {@link snapshot}.
+   */
+  readCoupling(): Readonly<SuperMindCouplingView> {
+    const view = this.couplingView;
+    view.dominance = this.dominance;
+    // `think()` replaces the consciousness aggregate each beat, so refresh the borrowed reference too.
+    view.consciousness = this.cons;
+    return view;
   }
 
   /** Deterministic, reproducible noise into `this.noise` (the Creativity-Machine perturbation). */

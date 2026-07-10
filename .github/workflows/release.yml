@@ -43,22 +43,29 @@ jobs:
 
       - name: Validate version input
         id: set
+        env:
+          REQUESTED_VERSION: ${{ github.event.inputs.version }}
         run: |
-          VERSION="${{ github.event.inputs.version }}"
-          # Ensure it starts with 'v'
-          if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+          VERSION="$REQUESTED_VERSION"
+          if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "::error::Version must match vX.Y.Z format (got: $VERSION)"
+            exit 1
+          fi
+          PACKAGE_TAG="v$(node -p "require('./package.json').version")"
+          if [ "$VERSION" != "$PACKAGE_TAG" ]; then
+            echo "::error::Requested tag $VERSION does not match package.json ($PACKAGE_TAG)."
             exit 1
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Check tag state
         id: tagstate
+        env:
+          TAG: ${{ steps.set.outputs.version }}
         run: |
-          TAG="${{ steps.set.outputs.version }}"
-          EXISTING_SHA="$(git ls-remote --tags origin "$TAG" | awk '{print $1}' | head -n 1)"
           HEAD_SHA="$(git rev-parse HEAD)"
-          if [ -n "$EXISTING_SHA" ]; then
+          if git show-ref --verify --quiet "refs/tags/$TAG"; then
+            EXISTING_SHA="$(git rev-list -n 1 "$TAG")"
             if [ "$EXISTING_SHA" != "$HEAD_SHA" ]; then
               echo "::error::Tag $TAG already exists at $EXISTING_SHA, not current HEAD $HEAD_SHA."
               exit 1
@@ -70,13 +77,28 @@ jobs:
             echo "Tag $TAG does not exist; creating it."
           fi
 
+      - name: Set up Bun before mutating tag state
+        if: steps.tagstate.outputs.exists == 'false'
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: '1.3.14'
+
+      - name: Install and gate before creating a tag
+        if: steps.tagstate.outputs.exists == 'false'
+        run: |
+          bun install --frozen-lockfile
+          bun run check
+          bun run generated:check
+
       - name: Create and push tag
         if: steps.tagstate.outputs.exists == 'false'
+        env:
+          TAG: ${{ steps.set.outputs.version }}
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag "${{ steps.set.outputs.version }}" HEAD
-          git push origin "${{ steps.set.outputs.version }}"
+          git tag "$TAG" HEAD
+          git push origin "$TAG"
 
   release:
     name: Gate, build, package, publish
@@ -91,18 +113,40 @@ jobs:
     steps:
       - name: Resolve tag name
         id: ref
+        env:
+          PUSHED_TAG: ${{ github.ref_name }}
+          REQUESTED_VERSION: ${{ github.event.inputs.version }}
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "tag=${{ github.event.inputs.version }}" >> "$GITHUB_OUTPUT"
+            TAG="$REQUESTED_VERSION"
           else
-            echo "tag=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+            TAG="$PUSHED_TAG"
           fi
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Release tag must match vX.Y.Z (got: $TAG)."
+            exit 1
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
       - name: Checkout at tag
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           ref: ${{ steps.ref.outputs.tag }}
           persist-credentials: false # don't leave the GITHUB_TOKEN in .git/config (supply-chain hardening)
+
+      - name: Validate checked-out tag against package manifest
+        env:
+          RELEASE_TAG: ${{ steps.ref.outputs.tag }}
+        run: |
+          if [[ ! "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Release tag must match vX.Y.Z (got: $RELEASE_TAG)."
+            exit 1
+          fi
+          PACKAGE_TAG="v$(node -p "require('./package.json').version")"
+          if [ "$RELEASE_TAG" != "$PACKAGE_TAG" ]; then
+            echo "::error::Release tag $RELEASE_TAG does not match package.json ($PACKAGE_TAG)."
+            exit 1
+          fi
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
@@ -115,13 +159,20 @@ jobs:
       - name: Full gate
         run: bun run check
 
+      - name: Generated artifact freshness
+        run: bun run generated:check
+
       - name: Assemble and package Pages-equivalent site
+        env:
+          RELEASE_TAG: ${{ steps.ref.outputs.tag }}
         run: |
           bun run pages
-          tar -czf cqm-${{ steps.ref.outputs.tag }}.tar.gz -C site .
+          tar -czf "cqm-${RELEASE_TAG}.tar.gz" -C site .
 
       - name: Generate SBOM (CycloneDX, §21.420)
-        run: bun run sbom > cqm-${{ steps.ref.outputs.tag }}-sbom.cdx.json
+        env:
+          RELEASE_TAG: ${{ steps.ref.outputs.tag }}
+        run: bun run sbom > "cqm-${RELEASE_TAG}-sbom.cdx.json"
 
       - name: Attest build provenance (SLSA)
         uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4.1.0

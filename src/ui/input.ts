@@ -134,6 +134,10 @@ export class InputSystem {
   private readonly ac = new AbortController();
 
   dispose(): void {
+    if (this.ac.signal.aborted) return;
+    // Timers are not owned by AbortController. Clear the apocalypse hold and every held-input bit
+    // BEFORE removing listeners so an HMR teardown cannot fire into an already-disposed World.
+    this.clearHeldInput();
     this.ac.abort();
   }
 

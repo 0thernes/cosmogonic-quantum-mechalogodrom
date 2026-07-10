@@ -1,9 +1,10 @@
 <!-- reviewed: 2026-06-27 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
-# ADR 0002 — three.js 0.184 ES modules for rendering
+# ADR 0002 — three.js 0.185.1 ES modules for rendering
 
 - Status: Accepted
 - Date: 2026-06-09
+- Amended: 2026-07-10 (dependency pin refreshed to 0.185.1)
 
 ## Context
 
@@ -13,7 +14,7 @@ to 1,000 `MeshStandardMaterial` meshes, two `Points` clouds (stars, quantum),
 `LineSegments` for the connectome and Shoggoth tendrils, `CatmullRomCurve3`
 tube pipelines, ACES filmic tone mapping, and `FogExp2`.
 
-Between r128 and 0.184 the API drifted materially: `BufferAttribute.
+Between r128 and 0.185.1 the API drifted materially: `BufferAttribute.
 updateRange` was **removed** (replaced by `clearUpdateRanges()` /
 `addUpdateRange()`), output color management changed
 (`outputColorSpace` defaults to sRGB), and geometry/material internals moved.
@@ -22,17 +23,17 @@ dependency; rewriting away from three would forfeit the faithful port.
 
 ## Decision
 
-Use **`three@0.184` from npm as ES modules** with `@types/three`:
+Use **`three@0.185.1` from npm as ES modules** with `@types/three`:
 
 - `import * as THREE from 'three'` everywhere; no globals, no CDN.
-- Keep the modern defaults: `outputColorSpace` stays at the 0.184 default;
+- Keep the modern defaults: `outputColorSpace` stays at the 0.185.1 default;
   visual parity is tuned through the ported constants, not by resurrecting
   legacy color management.
 - Port the legacy renderer constants verbatim: ACES filmic tone mapping,
   exposure 1.15, `FogExp2(0x020310, 0.003)`, camera 68° / 0.1–900 at
   (0, 25, 55), DPR capped at 1.25 (mobile) / 2 (desktop), shadows per quality
   profile.
-- Partial GPU uploads use the 0.184 API:
+- Partial GPU uploads use the 0.185.1 API:
   `attr.clearUpdateRanges(); attr.addUpdateRange(0, links * 6);` before
   `needsUpdate = true` (this is also the Known Bug 13 fix — the legacy code
   re-uploaded the full 4,000-segment connectome buffers every update).
@@ -53,7 +54,7 @@ Use **`three@0.184` from npm as ES modules** with `@types/three`:
 
 **Negative / accepted risks**
 
-- r128 → 0.184 is a 56-release jump; subtle shading differences from color
+- r128 → 0.185.1 is a 57-release jump; subtle shading differences from color
   management changes are possible. Mitigation: side-by-side eyeballing
   against `legacy/` and keeping every tunable constant identical.
 - Deprecated-API muscle memory is a hazard — `updateRange` assignments

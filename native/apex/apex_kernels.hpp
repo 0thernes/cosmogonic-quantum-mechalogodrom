@@ -34,6 +34,8 @@ struct Mulberry32 {
 
 // ── FNV-1a over a quantised float — matches apex-native-backend.ts :: fnvFloat ───────────────────
 constexpr double QUANT = 1e6;
+constexpr double PI = 3.141592653589793238462643383279502884;
+constexpr double INV_SQRT_2 = 0.707106781186547524400844362104849039;
 inline uint32_t fnv_float(uint32_t h, double v) {
     if (!std::isfinite(v)) v = 0.0;
     int32_t qi = static_cast<int32_t>(std::llround(v * QUANT));
@@ -72,7 +74,7 @@ inline uint32_t statevector_hash(int qubits, int steps, uint32_t seed) {
     int dim = 1 << q;
     std::vector<double> re(dim, 0.0), im(dim, 0.0);
     re[0] = 1.0;
-    const double s = M_SQRT1_2;
+    const double s = INV_SQRT_2;
     int S = steps < 1 ? 1 : steps;
     for (int t = 0; t < S; t++) {
         for (int target = 0; target < q; target++) {
@@ -131,7 +133,7 @@ inline uint32_t pendulum_hash(int n, int steps, uint32_t seed) {
     std::vector<double> theta(N), p(N);
     Mulberry32 rng(seed == 0 ? 1u : seed);
     for (int i = 0; i < N; i++) {
-        theta[i] = rng.next() * 2 * M_PI;
+        theta[i] = rng.next() * 2 * PI;
         p[i] = (rng.next() - 0.5) * 0.1;
     }
     const double K = 2.7;
@@ -140,7 +142,7 @@ inline uint32_t pendulum_hash(int n, int steps, uint32_t seed) {
         for (int i = 0; i < N; i++) {
             double np = p[i] + K * std::sin(theta[i]);
             p[i] = np;
-            theta[i] = std::fmod(theta[i] + np, 2 * M_PI);
+            theta[i] = std::fmod(theta[i] + np, 2 * PI);
         }
     uint32_t h = 0x811c9dc5u ^ seed;
     for (int i = 0; i < N; i++) h = fnv_float(h, theta[i]);

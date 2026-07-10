@@ -1,4 +1,4 @@
-<!-- reviewed: 2026-07-07 | v0.21.11 truth-surface nav polish | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-07 | v0.21.12 truth-surface nav polish | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # Contributing
 
@@ -44,7 +44,7 @@ touching module boundaries.
    narrow). No `@ts-ignore` / `@ts-expect-error`. Non-null `!` only with a
    one-line invariant comment.
 4. **Imports.** Extensionless relative imports (`../math/rng`).
-   `import * as THREE from 'three'` (modern 0.184 API — r128-era calls like
+   `import * as THREE from 'three'` (modern 0.185 API — r128-era calls like
    `BufferAttribute.updateRange` are gone; use
    `clearUpdateRanges()` / `addUpdateRange()`). Type-only imports use
    `import type`.

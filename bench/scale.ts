@@ -12,6 +12,7 @@ import { SpatialHash } from '../src/math/spatial-hash';
 import { createGeometryCache } from '../src/sim/geometry-cache';
 import { createMorphotypes } from '../src/sim/morphotypes';
 import { EntityManager } from '../src/sim/entities';
+import { Connectome } from '../src/sim/connectome';
 import { SINGULARITY_FIELD, SingularitySystem } from '../src/sim/singularities';
 import { getQuantizationConfig } from '../src/math/quantization';
 import type { AuditTrail } from '../src/logging/audit';
@@ -53,7 +54,7 @@ function makeCtx(seed: number, maxEntities: number): SimContext {
       maxEntities,
       targetEntities: maxEntities,
       quantumCount: 10,
-      maxLinks: 100,
+      maxLinks: maxEntities * 12,
       quantization: getQuantizationConfig('ultra'),
       shadows: false,
       starCount: 10,
@@ -142,6 +143,55 @@ function profileHole(
   return { ms: samples[samples.length >> 1] ?? 0, live: entities.list.length, k };
 }
 
+/**
+ * Structural 10k connectome receipt. The visible sample measures CPU topology + animated geometry writes;
+ * the hidden sample rebuilds the same topology without mutating activation and must write zero geometry
+ * floats. Both samples use the read-only measurement mode. Headless: `needsUpdate` is set, but there is no
+ * WebGL driver/upload timing claim.
+ */
+function profileConnectome(n: number): {
+  visibleMs: number;
+  hiddenMs: number;
+  links: number;
+  pairs: number;
+  maxLinks: number;
+  visibleFloats: number;
+  hiddenFloats: number;
+} {
+  const ctx = makeCtx(0xc011ec7, n);
+  const entities = new EntityManager(ctx);
+  entities.reset(n);
+  for (const entity of entities.list) if (entity) ctx.grid.insert(entity);
+  const connectome = new Connectome(ctx, entities);
+
+  const sample = (visible: boolean): { ms: number; floats: number } => {
+    connectome.setWebVisible(visible);
+    for (let f = 0; f < 3; f++) connectome.update(1 / 60, f / 60, false);
+    const samples: number[] = [];
+    for (let f = 0; f < 12; f++) {
+      const t0 = performance.now();
+      connectome.update(1 / 60, (f + 3) / 60, false);
+      samples.push(performance.now() - t0);
+    }
+    samples.sort((a, b) => a - b);
+    return { ms: samples[samples.length >> 1] ?? 0, floats: connectome.geometryFloatsWritten };
+  };
+
+  const visible = sample(true);
+  const hidden = sample(false);
+  const result = {
+    visibleMs: visible.ms,
+    hiddenMs: hidden.ms,
+    links: connectome.links,
+    pairs: connectome.pairCount,
+    maxLinks: ctx.quality.maxLinks,
+    visibleFloats: visible.floats,
+    hiddenFloats: hidden.floats,
+  };
+  connectome.dispose();
+  return result;
+}
+
 if (import.meta.main) {
   const LADDER = [2000, 5000, 10000, 25000, 50000];
   console.log('\nPopulation scale profile — entity sim pipeline (update + grid), headless\n');
@@ -154,6 +204,22 @@ if (import.meta.main) {
       `  ${String(n).padStart(5)} | ${String(live).padStart(6)} | ${ms.toFixed(2).padStart(8)} | ${verdict}`,
     );
   }
+
+  const conn = profileConnectome(10000);
+  console.log(
+    '\nConnectome @ 10,000 entities — 120,000-link production cap (CPU median; headless)\n',
+  );
+  console.log('          | links/max | pairs | geometry floats | ms/rebuild');
+  console.log('  --------+-----------+-------+-----------------+-----------');
+  console.log(
+    `  visible | ${String(conn.links).padStart(6)}/${String(conn.maxLinks).padEnd(6)} | ${String(conn.pairs).padStart(5)} | ${String(conn.visibleFloats).padStart(15)} | ${conn.visibleMs.toFixed(2).padStart(9)}`,
+  );
+  console.log(
+    `  hidden  | ${String(conn.links).padStart(6)}/${String(conn.maxLinks).padEnd(6)} | ${String(conn.pairs).padStart(5)} | ${String(conn.hiddenFloats).padStart(15)} | ${conn.hiddenMs.toFixed(2).padStart(9)}`,
+  );
+  console.log(
+    '  Hidden still rebuilds pairs/topology; zero geometry floats means no CPU buffer writes/upload flag.',
+  );
 
   console.log('\nSingularity force pass — O(k) reach query, white hole active (median ms/frame)\n');
   console.log('     N  |  live  |    k   | sing ms | note (cost ~flat ⇒ O(k), not O(n))');

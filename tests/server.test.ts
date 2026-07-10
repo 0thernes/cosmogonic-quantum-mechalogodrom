@@ -223,6 +223,45 @@ describe('readJsonBody — size guard before buffering', () => {
     );
     expect(r).toEqual({ ok: false, status: 413, error: 'body too large' });
   });
+
+  test('cancels an undeclared streaming body as soon as its byte cap is crossed', async () => {
+    let pulls = 0;
+    let cancelled = false;
+    const stream = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        pulls++;
+        controller.enqueue(new Uint8Array(300));
+      },
+      cancel() {
+        cancelled = true;
+      },
+    });
+
+    const r = await readJsonBody(
+      new Request('http://localhost:3000/api/chat', { method: 'POST', body: stream }),
+      512,
+    );
+    expect(r).toEqual({ ok: false, status: 413, error: 'body too large' });
+    expect(cancelled).toBe(true);
+    expect(pulls).toBeLessThanOrEqual(3);
+  });
+
+  test('decodes valid JSON split across bounded byte chunks', async () => {
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(encoder.encode('{"message":"hel'));
+        controller.enqueue(encoder.encode('lo"}'));
+        controller.close();
+      },
+    });
+
+    const r = await readJsonBody(
+      new Request('http://localhost:3000/api/chat', { method: 'POST', body: stream }),
+      64,
+    );
+    expect(r).toEqual({ ok: true, value: { message: 'hello' } });
+  });
 });
 
 describe('Copilot route guards — origin before quota', () => {

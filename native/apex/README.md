@@ -20,19 +20,18 @@ stencils, the same FNV-1a-over-quantised-floats hash.
 ## Verify reproduction
 
 ```sh
-# 1. Build the native golden-vector printer (header-only, no deps):
-g++ -std=c++17 -O2 native/apex/apex_golden.cpp -o native/apex/apex_golden      # or clang++ / MSVC
+# 1. Build the native golden-vector checker (header-only, no deps):
+g++ -std=c++20 -O2 native/apex/apex_golden.cpp -o native/apex/apex_golden      # or clang++ / MSVC
 
-# 2. Print the native vectors:
+# 2. Its embedded native constants must match the compiled kernels (non-zero on drift):
 ./native/apex/apex_golden
 
-# 3. Print the authoritative TS oracle vectors:
-bun -e "import {apexGoldenVectors} from './src/sim/apex-native-backend'; \
-  for (const s of [1,7,12345,0xabcdef]) { const g = apexGoldenVectors(s); \
-  console.log(g.seed, g.primeSieve, g.statevector, g.heatGrid, g.pendulum); }"
-
-# 4. The two tables must match. In TS, backendReproducesOracle(nativeBackend) is the gate.
+# 3. Compare the executable to the CURRENT authoritative TypeScript oracle:
+bun scripts/verify-native-apex.ts native/apex/apex_golden
 ```
+
+The native CI job performs the same cross-language comparison after CMake/CTest, so a one-sided
+TypeScript, C++, or embedded-vector change cannot self-validate.
 
 ## Kernels
 
@@ -47,7 +46,7 @@ bun -e "import {apexGoldenVectors} from './src/sim/apex-native-backend'; \
 
 Cross-platform bit-exactness relies on the `QUANT = 1e6` quantisation absorbing benign FP-rounding
 differences between engines. Compile **without** `-ffast-math` for the kernels so IEEE rounding is
-preserved (the sibling render engine may use `-ffast-math`; these kernels must not). Where a platform
+preserved; the sibling render target follows the same safe rule. Where a platform
 still diverges after quantisation, the contract is defined at the quantised hash, not raw bits.
 
 ## Status

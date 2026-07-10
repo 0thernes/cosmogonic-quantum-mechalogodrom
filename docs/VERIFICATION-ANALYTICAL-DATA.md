@@ -1,4 +1,4 @@
-<!-- reviewed: 2026-07-07 | publication-surface current-truth pass | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-10 | publication-surface current-truth pass | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # Verification Analytical Data — cross-surface fact ledger
 
@@ -20,8 +20,8 @@ Rewritten in place when the facts change (per the binding living-doc law in
 
 | Fact                                     | Canonical value                                                      | Source of truth                                                                                                    | Propagated by           |
 | ---------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------- |
-| Package version                          | `0.21.11`                                                            | `package.json` `version`                                                                                           | `sync-surfaces.ts`      |
-| Test count (floor)                       | `2360`                                                               | `scripts/canonical-receipts.ts`                                                                                    | `sync-surfaces.ts`      |
+| Package version                          | `0.21.12`                                                            | `package.json` `version`                                                                                           | `sync-surfaces.ts`      |
+| Test count (exact tracked suite)         | `2369`                                                               | `scripts/canonical-receipts.ts`                                                                                    | `sync-surfaces.ts`      |
 | Line coverage                            | `84.64%`                                                             | `scripts/canonical-receipts.ts`                                                                                    | `sync-surfaces.ts`      |
 | Function coverage                        | `82.21%`                                                             | `scripts/canonical-receipts.ts`                                                                                    | `sync-surfaces.ts`      |
 | Faculties (design)                       | `100` (~30 deep-wired)                                               | `CANONICAL_FACULTIES`                                                                                              | `sync-surfaces.ts`      |
@@ -36,24 +36,27 @@ Rewritten in place when the facts change (per the binding living-doc law in
 | Apex composite mind                      | `~10,081` weights                                                    | `src/sim/super-mind.ts`                                                                                            | prose (NOT auto-synced) |
 | Legacy spine                             | `~1,444` params                                                      | `src/sim/super-mind.ts` / ADR-0008                                                                                 | prose (NOT auto-synced) |
 
-### Latest local receipt (Windows, 2026-07-07, Bun 1.3.14)
+### Latest local receipt (Windows, 2026-07-10, Bun 1.3.14)
 
-- `bun run verify:receipts` → **2,385 completed cases, zero failures** · **256 test files** · **2,867,279**
-  `expect()` calls · **92.03% line / 89.67% func** on this Windows checkout. The synced portable
-  canonical floor remains **2,360 tests · 84.64% line / 82.21% func** from `canonical-receipts.ts`.
-  `CANONICAL_TEST_COUNT` is a documented **floor**; env-dependent totals may differ. Gate-enforced
-  `verify:receipts` floors against the canonical ledger — regression beyond ±6 pp coverage fails CI.
-- The current publication line must keep both truths separated: the portable floor is still the
-  release-synced number, while Windows-local receipts may run higher as suites grow. Current local
-  release gate status must be read with the warning queue: typecheck/lint/receipts/sync are green,
-  `verify:facts` exits 0 with known warnings, and the local-only archived-report formatter gap is
-  handled by `.prettierignore` rather than promoted to the public artifact.
+<!-- cqm-sync:local-measurement:start -->
 
-### Current consolidated report/audit pair (2026-07-07)
+- `bun run verify:receipts` → **2,369 tests, zero failures** · **263 test files** · **2,868,067**
+  `expect()` calls · **92.21% line / 89.85% func** on this Windows checkout.
+
+<!-- cqm-sync:local-measurement:end -->
+
+- Tracked-only discovery makes `CANONICAL_TEST_COUNT` an exact cross-platform suite count; the
+  published **84.64% line / 82.21% func** pair remains the one-sided clean-Ubuntu coverage floor.
+- Gate-enforced `verify:receipts` rejects any failed/unknown child status, any test-count mismatch,
+  or coverage below either portable floor. Higher local coverage is recorded separately, not synced.
+- The current publication line keeps the exact test count, portable coverage floors, and higher local
+  coverage explicitly separated. The complete local gate and `verify:facts` are green with no drift.
+
+### Dated consolidated report/audit pair (2026-07-07)
 
 - [`CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md`](./CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md)
-  is the current readable synthesis across the 22 report artifacts, GitHub/About/release-facing
-  surfaces, and the proxy-consciousness/sentience boundary.
+  is the dated readable synthesis across the 22 report artifacts and the
+  proxy-consciousness/sentience boundary; its receipt values are snapshot evidence, not current data.
 - [`CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md`](./CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md)
   is the file-trust ledger. It records stale counts, overclaim risks, public-page gaps, and the
   exact fifth-pass handles that must carry forward.
@@ -76,17 +79,17 @@ Rewritten in place when the facts change (per the binding living-doc law in
 
 ## 3 · Audit findings (2026-06-26)
 
-| #   | Severity                   | Where                                                      | Issue                                                                                                                                                                                          | Resolution                                                                                                       |
-| --- | -------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| A   | **P0 gate-RED**            | `.github/copilot-instructions.md`                          | markdown tables collapsed by the external `hacklm-memory` tool → fails `prettier --check` (first gate stage) in the working tree                                                               | `prettier --write` (re-pad tables)                                                                               |
-| B   | reconciled (not a bug)     | `scripts/canonical-receipts.ts`                            | `CANONICAL_TEST_COUNT` is a floor (1477→1771→1984→2372→2295→2360 portable floor as suites and hosts changed) vs file-rich measured counts                                                      | floor semantics confirmed correct; the published headline floor is now **2360** (`--print` never auto-raises it) |
-| C   | **P0 gate-RED**            | `CHANGELOG.md`, `docs/KANBAN-2026-06-26.md`                | 3 dead relative links into the deleted `docs/audit-2026-06-15/` folder (consolidated into AUDIT-LOG by `e51a376`)                                                                              | repoint to `docs/AUDIT-LOG.md`                                                                                   |
-| C2  | P1 test-hygiene            | `tests/doc-links.test.ts`                                  | `SKIP` set omitted `.claude/` → the test scanned nested worktree copies and false-failed                                                                                                       | add `.claude`, `legacy`, `site`, `coverage` to `SKIP`                                                            |
-| D   | P1 doc-rot                 | `docs/KANBAN-2026-06-26.md`                                | mojibake: `×11/`×7/``×1 (orphaned-emoji fragments), `—`×34 used as `—`, plus `¦`/`–`/`©º`— slipped the encoding gate (orphaned fragments aren't double-encoding;`U+201D` is a legit codepoint) | byte-precise normalize: drop corrupted emoji prefixes, restore `—`/`–` separators                                |
-| E   | P2 count-drift             | `docs/KANBAN-2026-06-26.md:17`                             | "ALL **19** Tsotchke repos" — only outlier vs the canonical "20 corpus projects" everywhere                                                                                                    | `19 → 20`                                                                                                        |
-| F   | **RESOLVED (2026-07-06)**  | `HANDOFF-2026-06-26.md`, `research_receipts-2026-06-26.md` | stale present-tense continuity artifacts (942–1172 tests) duplicated AUDIT-LOG + VERIFICATION                                                                                                  | deleted; history preserved in AUDIT-LOG + CHANGELOG                                                              |
-| G   | flag (cleanliness)         | repo root                                                  | stray debug logs tracked at root (`.gate.log`, `.gate.baseline.log`, `.audit-gate.log`, `law.log`, `law_error.txt`, `tsc.log`, `tscout.txt`, `receipts_print.txt`)                             | noted for cleanup                                                                                                |
-| H   | flag (fidelity, not a bug) | `src/math/curvature-aware-qng.ts`                          | `computeChristoffelSymbols` sets `dg=0`, so the general N×N "curvature-aware" path reduces to ordinary QNG                                                                                     | honestly documented as a simplification; no NaN / wrong shape; noted so the caveat is visible                    |
+| #   | Severity                   | Where                                                      | Issue                                                                                                                                                                                          | Resolution                                                                                    |
+| --- | -------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| A   | **P0 gate-RED**            | `.github/copilot-instructions.md`                          | markdown tables collapsed by the external `hacklm-memory` tool → fails `prettier --check` (first gate stage) in the working tree                                                               | `prettier --write` (re-pad tables)                                                            |
+| B   | fixed                      | `scripts/canonical-receipts.ts`, `tests/doc-links.test.ts` | Historical host-dependent discovery made one count look like a floor; tracked-only discovery now yields one exact suite count on clean local/CI checkouts                                      | exact-count semantics sealed at **2369**; coverage alone remains a portable one-sided floor   |
+| C   | **P0 gate-RED**            | `CHANGELOG.md`, `docs/KANBAN-2026-06-26.md`                | 3 dead relative links into the deleted `docs/audit-2026-06-15/` folder (consolidated into AUDIT-LOG by `e51a376`)                                                                              | repoint to `docs/AUDIT-LOG.md`                                                                |
+| C2  | P1 test-hygiene            | `tests/doc-links.test.ts`                                  | `SKIP` set omitted `.claude/` → the test scanned nested worktree copies and false-failed                                                                                                       | add `.claude`, `legacy`, `site`, `coverage` to `SKIP`                                         |
+| D   | P1 doc-rot                 | `docs/KANBAN-2026-06-26.md`                                | mojibake: `×11/`×7/``×1 (orphaned-emoji fragments), `—`×34 used as `—`, plus `¦`/`–`/`©º`— slipped the encoding gate (orphaned fragments aren't double-encoding;`U+201D` is a legit codepoint) | byte-precise normalize: drop corrupted emoji prefixes, restore `—`/`–` separators             |
+| E   | P2 count-drift             | `docs/KANBAN-2026-06-26.md:17`                             | "ALL **19** Tsotchke repos" — only outlier vs the canonical "20 corpus projects" everywhere                                                                                                    | `19 → 20`                                                                                     |
+| F   | **RESOLVED (2026-07-06)**  | `HANDOFF-2026-06-26.md`, `research_receipts-2026-06-26.md` | stale present-tense continuity artifacts (942–1172 tests) duplicated AUDIT-LOG + VERIFICATION                                                                                                  | deleted; history preserved in AUDIT-LOG + CHANGELOG                                           |
+| G   | flag (cleanliness)         | repo root                                                  | stray debug logs tracked at root (`.gate.log`, `.gate.baseline.log`, `.audit-gate.log`, `law.log`, `law_error.txt`, `tsc.log`, `tscout.txt`, `receipts_print.txt`)                             | noted for cleanup                                                                             |
+| H   | flag (fidelity, not a bug) | `src/math/curvature-aware-qng.ts`                          | `computeChristoffelSymbols` sets `dg=0`, so the general N×N "curvature-aware" path reduces to ordinary QNG                                                                                     | honestly documented as a simplification; no NaN / wrong shape; noted so the caveat is visible |
 
 **Finding D2 — master governance XML mojibake (root cause + fix).** All three `masters/*.xml` files
 (the EXECUTOR / ARCHITECT / PHYSICIST steering docs read before every change) each carried ~150
@@ -111,7 +114,7 @@ outside sim logic). Only fidelity caveat = Finding H above.
 
 Consistency that **passed** verification (no drift found): Butlin `8/14 met + 6/14 partial` (every
 current surface; the only `14/14` hits are in `legacy/` verbatim-preserved files + append-only CHANGELOG
-history with the correction logged), version `0.21.11` (matches `package.json` — the version SSOT), entity `50,000`, bioforms
+history with the correction logged), version `0.21.12` (matches `package.json` — the version SSOT), entity `50,000`, bioforms
 `26`, faculty/Archon/ToM/emergence counts, Tsotchke `20`.
 
 ---
@@ -366,7 +369,7 @@ verify:facts` = 0 drift / 80 surfaces, 0 git-conflict-markers tree-wide, 100% of
 | `src/ui/**`                                                                       | 20    | subsystems agent                                         | clean (3 cosmetic Low: DPR-on-monitor-move)                                                      |
 | `src/core,audio,server,memory,logging` + `main/types/docs-page` + `server.ts`     | ~14   | subsystems agent                                         | clean; security exceptionally hardened                                                           |
 | `src/styles/app.css`                                                              | 1     | front-end agent                                          | clean                                                                                            |
-| `tests/**`                                                                        | 256   | gate floor (2,360 tests) + tooling agent                 | healthy, 0 disabled, all assert                                                                  |
+| `tests/**`                                                                        | 263   | exact gate (2,369 tests) + tooling agent                 | healthy, 0 disabled, all assert                                                                  |
 | `scripts/**`                                                                      | 16    | scripts/tooling agents                                   | sound; **CI sync:check gap FIXED**, dead `.sync-receipts.cjs` removed                            |
 | `bench/**`                                                                        | 13    | tooling agent                                            | clean; aggregate now includes the P1 quantum-classical bench                                     |
 | `.github/workflows/*.yml` + issue/PR templates                                    | 8+    | CI agent                                                 | SHA-pinned, least-priv; `master`->`main` URLs FIXED; **gate now runs sync:check + verify:facts** |

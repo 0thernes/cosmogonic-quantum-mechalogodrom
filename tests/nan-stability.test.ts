@@ -25,6 +25,7 @@ import { CHAOS_MAX } from '../src/sim/constants';
 import { getQuantizationConfig } from '../src/math/quantization';
 import type { AuditTrail } from '../src/logging/audit';
 import type { Entity, SimContext, SimState } from '../src/types';
+import { World } from '../src/world';
 
 /** Max legal frame delta: the 0.05 s rawDt clamp at timeScale 3 (world.ts step contract). */
 const DT_MAX = 0.15;
@@ -129,6 +130,63 @@ function stepWorldSlice(ctx: SimContext, entities: EntityManager, dt: number): v
   }
   entities.update(dt, s.elapsed);
 }
+
+describe('World frame-delta ingress', () => {
+  test('rejects and audits non-finite clock samples before reading or mutating world state', () => {
+    const records: Array<{ action: string; detail?: Record<string, unknown> }> = [];
+    // Deliberately provide no state/engine/subsystems. If step() reaches any stateful frame work, this test
+    // throws; a successful return proves the rejection happens at the ingress boundary.
+    const receiver = {
+      audit: {
+        record: (action: string, detail?: Record<string, unknown>) =>
+          records.push({ action, detail }),
+      },
+    } as unknown as World;
+
+    World.prototype.step.call(receiver, Number.NaN);
+    World.prototype.step.call(receiver, Number.POSITIVE_INFINITY);
+    World.prototype.step.call(receiver, Number.NEGATIVE_INFINITY);
+
+    expect(records).toEqual([
+      { action: 'frame-delta-rejected', detail: { rawDt: 'NaN' } },
+      { action: 'frame-delta-rejected', detail: { rawDt: 'Infinity' } },
+      { action: 'frame-delta-rejected', detail: { rawDt: '-Infinity' } },
+    ]);
+  });
+
+  test('both pause states return before dispatching wilderness simulation work', () => {
+    const makeReceiver = (frozenAll: boolean): { world: World; pausedSteps: number[] } => {
+      const pausedSteps: number[] = [];
+      const receiver = {
+        state: { timeScale: 0, elapsed: 0, frame: 0 },
+        godClock: 0,
+        frozenAll,
+        pauseVisualClock: 0,
+        stepFrozen: (dt: number) => pausedSteps.push(dt),
+        stepSuspended: (dt: number) => pausedSteps.push(dt),
+        wilderness: {
+          update: () => {
+            throw new Error('paused world dispatched wilderness work');
+          },
+        },
+        wildernessRender: {
+          sync: () => {
+            throw new Error('frozen world synced wilderness');
+          },
+        },
+      } as unknown as World;
+      return { world: receiver, pausedSteps };
+    };
+
+    const frozen = makeReceiver(true);
+    World.prototype.step.call(frozen.world, 0.016);
+    expect(frozen.pausedSteps).toEqual([0.016]);
+
+    const suspended = makeReceiver(false);
+    World.prototype.step.call(suspended.world, 0.016);
+    expect(suspended.pausedSteps).toEqual([0.016]);
+  });
+});
 
 describe('lorenz divergence seal (apocalypse regime)', () => {
   test('all-lorenz population survives 400 max-dt frames of apocalypse spam', () => {

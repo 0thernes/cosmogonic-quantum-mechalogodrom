@@ -4,7 +4,7 @@
  * RAG book). Deterministic (sorted), so re-running on an unchanged tree is a no-op diff. No hand edits:
  * to fix a summary, fix the module's header and re-run. Part of the DOCUMENTATION / RAG BOOK (V37).
  */
-import { Glob } from 'bun';
+import { execFileSync } from 'node:child_process';
 
 const ROOT = 'src';
 
@@ -20,7 +20,14 @@ function summarize(text: string): string {
   return line ? (line[1] ?? '—').trim() : '—';
 }
 
-const rels = [...new Glob('**/*.ts').scanSync(ROOT)].map((r) => r.replace(/\\/g, '/')).sort();
+const rels = execFileSync('git', ['ls-files', '-z', '--', ROOT], {
+  encoding: 'utf8',
+  maxBuffer: 16 * 1024 * 1024,
+})
+  .split('\0')
+  .filter((path) => path.startsWith(`${ROOT}/`) && path.endsWith('.ts'))
+  .map((path) => path.slice(ROOT.length + 1).replace(/\\/g, '/'))
+  .sort();
 
 const groups = new Map<string, { file: string; sum: string }[]>();
 for (const rel of rels) {
@@ -33,6 +40,8 @@ for (const rel of rels) {
   groups.set(dir, arr);
 }
 
+const TARGET = 'docs/FILE-MAP.md';
+
 // Freshness stamp: preserve whatever the repo-wide reviewed-stamp sweep last set so the living date
 // survives regeneration (this file is the only generated MD, so without preservation each re-run would
 // silently strip its stamp). We must NOT author the date here — a `new Date()` stamp would also break
@@ -41,9 +50,10 @@ for (const rel of rels) {
 const STAMP_SEED =
   '<!-- reviewed: 2026-06-27 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->';
 let stamp = STAMP_SEED;
+let previous = '';
 try {
-  const prev = await Bun.file('docs/FILE-MAP.md').text();
-  const m = prev.match(/^<!--\s*reviewed:.*?-->/m);
+  previous = await Bun.file(TARGET).text();
+  const m = previous.match(/^<!--\s*reviewed:.*?-->/m);
   if (m) stamp = m[0];
 } catch {
   /* first generation — no prior file; use the seed */
@@ -64,5 +74,14 @@ for (const dir of [...groups.keys()].sort()) {
   out += `\n`;
 }
 
-await Bun.write('docs/FILE-MAP.md', out);
-console.log(`wrote docs/FILE-MAP.md — ${rels.length} modules, ${groups.size} dirs`);
+if (process.argv.includes('--check')) {
+  if (previous !== out) {
+    console.error(`filemap --check: ${TARGET} is stale — run: bun run filemap`);
+    process.exitCode = 1;
+  } else {
+    console.log(`filemap --check: ${rels.length} modules across ${groups.size} dirs are current`);
+  }
+} else {
+  await Bun.write(TARGET, out);
+  console.log(`wrote ${TARGET} — ${rels.length} modules, ${groups.size} dirs`);
+}

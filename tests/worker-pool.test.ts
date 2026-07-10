@@ -12,6 +12,7 @@
  */
 import { describe, expect, test } from 'bun:test';
 import { createWorkerPool, WorkerPool, type WorkerTask } from '../src/core/worker-pool';
+import { WildernessPopulation } from '../src/sim/wilderness-population';
 import type { QualityTier } from '../src/types';
 
 describe('Phase 3.1: Worker Pool', () => {
@@ -33,6 +34,7 @@ describe('Phase 3.1: Worker Pool', () => {
       type: 'simulation',
       data: new Float32Array([1, 2, 3, 4, 5, 6]),
       seed: 12345,
+      dt: 1 / 60,
     };
 
     const executor = (t: WorkerTask) => {
@@ -61,6 +63,7 @@ describe('Phase 3.1: Worker Pool', () => {
       type: 'simulation',
       data: new Float32Array([1, 2, 3]),
       seed: 12345,
+      dt: 1 / 60,
     };
 
     const executor = (t: WorkerTask) => {
@@ -117,6 +120,7 @@ describe('Phase 3.1: Worker Pool', () => {
       type: 'simulation',
       data: new Float32Array(0),
       seed: 12345,
+      dt: 1 / 60,
     };
 
     const executor = (t: WorkerTask) => {
@@ -135,6 +139,7 @@ describe('Phase 3.1: Worker Pool', () => {
       type: 'wilderness',
       data: new Float32Array(8),
       seed: 12345,
+      dt: 1 / 60,
       chunkId: '0,0',
     };
     const uninitResult = await pool.executeAsync(wildernessTask);
@@ -157,6 +162,7 @@ describe('Phase 3.1: Worker Pool', () => {
       type: 'simulation',
       data: largeData,
       seed: 12345,
+      dt: 1 / 60,
     };
 
     const executor = (t: WorkerTask) => {
@@ -260,11 +266,17 @@ describe('Phase 3.1: Worker Pool', () => {
     class TransferWorker {
       onmessage: ((event: MessageEvent) => void) | null = null;
       onerror: ((event: ErrorEvent) => void) | null = null;
-      postMessage(msg: WorkerTask & { useSharedArrayBuffer: boolean }): void {
+      postMessage(msg: WorkerTask & { generation: number; useSharedArrayBuffer: boolean }): void {
         const out = new Float32Array(msg.data);
         for (let i = 0; i < out.length; i++) out[i] = (out[i] ?? 0) + 1;
         this.onmessage?.({
-          data: { id: msg.id, type: msg.type, data: out, success: true },
+          data: {
+            id: msg.id,
+            type: msg.type,
+            data: out,
+            success: true,
+            generation: msg.generation,
+          },
         } as MessageEvent);
       }
       terminate(): void {}
@@ -292,6 +304,7 @@ describe('Phase 3.1: Worker Pool', () => {
       type: 'wilderness',
       data: owned,
       seed: 99,
+      dt: 1 / 60,
       chunkId: '0,0',
     };
 
@@ -345,6 +358,7 @@ describe('Phase 3.1: Worker Pool', () => {
       type: 'wilderness',
       data: new Float32Array(4),
       seed: 1,
+      dt: 1 / 60,
       chunkId: '0,0',
     });
 
@@ -381,6 +395,7 @@ describe('Phase 3.1: Worker Pool', () => {
                 type: msg.type,
                 data: msg.data,
                 success: true,
+                generation: msg.generation,
               },
             } as MessageEvent);
           }
@@ -410,6 +425,7 @@ describe('Phase 3.1: Worker Pool', () => {
       type: 'wilderness',
       data: new Float32Array([10, 20]),
       seed: 99,
+      dt: 1 / 60,
     };
 
     const promise = pool.executeAsync(task1);
@@ -423,12 +439,14 @@ describe('Phase 3.1: Worker Pool', () => {
       type: 'wilderness',
       data: new Float32Array([10]),
       seed: 1,
+      dt: 1 / 60,
     };
     const task3: WorkerTask = {
       id: 'queued-task-2',
       type: 'wilderness',
       data: new Float32Array([20]),
       seed: 2,
+      dt: 1 / 60,
     };
 
     const p1 = pool.executeAsync(task2);
@@ -450,5 +468,421 @@ describe('Phase 3.1: Worker Pool', () => {
       configurable: true,
       value: originalWorker,
     });
+  });
+
+  test('equal-size SharedArrayBuffer tasks receive exclusive leases and stable results', async () => {
+    const originalWorker = globalThis.Worker;
+    const originalNavigator = globalThis.navigator;
+    const seenBuffers: Array<ArrayBufferLike> = [];
+
+    class SabWorker {
+      onmessage: ((event: MessageEvent) => void) | null = null;
+      onerror: ((event: ErrorEvent) => void) | null = null;
+      postMessage(msg: {
+        id: string;
+        type: 'wilderness';
+        data: Float32Array;
+        generation: number;
+      }): void {
+        seenBuffers.push(msg.data.buffer);
+        const initial = msg.data[0] ?? 0;
+        const reply = this.onmessage;
+        setTimeout(
+          () => {
+            for (let i = 0; i < msg.data.length; i++) msg.data[i] = (msg.data[i] ?? 0) + 10;
+            reply?.({
+              data: {
+                id: msg.id,
+                type: msg.type,
+                data: msg.data,
+                success: true,
+                generation: msg.generation,
+              },
+            } as MessageEvent);
+          },
+          initial === 1 ? 10 : 0,
+        );
+      }
+      terminate(): void {}
+    }
+
+    Object.defineProperty(globalThis, 'Worker', { configurable: true, value: SabWorker });
+    Object.defineProperty(globalThis, 'navigator', {
+      configurable: true,
+      value: { hardwareConcurrency: 2 },
+    });
+
+    const pool = new WorkerPool({
+      maxWorkers: 2,
+      useSharedArrayBuffer: true,
+      qualityTier: 'desktop',
+      taskTimeoutMs: 100,
+    });
+
+    try {
+      await pool.initialize('/fake-worker.js');
+      const first = pool.executeAsync({
+        id: 'sab-a',
+        type: 'wilderness',
+        data: new Float32Array([1, 1]),
+        seed: 1,
+        dt: 1 / 60,
+        chunkId: '0,0',
+      });
+      const second = pool.executeAsync({
+        id: 'sab-b',
+        type: 'wilderness',
+        data: new Float32Array([2, 2]),
+        seed: 2,
+        dt: 1 / 60,
+        chunkId: '1,0',
+      });
+
+      const [a, b] = await Promise.all([first, second]);
+      expect(seenBuffers).toHaveLength(2);
+      expect(seenBuffers[0]).not.toBe(seenBuffers[1]);
+      expect(a.data).toEqual(new Float32Array([11, 11]));
+      expect(b.data).toEqual(new Float32Array([12, 12]));
+
+      // A later lease may reuse a free SAB, but previously resolved data must remain immutable.
+      await pool.executeAsync({
+        id: 'sab-c',
+        type: 'wilderness',
+        data: new Float32Array([3, 3]),
+        seed: 3,
+        dt: 1 / 60,
+        chunkId: '2,0',
+      });
+      expect(a.data).toEqual(new Float32Array([11, 11]));
+    } finally {
+      pool.dispose();
+      Object.defineProperty(globalThis, 'navigator', {
+        configurable: true,
+        value: originalNavigator,
+      });
+      Object.defineProperty(globalThis, 'Worker', {
+        configurable: true,
+        value: originalWorker,
+      });
+    }
+  });
+
+  test('dispose settles both an active task and a saturated acquisition waiter', async () => {
+    const originalWorker = globalThis.Worker;
+    const originalNavigator = globalThis.navigator;
+
+    class HangingWorker {
+      onmessage: ((event: MessageEvent) => void) | null = null;
+      onerror: ((event: ErrorEvent) => void) | null = null;
+      postMessage(): void {}
+      terminate(): void {}
+    }
+
+    Object.defineProperty(globalThis, 'Worker', { configurable: true, value: HangingWorker });
+    Object.defineProperty(globalThis, 'navigator', {
+      configurable: true,
+      value: { hardwareConcurrency: 1 },
+    });
+
+    const pool = new WorkerPool({
+      maxWorkers: 1,
+      useSharedArrayBuffer: false,
+      qualityTier: 'desktop',
+      taskTimeoutMs: 1000,
+    });
+
+    try {
+      await pool.initialize('/fake-worker.js');
+      const active = pool.executeAsync({
+        id: 'dispose-active',
+        type: 'wilderness',
+        data: new Float32Array(8),
+        seed: 1,
+        dt: 1 / 60,
+        chunkId: '0,0',
+      });
+      const queued = pool.executeAsync({
+        id: 'dispose-queued',
+        type: 'wilderness',
+        data: new Float32Array(8),
+        seed: 2,
+        dt: 1 / 60,
+        chunkId: '1,0',
+      });
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(pool.getStats().activeTasks).toBe(1);
+
+      pool.dispose();
+      const [activeResult, queuedResult] = await Promise.all([active, queued]);
+      expect(activeResult.success).toBe(false);
+      expect(activeResult.error).toContain('disposed');
+      expect(queuedResult.success).toBe(false);
+      expect(queuedResult.error).toContain('disposed');
+      expect(pool.getStats()).toEqual({
+        totalWorkers: 0,
+        availableWorkers: 0,
+        activeTasks: 0,
+        pendingResults: 0,
+      });
+    } finally {
+      pool.dispose();
+      Object.defineProperty(globalThis, 'navigator', {
+        configurable: true,
+        value: originalNavigator,
+      });
+      Object.defineProperty(globalThis, 'Worker', {
+        configurable: true,
+        value: originalWorker,
+      });
+    }
+  });
+
+  test('a saturated acquisition waiter has the same bounded deadline as active work', async () => {
+    const originalWorker = globalThis.Worker;
+    const originalNavigator = globalThis.navigator;
+
+    class HangingWorker {
+      onmessage: ((event: MessageEvent) => void) | null = null;
+      onerror: ((event: ErrorEvent) => void) | null = null;
+      postMessage(): void {}
+      terminate(): void {}
+    }
+
+    Object.defineProperty(globalThis, 'Worker', { configurable: true, value: HangingWorker });
+    Object.defineProperty(globalThis, 'navigator', {
+      configurable: true,
+      value: { hardwareConcurrency: 1 },
+    });
+
+    const pool = new WorkerPool({
+      maxWorkers: 1,
+      useSharedArrayBuffer: false,
+      qualityTier: 'desktop',
+      taskTimeoutMs: 5,
+    });
+
+    try {
+      await pool.initialize('/fake-worker.js');
+      const active = pool.executeAsync({
+        id: 'deadline-active',
+        type: 'wilderness',
+        data: new Float32Array(8),
+        seed: 1,
+        dt: 1 / 60,
+        chunkId: '0,0',
+      });
+      const queued = pool.executeAsync({
+        id: 'deadline-queued',
+        type: 'wilderness',
+        data: new Float32Array(8),
+        seed: 2,
+        dt: 1 / 60,
+        chunkId: '1,0',
+      });
+
+      const queuedResult = await queued;
+      const activeResult = await active;
+      expect(queuedResult.success).toBe(false);
+      expect(queuedResult.error).toContain('waiting for capacity');
+      expect(activeResult.success).toBe(false);
+      expect(activeResult.error).toContain('timed out');
+    } finally {
+      pool.dispose();
+      Object.defineProperty(globalThis, 'navigator', {
+        configurable: true,
+        value: originalNavigator,
+      });
+      Object.defineProperty(globalThis, 'Worker', {
+        configurable: true,
+        value: originalWorker,
+      });
+    }
+  });
+
+  test('timeout retires the worker and ignores its late generation before ID reuse', async () => {
+    const originalWorker = globalThis.Worker;
+    const originalNavigator = globalThis.navigator;
+    let instanceCount = 0;
+
+    class GenerationWorker {
+      readonly index = instanceCount++;
+      onmessage: ((event: MessageEvent) => void) | null = null;
+      onerror: ((event: ErrorEvent) => void) | null = null;
+      postMessage(msg: {
+        id: string;
+        type: 'wilderness';
+        data: Float32Array;
+        generation: number;
+      }): void {
+        const reply = this.onmessage;
+        const response = {
+          id: msg.id,
+          type: msg.type,
+          data: new Float32Array(msg.data),
+          success: true,
+          generation: msg.generation,
+        };
+        if (this.index === 0) setTimeout(() => reply?.({ data: response } as MessageEvent), 30);
+        else setTimeout(() => reply?.({ data: response } as MessageEvent), 0);
+      }
+      terminate(): void {}
+    }
+
+    Object.defineProperty(globalThis, 'Worker', { configurable: true, value: GenerationWorker });
+    Object.defineProperty(globalThis, 'navigator', {
+      configurable: true,
+      value: { hardwareConcurrency: 1 },
+    });
+
+    const pool = new WorkerPool({
+      maxWorkers: 1,
+      useSharedArrayBuffer: false,
+      qualityTier: 'desktop',
+      taskTimeoutMs: 5,
+    });
+
+    try {
+      await pool.initialize('/fake-worker.js');
+      const timedOut = await pool.executeAsync({
+        id: 'reused-id',
+        type: 'wilderness',
+        data: new Float32Array([1]),
+        seed: 1,
+        dt: Number.POSITIVE_INFINITY,
+        chunkId: '0,0',
+      });
+      expect(timedOut.success).toBe(false);
+      expect(timedOut.error).toContain('timed out');
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      const replacement = await pool.executeAsync({
+        id: 'reused-id',
+        type: 'wilderness',
+        data: new Float32Array([2]),
+        seed: 2,
+        dt: 10,
+        chunkId: '0,0',
+      });
+      expect(replacement.success).toBe(true);
+      expect(replacement.data).toEqual(new Float32Array([2]));
+
+      await new Promise((resolve) => setTimeout(resolve, 35));
+      expect(pool.getStats().activeTasks).toBe(0);
+      expect(pool.getStats().pendingResults).toBe(0);
+    } finally {
+      pool.dispose();
+      Object.defineProperty(globalThis, 'navigator', {
+        configurable: true,
+        value: originalNavigator,
+      });
+      Object.defineProperty(globalThis, 'Worker', {
+        configurable: true,
+        value: originalWorker,
+      });
+    }
+  });
+
+  test('repeated asynchronous startup errors exhaust replacement budget and preserve sync fallback', async () => {
+    const originalWorker = globalThis.Worker;
+    const originalNavigator = globalThis.navigator;
+    let constructed = 0;
+
+    class StartupErrorWorker {
+      onmessage: ((event: MessageEvent) => void) | null = null;
+      onerror: ((event: ErrorEvent) => void) | null = null;
+      private terminated = false;
+
+      constructor() {
+        constructed++;
+        // Browser worker script/CSP failures are asynchronous: construction succeeds, then `error`
+        // fires after the pool has admitted the worker.
+        setTimeout(() => {
+          if (!this.terminated)
+            this.onerror?.({ message: 'worker script failed to load' } as ErrorEvent);
+        }, 0);
+      }
+
+      postMessage(): void {}
+
+      terminate(): void {
+        this.terminated = true;
+      }
+    }
+
+    Object.defineProperty(globalThis, 'Worker', {
+      configurable: true,
+      value: StartupErrorWorker,
+    });
+    Object.defineProperty(globalThis, 'navigator', {
+      configurable: true,
+      value: { hardwareConcurrency: 1 },
+    });
+
+    const pool = new WorkerPool({
+      maxWorkers: 1,
+      useSharedArrayBuffer: false,
+      qualityTier: 'desktop',
+      taskTimeoutMs: 100,
+      maxReplacementAttempts: 2,
+    });
+    const wilderness = new WildernessPopulation(pool, 0x1234abcd);
+
+    try {
+      await pool.initialize('/missing-worker.js');
+      for (let i = 0; i < 40; i++) {
+        if (constructed === 3 && pool.getStats().totalWorkers === 0) break;
+        await new Promise((resolve) => setTimeout(resolve, 5));
+      }
+
+      // One initial worker + exactly two replacements, then the failed slot remains retired.
+      expect(constructed).toBe(3);
+      expect(pool.getStats()).toEqual({
+        totalWorkers: 0,
+        availableWorkers: 0,
+        activeTasks: 0,
+        pendingResults: 0,
+      });
+      await new Promise((resolve) => setTimeout(resolve, 15));
+      expect(constructed).toBe(3);
+
+      const unavailable = await pool.executeAsync({
+        id: 'startup-exhausted',
+        type: 'wilderness',
+        data: new Float32Array(8),
+        seed: 1,
+        dt: 1 / 60,
+        chunkId: '0,0',
+      });
+      expect(unavailable.success).toBe(false);
+      expect(unavailable.error).toContain('not initialized');
+
+      // Wilderness consumes that failure through its shared main-thread kernel instead of stalling.
+      wilderness.update(0, 0, 1 / 60);
+      const before = wilderness.getSnapshot('0,0');
+      expect(before).not.toBeNull();
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      const after = wilderness.getSnapshot('0,0');
+      expect(after).not.toBeNull();
+      let changed = false;
+      for (let i = 0; i < (before?.positions.length ?? 0); i++) {
+        if (before?.positions[i] !== after?.positions[i]) {
+          changed = true;
+          break;
+        }
+      }
+      expect(changed).toBe(true);
+    } finally {
+      wilderness.dispose();
+      pool.dispose();
+      Object.defineProperty(globalThis, 'navigator', {
+        configurable: true,
+        value: originalNavigator,
+      });
+      Object.defineProperty(globalThis, 'Worker', {
+        configurable: true,
+        value: originalWorker,
+      });
+    }
   });
 });

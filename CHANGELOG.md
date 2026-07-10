@@ -9,6 +9,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.12] — 2026-07-10
+
+- Runtime and determinism hardening:
+  - Made worker/SAB leases exclusive, bounded every active/capacity wait, retired failed workers,
+    settled disposal, and validated worker identities and payloads before use.
+  - Unified worker and synchronous wilderness physics, added real bounded `dt`, coordinate-stable
+    chunk seeds, newest-frame backpressure, and deterministic fallback for malformed results.
+  - Added non-finite frame rejection, WebGPU adapter fallback deadlines, bounded deferred-UI retries,
+    Copilot request/history/provider/body ceilings, finite audit retention, and timer-safe input teardown.
+- Performance and measurement:
+  - Replaced per-frame deep SuperMind snapshots with borrowed coupling reads plus UI-cadence snapshots.
+  - Skipped hidden-connectome geometry work while retaining topology/activation and added a
+    production-shaped structural benchmark.
+  - Seeded benchmark fixtures and stopped the aggregate mitata runner from executing every suite twice.
+- Delivery and supply-chain integrity:
+  - Made coverage receipts preserve the real child exit status and exact tracked-suite count.
+  - Made generated files, hooks, builds, Pages, tags, releases, and canonical-fact checks fail closed.
+  - Gated Pages/tags on successful CI; removed privileged shell interpolation; made release dispatch
+    immutable/retry-safe; and required legal/security documents in Pages and release artifacts.
+  - Added clean Ubuntu native CI for both fallback and default Jolt builds plus a live C++↔TypeScript
+    APEX oracle comparison; pinned FetchContent dependencies to immutable commits.
+  - Expanded the CycloneDX SBOM to all reachable normal, optional, development, and peer dependencies,
+    with runtime/development scopes and dependency-reference regression tests.
+- Includes the post-0.21.11 Three.js, Tailwind, Mermaid, Prettier, oxlint, TypeScript, and statistics
+  dependency/toolchain refreshes already landed on main.
+
 ## [0.21.11] — 2026-07-07
 
 - Public docs truth repair after `v0.21.10`:

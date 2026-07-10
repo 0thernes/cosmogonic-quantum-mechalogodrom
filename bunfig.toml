@@ -1,10 +1,6 @@
 [serve.static]
 plugins = ["bun-plugin-tailwind"]
 
-# Coverage regression guard (500-point §17.339). Thresholds sit safely below the measured coverage
-# (see scripts/canonical-receipts.ts: CANONICAL_LINE_COV / CANONICAL_FUNC_COV — the SSOT; never
-# hand-copy a coverage % here) so normal change has headroom, but a real drop fails. Only enforced
-# when coverage is collected (`bun test --coverage`, run by `bun run test:coverage` in CI) — the
-# local `bun test` stays fast and uninstrumented.
-[test]
-coverageThreshold = { line = 0.9, function = 0.85 }
+# Coverage policy lives only in scripts/canonical-receipts.ts and is enforced by verify-receipts.ts.
+# Duplicating numeric thresholds here previously made Ubuntu's valid portable floor exit non-zero while
+# a shell pipeline silently discarded that status. One source of truth; one child process; one exit code.

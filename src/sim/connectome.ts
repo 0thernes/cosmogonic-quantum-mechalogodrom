@@ -97,6 +97,8 @@ export class Connectome {
   private readonly lines: THREE.LineSegments;
   private linkCount = 0;
   private pairTotal = 0;
+  /** Position/color floats written during the last update (0 while the web is hidden). */
+  private geometryWriteTotal = 0;
   /** Community lookup installed by GraphMind (null ⇒ V1 time-hue coloring). */
   private communityOf: ((entityIndex: number) => number) | null = null;
   // Open-addressed mesh-id → list-index table, generation-stamped so a refill never clears
@@ -155,6 +157,8 @@ export class Connectome {
    *  regardless; this only toggles the visual layer. O(1). */
   setWebVisible(show: boolean): void {
     this.lines.visible = show;
+    // Never expose a stale web between the toggle and the next rebuild.
+    if (!show) this.geo.setDrawRange(0, 0);
   }
 
   /** Whether the axon-web LineSegments are currently drawn. */
@@ -170,6 +174,11 @@ export class Connectome {
   /** Index pairs recorded in {@link pairs} by the last update (`pairCount <= links`). */
   get pairCount(): number {
     return this.pairTotal;
+  }
+
+  /** Structural performance receipt: CPU geometry/color floats written by the last rebuild. */
+  get geometryFloatsWritten(): number {
+    return this.geometryWriteTotal;
   }
 
   /** Free the owned geometry + material and remove the axon-web from the scene (HMR / world-reset safe;
@@ -250,6 +259,8 @@ export class Connectome {
     const pairs = this.pairs;
     const communityOf = this.communityOf;
     const max = this.maxLinks;
+    const drawWeb = this.lines.visible;
+    this.geometryWriteTotal = 0;
     const actStep = mutateAct ? ACT_PROP_GAIN * Math.min(1, dt * 60) : 0;
     // Advance the lookup generation (uint32 wrap ≈ 2.2 years of 60 fps updates; on the wrap,
     // stamps are zeroed so a slot from 2^32 updates ago can never alias the new generation).
@@ -287,7 +298,6 @@ export class Connectome {
             pairs[pc * 2 + 1] = bi;
             pc++;
           }
-          const nI = 1 - nd * 0.125;
           const nw = (ea.userData.nW + eb.userData.nW) * 0.5;
           // Bounded activation propagation: `!(< ACT_MAX)` routes both overflow AND NaN to
           // the cap, the symmetric branch floors the (rare) negative side. O(1), no allocation.
@@ -295,6 +305,11 @@ export class Connectome {
           if (mutateAct) {
             eb.userData.act = !(act < ACT_MAX) ? ACT_MAX : act > -ACT_MAX ? act : -ACT_MAX;
           }
+          // Link topology + activation are simulation state and always advance. When the visual layer is
+          // hidden, stop here: no HSL/trigonometric geometry work, buffer writes, draw range, or GPU upload.
+          const linkIndex = wI++;
+          if (!drawWeb) continue;
+          const nI = 1 - nd * 0.125;
           // V109 colour: one dynamic hue/saturation + firing/retracting brightness per link.
           const actPulse = (ea.userData.act + eb.userData.act) * 0.5;
           const fire = 0.5 + 0.5 * Math.sin(t * FIRE_HZ + nw * 12.0 + ni * 0.7);
@@ -348,7 +363,7 @@ export class Connectome {
             TMP_PT[o + 1] = ap.y + (bp.y - ap.y) * u + p1y * w1 + p2y * w2;
             TMP_PT[o + 2] = ap.z + (bp.z - ap.z) * u + p1z * w1 + p2z * w2;
           }
-          let w = wI * LINK_FLOATS;
+          let w = linkIndex * LINK_FLOATS;
           for (let k = 0; k < LINK_SEG; k++) {
             const a3 = k * 3;
             const b3 = a3 + 3;
@@ -366,14 +381,12 @@ export class Connectome {
             col[w + 5] = cb;
             w += 6;
           }
-          wI++;
         }
       }
     }
     this.linkCount = wI;
     this.pairTotal = pc;
-    if (wI > 0 && this.lines.visible) {
-      // Skip the GPU upload while HIDDEN (toggle via setWebVisible) — pairs + activation still compute.
+    if (wI > 0 && drawWeb) {
       // Known Bug 13 fix: upload only the populated range, not all maxLinks*LINK_FLOATS floats.
       this.posAttr.clearUpdateRanges();
       this.posAttr.addUpdateRange(0, wI * LINK_FLOATS);
@@ -382,7 +395,12 @@ export class Connectome {
       this.colAttr.addUpdateRange(0, wI * LINK_FLOATS);
       this.colAttr.needsUpdate = true;
     }
-    // Each link draws LINK_SEG segments → LINK_SEG·2 vertices.
-    this.geo.setDrawRange(0, wI * LINK_SEG * 2);
+    if (drawWeb) {
+      this.geometryWriteTotal = wI * LINK_FLOATS;
+      // Each link draws LINK_SEG segments → LINK_SEG·2 vertices.
+      this.geo.setDrawRange(0, wI * LINK_SEG * 2);
+    } else {
+      this.geo.setDrawRange(0, 0);
+    }
   }
 }

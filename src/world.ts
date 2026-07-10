@@ -1463,6 +1463,12 @@ export class World {
 
   /** Advance one frame. rawDt is the unclamped clock delta in seconds. */
   step(rawDt: number): void {
+    // Reject corrupt clock samples before touching simulation state. `Math.min/max` propagate NaN, and
+    // accepting Infinity as the 50 ms cap hides a broken clock source; both would make the audit trail lie.
+    if (!Number.isFinite(rawDt)) {
+      this.audit.record('frame-delta-rejected', { rawDt: String(rawDt) });
+      return;
+    }
     const s = this.state;
     // Clamp to [0, 50ms]: negative deltas (clock skew) and tab-switch gaps
     // would otherwise drive curve parameters and physics out of range.
@@ -1477,20 +1483,6 @@ export class World {
 
     s.frame++;
     const t = s.elapsed;
-
-    // ── WORKER OFFLOAD (ADR 0010) ─────────────────────────────────────────────────────────────────────
-    // Core simulation (deterministic, in golden) runs on main thread via SYNC executor.
-    // Wilderness simulation (best-effort, NOT in golden) runs on worker threads via ASYNC executor.
-    // Worker pool is initialized and wilderness population is active.
-    // Wilderness entities are camera-streamed (load near / unload far) with 1-frame lag (acceptable for ambient).
-    // One-way boundary: core may seed/spawn INTO wilderness; wilderness NEVER writes back to core.
-
-    // Update wilderness population based on camera position
-    // This runs on worker threads for full CPU utilization
-    const camX = this.engine.camera.position.x;
-    const camZ = this.engine.camera.position.z;
-    this.wilderness.update(camX, camZ, dt);
-    this.wildernessRender.sync(this.wilderness, t);
 
     // ── THREE-STATE PAUSE (USER pause redesign) ──────────────────────────────────────────────────────
     // The ⏸ PAUSE button cycles RUNNING → SUSPENDED → FROZEN → RUNNING (see togglePause / cycleTimeScale).
@@ -1517,6 +1509,16 @@ export class World {
     }
     // RUNNING: keep the pause clock tracking sim time so the next pause starts seamlessly (no phase jump).
     this.pauseVisualClock = t;
+
+    // ── WORKER OFFLOAD (ADR 0010) ─────────────────────────────────────────────────────────────────────
+    // Best-effort wilderness work is dispatched only while RUNNING. SUSPENDED already performs a render-only
+    // sync in stepSuspended(), and FROZEN holds the existing frame, so neither pause state needs worker work.
+    // One-way boundary: core may seed/spawn INTO wilderness; wilderness NEVER writes back to core.
+    const camX = this.engine.camera.position.x;
+    const camZ = this.engine.camera.position.z;
+    this.wilderness.update(camX, camZ, dt);
+    this.wildernessRender.sync(this.wilderness, t);
+
     this.updateGrowthTarget(); // V66: ramp the live population target 500 → ceiling, then breathe
 
     this.updateHeroControl(); // V41: route player nav input to the avatar (assist / manual)
@@ -1604,12 +1606,13 @@ export class World {
     );
     // V47: the wingman swarm orbits + assists the prime each frame; one InstancedMesh draws all 100.
     this.superBody.worldPosition(this.sv1);
+    const primeCoupling = this.superMinds[0]?.readCoupling();
     this.wingSwarm.update(
       this.sv1.x,
       this.sv1.y,
       this.sv1.z,
-      this.superMindSnap?.emotion.dominance ?? 0.5,
-      this.superMindSnap?.quantum ?? this.emptyQ,
+      primeCoupling?.dominance ?? 0.5,
+      primeCoupling?.quantum ?? this.emptyQ,
       t,
       dt,
     );
@@ -2074,12 +2077,13 @@ export class World {
     // ── Every creature ALIVE IN PLACE (travel frozen, body animating on vt; all rng-free here) ──
     for (let i = 0; i < this.superBodies.length; i++) this.superBodies[i]!.update(vt, 0); // APEX + 5 super creatures
     this.superBody.worldPosition(this.sv1);
+    const primeCoupling = this.superMinds[0]?.readCoupling();
     this.wingSwarm.update(
       this.sv1.x,
       this.sv1.y,
       this.sv1.z,
-      this.superMindSnap?.emotion.dominance ?? 0.5,
-      this.superMindSnap?.quantum ?? this.emptyQ,
+      primeCoupling?.dominance ?? 0.5,
+      primeCoupling?.quantum ?? this.emptyQ,
       vt,
       0, // dt=0 freezes the orbit; the drones keep spinning on the visual clock via wingRender.sync
     );
@@ -2246,9 +2250,13 @@ export class World {
         };
         confidence: number;
       }> = [];
+      // Deep SuperMind telemetry is intentionally materialized only on this UI cadence. Runtime couplings use
+      // readCoupling(), so the per-frame cognition loop never pays for QGT/qubit/reservoir snapshot allocation.
+      this.superMindSnap = null;
       for (let i = 0; i < APEX_INDIVIDUATED; i++) {
         const archonSnap = this.superCreatures[i]?.snapshot();
         const mindSnap = this.superMinds[i]?.snapshot?.() ?? null;
+        if (i === 0) this.superMindSnap = mindSnap;
         archonInfos.push({
           archetype: GODFORMS[i] ?? 'ARCHON',
           plan: archonSnap?.plan ?? mindSnap?.plan ?? 'REST',
@@ -2471,8 +2479,9 @@ export class World {
   private driveSuper(bass: number, level: number, t: number, n: number): void {
     try {
       const s = this.state;
-      // The pantheon is already beaten once per frame in update(); read its current snapshot here
-      // (driveSuper runs on a frame % 4 cadence) so the stigmergic field is not double-stepped.
+      // The pantheon is already beaten once per frame in update(); read its current snapshot here so the
+      // stigmergic field is not double-stepped. driveSuper itself runs every simulation frame; apexThinkMode
+      // rotates which one of the five minds takes the full path while the other four take the echo path.
       const pantheonSnap = this.pantheon.snapshot();
       const collective = this.superCollective;
       this.pantheon.collectiveBias(0, collective);
@@ -2666,12 +2675,14 @@ export class World {
         // V1.3 AE-1/HOT-3: the apex SuperMind's chosen move vector now steers the avatar's flight target.
         this.superBodies[i]!.setSuperMindMove(mindOut.move.x, mindOut.move.y, mindOut.move.z);
         if (i === 0) {
-          this.superMindSnap = this.superMinds[0]!.snapshot(); // typed, removed any per contract
           primeMindOut = mindOut;
         }
       }
+      // Borrowed, allocation-free state for every runtime coupling below. The deep immutable-ish telemetry
+      // snapshot is produced by pushPanels() only on the 18f/36f observatory cadence.
+      const primeCoupling = this.superMinds[0]?.readCoupling();
       // V-APEX: tick the Entropic Tesseract Hydra brain (10 organs + quantum + meta-paradox).
-      // The apex brain runs on the same driveSuper cadence (frame % 4), reading the world percept
+      // The apex brain runs on the same every-frame driveSuper cadence, reading the world percept
       // and producing a plan + vitality + agony + transcendence. Its output feeds the noosphere
       // and the emergence angles, so the 10-organ brain genuinely influences the world.
       const ap = this.apexPercept;
@@ -2728,7 +2739,7 @@ export class World {
       // present latent (past successful patterns align with now), it contributes a small bounded boost
       // to collective chaos — a genuine apex→field→world loop mirroring the noosphere's collectiveInsight
       // coupling above. Deterministic (the field draws no rng), bounded + clamped. Runs on the apex beat.
-      const apexLatent = this.superMindSnap?.latent;
+      const apexLatent = primeCoupling?.latent;
       if (apexLatent && apexLatent.length > 0) {
         this.morphicField.imprint(apexLatent, this.lastApexThought.transcendence);
         // V-MORPH-2: the Mechalogodrom fusion-mind is a SECOND author of the SAME shared field — its
@@ -2775,11 +2786,10 @@ export class World {
             }
           }
         }
-        const primeSnap = this.superMinds[0]!.snapshot();
         const rot = s.frame % ARCHON_CHANNELS;
         void this.emergenceAngles.evolveEshkolProgram(
           `archon-${rot}`,
-          primeSnap.consciousness.phi,
+          primeCoupling?.consciousness.phi ?? 0,
           fi,
         );
         this.emergenceAngles.recombineStrains(
@@ -2794,16 +2804,13 @@ export class World {
           let qgtC = 0.3;
           let esh = 0.4;
           if (a < this.superMinds.length) {
-            const snap = this.superMinds[a]?.snapshot?.() ?? null;
-            pwr =
-              (snap?.consciousness?.phi ?? 0.3) +
-              (snap?.consciousness?.ignition ?? 0.2) +
-              ((snap as { chaos?: number })?.chaos ?? 0);
-            spinO = (snap as { quantum?: number[] })?.quantum?.[0] ?? 0.4;
-            qgtC = (snap as { qgt?: number })?.qgt ?? 0.3;
-            esh =
-              (snap as { eshkolConsciousness?: { ignition?: number } })?.eshkolConsciousness
-                ?.ignition ?? 0.4;
+            const coupling = this.superMinds[a]?.readCoupling();
+            pwr = (coupling?.consciousness.phi ?? 0.3) + (coupling?.consciousness.ignition ?? 0.2);
+            spinO = coupling?.quantum[0] ?? 0.4;
+            // The prior snapshot casts queried fields that SuperMindSnapshot does not expose, so both values
+            // always used these fallbacks. Keep them explicit to preserve the deterministic event contract.
+            qgtC = 0.3;
+            esh = 0.4;
           } else {
             this.pantheon.field.sample(a, this.nhsiCollectiveScratch);
             const c = this.nhsiCollectiveScratch;
@@ -2897,20 +2904,20 @@ export class World {
       // Metrics are built from the prime super mind's consciousness + the world's chaos + diversity.
       if (!this.selfEvoLoop) {
         const initMetrics: EvolutionMetrics = {
-          fitness: clamp(this.superMindSnap?.emotion?.dominance ?? 0.5, 0, 1),
+          fitness: clamp(primeCoupling?.dominance ?? 0.5, 0, 1),
           emergence: clamp(n / target, 0, 1),
           complexity: this.apexBrain.parameterCount(),
-          consciousness: clamp(this.superMindSnap?.consciousness?.phi ?? 0, 0, 1),
+          consciousness: clamp(primeCoupling?.consciousness.phi ?? 0, 0, 1),
           stability: clamp(1 - s.chaos / CHAOS_MAX, 0, 1),
         };
         this.selfEvoLoop = new SelfEvolutionLoop(initMetrics);
       }
       if (s.frame % 1200 === 0 && s.frame > 0) {
         this.selfEvoLoop.ingestLive({
-          fitness: clamp(this.superMindSnap?.emotion?.dominance ?? 0.5, 0, 1),
+          fitness: clamp(primeCoupling?.dominance ?? 0.5, 0, 1),
           emergence: clamp(n / target, 0, 1),
           complexity: this.apexBrain.parameterCount(),
-          consciousness: clamp(this.superMindSnap?.consciousness?.phi ?? 0, 0, 1),
+          consciousness: clamp(primeCoupling?.consciousness.phi ?? 0, 0, 1),
           stability: clamp(1 - s.chaos / CHAOS_MAX, 0, 1),
         });
         // Feed metrics into the loop + step (the loop mutates its own metrics via safe self-modification)
@@ -3008,7 +3015,7 @@ export class World {
       for (const d of this.petriDishes) petriBoost *= petriGrowthMultiplier(d);
       petriBoost = Math.pow(petriBoost, 1 / Math.max(1, this.petriDishes.length));
       const vitality = clamp(
-        (0.5 * (this.superMindSnap?.emotion.dominance ?? 0.5) +
+        (0.5 * (primeCoupling?.dominance ?? 0.5) +
           0.3 * (primeMindOut?.consciousness?.novelty ?? 0) +
           0.2 * this.wingSwarm.assist) *
           petriBoost,

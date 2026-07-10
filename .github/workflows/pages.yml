@@ -1,12 +1,13 @@
 name: Deploy to GitHub Pages
 
 # CD: build the REAL app (not the old hand-pushed legacy demo) and publish it to GitHub Pages on
-# every push to the default branch. Replaces the stale `gh-pages` branch source — set the repo's
+# every successful CI push to the default branch. Replaces the stale `gh-pages` branch source — set the repo's
 # Pages source to "GitHub Actions" (build_type=workflow) for this to publish. The site is assembled
 # by scripts/build-pages.ts (dist/ + /lab + subpath-relative nav rewrites).
 on:
-  push:
-    branches: [main, master] # `main` is the live default branch; `master` kept only as a mirror alias
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
   workflow_dispatch:
 
 # Least privilege + the tokens the Pages deployment needs.
@@ -23,12 +24,18 @@ concurrency:
 jobs:
   build:
     name: Build site
+    if: >
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_branch == 'main')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
           persist-credentials: false # don't leave the GITHUB_TOKEN in .git/config (supply-chain hardening)
 
       - name: Set up Bun
@@ -45,6 +52,14 @@ jobs:
 
       - name: Install (frozen lockfile)
         run: bun install --frozen-lockfile
+
+      - name: Full gate for manual deployments
+        if: github.event_name == 'workflow_dispatch'
+        run: bun run check
+
+      - name: Generated artifact freshness for manual deployments
+        if: github.event_name == 'workflow_dispatch'
+        run: bun run generated:check
 
       - name: Build + assemble Pages site
         run: bun run pages

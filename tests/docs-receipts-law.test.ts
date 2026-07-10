@@ -10,8 +10,8 @@
  * Two-part enforcement:
  *   1. THIS test (fast, no spawning): every surface's published test-count / coverage tokens must equal
  *      the canonical constants below. Internal consistency across all surfaces is guaranteed instantly.
- *   2. `scripts/verify-receipts.ts` (run by `bun run check` and in CI): actually runs `bun test` +
- *      `bun test --coverage`, parses the real numbers, and fails if the canonical constants below have
+ *   2. `scripts/verify-receipts.ts` (run by `bun run check` and in CI): runs `bun test --coverage`
+ *      once, preserves its exit status, parses the real numbers, and fails if the canonical constants below have
  *      drifted from reality. That is where the constants are *measured*; this test is where they are
  *      *propagated*. Together: you cannot publish a number you did not measure.
  *
@@ -28,6 +28,7 @@ import {
   CANONICAL_LINE_COV,
   CANONICAL_FUNC_COV,
 } from '../scripts/canonical-receipts';
+import { measureGate, receiptProblems } from '../scripts/verify-receipts';
 
 // Public surfaces that publish receipts. (Dated reports under docs/reports/* are historical worldline
 // snapshots carrying a SUPERSEDED banner and are intentionally excluded — their bodies preserve the
@@ -42,6 +43,15 @@ const SURFACES = [
   'docs/BENCHMARKS-2026-06-26.md',
   'docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md',
 ];
+
+const HISTORICAL_SECTION_RE =
+  /<!-- cqm-sync:historical:start -->[\s\S]*?<!-- cqm-sync:historical:end -->/g;
+const LOCAL_MEASUREMENT_SECTION_RE =
+  /<!-- cqm-sync:local-measurement:start -->[\s\S]*?<!-- cqm-sync:local-measurement:end -->/g;
+
+function currentClaimsOnly(text: string): string {
+  return text.replace(HISTORICAL_SECTION_RE, '').replace(LOCAL_MEASUREMENT_SECTION_RE, '');
+}
 
 /**
  * Patterns that capture a published TEST-COUNT integer (group 1 = the number). The count register in
@@ -62,7 +72,7 @@ describe('receipts law — every published test count matches the canonical (mea
     for (const rel of SURFACES) {
       const file = Bun.file(rel);
       if (!(await file.exists())) continue;
-      const text = await file.text();
+      const text = currentClaimsOnly(await file.text());
       for (const re of TEST_COUNT_PATTERNS) {
         re.lastIndex = 0;
         let m: RegExpExecArray | null;
@@ -70,12 +80,11 @@ describe('receipts law — every published test count matches the canonical (mea
           const g = m[1];
           if (g === undefined) continue;
           const claimed = Number(g.replace(/,/g, ''));
-          // Police only the test-count register (1,000–9,999). The canonical count is a FLOOR, so a
-          // surface may publish any value AT OR ABOVE it (the exact total is env-dependent) but never
-          // BELOW — that would underclaim what the suite actually measures.
-          if (claimed >= 1000 && claimed < 10000 && claimed < CANONICAL_TEST_COUNT) {
+          // Police only the test-count register (1,000–9,999). Tracked-only discovery now makes the
+          // count deterministic across clean local/CI checkouts, so every live surface must be exact.
+          if (claimed >= 1000 && claimed < 10000 && claimed !== CANONICAL_TEST_COUNT) {
             offenders.push(
-              `${rel}: claims "${m[0].trim()}" (=${claimed}) BELOW the canonical floor ${CANONICAL_TEST_COUNT}`,
+              `${rel}: claims "${m[0].trim()}" (=${claimed}) instead of canonical ${CANONICAL_TEST_COUNT}`,
             );
           }
         }
@@ -89,6 +98,20 @@ describe('receipts law — every published test count matches the canonical (mea
       );
     }
     expect(offenders).toEqual([]);
+
+    const measured = measureGate(
+      `All files | ${CANONICAL_FUNC_COV} | ${CANONICAL_LINE_COV} |\n` +
+        ` ${CANONICAL_TEST_COUNT} pass\n 0 fail\n` +
+        `Ran ${CANONICAL_TEST_COUNT} tests across 257 files.`,
+    );
+    expect(receiptProblems(measured)).toEqual([]);
+    expect(receiptProblems({ ...measured, count: CANONICAL_TEST_COUNT - 1 })).toContain(
+      `test count: canonical ${CANONICAL_TEST_COUNT} but gate measures ${CANONICAL_TEST_COUNT - 1} (re-measure and re-sync)`,
+    );
+    expect(receiptProblems(measured, 1)).toContain('bun test --coverage exited with status 1');
+    expect(receiptProblems(measured, null)).toContain(
+      'bun test --coverage did not report an exit status',
+    );
   });
 });
 
@@ -100,7 +123,7 @@ describe('receipts law — coverage figures are internally consistent across sur
     for (const rel of SURFACES) {
       const file = Bun.file(rel);
       if (!(await file.exists())) continue;
-      const text = await file.text();
+      const text = currentClaimsOnly(await file.text());
       pairRe.lastIndex = 0;
       let m: RegExpExecArray | null;
       while ((m = pairRe.exec(text)) !== null) {
@@ -110,21 +133,27 @@ describe('receipts law — coverage figures are internally consistent across sur
         const lv = Number(line);
         const fv = Number(fn);
         if (lv >= 80 && lv <= 100 && fv >= 80 && fv <= 100) {
-          // Coverage is env-sensitive (Bun instruments a slightly different file set per environment),
-          // so surfaces are policed within an explicit ±band around canonical — the same tolerance the
-          // gate (verify-receipts.ts) uses — not bare float equality.
-          const COV_BAND = 6;
-          if (
-            Math.abs(lv - Number(CANONICAL_LINE_COV)) > COV_BAND ||
-            Math.abs(fv - Number(CANONICAL_FUNC_COV)) > COV_BAND
-          ) {
+          // The published pair is the portable coverage floor, not whichever higher number one OS
+          // happened to measure. Live surfaces therefore carry the exact canonical floor pair.
+          if (line !== CANONICAL_LINE_COV || fn !== CANONICAL_FUNC_COV) {
             offenders.push(
-              `${rel}: publishes coverage "${m[0].trim()}" beyond ±${COV_BAND}pp of canonical ${CANONICAL_LINE_COV}/${CANONICAL_FUNC_COV}`,
+              `${rel}: publishes coverage "${m[0].trim()}" instead of canonical ${CANONICAL_LINE_COV}/${CANONICAL_FUNC_COV}`,
             );
           }
         }
       }
     }
     expect(offenders).toEqual([]);
+  });
+});
+
+describe('receipts law — historical snapshots remain immutable', () => {
+  test('the v0.21.11 README receipt is explicit and excluded from current-fact propagation', async () => {
+    const readme = await Bun.file('README.md').text();
+    const blocks = readme.match(HISTORICAL_SECTION_RE) ?? [];
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0]).toContain('v0.21.11 (2026-07-07 public-doc truth repair)');
+    expect(blocks[0]).toContain('2,360-test');
+    expect(blocks[0]).toContain('Package **v0.21.11**');
   });
 });

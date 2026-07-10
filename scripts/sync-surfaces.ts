@@ -23,6 +23,45 @@ import { readFileSync, writeFileSync } from 'node:fs';
 
 const checkOnly = process.argv.includes('--check');
 
+const SYNC_EXCLUSION_KINDS = ['historical', 'local-measurement'] as const;
+
+interface ProtectedSections {
+  text: string;
+  blocks: string[];
+}
+
+/** Protect marked historical or host-local evidence from portable-current rewrites. */
+function protectSyncExcludedSections(s: string): ProtectedSections {
+  for (const kind of SYNC_EXCLUSION_KINDS) {
+    const start = `<!-- cqm-sync:${kind}:start -->`;
+    const end = `<!-- cqm-sync:${kind}:end -->`;
+    const starts = s.split(start).length - 1;
+    const ends = s.split(end).length - 1;
+    if (starts !== ends) {
+      throw new Error(`sync-surfaces: unbalanced ${kind} markers (${starts} start, ${ends} end)`);
+    }
+  }
+
+  const blocks: string[] = [];
+  const text = s.replace(
+    /<!-- cqm-sync:(historical|local-measurement):start -->[\s\S]*?<!-- cqm-sync:\1:end -->/g,
+    (block) => {
+      const token = `__CQM_SYNC_EXCLUDED_SECTION_${blocks.length}__`;
+      blocks.push(block);
+      return token;
+    },
+  );
+  return { text, blocks };
+}
+
+function restoreSyncExcludedSections(s: string, blocks: string[]): string {
+  let restored = s;
+  for (let i = 0; i < blocks.length; i++) {
+    restored = restored.replace(`__CQM_SYNC_EXCLUDED_SECTION_${i}__`, blocks[i]!);
+  }
+  return restored;
+}
+
 /** Single source of truth: the package version. */
 const VERSION = (JSON.parse(readFileSync('package.json', 'utf8')) as { version: string }).version;
 
@@ -172,7 +211,7 @@ function syncReceipts(s: string): string {
     )
     .replace(/\b[0-9],[0-9]{3}-test\b/g, `${TEST_COMMA}-test`)
     .replace(/\b[0-9],[0-9]{3}-test floor\b/g, `${TEST_COMMA}-test floor`)
-    .replace(/(\| Test count \(floor\)\s+\|\s+`)[0-9]+(`)/g, `$1${TEST}$2`)
+    .replace(/(\| Test count \((?:floor|exact tracked suite)\)\s+\|\s+`)[0-9]+(`)/g, `$1${TEST}$2`)
     .replace(/\*\*([0-9],[0-9]{3})\*\* \(floor/g, `**${TEST_COMMA}** (floor`)
     .replace(/\b[0-9]{2}\.[0-9]{2} % \/ [0-9]{2}\.[0-9]{2} %/g, `${LINE} % / ${FUNC} %`)
     .replace(/\b[0-9],[0-9]{3} passing tests\b/g, `${TEST_COMMA} passing tests`)
@@ -229,10 +268,7 @@ function syncVersion(s: string): string {
           : `v${VERSION} @ current`,
       )
       .replace(/version-0\.[0-9]+\.[0-9]+/g, `version-${VERSION}`)
-      .replace(
-        /reviewed:\s*[0-9-]{10}\s*\|\s*v0\.[0-9]+\.[0-9]+/g,
-        `reviewed: 2026-07-07 | v${VERSION}`,
-      )
+      .replace(/(reviewed:\s*[0-9-]{10}\s*\|\s*)v0\.[0-9]+\.[0-9]+/g, `$1v${VERSION}`)
       .replace(/(\| Package version\s+\|\s+`)0\.[0-9]+\.[0-9]+(`)/g, `$1${VERSION}$2`)
       // TECH-SPEC / spec-header "**Version:** vX.Y.Z" — the one current-version marker this missed,
       // which left TECHNICAL-SPECIFICATION-2026-06-26.md stuck a version behind until hand-reconciled. Now durable.
@@ -321,7 +357,9 @@ for (const file of SURFACES) {
   } catch {
     continue; // surface may not exist in every tree
   }
-  const next = syncNHSI(syncVersion(syncReceipts(s)));
+  const protectedSections = protectSyncExcludedSections(s);
+  const synced = syncNHSI(syncVersion(syncReceipts(protectedSections.text)));
+  const next = restoreSyncExcludedSections(synced, protectedSections.blocks);
   if (next !== s) {
     drift.push(file);
     if (!checkOnly) writeFileSync(file, next, 'utf8');

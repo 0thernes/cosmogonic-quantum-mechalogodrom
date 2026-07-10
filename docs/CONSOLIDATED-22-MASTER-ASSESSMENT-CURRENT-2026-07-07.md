@@ -6,6 +6,10 @@ Companion audit: `docs/CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md`
 Companion HTML: `docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.html`
 Audit HTML: `docs/CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.html`
 
+> **Snapshot boundary:** This assessment and every receipt called "latest" inside it are preserved as
+> evidence from 2026-07-07. Current version, test, assertion, and coverage measurements live in
+> [`VERIFICATION-ANALYTICAL-DATA.md`](./VERIFICATION-ANALYTICAL-DATA.md).
+
 ## Current Truth Banner
 
 This is the sober master. The right assessment is not "sentience proven" and not

@@ -82,6 +82,28 @@ describe('AuditTrail', () => {
     expect(entries.at(-1)?.action).toBe('a204');
   });
 
+  test('non-finite configured capacities fall back to the finite default', () => {
+    const trail = new AuditTrail({ max: Number.POSITIVE_INFINITY });
+    for (let i = 0; i < 205; i++) trail.record(`a${i}`);
+    expect(trail.entries()).toHaveLength(200);
+    expect(trail.entries().at(0)?.action).toBe('a5');
+  });
+
+  test('huge configured capacities are clamped to the hard retention ceiling', () => {
+    const realStorage = globalThis.localStorage;
+    delete (globalThis as { localStorage?: Storage }).localStorage;
+    globalThis.fetch = undefined as unknown as typeof fetch;
+    try {
+      const trail = new AuditTrail({ max: Number.MAX_SAFE_INTEGER });
+      for (let i = 0; i < 1005; i++) trail.record(`a${i}`);
+      expect(trail.entries()).toHaveLength(1000);
+      expect(trail.entries().at(0)?.action).toBe('a5');
+    } finally {
+      (globalThis as { localStorage?: Storage }).localStorage = realStorage;
+      installRecordingFetch();
+    }
+  });
+
   test('persists to localStorage and restores in a new instance', () => {
     const trail = new AuditTrail();
     trail.record('boot');
