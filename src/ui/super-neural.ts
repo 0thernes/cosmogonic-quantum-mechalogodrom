@@ -1234,6 +1234,20 @@ const drawBrain: Drawer = (ctx, w, h, s, t) => {
 
 /** 4D hyper-grid neuron projected through a rotating w-axis slice — MEGA GODLIKE mode. */
 const MEGA_N = 420;
+/** The static (i,j) axon pairs drawMegaBrain connects: the ~22k of the 88k pairs whose 4D-Hamming filter
+ * `((i^j)&15) ∈ {1,2,3,4}` passes. Precomputed once so the per-frame pass iterates only real candidates
+ * instead of the full O(MEGA_N²) double loop with a per-pair skip. Packed [i,j,i,j,…], i<j ascending —
+ * same pairs in the same order the old loop drew, so the render is byte-identical. */
+const MEGA_PAIRS: Uint16Array = (() => {
+  const out: number[] = [];
+  for (let i = 0; i < MEGA_N; i++) {
+    for (let j = i + 1; j < MEGA_N; j++) {
+      const d4 = (i ^ j) & 15;
+      if (d4 >= 1 && d4 <= 4) out.push(i, j);
+    }
+  }
+  return Uint16Array.from(out);
+})();
 /** Per-neuron spike-train history (ring buffer of binary spikes). */
 const SPIKE_HIST = 24;
 const spikeBuf: Float32Array[] = Array.from({ length: MEGA_N }, () => new Float32Array(SPIKE_HIST));
@@ -1415,37 +1429,28 @@ const drawMegaBrain: Drawer = (ctx, w, h, s, t) => {
 
   // 3) Axonal connections: small-world by 4D Hamming distance, with traveling spikes.
   const pulse = frac(t * 0.55);
-  for (let i = 0; i < MEGA_N; i++) {
-    for (let j = i + 1; j < MEGA_N; j++) {
-      const d4 = Math.abs((i ^ j) & 15);
-      if (d4 > 4 || d4 === 0) continue;
-      const strength = (act[i]! + act[j]!) * 0.5;
-      if (strength < 0.12) continue;
-      const near = ((pts[i]!.d + pts[j]!.d) / 2 + 1) / 2;
-      const li = layer[i]!;
-      const lj = layer[j]!;
-      const lhue = LAYER_HUES[li]!;
-      const lhue2 = LAYER_HUES[lj]!;
-      const hue = (lhue + lhue2) / 2 + ((t * 20) % 360);
-      ctx.strokeStyle = `hsla(${hue},100%,${(46 + strength * 38).toFixed(0)}%,${(strength * 0.4 * near).toFixed(2)})`;
-      ctx.lineWidth = 0.3 + strength * 1.6 * near;
-      ctx.beginPath();
-      ctx.moveTo(pts[i]!.x, pts[i]!.y);
-      ctx.lineTo(pts[j]!.x, pts[j]!.y);
-      ctx.stroke();
-      // traveling pulse packet
-      const pp = (pulse + (i + j) * 0.013) % 1;
-      const px = pts[i]!.x + (pts[j]!.x - pts[i]!.x) * pp;
-      const py = pts[i]!.y + (pts[j]!.y - pts[i]!.y) * pp;
-      spark(
-        ctx,
-        px,
-        py,
-        1.5 + strength * 3.5,
-        `${(hue + 60) % 360},255,200`,
-        strength * 0.7 * near,
-      );
-    }
+  for (let k = 0; k < MEGA_PAIRS.length; k += 2) {
+    const i = MEGA_PAIRS[k]!;
+    const j = MEGA_PAIRS[k + 1]!;
+    const strength = (act[i]! + act[j]!) * 0.5;
+    if (strength < 0.12) continue;
+    const near = ((pts[i]!.d + pts[j]!.d) / 2 + 1) / 2;
+    const li = layer[i]!;
+    const lj = layer[j]!;
+    const lhue = LAYER_HUES[li]!;
+    const lhue2 = LAYER_HUES[lj]!;
+    const hue = (lhue + lhue2) / 2 + ((t * 20) % 360);
+    ctx.strokeStyle = `hsla(${hue},100%,${(46 + strength * 38).toFixed(0)}%,${(strength * 0.4 * near).toFixed(2)})`;
+    ctx.lineWidth = 0.3 + strength * 1.6 * near;
+    ctx.beginPath();
+    ctx.moveTo(pts[i]!.x, pts[i]!.y);
+    ctx.lineTo(pts[j]!.x, pts[j]!.y);
+    ctx.stroke();
+    // traveling pulse packet
+    const pp = (pulse + (i + j) * 0.013) % 1;
+    const px = pts[i]!.x + (pts[j]!.x - pts[i]!.x) * pp;
+    const py = pts[i]!.y + (pts[j]!.y - pts[i]!.y) * pp;
+    spark(ctx, px, py, 1.5 + strength * 3.5, `${(hue + 60) % 360},255,200`, strength * 0.7 * near);
   }
 
   // 4) Dendritic halo + soma core + spike-train trace for each neuron.

@@ -620,6 +620,8 @@ export class SuperMind {
   private readonly cliffordRng: Rng;
   private cliffordBeat = 0;
   private cliffordEntNorm = 0;
+  /** Cached register magic-norm; recomputed only on the full round-robin beat (O(4ⁿ)), reused on echo beats. */
+  private lastMagicNorm = 0;
   /** Eshkol consciousness engine (logic + inference + GWT workspace). */
   private readonly eshkolEngine: EshkolConsciousnessEngine;
   private readonly eshkolSalience = new Float32Array(6);
@@ -1179,17 +1181,18 @@ export class SuperMind {
     const cut = Math.max(1, Math.floor(cq / 2));
     this.cliffordEntNorm = this.clifford.entanglementEntropy(cut) / cut;
 
-    // Quantum coherence: register snapshot readout (Tsotchke quantum-coherence leaf).
-    const snap = this.qmind.snapshot();
-    this.cliffordEntNorm = clamp01(this.cliffordEntNorm + snap.coherenceL1 * 0.2);
+    // Quantum coherence: register readout (Tsotchke quantum-coherence leaf). Cheap O(2ⁿ) accessor — the
+    // full QubitSnapshot (4ⁿ-Pauli magic + 5× QGT circuit rebuild + IIT min-cut) is UI-cadence only and
+    // was previously built here every beat × 5 archons just to read two scalars.
+    const cohL1 = this.qmind.coherenceL1Now();
+    this.cliffordEntNorm = clamp01(this.cliffordEntNorm + cohL1 * 0.2);
 
-    // Quantum magic: beyond-classical non-stabilizerness (Tsotchke quantum-magic leaf)
-    // Compute stabilizer 2-Rényi entropy to measure how far beyond Clifford the state is
-    // Use the magic already computed on the TRUE register amplitudes inside snapshot() (super-qubits.ts).
-    // The previous quantumMagic() call here was fed a malformed vector — re = sqrt(p) (magnitudes only),
-    // im = sin(phase) (phase only); neither the real amplitudes nor normalized — so its result was wrong
-    // and still fed `reflex` -> the attention schema + god-jewel shader.
-    const magicNorm = snap.magicNorm;
+    // Quantum magic: beyond-classical non-stabilizerness (Tsotchke quantum-magic leaf) — O(4ⁿ), so
+    // recompute it only on the full round-robin beat and reuse the cache on the 4 interleaved echo beats
+    // (echo is the GOAL5 light path; the register still evolves, so this is a bounded deterministic
+    // approximation). The default 'full' path (every test/golden) recomputes it exactly as before.
+    if (mode === 'full') this.lastMagicNorm = this.qmind.magicNormNow();
+    const magicNorm = this.lastMagicNorm;
 
     const reflex = clamp01(
       ((this.quantumOut[1] ?? 0) + (this.quantumOut[0] ?? 0)) * 0.5 * this.cliffordScale +

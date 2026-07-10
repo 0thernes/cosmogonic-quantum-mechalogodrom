@@ -506,6 +506,28 @@ export class QuantumMind {
   }
 
   /**
+   * Perf — the register L1-coherence of the CURRENT evolved state, O(2ⁿ). Cheap read for the per-beat
+   * cognition hot path ({@link ../sim/super-mind}.think()), which needs only this scalar + magic and must
+   * NOT pay for the full UI-cadence {@link snapshot} (whose quantumMagic 4ⁿ-Pauli sum, 5× QGT circuit
+   * rebuild and IIT min-cut are tens of millions of flops per beat × 5 archons). Reuses the snapshot
+   * buffers exactly like {@link integratedInformationNow}; snapshot() re-reads them, so no cross-call hazard.
+   */
+  coherenceL1Now(): number {
+    this.reg.amplitudesInto(this.bufRe, this.bufIm);
+    return quantumCoherence(this.bufRe, this.bufIm).l1Norm;
+  }
+
+  /**
+   * Perf — the register magic (stabilizer 2-Rényi non-stabilizerness) of the CURRENT state. Still O(4ⁿ)
+   * (quantum-magic's own doc says 'never per simulation beat'), so callers should recompute it only on the
+   * full round-robin beat and cache it for the interleaved echo beats — see super-mind.think().
+   */
+  magicNormNow(): number {
+    this.reg.amplitudesInto(this.bufRe, this.bufIm);
+    return quantumMagic(this.bufRe, this.bufIm, QMIND_QUBITS).magicNorm;
+  }
+
+  /**
    * Build the read-only BRAIN snapshot from the live statevector: Born probabilities + phases, the
    * per-qubit Bloch vectors and P(|1⟩), the normalized entropy, the mean entanglement (purity
    * deficit) and equatorial coherence, and the last sampled basis state. Allocates the public arrays

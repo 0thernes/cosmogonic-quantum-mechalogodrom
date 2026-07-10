@@ -112,6 +112,8 @@ const GRAVITATIONAL_LENS_SHADER: THREE.ShaderMaterialParameters & {
  */
 export class PostFx {
   private readonly composer: EffectComposer;
+  /** Kept so setSize can re-sync the composer's pixel ratio after a devicePixelRatio change. */
+  private readonly renderer: THREE.WebGLRenderer;
   private readonly lens: ShaderPass;
   /** The cinematic bloom pass (`?fx=1` only; null on the default 'lens' pipeline). */
   private readonly bloom: UnrealBloomPass | null;
@@ -130,6 +132,7 @@ export class PostFx {
     camera: THREE.Camera,
     cinematic: boolean,
   ) {
+    this.renderer = renderer;
     const composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
     // The gravitational lens — first effect, so bloom (cinematic) blooms the already-bent light.
@@ -194,6 +197,11 @@ export class PostFx {
 
   /** Match the composer's render targets to the viewport. */
   setSize(w: number, h: number): void {
+    // Re-sync the composer's frozen pixel ratio first: EffectComposer captures renderer.getPixelRatio()
+    // once at construction, so a devicePixelRatio change (e.g. dragging to another monitor) otherwise
+    // renders the whole lens/bloom chain at the boot-time DPR. Both engine resize paths call this AFTER
+    // renderer.setPixelRatio, so the fresh ratio is picked up. The following setSize applies the new dims.
+    this.composer.setPixelRatio(this.renderer.getPixelRatio());
     this.composer.setSize(w, h);
     this.aspect = w / Math.max(1, h);
     this.uAspect.value = this.aspect;

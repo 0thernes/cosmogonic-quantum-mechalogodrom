@@ -56,6 +56,21 @@ const RANK_COLOR: Record<string, string> = {
   FORBIDDEN: '#ff3b4e',
 };
 
+/** The static (i,j) axon pairs drawBrain4d connects: the ~12.7k of the 51k pairs (N=320) whose Hamming
+ * filter `((i^j)&15) <= 3` passes. Precomputed once so the per-frame pass iterates only real candidates
+ * instead of the full O(N²) double loop with a per-pair skip. Packed [i,j,i,j,…], i<j ascending — same
+ * pairs in the same order the old loop drew, so the render is byte-identical. Tied to N=320 below. */
+const BRAIN4D_N = 320;
+const BRAIN4D_PAIRS: Uint16Array = (() => {
+  const out: number[] = [];
+  for (let i = 0; i < BRAIN4D_N; i++) {
+    for (let j = i + 1; j < BRAIN4D_N; j++) {
+      if (((i ^ j) & 15) <= 3) out.push(i, j);
+    }
+  }
+  return Uint16Array.from(out);
+})();
+
 /** Responsive canvas height for the Architecture dynamics viewport. */
 export const ARCHITECTURE_PANEL_CANVAS_HEIGHT = 'clamp(200px, 42vh, 420px)';
 /** Minimum usable data well; prevents the table from becoming the old thin strip. */
@@ -177,6 +192,9 @@ export class PantheonArchitecturePanel {
   private hue = 0;
   private open = false;
   private raf = 0;
+  /** Last paint timestamp — the rAF loop is throttled to ~30fps (33ms) so the O(n²) canvas passes don't
+   * repaint at the full 60–144Hz display refresh against the live WebGL world loop. */
+  private lastPaint = 0;
   // V123 (USER #3): the GLYPH CORTEX — a live neural field of the 100 pantheon minds, fed by the
   // world's real `cqm:brain-snapshots` broadcast (the same glyph-brain data the 3-brains slot uses),
   // filling the previously-empty space under the viz-mode row. 1/1 per glyph (activity/novelty/valence).
@@ -539,8 +557,11 @@ export class PantheonArchitecturePanel {
 
   private startAnim(): void {
     if (this.raf) return;
-    const tick = (): void => {
-      this.frame();
+    const tick = (ts: number): void => {
+      if (ts - this.lastPaint >= 33) {
+        this.lastPaint = ts;
+        this.frame();
+      }
       this.raf = requestAnimationFrame(tick);
     };
     this.raf = requestAnimationFrame(tick);
@@ -767,7 +788,7 @@ export class PantheonArchitecturePanel {
           snap.thought.vitality * 0.4 + snap.thought.agony * 0.3 + snap.quantum.coherence * 0.3,
         )
       : clamp01(this.hue);
-    const N = 320;
+    const N = BRAIN4D_N;
     const pts: { x: number; y: number; d: number; a: number; hue: number; layer: number }[] = [];
     for (let i = 0; i < N; i++) {
       const u = (i + 0.5) / N;
@@ -798,19 +819,18 @@ export class PantheonArchitecturePanel {
       const hue = (layerHues[layer]! + ((i * 47 + t * 80) % 60)) % 360;
       pts.push({ x: px, y: py, d, a, hue, layer });
     }
-    for (let i = 0; i < N; i++) {
-      for (let j = i + 1; j < N; j++) {
-        if (((i ^ j) & 15) > 3) continue;
-        const s = (pts[i]!.a + pts[j]!.a) * 0.5;
-        if (s < 0.1) continue;
-        const near = (pts[i]!.d + pts[j]!.d) * 0.5;
-        ctx.strokeStyle = `hsla(${pts[i]!.hue},100%,55%,${(s * 0.45 * near).toFixed(2)})`;
-        ctx.lineWidth = 0.5 + s * 1.8 * near;
-        ctx.beginPath();
-        ctx.moveTo(pts[i]!.x, pts[i]!.y);
-        ctx.lineTo(pts[j]!.x, pts[j]!.y);
-        ctx.stroke();
-      }
+    for (let k = 0; k < BRAIN4D_PAIRS.length; k += 2) {
+      const i = BRAIN4D_PAIRS[k]!;
+      const j = BRAIN4D_PAIRS[k + 1]!;
+      const s = (pts[i]!.a + pts[j]!.a) * 0.5;
+      if (s < 0.1) continue;
+      const near = (pts[i]!.d + pts[j]!.d) * 0.5;
+      ctx.strokeStyle = `hsla(${pts[i]!.hue},100%,55%,${(s * 0.45 * near).toFixed(2)})`;
+      ctx.lineWidth = 0.5 + s * 1.8 * near;
+      ctx.beginPath();
+      ctx.moveTo(pts[i]!.x, pts[i]!.y);
+      ctx.lineTo(pts[j]!.x, pts[j]!.y);
+      ctx.stroke();
     }
     // Dendritic halos + soma cores + spike traces
     for (const p of pts) {
