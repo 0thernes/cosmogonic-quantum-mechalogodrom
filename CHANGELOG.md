@@ -32,6 +32,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     APEX oracle comparison; pinned FetchContent dependencies to immutable commits. The hosted gate
     exposed libm drift in the chaotic pendulum, so its recurrence is now explicitly quantised at each
     step and reproduces the same vectors on Windows and Ubuntu.
+  - Canonicalized generated lab-feed numbers at 12 significant digits, reject non-finite metrics and
+    unsafe integers, and eliminate last-bit Windows/Ubuntu JSON drift without weakening
+    artifact-freshness checks; local and Windows gates now enforce the same freshness check as Ubuntu.
   - Expanded the CycloneDX SBOM to all reachable normal, optional, development, and peer dependencies,
     with runtime/development scopes and dependency-reference regression tests.
 - Includes the post-0.21.11 Three.js, Tailwind, Mermaid, Prettier, oxlint, TypeScript, and statistics

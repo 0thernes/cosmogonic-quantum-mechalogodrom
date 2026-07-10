@@ -26,8 +26,9 @@
  * parameter). Ablating a framework degrades the estimator ⇒ the reward drops ⇒ the mechanism was load-
  * bearing. This gives every framework a real framework→index→behavior causal chain via the coupling web.
  *
- * DETERMINISM (ADR 0004). Everything draws from an injected/seed-derived {@link Rng}. Same seed ⇒ identical
- * LabReport bit-for-bit. Offline runner: NOT a per-frame path (O(ticks · conditions · 10²)).
+ * DETERMINISM (ADR 0004). Everything draws from an injected/seed-derived {@link Rng}. Same seed is
+ * replay-identical within one runtime/toolchain; the tracked public JSON canonicalizes sub-ULP host-libm
+ * drift at its serialization boundary. Offline runner: NOT a per-frame path (O(ticks · conditions · 10²)).
  *
  * HONESTY. `LabReport.claim` is always `'indicatorOnly'`. `singularityProven` / `ablationProven` / a positive
  * `nullSeparation` are evidence the machinery is load-bearing and not decorative — they are NOT proof of

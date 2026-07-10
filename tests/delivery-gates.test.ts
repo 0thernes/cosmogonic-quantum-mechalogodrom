@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { execFileSync } from 'node:child_process';
+import { labDataJsonReplacer, stabilizeLabNumber } from '../scripts/lab-data-json';
 
 async function text(path: string): Promise<string> {
   return Bun.file(path).text();
@@ -44,7 +45,7 @@ describe('delivery gates fail closed', () => {
     expect(workflow.match(/Generated artifact freshness/g)?.length).toBeGreaterThanOrEqual(1);
   });
 
-  test('native dependencies are immutable and both native configurations are verified', async () => {
+  test('cross-platform reproducibility contracts are pinned and verified', async () => {
     const cmake = await text('native/CMakeLists.txt');
     expect(cmake).not.toContain('GIT_SHALLOW');
     expect(cmake).not.toContain('-ffast-math');
@@ -61,9 +62,43 @@ describe('delivery gates fail closed', () => {
     expect(ci).toContain('-DGLFW_BUILD_WAYLAND=OFF');
     expect(ci).toContain('bun scripts/verify-native-apex.ts native/build-ci/cqm_apex_golden');
     expect(ci).toContain('Configure the default Jolt-enabled engine');
+    expect(ci.match(/name: Generated artifact freshness/g)?.length).toBeGreaterThanOrEqual(2);
+
+    const packageManifest = JSON.parse(await text('package.json')) as {
+      scripts: Record<string, string>;
+    };
+    expect(packageManifest.scripts.check).toContain('bun run generated:check');
 
     const crossLanguageGate = await text('scripts/verify-native-apex.ts');
     expect(crossLanguageGate).toContain("from '../src/sim/apex-native-backend'");
+
+    // Exact values from the Windows/Ubuntu generated-artifact drift caught by hosted CI.
+    expect(stabilizeLabNumber(0.38940480984070375)).toBe(stabilizeLabNumber(0.3894048098407037));
+    expect(stabilizeLabNumber(0.00018843824789427366)).toBe(
+      stabilizeLabNumber(0.00018843824789416264),
+    );
+    expect(stabilizeLabNumber(0.3894048098407)).not.toBe(stabilizeLabNumber(0.3894048099407));
+    expect(stabilizeLabNumber(1_234_567_890_123)).toBe(1_234_567_890_123);
+    expect(stabilizeLabNumber(stabilizeLabNumber(0.38940480984070375))).toBe(
+      stabilizeLabNumber(0.38940480984070375),
+    );
+    expect(Object.is(stabilizeLabNumber(-0), -0)).toBe(false);
+    expect(() => stabilizeLabNumber(Number.NaN)).toThrow('non-finite');
+    expect(() => stabilizeLabNumber(Number.MAX_SAFE_INTEGER + 1)).toThrow('unsafe integer');
+    expect(() => JSON.stringify({ metric: Number.POSITIVE_INFINITY }, labDataJsonReplacer)).toThrow(
+      'non-finite',
+    );
+    expect(() => JSON.stringify({ metric: Number.NEGATIVE_INFINITY }, labDataJsonReplacer)).toThrow(
+      'non-finite',
+    );
+    expect(
+      JSON.parse(
+        JSON.stringify(
+          { nested: [true, null, 'receipt', -0, 1_234_567_890_123] },
+          labDataJsonReplacer,
+        ),
+      ),
+    ).toEqual({ nested: [true, null, 'receipt', 0, 1_234_567_890_123] });
   });
 
   test('aggregated benchmark modules cannot execute the shared runner while imported', async () => {
