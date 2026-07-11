@@ -45,7 +45,7 @@ const AXES = [
 // 2026-07-10 batch-15b: ecology 3.0→3.2 (SOUP-SELECT) + cognition 3.8→3.9 (FORAGE) — each move is 1:1 with
 // a green, ablation-verified gate (tests/soup-harvest-selection.test.ts, tests/ad-forager-baseline.test.ts).
 // The self-scored CSV row is UNCHANGED; only this honest FLOOR rises toward it. Consciousness (idx 7) stays 3.5.
-const CODE_GROUNDED = [4.0, 2.2, 3.2, 3.8, 3.9, 4.5, 4.3, 3.5, 4.0];
+export const CODE_GROUNDED = [4.0, 2.2, 3.2, 3.8, 3.9, 4.5, 4.3, 3.5, 4.0];
 
 interface Row {
   project: string;
@@ -180,14 +180,24 @@ function scenario(rows: Row[], cosmoAxes: number[], peers: Row[]): Record<string
   };
 }
 
-async function main(): Promise<void> {
-  const rows = parseRows(await Bun.file(CSV).text());
+/**
+ * PURE recompute of the code-grounded sensitivity object (the shape written to alife-codeground.json)
+ * from the raw comparison CSV + the {@link CODE_GROUNDED} floor. Exported so a gate test can recompute
+ * and diff the committed artifact — a CODE_GROUNDED or CSV edit that forgets to regenerate the JSON, or
+ * a hand-edited surface number, then fails `check`. Deterministic (no Math.random / Date.now).
+ */
+export function computeAlifeCodeground(csvText: string): {
+  note: string;
+  selfScored: Record<string, unknown>;
+  codeGrounded: Record<string, unknown>;
+  deltas: { breadth: number; zPopulation: number; mahalanobis: number };
+} {
+  const rows = parseRows(csvText);
   const cosmo = rows.find((r) => isCosmo(r.project))!;
   const peers = rows.filter((r) => !isCosmo(r.project));
   const self = scenario(rows, cosmo.axes, peers);
   const code = scenario(rows, CODE_GROUNDED, peers);
-
-  const out = {
+  return {
     note: 'sensitivity of the A-Life headline stats to code-grounded re-scoring of the one self-scored row',
     selfScored: { axes: cosmo.axes, ...self },
     codeGrounded: { axes: CODE_GROUNDED, ...code },
@@ -197,6 +207,12 @@ async function main(): Promise<void> {
       mahalanobis: round((code.mahalanobis as number) - (self.mahalanobis as number), 3),
     },
   };
+}
+
+async function main(): Promise<void> {
+  const out = computeAlifeCodeground(await Bun.file(CSV).text());
+  const self = out.selfScored;
+  const code = out.codeGrounded;
   await Bun.write(`${OUT}/alife-codeground.json`, JSON.stringify(out, null, 2) + '\n');
 
   const fmt = (s: Record<string, unknown>): string =>
@@ -217,4 +233,5 @@ async function main(): Promise<void> {
   });
   console.log('\n  wrote alife-codeground.json');
 }
-void main();
+
+if (import.meta.main) void main();

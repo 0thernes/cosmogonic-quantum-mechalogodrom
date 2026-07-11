@@ -11,6 +11,26 @@ changed and why.
 
 ---
 
+## 2026-07-10 — batch 21: verify:alife drift-lock (closes the batch-15b metric honesty gap)
+
+Honesty hardening for the batch-15b metric move. batch-15b lifted the code-grounded 9-axis floor and
+hand-updated the numbers on 4 surfaces, but nothing GATED them — `alife-codeground.json` is not a
+generated:check artifact and verify:facts does not check breadth, so a future CODE_GROUNDED/CSV edit
+that skipped regeneration, or a hand-edit of any surface number, would drift silently. Fixed:
+
+- Refactored `alife-codeground-sensitivity.ts` to export `CODE_GROUNDED` + a PURE `computeAlifeCodeground(csv)`
+  and guarded the CLI with `if (import.meta.main)` (importing it no longer runs/writes).
+- New `tests/alife-codeground-consistency.test.ts` (runs in the existing `bun test` gate, same SSOT
+  discipline as docs-receipts-law): (a) recompute-from-CSV must deep-equal the committed
+  `alife-codeground.json` (stale-JSON → fail), (b) every current surface (README/docs.html/specs.html/NHSI)
+  must cite the current computed breadth/z (hand-edit → fail), (c) the honest FLOOR must never exceed the
+  self-scored ceiling on ANY axis (guards against inflating past the self-score).
+
+**Declined the plan's suggested Instrumentation 4.3→4.5 move:** the Instrumentation axis rates the SIM's
+observability (analytics/telemetry), and a doc-consistency gate does not raise that — moving it for this
+would be the "decorative BS" inflation the owner forbids. Under-claim is the honest error direction; the
+gate ships as pure hardening. Receipts 2437→2440 (+3). Full gate green.
+
 ## 2026-07-10 (pass 6) — batch 20: copilot in-flight tool-call is cancelled on the turn deadline
 
 - **[NET-2] a running tool kept executing after the turn was cancelled** (`copilot.ts` / `ai-sandbox.ts`
