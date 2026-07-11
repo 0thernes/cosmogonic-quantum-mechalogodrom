@@ -40,7 +40,7 @@ function expectFiniteTree(value: unknown): void {
 describe('ordinary resource DEVELOPMENT V2', () => {
   test('pins fresh disjoint seed families while retaining the consumed V1 harness', async () => {
     expect(PHASE_B_DEVELOPMENT_SEED_FAMILY_SHA256).toBe(
-      '86bb594637eac23d1de4448b8b45809350e2caf7b87a800adf07e772e7e90249',
+      '469f79e59c29639034afb4aea2bf6b0e3a82f2a3f3303b7fb3c9efa7ec443b8a',
     );
     expect(PHASE_B_DEVELOPMENT_SEEDS.ordinaryV2Train).toHaveLength(12);
     expect(PHASE_B_DEVELOPMENT_SEEDS.ordinaryV2Validation).toHaveLength(8);
@@ -113,10 +113,10 @@ describe('ordinary resource DEVELOPMENT V2', () => {
       'c36bc5dd927c00cd5dda9e39eb33558f2b9b8ae5e377c0f85217083f8b604b97',
     );
     expect(COMPLETE.summary.configurationSha256).toBe(
-      '839a2b71509242134d28ae5b41e8710153c4254c168ad6f3004d0e74a0116fd7',
+      '7de3b0f4e979b7213f45e10d04d3457be251d126d45f98bc03b6086dc27476a7',
     );
     expect(COMPLETE.summary.rowsSha256).toBe(
-      '549bd7485686e0661a56ed88d4f03438be6dcbc42a15d9f4f7ddd1e95bee9257',
+      '2529126f5ea894e8e14762cfc106d8e06d83ecea13247e03c56e5959f85a7067',
     );
     expect(COMPLETE.summary.yokedCalibrationSha256).toBe(
       '046941a03ff61463a172b3500c37105aa0586d3fea95857e40872947250d5614',

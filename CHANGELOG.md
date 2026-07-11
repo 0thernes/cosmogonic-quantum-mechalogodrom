@@ -10,6 +10,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - Operational organism intelligence and evidence:
+  - Added the Phase-B NHI semantic expansion and exact JSON checkpoints, action-aware structured
+    outcomes, per-mind fault isolation, transactional launch/body lifecycle, dedicated deterministic
+    streams, a shared 512-birth ultra-tier budget, and an O(N)-once current-grid scaling seal.
+  - Added the isolated 101-input Predictor-V3 and executed a 46,080-row temporal-identifiability task;
+    all eight advancement criteria failed, so the model remains outside production and no
+    confirmatory manifest was frozen.
+  - Executed a separate 41,472-row NHI closed-loop task. Only HUNT/resource and SPAWN/social remain
+    interpretation-eligible development diagnostics; paired conflict service declined, so no
+    adaptation, reward-learning, scaling, consciousness, sentience, or broad four-action claim is
+    authorized. Published byte-stable JSON/CSV/SVG evidence plus a failure-forward report.
   - Added one bounded, shared Tsotchke organism-intelligence field and connected its resource, threat,
     exploration, social, forecast, and plasticity signals to living-system behavior while preserving
     seeded determinism and stable-object hot-path discipline.

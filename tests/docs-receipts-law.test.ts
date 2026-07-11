@@ -28,6 +28,7 @@ import {
   CANONICAL_LINE_COV,
   CANONICAL_FUNC_COV,
 } from '../scripts/canonical-receipts';
+import { syncReceipts } from '../scripts/sync-surfaces';
 import { measureGate, receiptProblems } from '../scripts/verify-receipts';
 
 // Public surfaces that publish receipts. (Dated reports under docs/reports/* are historical worldline
@@ -55,18 +56,35 @@ function currentClaimsOnly(text: string): string {
 
 /**
  * Patterns that capture a published TEST-COUNT integer (group 1 = the number). The count register in
- * this repo is ALWAYS comma-formatted ("1,052"), so we require the comma in prose patterns — that way a
- * bare 4-digit year like "2025 tested" or "Ferrante 2025" can never be mistaken for a test count. The
- * badge pattern is exempt (it has no comma) but is uniquely prefixed by `tests-`.
+ * this repo is ALWAYS comma-formatted ("1,052", "12,345", ...), so prose patterns require at least
+ * one comma group — that way a bare 4-digit year like "2025 tested" or "Ferrante 2025" can never be
+ * mistaken for a test count. The badge pattern is exempt but is uniquely prefixed by `tests-`.
  */
 const TEST_COUNT_PATTERNS: RegExp[] = [
-  /([0-9],[0-9]{3})\s+tests?\b/g, // "1,052 tests"
-  /([0-9],[0-9]{3})\s+pass\b/g, // "1,052 pass"
-  /([0-9],[0-9]{3})\s+\/\s+0\s+fail/g, // "1,052 / 0 fail"
-  /tests-([0-9]{3,4})\b/g, // shields badge "tests-1052"
+  /([0-9]{1,3}(?:,[0-9]{3})+)\s+tests?\b/g, // "1,052 tests", "12,345 tests"
+  /([0-9]{1,3}(?:,[0-9]{3})+)\s+exact tracked tests\b/g,
+  /([0-9]{1,3}(?:,[0-9]{3})+)\s+pass\b/g,
+  /([0-9]{1,3}(?:,[0-9]{3})+)\s+\/\s+0\s+fail/g,
+  /\|\s*Passing tests\s*\|\s*\*\*([0-9]{1,3}(?:,[0-9]{3})+)\*\*/g,
+  /tests-([0-9]+)\b/g, // shields badge "tests-1052" at every future width
 ];
 
 describe('receipts law — every published test count matches the canonical (measured) value', () => {
+  test('truth sync covers adjective and technical-table receipt grammars idempotently', () => {
+    const fixture =
+      '**2,613 exact tracked tests · 0 fail**\n' +
+      '| Passing tests | **2,696** (exact tracked suite; 0 failing) |\n' +
+      '**12,345 pass · 12,345 tests / 0 fail**';
+    const expected = CANONICAL_TEST_COUNT.toLocaleString('en-US');
+    const synced = syncReceipts(fixture);
+    expect(synced).toContain(`**${expected} exact tracked tests · 0 fail**`);
+    expect(synced).toContain(
+      `| Passing tests | **${expected}** (exact tracked suite; 0 failing) |`,
+    );
+    expect(synced).toContain(`**${expected} pass · ${expected} tests / 0 fail**`);
+    expect(syncReceipts(synced)).toBe(synced);
+  });
+
   test('no surface claims a test count other than the canonical one', async () => {
     const offenders: string[] = [];
     for (const rel of SURFACES) {
@@ -80,9 +98,9 @@ describe('receipts law — every published test count matches the canonical (mea
           const g = m[1];
           if (g === undefined) continue;
           const claimed = Number(g.replace(/,/g, ''));
-          // Police only the test-count register (1,000–9,999). Tracked-only discovery now makes the
-          // count deterministic across clean local/CI checkouts, so every live surface must be exact.
-          if (claimed >= 1000 && claimed < 10000 && claimed !== CANONICAL_TEST_COUNT) {
+          // Tracked-only discovery makes the count deterministic across clean local/CI checkouts, so
+          // every live surface must remain exact even after the suite crosses another digit width.
+          if (claimed >= 1000 && claimed !== CANONICAL_TEST_COUNT) {
             offenders.push(
               `${rel}: claims "${m[0].trim()}" (=${claimed}) instead of canonical ${CANONICAL_TEST_COUNT}`,
             );

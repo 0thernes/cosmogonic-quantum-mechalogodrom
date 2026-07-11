@@ -5,9 +5,9 @@
 Technical reports and audits for Cosmogonic Quantum Mechalogodrom. Dated filenames (`2026-*`) are
 **historical worldline snapshots** when present — they preserve evidence from their authoring pass.
 **Current** gate receipts: [VERIFICATION-ANALYTICAL-DATA.md](../VERIFICATION-ANALYTICAL-DATA.md) §1 ·
-`scripts/canonical-receipts.ts` (v0.21.13 · **2,697-test floor** · **84.64 % / 82.21 %** coverage).
-Latest Windows-local receipt observed by the current audit: **2,697 completed cases, zero failures,
-3,525,807 expect() calls, 93.13% line coverage, and 91.10% function coverage across 302 test files**.
+`scripts/canonical-receipts.ts` (v0.21.13 · **2,775-test floor** · **84.64 % / 82.21 %** coverage).
+Latest Windows-local receipt observed by the current audit: **2,775 completed cases, zero failures,
+3,556,386 expect() calls, 93.17% line coverage, and 91.16% function coverage across 307 test files**.
 
 The batch-26 adversarial repair pass made the flora sampler bilinear and sealed chemotaxis against
 the real cell-quantized field, corrected forager final-position telemetry, and closed root-pathspec
@@ -16,6 +16,12 @@ A-Life vector and do not add organism-intelligence, consciousness, or sentience 
 
 ## Reports
 
+- [PHASE-B-MECHANISM-DEVELOPMENT-V3-2026-07-11.md](./PHASE-B-MECHANISM-DEVELOPMENT-V3-2026-07-11.md)
+  — executable temporal-identifiability and NHI closed-loop development result with exact checkpoints,
+  structured production action outcomes, complete negative-result retention, compact JSON/CSV/SVG
+  evidence, and deterministic artifact verification. The temporal configuration fails all eight
+  advancement criteria; NHI interpretation is limited to HUNT/resource and SPAWN/social diagnostics.
+  No adaptation, learning, consciousness, sentience, or broad scaling claim is authorized.
 - [ORGANISM-INTELLIGENCE-V4-RESULTS-2026-07-11.md](./ORGANISM-INTELLIGENCE-V4-RESULTS-2026-07-11.md)
   — repository-preregistered 64-seed-per-family descendant result with a complete 1,152-row CSV,
   replay/source/fixture hashes, three exact 10,000-step numerical campaigns, machine-local ordinary

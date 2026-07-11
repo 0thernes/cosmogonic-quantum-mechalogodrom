@@ -37,8 +37,10 @@ describe('World lifecycle wiring', () => {
     const liveStart = WORLD.indexOf('private nhiLiveIds');
     const liveEnd = WORLD.indexOf('\n  /**', liveStart + 1);
     const liveBody = WORLD.slice(liveStart, liveEnd);
-    expect(liveBody).toContain('this.economy.unregister(World.nhiEconomyId(id));');
-    expect(liveBody).toContain('this.nhiBody.remove(id);');
+    expect(liveBody).toContain('this.economy.unregister(World.nhiEconomyId(id))');
+    expect(liveBody).toContain('this.nhiBody.remove(id)');
+    expect(liveBody).toContain("'retire-dead-economy'");
+    expect(liveBody).toContain("'retire-dead-body'");
 
     const clearStart = WORLD.indexOf('private clearNhiPopulation');
     const clearEnd = WORLD.indexOf('\n  /**', clearStart + 1);
@@ -48,24 +50,53 @@ describe('World lifecycle wiring', () => {
       'this.nhiEntities.clear()',
       'this.nhiTargets.clear()',
       'this.nhi.clear()',
-      'this.nhiBody.clear()',
+      "'clear-population-body'",
     ]) {
       expect(clearBody).toContain(operation);
     }
   });
 
   test('NHI launch is bounded before user-event RNG and keeps a reverse spatial identity map', () => {
-    expect(WORLD).toContain('private static readonly NHI_POPULATION_CAP = 32;');
+    expect(WORLD).toContain('private static readonly NHI_POPULATION_CAP = NHI_SYSTEM_MIND_CAP;');
     expect(WORLD).toContain('private readonly nhiIdsByEntity = new Map<Entity, number>();');
     const start = WORLD.indexOf('private launchNhiBeing');
     const end = WORLD.indexOf('\n  /**', start + 1);
     const body = WORLD.slice(start, end);
     const capAt = body.indexOf('this.nhiEntities.size >= World.NHI_POPULATION_CAP');
+    const idAt = body.indexOf('const nid = this.nhiNextId++;');
+    const cameraAt = body.indexOf('cam.getWorldDirection(this.sv2);');
+    const effectAt = body.indexOf('this.nhiEffectRng()');
     expect(capAt).toBeGreaterThanOrEqual(0);
-    expect(capAt).toBeLessThan(body.indexOf('this.uiRng()'));
+    expect(capAt).toBeLessThan(idAt);
+    expect(idAt).toBeLessThan(cameraAt);
+    expect(idAt).toBeLessThan(effectAt);
+    expect(body.indexOf('try {', idAt)).toBeLessThan(cameraAt);
+    expect(body.indexOf('try {', idAt)).toBeLessThan(effectAt);
+    expect(body).toContain('this.nhi.register(nid, this.nhiBirthRng);');
+    expect(body).toContain("this.audit.record('nhi-launch-failed'");
+    expect(body).not.toContain('this.uiRng()');
+    expect(body).not.toContain('this.nhi.register(nid, this.rng)');
     expect(body).toContain('this.nhiIdsByEntity.set(e, nid);');
+    expect(body).toContain('const nid = this.nhiNextId++;');
+    expect(body).toContain('this.entities.discardSpawnAt(entityIndex)');
+    expect(body).not.toContain('this.entities.dispose(e)');
+    expect(body).toContain('rngRollback: false');
+    expect(body).toContain('logicalRollbackComplete');
+    expect(body).toContain('rollbackCallFailures');
+    expect(body).toContain('logicalRollbackPostconditions');
+    expect(body).toContain("resourceCleanupStatus: 'best-effort-unverified'");
+    expect(body).toContain('bodyAbsent: !this.nhiBody.has(nid)');
     expect(WORLD).toContain('const kin = this.grid.query(p.x, p.z, 90);');
     expect(WORLD).toContain('const oid = this.nhiIdsByEntity.get(oe);');
+  });
+
+  test('NHI social audio is guarded and burns its cooldown before the external sink runs', () => {
+    const callback = WORLD.indexOf('(_id, level) => {');
+    const cooldown = WORLD.indexOf('this.nhiSocialCooldown = 24;', callback);
+    const audio = WORLD.indexOf("this.nhiGuard('social-audio'", callback);
+    expect(callback).toBeGreaterThanOrEqual(0);
+    expect(cooldown).toBeGreaterThan(callback);
+    expect(audio).toBeGreaterThan(cooldown);
   });
 
   test('edge-column controls are exposed only while the UI is a grid', () => {

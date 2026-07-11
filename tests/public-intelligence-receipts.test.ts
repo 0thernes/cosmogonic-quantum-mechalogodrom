@@ -362,7 +362,7 @@ describe('organism-intelligence claim boundary', () => {
     }
   });
 
-  test('Phase-B public truth surfaces retain both rejected development configurations', async () => {
+  test('Phase-B public truth surfaces retain every rejected stage and the V3 falsification boundary', async () => {
     const adr = (
       await Bun.file(`${ROOT}/docs/adr/0015-phase-b-neural-semantic-expansion-2026-07-11.md`).text()
     )
@@ -374,16 +374,37 @@ describe('organism-intelligence claim boundary', () => {
     expect(adr).toContain('yoked surrogate is higher at 50/384');
     expect(adr).toContain('no successor protocol');
     expect(adr).toContain('no successor protocol, manifest, confirmatory seed family');
-    expect(adr).toContain('839a2b71509242134d28ae5b41e8710153c4254c168ad6f3004d0e74a0116fd7');
-    expect(adr).toContain('11fa3ca3f990ac5a6781513352002958898a6b2bc72f384630e509fa28fe4e86');
+    expect(adr).toContain('7de3b0f4e979b7213f45e10d04d3457be251d126d45f98bc03b6086dc27476a7');
+    expect(adr).toContain('ec7f516f3b9567d89dc0bd49e998cec83f2977fe95d9eca38707aa5ec51dfb10');
+    expect(adr).toContain('46,080/46,080 rows');
+    expect(adr).toContain('fails all eight frozen criteria');
+    expect(adr).toContain('41,472/41,472 rows');
+    expect(adr).toContain('hunt/resource');
+    expect(adr).toContain('spawn/social');
+    expect(adr).toContain('no adaptation or broad claim');
+    expect(adr).toContain('bfff6581b8e3e032c596a114ef3bfc86c7d5067537efe24043d5d731a09e0f0c');
+    expect(adr).toContain('43f26e8b224449db588dd56ba5dd16c7f37c579e396a5689421e5545ee35db06');
 
-    for (const path of ['README.md', 'docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md']) {
+    for (const path of ['README.md', 'docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md', 'specs.html']) {
       const prose = (await Bun.file(`${ROOT}/${path}`).text()).toLowerCase().replace(/\s+/g, ' ');
-      expect(prose).toContain('predictor');
-      expect(prose).toContain('ordinary');
-      expect(prose).toContain('temporal');
-      expect(prose).toContain('yoked');
-      expect(prose).toMatch(/not (?:a new|a) receipt/);
+      expect(prose).toContain('phase-b-mechanism-development-v3-2026-07-11.md');
+      expect(prose).toContain('phase-b-mechanism-development-v3.svg');
+      expect(prose).toContain('41,472');
+      expect(prose).toContain('46,080');
+      expect(prose).toContain('hunt/resource');
+      expect(prose).toContain('spawn/social');
+      expect(prose).toContain('consciousness');
+      expect(prose).toContain('sentience');
     }
+
+    const report = await Bun.file(
+      `${ROOT}/docs/reports/PHASE-B-MECHANISM-DEVELOPMENT-V3-2026-07-11.md`,
+    ).text();
+    expect(report).toContain('3122e53b2a95de2c665913ba976e33587a0b1e6e88f804597535d0fe51931b25');
+    expect(report).toContain('916240cdca6f9ad8d9e0403d86e6e1fc82d4881a83effd288a982c517d38c015');
+    expect(report).toContain('bf7bb362d472aee5e848c2ef9d13b44c56a44c6af86e27e1568943a07f84af47');
+    expect(report).toContain('resourceCleanupStatus');
+    expect(report).toContain('caller-owned decision-RNG state');
+    expect(report).toContain('the RNG is not serialized');
   });
 });

@@ -189,6 +189,35 @@ describe('TitanSystem — structural invariants', () => {
     expect(titans.ledger.length).toBe(20);
   });
 
+  test('procreation receipts distinguish attempted launches from successful NHI births', () => {
+    const ctx = makeCtx(17);
+    const receipts: Array<{ event: string; data: unknown }> = [];
+    ctx.audit = {
+      record: (event: string, data: unknown) => {
+        receipts.push({ event, data });
+        if (event === 'titan-procreation') throw new Error('diagnostic sink failed');
+      },
+      entries: () => [],
+    } as unknown as AuditTrail;
+    const entities = new EntityManager(ctx);
+    const titans = new TitanSystem(ctx, entities, LORE, { perturb: () => undefined });
+    const internals = titans as unknown as {
+      titans: Array<{ breeder: boolean; group: THREE.Group }>;
+      procreateAtCenter(frame: number): void;
+    };
+    for (const titan of internals.titans) {
+      if (titan.breeder) titan.group.position.set(0, 0, 0);
+    }
+    let attempt = 0;
+    titans.attachProcreation(() => ++attempt % 2 === 0);
+    expect(() => internals.procreateAtCenter(180)).not.toThrow();
+    expect(attempt).toBe(2);
+    expect(receipts.at(-1)).toEqual({
+      event: 'titan-procreation',
+      data: { breeders: 10, attempted: 2, succeeded: 1, failed: 1, births: 1 },
+    });
+  });
+
   test('dispose() frees per-titan materials + the geometry cache and clears the count (idempotent)', () => {
     const ctx = makeCtx(1);
     const entities = new EntityManager(ctx);

@@ -116,7 +116,7 @@ const SURFACES = [
 ];
 
 /** Apply receipts (test count + coverage) propagation. */
-function syncReceipts(s: string): string {
+export function syncReceipts(s: string): string {
   const protectedLocalCoverage: string[] = [];
   const protectLocalCoverage = (match: string): string => {
     const token = `__CQM_LOCAL_COVERAGE_${protectedLocalCoverage.length}__`;
@@ -141,6 +141,13 @@ function syncReceipts(s: string): string {
     // each sync) and froze comma surfaces once CANONICAL_TEST_COUNT crossed 9,999.
     .replace(/tests-[0-9]{3,}/g, `tests-${TEST}`)
     .replace(/\b[0-9]{1,3}(?:,[0-9]{3})+\s+tests\b/g, `${TEST_COMMA} tests`)
+    // Receipt adjectives can sit between the number and noun. Keep these narrowly anchored to the
+    // repository's exact public phrases so an unrelated prose count is never rewritten.
+    .replace(
+      /\b[0-9]{1,3}(?:,[0-9]{3})+\s+exact tracked tests\b/g,
+      `${TEST_COMMA} exact tracked tests`,
+    )
+    .replace(/(\|\s*Passing tests\s*\|\s*\*\*)[0-9]{1,3}(?:,[0-9]{3})+(\*\*)/g, `$1${TEST_COMMA}$2`)
     // Hyphenated adjective form "N,NNN-test" (e.g. "2,450-test floor"). The mandatory comma-grouped
     // number keeps it from matching ordinary compounds like "unit-test" / "A-test". Idempotent.
     .replace(/\b[0-9]{1,3}(?:,[0-9]{3})+-test\b/g, `${TEST_COMMA}-test`)
@@ -160,9 +167,12 @@ function syncReceipts(s: string): string {
       /(<div class="n[^"]*">)[0-9][0-9,]*(<\/div>\s*<div class="l">tests\b)/g,
       `$1${TEST_COMMA}$2`,
     )
-    .replace(/\b[0-9],[0-9]{3}\s+pass\b/g, `${TEST_COMMA} pass`)
-    .replace(/\b[0-9],[0-9]{3}\s+tests\s*\/\s*0\s+fail\b/g, `${TEST_COMMA} tests / 0 fail`)
-    .replace(/(?<![,0-9])\b[0-9]{3,4}\s+tests\s*\/\s*0\s+fail\b/g, `${TEST} tests / 0 fail`)
+    .replace(/\b[0-9]{1,3}(?:,[0-9]{3})+\s+pass\b/g, `${TEST_COMMA} pass`)
+    .replace(
+      /\b[0-9]{1,3}(?:,[0-9]{3})+\s+tests\s*\/\s*0\s+fail\b/g,
+      `${TEST_COMMA} tests / 0 fail`,
+    )
+    .replace(/(?<![,0-9])\b[0-9]{3,}\s+tests\s*\/\s*0\s+fail\b/g, `${TEST} tests / 0 fail`)
     .replace(
       /\b[0-9]{2}\.[0-9]{2}%\s+line\s*\/\s*[0-9]{2}\.[0-9]{2}%\s+func\b/g,
       `${LINE}% line / ${FUNC}% func`,
@@ -363,50 +373,59 @@ function syncNHSI(s: string): string {
   );
 }
 
-let changed = 0;
-const drift: string[] = [];
-for (const file of SURFACES) {
-  let s: string;
-  try {
-    s = readFileSync(file, 'utf8');
-  } catch {
-    continue; // surface may not exist in every tree
+function main(): void {
+  let changed = 0;
+  const drift: string[] = [];
+  for (const file of SURFACES) {
+    let s: string;
+    try {
+      s = readFileSync(file, 'utf8');
+    } catch {
+      continue; // surface may not exist in every tree
+    }
+    const protectedSections = protectSyncExcludedSections(s);
+    const synced = syncNHSI(syncVersion(syncReceipts(protectedSections.text)));
+    const next = restoreSyncExcludedSections(synced, protectedSections.blocks);
+    if (next !== s) {
+      drift.push(file);
+      if (!checkOnly) writeFileSync(file, next, 'utf8');
+      changed++;
+    }
   }
-  const protectedSections = protectSyncExcludedSections(s);
-  const synced = syncNHSI(syncVersion(syncReceipts(protectedSections.text)));
-  const next = restoreSyncExcludedSections(synced, protectedSections.blocks);
-  if (next !== s) {
-    drift.push(file);
-    if (!checkOnly) writeFileSync(file, next, 'utf8');
-    changed++;
+
+  // package.json description carries a trailing "vX.Y.Z" that must equal the version field.
+  {
+    const pkgRaw = readFileSync('package.json', 'utf8');
+    const pkgNext = pkgRaw.replace(
+      /("description":\s*"[^"]*?)v0\.[0-9]+\.[0-9]+/g,
+      `$1v${VERSION}`,
+    );
+    if (pkgNext !== pkgRaw) {
+      drift.push('package.json');
+      if (!checkOnly) writeFileSync('package.json', pkgNext, 'utf8');
+      changed++;
+    }
+  }
+
+  if (checkOnly) {
+    if (changed > 0) {
+      console.error(`sync-surfaces --check: ${changed} surface(s) drifted from source of truth:`);
+      for (const d of drift) console.error(`   - ${d}`);
+      console.error(`   Fix: bun scripts/sync-surfaces.ts`);
+      process.exitCode = 1;
+      return;
+    }
+    console.log(
+      `sync-surfaces --check: all surfaces match v${VERSION} · ${TEST} tests · ${LINE}/${FUNC}%`,
+    );
+  } else {
+    console.log(
+      changed > 0
+        ? `Synced ${changed} surface(s) to v${VERSION} · ${TEST} tests · ${LINE}% line / ${FUNC}% func`
+        : `Surfaces already in sync (v${VERSION} · ${TEST} tests · ${LINE}/${FUNC}%)`,
+    );
   }
 }
 
-// package.json description carries a trailing "vX.Y.Z" that must equal the version field.
-{
-  const pkgRaw = readFileSync('package.json', 'utf8');
-  const pkgNext = pkgRaw.replace(/("description":\s*"[^"]*?)v0\.[0-9]+\.[0-9]+/g, `$1v${VERSION}`);
-  if (pkgNext !== pkgRaw) {
-    drift.push('package.json');
-    if (!checkOnly) writeFileSync('package.json', pkgNext, 'utf8');
-    changed++;
-  }
-}
-
-if (checkOnly) {
-  if (changed > 0) {
-    console.error(`sync-surfaces --check: ${changed} surface(s) drifted from source of truth:`);
-    for (const d of drift) console.error(`   - ${d}`);
-    console.error(`   Fix: bun scripts/sync-surfaces.ts`);
-    process.exit(1);
-  }
-  console.log(
-    `sync-surfaces --check: all surfaces match v${VERSION} · ${TEST} tests · ${LINE}/${FUNC}%`,
-  );
-} else {
-  console.log(
-    changed > 0
-      ? `Synced ${changed} surface(s) to v${VERSION} · ${TEST} tests · ${LINE}% line / ${FUNC}% func`
-      : `Surfaces already in sync (v${VERSION} · ${TEST} tests · ${LINE}/${FUNC}%)`,
-  );
-}
+// Importing the pure synchronizers in receipt-law tests must never rewrite the evidence under test.
+if (import.meta.main) main();

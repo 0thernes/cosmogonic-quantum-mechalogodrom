@@ -130,6 +130,22 @@ describe('SuperHunt', () => {
     hunt.dispose();
   });
 
+  test('an NHI at contact is neither consumed nor pursued as ordinary prey', () => {
+    const ctx = makeCtx(20, 50);
+    const entities = new EntityManager(ctx);
+    const hunt = new SuperHunt(ctx);
+    const apex = mockApex(0, 10, 0);
+    const nhi = entities.spawn(new THREE.Vector3(0, 10, 0), 0) as Entity;
+    nhi.userData.isNhi = true;
+    hunt.update([apex] as unknown as SuperBodySystem[], entities, 1, DT);
+    expect(hunt.eaten).toBe(0);
+    expect(apex.ate).toBe(0);
+    expect(apex.hunt).toBeNull();
+    expect(entities.list).toEqual([nhi]);
+    expect(hunt.stats().pending).toBe(0);
+    hunt.dispose();
+  });
+
   test('an organism beyond SENSES_R is ignored (apex resumes wander)', () => {
     const ctx = makeCtx(3, 50);
     const entities = new EntityManager(ctx);

@@ -155,7 +155,9 @@ export class SuperHunt {
       this.deathIndices.length = 0;
       for (let i = list.length - 1; i >= 0; i--) {
         const e = list[i];
-        if (!e) continue;
+        // NHI backing bodies are explicitly consumption-immune. Lethal portal/mecha hazards remain a
+        // separate policy; ordinary apex feeding must neither eat nor pursue an NHI as prey.
+        if (!e || e.userData.isNhi) continue;
         const p = e.position;
         let consumed = false;
         for (let b = 0; b < nb; b++) {

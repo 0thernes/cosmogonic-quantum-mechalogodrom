@@ -205,123 +205,139 @@ export class NhiBodySystem {
   /** Birth an alien body for NHI `id` at (x,y,z). Idempotent per id. */
   spawn(id: number, x: number, y: number, z: number): void {
     if (this.bodies.has(id)) return;
-    const group = new THREE.Group();
-    group.position.set(x, y, z);
-
-    // USER #7: this NHI's SPECIES — a distinct core body, spike form, and appendage counts per index.
     const si = this.spawnIndex;
-    const coreGeo = this.coreGeos[si % this.coreGeos.length]!;
-    const spikeGeo = this.spikeGeos[si % this.spikeGeos.length]!;
-    const ringCount = 1 + (si % 2); // 1..2 orbital rings
-    const spikeCount = 6 + (si % 4) * 2; // 6/8/10/12 protrusions
-    const tendrilCount = 3 + (si % 4); // 3..6 tendrils
-    const eyeCount = 5 + (si % 4); // 5..8 ocular crown
-
-    // V109: wider alien skin palette — each NHI gets a unique biomechanical "species" hue/texture.
-    // USER #7: near-black base + bright RIM glow, but the hue is now a curated dark-alien / old-money /
-    // Annihilation signature (nhiSpecies) instead of the old full-rainbow neon.
-    const skin = nhiSpecies(this.spawnIndex);
-    const coreMat = new THREE.MeshStandardMaterial({
-      color: 0x050505, // near black
-      emissive: skin.coreEm,
-      emissiveIntensity: 1.4,
-      metalness: 0.9,
-      roughness: 0.15,
-      flatShading: false, // smoother for bio look
-    });
-    // V-NHI-EXPANDED: patch the core with the named-effect suite, driven from real social + height.
-    const u: NhiUniforms = {
-      uTime: { value: 0 },
-      uSocial: { value: 0 },
-      uAsc: { value: 0 },
-    };
-    patchNhiCore(coreMat, u);
-    group.add(new THREE.Mesh(coreGeo, coreMat));
-
-    const ringMat = new THREE.MeshStandardMaterial({
-      color: skin.ringCol,
-      emissive: skin.ringEm,
-      emissiveIntensity: 1.05,
-      metalness: 0.95,
-      roughness: 0.2,
-    });
-    const ring = new THREE.Mesh(this.ringGeo, ringMat);
-    ring.rotation.x = Math.PI / 2.4;
-    group.add(ring);
-    if (ringCount > 1) {
-      const ring2 = new THREE.Mesh(this.ringGeo, ringMat);
-      ring2.rotation.set(Math.PI / 2.05, 0.4 + si * 0.31, 0.75);
-      ring2.scale.set(0.72 + 0.14 * Math.sin(si), 1.18, 0.72 + 0.14 * Math.cos(si));
-      group.add(ring2);
-    }
-    for (let i = 0; i < spikeCount; i++) {
-      const a = i * 2.399963229728653 + si * 0.41;
-      const spike = new THREE.Mesh(spikeGeo, ringMat);
-      spike.position.set(
-        Math.cos(a) * R * 0.78,
-        Math.sin(a * 1.7) * R * 0.34,
-        Math.sin(a) * R * 0.78,
-      );
-      spike.rotation.set(Math.sin(a) * 1.2, a, Math.cos(a) * 1.2);
-      spike.scale.setScalar(0.55 + 0.35 * Math.sin(i * 1.9 + this.spawnIndex));
-      group.add(spike);
-    }
-
+    const group = new THREE.Group();
     const tendrilGeos: THREE.BufferGeometry[] = [];
-    for (let ti = 0; ti < tendrilCount; ti++) {
-      const a = ti * 1.256637 + si * 0.37;
-      const curve = new THREE.CatmullRomCurve3([
-        new THREE.Vector3(0, 0, 0),
-        new THREE.Vector3(
-          Math.cos(a) * R * 0.42,
-          Math.sin(a * 2.1) * R * 0.28,
-          Math.sin(a) * R * 0.42,
-        ),
-        new THREE.Vector3(
-          Math.cos(a + 1.4) * R * 0.82,
-          Math.sin(a * 3.2) * R * 0.38,
-          Math.sin(a + 1.4) * R * 0.82,
-        ),
-        new THREE.Vector3(
-          Math.cos(a + 2.6) * R * 1.05,
-          -R * 0.18 + Math.sin(a) * R * 0.22,
-          Math.sin(a + 2.6) * R * 1.05,
-        ),
-      ]);
-      const geo = new THREE.TubeGeometry(curve, 10, R * (0.045 + (ti % 3) * 0.012), 6, false);
-      tendrilGeos.push(geo);
-      const tendril = new THREE.Mesh(geo, ringMat);
-      tendril.rotation.y = a;
-      tendril.rotation.x = Math.sin(a * 1.7) * 0.35;
-      group.add(tendril);
-    }
+    let coreMat: THREE.MeshStandardMaterial | undefined;
+    let ringMat: THREE.MeshStandardMaterial | undefined;
+    let eyeMat: THREE.MeshStandardMaterial | undefined;
 
-    // Ocular crown on the "face" (front +z) — weird but readable at distance.
-    const eyeMat = new THREE.MeshStandardMaterial({
-      color: 0x05070c,
-      emissive: skin.eyeEm,
-      emissiveIntensity: 2.4,
-    });
-    for (let i = 0; i < eyeCount; i++) {
-      const a = -0.95 + i * (1.9 / Math.max(1, eyeCount - 1));
-      const eye = new THREE.Mesh(this.eyeGeo, eyeMat);
-      eye.position.set(Math.sin(a) * R * 0.42, Math.cos(a * 1.7) * R * 0.22, R * 0.86);
-      const sc = 0.65 + 0.35 * Math.sin(i * 2.1 + si);
-      eye.scale.setScalar(sc);
-      group.add(eye);
-    }
+    try {
+      group.position.set(x, y, z);
 
-    this.root.add(group);
-    this.bodies.set(id, {
-      group,
-      coreMat,
-      ringMat,
-      eyeMat,
-      tendrilGeos,
-      phase: this.spawnIndex++ * 2.399963229728653,
-      u,
-      social: 0,
-    });
+      // USER #7: this NHI's SPECIES — a distinct core body, spike form, and appendage counts per index.
+      const coreGeo = this.coreGeos[si % this.coreGeos.length]!;
+      const spikeGeo = this.spikeGeos[si % this.spikeGeos.length]!;
+      const ringCount = 1 + (si % 2); // 1..2 orbital rings
+      const spikeCount = 6 + (si % 4) * 2; // 6/8/10/12 protrusions
+      const tendrilCount = 3 + (si % 4); // 3..6 tendrils
+      const eyeCount = 5 + (si % 4); // 5..8 ocular crown
+
+      // V109: wider alien skin palette — each NHI gets a unique biomechanical "species" hue/texture.
+      // USER #7: near-black base + bright RIM glow, but the hue is now a curated dark-alien / old-money /
+      // Annihilation signature (nhiSpecies) instead of the old full-rainbow neon.
+      const skin = nhiSpecies(si);
+      coreMat = new THREE.MeshStandardMaterial({
+        color: 0x050505, // near black
+        emissive: skin.coreEm,
+        emissiveIntensity: 1.4,
+        metalness: 0.9,
+        roughness: 0.15,
+        flatShading: false, // smoother for bio look
+      });
+      // V-NHI-EXPANDED: patch the core with the named-effect suite, driven from real social + height.
+      const u: NhiUniforms = {
+        uTime: { value: 0 },
+        uSocial: { value: 0 },
+        uAsc: { value: 0 },
+      };
+      patchNhiCore(coreMat, u);
+      group.add(new THREE.Mesh(coreGeo, coreMat));
+
+      ringMat = new THREE.MeshStandardMaterial({
+        color: skin.ringCol,
+        emissive: skin.ringEm,
+        emissiveIntensity: 1.05,
+        metalness: 0.95,
+        roughness: 0.2,
+      });
+      const ring = new THREE.Mesh(this.ringGeo, ringMat);
+      ring.rotation.x = Math.PI / 2.4;
+      group.add(ring);
+      if (ringCount > 1) {
+        const ring2 = new THREE.Mesh(this.ringGeo, ringMat);
+        ring2.rotation.set(Math.PI / 2.05, 0.4 + si * 0.31, 0.75);
+        ring2.scale.set(0.72 + 0.14 * Math.sin(si), 1.18, 0.72 + 0.14 * Math.cos(si));
+        group.add(ring2);
+      }
+      for (let i = 0; i < spikeCount; i++) {
+        const a = i * 2.399963229728653 + si * 0.41;
+        const spike = new THREE.Mesh(spikeGeo, ringMat);
+        spike.position.set(
+          Math.cos(a) * R * 0.78,
+          Math.sin(a * 1.7) * R * 0.34,
+          Math.sin(a) * R * 0.78,
+        );
+        spike.rotation.set(Math.sin(a) * 1.2, a, Math.cos(a) * 1.2);
+        spike.scale.setScalar(0.55 + 0.35 * Math.sin(i * 1.9 + si));
+        group.add(spike);
+      }
+
+      for (let ti = 0; ti < tendrilCount; ti++) {
+        const a = ti * 1.256637 + si * 0.37;
+        const curve = new THREE.CatmullRomCurve3([
+          new THREE.Vector3(0, 0, 0),
+          new THREE.Vector3(
+            Math.cos(a) * R * 0.42,
+            Math.sin(a * 2.1) * R * 0.28,
+            Math.sin(a) * R * 0.42,
+          ),
+          new THREE.Vector3(
+            Math.cos(a + 1.4) * R * 0.82,
+            Math.sin(a * 3.2) * R * 0.38,
+            Math.sin(a + 1.4) * R * 0.82,
+          ),
+          new THREE.Vector3(
+            Math.cos(a + 2.6) * R * 1.05,
+            -R * 0.18 + Math.sin(a) * R * 0.22,
+            Math.sin(a + 2.6) * R * 1.05,
+          ),
+        ]);
+        const geo = new THREE.TubeGeometry(curve, 10, R * (0.045 + (ti % 3) * 0.012), 6, false);
+        tendrilGeos.push(geo);
+        const tendril = new THREE.Mesh(geo, ringMat);
+        tendril.rotation.y = a;
+        tendril.rotation.x = Math.sin(a * 1.7) * 0.35;
+        group.add(tendril);
+      }
+
+      // Ocular crown on the "face" (front +z) — weird but readable at distance.
+      eyeMat = new THREE.MeshStandardMaterial({
+        color: 0x05070c,
+        emissive: skin.eyeEm,
+        emissiveIntensity: 2.4,
+      });
+      for (let i = 0; i < eyeCount; i++) {
+        const a = -0.95 + i * (1.9 / Math.max(1, eyeCount - 1));
+        const eye = new THREE.Mesh(this.eyeGeo, eyeMat);
+        eye.position.set(Math.sin(a) * R * 0.42, Math.cos(a * 1.7) * R * 0.22, R * 0.86);
+        const sc = 0.65 + 0.35 * Math.sin(i * 2.1 + si);
+        eye.scale.setScalar(sc);
+        group.add(eye);
+      }
+
+      // Commit only after the complete body has been attached. The morphology index advances only
+      // after the map mutation succeeds, so a failed launch is observationally equivalent to no launch.
+      this.root.add(group);
+      this.bodies.set(id, {
+        group,
+        coreMat,
+        ringMat,
+        eyeMat,
+        tendrilGeos,
+        phase: si * 2.399963229728653,
+        u,
+        social: 0,
+      });
+      this.spawnIndex = si + 1;
+    } catch (error) {
+      // Construction and attachment form one transaction. Never dispose the shared morphology
+      // geometries here: only resources allocated specifically for this attempted body are owned.
+      this.bodies.delete(id);
+      this.spawnIndex = si;
+      this.disposePartialBody(group, coreMat, ringMat, eyeMat, tendrilGeos);
+      throw error;
+    }
   }
 
   /**
@@ -343,8 +359,8 @@ export class NhiBodySystem {
     for (const [id, b] of this.bodies) {
       const p = posOf(id);
       if (!p) {
-        this.disposeBody(b);
         this.bodies.delete(id);
+        this.disposeBody(b);
         continue;
       }
       b.group.position.copy(p);
@@ -424,19 +440,25 @@ export class NhiBodySystem {
     return this.bodies.size;
   }
 
+  /** O(1) membership probe used by lifecycle receipts and rollback verification. */
+  has(id: number): boolean {
+    return this.bodies.has(id);
+  }
+
   /** Dispose one departed NHI body immediately. Idempotent and safe for an unknown id. */
   remove(id: number): boolean {
     const body = this.bodies.get(id);
     if (!body) return false;
-    this.disposeBody(body);
     this.bodies.delete(id);
+    this.disposeBody(body);
     return true;
   }
 
   /** Dispose every body (e.g. on world reset). */
   clear(): void {
-    for (const b of this.bodies.values()) this.disposeBody(b);
+    const bodies = [...this.bodies.values()];
     this.bodies.clear();
+    for (const b of bodies) this.disposeBody(b);
   }
 
   /** Free ALL GPU resources (live body materials via clear(), then the shared geometries) on world
@@ -451,10 +473,43 @@ export class NhiBodySystem {
   }
 
   private disposeBody(b: Body): void {
-    this.root.remove(b.group);
-    b.coreMat.dispose();
-    b.ringMat.dispose();
-    b.eyeMat.dispose();
-    for (const g of b.tendrilGeos) g.dispose();
+    this.disposePartialBody(b.group, b.coreMat, b.ringMat, b.eyeMat, b.tendrilGeos);
+  }
+
+  /** Best-effort, no-throw cleanup for both committed bodies and failed spawn transactions. */
+  private disposePartialBody(
+    group: THREE.Group,
+    coreMat: THREE.MeshStandardMaterial | undefined,
+    ringMat: THREE.MeshStandardMaterial | undefined,
+    eyeMat: THREE.MeshStandardMaterial | undefined,
+    tendrilGeos: readonly THREE.BufferGeometry[],
+  ): void {
+    try {
+      this.root.remove(group);
+    } catch {
+      // Continue: one failed detach must not suppress disposal of independent owned resources.
+    }
+    try {
+      coreMat?.dispose();
+    } catch {
+      // Best effort.
+    }
+    try {
+      ringMat?.dispose();
+    } catch {
+      // Best effort.
+    }
+    try {
+      eyeMat?.dispose();
+    } catch {
+      // Best effort.
+    }
+    for (const g of tendrilGeos) {
+      try {
+        g.dispose();
+      } catch {
+        // Best effort; continue through every independently owned tendril geometry.
+      }
+    }
   }
 }

@@ -120,6 +120,21 @@ describe('DomeFeeding', () => {
     feeding.dispose();
   });
 
+  test('an NHI at a feeder is consumption-immune and never queued as an ordinary respawn', () => {
+    const ctx = makeCtx(20, 50);
+    const entities = new EntityManager(ctx);
+    const feeding = new DomeFeeding(ctx);
+    const nhi = entities.spawn(new THREE.Vector3(0, 10, 0), 0) as Entity;
+    nhi.userData.isNhi = true;
+    let killed = 0;
+    feeding.update([mockFeeder([0, 10, 0])], entities, noGraze, 1, DT, () => killed++);
+    expect(feeding.eaten).toBe(0);
+    expect(killed).toBe(0);
+    expect(entities.list).toEqual([nhi]);
+    expect(feeding.stats().pending).toBe(0);
+    feeding.dispose();
+  });
+
   test('the flora is grazed at every feeder footprint', () => {
     const ctx = makeCtx(2, 50);
     const entities = new EntityManager(ctx);

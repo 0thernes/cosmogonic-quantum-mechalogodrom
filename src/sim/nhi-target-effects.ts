@@ -48,6 +48,8 @@ export interface NhiTargetSelection<T extends NhiTargetCandidate> {
 
 export interface NhiHuntEffect {
   readonly applied: boolean;
+  readonly selfChanged: boolean;
+  readonly targetChanged: boolean;
   readonly captured: boolean;
   readonly distance: number | null;
   readonly energyTransferred: number;
@@ -62,6 +64,14 @@ export interface NhiMimicEffect {
   readonly strategy: 0 | 1;
   readonly setGroup: number;
   readonly phylum: number;
+}
+
+export interface NhiVelocityImpulseEffect {
+  /** Any finite-sanitization or bounded impulse changed the stored velocity. */
+  readonly applied: boolean;
+  /** The requested directional impulse itself changed the sanitized baseline. */
+  readonly impulseApplied: boolean;
+  readonly velocity: NhiEffectVector;
 }
 
 export const NHI_ENERGY_CAP = 100;
@@ -132,6 +142,42 @@ function velocity(v: NhiEffectVector): NhiEffectVector {
   return { x, y, z };
 }
 
+/**
+ * Sanitize a velocity and apply one bounded impulse along a finite normalized direction. This is the
+ * shared leaf for DOMINATE and RETREAT: hostile numeric state is repaired before arithmetic, exact
+ * no-ops remain false, and `impulseApplied` distinguishes causal action evidence from mere hygiene.
+ */
+export function resolveNhiVelocityImpulse(
+  current: NhiEffectVector,
+  direction: NhiEffectVector,
+  impulse: number,
+): NhiVelocityImpulseEffect {
+  const baseline = velocity(current);
+  let dx = bounded(direction.x, -POSITION_LIMIT, POSITION_LIMIT);
+  let dy = bounded(direction.y, -POSITION_LIMIT, POSITION_LIMIT);
+  let dz = bounded(direction.z, -POSITION_LIMIT, POSITION_LIMIT);
+  const length = Math.hypot(dx, dy, dz);
+  if (length > Number.EPSILON) {
+    dx /= length;
+    dy /= length;
+    dz /= length;
+  } else {
+    dx = 0;
+    dy = 0;
+    dz = 0;
+  }
+  const gain = bounded(impulse, -NHI_EFFECT_MAX_SPEED, NHI_EFFECT_MAX_SPEED);
+  const next = velocity({
+    x: baseline.x + dx * gain,
+    y: baseline.y + dy * gain,
+    z: baseline.z + dz * gain,
+  });
+  const sanitized =
+    baseline.x !== current.x || baseline.y !== current.y || baseline.z !== current.z;
+  const impulseApplied = next.x !== baseline.x || next.y !== baseline.y || next.z !== baseline.z;
+  return { applied: sanitized || impulseApplied, impulseApplied, velocity: next };
+}
+
 function strategy(v: number): 0 | 1 {
   return bounded(v, 0, 1) >= 0.5 ? 1 : 0;
 }
@@ -194,9 +240,9 @@ export function selectNearestNhiTarget<T extends NhiTargetCandidate>(
 /**
  * Resolve a HUNT against the already-selected exact nearest ordinary target.
  *
- * A valid target always produces bounded steering. Energy moves only inside the fixed capture radius,
- * and the transfer is limited by magnitude, target balance, and the hunter's remaining capacity; the
- * two balances therefore cannot gain energy. Zero distance is a valid capture with no steering vector.
+ * A valid separated target produces bounded steering. Energy moves only inside the fixed capture
+ * radius, and the transfer is limited by magnitude, target balance, and the hunter's remaining
+ * capacity; the two balances therefore cannot gain energy. Exact no-op patches report `applied=false`.
  */
 export function resolveNhiHuntEffect(
   self: NhiEffectBody,
@@ -210,6 +256,8 @@ export function resolveNhiHuntEffect(
   if (!target || target.alive === false || gain <= 0) {
     return {
       applied: false,
+      selfChanged: false,
+      targetChanged: false,
       captured: false,
       distance: null,
       energyTransferred: 0,
@@ -239,14 +287,24 @@ export function resolveNhiHuntEffect(
   const energyTransferred = captured
     ? Math.min(NHI_HUNT_MAX_TRANSFER * gain, targetEnergy, NHI_ENERGY_CAP - selfEnergy)
     : 0;
+  const nextSelfEnergy = selfEnergy + energyTransferred;
+  const nextTargetEnergy = targetEnergy - energyTransferred;
+  const selfChanged =
+    nextSelfEnergy !== self.energy ||
+    steered.x !== self.velocity.x ||
+    steered.y !== self.velocity.y ||
+    steered.z !== self.velocity.z;
+  const targetChanged = nextTargetEnergy !== target.energy;
 
   return {
-    applied: true,
+    applied: selfChanged || targetChanged,
+    selfChanged,
+    targetChanged,
     captured,
     distance,
     energyTransferred,
-    selfEnergy: selfEnergy + energyTransferred,
-    targetEnergy: targetEnergy - energyTransferred,
+    selfEnergy: nextSelfEnergy,
+    targetEnergy: nextTargetEnergy,
     selfVelocity: steered,
   };
 }
@@ -278,15 +336,25 @@ export function resolveNhiMimicEffect(
 
   const targetVelocity = velocity(target.velocity);
   const blend = NHI_MIMIC_MAX_BLEND * gain;
+  const selfVelocity = velocity({
+    x: ownVelocity.x + (targetVelocity.x - ownVelocity.x) * blend,
+    y: ownVelocity.y + (targetVelocity.y - ownVelocity.y) * blend,
+    z: ownVelocity.z + (targetVelocity.z - ownVelocity.z) * blend,
+  });
+  const targetStrategy = strategy(target.strategy);
+  const targetSetGroup = integer(target.setGroup, -1_000_000, 1_000_000, 0);
+  const targetPhylum = integer(target.phylum, -1, 9, -1);
   return {
-    applied: true,
-    selfVelocity: velocity({
-      x: ownVelocity.x + (targetVelocity.x - ownVelocity.x) * blend,
-      y: ownVelocity.y + (targetVelocity.y - ownVelocity.y) * blend,
-      z: ownVelocity.z + (targetVelocity.z - ownVelocity.z) * blend,
-    }),
-    strategy: strategy(target.strategy),
-    setGroup: integer(target.setGroup, -1_000_000, 1_000_000, 0),
-    phylum: integer(target.phylum, -1, 9, -1),
+    applied:
+      selfVelocity.x !== self.velocity.x ||
+      selfVelocity.y !== self.velocity.y ||
+      selfVelocity.z !== self.velocity.z ||
+      targetStrategy !== self.strategy ||
+      targetSetGroup !== self.setGroup ||
+      targetPhylum !== self.phylum,
+    selfVelocity,
+    strategy: targetStrategy,
+    setGroup: targetSetGroup,
+    phylum: targetPhylum,
   };
 }

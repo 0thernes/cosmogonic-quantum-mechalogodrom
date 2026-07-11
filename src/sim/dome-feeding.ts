@@ -159,7 +159,8 @@ export class DomeFeeding {
         const list = entities.list;
         for (let i = list.length - 1; i >= 0; i--) {
           const e = list[i];
-          if (!e) continue;
+          // NHI backing bodies are consumption-immune; explicit lethal hazards are handled elsewhere.
+          if (!e || e.userData.isNhi) continue;
           const p = e.position;
           for (let g = 0; g < fc; g++) {
             const o = g * 3;

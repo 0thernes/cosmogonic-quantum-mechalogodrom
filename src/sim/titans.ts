@@ -679,7 +679,7 @@ export class TitanSystem implements DomeFeeder {
   /** Last RD pattern density fed by the integrator (0..1). */
   private lastRd = 0;
   /** World-owned NHI birth hook; null in tests/headless sims. */
-  private procreationSink: ((x: number, y: number, z: number) => void) | null = null;
+  private procreationSink: ((x: number, y: number, z: number) => boolean) | null = null;
 
   /** Builds the TITAN_COUNT colossi (boot-time allocation; ctx.rng draws are boot cadence). */
   constructor(ctx: SimContext, entities: EntityManager, lore: TitanLore, rd: TitanRd) {
@@ -793,7 +793,7 @@ export class TitanSystem implements DomeFeeder {
   }
 
   /** Wire the center-breeder titan event into the world-owned NHI birth pipeline. */
-  attachProcreation(sink: ((x: number, y: number, z: number) => void) | null): void {
+  attachProcreation(sink: ((x: number, y: number, z: number) => boolean) | null): void {
     this.procreationSink = sink;
   }
 
@@ -919,18 +919,45 @@ export class TitanSystem implements DomeFeeder {
       cz += p.z;
     }
     if (breeders < BREED_QUORUM) return;
-    const births = 1 + ((frame / BREED_PERIOD) % 3);
+    const attempted = 1 + ((frame / BREED_PERIOD) % 3);
     const inv = 1 / breeders;
-    for (let b = 0; b < births; b++) {
+    let succeeded = 0;
+    for (let b = 0; b < attempted; b++) {
       const a = this.ctx.rng() * TAU;
       const r = 5 + this.ctx.rng() * 18;
-      this.procreationSink(
-        cx * inv + Math.cos(a) * r,
-        cy * inv + 8 + b * 3,
-        cz * inv + Math.sin(a) * r,
-      );
+      try {
+        if (
+          this.procreationSink(
+            cx * inv + Math.cos(a) * r,
+            cy * inv + 8 + b * 3,
+            cz * inv + Math.sin(a) * r,
+          )
+        ) {
+          succeeded++;
+        }
+      } catch (error) {
+        try {
+          this.ctx.audit.record('titan-procreation-attempt-failed', {
+            breeders,
+            attempt: b,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        } catch {
+          // A failed sink and failed diagnostic still count as an unsuccessful attempt.
+        }
+      }
     }
-    this.ctx.audit.record('titan-procreation', { breeders, births });
+    try {
+      this.ctx.audit.record('titan-procreation', {
+        breeders,
+        attempted,
+        succeeded,
+        failed: attempted - succeeded,
+        births: succeeded,
+      });
+    } catch {
+      // Births are already material. A diagnostic sink cannot turn them into a failed update.
+    }
   }
 
   /** Boot-time titan factory: silhouette, light, lore identity, seeded economy. */

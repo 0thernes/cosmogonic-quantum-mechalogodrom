@@ -123,7 +123,8 @@ const TASK_DESCRIPTORS: Readonly<Record<EcologyDevelopmentTaskId, TaskDescriptor
   'missing-feedback-irregular-elapsed-time': {
     id: 'missing-feedback-irregular-elapsed-time',
     version: 1,
-    labelLaw: 'seed-derived logistic regime switches after irregular elapsed cadences',
+    labelLaw:
+      'seed-derived logistic regime switches at a forecast-cadence index while elapsed time advances irregularly',
     covariateLaw:
       '512 indexed forecast cadences with deterministic jumps in the separate elapsed-time coordinate',
     feedbackLaw:

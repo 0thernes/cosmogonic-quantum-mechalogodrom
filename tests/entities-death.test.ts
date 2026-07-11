@@ -74,6 +74,51 @@ function makeCtx(seed: number, maxEntities: number): SimContext {
 }
 
 describe('EntityManager.onDeath', () => {
+  test('a failing optional creature SFX sink cannot turn a completed spawn into a half-transaction', () => {
+    const ctx = makeCtx(29, 50);
+    ctx.creatureSfx = () => {
+      throw new Error('injected SFX failure');
+    };
+    const entities = new EntityManager(ctx);
+    const spawned = entities.spawn(new THREE.Vector3(1, 2, 3), 0);
+    expect(spawned).not.toBeNull();
+    expect(entities.list).toEqual([spawned as Entity]);
+    expect(spawned?.userData.alive).toBe(true);
+  });
+
+  test('a throwing brain-slot hook leaves no list or scene orphan when spawn cannot return identity', () => {
+    const ctx = makeCtx(31, 50);
+    const entities = new EntityManager(ctx);
+    entities.attachBrainSlotLifecycle({
+      swapEntitySlots: () => undefined,
+      resetEntitySlots: () => undefined,
+      clearEntitySlot: () => {
+        throw new Error('injected slot failure');
+      },
+    });
+    expect(() => entities.spawn(new THREE.Vector3(1, 2, 3), 0)).toThrow('injected slot failure');
+    expect(entities.list).toHaveLength(0);
+    expect(ctx.scene.children).toHaveLength(0);
+  });
+
+  test('a throwing material disposer cannot leave rollback state or double-decrement accounting', () => {
+    const ctx = makeCtx(37, 50);
+    const entities = new EntityManager(ctx);
+    const spawned = entities.spawn(new THREE.Vector3(1, 2, 3), 0);
+    expect(spawned).not.toBeNull();
+    if (!spawned) return;
+    spawned.material.dispose = () => {
+      throw new Error('injected dispose failure');
+    };
+    ctx.state.mutations = 7;
+    expect(() => entities.discardSpawnAt(0)).not.toThrow();
+    expect(entities.list).toHaveLength(0);
+    expect(spawned.userData.alive).toBe(false);
+    expect(ctx.state.mutations).toBe(7);
+    expect(() => entities.discardSpawnAt(0)).not.toThrow();
+    expect(ctx.state.mutations).toBe(7);
+  });
+
   test('disposeAt fires exactly once with the entity x/z; empty slots never fire', () => {
     const ctx = makeCtx(1, 50);
     const entities = new EntityManager(ctx);
@@ -88,6 +133,23 @@ describe('EntityManager.onDeath', () => {
     expect(entities.list.length).toBe(0);
     entities.disposeAt(0); // empty list — guard path, must not fire
     expect(calls.length).toBe(1);
+  });
+
+  test('discardSpawnAt removes a failed registration without fabricating a death', () => {
+    const ctx = makeCtx(11, 50);
+    const entities = new EntityManager(ctx);
+    let fires = 0;
+    entities.onDeath = () => fires++;
+    const survivor = entities.spawn(new THREE.Vector3(1, 2, 3), 0);
+    const rolledBack = entities.spawn(new THREE.Vector3(4, 5, 6), 1);
+    expect(survivor).not.toBeNull();
+    expect(rolledBack).not.toBeNull();
+    ctx.state.mutations = 9;
+    entities.discardSpawnAt(1);
+    expect(entities.list).toEqual([survivor as Entity]);
+    expect(rolledBack?.userData.alive).toBe(false);
+    expect(ctx.state.mutations).toBe(9);
+    expect(fires).toBe(0);
   });
 
   test('age-death inside update() fires exactly once per death (no double-fire)', () => {

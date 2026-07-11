@@ -196,12 +196,10 @@ const FLORA_CAMO = new THREE.Color().setRGB(
 );
 
 /**
- * Max NEW organisms an auto-split surge may create per frame at the ultra tier (>5,000). A
- * synchronized cascade — apocalypse maxes `chaos`, draining every split timer 3× so the whole
- * population turns split-ready at once — is AMORTIZED across frames instead of allocating
- * thousands of entities in one frame (the "brain-fart" GC/allocation cliff). The deferred splits
- * keep their ready timer and retry next frame, so the world still ramps to the ceiling — over a
- * few seconds, not a single locked frame. Deterministic (a frame-local COUNTER, not wall-clock).
+ * Max budgeted material-organism births per frame at the ultra tier (>5,000). Organic mitosis,
+ * sparse recovery, and post-update NHI swarms share the counter, so no one path can restore the
+ * synchronized allocation cliff. Deferred births retry on later frames; the world still ramps to
+ * its target over seconds instead of one locked frame. Deterministic (frame-local, not wall-clock).
  */
 export const SPAWN_BUDGET_ULTRA = 512;
 /** Distinct-morphotype scratch set — cleared at the top of every `update()` call. */
@@ -281,7 +279,8 @@ export class EntityManager {
    *  climb the biomass gradient toward the RICHEST patch (chemotaxis), not just drift to nearest cover.
    *  Null (the default, e.g. tests) detaches it so the seeded golden is byte-identical. */
   private floraGradient: ((x: number, z: number) => number) | null = null;
-  /** New organisms created so far THIS frame (auto-split), reset each {@link update}. See {@link SPAWN_BUDGET_ULTRA}. */
+  /** Reserved material-organism births THIS frame, reset by {@link update}. Auto-split, behavior
+   *  mitosis, sparse recovery, and post-update NHI swarms share it at the ultra tier. */
   private spawnsThisFrame = 0;
 
   constructor(ctx: SimContext) {
@@ -297,7 +296,7 @@ export class EntityManager {
     };
     this.env = {
       ctx,
-      spawn: (pos, mi, scale) => this.spawn(pos, mi, scale),
+      spawn: (pos, mi, scale) => this.spawnWithinFrameBudget(pos, mi, scale),
       dt: 0,
       t: 0,
       cm: 0,
@@ -353,6 +352,11 @@ export class EntityManager {
    *  gradient toward the richest patch (gradient-ascent chemotaxis). Deterministic; null detaches it. */
   attachFloraGradient(sampler: ((x: number, z: number) => number) | null): void {
     this.floraGradient = sampler;
+  }
+
+  /** Whether another material organism may use this frame's ultra-tier birth budget. */
+  private hasFrameSpawnCapacity(): boolean {
+    return this.ctx.quality.maxEntities <= 5000 || this.spawnsThisFrame < SPAWN_BUDGET_ULTRA;
   }
 
   /**
@@ -494,15 +498,107 @@ export class EntityManager {
       beh2: m.beh2 ?? null,
       alive: true,
     };
-    if (!ctx.quality.instanced) ctx.scene.add(mesh);
-    this.list.push(mesh);
-    this.clearOrganismGoal(this.list.length - 1);
-    this.brainSlots?.clearEntitySlot(this.list.length - 1);
     const spawnMi = mi % morphCount;
-    if (spawnMi >= 0 && spawnMi < this.morphLive.length)
-      this.morphLive[spawnMi] = (this.morphLive[spawnMi] ?? 0) + 1;
-    ctx.creatureSfx?.(mi % morphCount);
+    try {
+      const slot = this.list.length;
+      // Clear external slot state before material insertion: if the lifecycle owner rejects the slot,
+      // the caller receives an error but no orphaned list/scene entity.
+      this.clearOrganismGoal(slot);
+      this.brainSlots?.clearEntitySlot(slot);
+      if (!ctx.quality.instanced) ctx.scene.add(mesh);
+      this.list.push(mesh);
+      if (spawnMi >= 0 && spawnMi < this.morphLive.length)
+        this.morphLive[spawnMi] = (this.morphLive[spawnMi] ?? 0) + 1;
+    } catch (error) {
+      // Roll back internally because a caller cannot receive `mesh` when spawn itself throws.
+      const index = this.list.indexOf(mesh);
+      if (index >= 0) {
+        this.list.splice(index, 1);
+        if (spawnMi >= 0 && spawnMi < this.morphLive.length) {
+          const current = this.morphLive[spawnMi] ?? 0;
+          if (current > 0) this.morphLive[spawnMi] = current - 1;
+        }
+      }
+      try {
+        ctx.scene.remove(mesh);
+      } catch {
+        // Preserve the original spawn error; cleanup diagnostics below are best-effort.
+      }
+      try {
+        mat.dispose();
+      } catch {
+        // Preserve the original spawn error.
+      }
+      const message = error instanceof Error ? error.message : String(error);
+      try {
+        ctx.audit.record('entity-spawn-rolled-back', { morphIndex: spawnMi, error: message });
+      } catch {
+        // Reporting cannot replace the original failure.
+      }
+      throw error;
+    }
+    // Optional presentation is guarded after the transaction commits.
+    try {
+      ctx.creatureSfx?.(mi % morphCount);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      try {
+        ctx.audit.record('creature-sfx-failed', { morphIndex: spawnMi, error: message });
+      } catch {
+        // Reporting is also non-material; retain the valid organism when both external sinks fail.
+      }
+    }
     return mesh;
+  }
+
+  /**
+   * Spawn through the shared frame-local organism-birth budget. The budget is active only above
+   * 5,000 entities, so every lower-tier call delegates exactly to {@link spawn}. A reservation is
+   * committed only when a material entity is returned; null and exceptional spawn paths release it.
+   * This lets post-update NHI swarms share the same deterministic counter as organic mitosis.
+   */
+  spawnWithinFrameBudget(
+    pos: THREE.Vector3 | null,
+    mi: number,
+    scale = 1,
+    parent?: Entity,
+  ): Entity | null {
+    const budgeted = this.ctx.quality.maxEntities > 5000;
+    if (budgeted) {
+      if (!this.hasFrameSpawnCapacity()) return null;
+      this.spawnsThisFrame++;
+    }
+    try {
+      const entity = this.spawn(pos, mi, scale, parent);
+      if (budgeted && entity === null) this.spawnsThisFrame--;
+      return entity;
+    } catch (error) {
+      if (budgeted) this.spawnsThisFrame--;
+      throw error;
+    }
+  }
+
+  /**
+   * Rebuild the current-position entity index exactly once when any NHI is live. The work is O(N)
+   * and independent of NHI population M; M=0 is an exact no-op. Returns the number inserted so
+   * deterministic tests and diagnostics can pin that structural scaling without wall-clock flakes.
+   */
+  rebuildCurrentGridForNhi(liveNhiCount: number): number {
+    if (!Number.isSafeInteger(liveNhiCount) || liveNhiCount < 0) {
+      throw new RangeError('live NHI count must be a non-negative safe integer');
+    }
+    if (liveNhiCount === 0) return 0;
+    const grid = this.ctx.grid;
+    grid.clear();
+    const list = this.list;
+    let inserted = 0;
+    for (let i = 0; i < list.length; i++) {
+      const entity = list[i];
+      if (!entity) continue;
+      grid.insert(entity);
+      inserted++;
+    }
+    return inserted;
   }
 
   /**
@@ -512,13 +608,37 @@ export class EntityManager {
    */
   dispose(e: Entity): void {
     e.userData.alive = false;
-    // Instanced mode: the mesh was never added — remove() is a safe no-op there.
-    this.ctx.scene.remove(e);
-    e.material.dispose();
+    const ctx = this.ctx;
+    // Resource release is best-effort after logical death. A renderer/driver exception must not leave
+    // the entity live or make a retry double-decrement population accounting.
+    try {
+      ctx.scene.remove(e); // instanced mode: mesh was never added, so this is a no-op
+    } catch (error) {
+      try {
+        ctx.audit.record('entity-scene-remove-failed', {
+          morphIndex: e.userData.mi,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      } catch {
+        // Diagnostic sink failure cannot restore a logically dead entity.
+      }
+    }
+    try {
+      e.material.dispose();
+    } catch (error) {
+      try {
+        ctx.audit.record('entity-material-dispose-failed', {
+          morphIndex: e.userData.mi,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      } catch {
+        // Diagnostic sink failure cannot restore a logically dead entity.
+      }
+    }
   }
 
   /** Apply per-organism accounting and release its owned render resources. O(1). */
-  private retire(e: Entity): void {
+  private retire(e: Entity, trackExtinction = true): void {
     const dmi = e.userData.mi;
     const inRange = dmi >= 0 && dmi < this.morphLive.length;
     if (inRange) {
@@ -526,7 +646,7 @@ export class EntityManager {
       if (cur > 0) this.morphLive[dmi] = cur - 1;
     }
     const isExtinct = inRange ? (this.morphLive[dmi] ?? 0) === 0 : true;
-    if (isExtinct && this.ctx.state.mutations > 0) this.ctx.state.mutations--;
+    if (trackExtinction && isExtinct && this.ctx.state.mutations > 0) this.ctx.state.mutations--;
     this.dispose(e);
   }
 
@@ -537,6 +657,18 @@ export class EntityManager {
    * so the callback may safely spawn. Allocation-free ordered removal. O(n − index).
    */
   disposeAt(index: number): void {
+    this.removeAt(index, true, true);
+  }
+
+  /**
+   * Roll back a just-created entity without emitting a biological death/respawn event. This is for
+   * failed multi-system registration transactions, not ordinary mortality. O(n − index).
+   */
+  discardSpawnAt(index: number): void {
+    this.removeAt(index, false, false);
+  }
+
+  private removeAt(index: number, notifyDeath: boolean, trackExtinction: boolean): void {
     const list = this.list;
     const e = list[index];
     if (!e) return;
@@ -545,7 +677,7 @@ export class EntityManager {
     // per-morphotype counter — the previous whole-list rescan made a mass die-off / black-hole consume
     // O(deaths·n) ≈ O(n²). Post-decrement count === 0 ⇔ no other live entity shares this morphotype
     // (exactly what the rescan tested), so the `mutations` behaviour is byte-identical.
-    this.retire(e);
+    this.retire(e, trackExtinction);
     for (let j = index + 1; j < list.length; j++) {
       const next = list[j];
       if (next) {
@@ -558,7 +690,7 @@ export class EntityManager {
     this.clearOrganismGoal(list.length);
     this.brainSlots?.clearEntitySlot(list.length);
     const onDeath = this.onDeath;
-    if (onDeath) onDeath(e.position.x, e.position.z);
+    if (notifyDeath && onDeath) onDeath(e.position.x, e.position.z);
   }
 
   /**
@@ -692,12 +824,10 @@ export class EntityManager {
     // Full-rate behavior re-evaluation on every tier — no ultra cadence throttle (quality contract).
     const theoryStride = 2;
     const flockEvery = 1;
-    // F-SPAWN-BUDGET: cap NEW organisms per frame at the ultra tier so a synchronized auto-split
-    // surge (apocalypse maxes chaos → every split timer drains 3× → the whole population turns
-    // split-ready at once) RAMPS over ~seconds instead of allocating thousands of entities in one
-    // frame (the "brain-fart" freeze + GC cliff). Infinity at ≤5,000 ⇒ the budget is never
-    // consulted below ultra, so every golden + determinism property stays byte-identical.
-    const spawnBudget = maxEntities > 5000 ? SPAWN_BUDGET_ULTRA : Infinity;
+    // F-SPAWN-BUDGET: cap material organism births at the ultra tier so synchronized mitosis RAMPS
+    // over ~seconds instead of allocating thousands of entities in one frame. This counter remains
+    // live after update so same-frame NHI SPAWN_SWARM attempts spend the unused remainder. At ≤5,000
+    // the budget is disabled, preserving every lower-tier golden and draw order.
     this.spawnsThisFrame = 0;
     // Adaptive steady-state target: ORGANIC growth (auto-split, sparse respawn) stops here so
     // an idle ultra world settles below the 10k ceiling. Equals maxEntities on every other tier
@@ -876,8 +1006,7 @@ export class EntityManager {
       // At target === maxEntities (≤5,000) the short-circuited `rng()` is drawn on exactly the
       // legacy frames, so the seeded stream is byte-identical.
       u.sT -= dt * 30 * cm;
-      if (u.sT <= 0 && list.length < target && this.spawnsThisFrame < spawnBudget && rng() < 0.06) {
-        this.spawnsThisFrame++;
+      if (u.sT <= 0 && list.length < target && this.hasFrameSpawnCapacity() && rng() < 0.06) {
         u.sT = 300 + rng() * 500;
         SPAWN_AT.set(
           e.position.x + (rng() - 0.5) * 2,
@@ -886,7 +1015,12 @@ export class EntityManager {
         );
         // Auto-split: the offspring INHERITS its parent's genome (passed as `e`) — the trait
         // heredity runs on ctx.genomeRng, so the main rng order here is unchanged.
-        this.spawn(SPAWN_AT, (u.mi + Math.floor(rng() * 5)) % ctx.morphs.length, 0.7, e);
+        this.spawnWithinFrameBudget(
+          SPAWN_AT,
+          (u.mi + Math.floor(rng() * 5)) % ctx.morphs.length,
+          0.7,
+          e,
+        );
       }
 
       // Temperature-modified death + respawn-when-sparse (legacy lines 790-795).
@@ -902,12 +1036,13 @@ export class EntityManager {
         // to the steady-state target rather than the 10k ceiling.
         if (list.length < Math.max(100, target * 0.1)) {
           for (let r = 0; r < 3; r++) {
+            if (!this.hasFrameSpawnCapacity()) break;
             SPAWN_AT.set(
               (rng() - 0.5) * 2 * PLATFORM_HALF * 0.6 + ex * 0.3,
               PLATFORM_FLOOR + rng() * (PLATFORM_CEIL - PLATFORM_FLOOR),
               (rng() - 0.5) * 2 * PLATFORM_HALF * 0.6 + ez * 0.3,
             );
-            this.spawn(SPAWN_AT, Math.floor(rng() * ctx.morphs.length));
+            this.spawnWithinFrameBudget(SPAWN_AT, Math.floor(rng() * ctx.morphs.length));
           }
         }
       }

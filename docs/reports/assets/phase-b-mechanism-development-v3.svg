@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1020" viewBox="0 0 1200 1020" role="img" aria-labelledby="phase-b-title phase-b-desc">
+  <title id="phase-b-title">Phase-B mechanism development: failed temporal gate and bounded NHI diagnostics</title>
+  <desc id="phase-b-desc">All eight temporal advancement criteria fail. NHI service declines under a paired surface conflict. Only HUNT resource and SPAWN social neural semantic lanes are supported for diagnostic interpretation; MANIPULATE and DOMINATE are unsupported.</desc>
+  <style>
+    text{font-family:Inter,Segoe UI,Arial,sans-serif;fill:#f6f8fb}.title{font-size:28px;font-weight:750}.subtitle{font-size:15px;fill:#b8c1cf}.section{font-size:20px;font-weight:700}.body{font-size:14px}.mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:13px}.fail{font-size:13px;font-weight:800;fill:#ff93a0}.honesty{font-size:14px;font-weight:800;fill:#ffd166}.lane-title{font-size:18px;font-weight:750}.supported{font-size:14px;fill:#78e7c8}.muted{font-size:14px;fill:#a9b0bb}.small{font-size:10px;font-weight:700;letter-spacing:.4px;fill:#d6dbe3}
+  </style>
+  <rect width="1200" height="1020" fill="#0d1117"/>
+  <text id="phase-b-heading" x="44" y="48" class="title">Phase-B mechanism development · V3</text>
+  <text x="44" y="74" class="subtitle">Fixed 2026-07-11 · deterministic development artifacts · negative results retained</text>
+  <g transform="translate(44 94)">
+    <rect width="1112" height="52" rx="10" fill="#33270d" stroke="#ffd166" stroke-width="2"/>
+    <text x="18" y="22" class="honesty">DEVELOPMENT ONLY · CLAIMS DISALLOWED</text>
+    <text x="18" y="42" class="body">No advancement, adaptation, reward-learning, consciousness, sentience, or broad four-action semantic claim.</text>
+  </g>
+  <text x="44" y="177" class="section">Temporal identifiability gate · 8 / 8 criteria failed</text>
+  <g data-gate-status="fail" transform="translate(44 196)">
+    <rect width="1112" height="35" rx="7" fill="#3b1118" stroke="#ff6577"/>
+    <text x="14" y="23" class="fail">FAIL</text>
+    <text x="80" y="23" class="body">Minimum control mean SSE gain</text>
+    <text x="1088" y="23" text-anchor="end" class="mono">-0.0081 &gt;= 0.0400</text>
+  </g>
+  <g data-gate-status="fail" transform="translate(44 239)">
+    <rect width="1112" height="35" rx="7" fill="#3b1118" stroke="#ff6577"/>
+    <text x="14" y="23" class="fail">FAIL</text>
+    <text x="80" y="23" class="body">Minimum median model gain</text>
+    <text x="1088" y="23" text-anchor="end" class="mono">-0.0074 &gt;= 0.0300</text>
+  </g>
+  <g data-gate-status="fail" transform="translate(44 282)">
+    <rect width="1112" height="35" rx="7" fill="#3b1118" stroke="#ff6577"/>
+    <text x="14" y="23" class="fail">FAIL</text>
+    <text x="80" y="23" class="body">Minimum every-delay mean gain</text>
+    <text x="1088" y="23" text-anchor="end" class="mono">-0.0146 &gt;= 0.0200</text>
+  </g>
+  <g data-gate-status="fail" transform="translate(44 325)">
+    <rect width="1112" height="35" rx="7" fill="#3b1118" stroke="#ff6577"/>
+    <text x="14" y="23" class="fail">FAIL</text>
+    <text x="80" y="23" class="body">Mean cue/query twin margin</text>
+    <text x="1088" y="23" text-anchor="end" class="mono">1.18e-4 &gt;= 0.2000</text>
+  </g>
+  <g data-gate-status="fail" transform="translate(44 368)">
+    <rect width="1112" height="35" rx="7" fill="#3b1118" stroke="#ff6577"/>
+    <text x="14" y="23" class="fail">FAIL</text>
+    <text x="80" y="23" class="body">Twin ordering rate</text>
+    <text x="1088" y="23" text-anchor="end" class="mono">0.5000 &gt;= 0.7500</text>
+  </g>
+  <g data-gate-status="fail" transform="translate(44 411)">
+    <rect width="1112" height="35" rx="7" fill="#3b1118" stroke="#ff6577"/>
+    <text x="14" y="23" class="fail">FAIL</text>
+    <text x="80" y="23" class="body">Maximum Holm-adjusted p</text>
+    <text x="1088" y="23" text-anchor="end" class="mono">1.0000 &lt; 0.0100</text>
+  </g>
+  <g data-gate-status="fail" transform="translate(44 454)">
+    <rect width="1112" height="35" rx="7" fill="#3b1118" stroke="#ff6577"/>
+    <text x="14" y="23" class="fail">FAIL</text>
+    <text x="80" y="23" class="body">Minimum bootstrap 99% lower bound</text>
+    <text x="1088" y="23" text-anchor="end" class="mono">-0.0107 &gt; 0</text>
+  </g>
+  <g data-gate-status="fail" transform="translate(44 497)">
+    <rect width="1112" height="35" rx="7" fill="#3b1118" stroke="#ff6577"/>
+    <text x="14" y="23" class="fail">FAIL</text>
+    <text x="80" y="23" class="body">Worst independent-model gain</text>
+    <text x="1088" y="23" text-anchor="end" class="mono">-0.0179 &gt;= -0.0100</text>
+  </g>
+  <text x="44" y="568" class="section">NHI paired surface-conflict response · not adaptation</text>
+  <text x="44" y="596" class="body">Same exogenous base trials; environment, cognition, and policy RNG reset at the phase boundary.</text>
+  <g transform="translate(44 620)">
+    <text x="0" y="18" class="body">Aligned pre-conflict</text>
+    <rect x="170" y="2" width="269.70" height="22" rx="5" fill="#56d6b3"/>
+    <text x="453.70" y="18" class="mono">0.0674</text>
+    <text x="0" y="62" class="body">Post-conflict</text>
+    <rect x="170" y="46" width="216.47" height="22" rx="5" fill="#ffb454"/>
+    <text x="400.47" y="62" class="mono">0.0541</text>
+    <text x="650" y="40" class="fail">DECLINE -0.0133</text>
+  </g>
+  <text x="44" y="758" class="section">Neural semantic action lanes · diagnostic scope only</text>
+  <g transform="translate(44 790)" data-lane-support="supported-diagnostic">
+    <rect width="266" height="112" rx="12" fill="#123b36" stroke="#56d6b3" stroke-width="2"/>
+    <text x="16" y="28" class="lane-title">HUNT</text>
+    <text x="16" y="53" class="supported">resource → HUNT</text>
+    <text x="16" y="81" class="mono">Δ neural = 0.0187</text>
+    <text x="16" y="102" class="small">SUPPORTED DIAGNOSTIC LANE</text>
+  </g>
+  <g transform="translate(326 790)" data-lane-support="supported-diagnostic">
+    <rect width="266" height="112" rx="12" fill="#123b36" stroke="#56d6b3" stroke-width="2"/>
+    <text x="16" y="28" class="lane-title">SPAWN</text>
+    <text x="16" y="53" class="supported">social → SPAWN</text>
+    <text x="16" y="81" class="mono">Δ neural = 0.0170</text>
+    <text x="16" y="102" class="small">SUPPORTED DIAGNOSTIC LANE</text>
+  </g>
+  <g transform="translate(608 790)" data-lane-support="unsupported">
+    <rect width="266" height="112" rx="12" fill="#252a32" stroke="#7d8592" stroke-width="2"/>
+    <text x="16" y="28" class="lane-title">MANIPULATE</text>
+    <text x="16" y="53" class="muted">no direct target lane</text>
+    <text x="16" y="81" class="mono">Δ neural = -0.0017</text>
+    <text x="16" y="102" class="small">UNSUPPORTED · DO NOT INTERPRET</text>
+  </g>
+  <g transform="translate(890 790)" data-lane-support="unsupported">
+    <rect width="266" height="112" rx="12" fill="#252a32" stroke="#7d8592" stroke-width="2"/>
+    <text x="16" y="28" class="lane-title">DOMINATE</text>
+    <text x="16" y="53" class="muted">no direct target lane</text>
+    <text x="16" y="81" class="mono">Δ neural = 0.0073</text>
+    <text x="16" y="102" class="small">UNSUPPORTED · DO NOT INTERPRET</text>
+  </g>
+  <g transform="translate(44 932)">
+    <rect width="1112" height="54" rx="9" fill="#171c24" stroke="#48515e"/>
+    <text x="16" y="22" class="body">Temporal rows 46080/46080 · NHI rows 41472/41472</text>
+    <text x="16" y="43" class="small">NHI CONFIGURATION + DECLARED-LAWS HASH (NOT SOURCE CLOSURE): bfff6581b8e3e032c596a114ef3bfc86c7d5067537efe24043d5d731a09e0f0c</text>
+  </g>
+</svg>

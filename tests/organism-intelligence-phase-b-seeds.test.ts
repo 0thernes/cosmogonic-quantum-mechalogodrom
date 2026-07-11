@@ -39,11 +39,18 @@ describe('Phase-B development seed firewall', () => {
 
   test('derives deterministic domain-separated, mutually disjoint development families', () => {
     expect(PHASE_B_DEVELOPMENT_SEED_FAMILY_SHA256).toBe(
-      '86bb594637eac23d1de4448b8b45809350e2caf7b87a800adf07e772e7e90249',
+      '469f79e59c29639034afb4aea2bf6b0e3a82f2a3f3303b7fb3c9efa7ec443b8a',
     );
+    expect(Object.keys(PHASE_B_DEVELOPMENT_SEEDS)).toHaveLength(22);
     expect(PHASE_B_DEVELOPMENT_SEEDS.nhiTrain).toHaveLength(32);
     expect(PHASE_B_DEVELOPMENT_SEEDS.nhiValidation).toHaveLength(16);
     expect(PHASE_B_DEVELOPMENT_SEEDS.predictorDevelopment).toHaveLength(48);
+    expect(PHASE_B_DEVELOPMENT_SEEDS.predictorV3TaskTrain).toHaveLength(32);
+    expect(PHASE_B_DEVELOPMENT_SEEDS.predictorV3TaskSelection).toHaveLength(16);
+    expect(PHASE_B_DEVELOPMENT_SEEDS.predictorV3TaskValidation).toHaveLength(32);
+    expect(PHASE_B_DEVELOPMENT_SEEDS.predictorV3ModelDevelopment).toHaveLength(8);
+    expect(PHASE_B_DEVELOPMENT_SEEDS.predictorV3ModelValidation).toHaveLength(16);
+    expect(PHASE_B_DEVELOPMENT_SEEDS.predictorV3Fault).toHaveLength(8);
     expect(PHASE_B_DEVELOPMENT_SEEDS.ordinaryTrain).toHaveLength(32);
     expect(PHASE_B_DEVELOPMENT_SEEDS.ordinaryV2Train).toHaveLength(12);
     expect(PHASE_B_DEVELOPMENT_SEEDS.ordinaryV2Validation).toHaveLength(8);
@@ -53,6 +60,9 @@ describe('Phase-B development seed firewall', () => {
     expect(phaseBDevelopmentSeeds('nhi-train', 32)).toEqual(PHASE_B_DEVELOPMENT_SEEDS.nhiTrain);
     expect(phaseBDevelopmentSeeds('nhi-train', 3)).toEqual(
       PHASE_B_DEVELOPMENT_SEEDS.nhiTrain.slice(0, 3),
+    );
+    expect(phaseBDevelopmentSeeds('predictor-v3-task-validation', 32)).toEqual(
+      PHASE_B_DEVELOPMENT_SEEDS.predictorV3TaskValidation,
     );
     expect(PHASE_B_DEVELOPMENT_SEEDS.nhiTrain.slice(0, 3)).toEqual([
       2_754_074_950, 162_971_225, 159_303_717,

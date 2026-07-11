@@ -8,6 +8,7 @@ import {
   NHI_HUNT_CAPTURE_RADIUS,
   resolveNhiHuntEffect,
   resolveNhiMimicEffect,
+  resolveNhiVelocityImpulse,
   selectNearestNhiTarget,
   type NhiEffectBody,
 } from '../src/sim/nhi-target-effects';
@@ -112,6 +113,8 @@ describe('NHI target effects', () => {
     const second = resolveNhiHuntEffect(SELF, TARGET, 1);
     expect(first).toEqual(second);
     expect(first.applied).toBe(true);
+    expect(first.selfChanged).toBe(true);
+    expect(first.targetChanged).toBe(false);
     expect(first.captured).toBe(false);
     expect(first.distance).toBe(10);
     expect(first.selfVelocity.x).toBeGreaterThan(0);
@@ -133,6 +136,8 @@ describe('NHI target effects', () => {
     };
     const effect = resolveNhiHuntEffect(hunter, prey, 1);
     expect(effect.captured).toBe(true);
+    expect(effect.selfChanged).toBe(true);
+    expect(effect.targetChanged).toBe(true);
     expect(effect.energyTransferred).toBe(4); // hunter headroom is the tightest bound
     expect(effect.selfEnergy).toBe(NHI_ENERGY_CAP);
     expect(effect.targetEnergy).toBe(5);
@@ -156,6 +161,31 @@ describe('NHI target effects', () => {
 
     expect(resolveNhiHuntEffect(SELF, null, 1).applied).toBe(false);
     expect(resolveNhiHuntEffect(SELF, { ...TARGET, alive: false }, 1).applied).toBe(false);
+
+    const exactNoOp = resolveNhiHuntEffect(
+      { ...SELF, position: { x: 0, y: 0, z: 0 }, energy: NHI_ENERGY_CAP },
+      { ...TARGET, position: { x: 0, y: 0, z: 0 }, energy: 0 },
+      1,
+    );
+    expect(exactNoOp.captured).toBe(true);
+    expect(exactNoOp.energyTransferred).toBe(0);
+    expect(exactNoOp.applied).toBe(false);
+    expect(exactNoOp.selfChanged).toBe(false);
+    expect(exactNoOp.targetChanged).toBe(false);
+
+    const sanitizedHunt = resolveNhiHuntEffect(
+      {
+        ...SELF,
+        position: { x: 0, y: 0, z: 0 },
+        velocity: { x: Number.NaN, y: Number.POSITIVE_INFINITY, z: Number.NEGATIVE_INFINITY },
+        energy: Number.POSITIVE_INFINITY,
+      },
+      { ...TARGET, position: { x: 0, y: 0, z: 0 }, energy: 0 },
+      1,
+    );
+    expect(sanitizedHunt.applied).toBe(true);
+    expect(Object.values(sanitizedHunt.selfVelocity).every(Number.isFinite)).toBe(true);
+    expect(sanitizedHunt.selfEnergy).toBe(NHI_ENERGY_CAP);
 
     const hostile = resolveNhiHuntEffect(
       {
@@ -205,6 +235,21 @@ describe('NHI target effects', () => {
   test('MIMIC no-ops on absent/dead targets and finitize-clamps its patch', () => {
     expect(resolveNhiMimicEffect(SELF, null, 1).applied).toBe(false);
     expect(resolveNhiMimicEffect(SELF, { ...TARGET, alive: false }, 1).applied).toBe(false);
+    expect(resolveNhiMimicEffect(SELF, structuredClone(SELF), 1).applied).toBe(false);
+
+    const invalidSelf = {
+      ...SELF,
+      velocity: { x: Number.NaN, y: Number.POSITIVE_INFINITY, z: Number.NEGATIVE_INFINITY },
+      strategy: Number.NaN,
+      setGroup: Number.NaN,
+      phylum: Number.NaN,
+    };
+    const sanitizedMimic = resolveNhiMimicEffect(invalidSelf, structuredClone(invalidSelf), 1);
+    expect(sanitizedMimic.applied).toBe(true);
+    expect(Object.values(sanitizedMimic.selfVelocity).every(Number.isFinite)).toBe(true);
+    expect(Number.isFinite(sanitizedMimic.strategy)).toBe(true);
+    expect(Number.isFinite(sanitizedMimic.setGroup)).toBe(true);
+    expect(Number.isFinite(sanitizedMimic.phylum)).toBe(true);
 
     const effect = resolveNhiMimicEffect(
       { ...SELF, velocity: { x: Number.NaN, y: Number.POSITIVE_INFINITY, z: -1e300 } },
@@ -226,6 +271,32 @@ describe('NHI target effects', () => {
     expect(effect.setGroup).toBe(1_000_000);
     expect(effect.phylum).toBe(-1);
   });
+
+  test('directional impulses sanitize first and separate repair from causal movement', () => {
+    expect(resolveNhiVelocityImpulse({ x: 1, y: 2, z: 3 }, { x: 0, y: 0, z: 0 }, 1)).toEqual({
+      applied: false,
+      impulseApplied: false,
+      velocity: { x: 1, y: 2, z: 3 },
+    });
+
+    const repairedOnly = resolveNhiVelocityImpulse(
+      { x: Number.NaN, y: Number.POSITIVE_INFINITY, z: Number.NEGATIVE_INFINITY },
+      { x: 0, y: 0, z: 0 },
+      1,
+    );
+    expect(repairedOnly.applied).toBe(true);
+    expect(repairedOnly.impulseApplied).toBe(false);
+    expect(Object.values(repairedOnly.velocity).every(Number.isFinite)).toBe(true);
+
+    const moved = resolveNhiVelocityImpulse(
+      { x: Number.NaN, y: 0, z: 0 },
+      { x: Number.POSITIVE_INFINITY, y: 0, z: 0 },
+      0.5,
+    );
+    expect(moved.applied).toBe(true);
+    expect(moved.impulseApplied).toBe(true);
+    expect(moved.velocity).toEqual({ x: 0.5, y: 0, z: 0 });
+  });
 });
 
 const WORLD = await Bun.file(new URL('../src/world.ts', import.meta.url)).text();
@@ -239,15 +310,24 @@ describe('World NHI target-effect wiring', () => {
     const apply = WORLD.slice(applyStart, applyEnd);
     const integration = WORLD.indexOf('const stats = this.entities.update');
     const containment = WORLD.indexOf('this.steerNhiBeings(t)', integration);
-    const currentGrid = WORLD.indexOf('this.grid.clear()', containment);
-    const tick = WORLD.indexOf('this.nhi.tick(this.rng, this.nhiWorld)', currentGrid);
+    const currentGrid = WORLD.indexOf(
+      'this.entities.rebuildCurrentGridForNhi(this.nhi.count);',
+      containment,
+    );
+    const tick = WORLD.indexOf(
+      'this.nhi.tick(this.nhiPolicyRng, this.nhiWorld, this.onNhiTickFailure)',
+      currentGrid,
+    );
 
     expect(WORLD).toContain('private readonly nhiTargets = new Map<number, Entity>();');
     expect(integration).toBeGreaterThanOrEqual(0);
     expect(containment).toBeGreaterThan(integration);
     expect(currentGrid).toBeGreaterThan(containment);
     expect(tick).toBeGreaterThan(currentGrid);
-    expect(WORLD).toContain('const rebuildCurrentGrid = this.nhi.count > 0;');
+    expect(WORLD.slice(currentGrid, tick)).not.toContain('catch {}');
+    expect(WORLD).toContain("this.nhiGuard('tick-failure-audit'");
+    expect(WORLD).toContain("this.audit.record('nhi-tick-failed', receipt)");
+    expect(WORLD).toContain('this.entities.rebuildCurrentGridForNhi(this.nhi.count);');
     expect(WORLD).not.toContain('nhiEntitySetScratch');
     expect(WORLD).toContain('return this.nhiLiveScratch;');
     expect(percept).toContain('selectNearestNhiTarget(e, near, previousTarget ?? null)');
@@ -257,12 +337,25 @@ describe('World NHI target-effect wiring', () => {
     expect(apply).toContain('intent.action === NhiAction.HUNT');
     expect(apply).toContain('isNhiManipulationTarget(o.userData, intent.target)');
     expect(apply).toContain('o.userData.strategy !== flip');
-    expect(apply).toContain('this.grid.insert(child);');
+    expect(apply).toContain("this.nhiGuard('spawn-swarmling-grid'");
+    expect(apply).toContain("this.nhiGuard('spawn-swarmling-failure-audit'");
+    expect(apply).toContain("this.audit.record('nhi-swarm-spawn-failed'");
+    expect(apply).toContain('this.grid.insert(child)');
+    expect(apply).toContain('this.nhiEffectRng()');
+    expect(apply).toContain('this.entities.spawnWithinFrameBudget(');
+    expect(apply).not.toContain('this.uiRng()');
     expect(apply).toContain('resolveNhiHuntEffect(');
+    expect(apply).toContain('Number(effect.selfChanged) + Number(effect.targetChanged)');
     expect(apply).toContain('target.userData.energy = effect.targetEnergy;');
     expect(apply).toContain('intent.action === NhiAction.MIMIC');
     expect(apply).toContain('resolveNhiMimicEffect(');
+    expect(apply).toContain('resolveNhiVelocityImpulse(');
     expect(apply).toContain('e.userData.strategy = effect.strategy;');
     expect(apply).toContain('e.userData.vel.set(');
+    expect(apply).toContain('): NhiActionOutcome');
+    expect(apply).toContain(
+      'return { effectApplied, factSupported, affected, energyTransferred };',
+    );
+    expect(apply).toContain("this.nhiGuard('hunt-capture-audit'");
   });
 });

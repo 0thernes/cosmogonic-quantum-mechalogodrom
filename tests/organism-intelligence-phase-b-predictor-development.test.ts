@@ -156,10 +156,10 @@ describe('Phase-B ecology predictor development matrix', () => {
       '83a7302638d51b9b7101475be938641dfc13c7e0ef186ea2a2a2aa97d79a319a',
     );
     expect(study.summary.configurationSha256).toBe(
-      'e03391775897a9bb57e981e61ac7c4e42b2b91963ebaa20ad28a4daf930d669b',
+      '55f31de82cb299862fe8ec807e48ffe93b56150ad6bd30ced147d2542b188a3e',
     );
     expect(study.summary.rowsSha256).toBe(
-      '11fa3ca3f990ac5a6781513352002958898a6b2bc72f384630e509fa28fe4e86',
+      'ec7f516f3b9567d89dc0bd49e998cec83f2977fe95d9eca38707aa5ec51dfb10',
     );
 
     for (const row of study.rows) {

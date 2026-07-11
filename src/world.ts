@@ -84,13 +84,20 @@ import { SingularitySystem, SINGULARITY_KINDS } from './sim/singularities';
 import { ChaosField } from './sim/chaos-field';
 import { ArtifactField } from './sim/artifacts';
 import { LeviathanSystem } from './sim/leviathans';
-import { NhiSystem, type NhiWorld } from './sim/nhi-system';
+import {
+  NHI_SYSTEM_MIND_CAP,
+  NhiSystem,
+  type NhiActionOutcome,
+  type NhiTickFailure,
+  type NhiWorld,
+} from './sim/nhi-system';
 import { Economy } from './sim/economy';
 import { NhiAction, type NhiIntent, type NhiPercept } from './sim/nhi';
 import {
   isNhiManipulationTarget,
   resolveNhiHuntEffect,
   resolveNhiMimicEffect,
+  resolveNhiVelocityImpulse,
   selectNearestNhiTarget,
   type NhiEffectBody,
 } from './sim/nhi-target-effects';
@@ -306,6 +313,13 @@ export class World {
 
   private readonly rng: Rng;
   private readonly uiRng: Rng;
+  /**
+   * Direct NHI identity, policy, and action sampling never consumes UI randomness. Material organism
+   * creation still intentionally advances EntityManager's ordinary physics/genome streams.
+   */
+  private readonly nhiBirthRng: Rng;
+  private readonly nhiPolicyRng: Rng;
+  private readonly nhiEffectRng: Rng;
   private readonly state: SimState;
   private prePauseTimeScale = 1;
   /**
@@ -535,7 +549,7 @@ export class World {
   /** F-SUPER V31: the apex purse (+1..3 for its twins). 9000 leaves headroom below it. */
   private static readonly ECON_SUPER_BASE = 9000;
   /** Hard bound keeps per-NHI bodies, cognition, economy, and pairwise visual social work finite. */
-  private static readonly NHI_POPULATION_CAP = 32;
+  private static readonly NHI_POPULATION_CAP = NHI_SYSTEM_MIND_CAP;
   /** NHI wallets occupy negative ids, disjoint from every non-negative fixed creature namespace. */
   private static nhiEconomyId(nid: number): number {
     return -(nid + 1);
@@ -558,6 +572,18 @@ export class World {
     liveIds: () => this.nhiLiveIds(),
     percept: (id) => this.nhiPercept(id),
     apply: (id, intent, text) => this.nhiApply(id, intent, text),
+  };
+  /** Exceptional-only production boundary: report one failed mind without starving the population. */
+  private readonly onNhiTickFailure = (failure: NhiTickFailure): void => {
+    const message = failure.error instanceof Error ? failure.error.message : String(failure.error);
+    const receipt = {
+      id: failure.id,
+      beat: failure.beat,
+      phase: failure.phase,
+      error: message,
+    };
+    this.nhiGuard('tick-failure-log', () => this.log.error('NHI mind tick failed', receipt));
+    this.nhiGuard('tick-failure-audit', () => this.audit.record('nhi-tick-failed', receipt));
   };
   /** Alien biomechanical bodies for launched NHIs (additive viz; assigned in the constructor). */
   private readonly nhiBody: NhiBodySystem;
@@ -892,6 +918,9 @@ export class World {
 
     const streams = createIsolatedStreams(this.persisted.seed);
     this.rng = streams.physicsRng;
+    this.nhiPolicyRng = streams.aiRng;
+    this.nhiBirthRng = mulberry32((this.persisted.seed ^ 0x6e48_6942) >>> 0 || 1);
+    this.nhiEffectRng = mulberry32((this.persisted.seed ^ 0xa17e_ffec) >>> 0 || 1);
     // Economy rng: a deterministic sub-stream derived from the world seed (golden-ratio mix), kept
     // separate from `this.rng` so the market never perturbs the main simulation's draw order.
     this.econRng = mulberry32((this.persisted.seed ^ 0x9e3779b1) >>> 0 || 1);
@@ -1101,9 +1130,9 @@ export class World {
     this.titans.attachEconomy(
       (idx) => this.economy.wealthOf(World.ECON_TITAN_BASE + idx)?.netWorth ?? 0,
     );
-    this.titans.attachProcreation((x, y, z) => {
-      this.launchNhiBeing(x, y, z, 'titan-procreation');
-    });
+    this.titans.attachProcreation(
+      (x, y, z) => this.launchNhiBeing(x, y, z, 'titan-procreation') === 1,
+    );
     this.graphMind = new GraphMind(ctx, this.entities, this.connectome);
     this.constellations = new ConstellationSystem(ctx, this.lore);
     this.audioAnalysis = new AudioAnalysis(this.audio);
@@ -1848,8 +1877,8 @@ export class World {
           (id) => this.nhiEntities.get(id)?.position ?? null,
           (_id, level) => {
             if (this.nhiSocialCooldown <= 0) {
-              this.audio.playNhiSocial(level);
               this.nhiSocialCooldown = 24;
+              this.nhiGuard('social-audio', () => this.audio.playNhiSocial(level));
             }
           },
         );
@@ -1912,23 +1941,11 @@ export class World {
     // The baseline grid was rebuilt above on its legacy every-second-frame cadence. A live NHI pays
     // one additional current-position rebuild here because its exact-nearest proof requires state
     // after this frame's integration and containment. The no-NHI 50k path pays no duplicate scan.
-    const rebuildCurrentGrid = this.nhi.count > 0;
-    if (rebuildCurrentGrid) {
-      this.grid.clear();
-      const connList = this.entities.list;
-      for (let i = 0; i < connList.length; i++) {
-        const e = connList[i];
-        if (e) this.grid.insert(e);
-      }
-    }
+    this.entities.rebuildCurrentGridForNhi(this.nhi.count);
 
     // F-NHI V10: drive launched super-minds every frame at full cadence against the current grid.
     if (this.nhi.count > 0) {
-      try {
-        this.nhi.tick(this.rng, this.nhiWorld);
-      } catch {
-        /* an NHI beat misbehaved — skip it, keep the world running */
-      }
+      this.nhi.tick(this.nhiPolicyRng, this.nhiWorld, this.onNhiTickFailure);
     }
     // NHI SPAWN_SWARM can add ordinary minions above. Capture population only after that material
     // effect so every same-frame density, super-creature, telemetry, and panel consumer sees them.
@@ -3881,66 +3898,180 @@ export class World {
   }
 
   /**
+   * Run presentation, reporting, indexing, or rollback work without letting a secondary failure
+   * corrupt an already-material NHI outcome or starve later minds. The logger is guarded too because
+   * console implementations are external and may themselves throw in embedded runtimes.
+   */
+  private nhiGuard(label: string, action: () => void): boolean {
+    try {
+      action();
+      return true;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      try {
+        this.log.warn('NHI guarded side effect failed', { label, error: message });
+      } catch {
+        // A failed diagnostic sink must never replace the original simulation outcome.
+      }
+      return false;
+    }
+  }
+
+  /**
    * F-NHI: launch a user-controlled non-human-intelligence being ~45u in front of the camera — a
    * buoyant, fast, age-immortal, consumption-immune entity that flies and floats through the world
-   * with "Matrix" powers. Returns 1 on success, 0 at the population cap. Draws rng (a user event,
-   * recorded in the audit so replays reproduce); a never-launched world draws none and is unchanged.
+   * with "Matrix" powers. Returns 1 on success and 0 on a bounded/failed attempt. A failed attempt
+   * consumes its monotonic id and any RNG already drawn; rollback removes material state but never
+   * pretends the random streams can be rewound. A never-attempted launch at the NHI cap draws none.
    */
   private launchNhiBeing(x?: number, y?: number, z?: number, source = 'user'): number {
+    // A dead backing entity can be present between render ticks; retire it before applying the cap so
+    // an immediately requested replacement is not falsely rejected.
+    this.nhiLiveIds();
     if (this.nhiEntities.size >= World.NHI_POPULATION_CAP) {
-      this.hud.showSector(`NHI CAP · ${World.NHI_POPULATION_CAP} LIVE`);
-      this.audit.record('nhi-launch-blocked', {
-        source,
-        reason: 'nhi-population-cap',
-        cap: World.NHI_POPULATION_CAP,
-      });
+      this.nhiGuard('launch-cap-hud', () =>
+        this.hud.showSector(`NHI CAP · ${World.NHI_POPULATION_CAP} LIVE`),
+      );
+      this.nhiGuard('launch-cap-audit', () =>
+        this.audit.record('nhi-launch-blocked', {
+          source,
+          reason: 'nhi-population-cap',
+          cap: World.NHI_POPULATION_CAP,
+        }),
+      );
       return 0;
     }
-    if (
-      typeof x === 'number' &&
-      typeof y === 'number' &&
-      typeof z === 'number' &&
-      Number.isFinite(x) &&
-      Number.isFinite(y) &&
-      Number.isFinite(z)
-    ) {
-      this.sv1.set(x, y, z);
-    } else {
-      const cam = this.engine.camera;
-      cam.getWorldDirection(this.sv2);
-      this.sv1.copy(cam.position).addScaledVector(this.sv2, 45);
-    }
-    const mi = Math.floor(this.uiRng() * this.morphTotal);
-    const e = this.entities.spawn(this.sv1, mi, 2.2);
-    if (!e) return 0;
-    const u = e.userData;
-    u.isNhi = true;
-    u.beh = 'helix'; // ethereal, weaving motion (now OMNIDIRECTIONAL + contained — see steerNhiBeings)
-    u.spd *= 2.2; // quick
-    // V57: launch in a RANDOM direction (was a fixed +y, which made every NHI climb to the sky).
-    u.vel.set((this.uiRng() - 0.5) * 0.4, (this.uiRng() - 0.5) * 0.4, (this.uiRng() - 0.5) * 0.4);
-    e.material.emissive.setRGB(0.25, 0.95, 1.0); // unmistakable cyan NHI glow
-    e.material.emissiveIntensity = 3.2;
-    // V10: birth a deterministic super-mind for this NHI and register it so it ACTS on the world
-    // each beat (spawns swarms, dominates the local field, broadcasts hallucinated utterances) —
-    // ending the "NHI float and do nothing" complaint.
+    // IDs name attempts, not only successes. Gaps therefore expose failed launches instead of
+    // silently reusing an identity whose RNG and external registration steps may have advanced.
     const nid = this.nhiNextId++;
-    this.nhiEntities.set(nid, e);
-    this.nhiIdsByEntity.set(e, nid);
-    this.nhi.register(nid, this.rng);
-    // F-ECONOMY: an NHI super-mind enters the market with the cosmos's fattest purse (weight 14 vs a
-    // titan's ~8). Uses econRng so the launch's main-stream draws above stay reproducible.
-    this.economy.register(World.nhiEconomyId(nid), 'NHI super-mind', 14, this.econRng);
-    this.nhiBody.spawn(nid, e.position.x, e.position.y, e.position.z);
+    let mi = -1;
+    let e: Entity | null = null;
+    try {
+      if (
+        typeof x === 'number' &&
+        typeof y === 'number' &&
+        typeof z === 'number' &&
+        Number.isFinite(x) &&
+        Number.isFinite(y) &&
+        Number.isFinite(z)
+      ) {
+        this.sv1.set(x, y, z);
+      } else {
+        const cam = this.engine.camera;
+        cam.getWorldDirection(this.sv2);
+        this.sv1.copy(cam.position).addScaledVector(this.sv2, 45);
+      }
+      mi = Math.floor(this.nhiEffectRng() * this.morphTotal);
+      e = this.entities.spawn(this.sv1, mi, 2.2);
+      if (!e) {
+        this.nhiGuard('launch-entity-cap-audit', () =>
+          this.audit.record('nhi-launch-failed', {
+            id: nid,
+            source,
+            reason: 'entity-cap-or-taxonomy',
+            idConsumed: true,
+            rngRollback: false,
+            rollbackRequired: false,
+            logicalRollbackComplete: true,
+            resourceCleanupStatus: 'not-required',
+          }),
+        );
+        return 0;
+      }
+      const u = e.userData;
+      u.isNhi = true;
+      u.beh = 'helix'; // ethereal, weaving motion (now OMNIDIRECTIONAL + contained — see steerNhiBeings)
+      u.spd *= 2.2; // quick
+      // V57: launch in a RANDOM direction (was a fixed +y, which made every NHI climb to the sky).
+      u.vel.set(
+        (this.nhiEffectRng() - 0.5) * 0.4,
+        (this.nhiEffectRng() - 0.5) * 0.4,
+        (this.nhiEffectRng() - 0.5) * 0.4,
+      );
+      e.material.emissive.setRGB(0.25, 0.95, 1.0); // unmistakable cyan NHI glow
+      e.material.emissiveIntensity = 3.2;
+      // V10: birth a deterministic super-mind for this NHI and register it so it ACTS on the world
+      // each beat (spawns swarms, dominates the local field, broadcasts hallucinated utterances).
+      this.nhi.register(nid, this.nhiBirthRng);
+      this.nhiEntities.set(nid, e);
+      this.nhiIdsByEntity.set(e, nid);
+      // F-ECONOMY: an NHI super-mind enters the market with the cosmos's fattest purse (weight 14 vs
+      // a titan's ~8). Its market enrollment remains on the isolated economy stream.
+      this.economy.register(World.nhiEconomyId(nid), 'NHI super-mind', 14, this.econRng);
+      this.nhiBody.spawn(nid, e.position.x, e.position.y, e.position.z);
+    } catch (error) {
+      const rollbackCallFailures: string[] = [];
+      const rollback = (label: string, action: () => void): void => {
+        if (!this.nhiGuard(label, action)) rollbackCallFailures.push(label);
+      };
+      rollback('launch-rollback-mind', () => void this.nhi.unregister(nid));
+      rollback('launch-rollback-forward-map', () => void this.nhiEntities.delete(nid));
+      if (e) {
+        rollback('launch-rollback-reverse-map', () => void this.nhiIdsByEntity.delete(e!));
+      }
+      rollback('launch-rollback-target', () => void this.nhiTargets.delete(nid));
+      rollback(
+        'launch-rollback-economy',
+        () => void this.economy.unregister(World.nhiEconomyId(nid)),
+      );
+      rollback('launch-rollback-body', () => void this.nhiBody.remove(nid));
+      if (e) {
+        const entityIndex = this.entities.list.indexOf(e);
+        if (entityIndex >= 0) {
+          rollback('launch-rollback-entity', () => this.entities.discardSpawnAt(entityIndex));
+        }
+      }
+      const logicalRollbackPostconditions = {
+        mindAbsent: this.nhi.snapshot(nid) === null,
+        forwardMapAbsent: !this.nhiEntities.has(nid),
+        reverseMapAbsent: !e || !this.nhiIdsByEntity.has(e),
+        targetAbsent: !this.nhiTargets.has(nid),
+        economyAbsent: !this.economy.has(World.nhiEconomyId(nid)),
+        bodyAbsent: !this.nhiBody.has(nid),
+        entityAbsent: !e || !this.entities.list.includes(e),
+      };
+      const logicalRollbackComplete =
+        rollbackCallFailures.length === 0 &&
+        Object.values(logicalRollbackPostconditions).every(Boolean);
+      const message = error instanceof Error ? error.message : String(error);
+      const receipt = {
+        id: nid,
+        source,
+        error: message,
+        idConsumed: true,
+        rngRollback: false,
+        rollbackRequired: true,
+        logicalRollbackComplete,
+        rollbackCallFailures,
+        logicalRollbackPostconditions,
+        // Scene detach and GPU disposal are best-effort no-throw leaves. Their logical owners are
+        // absent above, but WebGL/driver cleanup cannot be synchronously proven from this layer.
+        resourceCleanupStatus: 'best-effort-unverified',
+      };
+      this.nhiGuard('launch-failure-log', () =>
+        this.log.error(
+          logicalRollbackComplete
+            ? 'NHI launch logically rolled back; resource cleanup unverified'
+            : 'NHI launch logical rollback incomplete',
+          receipt,
+        ),
+      );
+      this.nhiGuard('launch-failure-audit', () => this.audit.record('nhi-launch-failed', receipt));
+      return 0;
+    }
     // USER #7a: varied alien vocalization on NHI arrival (round-robin from the alien chitter band).
-    this.audio.playNhiLaunch();
-    this.audio.playExtra(source === 'titan-procreation' ? 'phantomscale' : 'voidgurgle');
-    this.hud.showSector(
-      source === 'titan-procreation'
-        ? 'NHI BIRTH · TITAN MATRIX OFFSPRING'
-        : 'NHI LAUNCHED · MATRIX BEING',
+    this.nhiGuard('launch-audio-primary', () => this.audio.playNhiLaunch());
+    this.nhiGuard('launch-audio-extra', () =>
+      this.audio.playExtra(source === 'titan-procreation' ? 'phantomscale' : 'voidgurgle'),
     );
-    this.audit.record('nhi-launch', { mi, source });
+    this.nhiGuard('launch-hud', () =>
+      this.hud.showSector(
+        source === 'titan-procreation'
+          ? 'NHI BIRTH · TITAN MATRIX OFFSPRING'
+          : 'NHI LAUNCHED · MATRIX BEING',
+      ),
+    );
+    this.nhiGuard('launch-audit', () => this.audit.record('nhi-launch', { id: nid, mi, source }));
     return 1;
   }
 
@@ -3955,8 +4086,12 @@ export class World {
       if (e.userData.alive === true) {
         this.nhiLiveScratch.push(id);
       } else {
-        this.economy.unregister(World.nhiEconomyId(id));
-        this.nhiBody.remove(id);
+        this.nhiGuard(
+          'retire-dead-economy',
+          () => void this.economy.unregister(World.nhiEconomyId(id)),
+        );
+        this.nhiGuard('retire-dead-body', () => void this.nhiBody.remove(id));
+        this.nhi.unregister(id);
         this.nhiIdsByEntity.delete(e);
         this.nhiEntities.delete(id);
         this.nhiTargets.delete(id);
@@ -3978,13 +4113,16 @@ export class World {
    */
   private clearNhiPopulation(): void {
     for (const id of this.nhiEntities.keys()) {
-      this.economy.unregister(World.nhiEconomyId(id));
+      this.nhiGuard(
+        'clear-population-economy',
+        () => void this.economy.unregister(World.nhiEconomyId(id)),
+      );
     }
     this.nhiEntities.clear();
     this.nhiIdsByEntity.clear();
     this.nhiTargets.clear();
     this.nhi.clear();
-    this.nhiBody.clear();
+    this.nhiGuard('clear-population-body', () => this.nhiBody.clear());
     this.nhiLiveScratch.length = 0;
     this.nhiSocialCooldown = 0;
   }
@@ -4084,35 +4222,61 @@ export class World {
     };
   }
 
-  /** Execute one NHI decision; return whether its corresponding GOAP fact materially occurred. */
-  private nhiApply(id: number, intent: NhiIntent, text: string): boolean {
+  /** Execute one NHI decision and separate any material effect from supporting GOAP evidence. */
+  private nhiApply(id: number, intent: NhiIntent, text: string): NhiActionOutcome {
     const e = this.nhiEntities.get(id);
-    if (!e) return false;
+    if (!e) {
+      return { effectApplied: false, factSupported: false, affected: 0, energyTransferred: 0 };
+    }
     const p = e.position;
-    let factAchieved = false;
+    let effectApplied = false;
+    let factSupported = false;
+    let affected = 0;
+    let energyTransferred = 0;
     if (intent.action === NhiAction.SPAWN_SWARM) {
       const n = Math.min(intent.spawn, 6);
       for (let i = 0; i < n; i++) {
-        this.sv1.set(
-          p.x + (this.uiRng() - 0.5) * 12,
-          p.y + (this.uiRng() - 0.5) * 12,
-          p.z + (this.uiRng() - 0.5) * 12,
-        );
-        const child = this.entities.spawn(
-          this.sv1,
-          Math.floor(this.uiRng() * this.morphTotal),
-          0.8,
-        );
-        if (child) {
-          child.material.emissive.setRGB(0.6, 0.2, 0.85); // swarmling glow
-          // The frame grid was rebuilt before NHI cognition. Incrementally index this new child so
-          // later NHIs and the same-frame connectome see the complete current entity generation.
-          this.grid.insert(child);
-          factAchieved = true;
+        try {
+          // Keep the declared NHI attempt schedule stable: sample the dedicated effect stream before
+          // asking EntityManager for the shared frame slot. A rejected slot never touches the ordinary
+          // entity physics/genome streams because spawnWithinFrameBudget returns before spawn().
+          this.sv1.set(
+            p.x + (this.nhiEffectRng() - 0.5) * 12,
+            p.y + (this.nhiEffectRng() - 0.5) * 12,
+            p.z + (this.nhiEffectRng() - 0.5) * 12,
+          );
+          const child = this.entities.spawnWithinFrameBudget(
+            this.sv1,
+            Math.floor(this.nhiEffectRng() * this.morphTotal),
+            0.8,
+          );
+          if (child) {
+            // The material population exists once spawn returns. Presentation/indexing failures must
+            // not erase that outcome or suppress its acknowledgement.
+            effectApplied = true;
+            factSupported = true;
+            affected++;
+            this.nhiGuard('spawn-swarmling-appearance', () => {
+              child.material.emissive.setRGB(0.6, 0.2, 0.85);
+            });
+            // The frame grid was rebuilt before NHI cognition. Incrementally index this new child so
+            // later NHIs and the same-frame connectome see the complete current entity generation.
+            // A failed index is repaired by the next frame rebuild; the child remains a real outcome.
+            this.nhiGuard('spawn-swarmling-grid', () => this.grid.insert(child));
+          }
+        } catch (error) {
+          // EntityManager rolls a throwing spawn back internally. Retain earlier successful children,
+          // report this attempt, and let the aggregate outcome acknowledge only material successes.
+          const message = error instanceof Error ? error.message : String(error);
+          this.nhiGuard('spawn-swarmling-failure-audit', () =>
+            this.audit.record('nhi-swarm-spawn-failed', { id, attempt: i, error: message }),
+          );
         }
       }
-      this.audio.play('warp');
-      this.audio.playExtra('chitter');
+      if (effectApplied) {
+        this.nhiGuard('spawn-swarmling-audio-primary', () => this.audio.play('warp'));
+        this.nhiGuard('spawn-swarmling-audio-extra', () => this.audio.playExtra('chitter'));
+      }
     } else if (intent.action === NhiAction.DOMINATE || intent.action === NhiAction.MANIPULATE) {
       // Game theory made physical: a DEFECTING NHI turns hostile (scatters organisms AWAY); a
       // cooperating one gathers them IN. MANIPULATE targets only the exact perceived rival faction
@@ -4126,7 +4290,6 @@ export class World {
       // identical to the old full scan (XZ-radius query is a superset of the 3D-radius hits); the
       // per-entity vel/strategy write is order-independent, so grid order preserves determinism.
       const near = this.grid.query(p.x, p.z, 36);
-      let affected = 0;
       for (let i = 0; i < near.length; i++) {
         const o = near[i];
         if (!o || o === e || o.userData.alive === false || o.userData.isNhi) continue;
@@ -4142,20 +4305,42 @@ export class World {
         const dz = p.z - op.z;
         const d2 = dx * dx + dy * dy + dz * dz;
         if (!(d2 < r2)) continue;
-        let materiallyChanged = false;
-        if (d2 > Number.EPSILON && gain !== 0) {
-          this.sv2.set(dx, dy, dz).normalize();
-          o.userData.vel.addScaledVector(this.sv2, gain);
-          materiallyChanged = intent.action === NhiAction.DOMINATE;
+        let bodyChanged = false;
+        let bodyFactSupported = false;
+        if (d2 > Number.EPSILON || !Number.isFinite(o.userData.vel.lengthSq())) {
+          const velocityEffect = resolveNhiVelocityImpulse(
+            o.userData.vel,
+            { x: dx, y: dy, z: dz },
+            gain,
+          );
+          if (velocityEffect.applied) {
+            o.userData.vel.set(
+              velocityEffect.velocity.x,
+              velocityEffect.velocity.y,
+              velocityEffect.velocity.z,
+            );
+            bodyChanged = true;
+          }
+          if (intent.action === NhiAction.DOMINATE) {
+            bodyFactSupported ||= velocityEffect.impulseApplied;
+          }
         }
         if (intent.action === NhiAction.MANIPULATE && o.userData.strategy !== flip) {
           o.userData.strategy = flip;
-          materiallyChanged = true;
+          bodyChanged = true;
+          bodyFactSupported = true;
         }
-        if (materiallyChanged) affected++;
+        if (bodyChanged) affected++;
+        effectApplied ||= bodyChanged;
+        factSupported ||= bodyFactSupported;
       }
-      factAchieved = affected > 0;
-      this.audio.playExtra(intent.action === NhiAction.DOMINATE ? 'demonicgrowl' : 'phantomscale');
+      if (effectApplied) {
+        this.nhiGuard('field-action-audio', () =>
+          this.audio.playExtra(
+            intent.action === NhiAction.DOMINATE ? 'demonicgrowl' : 'phantomscale',
+          ),
+        );
+      }
     } else if (intent.action === NhiAction.HUNT) {
       const target = this.nhiTargets.get(id) ?? null;
       const effect = resolveNhiHuntEffect(
@@ -4164,20 +4349,25 @@ export class World {
         intent.magnitude,
       );
       if (effect.applied) {
+        effectApplied = true;
+        affected = Number(effect.selfChanged) + Number(effect.targetChanged);
         e.userData.vel.set(effect.selfVelocity.x, effect.selfVelocity.y, effect.selfVelocity.z);
         e.userData.energy = effect.selfEnergy;
         if (target) {
           target.userData.energy = effect.targetEnergy;
           if (effect.energyTransferred > 0) {
-            factAchieved = true;
+            factSupported = true;
+            energyTransferred = effect.energyTransferred;
             // The ordinary organism's existing payoff/learning channel records the real predation loss.
             e.userData.payoff = effect.energyTransferred;
             target.userData.payoff = -effect.energyTransferred;
-            this.audit.record('nhi-hunt-capture', {
-              id,
-              targetMorph: target.userData.mi,
-              energyTransferred: effect.energyTransferred,
-            });
+            this.nhiGuard('hunt-capture-audit', () =>
+              this.audit.record('nhi-hunt-capture', {
+                id,
+                targetMorph: target.userData.mi,
+                energyTransferred: effect.energyTransferred,
+              }),
+            );
           }
         }
       }
@@ -4189,21 +4379,38 @@ export class World {
         intent.magnitude,
       );
       if (effect.applied) {
+        effectApplied = true;
+        affected = 1;
         e.userData.vel.set(effect.selfVelocity.x, effect.selfVelocity.y, effect.selfVelocity.z);
         e.userData.strategy = effect.strategy;
         e.userData.setGroup = effect.setGroup;
         e.userData.phylum = effect.phylum;
       }
     } else if (intent.action === NhiAction.BROADCAST) {
-      this.hud.showToast(text, 'NHI');
-      this.audio.play('warp');
-      this.audio.playExtra(text.length % 2 === 0 ? 'alienchitter' : 'voidgurgle');
+      effectApplied = this.nhiGuard('broadcast-hud', () => this.hud.showToast(text, 'NHI'));
+      effectApplied =
+        this.nhiGuard('broadcast-audio-primary', () => this.audio.play('warp')) || effectApplied;
+      effectApplied =
+        this.nhiGuard('broadcast-audio-extra', () =>
+          this.audio.playExtra(text.length % 2 === 0 ? 'alienchitter' : 'voidgurgle'),
+        ) || effectApplied;
     } else if (intent.action === NhiAction.RETREAT) {
       // V57: retreat = pull back toward the home field (any direction), NOT ascend forever.
-      e.userData.vel.addScaledVector(this.sv1.copy(p).normalize(), -0.06 * intent.magnitude);
-      this.audio.playExtra('abyssal');
+      const velocityEffect = resolveNhiVelocityImpulse(e.userData.vel, p, -0.06 * intent.magnitude);
+      if (velocityEffect.applied) {
+        e.userData.vel.set(
+          velocityEffect.velocity.x,
+          velocityEffect.velocity.y,
+          velocityEffect.velocity.z,
+        );
+      }
+      effectApplied = velocityEffect.applied;
+      if (effectApplied) {
+        affected = 1;
+        this.nhiGuard('retreat-audio', () => this.audio.playExtra('abyssal'));
+      }
     }
-    return factAchieved;
+    return { effectApplied, factSupported, affected, energyTransferred };
   }
 
   /**

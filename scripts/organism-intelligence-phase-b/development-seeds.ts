@@ -48,6 +48,12 @@ export type PhaseBDevelopmentSeedNamespace =
   | 'predictor-development'
   | 'predictor-calibration'
   | 'predictor-fault'
+  | 'predictor-v3-task-train'
+  | 'predictor-v3-task-selection'
+  | 'predictor-v3-task-validation'
+  | 'predictor-v3-model-development'
+  | 'predictor-v3-model-validation'
+  | 'predictor-v3-fault'
   | 'ordinary-train'
   | 'ordinary-validation'
   | 'ordinary-surrogate'
@@ -66,6 +72,12 @@ const DOMAIN: Record<PhaseBDevelopmentSeedNamespace, string> = {
   'predictor-development': 'cqm/predictor-phase-b/dev-development/v1',
   'predictor-calibration': 'cqm/predictor-phase-b/dev-calibration/v1',
   'predictor-fault': 'cqm/predictor-phase-b/dev-fault/v1',
+  'predictor-v3-task-train': 'cqm/predictor-phase-b/temporal-task-train/v3',
+  'predictor-v3-task-selection': 'cqm/predictor-phase-b/temporal-task-selection/v3',
+  'predictor-v3-task-validation': 'cqm/predictor-phase-b/temporal-task-validation/v3',
+  'predictor-v3-model-development': 'cqm/predictor-phase-b/temporal-model-development/v3',
+  'predictor-v3-model-validation': 'cqm/predictor-phase-b/temporal-model-validation/v3',
+  'predictor-v3-fault': 'cqm/predictor-phase-b/temporal-fault/v3',
   'ordinary-train': 'cqm/ordinary-phase-b/dev-train/v1',
   'ordinary-validation': 'cqm/ordinary-phase-b/dev-validation/v1',
   'ordinary-surrogate': 'cqm/ordinary-phase-b/dev-surrogate/v1',
@@ -128,6 +140,12 @@ export const PHASE_B_DEVELOPMENT_SEEDS = Object.freeze({
   predictorDevelopment: phaseBDevelopmentSeeds('predictor-development', 48),
   predictorCalibration: phaseBDevelopmentSeeds('predictor-calibration', 16),
   predictorFault: phaseBDevelopmentSeeds('predictor-fault', 8),
+  predictorV3TaskTrain: phaseBDevelopmentSeeds('predictor-v3-task-train', 32),
+  predictorV3TaskSelection: phaseBDevelopmentSeeds('predictor-v3-task-selection', 16),
+  predictorV3TaskValidation: phaseBDevelopmentSeeds('predictor-v3-task-validation', 32),
+  predictorV3ModelDevelopment: phaseBDevelopmentSeeds('predictor-v3-model-development', 8),
+  predictorV3ModelValidation: phaseBDevelopmentSeeds('predictor-v3-model-validation', 16),
+  predictorV3Fault: phaseBDevelopmentSeeds('predictor-v3-fault', 8),
   ordinaryTrain: phaseBDevelopmentSeeds('ordinary-train', 32),
   ordinaryValidation: phaseBDevelopmentSeeds('ordinary-validation', 16),
   ordinarySurrogate: phaseBDevelopmentSeeds('ordinary-surrogate', 16),
@@ -140,12 +158,12 @@ export const PHASE_B_DEVELOPMENT_SEEDS = Object.freeze({
 });
 
 /**
- * Deliberate-change seal for all sixteen ordered development families. Derivation tests alone are
+ * Deliberate-change seal for all twenty-two ordered development families. Derivation tests alone are
  * tautological if a namespace is edited; this literal makes any family replacement an explicit,
  * reviewable update instead of silently changing every development schedule.
  */
 export const PHASE_B_DEVELOPMENT_SEED_FAMILY_SHA256 =
-  '86bb594637eac23d1de4448b8b45809350e2caf7b87a800adf07e772e7e90249';
+  '469f79e59c29639034afb4aea2bf6b0e3a82f2a3f3303b7fb3c9efa7ec443b8a';
 
 const seedFamilyMaterial = Object.entries(PHASE_B_DEVELOPMENT_SEEDS).map(([name, seeds]) => [
   name,

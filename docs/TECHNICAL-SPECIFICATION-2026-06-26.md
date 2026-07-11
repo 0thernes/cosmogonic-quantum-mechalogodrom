@@ -19,7 +19,7 @@
 > `/spec` · **Architecture docs:** `/docs`
 
 **Version:** v0.21.13 · **Generated:** 2026-06-26 · **License:** Non-commercial research & play (© 0thernes; study / run / modify / share non-commercially, keep attribution, no for-profit use).
-**Gate:** 2,697 tests · 84.64% line / 82.21% func (canonical synced via verify-receipts 2026-06-26, receipts law enforced).
+**Gate:** 2,775 tests · 84.64% line / 82.21% func (canonical synced via verify-receipts 2026-06-26, receipts law enforced).
 **NHSI scorecard:** [NHSI-PROGRESS-DASHBOARD-2026-06-26.md](./NHSI-PROGRESS-DASHBOARD-2026-06-26.md) · **Tsotchke depth:** [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md)
 
 **Tsotchke depth ledger:** 22 external repositories are accounted for as `8 deep`, `7 wired`,
@@ -52,13 +52,13 @@ Snapshot: **2026-07-11**. (Coverage + passing-test counts ARE SSOT-synced — se
 
 | Metric                                  | Value                                                                 |
 | --------------------------------------- | --------------------------------------------------------------------- |
-| Total tracked authored files            | **835**                                                               |
-| Total tracked authored lines            | **242,547**                                                           |
-| App source (`src/`)                     | 105,794 lines · 304 files                                             |
-| Tests (`tests/`)                        | 45,674 lines · 302 files                                              |
+| Total tracked authored files            | **849**                                                               |
+| Total tracked authored lines            | **251,855**                                                           |
+| App source (`src/`)                     | 108,161 lines · 305 files                                             |
+| Tests (`tests/`)                        | 48,684 lines · 307 files                                              |
 | Native C++ engine (`native/`, ADR-0007) | 1,835 lines · 12 files                                                |
-| Test : source ratio                     | 0.43 → **84.64% line / 82.21% func** coverage (`bun test --coverage`) |
-| Passing tests                           | **2,696** (exact tracked suite; 0 failing)                            |
+| Test : source ratio                     | 0.45 → **84.64% line / 82.21% func** coverage (`bun test --coverage`) |
+| Passing tests                           | **2,775** (exact tracked suite; 0 failing)                            |
 
 (Excludes the vendored `node_modules/`, generated `dist/` · `coverage/` · `native/build/`, and nested
 `.claude/worktrees/` checkouts.)
@@ -67,38 +67,38 @@ Snapshot: **2026-07-11**. (Coverage + passing-test counts ARE SSOT-synced — se
 
 | Type                 | Files |   Lines |   Share |
 | -------------------- | ----: | ------: | ------: |
-| TypeScript           |   665 | 169,898 | 70.05 % |
-| Markdown             |    75 |  22,577 |  9.31 % |
-| JSON                 |    18 |  16,125 |  6.65 % |
-| HTML                 |    10 |  14,836 |  6.12 % |
-| PNG (shots)          |     4 |   9,552 |  3.94 % |
-| CSS (Tailwind)       |     2 |   2,476 |  1.02 % |
-| CSV                  |     5 |   1,997 |  0.82 % |
-| YML                  |    10 |     954 |  0.39 % |
-| C/C++ headers + impl |     8 |   1,527 |  0.63 % |
-| XML                  |     4 |     707 |  0.29 % |
-| PowerShell           |     2 |     515 |  0.21 % |
-| Lockfile             |     1 |     454 |  0.19 % |
+| TypeScript           |   675 | 178,750 | 70.97 % |
+| Markdown             |    76 |  22,822 |  9.06 % |
+| JSON                 |    19 |  16,129 |  6.40 % |
+| HTML                 |    10 |  14,861 |  5.90 % |
+| PNG (shots)          |     4 |   9,552 |  3.79 % |
+| CSS (Tailwind)       |     2 |   2,476 |  0.98 % |
+| CSV                  |     6 |   2,070 |  0.82 % |
+| YML                  |    10 |     954 |  0.38 % |
+| C/C++ headers + impl |     8 |   1,527 |  0.61 % |
+| XML                  |     4 |     707 |  0.28 % |
+| PowerShell           |     2 |     515 |  0.20 % |
+| Lockfile             |     1 |     454 |  0.18 % |
 | No extension         |     9 |     301 |  0.12 % |
-| Text                 |     5 |     238 |  0.10 % |
-| SVG                  |    13 |     226 |  0.09 % |
-| JavaScript           |     1 |      85 |  0.04 % |
+| Text                 |     5 |     238 |  0.09 % |
+| SVG                  |    14 |     335 |  0.13 % |
+| JavaScript           |     1 |      85 |  0.03 % |
 | DOCX                 |     1 |      64 |  0.03 % |
 | YAML                 |     1 |       9 |  0.00 % |
 | TOML                 |     1 |       6 |  0.00 % |
 
-**Code (TS + C/C++ + HTML + CSS) = 188,737 lines = 77.81 %**; documentation + config + assets = 22.19 %.
+**Code (TS + C/C++ + HTML + CSS) = 197,614 lines = 78.46 %**; documentation + config + assets = 21.54 %.
 
 ### 1.2 Lines by area
 
 | Area                                  | Files |   Lines |
 | ------------------------------------- | ----: | ------: |
-| `src/` (application)                  |   304 | 105,794 |
-| `tests/`                              |   302 |  45,674 |
-| `docs/`                               |    88 |  30,019 |
-| `scripts/`                            |    45 |  19,254 |
+| `src/` (application)                  |   305 | 108,161 |
+| `tests/`                              |   307 |  48,684 |
+| `docs/`                               |    92 |  30,422 |
+| `scripts/`                            |    49 |  22,729 |
 | `lab/` (self-contained artifact)      |     5 |  13,372 |
-| repo root (README, LICENSE, configs)  |    27 |  11,855 |
+| repo root (README, LICENSE, configs)  |    27 |  11,908 |
 | `output/` (tracked visual receipts)   |     3 |   9,551 |
 | `legacy/` (preserved origin)          |     6 |   2,072 |
 | `native/` (C++ engine, ADR-0007)      |    12 |   1,835 |
@@ -180,25 +180,32 @@ Each frame (`dt` clamped to ≤ 50 ms, then × time-scale):
    auto-split, temperature-modified death + sparse respawn
 5. **NHI exact-target pass** (every frame while an NHI is live, hard cap 32): rebuild current
    positions, prune lifecycle state in O(live NHI), use spatial local-kin sensing, then percept →
-   GOAP-biased decision → ordinary minions / dominate / hunt / mimic / broadcast
+   GOAP-biased decision → structured effect/fact outcome → ordinary minions / dominate / hunt /
+   mimic / broadcast. The index rebuild is zero work at `M=0` and one `O(N)` pass for any `M>0`,
+   independent of NHI count. One mind failure cannot starve later minds.
 6. connectome (graphology, strided cadence), quantum circuit + cloud, reaction-diffusion (128²),
    constellations, analytics
 7. instanced-mesh mirror + render
 
-Allocation-free in steady state (pre-allocated typed-array scratch); event-driven growth only.
+Population-scale steady-state paths reuse typed-array scratch; low-cardinality control/error paths use
+bounded objects, and organism allocation occurs only on event-driven growth. At the ultra tier,
+organic mitosis, sparse recovery, behavior births, and NHI swarms share one 512-birth frame budget;
+failed reservations refund and tiers at 5,000 entities or below preserve their direct spawn stream.
 
 ---
 
 ## 5 · Determinism model
 
-- **One seeded generator:** `mulberry32(seed)` (`math/rng.ts`). Same 32-bit seed → identical run,
-  bit-for-bit. Human-readable run names map to seeds via FNV-1a.
+- **One root seed, domain-separated generators:** `mulberry32(seed)` plus fixed derived namespaces
+  (`math/rng.ts`). Same 32-bit root seed and event schedule → identical run, bit-for-bit.
+  Physics, genome, UI, economy, NHI birth, NHI policy, and direct NHI action sampling have separate
+  streams. Material NHI organism creation intentionally consumes the ordinary physics/genome streams.
 - **Banned in simulation logic:** `Math.random`, `Date.now`, wall-clock — enforced by review + the
   determinism test suite (`determinism.test.ts`, `feature-determinism.test.ts`,
   `nan-stability.test.ts`).
 - **Boot-stream neutrality:** systems that draw no RNG at construction can be placed anywhere without
-  shifting the seeded stream; user events (NHI launch, apocalypse) draw RNG but are recorded in the
-  audit ring so replays reproduce them.
+  shifting the seeded stream. User events draw RNG and are audit-recorded. Failed NHI launch attempts
+  consume a monotonic attempt id and any draws already made; rollback never pretends streams rewind.
 
 ---
 
@@ -253,7 +260,11 @@ WRITES to the world (spawns ordinary swarmling minions, manipulates factions, pe
 broadcasts hallucinated utterances) — wired into `world.ts`, guarded, deterministic. Its inherited gene
 now receives the four bounded Tsotchke resource/threat/exploration/social lanes directly, with a separate
 neural-semantic ablation that leaves the hybrid hand-written utility routes intact. Zero semantic input
-preserves the former neural output and default constructor RNG position exactly.
+preserves the former neural output and default constructor RNG position exactly. Versioned JSON-safe
+mind/system checkpoints restore exact neural, memory, game, GOAP, regret, and beat state. World actions
+separate `effectApplied` from the narrower `factSupported`, affected-body count, and energy transfer;
+contradictory/action-invalid evidence is rejected, and the mind reports whether its internal fact state
+actually transitioned before planning advances.
 
 ### 7.1 Model parameter sizes (measured)
 
@@ -263,6 +274,7 @@ preserves the former neural output and default constructor RNG position exactly.
 | Faction brain (× 8 archetypes)                    | TinyMLP 6→6→4                              | 70 weights                          |
 | NHI intuition gene                                | TinyMLP 9→6→7 default; H=3/6/12 tiers      | **109 live**; 58/109/211 by tier    |
 | NHI alien voice                                   | Markov 12×12                               | 144 weights                         |
+| Ecology Predictor V3 (development-only)           | 101→H→1 + direct skip; H=8/16/32           | **926/1,750/3,398**                 |
 | Super Creature minds (GOAL5: 5 Archons)           | 5× composite · 12 sub-nets · 5 stages × 25 | ~10,081 weights each (~50.4k total) |
 | Super Creature quantum minds                      | 5× 6-qubit statevector + Clifford reflex   | 64 complex + 16q stabilizer each    |
 | Quantum register (1 shared, puppet-master-driven) | 5-qubit statevector                        | 32 complex amplitudes (256 B)       |
@@ -271,6 +283,13 @@ preserves the former neural output and default constructor RNG position exactly.
 brains, plus the 5×~10,081-weight Super Creature / Archon composites (GOAL5), the 8 faction brains, and the apex NHI mind),
 stored as Float32 = **≈ 14 MB of weights**, executed on **one CPU thread**. (The default ultra tier caps
 at 10,000 organisms ≈ 700 K params ≈ 2.8 MB.)
+
+The Predictor-V3 size is excluded from live-world neural mass because it is not production-integrated.
+Its 46,080-row terminal-twin temporal task failed all eight advancement criteria. The NHI's separate
+41,472-row closed-loop task retained every row but authorizes only HUNT/resource and SPAWN/social
+development diagnostics; its paired conflict response declined. See the
+[Phase-B V3 falsification report](reports/PHASE-B-MECHANISM-DEVELOPMENT-V3-2026-07-11.md). Neither result
+authorizes adaptation, learning, scaling, consciousness, or sentience claims.
 
 The quantum minds no longer merely _study_ the Tsotchke quantum stack — **V84 ports three of its
 primitives into development** and wires them into the live apex creature: the **Eshkol** qubit-RNG
@@ -377,7 +396,7 @@ Complexity classes are catalogued in [COMPLEXITY-2026-06-26.md](COMPLEXITY-2026-
 
 The single gate — `bun run check` — must pass before every commit:
 
-`prettier --check` → `tsc --noEmit` (strict) → `oxlint` → `bun test` (**2,697 tests, 0 fail**) →
+`prettier --check` → `tsc --noEmit` (strict) → `oxlint` → `bun test` (**2,775 tests, 0 fail**) →
 `bun scripts/build.ts`. Receipt regression guard: coverage must stay within the `verify:receipts` tolerance from the canonical **84.64% line / 82.21% func** floor; local Windows receipt runs may measure higher.
 Three governing "master" personas (`masters/*.xml`) encode the discipline: **the Executor** (finish
 everything, full gates), **the Architect** (contracts before code, exclusive ownership), **the
@@ -392,42 +411,33 @@ A full per-file roster is generated, not hand-kept — run `bun run metrics`
 breakdown, or `bun run filemap` for the file tree. Below is the **2026-07-11** measured snapshot of the
 heaviest files (where the weight sits); refresh it with the same commands when source lines move.
 
-### `src/` — heaviest files (304 files · 105,794 lines total; top of the list)
+### `src/` — heaviest files (305 files · 108,161 lines total; top of the list)
 
-Current top-12 by weight: `world.ts` 5,078 (composition root) · `styles/app.css` 2,442 ·
-`ui/observatory.ts` 2,330 · `sim/apex-brain.ts` 2,136 · `sim/super-mind.ts` 2,077 ·
-`ui/super-neural.ts` 1,847 · `sim/titans.ts` 1,632 · `sim/super-body.ts` 1,424 ·
-`sim/creature-exterior-layers.ts` 1,395 · `ui/copilot.ts` 1,181 · `sim/entities.ts` 1,145 ·
-`sim/singularities.ts` 1,131. The table below refreshes the established extended roster:
+| Lines | File                        | Lines | File                            |
+| ----: | --------------------------- | ----: | ------------------------------- |
+|  5285 | world.ts (composition root) |  1847 | ui/super-neural.ts              |
+|  2442 | styles/app.css              |  1659 | sim/titans.ts                   |
+|  2330 | ui/observatory.ts           |  1424 | sim/super-body.ts               |
+|  2136 | sim/apex-brain.ts           |  1395 | sim/creature-exterior-layers.ts |
+|  2077 | sim/super-mind.ts           |  1324 | sim/nhi.ts                      |
+|  1280 | sim/entities.ts             |  1181 | ui/copilot.ts                   |
 
-| Lines | File                        | Lines | File                      |
-| ----: | --------------------------- | ----: | ------------------------- |
-|  5078 | world.ts (composition root) |  1131 | sim/singularities.ts      |
-|  2330 | ui/observatory.ts           |  1061 | audio/engine.ts           |
-|  2077 | sim/super-mind.ts           |   750 | sim/economy.ts            |
-|  1847 | ui/super-neural.ts          |  1145 | sim/entities.ts           |
-|  2442 | styles/app.css              |  1099 | sim/instanced-entities.ts |
-|  1632 | sim/titans.ts               |  1023 | server/copilot.ts         |
-|  1114 | ui/nhi-observatory.ts       |   601 | sim/super-qubits.ts       |
-|   869 | sim/tsotchke-deep-wire.ts   |  1056 | ui/center-hud.ts          |
-|  1424 | sim/super-body.ts           |   714 | sim/petri-dish.ts         |
-|  1031 | sim/environment.ts          |   551 | sim/libirrep-qec.ts       |
-|   696 | sim/emergence-angles.ts     |   557 | math/eshkol-ad.ts         |
+### `tests/` — heaviest files (307 files · 48,684 lines total)
 
-### `tests/` — heaviest files (302 files · 45,674 lines total)
-
-`worker-pool 899 · singularities 746 · observatory 670 · operational-organism-intelligence 568 · nhi 545 ·
-phase-b-predictor-development 509 · titans 482 · organism-intelligence-v4-benchmark 471 · quantum 462 ·
-organism-intelligence-v4-artifact-integrity 460 · entity-vitals 448 · tsotchke-ecology-predictor-v2 428` ·
+`worker-pool 899 · nhi 767 · singularities 746 · observatory 670 ·
+operational-organism-intelligence 568 · titans 511 · phase-b-predictor-development 509 ·
+organism-intelligence-v4-benchmark 471 · quantum 462 · organism-intelligence-v4-artifact-integrity 460 ·
+phase-b-nhi-closed-loop 454 · entity-vitals 448 · tsotchke-ecology-predictor-v2 428 ·
+tsotchke-ecology-predictor-v3 427` ·
 … (full list via `bun run metrics`).
 
 ---
 
 ## 13 · Positioning
 
-This is a ~105.8k-line app-source (+ optional C++/Jolt native engine) browser-native simulation that
+This is a ~108.2k-line app-source (+ optional C++/Jolt native engine) browser-native simulation that
 renders **up to 50,000 agents** (10,000 at 60 fps on a laptop iGPU with zero AI accelerator), is
-**bit-reproducible from one seed**, ships through a **full CI/CD gate** (2,697 tests, 84.64% line / 82.21% func coverage),
+**bit-reproducible from one seed**, ships through a **full CI/CD gate** (2,775 tests, 84.64% line / 82.21% func coverage),
 and whose entire emergent intelligence weighs **≈ 14 MB — 1/50,000th of GPT-3** at the mega ceiling. It
 demonstrates that depth comes from **architecture,
 determinism, and engineering discipline**, not parameter count or hardware.

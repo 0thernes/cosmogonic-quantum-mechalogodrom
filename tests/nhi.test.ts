@@ -13,7 +13,7 @@ import {
   GameStrategy,
   TinyMLP,
 } from '../src/sim/ai/brains';
-import { NhiMind, NhiAction, type NhiPercept } from '../src/sim/nhi';
+import { NhiMind, NhiAction, type NhiMindStateSnapshot, type NhiPercept } from '../src/sim/nhi';
 
 describe('game theory: bestResponse', () => {
   test('picks the row maximizing expected payoff', () => {
@@ -192,6 +192,85 @@ describe('NhiMind', () => {
     expect(routeDelta({ corpusSocial: 1 }, NhiAction.SPAWN_SWARM)).toBeCloseTo(0.24, 5);
   });
 
+  test('component controls isolate semantic utility, gene output, base utility, and GOAP bias', () => {
+    const driven: NhiPercept = {
+      ...PERCEPT,
+      kinPresence: 0.75,
+      kinMood: 0.25,
+      corpusResource: 1,
+      corpusThreat: 1,
+      corpusExplore: 1,
+      corpusSocial: 1,
+      corpusConfidence: 1,
+    };
+    const run = (options: ConstructorParameters<typeof NhiMind>[1]) => {
+      const mind = new NhiMind(mulberry32(0xc0a7), options);
+      mind.think(driven, mulberry32(0xdec1de));
+      return mind.snapshot();
+    };
+    const full = run({});
+    const noSemanticUtility = run({ semanticUtilityInputs: false });
+    expect(noSemanticUtility.sensory).toEqual(full.sensory);
+    expect(noSemanticUtility.hidden).toEqual(full.hidden);
+    expect(noSemanticUtility.output).toEqual(full.output);
+    expect(
+      (full.scores[NhiAction.HUNT] ?? 0) - (noSemanticUtility.scores[NhiAction.HUNT] ?? 0),
+    ).toBeCloseTo(0.35, 5);
+    expect(
+      (full.scores[NhiAction.RETREAT] ?? 0) - (noSemanticUtility.scores[NhiAction.RETREAT] ?? 0),
+    ).toBeCloseTo(0.3, 5);
+    expect(
+      (full.scores[NhiAction.MIMIC] ?? 0) - (noSemanticUtility.scores[NhiAction.MIMIC] ?? 0),
+    ).toBeCloseTo(0.18, 5);
+    expect(
+      (full.scores[NhiAction.SPAWN_SWARM] ?? 0) -
+        (noSemanticUtility.scores[NhiAction.SPAWN_SWARM] ?? 0),
+    ).toBeCloseTo(0.24, 5);
+
+    const noGene = run({ neuralGeneOutput: false });
+    expect(noGene.output).toEqual(full.output);
+    for (let action = 0; action < full.output.length; action++) {
+      expect((full.scores[action] ?? 0) - (noGene.scores[action] ?? 0)).toBeCloseTo(
+        (full.output[action] ?? 0) * 0.5,
+        5,
+      );
+    }
+
+    const noGoap = run({ goapBias: false });
+    expect(noGoap.plannedAction).toBe(full.plannedAction);
+    for (let action = 0; action < full.scores.length; action++) {
+      const expected = action === full.plannedAction ? 1 : 0;
+      expect((full.scores[action] ?? 0) - (noGoap.scores[action] ?? 0)).toBeCloseTo(expected, 5);
+    }
+
+    const goapOnly = run({
+      neuralSemanticInputs: false,
+      semanticUtilityInputs: false,
+      neuralGeneOutput: false,
+      baseUtilityInputs: false,
+      goapBias: true,
+    });
+    expect(goapOnly.scores).toEqual(
+      Array.from({ length: 7 }, (_, action) => (action === goapOnly.plannedAction ? 1 : 0)),
+    );
+    expect(goapOnly.semanticUtilityInputs).toBe(false);
+    expect(goapOnly.neuralGeneOutput).toBe(false);
+    expect(goapOnly.baseUtilityInputs).toBe(false);
+    expect(goapOnly.goapBias).toBe(true);
+
+    const rngA = mulberry32(0x51a9);
+    const rngB = mulberry32(0x51a9);
+    new NhiMind(rngA);
+    new NhiMind(rngB, {
+      neuralSemanticInputs: false,
+      semanticUtilityInputs: false,
+      neuralGeneOutput: false,
+      baseUtilityInputs: false,
+      goapBias: false,
+    });
+    expect(rngB()).toBe(rngA()); // controls consume no birth-RNG draws
+  });
+
   test('invalid corpus telemetry is normalized before neural and utility consumption', () => {
     const cases = [
       {
@@ -329,21 +408,22 @@ describe('NhiMind', () => {
 
   test('GOAP facts advance only on acknowledged material outcomes', () => {
     const preconditioned = new NhiMind(mulberry32(0xd011));
-    preconditioned.acknowledge(NhiAction.DOMINATE, true);
+    expect(preconditioned.acknowledge(NhiAction.DOMINATE, true)).toBe(false);
     expect(preconditioned.snapshot().facts).toBe(0); // DOMINATE requires acknowledged SWARM
 
     const mind = new NhiMind(mulberry32(0xacce55));
     expect(mind.snapshot().facts).toBe(0);
-    mind.acknowledge(NhiAction.SPAWN_SWARM, false);
+    expect(mind.acknowledge(NhiAction.SPAWN_SWARM, false)).toBe(false);
     expect(mind.snapshot().facts).toBe(0);
-    mind.acknowledge(NhiAction.SPAWN_SWARM, true);
+    expect(mind.acknowledge(NhiAction.SPAWN_SWARM, true)).toBe(true);
     expect(mind.snapshot().facts).toBe(1);
+    expect(mind.acknowledge(NhiAction.SPAWN_SWARM, true)).toBe(false);
     expect(mind.snapshot().plannedAction).not.toBe(NhiAction.SPAWN_SWARM);
-    mind.acknowledge(NhiAction.DOMINATE, true);
+    expect(mind.acknowledge(NhiAction.DOMINATE, true)).toBe(true);
     expect(mind.snapshot().facts).toBe(5);
     expect(mind.snapshot().plannedAction).toBe(NhiAction.MANIPULATE);
     // DOMINATE + DECEIVE completes the declared goal and starts a fresh scheme.
-    mind.acknowledge(NhiAction.MANIPULATE, true);
+    expect(mind.acknowledge(NhiAction.MANIPULATE, true)).toBe(true);
     expect(mind.snapshot().facts).toBe(0);
     expect(mind.snapshot().plannedAction).toBe(NhiAction.MANIPULATE);
     expect(() => mind.acknowledge(99 as never, true)).toThrow(RangeError);
@@ -364,6 +444,148 @@ describe('NhiMind', () => {
       return out.join('|');
     };
     expect(run()).toBe(run());
+  });
+
+  test('JSON state restores exact future cognition with matched caller-owned RNG state', () => {
+    const source = new NhiMind(mulberry32(0x51a7e), {
+      geneHidden: 12,
+      neuralSemanticInputs: true,
+    });
+    const preludeRng = mulberry32(0xc105ed);
+    for (let beat = 0; beat < 24; beat++) {
+      const intent = source.think(
+        {
+          ...PERCEPT,
+          beat,
+          energy: ((beat * 3) % 11) / 10,
+          threat: ((beat * 5 + 1) % 11) / 10,
+          rivalFaction: 1 + (beat % 4),
+          rivalLastMove: beat % 3 === 0 ? 1 : 0,
+          corpusResource: (beat % 5) / 4,
+          corpusThreat: ((beat + 1) % 5) / 4,
+          corpusExplore: ((beat + 2) % 5) / 4,
+          corpusSocial: ((beat + 3) % 5) / 4,
+        },
+        preludeRng,
+      );
+      source.acknowledge(intent.action, beat % 3 !== 0);
+    }
+
+    const encoded = JSON.stringify(source.stateSnapshot());
+    const restored = NhiMind.fromState(JSON.parse(encoded) as NhiMindStateSnapshot);
+    expect(JSON.stringify(restored.stateSnapshot())).toBe(encoded);
+    expect(restored.snapshot()).toEqual(source.snapshot());
+    expect(restored.snapshot().rivalCount).toBe(4);
+
+    const sourceRng = mulberry32(0xf0702e);
+    const restoredRng = mulberry32(0xf0702e);
+    for (let beat = 24; beat < 72; beat++) {
+      const percept: NhiPercept = {
+        ...PERCEPT,
+        beat,
+        energy: ((beat * 7) % 13) / 12,
+        crowding: ((beat * 11) % 13) / 12,
+        chaos: ((beat * 2) % 9) / 8,
+        threat: ((beat * 5) % 13) / 12,
+        rivalFaction: 1 + (beat % 5),
+        rivalLastMove: beat % 4 === 0 ? 1 : 0,
+        kinPresence: (beat % 6) / 5,
+        kinMood: ((beat % 7) - 3) / 3,
+        corpusResource: (beat % 5) / 4,
+        corpusThreat: ((beat + 1) % 5) / 4,
+        corpusExplore: ((beat + 2) % 5) / 4,
+        corpusSocial: ((beat + 3) % 5) / 4,
+        corpusConfidence: ((beat + 4) % 5) / 4,
+      };
+      const sourceIntent = source.think(percept, sourceRng);
+      const restoredIntent = restored.think(percept, restoredRng);
+      expect(restoredIntent).toEqual(sourceIntent);
+      const achieved = beat % 4 !== 0;
+      source.acknowledge(sourceIntent.action, achieved);
+      restored.acknowledge(restoredIntent.action, achieved);
+      expect(restored.stateSnapshot()).toEqual(source.stateSnapshot());
+    }
+  });
+
+  test('state restore rejects forged dynamics and cross-identity checkpoints atomically', () => {
+    const source = new NhiMind(mulberry32(0x51a7e));
+    const rng = mulberry32(0xdec0de);
+    for (let beat = 0; beat < 12; beat++) {
+      const intent = source.think(
+        { ...PERCEPT, beat, rivalFaction: 1 + (beat % 3), rivalLastMove: beat % 2 },
+        rng,
+      );
+      source.acknowledge(intent.action, true);
+    }
+    const before = JSON.stringify(source.stateSnapshot());
+
+    const forgedPolicy = structuredClone(source.stateSnapshot()) as NhiMindStateSnapshot & {
+      cognition: { policy: number[] };
+    };
+    forgedPolicy.cognition.policy[0] = (forgedPolicy.cognition.policy[0] ?? 0) + 0.1;
+    expect(() => source.restoreState(forgedPolicy)).toThrow(/policy must sum to one/);
+    expect(JSON.stringify(source.stateSnapshot())).toBe(before);
+
+    const forgedRivals = structuredClone(source.stateSnapshot()) as NhiMindStateSnapshot & {
+      cognition: { rivals: Array<{ id: number }> };
+    };
+    forgedRivals.cognition.rivals[1]!.id = forgedRivals.cognition.rivals[0]!.id;
+    expect(() => source.restoreState(forgedRivals)).toThrow(/uniquely sorted/);
+    expect(JSON.stringify(source.stateSnapshot())).toBe(before);
+
+    const forgedPlan = structuredClone(source.stateSnapshot()) as NhiMindStateSnapshot & {
+      cognition: { plannedAction: number };
+    };
+    forgedPlan.cognition.plannedAction =
+      forgedPlan.cognition.plannedAction === NhiAction.HUNT ? NhiAction.MIMIC : NhiAction.HUNT;
+    expect(() => source.restoreState(forgedPlan)).toThrow(/planned action/);
+    expect(JSON.stringify(source.stateSnapshot())).toBe(before);
+
+    const forgedRegret = structuredClone(source.stateSnapshot()) as NhiMindStateSnapshot & {
+      cognition: { regret: number[] };
+    };
+    forgedRegret.cognition.regret[0] = Math.fround((forgedRegret.cognition.regret[0] ?? 0) + 0.25);
+    expect(() => source.restoreState(forgedRegret)).toThrow(/latest choice update/);
+    expect(JSON.stringify(source.stateSnapshot())).toBe(before);
+
+    const unreachableDominance = structuredClone(source.stateSnapshot()) as NhiMindStateSnapshot & {
+      cognition: { facts: number };
+    };
+    unreachableDominance.cognition.facts = 4;
+    expect(() => source.restoreState(unreachableDominance)).toThrow(
+      /requires an acknowledged swarm/,
+    );
+    expect(JSON.stringify(source.stateSnapshot())).toBe(before);
+
+    const retainedSatisfiedGoal = structuredClone(
+      source.stateSnapshot(),
+    ) as NhiMindStateSnapshot & {
+      cognition: { facts: number };
+    };
+    retainedSatisfiedGoal.cognition.facts = 7;
+    expect(() => source.restoreState(retainedSatisfiedGoal)).toThrow(/satisfied GOAP goal/);
+    expect(JSON.stringify(source.stateSnapshot())).toBe(before);
+
+    const other = new NhiMind(mulberry32(0x0f7e2));
+    const otherBefore = JSON.stringify(other.stateSnapshot());
+    expect(() => other.restoreState(source.stateSnapshot())).toThrow(/identity mismatch/);
+    expect(JSON.stringify(other.stateSnapshot())).toBe(otherBefore);
+  });
+
+  test('untouched state also round-trips without consuming a birth RNG', () => {
+    const source = new NhiMind(mulberry32(0x1d1e), { neuralSemanticInputs: false });
+    const state = source.stateSnapshot();
+    expect(NhiMind.fromState(state).stateSnapshot()).toEqual(state);
+  });
+
+  test('pre-think material acknowledgement remains a legal exact checkpoint', () => {
+    const source = new NhiMind(mulberry32(0xa11ce));
+    source.acknowledge(NhiAction.SPAWN_SWARM, true);
+    const state = source.stateSnapshot();
+    expect(state.cognition.selectionMode).toBe('uninitialized');
+    expect(state.cognition.facts).toBe(1);
+    expect(state.cognition.planDirty).toBe(false);
+    expect(NhiMind.fromState(state).stateSnapshot()).toEqual(state);
   });
 
   test('emits well-formed intents', () => {

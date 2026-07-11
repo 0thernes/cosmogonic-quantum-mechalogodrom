@@ -39,15 +39,18 @@ Development output is not a release receipt. No public score or capability claim
 
 ### Current implementation state
 
-| Development component                | State on 2026-07-11                                                                                                                                                                                                 | Claim consequence                                                                                                                      |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| Historical-seed firewall             | Implemented; reconstructs and rejects all 170 V1–V4 evaluation/calibration seeds and seals 16 mutually disjoint domain-separated development families                                                               | Prevents accidental evaluation-set reuse; creates no evidence                                                                          |
-| NHI neural-semantic gene and effects | Implemented; default `9→6→7` gene has 109 live weights, with 58/109/211 tiers, neural-only semantic ablation, exact-target HUNT/MIMIC effects, material-outcome GOAP acknowledgement, and runtime lifecycle closure | Establishes a real, ablatable neural/world path; task benefit is not yet established                                                   |
-| Ecology predictor V2 leaf            | Implemented but not production-integrated; strict forecast/observe tokens, 54/98/186 live tiers, bounded optimizer, exact snapshots                                                                                 | Candidate leaf remains non-evidentiary; production predictor remains V1                                                                |
-| Predictor development V2             | Complete: 4,224/4,224 rows retained across 6 tasks, 11 arms, 48 development seeds, and 16 fixed-configuration validation seeds                                                                                      | Rejected for protocol advancement: the temporal-input ablation is slightly better than H8 aggregate and unfavorable paired rows remain |
-| Ordinary resource-head leaf          | Implemented but not production-integrated; 27/51/99 added parameters, one-shot food-reward API, recurrence/frozen controls, exact snapshots                                                                         | Candidate mechanism only; production benefit is not established                                                                        |
-| Ordinary development V1              | Complete and retained as a rejected diagnostic; it lacked an executed legacy brain, independent model units, terminal contact, and adequate yoked controls                                                          | Structurally ineligible for evidence or protocol selection                                                                             |
-| Ordinary development V2              | Complete: 4,224/4,224 rows retained across 4 model units, 11 paired arms, 8 validation seeds × 12 trials                                                                                                            | Rejected for protocol advancement: every neural/semantic/recurrent causal arm ties identity and the yoked action surrogate wins        |
+| Development component                | State on 2026-07-11                                                                                                                                                                                            | Claim consequence                                                                                                                       |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Historical-seed firewall             | Implemented; reconstructs and rejects all 170 V1–V4 evaluation/calibration seeds and seals 22 mutually disjoint domain-separated development families                                                          | Prevents accidental evaluation-set reuse; creates no evidence                                                                           |
+| NHI neural-semantic gene and effects | Implemented; default `9→6→7` gene has 109 live weights, with 58/109/211 tiers, component ablations, exact state, structured fact/effect acknowledgement, bounded target actions, and runtime lifecycle closure | Establishes a real, ablatable neural/world path; broad task benefit is not established                                                  |
+| NHI closed-loop development          | Complete: 41,472/41,472 rows, fixed-point-free semantic derangement, target-valid yoke, paired phase reset, exact checkpoints, and narrow action-level contrasts                                               | Development-only: HUNT/resource and SPAWN/social diagnostics are positive, but conflict response declines; no adaptation or broad claim |
+| Ecology predictor V2 leaf            | Implemented but not production-integrated; strict forecast/observe tokens, 54/98/186 live tiers, bounded optimizer, exact snapshots                                                                            | Candidate leaf remains non-evidentiary; production predictor remains V1                                                                 |
+| Predictor development V2             | Complete: 4,224/4,224 rows retained across 6 tasks, 11 arms, 48 development seeds, and 16 fixed-configuration validation seeds                                                                                 | Rejected for protocol advancement: the temporal-input ablation is slightly better than H8 aggregate and unfavorable paired rows remain  |
+| Ecology predictor V3 leaf            | Implemented but not production-integrated; 101 inputs, 80-step validity-marked history, 926/1,750/3,398 parameters, bounded RMSProp, ablations, and exact snapshots                                            | Candidate leaf remains non-evidentiary; production predictor remains V1                                                                 |
+| Temporal-identifiability development | Complete: 46,080/46,080 rows, 80/80 distinct task profiles, terminal-input twins, locked validation, exact statistics, and byte-stable seals                                                                   | Rejected for advancement: the V3 H8 configuration fails all eight frozen criteria                                                       |
+| Ordinary resource-head leaf          | Implemented but not production-integrated; 27/51/99 added parameters, one-shot food-reward API, recurrence/frozen controls, exact snapshots                                                                    | Candidate mechanism only; production benefit is not established                                                                         |
+| Ordinary development V1              | Complete and retained as a rejected diagnostic; it lacked an executed legacy brain, independent model units, terminal contact, and adequate yoked controls                                                     | Structurally ineligible for evidence or protocol selection                                                                              |
+| Ordinary development V2              | Complete: 4,224/4,224 rows retained across 4 model units, 11 paired arms, 8 validation seeds × 12 trials                                                                                                       | Rejected for protocol advancement: every neural/semantic/recurrent causal arm ties identity and the yoked action surrogate wins         |
 
 ## Seed firewall
 
@@ -60,13 +63,15 @@ The implemented firewall exposes:
 
 - 32/16/16/8 NHI train/validation/surrogate/fault seeds;
 - 48/16/8 predictor development/fixed-configuration-validation/fault seeds;
+- 32/16/32 temporal-task train/selection/locked-development-validation seeds plus 8/16/8
+  temporal-model development/validation/fault seeds;
 - 32/16/16/8 retained ordinary-V1 train/validation/surrogate/fault seeds; and
 - 12/8/4/8/4 fresh ordinary-V2 train/validation/model/surrogate/fault seeds. The V2 fault family is
   reserved and explicitly not consumed by the task runner.
 
 It asserts historical exclusion and mutual disjointness at module load and runner entry. The ordered
-16-family SHA-256 seal is
-`86bb594637eac23d1de4448b8b45809350e2caf7b87a800adf07e772e7e90249`.
+22-family SHA-256 seal is
+`469f79e59c29639034afb4aea2bf6b0e3a82f2a3f3303b7fb3c9efa7ec443b8a`.
 
 The frozen V4 authority remains unchanged:
 
@@ -114,15 +119,26 @@ The first Phase-B implementation has:
 Production `SPAWN_SWARM` creates ordinary minions, not child NHI minds; the heredity API therefore has no
 production reproduction claim. The NHI population is intentionally retired by Genesis because its
 physical organisms live inside the reset `EntityManager`; dedicated pantheon/titan systems persist.
-Exact restorable rival/planning state and a closed-loop outcome task remain required before the first NHI
-protocol freezes.
+Versioned JSON-safe mind/system checkpoints now restore exact rival, planning, memory, neural, regret,
+and population-beat state. Production actions return separate material-effect and `factSupported`
+evidence; the mind decides whether that evidence advances its current GOAP state, and one failed mind
+or diagnostic callback cannot starve later minds. Failed launches retain
+monotonic attempt/RNG provenance and roll back without a fake death or mutation-accounting change.
 
-The first outcome task is a finite resource/threat reversal with action costs. Primary outcome is a
-normalized combination of retained energy, acquired resource, survival, and surviving ordinary
-swarmling minions. This is a bounded service/output metric, not NHI reproduction. Action correctness is
-diagnostic only. Required controls include neural-semantic ablation, field disabled,
-cyclic semantics, hybrid-only/GOAP-only component controls, a rate/magnitude-matched surrogate, and exact
-legacy. Capacity is tested only after family behavior passes.
+The executed closed-loop task uses paired action-independent cue/outcome tapes, bounded action costs,
+material service deltas, a phase-relative mind clock, and an exact environment/mind/policy reset before
+the conflicting surface map. All 41,472 rows are retained. Validation full-arm mean service is
+`0.060770689609`; pre/post conflict response is `-0.013306302297`. Full minus balanced semantic
+derangement is `+0.020167955761`, while the neural-semantic ablation contrasts are interpretation-eligible
+only for HUNT/resource (`+0.018742616898`) and SPAWN/social (`+0.017038134204`). This is a bounded
+development diagnostic, not NHI reproduction, adaptation, reward learning, or confirmatory evidence.
+Its configuration-protocol hash is
+`bfff6581b8e3e032c596a114ef3bfc86c7d5067537efe24043d5d731a09e0f0c`; this hash covers declared
+configuration/laws, not source blobs. Schedule and row seals are
+`8acb60a51bbef06bbf238f8b365f8b9f2d61314850909ff109cbbf70514f617f` and
+`43f26e8b224449db588dd56ba5dd16c7f37c579e396a5689421e5545ee35db06`. The Git tree is source
+provenance. See the [V3 mechanism report](../reports/PHASE-B-MECHANISM-DEVELOPMENT-V3-2026-07-11.md).
+No NHI confirmatory protocol or capacity study freezes from this result.
 
 ## Workstream B: successor ecology predictor
 
@@ -153,6 +169,10 @@ an open-loop live-world trace or an actual V1 arm. Its 11 arms are H4/H8/H16 ada
 H8 temporal-input ablated; H8 drift-gain disabled; an H8 causal reservoir-lag gradient-target control;
 matched current-5 and temporal-9 online logistic controls; persistence; and EWMA.
 
+For the missing-feedback task, the regime switch is indexed by forecast cadence; the separately
+reported elapsed-time coordinate is what advances irregularly. The descriptor and its hashes were
+corrected to state that exact implemented law rather than imply an elapsed-time-triggered switch.
+
 All 4,224 configured rows are retained. Development/validation aggregate soft-target squared error is:
 
 | Arm                       | Development (48 seeds) | Fixed-config validation (16 seeds) |
@@ -169,8 +189,24 @@ H16 is not below H8 in 126/288 and 42/96; H8 is not below temporal-9 logistic in
 Most importantly, removing the four temporal inputs slightly improves the aggregate in both roles. This
 tested V2 configuration therefore fails to demonstrate temporal-context benefit and is blocked from
 protocol advancement. The deterministic hashes are config
-`e03391775897a9bb57e981e61ac7c4e42b2b91963ebaa20ad28a4daf930d669b` and rows
-`11fa3ca3f990ac5a6781513352002958898a6b2bc72f384630e509fa28fe4e86`.
+`55f31de82cb299862fe8ec807e48ffe93b56150ad6bd30ced147d2542b188a3e` and rows
+`ec7f516f3b9567d89dc0bd49e998cec83f2977fe95d9eca38707aa5ec51dfb10`.
+
+Phase B then added an isolated V3 leaf specifically to test temporal identifiability. Its 101 inputs are
+five current covariates, 80 ordered historical values, and 16 validity markers. `H=8/16/32` allocates
+`926/1,750/3,398` parameters. History is inserted before the current forecast, strict tokens prevent
+double observation, bounded RMSProp handles updates, and versioned snapshots restore exact continuation.
+
+The terminal-input-twin task makes the current query state identical while a cue 2, 8, or 16 steps in
+the past determines the label. Every one of the 80 sealed task seeds has a distinct cue/query/neutral
+profile. All 46,080 rows are retained; 36,864 locked-validation rows enter the gate. The primary H8
+model measured SSE `0.168091430523`, cross-entropy `0.710259892165`, twin margin
+`0.000118188607`, and ordering `0.5`. It failed all eight criteria: every-control mean and median gain,
+every-delay gain, twin margin, ordering, Holm-adjusted p, bootstrap 99% lower bound, and worst-model gain.
+Configuration and row seals are
+`01afdd9d4983cc63652dd5bb266a5142bdf66f9ecf05a8e9d7c100216091a384` and
+`76e6d40fb6fc548bb2475e9b38e46646b8641756c45f4bc6fea2915e4b5ff48f`. V3 therefore remains
+non-production and cannot advance to a confirmatory protocol.
 
 Even a future predictor success would not imply downstream ecological benefit; that requires a separate
 route/action outcome.
@@ -221,10 +257,12 @@ rates `[0.104167, 0.020833, 0.104167, 0.125000]`. Exact legacy is 18/384 (`0.046
 surrogate is higher at 50/384 (`0.130208`). The head changes some trajectory diagnostics and descriptively
 beats legacy, but establishes no semantic, recurrence, state, or eligibility benefit and loses to its
 yoked outcome control. It is rejected. Deterministic hashes are config
-`839a2b71509242134d28ae5b41e8710153c4254c168ad6f3004d0e74a0116fd7`, rows
-`549bd7485686e0661a56ed88d4f03438be6dcbc42a15d9f4f7ddd1e95bee9257`, and yoke
+`7de3b0f4e979b7213f45e10d04d3457be251d126d45f98bc03b6086dc27476a7`, rows
+`2529126f5ea894e8e14762cfc106d8e06d83ecea13247e03c56e5959f85a7067`, and yoke
 `046941a03ff61463a172b3500c37105aa0586d3fea95857e40872947250d5614`. The yoke receipt includes the
 validation-seed-separated direction-domain law and every full open-loop randomized direction tape.
+The ordinary outcomes and yoke are unchanged; its config/row hashes changed only because those sealed
+materials embed the expanded 22-family development firewall.
 
 The existing ordinary population gate is not relaxed: aggregate log-log runtime slope `<= 1.15`; the
 50,000-entity enhanced-minus-legacy median and every counterbalanced batch median remain `< 3 ms`. V4's
@@ -235,18 +273,18 @@ not deploy.
 
 Families advance independently. A passing family cannot hide another failure.
 
-| Priority | Family                                                                 | Current honest controller/effect                                                      | Advancement requirement                                                                                                    |
-| -------: | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-|        1 | NHI                                                                    | Hybrid policy with a default 109-weight `9→6→7` semantic gene and real world writes   | Material closed-loop task, complete action effects/restorable state, and matched component controls                        |
-|        2 | Alien flora                                                            | Non-neural bounded ecological-rate controller; biomass affects grazing and chemotaxis | Independent resource-service outcome; never relabel as neural scaling                                                      |
-|        3 | Shoggoths                                                              | Heuristic/game policy writing prey, satiation, economy, velocity, and offspring       | Prey-capture/satiation/economy benefit against semantic and action controls                                                |
-|        4 | Archon/SuperMind                                                       | Five live composite neural minds, each reporting 10,081 MLP weights                   | Target-bearing perception, externally scored reward, material plan/action writes, and real capacity configurations         |
-|        5 | Primordial soup                                                        | 128 slots × 24 heritable scalars; ecological/genetic, not neural                      | Descendant survival or resource service after materialization, not an argmax-construction result                           |
-|        6 | APEX                                                                   | Heterogeneous neural/dynamical scaffold with live tiers `953/21,851/41,383`           | Consume returned motor/plan in the world, use energy as a live input, and score beneficial behavior rather than divergence |
-|        7 | Mechalogodrom                                                          | 53,728 live STDP/fusion parameters; direct output is primarily visual                 | Real task action head, external reward, snapshot/restore, and STDP-on/frozen/time-shuffled controls                        |
-|        8 | Petri                                                                  | Non-neural differential selection with a positive but sub-floor V4 result             | Symmetric founders, finite nutrients, real birth/death competition, descendant-share outcome                               |
-|        9 | Wilderness fauna, puppeteers, leviathans                               | Heuristic/state-machine ecological controllers                                        | Material task outcomes and exact semantic/action controls; no neural claim                                                 |
-|       10 | Glyphs, light echoes, wingmen, hero/twins, foundationals, god-colossus | Visual, proxy, scaffold, or incompletely action-wired paths                           | Remain explicitly ineligible until a controller has live inputs, independently scored world writes, and replayable state   |
+| Priority | Family                                                                 | Current honest controller/effect                                                                  | Advancement requirement                                                                                                    |
+| -------: | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+|        1 | NHI                                                                    | Hybrid policy with a default 109-weight `9→6→7` semantic gene, exact state, and real world writes | Fresh dependency-closed confirmatory protocol only after stable benefit across supported actions/conflict regimes          |
+|        2 | Alien flora                                                            | Non-neural bounded ecological-rate controller; biomass affects grazing and chemotaxis             | Independent resource-service outcome; never relabel as neural scaling                                                      |
+|        3 | Shoggoths                                                              | Heuristic/game policy writing prey, satiation, economy, velocity, and offspring                   | Prey-capture/satiation/economy benefit against semantic and action controls                                                |
+|        4 | Archon/SuperMind                                                       | Five live composite neural minds, each reporting 10,081 MLP weights                               | Target-bearing perception, externally scored reward, material plan/action writes, and real capacity configurations         |
+|        5 | Primordial soup                                                        | 128 slots × 24 heritable scalars; ecological/genetic, not neural                                  | Descendant survival or resource service after materialization, not an argmax-construction result                           |
+|        6 | APEX                                                                   | Heterogeneous neural/dynamical scaffold with live tiers `953/21,851/41,383`                       | Consume returned motor/plan in the world, use energy as a live input, and score beneficial behavior rather than divergence |
+|        7 | Mechalogodrom                                                          | 53,728 live STDP/fusion parameters; direct output is primarily visual                             | Real task action head, external reward, snapshot/restore, and STDP-on/frozen/time-shuffled controls                        |
+|        8 | Petri                                                                  | Non-neural differential selection with a positive but sub-floor V4 result                         | Symmetric founders, finite nutrients, real birth/death competition, descendant-share outcome                               |
+|        9 | Wilderness fauna, puppeteers, leviathans                               | Heuristic/state-machine ecological controllers                                                    | Material task outcomes and exact semantic/action controls; no neural claim                                                 |
+|       10 | Glyphs, light echoes, wingmen, hero/twins, foundationals, god-colossus | Visual, proxy, scaffold, or incompletely action-wired paths                                       | Remain explicitly ineligible until a controller has live inputs, independently scored world writes, and replayable state   |
 
 ## Development gates
 
@@ -285,8 +323,9 @@ It does not require historical sources to remain equal to future `HEAD`. The man
 file, Bun/toolchain identity, task fixtures, control calibration, and source ancestry. Result generation
 rejects a dirty or source-divergent tree.
 
-Because predictor V2 and ordinary V2 fail their causal development controls, no successor protocol,
-manifest, confirmatory seed family, or result artifact is frozen from these configurations.
+Because predictor V2, predictor V3, and ordinary V2 fail their development gates—and the NHI result is
+only a narrow development diagnostic with a negative conflict response—no successor protocol, manifest,
+confirmatory seed family, or claim-bearing result is frozen from these configurations.
 
 ## Claim boundary
 
