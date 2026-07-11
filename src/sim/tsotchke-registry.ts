@@ -146,6 +146,10 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     hue: 0.72,
   },
   // Local corpus Z:\[Vibe Coded (AI)]\(Tsotchke)\Eshkol\eshkol_repo used as build source for .esk programs as heritable digital biologic DNA.
+  // Eshkol AD (vm_autodiff port, math/eshkol-ad.ts) now drives THREE living consumers, deepest → shallowest:
+  //   sim/ad-mlp.ts        — a real multi-layer perceptron: backprop through a tanh hidden layer (GATE-MLP: solves XOR);
+  //   sim/digital-biologics — each biologic trains that MLP ONLINE into a forward self-model (GATE-SELFMODEL);
+  //   sim/ad-forager.ts    — exact ∇ of a food potential for base-agent chemotaxis (GATE-FORAGE).
   {
     slug: 'moonlab',
     origin: 'user',

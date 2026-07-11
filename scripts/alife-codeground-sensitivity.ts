@@ -57,7 +57,11 @@ const HISTORICAL_SELF_SCORED = [4.0, 3.5, 5.0, 4.0, 4.5, 5.0, 4.5, 4.5, 5.0];
 //              not a claim of unbounded evolution)
 //   batch-23:  cognition 3.9→4.0 (GATE-BIOLOGIC-LEARN — the base population learns by exact Eshkol AD)
 //   batch-25:  cognition 4.0→4.1 (GATE-CHEMOTAXIS — the LIVE base 50k population forages up the flora gradient)
-export const CODE_GROUNDED = [4.0, 2.4, 3.2, 3.8, 4.1, 4.5, 4.3, 3.5, 4.0];
+//   batch-27:  cognition 4.1→4.3 (GATE-MLP: a real Eshkol-AD multi-layer perceptron solves XOR — a nonlinear
+//              map a linear unit provably cannot; + GATE-SELFMODEL: every digital biologic trains that MLP
+//              ONLINE by exact backprop into a forward self-model whose error collapses in the live petri —
+//              a qualitative jump from linear learners to a universal approximator, two ablation-verified gates)
+export const CODE_GROUNDED = [4.0, 2.4, 3.2, 3.8, 4.3, 4.5, 4.3, 3.5, 4.0];
 const EXPECTED_CANONICAL_CODE_GROUNDED = CODE_GROUNDED;
 
 interface Row {

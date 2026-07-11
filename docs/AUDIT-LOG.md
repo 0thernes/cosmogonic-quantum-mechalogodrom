@@ -11,6 +11,40 @@ changed and why.
 
 ---
 
+## 2026-07-11 — batch 27: real neural networks for the beings — an Eshkol-AD MLP + a live online self-model + honest Cognition 4.1→4.3
+
+Owner `/goal`: expand the beings' neural networks for scaling/consciousness, wire Tsotchke harder, raise the
+scores — operational, provable, falsifiable, "not decorative BS." The honest expansion: the base learners
+were LINEAR (`biologicLearnStep` = Σθ·x with a closed-form optimum). A linear unit provably cannot represent
+a non-linearly-separable map. So I built a genuine neural network and proved the gap.
+
+- **`src/sim/ad-mlp.ts` — a real multi-layer perceptron on the Eshkol AD tape.** Input → tanh hidden →
+  linear output, with backprop through BOTH weight matrices read off the Wengert tape (never hand-coded).
+  Deterministic (seeded Glorot init; the forward/backward are pure exact AD); allocation-free module tape.
+  A far deeper consumption of tsotchke/Eshkol's `vm_autodiff` than the linear learner.
+- **GATE-MLP (`tests/ad-mlp-learning.test.ts`)** — the universal-approximation proof: the MLP learns **XOR**
+  to < 0.05 MSE and classifies all four patterns, while an inline linear AD baseline trained identically
+  stays pinned at the **0.25** theoretical XOR floor (the capability GAP). ABLATION: a frozen MLP (lr=0)
+  never lowers its loss (byte-identical) — the AD backprop is load-bearing. Deterministic; 17 params vs 3.
+- **Live wiring — every digital biologic trains an online SELF-MODEL.** Each `Biologic` carries a 4→5→1 MLP
+  brain (seeded off its id on a SEPARATE mulberry32 stream ⇒ zero ctx.rng perturbation). On the live petri
+  `learn=true` path it trains by exact backprop to predict the `consciousness` it reaches from the substrate
+  it started the beat with; `selfModelErr` (EMA) is tracked. PURELY observational — never feeds back into
+  adFitness/consciousness/selection ⇒ **every existing petri golden is byte-identical** (verified).
+- **GATE-SELFMODEL (`tests/biologic-self-model.test.ts`)** — live: `selfModelErr` collapses 0.021→0.0003 over
+  a run (the brain anticipates itself). ABLATION on the SAME input stream: a frozen brain's mean error is
+  **1.03** vs the trained brain's **0.0006** (~1700×) — decisively load-bearing. Deterministic; `learn=false`
+  never touches the brain (golden-safe).
+- **Honest metric move: Cognition/Learning floor 4.1 → 4.3** (`CODE_GROUNDED`) — a QUALITATIVE jump (linear
+  learner → universal approximator wired live), two ablation-verified gates = +0.2, staying below the 4.5
+  self-scored ceiling (never inflated). Substrate stays 4.5 (Eshkol is already-counted — the MLP adds no new
+  substrate). Regenerated: code-grounded breadth 3.756→3.778, z-pop +2.95→+2.99, lead +0.26→+0.278
+  (Mahalanobis 10.24). Updated the 4 drift-locked surfaces (README/docs.html/specs.html breadth `3.78 / 5`,
+  NHSI `z=+2.99`). Consciousness (3.5) + Butlin + self-scored CSV row BYTE-IDENTICAL. Eshkol wired-ledger
+  note added (deeper consumer, no fraction change — still 18/21).
+
+Receipts 2460→2469 (+9). Coupling invariant intact (12/12). Full gate green.
+
 ## 2026-07-11 — batch 26: adversarial SELF-review of this session's changes — 7 confirmed bugs I introduced, fixed
 
 Ran a 17-agent adversarial workflow over batches 15a–25 (6 review lenses → per-finding verifiers). It

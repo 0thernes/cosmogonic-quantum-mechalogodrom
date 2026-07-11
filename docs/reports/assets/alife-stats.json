@@ -4,10 +4,10 @@
   "nSystems": 113,
   "nPeers": 112,
   "cosmogonic": {
-    "breadthMean": 3.76,
+    "breadthMean": 3.78,
     "breadthRank": 1,
-    "zScorePopulation": 2.95,
-    "zScoreVsPeers": 3.09,
+    "zScorePopulation": 2.99,
+    "zScoreVsPeers": 3.13,
     "percentile": 100,
     "peerMaturity": 1.5
   },
@@ -18,7 +18,7 @@
     "breadthStdPeers": 0.54,
     "medianBreadth": 2.11,
     "medianPeerMaturity": 3.5,
-    "corrBreadthVsMaturity": -0.112
+    "corrBreadthVsMaturity": -0.113
   },
   "perAxis": [
     {
@@ -107,8 +107,8 @@
       "mean": 1.9,
       "std": 1.6,
       "max": 5,
-      "cosmo": 4.1,
-      "cosmoZ": 1.38,
+      "cosmo": 4.3,
+      "cosmoZ": 1.5,
       "leaders": [
         "DERL (Deep Evolutionary Reinforcement Learning)",
         "UNIMAL (Universal Animal design space)",
@@ -185,22 +185,22 @@
     {
       "name": "ALIEN",
       "full": "ALIEN",
-      "d": 4.45
+      "d": 4.5
     },
     {
       "name": "Creatures",
       "full": "Creatures",
-      "d": 4.86
+      "d": 4.87
     },
     {
       "name": "Framsticks",
       "full": "Framsticks",
-      "d": 5.3
+      "d": 5.35
     },
     {
       "name": "Division Blocks",
       "full": "Division Blocks",
-      "d": 5.37
+      "d": 5.41
     },
     {
       "name": "biosim4",
@@ -215,12 +215,7 @@
     {
       "name": "Karl Sims VC",
       "full": "Karl Sims Evolved Virtual Creatures",
-      "d": 5.62
-    },
-    {
-      "name": "Species: Artificial Life, Real Evolution",
-      "full": "Species: Artificial Life, Real Evolution",
-      "d": 5.68
+      "d": 5.67
     },
     {
       "name": "Neural Graph Evolution (NGE)",
@@ -230,6 +225,11 @@
     {
       "name": "DERL (Deep Evolutionary Reinforcement Learning)",
       "full": "DERL (Deep Evolutionary Reinforcement Learning)",
+      "d": 5.72
+    },
+    {
+      "name": "Species: Artificial Life, Real Evolution",
+      "full": "Species: Artificial Life, Real Evolution",
       "d": 5.75
     }
   ]

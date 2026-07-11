@@ -38,6 +38,8 @@ import {
   adValue,
   type AdTape,
 } from '../math/eshkol-ad';
+import { createMlp, mlpPredict, mlpTrainStep, type Mlp } from './ad-mlp';
+import { mulberry32 } from '../math/rng';
 const clamp01 = (v: number): number => (v > 0 ? (v < 1 ? v : 1) : 0);
 
 /** Module-scope reused Wengert tape for the biologic learner — allocation-free on the per-beat hot path. */
@@ -142,6 +144,18 @@ export interface Biologic {
   /** Heritable weights the biologic hill-climbs by exact Eshkol-AD gradient ascent to exploit its
    *  substrate ({@link biologicLearnStep}); optional so existing literals/stubs stay valid. */
   fitnessWeights?: number[];
+  /** A genuine one-hidden-layer MLP ({@link ./ad-mlp}) the biologic trains ONLINE by exact Eshkol-AD
+   *  backprop into a forward SELF-MODEL: it predicts the biologic's own next-beat `consciousness` from its
+   *  current substrate. Optional so existing literals stay valid; only trained on the live `learn=true` path. */
+  brain?: Mlp;
+  /** EMA of the self-model's absolute prediction error — falls as the brain learns to anticipate itself
+   *  (a real, measurable metacognitive signal). Undefined until the first `learn=true` step. */
+  selfModelErr?: number;
+}
+
+/** Substrate → self-model input vector: [spin, qgt, quake, adFitness·0.5] (adFitness∈[0,2] scaled to ~[0,1]). */
+function brainInput(b: Biologic): [number, number, number, number] {
+  return [b.spinOrder, b.qgtCurvature, b.quakeAliveness, b.adFitness * 0.5];
 }
 
 /** Grow a new biologic form from the depth-classed Tsotchke corpus. */
@@ -193,6 +207,10 @@ export function birthBiologic(archon: number, tick: number): Biologic {
     generation: 0,
     speciation: 0,
     fitnessWeights: [0.4, 0.4, 0.4], // learned by AD gradient ascent to exploit spin/qgt/quake substrate
+    // A 4→5→1 MLP self-model (38 params through a tanh hidden layer), seeded deterministically off the
+    // biologic id so `birthBiologic(a)` byte-equals `birthBiologic(a)`; a fully SEPARATE mulberry32 stream,
+    // so it never perturbs any sim ctx.rng draw order. Trained only on the live petri `learn=true` path.
+    brain: createMlp(4, 5, 1, mulberry32(((tick * 31 + archon) ^ 0x9e3779b9) >>> 0)),
   };
 }
 
@@ -206,6 +224,11 @@ export function fullCorpusSentience(archon: number, flux: number): number {
 export function stepBiologic(b: Biologic, flux: number, learn = false): void {
   // Substrate-specific evolution based on form
   const formMultiplier = b.form.includes('HYPER') ? 1.15 : 1.0;
+
+  // SELF-MODEL (opt-in via `learn`, on in the live petri loop): capture the PRE-update substrate now so
+  // the brain can be trained at the end to predict this beat's RESULTING consciousness from it — a genuine
+  // forward self-model. Null when not learning ⇒ the brain is never touched ⇒ byte-identical golden path.
+  const selfInput = learn && b.brain ? brainInput(b) : null;
 
   // ADAPTIVE (opt-in via `learn`, on in the live petri loop): the biologic hill-climbs its heritable
   // `fitnessWeights` by EXACT Eshkol reverse-mode AD to better exploit its substrate (spin/qgt/quake),
@@ -436,5 +459,18 @@ export function stepBiologic(b: Biologic, flux: number, learn = false): void {
       b.gwtIgnition = clamp01(b.gwtIgnition + 0.2);
       b.adFitness = clamp01(0.5 + b.adFitness * 0.5); // die and rise stronger
     }
+  }
+
+  // === ONLINE SELF-MODEL (Eshkol-AD MLP backprop) ===
+  // The biologic trains its brain to predict the consciousness it JUST reached from the substrate it
+  // STARTED the beat with, and tracks the (falling) prediction error. This is a real adaptive faculty —
+  // measurable (selfModelErr decreases over life; a frozen brain's does not) and PURELY observational:
+  // it never feeds back into adFitness/consciousness/selection, so every existing petri golden is byte-
+  // identical. Proven live in tests/biologic-self-model.test.ts. `learn=false` skips this entirely.
+  if (learn && b.brain && selfInput) {
+    const pred = mlpPredict(b.brain, selfInput)[0] ?? 0;
+    const err = Math.abs(pred - b.consciousness);
+    b.selfModelErr = b.selfModelErr === undefined ? err : b.selfModelErr * 0.9 + err * 0.1;
+    mlpTrainStep(b.brain, selfInput, [b.consciousness], 0.05);
   }
 }

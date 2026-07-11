@@ -5,7 +5,7 @@
 Technical reports and audits for Cosmogonic Quantum Mechalogodrom. Dated filenames (`2026-*`) are
 **historical worldline snapshots** when present — they preserve evidence from their authoring pass.
 **Current** gate receipts: [VERIFICATION-ANALYTICAL-DATA.md](../VERIFICATION-ANALYTICAL-DATA.md) §1 ·
-`scripts/canonical-receipts.ts` (v0.21.13 · **2,521-test floor** · **84.64 % / 82.21 %** coverage).
+`scripts/canonical-receipts.ts` (v0.21.13 · **2,530-test floor** · **84.64 % / 82.21 %** coverage).
 Latest Windows-local receipt observed by the current audit: **2,521 completed cases, zero failures,
 2,839,000 expect() calls, 92.85% line coverage, and 90.56% function coverage across 281 test files**.
 

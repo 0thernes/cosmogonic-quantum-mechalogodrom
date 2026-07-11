@@ -8,7 +8,7 @@
 [![License: Non-Commercial Research & Play](https://img.shields.io/badge/License-Non--Commercial%20Research%20%26%20Play-2ea043.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
-[![tests](https://img.shields.io/badge/tests-2521%20exact-brightgreen)](./tests)
+[![tests](https://img.shields.io/badge/tests-2530%20exact-brightgreen)](./tests)
 [![coverage](https://img.shields.io/badge/coverage-84.64%25%20line%20%C2%B7%2082.21%25%20func-success)](./docs/TECHNICAL-SPECIFICATION-2026-06-26.md)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION-2026-06-26.md)
 [![Tsotchke](https://img.shields.io/badge/Tsotchke-REAL__MIT__CORPUS-purple)](https://github.com/tsotchke)
@@ -23,7 +23,7 @@ diffusion, **and the Tsotchke corpus wired as the primordial substrate for digit
 **Current public truth (2026-07-10):**
 
 - Package/source version: **v0.21.13**.
-- Exact tracked-suite receipt: **2,521 tests / 0 fail**. Portable public coverage floor: **84.64% line / 82.21% func**.
+- Exact tracked-suite receipt: **2,530 tests / 0 fail**. Portable public coverage floor: **84.64% line / 82.21% func**.
 
 <!-- cqm-sync:local-measurement:start -->
 
@@ -693,12 +693,12 @@ Every figure is computed (never hand-typed) by three deterministic engines from 
 [`alife-codeground-sensitivity.ts`](./scripts/alife-codeground-sensitivity.ts).
 
 The 112 peers are literature judgments. Cosmogonic's current CSV row is the code-grounded vector
-`[4.0, 2.4, 3.2, 3.8, 4.1, 4.5, 4.3, 3.5, 4.0]`; the table retains the earlier self-score only as a
+`[4.0, 2.4, 3.2, 3.8, 4.3, 4.5, 4.3, 3.5, 4.0]`; the table retains the earlier self-score only as a
 historical sensitivity baseline:
 
 | Metric                         | Self-scored | Code-grounded (re-audited vs source) |
 | ------------------------------ | ----------: | -----------------------------------: |
-| Breadth (mean of 9 axes)       |    4.44 / 5 |                         **3.76 / 5** |
+| Breadth (mean of 9 axes)       |    4.44 / 5 |                         **3.78 / 5** |
 | Rank among 113 systems         |    #1 / 113 |                         **#1 / 113** |
 | z-score vs population          |      +4.02σ |                           **+2.95σ** |
 | z-score vs peers               |      +4.36σ |                           **+3.09σ** |

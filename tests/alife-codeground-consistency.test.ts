@@ -28,7 +28,7 @@ describe('A-Life code-grounded stats are computed-and-gated (no silent drift)', 
   test('every current narrative surface cites the current code-grounded figure (hand-edit → fail)', () => {
     const cg = computed.codeGrounded as { breadth: number; zPopulation: number };
     const breadth = cg.breadth.toFixed(2); // e.g. "3.71"
-    const zPop = `+${cg.zPopulation.toFixed(3)}`; // exact published current receipt, e.g. "+2.954"
+    const zPop = `+${cg.zPopulation.toFixed(3)}`; // exact published current receipt, e.g. "+2.990"
     // README / docs.html / specs.html render the code-grounded breadth as "<breadth> / 5".
     for (const surface of ['README.md', 'docs.html', 'specs.html']) {
       expect(read(surface)).toContain(`${breadth} / 5`);
