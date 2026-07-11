@@ -394,44 +394,49 @@ describe('Phase-B NHI closed-loop development harness', () => {
     expect(result.broadFourActionSemanticClaimAllowed).toBe(false);
   });
 
-  test('pins the exact default development result, including positive service contrast and negative conflict response', () => {
-    const result = runNhiClosedLoopDevelopment();
-    expect(result.expectedRows).toBe(41_472);
-    expect(result.retainedRows).toBe(41_472);
-    expect(result.droppedRows).toBe(0);
-    expect(result.selectedSeedFamiliesSha256).toBe(
-      'ab86f694abcf079ed0ab44aaf97c5cf3fc4ae709d1d8b0580ed4f87dadfc3408',
-    );
-    expect(result.protocolSha256).toBe(
-      'bfff6581b8e3e032c596a114ef3bfc86c7d5067537efe24043d5d731a09e0f0c',
-    );
-    expect(result.scheduleSha256).toBe(
-      '8acb60a51bbef06bbf238f8b365f8b9f2d61314850909ff109cbbf70514f617f',
-    );
-    expect(result.rowsSha256).toBe(
-      '43f26e8b224449db588dd56ba5dd16c7f37c579e396a5689421e5545ee35db06',
-    );
-    expect(result.faultProbesSha256).toBe(
-      '2ba8bb51fa2c5d212cc51afd58883b4a8ecc0a62c0ad1f784ebd85b83c61670c',
-    );
-    const validationFull = result.armSummaries.find(
-      (summary) => summary.role === 'validation' && summary.arm === 'full',
-    )!;
-    expect(validationFull.meanServiceScore).toBe(0.060770689608528806);
-    expect(validationFull.successRate).toBe(0.21158854166666666);
-    expect(validationFull.conflictMinusAlignedMeanServiceScore).toBe(-0.013306302297047767);
-    expect(validationFull.conflictMinusAlignedMeanServiceScore).toBeLessThan(0);
-    const shuffled = result.pairedComparisons.find(
-      (item) => item.role === 'validation' && item.controlArm === 'semantic-cue-shuffled',
-    )!;
-    expect(shuffled.fullMinusControlMeanServiceScore).toBe(0.020167955760604026);
-    expect(shuffled.fullMinusControlMeanServiceScore).toBeGreaterThan(0);
-    const hunt = result.actionSemanticContrasts.find(
-      (item) => item.role === 'validation' && item.requestedAction === NhiAction.HUNT,
-    )!;
-    expect(hunt.fullMinusNeuralSemanticAblated).toBe(0.018742616897973855);
-    expect(hunt.neuralSemanticInterpretationAllowed).toBe(true);
-  });
+  test(
+    'pins the exact default development result, including positive service contrast and negative conflict response',
+    () => {
+      const result = runNhiClosedLoopDevelopment();
+      expect(result.expectedRows).toBe(41_472);
+      expect(result.retainedRows).toBe(41_472);
+      expect(result.droppedRows).toBe(0);
+      expect(result.selectedSeedFamiliesSha256).toBe(
+        'ab86f694abcf079ed0ab44aaf97c5cf3fc4ae709d1d8b0580ed4f87dadfc3408',
+      );
+      expect(result.protocolSha256).toBe(
+        'bfff6581b8e3e032c596a114ef3bfc86c7d5067537efe24043d5d731a09e0f0c',
+      );
+      expect(result.scheduleSha256).toBe(
+        '8acb60a51bbef06bbf238f8b365f8b9f2d61314850909ff109cbbf70514f617f',
+      );
+      expect(result.rowsSha256).toBe(
+        '43f26e8b224449db588dd56ba5dd16c7f37c579e396a5689421e5545ee35db06',
+      );
+      expect(result.faultProbesSha256).toBe(
+        '2ba8bb51fa2c5d212cc51afd58883b4a8ecc0a62c0ad1f784ebd85b83c61670c',
+      );
+      const validationFull = result.armSummaries.find(
+        (summary) => summary.role === 'validation' && summary.arm === 'full',
+      )!;
+      expect(validationFull.meanServiceScore).toBe(0.060770689608528806);
+      expect(validationFull.successRate).toBe(0.21158854166666666);
+      expect(validationFull.conflictMinusAlignedMeanServiceScore).toBe(-0.013306302297047767);
+      expect(validationFull.conflictMinusAlignedMeanServiceScore).toBeLessThan(0);
+      const shuffled = result.pairedComparisons.find(
+        (item) => item.role === 'validation' && item.controlArm === 'semantic-cue-shuffled',
+      )!;
+      expect(shuffled.fullMinusControlMeanServiceScore).toBe(0.020167955760604026);
+      expect(shuffled.fullMinusControlMeanServiceScore).toBeGreaterThan(0);
+      const hunt = result.actionSemanticContrasts.find(
+        (item) => item.role === 'validation' && item.requestedAction === NhiAction.HUNT,
+      )!;
+      expect(hunt.fullMinusNeuralSemanticAblated).toBe(0.018742616897973855);
+      expect(hunt.neuralSemanticInterpretationAllowed).toBe(true);
+    },
+    // The exact 41,472-row matrix is intentionally retained; instrumented CI needs extra headroom.
+    { timeout: 15_000 },
+  );
 
   test('labels reversal only as paired conflict response and authorizes no adaptation, reward-learning, consciousness, sentience, or publication claim', async () => {
     const result = runNhiClosedLoopDevelopment(SMALL_OPTIONS);

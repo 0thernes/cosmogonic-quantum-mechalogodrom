@@ -17,10 +17,24 @@ import {
   runNhiClosedLoopDevelopment,
   type NhiClosedLoopActionSemanticContrast,
   type NhiClosedLoopDevelopmentResult,
+  type NhiClosedLoopPairedComparison,
 } from './nhi-closed-loop-development';
+import {
+  canonicalizePhaseBEvidence,
+  canonicalizePhaseBEvidenceNumber,
+  PHASE_B_EVIDENCE_PRECISION_LAW,
+} from './evidence-precision';
 
 export const PHASE_B_MECHANISM_EVIDENCE_DATE = '2026-07-11' as const;
 export const PHASE_B_MECHANISM_EVIDENCE_ID = 'phase-b-mechanism-development-v3' as const;
+export const PHASE_B_ARTIFACT_LOCAL_HASH_LAW = Object.freeze({
+  id: 'phase-b-rounded-material-canonical-json-sha256-v1',
+  algorithm: 'sha256',
+  serialization: 'lexicographically-key-sorted-canonical-json',
+  boundary: 'after-phase-b-evidence-precision-before-artifact-embedding',
+  scope:
+    'each displayed validation comparison or action contrast excluding its source and artifact hash receipt fields',
+} as const);
 export const PHASE_B_MECHANISM_EVIDENCE_PATHS = Object.freeze({
   json: 'docs/reports/assets/phase-b-mechanism-development-v3.json',
   csv: 'docs/reports/assets/phase-b-mechanism-development-v3.csv',
@@ -51,7 +65,7 @@ function canonicalJson(value: unknown): string {
   if (typeof value === 'boolean' || typeof value === 'string') return JSON.stringify(value);
   if (typeof value === 'number') {
     if (!Number.isFinite(value)) throw new RangeError('evidence JSON rejects non-finite numbers');
-    return Object.is(value, -0) ? '0' : JSON.stringify(value);
+    return JSON.stringify(canonicalizePhaseBEvidenceNumber(value));
   }
   if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`;
   if (typeof value === 'object' && value !== undefined) {
@@ -150,6 +164,26 @@ function withActionLabel(contrast: NhiClosedLoopActionSemanticContrast) {
   return { ...contrast, actionLabel: actionLabel(contrast.requestedAction) };
 }
 
+function withArtifactComparisonHashes(comparison: NhiClosedLoopPairedComparison) {
+  const { comparisonSha256: sourceComparisonSha256, ...sourceMaterial } = comparison;
+  const material = canonicalizePhaseBEvidence(sourceMaterial);
+  return {
+    ...material,
+    sourceComparisonSha256,
+    artifactComparisonMaterialSha256: sha256(canonicalJson(material)),
+  } as const;
+}
+
+function withArtifactActionContrastHashes(contrast: NhiClosedLoopActionSemanticContrast) {
+  const { contrastSha256: sourceContrastSha256, ...sourceMaterial } = withActionLabel(contrast);
+  const material = canonicalizePhaseBEvidence(sourceMaterial);
+  return {
+    ...material,
+    sourceContrastSha256,
+    artifactContrastMaterialSha256: sha256(canonicalJson(material)),
+  } as const;
+}
+
 export function buildPhaseBMechanismEvidenceSummary(
   temporalStudy: EcologyTemporalDevelopmentStudy = runEcologyTemporalDevelopment(),
   nhiStudy: NhiClosedLoopDevelopmentResult = runNhiClosedLoopDevelopment(),
@@ -168,10 +202,10 @@ export function buildPhaseBMechanismEvidenceSummary(
   );
   const validationActionSemanticContrasts = nhiStudy.actionSemanticContrasts
     .filter((contrast) => contrast.role === 'validation')
-    .map(withActionLabel);
-  const validationPairedComparisons = nhiStudy.pairedComparisons.filter(
-    (comparison) => comparison.role === 'validation',
-  );
+    .map(withArtifactActionContrastHashes);
+  const validationPairedComparisons = nhiStudy.pairedComparisons
+    .filter((comparison) => comparison.role === 'validation')
+    .map(withArtifactComparisonHashes);
   const semanticShuffleFixedPointCount = nhiStudy.rows.filter(
     (row) => row.arm === 'semantic-cue-shuffled' && row.semanticCueMatchesRequest,
   ).length;
@@ -181,14 +215,16 @@ export function buildPhaseBMechanismEvidenceSummary(
   if (semanticShuffleFixedPointCount !== 0 || invalidYokeTargetCount !== 0) {
     throw new Error('final NHI controls require zero shuffle fixed points and zero invalid yokes');
   }
-  const summaryBase = {
-    schemaVersion: 3,
+  const summaryBase = canonicalizePhaseBEvidence({
+    schemaVersion: 4,
     artifactId: PHASE_B_MECHANISM_EVIDENCE_ID,
     generatedDate: PHASE_B_MECHANISM_EVIDENCE_DATE,
     status: 'development-only-negative-and-diagnostic-results-retained',
     developmentOnly: true,
     claimAllowed: false,
     metadataLaw: 'fixed-date-no-clock-git-network-or-machine-state',
+    evidencePrecisionLaw: PHASE_B_EVIDENCE_PRECISION_LAW,
+    artifactLocalHashLaw: PHASE_B_ARTIFACT_LOCAL_HASH_LAW,
     temporal: {
       studyId: temporalStudy.summary.studyId,
       conclusion: temporalStudy.summary.conclusion,
@@ -271,7 +307,7 @@ export function buildPhaseBMechanismEvidenceSummary(
       sentience: false,
       broadFourActionNeuralSemanticBenefit: false,
     },
-  } as const;
+  } as const);
   return {
     ...summaryBase,
     summaryMaterialSha256: sha256(canonicalJson(summaryBase)),
@@ -437,7 +473,10 @@ export function renderPhaseBMechanismEvidenceSvg(summary: PhaseBMechanismEvidenc
     x: number,
     action: string,
     lane: string,
-    contrast: NhiClosedLoopActionSemanticContrast,
+    contrast: Pick<
+      NhiClosedLoopActionSemanticContrast,
+      'neuralSemanticInterpretationAllowed' | 'fullMinusNeuralSemanticAblated'
+    >,
   ) => {
     const supported = contrast.neuralSemanticInterpretationAllowed;
     return `  <g transform="translate(${x} 790)" data-lane-support="${supported ? 'supported-diagnostic' : 'unsupported'}">

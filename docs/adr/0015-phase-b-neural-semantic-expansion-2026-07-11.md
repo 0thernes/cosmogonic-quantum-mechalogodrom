@@ -189,8 +189,11 @@ H16 is not below H8 in 126/288 and 42/96; H8 is not below temporal-9 logistic in
 Most importantly, removing the four temporal inputs slightly improves the aggregate in both roles. This
 tested V2 configuration therefore fails to demonstrate temporal-context benefit and is blocked from
 protocol advancement. The deterministic hashes are config
-`55f31de82cb299862fe8ec807e48ffe93b56150ad6bd30ced147d2542b188a3e` and rows
-`ec7f516f3b9567d89dc0bd49e998cec83f2977fe95d9eca38707aa5ec51dfb10`.
+`7f4b711c619435e10d6c23a627ca3ccdbe22b41ad3ea828ce7f9ccef284898fe` and rows
+`309b6b4eff1b5fadacf6184e6436551148f05a0fa0495991b17b44000d95fe53`. The machine summary exposes,
+and the configuration digest seals, `ecology-development-hash-fixed-decimal-1e-9-v1`: input, target,
+gradient-stream, and row receipts render finite numeric leaves to 9 decimal places only at the hash
+boundary. Returned rows, aggregates, gate inputs, and reported measurements remain unrounded binary64.
 
 Phase B then added an isolated V3 leaf specifically to test temporal identifiability. Its 101 inputs are
 five current covariates, 80 ordered historical values, and 16 validity markers. `H=8/16/32` allocates
@@ -200,12 +203,21 @@ double observation, bounded RMSProp handles updates, and versioned snapshots res
 The terminal-input-twin task makes the current query state identical while a cue 2, 8, or 16 steps in
 the past determines the label. Every one of the 80 sealed task seeds has a distinct cue/query/neutral
 profile. All 46,080 rows are retained; 36,864 locked-validation rows enter the gate. The primary H8
-model measured SSE `0.168091430523`, cross-entropy `0.710259892165`, twin margin
-`0.000118188607`, and ordering `0.5`. It failed all eight criteria: every-control mean and median gain,
+model measured canonical SSE `0.168091`, cross-entropy `0.710260`, twin margin `0.000118`, and
+ordering `0.5`. It failed all eight criteria: every-control mean and median gain,
 every-delay gain, twin margin, ordering, Holm-adjusted p, bootstrap 99% lower bound, and worst-model gain.
+Raw execution remains binary64; schema-2 temporal evidence and schema-4 combined artifacts apply a
+fixed-decimal `1e-6` law before rows, derived statistics, gates, digests, and rendering. That quantum is
+10,000 times finer than the smallest non-zero gate threshold and also covers NHI numeric artifact fields.
+Every observed metric in this sealed gate is more than one quantum from its own comparison boundary,
+including the strict zero bootstrap boundary, so canonicalization did not change this sealed verdict;
+future near-threshold results must re-establish that margin.
+Per-sample SSE and cross-entropy are computed from the raw prediction before each evidence leaf is
+canonicalized, so publication precision never feeds back into endpoint-sensitive scientific metrics.
+Windows x64 and Ubuntu/WSL x64 on Bun `1.3.14` reproduced identical seals and artifact bytes.
 Configuration and row seals are
-`01afdd9d4983cc63652dd5bb266a5142bdf66f9ecf05a8e9d7c100216091a384` and
-`76e6d40fb6fc548bb2475e9b38e46646b8641756c45f4bc6fea2915e4b5ff48f`. V3 therefore remains
+`e9d41c9ed838375f848867fd05e71ee895868feb8b5d64044a9015bf6ec73479` and
+`241f61fee25f4d48462135083cecedd55cd60f36178dacd56a843de6121226c4`. V3 therefore remains
 non-production and cannot advance to a confirmatory protocol.
 
 Even a future predictor success would not imply downstream ecological benefit; that requires a separate
@@ -257,12 +269,17 @@ rates `[0.104167, 0.020833, 0.104167, 0.125000]`. Exact legacy is 18/384 (`0.046
 surrogate is higher at 50/384 (`0.130208`). The head changes some trajectory diagnostics and descriptively
 beats legacy, but establishes no semantic, recurrence, state, or eligibility benefit and loses to its
 yoked outcome control. It is rejected. Deterministic hashes are config
-`7de3b0f4e979b7213f45e10d04d3457be251d126d45f98bc03b6086dc27476a7`, rows
-`2529126f5ea894e8e14762cfc106d8e06d83ecea13247e03c56e5959f85a7067`, and yoke
-`046941a03ff61463a172b3500c37105aa0586d3fea95857e40872947250d5614`. The yoke receipt includes the
-validation-seed-separated direction-domain law and every full open-loop randomized direction tape.
-The ordinary outcomes and yoke are unchanged; its config/row hashes changed only because those sealed
-materials embed the expanded 22-family development firewall.
+`b09a4f5e02b1d1eccaf8341e21cfabac8054efa4e99417b0021478ecad6d25de`, rows
+`19cee124ef64913fbb5dbf8824e00b1b6639cbb174066b6b26c6ad792b4a5761`, and yoke
+`29bdc2a7b212fe3cd4ea19f9cd9a479c8549535916d723c4852843e4ca1c4471`. Floating-derived receipt
+material uses a hash-only platform-canonical projection: every finite numeric scalar is rendered to 9
+decimal places and quantized zero is normalized to positive zero. Returned study rows and reported
+measurements remain unrounded. The machine summary exposes, and the configuration digest seals, this
+`ordinary-resource-development-v2-hash-fixed-decimal-1e-9-v1` law and its stream/replay/row/yoke scope.
+The yoke receipt includes the validation-seed-separated direction-domain law and every full open-loop
+randomized direction tape. The ordinary outcomes and yoke are unchanged; the configuration hash reflects
+the expanded 22-family development firewall and the hash-law provenance, while the row/yoke digests seal
+the platform-canonical projection.
 
 The existing ordinary population gate is not relaxed: aggregate log-log runtime slope `<= 1.15`; the
 50,000-entity enhanced-minus-legacy median and every counterbalanced batch median remain `< 3 ms`. V4's

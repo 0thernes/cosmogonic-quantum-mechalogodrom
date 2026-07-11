@@ -374,8 +374,10 @@ describe('organism-intelligence claim boundary', () => {
     expect(adr).toContain('yoked surrogate is higher at 50/384');
     expect(adr).toContain('no successor protocol');
     expect(adr).toContain('no successor protocol, manifest, confirmatory seed family');
-    expect(adr).toContain('7de3b0f4e979b7213f45e10d04d3457be251d126d45f98bc03b6086dc27476a7');
-    expect(adr).toContain('ec7f516f3b9567d89dc0bd49e998cec83f2977fe95d9eca38707aa5ec51dfb10');
+    expect(adr).toContain('b09a4f5e02b1d1eccaf8341e21cfabac8054efa4e99417b0021478ecad6d25de');
+    expect(adr).toContain('309b6b4eff1b5fadacf6184e6436551148f05a0fa0495991b17b44000d95fe53');
+    expect(adr).toContain('ecology-development-hash-fixed-decimal-1e-9-v1');
+    expect(adr).toContain('ordinary-resource-development-v2-hash-fixed-decimal-1e-9-v1');
     expect(adr).toContain('46,080/46,080 rows');
     expect(adr).toContain('fails all eight frozen criteria');
     expect(adr).toContain('41,472/41,472 rows');
@@ -400,9 +402,10 @@ describe('organism-intelligence claim boundary', () => {
     const report = await Bun.file(
       `${ROOT}/docs/reports/PHASE-B-MECHANISM-DEVELOPMENT-V3-2026-07-11.md`,
     ).text();
-    expect(report).toContain('3122e53b2a95de2c665913ba976e33587a0b1e6e88f804597535d0fe51931b25');
-    expect(report).toContain('916240cdca6f9ad8d9e0403d86e6e1fc82d4881a83effd288a982c517d38c015');
+    expect(report).toContain('a509e241d9393bc807312fe994815f1fe988590112fc31736854992ede93ec83');
+    expect(report).toContain('eafef6d180c350b103f7a4fd33f57325a4acdb650ccd7aaea6490f33dd7f476c');
     expect(report).toContain('bf7bb362d472aee5e848c2ef9d13b44c56a44c6af86e27e1568943a07f84af47');
+    expect(report).toContain('phase-b-rounded-material-canonical-json-sha256-v1');
     expect(report).toContain('resourceCleanupStatus');
     expect(report).toContain('caller-owned decision-RNG state');
     expect(report).toContain('the RNG is not serialized');

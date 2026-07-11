@@ -21,7 +21,7 @@ Rewritten in place when the facts change (per the binding living-doc law in
 | Fact                                     | Canonical value                                                                                                                                             | Source of truth                                                                                                    | Propagated by           |
 | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------- |
 | Package version                          | `0.21.13`                                                                                                                                                   | `package.json` `version`                                                                                           | `sync-surfaces.ts`      |
-| Test count (exact tracked suite)         | `2775`                                                                                                                                                      | `scripts/canonical-receipts.ts`                                                                                    | `sync-surfaces.ts`      |
+| Test count (exact tracked suite)         | `2776`                                                                                                                                                      | `scripts/canonical-receipts.ts`                                                                                    | `sync-surfaces.ts`      |
 | Line coverage                            | `84.64%`                                                                                                                                                    | `scripts/canonical-receipts.ts`                                                                                    | `sync-surfaces.ts`      |
 | Function coverage                        | `82.21%`                                                                                                                                                    | `scripts/canonical-receipts.ts`                                                                                    | `sync-surfaces.ts`      |
 | Faculties (design)                       | `100` (~30 deep-wired)                                                                                                                                      | `CANONICAL_FACULTIES`                                                                                              | `sync-surfaces.ts`      |
@@ -42,8 +42,8 @@ Rewritten in place when the facts change (per the binding living-doc law in
 
 <!-- cqm-sync:local-measurement:start -->
 
-- `bun run verify:receipts` → **2,775 tests, zero failures** · **307 test files** · **3,556,386**
-  `expect()` calls · **93.17% line / 91.16% func** on this Windows checkout.
+- `bun run verify:receipts` → **2,776 tests, zero failures** · **307 test files** · **3,556,484**
+  `expect()` calls · **93.17% line / 91.17% func** on this Windows checkout.
 
 <!-- cqm-sync:local-measurement:end -->
 
@@ -451,7 +451,7 @@ verify:facts` = 0 drift / 80 surfaces, 0 git-conflict-markers tree-wide, 100% of
 | `src/ui/**`                                                                       | 20    | subsystems agent                                         | clean (3 cosmetic Low: DPR-on-monitor-move)                                                      |
 | `src/core,audio,server,memory,logging` + `main/types/docs-page` + `server.ts`     | ~14   | subsystems agent                                         | clean; security exceptionally hardened                                                           |
 | `src/styles/app.css`                                                              | 1     | front-end agent                                          | clean                                                                                            |
-| `tests/**`                                                                        | 307   | exact gate (2,775 tests) + tooling agent                 | healthy, 0 disabled, all assert                                                                  |
+| `tests/**`                                                                        | 307   | exact gate (2,776 tests) + tooling agent                 | healthy, 0 disabled, all assert                                                                  |
 | `scripts/**`                                                                      | 16    | scripts/tooling agents                                   | sound; **CI sync:check gap FIXED**, dead `.sync-receipts.cjs` removed                            |
 | `bench/**`                                                                        | 13    | tooling agent                                            | clean; aggregate now includes the P1 quantum-classical bench                                     |
 | `.github/workflows/*.yml` + issue/PR templates                                    | 8+    | CI agent                                                 | SHA-pinned, least-priv; `master`->`main` URLs FIXED; **gate now runs sync:check + verify:facts** |

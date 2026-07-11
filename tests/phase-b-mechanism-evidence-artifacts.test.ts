@@ -3,11 +3,16 @@ import { statSync } from 'node:fs';
 import {
   buildPhaseBMechanismEvidenceArtifacts,
   checkPhaseBMechanismEvidenceArtifacts,
+  PHASE_B_ARTIFACT_LOCAL_HASH_LAW,
   PHASE_B_MECHANISM_EVIDENCE_DATE,
   PHASE_B_MECHANISM_EVIDENCE_ID,
   PHASE_B_MECHANISM_EVIDENCE_PATHS,
   renderPhaseBMechanismEvidenceArtifacts,
 } from '../scripts/organism-intelligence-phase-b/mechanism-evidence-artifacts';
+import {
+  canonicalizePhaseBEvidence,
+  PHASE_B_EVIDENCE_PRECISION_LAW,
+} from '../scripts/organism-intelligence-phase-b/evidence-precision';
 
 const SHA256 = /^[a-f\d]{64}$/;
 let built: ReturnType<typeof buildPhaseBMechanismEvidenceArtifacts>;
@@ -20,6 +25,28 @@ beforeAll(() => {
 
 function fileSha256(content: string): string {
   return new Bun.CryptoHasher('sha256').update(content).digest('hex');
+}
+
+function canonicalArtifactJson(value: unknown): string {
+  if (value === null) return 'null';
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value)) throw new RangeError('test canonical JSON rejects non-finite');
+    return JSON.stringify(Object.is(value, -0) ? 0 : value);
+  }
+  if (typeof value === 'string' || typeof value === 'boolean') return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map(canonicalArtifactJson).join(',')}]`;
+  if (typeof value === 'object') {
+    const record = value as Record<string, unknown>;
+    return `{${Object.keys(record)
+      .sort()
+      .map((key) => `${JSON.stringify(key)}:${canonicalArtifactJson(record[key])}`)
+      .join(',')}}`;
+  }
+  throw new TypeError(`test canonical JSON rejects ${typeof value}`);
+}
+
+function artifactMaterialSha256(value: unknown): string {
+  return new Bun.CryptoHasher('sha256').update(canonicalArtifactJson(value)).digest('hex');
 }
 
 describe('Phase-B mechanism evidence artifacts', () => {
@@ -52,11 +79,18 @@ describe('Phase-B mechanism evidence artifacts', () => {
     expect(parsed.developmentOnly).toBe(true);
     expect(parsed.claimAllowed).toBe(false);
     expect(parsed.summaryMaterialSha256).toMatch(SHA256);
+    const { summaryMaterialSha256, ...summaryMaterial } = parsed;
+    expect(summaryMaterialSha256).toBe(artifactMaterialSha256(summaryMaterial));
+    expect(parsed.schemaVersion).toBe(4);
+    expect(parsed.evidencePrecisionLaw).toEqual(PHASE_B_EVIDENCE_PRECISION_LAW);
+    expect(parsed.artifactLocalHashLaw).toEqual(PHASE_B_ARTIFACT_LOCAL_HASH_LAW);
+    expect(canonicalizePhaseBEvidence(parsed.temporal)).toEqual(parsed.temporal);
+    expect(canonicalizePhaseBEvidence(parsed.nhi)).toEqual(parsed.nhi);
 
     expect(parsed.temporal.hashes).toEqual({
       seedFamiliesSha256: 'a14179926f8fd43041b773790dc3bd62dcc5dc5bafc41db4a86fe4ea03794688',
-      configurationSha256: '01afdd9d4983cc63652dd5bb266a5142bdf66f9ecf05a8e9d7c100216091a384',
-      rowsSha256: '76e6d40fb6fc548bb2475e9b38e46646b8641756c45f4bc6fea2915e4b5ff48f',
+      configurationSha256: 'e9d41c9ed838375f848867fd05e71ee895868feb8b5d64044a9015bf6ec73479',
+      rowsSha256: '241f61fee25f4d48462135083cecedd55cd60f36178dacd56a843de6121226c4',
     });
     expect(parsed.temporal.rows).toEqual({
       configured: 46_080,
@@ -96,14 +130,14 @@ describe('Phase-B mechanism evidence artifacts', () => {
       rowsFilteredByOutcome: 0,
     });
     expect(parsed.temporal.advancementGate.observed).toEqual({
-      minimumControlMeanSseGain: -0.00809143052302232,
-      minimumControlMedianModelGain: -0.007411638567394595,
-      minimumDelayMeanSseGain: -0.014588363623341592,
-      meanTwinMargin: 0.00011818860661448622,
+      minimumControlMeanSseGain: -0.008091,
+      minimumControlMedianModelGain: -0.007411,
+      minimumDelayMeanSseGain: -0.014588,
+      meanTwinMargin: 0.000118,
       orderingRate: 0.5,
       maximumHolmAdjustedPValue: 1,
-      minimumBootstrap99Lower: -0.010691272174589221,
-      worstModelGain: -0.017918081632547704,
+      minimumBootstrap99Lower: -0.010691,
+      worstModelGain: -0.017918,
       rowsFilteredByOutcome: 0,
     });
   });
@@ -157,11 +191,29 @@ describe('Phase-B mechanism evidence artifacts', () => {
         ),
       ),
     ).toEqual({
-      SPAWN: 0.01703813420416366,
-      DOMINATE: 0.007297740406568413,
-      HUNT: 0.018742616897973855,
-      MANIPULATE: -0.0016959499927223232,
+      SPAWN: 0.017038,
+      DOMINATE: 0.007298,
+      HUNT: 0.018743,
+      MANIPULATE: -0.001696,
     });
+    for (const comparison of nhi.validationPairedComparisons) {
+      const { sourceComparisonSha256, artifactComparisonMaterialSha256, ...displayedMaterial } =
+        comparison;
+      expect(sourceComparisonSha256).toMatch(SHA256);
+      expect(artifactComparisonMaterialSha256).toMatch(SHA256);
+      expect(artifactComparisonMaterialSha256).toBe(artifactMaterialSha256(displayedMaterial));
+      expect(artifactComparisonMaterialSha256).not.toBe(sourceComparisonSha256);
+      expect('comparisonSha256' in comparison).toBe(false);
+    }
+    for (const contrast of nhi.validationActionSemanticContrasts) {
+      const { sourceContrastSha256, artifactContrastMaterialSha256, ...displayedMaterial } =
+        contrast;
+      expect(sourceContrastSha256).toMatch(SHA256);
+      expect(artifactContrastMaterialSha256).toMatch(SHA256);
+      expect(artifactContrastMaterialSha256).toBe(artifactMaterialSha256(displayedMaterial));
+      expect(artifactContrastMaterialSha256).not.toBe(sourceContrastSha256);
+      expect('contrastSha256' in contrast).toBe(false);
+    }
     expect(Object.values(nhi.claimProhibitions).every((allowed) => allowed === false)).toBe(true);
     expect(Object.values(built.summary.artifactClaims).every((claim) => claim === false)).toBe(
       true,
@@ -211,10 +263,10 @@ describe('Phase-B mechanism evidence artifacts', () => {
 
   test('pins canonical artifact byte hashes and excludes ambient provenance APIs', async () => {
     expect(fileSha256(built.files.json)).toBe(
-      '3122e53b2a95de2c665913ba976e33587a0b1e6e88f804597535d0fe51931b25',
+      'a509e241d9393bc807312fe994815f1fe988590112fc31736854992ede93ec83',
     );
     expect(fileSha256(built.files.csv)).toBe(
-      '916240cdca6f9ad8d9e0403d86e6e1fc82d4881a83effd288a982c517d38c015',
+      'eafef6d180c350b103f7a4fd33f57325a4acdb650ccd7aaea6490f33dd7f476c',
     );
     expect(fileSha256(built.files.svg)).toBe(
       'bf7bb362d472aee5e848c2ef9d13b44c56a44c6af86e27e1568943a07f84af47',

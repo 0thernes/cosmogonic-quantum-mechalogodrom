@@ -32,6 +32,15 @@ export const ORDINARY_RESOURCE_DEVELOPMENT_V2_DELAYS = Object.freeze([30, 90, 18
 export const ORDINARY_RESOURCE_DEVELOPMENT_V2_CUE_STEPS = 4;
 export const ORDINARY_RESOURCE_DEVELOPMENT_V2_CHOICE_STEPS = 180;
 export const ORDINARY_RESOURCE_DEVELOPMENT_V2_TRIALS_PER_SEED = 12;
+export const ORDINARY_RESOURCE_DEVELOPMENT_V2_HASH_DECIMAL_PLACES = 9;
+export const ORDINARY_RESOURCE_DEVELOPMENT_V2_HASH_QUANTIZATION_LAW = Object.freeze({
+  id: 'ordinary-resource-development-v2-hash-fixed-decimal-1e-9-v1',
+  decimalPlaces: ORDINARY_RESOURCE_DEVELOPMENT_V2_HASH_DECIMAL_PLACES,
+  absoluteQuantum: 1e-9,
+  rawComputation: 'ieee-754-binary64',
+  boundary:
+    'hash-only-floating-stream-replay-row-and-yoke-receipts; returned-study-values-unrounded',
+} as const);
 
 export const ORDINARY_RESOURCE_DEVELOPMENT_V2_ARMS = Object.freeze([
   'identity-frozen',
@@ -128,6 +137,45 @@ function canonicalJson(value: unknown): string {
 
 function hashCanonical(value: unknown): string {
   return new Bun.CryptoHasher('sha256').update(canonicalJson(value)).digest('hex');
+}
+
+/**
+ * Canonical audit projection for values produced by floating-point simulation.
+ *
+ * Bun delegates transcendental arithmetic to the host platform, so Windows and Linux can differ in
+ * the last few binary digits while preserving the same trajectory and outcome. Hash receipts render
+ * every finite number to the nearest 10^-9 decimal unit and normalize quantized zero. The study rows
+ * themselves remain unrounded; only their audit projection and floating stream receipts use this law.
+ */
+function canonicalQuantizedHashJson(value: unknown): string {
+  if (value === null) return 'null';
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value))
+      throw new RangeError('V2 quantized hash JSON rejects non-finite numbers');
+    const fixed = value.toFixed(ORDINARY_RESOURCE_DEVELOPMENT_V2_HASH_DECIMAL_PLACES);
+    return Number(fixed) === 0
+      ? `0.${'0'.repeat(ORDINARY_RESOURCE_DEVELOPMENT_V2_HASH_DECIMAL_PLACES)}`
+      : fixed;
+  }
+  if (typeof value === 'string' || typeof value === 'boolean') return JSON.stringify(value);
+  if (Array.isArray(value))
+    return `[${value.map((entry) => canonicalQuantizedHashJson(entry)).join(',')}]`;
+  if (typeof value === 'object' && value !== undefined) {
+    const record = value as Record<string, unknown>;
+    return `{${Object.keys(record)
+      .sort()
+      .map((key) => `${JSON.stringify(key)}:${canonicalQuantizedHashJson(record[key])}`)
+      .join(',')}}`;
+  }
+  throw new TypeError(`V2 quantized hash JSON rejects ${typeof value}`);
+}
+
+function hashCanonicalQuantized(value: unknown): string {
+  return new Bun.CryptoHasher('sha256').update(canonicalQuantizedHashJson(value)).digest('hex');
+}
+
+function quantizedHashNumber(value: number): string {
+  return canonicalQuantizedHashJson(value);
 }
 
 function mix32(value: number): number {
@@ -369,7 +417,7 @@ class LegacyBrainRuntime {
   ): readonly [number, number] {
     const data = this.entity.userData;
     observationHasher?.update(
-      canonicalJson({
+      canonicalQuantizedHashJson({
         energy: agent.energy,
         velocityX: agent.velocityX,
         velocityZ: agent.velocityZ,
@@ -601,7 +649,7 @@ function executeValidationTrial(options: ExecuteTrialOptions): TrialExecution {
         agent.energy,
         options.intervention,
       );
-      observations.update(canonicalJson(observation));
+      observations.update(canonicalQuantizedHashJson(observation));
       baseline.action(agent, simulationStep * DT_SECONDS, baselineObservations);
       if (head !== null) observeHead(head, observation);
       simulationStep++;
@@ -616,7 +664,7 @@ function executeValidationTrial(options: ExecuteTrialOptions): TrialExecution {
   if (head !== null && options.resetAtDelay) clearHeadTemporal(head);
   for (let step = 0; step < trial.delaySteps; step++) {
     const observation = maskedObservation(agent);
-    observations.update(canonicalJson(observation));
+    observations.update(canonicalQuantizedHashJson(observation));
     baseline.action(agent, simulationStep * DT_SECONDS, baselineObservations);
     if (head !== null) observeHead(head, observation);
     simulationStep++;
@@ -637,12 +685,14 @@ function executeValidationTrial(options: ExecuteTrialOptions): TrialExecution {
   for (let step = 0; step < ORDINARY_RESOURCE_DEVELOPMENT_V2_CHOICE_STEPS; step++) {
     if (terminal !== null) {
       choiceActions.push([0, 0]);
-      actions.update(`${step}|0|0|padded;`);
-      actionMagnitudes.update(`${step}|0|padded;`);
+      actions.update(
+        `${quantizedHashNumber(step)}|${quantizedHashNumber(0)}|${quantizedHashNumber(0)}|padded;`,
+      );
+      actionMagnitudes.update(`${quantizedHashNumber(step)}|${quantizedHashNumber(0)}|padded;`);
       continue;
     }
     const observation = maskedObservation(agent);
-    observations.update(canonicalJson(observation));
+    observations.update(canonicalQuantizedHashJson(observation));
     const baselineAction = baseline.action(
       agent,
       simulationStep * DT_SECONDS,
@@ -672,8 +722,12 @@ function executeValidationTrial(options: ExecuteTrialOptions): TrialExecution {
       action = composeAction(baselineAction, headAction);
     }
     choiceActions.push(action);
-    actions.update(`${step}|${action[0]}|${action[1]};`);
-    actionMagnitudes.update(`${step}|${Math.hypot(action[0], action[1])};`);
+    actions.update(
+      `${quantizedHashNumber(step)}|${quantizedHashNumber(action[0])}|${quantizedHashNumber(action[1])};`,
+    );
+    actionMagnitudes.update(
+      `${quantizedHashNumber(step)}|${quantizedHashNumber(Math.hypot(action[0], action[1]))};`,
+    );
     activeControllerSteps++;
     simulationStep++;
 
@@ -822,8 +876,8 @@ function trainPairedModel(
     identityObservation: Omit<EntityResourceHeadObservation, 'revision'>,
     corruptedObservation: Omit<EntityResourceHeadObservation, 'revision'>,
   ): readonly [number, number] => {
-    identityObservations.update(canonicalJson(identityObservation));
-    corruptedObservations.update(canonicalJson(corruptedObservation));
+    identityObservations.update(canonicalQuantizedHashJson(identityObservation));
+    corruptedObservations.update(canonicalQuantizedHashJson(corruptedObservation));
     identity.observe({ ...identityObservation, revision: identityRevision.value++ });
     corrupted.observe({ ...corruptedObservation, revision: corruptedRevision.value++ });
     const action = identity.readAction();
@@ -855,7 +909,7 @@ function trainPairedModel(
       for (let step = 0; step < ORDINARY_RESOURCE_DEVELOPMENT_V2_CUE_STEPS; step++) {
         const source = cueObservation(cue, bearingX, bearingZ, agent.energy, 'identity');
         const corrupt = corruptEligibilityObservation(source, surrogateSeed, trialIndex);
-        corruptionAssociations.update(canonicalJson(corrupt));
+        corruptionAssociations.update(canonicalQuantizedHashJson(corrupt));
         baseline.action(agent, simulationStep * DT_SECONDS, baselineObservations);
         observePair(source, corrupt);
         simulationStep++;
@@ -896,7 +950,9 @@ function trainPairedModel(
       );
       const identityHeadAction = observePair(input, input);
       const action = composeAction(baselineAction, identityHeadAction);
-      physicsActions.update(`${trialIndex}|${step}|${action[0]}|${action[1]};`);
+      physicsActions.update(
+        `${quantizedHashNumber(trialIndex)}|${quantizedHashNumber(step)}|${quantizedHashNumber(action[0])}|${quantizedHashNumber(action[1])};`,
+      );
       simulationStep++;
       const priorX = agent.x;
       const priorZ = agent.z;
@@ -1149,6 +1205,7 @@ export interface OrdinaryResourceDevelopmentV2Aggregate {
 export interface OrdinaryResourceDevelopmentV2Summary {
   readonly schemaVersion: 2;
   readonly studyId: 'ordinary-resource-head-phase-b-development-v2';
+  readonly hashProjectionLaw: typeof ORDINARY_RESOURCE_DEVELOPMENT_V2_HASH_QUANTIZATION_LAW;
   readonly developmentOnly: true;
   readonly claimAllowed: false;
   readonly thresholdDefined: false;
@@ -1386,7 +1443,7 @@ export function runOrdinaryResourceDevelopmentV2(
         }
         const outcome = execution.outcome;
         const budget = parameterBudget(descriptor);
-        const replaySha256 = hashCanonical({
+        const replaySha256 = hashCanonicalQuantized({
           modelSeed,
           validationSeed: trial.seed,
           armId: descriptor.id,
@@ -1457,6 +1514,7 @@ export function runOrdinaryResourceDevelopmentV2(
   }
   const configuration = {
     constants: V2_CONSTANTS,
+    hashProjectionLaw: ORDINARY_RESOURCE_DEVELOPMENT_V2_HASH_QUANTIZATION_LAW,
     arms: ARM_DESCRIPTORS,
     trainSeeds,
     validationSeeds,
@@ -1469,6 +1527,7 @@ export function runOrdinaryResourceDevelopmentV2(
   const summary: OrdinaryResourceDevelopmentV2Summary = {
     schemaVersion: 2,
     studyId: 'ordinary-resource-head-phase-b-development-v2',
+    hashProjectionLaw: ORDINARY_RESOURCE_DEVELOPMENT_V2_HASH_QUANTIZATION_LAW,
     developmentOnly: true,
     claimAllowed: false,
     thresholdDefined: false,
@@ -1486,8 +1545,8 @@ export function runOrdinaryResourceDevelopmentV2(
     rowsFilteredByOutcome: 0,
     constantsSha256,
     configurationSha256: hashCanonical(configuration),
-    rowsSha256: hashCanonical(rows),
-    yokedCalibrationSha256: hashCanonical(yokeCalibrationMaterial),
+    rowsSha256: hashCanonicalQuantized(rows),
+    yokedCalibrationSha256: hashCanonicalQuantized(yokeCalibrationMaterial),
     yokedCalibrationPolicy: 'full-180-command-open-loop-identity-tape',
     yokedDirectionPolicy: 'validation-seed-separated-domain-v2-full-open-loop-tape',
     models: modelReceipts,

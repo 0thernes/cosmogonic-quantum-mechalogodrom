@@ -24,7 +24,7 @@ four-action neural interpretation is allowed.
 | Can the 101-input V3 temporal predictor recover a hidden delayed cue under terminal-input twins? | **No.** All eight advancement criteria failed.                              | Do not advance this configuration to confirmatory evaluation. |
 | Does the NHI closed loop execute bounded, target-valid material actions before acknowledgement?  | **Yes**, for the synthetic development task and production action boundary. | Functional closed-loop evidence only.                         |
 | Do semantic neural inputs help every declared NHI action?                                        | **No.** Only HUNT/resource and SPAWN/social are interpretation-eligible.    | Withhold a broad semantic-neural effect claim.                |
-| Does performance improve after the surface mapping conflicts?                                    | **No.** Mean service declined by `0.013306302297`.                          | Paired conflict response, explicitly **not adaptation**.      |
+| Does performance improve after the surface mapping conflicts?                                    | **No.** Mean service declined by `0.013306`.                                | Paired conflict response, explicitly **not adaptation**.      |
 | Is consciousness or sentience established?                                                       | **No.** Those claims are prohibited by both harnesses.                      | Proxy mechanisms remain mechanisms, not phenomenal evidence.  |
 
 ## Temporal-identifiability gate
@@ -34,20 +34,32 @@ by a cue observed 2, 8, or 16 steps earlier. Present-only controls therefore can
 configured task seeds produce distinct seed-derived cue/query/neutral profiles, all 46,080 configured
 rows are retained, and only 36,864 locked validation rows enter the gate.
 
-The primary V3 H8 identity-history model measured mean SSE `0.168091430523`, mean cross-entropy
-`0.710259892165`, mean twin margin `0.000118188607`, and ordering rate `0.5` across 3,072 locked
+The primary V3 H8 identity-history model measured mean SSE `0.168091`, mean cross-entropy
+`0.710260`, mean twin margin `0.000118`, and ordering rate `0.5` across 3,072 locked
 validation rows.
+
+Raw model execution remains IEEE-754 binary64. The temporal schema-2 rows, derived statistics, gate
+decisions, digests, and combined schema-4 artifact apply one fixed-decimal `1e-6` evidence law before
+publication. The same law covers temporal and NHI numeric fields. Its quantum is 10,000 times finer
+than the smallest non-zero temporal threshold (`0.01`). Every observed metric in this sealed gate is
+also more than one quantum from its own comparison boundary, including the strict zero bootstrap
+boundary, so canonicalization did not change this sealed verdict; a future near-threshold result must
+re-establish that margin. SSE and cross-entropy are computed from each raw prediction before their
+evidence leaves are canonicalized, so rounding cannot snap a near-endpoint forecast to `0` or `1`
+before metric evaluation.
+Windows x64 and Ubuntu/WSL x64 on Bun `1.3.14` reproduced the same temporal seals and the exact same
+JSON, CSV, and SVG bytes; artifact `--check` passed on both platforms.
 
 | Advancement criterion             |   Required | Observed worst/minimum | Result   |
 | --------------------------------- | ---------: | ---------------------: | -------- |
-| Mean SSE gain over every control  |  `>= 0.04` |      `-0.008091430523` | **FAIL** |
-| Median model gain                 |  `>= 0.03` |      `-0.007411638567` | **FAIL** |
-| Every-delay mean gain             |  `>= 0.02` |      `-0.014588363623` | **FAIL** |
-| Mean twin margin                  |  `>= 0.20` |       `0.000118188607` | **FAIL** |
+| Mean SSE gain over every control  |  `>= 0.04` |            `-0.008091` | **FAIL** |
+| Median model gain                 |  `>= 0.03` |            `-0.007411` | **FAIL** |
+| Every-delay mean gain             |  `>= 0.02` |            `-0.014588` | **FAIL** |
+| Mean twin margin                  |  `>= 0.20` |             `0.000118` | **FAIL** |
 | Correct ordering rate             |  `>= 0.75` |                 `0.50` | **FAIL** |
 | Maximum Holm-adjusted one-sided p |   `< 0.01` |                  `1.0` | **FAIL** |
-| Minimum bootstrap 99% lower bound |      `> 0` |      `-0.010691272175` | **FAIL** |
-| Worst model gain                  | `>= -0.01` |      `-0.017918081633` | **FAIL** |
+| Minimum bootstrap 99% lower bound |      `> 0` |            `-0.010691` | **FAIL** |
+| Worst model gain                  | `>= -0.01` |            `-0.017918` | **FAIL** |
 
 This failure is configuration-specific. It falsifies advancement of the recorded V3 H8 training
 configuration; it does not prove that recurrent memory cannot solve the task.
@@ -63,18 +75,18 @@ the boundary. A balanced semantic derangement has zero fixed points, and the act
 invalid current targets.
 
 All 41,472 configured rows were retained. On locked validation rows, the full arm measured mean service
-`0.060770689609` and success rate `0.211588541667`. Its aligned pre-conflict mean was
-`0.067423840757`; post-conflict mean was `0.054117538460`; the paired response was
-`-0.013306302297`. That decline is not evidence of adaptation or reward learning.
+`0.060771` and success rate `0.211589`. Its aligned pre-conflict mean was `0.067424`;
+post-conflict mean was `0.054118`; the paired response was `-0.013306`. That decline is not
+evidence of adaptation or reward learning.
 
 | Validation diagnostic                          | Full-minus-control mean service | Interpretation                           |
 | ---------------------------------------------- | ------------------------------: | ---------------------------------------- |
-| Balanced fixed-point-free semantic derangement |               `+0.020167955761` | Development diagnostic; not confirmatory |
-| Target-rebound action yoke                     |               `+0.037909184343` | Development diagnostic; not confirmatory |
-| HUNT/resource neural-semantic ablation         |               `+0.018742616898` | Narrow lane interpretation allowed       |
-| SPAWN/social neural-semantic ablation          |               `+0.017038134204` | Narrow lane interpretation allowed       |
-| MANIPULATE/explore neural-semantic ablation    |               `-0.001695949993` | Unsupported diagnostic only              |
-| DOMINATE neural-semantic ablation              |               `+0.007297740407` | Unsupported diagnostic only              |
+| Balanced fixed-point-free semantic derangement |                     `+0.020168` | Development diagnostic; not confirmatory |
+| Target-rebound action yoke                     |                     `+0.037909` | Development diagnostic; not confirmatory |
+| HUNT/resource neural-semantic ablation         |                     `+0.018743` | Narrow lane interpretation allowed       |
+| SPAWN/social neural-semantic ablation          |                     `+0.017038` | Narrow lane interpretation allowed       |
+| MANIPULATE/explore neural-semantic ablation    |                     `-0.001696` | Unsupported diagnostic only              |
+| DOMINATE neural-semantic ablation              |                     `+0.007298` | Unsupported diagnostic only              |
 
 ## Production boundary hardened
 
@@ -116,9 +128,9 @@ All 41,472 configured rows were retained. On locked validation rows, the full ar
 ### Temporal task
 
 - Seed-family SHA-256: `a14179926f8fd43041b773790dc3bd62dcc5dc5bafc41db4a86fe4ea03794688`
-- Configuration SHA-256: `01afdd9d4983cc63652dd5bb266a5142bdf66f9ecf05a8e9d7c100216091a384`
-- Row-matrix SHA-256: `76e6d40fb6fc548bb2475e9b38e46646b8641756c45f4bc6fea2915e4b5ff48f`
-- Task-profile-family SHA-256: `1659955d1aa3d0eca07b7379c104411a86f67f678e35017cd67dcb74a3003fe9`
+- Configuration SHA-256: `e9d41c9ed838375f848867fd05e71ee895868feb8b5d64044a9015bf6ec73479`
+- Row-matrix SHA-256: `241f61fee25f4d48462135083cecedd55cd60f36178dacd56a843de6121226c4`
+- Task-profile-family SHA-256: `06ebbf60d95c3d09277f350b3ea768fdd0dfb97b86fea02a66efe7946fc3e6a2`
 
 ### NHI task
 
@@ -133,9 +145,14 @@ All 41,472 configured rows were retained. On locked validation rows, the full ar
 
 ### Compact evidence artifacts
 
-- JSON SHA-256: `3122e53b2a95de2c665913ba976e33587a0b1e6e88f804597535d0fe51931b25`
-- CSV SHA-256: `916240cdca6f9ad8d9e0403d86e6e1fc82d4881a83effd288a982c517d38c015`
+- JSON SHA-256: `a509e241d9393bc807312fe994815f1fe988590112fc31736854992ede93ec83`
+- CSV SHA-256: `eafef6d180c350b103f7a4fd33f57325a4acdb650ccd7aaea6490f33dd7f476c`
 - SVG SHA-256: `bf7bb362d472aee5e848c2ef9d13b44c56a44c6af86e27e1568943a07f84af47`
+
+For each displayed NHI validation comparison and action contrast, schema 4 preserves the source-study
+receipt under an explicit `source*Sha256` field and adds a separately recomputable artifact-local hash
+over the rounded displayed material. The artifact-local law is
+`phase-b-rounded-material-canonical-json-sha256-v1`; both receipt fields are excluded from its scope.
 
 ## Reproduce
 

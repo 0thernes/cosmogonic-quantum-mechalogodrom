@@ -5,6 +5,8 @@ import {
   ORDINARY_RESOURCE_DEVELOPMENT_V2_CHOICE_STEPS,
   ORDINARY_RESOURCE_DEVELOPMENT_V2_CUE_STEPS,
   ORDINARY_RESOURCE_DEVELOPMENT_V2_DELAYS,
+  ORDINARY_RESOURCE_DEVELOPMENT_V2_HASH_DECIMAL_PLACES,
+  ORDINARY_RESOURCE_DEVELOPMENT_V2_HASH_QUANTIZATION_LAW,
   ordinaryResourceDevelopmentV2YokeDomain,
   resolveOrdinaryResourceDevelopmentV2Contact,
   runOrdinaryResourceDevelopmentV2,
@@ -113,13 +115,30 @@ describe('ordinary resource DEVELOPMENT V2', () => {
       'c36bc5dd927c00cd5dda9e39eb33558f2b9b8ae5e377c0f85217083f8b604b97',
     );
     expect(COMPLETE.summary.configurationSha256).toBe(
-      '7de3b0f4e979b7213f45e10d04d3457be251d126d45f98bc03b6086dc27476a7',
+      'b09a4f5e02b1d1eccaf8341e21cfabac8054efa4e99417b0021478ecad6d25de',
     );
+    expect(ORDINARY_RESOURCE_DEVELOPMENT_V2_HASH_DECIMAL_PLACES).toBe(9);
+    expect(COMPLETE.summary.hashProjectionLaw).toEqual(
+      ORDINARY_RESOURCE_DEVELOPMENT_V2_HASH_QUANTIZATION_LAW,
+    );
+    expect(ORDINARY_RESOURCE_DEVELOPMENT_V2_HASH_QUANTIZATION_LAW).toEqual({
+      id: 'ordinary-resource-development-v2-hash-fixed-decimal-1e-9-v1',
+      decimalPlaces: 9,
+      absoluteQuantum: 1e-9,
+      rawComputation: 'ieee-754-binary64',
+      boundary:
+        'hash-only-floating-stream-replay-row-and-yoke-receipts; returned-study-values-unrounded',
+    });
+    expect(
+      COMPLETE.rows.some(
+        (row) => row.terminalPathLength !== Number(row.terminalPathLength.toFixed(9)),
+      ),
+    ).toBe(true);
     expect(COMPLETE.summary.rowsSha256).toBe(
-      '2529126f5ea894e8e14762cfc106d8e06d83ecea13247e03c56e5959f85a7067',
+      '19cee124ef64913fbb5dbf8824e00b1b6639cbb174066b6b26c6ad792b4a5761',
     );
     expect(COMPLETE.summary.yokedCalibrationSha256).toBe(
-      '046941a03ff61463a172b3500c37105aa0586d3fea95857e40872947250d5614',
+      '29bdc2a7b212fe3cd4ea19f9cd9a479c8549535916d723c4852843e4ca1c4471',
     );
   });
 

@@ -5,6 +5,7 @@ import {
   createEcologyDevelopmentSchedule,
   ECOLOGY_DEVELOPMENT_ARMS,
   ECOLOGY_DEVELOPMENT_CADENCES,
+  ECOLOGY_DEVELOPMENT_HASH_PROJECTION_LAW,
   ECOLOGY_DEVELOPMENT_SEED_ROLES,
   ECOLOGY_DEVELOPMENT_TASKS,
   runEcologyPredictorDevelopment,
@@ -25,9 +26,10 @@ const SHA256 = /^[a-f\d]{64}$/;
 
 let study: EcologyDevelopmentStudy;
 
+// This 4,224-row matrix is computed once for the file; parallel coverage can exceed Bun's 5s default.
 beforeAll(() => {
   study = runEcologyPredictorDevelopment();
-});
+}, 20_000);
 
 const scheduleKey = (row: EcologyDevelopmentRow): string =>
   `${row.seedRole}/${row.taskId}/${row.seed}`;
@@ -156,11 +158,27 @@ describe('Phase-B ecology predictor development matrix', () => {
       '83a7302638d51b9b7101475be938641dfc13c7e0ef186ea2a2a2aa97d79a319a',
     );
     expect(study.summary.configurationSha256).toBe(
-      '55f31de82cb299862fe8ec807e48ffe93b56150ad6bd30ced147d2542b188a3e',
+      '7f4b711c619435e10d6c23a627ca3ccdbe22b41ad3ea828ce7f9ccef284898fe',
     );
     expect(study.summary.rowsSha256).toBe(
-      'ec7f516f3b9567d89dc0bd49e998cec83f2977fe95d9eca38707aa5ec51dfb10',
+      '309b6b4eff1b5fadacf6184e6436551148f05a0fa0495991b17b44000d95fe53',
     );
+    expect(study.summary.hashProjectionLaw).toEqual(ECOLOGY_DEVELOPMENT_HASH_PROJECTION_LAW);
+    expect(study.summary.hashProjectionLaw).toEqual({
+      id: 'ecology-development-hash-fixed-decimal-1e-9-v1',
+      decimalPlaces: 9,
+      absoluteQuantum: 1e-9,
+      rawComputation: 'ieee-754-binary64',
+      boundary:
+        'hash-only-input-target-gradient-stream-receipts-and-rows-sha256; returned-study-values-unrounded',
+    });
+    expect(
+      study.rows.some(
+        (row) =>
+          row.metrics.softTargetSquaredError !==
+          Number(row.metrics.softTargetSquaredError.toFixed(9)),
+      ),
+    ).toBe(true);
 
     for (const row of study.rows) {
       expect(row.taskSha256).toMatch(SHA256);

@@ -10,12 +10,18 @@ import {
   ECOLOGY_TEMPORAL_ORACLE_SSE,
   ECOLOGY_TEMPORAL_PRESENT_ONLY_CROSS_ENTROPY_FLOOR,
   ECOLOGY_TEMPORAL_PRESENT_ONLY_SSE_FLOOR,
+  ecologyTemporalPredictionEvidence,
   exactOneSidedSignTestPValue,
   runEcologyTemporalDevelopment,
   type EcologyTemporalDevelopmentRow,
   type EcologyTemporalDevelopmentStudy,
 } from '../scripts/organism-intelligence-phase-b/ecology-temporal-development';
 import { PHASE_B_DEVELOPMENT_SEEDS } from '../scripts/organism-intelligence-phase-b/development-seeds';
+import {
+  canonicalizePhaseBEvidence,
+  canonicalizePhaseBEvidenceNumber,
+  PHASE_B_EVIDENCE_PRECISION_LAW,
+} from '../scripts/organism-intelligence-phase-b/evidence-precision';
 
 const SHA256 = /^[a-f\d]{64}$/;
 const FOCUSED_OPTIONS = Object.freeze({
@@ -45,9 +51,21 @@ describe('Phase-B temporal-identifiability development harness', () => {
   test('predeclares exact causal delays, analytic floors, arms, and strict thresholds', () => {
     expect(ECOLOGY_TEMPORAL_DELAYS).toEqual([2, 8, 16]);
     expect(ECOLOGY_TEMPORAL_PRESENT_ONLY_SSE_FLOOR).toBe(0.16);
-    expect(ECOLOGY_TEMPORAL_PRESENT_ONLY_CROSS_ENTROPY_FLOOR).toBe(Math.log(2));
+    expect(ECOLOGY_TEMPORAL_PRESENT_ONLY_CROSS_ENTROPY_FLOOR).toBe(0.693_147);
     expect(ECOLOGY_TEMPORAL_ORACLE_SSE).toBe(0);
-    expect(ECOLOGY_TEMPORAL_ORACLE_CROSS_ENTROPY).toBeCloseTo(0.325_082_973_391_448_2, 15);
+    expect(ECOLOGY_TEMPORAL_ORACLE_CROSS_ENTROPY).toBe(0.325_083);
+    expect(PHASE_B_EVIDENCE_PRECISION_LAW).toEqual({
+      id: 'phase-b-fixed-decimal-1e-6-v1',
+      decimalPlaces: 6,
+      absoluteQuantum: 1e-6,
+      rawComputation: 'ieee-754-binary64',
+      boundary: 'before-returned-rows-derived-statistics-gates-digests-json-csv-and-svg',
+    });
+    expect(canonicalizePhaseBEvidenceNumber(-0)).toBe(0);
+    expect(canonicalizePhaseBEvidenceNumber(0.123_456_789_6)).toBe(0.123_457);
+    expect(() => canonicalizePhaseBEvidenceNumber(Number.POSITIVE_INFINITY)).toThrow(
+      'rejects non-finite',
+    );
     expect(ECOLOGY_TEMPORAL_ARMS).toEqual([
       'v3-h8-identity-history',
       'v3-h8-history-zero-parameter-matched',
@@ -76,6 +94,29 @@ describe('Phase-B temporal-identifiability development harness', () => {
     });
   });
 
+  test('canonicalizes forecast evidence only after raw endpoint-sensitive metrics are computed', () => {
+    const target = 0.1;
+    const rawPrediction = 0.999_999_6;
+    const evidence = ecologyTemporalPredictionEvidence(target, rawPrediction);
+    const rawCrossEntropy = -(
+      target * Math.log(rawPrediction) +
+      (1 - target) * Math.log(1 - rawPrediction)
+    );
+    const roundedFirstCrossEntropy = -(
+      target * Math.log(1 - 1e-12) +
+      (1 - target) * Math.log(1e-12)
+    );
+
+    expect(evidence.prediction).toBe(1);
+    expect(evidence.squaredError).toBe(
+      canonicalizePhaseBEvidenceNumber((target - rawPrediction) ** 2),
+    );
+    expect(evidence.squaredError).toBe(0.809_999);
+    expect(evidence.crossEntropy).toBe(canonicalizePhaseBEvidenceNumber(rawCrossEntropy));
+    expect(evidence.crossEntropy).toBe(13.258_621);
+    expect(roundedFirstCrossEntropy - evidence.crossEntropy).toBeGreaterThan(11);
+  });
+
   test('is deterministic and invariant to caller seed ordering', () => {
     const replay = runEcologyTemporalDevelopment(FOCUSED_OPTIONS);
     const reordered = runEcologyTemporalDevelopment({
@@ -101,7 +142,9 @@ describe('Phase-B temporal-identifiability development harness', () => {
     expect(expectedRows).toBe(288);
     expect(study.rows).toHaveLength(expectedRows);
     expect(study.summary).toMatchObject({
-      schemaVersion: 1,
+      schemaVersion: 2,
+      studyId: 'tsotchke-ecology-temporal-identifiability-phase-b-development-v2',
+      evidencePrecisionLaw: PHASE_B_EVIDENCE_PRECISION_LAW,
       developmentOnly: true,
       claimAllowed: false,
       trainingEpochs: 1,
@@ -123,6 +166,7 @@ describe('Phase-B temporal-identifiability development harness', () => {
     expect(study.summary.targetShuffle).toMatchObject({
       method: 'fault-seed-fisher-yates-permutation',
     });
+    expect(canonicalizePhaseBEvidence(study)).toEqual(study);
     expect(study.summary.targetShuffle.seedSha256).toMatch(SHA256);
     expect(study.summary.targetShuffle.permutationSha256).toMatch(SHA256);
     expect(study.summary.targetShuffle.sameLabelFraction).toBeGreaterThan(0);
@@ -294,8 +338,8 @@ describe('Phase-B temporal-identifiability development harness', () => {
       developmentOnly: true,
       claimAllowed: false,
       seedFamiliesSha256: 'a14179926f8fd43041b773790dc3bd62dcc5dc5bafc41db4a86fe4ea03794688',
-      configurationSha256: '01afdd9d4983cc63652dd5bb266a5142bdf66f9ecf05a8e9d7c100216091a384',
-      rowsSha256: '76e6d40fb6fc548bb2475e9b38e46646b8641756c45f4bc6fea2915e4b5ff48f',
+      configurationSha256: 'e9d41c9ed838375f848867fd05e71ee895868feb8b5d64044a9015bf6ec73479',
+      rowsSha256: '241f61fee25f4d48462135083cecedd55cd60f36178dacd56a843de6121226c4',
       retention: {
         configuredRows: 46_080,
         retainedRows: 46_080,
@@ -305,13 +349,13 @@ describe('Phase-B temporal-identifiability development harness', () => {
         method: 'fault-seed-fisher-yates-permutation',
         seedSha256: 'e26692994b49a18ab8cd70aeed895ae8d70258600b2e8ae04caebb1de8fa903b',
         permutationSha256: '1b794303fd09d8267da434452afa3044fdbc5342f2ed096755d5a2ad462d8170',
-        sameLabelFraction: 0.5104166666666666,
+        sameLabelFraction: 0.510417,
       },
       taskProfileUniqueness: {
         configuredTaskSeedCount: 80,
         uniqueTaskProfileCount: 80,
         allTaskProfilesUnique: true,
-        profileFamilySha256: '1659955d1aa3d0eca07b7379c104411a86f67f678e35017cd67dcb74a3003fe9',
+        profileFamilySha256: '06ebbf60d95c3d09277f350b3ea768fdd0dfb97b86fea02a66efe7946fc3e6a2',
       },
     });
     expect(sealed.summary.advancementGate.passed).toBe(false);
@@ -325,20 +369,39 @@ describe('Phase-B temporal-identifiability development harness', () => {
       'bootstrap-99-lower',
       'worst-model-gain',
     ]);
+    const { observed, thresholds } = sealed.summary.advancementGate;
+    const sealedGateMargins = [
+      Math.abs(observed.minimumControlMeanSseGain - thresholds.meanSseGain),
+      Math.abs(observed.minimumControlMedianModelGain - thresholds.medianModelGain),
+      Math.abs(observed.minimumDelayMeanSseGain - thresholds.everyDelayMeanGain),
+      Math.abs(observed.meanTwinMargin - thresholds.meanTwinMargin),
+      Math.abs(observed.orderingRate - thresholds.orderingRate),
+      Math.abs(observed.maximumHolmAdjustedPValue - thresholds.holmAdjustedPExclusiveMaximum),
+      Math.abs(observed.minimumBootstrap99Lower - thresholds.bootstrap99LowerExclusiveMinimum),
+      Math.abs(observed.worstModelGain - thresholds.worstModelGain),
+    ];
+    expect(sealedGateMargins).toHaveLength(8);
+    for (const margin of sealedGateMargins) {
+      expect(margin).toBeGreaterThan(PHASE_B_EVIDENCE_PRECISION_LAW.absoluteQuantum);
+    }
     const primary = sealed.rows.filter(
       (row) =>
         row.seedRole === 'fixed-configuration-validation' && row.armId === 'v3-h8-identity-history',
     );
     expect(primary).toHaveLength(3_072);
     expect(
-      primary.reduce((total, row) => total + row.metrics.meanSquaredError, 0) / primary.length,
-    ).toBe(0.1680914305230221);
+      canonicalizePhaseBEvidenceNumber(
+        primary.reduce((total, row) => total + row.metrics.meanSquaredError, 0) / primary.length,
+      ),
+    ).toBe(0.168091);
     expect(
-      primary.reduce((total, row) => total + row.metrics.meanCrossEntropy, 0) / primary.length,
-    ).toBe(0.7102598921647464);
-    expect(sealed.summary.advancementGate.observed.meanTwinMargin).toBe(0.00011818860661448622);
+      canonicalizePhaseBEvidenceNumber(
+        primary.reduce((total, row) => total + row.metrics.meanCrossEntropy, 0) / primary.length,
+      ),
+    ).toBe(0.71026);
+    expect(sealed.summary.advancementGate.observed.meanTwinMargin).toBe(0.000118);
     expect(sealed.summary.advancementGate.observed.orderingRate).toBe(0.5);
-  }, 20_000);
+  }, 30_000);
 
   test('rejects unsealed seed substitutions and unsafe workload controls', () => {
     const taskTrainSeed = PHASE_B_DEVELOPMENT_SEEDS.predictorV3TaskTrain[0] as number;

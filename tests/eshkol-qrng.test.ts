@@ -41,13 +41,18 @@ describe('EshkolQrng — deterministic state-vector compatibility adapter', () =
     }
   });
 
-  test('mean of many draws ≈ 0.5 (no gross bias)', () => {
-    const q = new EshkolQrng(mulberry32(99));
-    let sum = 0;
-    const N = 20000;
-    for (let i = 0; i < N; i++) sum += q.next01();
-    expect(Math.abs(sum / N - 0.5)).toBeLessThan(0.02);
-  });
+  test(
+    'mean of many draws ≈ 0.5 (no gross bias)',
+    () => {
+      const q = new EshkolQrng(mulberry32(99));
+      let sum = 0;
+      const N = 20000;
+      for (let i = 0; i < N; i++) sum += q.next01();
+      expect(Math.abs(sum / N - 0.5)).toBeLessThan(0.02);
+    },
+    // Coverage instrumentation can push this 20,000-draw statistical seal past Bun's 5s default.
+    { timeout: 15_000 },
+  );
 
   test('all 8 histogram buckets populated (output spread, not stuck)', () => {
     const q = new EshkolQrng(mulberry32(42));

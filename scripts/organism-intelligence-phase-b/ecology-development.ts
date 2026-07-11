@@ -22,6 +22,14 @@ import {
 
 export const ECOLOGY_DEVELOPMENT_CADENCES = 512;
 export const ECOLOGY_DEVELOPMENT_SCHEMA_VERSION = 2;
+export const ECOLOGY_DEVELOPMENT_HASH_PROJECTION_LAW = Object.freeze({
+  id: 'ecology-development-hash-fixed-decimal-1e-9-v1',
+  decimalPlaces: 9,
+  absoluteQuantum: 1e-9,
+  rawComputation: 'ieee-754-binary64',
+  boundary:
+    'hash-only-input-target-gradient-stream-receipts-and-rows-sha256; returned-study-values-unrounded',
+} as const);
 
 export const ECOLOGY_DEVELOPMENT_TASKS = Object.freeze([
   'stationary-soft-pressure',
@@ -235,6 +243,41 @@ function sha256(value: string): string {
 
 function hashCanonical(value: unknown): string {
   return sha256(canonicalJson(value));
+}
+
+/**
+ * Platform-canonical hash projection for floating-derived development evidence.
+ *
+ * Windows and Linux libm can differ in the last few binary digits without changing a trajectory,
+ * discrete result, or scientific interpretation. Hash-only evidence renders every finite number to
+ * the nearest 1e-9 decimal unit and normalizes quantized zero. Returned rows and aggregates retain the
+ * original binary64 results; this function is used only at the receipt boundary declared above.
+ */
+function canonicalQuantizedHashJson(value: unknown): string {
+  if (value === null) return 'null';
+  if (typeof value === 'boolean' || typeof value === 'string') return JSON.stringify(value);
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value))
+      throw new RangeError('development quantized hash JSON rejects non-finite numbers');
+    const fixed = value.toFixed(ECOLOGY_DEVELOPMENT_HASH_PROJECTION_LAW.decimalPlaces);
+    return Number(fixed) === 0
+      ? `0.${'0'.repeat(ECOLOGY_DEVELOPMENT_HASH_PROJECTION_LAW.decimalPlaces)}`
+      : fixed;
+  }
+  if (Array.isArray(value))
+    return `[${value.map((entry) => canonicalQuantizedHashJson(entry)).join(',')}]`;
+  if (typeof value === 'object') {
+    const record = value as Record<string, unknown>;
+    return `{${Object.keys(record)
+      .sort()
+      .map((key) => `${JSON.stringify(key)}:${canonicalQuantizedHashJson(record[key])}`)
+      .join(',')}}`;
+  }
+  throw new TypeError(`development quantized hash JSON does not support ${typeof value}`);
+}
+
+function hashCanonicalQuantized(value: unknown): string {
+  return sha256(canonicalQuantizedHashJson(value));
 }
 
 function taskHashMaterial(taskId: EcologyDevelopmentTaskId): unknown {
@@ -575,6 +618,7 @@ export interface EcologyDevelopmentAggregate {
 export interface EcologyDevelopmentSummary {
   schemaVersion: 2;
   studyId: 'tsotchke-ecology-predictor-phase-b-development-v2';
+  hashProjectionLaw: typeof ECOLOGY_DEVELOPMENT_HASH_PROJECTION_LAW;
   developmentOnly: true;
   claimAllowed: false;
   cadenceCount: number;
@@ -966,7 +1010,7 @@ function createArmRuntime(
 }
 
 function appendNumber(hasher: Bun.CryptoHasher, value: number): void {
-  hasher.update(`${Object.is(value, -0) ? 0 : value};`);
+  hasher.update(`${canonicalQuantizedHashJson(value)};`);
 }
 
 function mean(values: readonly number[]): number {
@@ -1420,6 +1464,7 @@ export function runEcologyPredictorDevelopment(
   const aggregates = aggregateRows(rows);
   const configuration = {
     schemaVersion: ECOLOGY_DEVELOPMENT_SCHEMA_VERSION,
+    hashProjectionLaw: ECOLOGY_DEVELOPMENT_HASH_PROJECTION_LAW,
     cadenceCount,
     tasks: ECOLOGY_DEVELOPMENT_TASKS.map((taskId) => taskHashMaterial(taskId)),
     arms: ARM_DESCRIPTORS.map((descriptor) => armHashMaterial(descriptor)),
@@ -1428,6 +1473,7 @@ export function runEcologyPredictorDevelopment(
   const summary: EcologyDevelopmentSummary = {
     schemaVersion: ECOLOGY_DEVELOPMENT_SCHEMA_VERSION,
     studyId: 'tsotchke-ecology-predictor-phase-b-development-v2',
+    hashProjectionLaw: ECOLOGY_DEVELOPMENT_HASH_PROJECTION_LAW,
     developmentOnly: true,
     claimAllowed: false,
     cadenceCount,
@@ -1443,7 +1489,7 @@ export function runEcologyPredictorDevelopment(
     rowCount: rows.length,
     seedFamilySha256: hashCanonical(roleFamilies),
     configurationSha256: hashCanonical(configuration),
-    rowsSha256: hashCanonical(rows),
+    rowsSha256: hashCanonicalQuantized(rows),
     retention: {
       configuredRows: expectedRows,
       retainedRows: rows.length,

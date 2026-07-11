@@ -24,15 +24,24 @@ import {
   assertPhaseBDevelopmentSeed,
   PHASE_B_DEVELOPMENT_SEEDS,
 } from './development-seeds';
+import {
+  canonicalizePhaseBEvidence,
+  canonicalizePhaseBEvidenceNumber,
+  PHASE_B_EVIDENCE_PRECISION_LAW,
+} from './evidence-precision';
 
-export const ECOLOGY_TEMPORAL_DEVELOPMENT_SCHEMA_VERSION = 1;
+export const ECOLOGY_TEMPORAL_DEVELOPMENT_SCHEMA_VERSION = 2;
 export const ECOLOGY_TEMPORAL_DELAYS = Object.freeze([2, 8, 16] as const);
 export type EcologyTemporalDelay = (typeof ECOLOGY_TEMPORAL_DELAYS)[number];
 
 export const ECOLOGY_TEMPORAL_PRESENT_ONLY_SSE_FLOOR = 0.16;
-export const ECOLOGY_TEMPORAL_PRESENT_ONLY_CROSS_ENTROPY_FLOOR = Math.log(2);
+export const ECOLOGY_TEMPORAL_PRESENT_ONLY_CROSS_ENTROPY_FLOOR = canonicalizePhaseBEvidenceNumber(
+  Math.log(2),
+);
 export const ECOLOGY_TEMPORAL_ORACLE_SSE = 0;
-export const ECOLOGY_TEMPORAL_ORACLE_CROSS_ENTROPY = -(0.9 * Math.log(0.9) + 0.1 * Math.log(0.1));
+export const ECOLOGY_TEMPORAL_ORACLE_CROSS_ENTROPY = canonicalizePhaseBEvidenceNumber(
+  -(0.9 * Math.log(0.9) + 0.1 * Math.log(0.1)),
+);
 
 export const ECOLOGY_TEMPORAL_ARMS = Object.freeze([
   'v3-h8-identity-history',
@@ -256,7 +265,7 @@ export interface EcologyTemporalRowMetrics {
 }
 
 export interface EcologyTemporalDevelopmentRow {
-  schemaVersion: 1;
+  schemaVersion: 2;
   developmentOnly: true;
   claimAllowed: false;
   seedRole: EcologyTemporalSeedRole;
@@ -318,8 +327,9 @@ export interface EcologyTemporalAdvancementGate {
 }
 
 export interface EcologyTemporalDevelopmentSummary {
-  schemaVersion: 1;
-  studyId: 'tsotchke-ecology-temporal-identifiability-phase-b-development-v1';
+  schemaVersion: 2;
+  studyId: 'tsotchke-ecology-temporal-identifiability-phase-b-development-v2';
+  evidencePrecisionLaw: typeof PHASE_B_EVIDENCE_PRECISION_LAW;
   developmentOnly: true;
   claimAllowed: false;
   conclusion:
@@ -387,7 +397,7 @@ function canonicalJson(value: unknown): string {
   if (typeof value === 'number') {
     if (!Number.isFinite(value))
       throw new RangeError('temporal development JSON rejects non-finite numbers');
-    return Object.is(value, -0) ? '0' : JSON.stringify(value);
+    return JSON.stringify(canonicalizePhaseBEvidenceNumber(value));
   }
   if (Array.isArray(value)) return `[${value.map((entry) => canonicalJson(entry)).join(',')}]`;
   if (typeof value === 'object') {
@@ -429,6 +439,29 @@ function clampProbability(value: number): number {
 function crossEntropy(target: number, prediction: number): number {
   const bounded = clampProbability(prediction);
   return -(target * Math.log(bounded) + (1 - target) * Math.log(1 - bounded));
+}
+
+/**
+ * Project one raw model forecast into portable evidence without feeding the rounded forecast back into
+ * the scientific metrics. In particular, a probability within half a display quantum of 0 or 1 must
+ * not be snapped to that endpoint before cross-entropy is evaluated.
+ */
+export function ecologyTemporalPredictionEvidence(
+  target: 0.1 | 0.9,
+  rawPrediction: number,
+): {
+  readonly prediction: number;
+  readonly squaredError: number;
+  readonly crossEntropy: number;
+} {
+  const residual = target - rawPrediction;
+  const rawSquaredError = residual * residual;
+  const rawCrossEntropy = crossEntropy(target, rawPrediction);
+  return {
+    prediction: canonicalizePhaseBEvidenceNumber(rawPrediction),
+    squaredError: canonicalizePhaseBEvidenceNumber(rawSquaredError),
+    crossEntropy: canonicalizePhaseBEvidenceNumber(rawCrossEntropy),
+  };
 }
 
 function mean(values: readonly number[]): number {
@@ -890,15 +923,15 @@ function evaluateTwin(
     relation,
     armId === 'v3-h8-cue-ablated',
   );
-  const prediction = predictTwin(armId, bundle, sequence);
-  const residual = sequence.target - prediction;
-  return {
+  const evidence = ecologyTemporalPredictionEvidence(
+    sequence.target,
+    predictTwin(armId, bundle, sequence),
+  );
+  return canonicalizePhaseBEvidence({
     relation,
     cueBit: sequence.cueBit,
     target: sequence.target,
-    prediction,
-    squaredError: residual * residual,
-    crossEntropy: crossEntropy(sequence.target, prediction),
+    ...evidence,
     queryInputSha256: hashCanonical(inputVector(sequence.queryInput)),
     scheduleSha256: hashCanonical({
       taskSeed,
@@ -911,7 +944,7 @@ function evaluateTwin(
       priorInputs: sequence.priorInputs.map(inputVector),
       queryInput: inputVector(sequence.queryInput),
     }),
-  };
+  } satisfies TwinEvaluation);
 }
 
 function runRow(
@@ -941,11 +974,17 @@ function runRow(
   if (match.queryInputSha256 !== mismatch.queryInputSha256) {
     throw new Error('counterbalanced twin terminal-input hashes differ');
   }
-  const meanSquaredError = (match.squaredError + mismatch.squaredError) / 2;
-  const meanCrossEntropy = (match.crossEntropy + mismatch.crossEntropy) / 2;
-  const twinPredictionMargin = match.prediction - mismatch.prediction;
-  return {
-    schemaVersion: 1,
+  const meanSquaredError = canonicalizePhaseBEvidenceNumber(
+    (match.squaredError + mismatch.squaredError) / 2,
+  );
+  const meanCrossEntropy = canonicalizePhaseBEvidenceNumber(
+    (match.crossEntropy + mismatch.crossEntropy) / 2,
+  );
+  const twinPredictionMargin = canonicalizePhaseBEvidenceNumber(
+    match.prediction - mismatch.prediction,
+  );
+  return canonicalizePhaseBEvidence({
+    schemaVersion: ECOLOGY_TEMPORAL_DEVELOPMENT_SCHEMA_VERSION,
     developmentOnly: true,
     claimAllowed: false,
     seedRole: role,
@@ -982,7 +1021,7 @@ function runRow(
       twinPredictionMargin,
       orderingCorrect: twinPredictionMargin > 0 ? 1 : 0,
     },
-  };
+  } satisfies EcologyTemporalDevelopmentRow);
 }
 
 function rowKey(row: EcologyTemporalDevelopmentRow): string {
@@ -1052,7 +1091,9 @@ function draftContrasts(
     for (const control of rows.filter((row) => row.armId === controlArmId)) {
       const identity = primary.get(rowKey(control));
       if (identity === undefined) throw new Error(`primary row missing for ${rowKey(control)}`);
-      const gain = control.metrics.meanSquaredError - identity.metrics.meanSquaredError;
+      const gain = canonicalizePhaseBEvidenceNumber(
+        control.metrics.meanSquaredError - identity.metrics.meanSquaredError,
+      );
       gains.push(gain);
       const modelKey = `${control.seedRole}/${control.modelSeed}`;
       const modelGains = byModel.get(modelKey) ?? [];
@@ -1062,24 +1103,30 @@ function draftContrasts(
       delayGains.push(gain);
       byDelay.set(control.delay, delayGains);
     }
-    const modelMeanGains = [...byModel.values()].map(mean);
+    const modelMeanGains = [...byModel.values()].map((values) =>
+      canonicalizePhaseBEvidenceNumber(mean(values)),
+    );
     const delayMeanGains: Readonly<Record<EcologyTemporalDelay, number>> = {
-      2: mean(byDelay.get(2) ?? []),
-      8: mean(byDelay.get(8) ?? []),
-      16: mean(byDelay.get(16) ?? []),
+      2: canonicalizePhaseBEvidenceNumber(mean(byDelay.get(2) ?? [])),
+      8: canonicalizePhaseBEvidenceNumber(mean(byDelay.get(8) ?? [])),
+      16: canonicalizePhaseBEvidenceNumber(mean(byDelay.get(16) ?? [])),
     };
-    return {
+    return canonicalizePhaseBEvidence({
       controlArmId,
       pairedRowCount: gains.length,
-      meanSseGain: mean(gains),
+      meanSseGain: canonicalizePhaseBEvidenceNumber(mean(gains)),
       modelMeanGains,
-      medianModelGain: median(modelMeanGains),
+      medianModelGain: canonicalizePhaseBEvidenceNumber(median(modelMeanGains)),
       delayMeanGains,
       // Model seeds, not correlated task/query rows, are the independent inferential units.
-      oneSidedSignTestPValue: exactOneSidedSignTestPValue(modelMeanGains),
-      bootstrap99Lower: bootstrap99Lower(modelMeanGains, controlArmId, bootstrapReplicates),
+      oneSidedSignTestPValue: canonicalizePhaseBEvidenceNumber(
+        exactOneSidedSignTestPValue(modelMeanGains),
+      ),
+      bootstrap99Lower: canonicalizePhaseBEvidenceNumber(
+        bootstrap99Lower(modelMeanGains, controlArmId, bootstrapReplicates),
+      ),
       worstModelGain: Math.min(...modelMeanGains),
-    };
+    } satisfies ContrastDraft);
   });
 }
 
@@ -1100,29 +1147,34 @@ function finalizeContrasts(drafts: readonly ContrastDraft[]): EcologyTemporalCon
   return drafts.map((draft) => {
     const holmAdjustedPValue = adjusted.get(draft.controlArmId);
     if (holmAdjustedPValue === undefined) throw new Error('Holm correction lost a control');
+    const canonicalDraft = canonicalizePhaseBEvidence(draft);
+    const canonicalHolmAdjustedPValue = canonicalizePhaseBEvidenceNumber(holmAdjustedPValue);
     const passes =
-      draft.meanSseGain >= ECOLOGY_TEMPORAL_GATE_THRESHOLDS.meanSseGain &&
-      draft.medianModelGain >= ECOLOGY_TEMPORAL_GATE_THRESHOLDS.medianModelGain &&
+      canonicalDraft.meanSseGain >= ECOLOGY_TEMPORAL_GATE_THRESHOLDS.meanSseGain &&
+      canonicalDraft.medianModelGain >= ECOLOGY_TEMPORAL_GATE_THRESHOLDS.medianModelGain &&
       ECOLOGY_TEMPORAL_DELAYS.every(
         (delay) =>
-          draft.delayMeanGains[delay] >= ECOLOGY_TEMPORAL_GATE_THRESHOLDS.everyDelayMeanGain,
+          canonicalDraft.delayMeanGains[delay] >=
+          ECOLOGY_TEMPORAL_GATE_THRESHOLDS.everyDelayMeanGain,
       ) &&
-      holmAdjustedPValue < ECOLOGY_TEMPORAL_GATE_THRESHOLDS.holmAdjustedPExclusiveMaximum &&
-      draft.bootstrap99Lower > ECOLOGY_TEMPORAL_GATE_THRESHOLDS.bootstrap99LowerExclusiveMinimum &&
-      draft.worstModelGain >= ECOLOGY_TEMPORAL_GATE_THRESHOLDS.worstModelGain;
-    return {
+      canonicalHolmAdjustedPValue <
+        ECOLOGY_TEMPORAL_GATE_THRESHOLDS.holmAdjustedPExclusiveMaximum &&
+      canonicalDraft.bootstrap99Lower >
+        ECOLOGY_TEMPORAL_GATE_THRESHOLDS.bootstrap99LowerExclusiveMinimum &&
+      canonicalDraft.worstModelGain >= ECOLOGY_TEMPORAL_GATE_THRESHOLDS.worstModelGain;
+    return canonicalizePhaseBEvidence({
       inferenceSeedRole: 'fixed-configuration-validation',
-      controlArmId: draft.controlArmId,
-      pairedRowCount: draft.pairedRowCount,
-      meanSseGain: draft.meanSseGain,
-      medianModelGain: draft.medianModelGain,
-      delayMeanGains: draft.delayMeanGains,
-      oneSidedSignTestPValue: draft.oneSidedSignTestPValue,
-      holmAdjustedPValue,
-      bootstrap99Lower: draft.bootstrap99Lower,
-      worstModelGain: draft.worstModelGain,
+      controlArmId: canonicalDraft.controlArmId,
+      pairedRowCount: canonicalDraft.pairedRowCount,
+      meanSseGain: canonicalDraft.meanSseGain,
+      medianModelGain: canonicalDraft.medianModelGain,
+      delayMeanGains: canonicalDraft.delayMeanGains,
+      oneSidedSignTestPValue: canonicalDraft.oneSidedSignTestPValue,
+      holmAdjustedPValue: canonicalHolmAdjustedPValue,
+      bootstrap99Lower: canonicalDraft.bootstrap99Lower,
+      worstModelGain: canonicalDraft.worstModelGain,
       passes,
-    };
+    } satisfies EcologyTemporalControlContrast);
   });
 }
 
@@ -1131,24 +1183,34 @@ function buildGate(
   contrasts: readonly EcologyTemporalControlContrast[],
 ): EcologyTemporalAdvancementGate {
   const primaryRows = rows.filter((row) => row.armId === 'v3-h8-identity-history');
-  const minimumControlMeanSseGain = Math.min(...contrasts.map((contrast) => contrast.meanSseGain));
-  const minimumControlMedianModelGain = Math.min(
-    ...contrasts.map((contrast) => contrast.medianModelGain),
+  const minimumControlMeanSseGain = canonicalizePhaseBEvidenceNumber(
+    Math.min(...contrasts.map((contrast) => contrast.meanSseGain)),
   );
-  const minimumDelayMeanSseGain = Math.min(
-    ...contrasts.flatMap((contrast) =>
-      ECOLOGY_TEMPORAL_DELAYS.map((delay) => contrast.delayMeanGains[delay]),
+  const minimumControlMedianModelGain = canonicalizePhaseBEvidenceNumber(
+    Math.min(...contrasts.map((contrast) => contrast.medianModelGain)),
+  );
+  const minimumDelayMeanSseGain = canonicalizePhaseBEvidenceNumber(
+    Math.min(
+      ...contrasts.flatMap((contrast) =>
+        ECOLOGY_TEMPORAL_DELAYS.map((delay) => contrast.delayMeanGains[delay]),
+      ),
     ),
   );
-  const meanTwinMargin = mean(primaryRows.map((row) => row.metrics.twinPredictionMargin));
-  const orderingRate = mean(primaryRows.map((row) => row.metrics.orderingCorrect));
-  const maximumHolmAdjustedPValue = Math.max(
-    ...contrasts.map((contrast) => contrast.holmAdjustedPValue),
+  const meanTwinMargin = canonicalizePhaseBEvidenceNumber(
+    mean(primaryRows.map((row) => row.metrics.twinPredictionMargin)),
   );
-  const minimumBootstrap99Lower = Math.min(
-    ...contrasts.map((contrast) => contrast.bootstrap99Lower),
+  const orderingRate = canonicalizePhaseBEvidenceNumber(
+    mean(primaryRows.map((row) => row.metrics.orderingCorrect)),
   );
-  const worstModelGain = Math.min(...contrasts.map((contrast) => contrast.worstModelGain));
+  const maximumHolmAdjustedPValue = canonicalizePhaseBEvidenceNumber(
+    Math.max(...contrasts.map((contrast) => contrast.holmAdjustedPValue)),
+  );
+  const minimumBootstrap99Lower = canonicalizePhaseBEvidenceNumber(
+    Math.min(...contrasts.map((contrast) => contrast.bootstrap99Lower)),
+  );
+  const worstModelGain = canonicalizePhaseBEvidenceNumber(
+    Math.min(...contrasts.map((contrast) => contrast.worstModelGain)),
+  );
   const failedCriteria: string[] = [];
   if (minimumControlMeanSseGain < ECOLOGY_TEMPORAL_GATE_THRESHOLDS.meanSseGain)
     failedCriteria.push('mean-sse-gain');
@@ -1166,7 +1228,7 @@ function buildGate(
     failedCriteria.push('bootstrap-99-lower');
   if (worstModelGain < ECOLOGY_TEMPORAL_GATE_THRESHOLDS.worstModelGain)
     failedCriteria.push('worst-model-gain');
-  return {
+  return canonicalizePhaseBEvidence({
     passed: failedCriteria.length === 0 && contrasts.every((contrast) => contrast.passes),
     thresholds: ECOLOGY_TEMPORAL_GATE_THRESHOLDS,
     observed: {
@@ -1181,7 +1243,7 @@ function buildGate(
       rowsFilteredByOutcome: 0,
     },
     failedCriteria,
-  };
+  } satisfies EcologyTemporalAdvancementGate);
 }
 
 function normalizedSeedSubset(
@@ -1376,6 +1438,7 @@ export function runEcologyTemporalDevelopment(
   };
   const configuration = {
     schemaVersion: ECOLOGY_TEMPORAL_DEVELOPMENT_SCHEMA_VERSION,
+    evidencePrecisionLaw: PHASE_B_EVIDENCE_PRECISION_LAW,
     taskProtocol: TEMPORAL_TASK_PROTOCOL,
     delays: ECOLOGY_TEMPORAL_DELAYS,
     armProtocols: TEMPORAL_ARM_PROTOCOLS,
@@ -1387,9 +1450,10 @@ export function runEcologyTemporalDevelopment(
     taskProfileEntries,
     trainingReceipts,
   };
-  const summary: EcologyTemporalDevelopmentSummary = {
-    schemaVersion: 1,
-    studyId: 'tsotchke-ecology-temporal-identifiability-phase-b-development-v1',
+  const summary: EcologyTemporalDevelopmentSummary = canonicalizePhaseBEvidence({
+    schemaVersion: ECOLOGY_TEMPORAL_DEVELOPMENT_SCHEMA_VERSION,
+    studyId: 'tsotchke-ecology-temporal-identifiability-phase-b-development-v2',
+    evidencePrecisionLaw: PHASE_B_EVIDENCE_PRECISION_LAW,
     developmentOnly: true,
     claimAllowed: false,
     conclusion: advancementGate.passed
@@ -1431,7 +1495,7 @@ export function runEcologyTemporalDevelopment(
     rowsSha256: hashCanonical(rows),
     pairedControlContrasts: contrasts,
     advancementGate,
-  };
+  } satisfies EcologyTemporalDevelopmentSummary);
   JSON.parse(canonicalJson({ summary, rows }));
   return { summary, rows };
 }
