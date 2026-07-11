@@ -122,7 +122,7 @@ describe('randomnessReport — composite', () => {
   });
 });
 
-describe('measures a real seeded EshkolQrng stream (reads the entropy organ)', () => {
+describe('measures a seeded deterministic EshkolQrng adapter stream', () => {
   function qrngBytes(seed: number, n: number): number[] {
     const q = new EshkolQrng(mulberry32(seed));
     const out: number[] = Array.from({ length: n }, () => 0);
@@ -130,7 +130,7 @@ describe('measures a real seeded EshkolQrng stream (reads the entropy organ)', (
     return out;
   }
 
-  test('the seeded quantum stream passes the quality battery', () => {
+  test('the seeded model stream passes the descriptive quality battery', () => {
     const bytes = qrngBytes(0xc0ffee, 8192);
     const r = randomnessReport(bytes);
     expect(r.entropy).toBeGreaterThan(7.5); // near-max byte entropy

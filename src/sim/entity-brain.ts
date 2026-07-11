@@ -16,7 +16,7 @@
  * No `Math.random` / `Date.now`. Leaf module (depends only on `genome`, `Rng`, and the entity type).
  */
 import type { Rng } from '../math/rng';
-import type { Entity } from '../types';
+import type { Entity, OrganismGoalField, OrganismIntelligenceSignal } from '../types';
 import type { QuantizationConfig } from '../math/quantization';
 import { fp16BitsToFp32, fp32ToFp16Bits, fp32ToInt8, int8ToFp32 } from '../math/quantization';
 import {
@@ -55,6 +55,26 @@ export class EntityBrainField {
   private readonly senses = new Float32Array(BRAIN_IN);
   private readonly hidden = new Float32Array(BRAIN_HIDDEN);
   private readonly out = new Float32Array(BRAIN_OUT);
+  /** Optional live shared field + ecology goals. Null preserves the exact legacy/headless controller. */
+  private intelligence: OrganismIntelligenceSignal | null = null;
+  private goals: OrganismGoalField | null = null;
+  private onlineLearningEnabled = true;
+  /** Bounded online actor/value traces—one compact adaptive state per organism slot. */
+  private readonly valueEstimate: Float32Array;
+  private readonly actorBiasX: Float32Array;
+  private readonly actorBiasZ: Float32Array;
+  private readonly lastActionX: Float32Array;
+  private readonly lastActionZ: Float32Array;
+  private readonly lastEnergy: Float32Array;
+  private readonly adaptiveReady: Uint8Array;
+  /**
+   * Current entity slot -> persistent brain identity. EntityManager swaps two uint32 entries while
+   * compacting, so a survivor keeps its genome and learned state without copying 70 genes per move.
+   */
+  private readonly slotToBrain: Uint32Array;
+  /** Time-normalizes online updates so 30/60/120 Hz do not learn at different wall-sim rates. */
+  private lastThinkTime = Number.NaN;
+  private learningStepScale = 1;
 
   /** Roll one deterministic genome per slot from the injected (dedicated) rng. O(capacity). */
   constructor(capacity: number, rng: Rng, quantization: QuantizationConfig = DEFAULT_QUANTIZATION) {
@@ -68,8 +88,17 @@ export class EntityBrainField {
           ? new Uint16Array(totalGenes)
           : new Uint8Array(totalGenes);
     this.fp32Genomes = this.storageKind === 'fp32' ? (this.genomes as Float32Array) : null;
+    this.valueEstimate = new Float32Array(this.capacity);
+    this.actorBiasX = new Float32Array(this.capacity);
+    this.actorBiasZ = new Float32Array(this.capacity);
+    this.lastActionX = new Float32Array(this.capacity);
+    this.lastActionZ = new Float32Array(this.capacity);
+    this.lastEnergy = new Float32Array(this.capacity);
+    this.adaptiveReady = new Uint8Array(this.capacity);
+    this.slotToBrain = new Uint32Array(this.capacity);
 
     for (let i = 0; i < this.capacity; i++) {
+      this.slotToBrain[i] = i;
       const g = randomGenome(rng);
       const base = i * GENOME_LEN;
       if (this.storageKind === 'fp32') {
@@ -78,6 +107,75 @@ export class EntityBrainField {
         for (let k = 0; k < GENOME_LEN; k++) this.setGene(base + k, g[k] ?? 0);
       }
     }
+  }
+
+  /**
+   * Attach the composition-root-owned intelligence and EntityManager-owned ecology goal fields.
+   * Both object identities remain stable. A null signal with non-null goals is the goal-only causal
+   * control; passing null for both restores the exact original 6-sense/70-parameter controller path.
+   */
+  attachAdaptiveField(
+    intelligence: OrganismIntelligenceSignal | null,
+    goals: OrganismGoalField | null,
+  ): void {
+    this.intelligence = intelligence;
+    this.goals = goals;
+  }
+
+  /** Counterfactual/benchmark control: keep perception + goals but freeze actor/value trace updates. */
+  setOnlineLearningEnabled(enabled: boolean): void {
+    this.onlineLearningEnabled = enabled;
+  }
+
+  /** O(1) entity-list compaction hook: exchange persistent brain identities for two live slots. */
+  swapEntitySlots(a: number, b: number): void {
+    this.assertSlot(a);
+    this.assertSlot(b);
+    if (a === b) return;
+    const brain = this.slotToBrain[a]!;
+    this.slotToBrain[a] = this.slotToBrain[b]!;
+    this.slotToBrain[b] = brain;
+  }
+
+  /** Clear online state for a newborn/recycled entity slot while retaining its pre-rolled genome. */
+  clearEntitySlot(slot: number): void {
+    this.assertSlot(slot);
+    this.clearBrainState(this.slotToBrain[slot]!);
+  }
+
+  /** Genesis reset: restore identity mapping and remove all learned state in O(capacity). */
+  resetEntitySlots(): void {
+    for (let slot = 0; slot < this.capacity; slot++) this.slotToBrain[slot] = slot;
+    this.valueEstimate.fill(0);
+    this.actorBiasX.fill(0);
+    this.actorBiasZ.fill(0);
+    this.lastActionX.fill(0);
+    this.lastActionZ.fill(0);
+    this.lastEnergy.fill(0);
+    this.adaptiveReady.fill(0);
+    this.lastThinkTime = Number.NaN;
+    this.learningStepScale = 1;
+  }
+
+  /** Low-cadence evidence view for one slot; never called by the population hot loop. */
+  adaptiveStateAt(slot: number): {
+    value: number;
+    biasX: number;
+    biasZ: number;
+    lastActionX: number;
+    lastActionZ: number;
+    ready: boolean;
+  } {
+    this.assertSlot(slot);
+    const brainSlot = this.slotToBrain[slot]!;
+    return {
+      value: this.valueEstimate[brainSlot] ?? 0,
+      biasX: this.actorBiasX[brainSlot] ?? 0,
+      biasZ: this.actorBiasZ[brainSlot] ?? 0,
+      lastActionX: this.lastActionX[brainSlot] ?? 0,
+      lastActionZ: this.lastActionZ[brainSlot] ?? 0,
+      ready: (this.adaptiveReady[brainSlot] ?? 0) !== 0,
+    };
   }
 
   /** Underlying genome storage bytes (used by perf receipts and memory budgets). */
@@ -95,7 +193,8 @@ export class EntityBrainField {
    * copy because subarray mutation cannot be reflected into packed integer buffers.
    */
   genomeAt(i: number): Float32Array {
-    const base = i * GENOME_LEN;
+    this.assertSlot(i);
+    const base = this.slotToBrain[i]! * GENOME_LEN;
     if (this.storageKind === 'fp32') {
       return (this.genomes as Float32Array).subarray(base, base + GENOME_LEN);
     }
@@ -132,7 +231,7 @@ export class EntityBrainField {
     if (predatorSlot < 0 || predatorSlot >= this.capacity) {
       return { mindDistance: 0, transfer: 0 };
     }
-    const base = predatorSlot * GENOME_LEN + TRAIT_GENES;
+    const base = this.slotToBrain[predatorSlot]! * GENOME_LEN + TRAIT_GENES;
     let dist = 0;
     let moved = 0;
     for (let k = 0; k < BRAIN_GENES; k++) {
@@ -156,6 +255,7 @@ export class EntityBrainField {
   think(list: ReadonlyArray<Entity | undefined>, chaos: number, t: number): number {
     const n = Math.min(list.length, this.capacity);
     if (n === 0) return 0;
+    this.prepareThinkTime(t);
     const chaosN = clamp01(chaos / 10);
     let thought = 0;
     for (let i = 0; i < n; i++) {
@@ -177,6 +277,7 @@ export class EntityBrainField {
     t: number,
   ): number {
     if (indices.length === 0 || this.capacity === 0) return 0;
+    this.prepareThinkTime(t);
     const chaosN = clamp01(chaos / 10);
     let thought = 0;
     for (const slot of indices) {
@@ -192,6 +293,7 @@ export class EntityBrainField {
    * Explicit full-quality alias: every entity gets the full 70-param brain every evaluation.
    */
   thinkAll(list: ReadonlyArray<Entity | undefined>, chaos: number, t: number): number {
+    this.prepareThinkTime(t);
     const chaosN = clamp01(chaos / 10);
     const n = Math.min(list.length, this.capacity);
     let thought = 0;
@@ -205,29 +307,147 @@ export class EntityBrainField {
   private thinkSlot(e: Entity, slot: number, chaosN: number, t: number): boolean {
     const ud = e.userData;
     if (ud.isNhi) return false; // launched NHIs fly their own mind
-    const base = slot * GENOME_LEN;
+    const brainSlot = this.slotToBrain[slot]!;
+    const base = brainSlot * GENOME_LEN;
     const s = this.senses;
     // ── PERCEPTION (6 senses, all bounded) ──
     s[0] = clamp01(ud.energy / 100); // health / wealth
     s[1] = clamp01(ud.age / (ud.life > 1 ? ud.life : 1)); // mortality (age toward death)
     const sp = Math.hypot(ud.vel.x, ud.vel.y, ud.vel.z);
     s[2] = clamp01(sp / 6); // own speed
-    s[3] = chaosN; // world disorder
+    const intelligence = this.intelligence;
+    const signal = intelligence?.enabled === true ? intelligence : null;
+    const controllerActive = signal !== null || this.goals !== null;
+    s[3] = signal ? clamp01(chaosN * 0.7 + signal.threatResponse * 0.3) : chaosN; // world disorder + shared threat forecast
     const fp32 = this.fp32Genomes;
     const curiosity = fp32
       ? (fp32[base + TRAIT.curiosity] ?? 0)
       : this.getGene(base + TRAIT.curiosity);
-    s[4] = Number.isFinite(curiosity) ? curiosity : 0.5; // stable personality bias (diversity)
-    s[5] = Math.sin(ud.ph + t * 0.6); // a phase clock (-1..1)
+    const curiosityN = Number.isFinite(curiosity) ? curiosity : 0.5;
+    s[4] = signal ? clamp01(curiosityN * 0.65 + signal.exploration * 0.35) : curiosityN; // stable personality + shared exploration pressure
+    const phase = Math.sin(ud.ph + t * 0.6);
+    s[5] = signal
+      ? Math.max(-1, Math.min(1, phase * 0.72 + (signal.forecast - 0.5) * 0.56))
+      : phase; // temporal phase + Eshkol-style ecological forecast
     // ── COGNITION (70-param brain, inline allocation-free forward) ──
     if (fp32) this.forwardFp32(base + TRAIT_GENES, fp32);
     else this.forward(base + TRAIT_GENES);
     const o = this.out;
+    let actionX = o[0] ?? 0;
+    let actionZ = o[1] ?? 0;
+    let actionY = o[2] ?? 0;
+    if (controllerActive) {
+      const metabolic = clamp01(ud.energy / 100);
+      const payoff = Number.isFinite(ud.payoff) ? Math.tanh(ud.payoff * 0.1) : 0;
+      const baseLearningRate = 0.004 + (signal?.plasticity ?? 0) * 0.022;
+      const learningRate =
+        this.learningStepScale <= 0
+          ? 0
+          : 1 - Math.pow(1 - baseLearningRate, this.learningStepScale);
+      if (this.onlineLearningEnabled && (this.adaptiveReady[brainSlot] ?? 0) !== 0) {
+        // Temporal-difference reward: food/wealth gain dominates; payoff supplies a smaller social term.
+        const reward = Math.max(
+          -1,
+          Math.min(
+            1,
+            ((metabolic - (this.lastEnergy[brainSlot] ?? metabolic)) /
+              Math.max(0.25, this.learningStepScale)) *
+              6 +
+              payoff * 0.12,
+          ),
+        );
+        const oldValue = this.valueEstimate[brainSlot] ?? 0;
+        const advantage = reward - oldValue;
+        this.valueEstimate[brainSlot] = oldValue + learningRate * advantage;
+        this.actorBiasX[brainSlot] = Math.max(
+          -0.35,
+          Math.min(
+            0.35,
+            (this.actorBiasX[brainSlot] ?? 0) +
+              learningRate * advantage * (this.lastActionX[brainSlot] ?? 0),
+          ),
+        );
+        this.actorBiasZ[brainSlot] = Math.max(
+          -0.35,
+          Math.min(
+            0.35,
+            (this.actorBiasZ[brainSlot] ?? 0) +
+              learningRate * advantage * (this.lastActionZ[brainSlot] ?? 0),
+          ),
+        );
+      } else if (this.onlineLearningEnabled) {
+        this.adaptiveReady[brainSlot] = 1;
+      }
+      this.lastEnergy[brainSlot] = metabolic;
+
+      const goals = this.goals;
+      const goalDesire = clamp01(goals?.desire[slot] ?? 0);
+      const goalCover = clamp01(goals?.cover[slot] ?? 0);
+      const goalGain =
+        goalDesire *
+        goalCover *
+        (0.22 + (signal?.resourcePressure ?? 0) * 0.2 + (signal?.confidence ?? 0) * 0.08);
+      const goalX = goals?.directionX[slot] ?? 0;
+      const goalZ = goals?.directionZ[slot] ?? 0;
+      const hasGoal = goalDesire > 0.001 && goalX * goalX + goalZ * goalZ > 1e-8;
+
+      // Actor traces live in the GOAL'S LOCAL FRAME: biasX = along-goal, biasZ = lateral. A learned
+      // preference for successful goal pursuit therefore transfers when a resource patch moves or a
+      // depleted patch reverses the target; the previous world-coordinate trace fought the new goal.
+      const learnedAlong = this.actorBiasX[brainSlot] ?? 0;
+      const learnedLateral = this.actorBiasZ[brainSlot] ?? 0;
+      const learnedX = hasGoal ? goalX * learnedAlong - goalZ * learnedLateral : learnedAlong;
+      const learnedZ = hasGoal ? goalZ * learnedAlong + goalX * learnedLateral : learnedLateral;
+
+      // The aggregate corpus remains causal after the MLP rather than disappearing inside a saturated
+      // intermediate. Rotate by slot phase so a global field does not make the whole population march in
+      // lockstep. Each integrated-repo ablation therefore reaches final velocity; fenced/meta rows do not.
+      const ch = signal?.channels;
+      const corpusU = ch ? (ch[0] ?? 0) - (ch[1] ?? 0) : 0;
+      const corpusV = ch ? (ch[2] ?? 0) - (ch[3] ?? 0) : 0;
+      const angle = slot * 2.399963229728653 + ud.ph;
+      const ca = Math.cos(angle);
+      const sa = Math.sin(angle);
+      const corpusX = (corpusU * ca - corpusV * sa) * 0.11 * (signal?.confidence ?? 0);
+      const corpusZ = (corpusU * sa + corpusV * ca) * 0.11 * (signal?.confidence ?? 0);
+      const exploratory = signal ? (signal.exploration - 0.5) * 0.08 : 0;
+
+      actionX = Math.max(
+        -1.5,
+        Math.min(
+          1.5,
+          actionX +
+            learnedX +
+            goalX * goalGain +
+            corpusX +
+            Math.cos(angle + t * 0.17) * exploratory,
+        ),
+      );
+      actionZ = Math.max(
+        -1.5,
+        Math.min(
+          1.5,
+          actionZ +
+            learnedZ +
+            goalZ * goalGain +
+            corpusZ +
+            Math.sin(angle + t * 0.19) * exploratory,
+        ),
+      );
+      if (signal) {
+        actionY = Math.max(-1.25, Math.min(1.25, actionY + (signal.threatResponse - 0.5) * 0.05));
+      }
+      this.lastActionX[brainSlot] = hasGoal ? actionX * goalX + actionZ * goalZ : actionX;
+      this.lastActionZ[brainSlot] = hasGoal ? -actionX * goalZ + actionZ * goalX : actionZ;
+    }
     // ── ACTION: a small, bounded steer; out[3] is an excitation that scales the authority ──
-    const gain = STEER_GAIN * (0.5 + 0.75 * ((o[3] ?? 0) + 1) * 0.5);
-    ud.vel.x += (o[0] ?? 0) * gain;
-    ud.vel.z += (o[1] ?? 0) * gain;
-    ud.vel.y += (o[2] ?? 0) * gain * 0.5; // gentler vertical
+    const gain =
+      STEER_GAIN *
+      (0.5 + 0.75 * ((o[3] ?? 0) + 1) * 0.5) *
+      (signal ? 0.92 + signal.confidence * 0.16 : 1);
+    ud.vel.x += actionX * gain;
+    ud.vel.z += actionZ * gain;
+    ud.vel.y += actionY * gain * 0.5; // gentler vertical
     // Couple brain excitation into the shared activation field the connectome reads + renders.
     const excite = (o[3] ?? 0) + 1;
     ud.act += excite * excite * 0.022;
@@ -297,5 +517,37 @@ export class EntityBrainField {
 
   private int8Max(): number {
     return 1;
+  }
+
+  private assertSlot(slot: number): void {
+    if (!Number.isInteger(slot) || slot < 0 || slot >= this.capacity) {
+      throw new RangeError(
+        `brain slot must be an integer in [0,${Math.max(0, this.capacity - 1)}]`,
+      );
+    }
+  }
+
+  private clearBrainState(brainSlot: number): void {
+    this.valueEstimate[brainSlot] = 0;
+    this.actorBiasX[brainSlot] = 0;
+    this.actorBiasZ[brainSlot] = 0;
+    this.lastActionX[brainSlot] = 0;
+    this.lastActionZ[brainSlot] = 0;
+    this.lastEnergy[brainSlot] = 0;
+    this.adaptiveReady[brainSlot] = 0;
+  }
+
+  private prepareThinkTime(t: number): void {
+    if (!Number.isFinite(t)) {
+      this.learningStepScale = 1;
+      this.lastThinkTime = Number.NaN;
+      return;
+    }
+    if (!Number.isFinite(this.lastThinkTime) || t < this.lastThinkTime) {
+      this.learningStepScale = 1;
+    } else {
+      this.learningStepScale = Math.max(0, Math.min(4, (t - this.lastThinkTime) * 60));
+    }
+    this.lastThinkTime = t;
   }
 }

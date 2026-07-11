@@ -1,16 +1,21 @@
-<!-- reviewed: 2026-07-07 | historical snapshot policy + active 22-report index | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-10 | current causal report + historical snapshot policy | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # Reports
 
 Technical reports and audits for Cosmogonic Quantum Mechalogodrom. Dated filenames (`2026-*`) are
 **historical worldline snapshots** when present — they preserve evidence from their authoring pass.
 **Current** gate receipts: [VERIFICATION-ANALYTICAL-DATA.md](../VERIFICATION-ANALYTICAL-DATA.md) §1 ·
-`scripts/canonical-receipts.ts` (v0.21.13 · **2,420-test floor** · **84.64 % / 82.21 %** coverage).
+`scripts/canonical-receipts.ts` (v0.21.13 · **2,469-test floor** · **84.64 % / 82.21 %** coverage).
 Latest Windows-local receipt observed by the current audit: **2,385 completed cases, zero failures, 2,867,279
 expect() calls**.
 
 ## Reports
 
+- [2026-07-10-OPERATIONAL-ORGANISM-INTELLIGENCE-CAUSAL-AUDIT.md](./2026-07-10-OPERATIONAL-ORGANISM-INTELLIGENCE-CAUSAL-AUDIT.md)
+  — current matched-seed causal report for the shared living-system intelligence field: resource-goal
+  effect, `17/17` integrated-channel reach, `5/5` excluded-channel inertness, performance pass, and the
+  honestly failed 5% reversal-adaptation criterion. Includes the 22-repository ledger, Eshkol/QRNG
+  boundaries, the code-grounded 9-axis profile, and the no-sentience/no-numeric-uplift gate.
 - [VERIFICATION-ANALYTICAL-DATA.md](../VERIFICATION-ANALYTICAL-DATA.md) — canonical current facts.
 - [CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md](../CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md)
   — active 22-report master synthesis and current publication-facing truth pass.
@@ -25,8 +30,9 @@ expect() calls**.
   [assets/scrutiny-25-scorecard.svg](./assets/scrutiny-25-scorecard.svg).
 - `2026-06-26-ALIFE-COMPARATIVE-AUDIT.md` — retired A-Life comparative
   audit snapshot vs **112 known systems** (v4, 113-system expansion, code-grounded): measured statistics,
-  chart outputs, PCA + clustering + Pareto + Mahalanobis geometry, a 9-agent code-grounding of the one
-  self-scored row (`file:line`), and an adversarial novelty defense. Regenerable from the source CSV
+  chart outputs, PCA + clustering + Pareto + Mahalanobis geometry, a code-grounded Cosmogonic row, and
+  an adversarial novelty defense. The historical self-score is retained only as a sensitivity baseline.
+  Regenerable from the source CSV
   [2026-06-26-alife-comparison-matrix.csv](./2026-06-26-alife-comparison-matrix.csv) via
   three deterministic engines — [`scripts/alife-comparison-stats.ts`](../../scripts/alife-comparison-stats.ts),
   [`scripts/alife-comparison-geometry.ts`](../../scripts/alife-comparison-geometry.ts), and

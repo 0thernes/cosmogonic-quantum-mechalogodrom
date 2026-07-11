@@ -1123,7 +1123,11 @@ export class TitanSystem implements DomeFeeder {
     const tdx = Math.cos(t * 0.11 + tph) * trad - p.x;
     const tdy = T_HOME_Y + Math.sin(t * 0.17 + tph) * PLATFORM_HEIGHT * (16 / 39) - p.y;
     const tdz = Math.sin(t * 0.13 + tph * 1.3) * trad - p.z;
-    const tInv = 0.055 / (Math.sqrt(tdx * tdx + tdy * tdy + tdz * tdz) + 1e-6); // USER: faster (0.02→0.055) — visibly roams
+    const intelligence = this.ctx.organismIntelligence;
+    const intentGain = intelligence?.enabled
+      ? 0.88 + intelligence.exploration * 0.16 + intelligence.confidence * 0.08
+      : 1;
+    const tInv = (0.055 * intentGain) / (Math.sqrt(tdx * tdx + tdy * tdy + tdz * tdz) + 1e-6); // USER: faster (0.02→0.055) — visibly roams
     vel.x += tdx * tInv + Math.sin(t * 0.5 + ti.mi * 1.3) * 0.012;
     vel.y += tdy * tInv + Math.sin(t * 0.37 + ti.mi * 2.1) * 0.008;
     vel.z += tdz * tInv + Math.cos(t * 0.43 + ti.mi * 0.7) * 0.012;

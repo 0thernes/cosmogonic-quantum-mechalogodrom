@@ -1,0 +1,162 @@
+{
+  "schemaVersion": 1,
+  "taskVersion": "organism-intelligence-v2-goal-frame",
+  "generatedDate": "2026-07-10",
+  "predecessorReceipt": "docs/reports/assets/organism-intelligence-causal-benchmark.json",
+  "predecessorOutcome": "v1 passed goal seeking, corpus causality, and cost but failed median reversal adaptation; v2 stores actor traces in the goal-local frame and uses a disjoint held-out seed set.",
+  "indicatorOnly": true,
+  "claimBoundary": "Measures deterministic task behavior only; not phenomenal consciousness, sentience, physical quantum entropy, CSPRNG security, or general intelligence.",
+  "provenance": {
+    "cosmogonicBaseCommit": "f93ca06def1ad2999269c246aedc9f0af592c262",
+    "eshkolReference": {
+      "tag": "v1.3.2-evolve",
+      "commit": "8443ddaeecec579c60ac858348a23cf1912d7a78",
+      "relationship": "bounded-float64-runtime-analogue-not-native-parity"
+    },
+    "quantumRngReference": {
+      "tag": "v3.0.1",
+      "commit": "a00ad483cbbef31ea7536f09ae99409d81c9a823",
+      "relationship": "deterministic-classical-statevector-adaptation-not-csprng-or-physical-entropy"
+    }
+  },
+  "protocol": {
+    "heldOutSeeds": [
+      272071090,
+      2926506851,
+      1285975316,
+      3940411077,
+      2299879542,
+      659348007,
+      3313783768,
+      1673252233,
+      32720698,
+      2687156459,
+      1046624924,
+      3701060685,
+      2060529150,
+      419997615,
+      3074433376,
+      1433901841,
+      4088337602,
+      2447806067,
+      807274532,
+      3461710293,
+      1821178758,
+      180647223,
+      2835082984,
+      1194551449,
+      3848987210,
+      2208455675,
+      567924140,
+      3222359901,
+      1581828366,
+      4236264127
+    ],
+    "bootstrapSamples": 10000,
+    "controls": [
+      "substrate-disabled",
+      "repo-channel-permutation",
+      "entropy-matched-classical",
+      "random-policy"
+    ],
+    "resourceTask": "one-step x-axis progress toward identical flora goal",
+    "adaptationTask": "240 steps with resource-goal reversal after step 120; online trace vs frozen trace"
+  },
+  "resourceSeeking": {
+    "means": {
+      "enhanced": 0.014374130663348316,
+      "disabled": -0.0007765767154523202,
+      "shuffled": 0.0144661397422624,
+      "classical": 0.014928489308231286,
+      "random": -0.0061576186786405735
+    },
+    "enhancedMinusDisabled": {
+      "mean": 0.015150707378800638,
+      "bootstrap95": [
+        0.013177274872187228,
+        0.017323769627979817
+      ],
+      "cohenDz": 2.5396124783677094
+    },
+    "enhancedMinusShuffled": {
+      "mean": -0.0000920090789140815,
+      "bootstrap95": [
+        -0.0003326717364833753,
+        0.00017295119097604573
+      ],
+      "cohenDz": -0.13152139833851026
+    },
+    "enhancedMinusClassical": {
+      "mean": -0.0005543586448829664,
+      "bootstrap95": [
+        -0.0012357750695679093,
+        0.0001136388683422123
+      ],
+      "cohenDz": -0.2901298770134111
+    },
+    "acceptedAgainstDisabled": true,
+    "substrateSpecific": false,
+    "quantumSpecific": false
+  },
+  "adaptation": {
+    "medianPostReversalEnhanced": 1.522862440765349,
+    "medianPostReversalFrozen": 1.465517869734803,
+    "relativeMedianImprovement": 0.039129219926143224,
+    "enhancedMinusFrozen": {
+      "mean": 0.12050746675240001,
+      "bootstrap95": [
+        0.07706648470318986,
+        0.16991166304806113
+      ],
+      "cohenDz": 0.908794532674938
+    },
+    "worstSeedRelativeLoss": -0.01269826560965952,
+    "accepted": false
+  },
+  "corpusCausality": {
+    "integrated": 17,
+    "integratedChanged": 17,
+    "excluded": 5,
+    "excludedExactZero": 5,
+    "accepted": true
+  },
+  "performance": {
+    "sharedFieldP95Ms": 0.024399999999999977,
+    "legacyEntityMedianMs": 8.7945,
+    "enhancedEntityMedianMs": 11.104700000000008,
+    "incrementalEntityMedianMs": 2.310200000000009,
+    "population": 50000,
+    "accepted": true
+  },
+  "consumerCoverage": [
+    "ordinary-entities",
+    "alien-flora",
+    "shoggoths",
+    "puppeteers",
+    "titans",
+    "leviathans",
+    "nhi",
+    "glyph-beings",
+    "wilderness-fauna",
+    "primordial-digital-biologics",
+    "archon-apex-and-mechalogodrom-existing-deep-paths"
+  ],
+  "claims": {
+    "operationalGoalUplift": true,
+    "adaptivePostReversalUplift": false,
+    "allIntegratedReposCausal": true,
+    "performanceBudgetMet": true,
+    "substrateSpecificUplift": false,
+    "quantumSpecificUplift": false,
+    "numericScoreUpliftAllowed": false
+  },
+  "machine": {
+    "platform": "win32",
+    "architecture": "x64",
+    "bun": "1.3.14",
+    "logicalCpus": 24,
+    "cpuModel": "Intel(R) Core(TM) Ultra 9 275HX",
+    "totalMemoryBytes": 50910707712
+  },
+  "contentSha256": "e0fd138bd9af11dd4db6cd394abaed1b5d4e118324354c286614ea67af3a286b"
+}

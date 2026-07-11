@@ -18,13 +18,31 @@ import {
   AlienFlora,
 } from '../src/sim/alien-flora';
 import { PLATFORM_HALF } from '../src/sim/constants';
-import type { SimContext } from '../src/types';
+import type { OrganismIntelligenceSignal, SimContext } from '../src/types';
+
+const OPERATIONAL_SIGNAL: OrganismIntelligenceSignal = {
+  enabled: true,
+  indicatorOnly: true,
+  revision: 1,
+  resourcePressure: 1,
+  threatResponse: 0.3,
+  exploration: 0.7,
+  socialDrive: 1,
+  plasticity: 1,
+  forecast: 1,
+  confidence: 1,
+  corpusDrive: 1,
+  channels: new Float32Array([1, 1, 1, 1]),
+  integratedRepoCount: 17,
+  diagnosticAlert: false,
+};
 
 /** Minimal headless ctx — AlienFlora only reads `scene` + `quality.isMobile`. */
-function makeCtx(isMobile = false): SimContext {
+function makeCtx(isMobile = false, organismIntelligence?: OrganismIntelligenceSignal): SimContext {
   return {
     scene: new THREE.Scene(),
     quality: { isMobile },
+    organismIntelligence,
   } as unknown as SimContext;
 }
 
@@ -223,6 +241,53 @@ describe('AlienFlora — the vegetal ground ecology', () => {
     // A location off the field yields nothing (no plants there).
     expect(f.grazeAt(1e6, 1e6, 1, 1 / 60)).toBe(0);
     f.dispose();
+  });
+
+  test('operational field accelerates actual biomass recovery under matched grazing', () => {
+    const baseline = new AlienFlora(makeCtx(true));
+    const adaptive = new AlienFlora(makeCtx(true, OPERATIONAL_SIGNAL));
+    let gx = 0;
+    let gz = 0;
+    let found = false;
+    for (let radius = 60; radius < PLATFORM_HALF && !found; radius += 30) {
+      for (let angle = 0; angle < 6.28 && !found; angle += 0.4) {
+        const c = baseline.comfortAt(Math.cos(angle) * radius, Math.sin(angle) * radius);
+        if (c.strength > 0.05) {
+          gx = c.x;
+          gz = c.z;
+          found = true;
+        }
+      }
+    }
+    expect(found).toBe(true);
+    expect(adaptive.meanBiomass()).toBe(baseline.meanBiomass());
+    for (let i = 0; i < 250; i++) {
+      baseline.grazeAt(gx, gz, 1, 1 / 60);
+      adaptive.grazeAt(gx, gz, 1, 1 / 60);
+    }
+    for (let i = 0; i < 600; i++) {
+      baseline.update(1 / 60, 1, 0.3);
+      adaptive.update(1 / 60, 1, 0.3);
+    }
+    expect(adaptive.meanBiomass()).toBeGreaterThan(baseline.meanBiomass());
+    const exactMean = (flora: AlienFlora): number => {
+      const internals = flora as unknown as { biomass: Float32Array; density: Float32Array };
+      let total = 0;
+      let occupied = 0;
+      for (let i = 0; i < internals.biomass.length; i++) {
+        if ((internals.density[i] ?? 0) <= 0) continue;
+        total += internals.biomass[i] ?? 0;
+        occupied++;
+      }
+      return occupied > 0 ? total / occupied : 0;
+    };
+    expect(baseline.meanBiomass()).toBeCloseTo(exactMean(baseline), 8);
+    expect(adaptive.meanBiomass()).toBeCloseTo(exactMean(adaptive), 8);
+    const beforeInvalidGraze = adaptive.meanBiomass();
+    expect(adaptive.grazeAt(gx, gz, Number.NaN, Number.NaN)).toBe(0);
+    expect(adaptive.meanBiomass()).toBe(beforeInvalidGraze);
+    baseline.dispose();
+    adaptive.dispose();
   });
 
   test('mobile builds a lighter field than desktop', () => {

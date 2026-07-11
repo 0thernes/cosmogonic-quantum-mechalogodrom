@@ -9,6 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Operational organism intelligence and evidence:
+  - Added one bounded, shared Tsotchke organism-intelligence field and connected its resource, threat,
+    exploration, social, forecast, and plasticity signals to living-system behavior while preserving
+    seeded determinism and stable-object hot-path discipline.
+  - Corrected the external repository ledger to exactly 22 repositories: `8 deep`, `7 wired`,
+    `2 harvest`, `4 fenced`, `1 meta`, or `17/21` non-meta integrated. Kept the operational
+    `classical-contrast` experiment separate and added the previously omitted, deliberately fenced
+    AGPL `OBLITERATUS` repository.
+  - Published a 30-seed causal receipt. Resource seeking, `17/17` integrated-channel causality,
+    `5/5` excluded-channel inertness, and the 50,000-organism cost budget passed. Median reversal
+    adaptation improved `3.9129%` and therefore failed the preregistered 5% threshold; shuffled-channel
+    and entropy-matched classical controls did not support substrate- or quantum-specific uplift.
+  - Replaced the legacy phase-array QRNG compatibility implementation with a deterministic classical
+    statevector adaptation pinned to upstream v3.0.1, and added a bounded Float64 Taylor-jet analogue
+    pinned to Eshkol v1.3.2. Neither is described as hardware entropy, CSPRNG security, a physical Bell
+    experiment, or native/unlimited-order Eshkol parity.
+  - Kept the code-grounded 9-axis A-Life vector
+    `[4.0, 2.2, 3.0, 3.8, 3.8, 4.5, 4.3, 3.5, 4.0]` and consciousness/sentience scores unchanged.
+    Added the current causal audit and linked it from the README, architecture, specification, Book,
+    NHSI dashboard, verification ledger, and reports index.
 - Habitat and ecology expansion:
   - Doubled biosphere width and length (four times the land), tripled the roaming ceiling, and kept
     every non-plant quality/population ceiling unchanged.

@@ -1,11 +1,11 @@
 /**
- * QUANTUM QUAKE PHYSICS — genuine quantum geometry over Gaussian wave-packet states.
+ * QUANTUM QUAKE PHYSICS — simulated quantum geometry over Gaussian wave-packet states.
  *
  * Port of QuantumQuake's QGE particle physics. Upstream `qge/qge_physics.c` encodes a particle's
  * 3D position as a quantum wave function ψ(r) over a spatial grid — a Gaussian envelope times a
  * momentum phase, ψ(r) ∝ exp(−(r−r₀)²/2σ²)·exp(i k·r) (see `qge_particle_spawn`), evolved by
  * Schrödinger phase rotations and measured by the Born rule |ψ|². We reproduce that state
- * construction and then compute the REAL quantum geometry of the resulting amplitudes:
+ * construction and then compute quantum-geometric quantities from the resulting model amplitudes:
  *
  *   • Fubini–Study distance  d(ψ₁,ψ₂) = arccos(min(1, |⟨ψ₁|ψ₂⟩|))   — projective Hilbert distance.
  *   • Berry curvature        F_ij = ∂_i A_j − ∂_j A_i,  A_i = Im⟨ψ|∂_iψ⟩  — antisymmetric holonomy.
@@ -288,8 +288,8 @@ export function berryCurvature(state: QGEState, _parameters: number[]): [number,
  * Fubini–Study distance between two QGE states in projective Hilbert space:
  * d = arccos(min(1, |⟨ψ₁|ψ₂⟩|)) over the normalized wave-packet amplitudes. d(ψ,ψ) = 0 (with a
  * near-1 fidelity guard so f64 round-off does not leak through arccos's singular slope) and
- * orthogonal states give π/2. This measures genuine quantum distinguishability — NOT Euclidean
- * position distance.
+ * orthogonal states give π/2. This is projective-Hilbert distinguishability inside the numerical
+ * model, not a physical measurement or Euclidean position distance.
  *
  * @param state1 - first QGE state.
  * @param state2 - second QGE state.

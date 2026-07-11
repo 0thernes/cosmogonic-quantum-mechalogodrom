@@ -1,5 +1,5 @@
 /**
- * QGE ALIVENESS — genuine quantum-geometric aliveness over real QGE states.
+ * QGE ALIVENESS — bounded aliveness proxy over simulated QGE states.
  *
  * Falsifiable claims under test:
  *   • aliveness ∈ [0,1] for every state;

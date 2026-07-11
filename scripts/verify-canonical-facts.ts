@@ -55,15 +55,30 @@ const FACTS: Fact[] = [
     name: 'Tsotchke project count',
     pattern: /\b(\d+)\s+(?:Tsotchke\s+)?(?:corpus\s+)?projects?\b/gi,
     allowed: new Set(['20', '22']), // 20 corpus (mirrors+flagship); 22 = the distinct GH repo count
-    note: '20 corpus projects / 22 registry entries; 9 deep, 7 wired, 2 harvest, 3 fenced, 1 meta; scientific wired fraction 18/21',
+    note: '20 historical corpus projects / 22 live external repositories; 8 deep, 7 wired, 2 harvest, 4 fenced, 1 meta; non-meta integration fraction 17/21',
   },
   {
     name: 'Fenced Tsotchke repos',
-    // The non-LLM mandate fences exactly 3 repos (gpt2-basic, llm-arbitrator, SolanaQuantumFlux);
-    // Quantum-RNG-API is WIRED, not fenced. ARCHITECTURE-2026-06-26.md had drifted to "four ... fenced".
+    // Four external repositories are fenced: the original three LLM/chain boundaries plus OBLITERATUS.
+    // Quantum-RNG-API remains harvest/integrated; `.github` is metadata, not a fifth fence.
     pattern: /\b(\d+)\s+(?:LLM(?:\/chain)?(?:\/API)?\s+(?:repos?\s+)?)?fenced\b/gi,
-    allowed: new Set(['3']),
-    note: '3 fenced (gpt2-basic, llm-arbitrator, SolanaQuantumFlux); Quantum-RNG-API is wired',
+    allowed: new Set(['4']),
+    note: '4 fenced (gpt2-basic, llm-arbitrator, SolanaQuantumFlux, OBLITERATUS); .github is meta and Quantum-RNG-API is harvest',
+  },
+  {
+    name: 'Tsotchke depth ledger',
+    // Scope to the complete depth-class tuple so unrelated uses such as "three deep layers" do not match.
+    pattern:
+      /\b(\d+)\s+deep\b(?=[^\n]{0,100}\b\d+\s+wired\b[^\n]{0,100}\b\d+\s+harvest\b[^\n]{0,100}\b\d+\s+fenced\b)/gi,
+    allowed: new Set(['8']),
+    note: '22 external repositories = 8 deep + 7 wired + 2 harvest + 4 fenced + 1 meta',
+  },
+  {
+    name: 'Tsotchke non-meta integration fraction',
+    pattern:
+      /\b(\d+)\s*\/\s*21\b(?=[^\n]{0,80}\b(?:wired|integrated|integration|scientific|non-meta)\b)|\b(?:wired|integrated|integration|scientific|non-meta)\b[^\n]{0,80}\b(\d+)\s*\/\s*21\b/gi,
+    allowed: new Set(['17']),
+    note: '17 of 21 non-meta external repositories are deep, wired, or harvest; four are fenced',
   },
   {
     name: 'Faculties (design)',

@@ -98,7 +98,12 @@ import { Mechalogodrom } from './sim/mechalogodrom';
 import { MechalogodromBrain, type MechalogodromBrainSnapshot } from './sim/mechalogodrom-brain';
 import { AlphabetPantheonRender } from './sim/alphabet-pantheon-render';
 import { corpusPulse } from './sim/tsotchke-facade';
-import { GlyphBrainBatch, type GlyphBrainSnapshot } from './sim/glyph-brain';
+import { TsotchkeOrganismIntelligence } from './sim/tsotchke-organism-intelligence';
+import {
+  GlyphBrainBatch,
+  writeGlyphEnvironmentalPercept,
+  type GlyphBrainSnapshot,
+} from './sim/glyph-brain';
 import { Foundationals, type FoundationalsSnapshot } from './sim/foundationals';
 import { apexGrowthStage, type ApexGrowthStage } from './sim/apex-consciousness-scaffold';
 import { LoreEngine } from './sim/lore';
@@ -334,6 +339,8 @@ export class World {
   private readonly wilderness: WildernessPopulation;
   private readonly wildernessRender: WildernessRenderer;
   private readonly entityBrains: EntityBrainField; // V42: per-organism 70-param neural controller
+  /** ADR-0013: one O(22)-cadenced corpus field, consumed O(1) by every living-system controller. */
+  private readonly organismIntelligence: TsotchkeOrganismIntelligence;
   /** V127 (USER): Thaler "Death of a Gedanken Creature" — measured on every portal death (dying nets
    *  confabulate; the ledger accumulates the population-scale evidence). `gedankenSenses` is reused. */
   private readonly gedankenLedger = new GedankenLedger();
@@ -402,7 +409,13 @@ export class World {
   private readonly superBodies: SuperBodySystem[] = [];
   // GOAL5: per-archon small creature snapshots (for body.setMind) + the 5 deep minds/bodies.
   private readonly superCreatures: SuperCreature[] = [];
-  /** Primordial petri dishes — one per Archon; digital biologic soup (FULL Tsotchke wired: ALL 21 repos from tsotchke user + Tsotchke-Corporation: Eshkol as the core non-LLM consciousness language with native AD-as-primitive + GWT/active-inference + programs as heritable DNA/genomes, Moonlab Clifford/tensors/QEC/VQE, QGTL geometry/Berry/natural gradients, spin-based neural/Hopfield/SK instinct, libirrep symmetry/Wigner/CG, quantum-quake aliveness + QGE, ulg laws, logo-lab procedural morphogenesis, tensorcore, PINN/PIMC, quantum/classical rng, asteroids, classical contrast, homebrew tooling). The Petri Dish (petri-dish.ts + primordial-soup.ts + digital-biologics.ts) is the God layer / growth engine for different forms of life and proto-sentience. Super Creature / 5 Archons are the initial framework and spark only — "as if God made primordial inorganic soup". Soup grows independent digital biologics onward via Eshkol programs (mutated by real AD, selected by aliveness/QGT/collective order). "Grow What Thou Wilt." (Aleister Crowley). Not LLM or tokenizer bullshit. All local docs (README, ARCH, ERD/ERM/ERP, masters, SPECS, LABS) + GH match exactly. Accurate, truthful, current. Tsotchke is paramount. */
+  /**
+   * Primordial petri dishes — one per Archon. The external ledger has 22 repositories: 17 represented
+   * scientific/tooling entries, four deliberate fences, and one metadata entry; internal classical
+   * contrast is tracked separately. Soup dynamics use deterministic local primitives, adaptations, and
+   * harvested program fingerprints. Its consciousness/sentience fields are indicators and control
+   * signals only, not evidence of phenomenal experience or physical quantum computation.
+   */
   private readonly petriDishes: PetriDishState[] = [];
   private petriRng!: Rng;
   private readonly superPanel: SuperPanel;
@@ -798,9 +811,9 @@ export class World {
   get offworldUmwelt(): number {
     return this.lastOffworldUmwelt;
   }
-  /** V-CHSH: the CHSH Bell parameter S of the quantum substrate — the one witness a classical RNG cannot
-   *  fake (classical ≤ 2; the entangled Eshkol state reaches the Tsirelson bound 2√2 ≈ 2.828). −1 until
-   *  measured. `chshViolation` is true once S > 2 (a genuine quantum-only signature). */
+  /** V-CHSH: CHSH S from the deterministic two-qubit state-vector reference model. The model reaches
+   *  2√2, but classical software computes it; this is not a physical Bell experiment, entropy validation,
+   *  or nonlocality evidence. `chshViolation` is the legacy name for the simulated S > 2 threshold flag. */
   get chshBellS(): number {
     return this.lastBellS;
   }
@@ -843,8 +856,8 @@ export class World {
    *  (quantum/field/procedural) vs mundane reach/resident signals. −1 until measured once (a static
    *  characterisation of the fixed apex scale, so it is computed a single time off the hot path). */
   private lastOffworldUmwelt = -1;
-  /** V-CHSH: the quantum substrate's CHSH Bell parameter S (≈2√2 for the entangled state; classical ≤ 2).
-   *  −1 until measured once — S is analytic (Born-rule correlations), so a single measurement characterises it. */
+  /** V-CHSH: deterministic state-vector model's CHSH S (≈2√2 for its modelled Bell state). −1 until
+   *  evaluated once. This is analytic model conformance, not a measurement of physical hardware. */
   private lastBellS = -1;
 
   /** Reused telemetry snapshot (panel reads synchronously). */
@@ -939,6 +952,9 @@ export class World {
     const phyla = createPhyla(this.rng, (i) => this.lore.name('tribe', i), geos.length);
     const morphs = createMorphotypes(this.rng, geos.length, phyla);
     this.morphTotal = morphs.length;
+    this.organismIntelligence = new TsotchkeOrganismIntelligence(
+      (this.persisted.seed ^ 0x0a11_f1fe) >>> 0 || 1,
+    );
     const ctx: SimContext = {
       scene: this.engine.scene,
       quality: this.quality,
@@ -948,6 +964,7 @@ export class World {
       morphs,
       geos,
       state: this.state,
+      organismIntelligence: this.organismIntelligence.signal,
       audit: this.audit,
       sfx: (type) => this.audio.play(type),
       creatureSfx: (mi) => {
@@ -1167,9 +1184,15 @@ export class World {
       mulberry32((this.persisted.seed ^ 0xb7a19e3d) >>> 0 || 1),
       this.quality.quantization,
     );
+    this.entityBrains.attachAdaptiveField(
+      this.organismIntelligence.signal,
+      this.entities.organismGoals,
+    );
+    this.entities.attachBrainSlotLifecycle(this.entityBrains);
     this.superScene = ctx.scene;
     // 5 SUPER CREATURES (GOAL5 Archons/Godforms): World.GODFORMS from exclusive godform.ts source.
-    // WIRED FROM FULL TSOTCHKE CORPUS (Z:\[Vibe Coded (AI)]\(Tsotchke) 20 repos + sites; see docs/TSOTCHKE_FULL...AUDIT.md). Eshkol AD/HoTT/arena + Moonlab tensor/qgt/Bloch for per-Archon percepts/bias/pulses/entropy. 5 child seeds + getGodformBias + getArchonForm. Local grid + audio + bias. (Ralph-loop incorporation wave.)
+    // Driven by the represented entries in the 22-repository ledger (17 integrated; four fenced; one
+    // metadata-only), using deterministic local primitives/facades for per-Archon bias and telemetry.
     // Determinism: child seeds only (no consumption of main/super streams). Spaced + archetype bias.
     const master = (this.persisted.seed ^ 0x5e1f3d11) >>> 0 || 1;
     for (let i = 0; i < APEX_INDIVIDUATED; i++) {
@@ -1571,7 +1594,7 @@ export class World {
     // One-way boundary: core may seed/spawn INTO wilderness; wilderness NEVER writes back to core.
     const camX = this.engine.camera.position.x;
     const camZ = this.engine.camera.position.z;
-    this.wilderness.update(camX, camZ, dt);
+    this.wilderness.update(camX, camZ, dt, this.organismIntelligence.signal);
     this.wildernessRender.sync(this.wilderness, t);
 
     this.updateGrowthTarget(); // V66: ramp the live population target 500 → ceiling, then breathe
@@ -1606,6 +1629,19 @@ export class World {
       this.persisted.weatherIdx = s.weatherIdx;
     }
     if (this.chaosField.takeAlgoKick()) this.selectAlgo(s.algoIdx + 1, false);
+
+    // ADR-0013: evaluate the whole external corpus ONCE on a slow deterministic cadence. All living
+    // systems below read the same stable signal in O(1); no organism loops over the repository ledger.
+    this.organismIntelligence.step({
+      frame: s.frame,
+      chaos: clamp(s.chaos / CHAOS_MAX, 0, 1),
+      entropy: clamp((s.entropy ?? 0) / ENTROPY_MAX, 0, 1),
+      temperature: s.temperature,
+      population: this.entities.list.length,
+      capacity: this.quality.maxEntities,
+      meanMetabolicEnergy: this.entities.meanMetabolicEnergy,
+      floraBiomass: this.alienFlora.meanBiomass(),
+    });
 
     // Audio couplings, each ≤ 0.35 per contract: bass shimmers the six-lamp
     // rig (inside environment.update — the contracted LOCAL coupling, which
@@ -1752,16 +1788,22 @@ export class World {
       const thermal = clamp((s.temperature + 20) / 80, 0, 1);
       const qEntropy = clamp(this.qc.entropy, 0, 1);
       const rdPulse = clamp(this.rdEnergy, 0, 1);
-      percept[5] = (weatherHue * 0.5 + qEntropy * 0.24 + rdPulse * 0.18 + bands.treble * 0.08) % 1;
-      percept[6] = clamp(
-        0.32 + visChaos * 0.22 + windEnergy * 0.18 + bands.mid * 0.18 + rdPulse * 0.1,
-        0,
-        1,
-      );
-      percept[7] = clamp(
-        0.28 + qEntropy * 0.2 + bands.level * 0.2 + thermal * 0.16 + (apex?.vitality ?? 0) * 0.16,
-        0,
-        1,
+      const lifeSignal = this.organismIntelligence.signal;
+      writeGlyphEnvironmentalPercept(
+        percept,
+        {
+          weatherHue,
+          quantumEntropy: qEntropy,
+          reactionDiffusion: rdPulse,
+          treble: bands.treble,
+          visualChaos: visChaos,
+          windEnergy,
+          mid: bands.mid,
+          level: bands.level,
+          thermal,
+          apexVitality: apex?.vitality ?? 0,
+        },
+        lifeSignal,
       );
       this.lastGlyphSnaps = this.glyphBrains.thinkAll(percept);
       const snaps = this.lastGlyphSnaps;
@@ -2729,8 +2771,8 @@ export class World {
           ],
           0.35 + mindOut.consciousness.ignition * 0.5,
         );
-        // FULL TSOTCHKE: catalyze via update (Eshkol + all repos soup growth)
-        this.primordialSoup.update(i, s.frame, this.petriRng);
+        // Registry-driven soup update; only the 17 represented entries contribute, while fences/meta are inert.
+        this.primordialSoup.update(i, s.frame, this.petriRng, this.organismIntelligence.signal);
         const dish = this.petriDishes[i];
         if (dish) petriDishBeat(dish, i, s.frame, this.petriRng);
         this.superBodies[i]!.setMind(this.superCreatures[i]!.snapshot());
@@ -2956,7 +2998,7 @@ export class World {
         }
       }
 
-      // FULL TSOTCHKE growth: channels 0..4 are already ticked in the per-archon loop above; the harvest
+      // Registry-driven growth: channels 0..4 are already ticked in the per-archon loop above; the harvest
       // is via snapshot at the frame % 120 cadence below. (Removed a redundant extra update(0) here that
       // double-stepped channel 0 every frame — a 6th soup tick and a 2x catalysis bias toward archon 0.)
       // V-BREED: pantheon breeding rite (disabled V105 — visual dome only, no petri coupling).
@@ -3063,15 +3105,20 @@ export class World {
             samples: um.samples,
           });
         }
-        // V-CHSH: surface the quantum substrate's CHSH Bell parameter S — the ONE witness a classical RNG
-        // structurally cannot reproduce (classical ≤ 2; the entangled Eshkol state reaches the Tsirelson
-        // bound 2√2 ≈ 2.828). S is analytic (Born-rule correlations, no rng draw ⇒ boot-stream-neutral), so
-        // measure it once and surface it — closes the "where does the running sim show a genuine quantum
-        // signature (S>2)?" gap: the CHSH witness was tested but reachable from no runtime code path.
+        // V-CHSH: evaluate the deterministic state-vector reference's CHSH S once. The modelled Bell state
+        // reaches 2√2 analytically and consumes no RNG draw, so this is boot-stream-neutral. A classical
+        // simulator computes the value: it is model-conformance telemetry, not a physical Bell experiment,
+        // entropy-source validation, security evidence, or proof of nonlocality.
         if (this.lastBellS < 0) {
           const bell = bellTestWithRng(mulberry32((s.frame ^ 0xb311_5e11) >>> 0 || 1));
           this.lastBellS = bell.S;
-          this.audit.record('chsh-bell-witness', { S: bell.S, violation: bell.violation });
+          this.audit.record('chsh-bell-witness', {
+            S: bell.S,
+            violation: bell.violation,
+            simulatedThresholdExceeded: bell.violation,
+            modelConformance: bell.modelConformance,
+            physicalExperiment: bell.physicalExperiment,
+          });
         }
       }
       if (s.frame % 120 === 0 && n < target) {
@@ -3944,6 +3991,7 @@ export class World {
         }
       }
     }
+    const lifeSignal = this.organismIntelligence.signal;
     return {
       energy: u ? c01(u.energy / 100) : 0.5,
       crowding: c01(this.entities.list.length / Math.max(1, this.quality.maxEntities)),
@@ -3953,6 +4001,11 @@ export class World {
       rivalLastMove,
       kinPresence: c01(kinN / 4), // 4+ nearby kin ⇒ full social field
       kinMood: kinN > 0 ? kinMood / kinN : 0,
+      corpusResource: lifeSignal.resourcePressure,
+      corpusThreat: lifeSignal.threatResponse,
+      corpusSocial: lifeSignal.socialDrive,
+      corpusExplore: lifeSignal.exploration,
+      corpusConfidence: lifeSignal.confidence,
     };
   }
 

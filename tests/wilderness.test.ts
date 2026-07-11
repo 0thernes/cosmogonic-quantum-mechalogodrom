@@ -11,7 +11,11 @@ import {
   chunksInRadius,
   streamPlan,
 } from '../src/sim/wilderness-chunks';
-import { WildernessPopulation, simulateWildernessData } from '../src/sim/wilderness-population';
+import {
+  WildernessPopulation,
+  simulateWildernessData,
+  wildernessResourcePatchKey,
+} from '../src/sim/wilderness-population';
 import { WildernessRenderer } from '../src/sim/wilderness-render';
 import type { WorkerPool, WorkerResult, WorkerTask } from '../src/core/worker-pool';
 
@@ -118,6 +122,42 @@ describe('WildernessPopulation', () => {
     const replay = new Float32Array(initial);
     simulateWildernessData(replay, 77, '0,0', 0.05);
     expect(replay).toEqual(capped);
+  });
+
+  test('operational intelligence changes the shared fauna kernel under a matched-seed control', () => {
+    const initial = new Float32Array([
+      4, 0, 8, 0.25, 0, -0.1, 2, 123, 96, 0, 91, -0.2, 0, 0.15, 3, 456,
+    ]);
+    const baseline = new Float32Array(initial);
+    const adaptive = new Float32Array(initial);
+    const replay = new Float32Array(initial);
+    simulateWildernessData(baseline, 77, '0,0', 0.05, 100);
+    simulateWildernessData(adaptive, 77, '0,0', 0.05, 100, 1, 0.8, 0.7);
+    simulateWildernessData(replay, 77, '0,0', 0.05, 100, 1, 0.8, 0.7);
+
+    expect(adaptive).toEqual(replay);
+    expect(adaptive).not.toEqual(baseline);
+    for (const value of adaptive) expect(Number.isFinite(value)).toBe(true);
+  });
+
+  test('high uint32 seeds retain diverse resource patches despite Float32 packing', () => {
+    const packedSeeds = new Float32Array(128);
+    const keys = new Set<number>();
+    for (let i = 0; i < packedSeeds.length; i++) {
+      packedSeeds[i] = (0xf123_4567 + i) >>> 0;
+      keys.add(wildernessResourcePatchKey(packedSeeds[i]!, i));
+    }
+    expect(new Set(packedSeeds).size).toBeLessThan(8);
+    expect(keys.size).toBe(packedSeeds.length);
+  });
+
+  test('rejects non-positive or non-finite chunk sizes before boundary math', () => {
+    const entity = new Float32Array([4, 0, 8, 0.25, 0, -0.1, 2, 123]);
+    for (const chunkSize of [0, -1, Number.NaN, Number.POSITIVE_INFINITY]) {
+      expect(() =>
+        simulateWildernessData(new Float32Array(entity), 77, '0,0', 0.05, chunkSize, 1, 1, 1),
+      ).toThrow('chunkSize');
+    }
   });
 
   test('malformed and non-finite worker results fall back to the shared synchronous kernel', async () => {

@@ -1,12 +1,11 @@
 /**
- * TSOTCHKE BRAIN INTAKE tests — the measured proof that the FULL corpus feeds the brains.
+ * TSOTCHKE BRAIN INTAKE tests — evidence that every represented external substrate feeds the intake.
  *   • determinism (same seed+frame ⇒ identical intake);
- *   • NO decoration: every wired scientific repo measurably moves the brain intake when ablated —
- *     the honest form of "all 20 repos wired into the brain";
- *   • fenced repos (gpt2-basic / llm-arbitrator / SolanaQuantumFlux) + org-meta (.github) are excluded
- *     BY DESIGN (the non-LLM mandate) — never wired, never removed;
+ *   • no decoration: each of the 17 represented non-meta entries measurably moves the intake;
+ *   • fenced repos (gpt2-basic / llm-arbitrator / SolanaQuantumFlux / OBLITERATUS) plus org-meta
+ *     (.github) are excluded by design — never wired, never removed;
  *   • all channels + drive stay bounded in [0,1].
- * Tsotchke is real MIT-grade math; this WIRES it (never stubs/removes).
+ * Facades/adaptations are tested as such; no physical-quantum or upstream-parity claim is made.
  */
 import { describe, expect, test } from 'bun:test';
 import {
@@ -14,8 +13,9 @@ import {
   corpusBrainScalar,
   corpusBrainAblation,
   corpusBrainDistance,
+  substrateScalar,
 } from '../src/sim/tsotchke-brain-intake';
-import { FENCED_REPO_SLUGS } from '../src/sim/tsotchke-registry';
+import { FENCED_REPO_SLUGS, getTsotchkeRepo } from '../src/sim/tsotchke-registry';
 
 const SEED = 0x5eed_beef;
 
@@ -51,7 +51,7 @@ describe('no decoration — every wired repo is load-bearing on the brain', () =
   const report = corpusBrainAblation(SEED, 9);
 
   test('every wired scientific repo measurably moves the brain intake', () => {
-    expect(report.wiredRepoCount).toBeGreaterThanOrEqual(15); // the full scientific corpus feeds the brain
+    expect(report.wiredRepoCount).toBe(17);
     for (const a of report.ablations) {
       expect(a.distance).toBeGreaterThan(0);
       expect(a.loadBearing).toBe(true);
@@ -75,5 +75,13 @@ describe('fenced + meta repos are excluded by design (never wired into a brain)'
 
   test('org-meta (.github) never feeds a brain', () => {
     expect(wiredSlugs.has('.github')).toBe(false);
+  });
+
+  test('the exported substrate primitive itself returns exact zero for every excluded row', () => {
+    for (const slug of [...FENCED_REPO_SLUGS, '.github'] as const) {
+      const repo = getTsotchkeRepo(slug);
+      expect(repo).toBeDefined();
+      expect(substrateScalar(repo!, SEED, 3, 0)).toBe(0);
+    }
   });
 });

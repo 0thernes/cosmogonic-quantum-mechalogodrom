@@ -1,12 +1,12 @@
 /**
- * TSOTCHKE PULSE WIRING — the end-of-line proof that the full corpus reaches the value a BRAIN reads.
+ * TSOTCHKE PULSE WIRING — end-of-line evidence that represented entries reach a value a brain reads.
  *
  * tsotchke-brain-intake proves each repo is load-bearing on the intake VECTOR; this proves it at the
  * next boundary: `corpusPulse().qgtVolume`, the exact field the apex QuantumBrainOrgan / godform /
  * apex-quantum-substrate consume. Removing any wired repo measurably changes that value — the honest
- * form of "all repos wired into the brain". The ablation param is backward-compatible (an empty/omitted
- * set reproduces the full-corpus pulse exactly) and never touches `adGradient`, so the facade's tested
- * wired>fenced ordering invariant is preserved.
+ * form of "all 17 integrated entries are causally represented". The ablation parameter is
+ * backward-compatible: an empty or omitted set reproduces the represented-entry pulse exactly and
+ * never touches `adGradient`, so the facade's tested wired>fenced ordering invariant is preserved.
  */
 import { describe, expect, test } from 'bun:test';
 import { corpusPulse } from '../src/sim/tsotchke-facade';
@@ -35,7 +35,7 @@ describe('Tsotchke corpus reaches the brain-facing pulse (qgtVolume)', () => {
       }
       expect(moved).toBe(true); // removing this repo measurably changes the pulse a brain reads
     }
-    expect(checked).toBeGreaterThanOrEqual(15);
+    expect(checked).toBe(17);
   });
 
   test('an empty / omitted ablation reproduces the full-corpus pulse exactly (back-compat)', () => {

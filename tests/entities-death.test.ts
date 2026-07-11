@@ -121,11 +121,30 @@ describe('EntityManager.onDeath', () => {
     for (let i = 0; i < original.length; i++) original[i]!.position.x = i;
     const killed = [19, 15, 10, 1];
     const deaths: number[] = [];
+    const brainIds = Array.from({ length: 50 }, (_, i) => i);
+    const cleared: number[] = [];
+    entities.attachBrainSlotLifecycle({
+      swapEntitySlots(a, b) {
+        const id = brainIds[a]!;
+        brainIds[a] = brainIds[b]!;
+        brainIds[b] = id;
+      },
+      clearEntitySlot(slot) {
+        cleared.push(slot);
+      },
+      resetEntitySlots() {
+        for (let i = 0; i < brainIds.length; i++) brainIds[i] = i;
+      },
+    });
     entities.onDeath = (x) => deaths.push(x);
 
     expect(entities.disposeManyDescending(killed)).toBe(killed.length);
     expect(entities.list).toEqual(original.filter((_entity, index) => !killed.includes(index)));
     expect(deaths).toEqual(killed);
+    expect(brainIds.slice(0, entities.list.length)).toEqual(
+      original.map((_entity, index) => index).filter((index) => !killed.includes(index)),
+    );
+    expect(cleared).toEqual([16, 17, 18, 19]);
     for (const index of killed) expect(original[index]!.userData.alive).toBe(false);
     for (const entity of entities.list) expect(entity.userData.alive).toBe(true);
 

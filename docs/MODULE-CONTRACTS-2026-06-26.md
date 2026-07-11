@@ -1,8 +1,12 @@
-<!-- reviewed: 2026-06-27 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-10 | corrected corpus and organism-intelligence contract | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # Module Contracts
 
-**TSOTCHKE MASTER WIRE ERA (v0.21.13):** Tsotchke corpus is the substrate for digital biologics (see `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`). Eshkol AD/GWT + scientific kernels are wired; LLM repos fenced. Canonical facts: `docs/VERIFICATION-ANALYTICAL-DATA.md`.
+**TSOTCHKE MASTER WIRE ERA (v0.21.13):** 22 external repositories are represented as `8 deep`,
+`7 wired`, `2 harvest`, `4 fenced`, and `1 meta` (`17/21` non-meta integrated); `OBLITERATUS` is one
+of the four fences and `classical-contrast` is an internal control. Direct ports, deterministic facades,
+harvests, and fences must remain distinct. See `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md` and
+`docs/VERIFICATION-ANALYTICAL-DATA.md`.
 
 Binding spec for every module in this repo. Writer agents and humans MUST conform exactly —
 `world.ts`/`main.ts` (the composition root) are written against these signatures, sight unseen.
@@ -34,10 +38,21 @@ Binding spec for every module in this repo. Writer agents and humans MUST confor
 
 ## Tsotchke wiring contracts (paramount)
 
-- `tsotchke-registry.ts`: 20 corpus projects (Eshkol + mirrors) mapped 1:1 to SubstrateKind. The 3 LLM/chain repos (gpt2-basic, llm-arbitrator, SolanaQuantumFlux) are **fenced** (wiring 0); Quantum-RNG-API is redundant/toolchain (the `quantum_rng` core is ported directly), not fenced; the scientific kernels are wired and each verified leaf-by-leaf with golden tests (wiring scores are tracked per leaf, not asserted at 1.0 across the board). `fullTsotchkeBiologicsCatalysis`, `biologicProgramFingerprint` drive soup.
+- `tsotchke-registry.ts`: exactly 22 external repositories mapped to explicit depth, integration-mode,
+  and source-boundary fields. The four fences are `gpt2-basic`, `llm-arbitrator`,
+  `SolanaQuantumFlux`, and `OBLITERATUS`; `.github` is metadata; `Quantum-RNG-API` is harvest/toolchain.
+  `classical-contrast` is separately ledgered as an internal operational control. Do not count it as an
+  external repository.
+- `tsotchke-organism-intelligence.ts`: one bounded-cadence shared field with a reused signal object.
+  Integrated repository channels may affect resource, threat, exploration, social, forecast, and
+  plasticity terms; all four fences and metadata must remain exactly inert. Consumers may not allocate
+  per entity to recompute the shared O(22) field.
 - `primordial-soup.ts` + `petri-dish.ts`: Digital biologics birth engine. Eshkol AD for mutation on `eshkolProgram` genomes. Full corpus flux for catalysis. New strains emerge with substrate-specific forms.
 - `eshkol-bridge.ts`: Consciousness engine (AD, GWT, inference) from Eshkol corpus. Used for program eval + ignition in soup/mind.
-- All leaves (moonlab-tensor, qge-\*, irrep-symmetry, etc.): Real faithful ports. No stubs in hot paths. Every system touching life/mind must read/write Tsotchke substrates.
+- Leaves such as moonlab-tensor, qge-\*, irrep-symmetry, PINN, PIMC, ULG, logo, and RNG must preserve
+  their registry-declared relationship: direct port, deterministic facade, or adaptation. A facade is
+  never described as native parity. The QRNG path is a seeded classical statevector adaptation pinned to
+  upstream v3.0.1, not hardware entropy or a CSPRNG.
 - `super-mind.ts` / `godform.ts`: Super Creature is initial nucleation. Faculties must incorporate Tsotchke substrates (not replace with LLM).
 - Determinism: All biologics evolution seeded. No tokenization.
 
@@ -1559,7 +1574,7 @@ Copilot are constructed boot-stream-neutral and never write sim state, so the go
 
 ### V9 acceptance
 
-Full `bun run check` green: prettier → tsc strict → oxlint → 2420 tests (0 fail, 300-frame golden
+Full `bun run check` green: prettier → tsc strict → oxlint → 2469 tests (0 fail, 300-frame golden
 included) → build. The Copilot sandbox verified live (allow: `git log`, file reads; deny:
 path-escape, `git push`, `legacy/`, shell redirection).
 

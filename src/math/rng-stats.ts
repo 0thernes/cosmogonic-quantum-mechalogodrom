@@ -1,17 +1,18 @@
 /**
  * rng-stats.ts — deterministic randomness-quality battery (leaf, exclusive owner).
  *
- * A faithful TypeScript reimplementation of the Tsotchke `quantum_rng` statistical
- * test suite (`tests/quantum_stats.c` + `tests/statistical/statistical_tests.h`,
- * MIT © 2024–2026 tsotchke). The C original draws live samples from a `qrng_ctx`;
- * this port instead operates on a **already-materialised sample buffer**, so it is
+ * Deterministic TypeScript implementations of metrics corresponding to the Tsotchke `quantum_rng`
+ * statistical test suite (`tests/quantum_stats.c` + `tests/statistical/statistical_tests.h`,
+ * MIT © 2024–2026 tsotchke). The C original draws samples from a `qrng_ctx`;
+ * this local battery instead operates on an already-materialised sample buffer, so it is
  * pure, allocation-light, and free of any entropy source of its own — it never
  * calls `Rng`, `Math.random`, or `Date.now`. The same buffer always yields the
  * same report (Manhattan: determinism is divinity).
  *
- * It exists so Cosmogonic can *measure the quality* of its own seeded entropy
- * streams (`eshkol-qrng.ts`, `rng.ts`) instead of asserting it — a real provenance
- * gate rather than a magic constant. Every figure here is computed from the buffer.
+ * It exists so Cosmogonic can report descriptive statistics for its seeded output streams
+ * (`eshkol-qrng.ts`, `rng.ts`) instead of using magic constants. Every figure is computed from the
+ * buffer, but this battery is not physical-entropy validation, SP 800-90B certification, an
+ * independence proof, or cryptographic-security evidence.
  *
  * Upstream metric provenance (`quantum_stats.c`):
  *  - `calculate_entropy`        → {@link shannonEntropy}

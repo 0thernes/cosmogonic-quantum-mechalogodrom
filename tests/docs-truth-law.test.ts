@@ -3,7 +3,7 @@
  *
  * The autonomous doc-writing loop has repeatedly (a) corrupted README/docs into
  * UTF-8 mojibake and (b) overclaimed Tsotchke wiring ("wiring=1.0" across the
- * board, omitting that the 4 LLM/chain/API repos are deliberately fenced). These
+ * board, omitting that four external LLM/chain/license-boundary repos are deliberately fenced). These
  * tests make `bun run check` / CI FAIL on either problem, so no writer — script
  * or LLM loop — can publish corrupted or untruthful docs. Fix encoding with
  * `bun scripts/normalize-docs.ts`; truth is a manual edit.
@@ -223,11 +223,13 @@ describe('docs truth law — honest Tsotchke wiring', () => {
     expect(offenders).toEqual([]);
   });
 
-  test('living surfaces acknowledge the fenced LLM/chain/API repos', async () => {
+  test('living surfaces acknowledge the corrected four-repository fence', async () => {
     for (const rel of LIVING) {
       const file = Bun.file(rel);
       if (!(await file.exists())) continue;
-      expect((await file.text()).toLowerCase()).toContain('fenced');
+      const text = (await file.text()).toLowerCase();
+      expect(text).toContain('fenced');
+      expect(text).toContain('obliteratus');
     }
   });
 });

@@ -1,11 +1,11 @@
 /**
- * CLASSICAL CONTRAST — a classical PRNG baseline (LCG) measured AGAINST the project's
- * quantum-inspired Eshkol QRNG.
+ * CLASSICAL CONTRAST — an LCG baseline compared with the project's deterministic
+ * classical state-vector RNG adapter.
  *
  * The point of this leaf is the CONTRAST: it runs two streams of the same length —
  *   • the classical linear-congruential generator below (the `classical_rng` baseline), and
- *   • the {@link EshkolQrng} (the consciousness-substrate "quantum-inspired" generator) —
- * and quantifies how their statistical signatures differ on two real randomness tests:
+ *   • the {@link EshkolQrng} seeded state-vector adapter —
+ * and quantifies how their descriptive sample statistics differ on two diagnostics:
  *
  *   1. Lag-1 serial correlation r₁ = Σ(xₜ−x̄)(xₜ₊₁−x̄) / Σ(xₜ−x̄)². A perfectly independent
  *      stream has r₁ ≈ 0; a correlated/structured stream has |r₁| → 1. (Knuth, TAOCP vol. 2, §3.3.2.)
@@ -16,12 +16,13 @@
  * [0,1]. It is finite, deterministic (seeded — both streams derive from one uint32 seed), and it
  * cleanly separates a pathological stream (e.g. a constant) from a good one: a constant stream has
  * r₁ that collapses to 0-variance (treated as maximally degenerate) and a maximally non-uniform χ²,
- * so its contrast against either real generator saturates near 1.
+ * so its contrast against either deterministic generator saturates near 1.
  *
  * Determinism (CLAUDE.md operational law; docs/PHILOSOPHY-2026-06-26.md): no Math.random / Date.now. The LCG is
  * a closed-form recurrence; the Eshkol generator is seeded through {@link mulberry32}.
  *
- * MIT © tsotchke for the LCG baseline + Eshkol QRNG — see THIRD-PARTY-NOTICES.md.
+ * Upstream metric and generator provenance is recorded in THIRD-PARTY-NOTICES.md. These diagnostics
+ * do not validate a physical entropy source, unpredictability, independence, or cryptographic security.
  */
 
 import { EshkolQrng } from '../math/eshkol-qrng';
@@ -32,7 +33,7 @@ export function classicalLcgStep(state: number): number {
   return (Math.imul(state, 1664525) + 1013904223) >>> 0;
 }
 
-/** Murmur3 fmix32 avalanche finalizer — the real bit-mixing classical_rng uses. O(1). */
+/** Murmur3 fmix32 avalanche finalizer used by the local classical_rng-style mixer. O(1). */
 export function mixFast(x: number): number {
   let h = x >>> 0;
   h ^= h >>> 16;
@@ -84,9 +85,9 @@ export function classicalEntropyGap(seed: number, n: number): number {
 }
 
 /**
- * REAL classical-vs-quantum contrast: how much more uniform the Eshkol QRNG is than
- * the classical generator, mapped to [0,1] (0.5 = parity, >0.5 = quantum more random).
- * `quantumEntropy` is the normalized Shannon entropy reported by the QRNG snapshot.
+ * Legacy classical-vs-"quantum" contrast API: compares normalized empirical Shannon estimates,
+ * mapped to [0,1] (0.5 = parity, >0.5 = the adapter's supplied estimate is higher).
+ * `quantumEntropy` is a historical parameter name; it is not a physical entropy measurement.
  */
 export function classicalQuantumContrast(seed: number, n: number, quantumEntropy: number): number {
   const c = classicalShannonEntropy(seed, n);
@@ -180,7 +181,7 @@ function classicalStream(seed: number, n: number): number[] {
   return out;
 }
 
-/** Draw `n` Eshkol-QRNG samples in [0,1) from a seed (its own seeded stream). O(n·step-amortized). */
+/** Draw `n` seeded state-vector-adapter samples in [0,1). O(n·step-amortized). */
 function quantumStream(seed: number, n: number): number[] {
   const qrng = new EshkolQrng(mulberry32(seed >>> 0 || 1));
   const out: number[] = Array.from({ length: n }, () => 0);
@@ -188,11 +189,11 @@ function quantumStream(seed: number, n: number): number[] {
   return out;
 }
 
-/** The full classical-vs-quantum contrast report for a seed and sample count. */
+/** Statistical contrast report for the LCG and deterministic state-vector adapter. */
 export interface RngContrast {
   /** Classical LCG stream signature. */
   classical: RandomnessSignature;
-  /** Eshkol quantum-inspired stream signature. */
+  /** Eshkol deterministic state-vector-adapter stream signature (legacy field name). */
   quantum: RandomnessSignature;
   /** |Δ serial-correlation| between the streams, in [0,1]. */
   serialGap: number;
@@ -203,13 +204,13 @@ export interface RngContrast {
 }
 
 /**
- * GENUINE classical-vs-quantum contrast: run the classical LCG and the Eshkol QRNG for `n` samples
+ * Run the classical LCG and deterministic Eshkol adapter for `n` samples
  * each from the same seed, compute both randomness signatures, and return the bounded gap between
  * them. Deterministic and finite for any seed.
  *
  * The blended `contrast` combines the serial-correlation gap and the uniformity gap; both inputs are
  * squashed into [0,1] so the result is always bounded. A deliberately-bad stream (e.g. a constant,
- * via {@link contrastVsStream}) reads near 1 against either real generator; two well-behaved
+ * via {@link contrastVsStream}) reads near 1 against either deterministic generator; two well-behaved
  * generators read low.
  *
  * @param seed — uint32 seed driving BOTH streams (each derives its own substream deterministically).

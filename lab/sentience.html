@@ -243,6 +243,14 @@
         min-width: 0;
       }
 
+      .operational-receipt {
+        border-color: color-mix(in srgb, var(--gold) 48%, var(--line));
+      }
+
+      .operational-receipt p + p {
+        margin-top: 8px;
+      }
+
       .panel-head {
         display: flex;
         justify-content: space-between;
@@ -384,6 +392,27 @@
             <button id="csv-runs" type="button">Runs CSV</button>
             <button id="csv-entities" type="button">Entities CSV</button>
           </div>
+        </section>
+        <section class="panel operational-receipt" aria-label="Operational intelligence receipt">
+          <div class="panel-head">
+            <h2>Operational organism intelligence · held-out receipt</h2>
+            <a
+              class="action-link"
+              href="../../docs/reports/assets/organism-intelligence-causal-benchmark-v2.json"
+              >30-seed JSON</a
+            >
+          </div>
+          <p>
+            Goal seeking passed against the substrate-disabled control; all 17 integrated repository
+            channels changed behavior, while all 5 excluded channels (4 fenced plus 1 metadata) were
+            inert. Post-reversal adaptation improved by 3.913%, below the preregistered 5%
+            acceptance threshold.
+          </p>
+          <p class="muted">
+            This task receipt is not sentience evidence. Numeric scores remain frozen for sentience
+            and consciousness; the telemetry below remains a static-profile, proxy-only lab. The
+            receipt found no substrate-specific or quantum-specific uplift.
+          </p>
         </section>
       </main>
     </div>

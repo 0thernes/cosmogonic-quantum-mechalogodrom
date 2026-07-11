@@ -4,6 +4,7 @@
  */
 
 import type { Rng } from '../math/rng';
+import type { OrganismIntelligenceSignal } from '../types';
 import { clamp } from '../math/scalar';
 import {
   getEshkolProgramFingerprint,
@@ -105,7 +106,12 @@ export class PrimordialSoup {
     return -1;
   }
 
-  update(input: number | Float32Array, beatOrDt = 0, rng: Rng = this.rng): void {
+  update(
+    input: number | Float32Array,
+    beatOrDt = 0,
+    rng: Rng = this.rng,
+    intelligence?: OrganismIntelligenceSignal,
+  ): void {
     this.tick++;
     const archonIdx = typeof input === 'number' ? input : Math.floor(((input[0] ?? 0) * 10) % 10);
     const beat = typeof input === 'number' ? beatOrDt : this.tick;
@@ -159,7 +165,14 @@ export class PrimordialSoup {
             ? (prog.length % 997) / 997
             : (Number(prog) % 997) / 997;
       const growth =
-        0.001 + (corpus + inputCatalysis * 0.25) * 0.002 * wiring + programBoost * 0.001;
+        0.001 +
+        (corpus + inputCatalysis * 0.25) * 0.002 * wiring +
+        programBoost * 0.001 +
+        (intelligence?.enabled
+          ? intelligence.resourcePressure *
+            intelligence.plasticity *
+            (0.00015 + programBoost * 0.0001)
+          : 0);
       // DEEP Tsotchke PINN wiring (promote telemetry): Gray-Scott residual as metabolism health -> vitality boost for digital biologics.
       // PINN from Tsotchke corpus provides physics-informed field residual; high loss = low health = selection pressure.
       const pinnHealth = pinnLoss(
@@ -178,7 +191,11 @@ export class PrimordialSoup {
       const UPKEEP = 0.004;
       this.vitality[i] = clamp01(v * (1 - UPKEEP) + growth + pinnFactor);
       this.consciousness[i] = clamp01(
-        c * 0.98 + (corpus + (this.symmetry[i] ?? 0)) * 0.01 * wiring,
+        c * 0.98 +
+          (corpus + (this.symmetry[i] ?? 0)) * 0.01 * wiring +
+          (intelligence?.enabled
+            ? (intelligence.socialDrive + intelligence.forecast) * 0.00035
+            : 0),
       );
       if ((this.vitality[i] ?? 0) < 0.05 && (this.generation[i] ?? 0) < 5) {
         this.alive[i] = 0;

@@ -24,6 +24,10 @@ export interface WorkerTask {
   /** Finite simulation delta in seconds; the pool defensively normalizes it again. */
   dt: number;
   chunkId?: string;
+  /** Optional ADR-0013 bounded wilderness policy channels; absent preserves the legacy kernel exactly. */
+  intelligenceResource?: number;
+  intelligenceThreat?: number;
+  intelligenceExplore?: number;
 }
 
 export interface WorkerResult {

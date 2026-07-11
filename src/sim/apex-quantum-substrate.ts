@@ -3,7 +3,7 @@
  *
  * The owner mandate is non-negotiable: the APEX #101 has a Quantum Brain built on the Tsotchke corpus,
  * and it must scale toward a billion. Storing 2³⁰ dense amplitudes (≈8 GB) is impossible in a browser,
- * so this substrate reaches a billion dimensions the way real quantum information theory does — with
+ * so this classical simulation reaches a billion model dimensions using quantum-information structure:
  * two complementary engines:
  *
  * - **Dense exact core** — a {@link QuantumRegister} (≤ 8 qubits, 2⁸ = 256 amplitudes). Small, exact,
@@ -11,7 +11,8 @@
  * - **Stabilizer reflex** — a {@link CliffordTableau} of up to 30 qubits. By the Gottesman–Knill
  *   theorem (Aaronson & Gottesman 2004) a stabilizer state on `q` qubits is a `2^q`-dimensional vector
  *   represented by O(q²) bits; `q = 30` addresses 2³⁰ ≈ 1.07e9 basis states with ~1.8 KB of tableau.
- *   THIS is the honest billion: real quantum state space, real entanglement, polynomial storage.
+ *   This is an addressable simulated Hilbert-space dimension with model entanglement and polynomial
+ *   storage; it is not a billion resident amplitudes or physical quantum hardware.
  *
  * Both are Tsotchke primitives ({@link ../math/quantum}, {@link ../math/clifford-tableau}) and the
  * substrate is coupled to the live corpus via {@link corpusPulse} (QGT volume, clifford, AD gradient).

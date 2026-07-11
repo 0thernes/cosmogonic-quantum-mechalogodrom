@@ -135,6 +135,45 @@ export interface Entity extends THREE.Mesh<THREE.BufferGeometry, THREE.MeshStand
   userData: EntityData;
 }
 
+/**
+ * Stable, composition-root-owned cognition signal shared by living systems.
+ *
+ * Every scalar is finite and clamped to `[0,1]`. The object is mutated in place on a slow deterministic
+ * cadence; consumers must read it synchronously and must not retain assumptions about a particular
+ * revision. `indicatorOnly` is a permanent scientific boundary: this is operational control data, not
+ * evidence of phenomenal consciousness, sentience, physical quantum entropy, or general intelligence.
+ */
+export interface OrganismIntelligenceSignal {
+  enabled: boolean;
+  indicatorOnly: true;
+  revision: number;
+  resourcePressure: number;
+  threatResponse: number;
+  exploration: number;
+  socialDrive: number;
+  plasticity: number;
+  forecast: number;
+  confidence: number;
+  corpusDrive: number;
+  /** Four bounded aggregate corpus channels; the Float32Array identity is stable. */
+  channels: Float32Array;
+  integratedRepoCount: number;
+  diagnosticAlert: boolean;
+}
+
+/**
+ * EntityManager-owned ecological goals, indexed by the current compacted entity/brain slot.
+ * Typed arrays are allocated once at the quality-tier ceiling and updated in place; EntityBrainField
+ * reads them one frame later without a query or allocation.
+ */
+export interface OrganismGoalField {
+  readonly directionX: Float32Array;
+  readonly directionZ: Float32Array;
+  readonly desire: Float32Array;
+  readonly cover: Float32Array;
+  readonly revision: Uint32Array;
+}
+
 /** One procedurally generated morphotype (100 legacy / 250 in phylum mode). */
 export interface MorphType {
   id: number;
@@ -234,6 +273,8 @@ export interface SimContext {
   morphs: MorphType[];
   geos: THREE.BufferGeometry[];
   state: SimState;
+  /** Optional in headless/legacy contexts; the live World always supplies one stable signal object. */
+  organismIntelligence?: OrganismIntelligenceSignal;
   audit: AuditTrail;
   sfx: (type: SfxType) => void;
   /** Rare per-morph creature voice (palette index); optional — wired by world.ts. */

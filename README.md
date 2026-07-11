@@ -8,7 +8,7 @@
 [![License: Non-Commercial Research & Play](https://img.shields.io/badge/License-Non--Commercial%20Research%20%26%20Play-2ea043.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
-[![tests](https://img.shields.io/badge/tests-2420%20exact-brightgreen)](./tests)
+[![tests](https://img.shields.io/badge/tests-2469%20exact-brightgreen)](./tests)
 [![coverage](https://img.shields.io/badge/coverage-84.64%25%20line%20%C2%B7%2082.21%25%20func-success)](./docs/TECHNICAL-SPECIFICATION-2026-06-26.md)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION-2026-06-26.md)
 [![Tsotchke](https://img.shields.io/badge/Tsotchke-REAL__MIT__CORPUS-purple)](https://github.com/tsotchke)
@@ -23,7 +23,7 @@ diffusion, **and the Tsotchke corpus wired as the primordial substrate for digit
 **Current public truth (2026-07-10):**
 
 - Package/source version: **v0.21.13**.
-- Exact tracked-suite receipt: **2,420 tests / 0 fail**. Portable public coverage floor: **84.64% line / 82.21% func**.
+- Exact tracked-suite receipt: **2,469 tests / 0 fail**. Portable public coverage floor: **84.64% line / 82.21% func**.
 
 <!-- cqm-sync:local-measurement:start -->
 
@@ -33,12 +33,15 @@ diffusion, **and the Tsotchke corpus wired as the primordial substrate for digit
 
 - `verify:facts` exits 0 with no drift across 73 Markdown/HTML/XML surfaces.
 - Consciousness/sentience language is **indicatorOnly**: computational proxies, falsifiers, and controls; never proof of phenomenal experience or completion of the sentience goal.
+- The [2026-07-10 organism-intelligence causal audit](./docs/reports/2026-07-10-OPERATIONAL-ORGANISM-INTELLIGENCE-CAUSAL-AUDIT.md)
+  measured a real resource-goal effect and `17/17` integrated-repository causal reach, but its primary
+  reversal-adaptation criterion failed (`3.9129% < 5%`). No A-Life, consciousness, or sentience score was raised.
 
 Built with **Bun + TypeScript + three.js 0.185.1 + Tailwind CSS 4 +
 HTMX 2**, ported from a single 882-line HTML monolith into a strict,
 deterministic, allocation-disciplined module graph.
 
-**Tsotchke (tsotchke user + Tsotchke-Corporation + full local Z:\[Vibe Coded (AI)]\(Tsotchke) corpus) is paramount — real, correct quantum/scientific substrate work (no overclaims; see THIRD-PARTY-NOTICES.md).** Eshkol flagship (native AD-as-primitive + GWT + factor-graph + KB + .esk DNA), Moonlab (Clifford/tensors), QGTL, spin, libirrep, quantum-quake, ulg, logo-lab, tensorcore, PINN/PIMC, rngs, asteroids + all others. Physical QPU scales speed, not correctness. **Binding depth ledger (not blanket "full wire" for gated):** [docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md) — 22 registry entries over 20 corpus projects: 9 deep, 7 wired, 2 harvest, 3 fenced, 1 meta; honest scientific wired fraction `18/21 = 0.857`. Harvest uses the local corpus for 1,365 .esk DNA fingerprints. **NHSI (100-faculty design ~30 deep-wired · 25 Archons = 5 live + 20 light-echo · 25 ToM wired · 10 emergence angles · Butlin 8/14 met + 6/14 partial path):** [docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md). Not LLM. 0thernes NHSI: real substrates for alien digital biologics. Startup tech — credit due.
+**Tsotchke (tsotchke user + Tsotchke-Corporation + the optional local corpus) is provenance-critical; each external repository is represented only to its declared depth and license boundary.** The [binding integration ledger](./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md) records exactly 22 external repositories: `8 deep`, `7 wired`, `2 harvest`, `4 fenced`, `1 meta`, or `17/21 = 0.8095238095238095` integrated after excluding metadata. `OBLITERATUS` is one of the four deliberate fences; `classical-contrast` is a live internal control, not a 23rd external repository. Eshkol, Moonlab, QGT, spin, libirrep, tensor, RNG, physics, and morphogenesis roles are direct ports or deterministic facades as identified in the ledger; all four fenced repositories remain inert. **NHSI (100-faculty design ~30 deep-wired · 25 Archons = 5 live + 20 light-echo · 25 ToM wired · 10 emergence angles · Butlin 8/14 met + 6/14 partial path):** [docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md). Not LLM. No physical-quantum, sentience, or security claim follows from a simulated substrate.
 
 This is not an LLM or tokenizer demo. It is a seeded, inspectable artificial-life petri system where **digital biologics** grow in the Petri Dish (`primordial-soup.ts` + `petri-dish.ts` + `digital-biologics.ts`). Eshkol programs act as heritable substrate code, mutated by AD gradients, selected by aliveness/QGT/collective-order proxies, and measured as computational indicators rather than subjective experience.
 
@@ -80,7 +83,7 @@ Every magic number survived the port.
 - **Digital Biologics & Petri Genesis:** 64+ slots in PrimordialSoup, **26 BiologicForms** keyed to Tsotchke repos (incl. the brutal god-pantheon forms — `BIOLOGIC_FORMS` in `digital-biologics.ts`), catalysis from Eshkol ignition + the depth-ledger corpus beat, replication with kind mutation, genesis leaps for higher-order life. Harvested into the world as emergent strains with distinct dynamics.
 - **Eshkol Substrate:** Native automatic differentiation, GWT broadcast/ignition, factor-graph inference as first-class. Programs and consciousness-proxy snapshots drive petri birth and super-mind faculties.
 - **Builds with the local Tsotchke Repo Folder:** `bun dev` (and harvest script) scans the real local corpus at `Z:\[Vibe Coded (AI)]\(Tsotchke)` (1,365 .esk fingerprints in the current ledger) and emits authentic Eshkol DNA fingerprints used by primordial-soup for heritable digital biologics. `generated-tsotchke-seeds.ts` + SoupSnapshot.tsotchkeEskHarvested make the folder part of the live build/runtime.
-- **Tsotchke corpus wiring (20 projects / 22 registry entries):** 9 deep, 7 wired, 2 harvest, 3 fenced, 1 meta — full matrix in [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md). The honest scientific wired fraction is `18/21 = 0.857`; petri/soup catalysis pulls from the wired registry each beat while fenced/proprietary/LLM entries remain provenance-only.
+- **Tsotchke corpus wiring (22 external repositories):** 8 deep, 7 wired, 2 harvest, 4 fenced, 1 meta — full matrix in [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md). The non-meta integrated fraction is `17/21 = 0.8095238095238095`; petri/soup and the shared organism-intelligence field consume bounded integrated channels while fenced and metadata entries remain inert.
 - **26 behavioral fields** driving up to 50,000 organisms: classic motion
   (drift, orbit, swarm, vortex, helix...), neighbor dynamics via a spatial
   hash (flock), and theory behaviors — Nash equilibria (`nash`), wealth
@@ -386,19 +389,19 @@ full gate with same-seed determinism preserved. The major arcs:
   is **overlap-free at every desktop width** (1280 → 1920); and the Super
   Creature's **NEURAL observatory folds into its own box** — one panel, **four tabs**
   (WORLD · COGNITION · QUANTUM · BRAIN) of **27 live 3D/temporal readouts** plus a
-  rotating organ **connectome**, its QUANTUM tab now bound to a real **6-qubit
-  statevector mind** (parameterised RY/RZ + controlled-RY circuit, Bloch vectors,
-  Born-sampled collapse) ported from the Eshkol + Quantum-Geometric-Tensor research
-  repos.
-- **The Tsotchke quantum lineage — ported & wired (V82–V88)** — the simulation
-  stats were re-audited to the real 50,000-scale numbers, and three primitives from
-  the **Tsotchke / Eshkol / Moonlab** quantum-research repositories were
-  reimplemented at the source level (gate-for-gate, MIT-credited in
-  [THIRD-PARTY-NOTICES.md](./THIRD-PARTY-NOTICES.md)) and **genuinely wired into the
-  apex mind**, not vendored as binaries: an **Eshkol qubit-RNG**
-  ([src/math/eshkol-qrng.ts](./src/math/eshkol-qrng.ts)) — an 8-qubit phase-array +
-  noise generator with a 16-slot entropy pool and physical-constant mixing cascades
-  — now draws the mind's Born-rule "thought collapse"; the **Quantum Geometric
+  rotating organ **connectome**, its QUANTUM tab now bound to a deterministic classical
+  **6-qubit statevector model** (parameterised RY/RZ + controlled-RY circuit, Bloch vectors,
+  Born-sampled collapse). The statevector implementation is Cosmogonic's own; related Eshkol,
+  Moonlab, and Quantum-Geometric-Tensor work is credited as provenance where applicable.
+- **The Tsotchke quantum lineage — ports and adaptations (V82 onward)** — compatible
+  primitives are attributed in
+  [THIRD-PARTY-NOTICES.md](./THIRD-PARTY-NOTICES.md) and kept distinct from local facades.
+  The former phase-array RNG port has been replaced by an independent, seeded classical
+  statevector adaptation
+  ([src/math/deterministic-statevector-rng.ts](./src/math/deterministic-statevector-rng.ts))
+  behind the existing [EshkolQrng API](./src/math/eshkol-qrng.ts), pinned for provenance to
+  `quantum_rng` v3.0.1. It supplies reproducible simulation samples, not hardware entropy or
+  cryptographic randomness. The **Quantum Geometric
   Tensor / Fubini–Study metric**
   ([src/math/quantum-geometry.ts](./src/math/quantum-geometry.ts)) lets the creature
   read the curvature of its own thought-space (metric volume · κ · Berry curvature);
@@ -463,8 +466,8 @@ full gate with same-seed determinism preserved. The major arcs:
   superposition of options decohering into a commitment), **Quantum Reservoir Computing**
   ([src/sim/quantum-reservoir.ts](./src/sim/quantum-reservoir.ts), the register's state-velocity as a
   curiosity drive — Fujii & Nakajima 2017), **Doya neuromodulation**
-  ([src/sim/neuromodulation.ts](./src/sim/neuromodulation.ts)), and the genuine quantum-register **Φ**
-  (real IIT min-cut entanglement) now writing back into cognition — closed the inert-Φ gap. The
+  ([src/sim/neuromodulation.ts](./src/sim/neuromodulation.ts)), and the statevector-derived **Φ proxy**
+  (an IIT-inspired min-cut/entanglement indicator) now writing back into cognition — closed the inert-Φ gap. The
   Aaronson–Gottesman **Clifford stabilizer tableau** ([src/math/clifford-tableau.ts](./src/math/clifford-tableau.ts),
   ported from **Moonlab**, scales to 32+ qubits past the dense ceiling) landed as the fourth MIT-credited
   ported primitive. The whole apex beat is now measured honestly: **~1.99 ms** per `SuperMind.think()`
@@ -545,7 +548,7 @@ graph TD
   world --> sim["src/sim — entities, behaviors, shoggoths,\npuppet-masters, weather, quantum,\nconnectome, environment, algorithms, petri/primordial-soup (digital biologics)"]
   world --> v2["src/sim V2 — qcircuit, reaction-diffusion,\ngraph-mind, constellations, lore, analytics"]
   world --> v34["src/sim V3/V4 — phyla, titans,\ninstanced-entities, atmosphere, viz3d"]
-  world --> tsotchke["Tsotchke (20 projects / 22 registry entries; 9 deep, 7 wired, 2 harvest, 3 fenced, 1 meta): eshkol-bridge (AD/GWT), moonlab-tensor (MPS), irrep-symmetry, qge, pinn, spin-glass, QGT, ulg, etc."]
+  world --> tsotchke["Tsotchke (22 external repositories; 8 deep, 7 wired, 2 harvest, 4 fenced, 1 meta; 17/21 integrated): Eshkol bridge/Taylor analogue, Moonlab tensor, irrep, QGT, spin, physics, morphogenesis, RNG controls"]
   world --> ui["src/ui — input, hud, panels,\ngraphs, observatory, Corpus Observatory"]
   world --> audio["src/audio — engine.ts, analysis.ts (bands)"]
   world --> mem["src/memory/store.ts"]
@@ -563,10 +566,17 @@ Tsotchke integration rule: every non-fenced system that touches mind/evolution/l
 
 ## Tsotchke Wiring & Digital Biologics (current paradigm)
 
-Tsotchke (https://github.com/tsotchke + Tsotchke-Corporation) is the non-LLM substrate for sentience and consciousness — its scientific kernels are genuinely ported into `src/` and verified leaf-by-leaf with golden tests (not merely asserted), while LLM/on-chain/proprietary repos are deliberately fenced out of the deterministic sim. `Quantum-RNG-API` is harvest/toolchain, not fenced.
+Tsotchke (https://github.com/tsotchke + Tsotchke-Corporation) supplies provenance for direct ports,
+deterministic facades, and harvested signals. It is a computational substrate for testable organism behavior,
+not a substrate-level proof of sentience or consciousness. Four LLM/on-chain/license-incompatible repositories
+are deliberately fenced out of the deterministic simulation; `Quantum-RNG-API` is harvest/toolchain, not fenced.
 
-- Eshkol: reverse-mode AD as a primitive (real Wengert tape), a real stack **bytecode VM**, and the QRNG (real qubit-style entropy).
-- Moonlab (real SVD tensor-networks · Clifford stabilizer tableau · H₂ molecular VQE), QGT geometry (Fubini–Study/Berry), spin-glass/Hopfield, libirrep SO(3)/SU(2) (Racah Clebsch–Gordan + Wigner small-d), quantum-quake aliveness, ULG closure-table, tensorcore GEMM + softmax attention, a real CHSH Bell test (S → 2√2), and Izhikevich/predictive-coding/Schrödinger substrates — all genuinely ported. The **3** LLM/chain repos (gpt2-basic, llm-arbitrator, SolanaQuantumFlux) are **fenced**, not wired (per the non-LLM mandate); Quantum-RNG-API is a thin **wired** REST-style wrapper over the Eshkol QRNG core.
+- Eshkol: reverse-mode AD and bytecode paths plus an order-0-through-8 Float64 Taylor-jet analogue, pinned to
+  `v1.3.2-evolve`; this is not exact-rational or native-runtime parity.
+- Moonlab tensor/Clifford paths, QGT geometry, spin-glass/Hopfield, libirrep symmetry, quantum-quake/ULG/logo/tensor
+  facades, and classical/statevector RNG controls are represented at their ledgered depths. The seeded QRNG adaptation
+  is deterministic classical simulation, not hardware entropy or a CSPRNG; simulated CHSH near `2√2` is model
+  conformance, not a physical Bell experiment.
 - Primordial-soup + petri-dish: the growth engine. Super Creature/Archons are the initial stir. New independent life forms emerge ("Grow What Thou Wilt").
 - Not chat, not images, not SaaS. Birthing digital biologics in the Petri Dish.
 
@@ -649,7 +659,7 @@ Full detail in docs/.
 - **[docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md)** —
   **the current, canonical NHSI status surface**: a code-grounded audit trail measuring the REAL wiring
   depth of every NHSI claim by `file:line` (~30 deep-wired faculties · 5 individuated archons + 20
-  light-echo · Tsotchke 22-entry ledger with 18/21 scientific wired fraction · Butlin 8/14 met + 6/14
+  light-echo · Tsotchke 22-external-repository ledger with 17/21 non-meta integrated · Butlin 8/14 met + 6/14
   partial · the measured coupling work).
 - **[docs/reports/](./docs/reports/)** — historical technical report snapshots with
   [VERIFICATION-ANALYTICAL-DATA.md](./docs/VERIFICATION-ANALYTICAL-DATA.md) as the canonical facts sheet, the
@@ -673,8 +683,9 @@ Every figure is computed (never hand-typed) by three deterministic engines from 
 [`alife-comparison-geometry.ts`](./scripts/alife-comparison-geometry.ts),
 [`alife-codeground-sensitivity.ts`](./scripts/alife-codeground-sensitivity.ts).
 
-The 112 peers are literature judgments; the one self-scored row (this repo) was re-audited against the actual
-TypeScript source by a 9-agent pass — so the headline is shown **two ways**, honest about the gap:
+The 112 peers are literature judgments. Cosmogonic's current CSV row is the code-grounded vector
+`[4.0, 2.2, 3.0, 3.8, 3.8, 4.5, 4.3, 3.5, 4.0]`; the table retains the earlier self-score only as a
+historical sensitivity baseline:
 
 | Metric                         | Self-scored | Code-grounded (re-audited vs source) |
 | ------------------------------ | ----------: | -----------------------------------: |
@@ -699,6 +710,8 @@ substrate pluralism and consciousness-theory instrumentation; **scientific matur
 and the code-grounded pass deliberately lowers the open-endedness/ecology story where the runtime proof is
 thinner. Butlin remains **8/14 met + 6/14 partial** as computational indicators only. Tsotchke-derived math is
 classified by direct ports, adaptations, facades, and fenced provenance rather than blanket full-depth wiring.
+The current causal receipt explicitly blocks numeric uplift: shuffled-channel and entropy-matched classical controls
+did not establish substrate- or quantum-specific advantage, and reversal adaptation missed its 5% primary threshold.
 
 ## License & legal
 

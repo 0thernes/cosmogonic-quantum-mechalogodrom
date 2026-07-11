@@ -535,13 +535,21 @@ export class ShoggothSystem implements PortalCullable {
           nearBold = clamp(this.econWealth(nearJ) / meanWorth, BOLD_MIN, BOLD_MAX);
         peer = clamp(1 - Math.abs(boldness - nearBold) / PEER_SPAN, 0, 1);
       }
+      const intelligence = ctx.organismIntelligence;
+      const intelligent = intelligence?.enabled === true;
       const drive = creatureDrive({
-        threat,
-        prey,
+        threat: intelligent
+          ? clamp(threat * (0.84 + intelligence.threatResponse * 0.32), 0, 1)
+          : threat,
+        prey: intelligent
+          ? clamp(prey * (0.84 + intelligence.resourcePressure * 0.32), 0, 1)
+          : prey,
         satiation: sg.satiation,
-        boldness,
+        boldness: intelligent
+          ? clamp(boldness * (0.9 + intelligence.confidence * 0.15), BOLD_MIN, BOLD_MAX)
+          : boldness,
         partner,
-        peer,
+        peer: intelligent ? clamp(peer * (0.85 + intelligence.socialDrive * 0.3), 0, 1) : peer,
       });
       // Drive the MIND shader from the real F-COGNITION drives (each already/now clamped to [0,1]) so
       // the shoggoth's inner state — how fed, how threatened, how hungry, how agitated — reads out on
@@ -592,7 +600,8 @@ export class ShoggothSystem implements PortalCullable {
       const wdy = wty - p.y;
       const wdz = wtz - p.z;
       // USER: faster, more kinetic roaming — seek accel 0.04→0.11, weave amps ~2.3× (+ damping 0.985→0.97).
-      const wInv = 0.11 / (Math.sqrt(wdx * wdx + wdy * wdy + wdz * wdz) + 1e-6);
+      const roamGain = intelligent ? 0.88 + intelligence.exploration * 0.24 : 1;
+      const wInv = (0.11 * roamGain) / (Math.sqrt(wdx * wdx + wdy * wdy + wdz * wdz) + 1e-6);
       sg.vel.x += wdx * wInv + Math.sin(t * 0.7 + si * 1.3) * 0.07;
       sg.vel.y += wdy * wInv + Math.sin(t * 0.53 + si * 2.1) * 0.05;
       sg.vel.z += wdz * wInv + Math.cos(t * 0.61 + si * 0.7) * 0.07;

@@ -1,7 +1,7 @@
 /**
  * Quantum-quake QGE REAL geometry — falsifiable closed-form receipts.
  *
- * Asserts the genuine quantum-geometric identities (not surrogate trig):
+ * Asserts quantum-geometric identities in the numerical state model (not surrogate trig):
  *   • Fubini–Study self-distance is 0 and orthogonal states give π/2.
  *   • Berry curvature is antisymmetric (F_ij = −F_ji), here its diagonal dual self-consistency.
  *   • computeQGE genuinely depends on the state (changes when the state changes) and is seed-stable.

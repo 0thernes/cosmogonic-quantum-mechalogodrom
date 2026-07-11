@@ -1,6 +1,7 @@
 {
-  "note": "sensitivity of the A-Life headline stats to code-grounded re-scoring of the one self-scored row",
-  "selfScored": {
+  "note": "sensitivity of A-Life headline statistics: superseded historical optimistic self-score versus the canonical code-grounded CSV profile",
+  "canonicalSource": "docs/reports/2026-06-26-alife-comparison-matrix.csv",
+  "historicalSelfScored": {
     "axes": [
       4,
       3.5,
@@ -69,7 +70,7 @@
       }
     ]
   },
-  "codeGrounded": {
+  "canonicalCodeGrounded": {
     "axes": [
       4,
       2.2,
@@ -139,6 +140,7 @@
     ]
   },
   "deltas": {
+    "basis": "canonical-minus-historical",
     "breadth": -0.766,
     "zPopulation": -1.192,
     "mahalanobis": -2.403

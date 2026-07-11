@@ -24,6 +24,9 @@ export interface WorkerMessage {
   seed: number;
   dt: number;
   chunkId?: string;
+  intelligenceResource?: number;
+  intelligenceThreat?: number;
+  intelligenceExplore?: number;
   generation: number;
   useSharedArrayBuffer: boolean;
 }
@@ -50,6 +53,15 @@ function isWorkerMessage(value: unknown): value is WorkerMessage {
     typeof message.dt === 'number' &&
     Number.isFinite(message.dt) &&
     (message.chunkId === undefined || typeof message.chunkId === 'string') &&
+    (message.intelligenceResource === undefined ||
+      (typeof message.intelligenceResource === 'number' &&
+        Number.isFinite(message.intelligenceResource))) &&
+    (message.intelligenceThreat === undefined ||
+      (typeof message.intelligenceThreat === 'number' &&
+        Number.isFinite(message.intelligenceThreat))) &&
+    (message.intelligenceExplore === undefined ||
+      (typeof message.intelligenceExplore === 'number' &&
+        Number.isFinite(message.intelligenceExplore))) &&
     typeof message.generation === 'number' &&
     Number.isSafeInteger(message.generation) &&
     message.generation >= 0 &&
@@ -80,6 +92,10 @@ self.onmessage = (event: MessageEvent<unknown>) => {
         message.seed,
         message.chunkId || '0,0',
         message.dt,
+        100,
+        message.intelligenceResource,
+        message.intelligenceThreat,
+        message.intelligenceExplore,
       );
     } else {
       // Simulation type - placeholder

@@ -1,9 +1,8 @@
 /**
- * QUANTUM RNG FULL (V3) — Eshkol QRNG with a REAL CHSH Bell test.
+ * QUANTUM RNG FULL (V3 MODEL) — deterministic state-vector sampler + CHSH model conformance.
  *
- * Extends the Eshkol QRNG (eshkol-qrng.ts) with a genuine Bell-inequality test
- * driven by an actual two-qubit statevector (`math/quantum.ts`), not the old
- * `cos²`-table-plus-noise proxy that was structurally pinned near S = 2.0.
+ * Uses the deterministic state-vector model adapted from quantum_rng v3.0.1 for output and an
+ * independent two-qubit statevector (`math/quantum.ts`) for a CHSH reference calculation.
  *
  * The test prepares the maximally-entangled Bell state |Φ⁺⟩ = (|00⟩+|11⟩)/√2
  * (H on q0, then CX), rotates each qubit's measurement axis into the X–Z plane by
@@ -11,24 +10,26 @@
  * straight from the Born-rule probabilities. With the canonical CHSH angles
  * (a=0, a′=π/2, b=π/4, b′=−π/4) the combination
  *   S = E(a,b) + E(a,b′) + E(a′,b) − E(a′,b′)
- * reaches the Tsirelson bound 2√2 ≈ 2.828 for the entangled state — a real
- * quantum violation of the classical bound 2. A separable (product) state can
- * only reach 2.
+ * reaches the quantum prediction 2√2 ≈ 2.828 for the modelled entangled state. This is a classical
+ * simulator conformance result: classical software can calculate it, and it is not a physical Bell
+ * experiment, proof of nonlocality, entropy-source validation, or security evidence.
  *
  * DETERMINISM (Manhattan): the Bell test is pure unitary linear algebra — NO
- * `Rng`, NO `Date.now`, exact every run. `entropy()` still samples the parent
- * generator for a Shannon-entropy estimate.
+ * `Rng`, NO `Date.now`, exact every run. `entropy()` samples the deterministic state-vector output for
+ * a Shannon-entropy diagnostic. The generator is not a CSPRNG or physical quantum entropy source.
  */
 
 import type { Rng } from './rng';
-import { EshkolQrng, type EshkolQrngSnapshot } from './eshkol-qrng';
 import { QuantumRegister } from './quantum';
+import { EshkolQrng, type EshkolQrngSnapshot } from './eshkol-qrng';
 
 /** Bell test result */
 export interface BellTestResult {
   S: number; /* CHSH S parameter */
-  violation: boolean; /* true if S > 2 (quantum violation) */
+  violation: boolean; /* true if the simulated CHSH value is above the local-hidden-variable bound */
   correlations: number[]; /* the four spin-spin correlations [E(a,b),E(a,b'),E(a',b),E(a',b')] */
+  modelConformance: true;
+  physicalExperiment: false;
 }
 
 /** Entropy estimate (Shannon entropy of recent output) */
@@ -58,8 +59,7 @@ export function bellCorrelation(angleA: number, angleB: number): number {
 }
 
 /**
- * Quantum RNG with Bell verification.
- * Extends EshkolQrng with additional validation methods.
+ * Deterministic classical state-vector model with CHSH reference diagnostics.
  */
 export class QuantumRngFull extends EshkolQrng {
   constructor(seed: Rng) {
@@ -67,8 +67,8 @@ export class QuantumRngFull extends EshkolQrng {
   }
 
   /**
-   * REAL CHSH Bell test on an entangled two-qubit statevector. Returns S ≈ 2√2
-   * (a genuine quantum violation), the violation flag, and the four correlations.
+   * CHSH model-conformance calculation on an entangled two-qubit statevector. Returns S ≈ 2√2,
+   * the threshold flag, and four correlations. It is explicitly not a physical experiment.
    */
   bellTest(): BellTestResult {
     const a = 0;
@@ -80,7 +80,13 @@ export class QuantumRngFull extends EshkolQrng {
     const Eapb = bellCorrelation(ap, b);
     const Eapbp = bellCorrelation(ap, bp);
     const S = Math.abs(Eab + Eabp + Eapb - Eapbp);
-    return { S, violation: S > 2.0, correlations: [Eab, Eabp, Eapb, Eapbp] };
+    return {
+      S,
+      violation: S > 2.0,
+      correlations: [Eab, Eabp, Eapb, Eapbp],
+      modelConformance: true,
+      physicalExperiment: false,
+    };
   }
 
   /**
@@ -126,9 +132,11 @@ export class QuantumRngFull extends EshkolQrng {
     bell: BellTestResult;
     entropy: EntropyEstimate;
   } {
-    const base = this.snapshot();
-    const bell = this.bellTest();
+    // entropy() advances 64 draws. Capture the base afterward so the receipt describes the live state
+    // at method return rather than a stream position 64 draws behind it.
     const ent = this.entropy();
+    const bell = this.bellTest();
+    const base = this.snapshot();
     return { ...base, bell, entropy: ent };
   }
 }

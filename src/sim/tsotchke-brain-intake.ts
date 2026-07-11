@@ -5,20 +5,20 @@
  * but the brain-facing pulse ({@link ./tsotchke-facade}.corpusPulse / getTsotchkeBias) only drew from the
  * 8 archetype families + one indexed repo — so a mind saw a NARROW slice of the corpus. This closes that
  * gap: every WIRED scientific Tsotchke substrate (all `wiring>0` entries except org-meta) contributes to a
- * compact brain-influence vector, each routed through that repo's OWN real substrate primitive (Eshkol AD,
- * Moonlab tensor contraction, libirrep SU(2), QGT aliveness, quake factor, tensorcore metal bias, ULG field,
- * classical/QRNG entropy) or, for the substrates whose primitive needs heavy state, through the registry's
- * real per-repo mapping (`corpusBeatForArchon` + hue + wiring). Fenced repos (gpt2-basic / llm-arbitrator /
- * SolanaQuantumFlux, `wiring===0`) and org-meta (`.github`) are excluded BY DESIGN — the non-LLM mandate.
+ * compact brain-influence vector, each routed through a dedicated bounded local primitive (Eshkol AD,
+ * Moonlab tensor contraction, libirrep SU(2), QGT proxy, quake factor, tensorcore facade, ULG field,
+ * classical/state-vector diagnostics) or, for substrates whose primitive needs heavy state, through the
+ * registry's per-repo mapping (`corpusBeatForArchon` + hue + wiring). Fenced repos (gpt2-basic,
+ * llm-arbitrator, SolanaQuantumFlux, OBLITERATUS; `wiring===0`) and org-meta (`.github`) are excluded by
+ * design. Facades and adapted models are not described as direct upstream ports or physical experiments.
  *
  * The point is not prose but MEASUREMENT: {@link corpusBrainAblation} removes each repo in turn and shows
- * its contribution is load-bearing (distance > 0) — the honest form of "all repos wired into the brain",
- * mirroring the APEX organ ablation harness. Pure & deterministic (no `Math.random`, no `Date.now`).
- * Tsotchke is real MIT-grade quantum math; this WIRES it, it never stubs or removes it.
+ * its contribution is load-bearing (distance > 0) — currently all 17 represented external entries,
+ * with four fences and one metadata entry intentionally inert. This mirrors the APEX organ ablation
+ * harness. Pure and deterministic (no `Math.random`, no `Date.now`).
  */
 import {
   getTsotchkeRepoByIndex,
-  corpusBeatForArchon,
   TSOTCHKE_REPO_COUNT,
   type TsotchkeRepoEntry,
   type TsotchkeRepoSlug,
@@ -31,10 +31,36 @@ import { classicalEntropyGap } from './classical-contrast';
 import { quakeQgeFactor } from './qge-physics';
 import { tensorcoreMorphBias } from './tensorcore-facade';
 import { ulgFieldSample } from './ulg-bridge';
+import {
+  storeHebbian,
+  energy as hopfieldEnergy,
+  overlap as hopfieldOverlap,
+} from '../math/hopfield';
+import { grayScottResidual, pinnLoss } from './pinn-residual';
+import { pathWeight } from './pimc-paths';
+import { asteroidEnergy, asteroidSpawn, asteroidStep, asteroidThrust } from './asteroids-physics';
+import { logoMorphScalar, type TurtleState } from './logo-turtle';
+import { eskCatalogVitality } from './homebrew-eshkol';
+import { perceptronTag } from './perceptron-baseline';
+import { TSOTCHKE_HARVEST } from './generated-tsotchke-seeds';
 
 const clamp01 = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v);
 /** Squash any real value into (0,1) so every substrate primitive contributes a bounded, finite term. */
 const squash = (v: number): number => (Number.isFinite(v) ? 0.5 + 0.5 * Math.tanh(v) : 0.5);
+
+// Fixed, module-owned substrate scratch. The shared field is single-threaded; resetting these values on
+// every call keeps the intake deterministic and avoids repository-specific heap churn.
+const HOP_PATTERNS = [
+  [1, 1, -1, -1],
+  [1, -1, 1, -1],
+] as const;
+const HOP_NET = storeHebbian(HOP_PATTERNS);
+const HOP_STATE = [1, 1, -1, -1];
+const PIMC_PATH = new Float32Array(6);
+const PERC_WEIGHTS = new Float32Array([0.7, -0.35, 0.5, 0.2]);
+const PERC_INPUT = new Float32Array(4);
+const LOGO_TURTLE: TurtleState = { x: 0, y: 0, heading: 0, penDown: true };
+const harmonicPotential = (x: number): number => 0.5 * x * x;
 
 /** True ⇔ this repo is a WIRED scientific substrate that should feed a brain (not fenced, not org-meta). */
 export function isBrainWired(repo: TsotchkeRepoEntry): boolean {
@@ -42,10 +68,10 @@ export function isBrainWired(repo: TsotchkeRepoEntry): boolean {
 }
 
 /**
- * One repo's REAL substrate contribution to the brain, routed through that repo's own Tsotchke primitive.
+ * One repo's local substrate contribution to the brain, routed through its declared primitive or facade.
  * Deterministic in `(repo, seed, frame, idx)`; bounded to (0,1) by {@link squash}.
  */
-function substrateScalar(
+export function substrateScalar(
   repo: TsotchkeRepoEntry,
   seed: number,
   frame: number,
@@ -55,43 +81,113 @@ function substrateScalar(
   const f = frame;
   let raw: number;
   switch (repo.substrate) {
-    case 'consciousness-engine': // Eshkol — real automatic-differentiation gradient
+    case 'consciousness-engine': // Eshkol — automatic-differentiation gradient
       raw = eshkolADGradient((x) => Math.sin(x * (1 + repo.hue)), s * 6.2832 + f * 0.01);
       break;
     case 'clifford-tensor': {
-      // Moonlab — real tensor contraction over a seed-derived vector
+      // Moonlab — tensor contraction over a seed-derived vector
       const v = [s, repo.hue, (s + repo.hue) % 1, ((f % 7) + 1) / 7];
       raw = moonlabTensorContract(v, v, 4);
       break;
     }
-    case 'metal-sim': // tensorcore — real metal GEMM morph bias
+    case 'metal-sim': // tensorcore — deterministic local GEMM morph-bias facade
       raw = tensorcoreMorphBias(4 + repo.hue * 12, 1 + (idx % 8));
       break;
-    case 'equivariant-sym': // libirrep — real SU(2) dimension + symmetry mode count
+    case 'equivariant-sym': // libirrep — SU(2) dimension + symmetry mode count
       raw = su2Dimension((idx % 5) * 0.5) + libirrepSymmetry(2 + (idx % 4), 8) * 0.01;
       break;
-    case 'quantum-geometry': // QGT — real aliveness proxy over curvature/phase
+    case 'quantum-geometry': // QGT — bounded aliveness proxy over curvature/phase
       raw = qgeAlivenessProxy(s, f * 0.017 + repo.hue * 6.2832);
       break;
-    case 'quake-aliveness': // quantum-quake — real QGE hybrid factor
+    case 'quake-aliveness': // quantum-quake — local QGE hybrid factor
       raw = quakeQgeFactor(0.5 + 0.4 * Math.sin(f * 0.05 + idx), 0.5 + repo.hue * 0.5);
       break;
-    case 'browser-hybrid': // ULG — real universal-law field sample
+    case 'browser-hybrid': // ULG — deterministic universal-law field sample
       raw = ulgFieldSample(s * 4, repo.hue * 4, idx % 5, f);
       break;
     case 'qrng-entropy': // quantum_rng
+      // Deterministic two-path interference diagnostic. The shared organism field separately samples
+      // the bounded state-vector model; this scalar does not pretend to be physical entropy.
+      raw = Math.sin((s + repo.hue) * Math.PI + f * 0.013) ** 2;
+      break;
     case 'classical-rng': // classical_rng
-    case 'qrng-api': // Quantum-RNG-API (eshkol-qrng REST facade)
       raw = classicalEntropyGap((seed ^ (idx * 0x9e37)) >>> 0, 16);
       break;
-    case 'classical-baseline': // simple_mnist / classical-contrast
-      raw = classicalEntropyGap((seed + idx * 131) >>> 0 || 1, 12);
+    case 'qrng-api': // Quantum-RNG-API: harvested API contract around the deterministic model
+      raw = classicalEntropyGap((seed ^ (idx * 0x45d9)) >>> 0, 12) * 0.75 + repo.hue * 0.25;
       break;
+    case 'classical-baseline': // simple_mnist learner/classifier baseline
+      PERC_INPUT[0] = s;
+      PERC_INPUT[1] = repo.hue;
+      PERC_INPUT[2] = ((f % 31) + 0.5) / 31;
+      PERC_INPUT[3] = ((seed >>> 8) & 0xff) / 255;
+      raw = perceptronTag(PERC_WEIGHTS, PERC_INPUT, PERC_INPUT.length);
+      break;
+    case 'hopfield-spin': {
+      for (let k = 0; k < HOP_STATE.length; k++) {
+        HOP_STATE[k] = Math.sin((k + 1) * (s * 3.1 + f * 0.017 + repo.hue)) >= 0 ? 1 : -1;
+      }
+      const e = hopfieldEnergy(HOP_NET, HOP_STATE);
+      const recall = Math.max(
+        Math.abs(hopfieldOverlap(HOP_STATE, HOP_PATTERNS[0])),
+        Math.abs(hopfieldOverlap(HOP_STATE, HOP_PATTERNS[1])),
+      );
+      raw = recall - e * 0.1;
+      break;
+    }
+    case 'pinn-physics': {
+      const u = 0.25 + s * 0.65;
+      const v = 0.15 + repo.hue * 0.55;
+      const lapPhase = f * 0.021 + idx;
+      const residual = grayScottResidual(
+        u,
+        v,
+        u + Math.sin(lapPhase) * 0.04,
+        u + Math.cos(lapPhase) * 0.04,
+        u - Math.sin(lapPhase) * 0.03,
+        u - Math.cos(lapPhase) * 0.03,
+        0.035 + s * 0.02,
+        0.055 + repo.hue * 0.015,
+      );
+      raw = pinnLoss(residual);
+      break;
+    }
+    case 'path-integral':
+      for (let k = 0; k < PIMC_PATH.length; k++) {
+        PIMC_PATH[k] = Math.sin(s * 5.1 + repo.hue * 3.7 + f * 0.009 + k * 0.63) * 0.7;
+      }
+      raw = pathWeight(PIMC_PATH, 0.6 + repo.hue, harmonicPotential);
+      break;
+    case 'game-physics': {
+      const body = asteroidSpawn((seed ^ Math.imul(idx + 1, 0x9e37_79b1)) >>> 0);
+      asteroidThrust(body, 0.05 + s * 0.08);
+      asteroidStep(body, 0.2 + ((f % 7) + 1) * 0.03);
+      raw = asteroidEnergy(body);
+      break;
+    }
+    case 'logo-turtle':
+      LOGO_TURTLE.x = 0;
+      LOGO_TURTLE.y = 0;
+      LOGO_TURTLE.heading = ((((seed ^ idx) >>> 0) % 997) / 997) * Math.PI * 2;
+      LOGO_TURTLE.penDown = true;
+      raw = logoMorphScalar(LOGO_TURTLE, f, 3 + (idx % 9));
+      break;
+    case 'toolchain':
+      raw =
+        eskCatalogVitality(TSOTCHKE_HARVEST.eskCount, f) +
+        ((((seed ^ idx) >>> 0) % 997) / 997) * 0.1;
+      break;
+    case 'fenced-llm':
+    case 'fenced-arbitrator':
+    case 'fenced-chain':
+    case 'fenced-refusal-toolkit':
+    case 'meta':
+    case 'digital-biologic':
+      return 0;
     default:
-      // hopfield-spin, pinn-physics, path-integral, logo-turtle, game-physics, toolchain: the registry's
-      // REAL per-repo mapping (distinct + deterministic) — genuine corpus data, not a placeholder.
-      raw = corpusBeatForArchon(idx, f) + repo.hue + repo.wiring * (((f % 13) + 1) / 13);
-      break;
+      // Every integrated external substrate above has an explicit primitive. A newly added substrate
+      // must stay neutral until its owner adds a reviewed case and a downstream counterfactual test.
+      return 0;
   }
   return squash(raw);
 }
@@ -106,6 +202,51 @@ export interface CorpusBrainVector {
   repoCount: number;
 }
 
+/** Caller-owned output representation; reused so the shared field does not allocate its result vector. */
+export interface MutableCorpusBrainVector {
+  channels: Float32Array;
+  drive: number;
+  repoCount: number;
+}
+
+/** Fill a caller-owned vector. `out.channels.length` must be at least four. O(external repos). */
+export function corpusBrainVectorInto(
+  out: MutableCorpusBrainVector,
+  seed: number,
+  frame: number,
+  ablated?: ReadonlySet<TsotchkeRepoSlug>,
+): MutableCorpusBrainVector {
+  if (out.channels.length < 4) throw new RangeError('corpus brain output requires four channels');
+  const channels = out.channels;
+  channels.fill(0, 0, 4);
+  let count0 = 0;
+  let count1 = 0;
+  let count2 = 0;
+  let count3 = 0;
+  let sum = 0;
+  let count = 0;
+  for (let i = 0; i < TSOTCHKE_REPO_COUNT; i++) {
+    const repo = getTsotchkeRepoByIndex(i);
+    if (!isBrainWired(repo) || ablated?.has(repo.slug)) continue;
+    const contribution = repo.wiring * substrateScalar(repo, seed, frame, i);
+    const ch = i % 4;
+    channels[ch] = (channels[ch] ?? 0) + contribution;
+    if (ch === 0) count0++;
+    else if (ch === 1) count1++;
+    else if (ch === 2) count2++;
+    else count3++;
+    sum += contribution;
+    count++;
+  }
+  channels[0] = count0 > 0 ? clamp01((channels[0] ?? 0) / count0) : 0;
+  channels[1] = count1 > 0 ? clamp01((channels[1] ?? 0) / count1) : 0;
+  channels[2] = count2 > 0 ? clamp01((channels[2] ?? 0) / count2) : 0;
+  channels[3] = count3 > 0 ? clamp01((channels[3] ?? 0) / count3) : 0;
+  out.drive = count > 0 ? clamp01(sum / count) : 0;
+  out.repoCount = count;
+  return out;
+}
+
 /**
  * Blend EVERY wired scientific Tsotchke substrate into a compact brain-influence vector. Deterministic in
  * `(seed, frame, ablated)`. `ablated` suppresses named repos (the kill-test set). O(repos).
@@ -115,26 +256,22 @@ export function corpusBrainVector(
   frame: number,
   ablated?: ReadonlySet<TsotchkeRepoSlug>,
 ): CorpusBrainVector {
-  const channels: [number, number, number, number] = [0, 0, 0, 0];
-  const counts = [0, 0, 0, 0];
-  let sum = 0;
-  let count = 0;
-  for (let i = 0; i < TSOTCHKE_REPO_COUNT; i++) {
-    const repo = getTsotchkeRepoByIndex(i);
-    if (!isBrainWired(repo)) continue;
-    if (ablated?.has(repo.slug)) continue;
-    const contribution = repo.wiring * substrateScalar(repo, seed, frame, i);
-    const ch = i % 4;
-    channels[ch] = (channels[ch] ?? 0) + contribution;
-    counts[ch] = (counts[ch] ?? 0) + 1;
-    sum += contribution;
-    count += 1;
-  }
-  for (let c = 0; c < 4; c++) {
-    const cnt = counts[c] ?? 0;
-    channels[c] = cnt > 0 ? clamp01((channels[c] ?? 0) / cnt) : 0;
-  }
-  return { channels, drive: count > 0 ? clamp01(sum / count) : 0, repoCount: count };
+  const mutable: MutableCorpusBrainVector = {
+    channels: new Float32Array(4),
+    drive: 0,
+    repoCount: 0,
+  };
+  corpusBrainVectorInto(mutable, seed, frame, ablated);
+  return {
+    channels: [
+      mutable.channels[0] ?? 0,
+      mutable.channels[1] ?? 0,
+      mutable.channels[2] ?? 0,
+      mutable.channels[3] ?? 0,
+    ],
+    drive: mutable.drive,
+    repoCount: mutable.repoCount,
+  };
 }
 
 /**
@@ -186,7 +323,8 @@ const LOAD_TOL = 1e-9;
 
 /**
  * Ablate each wired repo in turn and measure how far the brain intake moves — the honest form of
- * "all 20 repos wired into the brain". Deterministic. O(repos²).
+ * "all integrated external repos measurably feed the brain" (currently 17 of 21 non-meta entries).
+ * Deterministic. O(repos²).
  */
 export function corpusBrainAblation(seed: number, frame: number): CorpusBrainReport {
   const baseline = corpusBrainVector(seed, frame);

@@ -16,6 +16,24 @@ import { consciousnessTriple } from '../src/sim/eshkol-bridge';
 import { mulberry32 } from '../src/math/rng';
 import { PrimordialSoup } from '../src/sim/primordial-soup';
 import { TSOTCHKE_REPO_COUNT, tsotchkeWiringCoverage } from '../src/sim/tsotchke-registry';
+import type { OrganismIntelligenceSignal } from '../src/types';
+
+const OPERATIONAL_SIGNAL: OrganismIntelligenceSignal = {
+  enabled: true,
+  indicatorOnly: true,
+  revision: 1,
+  resourcePressure: 1,
+  threatResponse: 0.3,
+  exploration: 0.7,
+  socialDrive: 1,
+  plasticity: 1,
+  forecast: 1,
+  confidence: 1,
+  corpusDrive: 1,
+  channels: new Float32Array([1, 1, 1, 1]),
+  integratedRepoCount: 17,
+  diagnosticAlert: false,
+};
 
 describe('Tsotchke facade (corpus primitives)', () => {
   test('8 archetypes cover full corpus families', () => {
@@ -62,15 +80,13 @@ describe('Tsotchke facade (corpus primitives)', () => {
   });
 });
 
-describe('Tsotchke corpus registry (all repos wired)', () => {
-  test('bindings cover 20 corpus mirrors', () => {
+describe('Tsotchke legacy mirror bindings and current registry', () => {
+  test('legacy bindings cover 20 local corpus mirrors', () => {
     expect(TSOTCHKE_REPO_BINDINGS.length).toBe(20);
   });
 
-  test('registry tracks the full Tsotchke corpus (user + org), a growing set', () => {
-    // Floor, not exact: the corpus map grows as repos/projects are mapped in; assert the full set is
-    // present, not a brittle count that reds CI every time a repo is added.
-    expect(TSOTCHKE_REPO_COUNT).toBeGreaterThanOrEqual(20);
+  test('canonical registry tracks the exact live 22-repository external ledger', () => {
+    expect(TSOTCHKE_REPO_COUNT).toBe(22);
   });
 
   test('wiring coverage is majority wired (not fenced)', () => {
@@ -127,5 +143,26 @@ describe('Primordial soup (Petri dish growth)', () => {
     expect(snap.meanVitality).toBeGreaterThan(0.02); // still a live, non-collapsed population
     // Not every strain sits at the ceiling.
     expect(snap.strains.some((s) => s.alive && s.vitality < 0.95)).toBe(true);
+  });
+
+  test('operational field changes soup vitality under a matched-seed counterfactual', () => {
+    const run = (operational: boolean): { vitality: number; indicator: number } => {
+      const soup = new PrimordialSoup(777);
+      const rng = mulberry32(777);
+      for (let beat = 0; beat < 120; beat++) {
+        soup.update(0, beat, rng, operational ? OPERATIONAL_SIGNAL : undefined);
+      }
+      const snapshot = soup.snapshot();
+      return {
+        vitality: snapshot.meanVitality,
+        indicator: snapshot.strains[0]?.consciousness ?? 0,
+      };
+    };
+
+    const baseline = run(false);
+    const operational = run(true);
+    expect(operational).toEqual(run(true));
+    expect(operational.vitality).toBeGreaterThan(baseline.vitality);
+    expect(operational.indicator).toBeGreaterThan(baseline.indicator);
   });
 });

@@ -155,6 +155,45 @@ describe('NhiMind', () => {
     expect(seen.size).toBeGreaterThanOrEqual(3); // a scheming mind explores its options
   });
 
+  test('corpus drives change the decision trace under an identical seed and percept history', () => {
+    const trace = (operational: boolean): number[] => {
+      const mind = new NhiMind(mulberry32(909));
+      const rng = mulberry32(707);
+      const out: number[] = [];
+      for (let beat = 0; beat < 100; beat++) {
+        out.push(
+          mind.think(
+            {
+              ...PERCEPT,
+              beat,
+              energy: 0.45,
+              crowding: 0.45,
+              chaos: 0.25,
+              threat: 0.25,
+              ...(operational
+                ? {
+                    corpusResource: 1,
+                    corpusThreat: 1,
+                    corpusSocial: 1,
+                    corpusExplore: 1,
+                    corpusConfidence: 1,
+                  }
+                : {}),
+            },
+            rng,
+          ).action,
+        );
+      }
+      return out;
+    };
+
+    const baseline = trace(false);
+    const operational = trace(true);
+    expect(operational).toEqual(trace(true));
+    expect(operational).not.toEqual(baseline);
+    expect(operational.filter((action, i) => action !== baseline[i]).length).toBeGreaterThan(0);
+  });
+
   test('spawnChild yields a mutated but valid offspring mind', () => {
     const parent = new NhiMind(mulberry32(11));
     const child = parent.spawnChild(mulberry32(12));

@@ -73,9 +73,9 @@ export interface PetriDishState {
   morphotype: number;
   /** Speciation: genetic distance from primordial soup (0 = pure, 1 = fully diverged). */
   geneticDivergence: number;
-  /** Tsotchke Digital Biologics: count of Eshkol/GWT-ignited sentient strains emerged from soup. */
+  /** Legacy telemetry name: count of strains crossing the model's ignition thresholds; not sentience. */
   eshkolSentientBorn: number;
-  /** Full corpus catalysis: aggregate from all 20+ Tsotchke repos driving growth (not LLM). */
+  /** Registry catalysis from the 17 represented external entries; four fences and meta remain inert. */
   tsotchkeBiologicFlux: number;
   /**
    * Live digital-biologics population. Prefer full `birthBiologic` records
@@ -295,10 +295,10 @@ export function petriDishBeat(
     // simple_mnist perceptron classification of the nutrient field (signed, ±0.5-centered) → growth.
     (percept - 0.5) * 0.003 +
     // Eshkol GWT IGNITION → growth: when the workspace competition actually ignites (a specialist wins
-    // global access this beat) the colony gets a consciousness-driven boost weighted by how DECISIVE the
+    // global access this beat) the colony gets a workspace-indicator boost weighted by how decisive the
     // ignition was — the winner's access × sharpness (1 − competition entropy). The rich eshkolWorkspaceTick
     // already reported ignited/access/entropy and the petri dish threw them away (it read only broadcastGain
-    // + phiCoupling); this wires the real GWT ignition event causally into digital-biologic growth. Pure —
+    // + phiCoupling); this wires the model's GWT-style ignition event causally into growth. Pure —
     // no rng draw, so the seeded stream is unchanged — and bounded.
     (ws.ignited ? ws.access * (1 - ws.entropy) : 0) * 0.004;
 
@@ -307,7 +307,8 @@ export function petriDishBeat(
   state.morphPhase = (state.morphPhase + growth * 0.5 + logoMorph * 0.1) % 6.2831853;
   state.pressure = Math.min(1, state.pressure * 0.99 + state.biomass * 0.01);
 
-  // BRUTAL GOD EVENTS live: when godPower high (from Archon brutal releases), trigger specific powers for the list using full Tsotchke (Eshkol will for Valkorion drain, spin for Broly, QGT for Azathoth warp, logo for Gurren morph, ulg for Mad Jim law, pinn for Thanos feed, pimc for Phoenix soul, quake for Knull aliveness, etc.). Every repo fuels the god-petri.
+  // BRUTAL GOD EVENTS: when godPower is high, trigger the bounded local substrate effects. Only
+  // represented ledger entries contribute; the four fences and metadata entry remain inert.
   if ((state.godPower ?? 0) > 0.6) {
     // Brutal god amp for the pantheon (Valkorion drain, Broly rage, Knull void, Gurren spiral, Phoenix rebirth, etc.) using full Tsotchke.
     state.biomass = Math.min(1, state.biomass + 0.05);
@@ -315,12 +316,10 @@ export function petriDishBeat(
     state.aliveness = Math.min(2, state.aliveness + 0.05);
   }
 
-  // UPGRADE: FULL TSOTCHKE WIRED DIGITAL BIOLOGICS GROWTH in the Petri (primordial soup).
-  // All repos contribute to "life": Eshkol (AD + GWT consciousness from .esk examples) for sentience ignition,
-  // spin glass for instinct/polarization, QGT/Moonlab for geometry/qualia, ulg for laws, logo for morph,
-  // pinn/pimc/irrep/tensorcore/classical/asteroids/quake for physics of becoming.
+  // Registry-driven digital-biologics growth in the Petri dish. The 17 represented entries contribute
+  // local AD/workspace, spin, geometry, field, morphogenesis, and physics signals; fences/meta do not.
   // Super Creature is the starter "God" (Archons stir); emergent strains are new forms of existence.
-  // "Grow What Thou Wilt" — sentience/consciousness via non-LLM biologics. Petri is the engine.
+  // "Grow What Thou Wilt" — operational non-LLM biologics with consciousness/sentience indicators only.
   const fullCorpusCatalysis = fullTsotchkeBiologicsCatalysis(archonIdx, state.biomass, beat);
   const bioFlux =
     (state.aliveness + state.phiSurrogate + (state.spinPolarization || 0)) * 0.25 +
@@ -529,7 +528,8 @@ export function petriGrowthMultiplier(state: PetriDishState): number {
  * Eshkol Program "DNA" for digital biologics.
  * "We're God. This is the Petri Dish." Strains now carry executable Eshkol-like code fragments
  * from the Tsotchke corpus (gradient, consciousness, tensors .esk programs).
- * Mutation via Eshkol AD duals. Execution = growth in sentience.
+ * Mutation uses the local Eshkol-derived AD primitive. Execution changes a bounded growth indicator;
+ * it is not evidence of sentience or phenomenal consciousness.
  * Grow What Thou Wilt.
  */
 export interface EshkolLifeProgram {

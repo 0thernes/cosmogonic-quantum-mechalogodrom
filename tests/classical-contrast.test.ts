@@ -1,9 +1,10 @@
 /**
- * CLASSICAL CONTRAST — genuine classical-LCG vs quantum-inspired-Eshkol-QRNG contrast.
+ * CLASSICAL CONTRAST — LCG vs deterministic state-vector-adapter statistical contrast.
  *
  * Falsifiable claims under test:
  *   • the contrast metric (and its components) is finite and bounded in [0,1];
- *   • both real streams pass a basic uniformity sanity check (near-zero serial correlation, χ² near 1);
+ *   • both deterministic streams pass a basic uniformity sanity check (near-zero serial correlation,
+ *     χ² near 1); this is not entropy-source validation;
  *   • deterministic: identical seed ⇒ identical contrast report;
  *   • the metric SEPARATES a deliberately-bad (constant) stream from a good one;
  *   • the preserved LCG contracts (classicalSample / classicalEntropyGap) still replay.
@@ -21,7 +22,7 @@ import {
 } from '../src/sim/classical-contrast';
 import { mlpNew, mlpForward, mlpTrainStep, perceptronTag } from '../src/sim/perceptron-baseline';
 
-describe('classical-contrast: genuine quantum-vs-classical contrast', () => {
+describe('classical-contrast: deterministic state-vector vs LCG statistics', () => {
   test('contrast and its components are finite and bounded in [0,1]', () => {
     for (const seed of [1, 42, 1337, 0xabcdef]) {
       const c = rngContrast(seed, 256);
@@ -35,7 +36,7 @@ describe('classical-contrast: genuine quantum-vs-classical contrast', () => {
     }
   });
 
-  test('both real streams pass a basic uniformity sanity check', () => {
+  test('both deterministic streams pass a basic uniformity sanity check', () => {
     // A decent sample count keeps the statistics stable.
     const c = rngContrast(20260620, 1024);
     for (const sig of [c.classical, c.quantum]) {

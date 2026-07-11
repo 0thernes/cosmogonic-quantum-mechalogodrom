@@ -19,7 +19,7 @@ describe('tsotchke honest wired fraction', () => {
     expect(honest).toBeLessThan(tsotchkeWiringCoverage());
   });
 
-  test('matches the audit figure (~18 of 21 scientific substrates wired)', () => {
-    expect(tsotchkeWiredSubstrateFraction()).toBeCloseTo(18 / 21, 2);
+  test('matches the live external audit (17 of 21 non-meta repositories integrated)', () => {
+    expect(tsotchkeWiredSubstrateFraction()).toBeCloseTo(17 / 21, 12);
   });
 });

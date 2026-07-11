@@ -24,7 +24,89 @@
  * No Math.random, no Date.now. Pure, three.js-/DOM-free — a `bun test` leaf.
  */
 import { mulberry32, type Rng } from '../math/rng';
+import { clamp } from '../math/scalar';
+import type { OrganismIntelligenceSignal } from '../types';
 import { PANTHEON_GLYPH_BRAIN_PARAMS } from './apex-brain';
+
+export interface GlyphEnvironmentalPerceptInput {
+  weatherHue: number;
+  quantumEntropy: number;
+  reactionDiffusion: number;
+  treble: number;
+  visualChaos: number;
+  windEnergy: number;
+  mid: number;
+  level: number;
+  thermal: number;
+  apexVitality: number;
+}
+
+const finite01 = (value: number): number => (Number.isFinite(value) ? clamp(value, 0, 1) : 0);
+
+/**
+ * Write the environment-dependent final three glyph senses. Disabled/missing intelligence is exactly
+ * the pre-ADR-0013 formula; enabled mode adds bounded threat/exploration/social control terms.
+ */
+export function writeGlyphEnvironmentalPercept(
+  target: Float32Array,
+  input: GlyphEnvironmentalPerceptInput,
+  intelligence?: OrganismIntelligenceSignal,
+): void {
+  if (target.length < 8) throw new RangeError('glyph percept target requires at least 8 values');
+  const weatherHue = finite01(input.weatherHue);
+  const qEntropy = finite01(input.quantumEntropy);
+  const rdPulse = finite01(input.reactionDiffusion);
+  const treble = finite01(input.treble);
+  const visChaos = finite01(input.visualChaos);
+  const windEnergy = finite01(input.windEnergy);
+  const mid = finite01(input.mid);
+  const level = finite01(input.level);
+  const thermal = finite01(input.thermal);
+  const apexVitality = finite01(input.apexVitality);
+
+  if (!intelligence?.enabled) {
+    target[5] = (weatherHue * 0.5 + qEntropy * 0.24 + rdPulse * 0.18 + treble * 0.08) % 1;
+    target[6] = clamp(
+      0.32 + visChaos * 0.22 + windEnergy * 0.18 + mid * 0.18 + rdPulse * 0.1,
+      0,
+      1,
+    );
+    target[7] = clamp(
+      0.28 + qEntropy * 0.2 + level * 0.2 + thermal * 0.16 + apexVitality * 0.16,
+      0,
+      1,
+    );
+    return;
+  }
+
+  target[5] =
+    (weatherHue * 0.43 +
+      qEntropy * 0.2 +
+      rdPulse * 0.16 +
+      treble * 0.07 +
+      finite01(intelligence.exploration) * 0.14) %
+    1;
+  target[6] = clamp(
+    0.29 +
+      visChaos * 0.2 +
+      windEnergy * 0.16 +
+      mid * 0.16 +
+      rdPulse * 0.09 +
+      finite01(intelligence.threatResponse) * 0.1,
+    0,
+    1,
+  );
+  target[7] = clamp(
+    0.25 +
+      qEntropy * 0.17 +
+      level * 0.17 +
+      thermal * 0.14 +
+      apexVitality * 0.14 +
+      finite01(intelligence.socialDrive) * 0.13,
+    0,
+    1,
+  );
+}
 
 // ── Sub-network ────────────────────────────────────────────────────────────────────────────────
 

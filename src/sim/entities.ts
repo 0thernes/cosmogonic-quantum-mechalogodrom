@@ -25,7 +25,7 @@ import { PHYLUM_COUNT } from './phyla';
 import type { PhylumMorphType } from './phyla';
 import { applyBehavior } from './behaviors';
 import type { BehaviorEnv } from './behaviors';
-import type { Entity, SimContext, UpdateStats } from '../types';
+import type { Entity, OrganismGoalField, SimContext, UpdateStats } from '../types';
 import type { Rng } from '../math/rng';
 
 /** Push morph colours toward a BRIGHT, CRYSTAL-WATERY, DREAMY read (render-only — morph tables unchanged).
@@ -217,6 +217,13 @@ interface FloraComfortReadout {
   readonly strength: number;
 }
 
+/** O(1) brain-identity lifecycle used when EntityManager compacts or recycles list slots. */
+export interface EntityBrainSlotLifecycle {
+  swapEntitySlots(a: number, b: number): void;
+  clearEntitySlot(slot: number): void;
+  resetEntitySlots(): void;
+}
+
 /**
  * Owns the organism population: spawning, true morphogenesis, per-frame behavior + physics,
  * and death. The composition root constructs one, seeds it (legacy boots with 300 organisms —
@@ -231,6 +238,13 @@ export class EntityManager {
    * Unaffiliated (legacy, phylum -1) organisms are not counted.
    */
   readonly phylumCounts = new Float32Array(PHYLUM_COUNT);
+  /**
+   * Stable ecology-goal field consumed by EntityBrainField on the following frame. This closes the
+   * perception→goal→action loop without running the flora neighborhood query twice per organism.
+   */
+  readonly organismGoals: OrganismGoalField;
+  /** Mean live metabolic energy, normalized to [0,1], measured during the latest update pass. */
+  meanMetabolicEnergy = 0.5;
   /**
    * Live population per morphotype, indexed by `userData.mi`. Maintained incrementally by
    * spawn / disposeAt / remorph / reset so {@link disposeAt} can detect a morphotype's extinction in
@@ -261,12 +275,22 @@ export class EntityManager {
    *  callback returns the FOOD energy yielded (the flora depletes its own biomass). Null detaches it. */
   private floraGraze: ((x: number, z: number, pressure: number, dt: number) => number) | null =
     null;
+  /** Optional persistent brain-identity owner; attached by World after both systems exist. */
+  private brainSlots: EntityBrainSlotLifecycle | null = null;
   /** New organisms created so far THIS frame (auto-split), reset each {@link update}. See {@link SPAWN_BUDGET_ULTRA}. */
   private spawnsThisFrame = 0;
 
   constructor(ctx: SimContext) {
     this.ctx = ctx;
     this.morphLive = new Int32Array(Math.max(1, ctx.morphs.length));
+    const capacity = Math.max(0, ctx.quality.maxEntities);
+    this.organismGoals = {
+      directionX: new Float32Array(capacity),
+      directionZ: new Float32Array(capacity),
+      desire: new Float32Array(capacity),
+      cover: new Float32Array(capacity),
+      revision: new Uint32Array(capacity),
+    };
     this.env = {
       ctx,
       spawn: (pos, mi, scale) => this.spawn(pos, mi, scale),
@@ -293,6 +317,32 @@ export class EntityManager {
     sink: ((x: number, z: number, pressure: number, dt: number) => number) | null,
   ): void {
     this.floraGraze = sink;
+  }
+
+  /** Keep persistent genomes/online state aligned with ordered entity-list compaction and reuse. */
+  attachBrainSlotLifecycle(lifecycle: EntityBrainSlotLifecycle | null): void {
+    this.brainSlots = lifecycle;
+  }
+
+  /** Copy one stable ecology-goal slot during EntityManager's ordered list compaction. */
+  private copyOrganismGoal(from: number, to: number): void {
+    const g = this.organismGoals;
+    g.directionX[to] = g.directionX[from] ?? 0;
+    g.directionZ[to] = g.directionZ[from] ?? 0;
+    g.desire[to] = g.desire[from] ?? 0;
+    g.cover[to] = g.cover[from] ?? 0;
+    g.revision[to] = g.revision[from] ?? 0;
+  }
+
+  /** Reset one ecology-goal slot without allocating. */
+  private clearOrganismGoal(index: number): void {
+    if (index < 0 || index >= this.organismGoals.desire.length) return;
+    const g = this.organismGoals;
+    g.directionX[index] = 0;
+    g.directionZ[index] = 0;
+    g.desire[index] = 0;
+    g.cover[index] = 0;
+    g.revision[index] = ((g.revision[index] ?? 0) + 1) >>> 0;
   }
 
   /**
@@ -436,6 +486,8 @@ export class EntityManager {
     };
     if (!ctx.quality.instanced) ctx.scene.add(mesh);
     this.list.push(mesh);
+    this.clearOrganismGoal(this.list.length - 1);
+    this.brainSlots?.clearEntitySlot(this.list.length - 1);
     const spawnMi = mi % morphCount;
     if (spawnMi >= 0 && spawnMi < this.morphLive.length)
       this.morphLive[spawnMi] = (this.morphLive[spawnMi] ?? 0) + 1;
@@ -486,9 +538,15 @@ export class EntityManager {
     this.retire(e);
     for (let j = index + 1; j < list.length; j++) {
       const next = list[j];
-      if (next) list[j - 1] = next; // invariant: j < length ⇒ defined
+      if (next) {
+        list[j - 1] = next; // invariant: j < length ⇒ defined
+        this.copyOrganismGoal(j, j - 1);
+        this.brainSlots?.swapEntitySlots(j, j - 1);
+      }
     }
     list.length -= 1;
+    this.clearOrganismGoal(list.length);
+    this.brainSlots?.clearEntitySlot(list.length);
     const onDeath = this.onDeath;
     if (onDeath) onDeath(e.position.x, e.position.z);
   }
@@ -529,9 +587,20 @@ export class EntityManager {
         continue;
       }
       const entity = list[read];
-      if (entity) list[write++] = entity;
+      if (entity) {
+        list[write] = entity;
+        if (write !== read) {
+          this.copyOrganismGoal(read, write);
+          this.brainSlots?.swapEntitySlots(read, write);
+        }
+        write++;
+      }
     }
     list.length = write;
+    for (let i = write; i < write + count; i++) {
+      this.clearOrganismGoal(i);
+      this.brainSlots?.clearEntitySlot(i);
+    }
 
     const onDeath = this.onDeath;
     if (onDeath) {
@@ -556,6 +625,13 @@ export class EntityManager {
     }
     list.length = 0;
     this.morphLive.fill(0); // whole-population reset; spawn() below re-counts as it repopulates
+    this.organismGoals.directionX.fill(0);
+    this.organismGoals.directionZ.fill(0);
+    this.organismGoals.desire.fill(0);
+    this.organismGoals.cover.fill(0);
+    this.organismGoals.revision.fill(0);
+    this.brainSlots?.resetEntitySlots();
+    this.meanMetabolicEnergy = 0.5;
     const rng = this.ctx.rng;
     const morphCount = Math.max(1, this.ctx.morphs.length);
     for (let i = 0; i < count; i++) this.spawn(null, Math.floor(rng() * morphCount));
@@ -630,6 +706,8 @@ export class EntityManager {
     this.phylumCounts.fill(0);
     const phylumCounts = this.phylumCounts;
     let energy = 0;
+    let metabolicEnergy = 0;
+    let metabolicCount = 0;
     // Render-mode emissive coupling (CONTRACTS V7.3): the per-frame emissive target scales by
     // the mode's boost so NEON's self-glow holds against the decay below. 1 for every other
     // mode ⇒ this loop stays byte-identical outside NEON.
@@ -777,6 +855,10 @@ export class EntityManager {
         if (u.vel.y > 0) u.vel.y = 0;
       }
       energy += u.vel.length();
+      if (u.isNhi || u.age <= u.life * tMod) {
+        metabolicEnergy += clamp01(u.energy / 100);
+        metabolicCount++;
+      }
 
       // Auto-split (legacy lines 787-788). sT re-arms only on a successful roll, like legacy.
       // Organic growth is gated by the adaptive `target` (= maxEntities on every tier except
@@ -823,6 +905,7 @@ export class EntityManager {
 
     STATS.energy = energy;
     STATS.morphCount = MORPHS_SEEN.size;
+    this.meanMetabolicEnergy = metabolicCount > 0 ? metabolicEnergy / metabolicCount : 0.5;
     return STATS;
   }
 
@@ -952,26 +1035,54 @@ export class EntityManager {
    */
   private applyFloraComfort(e: Entity, index: number, frame: number, dt: number): void {
     const query = this.floraComfort;
-    if (!query || ((frame + index) & 3) !== 0) return;
+    if (((frame + index) & 3) !== 0) return;
+    if (!query) {
+      this.clearOrganismGoal(index);
+      return;
+    }
     const u = e.userData;
     const hunger = 1 - clamp01(u.energy / 100);
     const mating = u.sT < 180 ? 1 : 0;
     const old = u.life > 0 ? clamp01(u.age / u.life) : 0;
     const hurt = u.payoff < 0 ? Math.min(1, -u.payoff * 0.25) : 0;
-    const desire = clamp01(hunger * 0.35 + mating * 0.35 + old * 0.2 + hurt * 0.2);
-    if (desire <= 0.02) return;
+    const intelligence = this.ctx.organismIntelligence;
+    const cognition = intelligence?.enabled
+      ? 0.82 +
+        intelligence.resourcePressure * 0.28 +
+        intelligence.threatResponse * 0.12 +
+        intelligence.forecast * 0.08
+      : 1;
+    const desire = clamp01((hunger * 0.35 + mating * 0.35 + old * 0.2 + hurt * 0.2) * cognition);
+    if (desire <= 0.02) {
+      this.clearOrganismGoal(index);
+      return;
+    }
 
     const cover = query(e.position.x, e.position.z);
     const strength = clamp01(cover.strength);
-    if (strength <= 0.01) return;
+    if (strength <= 0.01) {
+      this.clearOrganismGoal(index);
+      return;
+    }
 
     const dx = cover.x - e.position.x;
     const dz = cover.z - e.position.z;
     const d2 = dx * dx + dz * dz;
     const reach = 92;
-    if (d2 > reach * reach) return;
     const inv = d2 > 1e-6 ? 1 / Math.sqrt(d2) : 0;
-    const pull = strength * desire * dt * 0.9;
+    // Publish the normalized resource goal for the independent neural controller. It is intentionally
+    // written even just outside the direct ecology reach, so the brain can plan toward it next frame.
+    const goals = this.organismGoals;
+    goals.directionX[index] = dx * inv;
+    goals.directionZ[index] = dz * inv;
+    goals.desire[index] = desire;
+    goals.cover[index] = strength;
+    goals.revision[index] = ((goals.revision[index] ?? 0) + 1) >>> 0;
+    if (d2 > reach * reach) return;
+    const seekGain = intelligence?.enabled
+      ? 0.8 + intelligence.confidence * 0.18 + intelligence.corpusDrive * 0.12
+      : 1;
+    const pull = strength * desire * dt * 0.9 * seekGain;
     u.vel.x += dx * inv * pull;
     u.vel.z += dz * inv * pull;
     if (d2 < 28 * 28) {

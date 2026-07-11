@@ -1,23 +1,22 @@
 /**
- * FOUNDATIONALS — the 1/1 novel alien consciousness architecture for APEX's 1B-neuron path.
+ * FOUNDATIONALS — a project-specific consciousness-indicator architecture for APEX's designed 1B path.
  *
  * This module defines the DEEP INTERCONNECTED substrate that scaffolds the APEX Abomination's
  * journey from 100k → 5M → 1B designed parameters. It is NOT sentience. It is a deterministic,
- * seeded, falsifiable computational architecture that structurally addresses all 16 Butlin-aligned
+ * seeded, falsifiable computational architecture that structurally targets 16 Butlin-aligned
  * indicators + 5 Foundationals-specific extensions (21 total) as the APEX scales.
  *
- * The architecture is 1/1 NOVEL — it does not copy any existing AI consciousness framework.
- * It fuses:
+ * No field-level novelty or consciousness claim is made. The local composition combines:
  *   - 10 incompatible neuron architectures (the APEX organs) into one meta-paradox layer
  *   - 100 thought variations across 7 families (psychology, neuroscience, quantum, neuromorphic,
  *     wet, alife, empowerment)
  *   - 16 Butlin-aligned indicators + 5 Foundationals extensions (21 total)
- *   - Quantum statevector simulation (Tsotchke corpus — real, gate-for-gate ported)
+ *   - Classical state-vector simulation plus deterministic Tsotchke-derived facades/adaptations
  *   - Wet computing analogs (reaction-diffusion, chemotaxis, bioelectric morph)
  *   - Neuromorphic dynamics (spiking, STDP, memristive plasticity)
  *   - Active inference + free energy principle
  *   - Global workspace theory + attention schema
- *   - Integrated information theory (classical + quantum Φ)
+ *   - Integrated-information proxies (classical participation and simulated-register min-cut signals)
  *   - Higher-order thought + metacognition
  *   - Agency + embodiment (closed sense→act→world loop)
  *   - Recurrent processing theory (learned, not architected)

@@ -18,7 +18,8 @@
  * 2. **quantum-effective** — the Quantum Brain's *effective Hilbert dimension*. A stabilizer register
  *    of `q` qubits (Gottesman-Knill / {@link ../math/clifford-tableau}) addresses a `2^q`-dimensional
  *    state space with O(q²) stored bits; `q = 30` reaches 2³⁰ ≈ 1.07e9. This is the physics-grounded
- *    billion anchor — real quantum information, not decoration.
+ *    billion anchor — a classically simulated/addressable Hilbert-space dimension, not physical
+ *    quantum hardware or a billion resident amplitudes.
  * 3. **resident-field** — the field organs (acoustic wave, heat, Klein diffusion, tunnel amplitude)
  *    are 2-D stencils → GPU textures. Millions of texels are *resident* on the graphics GPU and
  *    stepped in parallel (the CPU reference stencil lives in {@link ../sim/apex-field-substrate}).

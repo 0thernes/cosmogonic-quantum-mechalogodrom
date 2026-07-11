@@ -1,5 +1,5 @@
 /**
- * TSOTCHKE REGISTRY + PETRI DISH — all 22 repos, primordial biologics substrate.
+ * TSOTCHKE REGISTRY + PETRI DISH — 22 external repos plus separate internal controls.
  */
 import { describe, expect, test } from 'bun:test';
 import { mulberry32 } from '../src/math/rng';
@@ -7,10 +7,14 @@ import {
   TSOTCHKE_REPO_COUNT,
   TSOTCHKE_USER_REPOS,
   TSOTCHKE_ORG_REPOS,
+  TSOTCHKE_INTERNAL_CONTROLS,
   getTsotchkeRepo,
+  getTsotchkeRepoByIndex,
   tsotchkeWiringCoverage,
+  tsotchkeWiredSubstrateFraction,
   substrateVectorForArchon,
   corpusBeatForArchon,
+  biologicProgramFingerprint,
   FENCED_REPO_SLUGS,
   ARCHON_PRIMARY_REPOS,
   primaryRepoForArchon,
@@ -18,6 +22,8 @@ import {
   wiredSimRepoCount,
   tsotchkeDepthFor,
   type DepthKind,
+  type TsotchkeIntegrationMode,
+  type TsotchkeRepoSlug,
 } from '../src/sim/tsotchke-registry';
 import {
   createPetriDish,
@@ -28,21 +34,109 @@ import {
 import { eshkolWorkspaceTick, workspaceSalience } from '../src/sim/eshkol-workspace';
 import { qgeAlivenessStep, qgeWorldPerturb, qgeFubiniProxy } from '../src/sim/qge-aliveness';
 
-describe('Tsotchke registry — ALL repos mapped (22 with classical-contrast for full Tsotchke)', () => {
-  test('user + org repos sum to ALL (22 with full Tsotchke)', () => {
-    const userLen = TSOTCHKE_USER_REPOS.length;
-    const orgLen = TSOTCHKE_ORG_REPOS.length;
-    expect(userLen + orgLen).toBe(TSOTCHKE_REPO_COUNT);
+const EXPECTED_USER_REPOS = [
+  'eshkol',
+  'moonlab',
+  'tensorcore',
+  'libirrep',
+  'spin_based_neural_network',
+  'quantum_geometric_tensor',
+  'quantum_rng',
+  'gpt2-basic',
+  'homebrew-eshkol',
+  'llm-arbitrator',
+  'simple_mnist',
+  'asteroids',
+  'classical_rng',
+  'PINN',
+  'PIMC',
+] as const;
+
+const EXPECTED_ORG_REPOS = [
+  'ulg',
+  'logo-lab',
+  'quantum-quake',
+  'SolanaQuantumFlux',
+  'Quantum-RNG-API',
+  'OBLITERATUS',
+  '.github',
+] as const;
+
+describe('Tsotchke registry — exact external ledger and internal-control boundary', () => {
+  test('live external parity is exactly 15 user + 7 org repositories', () => {
+    expect(TSOTCHKE_USER_REPOS).toEqual(EXPECTED_USER_REPOS);
+    expect(TSOTCHKE_ORG_REPOS).toEqual(EXPECTED_ORG_REPOS);
+    expect(TSOTCHKE_USER_REPOS).toHaveLength(15);
+    expect(TSOTCHKE_ORG_REPOS).toHaveLength(7);
+    expect(TSOTCHKE_REPO_COUNT).toBe(22);
+    expect(TSOTCHKE_USER_REPOS.length + TSOTCHKE_ORG_REPOS.length).toBe(TSOTCHKE_REPO_COUNT);
+    expect(
+      Array.from({ length: TSOTCHKE_REPO_COUNT }, (_, i) => getTsotchkeRepoByIndex(i).slug),
+    ).toEqual([...EXPECTED_USER_REPOS, ...EXPECTED_ORG_REPOS]);
   });
 
-  test('LLM repos are fenced (wiring 0)', () => {
+  test('classical contrast remains operational without inflating the external ledger', () => {
+    expect(TSOTCHKE_INTERNAL_CONTROLS).toHaveLength(1);
+    expect(TSOTCHKE_INTERNAL_CONTROLS[0]).toMatchObject({
+      id: 'classical-contrast',
+      cosmogonicLeaf: 'sim/classical-contrast.ts',
+      operational: true,
+    });
+    expect([...TSOTCHKE_USER_REPOS, ...TSOTCHKE_ORG_REPOS]).not.toContain(
+      TSOTCHKE_INTERNAL_CONTROLS[0].id,
+    );
+    expect(getTsotchkeRepo(TSOTCHKE_INTERNAL_CONTROLS[0].id as TsotchkeRepoSlug)).toBeUndefined();
+  });
+
+  test('all legacy registry helpers weight hue by wiring so fences and metadata are inert', () => {
+    for (let i = 0; i < TSOTCHKE_REPO_COUNT; i++) {
+      const e0 = getTsotchkeRepoByIndex(i);
+      const e1 = getTsotchkeRepoByIndex(i + 7);
+      const e2 = getTsotchkeRepoByIndex(i + 14);
+      const vector = substrateVectorForArchon(i);
+      const expectedVector = [
+        e0.wiring,
+        e1.wiring * e1.hue,
+        e2.wiring * e2.hue,
+        e0.wiring * e0.hue,
+        e1.wiring,
+      ];
+      for (let k = 0; k < expectedVector.length; k++) {
+        expect(vector[k]).toBeCloseTo(expectedVector[k]!, 6);
+      }
+
+      const f1 = getTsotchkeRepoByIndex(i + 3);
+      const f2 = getTsotchkeRepoByIndex(i + 9);
+      const seed = 0x51a7;
+      const expected =
+        ((e0.wiring * 1000 + f1.wiring * f1.hue * 100 + f2.wiring) ^ seed) % 0xffffff;
+      expect(biologicProgramFingerprint(i, seed)).toBe(expected);
+    }
+    expect(getTsotchkeRepo('.github')?.hue).toBe(0);
+  });
+
+  test('all four deliberately excluded repos are fenced with zero wiring', () => {
     expect(getTsotchkeRepo('gpt2-basic')?.wiring).toBe(0);
     expect(getTsotchkeRepo('llm-arbitrator')?.wiring).toBe(0);
     expect(getTsotchkeRepo('SolanaQuantumFlux')?.wiring).toBe(0);
-    expect(FENCED_REPO_SLUGS.length).toBeGreaterThanOrEqual(3);
-    // Floor, not exact: count of wired sim substrates grows as the corpus is wired deeper; assert a
-    // healthy minimum rather than a brittle exact number that reds CI on every registry edit.
-    expect(wiredSimRepoCount()).toBeGreaterThanOrEqual(15);
+    expect(getTsotchkeRepo('OBLITERATUS')?.wiring).toBe(0);
+    expect(FENCED_REPO_SLUGS).toEqual([
+      'gpt2-basic',
+      'llm-arbitrator',
+      'SolanaQuantumFlux',
+      'OBLITERATUS',
+    ]);
+  });
+
+  test('OBLITERATUS records its AGPL and non-LLM boundary with no runtime leaf', () => {
+    const obliteratus = getTsotchkeRepo('OBLITERATUS')!;
+    expect(obliteratus.origin).toBe('org');
+    expect(obliteratus.substrate).toBe('fenced-refusal-toolkit');
+    expect(obliteratus.depth).toBe('fenced');
+    expect(obliteratus.integrationMode).toBe('fenced');
+    expect(obliteratus.cosmogonicLeaf).toBe('');
+    expect(obliteratus.sourceBoundary).toContain('AGPL-3.0');
+    expect(obliteratus.sourceBoundary).toContain('non-LLM');
   });
 
   test('consciousness substrates are wired', () => {
@@ -52,10 +146,35 @@ describe('Tsotchke registry — ALL repos mapped (22 with classical-contrast for
     expect(getTsotchkeRepo('logo-lab')!.cosmogonicLeaf).toBe('sim/logo-turtle.ts');
   });
 
+  test('quantum_rng is truthfully ledgered as a deterministic facade/adaptation', () => {
+    const qrng = getTsotchkeRepo('quantum_rng')!;
+    expect(qrng.integrationMode).toBe('deterministic-facade');
+    expect(qrng.sourceBoundary).toContain('state-vector adaptation');
+    expect(qrng.sourceBoundary).toContain('not a direct port');
+    expect(qrng.sourceBoundary).toContain('hardware entropy');
+  });
+
   test('wiring coverage is between 0 and 1', () => {
     const c = tsotchkeWiringCoverage();
     expect(c).toBeGreaterThan(0.55);
     expect(c).toBeLessThanOrEqual(1);
+  });
+
+  test('depth tally and non-meta integration fraction are exact and de-inflated', () => {
+    const counts: Record<DepthKind, number> = {
+      deep: 0,
+      wired: 0,
+      harvest: 0,
+      fenced: 0,
+      meta: 0,
+    };
+    for (const slug of [...TSOTCHKE_USER_REPOS, ...TSOTCHKE_ORG_REPOS]) {
+      counts[getTsotchkeRepo(slug)!.depth] += 1;
+    }
+    expect(counts).toEqual({ deep: 8, wired: 7, harvest: 2, fenced: 4, meta: 1 });
+    expect(wiredSimRepoCount()).toBe(17);
+    expect(tsotchkeWiredSubstrateFraction()).toBe(17 / 21);
+    expect(getTsotchkeRepo('.github')!.wiring).toBe(0);
   });
 
   test('corpus beat rotates all 22 repos deterministically', () => {
@@ -96,6 +215,25 @@ describe('Tsotchke registry — ALL repos mapped (22 with classical-contrast for
     }
   });
 
+  test('every external entry declares an integration mode and source boundary', () => {
+    const valid = new Set<TsotchkeIntegrationMode>([
+      'direct-port',
+      'deterministic-facade',
+      'harvest',
+      'fenced',
+      'meta',
+    ]);
+    for (const slug of [...TSOTCHKE_USER_REPOS, ...TSOTCHKE_ORG_REPOS]) {
+      const entry = getTsotchkeRepo(slug)!;
+      expect(valid.has(entry.integrationMode)).toBe(true);
+      expect(entry.sourceBoundary.trim().length).toBeGreaterThan(0);
+      if (entry.depth === 'fenced' || entry.depth === 'meta') {
+        expect(entry.integrationMode).toBe(entry.depth);
+        expect(entry.wiring).toBe(0);
+      }
+    }
+  });
+
   test('fenced repos are the only ones with depth fenced', () => {
     for (const slug of FENCED_REPO_SLUGS) {
       expect(tsotchkeDepthFor(slug)).toBe('fenced');
@@ -116,7 +254,7 @@ describe('Tsotchke registry — ALL repos mapped (22 with classical-contrast for
       'libirrep',
       'tensorcore',
       'quantum_rng',
-      'classical-contrast',
+      'classical_rng',
     ] as const;
     for (const slug of deep) {
       expect(tsotchkeDepthFor(slug)).toBe('deep');

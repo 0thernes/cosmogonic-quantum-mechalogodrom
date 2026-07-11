@@ -1,0 +1,160 @@
+{
+  "schemaVersion": 1,
+  "taskVersion": "organism-intelligence-v1",
+  "generatedDate": "2026-07-10",
+  "indicatorOnly": true,
+  "claimBoundary": "Measures deterministic task behavior only; not phenomenal consciousness, sentience, physical quantum entropy, CSPRNG security, or general intelligence.",
+  "provenance": {
+    "cosmogonicBaseCommit": "f93ca06def1ad2999269c246aedc9f0af592c262",
+    "eshkolReference": {
+      "tag": "v1.3.2-evolve",
+      "commit": "8443ddaeecec579c60ac858348a23cf1912d7a78",
+      "relationship": "bounded-float64-runtime-analogue-not-native-parity"
+    },
+    "quantumRngReference": {
+      "tag": "v3.0.1",
+      "commit": "a00ad483cbbef31ea7536f09ae99409d81c9a823",
+      "relationship": "deterministic-classical-statevector-adaptation-not-csprng-or-physical-entropy"
+    }
+  },
+  "protocol": {
+    "heldOutSeeds": [
+      255293874,
+      2909729635,
+      1269198100,
+      3923633861,
+      2283102326,
+      642570791,
+      3297006552,
+      1656475017,
+      15943482,
+      2670379243,
+      1029847708,
+      3684283469,
+      2043751934,
+      403220399,
+      3057656160,
+      1417124625,
+      4071560386,
+      2431028851,
+      790497316,
+      3444933077,
+      1804401542,
+      163870007,
+      2818305768,
+      1177774233,
+      3832209994,
+      2191678459,
+      551146924,
+      3205582685,
+      1565051150,
+      4219486911
+    ],
+    "bootstrapSamples": 10000,
+    "controls": [
+      "substrate-disabled",
+      "repo-channel-permutation",
+      "entropy-matched-classical",
+      "random-policy"
+    ],
+    "resourceTask": "one-step x-axis progress toward identical flora goal",
+    "adaptationTask": "240 steps with resource-goal reversal after step 120; online trace vs frozen trace"
+  },
+  "resourceSeeking": {
+    "means": {
+      "enhanced": 0.01150844492454496,
+      "disabled": -0.0022294092150028544,
+      "shuffled": 0.011368191346134994,
+      "classical": 0.011670229735099602,
+      "random": -0.013149457378545776
+    },
+    "enhancedMinusDisabled": {
+      "mean": 0.013737854139547813,
+      "bootstrap95": [
+        0.011879774851016016,
+        0.015510905855250837
+      ],
+      "cohenDz": 2.6750325200534117
+    },
+    "enhancedMinusShuffled": {
+      "mean": 0.0001402535784099651,
+      "bootstrap95": [
+        -0.00010604643218606316,
+        0.0003837209560045346
+      ],
+      "cohenDz": 0.1999426631196293
+    },
+    "enhancedMinusClassical": {
+      "mean": -0.00016178481055464336,
+      "bootstrap95": [
+        -0.0009302658654488639,
+        0.0005653556759868541
+      ],
+      "cohenDz": -0.07691518023711123
+    },
+    "acceptedAgainstDisabled": true,
+    "substrateSpecific": false,
+    "quantumSpecific": false
+  },
+  "adaptation": {
+    "medianPostReversalEnhanced": 0.5373871520143083,
+    "medianPostReversalFrozen": 0.5816915100746343,
+    "relativeMedianImprovement": -0.07616469777020032,
+    "enhancedMinusFrozen": {
+      "mean": 0.06086086918475552,
+      "bootstrap95": [
+        0.010900969888329531,
+        0.11719701404667897
+      ],
+      "cohenDz": 0.4012779642673525
+    },
+    "worstSeedRelativeLoss": -0.17912495802992576,
+    "accepted": false
+  },
+  "corpusCausality": {
+    "integrated": 17,
+    "integratedChanged": 17,
+    "excluded": 5,
+    "excludedExactZero": 5,
+    "accepted": true
+  },
+  "performance": {
+    "sharedFieldP95Ms": 0.03300000000000125,
+    "legacyEntityMedianMs": 8.96980000000002,
+    "enhancedEntityMedianMs": 11.33080000000001,
+    "incrementalEntityMedianMs": 2.36099999999999,
+    "population": 50000,
+    "accepted": true
+  },
+  "consumerCoverage": [
+    "ordinary-entities",
+    "alien-flora",
+    "shoggoths",
+    "puppeteers",
+    "titans",
+    "leviathans",
+    "nhi",
+    "glyph-beings",
+    "wilderness-fauna",
+    "primordial-digital-biologics",
+    "archon-apex-and-mechalogodrom-existing-deep-paths"
+  ],
+  "claims": {
+    "operationalGoalUplift": true,
+    "adaptivePostReversalUplift": false,
+    "allIntegratedReposCausal": true,
+    "performanceBudgetMet": true,
+    "substrateSpecificUplift": false,
+    "quantumSpecificUplift": false,
+    "numericScoreUpliftAllowed": false
+  },
+  "machine": {
+    "platform": "win32",
+    "architecture": "x64",
+    "bun": "1.3.14",
+    "logicalCpus": 24,
+    "cpuModel": "Intel(R) Core(TM) Ultra 9 275HX",
+    "totalMemoryBytes": 50910707712
+  },
+  "contentSha256": "4d4f6580c40f3aec62003651aa3b6747cd9b742bf12e4d4e812074e247c537a6"
+}

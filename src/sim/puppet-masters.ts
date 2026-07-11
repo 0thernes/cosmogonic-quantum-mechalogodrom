@@ -397,11 +397,21 @@ export class PuppetMasterSystem implements PortalCullable, DomeFeeder {
       // recent meddling → a scheming opportunism. threat=0 (disembodied; never flees); the HUNT drive
       // is the meddle urge, AGITATION the restless glow/spin. Reuses the shared creatureDrive kernel.
       const here = pm.mesh.position;
-      const opportunity = clamp(
+      const localOpportunity = clamp(
         this.ctx.grid.query(here.x, here.z, PUP_OPP_R).length / PUP_OPP_CAP,
         0,
         1,
       );
+      const intelligence = this.ctx.organismIntelligence;
+      const opportunity = intelligence?.enabled
+        ? clamp(
+            localOpportunity * 0.78 +
+              intelligence.socialDrive * 0.12 +
+              intelligence.resourcePressure * 0.1,
+            0,
+            1,
+          )
+        : localOpportunity;
       pm.satiation = clamp(pm.satiation - PUP_SAT_DECAY * dt, 0, 1);
       const drive = creatureDrive({
         threat: 0,
@@ -433,7 +443,10 @@ export class PuppetMasterSystem implements PortalCullable, DomeFeeder {
       pm.ti += dt * 30;
       // Meddle cadence: WEALTH (V19 boldness) × the V25 opportunism HUNT drive — a rich hand over a
       // disordered, target-rich sector that hasn't acted lately strikes soonest; a spent one waits.
-      if (pm.ti >= cfg.iv / (boldness * (0.6 + 0.5 * drive.hunt))) {
+      const planningGain = intelligence?.enabled
+        ? 0.9 + intelligence.confidence * 0.06 + intelligence.exploration * 0.08
+        : 1;
+      if (pm.ti >= cfg.iv / (boldness * (0.6 + 0.5 * drive.hunt) * planningGain)) {
         pm.ti = 0;
         pm.satiation = clamp(pm.satiation + PUP_SAT_BUMP, 0, 1); // remember the meddle
         this.act(cfg);

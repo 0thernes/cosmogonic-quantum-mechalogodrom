@@ -4,21 +4,21 @@
   "nSystems": 113,
   "nPeers": 112,
   "cosmogonic": {
-    "breadthMean": 4.44,
+    "breadthMean": 3.68,
     "breadthRank": 1,
-    "zScorePopulation": 4.02,
-    "zScoreVsPeers": 4.36,
+    "zScorePopulation": 2.83,
+    "zScoreVsPeers": 2.95,
     "percentile": 100,
     "peerMaturity": 1.5
   },
   "survey": {
-    "breadthMeanAll": 2.11,
-    "breadthStdAll": 0.58,
+    "breadthMeanAll": 2.1,
+    "breadthStdAll": 0.56,
     "breadthMeanPeers": 2.08,
     "breadthStdPeers": 0.54,
     "medianBreadth": 2.11,
     "medianPeerMaturity": 3.5,
-    "corrBreadthVsMaturity": -0.133
+    "corrBreadthVsMaturity": -0.109
   },
   "perAxis": [
     {
@@ -47,11 +47,11 @@
     },
     {
       "axis": "Open-endedness",
-      "mean": 2.63,
-      "std": 1.29,
+      "mean": 2.62,
+      "std": 1.28,
       "max": 5,
-      "cosmo": 3.5,
-      "cosmoZ": 0.67,
+      "cosmo": 2.2,
+      "cosmoZ": -0.33,
       "leaders": [
         "Picbreeder",
         "POET",
@@ -66,13 +66,12 @@
     },
     {
       "axis": "Ecology",
-      "mean": 2.21,
-      "std": 1.4,
+      "mean": 2.19,
+      "std": 1.38,
       "max": 5,
-      "cosmo": 5,
-      "cosmoZ": 1.99,
+      "cosmo": 3,
+      "cosmoZ": 0.59,
       "leaders": [
-        "COSMOGONIC",
         "Polyworld",
         "Sugarscape",
         "Swarm"
@@ -80,11 +79,11 @@
     },
     {
       "axis": "Morphology/Physics",
-      "mean": 2.34,
+      "mean": 2.33,
       "std": 1.66,
       "max": 5,
-      "cosmo": 4,
-      "cosmoZ": 1,
+      "cosmo": 3.8,
+      "cosmoZ": 0.88,
       "leaders": [
         "Framsticks",
         "Karl Sims VC",
@@ -106,10 +105,10 @@
     {
       "axis": "Cognition/Learning",
       "mean": 1.9,
-      "std": 1.6,
+      "std": 1.59,
       "max": 5,
-      "cosmo": 4.5,
-      "cosmoZ": 1.62,
+      "cosmo": 3.8,
+      "cosmoZ": 1.2,
       "leaders": [
         "DERL (Deep Evolutionary Reinforcement Learning)",
         "UNIMAL (Universal Animal design space)",
@@ -120,10 +119,10 @@
     {
       "axis": "Substrate pluralism",
       "mean": 1.11,
-      "std": 0.48,
-      "max": 5,
-      "cosmo": 5,
-      "cosmoZ": 8.05,
+      "std": 0.45,
+      "max": 4.5,
+      "cosmo": 4.5,
+      "cosmoZ": 7.57,
       "leaders": [
         "COSMOGONIC"
       ]
@@ -133,8 +132,8 @@
       "mean": 3.14,
       "std": 1.02,
       "max": 5,
-      "cosmo": 4.5,
-      "cosmoZ": 1.34,
+      "cosmo": 4.3,
+      "cosmoZ": 1.15,
       "leaders": [
         "Game of Life",
         "EvoGym",
@@ -151,24 +150,23 @@
     },
     {
       "axis": "Consciousness-theory",
-      "mean": 0.06,
-      "std": 0.44,
-      "max": 4.5,
-      "cosmo": 4.5,
-      "cosmoZ": 10.04,
+      "mean": 0.05,
+      "std": 0.35,
+      "max": 3.5,
+      "cosmo": 3.5,
+      "cosmoZ": 9.73,
       "leaders": [
         "COSMOGONIC"
       ]
     },
     {
       "axis": "Visual scale",
-      "mean": 2.93,
-      "std": 1.16,
+      "mean": 2.92,
+      "std": 1.15,
       "max": 5,
-      "cosmo": 5,
-      "cosmoZ": 1.79,
+      "cosmo": 4,
+      "cosmoZ": 0.94,
       "leaders": [
-        "COSMOGONIC",
         "Karl Sims VC",
         "Creatures",
         "Picbreeder",
@@ -187,52 +185,52 @@
     {
       "name": "ALIEN",
       "full": "ALIEN",
-      "d": 5.17
+      "d": 4.5
     },
     {
       "name": "Creatures",
       "full": "Creatures",
-      "d": 5.57
-    },
-    {
-      "name": "Polyworld",
-      "full": "Polyworld",
-      "d": 6.48
+      "d": 4.97
     },
     {
       "name": "Framsticks",
       "full": "Framsticks",
-      "d": 6.56
-    },
-    {
-      "name": "Species: Artificial Life, Real Evolution",
-      "full": "Species: Artificial Life, Real Evolution",
-      "d": 6.93
-    },
-    {
-      "name": "The Bibites",
-      "full": "The Bibites",
-      "d": 6.93
-    },
-    {
-      "name": "breve",
-      "full": "breve",
-      "d": 7
+      "d": 5.31
     },
     {
       "name": "Division Blocks",
       "full": "Division Blocks",
-      "d": 7
-    },
-    {
-      "name": "Karl Sims VC",
-      "full": "Karl Sims Evolved Virtual Creatures",
-      "d": 7.14
+      "d": 5.34
     },
     {
       "name": "biosim4",
       "full": "biosim4",
-      "d": 7.28
+      "d": 5.52
+    },
+    {
+      "name": "Karl Sims VC",
+      "full": "Karl Sims Evolved Virtual Creatures",
+      "d": 5.56
+    },
+    {
+      "name": "Species: Artificial Life, Real Evolution",
+      "full": "Species: Artificial Life, Real Evolution",
+      "d": 5.63
+    },
+    {
+      "name": "Neural Graph Evolution (NGE)",
+      "full": "Neural Graph Evolution (NGE)",
+      "d": 5.65
+    },
+    {
+      "name": "The Bibites",
+      "full": "The Bibites",
+      "d": 5.67
+    },
+    {
+      "name": "OpenWorm",
+      "full": "OpenWorm",
+      "d": 5.74
     }
   ]
 }

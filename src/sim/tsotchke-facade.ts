@@ -230,7 +230,9 @@ export function corpusPulse(
   const brain = corpusBrainScalar(seed, formIdx, corpusAblated);
   return {
     cliffordEnt: c01((b.cliffordWeight + s * 0.1) * scale),
-    qgtVolume: c01((b.generative + b.chaos * 0.5 + brain * 0.6) * scale),
+    // Convex blend preserves headroom for repo ablations. The previous unnormalised sum saturated at 1
+    // for most forms, erasing downstream counterfactual differences.
+    qgtVolume: c01((b.generative * 0.38 + b.chaos * 0.2 + brain * 0.42) * scale),
     rngEntropy: c01((b.narrative * 0.7 + s) * scale),
     quakeAliveness: c01(b.quakeFactor * (0.6 + repo.hue * 0.4)),
     adGradient: c01((b.adDepth / 8) * (0.5 + s * 0.5) * scale),

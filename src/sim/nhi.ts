@@ -96,6 +96,12 @@ export interface NhiPercept {
    */
   kinPresence?: number;
   kinMood?: number;
+  /** ADR-0013 shared non-LLM corpus drives. Optional zeros preserve standalone/headless behavior. */
+  corpusResource?: number;
+  corpusThreat?: number;
+  corpusSocial?: number;
+  corpusExplore?: number;
+  corpusConfidence?: number;
 }
 
 /** The NHI's decision for this beat — pure data the integrator executes. */
@@ -265,6 +271,11 @@ export class NhiMind {
     // many are near), so a panicked cluster spirals together and a manic one feeds each other's frenzy.
     const kinPresence = p.kinPresence ?? 0;
     const kinMood = p.kinMood ?? 0;
+    const corpusResource = p.corpusResource ?? 0;
+    const corpusThreat = p.corpusThreat ?? 0;
+    const corpusSocial = p.corpusSocial ?? 0;
+    const corpusExplore = p.corpusExplore ?? 0;
+    const corpusConfidence = p.corpusConfidence ?? 0;
     // V122 (USER #3): the REMEMBER step was documented but never written — the MemoryRing was read
     // (mean() below, recent() in snapshot) yet nothing ever pushed, so the MEMORY observatory pane
     // sat at "filling memory…" forever and the mean() mood term was a dead 0. One valence sample per
@@ -314,8 +325,12 @@ export class NhiMind {
       (g[NhiAction.BROADCAST] ?? 0) * 0.5;
     s[NhiAction.MIMIC] = this.deceit * 0.6 + p.threat * 0.7 + (g[NhiAction.MIMIC] ?? 0) * 0.5;
     s[NhiAction.HUNT] =
-      (1 - p.energy) * 1.1 + this.aggression * 0.5 + (g[NhiAction.HUNT] ?? 0) * 0.5;
-    s[NhiAction.RETREAT] = p.threat * 1.4 - p.energy * 0.6 + (g[NhiAction.RETREAT] ?? 0) * 0.5;
+      (1 - p.energy) * 1.1 +
+      this.aggression * 0.5 +
+      corpusResource * 0.35 +
+      (g[NhiAction.HUNT] ?? 0) * 0.5;
+    s[NhiAction.RETREAT] =
+      p.threat * 1.4 - p.energy * 0.6 + corpusThreat * 0.3 + (g[NhiAction.RETREAT] ?? 0) * 0.5;
 
     // 3a-social (USER #7a): kin nearby → the NHI BREEDS + BROADCASTS to the pack and holds ground
     // (safety in numbers); ISOLATED → it turns inward and schemes/hunts alone. Deterministic utility
@@ -326,6 +341,9 @@ export class NhiMind {
     s[NhiAction.RETREAT] = (s[NhiAction.RETREAT] ?? 0) - kinPresence * 0.4;
     s[NhiAction.MANIPULATE] = (s[NhiAction.MANIPULATE] ?? 0) + isolation * 0.3;
     s[NhiAction.HUNT] = (s[NhiAction.HUNT] ?? 0) + isolation * 0.25;
+    s[NhiAction.SPAWN_SWARM] = (s[NhiAction.SPAWN_SWARM] ?? 0) + corpusSocial * 0.24;
+    s[NhiAction.BROADCAST] = (s[NhiAction.BROADCAST] ?? 0) + corpusSocial * 0.2;
+    s[NhiAction.MIMIC] = (s[NhiAction.MIMIC] ?? 0) + corpusExplore * 0.18;
 
     // 3b. GOAP: plan the cheapest path to dominion and nudge the planned NEXT step's utility up, so
     //     the NHI runs a coherent multi-step scheme across beats rather than only reacting.
@@ -336,7 +354,10 @@ export class NhiMind {
 
     // 4. Choose: volatility + chaos raise the softmax temperature → wild, unpredictable picks; a calm,
     //    confident NHI is near-greedy. Occasionally regret-matching overrides for adaptivity.
-    const temp = 0.2 + (this.volatility * 0.8 + p.chaos * 0.6) * 1.5;
+    const temp =
+      0.2 +
+      (this.volatility * 0.8 + p.chaos * 0.6 + corpusExplore * 0.12) *
+        (1.5 - corpusConfidence * 0.12);
     let action =
       rng() < 0.15 + this.volatility * 0.2
         ? regretMatch(this.cumRegret, ACTION_COUNT, rng)

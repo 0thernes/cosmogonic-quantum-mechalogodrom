@@ -360,7 +360,7 @@ export class SuperPanel {
     this.id.offspring = idRow(id, 'Twins', doc);
     this.id.wallet = idRow(id, 'Wallet', doc);
     this.id.brain = idRow(id, 'Conscious', doc); // V46: the live ~10k-param composite mind
-    this.id.substrate = idRow(id, 'Substrate', doc); // V84 + Ralph 10x: ported Tsotchke (Eshkol QRNG/AD/GWT + Moonlab tensor/Clifford + QGT + libirrep sym + quake + mpo + ulg) substrates live in 5 Archons. See facade + full corpus.
+    this.id.substrate = idRow(id, 'Substrate', doc); // V84: bounded Tsotchke-derived local primitives, facades, and adaptations feed the five Archons. See the registry and integration map.
     this.id.cognition = idRow(id, 'Cognition', doc); // V1.1: reservoir · active-inference · metacognition
     this.id.resonance = idRow(id, 'Resonance', doc); // #59: standing-wave coherence binding the assembly
     this.id.power = idRow(id, 'Power', doc); // V48: the evolution — level / stage / power / day

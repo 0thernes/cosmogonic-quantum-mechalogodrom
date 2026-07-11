@@ -1,13 +1,22 @@
 /**
- * THE ESHKOL QUANTUM RNG (V84) — proves the ported Tsotchke generator is deterministic from a seed
- * (the one deliberate deviation from upstream), NaN-free, range-correct, and statistically sane.
+ * ESHKOL RNG COMPATIBILITY ADAPTER — proves the bounded classical state-vector adaptation is
+ * deterministic from a seed, NaN-free, range-correct, and statistically sane. It is neither a direct
+ * upstream port nor a physical entropy/security claim.
  * Experiments (a falsifiable claim each), per the Physicist's law 4.
  */
 import { describe, expect, test } from 'bun:test';
 import { mulberry32 } from '../src/math/rng';
 import { EshkolQrng, ESHKOL_QUBITS } from '../src/math/eshkol-qrng';
 
-describe('EshkolQrng (V84) — the ported Tsotchke quantum RNG', () => {
+describe('EshkolQrng — deterministic state-vector compatibility adapter', () => {
+  test('zero-draw telemetry reports insufficient evidence instead of maximum entropy', () => {
+    const s = new EshkolQrng(mulberry32(0x51a7)).snapshot();
+    expect(s.draws).toBe(0);
+    expect(s.health.status).toBe('insufficient-data');
+    expect(s.health.sampleBits).toBe(0);
+    expect(s.entropyEstimate).toBe(0);
+  });
+
   test('same seed ⇒ identical bitstream (the seeded-determinism deviation holds)', () => {
     const a = new EshkolQrng(mulberry32(12345));
     const b = new EshkolQrng(mulberry32(12345));
@@ -64,8 +73,11 @@ describe('EshkolQrng (V84) — the ported Tsotchke quantum RNG', () => {
     expect(s.amplitudes).toHaveLength(ESHKOL_QUBITS);
     expect(s.pool).toHaveLength(16);
     expect(s.lastBits).toHaveLength(64);
+    expect(s.modelVersion).toBe('v3.0.1-deterministic-classical-statevector-adaptation');
+    expect(s.securityBoundary).toContain('not a CSPRNG');
+    expect(s.securityBoundary).toContain('not physical entropy');
     for (const a of s.amplitudes) expect(Number.isFinite(a)).toBe(true);
-    expect(s.entropyEstimate).toBeGreaterThan(0.7); // high-entropy output
+    expect(s.entropyEstimate).toBeGreaterThan(0.7); // high empirical binary-entropy estimate
     expect(s.entropyEstimate).toBeLessThanOrEqual(1);
   });
 });

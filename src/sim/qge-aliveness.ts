@@ -70,10 +70,10 @@ export function qgeFisherAliveness(state: QGEState, k = 14): number {
 }
 
 /**
- * GENUINE quantum-geometric aliveness of a QGE state, in [0,1].
+ * Quantum-geometric aliveness proxy for a simulated QGE state, in [0,1].
  *
  * Primary axis: the normalized Fubini–Study distinguishability of the state from {@link GROUND_STATE}
- * — a real, gauge-invariant projective-Hilbert distance that ACTUALLY changes with the state. It is
+ * — a gauge-invariant projective-Hilbert distance that changes with the model state. It is
  * tempered (geometric mean) by the log-normalized QFI factor so a state that is both far from the
  * trivial ray AND has well-formed self-sensitivity scores highest. Concretely:
  *   • a trivial/ground state ⇒ FS distance 0 ⇒ aliveness 0 (minimal);

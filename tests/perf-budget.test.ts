@@ -61,7 +61,7 @@ const SYNC_BUDGET_MS = 80;
  * Generous per-beat ceiling (ms) for the apex {@link SuperMind.think} — ONE creature's full cognitive beat
  * (the 20-plus-faculty SC 1.1 stack: the 5-stage/25-variant Tree of Thought, the 6-qubit evolve + QNG +
  * Grover, spin-glass, active inference, ToM, neuromodulation, successor-representation, empowerment,
- * holographic recall, and now the genuine quantum-Φ read). The reference machine runs it in ≈ 0.21 ms; a
+ * holographic recall, and now the simulated-register integration-proxy read). The reference machine runs it in ≈ 0.21 ms; a
  * the apex mind is a deliberate HEAVYWEIGHT (25+ faculties; only ≤5 instances exist, staggered across
  * sub-beats — NOT the 50k swarm), so the bound guards against a GROSS structural regression (e.g.
  * accidentally calling the UI-cadence `snapshot()` — full QGT + 4ⁿ-Pauli magic — every beat, or an O(n²)

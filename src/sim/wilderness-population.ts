@@ -16,10 +16,22 @@ import {
   type WorkerTask,
 } from '../core/worker-pool';
 import { chunkSeed as coordinateChunkSeed } from './wilderness-chunks';
+import type { OrganismIntelligenceSignal } from '../types';
 
 /** Packed wilderness entity layout: xyz, velocity xyz, type, seed. */
 export const WILDERNESS_ENTITY_STRIDE = 8;
 const WILDERNESS_DAMPING_60HZ = 0.985;
+
+/**
+ * Recover a diverse deterministic patch key from the lossy Float32 seed lane plus stable chunk-local
+ * ordinal. Float32 cannot retain all uint32 low bits; mixing the ordinal prevents adjacent high seeds
+ * from collapsing to one resource target while preserving worker/main parity.
+ */
+export function wildernessResourcePatchKey(packedSeed: number, entityOrdinal: number): number {
+  const seed = Number.isFinite(packedSeed) ? Math.trunc(packedSeed) >>> 0 : 0;
+  const ordinal = Number.isSafeInteger(entityOrdinal) && entityOrdinal >= 0 ? entityOrdinal : 0;
+  return (seed ^ Math.imul(ordinal + 1, 0x9e37_79b1)) >>> 0;
+}
 
 /**
  * Shared worker/main-thread wilderness kernel. Mutates `data` in place and draws exactly three
@@ -31,9 +43,15 @@ export function simulateWildernessData(
   chunkId: string,
   dt: number,
   chunkSize = 100,
+  intelligenceResource = 0,
+  intelligenceThreat = 0,
+  intelligenceExplore = 0,
 ): Float32Array {
   if (data.length % WILDERNESS_ENTITY_STRIDE !== 0) {
     throw new Error(`Malformed wilderness payload length: ${data.length}`);
+  }
+  if (!Number.isFinite(chunkSize) || chunkSize <= 0) {
+    throw new RangeError(`wilderness chunkSize must be finite and > 0, received ${chunkSize}`);
   }
 
   const safeDt = normalizeWorkerDt(dt);
@@ -45,6 +63,19 @@ export function simulateWildernessData(
   const frameScale = safeDt * 60;
   const damping = Math.pow(WILDERNESS_DAMPING_60HZ, frameScale);
   const rng = safeDt > 0 ? mulberry32((seed ^ hashSeed(chunkId)) >>> 0) : null;
+  const resource = Math.max(
+    0,
+    Math.min(1, Number.isFinite(intelligenceResource) ? intelligenceResource : 0),
+  );
+  const threat = Math.max(
+    0,
+    Math.min(1, Number.isFinite(intelligenceThreat) ? intelligenceThreat : 0),
+  );
+  const explore = Math.max(
+    0,
+    Math.min(1, Number.isFinite(intelligenceExplore) ? intelligenceExplore : 0),
+  );
+  const adaptive = resource > 0 || threat > 0 || explore > 0;
 
   for (let i = 0; i < data.length; i += WILDERNESS_ENTITY_STRIDE) {
     let x = data[i] ?? 0;
@@ -69,9 +100,30 @@ export function simulateWildernessData(
     }
 
     if (rng) {
-      vx += (rng() - 0.5) * 0.04 * frameScale;
-      vy += (rng() - 0.5) * 0.02 * frameScale;
-      vz += (rng() - 0.5) * 0.04 * frameScale;
+      const exploreGain = adaptive ? 0.82 + explore * 0.36 : 1;
+      vx += (rng() - 0.5) * 0.04 * exploreGain * frameScale;
+      vy += (rng() - 0.5) * 0.02 * exploreGain * frameScale;
+      vz += (rng() - 0.5) * 0.04 * exploreGain * frameScale;
+      if (adaptive) {
+        // Each fauna identity defines a persistent resource patch inside its streamed chunk. Resource
+        // pressure strengthens goal seeking; threat strengthens predictive boundary avoidance.
+        const patchKey = wildernessResourcePatchKey(entitySeed, i / WILDERNESS_ENTITY_STRIDE);
+        const patchU = (((Math.imul(patchKey, 1103515245) + 12345) >>> 8) & 0xffff) / 0x10000;
+        const patchV = (((Math.imul(patchKey, 214013) + 2531011) >>> 8) & 0xffff) / 0x10000;
+        const targetX = (chunkX + 0.12 + patchU * 0.76) * chunkSize;
+        const targetZ = (chunkZ + 0.12 + patchV * 0.76) * chunkSize;
+        vx += (targetX - x) * resource * 0.00008 * frameScale;
+        vz += (targetZ - z) * resource * 0.00008 * frameScale;
+        const localX = x - chunkX * chunkSize;
+        const localZ = z - chunkZ * chunkSize;
+        const margin = chunkSize * 0.16;
+        if (localX < margin) vx += (1 - localX / margin) * threat * 0.012 * frameScale;
+        else if (localX > chunkSize - margin)
+          vx -= (1 - (chunkSize - localX) / margin) * threat * 0.012 * frameScale;
+        if (localZ < margin) vz += (1 - localZ / margin) * threat * 0.012 * frameScale;
+        else if (localZ > chunkSize - margin)
+          vz -= (1 - (chunkSize - localZ) / margin) * threat * 0.012 * frameScale;
+      }
       x += vx * safeDt;
       y += vy * safeDt;
       z += vz * safeDt;
@@ -147,6 +199,9 @@ export class WildernessPopulation {
   private latestWorkerDt = 0;
   private latestWorkerFrame = 0;
   private disposed = false;
+  private intelligenceResource = 0;
+  private intelligenceThreat = 0;
+  private intelligenceExplore = 0;
 
   constructor(workerPool: WorkerPool | null, baseSeed: number) {
     this.workerPool = workerPool;
@@ -162,11 +217,25 @@ export class WildernessPopulation {
    * Update wilderness based on camera position
    * Loads/unloads chunks by distance (camera-streamed)
    */
-  update(cameraX: number, cameraZ: number, dt: number): void {
+  update(
+    cameraX: number,
+    cameraZ: number,
+    dt: number,
+    intelligence?: OrganismIntelligenceSignal,
+  ): void {
     if (this.disposed) return;
     // A poisoned camera coordinate would otherwise create persistent `NaN,z` chunk keys and
     // hundreds of non-finite entities. Reject before counters or chunk state can mutate.
     if (!Number.isFinite(cameraX) || !Number.isFinite(cameraZ)) return;
+    if (intelligence?.enabled) {
+      this.intelligenceResource = intelligence.resourcePressure;
+      this.intelligenceThreat = intelligence.threatResponse;
+      this.intelligenceExplore = intelligence.exploration;
+    } else {
+      this.intelligenceResource = 0;
+      this.intelligenceThreat = 0;
+      this.intelligenceExplore = 0;
+    }
     // Increment frame counter for deterministic timestamps
     this.frameCounter++;
 
@@ -329,7 +398,16 @@ export class WildernessPopulation {
 
     // Any worker-level failure or malformed payload falls back through the exact same pure kernel.
     try {
-      simulateWildernessData(task.data, task.seed, chunkId, task.dt, this.chunkSize);
+      simulateWildernessData(
+        task.data,
+        task.seed,
+        chunkId,
+        task.dt,
+        this.chunkSize,
+        task.intelligenceResource,
+        task.intelligenceThreat,
+        task.intelligenceExplore,
+      );
       if (this.isValidData(task.data, task.data.length)) {
         this.updateEntitiesFromResult(chunk, task.data, scheduledFrame);
       }
@@ -374,6 +452,9 @@ export class WildernessPopulation {
         ((chunk.entities[0]?.seed ?? this.baseSeed) ^ hashSeed(`frame:${scheduledFrame}`)) >>> 0,
       dt,
       chunkId,
+      intelligenceResource: this.intelligenceResource,
+      intelligenceThreat: this.intelligenceThreat,
+      intelligenceExplore: this.intelligenceExplore,
     };
   }
 
@@ -400,7 +481,16 @@ export class WildernessPopulation {
   ): void {
     const task = this.packTask(chunkId, chunk, dt, scheduledFrame, bufIndex);
     try {
-      simulateWildernessData(task.data, task.seed, chunkId, task.dt, this.chunkSize);
+      simulateWildernessData(
+        task.data,
+        task.seed,
+        chunkId,
+        task.dt,
+        this.chunkSize,
+        task.intelligenceResource,
+        task.intelligenceThreat,
+        task.intelligenceExplore,
+      );
       this.updateEntitiesFromResult(chunk, task.data, scheduledFrame);
     } catch (error) {
       console.error('Wilderness synchronous update error:', error);

@@ -1,18 +1,18 @@
 /**
- * ESHKOL VM — a REAL minimal stack bytecode interpreter (leaf, exclusive owner).
+ * ESHKOL VM — a working minimal stack bytecode interpreter (leaf, exclusive owner).
  *
  * Retires the audit's PROXY_STUB note that "eshkol-vm.ts is NOT a VM" — it was a
- * pure re-export facade. This module now ALSO ships a genuine stack-based bytecode
- * interpreter (a faithful miniature of the Tsotchke Eshkol `vm_core.c` execution
+ * pure re-export facade. This module now also ships a stack-based bytecode
+ * interpreter inspired by the Tsotchke Eshkol `vm_core.c` execution
  * loop): a constant pool, an operand stack, arithmetic + comparison opcodes, and
- * real control flow (JMP/JZ) with a bounded step budget. This is the first step of
+ * executable control flow (JMP/JZ) with a bounded step budget. This is the first step of
  * the "digital biologics think in Eshkol" thesis — creatures/Archons can carry a
  * compiled `EshProgram` and EXECUTE it deterministically inside the sim loop, not
  * just hash a source string.
  *
  * The original program-heuristic evaluator (keyword/FNV salience) is preserved and
  * re-exported below for existing callers; it is honestly a SALIENCE HEURISTIC, while
- * the bytecode VM here is the real opcode executor.
+ * the bytecode VM here is the actual local opcode executor. It is a bounded subset, not full Eshkol.
  *
  * DETERMINISM (Manhattan): pure interpreter, NO `Rng`, NO `Date.now`, fixed step
  * cap → always halts. Same program ⇒ same result, bit for bit.
@@ -31,7 +31,8 @@ export const TSOTCHKE_REPO_MAP = {
   moonlab: 'MoonlabSim — Clifford, tensor/MPO, Bloch, QGT geometry',
   libirrep: 'LibirrepSym — SO(3)/SU(2) irreps, Clebsch–Gordan, equivariance',
   quantum_quake: 'QuantumQuake — QGE aliveness, lattice perturbations',
-  quantum_rng: 'QRNG — seeded qubit measurement (ported to eshkol-qrng.ts)',
+  quantum_rng:
+    'QRNG — deterministic state-vector adaptation (eshkol-qrng.ts; not physical entropy)',
   ulg: 'ULG-Browser — triad handoff / hybrid aliveness',
   qgt: 'QGTLGeo — quantum geometry & topological curvature',
   spin_nets: 'SpinNets — spin-glass instinct lattices',

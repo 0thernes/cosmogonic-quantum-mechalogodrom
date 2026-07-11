@@ -1,14 +1,21 @@
 /**
  * TSOTCHKE CORPUS REGISTRY — BINDING LEDGER PER docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md
- * ALL repos/projects from tsotchke user + Tsotchke-Corporation org + full local Z:\[Vibe Coded (AI)]\(Tsotchke) corpus (12k+ files) MAPPED and UTILIZED as digital-biologic substrate.
- * Deep apex (9): Eshkol (AD/GWT/consciousness-engine + .esk DNA), Moonlab (Clifford/tensor), QGTL, spin NN, quantum_rng, libirrep, tensorcore, classical_rng, classical-contrast.
+ * ALL 22 public repos from the tsotchke user + Tsotchke-Corporation org are accounted for as
+ * digital-biologic substrate, harvest, deliberate fence, or metadata. Internal Cosmogonic controls
+ * are recorded separately and never inflate the external-repository count or coverage denominator.
+ * Deep apex (8): Eshkol (AD/GWT/consciousness-engine + .esk DNA), Moonlab (Clifford/tensor), QGTL,
+ * spin NN, quantum_rng, libirrep, tensorcore, classical_rng.
  * World/sim (2): asteroids, simple_mnist.
  * Ported/telemetry (3): PINN, PIMC, quantum-quake (license notes apply; quake GPL quarantine per map).
  * License-gated leaves (2): ulg, logo-lab.
- * Fenced by design (non-LLM mandate + proprietary): gpt2-basic, llm-arbitrator, SolanaQuantumFlux.
+ * Fenced by design (non-LLM mandate + license boundary): gpt2-basic, llm-arbitrator,
+ * SolanaQuantumFlux, OBLITERATUS.
  * Toolchain/meta: homebrew-eshkol, .github.
- * Catalysis (fullTsotchkeBiologicsCatalysis + soup + petri + Archons) mixes ALL wiring>0. Harvest pulls real local .esk for Eshkol DNA.
- * Tsotchke is REAL MIT-grade startup quantum math (no overclaims; physical QC for scale). Binding depth: TSOTCHKE-INTEGRATION-MAP-2026-06-26.md. "Grow What Thou Wilt."
+ * Catalysis (fullTsotchkeBiologicsCatalysis + soup + petri + Archons) mixes all entries with
+ * `wiring>0`. Harvest pulls local `.esk` artifacts for deterministic Eshkol program fingerprints.
+ * The ledger records integration and provenance; it does not certify physical quantum hardware,
+ * consciousness, sentience, security, or upstream implementation quality. Binding depth:
+ * TSOTCHKE-INTEGRATION-MAP-2026-06-26.md. "Grow What Thou Wilt."
  *
  * NOT LLM. Different forms of life. Petri is growth engine. Super Creature initial spark only.
  */
@@ -27,7 +34,6 @@ export const TSOTCHKE_USER_REPOS = [
   'simple_mnist',
   'asteroids',
   'classical_rng',
-  'classical-contrast',
   'PINN',
   'PIMC',
 ] as const;
@@ -38,6 +44,7 @@ export const TSOTCHKE_ORG_REPOS = [
   'quantum-quake',
   'SolanaQuantumFlux',
   'Quantum-RNG-API',
+  'OBLITERATUS',
   '.github',
 ] as const;
 
@@ -53,6 +60,10 @@ export type DepthKind =
   | 'fenced' // deliberately excluded by project mandate
   | 'meta'; // org-level meta (e.g., .github)
 
+/** How an external repository is represented without conflating a facade with copied source. */
+export type TsotchkeIntegrationMode =
+  'direct-port' | 'deterministic-facade' | 'harvest' | 'fenced' | 'meta';
+
 /** Substrate roles for digital biologics (primordial soup evolution). */
 export type SubstrateKind =
   | 'consciousness-engine' // Eshkol: AD, GWT, active inference, programs as life code
@@ -61,7 +72,7 @@ export type SubstrateKind =
   | 'equivariant-sym' // libirrep: symmetry as form constraint
   | 'hopfield-spin' // spin glass: associative imprinting / instinct
   | 'quantum-geometry' // QGT: geometry of thought-space, curvature drives
-  | 'qrng-entropy' // quantum/classical rng: true variation for mutation
+  | 'qrng-entropy' // seeded state-vector model: deterministic mutation variation, not physical entropy
   | 'fenced-llm' // explicitly not used for life
   | 'toolchain' // homebrew-eshkol: build tools for biologics
   | 'fenced-arbitrator' // fenced
@@ -74,6 +85,7 @@ export type SubstrateKind =
   | 'logo-turtle' // logo-lab: procedural growth / morphogenesis
   | 'quake-aliveness' // quantum-quake: aliveness observable as fitness
   | 'fenced-chain' // onchain fenced
+  | 'fenced-refusal-toolkit' // OBLITERATUS: AGPL LLM refusal-removal toolkit, excluded
   | 'qrng-api' // Quantum-RNG-API: REST facade over eshkol-qrng core
   | 'meta' // meta
   | 'digital-biologic'; // composite for new life forms
@@ -85,14 +97,41 @@ export interface TsotchkeRepoEntry {
   cosmogonicLeaf: string;
   /**
    * Declared integration status (a design-intent weight, NOT a measured behavioural metric):
-   * 1.0 = wired into soup / mind / world, 0 = present-but-fenced (e.g. license-gated). This records
+   * 1.0 = represented in soup / mind / world, 0 = fenced or metadata-only. This records
    * our wiring intent for each upstream repo; it says nothing about the upstream tech, which is real.
    */
   wiring: number;
   /** Public depth classification for the integration map. */
   depth: DepthKind;
+  /** Whether the local leaf is a port, clean deterministic facade, harvest, fence, or metadata. */
+  integrationMode: TsotchkeIntegrationMode;
+  /** Human-readable upstream license/provenance boundary; not a legal conclusion. */
+  sourceBoundary: string;
   hue: number;
 }
+
+/**
+ * Internal experimental controls are operational Cosmogonic leaves, not public Tsotchke repos.
+ * Keeping a separate type and ledger prevents them from entering external counts, coverage, or
+ * registry-driven catalysis while retaining explicit provenance for the live control path.
+ */
+export interface TsotchkeInternalControlEntry {
+  id: 'classical-contrast';
+  substrate: 'classical-baseline';
+  cosmogonicLeaf: 'sim/classical-contrast.ts';
+  purpose: string;
+  operational: true;
+}
+
+export const TSOTCHKE_INTERNAL_CONTROLS = [
+  {
+    id: 'classical-contrast',
+    substrate: 'classical-baseline',
+    cosmogonicLeaf: 'sim/classical-contrast.ts',
+    purpose: 'Internal quantum-versus-classical experimental control; backed by classical_rng.',
+    operational: true,
+  },
+] as const satisfies readonly TsotchkeInternalControlEntry[];
 
 const ENTRIES: TsotchkeRepoEntry[] = [
   {
@@ -102,6 +141,8 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     cosmogonicLeaf: 'sim/eshkol-bridge.ts',
     wiring: 1.0,
     depth: 'deep',
+    integrationMode: 'direct-port',
+    sourceBoundary: 'MIT; compatible upstream source may be ported with attribution.',
     hue: 0.72,
   },
   // Local corpus Z:\[Vibe Coded (AI)]\(Tsotchke)\Eshkol\eshkol_repo used as build source for .esk programs as heritable digital biologic DNA.
@@ -112,6 +153,8 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     cosmogonicLeaf: 'sim/moonlab-tensor.ts',
     wiring: 1.0,
     depth: 'deep',
+    integrationMode: 'direct-port',
+    sourceBoundary: 'MIT; compatible upstream source may be ported with attribution.',
     hue: 0.41,
   },
   {
@@ -121,6 +164,8 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     cosmogonicLeaf: 'sim/tensorcore-facade.ts',
     wiring: 1.0,
     depth: 'deep',
+    integrationMode: 'deterministic-facade',
+    sourceBoundary: 'MIT; local leaf is a deterministic TypeScript facade.',
     hue: 0.05,
   },
   {
@@ -130,6 +175,8 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     cosmogonicLeaf: 'sim/irrep-symmetry.ts',
     wiring: 1.0,
     depth: 'deep',
+    integrationMode: 'direct-port',
+    sourceBoundary: 'MIT; compatible upstream source may be ported with attribution.',
     hue: 0.18,
   },
   {
@@ -139,6 +186,8 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     cosmogonicLeaf: 'math/hopfield + spin-glass',
     wiring: 1.0,
     depth: 'deep',
+    integrationMode: 'direct-port',
+    sourceBoundary: 'MIT; compatible upstream source may be ported with attribution.',
     hue: 0.55,
   },
   {
@@ -148,6 +197,8 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     cosmogonicLeaf: 'quantum-geometry',
     wiring: 1.0,
     depth: 'deep',
+    integrationMode: 'direct-port',
+    sourceBoundary: 'MIT; compatible upstream source may be ported with attribution.',
     hue: 0.88,
   },
   {
@@ -157,6 +208,9 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     cosmogonicLeaf: 'eshkol-qrng',
     wiring: 1.0,
     depth: 'deep',
+    integrationMode: 'deterministic-facade',
+    sourceBoundary:
+      'MIT; local code is a seeded state-vector adaptation/facade, not a direct port or hardware entropy source.',
     hue: 0.62,
   },
   {
@@ -166,6 +220,8 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     cosmogonicLeaf: '',
     wiring: 0,
     depth: 'fenced',
+    integrationMode: 'fenced',
+    sourceBoundary: 'MIT; excluded by the non-LLM simulation mandate.',
     hue: 0,
   },
   {
@@ -175,6 +231,8 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     cosmogonicLeaf: 'sim/homebrew-eshkol.ts',
     wiring: 1.0,
     depth: 'harvest',
+    integrationMode: 'harvest',
+    sourceBoundary: 'NO LICENSE; toolchain/catalog harvest only, with no upstream source port.',
     hue: 0.33,
   },
   {
@@ -184,6 +242,8 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     cosmogonicLeaf: '',
     wiring: 0,
     depth: 'fenced',
+    integrationMode: 'fenced',
+    sourceBoundary: 'MIT; excluded by the non-LLM simulation mandate.',
     hue: 0,
   },
   {
@@ -193,6 +253,8 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     cosmogonicLeaf: 'sim/perceptron-baseline.ts',
     wiring: 1.0,
     depth: 'wired',
+    integrationMode: 'deterministic-facade',
+    sourceBoundary: 'MIT; local leaf is a deterministic baseline facade.',
     hue: 0.27,
   },
   {
@@ -202,6 +264,8 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     cosmogonicLeaf: 'sim/asteroids-physics.ts',
     wiring: 1.0,
     depth: 'wired',
+    integrationMode: 'deterministic-facade',
+    sourceBoundary: 'MIT; local leaf is a deterministic physics facade.',
     hue: 0.48,
   },
   {
@@ -211,16 +275,9 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     cosmogonicLeaf: 'sim/classical-contrast.ts',
     wiring: 1.0,
     depth: 'deep',
+    integrationMode: 'direct-port',
+    sourceBoundary: 'MIT; feeds the separately ledgered internal contrast control.',
     hue: 0.71,
-  },
-  {
-    slug: 'classical-contrast',
-    origin: 'user',
-    substrate: 'classical-baseline',
-    cosmogonicLeaf: 'sim/classical-contrast.ts',
-    wiring: 1.0,
-    depth: 'deep',
-    hue: 0.65,
   },
   {
     slug: 'PINN',
@@ -229,6 +286,8 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     cosmogonicLeaf: 'sim/pinn-residual.ts',
     wiring: 1.0,
     depth: 'wired',
+    integrationMode: 'deterministic-facade',
+    sourceBoundary: 'NO LICENSE; deterministic-facade status pending chain-of-title clearance.',
     hue: 0.39,
   },
   {
@@ -238,6 +297,8 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     cosmogonicLeaf: 'sim/pimc-paths.ts',
     wiring: 1.0,
     depth: 'wired',
+    integrationMode: 'deterministic-facade',
+    sourceBoundary: 'NO LICENSE; deterministic-facade status pending chain-of-title clearance.',
     hue: 0.44,
   },
   {
@@ -247,6 +308,8 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     cosmogonicLeaf: 'sim/ulg-bridge.ts',
     wiring: 1.0,
     depth: 'wired',
+    integrationMode: 'deterministic-facade',
+    sourceBoundary: 'NO LICENSE; deterministic-facade status pending copyright assignment.',
     hue: 0.25,
   },
   {
@@ -256,6 +319,8 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     cosmogonicLeaf: 'sim/logo-turtle.ts',
     wiring: 1.0,
     depth: 'wired',
+    integrationMode: 'deterministic-facade',
+    sourceBoundary: 'NO LICENSE; deterministic-facade status pending assignment and NOTICE.',
     hue: 0.52,
   },
   {
@@ -265,6 +330,9 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     cosmogonicLeaf: 'sim/qge-aliveness.ts',
     wiring: 1.0,
     depth: 'wired',
+    integrationMode: 'deterministic-facade',
+    sourceBoundary:
+      'GPL-2.0-derived upstream quarantined; deterministic facade pending separability/legal review.',
     hue: 0.58,
   },
   {
@@ -274,6 +342,8 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     cosmogonicLeaf: '',
     wiring: 0,
     depth: 'fenced',
+    integrationMode: 'fenced',
+    sourceBoundary: 'PROPRIETARY; no runtime use without an explicit compatible license.',
     hue: 0,
   },
   {
@@ -283,16 +353,31 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     cosmogonicLeaf: 'sim/quantum-rng-api.ts',
     wiring: 1.0,
     depth: 'harvest',
+    integrationMode: 'harvest',
+    sourceBoundary: 'MIT; REST wrapper is redundant because the core is integrated directly.',
     hue: 0.68,
+  },
+  {
+    slug: 'OBLITERATUS',
+    origin: 'org',
+    substrate: 'fenced-refusal-toolkit',
+    cosmogonicLeaf: '',
+    wiring: 0,
+    depth: 'fenced',
+    integrationMode: 'fenced',
+    sourceBoundary: 'AGPL-3.0; refusal-removal LLM toolkit excluded by the non-LLM mandate.',
+    hue: 0,
   },
   {
     slug: '.github',
     origin: 'org',
     substrate: 'meta',
     cosmogonicLeaf: 'tsotchke-registry',
-    wiring: 1.0,
+    wiring: 0,
     depth: 'meta',
-    hue: 0.15,
+    integrationMode: 'meta',
+    sourceBoundary: 'Repository metadata only; no runtime source or simulation leaf.',
+    hue: 0,
   },
 ];
 
@@ -334,7 +419,7 @@ export function tsotchkeWiringCoverage(): number {
 /**
  * HONEST wired fraction (de-inflated, per the 2026-06-21 honesty audit): scientific-substrate repos with
  * real downstream wiring (>0) over ALL scientific substrates — EXCLUDES org-meta (`.github`) and COUNTS
- * fenced repos as present-but-unwired in the denominator. ~0.86 (18 of 21), NOT the ~1.0 that
+ * fenced repos as present-but-unwired in the denominator. 17/21, NOT the ~1.0 that
  * {@link tsotchkeWiringCoverage} reports by averaging only the wired entries. Surfaced as the petri view's
  * `wiringCoverage` so the public number can never read "all wired 1.0".
  */
@@ -354,13 +439,20 @@ export function substrateVectorForArchon(archonIdx: number): Float32Array {
   const e0 = getTsotchkeRepoByIndex(archonIdx);
   const e1 = getTsotchkeRepoByIndex(archonIdx + 7);
   const e2 = getTsotchkeRepoByIndex(archonIdx + 14);
-  return new Float32Array([e0.wiring, e1.hue, e2.wiring * e2.hue, e0.hue, e1.wiring]);
+  return new Float32Array([
+    e0.wiring,
+    e1.wiring * e1.hue,
+    e2.wiring * e2.hue,
+    e0.wiring * e0.hue,
+    e1.wiring,
+  ]);
 }
 
 export const FENCED_REPO_SLUGS = [
   'gpt2-basic',
   'llm-arbitrator',
   'SolanaQuantumFlux',
+  'OBLITERATUS',
 ] as const satisfies readonly TsotchkeRepoSlug[];
 
 export const ARCHON_PRIMARY_REPOS: readonly TsotchkeRepoSlug[] = [
@@ -372,9 +464,9 @@ export const ARCHON_PRIMARY_REPOS: readonly TsotchkeRepoSlug[] = [
 ];
 
 /** FULL CORPUS BIOLOGICS CATALYSIS — registry-driven, not blanket "all deeply wired".
- * Ledger truth: 20 corpus projects / 22 registry entries; 9 deep, 7 wired, 2 harvest, 3 fenced, 1 meta.
- * The scientific wired fraction is 18/21 = 0.857. Fenced LLM/chain/proprietary entries stay
- * provenance-only, while non-fenced entries with wiring > 0 contribute to catalysis/soup/petri.
+ * Ledger truth: 22 external repositories; 8 deep, 7 wired, 2 harvest, 4 fenced, 1 meta.
+ * The non-meta integration fraction is 17/21. Fenced LLM/chain/license entries and metadata stay
+ * provenance-only, while represented external entries with wiring > 0 contribute to catalysis.
  * Eshkol supplies digital-biologic DNA and consciousness-proxy substrate signals (AD primitive,
  * GWT, factor graphs, KB). Physical QPU scale would improve speed, not correctness.
  */
@@ -419,7 +511,7 @@ export function wiredSimRepoCount(): number {
   return n;
 }
 
-/** Rotates full 21 into catalysis for primordial growth. */
+/** Rotates the 22-entry external ledger; zero-wiring fences/meta make no contribution. */
 export function corpusBeatForArchon(archonIdx: number, frame: number): number {
   const e0 = getTsotchkeRepoByIndex(archonIdx);
   const e1 = getTsotchkeRepoByIndex(archonIdx + 5);
@@ -434,5 +526,5 @@ export function biologicProgramFingerprint(archonIdx: number, seed: number): num
   const e0 = getTsotchkeRepoByIndex(archonIdx);
   const e1 = getTsotchkeRepoByIndex(archonIdx + 3);
   const e2 = getTsotchkeRepoByIndex(archonIdx + 9);
-  return ((e0.wiring * 1000 + e1.hue * 100 + e2.wiring) ^ seed) % 0xffffff;
+  return ((e0.wiring * 1000 + e1.wiring * e1.hue * 100 + e2.wiring) ^ seed) % 0xffffff;
 }

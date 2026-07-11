@@ -2,16 +2,16 @@
 /**
  * alife-codeground-sensitivity.ts — the HONESTY stress-test behind the A-Life deep-dive.
  *
- * The 25-peer rows in `2026-06-26-alife-comparison-matrix.csv` are literature/documentation
- * judgments; the ONE row that is a self-score (Cosmogonic) was re-audited against the ACTUAL
- * SOURCE by a 9-agent code-grounding pass (2026-06-26). Several self-scores were optimistic.
- * This script recomputes EVERY headline statistic twice — once with the self-scored row, once
- * with the code-defensible row — so the deep-dive can show exactly how much the conclusion moves
- * under brutal re-scoring. Pure + deterministic (no Math.random / Date.now).
+ * The peer rows in `2026-06-26-alife-comparison-matrix.csv` are literature/documentation
+ * judgments. Cosmogonic's CSV row is now the canonical code-grounded profile. This script retains
+ * the superseded optimistic self-score as historical evidence and recomputes every headline
+ * statistic twice: historical self-score versus current canonical code-grounded profile. Pure +
+ * deterministic (no Math.random / Date.now).
  *
  *   bun scripts/alife-codeground-sensitivity.ts   # prints both scenarios + writes alife-codeground.json
  *
- * Code-grounded Cosmogonic vector — each axis cites the strongest source the auditor could defend:
+ * Canonical code-grounded Cosmogonic vector — each axis cites the strongest source the auditor
+ * could defend. The script fails if the CSV drifts from this expected vector:
  *   reproduction        4.0  genome.ts:77-147 + primordial-soup.ts:118-147 (seeded recombine rebirth) — DEFENSIBLE
  *   open-endedness      2.2  emergence-angles.ts:117-184 only real GA; super-evolution.ts:93-287 handcrafted arc — OVERCLAIMED (was 3.5)
  *   ecology             3.0  titans.ts:969-1015 real economyTick; leviathans scenery, connectome one-way — OVERCLAIMED (was 5.0)
@@ -39,7 +39,8 @@ const AXES = [
   'Consciousness-theory',
   'Visual scale',
 ];
-const CODE_GROUNDED = [4.0, 2.2, 3.0, 3.8, 3.8, 4.5, 4.3, 3.5, 4.0];
+const HISTORICAL_SELF_SCORED = [4.0, 3.5, 5.0, 4.0, 4.5, 5.0, 4.5, 4.5, 5.0];
+const EXPECTED_CANONICAL_CODE_GROUNDED = [4.0, 2.2, 3.0, 3.8, 3.8, 4.5, 4.3, 3.5, 4.0];
 
 interface Row {
   project: string;
@@ -178,32 +179,44 @@ async function main(): Promise<void> {
   const rows = parseRows(await Bun.file(CSV).text());
   const cosmo = rows.find((r) => isCosmo(r.project))!;
   const peers = rows.filter((r) => !isCosmo(r.project));
-  const self = scenario(rows, cosmo.axes, peers);
-  const code = scenario(rows, CODE_GROUNDED, peers);
+  if (
+    cosmo.axes.length !== EXPECTED_CANONICAL_CODE_GROUNDED.length ||
+    cosmo.axes.some((value, index) => value !== EXPECTED_CANONICAL_CODE_GROUNDED[index])
+  ) {
+    throw new Error(
+      `canonical Cosmogonic CSV profile drifted: expected ${EXPECTED_CANONICAL_CODE_GROUNDED.join(',')}, received ${cosmo.axes.join(',')}`,
+    );
+  }
+  const historical = scenario(rows, HISTORICAL_SELF_SCORED, peers);
+  const canonical = scenario(rows, cosmo.axes, peers);
 
   const out = {
-    note: 'sensitivity of the A-Life headline stats to code-grounded re-scoring of the one self-scored row',
-    selfScored: { axes: cosmo.axes, ...self },
-    codeGrounded: { axes: CODE_GROUNDED, ...code },
+    note: 'sensitivity of A-Life headline statistics: superseded historical optimistic self-score versus the canonical code-grounded CSV profile',
+    canonicalSource: 'docs/reports/2026-06-26-alife-comparison-matrix.csv',
+    historicalSelfScored: { axes: HISTORICAL_SELF_SCORED, ...historical },
+    canonicalCodeGrounded: { axes: cosmo.axes, ...canonical },
     deltas: {
-      breadth: round((code.breadth as number) - (self.breadth as number), 3),
-      zPopulation: round((code.zPopulation as number) - (self.zPopulation as number), 3),
-      mahalanobis: round((code.mahalanobis as number) - (self.mahalanobis as number), 3),
+      basis: 'canonical-minus-historical',
+      breadth: round((canonical.breadth as number) - (historical.breadth as number), 3),
+      zPopulation: round((canonical.zPopulation as number) - (historical.zPopulation as number), 3),
+      mahalanobis: round((canonical.mahalanobis as number) - (historical.mahalanobis as number), 3),
     },
   };
   await Bun.write(`${OUT}/alife-codeground.json`, JSON.stringify(out, null, 2) + '\n');
 
   const fmt = (s: Record<string, unknown>): string =>
     `breadth ${s.breadth} (rank #${s.rank}/${s.total}, pct ${s.percentile}) · z-pop ${s.zPopulation} · z-peers ${s.zVsPeers} · Mahalanobis ${s.mahalanobis} · dominated-by ${s.dominatedBy9d} · lead over nearest peer breadth +${s.leadOverNearestPeerBreadth}`;
-  console.log('A-LIFE CODE-GROUNDED SENSITIVITY (self-scored vs source-audited Cosmogonic row)\n');
-  console.log('  SELF-SCORED : ' + fmt(self));
-  console.log('  CODE-GROUND : ' + fmt(code));
+  console.log(
+    'A-LIFE CODE-GROUNDED SENSITIVITY (historical optimistic self-score vs canonical CSV profile)\n',
+  );
+  console.log('  HISTORICAL SELF : ' + fmt(historical));
+  console.log('  CANONICAL CODE  : ' + fmt(canonical));
   console.log(
     `\n  Δ breadth ${out.deltas.breadth}  ·  Δ z-population ${out.deltas.zPopulation}  ·  Δ Mahalanobis ${out.deltas.mahalanobis}`,
   );
-  console.log('\n  per-axis (self -> code-grounded, z under code-grounded):');
-  (self.perAxisZ as { axis: string; score: number }[]).forEach((s, i) => {
-    const c = (code.perAxisZ as { axis: string; score: number; z: number }[])[i]!;
+  console.log('\n  per-axis (historical -> canonical, z under canonical):');
+  (historical.perAxisZ as { axis: string; score: number }[]).forEach((s, i) => {
+    const c = (canonical.perAxisZ as { axis: string; score: number; z: number }[])[i]!;
     const arrow = c.score < s.score ? 'v' : c.score > s.score ? '^' : '=';
     console.log(
       `    ${s.axis.padEnd(22)} ${s.score} -> ${c.score} ${arrow}  (z ${c.z >= 0 ? '+' : ''}${c.z})`,

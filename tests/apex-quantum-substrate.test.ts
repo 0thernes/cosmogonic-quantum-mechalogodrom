@@ -1,7 +1,7 @@
 /**
  * APEX Quantum Substrate tests — the Quantum Brain scaled to a billion-dimensional Hilbert space.
  *
- * Asserts the REAL quantum information, not the shape:
+ * Asserts the simulated quantum-information model's dimensions and invariants:
  *   - the stabilizer reflex addresses a ≥ 1e9-dimensional state space at 30 qubits (Gottesman–Knill).
  *   - the dense exact core stays within the 8-qubit statevector ceiling; qubit budgets clamp.
  *   - evolution is bit-for-bit deterministic (same seed ⇒ same reach + plan bias).

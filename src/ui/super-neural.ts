@@ -9,19 +9,18 @@
  *   I   · WORLD     — 9 readouts of the CORTEX world-model / perception / imagination.
  *   II  · COGNITION — 9 readouts of the five-stage pipeline, consciousness, emotion, drives, and the
  *                     spin-glass INSTINCT (`SuperMindSnapshot.spin`, the ported Hopfield/Ising lattice).
- *   III · QUANTUM   — 9 readouts of the REAL simulated-qubit mind (`SuperMindSnapshot.qubits`, the
+ *   III · QUANTUM   — 9 readouts of the classically simulated-qubit model (`SuperMindSnapshot.qubits`, the
  *                     `super-qubits.ts` 6-qubit statevector register): the |ψ|² statevector phase-
  *                     coloured, per-qubit Bloch vectors, live entropy/coherence, the Born-sampled
- *                     "collapsed thought", the entanglement web — plus the ported QGT GEOMETRY (the
- *                     metric eigen-ellipse of the mind's own circuit) and the ESHKOL qubit-RNG the
- *                     mind collapses its thoughts through (`SuperMindSnapshot.eshkol`).
+ *                     model-collapse sample, the entanglement web, a local QGT geometry calculation,
+ *                     and the deterministic ESHKOL state-vector adapter (`SuperMindSnapshot.eshkol`).
  *   IV  · BRAIN     — one large rotating 3D connectome of the mind's organs + signal flow.
  *
- * Every readout is bound to a REAL variable of the {@link SuperMindSnapshot}; nothing decorative.
+ * Every readout is bound to a live variable of the {@link SuperMindSnapshot}; nothing decorative.
  * Temporal views keep small ring-buffers so the data has MOTION between the slow Observatory pushes.
  * UI shell only — it never imports or mutates sim state (the determinism ban is on sim logic, not the
- * rAF clock). The GEOMETRY / ESHKOL / INSTINCT readouts bind the genuine Tsotchke ports wired into the
- * apex mind (see THIRD-PARTY-NOTICES.md), not presentation echoes.
+ * rAF clock). GEOMETRY / ESHKOL / INSTINCT bind local primitives, facades, or adaptations recorded in
+ * the integration ledger (see THIRD-PARTY-NOTICES.md), not presentation echoes.
  */
 import type { SuperMindSnapshot } from '../sim/super-mind';
 
@@ -873,7 +872,7 @@ const drawQuantumCrown: Drawer = (ctx, w, h, s, t) => {
 };
 const drawAmplitudes: Drawer = (ctx, w, h, s) => {
   frame(ctx, w, h, 'Q · STATEVECTOR');
-  // REAL register: the 2ⁿ Born probabilities, each bar HUE-coded by its amplitude phase.
+  // Simulated register: 2ⁿ Born probabilities, each bar hue-coded by its model amplitude phase.
   const probs = s.qubits?.probs ?? [];
   const phase = s.qubits?.phase ?? [];
   const n = probs.length || 1;
@@ -896,7 +895,7 @@ const drawAmplitudes: Drawer = (ctx, w, h, s) => {
 };
 const drawGeometry: Drawer = (ctx, w, h, s, t, H) => {
   frame(ctx, w, h, 'Q · GEOMETRY');
-  // REAL port: the Quantum Geometric Tensor of the mind's OWN circuit (ported QGTL / Moonlab qgt.c) —
+  // Local QGT calculation over the simulated circuit —
   // the 2×2 Fubini–Study metric over the (superposition, entanglement) drives. Its eigen-ellipse shows
   // how the thought-space stretches; det = curvature, trace = scalar "speed", Ω = Berry phase.
   const g = s.qubits?.geometry;
@@ -957,8 +956,8 @@ const drawGeometry: Drawer = (ctx, w, h, s, t, H) => {
 };
 const drawEshkol: Drawer = (ctx, w, h, s, _t, H) => {
   frame(ctx, w, h, 'Q · ESHKOL RNG');
-  // REAL port: the Eshkol qubit-RNG the mind COLLAPSES its thoughts through (ported tsotchke/quantum_rng).
-  // The 8 qubit amplitudes (phase array), the live 64-bit output word, and the buffer's entropy estimate.
+  // Deterministic state-vector adapter: model output influences the mind's exploration stream.
+  // Eight marginal P(q=1) values, the latest deterministic 64-bit word, and an empirical entropy estimate.
   const e = s.eshkol;
   const amps = e?.amplitudes ?? [];
   const bits = e?.lastBits ?? '';
@@ -967,7 +966,7 @@ const drawEshkol: Drawer = (ctx, w, h, s, _t, H) => {
   const bw = (w - 12) / n;
   const base = h * 0.6;
   for (let i = 0; i < n; i++) {
-    const v = clamp01((amps[i] ?? 0) * 2); // each amplitude ∈ [0, 0.5]
+    const v = clamp01((amps[i] ?? 0) * 2); // visual gain applied to each marginal probability in [0,1]
     ctx.fillStyle = `rgba(108,223,255,${(0.35 + v * 0.5).toFixed(2)})`;
     ctx.fillRect(6 + i * bw + 0.5, base - v * (h * 0.36), Math.max(0.8, bw - 1), v * (h * 0.36));
   }
@@ -991,7 +990,7 @@ const drawEshkol: Drawer = (ctx, w, h, s, _t, H) => {
 };
 const drawEntangleWeb: Drawer = (ctx, w, h, s, t) => {
   frame(ctx, w, h, 'Q · ENTANGLE');
-  // REAL register: the n qubits as nodes (size = P(|1⟩)); web density scales with the live
+  // Simulated register: n qubits as nodes (size = P(|1⟩)); web density scales with the live
   // entanglement metric (mean reduced-state purity deficit).
   const p1 = s.qubits?.p1 ?? [];
   const ent = clamp01(s.qubits?.entanglement ?? 0);

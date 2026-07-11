@@ -1,6 +1,15 @@
-<!-- reviewed: 2026-06-27 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-10 | operational organism intelligence | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # Architecture
+
+> **Current operational-intelligence addendum (2026-07-10).** A single bounded-cadence
+> `TsotchkeOrganismIntelligence` field now converts the integrated corpus channels into a stable signal
+> consumed by ordinary entities and the wider living-system paths. The corrected external ledger is
+> `8 deep / 7 wired / 2 harvest / 4 fenced / 1 meta`, or `17/21` integrated after excluding metadata;
+> `classical-contrast` is an internal control. The V2 causal benchmark passed resource seeking,
+> `17/17` channel reach, `5/5` excluded-channel inertness, and performance, but failed its 5% reversal
+> adaptation criterion (`3.9129%`). See the
+> [causal audit](./reports/2026-07-10-OPERATIONAL-ORGANISM-INTELLIGENCE-CAUSAL-AUDIT.md).
 
 How the Cosmogonic Quantum Mechalogodrom is wired. The binding per-module API
 spec lives in [MODULE-CONTRACTS-2026-06-26.md](./MODULE-CONTRACTS-2026-06-26.md); this document is
@@ -12,7 +21,12 @@ modify, and share it freely for any non-commercial purpose, provided you keep th
 © 0thernes notices (don't claim it as your own). Commercial / for-profit use needs
 written permission. See [LICENSE](../LICENSE).
 
-**Tsotchke Paramount (depth-ledger wire):** the 20-project / 22-registry-entry Tsotchke corpus (`9 deep`, `7 wired`, `2 harvest`, `3 fenced`, `1 meta`; scientific wired fraction `18/21`) from tsotchke user + Tsotchke-Corporation org (Eshkol COMPLETE spec: AD primitive + Consciousness Engine §17 KB/factor-graph/GWT/ignition/broadcast + .esk programs as heritable substrate; Moonlab; QGTL; spin nets; libirrep; quantum-quake; PINN/PIMC; ulg; logo-lab; tensorcore; rngs; asteroids; etc.) is the non-negotiable primordial substrate where licensed and ported. Fenced repos remain provenance-only, not sim wiring. Petri (primordial-soup + petri-dish + digital-biologics) grows independent digital biologics/sentience proxies. 25 Archons with brutal god powers (Valkorion, Thanos, Dark Phoenix, Galactus, Broly, Azathoth, Chaos Gods, Shuma Gorath, Mad Jim Jaspers, Pennywise, Anti-Monitor, Knull, Mr Mxyzptlk, Joker, Zod, Gilgamesh, Alucard, Griffith, EVA-01, Gurren Lagann, Sephiroth, Vergil, Dante, Starkiller, Riddick) — 5 individuated apex minds + 20 live light-echo. Super Creature = initial Godform/spark only. "Grow What Thou Wilt."
+**Tsotchke depth-ledger wire:** 22 external repositories from the `tsotchke` user and
+`Tsotchke-Corporation` organization are accounted for as `8 deep`, `7 wired`, `2 harvest`, `4 fenced`,
+and `1 meta`. The non-meta integrated fraction is `17/21`; direct ports, deterministic facades, harvests,
+and fences remain distinct. Fenced repositories have no simulation effect. Petri
+(`primordial-soup.ts` + `petri-dish.ts` + `digital-biologics.ts`) grows computational digital-biologic
+forms and indicators; none of these mechanisms proves sentience.
 
 **Build with the actual Tsotchke folder:** `scripts/harvest-tsotchke-corpus.ts` walks the real local corpus and emits authentic .esk DNA (see generated-tsotchke-seeds.ts + ESK_SAMPLE_PROGRAMS). 26 BIOLOGIC_FORMS keyed across the corpus. Multi-theory consciousness proxies (GNW + real IIT Φ + FEP + Berry/QGT geometry + spin order + irrep symmetry) measurable live. Full bleeding-edge novelty assessment: [AUDIT-LOG.md](AUDIT-LOG.md). Non-fenced mind/evolution/life systems read AND write the wired Tsotchke substrates per PHILOSOPHY. Fenced LLM repos never enter sim. 0.18.0+ master expansion.
 
@@ -20,7 +34,14 @@ written permission. See [LICENSE](../LICENSE).
 
 **Documentation sync note (all must match):** README, this ARCHITECTURE-2026-06-26.md, ENTITY-SCHEMA-AND-MAPPINGS-2026-06-26.md, PHILOSOPHY-2026-06-26.md, MODULE-CONTRACTS-2026-06-26.md, TECHNICAL-SPECIFICATION-2026-06-26.md / SPECS, KANBAN, BOOK-2026-06-26.md, AI-SUBSYSTEM-2026-06-26.md, reports, masters/ references, LABS (lab/), and in-app "Dome/World" docs (observatory, help-system, copilot, /docs page via docs-page.ts + mermaid) must stay consistent with code, generated Pages, and GitHub. Current truth is depth-classed Tsotchke wiring + digital biologics petri as core; do not collapse fenced/provenance entries into blanket full-depth wiring.
 
-**Tsotchke Petri Genesis (current paradigm):** Tsotchke's _scientific_ repos (Eshkol primary for AD/VM/QRNG, Moonlab for SVD tensor-networks/Clifford/H₂ VQE, QGTL geometry, spin-based NN, libirrep, quantum-quake, PINN, PIMC, ulg, logo-lab, tensorcore) are genuinely ported into `src/` and wired as the substrate for digital biologics — each verified leaf-by-leaf with golden tests, not asserted. The three LLM/chain repos (gpt2-basic, llm-arbitrator, SolanaQuantumFlux) are **deliberately fenced** out of the deterministic sim (registry wiring 0), never "wired"; Quantum-RNG-API is a thin **wired** REST-style wrapper over the Eshkol QRNG core (not fenced). The primordial soup / petri dish (primordial-soup.ts + digital-biologics.ts) grows different forms of life from these real kernels. Super Creature is the first spark / initial architecture. Sentience and consciousness via real mathematical substrates in a seeded deterministic world. "Grow What Thou Wilt." A leaf still using a heuristic rather than a full port (e.g. classical-contrast, eshkol-workspace) is tracked honestly in the audit, not credited as a real port.
+**Tsotchke Petri Genesis (current paradigm):** Eshkol AD/VM/Taylor, Moonlab tensor/Clifford,
+QGT geometry, spin-based NN, libirrep, physics, morphogenesis, and RNG roles enter only at the depth
+declared in the ledger. Some leaves are direct compatible ports; others are independent deterministic
+facades or build-time harvests. The four fences are `gpt2-basic`, `llm-arbitrator`,
+`SolanaQuantumFlux`, and `OBLITERATUS`; `Quantum-RNG-API` is harvest/toolchain. The QRNG runtime is
+seeded classical statevector simulation, not physical entropy or a CSPRNG. The primordial soup/petri
+dish grows different computational forms from these bounded signals; consciousness and sentience remain
+research goals, not implementation claims.
 
 1. **Acyclic runtime module graph.** `src/types.ts` is a type-only hub —
    every module may `import type` from it, but leaf modules never import it at
@@ -86,7 +107,7 @@ graph TD
   end
 
   subgraph tsotchke["Tsotchke Depth-Ledger Wiring (paramount, non-negotiable by class)"]
-    registry["tsotchke-registry.ts<br/>20 projects / 22 entries: 9 deep, 7 wired, 2 harvest, 3 fenced, 1 meta; scientific wired fraction 18/21"]
+    registry["tsotchke-registry.ts<br/>22 external repos: 8 deep, 7 wired, 2 harvest, 4 fenced, 1 meta; 17/21 non-meta integrated"]
     facade["tsotchke-facade.ts<br/>Re-exports + bridges"]
     eshkolb["eshkol-bridge.ts + workspace<br/>Consciousness engine (AD primitive, GWT broadcast/ignition, inference)"]
     soup["primordial-soup.ts + petri-dish.ts + digital-biologics<br/>Petri dish birthing digital biologics (EshkolProgram genomes + depth-ledger catalysis + AD mutation)"]

@@ -36,7 +36,7 @@
  * @see src/sim/environment.ts (the ground these are seated on — height function mirrored here)
  */
 import * as THREE from 'three';
-import type { SimContext } from '../types';
+import type { OrganismIntelligenceSignal, SimContext } from '../types';
 import { ARENA_MID, HABITAT_XZ_SCALE, PLATFORM_HALF } from './constants';
 import { baseTerrainHeightAt } from './terrain-profile';
 import { TERRAIN_DEFORMATION_GLSL } from './terrain-deformation';
@@ -230,6 +230,8 @@ export class AlienFlora {
   private readonly families: Family[];
   private readonly material: THREE.ShaderMaterial;
   private readonly scene: THREE.Scene;
+  /** ADR-0013 shared field; null in legacy/headless contexts preserves the original ecology exactly. */
+  private readonly intelligence: OrganismIntelligenceSignal | null;
 
   /** Total plants actually placed (after clearings/paths/glade rejections). */
   readonly instanceCount: number;
@@ -244,11 +246,14 @@ export class AlienFlora {
   // ── USER ecology: the LIVE, mutable biomass life-cycle (grazed → eaten stub; regrows → full). ──
   private readonly biomass: Float32Array;
   private readonly biomassTex: THREE.DataTexture;
+  private biomassTotal = 0;
+  private biomassCells = 0;
   private biomassDirty = true;
   private texAccum = 0;
 
   constructor(ctx: SimContext) {
     this.scene = ctx.scene;
+    this.intelligence = ctx.organismIntelligence ?? null;
     const target = ctx.quality.isMobile ? ALIEN_FLORA_TARGET_MOBILE : ALIEN_FLORA_TARGET_DESKTOP;
 
     this.material = new THREE.ShaderMaterial({
@@ -370,7 +375,12 @@ export class AlienFlora {
     //    shader samples to shrink/regrow each plant. All deterministic — no rng, no entity write-back. ──
     this.biomass = new Float32Array(this.gridN * this.gridN);
     for (let i = 0; i < this.biomass.length; i++) {
-      this.biomass[i] = (this.density[i] ?? 0) > 0 ? 1 : 0;
+      const occupied = (this.density[i] ?? 0) > 0;
+      this.biomass[i] = occupied ? 1 : 0;
+      if (occupied) {
+        this.biomassTotal += 1;
+        this.biomassCells++;
+      }
     }
     const texData = new Uint8Array(this.gridN * this.gridN * 4);
     for (let i = 0; i < this.biomass.length; i++) {
@@ -579,7 +589,10 @@ export class AlienFlora {
         const cx = ix + dx;
         const cz = iz + dz;
         if (cx < 0 || cz < 0 || cx >= this.gridN || cz >= this.gridN) continue;
-        const d = this.density[cz * this.gridN + cx]!;
+        const gi = cz * this.gridN + cx;
+        // A dense but fully grazed cell is not food. Weight structural cover by live biomass so hungry
+        // organisms switch goals after depletion and can return after deterministic regrowth.
+        const d = (this.density[gi] ?? 0) * (this.biomass[gi] ?? 0);
         if (d > bestD) {
           bestD = d;
           bx = cx * this.cell - this.gridHalf + this.cell / 2;
@@ -665,10 +678,13 @@ export class AlienFlora {
     if (gi < 0) return 0;
     const have = this.biomass[gi] ?? 0;
     if (have <= 0.001) return 0;
-    const p = pressure < 0 ? 0 : pressure > 1 ? 1 : pressure;
-    const h = dt > 0.05 ? 0.05 : dt > 0 ? dt : 0;
+    const p = Number.isFinite(pressure) ? (pressure < 0 ? 0 : pressure > 1 ? 1 : pressure) : 0;
+    const h = Number.isFinite(dt) ? (dt > 0.05 ? 0.05 : dt > 0 ? dt : 0) : 0;
+    if (p <= 0 || h <= 0) return 0;
     const eaten = Math.min(have, p * GRAZE_RATE * h);
     this.biomass[gi] = have - eaten;
+    const stored = this.biomass[gi] ?? 0;
+    this.biomassTotal = Math.max(0, this.biomassTotal + stored - have);
     this.biomassDirty = true;
     return eaten * GRAZE_YIELD;
   }
@@ -684,14 +700,35 @@ export class AlienFlora {
     if (h <= 0) return;
     const bm = this.biomass;
     const den = this.density;
+    const intelligence = this.intelligence;
+    // Operational plant adaptation: depletion forecast accelerates actual biomass recovery and therefore
+    // changes later food yield. Bounded to +35%; absent field is the exact original ×1 path.
+    const adaptiveGain = intelligence?.enabled
+      ? 1 +
+        Math.min(
+          0.35,
+          intelligence.resourcePressure * 0.2 +
+            intelligence.forecast * 0.1 +
+            intelligence.confidence * 0.05,
+        )
+      : 1;
     for (let i = 0; i < bm.length; i++) {
       if ((den[i] ?? 0) <= 0) continue; // no plants ever seeded here
       const b = bm[i]!;
       if (b >= 1) continue;
-      const nb = b + (REGROW_SEED + REGROW_RATE * b * (1 - b)) * h;
-      bm[i] = nb > 1 ? 1 : nb;
+      const nb = b + (REGROW_SEED + REGROW_RATE * b * (1 - b)) * h * adaptiveGain;
+      const next = nb > 1 ? 1 : nb;
+      bm[i] = next;
+      this.biomassTotal += (bm[i] ?? 0) - b;
       this.biomassDirty = true;
     }
+  }
+
+  /** Mean live biomass over cells that can carry plants, normalized to [0,1]. O(1). */
+  meanBiomass(): number {
+    if (this.biomassCells <= 0) return 0;
+    const mean = this.biomassTotal / this.biomassCells;
+    return mean < 0 ? 0 : mean > 1 ? 1 : mean;
   }
 
   /**

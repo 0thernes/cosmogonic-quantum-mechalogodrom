@@ -259,7 +259,7 @@ describe('QuantumMind (V75) — the simulated-qubit cognition layer', () => {
   });
 
   // ── V1.1: the snapshot now reports a REAL integrated-information Φ (IIT min-cut entanglement) +
-  // resource-theory coherence — genuine quantum irreducibility, not a participation-ratio surrogate. ──
+  // Resource-theory coherence of the simulated register, not a participation-ratio surrogate. ──
   test('V1.1 — snapshot Φ + coherence are bounded, and Φ rises only with genuine entanglement', () => {
     const sep = new QuantumMind(mulberry32(5));
     sep.evolve(aspects(0, 0), LATENT); // no controlled-RY ring + no Hadamards ⇒ product (separable) state

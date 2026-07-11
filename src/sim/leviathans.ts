@@ -16,7 +16,7 @@
 import * as THREE from 'three';
 import { ARENA_MID, GROUND_EXTENT, HABITAT_MID, HABITAT_Y_SCALE, MID_RADIUS2 } from './constants';
 import { POINT_LIGHT_GAIN } from './environment';
-import type { SimContext } from '../types';
+import type { OrganismIntelligenceSignal, SimContext } from '../types';
 import type { SingularitySystem } from './singularities';
 import type { ReactionDiffusionSystem } from './reaction-diffusion';
 import {
@@ -157,6 +157,7 @@ interface Leviathan {
  */
 export class LeviathanSystem implements PortalCullable, DomeFeeder {
   private readonly levs: Leviathan[] = [];
+  private readonly intelligence: OrganismIntelligenceSignal | null;
   /** PORTAL DEATH (USER): leviathans blasted by the portal, awaiting their 5 s respawn ELSEWHERE. */
   private readonly portalDowned: { lv: Leviathan; at: number }[] = [];
   private portalCullSeq = 0;
@@ -169,6 +170,7 @@ export class LeviathanSystem implements PortalCullable, DomeFeeder {
   // Only the scene is needed past construction; the rest of the context (rng, grid, …) is unused
   // by design — leviathans draw no rng and touch no organism state (F-BEINGS additive contract).
   constructor(ctx: SimContext) {
+    this.intelligence = ctx.organismIntelligence ?? null;
     const root = new THREE.Group();
     ctx.scene.add(root);
     // A capsule body reads as a sea-serpent/whale silhouette; built once, deterministically.
@@ -313,8 +315,12 @@ export class LeviathanSystem implements PortalCullable, DomeFeeder {
       // Sinusoidal sail: a wide lazy orbit whose radius and height breathe over time.
       const orbit = t * 0.04 + lv.ph;
       const r = ROAM_R * (0.85 + Math.sin(t * 0.05 + lv.ph) * 0.15);
-      lv.vel.x += (Math.cos(orbit) * r - p.x) * 0.0006 * dt * 60;
-      lv.vel.z += (Math.sin(orbit) * r - p.z) * 0.0006 * dt * 60;
+      const intelligence = this.intelligence;
+      const navigationGain = intelligence?.enabled
+        ? 0.88 + intelligence.forecast * 0.12 + intelligence.confidence * 0.1
+        : 1;
+      lv.vel.x += (Math.cos(orbit) * r - p.x) * 0.0006 * navigationGain * dt * 60;
+      lv.vel.z += (Math.sin(orbit) * r - p.z) * 0.0006 * navigationGain * dt * 60;
       lv.vel.y +=
         (18 * HABITAT_Y_SCALE + Math.sin(t * 0.07 + lv.ph) * 12 * HABITAT_Y_SCALE - p.y) *
         0.0005 *

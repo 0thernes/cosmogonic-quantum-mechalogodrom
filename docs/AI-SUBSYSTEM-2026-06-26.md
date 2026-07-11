@@ -1,10 +1,18 @@
-<!-- reviewed: 2026-06-27 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-10 | operational organism intelligence | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
-# The AI Subsystem (V84) — pre-transformer minds, a quantum register, ported Tsotchke primitives, + the read-only Copilot
+# The AI Subsystem — pre-transformer minds, a classical statevector register, Tsotchke ports/adaptations, + the read-only Copilot
 
 > How "intelligence" works in the Cosmogonic Quantum Mechalogodrom, and why it is split in two.
 > Consolidates the pre-transformer technique index and [MODULE-CONTRACTS-2026-06-26.md](MODULE-CONTRACTS-2026-06-26.md). Every
 > module named here is pure, seeded, allocation-disciplined, and unit-tested.
+
+> **2026-07-10 causal update.** The living systems now share a bounded corpus-conditioned intelligence
+> field that affects resource, threat, exploration, social, forecast, and plasticity signals. On 30
+> held-out seeds it improved resource-goal progress against the disabled control and made all `17/17`
+> integrated external channels causally visible, with all `5/5` excluded channels inert. It did not pass
+> the preregistered 5% reversal-adaptation threshold (`3.9129%`), and shuffled/classical controls did not
+> establish substrate- or quantum-specific uplift. This supports bounded task behavior only; see the
+> [full causal audit](./reports/2026-07-10-OPERATIONAL-ORGANISM-INTELLIGENCE-CAUSAL-AUDIT.md).
 
 ## The two halves, and the hard line between them
 
@@ -103,7 +111,7 @@ consciousness / emotion / drive readouts, and a 10-element bank of reactive "qua
 Observatory cadence — never per beat — which the in-box NEURAL observatory (`src/ui/super-neural.ts`,
 4 tabs × 9 readouts) paints. See [ADR-0008](adr/0008-super-creature-deep-mind-2026-06-26.md).
 
-Bolted onto that composite mind is a genuine **quantum-computing layer** (`QuantumMind`, V76): a
+Bolted onto that composite mind is a deterministic **classical statevector simulation layer** (`QuantumMind`, V76): a
 **6-qubit statevector register** (`src/math/quantum.ts` `QuantumRegister` → 2⁶ = 64 complex
 amplitudes). Each cognitive beat it rebuilds the state from |0…0⟩ and applies `QMIND_LAYERS` layers of
 single-qubit RY/RZ rotations (angles read from the mind's world-model latent), Hadamards gated by the
@@ -126,26 +134,26 @@ geometry       the Quantum Geometric Tensor readout (below): 2×2 Fubini–Study
                (superposition, entanglement) drives + det (curvature), trace (scalar), Berry curvature
 ```
 
-### Ported Tsotchke primitives — research → development (V84)
+### Tsotchke primitives and deterministic adaptations — research → development (V84+)
 
-Earlier versions only _studied_ the Tsotchke quantum repositories. V84 moves three of their primitives
-**from research into development**: each is reimplemented at the source level in seeded, deterministic,
-allocation-disciplined TypeScript, unit-tested, and **wired into the live apex creature** — so the Super
-Creature genuinely _uses_ Eshkol / Moonlab / QGTL machinery, not a lookalike. The derivative
-implementations are MIT-attributed to © 2024–2026 tsotchke (see
+Earlier versions only _studied_ the Tsotchke quantum repositories. The current runtime distinguishes
+compatible algorithm ports from independent deterministic adaptations and facades. All are seeded,
+allocation-disciplined TypeScript and are tested at their stated contract; a facade is not presented as
+source parity. Compatible derivative implementations are attributed to © 2024–2026 tsotchke (see
 [THIRD-PARTY-NOTICES.md](../THIRD-PARTY-NOTICES.md) and [NOTICE.md](../NOTICE.md)); the project's own
 proprietary licence still governs our code.
 
 | Ported primitive | Module | Upstream | How the apex creature uses it |
 | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Eshkol qubit-RNG** — an 8-qubit "phase array + noise" generator: physical-constant mixing cascades, a 16-slot entropy pool, the `quantum_noise` Heisenberg transcendental, `hadamard`/`phase` gates, Born `measure_state` | `src/math/eshkol-qrng.ts` (`tests/eshkol-qrng.test.ts`) | tsotchke/`quantum_rng` (`quantum_rng.c`), shipped in **Eshkol** as `quantum-random` | The `QuantumMind`'s per-beat **thought-collapse Born sample is drawn through it** — the apex psyche literally measures its thoughts through the Eshkol generator. Host-entropy reads (`gettimeofday`/`rdtsc`/PID) are replaced by a seeded `Rng` + golden-ratio surrogate, so the quantum bitstream replays from the world seed. |
+| **Deterministic statevector RNG adaptation** — 2–8 classical-simulated qubits, unitary gates, Born sampling, snapshot/restore, and diagnostic repetition/adaptive-proportion-style counters | `src/math/deterministic-statevector-rng.ts` + compatibility wrapper `src/math/eshkol-qrng.ts` | `quantum_rng` `v3.0.1` (`a00ad483cbbef31ea7536f09ae99409d81c9a823`) | Supplies a repeatable simulation stream to existing apex paths. It is an independent adaptation, not the deleted phase-array gate-for-gate port, hardware entropy, a CSPRNG, SP 800-90B certification, or a physical Bell experiment. |
 | **Quantum Geometric Tensor / Fubini–Study metric** — `Q_ij = ⟨∂_iψ                                                                                                                                                          | ∂_jψ⟩ − ⟨∂_iψ                                           | ψ⟩⟨ψ                                                                                | ∂_jψ⟩`; Re = metric, Im = Berry curvature | `src/sim/super-qubits.ts` (`QuantumMind.geometricMetric`; `tests/super-qubits.test.ts`) | tsotchke/`quantum_geometric_tensor` (QGTL) + **Moonlab** `quantum_geometry/qgt.c` | At Observatory cadence the mind takes the **2×2 QGT of its own circuit** over the (superposition, entanglement) drives by central finite difference — it _feels the curvature of its own thought-space_. Pure statevector algebra, no RNG, never on the per-beat path. |
 | **Spin-glass instinct** — a Hopfield/Ising associative-memory lattice: Hebbian imprint `J_ij = (1/N)Σ ξᵖ_i ξᵖ_j`, Metropolis/Glauber settle, pattern-overlap recall | `src/sim/spin-glass.ts` (`tests/spin-glass.test.ts`) | tsotchke/`spin_based_neural_network` (`ising_model.c`, `nqs_gradient.c`) | The **instinct floor** of the Biomimetic Polymorphic Neural Intelligence: each beat the lattice is driven by fields from the mind's world-model latent and **settles into the nearest behavioural archetype** — physics doing associative recall (the creature's "gut feeling"), under a dedicated seeded stream. |
 
 The honest line still holds where it should: the **64-amplitude statevector simulator itself**
 (`src/math/quantum.ts`, the `QuantumRegister` + RY/RZ/CNOT gate set) is the project's own Moonlab-style
-implementation, not copied. What V84 adds are genuine ports of the _algorithms layered on top of_ a
-statevector — the QGT readout, the Eshkol measurement source, and the spin-glass instinct.
+implementation, not copied. The QGT and spin/Hopfield paths retain their separately attributed algorithm
+lineage. The RNG compatibility API now delegates to the independent deterministic statevector adaptation;
+it must not be described as an Eshkol phase-array source port.
 
 The Observatory's **QUANTUM** tab binds the register directly (statevector / Bloch / entropy / collapse /
 entangle / superposition / **geometry**), and the **NEURAL** board surfaces the Eshkol entropy + the

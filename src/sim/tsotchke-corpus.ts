@@ -1,6 +1,8 @@
 /**
- * TSOTCHKE CORPUS REGISTRY — canonical map of all 20 local mirrors + org repos
- * to Cosmogonic exclusive leaves. Source: Z:\[Vibe Coded (AI)]\(Tsotchke)\CORPUS.md
+ * TSOTCHKE LEGACY BINDING TABLE — 20 locally mirrored projects mapped to Cosmogonic leaves.
+ * This is not the canonical external-repository ledger: `tsotchke-registry.ts` owns the current
+ * 22-entry ledger, including OBLITERATUS and `.github`, plus the separate internal-control boundary.
+ * Source: Z:\[Vibe Coded (AI)]\(Tsotchke)\CORPUS.md
  *
  * Not a runtime dependency on the corpus path — provenance + wiring index only.
  * Deterministic; no I/O.
@@ -15,7 +17,7 @@ export interface TsotchkeRepoBinding {
   readonly paradigm: string;
 }
 
-/** All repos from github.com/tsotchke + Tsotchke-Corporation, bound to sim leaves. */
+/** Legacy local-mirror bindings; fences may be listed for provenance but have no runtime contribution. */
 export const TSOTCHKE_REPO_BINDINGS: readonly TsotchkeRepoBinding[] = [
   {
     id: 'eshkol',
@@ -39,7 +41,7 @@ export const TSOTCHKE_REPO_BINDINGS: readonly TsotchkeRepoBinding[] = [
     id: 'quantum_rng',
     mirrorPath: 'mirrors/quantum_rng',
     cosmogonicLeaf: 'math/eshkol-qrng.ts',
-    paradigm: 'Bell QRNG · phase qubits',
+    paradigm: 'deterministic state-vector adaptation · output diagnostics',
   },
   {
     id: 'spin_based_neural_network',

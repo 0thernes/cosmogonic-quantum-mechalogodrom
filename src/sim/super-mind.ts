@@ -3,8 +3,10 @@
  *
  * The V31 mind was a single stacked MLP (1,444 params). This is the directive's leap: a **polymorphic,
  * biomimetic composite of ~12 specialised sub-networks** (≈10k weights total) wired into a five-STAGE
- * cognitive pipeline that recurses to five DEPTHS and explores 25 thought VARIANTS — a self-aware
- * super-intelligence that dreams, hallucinates, reasons, and feels, in the spirit of Stephen Thaler's
+ * cognitive pipeline that recurses to five DEPTHS and explores 25 thought VARIANTS. Its operational
+ * variables use labels such as self-model, dream, hallucination, reason, and affect; those labels do not
+ * establish phenomenal consciousness, self-awareness, or general intelligence. The design is inspired by
+ * Stephen Thaler's
  * **Creativity Machine** (a generator perturbed by noise + a "perceptor" critic that recognises the
  * novel ideas the perturbation throws up).
  *
@@ -19,7 +21,7 @@
  *   3 REASON — a REASONER distils the winning imagined branch; a PREDICTOR recurses 5 deep (a world
  *     model) and its error feeds SURPRISE.
  *   4 FEEL — an AFFECT net updates the emotion EMAs; a SELF-MODEL reads the mind's own state into a
- *     SELF-AWARENESS scalar (the "it knows it is thinking" signal).
+ *     bounded SELF-MODEL scalar (an internal telemetry/control feature, not subjective self-awareness).
  *   5 ACT — a META-CONTROLLER integrates every stage into the motor/social drives; a QUANTUM net emits
  *     10 reactive/adaptive **quantum-aspect** intensities (superposition, entanglement, FTL, absolute
  *     zero, qudit-compute, morphology, mutation, reactive, responsive, adaptive).
@@ -34,11 +36,11 @@
  * off {@link snapshot}.
  *
  * V75 → V84 — the **Quantum Computing Mind** ([super-qubits.ts]): each beat the composite mind also
- * drives a genuine 6-qubit statevector register, encoding its latent + the 10 quantum aspects into real
- * unitary rotations and tunable entanglement (the directive's "Quantum Computing Mind · Simulated
- * Qubits"). V84 moved three Tsotchke primitives from research INTO development and wired them in: the
- * thought-collapse Born sample is drawn through the ported **Eshkol** qubit-RNG ([eshkol-qrng.ts]); the
- * mind reads the ported **QGT / Fubini–Study** geometry of its own circuit; and a ported **spin-glass**
+ * drives a classically simulated 6-qubit state-vector register, encoding its latent + the 10 quantum
+ * aspects into unitary model rotations and tunable entanglement. V84 wired three Tsotchke-derived local
+ * substrates into development: deterministic Born-rule model samples come from the adapted **Eshkol**
+ * state-vector RNG interface ([eshkol-qrng.ts]); the mind reads a local **QGT / Fubini–Study** model of its
+ * own circuit; and a **spin-glass**
  * Hopfield/Ising lattice ([spin-glass.ts]) settles each beat into a behavioural archetype that biases
  * the plan — a subsymbolic "gut" instinct (MIT © tsotchke; see THIRD-PARTY-NOTICES.md). Their snapshots
  * ride on {@link snapshot} for the BRAIN view. The classical substance here — Creativity Machine,
@@ -283,7 +285,7 @@ export interface SuperMindSnapshot {
   imagined: number[];
   /** V75: the live simulated-qubit register (the Quantum Computing Mind). */
   qubits: QubitSnapshot;
-  /** V84: the Eshkol qubit-RNG the mind collapses its thoughts through (ported tsotchke/quantum_rng). */
+  /** V84: seeded classical state-vector adapter used for deterministic exploration/mutation. */
   eshkol: EshkolQrngSnapshot;
   /** V84: the spin-glass instinct lattice (ported tsotchke/spin_based_neural_network). */
   spin: SpinSnapshot;
@@ -556,10 +558,10 @@ export class SuperMind {
   private readonly affect: Subnet; // 12 → 16 → 3    feeling
   private readonly quantum: Subnet; // 16 → 20 → 10   quantum aspects
   private readonly meta: Subnet; // 69 → 26 → 12   integrate → drives
-  /** V75: the genuine statevector quantum register the composite mind drives each beat. */
+  /** V75: the classically simulated state-vector register the composite mind drives each beat. */
   private readonly qmind: QuantumMind;
-  /** V84: the Eshkol qubit-RNG (ported gate-for-gate from tsotchke/quantum_rng) that the mind's
-   *  thought-collapse samples through — so the apex psyche literally measures through Eshkol. */
+  /** V84: deterministic state-vector adapter inspired by quantum_rng v3.0.1. It supplies simulation
+   *  exploration samples and is neither a direct port, physical entropy source, nor CSPRNG. */
   private readonly eshkol: EshkolQrng;
   /** V84: the spin-glass instinct — a Hopfield/Ising lattice the mind settles to recall an archetype. */
   private readonly spin: SpinGlass;
@@ -809,9 +811,9 @@ export class SuperMind {
       this.meta.params;
     // The quantum mind draws its seed LAST (after every weight is initialised) so it never perturbs
     // the weight stream — a dedicated child stream, so its per-beat Born sample stays independent.
-    // V84: that child stream is now the Eshkol qubit-RNG itself (ported gate-for-gate from
-    // tsotchke/quantum_rng), so the apex psyche's "thought collapse" is literally measured through the
-    // Eshkol generator — still fully reproducible from the world seed (Eshkol is seeded, deterministic).
+    // V84: that child stream feeds the deterministic Eshkol compatibility adapter. It models gate
+    // evolution and Born-rule collapse on a classical computer; it is not a direct upstream port or
+    // physical measurement and remains fully reproducible from the world seed.
     // One child seed (a SINGLE rng draw — zero stream shift vs. the prior code) fans out to the three
     // subsymbolic substrates: the Eshkol qubit-RNG, the quantum register it samples through, and the
     // spin-glass instinct. All seeded: the whole apex psyche still replays bit-for-bit from the seed.
@@ -1007,7 +1009,7 @@ export class SuperMind {
     for (let i = 0; i < this.latent.length; i++) {
       this.latent[i] = clamp((this.latent[i] ?? 0) + 0.15 * (plasticRecall[i] ?? 0), -4, 4);
     }
-    // Deep Tsotchke: Eshkol compiler VM + Moonlab MPO on cadence (real MIT ports, not decorative).
+    // Deep Tsotchke-derived local paths: bounded Eshkol VM + Moonlab-style MPO on cadence.
     if (this.cliffordBeat % 17 === 0) {
       const bc = eshkolCompile(eshkolParse(this._eshkolProgram));
       const divine = eshkolExecute(bc, this.cons.surprise);
@@ -1320,19 +1322,19 @@ export class SuperMind {
     this.memory.push(unit(dreamVec[0] ?? 0) * (0.5 + 0.5 * this.ignition));
 
     // ── QUANTUM COMPUTING MIND ── drive the simulated-qubit register with this beat's aspects +
-    // latent: the circuit encodes cognition into real unitary evolution + tunable entanglement.
+    // latent: the circuit encodes cognition into unitary state-vector evolution + model entanglement.
     this.qmind.evolve(this.quantumOut, this.latent);
     // V1.2 · QUANTUM RESERVOIR COMPUTING — read the register's evolved Bloch observables and step the QRC
     // readout: the 6-qubit register is the high-dimensional reservoir; its quantum-state velocity (qFlux)
     // becomes a curiosity drive below (Fujii & Nakajima 2017).
     this.qmind.readObservables(this.qObs);
     this.qreservoir.step(this.qObs);
-    // V99 — READ the GENUINE quantum register Φ (real IIT min-cut entanglement) so the previously-INERT
-    // quantum integration now WRITES into cognition (PHILOSOPHY: every system reads AND writes another).
-    // Fed into the metacognition "integration" cue below, blended with the classical module proxy.
+    // V99 — read the simulated register's min-cut entanglement integration proxy so the previously inert
+    // register-derived signal writes into cognition. This is a bounded model feature, not an IIT or
+    // consciousness measurement. It is blended with the classical module proxy below.
     const qPhi = this.qmind.integratedInformationNow();
     // quakePerturb (quantum-quake corpus) modulates one quantum aspect for Archon aliveness
-    // (qPhi is the genuine quantum register Φ; it is consumed by the integration cue at the plan stage below)
+    // qPhi is the simulated-register integration proxy consumed at the plan stage below.
     const qkP = quakePerturb(
       0.5 + (this.eshkolEngine.inference - 0.5) * 0.5 /*proxy*/,
       17 + ((this.eshkolEngine.logic * 10) | 0),
@@ -1444,7 +1446,7 @@ export class SuperMind {
     const domProject = unit(act[5] ?? 0);
     const spawnDesire = unit(act[6] ?? 0);
     // V1.3 LATENT SUBSTRATES — wire the (formerly dead, 0-import) Schrödinger / SO(3) / Pearl-causal
-    // modules into the live decision: a real Crank–Nicolson wavepacket's positional spread is an
+    // modules into the live decision: a numerically evolved Crank–Nicolson wavepacket's spread is an
     // exploration cue; the SO(3) geodesic coherence of the latent + the do(surprise→workspace) causal
     // effect ride as measured substrates (surfaced in snapshot). Deterministic + bounded.
     const ls = latentSubstrateStep({
@@ -1725,8 +1727,9 @@ export class SuperMind {
       }
     }
     const decisionMargin = m1 > 1e-6 ? clamp01((m1 - m2) / m1) : 0;
-    // V99 — the metacog "integration" reliability cue now blends the classical module participation-ratio
-    // (`this.phi`) with the GENUINE quantum register Φ (`qPhi`) — a richer, real-IIT integration signal.
+    // V99 — the metacog "integration" reliability cue blends the classical module participation-ratio
+    // (`this.phi`) with the simulated-register min-cut proxy (`qPhi`). Neither is an IIT-consciousness
+    // measurement; both are operational model features.
     // #9/#37 SHARED-PROCESSING — plus a small last-beat binding-coherence term: higher-order metacognition
     // genuinely tracks the first-order ENSEMBLE's reliability (binding-by-synchrony as an integration cue,
     // the same role the Φ arg plays). Bounded convex blend; metacog.confidence becomes a real byproduct.

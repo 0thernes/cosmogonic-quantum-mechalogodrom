@@ -1,11 +1,11 @@
 /**
- * schrodinger.ts — REAL time-dependent Schrödinger evolution (leaf, exclusive owner).
+ * schrodinger.ts — numerical time-dependent Schrödinger evolution (leaf, exclusive owner).
  *
- * Genuine quantum dynamics: a complex wavefunction ψ(x,t) on a 1-D grid evolved
+ * A classical numerical model evolves a complex wavefunction ψ(x,t) on a 1-D grid
  * under Ĥ = −½∂ₓ² + V(x) by the Crank–Nicolson (Cayley) scheme
  *     (I + i·dt/2·Ĥ) ψⁿ⁺¹ = (I − i·dt/2·Ĥ) ψⁿ ,
  * which is EXACTLY unitary (norm- and energy-conserving to machine precision)
- * and unconditionally stable. This is the real quantum-field substrate behind
+ * and unconditionally stable. This is the simulated quantum-mechanics substrate behind
  * the corpus's `quantum-quake` QGE physics (`qge_physics.c`) — wavepackets that
  * propagate, disperse, and tunnel, not a "gravity-well proxy" multiplier.
  *
