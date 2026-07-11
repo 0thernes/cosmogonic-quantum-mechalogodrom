@@ -16,12 +16,12 @@ import * as THREE from 'three';
 import { ARENA_MID } from './constants';
 
 // ── Mirror mecha-blaze.ts's burn cone so the visible flames == the kill volume. ──
-const MECHA_Y = 252; // Mechalogodrom altitude (0, 252, 0)
-const BASE_R = 36 * ARENA_MID; // cone radius at the god (≈ 90)
+const MECHA_Y = 756; // Mechalogodrom altitude (0, 756, 0) — lifted ×3 with the taller world
+const BASE_R = 36 * ARENA_MID; // cone radius at the god (≈ 90) — god body size unchanged by the lift
 const CONE_SPREAD = 0.34; // extra radius per world-unit of descent
-const BLAZE_FLOOR = 150; // the cone bottoms out here (upper third of the column)
-const HEIGHT = MECHA_Y - BLAZE_FLOOR; // 102
-const BOTTOM_R = BASE_R + HEIGHT * CONE_SPREAD; // ≈ 124.7 — wide at the fanned bottom
+const BLAZE_FLOOR = 450; // the cone bottoms out here (upper third of the column) — scaled ×3 with the god
+const HEIGHT = MECHA_Y - BLAZE_FLOOR; // 306
+const BOTTOM_R = BASE_R + HEIGHT * CONE_SPREAD; // ≈ 194 — wide at the fanned bottom
 
 export class MechaFirePillar {
   private readonly scene: THREE.Scene;

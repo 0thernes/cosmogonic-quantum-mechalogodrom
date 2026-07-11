@@ -20,7 +20,7 @@ import { getQuantizationConfig } from '../src/math/quantization';
 import type { AuditTrail } from '../src/logging/audit';
 import type { Entity, SimContext, SimState } from '../src/types';
 
-/** Mecha kill-sphere centre (matches mecha-blaze.ts): (0, 252, 0). */
+/** Mecha kill-sphere centre (matches mecha-blaze.ts): (0, 756, 0). */
 const MECHA = new THREE.Vector3(0, MECHA_Y, 0);
 const DT = 1 / 60;
 
@@ -95,9 +95,9 @@ describe('MechaBlaze', () => {
     const ctx = makeCtx(11, 50);
     const entities = new EntityManager(ctx);
     const mb = new MechaBlaze(ctx);
-    entities.spawn(new THREE.Vector3(0, 200, 0), 0); // high-flyer under the mecha, inside the cone
-    const lowSwarm = entities.spawn(new THREE.Vector3(0, 100, 0), 1); // below BLAZE_FLOOR → safe
-    const wideMiss = entities.spawn(new THREE.Vector3(240, 200, 240), 2); // in the y-band but far outside the cone
+    entities.spawn(new THREE.Vector3(0, 650, 0), 0); // high-flyer under the mecha, inside the cone
+    const lowSwarm = entities.spawn(new THREE.Vector3(0, 300, 0), 1); // below BLAZE_FLOOR → safe
+    const wideMiss = entities.spawn(new THREE.Vector3(240, 650, 240), 2); // in the y-band but far outside the cone
     mb.update(entities, 1, DT);
     expect(mb.kills).toBe(1); // only the high-flyer in the cone burned
     expect(entities.list).toContain(lowSwarm as Entity);

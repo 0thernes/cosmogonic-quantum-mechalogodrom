@@ -60,10 +60,12 @@ const MECHA_TIME_SCALE = 16;
 const MECHA_EXTERIOR_TIME_SCALE = 0.15;
 const MECHA_SATELLITE_COUNT = 400;
 const MECHA_CORE_SEGMENTS = 128;
-/** Elevation of the whole abomination above the arena floor. Raised so its LOWEST extent (rings/halos)
- *  clears the LV100 MONOLITH TEMPLE's lintel top (~Y 113) with margin — it floats ABOVE the temple, a
- *  structurally-sensible cosmic crown rather than a ground prop. */
-const ALTITUDE = 252;
+/** Elevation of the whole abomination above the arena floor. Scaled ×3 with the world's VERTICAL
+ *  expansion (HABITAT_Y_SCALE = 3, biosphere ceiling PLATFORM_CEIL = 720): when the world grew 3× taller
+ *  the god was left sitting at a third of its former relative height, so it is lifted 252 → 756 to keep
+ *  CROWNING the enlarged world — its mass now floats just ABOVE the biosphere ceiling and well clear of
+ *  the LV100 MONOLITH TEMPLE, a structurally-sensible cosmic crown rather than a sunken ground prop. */
+const ALTITUDE = 756;
 /** Mandelbulb iteration budget for the per-vertex escape proxy (power-8 lobes; NaN-guarded). */
 const BULB_ITERS = 4;
 
