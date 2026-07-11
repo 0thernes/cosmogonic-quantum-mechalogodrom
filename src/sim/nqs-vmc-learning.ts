@@ -246,12 +246,18 @@ export function localEnergy(
     energy -= J * s_i * s_ip1;
   }
 
-  // X terms (off-diagonal)
+  // X terms (off-diagonal). psi's norm passed the finite guard above, but a FLIPPED state can overflow
+  // exp() INDEPENDENTLY of the current one (e.g. an alternating bitstring keeps psi bounded while a
+  // single flip pushes activations past the exp threshold): psiFlipped.re = Infinity ⇒ overlap/norm =
+  // Infinity, making E_L non-finite even though the primary-norm guard was satisfied. Guard each term
+  // and drop a non-finite one — in the diverged-weight regime the whole estimate is degenerate, so a
+  // bounded E_L is the safe degradation, and every finite term is unchanged (bit-identical normal runs).
   for (let i = 0; i < arch.visibleCount; i++) {
     const flipped = bitstring ^ (1 << i);
     const psiFlipped = amplitude(arch, flipped);
     const overlap = psi.re * psiFlipped.re + psi.im * psiFlipped.im;
-    energy -= h * (overlap / norm);
+    const term = overlap / norm;
+    if (Number.isFinite(term)) energy -= h * term;
   }
 
   return energy;

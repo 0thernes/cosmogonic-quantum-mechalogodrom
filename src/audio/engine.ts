@@ -1,5 +1,5 @@
 /**
- * Web Audio engine: procedural music scheduler + a data-driven 100-voice SFX synthesizer
+ * Web Audio engine: procedural music scheduler + a data-driven 110-voice SFX synthesizer
  * (CONTRACTS V7.1 — a procedurally generated palette voiced by one generic `synth()`).
  *
  * Port of the legacy monolith's audio block (lines 541-572) and audio toggles/cycles
@@ -140,7 +140,7 @@ export class AudioEngine {
   private sfxIdx = 0;
   /** Shared analysis tap (V2); created lazily by {@link tapAnalyser}, once per engine. */
   private analyser: AnalyserNode | null = null;
-  /** The 100-entry procedural SFX palette (CONTRACTS V7.1), built once at construction. */
+  /** The 110-entry procedural SFX palette (CONTRACTS V7.1), built once at construction. */
   private readonly palette: readonly SfxSpec[];
   /** Per-band round-robin cursor (keyed by band start) so repeat triggers don't repeat. */
   private readonly bandCursor = new Map<number, number>();
@@ -535,7 +535,7 @@ export class AudioEngine {
 
   /**
    * Fire one synthesized SFX for a semantic action (legacy `pS`). Selects from the action's
-   * family band in the 100-entry palette via a per-band round-robin cursor PLUS a per-trigger
+   * family band in the 110-entry palette via a per-band round-robin cursor PLUS a per-trigger
    * pitch jitter, so repeated triggers of the same action never sound identical (CONTRACTS
    * V7.1 — "nothing repetitive"). No-op until {@link init} has run and SFX are on. O(1).
    */

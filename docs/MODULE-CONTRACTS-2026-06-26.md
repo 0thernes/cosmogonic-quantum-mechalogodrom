@@ -1355,13 +1355,13 @@ allocation-free per-frame bodies, JSDoc + complexity, full `bun run check` gate,
 exclusive file ownership, determinism). The integrator owns world.ts / main.ts /
 types.ts.
 
-## V7.1 — 100 distinct SFX (writer: audio — src/audio/songs.ts + src/audio/engine.ts)
+## V7.1 — 110 distinct SFX (writer: audio — src/audio/songs.ts + src/audio/engine.ts)
 
-- songs.ts (leaf, pure) gains a **procedurally generated 100-entry SFX palette**:
+- songs.ts (leaf, pure) gains a **procedurally generated 110-entry SFX palette**:
   `interface SfxSpec` (waveform, start/end frequency + ramp shape, duration,
   gain peak/attack, optional biquad filter, optional FM ratio/depth, optional
   pitch-LFO rate/depth, optional noise mix, optional shimmer partial, per-trigger
-  jitter) and `createSfxPalette(rng: Rng): SfxSpec[]` returning EXACTLY 100 specs
+  jitter) and `createSfxPalette(rng: Rng): SfxSpec[]` returning EXACTLY 110 specs
   spread across timbral FAMILIES (pluck, zap, bend, drone, sweep, bell, fall,
   vibrato, fm-clang, sub-boom, glint, strange-noise) via seeded parameter
   excursions, so no two are alike. The 8 legacy semantic names (`SfxType`) map to
@@ -1559,7 +1559,7 @@ Copilot are constructed boot-stream-neutral and never write sim state, so the go
 
 ### V9 acceptance
 
-Full `bun run check` green: prettier → tsc strict → oxlint → 2399 tests (0 fail, 300-frame golden
+Full `bun run check` green: prettier → tsc strict → oxlint → 2404 tests (0 fail, 300-frame golden
 included) → build. The Copilot sandbox verified live (allow: `git log`, file reads; deny:
 path-escape, `git push`, `legacy/`, shell redirection).
 

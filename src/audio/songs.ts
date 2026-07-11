@@ -269,7 +269,7 @@ export interface SfxBand {
 }
 
 /**
- * The twelve event families (75 slots) followed by the 25-slot cue band — laid out in
+ * The twelve event families (85 slots) followed by the 25-slot cue band — laid out in
  * palette-index order. {@link createSfxPalette} fills the palette in exactly this order, so
  * these offsets are the contract between the data and {@link SFX_FAMILY_BANDS}/
  * {@link SFX_CUE_BAND}. Sums to {@link SFX_PALETTE_SIZE}.

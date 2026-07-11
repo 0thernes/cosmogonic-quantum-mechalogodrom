@@ -100,20 +100,20 @@ export function birthBiologic(archon: number, tick: number): Biologic {
   // Substrate-specific initialization based on form
   const substrateBias = formIdx / BIOLOGIC_FORMS.length;
 
-  // Use real harvested .esk from local Tsotchke folder when Eshkol native
-  const realProgram: number | string =
+  // Use the real harvested .esk FINGERPRINT (ESK_DERIVED_SEEDS, keyed to the local Tsotchke .esk at
+  // this index) when Eshkol-native, so the native strain carries genuinely distinct DNA. Previously
+  // this indexed ESK_SAMPLE_PROGRAMS, which holds FILE-PATH strings — `Number('Eshkol/…')` is NaN, then
+  // `NaN || fallback` silently collapsed every native program to the same generic non-native value,
+  // and the `?? getEshkolProgramFingerprint` fallback was dead. Now always a real number.
+  const program: number =
     form === 'ESHKOL_NATIVE' && ESK_SAMPLE_PROGRAMS.length > 0
-      ? (ESK_SAMPLE_PROGRAMS[formIdx % ESK_SAMPLE_PROGRAMS.length] ??
-        getEshkolProgramFingerprint(formIdx))
+      ? getEshkolProgramFingerprint(formIdx)
       : (cat * 10000 + beat * 1000) >>> 0;
 
   return {
     id: (tick * 31 + archon) >>> 0,
     form,
-    program:
-      typeof realProgram === 'number'
-        ? realProgram
-        : Number(realProgram) || (cat * 10000 + beat * 1000) >>> 0,
+    program,
     adFitness: 0.2 + cat * 0.5 * (form === 'ESHKOL_NATIVE' ? 1.2 : 0.8),
     gwtIgnition:
       ws.broadcastGain * (form === 'ESHKOL_NATIVE' || form.includes('HYPER') ? 1.1 : 0.9),

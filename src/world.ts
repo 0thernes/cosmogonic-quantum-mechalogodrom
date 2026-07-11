@@ -231,8 +231,22 @@ const SFX_ABYSSAL = SFX_EXTRA_BANDS['abyssal']?.start ?? SFX_STRANGE;
  * dedicated jitterGain in entities.update() carries the agitation PAST the clamp on top.
  */
 const CHAOS_NIGHTMARE_FLOOR = 6;
-/** BRUTALISM: cool overcast concrete fog the cosmos fades into (module consts → no per-frame alloc). */
-const BRUTAL_FOG = new THREE.Color(0x4a4a52);
+/**
+ * BRUTALISM: cool overcast concrete fog the cosmos fades into (module consts → no per-frame alloc).
+ * Built via setRGB(…, LinearSRGBColorSpace) — NOT `new THREE.Color(0x4a4a52)`. This is a module-level
+ * constant, so it is constructed at import-eval time, BEFORE main.ts's body runs
+ * `THREE.ColorManagement.enabled = false` (ES modules evaluate imports before the importer's body). A
+ * bare hex would therefore be sRGB→linear converted to ~0x111116 (near-black, ~4× too dark), making
+ * BRUTALISM fade the cosmos to black instead of concrete grey. setRGB into the linear working space is
+ * a no-op conversion regardless of the flag, matching the raw-hex convention every runtime-built scene
+ * color already follows (the renderer runs ColorManagement-off + LinearSRGBColorSpace output).
+ */
+const BRUTAL_FOG = new THREE.Color().setRGB(
+  0x4a / 255,
+  0x4a / 255,
+  0x52 / 255,
+  THREE.LinearSRGBColorSpace,
+);
 const BRUTAL_FOG_DENSITY = 0.0011;
 
 /** V57: singularity kind → telemetry display name (the chaos chooser cycles SINGULARITY_KINDS). */

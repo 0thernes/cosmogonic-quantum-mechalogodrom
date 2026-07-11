@@ -95,7 +95,7 @@ export interface ObservatorySnapshot {
   phylumCounts: ArrayLike<number>;
   /** Per-titan economy rows (up to {@link OBS_SERIES} consumed; missing → zero row). */
   titanLedger: ArrayLike<TitanLedgerEntry>;
-  /** 20×20 row-major war matrix, values 0 truce/none, 1 war, 2 alliance. */
+  /** 20×20 row-major war matrix, values 0 truce/none, 1 alliance, 2 war (titans.ts REL_* encoding). */
   warMatrix: ArrayLike<number>;
   /** Reaction-diffusion pattern energy (auto-scaled timeline). */
   rdEnergy: number;
@@ -193,7 +193,8 @@ export function strideFor(count: number, maxPoints: number): number {
 }
 
 /**
- * Map a raw war-matrix value to a palette slot: 0 = truce/none, 1 = war, 2 = alliance.
+ * Map a raw war-matrix value to a palette slot: 0 = truce/none, 1 = alliance, 2 = war
+ * (the producer's titans.ts REL_TRUCE/REL_ALLIANCE/REL_WAR encoding — matches types.ts + viz3d.ts).
  * Clamped: negatives and non-finite → 0, ≥ 2 → 2, fractional 1.x → 1. O(1).
  */
 export function warPaletteIndex(v: number): 0 | 1 | 2 {
@@ -671,11 +672,16 @@ export class Observatory {
     this.danger = readToken(style, '--color-danger-line', DANGER_FALLBACK);
     colors.push(this.accent, this.warnColor); // series 8 and 9
     this.seriesColors = colors;
-    this.warColors = [DIM, this.danger, this.accent];
-    // V5.1: brighter floors so war/alliance cells read at a glance on the narrow heat grid.
-    this.warAlphas = [0.22, 0.95, 0.8];
+    // Indexed by the RAW war-matrix value (0 truce, 1 alliance, 2 war): alliance→teal(accent),
+    // war→red(danger). (Was inverted — alliances rendered red-as-war and wars teal-as-ally.)
+    this.warColors = [DIM, this.accent, this.danger];
+    // V5.1: brighter floors so war/alliance cells read at a glance on the narrow heat grid — war (2)
+    // is the more intense floor.
+    this.warAlphas = [0.22, 0.8, 0.95];
     this.names = Array.from({ length: OBS_SERIES }, () => '');
     this.statColors = [this.accent, this.warnColor, this.danger];
+    // NOTE: indexed by the stacked-ring SERIES/scratch order [truce, wars, allies] (NOT the raw
+    // war-matrix value like warColors) — so war→red, ally→teal is correct here and must NOT be swapped.
     this.warStackColors = [DIM, this.danger, this.accent];
 
     if (doc) {
@@ -750,8 +756,9 @@ export class Observatory {
       const raw = wm[i] ?? 0;
       this.warScratch[i] = raw;
       const slot = warPaletteIndex(raw);
-      if (slot === 2) allies++;
-      else if (slot === 1) wars++;
+      // slot 1 = alliance, slot 2 = war (producer convention). (Was inverted — counted wars as allies.)
+      if (slot === 2) wars++;
+      else if (slot === 1) allies++;
       else truce++;
     }
     this.warCountsScratch[0] = truce;
@@ -1236,8 +1243,9 @@ export class Observatory {
     for (let r = 0; r < side; r++) {
       for (let q = 0; q < side; q++) {
         const idx = warPaletteIndex(this.warScratch[r * side + q] ?? 0);
-        if (idx === 1) wars++;
-        else if (idx === 2) allies++;
+        if (idx === 2)
+          wars++; // 2 = war, 1 = alliance (producer convention)
+        else if (idx === 1) allies++;
         x.fillStyle = this.warColors[idx] ?? DIM;
         x.globalAlpha = this.warAlphas[idx] ?? 1;
         x.fillRect(q * cw + pad, gridTop + r * ch + pad, cw - pad * 2, ch - pad * 2);
@@ -1246,7 +1254,8 @@ export class Observatory {
     x.globalAlpha = 1;
     this.title(x, `war matrix ${side}×${side}`, w);
     this.readout(x, `${wars}⚔ ${allies}∞`, w);
-    this.legend(x, ['truce', 'war', 'ally'], this.warColors, 3, w, h, null);
+    // Legend order matches warColors' raw-value indexing: [0]=truce, [1]=alliance/ally, [2]=war.
+    this.legend(x, ['truce', 'ally', 'war'], this.warColors, 3, w, h, null);
   }
 
   /**

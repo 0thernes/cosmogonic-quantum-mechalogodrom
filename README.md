@@ -8,7 +8,7 @@
 [![License: Non-Commercial Research & Play](https://img.shields.io/badge/License-Non--Commercial%20Research%20%26%20Play-2ea043.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
-[![tests](https://img.shields.io/badge/tests-2399%20exact-brightgreen)](./tests)
+[![tests](https://img.shields.io/badge/tests-2404%20exact-brightgreen)](./tests)
 [![coverage](https://img.shields.io/badge/coverage-84.64%25%20line%20%C2%B7%2082.21%25%20func-success)](./docs/TECHNICAL-SPECIFICATION-2026-06-26.md)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION-2026-06-26.md)
 [![Tsotchke](https://img.shields.io/badge/Tsotchke-REAL__MIT__CORPUS-purple)](https://github.com/tsotchke)
@@ -23,7 +23,7 @@ diffusion, **and the Tsotchke corpus wired as the primordial substrate for digit
 **Current public truth (2026-07-10):**
 
 - Package/source version: **v0.21.13**.
-- Exact tracked-suite receipt: **2,399 tests / 0 fail**. Portable public coverage floor: **84.64% line / 82.21% func**.
+- Exact tracked-suite receipt: **2,404 tests / 0 fail**. Portable public coverage floor: **84.64% line / 82.21% func**.
 
 <!-- cqm-sync:local-measurement:start -->
 
@@ -115,7 +115,7 @@ Every magic number survived the port.
   pantheon** as instanced glowing bodies across the upper dome; plus the namesake central
   **Mechalogodrom** fusion-mind ([mechalogodrom-brain.ts](./src/sim/mechalogodrom-brain.ts), ~53,728
   live params) uniting 10 bipolar titan-variant shells.
-- **6 procedural Web Audio songs** + a 100-voice synthesized SFX palette — no
+- **6 procedural Web Audio songs** + a 110-voice synthesized SFX palette — no
   audio assets, just oscillators.
 - **Deterministic seeded RNG** (`mulberry32`) injected everywhere; the global
   random number generator is banned in sim logic.

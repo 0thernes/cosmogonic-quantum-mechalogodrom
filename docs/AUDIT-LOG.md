@@ -11,6 +11,50 @@ changed and why.
 
 ---
 
+## 2026-07-10 (pass 3) — convergence sweep (4 NEW findings) + a batch-9 residual
+
+A third sweep with **complementary lenses** the first two under-covered (cross-module contract
+violations, resource-exhaustion, init-order, test-coverage gaps, numeric precision, config/build,
+error-swallow, + a completeness critic), each candidate adversarially verified. 4 confirmed (5
+dismissed as false-positive/intentional). Shipped as batch 11.
+
+### Batch 11 — convergence findings + VMC X-term hardening (this commit)
+
+- **[OBS-1] observatory INVERTED the titan war-matrix encoding** (`observatory.ts`, medium) — the
+  producer `titans.ts` uses `REL_TRUCE=0 / REL_ALLIANCE=1 / REL_WAR=2` (matched by `types.ts` +
+  `viz3d.ts`), but the observatory painted **alliances bright-red as "war" and wars teal as "ally"**
+  and swapped the war/ally tallies + the war-intensity timeline — the user saw peace reported as war.
+  Fixed the grid `warColors`/`warAlphas` (raw-value indexed), both tallies, and the grid legend to the
+  producer convention. Subtlety the finder's suggested fix got wrong: `warStackColors` is indexed by
+  the ring's SERIES order `[truce, wars, allies]`, NOT the raw value, so it was already correct and must
+  NOT be swapped (verified at the `warStackColors[s]` render site) — I left it and added a guard comment.
+  New producer↔consumer contract test (`warPaletteIndex(REL_ALLIANCE)===1`, `(REL_WAR)===2`) locks it.
+- **[FOG-1] BRUTAL_FOG linearised to near-black** (`world.ts`, medium) — the module-level
+  `new THREE.Color(0x4a4a52)` is constructed at import-eval time, BEFORE `main.ts`'s body runs
+  `ColorManagement.enabled = false` (ES modules evaluate imports before the importer body), so the hex
+  was sRGB→linear converted to ~`0x111116` (~4× too dark) and BRUTALISM faded the cosmos to black
+  instead of concrete grey. Rebuilt via `setRGB(…, LinearSRGBColorSpace)` — a no-op conversion
+  independent of the flag, matching every runtime-built scene color's raw-hex convention.
+- **[BIO-1] birthBiologic discarded the harvested .esk** (`digital-biologics.ts`, low) — the
+  ESHKOL_NATIVE `program` indexed `ESK_SAMPLE_PROGRAMS` (FILE-PATH strings), then `Number('Eshkol/…')`
+  = NaN and `NaN || fallback` silently collapsed every native strain to the generic non-native value
+  (and the `?? getEshkolProgramFingerprint` fallback was dead). Now uses the real per-`.esk` fingerprint
+  `getEshkolProgramFingerprint(formIdx)` (the `primordial-soup.ts:88` pattern) — always a real number.
+- **[SFX-1] SFX palette 100→110 truth-drift** (completeness critic, low) — the impl is test-locked at
+  `SFX_PALETTE_SIZE=110`, but the BINDING `MODULE-CONTRACTS` §V7.1 + `engine.ts`/`README`/`FILE-MAP`
+  comments still said "100" (and `songs.ts` said the families are "75 slots" — actually 85). Repaired
+  at every source (CLAUDE.md: stale current-tense numbers are tech debt fixed at source).
+- **[NQS-2] VMC X-term overflow — a residual the batch-9 fix MISSED** — writing a regression test for
+  the batch-9 guard exposed that `localEnergy`'s primary-`norm` guard does NOT cover the off-diagonal
+  X-terms: a FLIPPED state can overflow `exp()` independently (an alternating bitstring keeps `psi`
+  bounded while one flip diverges), making `overlap/norm = Infinity` and `E_L` non-finite despite the
+  guard. Now guards each X-term (drops a non-finite one; every finite term is bit-identical, so normal
+  runs are unchanged). New `tests/nqs-vmc-learning.test.ts` (the learner had ZERO coverage) locks both
+  the batch-9 and this guard. **Lesson: always write the regression test for a guard — it caught my own
+  incomplete fix.**
+
+Receipts 2399 → **2404** (+1 observatory contract test, +4 NQS/VMC). Full `bun run check` green.
+
 ## 2026-07-10 (pass 2) — fresh adversarial sweep (5 NEW findings beyond the original 69)
 
 A second multi-agent sweep (12 hunter lenses — dispose-leaks, numerical-edge, determinism, ratchet,

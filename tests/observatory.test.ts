@@ -34,6 +34,7 @@ import {
   windowMeanStd,
 } from '../src/ui/observatory';
 import type { MeanStd, ObservatorySnapshot, PlotRect } from '../src/ui/observatory';
+import { REL_TRUCE, REL_ALLIANCE, REL_WAR } from '../src/sim/titans';
 import { mean, sampleStandardDeviation } from 'simple-statistics';
 
 describe('observatory contract constants', () => {
@@ -179,8 +180,19 @@ describe('strideFor (series downsampling)', () => {
 describe('warPaletteIndex (palette mapping)', () => {
   test('maps the documented states', () => {
     expect(warPaletteIndex(0)).toBe(0); // truce/none
-    expect(warPaletteIndex(1)).toBe(1); // war
-    expect(warPaletteIndex(2)).toBe(2); // alliance
+    expect(warPaletteIndex(1)).toBe(1); // alliance
+    expect(warPaletteIndex(2)).toBe(2); // war
+  });
+
+  test('the palette-slot encoding matches the producer (titans REL_*) — locks against re-inversion', () => {
+    // The observatory once inverted this: it painted alliances red-as-war and wars teal-as-ally, and
+    // swapped the war/ally tallies. The consumer MUST speak the producer's convention. If either the
+    // titans REL_* constants or warPaletteIndex drifts, this fails.
+    expect(warPaletteIndex(REL_TRUCE)).toBe(0);
+    expect(warPaletteIndex(REL_ALLIANCE)).toBe(1); // slot 1 = alliance → teal (accent)
+    expect(warPaletteIndex(REL_WAR)).toBe(2); // slot 2 = war → red (danger)
+    // types.ts + viz3d.ts consume the same 0/1/2 = truce/alliance/war encoding.
+    expect([REL_TRUCE, REL_ALLIANCE, REL_WAR]).toEqual([0, 1, 2]);
   });
 
   test('clamps exotic inputs into the 3-slot palette', () => {
