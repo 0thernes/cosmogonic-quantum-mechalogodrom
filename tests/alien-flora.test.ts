@@ -243,7 +243,8 @@ describe('AlienFlora — the vegetal ground ecology', () => {
     // Shader must use tight local falloff (not the old ~72u slab radius).
     expect(mat.vertexShader).toContain('smoothstep(256.0, 25.0, d2)');
     expect(mat.vertexShader).toContain('aMeta');
-    expect(mat.fragmentShader).toContain('iridescent');
+    expect(mat.vertexShader).toContain('rootPin');
+    expect(mat.fragmentShader).toContain('field4');
     f.dispose();
   });
 

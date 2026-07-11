@@ -112,6 +112,9 @@ interface Family {
   readonly height: number;
 }
 
+/** How deep the instance origin sits below the analytic surface so roots bury and no coplanar z-fight. */
+const ROOT_SINK = 0.72;
+
 /** Dispose extras after merge, keep the final geometry. */
 function adoptMerged(parts: THREE.BufferGeometry[]): THREE.BufferGeometry {
   const nonIndexed = parts.map((g) => (g.index ? g.toNonIndexed() : g));
@@ -123,8 +126,29 @@ function adoptMerged(parts: THREE.BufferGeometry[]): THREE.BufferGeometry {
   return out;
 }
 
+/** Lathe a 2D profile (radius,y) into a curved solid of revolution — organic, not faceted boxes. */
+function lathe(profile: ReadonlyArray<readonly [number, number]>, segs = 14): THREE.BufferGeometry {
+  const pts = profile.map(([r, y]) => new THREE.Vector2(Math.max(0.001, r), y));
+  return new THREE.LatheGeometry(pts, segs);
+}
+
+/** Subsurface root bulb (y < 0) so the plant reads as planted, not hovering. */
+function rootBulb(r = 0.38, depth = 0.55): THREE.BufferGeometry {
+  const g = new THREE.SphereGeometry(r, 10, 8);
+  g.scale(1.15, 0.75, 1.15);
+  g.translate(0, -depth * 0.55, 0);
+  return g;
+}
+
+/** Positive-Y peak of a geometry (for sway up-weighting; ignores subterranean roots). */
+function peakHeight(geo: THREE.BufferGeometry): number {
+  geo.computeBoundingBox();
+  const maxY = geo.boundingBox?.max.y ?? 1;
+  return Math.max(0.5, maxY);
+}
+
 const flora_vert = /* glsl */ `
-  attribute vec4 aParams;   // x: phase, y: swayFreq, z: glow, w: localHeight
+  attribute vec4 aParams;   // x: phase, y: swayFreq, z: glow, w: localHeight (stem peak)
   attribute vec4 aMeta;     // x: rarity, y: stiffness, z: secondaryHue, w: reactGain
   attribute vec3 aColor;
   uniform float uTime;
@@ -146,6 +170,7 @@ const flora_vert = /* glsl */ `
   varying float vRarity;
   varying float vSecHue;
   varying float vContactLive;
+  varying float vRoot;
   varying vec3 vNormalV;
   varying vec3 vViewDir;
   varying vec3 vWorldP;
@@ -156,12 +181,9 @@ const flora_vert = /* glsl */ `
     if (strength < 0.001) return 0.0;
     vec2 d = base - vec2(cx, cz);
     float d2 = dot(d, d);
-    // Hard stop past CONTACT_RADIUS; full only in the inner ~5u so individuals thrash, not whole regions.
     float fall = smoothstep(${CONTACT_RADIUS2.toFixed(1)}, 25.0, d2);
     if (fall <= 0.0) return 0.0;
-    // Per-plant desync: phase + stiffness so neighbors never move as one solid plate.
     float personal = 0.42 + 0.58 * sin(phase * 2.7 + stiff * 5.1 + base.x * 0.31 + base.y * 0.29);
-    // Weirder ragdoll impulse: underdamped wobble + delayed tip (handled outside via up²).
     float wobble = 0.75 + 0.35 * sin(uTime * (3.2 + stiff * 4.0) + phase * 1.9);
     return strength * fall * personal * react * wobble;
   }
@@ -171,8 +193,12 @@ const flora_vert = /* glsl */ `
     vGlow = aParams.z;
     vRarity = aMeta.x;
     vSecHue = aMeta.z;
+    // up = 0 at/below soil collar; 1 at tip. Negative root verts stay at 0.
     float up = clamp(position.y / max(aParams.w, 0.001), 0.0, 1.0);
     vUp = up;
+    // rootPin: 0 at buried base, 1 above collar — HARD pin so roots never thrash out of ground.
+    float rootPin = smoothstep(0.0, 0.22, up);
+    vRoot = 1.0 - rootPin;
 
     float phase = aParams.x;
     float freq = aParams.y;
@@ -180,43 +206,47 @@ const flora_vert = /* glsl */ `
     float react = clamp(aMeta.w, 0.2, 2.2);
     float rarity = aMeta.x;
 
-    // Wind + chaos lean (tip-weighted). Stiffer plants resist; rare plants whip harder.
     float soft = 1.0 / stiff;
-    float bend = up * up * (uWind + uChaos * 0.8) * soft * (0.85 + rarity * 0.55);
-    float turb = up * up * uChaos * 0.6 * soft;
+    // Tip-weighted sway only (rootPin kills base motion → no ground bleed / lifted roots).
+    float bend = rootPin * rootPin * (uWind + uChaos * 0.75) * soft * (0.85 + rarity * 0.5);
+    float turb = rootPin * rootPin * uChaos * 0.55 * soft;
     vec3 p = position;
-    // Multi-harmonic stalk thrash — SEM-spicule / crystal-fan energy, not a single sine.
-    p.x += sin(uTime * freq + phase) * bend * 2.6
-         + sin(uTime * freq * 3.7 + phase * 2.1) * turb * 1.2
-         + sin(uTime * freq * 7.1 + phase * 0.4) * turb * 0.35 * rarity;
-    p.z += cos(uTime * freq * 0.8 + phase * 1.3) * bend * 2.1
-         + cos(uTime * freq * 2.9 + phase * 1.7) * turb * 1.0
-         + cos(uTime * freq * 5.3 + phase * 1.1) * turb * 0.3 * rarity;
-    p.y += sin(uTime * freq * 0.5 + phase) * up * 0.18 * (uWind + uChaos)
-         + sin(uTime * freq * 4.3 + phase) * up * 0.05 * uChaos
-         + sin(uTime * freq * 9.0 + phase * 2.0) * up * 0.04 * rarity;
 
-    // Rare crystal morph: mid-stalk breathing / flare (still rooted at base).
-    float morph = rarity * up * (0.06 + 0.1 * sin(uTime * (1.1 + freq * 0.4) + phase));
-    p.x *= 1.0 + morph * 0.9;
-    p.z *= 1.0 + morph * 0.9;
-    p.y *= 1.0 + morph * 0.35;
+    // Curved multi-harmonic thrash (not rigid lean).
+    p.x += sin(uTime * freq + phase) * bend * 2.4
+         + sin(uTime * freq * 3.7 + phase * 2.1) * turb * 1.1
+         + sin(uTime * freq * 6.3 + phase * 0.6) * turb * 0.4 * rarity;
+    p.z += cos(uTime * freq * 0.8 + phase * 1.3) * bend * 2.0
+         + cos(uTime * freq * 2.9 + phase * 1.7) * turb * 0.95
+         + cos(uTime * freq * 5.1 + phase * 1.1) * turb * 0.35 * rarity;
+    p.y += sin(uTime * freq * 0.5 + phase) * rootPin * 0.16 * (uWind + uChaos)
+         + sin(uTime * freq * 4.3 + phase) * rootPin * 0.05 * uChaos;
 
-    // USER ecology: shrink by cell BIOMASS — grazed stub vs regrown full.
+    // Soft organic breath above the collar only.
+    float morph = rootPin * (0.04 + 0.12 * rarity) * (0.55 + 0.45 * sin(uTime * (1.05 + freq * 0.35) + phase));
+    p.x *= 1.0 + morph;
+    p.z *= 1.0 + morph;
+    p.y *= 1.0 + morph * 0.4 * rootPin;
+
+    // USER ecology: biomass shrinks ABOVE ground; roots stay buried (no floating stubs).
     vec2 bmBase = (instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xz;
     float biomass = texture2D(uBiomass, (bmBase + 0.5 * uGridExtent) / uGridExtent).r;
     float grow = 0.12 + 0.88 * biomass;
-    // Neighbor density (biomass) modulates how "alive/coupled" the plant feels.
-    float neighbor = biomass; // bilinear already; denser cells = more mycelial coupling later
-    // PORTAL DEATH scorch.
+    float neighbor = biomass;
     if (uScorchRadius > 0.0) {
       float scorchD = length(bmBase - uScorchCenter);
       grow *= smoothstep(uScorchRadius * 0.82, uScorchRadius, scorchD);
     }
-    p *= grow;
+    float gBody = mix(1.0, grow, rootPin);
+    // Buried roots keep nearly full scale so they don't pull out of the soil when grazed.
+    float gRoot = mix(0.92 + 0.08 * grow, grow, rootPin);
+    p.x *= gRoot;
+    p.z *= gRoot;
+    p.y = position.y < 0.0 ? p.y * (0.9 + 0.1 * grow) : p.y * gBody;
     vGlow *= 0.3 + 0.7 * biomass;
 
     vec4 worldPosition = instanceMatrix * vec4(p, 1.0);
+    // Shared living-ground displacement: roots ride the terrain identically to the ground mesh.
     worldPosition.y += cqmTerrainDisplacement(
       vec3(bmBase.x, 0.0, bmBase.y),
       uTime,
@@ -225,8 +255,7 @@ const flora_vert = /* glsl */ `
       uTerrainWind
     );
 
-    // ── MULTI-POINT LOCAL RAGDOLL (weirder than a single push) ──
-    // Each seed contributes only nearby. Tip lags, mid twists, root mostly anchors.
+    // MULTI-POINT LOCAL RAGDOLL — tip only (rootPin / tip weights).
     float c0 = localContact(bmBase, uContactX.x, uContactZ.x, uContactS.x, phase, stiff, react);
     float c1 = localContact(bmBase, uContactX.y, uContactZ.y, uContactS.y, phase + 1.7, stiff, react);
     float c2 = localContact(bmBase, uContactX.z, uContactZ.z, uContactS.z, phase + 3.1, stiff, react);
@@ -234,50 +263,40 @@ const flora_vert = /* glsl */ `
     float cSum = c0 + c1 + c2 + c3;
     vContactLive = clamp(cSum, 0.0, 2.5);
 
-    // Direction: weighted push-away from active seeds (not one global centroid).
     vec2 push = vec2(0.0);
     float wsum = 0.001;
     if (c0 > 0.0) {
       vec2 a = bmBase - vec2(uContactX.x, uContactZ.x);
       float inv = inversesqrt(max(dot(a, a), 1.0));
-      push += a * inv * c0;
-      wsum += c0;
+      push += a * inv * c0; wsum += c0;
     }
     if (c1 > 0.0) {
       vec2 a = bmBase - vec2(uContactX.y, uContactZ.y);
       float inv = inversesqrt(max(dot(a, a), 1.0));
-      push += a * inv * c1;
-      wsum += c1;
+      push += a * inv * c1; wsum += c1;
     }
     if (c2 > 0.0) {
       vec2 a = bmBase - vec2(uContactX.z, uContactZ.z);
       float inv = inversesqrt(max(dot(a, a), 1.0));
-      push += a * inv * c2;
-      wsum += c2;
+      push += a * inv * c2; wsum += c2;
     }
     if (c3 > 0.0) {
       vec2 a = bmBase - vec2(uContactX.w, uContactZ.w);
       float inv = inversesqrt(max(dot(a, a), 1.0));
-      push += a * inv * c3;
-      wsum += c3;
+      push += a * inv * c3; wsum += c3;
     }
     push /= wsum;
 
-    // Tip lag (up³) + mid twist (sin) + root damp (1-up) — ragdoll chain feel.
-    float tip = up * up * up;
-    float mid = up * up * (1.0 - up) * 4.0;
-    float amp = (3.4 + uChaos * 4.0 + rarity * 2.2) * soft;
-    // Dense neighbor biomass = mycelial network tug (plants lean with their grove, not as a slab).
-    float grovePull = neighbor * cSum * 0.55 * mid;
+    float tip = rootPin * rootPin * rootPin;
+    float mid = rootPin * rootPin * (1.0 - up) * 4.0;
+    float amp = (3.0 + uChaos * 3.5 + rarity * 1.8) * soft;
+    float grovePull = neighbor * cSum * 0.45 * mid;
     worldPosition.xz += push * (cSum * tip * amp + grovePull);
-    // Orthogonal whip (stranger than pure radial flee).
     vec2 ortho = vec2(-push.y, push.x);
-    worldPosition.xz += ortho * sin(uTime * (5.0 + stiff * 3.0) + phase) * cSum * mid * amp * 0.55;
-    // Vertical: lift + delayed quiver (tip overshoots).
-    worldPosition.y += cSum * tip * (1.1 + uChaos * 1.6 + rarity * 1.2);
-    worldPosition.y += sin(cSum * 9.0 + uTime * 2.7 + phase) * cSum * tip * (0.9 + uChaos * 1.4);
-    // Rare plants fling harder and hold a residual shimmer after contact.
-    worldPosition.y += rarity * cSum * mid * 0.6 * sin(uTime * 11.0 + phase * 3.0);
+    worldPosition.xz += ortho * sin(uTime * (4.5 + stiff * 2.8) + phase) * cSum * mid * amp * 0.5;
+    // Never lift the root collar off the ground — tip only.
+    worldPosition.y += cSum * tip * (0.9 + uChaos * 1.3 + rarity * 0.9);
+    worldPosition.y += sin(cSum * 8.0 + uTime * 2.5 + phase) * cSum * tip * (0.7 + uChaos * 1.1);
 
     vWorldP = worldPosition.xyz;
     vec4 mvPosition = modelViewMatrix * worldPosition;
@@ -296,11 +315,11 @@ const flora_frag = /* glsl */ `
   varying float vRarity;
   varying float vSecHue;
   varying float vContactLive;
+  varying float vRoot;
   varying vec3 vNormalV;
   varying vec3 vViewDir;
   varying vec3 vWorldP;
 
-  // Cheap iridescent / mineral / SEM procedural — no textures, fully unique per fragment.
   vec3 hsl2rgb(float h, float s, float l) {
     float c = (1.0 - abs(2.0 * l - 1.0)) * s;
     float hp = mod(h, 1.0) * 6.0;
@@ -315,42 +334,53 @@ const flora_frag = /* glsl */ `
     return rgb + (l - 0.5 * c);
   }
 
+  // Soft domain-warped field (4D-ish: xyz + time) — no hard stripe banding.
+  float field4(vec3 p, float t) {
+    vec3 q = p * 0.11;
+    q.x += 0.35 * sin(q.y * 1.7 + t * 0.31);
+    q.y += 0.35 * cos(q.z * 1.5 - t * 0.27);
+    q.z += 0.3 * sin(q.x * 1.9 + t * 0.23);
+    float a = sin(q.x * 2.1 + t * 0.4) * cos(q.y * 1.8 - t * 0.33);
+    float b = sin(q.y * 2.4 + q.z * 1.3 + t * 0.21);
+    float c = cos(length(q.xy) * 3.1 - t * 0.29 + q.z);
+    return a * 0.45 + b * 0.35 + c * 0.2;
+  }
+
   void main() {
     vec3 n = normalize(vNormalV);
     vec3 v = normalize(vViewDir);
-    float fres = pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 2.2);
+    float fres = pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 2.0);
 
-    // Procedural micro-texture: crystal striations + SEM pores + mycelial freckle.
-    float stria = sin(vWorldP.y * 14.0 + vWorldP.x * 3.5) * sin(vWorldP.z * 11.0 - vWorldP.y * 6.0);
-    float pores = sin(vWorldP.x * 37.0 + vWorldP.z * 41.0) * sin(vWorldP.y * 29.0);
-    float freck = sin((vWorldP.x + vWorldP.z) * 53.0 + uTime * 0.7) * 0.5 + 0.5;
-    float tex = 0.72 + 0.18 * stria + 0.12 * pores + 0.08 * freck * vRarity;
+    float f = field4(vWorldP, uTime);
+    float f2 = field4(vWorldP.yzx * 1.3 + 2.1, uTime * 0.7);
+    // Soft organic mottling (SEM/mineral), not 1980s candy stripes.
+    float tex = 0.62 + 0.28 * f + 0.12 * f2;
 
-    // View-dependent iridescence (holographic / oil-slick mineral — not a flat solid).
-    float viewHue = fract(vSecHue + fres * 0.22 + vUp * 0.08 + stria * 0.04 + uTime * 0.015);
-    vec3 iri = hsl2rgb(viewHue, 0.55 + vRarity * 0.35, 0.48 + fres * 0.18);
-    // Secondary band (rare plants carry twin-spectrum shimmer).
-    vec3 iri2 = hsl2rgb(fract(viewHue + 0.33 + vRarity * 0.1), 0.7, 0.55);
-    vec3 spectrum = mix(iri, iri2, fres * (0.35 + vRarity * 0.5));
+    // Oil-slick / holographic spectrum — wild but smooth.
+    float viewHue = fract(vSecHue + fres * 0.28 + vUp * 0.1 + f * 0.08 + uTime * 0.04 + vRarity * 0.05);
+    vec3 iri = hsl2rgb(viewHue, 0.72 + vRarity * 0.25, 0.5 + fres * 0.16);
+    vec3 iri2 = hsl2rgb(fract(viewHue + 0.22 + f * 0.05), 0.8, 0.55);
+    vec3 spectrum = mix(iri, iri2, 0.3 + fres * 0.4 + vRarity * 0.2);
 
-    float key = 0.32 + 0.68 * clamp(dot(n, normalize(vec3(0.35, 0.8, 0.45))), 0.0, 1.0);
-    vec3 base = mix(vColor * tex, spectrum, 0.22 + vRarity * 0.45 + fres * 0.25) * key;
+    float key = 0.38 + 0.72 * clamp(dot(n, normalize(vec3(0.35, 0.8, 0.45))), 0.0, 1.0);
+    vec3 body = mix(vColor * tex, spectrum, 0.32 + vRarity * 0.4 + fres * 0.2) * key;
 
-    // Bioluminescence rides UP the stalk; chaos + contact excite it.
-    float pulse = 0.55 + 0.45 * sin(uTime * 1.7 + vUp * 6.2831 + vRarity * 2.0);
-    float contactFlash = clamp(vContactLive, 0.0, 1.5) * (0.25 + vRarity * 0.4);
-    float glow = vGlow * (0.18 + 0.82 * vUp) * pulse * (0.5 + 0.9 * uChaos + contactFlash);
-    vec3 glowCol = mix(vColor * vec3(1.25, 1.55, 1.95), spectrum * vec3(1.4, 1.2, 1.8), vRarity);
-    glowCol += vec3(0.04, 0.10, 0.16);
+    // Buried root zone: darker mycelial soil tone (grounds the plant visually).
+    vec3 rootCol = mix(vColor * 0.35, hsl2rgb(fract(vSecHue + 0.08), 0.45, 0.22), 0.5);
+    body = mix(body, rootCol, vRoot * 0.85);
 
-    // Crystal-edge rim + rare golden spore dust (reference: iridescent organism + mineral fans).
-    vec3 rim = spectrum * fres * (0.55 + vRarity * 0.9 + contactFlash * 0.5);
-    float spore = pow(max(0.0, pores), 4.0) * vRarity * (0.4 + 0.6 * pulse);
-    vec3 sporeCol = hsl2rgb(fract(vSecHue + 0.12), 0.85, 0.62) * spore;
+    float pulse = 0.5 + 0.5 * sin(uTime * 1.9 + vUp * 5.5 + f * 2.0 + vRarity * 1.5);
+    float contactFlash = clamp(vContactLive, 0.0, 1.5) * (0.3 + vRarity * 0.4);
+    float glow = vGlow * (0.2 + 0.85 * vUp) * pulse * (0.55 + 0.9 * uChaos + contactFlash) * (1.0 - vRoot * 0.7);
+    vec3 glowCol = mix(vColor * vec3(1.3, 1.55, 2.0), spectrum * 1.35, 0.45 + vRarity * 0.4);
 
-    vec3 col = base + glowCol * glow + rim + sporeCol;
-    // Contact makes plants briefly "wake" (brighter, more metallic) without solid color wash.
-    col += spectrum * contactFlash * 0.18 * vUp;
+    vec3 rim = spectrum * fres * (0.7 + vRarity * 1.0 + contactFlash * 0.55) * (1.0 - vRoot * 0.5);
+    // Soft spore shimmer (not hard pores).
+    float spore = pow(max(0.0, 0.5 + 0.5 * f2), 3.0) * (0.2 + vRarity * 0.7) * pulse * vUp;
+    vec3 sporeCol = hsl2rgb(fract(vSecHue + 0.15 + uTime * 0.03), 0.9, 0.62) * spore;
+
+    vec3 col = body + glowCol * glow + rim + sporeCol;
+    col += spectrum * contactFlash * 0.22 * vUp;
     gl_FragColor = vec4(col, 1.0);
   }
 `;
@@ -433,6 +463,11 @@ export class AlienFlora {
       },
       vertexShader: flora_vert,
       fragmentShader: flora_frag,
+      // Kill coplanar ground/plant z-fighting (bleeding edges) without floating the field.
+      polygonOffset: true,
+      polygonOffsetFactor: -1,
+      polygonOffsetUnits: -2,
+      depthWrite: true,
     });
 
     this.families = AlienFlora.buildFamilies();
@@ -507,11 +542,12 @@ export class AlienFlora {
           : rRoll > 0.94
             ? 0.45 + hash(k * 43) * 0.35 // uncommon ~5%
             : s.rarityBias * (0.05 + hash(k * 47) * 0.25); // common low rarity
-      const giant = hash(k * 23 + 29) > 0.965 ? 2.4 + hash(k * 23 + 31) * 2.8 : 1;
-      // Rare plants slightly larger / more food-bearing silhouette.
-      const scale = s.size * (0.44 + hash(k * 5 + 11) * 1.45) * giant * (1 + rarity * 0.35);
+      // Rare giants stay modest so the field stays proportional to the habitat (never nuclear-scale).
+      const giant = hash(k * 23 + 29) > 0.97 ? 1.7 + hash(k * 23 + 31) * 1.1 : 1;
+      const scale = s.size * (0.5 + hash(k * 5 + 11) * 1.15) * giant * (1 + rarity * 0.22);
       const yaw = hash(k * 5 + 13) * TAU;
-      const tilt = (hash(k * 5 + 17) - 0.5) * (0.28 + hash(k * 5 + 19) * 0.42);
+      // Small intrinsic lean only — big random tilt levers roots out of the ground and looks broken.
+      const tilt = (hash(k * 5 + 17) - 0.5) * (0.08 + hash(k * 5 + 19) * 0.1);
       perFamily[s.family]!.push({ x, z, sp, scale, yaw, tilt, rarity });
       placed++;
 
@@ -566,12 +602,14 @@ export class AlienFlora {
       for (let i = 0; i < n; i++) {
         const pl = list[i]!;
         const s = species[pl.sp]!;
-        const gy = baseTerrainHeightAt(pl.x, pl.z) - 0.6;
+        // Seat origin into the soil so curved roots bury; GPU adds the same living-ground displacement.
+        const gy = baseTerrainHeightAt(pl.x, pl.z) - ROOT_SINK;
         pos.set(pl.x, gy, pl.z);
+        // Follow terrain slope gently so the collar kisses the land without extreme lean.
         const dhx = baseTerrainHeightAt(pl.x + 1, pl.z) - baseTerrainHeightAt(pl.x - 1, pl.z);
         const dhz = baseTerrainHeightAt(pl.x, pl.z + 1) - baseTerrainHeightAt(pl.x, pl.z - 1);
-        const groundTiltX = -dhz * 0.45;
-        const groundTiltZ = dhx * 0.45;
+        const groundTiltX = Math.max(-0.35, Math.min(0.35, -dhz * 0.35));
+        const groundTiltZ = Math.max(-0.35, Math.min(0.35, dhx * 0.35));
         e.set(
           groundTiltX + Math.sin(pl.yaw) * pl.tilt,
           pl.yaw,
@@ -582,23 +620,23 @@ export class AlienFlora {
         m.compose(pos, q, scl);
         mesh.setMatrixAt(i, m);
 
-        // Wild palettes — not lawn-green solids. Biome band + strong jitter + rarity spectral kick.
+        // Wild palettes — saturated alien food colors, not lawn green.
         const hueJit =
           (s.hue +
-            (hash(pl.sp * 31 + i) - 0.5) * 0.22 +
-            0.05 * Math.sin(pl.x * 0.009 + pl.z * 0.011) +
-            pl.rarity * 0.12 +
+            (hash(pl.sp * 31 + i) - 0.5) * 0.14 +
+            0.04 * Math.sin(pl.x * 0.009 + pl.z * 0.011) +
+            pl.rarity * 0.1 +
             1) %
           1;
-        const sat = Math.min(0.99, s.sat + (hash(i * 97 + pl.sp) - 0.5) * 0.28 + pl.rarity * 0.2);
-        const light = Math.min(0.78, s.light + hash(i * 101 + pl.sp) * 0.22 + pl.rarity * 0.12);
+        const sat = Math.min(0.98, Math.max(0.55, s.sat + (hash(i * 97 + pl.sp) - 0.5) * 0.2 + pl.rarity * 0.15));
+        const light = Math.min(0.72, Math.max(0.32, s.light + hash(i * 101 + pl.sp) * 0.16 + pl.rarity * 0.1));
         col.setHSL(hueJit, sat, light);
-        // Legendary plants get a second-channel push toward holographic cyan/magenta/gold.
-        if (pl.rarity > 0.8) {
+        if (pl.rarity > 0.55) {
           const kick = hash(i * 113 + pl.sp);
-          if (kick < 0.33) col.lerp(new THREE.Color(0.3, 0.95, 1.0), 0.35);
-          else if (kick < 0.66) col.lerp(new THREE.Color(1.0, 0.35, 0.85), 0.35);
-          else col.lerp(new THREE.Color(1.0, 0.82, 0.25), 0.35);
+          const t = 0.28 + pl.rarity * 0.25;
+          if (kick < 0.33) col.lerp(new THREE.Color(0.25, 0.95, 1.0), t);
+          else if (kick < 0.66) col.lerp(new THREE.Color(1.0, 0.3, 0.85), t);
+          else col.lerp(new THREE.Color(1.0, 0.8, 0.28), t);
         }
 
         const o4 = i * 4;
@@ -636,158 +674,192 @@ export class AlienFlora {
   }
 
   /**
-   * Nine alien silhouettes — compound SEM-spicule / crystal-fan / mycelial-orb / holographic stalk
-   * geometries. Bases sit at local y=0. Not single bland primitives.
+   * Nine curved alien silhouettes (lathe / tube / knot) + buried root bulbs.
+   * Collar at y=0; roots below (y negative). No boxy plates — organic revolution profiles and helices.
    */
   private static buildFamilies(): Family[] {
     const fams: Family[] = [];
 
-    // 0 SPIRE — needle with crystal side blades (mineral fan energy)
+    // 0 SPIRE — curved lathe needle + soft crown bulb + buried root
     {
-      const stem = new THREE.ConeGeometry(0.42, 6.2, 7, 2);
-      stem.translate(0, 3.1, 0);
-      const bladeA = new THREE.BoxGeometry(0.08, 2.4, 1.1, 1, 3, 1);
-      bladeA.translate(0.35, 3.8, 0);
-      bladeA.rotateZ(0.35);
-      const bladeB = bladeA.clone();
-      bladeB.rotateY((Math.PI * 2) / 3);
-      const bladeC = bladeA.clone();
-      bladeC.rotateY((Math.PI * 4) / 3);
-      const tip = new THREE.OctahedronGeometry(0.35, 0);
-      tip.scale(0.6, 1.4, 0.6);
-      tip.translate(0, 6.1, 0);
-      fams.push({ geo: adoptMerged([stem, bladeA, bladeB, bladeC, tip]), height: 6.5 });
+      const stem = lathe(
+        [
+          [0.02, 0.0],
+          [0.28, 0.35],
+          [0.38, 1.2],
+          [0.32, 2.6],
+          [0.22, 4.0],
+          [0.12, 5.2],
+          [0.04, 5.9],
+        ],
+        16,
+      );
+      const crown = new THREE.SphereGeometry(0.42, 12, 10);
+      crown.scale(1.3, 0.7, 1.3);
+      crown.translate(0, 5.85, 0);
+      const geo = adoptMerged([stem, crown, rootBulb(0.42, 0.55)]);
+      fams.push({ geo, height: peakHeight(geo) });
     }
 
-    // 1 WHIP — tapered tendril + mid nodules (SEM organic)
-    {
-      const stem = new THREE.CylinderGeometry(0.04, 0.38, 8.2, 6, 4);
-      stem.translate(0, 4.1, 0);
-      const n1 = new THREE.SphereGeometry(0.28, 7, 5);
-      n1.scale(1.2, 0.7, 1.2);
-      n1.translate(0.15, 2.4, 0);
-      const n2 = new THREE.SphereGeometry(0.22, 7, 5);
-      n2.scale(1.1, 0.65, 1.1);
-      n2.translate(-0.12, 4.6, 0.1);
-      const n3 = new THREE.SphereGeometry(0.16, 6, 4);
-      n3.translate(0.08, 6.5, -0.05);
-      fams.push({ geo: adoptMerged([stem, n1, n2, n3]), height: 8.2 });
-    }
-
-    // 2 POD — knobby ground bulb cluster (SEM fruiting body)
-    {
-      const core = new THREE.IcosahedronGeometry(1.0, 1);
-      core.scale(1.15, 1.05, 1.15);
-      core.translate(0, 1.1, 0);
-      const budA = new THREE.SphereGeometry(0.45, 8, 6);
-      budA.translate(0.7, 0.55, 0.2);
-      const budB = new THREE.SphereGeometry(0.38, 8, 6);
-      budB.translate(-0.55, 0.7, 0.45);
-      const budC = new THREE.SphereGeometry(0.32, 7, 5);
-      budC.translate(0.15, 1.55, -0.55);
-      const pore = new THREE.TorusGeometry(0.35, 0.08, 5, 10);
-      pore.rotateX(Math.PI / 2);
-      pore.translate(0, 1.9, 0);
-      fams.push({ geo: adoptMerged([core, budA, budB, budC, pore]), height: 2.4 });
-    }
-
-    // 3 BLADE — thin tall leaf fan with striated plate (mineral sheet)
-    {
-      const plate = new THREE.BoxGeometry(0.12, 5.2, 1.55, 1, 5, 2);
-      plate.translate(0, 2.6, 0);
-      const rib = new THREE.BoxGeometry(0.22, 5.0, 0.18, 1, 4, 1);
-      rib.translate(0, 2.5, 0);
-      const fringe = new THREE.ConeGeometry(0.55, 1.2, 5, 1);
-      fringe.translate(0, 5.5, 0);
-      fams.push({ geo: adoptMerged([plate, rib, fringe]), height: 6.1 });
-    }
-
-    // 4 CORAL — spiky diamond with satellite crystals
-    {
-      const core = new THREE.OctahedronGeometry(1.5, 1);
-      core.scale(0.65, 2.1, 0.65);
-      core.translate(0, 3.6, 0);
-      const s1 = new THREE.TetrahedronGeometry(0.55, 0);
-      s1.scale(0.7, 1.6, 0.7);
-      s1.translate(0.7, 2.4, 0.2);
-      const s2 = new THREE.TetrahedronGeometry(0.45, 0);
-      s2.scale(0.7, 1.5, 0.7);
-      s2.translate(-0.6, 4.2, -0.25);
-      const s3 = new THREE.TetrahedronGeometry(0.4, 0);
-      s3.scale(0.65, 1.4, 0.65);
-      s3.translate(0.25, 5.5, 0.45);
-      fams.push({ geo: adoptMerged([core, s1, s2, s3]), height: 7.4 });
-    }
-
-    // 5 SHARD — crystal tetra stack (mineral lattice)
-    {
-      const a = new THREE.TetrahedronGeometry(1.5, 0);
-      a.scale(0.85, 1.9, 0.85);
-      a.translate(0, 2.8, 0);
-      const b = new THREE.TetrahedronGeometry(0.9, 0);
-      b.scale(0.7, 1.5, 0.7);
-      b.translate(0.35, 4.6, 0.1);
-      b.rotateY(0.7);
-      const c = new THREE.OctahedronGeometry(0.35, 0);
-      c.translate(0, 5.9, 0);
-      fams.push({ geo: adoptMerged([a, b, c]), height: 6.3 });
-    }
-
-    // 6 HELIX — twisted shell stalk + spore orbs (mycelial network vibe)
+    // 1 WHIP — helical tube tendril + fruiting nodules
     {
       const pts: THREE.Vector3[] = [];
-      for (let i = 0; i <= 36; i++) {
-        const y = (i / 36) * 5.8;
-        const a = i * 0.58;
-        const r = 0.42 * (1 - i / 36) + 0.08;
+      for (let i = 0; i <= 40; i++) {
+        const t = i / 40;
+        const y = t * 6.4;
+        const a = t * Math.PI * 4.2;
+        const r = 0.32 * (1 - t * 0.75) + 0.06;
         pts.push(new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r));
       }
-      const tube = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 28, 0.14, 6, false);
-      const orb1 = new THREE.SphereGeometry(0.28, 8, 6);
-      orb1.translate(0.35, 2.0, 0.1);
-      const orb2 = new THREE.SphereGeometry(0.22, 7, 5);
-      orb2.translate(-0.25, 3.8, 0.2);
-      const orb3 = new THREE.SphereGeometry(0.18, 7, 5);
-      orb3.translate(0.15, 5.2, -0.15);
-      fams.push({ geo: adoptMerged([tube, orb1, orb2, orb3]), height: 5.8 });
+      const tube = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 36, 0.12, 7, false);
+      const n1 = new THREE.SphereGeometry(0.32, 10, 8);
+      n1.scale(1.25, 0.75, 1.25);
+      n1.translate(0.28, 2.0, 0.05);
+      const n2 = new THREE.SphereGeometry(0.26, 10, 8);
+      n2.scale(1.15, 0.7, 1.15);
+      n2.translate(-0.22, 3.8, 0.12);
+      const n3 = new THREE.SphereGeometry(0.2, 9, 7);
+      n3.translate(0.1, 5.5, -0.08);
+      const geo = adoptMerged([tube, n1, n2, n3, rootBulb(0.36, 0.5)]);
+      fams.push({ geo, height: peakHeight(geo) });
     }
 
-    // 7 BUBBLE — clustered porous orbs (SEM fruiting cluster / mycelial nodes)
+    // 2 POD — lathe urn fruiting body (SEM organic)
     {
-      const main = new THREE.SphereGeometry(0.75, 10, 8);
-      main.scale(1.1, 0.9, 1.1);
+      const body = lathe(
+        [
+          [0.15, 0.0],
+          [0.7, 0.25],
+          [0.95, 0.7],
+          [1.05, 1.15],
+          [0.85, 1.55],
+          [0.45, 1.85],
+          [0.2, 2.05],
+        ],
+        18,
+      );
+      const lip = new THREE.TorusGeometry(0.42, 0.07, 8, 16);
+      lip.rotateX(Math.PI / 2);
+      lip.translate(0, 1.95, 0);
+      const geo = adoptMerged([body, lip, rootBulb(0.55, 0.48)]);
+      fams.push({ geo, height: peakHeight(geo) });
+    }
+
+    // 3 BLADE — curved lathe sail (leaf without hard boxes)
+    {
+      const sail = lathe(
+        [
+          [0.02, 0.0],
+          [0.15, 0.4],
+          [0.55, 1.4],
+          [0.85, 2.6],
+          [0.95, 3.6],
+          [0.7, 4.5],
+          [0.25, 5.2],
+          [0.02, 5.5],
+        ],
+        14,
+      );
+      sail.scale(0.35, 1, 1.0); // flatten into a soft blade
+      const geo = adoptMerged([sail, rootBulb(0.34, 0.5)]);
+      fams.push({ geo, height: peakHeight(geo) });
+    }
+
+    // 4 CORAL — torus-knot body + soft satellite bulbs (math weirdness, still connected)
+    {
+      const core = new THREE.TorusKnotGeometry(0.55, 0.16, 64, 8, 2, 3);
+      core.scale(0.85, 1.9, 0.85);
+      core.translate(0, 2.6, 0);
+      const s1 = new THREE.SphereGeometry(0.28, 10, 8);
+      s1.translate(0.55, 1.6, 0.15);
+      const s2 = new THREE.SphereGeometry(0.24, 9, 7);
+      s2.translate(-0.45, 3.2, -0.2);
+      const s3 = new THREE.SphereGeometry(0.2, 9, 7);
+      s3.translate(0.2, 4.4, 0.3);
+      const geo = adoptMerged([core, s1, s2, s3, rootBulb(0.4, 0.52)]);
+      fams.push({ geo, height: peakHeight(geo) });
+    }
+
+    // 5 SHARD — lathe crystal with curved waist (not tetra edges)
+    {
+      const crystal = lathe(
+        [
+          [0.05, 0.0],
+          [0.45, 0.5],
+          [0.55, 1.4],
+          [0.4, 2.6],
+          [0.55, 3.8],
+          [0.35, 4.8],
+          [0.08, 5.6],
+        ],
+        12,
+      );
+      const tip = new THREE.SphereGeometry(0.18, 10, 8);
+      tip.scale(0.7, 1.4, 0.7);
+      tip.translate(0, 5.7, 0);
+      const geo = adoptMerged([crystal, tip, rootBulb(0.38, 0.5)]);
+      fams.push({ geo, height: peakHeight(geo) });
+    }
+
+    // 6 HELIX — thick mycelial coil + spore orbs
+    {
+      const pts: THREE.Vector3[] = [];
+      for (let i = 0; i <= 42; i++) {
+        const t = i / 42;
+        const y = t * 5.6;
+        const a = t * Math.PI * 5.5;
+        const r = 0.48 * (1 - t * 0.7) + 0.1;
+        pts.push(new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r));
+      }
+      const tube = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 40, 0.16, 8, false);
+      const orb1 = new THREE.SphereGeometry(0.3, 10, 8);
+      orb1.translate(0.4, 1.6, 0.1);
+      const orb2 = new THREE.SphereGeometry(0.26, 10, 8);
+      orb2.translate(-0.32, 3.2, 0.18);
+      const orb3 = new THREE.SphereGeometry(0.22, 9, 7);
+      orb3.translate(0.18, 4.7, -0.12);
+      const geo = adoptMerged([tube, orb1, orb2, orb3, rootBulb(0.4, 0.5)]);
+      fams.push({ geo, height: peakHeight(geo) });
+    }
+
+    // 7 BUBBLE — fruiting cluster (connected via root mat)
+    {
+      const main = new THREE.SphereGeometry(0.7, 14, 12);
+      main.scale(1.15, 0.9, 1.15);
       main.translate(0, 0.85, 0);
-      const a = new THREE.SphereGeometry(0.42, 8, 6);
-      a.translate(0.65, 0.55, 0.15);
-      const b = new THREE.SphereGeometry(0.38, 8, 6);
-      b.translate(-0.5, 0.7, 0.4);
-      const c = new THREE.SphereGeometry(0.32, 7, 5);
-      c.translate(0.1, 1.35, -0.5);
-      const d = new THREE.SphereGeometry(0.25, 7, 5);
-      d.translate(-0.35, 1.2, -0.25);
-      const ring = new THREE.TorusGeometry(0.55, 0.06, 5, 12);
+      const a = new THREE.SphereGeometry(0.4, 12, 10);
+      a.translate(0.55, 0.55, 0.2);
+      const b = new THREE.SphereGeometry(0.36, 12, 10);
+      b.translate(-0.48, 0.7, 0.35);
+      const c = new THREE.SphereGeometry(0.32, 11, 9);
+      c.translate(0.12, 1.35, -0.45);
+      const ring = new THREE.TorusGeometry(0.48, 0.06, 8, 18);
       ring.rotateX(Math.PI / 2);
-      ring.translate(0, 1.55, 0);
-      fams.push({ geo: adoptMerged([main, a, b, c, d, ring]), height: 2.0 });
+      ring.translate(0, 1.45, 0);
+      const geo = adoptMerged([main, a, b, c, ring, rootBulb(0.5, 0.45)]);
+      fams.push({ geo, height: peakHeight(geo) });
     }
 
-    // 8 FAN — broad curved sail with radial ribs (mineral radial crystal)
+    // 8 FAN — lathe mineral sail (curved radial profile, no boxes)
     {
-      const sail = new THREE.CylinderGeometry(0.02, 1.75, 4.6, 5, 2, true);
-      sail.scale(1, 1, 0.22);
-      sail.translate(0, 2.3, 0);
-      const rib1 = new THREE.BoxGeometry(0.06, 4.2, 0.12, 1, 3, 1);
-      rib1.translate(0, 2.2, 0.05);
-      const rib2 = new THREE.BoxGeometry(0.05, 3.6, 0.1, 1, 2, 1);
-      rib2.translate(0.4, 2.0, 0);
-      rib2.rotateZ(-0.25);
-      const rib3 = new THREE.BoxGeometry(0.05, 3.6, 0.1, 1, 2, 1);
-      rib3.translate(-0.4, 2.0, 0);
-      rib3.rotateZ(0.25);
-      const base = new THREE.SphereGeometry(0.35, 7, 5);
-      base.scale(1.2, 0.6, 0.8);
-      base.translate(0, 0.25, 0);
-      fams.push({ geo: adoptMerged([sail, rib1, rib2, rib3, base]), height: 4.7 });
+      const sail = lathe(
+        [
+          [0.02, 0.0],
+          [0.2, 0.3],
+          [0.75, 1.0],
+          [1.15, 2.0],
+          [1.25, 3.0],
+          [0.9, 3.9],
+          [0.35, 4.5],
+          [0.02, 4.7],
+        ],
+        16,
+      );
+      sail.scale(0.28, 1, 1); // soft fan thickness
+      const jewel = new THREE.SphereGeometry(0.22, 10, 8);
+      jewel.translate(0, 4.55, 0);
+      const geo = adoptMerged([sail, jewel, rootBulb(0.36, 0.48)]);
+      fams.push({ geo, height: peakHeight(geo) });
     }
 
     return fams;
@@ -806,12 +878,13 @@ export class AlienFlora {
         family,
         biome,
         hue,
-        sat: 0.58 + hash(i * 23 + 3) * 0.4,
-        light: 0.3 + hash(i * 29 + 5) * 0.34,
-        size: 0.45 + hash(i * 31 + 7) * 2.4,
-        swayFreq: 0.22 + hash(i * 37 + 11) * 2.2,
-        glow: 0.25 + hash(i * 41 + 13) * 0.7,
-        rarityBias: hash(i * 59 + 17) * 0.35,
+        sat: 0.62 + hash(i * 23 + 3) * 0.36,
+        light: 0.34 + hash(i * 29 + 5) * 0.3,
+        // Proportional habitat scale — never nuclear giants.
+        size: 0.5 + hash(i * 31 + 7) * 1.65,
+        swayFreq: 0.28 + hash(i * 37 + 11) * 2.0,
+        glow: 0.35 + hash(i * 41 + 13) * 0.6,
+        rarityBias: hash(i * 59 + 17) * 0.4,
       });
     }
     return out;
