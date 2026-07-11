@@ -26,6 +26,7 @@ function mockWorld(
     }),
     apply: (id, intent, text) => {
       applied.push({ id, intent, text });
+      return true;
     },
   };
 }
@@ -47,6 +48,8 @@ describe('NhiSystem', () => {
     sys.register(9, mulberry32(2));
     sys.register(5, mulberry32(3)); // idempotent per id
     expect(sys.count).toBe(2);
+    expect(Number.isFinite(sys.moodOf(5) ?? Number.NaN)).toBe(true);
+    expect(sys.moodOf(999)).toBe(null);
   });
 
   test('ticks every live NHI and applies one intent each', () => {
@@ -74,6 +77,26 @@ describe('NhiSystem', () => {
     expect(world.applied.map((a) => a.id)).toEqual([1]);
   });
 
+  test('clear synchronously forgets every mind and permits a deterministic fresh population', () => {
+    const sys = new NhiSystem();
+    sys.register(1, mulberry32(10));
+    sys.register(2, mulberry32(20));
+    sys.tick(mulberry32(99), mockWorld(new Set([1, 2])));
+    sys.clear();
+    expect(sys.count).toBe(0);
+    expect(sys.ids()).toEqual([]);
+    expect(sys.snapshot(1)).toBe(null);
+
+    sys.register(7, mulberry32(77));
+    const fresh = new NhiSystem();
+    fresh.register(7, mulberry32(77));
+    const a = mockWorld(new Set([7]));
+    const b = mockWorld(new Set([7]));
+    sys.tick(mulberry32(88), a);
+    fresh.tick(mulberry32(88), b);
+    expect(a.applied).toEqual(b.applied); // clear reset the orchestration beat as well as the map
+  });
+
   test('is deterministic: same seeds ⇒ identical applied stream', () => {
     const run = (): string => {
       const sys = new NhiSystem();
@@ -87,5 +110,23 @@ describe('NhiSystem', () => {
         .join('|');
     };
     expect(run()).toBe(run());
+  });
+
+  test('feeds material apply acknowledgement back into the mind world model', () => {
+    const sys = new NhiSystem();
+    sys.register(1, mulberry32(0xacc));
+    const failed = mockWorld(new Set([1]));
+    failed.apply = (id, intent, text) => {
+      failed.applied.push({ id, intent, text });
+      return false;
+    };
+    sys.tick(mulberry32(0x101), failed);
+    expect(sys.snapshot(1)?.facts).toBe(0);
+
+    const succeeded = mockWorld(new Set([1]));
+    sys.tick(mulberry32(0x102), succeeded);
+    const action = succeeded.applied[0]?.intent.action;
+    const expectedBit = action === undefined ? 0 : ([2, 4, 1, 0, 0, 8, 0][action] ?? 0);
+    expect(sys.snapshot(1)?.facts).toBe(expectedBit);
   });
 });

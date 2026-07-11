@@ -2,7 +2,8 @@
 
 **Date:** 2026-07-10
 
-**Status:** current V3 evidence report
+**Status:** preserved V3 predecessor; superseded as current evidence by the verified
+[V4 Phase-A report](./ORGANISM-INTELLIGENCE-V4-RESULTS-2026-07-11.md)
 
 **Binding design contract:** [ADR-0013](../adr/0013-operational-organism-intelligence-2026-07-10.md)
 

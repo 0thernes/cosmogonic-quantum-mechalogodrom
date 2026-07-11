@@ -5,9 +5,9 @@
 Technical reports and audits for Cosmogonic Quantum Mechalogodrom. Dated filenames (`2026-*`) are
 **historical worldline snapshots** when present — they preserve evidence from their authoring pass.
 **Current** gate receipts: [VERIFICATION-ANALYTICAL-DATA.md](../VERIFICATION-ANALYTICAL-DATA.md) §1 ·
-`scripts/canonical-receipts.ts` (v0.21.13 · **2,613-test floor** · **84.64 % / 82.21 %** coverage).
-Latest Windows-local receipt observed by the current audit: **2,613 completed cases, zero failures,
-3,022,764 expect() calls, 92.97% line coverage, and 90.86% function coverage across 295 test files**.
+`scripts/canonical-receipts.ts` (v0.21.13 · **2,697-test floor** · **84.64 % / 82.21 %** coverage).
+Latest Windows-local receipt observed by the current audit: **2,697 completed cases, zero failures,
+3,525,807 expect() calls, 93.13% line coverage, and 91.10% function coverage across 302 test files**.
 
 The batch-26 adversarial repair pass made the flora sampler bilinear and sealed chemotaxis against
 the real cell-quantized field, corrected forager final-position telemetry, and closed root-pathspec

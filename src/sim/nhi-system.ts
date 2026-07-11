@@ -4,9 +4,10 @@
  *
  * It owns one mind per launched NHI, and each beat: drops any NHI that has died, builds a percept
  * from the world, runs the apex decision, and applies the resulting {@link NhiIntent} as a real
- * effect — spawn a mutated swarm, dominate/manipulate the local field, or broadcast a hallucinated
- * utterance. The world is reached ONLY through the injected {@link NhiWorld} facade, so this whole
- * orchestrator is DOM-free and unit-testable with a mock; the world.ts adapter (which touches the
+ * effect — spawn ordinary minions, dominate/manipulate the local field, hunt or mimic the exact
+ * perceived organism, or broadcast an utterance. The world is reached ONLY through the injected
+ * {@link NhiWorld} facade, so this whole orchestrator is DOM-free and unit-testable with a mock; the
+ * world.ts adapter (which touches the
  * EntityManager, factions, HUD and audio) is the only piece that knows three.js. Deterministic: a
  * single injected seeded {@link Rng} drives every mind, in a fixed id order.
  */
@@ -45,13 +46,19 @@ export interface NhiWorld {
   liveIds(): readonly number[];
   /** The percept for NHI `id` (everything except `beat`, which the orchestrator stamps). */
   percept(id: number): Omit<NhiPercept, 'beat'>;
-  /** Execute `intent` for NHI `id`; `utterance` is the already-rendered alien string. */
-  apply(id: number, intent: NhiIntent, utterance: string): void;
+  /**
+   * Execute `intent` for NHI `id`; return whether its corresponding GOAP fact materially occurred.
+   * `utterance` is the already-rendered alien string.
+   */
+  apply(id: number, intent: NhiIntent, utterance: string): boolean;
 }
 
 /** Owns the launched NHIs' minds and drives their decisions against an injected world. */
 export class NhiSystem {
   private readonly minds = new Map<number, NhiMind>();
+  private readonly liveScratch = new Set<number>();
+  private readonly deadScratch: number[] = [];
+  private readonly orderScratch: number[] = [];
   private beat = 0;
 
   /** Birth a mind for a newly-launched NHI `id` from the seeded rng. Idempotent per id. */
@@ -74,23 +81,45 @@ export class NhiSystem {
     return this.minds.get(id)?.snapshot() ?? null;
   }
 
+  /** Allocation-free affect read used by live NHI social sensing. */
+  moodOf(id: number): number | null {
+    return this.minds.get(id)?.moodValue() ?? null;
+  }
+
+  /** Forget the entire launched population synchronously (Genesis/reset lifecycle boundary). */
+  clear(): void {
+    this.minds.clear();
+    this.liveScratch.clear();
+    this.deadScratch.length = 0;
+    this.orderScratch.length = 0;
+    this.beat = 0;
+  }
+
   /**
    * One decision beat for every live NHI: forget the dead, then percept → think → apply, in ascending
-   * id order (deterministic). The single `rng` is shared across minds this beat. O(live NHIs).
+   * id order (deterministic). The single `rng` is shared across minds this beat. Internal lifecycle
+   * traversal is O(M), ordering is O(M log M), and injected percept/apply callback costs are external.
+   * Scratch collections are reused across beats.
    */
   tick(rng: Rng, world: NhiWorld): void {
-    const live = new Set(world.liveIds());
+    this.liveScratch.clear();
+    for (const id of world.liveIds()) this.liveScratch.add(id);
     // Snapshot dead ids first (don't delete from the Map mid-iteration), then forget them.
-    const dead: number[] = [];
-    for (const id of this.minds.keys()) if (!live.has(id)) dead.push(id);
-    for (const id of dead) this.minds.delete(id);
-    const ids = [...this.minds.keys()].sort((a, b) => a - b);
-    for (const id of ids) {
+    this.deadScratch.length = 0;
+    for (const id of this.minds.keys()) {
+      if (!this.liveScratch.has(id)) this.deadScratch.push(id);
+    }
+    for (const id of this.deadScratch) this.minds.delete(id);
+    this.orderScratch.length = 0;
+    for (const id of this.minds.keys()) this.orderScratch.push(id);
+    this.orderScratch.sort((a, b) => a - b);
+    for (const id of this.orderScratch) {
       const mind = this.minds.get(id);
       if (!mind) continue;
       const percept: NhiPercept = { ...world.percept(id), beat: this.beat };
       const intent = mind.think(percept, rng);
-      world.apply(id, intent, renderUtterance(intent.utterance));
+      const factAchieved = world.apply(id, intent, renderUtterance(intent.utterance));
+      mind.acknowledge(intent.action, factAchieved);
     }
     this.beat++;
   }

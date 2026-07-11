@@ -16,7 +16,7 @@ Audit HTML: `docs/CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.html`
 >
 > **Operational-intelligence refresh (2026-07-10):** the corrected external Tsotchke ledger is
 > `8 deep / 7 wired / 2 harvest / 4 fenced / 1 meta`, or `17/21` non-meta integrated; the internal
-> `classical-contrast` control is separate. The current V3 fresh disjoint fixed-family evaluation passed
+> `classical-contrast` control is separate. The then-current V3 fresh disjoint fixed-family evaluation passed
 > goal-only and corpus-conditioned effects, `6.1213%` reversal adaptation, `17/17` integrated-row reach,
 > `5/5` excluded-row inertness, numerical safety, three-process performance stability, and all named
 > consumer counterfactuals. Uniform random-action baseline separation and aggregate-mapping specificity
@@ -25,7 +25,13 @@ Audit HTML: `docs/CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.html`
 > `+2.990`, and peer z `+3.131`. The finite 26-form generator plus differential selection establishes
 > bounded active novelty against a frozen control, not unbounded open-ended evolution. V3 itself
 > authorizes no additional consciousness, sentience, or numeric capability score change. See the
-> [current causal audit](./reports/2026-07-10-OPERATIONAL-ORGANISM-INTELLIGENCE-CAUSAL-AUDIT.md).
+> [V3 causal audit](./reports/2026-07-10-OPERATIONAL-ORGANISM-INTELLIGENCE-CAUSAL-AUDIT.md).
+>
+> **V4 descendant refresh (2026-07-11):** the verified 64-seed Phase-A result retains three failures
+> and one pass. Ordinary and Petri effects miss the fixed magnitude floor; the adaptive predictor loses
+> to frozen and shuffled controls; Titans alone pass. This authorizes only bounded Titan game-policy
+> semantic causality and changes no A-Life, consciousness, or sentience score. See the
+> [V4 report](./reports/ORGANISM-INTELLIGENCE-V4-RESULTS-2026-07-11.md).
 
 ## Current Truth Banner
 

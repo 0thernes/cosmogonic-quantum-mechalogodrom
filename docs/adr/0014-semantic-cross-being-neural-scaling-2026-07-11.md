@@ -1,8 +1,9 @@
 # ADR 0014: Semantic Cross-Being Neural Scaling
 
-**Status:** Proposed; Phase-A mechanisms and repository protocol implemented, V4 evaluation unpublished
+**Status:** Accepted; Phase-A implemented and evaluated, with failed families retained for Phase-B work
 **Date:** 2026-07-11
 **Depends on:** [ADR 0013](./0013-operational-organism-intelligence-2026-07-10.md)
+**Successor:** [ADR 0015](./0015-phase-b-neural-semantic-expansion-2026-07-11.md)
 
 ## Context
 
@@ -36,24 +37,25 @@ Designed parameter counts and static adapter scores are not live neural capacity
 
 ## Current implementation boundary
 
-| Item                                                                                                                         | Status on 2026-07-11                         | What may be said now                                                                                   |
-| ---------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| ADR-0013 shared field, goal-preserved V3 ablation, reversal task, numerical and 50k cost seals                               | **Implemented and receipted**                | Bounded fixed-task results only, including the failed/tied controls.                                   |
-| Per-repository `resource`, `threat`, `exploration`, or `social` destination; `null` for fenced/meta rows                     | **Implemented and structurally tested**      | Exact reviewed mapping/counts and inert exclusions; semantic task benefit is not established.          |
-| Corpus aggregation by explicit semantic destination rather than registry index; channel identity included in ablation output | **Implemented and structurally tested**      | All 17 rows perturb only their declared aggregate; reachability is not useful behavior.                |
-| Four diagonal leaky recurrent semantic context states attached to stable brain identity                                      | **Implemented and focused-tested**           | Identity, birth/reset, delayed retention, control reset, and 30/60 Hz normalization only.              |
-| Adaptive `simple_mnist`-inspired ecology predictor                                                                           | **Implemented and focused-tested**           | Live 4-4-1 delayed learner, frozen arm, reversal test, fault bounds, and schema-v2 snapshot; not V4.   |
-| Petri and Titan semantic action wiring                                                                                       | **Implemented and focused-tested**           | Real differential biologic fitness and diplomacy/payoff/world-state causality; no broad family uplift. |
-| Phase-A repository protocol with 64 disjoint evaluation seeds                                                                | **Implemented; results deliberately absent** | Internal repository preregistration only, not external preregistration or replication.                 |
-| V4 JSON/CSV result and failure-forward forest chart                                                                          | **Planned**                                  | V3 remains canonical until V4 is generated in a later descendant commit and verified.                  |
+| Item                                                                                                                         | Status on 2026-07-11                      | What may be said now                                                                                                                  |
+| ---------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| ADR-0013 shared field, goal-preserved V3 ablation, reversal task, numerical and 50k cost seals                               | **Implemented and receipted**             | Bounded fixed-task results only, including the failed/tied controls.                                                                  |
+| Per-repository `resource`, `threat`, `exploration`, or `social` destination; `null` for fenced/meta rows                     | **Implemented, tested, and V4-evaluated** | Exact reviewed mapping/counts and inert exclusions; ordinary/Petri effects were positive but below the frozen family magnitude floor. |
+| Corpus aggregation by explicit semantic destination rather than registry index; channel identity included in ablation output | **Implemented, tested, and V4-evaluated** | All 17 rows perturb only their declared aggregate; V4 does not authorize a broad semantic-task or cross-family claim.                 |
+| Four diagonal leaky recurrent semantic context states attached to stable brain identity                                      | **Implemented, tested, and V4-evaluated** | Identity/lifecycle/replay passed, but ordinary recurrent-context benefit missed the frozen magnitude floor.                           |
+| Adaptive `simple_mnist`-inspired ecology predictor                                                                           | **Implemented, tested, and V4-evaluated** | The live 4-4-1 learner failed inference and magnitude against frozen/shuffled controls; no adaptive-prediction claim.                 |
+| Petri and Titan semantic action wiring                                                                                       | **Implemented, tested, and V4-evaluated** | Petri inference passed but magnitude failed; Titans passed and authorize only bounded game-policy semantic causality.                 |
+| Phase-A repository protocol with 64 disjoint evaluation seeds                                                                | **Frozen and executed**                   | Internal repository preregistration only, not external preregistration or replication.                                                |
+| V4 JSON/CSV result and failure-forward forest chart                                                                          | **Generated and integrity-verified**      | One family passed and three failed; raw rows, failures, hashes, and the receipt-bound forest are public.                              |
 
 No prose or diagram may promote a planned row to implemented. A worktree experiment is not a release
-receipt.
+receipt. The canonical result is [the V4 report](../reports/ORGANISM-INTELLIGENCE-V4-RESULTS-2026-07-11.md),
+not an exploratory rerun.
 
-One local post-implementation diagnostic ran the existing counterbalanced 50,000-entity worker in three
-fresh processes: all 30 incremental batch medians stayed below 3 ms, the worst was 2.8397 ms, and the three
-process medians were 1.7346, 1.6850, and 1.7882 ms. This is a hardware-local diagnostic, not the planned V4
-population curve or a canonical receipt.
+The V4 receipt ran the frozen 1k/5k/10k/50k ordinary-population curve in three fresh processes. Its
+aggregate log-log runtime slope was `1.008909`, the 50,000-entity incremental median was `2.0491 ms`, the
+worst of 18 counterbalanced batch medians was `2.82825 ms`, and semantic context remained exactly 17
+bytes/entity. This passes the frozen population-cost gate but remains a machine-local result.
 
 ## Decision
 
@@ -72,9 +74,10 @@ Every external registry row must declare exactly one destination or `null`. Fenc
 `null` and remain exactly inert. Channel order is a serialized runtime contract shared by the registry,
 corpus intake, organism signal, snapshots, consumers, controls, and evidence artifacts.
 
-Assignments are hypotheses, not facts inherited from repository names. V4 must publish the complete
-mapping and test it against channel-permuted controls. A failed mapping-specificity gate leaves the
-structural routing implemented while blocking any claim that the semantics improve behavior.
+Assignments are hypotheses, not facts inherited from repository names. V4 publishes the complete mapping
+and tests it against channel-permuted controls. The ordinary and Petri mapping-specificity contrasts are
+positive but below the frozen magnitude floor, so structural routing remains implemented while broad claims
+that those semantics improve behavior remain blocked. The Titan task passes its bounded family gate.
 
 ### 2. Add four identity-stable diagonal recurrent context neurons
 
@@ -91,15 +94,16 @@ context[c,t+1] = context[c,t] + alpha(dt) * (target[c,t] - context[c,t])
 The recurrence is diagonal: resource memory cannot silently become threat, exploration, or social memory.
 Cross-channel interaction occurs later through explicit action consumers. Inputs, sensitivities, rates, and
 states are finite and bounded. The adapter adds O(4) work per evaluated organism, no per-step heap
-allocation, and exactly 17 bytes/entity allocated at field construction. Entity-context snapshot/restore is
-still planned; it is not claimed by the current implementation.
+allocation, and exactly 17 bytes/entity allocated at field construction. Entity-context inclusion in a full
+world/brain snapshot is still planned; V4's exact replay restarts the deterministic arm and is not evidence
+of mid-run entity-context restoration.
 
 The state belongs to **brain identity**, not array position:
 
 - compaction may move an entity slot while preserving the same brain-state index;
 - reproduction creates a fresh state unless a separately documented inheritance experiment is enabled;
 - death/removal clears the retired identity, and a newborn reusing a slot receives zeroed context;
-- a future world/brain snapshot must reproduce all four states exactly before V4 replay can pass;
+- a future world/brain snapshot must reproduce all four states exactly before snapshot-resume replay can pass;
 - 30 Hz and 60 Hz paths use simulation-time-normalized decay/update rules;
 - an identity-permutation or slot-compaction test must fail if context follows the wrong being.
 
@@ -112,7 +116,7 @@ The static corpus helper still has a deterministic fixed baseline for standalone
 shared field replaces that row with a local `simple_mnist`-inspired 4-4-1 tanh/sigmoid MLP trained against a
 delayed ecological target. This is a local adaptation, not native upstream code parity.
 
-The shared, cadence-level learner will:
+The shared, cadence-level learner:
 
 1. read only four normalized observations available at prediction time: biomass depletion, metabolic
    depletion, crowding, and combined thermal/chaos stress;
@@ -125,10 +129,11 @@ The shared, cadence-level learner will:
 7. expose bounded prediction and lagged absolute error only on the non-ablated operational signal; raw
    predictor state remains available in the diagnostic snapshot without leaking through an ablated arm.
 
-One focused reversal test currently beats a frozen arm. The predictor is not V4-accepted until it also beats
-frozen and target-shuffled arms on the 64 frozen evaluation seeds. Training loss alone does not pass; the
-primary metric is future-cadence prediction error, followed by an independently measured ecological action
-outcome.
+One focused development reversal test beats a frozen arm, but V4 does not reproduce that advantage. Across
+the 64 frozen evaluation seeds the adaptive learner loses to both frozen and target-shuffled controls on
+true-label Brier score, so adaptive ecological prediction is rejected for Phase A. Training loss alone does
+not pass; any successor protocol must retain future-cadence prediction error as its primary metric and score
+an independently measured ecological action outcome separately.
 
 ### 4. Wire actions by family in measured phases
 
@@ -147,9 +152,10 @@ Each family adapter must declare `controllerType` (`neural`, `state-machine`, `g
 world-write paths, primary task, and declared primary control set. Only `neural` plus a live world write is eligible
 for a neural-scaling claim.
 
-Current focused tests establish ordinary action routing/context retention, Petri differential selection,
-and Titan diplomacy/payoff causality. They do not yet satisfy the table's independently scored 64-seed
-benefit requirements, and no other family advances phase because of those local results.
+V4 now establishes that ordinary routing/context and Petri differential selection are reproducible but
+too small for their frozen family magnitude rule. The adaptive predictor fails its frozen and shuffled
+controls. Titan diplomacy/payoff is the only Phase-A family that satisfies its independently scored
+64-seed behavior gate. No other family advances phase because of the Titan result.
 
 No phase changes all families at once. A family ships behind its existing disabled/legacy behavior, gets
 matched tests, and then enters the cross-being receipt. A failed family remains visible as failed or
@@ -162,9 +168,9 @@ V4 uses a repository preregistration. The Phase-A manifest is
 `scripts/organism-intelligence-v4-protocol.ts`. The manifest pins that source at SHA-256
 `120318627c437ac08b1c752015b586b306d68bbc843c676948c3c7eec5721541` plus one canonical fixture hash per
 evaluated family. It also pins the imported `mulberry32` implementation in `src/math/rng.ts`; changing that
-dependency invalidates the protocol seal. Both files are committed before any V4 result artifact is generated. This is stronger than
-fixing seeds inside the result-producing script, but it is still **not external preregistration or independent
-replication**.
+dependency invalidates the protocol seal. Both files were committed before any V4 result artifact was
+generated. This is stronger than fixing seeds inside the result-producing script, but it is still **not
+external preregistration or independent replication**.
 
 The Phase-A manifest defines:
 
@@ -181,9 +187,9 @@ The Phase-A manifest defines:
 - normalized `[0,1]` primary outcomes, denominator/failure rules, deterministic paired-bootstrap and
   sign-flip procedures, all statistical thresholds, and the within-family Holm procedure.
 
-The future result generator must import the pinned protocol module unchanged. Copying its numbers into a
-second implementation is not compliant. If the source or any fixture changes, the manifest hash must change
-in a new preregistration commit before any affected result is generated.
+The result generator imports the pinned protocol module unchanged. Copying its numbers into a second
+implementation is not compliant. If the source or any fixture changes, the manifest hash must change in a
+new preregistration commit before any affected successor result is generated.
 
 The action surrogate must match the full arm's empirical action magnitude/rate distribution on separate
 development seeds. V3's uniform action control remains reported but is not reused as though it were
@@ -191,7 +197,7 @@ distribution matched.
 
 ### 6. Publish raw V4 and cross-being evidence
 
-The planned canonical data products are:
+The published canonical data products are:
 
 - `docs/reports/assets/organism-intelligence-causal-benchmark-v4.json` — protocol, provenance,
   acceptance results, failures, and artifact hash;
@@ -233,11 +239,11 @@ failed behavioral control.
 | Generated visual     | Rebuilding the forest from the canonical receipt is byte-identical; labels, intervals, zero line, failed rows, ineligible rows, and receipt SHA are regression-tested.                                                                                                                                                                                                                                   |
 | Claim law            | `indicatorOnly` remains true. `consciousnessUpliftAllowed` and `sentienceUpliftAllowed` remain false regardless of V4 task performance unless a separate preregistered consciousness/sentience experiment establishes those claims.                                                                                                                                                                      |
 
-V4 may authorize only the family-specific statements whose gates pass: semantic task response, recurrent
-context benefit, adaptive ecological prediction, bounded neural-capacity response, or policy/ecological
-causality. A-Life numeric changes require their own code-grounded nine-axis evidence update. Physical
-quantumness, quantum advantage, security, general intelligence, phenomenal consciousness, and sentience
-remain outside this decision.
+V4 authorizes only bounded Titan game-policy semantic causality. It does not authorize ordinary recurrent
+context benefit, adaptive ecological prediction, Petri ecological causality, neural-capacity response, or a
+pooled cross-family result. A-Life numeric changes require their own code-grounded nine-axis evidence update.
+Physical quantumness, quantum advantage, security, general intelligence, phenomenal consciousness, and
+sentience remain outside this decision.
 
 ## Consequences
 
@@ -252,8 +258,8 @@ remain outside this decision.
   control. This is intentional: ten action divergences are not ten demonstrated benefits.
 - Generated raw rows and a failure-forward forest chart make negative results visible and independently
   re-analysable. Public presentation can be less flattering while becoming more scientifically useful.
-- V3 remains the current fixed-task receipt until the preregistered V4 artifact exists. Partial WIP does
-  not change public scores or the consciousness/sentience claim boundary.
+- The verified V4 artifact is now the current descendant receipt. Its three failures remain failures and
+  its one Titan pass does not change public scores or the consciousness/sentience claim boundary.
 
 ## Rejected alternatives
 

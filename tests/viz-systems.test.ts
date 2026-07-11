@@ -83,8 +83,20 @@ describe('NhiBodySystem lifecycle', () => {
     bodies.spawn(2, 5, 5, 5);
     expect(bodies.count).toBe(2);
 
+    expect(bodies.remove(2)).toBe(true);
+    expect(bodies.remove(2)).toBe(false);
+    expect(bodies.count).toBe(1);
+    bodies.spawn(2, 5, 5, 5);
+
     const livePos = new THREE.Vector3(3, 4, 5);
-    expect(() => bodies.update(1.2, (id) => (id === 1 ? livePos : null))).not.toThrow();
+    let positionReads = 0;
+    expect(() =>
+      bodies.update(1.2, (id) => {
+        positionReads++;
+        return id === 1 ? livePos : null;
+      }),
+    ).not.toThrow();
+    expect(positionReads).toBe(2); // one backing-position read per body, not one per pair
     expect(bodies.count).toBe(1); // id 2 returned null → its body was disposed
 
     bodies.clear();

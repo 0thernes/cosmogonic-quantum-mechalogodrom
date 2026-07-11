@@ -286,13 +286,14 @@ export class Economy {
   private pQuanta = 1;
   private pIchor = 1;
   private fx = 1; // AURUM per UMBRA
-  /** Scratch reused by tick() — grown on register, never per-tick. */
+  /** Scratch reused by tick() — kept index-aligned with agents across register/unregister. */
   private dQ: number[] = [];
   private dI: number[] = [];
   /** Net-worth scratch (grown on register) for cartel detection + the wealth Gini. */
   private nw: number[] = [];
-  /** Last-tick cartel wealth share + arbitrage spread, surfaced via {@link summary}. */
+  /** Pre-trade cartel share used by the sanction regulator; summary recomputes the live share. */
   private cartelShare = 0;
+  /** Last-tick arbitrage spread, surfaced via {@link summary}. */
   private arbSpread = 0;
   /** Last-tick off-book (black-market) commodity volume traded by sanctioned agents. */
   private blackVolume = 0;
@@ -304,8 +305,8 @@ export class Economy {
 
   /**
    * Enrol an agent with a purse sized to `weight` (its stature). Idempotent per id: re-registering
-   * an existing id is ignored (so a re-launched NHI keeps its purse). Draws 2 rng samples for the
-   * agent's commodity preference + currency lean. O(1) amortized.
+   * an existing live id is ignored. Draws 2 rng samples for the agent's commodity preference +
+   * currency lean. O(1) amortized.
    */
   register(id: number, title: string, weight: number, rng: Rng): void {
     if (this.byId.has(id)) return;
@@ -333,6 +334,29 @@ export class Economy {
     this.dQ.push(0);
     this.dI.push(0);
     this.nw.push(0);
+  }
+
+  /**
+   * Remove a departed agent and its wallet from the live market. The parallel scratch books are
+   * spliced at the same index so a later tick cannot attribute stale demand/net worth to another
+   * agent. Stable removal preserves deterministic order. O(n), intentionally paid only on death or
+   * lifecycle reset rather than on the hot market cadence.
+   */
+  unregister(id: number): boolean {
+    const a = this.byId.get(id);
+    if (!a) return false;
+    const index = this.agents.indexOf(a);
+    if (index < 0) {
+      // Defensive invariant repair: the map must never retain a record absent from the ordered book.
+      this.byId.delete(id);
+      return false;
+    }
+    this.agents.splice(index, 1);
+    this.dQ.splice(index, 1);
+    this.dI.splice(index, 1);
+    this.nw.splice(index, 1);
+    this.byId.delete(id);
+    return true;
   }
 
   /**
@@ -722,6 +746,13 @@ export class Economy {
     const umbraValue = umbra * this.fx;
     const totalMoney = aurum + umbraValue;
     const aurumShare = totalMoney > 0 ? aurum / totalMoney : 0.5;
+    const cartelCut = topKThreshold(worths, Math.min(CARTEL_SIZE, n));
+    let liveCartelWealth = 0;
+    for (let i = 0; i < n; i++) {
+      const worth = worths[i] ?? 0;
+      if (worth >= cartelCut) liveCartelWealth += worth;
+    }
+    const liveCartelShare = totalWealth > 0 ? clamp(liveCartelWealth / totalWealth, 0, 1) : 0;
     let sanctioned = 0;
     for (let i = 0; i < n; i++) if (this.agents[i]!.sanctioned) sanctioned++;
     const lorenz = lorenzDeciles(worths); // V122: real distribution data for the ticker's Lorenz curve
@@ -738,7 +769,7 @@ export class Economy {
       gini: gini(worths),
       agents: n,
       totalWealth,
-      cartelShare: this.cartelShare,
+      cartelShare: liveCartelShare,
       arbSpread: this.arbSpread,
       sanctioned,
       blackVolume: this.blackVolume,

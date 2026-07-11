@@ -48,7 +48,7 @@ export class SpatialHash<T extends { position: { x: number; z: number } }> {
   /**
    * Insert an item under its current XZ position. O(1) amortized; allocation-free once the pool
    * is warm. Items that move afterwards must be re-inserted on the next rebuild (legacy
-   * behavior — the grid is rebuilt every other frame).
+   * behavior — callers must rebuild at the cadence required by their exactness contract).
    */
   insert(item: T): void {
     const cs = this.cellSize;

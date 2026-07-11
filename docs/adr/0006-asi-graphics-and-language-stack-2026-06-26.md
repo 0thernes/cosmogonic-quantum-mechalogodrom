@@ -52,11 +52,13 @@ catalog's deferred upgrades (`gpu-io`, `typegpu`, Rapier WASM) remain the GPU-co
 ## The NHI ("smartest things ever") — graphics + mind
 
 - **Mind (shipped):** a deterministic super-mind (`src/sim/nhi.ts`) — game theory, regret-matching,
-  GOAP-ready, memory grudges, a per-NHI alien Markov voice, inherited neural gene. Bit-reproducible.
-- **Body (to build):** alien, biomechanical, uncanny (reference 3) — morphing geometry + a dedicated
+  material-outcome GOAP, memory grudges, a per-NHI alien Markov voice, and an inherited neural gene.
+  Seeded decision traces are bit-reproducible; full mutable-state restore remains future work.
+- **Body (shipped):** alien, biomechanical, uncanny (reference 3) — morphing geometry + a dedicated
   shader (subsurface veins, red ocular points, fresnel menace), not a cyan blob.
-- **Acts on the world (to wire):** spawns mutated swarms, manipulates factions, perturbs nearby
-  behaviour, broadcasts hallucinated utterances — ending "they float and do nothing."
+- **Acts on the world (shipped):** spawns ordinary minions, manipulates factions, perturbs nearby
+  behaviour, hunts/transfers bounded energy from the exact perceived target, behaviorally mimics it,
+  and broadcasts hallucinated utterances. Production swarms are not NHI offspring.
 
 ## Verification & CI/CD
 

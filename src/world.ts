@@ -2,12 +2,12 @@
  * Composition root of the simulation: constructs every system against the
  * contracts in docs/MODULE-CONTRACTS-2026-06-26.md, owns the mutable SimState, implements
  * all UiActions, and drives the per-frame pipeline
- * (camera → weather → puppet masters → grid → shoggoths → sector → sort step →
- *  entities → connectome → quantum → environment → telemetry → render).
+ * (camera → weather → puppet masters → shoggoths → sector → sort step → entities →
+ *  current grid when required → NHI → connectome → quantum → environment → telemetry → render).
  *
- * Frame-pipeline cadences (mirrors the legacy monolith):
- * grid rebuild every 2nd frame; connectome every 1/2/3 frames at n≤400/≤700/>700;
- * telemetry every 8th frame. `step()` is allocation-free (module scratch only).
+ * Frame-pipeline cadences: grid rebuild every 2nd frame, promoted to every frame while live NHI
+ * exact-target cognition requires current positions; connectome every 1/2/3 frames at
+ * n≤400/≤700/>700; telemetry every 8th frame. Population-scale hot paths reuse module scratch.
  */
 import * as THREE from 'three';
 import type { Engine } from './core/engine';
@@ -87,6 +87,13 @@ import { LeviathanSystem } from './sim/leviathans';
 import { NhiSystem, type NhiWorld } from './sim/nhi-system';
 import { Economy } from './sim/economy';
 import { NhiAction, type NhiIntent, type NhiPercept } from './sim/nhi';
+import {
+  isNhiManipulationTarget,
+  resolveNhiHuntEffect,
+  resolveNhiMimicEffect,
+  selectNearestNhiTarget,
+  type NhiEffectBody,
+} from './sim/nhi-target-effects';
 import { NhiBodySystem } from './sim/nhi-body';
 import { CosmicWeb } from './sim/cosmic-web';
 import { GoldLattice } from './sim/gold-lattice';
@@ -525,16 +532,24 @@ export class World {
   private static readonly ECON_SHOGGOTH_BASE = 2000;
   /** F-ECON-CREATURES V19: puppeteer econ ids occupy 3000..3099 (≤100 cabal; clear of others). */
   private static readonly ECON_PUPPET_BASE = 3000;
-  private static readonly ECON_NHI_BASE = 5000;
   /** F-SUPER V31: the apex purse (+1..3 for its twins). 9000 leaves headroom below it. */
   private static readonly ECON_SUPER_BASE = 9000;
+  /** Hard bound keeps per-NHI bodies, cognition, economy, and pairwise visual social work finite. */
+  private static readonly NHI_POPULATION_CAP = 32;
+  /** NHI wallets occupy negative ids, disjoint from every non-negative fixed creature namespace. */
+  private static nhiEconomyId(nid: number): number {
+    return -(nid + 1);
+  }
   private readonly economy = new Economy();
   private readonly econRng: Rng;
   private readonly genomeRng: Rng;
   /** Live NHI entities keyed by mind id; pruned when an NHI dies (leaves entities.list). */
   private readonly nhiEntities = new Map<number, Entity>();
-  /** Pre-allocated scratch for nhiLiveIds() to avoid Set construction per call. */
-  private readonly nhiEntitySetScratch = new Set<Entity>();
+  /** Reverse identity map for allocation-free spatial kin sensing. */
+  private readonly nhiIdsByEntity = new Map<Entity, number>();
+  /** Exact nearest ordinary target used to build each NHI's latest rival percept. */
+  private readonly nhiTargets = new Map<number, Entity>();
+  /** Pre-allocated scratch for the O(live NHI) lifecycle scan. */
   private readonly nhiLiveScratch: number[] = [];
   /** Monotonic NHI mind id — a stable key across the shifting entities.list. */
   private nhiNextId = 0;
@@ -1476,7 +1491,7 @@ export class World {
     this.alienFlora.dispose(); // free the 60k-plant instanced alien-flora field
     this.alphabetPantheon.dispose(); // V-ABC: free the 100-archetype instanced pools
     this.artifacts.dispose(this.engine.scene);
-    this.nhiBody.dispose(); // 3 shared geometries + live body materials
+    this.nhiBody.dispose(); // shared core/spike/ring/eye + per-body tendril geometries/materials
     this.rd.dispose(); // the Gray–Scott GPU DataTexture
     this.instanced?.dispose(); // free every live instance pool — clones + materials (null in per-mesh mode)
     this.connectome.dispose(); // free the axon-web BufferGeometry + LineBasicMaterial
@@ -1889,7 +1904,25 @@ export class World {
     }
     this.morphCount = stats.morphCount;
 
-    // F-NHI V10: drive launched super-minds every frame at full cadence.
+    // Keep NHI bodies contained before rebuilding the index. This may clamp positions, so doing it
+    // first is required by the exact-nearest target proof below. Intent writes then remain the final
+    // velocity decision for this beat instead of being immediately damped by ambient roaming.
+    if (this.nhiEntities.size > 0) this.steerNhiBeings(t);
+
+    // The baseline grid was rebuilt above on its legacy every-second-frame cadence. A live NHI pays
+    // one additional current-position rebuild here because its exact-nearest proof requires state
+    // after this frame's integration and containment. The no-NHI 50k path pays no duplicate scan.
+    const rebuildCurrentGrid = this.nhi.count > 0;
+    if (rebuildCurrentGrid) {
+      this.grid.clear();
+      const connList = this.entities.list;
+      for (let i = 0; i < connList.length; i++) {
+        const e = connList[i];
+        if (e) this.grid.insert(e);
+      }
+    }
+
+    // F-NHI V10: drive launched super-minds every frame at full cadence against the current grid.
     if (this.nhi.count > 0) {
       try {
         this.nhi.tick(this.rng, this.nhiWorld);
@@ -1897,19 +1930,9 @@ export class World {
         /* an NHI beat misbehaved — skip it, keep the world running */
       }
     }
-    // V57: keep NHIs roaming OMNIDIRECTIONALLY + inside the dome (was a one-way climb to the sky) — a
-    // 1/10-scale echo of the super creature's flight. Deterministic (sin of the clock + the NHI id, no
-    // rng) and a no-op until an NHI is launched, so the seeded golden is untouched.
-    if (this.nhiEntities.size > 0) this.steerNhiBeings(t);
-
+    // NHI SPAWN_SWARM can add ordinary minions above. Capture population only after that material
+    // effect so every same-frame density, super-creature, telemetry, and panel consumer sees them.
     const n = this.entities.list.length;
-    // Fresh spatial index immediately before connectome rebuild — entities moved this frame.
-    this.grid.clear();
-    const connList = this.entities.list;
-    for (let i = 0; i < connList.length; i++) {
-      const e = connList[i];
-      if (e) this.grid.insert(e);
-    }
     // Full 60 Hz connectome: every frame rebuilds links, propagates activation, uploads GPU geometry.
     this.connectome.update(dt, t);
 
@@ -3864,6 +3887,15 @@ export class World {
    * recorded in the audit so replays reproduce); a never-launched world draws none and is unchanged.
    */
   private launchNhiBeing(x?: number, y?: number, z?: number, source = 'user'): number {
+    if (this.nhiEntities.size >= World.NHI_POPULATION_CAP) {
+      this.hud.showSector(`NHI CAP · ${World.NHI_POPULATION_CAP} LIVE`);
+      this.audit.record('nhi-launch-blocked', {
+        source,
+        reason: 'nhi-population-cap',
+        cap: World.NHI_POPULATION_CAP,
+      });
+      return 0;
+    }
     if (
       typeof x === 'number' &&
       typeof y === 'number' &&
@@ -3894,10 +3926,11 @@ export class World {
     // ending the "NHI float and do nothing" complaint.
     const nid = this.nhiNextId++;
     this.nhiEntities.set(nid, e);
+    this.nhiIdsByEntity.set(e, nid);
     this.nhi.register(nid, this.rng);
     // F-ECONOMY: an NHI super-mind enters the market with the cosmos's fattest purse (weight 14 vs a
     // titan's ~8). Uses econRng so the launch's main-stream draws above stay reproducible.
-    this.economy.register(World.ECON_NHI_BASE + nid, 'NHI super-mind', 14, this.econRng);
+    this.economy.register(World.nhiEconomyId(nid), 'NHI super-mind', 14, this.econRng);
     this.nhiBody.spawn(nid, e.position.x, e.position.y, e.position.z);
     // USER #7a: varied alien vocalization on NHI arrival (round-robin from the alien chitter band).
     this.audio.playNhiLaunch();
@@ -3912,24 +3945,48 @@ export class World {
   }
 
   /**
-   * NHI ids whose entity is still alive (still in entities.list); prunes the dead. Builds a membership
-   * Set once (O(n)) instead of an O(n) `list.includes` PER NHI, so this is O(n + nhi) not O(nhi·n) —
-   * matters when the owner has launched many NHIs against the 50k-entity list.
+   * NHI ids whose backing organism is still alive; prunes the dead. EntityManager disposal marks
+   * `alive=false` before stable removal, and Genesis closes this layer synchronously before reset, so
+   * lifecycle detection is O(live NHI + retained targets) rather than rebuilding a 50k-entry Set.
    */
   private nhiLiveIds(): number[] {
-    this.nhiEntitySetScratch.clear();
     this.nhiLiveScratch.length = 0;
-    for (const e of this.entities.list) {
-      if (e) this.nhiEntitySetScratch.add(e);
-    }
     for (const [id, e] of this.nhiEntities) {
-      if (this.nhiEntitySetScratch.has(e)) {
+      if (e.userData.alive === true) {
         this.nhiLiveScratch.push(id);
       } else {
+        this.economy.unregister(World.nhiEconomyId(id));
+        this.nhiBody.remove(id);
+        this.nhiIdsByEntity.delete(e);
         this.nhiEntities.delete(id);
+        this.nhiTargets.delete(id);
       }
     }
-    return this.nhiLiveScratch.slice();
+    // A target may die between NHI beats; never retain a disposed organism as a future action sink.
+    for (const [id, target] of this.nhiTargets) {
+      if (!this.nhiEntities.has(id) || target.userData.alive === false) {
+        this.nhiTargets.delete(id);
+      }
+    }
+    return this.nhiLiveScratch;
+  }
+
+  /**
+   * Synchronously retire the NHI layer when EntityManager discards its backing organisms. This
+   * closes the mind/body/target/economy lifecycle even while the simulation is suspended and no
+   * later NHI tick is available to perform lazy pruning. Monotonic ids intentionally do not rewind.
+   */
+  private clearNhiPopulation(): void {
+    for (const id of this.nhiEntities.keys()) {
+      this.economy.unregister(World.nhiEconomyId(id));
+    }
+    this.nhiEntities.clear();
+    this.nhiIdsByEntity.clear();
+    this.nhiTargets.clear();
+    this.nhi.clear();
+    this.nhiBody.clear();
+    this.nhiLiveScratch.length = 0;
+    this.nhiSocialCooldown = 0;
   }
 
   /** The percept NHI `id` senses this beat, from its entity vitality + world crowding/chaos. */
@@ -3942,6 +3999,8 @@ export class World {
     // that organism's Nash strategy as the faction's last move toward it — wiring the game theory in.
     let rivalFaction = -1;
     let rivalLastMove = -1;
+    const previousTarget = this.nhiTargets.get(id);
+    let nearestTarget: Entity | null = null;
     if (e) {
       const p = e.position;
       // Nearest organism via the frame's spatial grid (O(k)) with an EXACT-fallback contract
@@ -3949,43 +4008,26 @@ export class World {
       // must also be in the query set (3D distance bounds XZ distance) — so the grid result is exact.
       // Only an isolated NHI with no organism within R pays the O(n) full-scan fallback.
       const R = 48;
-      let best = Infinity;
       const near = this.grid.query(p.x, p.z, R);
-      for (let i = 0; i < near.length; i++) {
-        const o = near[i];
-        if (!o || o === e || o.userData.isNhi) continue;
-        const op = o.position;
-        const dx = p.x - op.x;
-        const dy = p.y - op.y;
-        const dz = p.z - op.z;
-        const d2 = dx * dx + dy * dy + dz * dz;
-        if (d2 < best) {
-          best = d2;
-          rivalFaction = o.userData.setGroup;
-          rivalLastMove = o.userData.strategy;
-        }
-      }
-      if (best > R * R) {
+      const localSelection = selectNearestNhiTarget(e, near, previousTarget ?? null);
+      nearestTarget = localSelection.target;
+      if (localSelection.distanceSquared > R * R) {
         // No in-radius hit ⇒ exactness not guaranteed from the grid alone: full scan (rare).
-        best = Infinity;
-        rivalFaction = -1;
-        rivalLastMove = -1;
-        const list = this.entities.list;
-        for (let i = 0; i < list.length; i++) {
-          const o = list[i];
-          if (!o || o === e || o.userData.isNhi) continue;
-          const op = o.position;
-          const dx = p.x - op.x;
-          const dy = p.y - op.y;
-          const dz = p.z - op.z;
-          const d2 = dx * dx + dy * dy + dz * dz;
-          if (d2 < best) {
-            best = d2;
-            rivalFaction = o.userData.setGroup;
-            rivalLastMove = o.userData.strategy;
-          }
-        }
+        nearestTarget = selectNearestNhiTarget(
+          e,
+          this.entities.list,
+          previousTarget ?? null,
+        ).target;
       }
+    }
+    if (nearestTarget) {
+      // Retain the exact object that supplied rivalFaction/lastMove. HUNT and MIMIC therefore act on
+      // the same ordinary being the mind reasoned about, keyed stably by monotonic NHI id.
+      this.nhiTargets.set(id, nearestTarget);
+      rivalFaction = nearestTarget.userData.setGroup;
+      rivalLastMove = nearestTarget.userData.strategy;
+    } else {
+      this.nhiTargets.delete(id);
     }
     // USER #7a — the SOCIAL field: how many OTHER NHIs are near, and their mean mood. Fed into think()
     // as mood contagion + social action modulation, so nearby alien minds genuinely shape each other.
@@ -3994,15 +4036,19 @@ export class World {
     if (e) {
       const p = e.position;
       const KIN_R2 = 90 * 90;
-      for (const [oid, oe] of this.nhiEntities) {
-        if (oid === id || !oe) continue;
+      const kin = this.grid.query(p.x, p.z, 90);
+      for (let i = 0; i < kin.length; i++) {
+        const oe = kin[i];
+        if (!oe || oe === e || !oe.userData.isNhi || oe.userData.alive === false) continue;
+        const oid = this.nhiIdsByEntity.get(oe);
+        if (oid === undefined) continue;
         const op = oe.position;
         const dx = p.x - op.x;
         const dy = p.y - op.y;
         const dz = p.z - op.z;
         if (dx * dx + dy * dy + dz * dz < KIN_R2) {
           kinN++;
-          kinMood += this.nhi.snapshot(oid)?.mood ?? 0;
+          kinMood += this.nhi.moodOf(oid) ?? 0;
         }
       }
     }
@@ -4024,11 +4070,26 @@ export class World {
     };
   }
 
-  /** Execute one NHI decision as a real effect (spawn swarm / dominate / broadcast / steer). */
-  private nhiApply(id: number, intent: NhiIntent, text: string): void {
+  /** Read the small state surface consumed by the pure NHI target-effect leaf. */
+  private nhiEffectBody(e: Entity): NhiEffectBody {
+    const u = e.userData;
+    return {
+      position: e.position,
+      velocity: u.vel,
+      energy: u.energy,
+      strategy: u.strategy,
+      setGroup: u.setGroup,
+      phylum: u.phylum,
+      alive: u.alive,
+    };
+  }
+
+  /** Execute one NHI decision; return whether its corresponding GOAP fact materially occurred. */
+  private nhiApply(id: number, intent: NhiIntent, text: string): boolean {
     const e = this.nhiEntities.get(id);
-    if (!e) return;
+    if (!e) return false;
     const p = e.position;
+    let factAchieved = false;
     if (intent.action === NhiAction.SPAWN_SWARM) {
       const n = Math.min(intent.spawn, 6);
       for (let i = 0; i < n; i++) {
@@ -4042,14 +4103,20 @@ export class World {
           Math.floor(this.uiRng() * this.morphTotal),
           0.8,
         );
-        if (child) child.material.emissive.setRGB(0.6, 0.2, 0.85); // swarmling glow
+        if (child) {
+          child.material.emissive.setRGB(0.6, 0.2, 0.85); // swarmling glow
+          // The frame grid was rebuilt before NHI cognition. Incrementally index this new child so
+          // later NHIs and the same-frame connectome see the complete current entity generation.
+          this.grid.insert(child);
+          factAchieved = true;
+        }
       }
       this.audio.play('warp');
       this.audio.playExtra('chitter');
     } else if (intent.action === NhiAction.DOMINATE || intent.action === NhiAction.MANIPULATE) {
       // Game theory made physical: a DEFECTING NHI turns hostile (scatters organisms AWAY); a
-      // cooperating one gathers them IN. MANIPULATE also gaslights — it bends each nearby organism's
-      // Nash strategy to the NHI's own move (belief-state manipulation made real in the sim).
+      // cooperating one gathers them IN. MANIPULATE targets only the exact perceived rival faction
+      // named by the intent and bends that faction's strategy toward the NHI's own move.
       const hostile = intent.ownMove === 1;
       const gain = (hostile ? -0.09 : 0.06) * intent.magnitude;
       const flip: 0 | 1 = hostile ? 1 : 0;
@@ -4059,20 +4126,74 @@ export class World {
       // identical to the old full scan (XZ-radius query is a superset of the 3D-radius hits); the
       // per-entity vel/strategy write is order-independent, so grid order preserves determinism.
       const near = this.grid.query(p.x, p.z, 36);
+      let affected = 0;
       for (let i = 0; i < near.length; i++) {
         const o = near[i];
-        if (!o || o === e) continue;
+        if (!o || o === e || o.userData.alive === false || o.userData.isNhi) continue;
+        if (
+          intent.action === NhiAction.MANIPULATE &&
+          !isNhiManipulationTarget(o.userData, intent.target)
+        ) {
+          continue;
+        }
         const op = o.position;
         const dx = p.x - op.x;
         const dy = p.y - op.y;
         const dz = p.z - op.z;
-        if (dx * dx + dy * dy + dz * dz < r2) {
+        const d2 = dx * dx + dy * dy + dz * dz;
+        if (!(d2 < r2)) continue;
+        let materiallyChanged = false;
+        if (d2 > Number.EPSILON && gain !== 0) {
           this.sv2.set(dx, dy, dz).normalize();
           o.userData.vel.addScaledVector(this.sv2, gain);
-          if (intent.action === NhiAction.MANIPULATE) o.userData.strategy = flip;
+          materiallyChanged = intent.action === NhiAction.DOMINATE;
+        }
+        if (intent.action === NhiAction.MANIPULATE && o.userData.strategy !== flip) {
+          o.userData.strategy = flip;
+          materiallyChanged = true;
+        }
+        if (materiallyChanged) affected++;
+      }
+      factAchieved = affected > 0;
+      this.audio.playExtra(intent.action === NhiAction.DOMINATE ? 'demonicgrowl' : 'phantomscale');
+    } else if (intent.action === NhiAction.HUNT) {
+      const target = this.nhiTargets.get(id) ?? null;
+      const effect = resolveNhiHuntEffect(
+        this.nhiEffectBody(e),
+        target ? this.nhiEffectBody(target) : null,
+        intent.magnitude,
+      );
+      if (effect.applied) {
+        e.userData.vel.set(effect.selfVelocity.x, effect.selfVelocity.y, effect.selfVelocity.z);
+        e.userData.energy = effect.selfEnergy;
+        if (target) {
+          target.userData.energy = effect.targetEnergy;
+          if (effect.energyTransferred > 0) {
+            factAchieved = true;
+            // The ordinary organism's existing payoff/learning channel records the real predation loss.
+            e.userData.payoff = effect.energyTransferred;
+            target.userData.payoff = -effect.energyTransferred;
+            this.audit.record('nhi-hunt-capture', {
+              id,
+              targetMorph: target.userData.mi,
+              energyTransferred: effect.energyTransferred,
+            });
+          }
         }
       }
-      this.audio.playExtra(intent.action === NhiAction.DOMINATE ? 'demonicgrowl' : 'phantomscale');
+    } else if (intent.action === NhiAction.MIMIC) {
+      const target = this.nhiTargets.get(id) ?? null;
+      const effect = resolveNhiMimicEffect(
+        this.nhiEffectBody(e),
+        target ? this.nhiEffectBody(target) : null,
+        intent.magnitude,
+      );
+      if (effect.applied) {
+        e.userData.vel.set(effect.selfVelocity.x, effect.selfVelocity.y, effect.selfVelocity.z);
+        e.userData.strategy = effect.strategy;
+        e.userData.setGroup = effect.setGroup;
+        e.userData.phylum = effect.phylum;
+      }
     } else if (intent.action === NhiAction.BROADCAST) {
       this.hud.showToast(text, 'NHI');
       this.audio.play('warp');
@@ -4082,6 +4203,7 @@ export class World {
       e.userData.vel.addScaledVector(this.sv1.copy(p).normalize(), -0.06 * intent.magnitude);
       this.audio.playExtra('abyssal');
     }
+    return factAchieved;
   }
 
   /**
@@ -4302,11 +4424,12 @@ export class World {
     return s.sim;
   }
 
-  /** Legacy rSim: genesis reset — ENTITIES ONLY (V121, USER law). The petri population collapses to
-   *  ONE progenitor and regrows on the re-anchored slow ramp; the Pantheons, super creatures, titans,
-   *  and every other being keep their positions and selves — a reset is a petri-dish event, not a
-   *  world event. (The old chaos snap-to-0.5 stays for the counters, and the pantheon drift is now
-   *  rate-integrated in alphabet-pantheon-render so a chaos step can no longer teleport them.) */
+  /** Legacy rSim: genesis reset — ENTITY-MANAGER POPULATION ONLY (V121, USER law). The petri
+   *  population collapses to ONE progenitor and regrows on the re-anchored slow ramp. Pantheons,
+   *  dedicated super-creature systems, and titans keep their positions and selves. Launched NHIs are
+   *  explicitly retired because their physical organisms live in the discarded EntityManager; their
+   *  mind/body/target/wallet lifecycle is closed synchronously below. The old chaos snap-to-0.5 stays
+   *  for the counters, and pantheon drift is rate-integrated so chaos cannot teleport them. */
   private resetSim(): void {
     this.resetCount++; // V57: keep count for the HUD readout
     this.singularities.dispose(); // tear down any active cosmological effect
@@ -4317,6 +4440,7 @@ export class World {
     this.mechaBlaze.clearPendingRespawns();
     this.portalDeath.clearPendingRespawns();
     this.superHunt.clearPendingRespawns();
+    this.clearNhiPopulation();
     this.entities.reset(1); // USER: reset → ONE entity, never a 500-strong instant repopulation
     // V121: re-anchor the growth ramp at THIS moment with a base of 1, so the target climbs slowly
     // from the lone progenitor instead of yanking the manager straight back to a high target.

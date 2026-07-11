@@ -170,7 +170,7 @@ nonetheless, and the composition root (`world.ts`) is effectively its join
 engine. Diagrams below follow ERD (structure), ERM (relationship narrative),
 and ERP (process models).
 
-> **Scope (v0.21.13 TSOTCHKE + NHSI):** Per binding [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md): 22 external repositories = 8 deep, 7 wired, 2 harvest, 4 fenced, 1 meta; non-meta integrated fraction `17/21 = 0.8095238095238095`. `OBLITERATUS` is one of the four fences; `classical-contrast` is a separate internal control. **100-faculty design (~30 deep-wired)**, **5 individuated apex + 20 light-echo Archons**, **25 ToM wired**, **10 emergence angles** (+5 god-scale events), **Butlin 8/14 met + 6/14 partial** (computational indicators, not sentience). Gate: 2,613 tests · 84.64% / 82.21%. Not LLM. 0thernes NHSI.
+> **Scope (v0.21.13 TSOTCHKE + NHSI):** Per binding [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md): 22 external repositories = 8 deep, 7 wired, 2 harvest, 4 fenced, 1 meta; non-meta integrated fraction `17/21 = 0.8095238095238095`. `OBLITERATUS` is one of the four fences; `classical-contrast` is a separate internal control. **100-faculty design (~30 deep-wired)**, **5 individuated apex + 20 light-echo Archons**, **25 ToM wired**, **10 emergence angles** (+5 god-scale events), **Butlin 8/14 met + 6/14 partial** (computational indicators, not sentience). Gate: 2,697 tests · 84.64% / 82.21%. Not LLM. 0thernes NHSI.
 
 #
 
@@ -744,7 +744,11 @@ flowchart TD
   C -- no --> E[reuse last grid]
   D --> F[EntityManager.update<br/>behaviors + neighbor queries]
   E --> F
-  F --> G[Connectome.update<br/>cadence by population]
+  F --> NHIcheck{live NHI?}
+  NHIcheck -- yes --> NHIgrid[current-position grid rebuild]
+  NHIgrid --> NHItick[NHI exact-target percept + decision]
+  NHItick --> G[Connectome.update<br/>cadence by population]
+  NHIcheck -- no --> G
   G --> H[Titans + Shoggoths + PuppetMasters]
   H --> I[Quantum cloud + register drift]
   I --> J[Tsotchke depth-ledger catalysis (registry beat + soup update)]
@@ -772,19 +776,19 @@ flowchart TD
 The heavy passes are deliberately interleaved so no two land on the same frame. This is the core of
 the frame-budget "resource plan".
 
-| Stage                     | Cadence                                     | Offset | Why staggered                                                |
-| ------------------------- | ------------------------------------------- | ------ | ------------------------------------------------------------ |
-| Grid rebuild              | every 2nd frame                             | 0      | halves O(n) rebuild cost                                     |
-| Reaction-diffusion        | every 2nd frame                             | 1      | never shares a frame with the grid rebuild                   |
-| Connectome                | 1f (≤400) / 2f (≤700) / 3f (>700)           | —      | bounds the only per-frame O(n·k) consumer                    |
-| Quantum register drift    | every 30th frame                            | —      | gate math is bursty, not continuous                          |
-| Quantum-mind beat (V76)   | Observatory cadence (apex only)             | —      | ~90 gates × 64 amps, allocation-free `evolve`                |
-| Telemetry + analytics     | every 8th frame                             | —      | text writes are O(1) but DOM-touching                        |
-| Observatory draw          | every 18th frame                            | —      | 16 panels + the 36-readout NEURAL box                        |
-| Louvain (tribes)          | every 240th frame                           | 60/180 | rebuilds graphology graph — heavy                            |
-| PageRank (halo)           | every 600th frame                           | 300    | offset 300 never collides with the 240f Louvain              |
-| Analytics regression      | every 60th frame                            | —      | O(W=120) mean/stddev/slope                                   |
-| Petri / Digital Biologics | every frame (light) + Archon beat catalysis | —      | Primordial soup growth; Eshkol ignition births new biologics |
+| Stage                     | Cadence                                             | Offset | Why staggered                                                 |
+| ------------------------- | --------------------------------------------------- | ------ | ------------------------------------------------------------- |
+| Grid rebuild              | baseline every 2nd; extra every frame with live NHI | 0      | halves no-NHI O(n) cost; current NHI pass proves exact target |
+| Reaction-diffusion        | every 2nd frame                                     | 1      | never shares a frame with the grid rebuild                    |
+| Connectome                | 1f (≤400) / 2f (≤700) / 3f (>700)                   | —      | bounds the only per-frame O(n·k) consumer                     |
+| Quantum register drift    | every 30th frame                                    | —      | gate math is bursty, not continuous                           |
+| Quantum-mind beat (V76)   | Observatory cadence (apex only)                     | —      | ~90 gates × 64 amps, allocation-free `evolve`                 |
+| Telemetry + analytics     | every 8th frame                                     | —      | text writes are O(1) but DOM-touching                         |
+| Observatory draw          | every 18th frame                                    | —      | 16 panels + the 36-readout NEURAL box                         |
+| Louvain (tribes)          | every 240th frame                                   | 60/180 | rebuilds graphology graph — heavy                             |
+| PageRank (halo)           | every 600th frame                                   | 300    | offset 300 never collides with the 240f Louvain               |
+| Analytics regression      | every 60th frame                                    | —      | O(W=120) mean/stddev/slope                                    |
+| Petri / Digital Biologics | every frame (light) + Archon beat catalysis         | —      | Primordial soup growth; Eshkol ignition births new biologics  |
 
 ```mermaid
 gantt

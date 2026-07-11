@@ -1,4 +1,4 @@
-<!-- reviewed: 2026-07-10 | corrected 22-external-repository ledger | canonical code: src/sim/tsotchke-registry.ts -->
+<!-- reviewed: 2026-07-11 | V4 Phase-A organism intelligence | canonical code: src/sim/tsotchke-registry.ts -->
 
 # Tsotchke Corpus → Cosmogonic — integration map
 
@@ -7,8 +7,12 @@ This is the binding public ledger for the live repositories under the `tsotchke`
 facades, build-time harvests, deliberate fences, and metadata. –Accounted for— does not mean every
 repository is copied into, or has equal causal depth in, the simulation.
 
-The authoritative code ledger is `src/sim/tsotchke-registry.ts`; the causal evidence is the
-[2026-07-10 operational-organism audit](./reports/2026-07-10-OPERATIONAL-ORGANISM-INTELLIGENCE-CAUSAL-AUDIT.md).
+The authoritative code ledger is `src/sim/tsotchke-registry.ts`. The current causal evidence is the
+[V4 Phase-A report](./reports/ORGANISM-INTELLIGENCE-V4-RESULTS-2026-07-11.md); the
+[2026-07-10 V3 audit](./reports/2026-07-10-OPERATIONAL-ORGANISM-INTELLIGENCE-CAUSAL-AUDIT.md) is its
+preserved predecessor. V4 supports only bounded Titan game-policy semantic causality; it withholds
+ordinary recurrent benefit, adaptive prediction, Petri causality, neural scaling, pooled scaling, and all
+consciousness/sentience uplift.
 
 ## Current totals
 
@@ -79,7 +83,7 @@ parts of that signal; existing Archon/apex paths remain in place. The field carr
 threat response, exploration, social drive, plasticity, Taylor forecast, confidence, channel values,
 and health/revision state.
 
-The current V3 fixed-family receipt found:
+The preserved V3 fixed-family predecessor found:
 
 - all `17/17` integrated external rows changed final entity velocity on every evaluation seed;
 - all `5/5` excluded rows (four fences plus metadata) were exactly inert;
@@ -96,6 +100,11 @@ The current V3 fixed-family receipt found:
 These findings support bounded deterministic corpus-conditioned behavior on a fixed evaluation family.
 They do not support general intelligence, consciousness, sentience, repository-identity specificity,
 quantum advantage, or additional numeric score uplift.
+
+The V4 descendant then tested semantic identity and family outcomes directly. Ordinary and Petri
+contrasts were positive but missed the fixed magnitude floor, the adaptive predictor failed both controls,
+and Titans alone passed. The resulting claim remains only bounded Titan game-policy semantic causality;
+the registry counts and every broader prohibition above are unchanged.
 
 ## Eshkol boundary
 

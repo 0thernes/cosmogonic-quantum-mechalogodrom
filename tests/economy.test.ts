@@ -111,6 +111,30 @@ describe('economy — Economy market', () => {
     expect(e.has(99)).toBe(false);
   });
 
+  test('unregister retires the wallet and preserves aligned deterministic market books', () => {
+    const e = new Economy();
+    const rng = mulberry32(0xdead);
+    e.register(10, 'first', 1, rng);
+    e.register(20, 'departing', 9, rng);
+    e.register(30, 'last', 2, rng);
+    e.tick(rng, 0.4); // populate every parallel scratch book before removing the middle record
+    const before = e.summary();
+    const departed = e.wealthOf(20)?.netWorth ?? 0;
+
+    expect(e.unregister(20)).toBe(true);
+    expect(e.unregister(20)).toBe(false); // idempotent for an already-departed id
+    expect(e.has(20)).toBe(false);
+    expect(e.wealthOf(20)).toBe(null);
+    expect(e.count).toBe(2);
+    expect(e.summary().totalWealth).toBeCloseTo(before.totalWealth - departed, 6);
+
+    expect(() => e.tick(rng, 0.4)).not.toThrow();
+    expect(e.summary().agents).toBe(2);
+    expect(e.summary().cartelShare).toBeCloseTo(1, 12); // ≤ CARTEL_SIZE means all live agents
+    expect(e.wealthOf(10)).not.toBe(null);
+    expect(e.wealthOf(30)).not.toBe(null);
+  });
+
   test('same seed → identical market history (determinism)', () => {
     const a = seedEconomy(123);
     const b = seedEconomy(123);

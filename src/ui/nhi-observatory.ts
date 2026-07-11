@@ -6,22 +6,22 @@
  * the stage and says what is REAL about it, and the footer legend explains the expanded view in full —
  * so the panel is operational and self-explaining, never "just a flash". V75 — all nine views now LIVE
  * (the directive's "static sucks, 3D is cool, temporal is nice"): FIRING is a rotating 3D activation
- * field, REWARD/SENSORY/INTENTION/AFFECT/PREDICTION breathe, pulse, sweep and tremble (the AFFECT
+ * field, REGRET/SENSORY/INTENTION/AFFECT/PREDICTION breathe, pulse, sweep and tremble (the AFFECT
  * needle even jitters with the real volatility trait), TOPOLOGY/MEMORY/DECISION keep their temporal
  * motion — with every label clamped inside its window so nothing overflows or overshoots:
  *
- *   1 FIRING      — the gene MLP's hidden(6)+output(7) tanh activations, a rotating 3D column field.
- *   2 TOPOLOGY    — the actual weight matrix as a living 5→6→7 node-link graph that bends, breathes
- *                   and morphs to the net's own rhythm (edge sign+|w|, node firing).
+ *   1 FIRING      — the gene MLP's hidden(H)+output(7) tanh activations, a rotating 3D column field.
+ *   2 TOPOLOGY    — the actual 9→H→7 weights and recorded node firing; display-time curvature and
+ *                   pulses are explicitly presentation rather than simulated propagation.
  *   3 MEMORY      — the episodic MemoryRing valence timeline (oldest→newest), auto-scaled so even small
  *                   drift reads, with a live mean/latest readout — it visibly DOES something.
- *   4 REWARD      — cumulative regret per action (the reward-gradient signal).
- *   5 SENSORY     — the percept vector (energy/threat/crowding/chaos/mood) as a labelled radar.
+ *   4 REGRET      — decayed counterfactual utility regret per action.
+ *   5 SENSORY     — five physical/affective inputs plus four Tsotchke semantic lanes as a labelled radar.
  *   6 INTENTION   — the 7 action utilities as a polar star with EVERY spoke labelled, argmax in green.
  *   7 AFFECT      — the mood gauge + the five fixed personality traits.
  *   8 PREDICTION  — the GOAP world-model bits + the planned next step toward dominion.
- *   9 DECISION    — the softmax policy over the utilities, drawn with HORIZONTAL readable labels + the
- *                   probability of each action; chosen vs greedy highlighted.
+ *   9 DECISION    — the exact latest softmax/regret-mixture policy, drawn with HORIZONTAL readable
+ *                   labels + the marginal probability of each action; chosen vs greedy highlighted.
  *
  * UI shell only: it never imports or mutates sim state. The world pushes a {@link NhiSnapshot} each
  * Observatory cadence via {@link update}; the panel owns its DOM, its open/closed state, and which
@@ -49,7 +49,7 @@ const VIEW_TITLES = [
   '1 · FIRING',
   '2 · TOPOLOGY',
   '3 · MEMORY',
-  '4 · REWARD',
+  '4 · REGRET',
   '5 · SENSORY',
   '6 · INTENTION',
   '7 · AFFECT',
@@ -59,31 +59,41 @@ const VIEW_TITLES = [
 
 /** Per-cell plain-language caption — "what this is + what's real about it". Always shown under the cell. */
 const VIEW_CAP = [
-  'Gene-MLP activations — hidden(6) + output(7), tanh. Cyan = +, magenta = −.',
-  'Live 5→6→7 weight graph. Signal flows input→hidden→output; edges bend & breathe to the net rhythm.',
-  'Episodic valence ring, oldest→newest. Rises when fed/calm, falls under threat/chaos.',
-  'Cumulative regret per action — the reward-gradient signal that nudges future choices.',
-  'Percept vector: ENRG · THREAT · CROWD · CHAOS · MOOD (the 5 gene inputs).',
+  'Gene-MLP activations — hidden(H) + output(7), tanh. Cyan = +, magenta = −.',
+  'Live 9→H→7 weights/activations; animated pulses are presentation, not simulated propagation.',
+  'Episodic valence ring, oldest→newest. Energy and chaos raise it; threat lowers it.',
+  'Post-choice counterfactual utility regret — positive values can bias the next regret-matched choice.',
+  '9 gene inputs: energy · threat · crowd · chaos · mood + resource · risk · explore · social.',
   '7 action drives (utilities). Longest spoke = what it wants most; green = the winner.',
-  'Mood gauge (−manic..+brood) + the 5 fixed personality traits.',
-  'GOAP world-model bits + the planned NEXT step on its scheme toward dominion.',
-  'Softmax policy: bar height = P(action). Amber = chosen this beat, green outline = greedy.',
+  'Mood gauge (−brooding..+manic) + the 5 fixed personality traits.',
+  'GOAP world-model bits + the cheapest NEXT step currently biasing the hybrid policy.',
+  'Exact latest softmax/regret mixture: bar = marginal P(action); amber = sampled, green = greedy.',
 ] as const;
 
 /** Longer description shown in the footer legend when a view is expanded. */
 const VIEW_DESC = [
-  'FIRING — the inherited neural gene (a tiny MLP) thinking out loud. Top row = its 6 hidden neurons, bottom = the 7 output neurons (one per action). Bars are tanh activations: cyan fires positive, magenta negative. This is the raw neural vote that feeds the decision.',
-  'TOPOLOGY — the gene as a living graph: 5 sensory inputs → 6 hidden → 7 action outputs. Each line is a real weight (cyan +, magenta −, thickness = |w|); a pulse rides every lit edge so you watch signal flow forward. It bends, breathes and morphs because a neural net is dynamic, not a frozen diagram.',
-  'MEMORY — the episodic MemoryRing. Every decision beat the NHI stores one valence sample (energy − threat + a little chaos); the line is those samples oldest→newest, auto-scaled so even tiny drift is visible. The readout shows the latest value and the running mean — proof the memory is live and feeding mood.',
-  'REWARD — cumulative regret for each action: how much better the greedy choice would have been. This is the learning signal (regret-matching) that biases the NHI toward choices it "wishes" it had made.',
-  'SENSORY — the 5 gene inputs as a radar: energy, threat, crowding, chaos, and mood. This is exactly what the mind perceives this beat before it decides.',
+  'FIRING — the inherited neural gene (a tiny MLP) thinking out loud. Top row = its live hidden tier, bottom = the 7 output neurons (one per action). Bars are tanh activations: cyan fires positive, magenta negative. This is the raw neural vote that feeds the decision.',
+  'TOPOLOGY — the gene as a graph: 9 inputs → the live hidden tier → 7 action outputs. Each line is a real weight (cyan +, magenta −, thickness = |w|), and brightness uses the recorded source activation. Curvature and moving pulses are a display-time presentation layer, not evidence of temporal signal propagation. The last four inputs are separately ablatable resource, threat, exploration, and social semantic lanes.',
+  'MEMORY — the episodic MemoryRing. Every decision beat the NHI stores one valence sample (energy − threat + 0.2·chaos); the line is those samples oldest→newest, auto-scaled so even tiny drift is visible. Chaos contributes toward manic valence rather than acting as negative stress. The readout shows the latest value and running mean feeding mood.',
+  'REGRET — current post-choice decayed counterfactual utility regret for each action: how much better that action scored than the action actually sampled. DECISION used a separately captured pre-choice regret vector; this is internal utility, not measured world reward.',
+  'SENSORY — all 9 gene inputs as a radar: energy, threat, crowding, chaos, mood, then the resource, threat, exploration, and social Tsotchke lanes. These are exactly the bounded values presented to the inherited gene before it votes.',
   'INTENTION — the 7 action utilities as a star, every spoke labelled. Longer spoke = stronger drive; the green spoke is the argmax (what it most wants). Built from hand-designed drives + the gene vote + the GOAP plan nudge.',
   'AFFECT — the mood gauge (left = brooding, right = manic) plus the five personality traits fixed at birth: narcissism, aggression, deceit, hallucination, volatility. Mood drifts; traits do not.',
-  'PREDICTION — the GOAP layer. The four bits are the world-model facts it has achieved (SWARM · DECEIVE · DOMINATE · FED); NEXT STEP is the cheapest action toward its goal (dominate + deceive). It runs a coherent multi-step scheme, not pure reaction.',
-  'DECISION — the softmax policy over the utilities. Each bar is the probability of taking that action; the action names are written horizontally beneath. Amber (throbbing) is the action actually chosen this beat; the green outline marks the greedy (highest-utility) action.',
+  'PREDICTION — the GOAP layer. The four bits are materially acknowledged world-model facts (SWARM · DECEIVE · DOMINATE · FED); NEXT STEP is the cheapest action toward dominate + deceive. GOAP biases that step, while the hybrid stochastic policy may diverge; DOMINATE is acknowledged only after SWARM.',
+  'DECISION — the exact marginal policy used for the latest draw: live-temperature softmax mixed with the captured pre-choice positive-regret vector at the recorded branch probability. Each bar is P(action) before the seeded sample; amber is sampled and green is greedy utility.',
 ] as const;
 
-const SENSORY_LABELS = ['ENRG', 'THRT', 'CRWD', 'CHAOS', 'MOOD'] as const;
+const SENSORY_LABELS = [
+  'ENRG',
+  'THRT',
+  'CRWD',
+  'CHAO',
+  'MOOD',
+  'RSRC',
+  'RISK',
+  'XPLR',
+  'SOCL',
+] as const;
 
 const STYLE = `
 #cqm-nhi-toggle{border-color:rgba(80,220,255,.55);background:linear-gradient(180deg,rgba(8,16,32,.92),rgba(4,10,22,.88));color:#9be8ff}
@@ -304,9 +314,8 @@ const drawTopology: Drawer = (ctx, w, h, s, t) => {
   };
   const mw = maxAbs(s.weights);
   const off = nh * (ni + 1);
-  // A curved edge whose control point bows perpendicular to the line and SWELLS with a sine — the
-  // band has depth, cadence and rhythm. A pulse rides the curve, brightness driven by the SOURCE
-  // node's live firing, so you watch the signal actually flow forward.
+  // Curvature and pulse position are display-time presentation. Edge weight and source-activation
+  // brightness are live data; the instantaneous TinyMLP forward pass is not a timed propagation trace.
   const edge = (
     x0: number,
     y0: number,
@@ -491,14 +500,14 @@ const drawMemory: Drawer = (ctx, w, h, s, t) => {
   ctx.textAlign = 'left';
 };
 
-const drawReward: Drawer = (ctx, w, h, s, t) => {
+const drawRegret: Drawer = (ctx, w, h, s, t) => {
   frame(ctx, w, h, VIEW_TITLES[3]);
   const r = s.regret;
   const mx = maxAbs(r);
   const n = r.length;
   const rowH = (h - 22) / n;
   const x0 = w * 0.46;
-  // The action carrying the most regret pulses — it's the strongest learning signal this beat.
+  // The action carrying the most regret pulses — it is the strongest decision-bias signal next beat.
   let peak = 0;
   for (let i = 1; i < n; i++) if (Math.abs(r[i] ?? 0) > Math.abs(r[peak] ?? 0)) peak = i;
   ctx.strokeStyle = PAL.axis;
@@ -528,18 +537,22 @@ const drawReward: Drawer = (ctx, w, h, s, t) => {
 
 const drawSensory: Drawer = (ctx, w, h, s, t) => {
   frame(ctx, w, h, VIEW_TITLES[4]);
-  // map mood (−1..1) into 0..1 so all 5 axes share a 0..1 radar
+  // Map mood (−1..1) into 0..1; the other eight inputs already use bounded 0..1 contracts.
   const vals = [
     s.sensory[0] ?? 0,
     s.sensory[1] ?? 0,
     s.sensory[2] ?? 0,
     s.sensory[3] ?? 0,
     (s.sensory[4] ?? 0) * 0.5 + 0.5,
+    s.sensory[5] ?? 0,
+    s.sensory[6] ?? 0,
+    s.sensory[7] ?? 0,
+    s.sensory[8] ?? 0,
   ];
   const cx = w / 2;
   const cy = (h + 14) / 2;
   const R = Math.min(w, h - 14) * 0.36;
-  const N = 5;
+  const N = vals.length;
   for (let ring = 1; ring <= 2; ring++) {
     ctx.strokeStyle = PAL.grid;
     ctx.beginPath();
@@ -768,7 +781,7 @@ const drawPrediction: Drawer = (ctx, w, h, s, t) => {
 
 const drawDecision: Drawer = (ctx, w, h, s, t) => {
   frame(ctx, w, h, VIEW_TITLES[8]);
-  // softmax policy over the action utilities (temp ~0.5), chosen vs greedy highlighted
+  // Exact marginal policy captured by NhiMind before its latest seeded branch/sample.
   const sc = s.scores;
   const n = sc.length;
   let mx = -Infinity;
@@ -778,13 +791,7 @@ const drawDecision: Drawer = (ctx, w, h, s, t) => {
       mx = sc[i] ?? 0;
       greedy = i;
     }
-  let z = 0;
-  const p = sc.map((v) => {
-    const e = Math.exp((v - mx) / 0.5);
-    z += e;
-    return e;
-  });
-  for (let i = 0; i < n; i++) p[i] = (p[i] ?? 0) / z;
+  const p = s.policy;
   const bw = (w - 8) / n;
   const base = h - 16; // leave a readable label band beneath the bars
   const top = 26;
@@ -822,7 +829,7 @@ const DRAWERS: readonly Drawer[] = [
   drawFiring,
   drawTopology,
   drawMemory,
-  drawReward,
+  drawRegret,
   drawSensory,
   drawIntention,
   drawAffect,

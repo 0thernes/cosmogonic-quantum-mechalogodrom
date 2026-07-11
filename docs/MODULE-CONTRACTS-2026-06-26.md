@@ -570,7 +570,8 @@ is absent under bun, `tests/audit.test.ts` (ring cap, localStorage shim, fetch s
 rAF → dt = min(clock.delta, 0.05) * timeScale
   → camera (view mode) → weather.apply → puppetMasters.update
   → grid rebuild (every 2nd frame) → shoggoths.update → sort step (ALGOS[algoIdx])
-  → entities.update → connectome.update (cadence by n) → quantum.update
+  → entities.update → if NHI live: current-grid rebuild + NHI tick → connectome.update (cadence by n)
+  → quantum.update
   → environment.update → telemetry (every 8th frame) → render
 ```
 
@@ -1575,7 +1576,7 @@ Copilot are constructed boot-stream-neutral and never write sim state, so the go
 
 ### V9 acceptance
 
-Full `bun run check` green: prettier → tsc strict → oxlint → 2613 tests (0 fail, 300-frame golden
+Full `bun run check` green: prettier → tsc strict → oxlint → 2697 tests (0 fail, 300-frame golden
 included) → build. The Copilot sandbox verified live (allow: `git log`, file reads; deny:
 path-escape, repository-root pathspecs, `git push`, `legacy/`, shell redirection).
 

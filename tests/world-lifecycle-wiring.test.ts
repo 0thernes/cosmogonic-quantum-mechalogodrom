@@ -27,6 +27,45 @@ describe('World lifecycle wiring', () => {
       expect(clearAt, system).toBeGreaterThanOrEqual(0);
       expect(clearAt, system).toBeLessThan(resetAt);
     }
+    expect(body.indexOf('this.clearNhiPopulation()')).toBeGreaterThanOrEqual(0);
+    expect(body.indexOf('this.clearNhiPopulation()')).toBeLessThan(resetAt);
+  });
+
+  test('NHI death/reset retires minds, bodies, targets, and collision-free economy wallets', () => {
+    expect(WORLD).not.toContain('ECON_NHI_BASE');
+    expect(WORLD).toContain('return -(nid + 1);');
+    const liveStart = WORLD.indexOf('private nhiLiveIds');
+    const liveEnd = WORLD.indexOf('\n  /**', liveStart + 1);
+    const liveBody = WORLD.slice(liveStart, liveEnd);
+    expect(liveBody).toContain('this.economy.unregister(World.nhiEconomyId(id));');
+    expect(liveBody).toContain('this.nhiBody.remove(id);');
+
+    const clearStart = WORLD.indexOf('private clearNhiPopulation');
+    const clearEnd = WORLD.indexOf('\n  /**', clearStart + 1);
+    const clearBody = WORLD.slice(clearStart, clearEnd);
+    for (const operation of [
+      'this.economy.unregister(World.nhiEconomyId(id))',
+      'this.nhiEntities.clear()',
+      'this.nhiTargets.clear()',
+      'this.nhi.clear()',
+      'this.nhiBody.clear()',
+    ]) {
+      expect(clearBody).toContain(operation);
+    }
+  });
+
+  test('NHI launch is bounded before user-event RNG and keeps a reverse spatial identity map', () => {
+    expect(WORLD).toContain('private static readonly NHI_POPULATION_CAP = 32;');
+    expect(WORLD).toContain('private readonly nhiIdsByEntity = new Map<Entity, number>();');
+    const start = WORLD.indexOf('private launchNhiBeing');
+    const end = WORLD.indexOf('\n  /**', start + 1);
+    const body = WORLD.slice(start, end);
+    const capAt = body.indexOf('this.nhiEntities.size >= World.NHI_POPULATION_CAP');
+    expect(capAt).toBeGreaterThanOrEqual(0);
+    expect(capAt).toBeLessThan(body.indexOf('this.uiRng()'));
+    expect(body).toContain('this.nhiIdsByEntity.set(e, nid);');
+    expect(WORLD).toContain('const kin = this.grid.query(p.x, p.z, 90);');
+    expect(WORLD).toContain('const oid = this.nhiIdsByEntity.get(oe);');
   });
 
   test('edge-column controls are exposed only while the UI is a grid', () => {

@@ -1,4 +1,4 @@
-<!-- reviewed: 2026-07-10 | publication-surface current-truth pass | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-11 | V4 Phase-A current-truth pass | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # Verification Analytical Data — cross-surface fact ledger
 
@@ -7,7 +7,7 @@ surfaces (MD · HTML · XML · code), its **single source of truth**, and where 
 so a drift between the README, the dashboard, a master XML, or a spec page is caught at a glance.
 Rewritten in place when the facts change (per the binding living-doc law in
 [CLAUDE.md](../CLAUDE.md)). Last reconciled by a publication-surface current-truth pass on
-**2026-07-10** (§1 plus the operational-organism causal audit).
+**2026-07-11** (§1 plus the V4 Phase-A result and preserved V3 predecessor).
 
 > **How the numbers stay honest:** the version (`package.json`) and the measured receipts +
 > NHSI design counts (`scripts/canonical-receipts.ts`) are the ONLY places those facts are edited.
@@ -18,32 +18,32 @@ Rewritten in place when the facts change (per the binding living-doc law in
 
 ## 1 · Canonical facts (single source of truth)
 
-| Fact                                     | Canonical value                                                                                                                                                                                 | Source of truth                                                                                                    | Propagated by           |
-| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------- |
-| Package version                          | `0.21.13`                                                                                                                                                                                       | `package.json` `version`                                                                                           | `sync-surfaces.ts`      |
-| Test count (exact tracked suite)         | `2613`                                                                                                                                                                                          | `scripts/canonical-receipts.ts`                                                                                    | `sync-surfaces.ts`      |
-| Line coverage                            | `84.64%`                                                                                                                                                                                        | `scripts/canonical-receipts.ts`                                                                                    | `sync-surfaces.ts`      |
-| Function coverage                        | `82.21%`                                                                                                                                                                                        | `scripts/canonical-receipts.ts`                                                                                    | `sync-surfaces.ts`      |
-| Faculties (design)                       | `100` (~30 deep-wired)                                                                                                                                                                          | `CANONICAL_FACULTIES`                                                                                              | `sync-surfaces.ts`      |
-| Archon pantheon                          | `25` (5 apex + 20 light)                                                                                                                                                                        | `CANONICAL_ARCHONS`                                                                                                | `sync-surfaces.ts`      |
-| Theory-of-mind orgs                      | `25`                                                                                                                                                                                            | `CANONICAL_TOM_ORGANS`                                                                                             | `sync-surfaces.ts`      |
-| Emergence angles                         | `10` (+5 god events)                                                                                                                                                                            | `CANONICAL_EMERGENCE_ANGLES`                                                                                       | `sync-surfaces.ts`      |
-| Digital Biologics / PrimordialSoup forms | `26`                                                                                                                                                                                            | `CANONICAL_BIOLOGIC_FORMS`                                                                                         | `sync-surfaces.ts`      |
-| Morphotypes                              | `250` live · `100` legacy                                                                                                                                                                       | `phyla.ts` (`PHYLUM_COUNT 10 × MORPHS_PER_PHYLUM 25`) / `constants.ts` `MORPH_COUNT`                               | prose (NOT auto-synced) |
-| Butlin scorecard                         | `8/14 met + 6/14 partial`                                                                                                                                                                       | measured 2026-06-21 adversarial code audit                                                                         | prose (NOT auto-synced) |
-| Tsotchke corpus                          | `22 external repos: 8 deep / 7 wired / 2 harvest / 4 fenced / 1 meta; 17/21 non-meta integrated`                                                                                                | [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md), `src/sim/tsotchke-registry.ts` | prose (NOT auto-synced) |
-| Organism-intelligence causal claim       | V3 synthetic-goal/corpus effects, `6.1213%` adaptation, `17/17` row causality, `5/5` inertness, 3-process cost stability, and 10/10 consumer coverage pass; random and mapping-specificity fail | [2026-07-10 causal audit](./reports/2026-07-10-OPERATIONAL-ORGANISM-INTELLIGENCE-CAUSAL-AUDIT.md), V3 JSON receipt | prose (NOT auto-synced) |
-| A-Life 9-axis profile                    | `[4.0, 2.4, 3.2, 3.8, 4.3, 4.5, 4.3, 3.5, 4.0]`; breadth `3.778`; rank `#1/113`; z `+2.990` population / `+3.131` peers                                                                         | `docs/reports/2026-06-26-alife-comparison-matrix.csv`, generated stats/geometry                                    | generated + prose       |
-| Entity ceiling                           | `50,000` (mega tier)                                                                                                                                                                            | `src/core/quality.ts` `resolveTier`                                                                                | prose (NOT auto-synced) |
-| Apex composite mind                      | `~10,081` weights                                                                                                                                                                               | `src/sim/super-mind.ts`                                                                                            | prose (NOT auto-synced) |
-| Legacy spine                             | `~1,444` params                                                                                                                                                                                 | `src/sim/super-mind.ts` / ADR-0008                                                                                 | prose (NOT auto-synced) |
+| Fact                                     | Canonical value                                                                                                                                             | Source of truth                                                                                                    | Propagated by           |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------- |
+| Package version                          | `0.21.13`                                                                                                                                                   | `package.json` `version`                                                                                           | `sync-surfaces.ts`      |
+| Test count (exact tracked suite)         | `2697`                                                                                                                                                      | `scripts/canonical-receipts.ts`                                                                                    | `sync-surfaces.ts`      |
+| Line coverage                            | `84.64%`                                                                                                                                                    | `scripts/canonical-receipts.ts`                                                                                    | `sync-surfaces.ts`      |
+| Function coverage                        | `82.21%`                                                                                                                                                    | `scripts/canonical-receipts.ts`                                                                                    | `sync-surfaces.ts`      |
+| Faculties (design)                       | `100` (~30 deep-wired)                                                                                                                                      | `CANONICAL_FACULTIES`                                                                                              | `sync-surfaces.ts`      |
+| Archon pantheon                          | `25` (5 apex + 20 light)                                                                                                                                    | `CANONICAL_ARCHONS`                                                                                                | `sync-surfaces.ts`      |
+| Theory-of-mind orgs                      | `25`                                                                                                                                                        | `CANONICAL_TOM_ORGANS`                                                                                             | `sync-surfaces.ts`      |
+| Emergence angles                         | `10` (+5 god events)                                                                                                                                        | `CANONICAL_EMERGENCE_ANGLES`                                                                                       | `sync-surfaces.ts`      |
+| Digital Biologics / PrimordialSoup forms | `26`                                                                                                                                                        | `CANONICAL_BIOLOGIC_FORMS`                                                                                         | `sync-surfaces.ts`      |
+| Morphotypes                              | `250` live · `100` legacy                                                                                                                                   | `phyla.ts` (`PHYLUM_COUNT 10 × MORPHS_PER_PHYLUM 25`) / `constants.ts` `MORPH_COUNT`                               | prose (NOT auto-synced) |
+| Butlin scorecard                         | `8/14 met + 6/14 partial`                                                                                                                                   | measured 2026-06-21 adversarial code audit                                                                         | prose (NOT auto-synced) |
+| Tsotchke corpus                          | `22 external repos: 8 deep / 7 wired / 2 harvest / 4 fenced / 1 meta; 17/21 non-meta integrated`                                                            | [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md), `src/sim/tsotchke-registry.ts` | prose (NOT auto-synced) |
+| Organism-intelligence causal claim       | V4: ordinary and Petri fail magnitude, adaptive predictor fails both controls, Titans pass; only bounded Titan game-policy semantic causality is authorized | [V4 report](./reports/ORGANISM-INTELLIGENCE-V4-RESULTS-2026-07-11.md), V4 JSON/CSV/forest receipt                  | prose (NOT auto-synced) |
+| A-Life 9-axis profile                    | `[4.0, 2.4, 3.2, 3.8, 4.3, 4.5, 4.3, 3.5, 4.0]`; breadth `3.778`; rank `#1/113`; z `+2.990` population / `+3.131` peers                                     | `docs/reports/2026-06-26-alife-comparison-matrix.csv`, generated stats/geometry                                    | generated + prose       |
+| Entity ceiling                           | `50,000` (mega tier)                                                                                                                                        | `src/core/quality.ts` `resolveTier`                                                                                | prose (NOT auto-synced) |
+| Apex composite mind                      | `~10,081` weights                                                                                                                                           | `src/sim/super-mind.ts`                                                                                            | prose (NOT auto-synced) |
+| Legacy spine                             | `~1,444` params                                                                                                                                             | `src/sim/super-mind.ts` / ADR-0008                                                                                 | prose (NOT auto-synced) |
 
 ### Latest local receipt (Windows, 2026-07-11, Bun 1.3.14)
 
 <!-- cqm-sync:local-measurement:start -->
 
-- `bun run verify:receipts` → **2,613 tests, zero failures** · **295 test files** · **3,022,764**
-  `expect()` calls · **92.97% line / 90.86% func** on this Windows checkout.
+- `bun run verify:receipts` → **2,697 tests, zero failures** · **302 test files** · **3,525,807**
+  `expect()` calls · **93.13% line / 91.10% func** on this Windows checkout.
 
 <!-- cqm-sync:local-measurement:end -->
 
@@ -66,6 +66,21 @@ and SVG bytes.
 The result is one family pass and three failures, not an overall V4 pass. It authorizes no numeric
 score, V4-over-V3, neural-capacity, pooled scaling, consciousness, sentience, general-intelligence,
 physical-quantum, or security claim.
+
+### Phase-B development boundary (2026-07-11)
+
+[ADR 0015](./adr/0015-phase-b-neural-semantic-expansion-2026-07-11.md) governs successor work. The
+default NHI gene is now a live 109-weight `9→6→7` network whose last four inputs are separately ablatable
+resource/threat/exploration/social semantic lanes; 58/109/211 tiers are actually allocated. The former
+five-input neural outputs and constructor RNG position are exact when those four lanes are zero.
+
+Two isolated successor leaves are also implemented but are **not production evidence**: predictor V2 has
+54/98/186 actually allocated parameters with pre-outcome forecast/observe tokens and bounded optimizer
+state; the ordinary resource head has 27/51/99 parameters, fixed time-normalized recurrence, and a
+single counted readout that can learn only from explicit one-shot food reward. A development firewall
+reconstructs and rejects all 170 historical V1–V4 evaluation/calibration seeds. No confirmatory Phase-B
+seed family exists, neither leaf changes current production behavior, and no score or consciousness/
+sentience claim changes.
 
 - **Batch-26 corrective audit:** the originally shipped nearest-cell flora sampler made the ±6-unit
   chemotaxis probe degenerate across much of the 44-unit grid even though a smooth synthetic-field
@@ -436,7 +451,7 @@ verify:facts` = 0 drift / 80 surfaces, 0 git-conflict-markers tree-wide, 100% of
 | `src/ui/**`                                                                       | 20    | subsystems agent                                         | clean (3 cosmetic Low: DPR-on-monitor-move)                                                      |
 | `src/core,audio,server,memory,logging` + `main/types/docs-page` + `server.ts`     | ~14   | subsystems agent                                         | clean; security exceptionally hardened                                                           |
 | `src/styles/app.css`                                                              | 1     | front-end agent                                          | clean                                                                                            |
-| `tests/**`                                                                        | 295   | exact gate (2,613 tests) + tooling agent                 | healthy, 0 disabled, all assert                                                                  |
+| `tests/**`                                                                        | 302   | exact gate (2,697 tests) + tooling agent                 | healthy, 0 disabled, all assert                                                                  |
 | `scripts/**`                                                                      | 16    | scripts/tooling agents                                   | sound; **CI sync:check gap FIXED**, dead `.sync-receipts.cjs` removed                            |
 | `bench/**`                                                                        | 13    | tooling agent                                            | clean; aggregate now includes the P1 quantum-classical bench                                     |
 | `.github/workflows/*.yml` + issue/PR templates                                    | 8+    | CI agent                                                 | SHA-pinned, least-priv; `master`->`main` URLs FIXED; **gate now runs sync:check + verify:facts** |

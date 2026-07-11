@@ -6,7 +6,13 @@
  */
 import { describe, expect, test } from 'bun:test';
 import { mulberry32 } from '../src/math/rng';
-import { bestResponse, iteratedMove, regretMatch, GameStrategy } from '../src/sim/ai/brains';
+import {
+  bestResponse,
+  iteratedMove,
+  regretMatch,
+  GameStrategy,
+  TinyMLP,
+} from '../src/sim/ai/brains';
 import { NhiMind, NhiAction, type NhiPercept } from '../src/sim/nhi';
 
 describe('game theory: bestResponse', () => {
@@ -86,6 +92,264 @@ const PERCEPT: NhiPercept = {
 };
 
 describe('NhiMind', () => {
+  test('exposes honest 3/6/12 capacity tiers with a 9-input semantic gene', () => {
+    for (const [hidden, weights] of [
+      [3, 58],
+      [6, 109],
+      [12, 211],
+    ] as const) {
+      const snap = new NhiMind(mulberry32(100 + hidden), { geneHidden: hidden }).snapshot();
+      expect(snap.dims).toEqual({ in: 9, hid: hidden, out: 7 });
+      expect(snap.sensory.length).toBe(9);
+      expect(snap.hidden.length).toBe(hidden);
+      expect(snap.output.length).toBe(7);
+      expect(snap.weights.length).toBe(weights);
+      expect(snap.neuralSemanticInputs).toBe(true);
+    }
+    expect(() => new NhiMind(mulberry32(1), { geneHidden: 4 as never })).toThrow(RangeError);
+    expect(() => new NhiMind(mulberry32(1), { neuralSemanticInputs: 'yes' as never })).toThrow(
+      TypeError,
+    );
+  });
+
+  test('zero corpus lanes preserve the legacy 5→6→7 neural outputs and birth RNG position', () => {
+    const seed = 0x5e6a7;
+    const referenceRng = mulberry32(seed);
+    // Historical birth layout: five traits, 12×12 voice transitions, then 85 gene weights.
+    for (let i = 0; i < 5 + 12 * 12; i++) referenceRng();
+    const legacyWeights = new Float32Array(TinyMLP.weightCount(5, 6, 7));
+    for (let i = 0; i < legacyWeights.length; i++) legacyWeights[i] = referenceRng() * 2 - 1;
+    const expectedNextDraw = referenceRng();
+
+    const birthRng = mulberry32(seed);
+    const mind = new NhiMind(birthRng);
+    expect(birthRng()).toBe(expectedNextDraw);
+
+    mind.think(PERCEPT, mulberry32(0xdec1de));
+    const snap = mind.snapshot();
+    expect(snap.sensory.slice(5)).toEqual([0, 0, 0, 0]);
+
+    const legacy = new TinyMLP(5, 6, 7, legacyWeights);
+    const hidden = new Float32Array(6);
+    const output = new Float32Array(7);
+    legacy.forward(snap.sensory.slice(0, 5), hidden, output);
+    expect(snap.hidden).toEqual(Array.from(hidden));
+    expect(snap.output).toEqual(Array.from(output));
+  });
+
+  test('each neural semantic lane has a deterministic monotone trace toward its inherited action', () => {
+    const lanes = [
+      ['corpusResource', 5, NhiAction.HUNT],
+      ['corpusThreat', 6, NhiAction.RETREAT],
+      ['corpusExplore', 7, NhiAction.MIMIC],
+      ['corpusSocial', 8, NhiAction.SPAWN_SWARM],
+    ] as const;
+
+    for (const [lane, sensoryIndex, target] of lanes) {
+      const trace = [0, 0.25, 0.5, 0.75, 1].map((level) => {
+        const mind = new NhiMind(mulberry32(0x51a9));
+        mind.think({ ...PERCEPT, [lane]: level }, mulberry32(0xca05e));
+        const snap = mind.snapshot();
+        expect(snap.sensory[sensoryIndex]).toBe(level);
+        return snap.output[target] ?? Number.NaN;
+      });
+      expect(trace.every(Number.isFinite)).toBe(true);
+      for (let i = 1; i < trace.length; i++) {
+        expect(trace[i]).toBeGreaterThanOrEqual(trace[i - 1] ?? -Infinity);
+      }
+      expect(trace.at(-1)).toBeGreaterThan(trace[0] ?? Infinity);
+    }
+  });
+
+  test('neural semantic ablation zeros only neural lanes while hand-written routes stay live', () => {
+    const driven: NhiPercept = {
+      ...PERCEPT,
+      corpusResource: 1,
+      corpusThreat: 1,
+      corpusExplore: 1,
+      corpusSocial: 1,
+    };
+    const active = new NhiMind(mulberry32(0xab1a), { neuralSemanticInputs: true });
+    const ablated = new NhiMind(mulberry32(0xab1a), { neuralSemanticInputs: false });
+    active.think(driven, mulberry32(0xc0de));
+    ablated.think(driven, mulberry32(0xc0de));
+    expect(active.snapshot().sensory.slice(5)).toEqual([1, 1, 1, 1]);
+    expect(ablated.snapshot().sensory.slice(5)).toEqual([0, 0, 0, 0]);
+    expect(ablated.snapshot().neuralSemanticInputs).toBe(false);
+
+    const routeDelta = (lane: Partial<NhiPercept>, action: number): number => {
+      const baseline = new NhiMind(mulberry32(0x771), { neuralSemanticInputs: false });
+      const operational = new NhiMind(mulberry32(0x771), { neuralSemanticInputs: false });
+      baseline.think(PERCEPT, mulberry32(0x772));
+      operational.think({ ...PERCEPT, ...lane }, mulberry32(0x772));
+      return (
+        (operational.snapshot().scores[action] ?? 0) - (baseline.snapshot().scores[action] ?? 0)
+      );
+    };
+    expect(routeDelta({ corpusResource: 1 }, NhiAction.HUNT)).toBeCloseTo(0.35, 5);
+    expect(routeDelta({ corpusThreat: 1 }, NhiAction.RETREAT)).toBeCloseTo(0.3, 5);
+    expect(routeDelta({ corpusExplore: 1 }, NhiAction.MIMIC)).toBeCloseTo(0.18, 5);
+    expect(routeDelta({ corpusSocial: 1 }, NhiAction.SPAWN_SWARM)).toBeCloseTo(0.24, 5);
+  });
+
+  test('invalid corpus telemetry is normalized before neural and utility consumption', () => {
+    const cases = [
+      {
+        drives: {
+          corpusResource: Number.NaN,
+          corpusThreat: Number.POSITIVE_INFINITY,
+          corpusExplore: Number.NEGATIVE_INFINITY,
+          corpusSocial: 99,
+          corpusConfidence: Number.NaN,
+        },
+        expectedLanes: [0, 0, 0, 1],
+      },
+      {
+        drives: {
+          corpusResource: -10,
+          corpusThreat: 10,
+          corpusExplore: 0.5,
+          corpusSocial: Number.NaN,
+          corpusConfidence: Number.POSITIVE_INFINITY,
+        },
+        expectedLanes: [0, 1, 0.5, 0],
+      },
+    ] as const;
+
+    for (const [index, { drives, expectedLanes }] of cases.entries()) {
+      const mind = new NhiMind(mulberry32(0xfa17 + index));
+      const intent = mind.think({ ...PERCEPT, ...drives }, mulberry32(0xb0ad + index));
+      const snap = mind.snapshot();
+      expect(snap.sensory.slice(5)).toEqual(Array.from(expectedLanes));
+      expect(snap.sensory.every((value) => Number.isFinite(value) && Math.abs(value) <= 1)).toBe(
+        true,
+      );
+      expect(snap.hidden.every((value) => Number.isFinite(value) && Math.abs(value) <= 1)).toBe(
+        true,
+      );
+      expect(snap.output.every((value) => Number.isFinite(value) && Math.abs(value) <= 1)).toBe(
+        true,
+      );
+      expect(snap.scores.every((value) => Number.isFinite(value) && Math.abs(value) <= 5)).toBe(
+        true,
+      );
+      expect(intent.action).toBeGreaterThanOrEqual(0);
+      expect(intent.action).toBeLessThan(7);
+    }
+  });
+
+  test('hostile core, kin, and rival telemetry cannot poison persistent cognition', () => {
+    const mind = new NhiMind(mulberry32(0xfa117));
+    const intent = mind.think(
+      {
+        beat: Number.POSITIVE_INFINITY,
+        energy: Number.NaN,
+        crowding: Number.POSITIVE_INFINITY,
+        chaos: Number.NEGATIVE_INFINITY,
+        threat: Number.NaN,
+        rivalFaction: Number.MAX_SAFE_INTEGER,
+        rivalLastMove: 99,
+        kinPresence: Number.POSITIVE_INFINITY,
+        kinMood: Number.NaN,
+      },
+      mulberry32(0xb0a4d),
+    );
+    const first = mind.snapshot();
+    expect(intent.target).toBe(-1);
+    expect(intent.magnitude).toBeGreaterThanOrEqual(0);
+    expect(intent.magnitude).toBeLessThanOrEqual(1);
+    expect(Number.isFinite(intent.magnitude)).toBe(true);
+    expect(first.rivalCount).toBe(0);
+    for (const values of [
+      first.sensory,
+      first.hidden,
+      first.output,
+      first.scores,
+      first.policy,
+      first.regret,
+      first.memory,
+    ]) {
+      expect(values.every(Number.isFinite)).toBe(true);
+    }
+    expect(Number.isFinite(first.mood)).toBe(true);
+    expect(Number.isFinite(first.policyTemperature)).toBe(true);
+
+    // A valid later beat remains healthy, proving the hostile sample did not enter persistent state.
+    mind.think({ ...PERCEPT, beat: 1 }, mulberry32(0x5afe));
+    const recovered = mind.snapshot();
+    expect(recovered.memory.every(Number.isFinite)).toBe(true);
+    expect(recovered.regret.every(Number.isFinite)).toBe(true);
+    expect(recovered.policy.every(Number.isFinite)).toBe(true);
+  });
+
+  test('counterfactual regret develops positive mass instead of remaining in uniform fallback', () => {
+    const mind = new NhiMind(mulberry32(0x5e9e7));
+    const rng = mulberry32(0xa11ce);
+    for (let beat = 0; beat < 256; beat++) {
+      mind.think(
+        {
+          ...PERCEPT,
+          beat,
+          chaos: 0.85,
+          threat: (beat % 7) / 6,
+          corpusResource: (beat % 5) / 4,
+          corpusExplore: ((beat + 2) % 5) / 4,
+        },
+        rng,
+      );
+    }
+    const regret = mind.snapshot().regret;
+    expect(regret.every(Number.isFinite)).toBe(true);
+    expect(regret.some((value) => value > 1e-6)).toBe(true);
+    expect(Math.max(...regret) - Math.min(...regret)).toBeGreaterThan(0.01);
+    const snapshot = mind.snapshot();
+    expect(snapshot.policy.reduce((sum, probability) => sum + probability, 0)).toBeCloseTo(1, 5);
+    expect(snapshot.policy[snapshot.lastAction]).toBeGreaterThanOrEqual(0);
+    const maxScore = Math.max(...snapshot.scores);
+    const softmax = snapshot.scores.map((score) =>
+      Math.exp((score - maxScore) / snapshot.policyTemperature),
+    );
+    const softmaxTotal = softmax.reduce((sum, weight) => sum + weight, 0);
+    const positiveRegret = snapshot.policyRegret.reduce(
+      (sum, value) => sum + Math.max(0, value),
+      0,
+    );
+    for (let i = 0; i < snapshot.policy.length; i++) {
+      const regretProbability =
+        positiveRegret > 0
+          ? Math.max(0, snapshot.policyRegret[i] ?? 0) / positiveRegret
+          : 1 / snapshot.policy.length;
+      const expected =
+        (1 - snapshot.regretMix) * ((softmax[i] ?? 0) / softmaxTotal) +
+        snapshot.regretMix * regretProbability;
+      expect(snapshot.policy[i]).toBeCloseTo(expected, 12);
+    }
+    expect(snapshot.policyRegret).not.toEqual(snapshot.regret); // pre-choice vs post-choice slices
+  });
+
+  test('GOAP facts advance only on acknowledged material outcomes', () => {
+    const preconditioned = new NhiMind(mulberry32(0xd011));
+    preconditioned.acknowledge(NhiAction.DOMINATE, true);
+    expect(preconditioned.snapshot().facts).toBe(0); // DOMINATE requires acknowledged SWARM
+
+    const mind = new NhiMind(mulberry32(0xacce55));
+    expect(mind.snapshot().facts).toBe(0);
+    mind.acknowledge(NhiAction.SPAWN_SWARM, false);
+    expect(mind.snapshot().facts).toBe(0);
+    mind.acknowledge(NhiAction.SPAWN_SWARM, true);
+    expect(mind.snapshot().facts).toBe(1);
+    expect(mind.snapshot().plannedAction).not.toBe(NhiAction.SPAWN_SWARM);
+    mind.acknowledge(NhiAction.DOMINATE, true);
+    expect(mind.snapshot().facts).toBe(5);
+    expect(mind.snapshot().plannedAction).toBe(NhiAction.MANIPULATE);
+    // DOMINATE + DECEIVE completes the declared goal and starts a fresh scheme.
+    mind.acknowledge(NhiAction.MANIPULATE, true);
+    expect(mind.snapshot().facts).toBe(0);
+    expect(mind.snapshot().plannedAction).toBe(NhiAction.MANIPULATE);
+    expect(() => mind.acknowledge(99 as never, true)).toThrow(RangeError);
+    expect(() => mind.acknowledge(NhiAction.HUNT, 'yes' as never)).toThrow(TypeError);
+  });
+
   test('is bit-reproducible: same seed ⇒ identical decision stream', () => {
     const run = (): string => {
       const mind = new NhiMind(mulberry32(123));
@@ -201,6 +465,54 @@ describe('NhiMind', () => {
     const intent = child.think(PERCEPT, rng);
     expect(intent.action).toBeGreaterThanOrEqual(0);
     expect(intent.action).toBeLessThan(7);
+  });
+
+  test('spawnChild preserves expanded architecture/control and mutates inherited weights in bounds', () => {
+    const parent = new NhiMind(mulberry32(0xa11ce), {
+      geneHidden: 12,
+      neuralSemanticInputs: false,
+    });
+    const child = parent.spawnChild(mulberry32(0xb17));
+    const p = parent.snapshot();
+    const c = child.snapshot();
+    expect(c.dims).toEqual({ in: 9, hid: 12, out: 7 });
+    expect(c.neuralSemanticInputs).toBe(false);
+    expect(c.weights.length).toBe(211);
+    const deltas = c.weights.map((weight, i) => Math.abs(weight - (p.weights[i] ?? 0)));
+    expect(deltas.every((delta) => Number.isFinite(delta) && delta <= 0.150001)).toBe(true);
+    expect(deltas.filter((delta) => delta > 0).length).toBeGreaterThan(200);
+    expect(
+      c.weights.every((weight) => Number.isFinite(weight) && Math.abs(weight) <= 1.150001),
+    ).toBe(true);
+  });
+
+  test('expanded-tier decisions and neural bounds remain deterministic', () => {
+    const runExpanded = (): { actions: number[]; snapshot: ReturnType<NhiMind['snapshot']> } => {
+      const mind = new NhiMind(mulberry32(0x12e), { geneHidden: 12 });
+      const rng = mulberry32(0xd371);
+      const actions: number[] = [];
+      for (let beat = 0; beat < 40; beat++) {
+        actions.push(
+          mind.think(
+            {
+              ...PERCEPT,
+              beat,
+              corpusResource: (beat % 5) / 4,
+              corpusThreat: ((beat + 1) % 5) / 4,
+              corpusExplore: ((beat + 2) % 5) / 4,
+              corpusSocial: ((beat + 3) % 5) / 4,
+            },
+            rng,
+          ).action,
+        );
+      }
+      return { actions, snapshot: mind.snapshot() };
+    };
+    const first = runExpanded();
+    const second = runExpanded();
+    expect(first).toEqual(second);
+    expect(first.snapshot.hidden.every((value) => value >= -1 && value <= 1)).toBe(true);
+    expect(first.snapshot.output.every((value) => value >= -1 && value <= 1)).toBe(true);
   });
 
   // Behavioral decision signature over many beats — a fingerprint of the child's inherited gene.

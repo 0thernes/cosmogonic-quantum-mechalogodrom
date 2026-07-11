@@ -307,7 +307,7 @@ export const HELP_KB: readonly HelpEntry[] = [
     id: 'observatory',
     title: 'What is the NEURAL observatory?',
     keywords: ['observatory', 'neural', 'nhi', 'mind', 'connectome', 'brain', 'firing', 'topology'],
-    body: "The ⊞ NEURAL panel opens a 3×3 grid of nine scientific diagrams of a launched NHI's live mind — firing activity, network topology, memory pathways, reward gradients, sensory inputs, intention vectors, affect, prediction loops, and the decision/conflict map. Each is bound to a real internal variable of the NHI's think() step, animated as it reasons.",
+    body: "The ⊞ NEURAL panel opens a 3×3 grid of nine scientific diagrams of a launched NHI's live mind — firing activity, network topology, memory, internal counterfactual regret, sensory inputs, intention vectors, affect, GOAP plan bias, and the exact latest decision policy. Each is bound to a real internal variable; regret is not external world reward, and GOAP biases rather than forces the stochastic action.",
     see: ['src/ui/nhi-observatory.ts'],
   },
   {

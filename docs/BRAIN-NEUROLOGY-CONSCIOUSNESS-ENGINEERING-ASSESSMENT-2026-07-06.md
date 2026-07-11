@@ -13,15 +13,16 @@
 > chemotaxis probe a no-op across much of the field despite a synthetic-field test; bilinear sampling and
 > a real-sampler non-degeneracy gate now make that mechanism load-bearing. The same review hardened
 > Copilot root-pathspec confinement and cancellation and corrected AD-forager final-potential reporting.
-> The audit sync allowlist gap is closed. A fresh disjoint fixed-family
-> 30-seed organism-intelligence evaluation
-> passed goal-only and corpus-conditioned effects, `6.1213%` reversal adaptation, `17/17` integrated-row
-> causality, `5/5` excluded-row inertness, numerical safety, three-process performance stability, and
-> matched tests for every named consumer class. It did not beat the uniform random-action baseline or establish
-> aggregate-mapping specificity. V3 itself therefore authorizes no additional organism-intelligence,
-> consciousness, or sentience uplift; the A-Life axis changes above come from separate gate-backed mechanisms. See the
-> [current causal audit](./reports/2026-07-10-OPERATIONAL-ORGANISM-INTELLIGENCE-CAUSAL-AUDIT.md); where
-> this historical body conflicts with that report or the verification ledger, the current sources win.
+> The audit sync allowlist gap is closed. The predecessor V3 receipt passed several structural and
+> fixed-family gates but did not beat its random-action or aggregate-mapping controls. Its verified V4
+> Phase-A descendant publishes 1,152 rows over 64 frozen seeds: ordinary and Petri pass inference but
+> miss the fixed magnitude floor, the adaptive predictor loses to frozen and shuffled controls, and
+> Titans alone pass. V4 authorizes only bounded Titan game-policy semantic causality; it authorizes no
+> ordinary recurrent benefit, adaptive prediction, Petri causality, neural scaling, pooled cross-family
+> result, numeric score change, consciousness, or sentience uplift. The A-Life axis changes above come
+> from separate gate-backed mechanisms. See the [V4 report](./reports/ORGANISM-INTELLIGENCE-V4-RESULTS-2026-07-11.md)
+> and preserved [V3 audit](./reports/2026-07-10-OPERATIONAL-ORGANISM-INTELLIGENCE-CAUSAL-AUDIT.md); where
+> this historical body conflicts with those reports or the verification ledger, the current sources win.
 
 <!-- cqm-sync:historical:start -->
 
@@ -70,22 +71,22 @@
 
 Every value below is the current SSOT figure from `scripts/canonical-receipts.ts` / `package.json`, verified against the repo on 2026-07-11. These override the historical body and any half-remembered report claim.
 
-| Fact                                   | Canonical value                                                                                                      | Source of truth                                         |
-| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| **Version**                            | `0.21.13`                                                                                                            | `package.json`                                          |
-| **Test floor (portable)**              | **2,613** pass / **0** fail                                                                                          | `scripts/canonical-receipts.ts`                         |
-| **Latest local receipt (Windows)**     | **2,613** completed cases / 0 fail · **295** test files · **3,022,764** `expect()` calls                             | run 2026-07-11                                          |
-| **Coverage floor — portable (Ubuntu)** | **84.64%** line / **82.21%** func                                                                                    | `scripts/canonical-receipts.ts` (gate floor, ±6 pp tol) |
-| **Coverage — local (Windows)**         | **92.97%** line / **90.86%** func                                                                                    | this checkout                                           |
-| **Faculties (public design)**          | **100** (~30 genuinely deep-wired into `SuperMind.think()`)                                                          | `faculties-pantheon.ts` `FACULTY_COUNT`                 |
-| **Faculties (internal named layer)**   | **144** named entries (100 canonical + 44 brutal god-layer)                                                          | `faculties-pantheon.ts` `FACULTY_NAMES.length`          |
-| **Archons**                            | **25** total = **5 apex** (full SuperMind + Body + Petri) + **20 light echoes** (Eshkol VM)                          | `godform.ts` `PANTHEON_SIZE`, `APEX_INDIVIDUATED`       |
-| **Theory-of-Mind organs**              | **25** across **6** mechanism families                                                                               | `tom-pantheon.ts` `TOM_ORGANS.length`                   |
-| **Emergence angles**                   | **10** canonical wired + **5** god-scale release events                                                              | `open-endedness.ts` / `brutal-god-releases.ts`          |
-| **Biologic forms**                     | **26** heritable morphotypes                                                                                         | `canonical-receipts.ts`                                 |
-| **Tsotchke corpus**                    | **22 external repos** = 8 deep / 7 wired / 2 harvest / 4 fenced / 1 meta; `17/21` non-meta integrated                | `tsotchke-registry.ts` + integration map                |
-| **Butlin indicators**                  | **8/14 MET + 6/14 PARTIAL** (0/14 failed) · `indicatorOnly` — **never** 14/14                                        | `VERIFICATION-ANALYTICAL-DATA.md` §6                    |
-| **A-Life breadth**                     | code-grounded **3.778/5** · rank **#1 / 113** · z = **+2.990** population / **+3.131** peers; legacy self-score 4.44 | `docs/reports/assets/alife-codeground.json`             |
+| Fact                                   | Canonical value                                                                                                      | Source of truth                                   |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| **Version**                            | `0.21.13`                                                                                                            | `package.json`                                    |
+| **Test floor (portable)**              | **2,697** pass / **0** fail                                                                                          | `scripts/canonical-receipts.ts`                   |
+| **Latest local receipt (Windows)**     | **2,697** completed cases / 0 fail · **302** test files · **3,525,807** `expect()` calls                             | run 2026-07-11                                    |
+| **Coverage floor — portable (Ubuntu)** | **84.64%** line / **82.21%** func                                                                                    | `scripts/canonical-receipts.ts` (one-sided floor) |
+| **Coverage — local (Windows)**         | **93.13%** line / **91.10%** func                                                                                    | this checkout                                     |
+| **Faculties (public design)**          | **100** (~30 genuinely deep-wired into `SuperMind.think()`)                                                          | `faculties-pantheon.ts` `FACULTY_COUNT`           |
+| **Faculties (internal named layer)**   | **144** named entries (100 canonical + 44 brutal god-layer)                                                          | `faculties-pantheon.ts` `FACULTY_NAMES.length`    |
+| **Archons**                            | **25** total = **5 apex** (full SuperMind + Body + Petri) + **20 light echoes** (Eshkol VM)                          | `godform.ts` `PANTHEON_SIZE`, `APEX_INDIVIDUATED` |
+| **Theory-of-Mind organs**              | **25** across **6** mechanism families                                                                               | `tom-pantheon.ts` `TOM_ORGANS.length`             |
+| **Emergence angles**                   | **10** canonical wired + **5** god-scale release events                                                              | `open-endedness.ts` / `brutal-god-releases.ts`    |
+| **Biologic forms**                     | **26** heritable morphotypes                                                                                         | `canonical-receipts.ts`                           |
+| **Tsotchke corpus**                    | **22 external repos** = 8 deep / 7 wired / 2 harvest / 4 fenced / 1 meta; `17/21` non-meta integrated                | `tsotchke-registry.ts` + integration map          |
+| **Butlin indicators**                  | **8/14 MET + 6/14 PARTIAL** (0/14 failed) · `indicatorOnly` — **never** 14/14                                        | `VERIFICATION-ANALYTICAL-DATA.md` §6              |
+| **A-Life breadth**                     | code-grounded **3.778/5** · rank **#1 / 113** · z = **+2.990** population / **+3.131** peers; legacy self-score 4.44 | `docs/reports/assets/alife-codeground.json`       |
 
 <!-- cqm-sync:historical:start -->
 
@@ -2358,7 +2359,7 @@ Alternate (shorter): _"Indicators, Not Experience: A Ten-Framework Coupled Kerne
 | #   | Document : line                                                                       | Stale item                                            | Stale value   | Correct value at the 2026-07-11 reconciliation                                                                     | Fix                                                                                                                                                      | Severity              |
 | --- | ------------------------------------------------------------------------------------- | ----------------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
 | 1   | `docs/BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md:650`         | A-Life breadth score in current-tense prose           | `4.22 / 5`    | legacy self-score `4.44/5`; current code-grounded `3.778/5`, rank `#1/113`, population z=`+2.990`, peer z=`+3.131` | Keep the historical body labeled; publish the current code-grounded receipt from `docs/reports/assets/alife-codeground.json` in the superseding addendum | **P1 fact-drift**     |
-| 2   | `docs/reports/README.md:8`                                                            | Canonical-receipts version pointer in prose           | `v0.21.6`     | `v0.21.13 · 2,613-test floor · 84.64% / 82.21%`                                                                    | Point current gate text at `VERIFICATION-ANALYTICAL-DATA.md §1` + `canonical-receipts.ts`; let `bun run sync` propagate it                               | **P1 surface-sync**   |
+| 2   | `docs/reports/README.md:8`                                                            | Canonical-receipts version pointer in prose           | `v0.21.6`     | `v0.21.13 · 2,697-test floor · 84.64% / 82.21%`                                                                    | Point current gate text at `VERIFICATION-ANALYTICAL-DATA.md §1` + `canonical-receipts.ts`; let `bun run sync` propagate it                               | **P1 surface-sync**   |
 | 3   | `docs/KANBAN-2026-06-26.md:17`                                                        | Tsotchke corpus count                                 | `19` projects | 22 external repos; depth classes 8 deep / 7 wired / 2 harvest / 4 fenced / 1 meta; `17/21` non-meta integrated     | State that `OBLITERATUS` is fenced and `classical-contrast` is an internal control; match `TSOTCHKE-INTEGRATION-MAP` + `tsotchke-registry.ts`            | **P2 count-accuracy** |
 | 4   | `docs/BRAIN-NEUROLOGY-…-2026-07-06.md:649`                                            | Version marker context ("V123 optimization complete") | `v0.21.6`     | current `v0.21.13`; `v0.21.6` and the assessed `v0.21.9` body are historical                                       | Keep the historical framing explicit; current facts live in the superseding addendum                                                                     | **P1 doc-accuracy**   |
 | 5   | `docs/reports/2026-06-20-ROADMAP-TO-NHSI-AND-SENTIENCE.xml:5`                         | XML roadmap version baseline                          | `v0.18.0`     | current package `v0.21.13`                                                                                         | **EXEMPT** — point-in-time snapshot dated 2026-06-20; v0.18.0 is correct _for that date_ per the reports worldline-snapshot rule. Do NOT rewrite.        | P2 (exempt)           |

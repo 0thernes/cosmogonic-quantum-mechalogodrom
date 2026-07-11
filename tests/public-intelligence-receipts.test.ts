@@ -319,32 +319,33 @@ describe('organism-intelligence claim boundary', () => {
     expect(verification).toContain(contentSha256);
   });
 
-  test('both lab pages publish the operational receipt without relabeling static proxies', async () => {
+  test('both lab pages publish the V4 descendant without relabeling static proxies', async () => {
     const receipt = (await Bun.file(
-      `${ROOT}/docs/reports/assets/organism-intelligence-causal-benchmark-v3.json`,
-    ).json()) as IntelligenceReceipt;
+      `${ROOT}/docs/reports/assets/organism-intelligence-causal-benchmark-v4.json`,
+    ).json()) as { contentSha256: string };
     const paths = [`${ROOT}/lab/consciousness.html`, `${ROOT}/lab/sentience.html`];
 
     for (const path of paths) {
       const html = (await Bun.file(path).text()).toLowerCase();
       const prose = html.replace(/\s+/g, ' ');
       expect(html).toContain(`data-receipt-sha="${receipt.contentSha256}"`);
-      expect(prose).toContain('operational organism intelligence · fixed evaluation receipt');
-      expect(prose).toContain('organism-intelligence-causal-benchmark-v3.json');
-      expect(prose).toContain('goal-preserved control');
-      expect(prose).toContain('fresh disjoint 30-seed family');
-      expect(prose).toContain('cleared the script-declared 5% threshold');
-      expect(prose).toContain('did not separate from the uniform random-action baseline');
-      expect(prose).toContain('all-30-batch performance stability passed');
-      expect(prose).toContain('all 10 consumer classes passed matched counterfactual coverage');
+      expect(prose).toContain('operational organism intelligence · v4 phase-a receipt');
+      expect(prose).toContain('organism-intelligence-causal-benchmark-v4.json');
+      expect(prose).toContain('cross-being-neural-causality-v1.csv');
+      expect(prose).toContain('organism-intelligence-v4-cross-being-forest.svg');
+      expect(prose).toContain('all 1,152 raw rows over 64 frozen seeds');
+      expect(prose).toContain('ordinary organisms and petri biologics passed inference');
+      expect(prose).toContain('adaptive ecology predictor lost to frozen and shuffled controls');
+      expect(prose).toContain('titans alone passed');
+      expect(prose).toContain('one family pass is not an overall v4 pass');
       expect(prose).toContain('not sentience');
-      expect(prose).toContain('scores remain frozen');
-      expect(prose).toContain('static');
-      expect(prose).toContain('no substrate-specific or quantum-specific uplift');
+      expect(prose).toContain('numeric scores remain frozen');
+      expect(prose).toContain('neural scaling');
+      expect(prose).toContain('v3 predecessor');
     }
   });
 
-  test('docs, specification, and bible expose the same bounded V3 receipt', async () => {
+  test('docs, specification, and bible retain V3 while exposing the V4 descendant', async () => {
     for (const name of ['docs.html', 'specs.html', 'bible.html']) {
       const prose = (await Bun.file(`${ROOT}/${name}`).text()).toLowerCase().replace(/\s+/g, ' ');
       expect(prose).toContain(
@@ -354,6 +355,35 @@ describe('organism-intelligence claim boundary', () => {
       expect(prose).toContain('corpus-conditioned goal-response');
       expect(prose).toContain('three-process/30-batch performance gates');
       expect(prose).toContain('no numeric a-life-score uplift');
+      expect(prose).toContain('organism-intelligence-v4-results-2026-07-11.md');
+      expect(prose).toContain('organism-intelligence-causal-benchmark-v4.json');
+      expect(prose).toContain('cross-being-neural-causality-v1.csv');
+      expect(prose).toContain('organism-intelligence-v4-cross-being-forest.svg');
+    }
+  });
+
+  test('Phase-B public truth surfaces retain both rejected development configurations', async () => {
+    const adr = (
+      await Bun.file(`${ROOT}/docs/adr/0015-phase-b-neural-semantic-expansion-2026-07-11.md`).text()
+    )
+      .toLowerCase()
+      .replace(/\s+/g, ' ');
+    expect(adr).toContain('4,224/4,224 rows retained');
+    expect(adr).toContain('fails to demonstrate temporal-context benefit');
+    expect(adr).toContain('exactly the same 34/384');
+    expect(adr).toContain('yoked surrogate is higher at 50/384');
+    expect(adr).toContain('no successor protocol');
+    expect(adr).toContain('no successor protocol, manifest, confirmatory seed family');
+    expect(adr).toContain('839a2b71509242134d28ae5b41e8710153c4254c168ad6f3004d0e74a0116fd7');
+    expect(adr).toContain('11fa3ca3f990ac5a6781513352002958898a6b2bc72f384630e509fa28fe4e86');
+
+    for (const path of ['README.md', 'docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md']) {
+      const prose = (await Bun.file(`${ROOT}/${path}`).text()).toLowerCase().replace(/\s+/g, ' ');
+      expect(prose).toContain('predictor');
+      expect(prose).toContain('ordinary');
+      expect(prose).toContain('temporal');
+      expect(prose).toContain('yoked');
+      expect(prose).toMatch(/not (?:a new|a) receipt/);
     }
   });
 });

@@ -1,4 +1,4 @@
-<!-- reviewed: 2026-07-10 | operational organism intelligence | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-11 | V4 Phase-A organism intelligence | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # Architecture
 
@@ -6,11 +6,13 @@
 > `TsotchkeOrganismIntelligence` field now converts the integrated corpus channels into a stable signal
 > consumed by ordinary entities and the wider living-system paths. The corrected external ledger is
 > `8 deep / 7 wired / 2 harvest / 4 fenced / 1 meta`, or `17/21` integrated after excluding metadata;
-> `classical-contrast` is an internal control. The current V3 fixed-family evaluation passed goal-only
-> and corpus-conditioned effects, `17/17` row causality, `5/5` exclusion inertness, numerical safety,
-> and `6.1213%` reversal adaptation. Three fresh performance processes and all named consumer-class
-> counterfactuals now pass; the uniform random-action baseline and aggregate-mapping specificity remain tied. See the
-> [causal audit](./reports/2026-07-10-OPERATIONAL-ORGANISM-INTELLIGENCE-CAUSAL-AUDIT.md).
+> `classical-contrast` is an internal control. The verified V4 Phase-A descendant evaluates 64 frozen
+> seeds and retains every failed family: ordinary and Petri pass inference but miss the fixed magnitude
+> floor, the adaptive predictor loses to both controls, and only Titans pass. It authorizes bounded Titan
+> game-policy semantic causality, not ordinary recurrent benefit, adaptive prediction, Petri causality,
+> neural scaling, pooled scaling, or any consciousness/sentience uplift. See the
+> [V4 result](./reports/ORGANISM-INTELLIGENCE-V4-RESULTS-2026-07-11.md) and preserved
+> [V3 predecessor](./reports/2026-07-10-OPERATIONAL-ORGANISM-INTELLIGENCE-CAUSAL-AUDIT.md).
 
 How the Cosmogonic Quantum Mechalogodrom is wired. The binding per-module API
 spec lives in [MODULE-CONTRACTS-2026-06-26.md](./MODULE-CONTRACTS-2026-06-26.md); this document is
@@ -361,7 +363,7 @@ The flowchart above is the **V1/V2 core**. The V10–V75 systems interleave on t
 
 | Step                         | Cadence                                                                                                                                  |
 | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Grid rebuild                 | Every 2nd frame (halves the O(n) rebuild cost)                                                                                           |
+| Grid rebuild                 | Baseline every 2nd frame; one additional current-position rebuild every frame while any live NHI requires exact targeting                |
 | Connectome                   | Every frame (n ≤ 400), every 2nd (≤ 700), every 3rd (> 700)                                                                              |
 | Quantum colors               | Every 6th frame (positions upload every frame)                                                                                           |
 | Telemetry text               | Every 8th frame                                                                                                                          |
@@ -377,7 +379,7 @@ The flowchart above is the **V1/V2 core**. The V10–V75 systems interleave on t
 | Economy tick (V13)           | Every 30th frame, offset 15 — sanctions + clearing market on its own `econRng` sub-stream                                                |
 | Chaos-field (V62)            | Every frame when engaged (Lorenz + tunnel/entangle/superpose on a stride-3 slice); inert + rng-silent when off                           |
 | Singularity force (V7.4)     | Every frame while a hole is summoned — r⁻² force + time-dilation; raises `state.chaos` (V64)                                             |
-| NHI beat (V10)               | Each launched NHI mind thinks every 18th frame; bodies steer every frame                                                                 |
+| NHI beat (V10)               | Every frame while present; hard cap 32, O(M) lifecycle, spatial local-kin sensing, and bounded O(M²/2) body-social visuals               |
 | Super-creature minds (GOAL5) | Every 4th frame — 5× (distinct seeds/archetypes): per-pos percept → think (Clifford reflex + AST/HOT scaffolds + memory) → bodies + roam |
 | Gravitational lens (V60)     | Every frame — full-screen post-FX pass; pixel-exact passthrough when no hole is active                                                   |
 

@@ -25,6 +25,8 @@ interface Body {
   phase: number;
   /** Per-being CORE shader uniforms for the V-NHI-EXPANDED suite (driven from real state each frame). */
   u: NhiUniforms;
+  /** Reused nearest-kin proximity scalar for this frame. */
+  social: number;
 }
 
 /** Silhouette radius of an NHI body — large enough to read as a colossus, not an organism. */
@@ -318,13 +320,15 @@ export class NhiBodySystem {
       tendrilGeos,
       phase: this.spawnIndex++ * 2.399963229728653,
       u,
+      social: 0,
     });
   }
 
   /**
    * Per frame: each body follows its NHI (position via `posOf`), spins, breathes (non-uniform scale
    * wobble = the morph), and pulses its glow. A body whose NHI has died (`posOf` → null) is disposed.
-   * Allocation-free. O(bodies).
+   * Allocation-free. Position callbacks are O(bodies); pairwise visual proximity is O(bodies²/2)
+   * and the composition root caps the launched population at 32.
    *
    * @param onSocial optional callback fired when this body is within 55u of another NHI; the scalar
    *   `0..1` is the social proximity level so callers can layer sound (e.g. NhiBodySystem emits no
@@ -335,6 +339,7 @@ export class NhiBodySystem {
     posOf: (id: number) => THREE.Vector3 | null,
     onSocial?: (id: number, level: number) => void,
   ): void {
+    // Resolve each backing position exactly once and retire missing bodies before pair evaluation.
     for (const [id, b] of this.bodies) {
       const p = posOf(id);
       if (!p) {
@@ -342,20 +347,33 @@ export class NhiBodySystem {
         this.bodies.delete(id);
         continue;
       }
-      let social = 0;
-      for (const [otherId] of this.bodies) {
-        if (otherId === id) continue;
-        const op = posOf(otherId);
-        if (!op) continue;
+      b.group.position.copy(p);
+      b.social = 0;
+    }
+
+    // Visit each unordered pair once and update both endpoints' nearest-proximity scalar.
+    for (const [id, b] of this.bodies) {
+      const p = b.group.position;
+      for (const [otherId, other] of this.bodies) {
+        if (otherId <= id) continue;
+        const op = other.group.position;
         const dx = p.x - op.x;
         const dy = p.y - op.y;
         const dz = p.z - op.z;
         const d2 = dx * dx + dy * dy + dz * dz;
-        if (d2 < 55 * 55) social = Math.max(social, 1 - Math.sqrt(d2) / 55);
+        if (d2 < 55 * 55) {
+          const proximity = 1 - Math.sqrt(d2) / 55;
+          if (proximity > b.social) b.social = proximity;
+          if (proximity > other.social) other.social = proximity;
+        }
       }
+    }
+
+    for (const [id, b] of this.bodies) {
+      const social = b.social;
       if (social > 0.4 && onSocial) onSocial(id, social);
       const g = b.group;
-      g.position.copy(p);
+      const p = g.position;
       // V-NHI-EXPANDED: feed the real signals to the core named-effect suite (social = proximity,
       // asc = height). A solitary grounded being is dark; a high-flying, congregating one blazes.
       b.u.uTime.value = t;
@@ -404,6 +422,15 @@ export class NhiBodySystem {
   /** Number of live alien bodies (telemetry). */
   get count(): number {
     return this.bodies.size;
+  }
+
+  /** Dispose one departed NHI body immediately. Idempotent and safe for an unknown id. */
+  remove(id: number): boolean {
+    const body = this.bodies.get(id);
+    if (!body) return false;
+    this.disposeBody(body);
+    this.bodies.delete(id);
+    return true;
   }
 
   /** Dispose every body (e.g. on world reset). */

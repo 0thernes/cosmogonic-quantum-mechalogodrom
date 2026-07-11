@@ -105,16 +105,22 @@ nash, market, lorenz`). They split, age, die (weather-tuned lifespan), and feed 
 ## 5. NHI — the non-human super-minds
 
 - **Biology:** launched apex intelligences (`sim/nhi.ts`) — game theory, regret-matching, GOAP,
-  memory grudges, a per-NHI alien Markov **voice**, and an inherited neural gene (`TinyMLP`).
-- **Behavior:** spawn mutated swarms, **play the nearest faction** (gather/pacify when cooperating,
-  scatter + Nash-gaslight when defecting), broadcast hallucinated utterances. **Mind is now
+  memory grudges, a per-NHI alien Markov **voice**, and an inherited neural gene (`TinyMLP`). The
+  launched population is hard-capped at 32 so pairwise visual-social work and owned GPU resources stay
+  bounded.
+- **Behavior:** spawn ordinary swarmling minions, **play the nearest faction**
+  (gather/pacify when cooperating, scatter + Nash-gaslight when defecting), hunt the exact perceived
+  target with bounded energy transfer, behaviorally mimic it, and broadcast hallucinated utterances.
+  Production swarms are not NHI offspring; `spawnChild` remains an isolated heredity API. **Mind is now
   inspectable (V15):** the ⊞ NEURAL Observatory shows a live 9-view 3×3 grid of its firing, topology,
-  memory, reward, sensory, intention, affect, prediction, and decision state.
+  memory, regret, sensory, intention, affect, prediction, and decision state.
 - **Silhouette:** an alien biomechanical red-eyed morphing body (`nhi-body.ts`).
 - **Material language:** unmistakable cyan NHI glow + subsurface menace.
 - **Animation grammar:** ethereal helix-weave float; morphing body; swarm summons.
-- **World meaning:** the smartest things in the cosmos — the player's avatar of dominion.
-- **Economic role:** **fattest purse** (weight 14) — super-mind speculators, enrolled on launch.
+- **World meaning:** apex simulated agents — the player's avatar of dominion, not evidence of general
+  intelligence, consciousness, or sentience.
+- **Economic role:** **fattest purse** (weight 14) — super-mind speculators, enrolled on launch and
+  removed from the live market when their backing organism dies or Genesis retires it.
 
 ## 5★ SUPER CREATURES (GOAL5: 5 ARCHONS / GODFORMS) — the pantheon
 
