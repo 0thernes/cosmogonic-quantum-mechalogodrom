@@ -196,10 +196,13 @@ describe('AlienFlora — the vegetal ground ecology', () => {
     const f = new AlienFlora(ctx);
     const mat = (f as unknown as { material: THREE.ShaderMaterial }).material;
     f.setContact(12, -34, 0.8);
-    // The touch point is recorded immediately (visual uniform)...
+    // The touch point is recorded immediately (visual uniform, slot 0)...
     const pos = mat.uniforms['uContactPos']!.value as THREE.Vector2;
     expect(pos.x).toBe(12);
     expect(pos.y).toBe(-34);
+    // Multi-point uniforms also receive the seed (local thrash, not lawn-wide slabs).
+    const cx = mat.uniforms['uContactX']!.value as THREE.Vector4;
+    expect(cx.x).toBe(12);
     // ...and the bend SPRINGS in through update() (a damped ragdoll, not an instant poke): it rises
     // off rest and reaches a real deflection over the first frames.
     let peak = 0;
@@ -211,6 +214,36 @@ describe('AlienFlora — the vegetal ground ecology', () => {
     // With no further contact the spring settles back toward rest — bounded, never a runaway.
     for (let i = 0; i < 400; i++) f.update(1 / 60, 1, 0.3);
     expect(Math.abs(mat.uniforms['uContact']!.value as number)).toBeLessThan(0.05);
+    f.dispose();
+  });
+
+  test('multi-point setContacts keeps local seeds independent (no single giant patch)', () => {
+    const ctx = makeCtx();
+    const f = new AlienFlora(ctx);
+    const mat = (f as unknown as { material: THREE.ShaderMaterial }).material;
+    f.setContacts([
+      { x: 10, z: 20, strength: 0.9 },
+      { x: 200, z: -150, strength: 0.7 },
+      { x: -80, z: 90, strength: 0.5 },
+    ]);
+    for (let i = 0; i < 12; i++) f.update(1 / 60, 1, 0.4);
+    const cx = mat.uniforms['uContactX']!.value as THREE.Vector4;
+    const cz = mat.uniforms['uContactZ']!.value as THREE.Vector4;
+    const cs = mat.uniforms['uContactS']!.value as THREE.Vector4;
+    expect(cx.x).toBe(10);
+    expect(cz.x).toBe(20);
+    expect(cx.y).toBe(200);
+    expect(cz.y).toBe(-150);
+    expect(cx.z).toBe(-80);
+    expect(cz.z).toBe(90);
+    // All three springs should have sprung to a real deflection.
+    expect(Math.abs(cs.x)).toBeGreaterThan(0.05);
+    expect(Math.abs(cs.y)).toBeGreaterThan(0.05);
+    expect(Math.abs(cs.z)).toBeGreaterThan(0.05);
+    // Shader must use tight local falloff (not the old ~72u slab radius).
+    expect(mat.vertexShader).toContain('smoothstep(256.0, 25.0, d2)');
+    expect(mat.vertexShader).toContain('aMeta');
+    expect(mat.fragmentShader).toContain('iridescent');
     f.dispose();
   });
 

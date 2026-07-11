@@ -2518,17 +2518,18 @@ export class World {
   }
 
   /**
-   * Render-only plant contact: sample a bounded set of live organisms and drive the flora shader's
-   * contact bend near the weighted activity centroid. O(min(n,96)); no rng, no sim feedback.
+   * Render-only plant contact: sample live organisms into ≤4 LOCAL activity seeds (min-separated),
+   * never one giant centroid that slides entire lawn slabs. Each seed only thrash plants nearby;
+   * the flora shader desyncs per-plant. O(min(n,96)); no rng, no sim feedback.
    */
   private driveFloraContact(n: number): void {
     if (n <= 0) return;
     const list = this.entities.list;
     const stride = Math.max(1, Math.floor(n / 96));
     const start = this.state.frame % stride;
-    let wx = 0;
-    let wz = 0;
-    let weight = 0;
+    // Up to 4 spatially-separated contact seeds (multi-point local ragdoll).
+    const seeds: { x: number; z: number; strength: number }[] = [];
+    const minSep2 = 28 * 28; // keep seeds apart so each owns a local thrash pocket
     for (let i = start; i < n; i += stride) {
       const e = list[i];
       if (!e) continue;
@@ -2539,21 +2540,74 @@ export class World {
       const body = (u.belly > 0 ? 0.24 : 0) + (u.isNhi ? 0.45 : 0);
       const w = motion + neural + body;
       if (w <= 0.02) continue;
-      wx += e.position.x * w;
-      wz += e.position.z * w;
-      weight += w;
+      const px = e.position.x;
+      const pz = e.position.z;
+      // Reinforce nearest existing seed if close; else open a new local pocket.
+      let best = -1;
+      let bestD2 = Infinity;
+      for (let s = 0; s < seeds.length; s++) {
+        const dx = px - seeds[s]!.x;
+        const dz = pz - seeds[s]!.z;
+        const d2 = dx * dx + dz * dz;
+        if (d2 < bestD2) {
+          bestD2 = d2;
+          best = s;
+        }
+      }
+      if (best >= 0 && bestD2 < minSep2) {
+        const s = seeds[best]!;
+        // Weighted merge toward the new activity (keeps the pocket tracking the local swarm).
+        const nw = s.strength + w;
+        s.x = (s.x * s.strength + px * w) / nw;
+        s.z = (s.z * s.strength + pz * w) / nw;
+        s.strength = nw;
+      } else if (seeds.length < 4) {
+        seeds.push({ x: px, z: pz, strength: w });
+      } else {
+        // Replace weakest seed if this activity is stronger and far enough from all.
+        let weak = 0;
+        for (let s = 1; s < seeds.length; s++) {
+          if (seeds[s]!.strength < seeds[weak]!.strength) weak = s;
+        }
+        if (w > seeds[weak]!.strength && bestD2 >= minSep2) {
+          seeds[weak] = { x: px, z: pz, strength: w };
+        }
+      }
     }
-    // USER ecology: the BIG living things bend the flora too, not only the organism swarm — fold in the
-    // super creature when it roams LOW over the field, so plants visibly react as the colossus passes.
+    // Super creature is its own heavy local seed when low over the field.
     this.superBody.worldPosition(this.sv1);
     if (this.sv1.y < 24) {
-      const sw = 1.2;
-      wx += this.sv1.x * sw;
-      wz += this.sv1.z * sw;
-      weight += sw;
+      const sx = this.sv1.x;
+      const sz = this.sv1.z;
+      const sw = 1.4;
+      let merged = false;
+      for (const s of seeds) {
+        const dx = sx - s.x;
+        const dz = sz - s.z;
+        if (dx * dx + dz * dz < minSep2) {
+          const nw = s.strength + sw;
+          s.x = (s.x * s.strength + sx * sw) / nw;
+          s.z = (s.z * s.strength + sz * sw) / nw;
+          s.strength = nw;
+          merged = true;
+          break;
+        }
+      }
+      if (!merged) {
+        if (seeds.length < 4) seeds.push({ x: sx, z: sz, strength: sw });
+        else {
+          let weak = 0;
+          for (let s = 1; s < seeds.length; s++) {
+            if (seeds[s]!.strength < seeds[weak]!.strength) weak = s;
+          }
+          if (sw > seeds[weak]!.strength) seeds[weak] = { x: sx, z: sz, strength: sw };
+        }
+      }
     }
-    if (weight <= 0) return;
-    this.alienFlora.setContact(wx / weight, wz / weight, Math.min(1, weight / 18));
+    if (seeds.length === 0) return;
+    // Normalize strengths into 0..1 spring targets (local thrash, not lawn-wide).
+    for (const s of seeds) s.strength = Math.min(1, s.strength / 6);
+    this.alienFlora.setContacts(seeds);
   }
 
   /**
