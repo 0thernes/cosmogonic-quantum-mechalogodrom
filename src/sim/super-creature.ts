@@ -10,13 +10,22 @@
  *
  * On top of the network sit the faculties the brief names: an **emotion-like state** (valence /
  * arousal / dominance, each an EMA of real signals), **episodic memory** (a salience ring), a
- * **prediction loop** (the cortex forecasts next-beat salience; the gap is felt as SURPRISE and feeds
- * back as arousal), **GOAP-style planning** (a goal is chosen each beat from the drive scores), and
+ * **prediction loop** (a forecast of next-beat salience; the gap is felt as SURPRISE and feeds back as
+ * arousal), **GOAP-style planning** (a goal is chosen each beat from the drive scores), and
  * **self-replication** — when sated and dominant it births up to **3 mutated twins**.
  *
- * Everything is deterministic: weights are rolled from an injected {@link Rng}, `think` is pure and
- * allocation-free, and twin mutation draws from the same seeded stream — so a seed reproduces the
- * Super Creature's entire psychological arc. No `Math.random` / `Date.now`. (Contract rule 7.)
+ * The cortex+actor are FROZEN (rolled once, only mutated on spawn), but the prediction loop can LEARN:
+ * {@link SuperCreature.enableLearning} lights a real online world-model — a 18→8→1 MLP trained by exact
+ * reverse-mode Eshkol-AD backprop ({@link ./ad-mlp}) — that forecasts salience, corrects itself every
+ * beat, and takes over the surprise signal. It is the one part of the apex mind that grows during life;
+ * its error provably falls (tests/super-creature-learning.test.ts). The world lights it on the live
+ * apex archons; it is OFF by default, so the frozen baseline is byte-identical.
+ *
+ * Everything is deterministic: weights are rolled from an injected {@link Rng}, twin mutation draws from
+ * the same seeded stream, and the world-model is seeded from a SEPARATE identity-derived substream +
+ * trained by pure exact AD (no rng) — so a seed reproduces the Super Creature's entire psychological
+ * arc. No `Math.random` / `Date.now`. (Contract rule 7.) `think` is allocation-free in the frozen
+ * baseline; with learning lit it makes small bounded per-beat AD-tape allocations (the live apex only).
  *
  * This module is the SPINE; the masterful morphing many-eyed BODY + 4K shader that renders it hang off
  * {@link SuperCreature.snapshot} in later increments. See [[reliquary-surface-state]] and ENTITY-SHEETS.
@@ -31,7 +40,9 @@
  */
 
 import type { Rng } from '../math/rng';
+import { mulberry32, hashSeed } from '../math/rng';
 import { TinyMLP, MemoryRing } from './ai/brains';
+import { createMlp, mlpPredict, mlpTrainStep, type Mlp } from './ad-mlp';
 
 /** Network shape — chosen so the total parameter count lands inside the briefed 1000–1500 band. */
 const SENSE = 18; // perception inputs
@@ -43,6 +54,19 @@ const ACT = 8; // motor/social drives
 /** Parameter budget: cortex (18→32→16) + actor (16→12→8). Asserted in tests to stay in [1000,1500]. */
 export const SUPER_PARAM_COUNT =
   TinyMLP.weightCount(SENSE, CORTEX_HID, LATENT) + TinyMLP.weightCount(LATENT, ACTOR_HID, ACT);
+
+/**
+ * Online world-model shape (18→8→1). The cortex+actor above are FROZEN (rolled once, only ever mutated
+ * on spawn); this extra head is the one part of the apex mind that genuinely LEARNS during its life —
+ * a real MLP trained by exact reverse-mode Eshkol-AD backprop ({@link ./ad-mlp}) to forecast next-beat
+ * salience, correcting itself every beat. Off by default (byte-identical to the frozen baseline); the
+ * world lights it on the live apex archons via {@link SuperCreature.enableLearning}.
+ */
+const WM_HID = 8; // world-model hidden width
+const WM_LR = 0.05; // default gradient-descent step for the online world-model
+const WM_TAU = 0.05; // EMA smoothing for the learned prediction-error telemetry
+/** Total learnable params the online world-model adds when lit: (SENSE·h + h) + (h·1 + 1). */
+export const SUPER_WORLDMODEL_PARAMS = SENSE * WM_HID + WM_HID + (WM_HID * 1 + 1);
 
 /** Max living twins the Super Creature may sire (the brief's "twin/offspring creation up to 3"). */
 export const SUPER_MAX_OFFSPRING = 3;
@@ -95,6 +119,9 @@ export interface SuperSnapshot {
   power: number; // power vs a Titan (≈100)
   emotion: { valence: number; arousal: number; dominance: number };
   surprise: number; // |predicted − actual| salience last beat — the prediction-loop error
+  learning: boolean; // is the online world-model lit this life?
+  learnedPredErr: number; // EMA of the learned forecaster's error (0 when frozen) — falls as it learns
+  liveParamCount: number; // cortex+actor (frozen) + world-model params when learning is lit
   offspring: number; // living twins sired (≤ SUPER_MAX_OFFSPRING)
   plan: SuperPlan;
   intent: {
@@ -154,10 +181,22 @@ export class SuperCreature {
   private valence = 0; // −1 dread .. +1 triumph
   private arousal = 0; // 0 calm .. 1 frenzied
   private dominance = 0.5; // 0 cowed .. 1 god-mode
-  private predictedSalience = 0; // the cortex's forecast for THIS beat, set last beat
+  private predictedSalience = 0; // the forecast for THIS beat, set last beat (cortex, or the learner)
   private surprise = 0; // |predicted − actual| last beat
   private plan: SuperPlan = 'REST';
   private offspring = 0;
+
+  // ── ONLINE WORLD-MODEL (the one part of the apex mind that LEARNS during life) ────────────────────
+  // A real 18→8→1 MLP trained by exact Eshkol-AD backprop to forecast next-beat salience. Null until
+  // enableLearning() lights it; while lit it STEERS predictedSalience → surprise → arousal → planning,
+  // so the creature's sense of the eventful rides an adaptive forecaster, not a frozen random readout.
+  private worldModel: Mlp | null = null;
+  private learn = false; // default OFF ⇒ think() is byte-identical to the frozen baseline
+  private wmLr = WM_LR; // gradient-descent step; 0 freezes the net (the ablation control)
+  private readonly prevSense = new Float64Array(SENSE); // last beat's percept — the world-model's input
+  private readonly wmTarget = new Float64Array(1); // scratch target (this beat's actual salience)
+  private prevValid = false; // guards the first beat (no prior percept to train on yet)
+  private learnedPredErr = 0; // EMA of |world-model forecast − actual salience| — FALLS as it learns
 
   /**
    * Birth the Super Creature. With no preset weights it rolls a fresh deep mind from `rng` (the
@@ -188,6 +227,41 @@ export class SuperCreature {
   }
   get offspringCount(): number {
     return this.offspring;
+  }
+  /** Live params: the frozen cortex+actor, plus the online world-model's learnable weights when lit. */
+  get liveParamCount(): number {
+    return this.paramCount + (this.worldModel ? SUPER_WORLDMODEL_PARAMS : 0);
+  }
+  /** Is the online world-model learning this life? (false ⇒ the mind is the frozen baseline). */
+  get isLearning(): boolean {
+    return this.learn;
+  }
+  /** EMA of the online world-model's forecast error — the falsifiable "it is actually learning" readout. */
+  get learnedPredictionError(): number {
+    return this.learnedPredErr;
+  }
+
+  /**
+   * Ignite ONLINE learning: the apex world-model (a real {@link SUPER_WORLDMODEL_PARAMS}-param 18→8→1
+   * MLP trained by exact reverse-mode Eshkol-AD backprop) begins forecasting next-beat salience and
+   * CORRECTING itself every beat, and its forecast takes over the surprise loop. The net is seeded from
+   * a SEPARATE deterministic substream derived from the creature's identity — NEVER the constructor rng
+   * — so lighting learning cannot perturb the world's main draw order. Idempotent. `lr = 0` freezes the
+   * net (the ablation control): it still forecasts but never updates, so its error cannot fall.
+   */
+  enableLearning(opts?: { lr?: number; seed?: number }): void {
+    if (opts?.lr !== undefined) this.wmLr = opts.lr;
+    if (this.worldModel) {
+      this.learn = true;
+      return;
+    }
+    const seed =
+      ((hashSeed(this.name) ^ ((this.generation + 1) * 0x9e3779b9)) >>> 0 || 1) ^
+      ((opts?.seed ?? 0) >>> 0);
+    this.worldModel = createMlp(SENSE, WM_HID, 1, mulberry32(seed >>> 0 || 1));
+    this.learn = true;
+    this.prevValid = false;
+    this.learnedPredErr = 0;
   }
 
   /**
@@ -234,8 +308,24 @@ export class SuperCreature {
     // ── PREDICTION LOOP: compare last beat's forecast to this beat's actual salience → surprise ────
     const salience = clamp01(0.5 * s[1] + 0.3 * s[2] + 0.2 * moveMag); // how eventful "now" is
     this.surprise = clamp01(Math.abs(this.predictedSalience - salience));
-    this.predictedSalience = unit(this.latent[0] ?? 0); // the cortex's forecast for the NEXT beat
     this.memory.push(salience);
+    // The forecast for the NEXT beat. FROZEN baseline: the cortex's random-init readout unit(latent[0]).
+    // LEARNING (apex archons): a real MLP trained by exact Eshkol-AD backprop takes over — it forecasts
+    // the SAME target, is corrected on (prevSense → salience) every beat, and its improving forecast now
+    // DRIVES predictedSalience. So surprise (→ arousal → planning) rides an adaptive predictor whose
+    // error provably falls (tests/super-creature-learning.test.ts), not a frozen readout. lr=0 = control.
+    if (this.learn && this.worldModel) {
+      if (this.prevValid && this.wmLr > 0) {
+        this.wmTarget[0] = salience;
+        mlpTrainStep(this.worldModel, this.prevSense, this.wmTarget, this.wmLr);
+      }
+      this.learnedPredErr += WM_TAU * (this.surprise - this.learnedPredErr); // realized error, smoothed
+      this.predictedSalience = clamp01(mlpPredict(this.worldModel, s)[0] ?? 0);
+      for (let i = 0; i < SENSE; i++) this.prevSense[i] = s[i] ?? 0; // remember for next-beat training
+      this.prevValid = true;
+    } else {
+      this.predictedSalience = unit(this.latent[0] ?? 0); // frozen cortex forecast (unchanged baseline)
+    }
 
     // ── EMOTION: each axis is an EMA toward a real signal (a temperament, not decoration) ─────────
     this.valence += EMOTION_TAU * (clamp(s[0] - s[1], -1, 1) - this.valence);
@@ -302,12 +392,16 @@ export class SuperCreature {
     this.offspring++;
     const cw = SuperCreature.mutate(this.cortex.weights, rng);
     const aw = SuperCreature.mutate(this.actor.weights, rng);
-    return new SuperCreature(rng, {
+    const child = new SuperCreature(rng, {
       name: `${this.name}·twin${this.offspring}`,
       generation: this.generation + 1,
       cortexW: cw,
       actorW: aw,
     });
+    // A learning lineage: if the parent's world-model is lit, the child is born learning too (its own
+    // net, seeded from its own unique identity ⇒ deterministic, no shared state, no rng perturbation).
+    if (this.learn) child.enableLearning({ lr: this.wmLr });
+    return child;
   }
 
   /**
@@ -347,6 +441,9 @@ export class SuperCreature {
       power: this.power,
       emotion: { valence: this.valence, arousal: this.arousal, dominance: this.dominance },
       surprise: this.surprise,
+      learning: this.learn,
+      learnedPredErr: this.learnedPredErr,
+      liveParamCount: this.liveParamCount,
       offspring: this.offspring,
       plan: this.plan,
       intent: {

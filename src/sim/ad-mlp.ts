@@ -75,7 +75,7 @@ interface ForwardTrace {
   w2Nodes: number[];
   b2Nodes: number[];
 }
-function recordForward(tape: AdTape, net: Mlp, input: readonly number[]): ForwardTrace {
+function recordForward(tape: AdTape, net: Mlp, input: ArrayLike<number>): ForwardTrace {
   const { din, h, dout } = net;
   const xNodes: number[] = []; // inputs are DATA (constants) — no gradient flows to them
   for (let i = 0; i < din; i++) xNodes.push(adConst(tape, input[i] ?? 0));
@@ -113,7 +113,7 @@ function recordForward(tape: AdTape, net: Mlp, input: readonly number[]): Forwar
 }
 
 /** Forward-only prediction. Pure (no weight change, no rng); reuses the exact same code path as training. */
-export function mlpPredict(net: Mlp, input: readonly number[]): number[] {
+export function mlpPredict(net: Mlp, input: ArrayLike<number>): number[] {
   const tape = MLP_TAPE;
   adTapeReset(tape);
   const t = recordForward(tape, net, input);
@@ -128,8 +128,8 @@ export function mlpPredict(net: Mlp, input: readonly number[]): number[] {
  */
 export function mlpTrainStep(
   net: Mlp,
-  input: readonly number[],
-  target: readonly number[],
+  input: ArrayLike<number>,
+  target: ArrayLike<number>,
   lr = 0.1,
 ): number {
   const tape = MLP_TAPE;

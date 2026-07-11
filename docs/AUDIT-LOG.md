@@ -11,6 +11,42 @@ changed and why.
 
 ---
 
+## 2026-07-11 — batch 28: the FROZEN apex mind now LEARNS — a live online Eshkol-AD world-model on all 5 Super Creature archons
+
+Owner `/goal`: "Review the plan for Apex Abomination and Super Creature and NHSI. They need to be smarter with
+Tsotchke and expanded their intelligences more and neural networks need to grow and scale." Reviewed all three
+(3 Explore passes). The finding: the apex intelligence gap is **not** parameter count — it is that the networks
+are **FROZEN**. `SuperCreature`'s cortex (18→32→16) + actor (16→12→8) are rolled once from the seed and only ever
+_mutated_ on spawn; they never learn in-life. Its "prediction loop" forecasts next-beat salience as
+`unit(latent[0])` — a fixed random-init readout that cannot improve. So the honest expansion is to make a
+previously-frozen network **learn**, exact-AD, ablation-gated, determinism- and coupling-safe.
+
+- **`src/sim/super-creature.ts` — a real online world-model (the one part of the apex mind that grows in-life).**
+  `enableLearning()` lights a genuine **18→8→1 MLP trained by exact reverse-mode Eshkol-AD backprop**
+  ({@link ad-mlp}) that forecasts next-beat salience and **corrects itself every beat**. Its improving forecast
+  then **takes over `predictedSalience`**, so `surprise → arousal → planning` ride an adaptive predictor —
+  OPERATIONAL, not telemetry. Seeded from a SEPARATE identity-derived substream (never the ctor rng) ⇒ zero
+  main/super draw perturbation. `learnedPredErr` (EMA) + `liveParamCount` surfaced to the snapshot.
+- **Live on all 5 apex archons** (`world.ts` — `c.enableLearning({ seed: mindSeed })`, each individuated since
+  the 5 share a default name). A **learning lineage**: twins are born learning (own net). Default **OFF** ⇒ the
+  frozen baseline (and every non-apex `SuperCreature`) is byte-identical.
+- **GATE-SC-LEARN (`tests/super-creature-learning.test.ts`, 7 cases)** — falsifiable four ways:
+  (1) LEARNING: forecast error falls early **0.087 → late 0.032** (≥30%), absolute < 0.2. (2) ABLATION: an
+  identically-initialised net FROZEN at `lr=0` stays at EMA **0.704** while the trained net reaches **0.028**
+  (~25× lower) on the SAME init + stream — the AD backprop is load-bearing, not the architecture. (3) OPERATIONAL:
+  a trained arc ≠ the frozen arc (the learner really steers the mind — not decorative). (4) DETERMINISM +
+  DEFAULT-OFF: same seed ⇒ byte-identical while learning; `learn=false` ⇒ baseline byte-identical, `learnedPredErr=0`,
+  `liveParamCount` unchanged. Plus SCALE (+161 live params when lit) and LINEAGE.
+- **HONESTY (ADR 0014/0015, indicatorOnly).** NO consciousness / Butlin / A-Life score is claimed to move. The
+  claim is narrow and proven: _the previously-frozen apex prediction loop now learns online, provably reducing
+  its own forecast error, and steers behaviour — ablation-verified._ Butlin + Consciousness + the self-scored CSV
+  BYTE-IDENTICAL. `super-creature.test.ts` (frozen determinism/param goldens) unchanged.
+- **`src/sim/ad-mlp.ts`** — `mlpPredict`/`mlpTrainStep`/`recordForward` inputs widened `readonly number[]` →
+  `ArrayLike<number>` (feed typed-array scratch with zero per-beat allocation; safe widening, no caller breaks).
+
+Receipts 2776→2783 (+7). Coupling invariant intact (SuperCreature is outside the receipt; coupling-audit + super-mind
+green). Full gate green.
+
 ## 2026-07-11 — batch 27: real neural networks for the beings — an Eshkol-AD MLP + a live online self-model + honest Cognition 4.1→4.3
 
 Owner `/goal`: expand the beings' neural networks for scaling/consciousness, wire Tsotchke harder, raise the

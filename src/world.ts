@@ -1264,6 +1264,12 @@ export class World {
       ); // TSOTCHKE CORPUS: Eshkol consciousness + per-Archon .esk program from godform
       this.superMinds.push(m);
       const c = new SuperCreature(mulberry32((mindSeed ^ 0xc0d3beef) >>> 0 || 1 + i));
+      // APEX LEARNS: light the online world-model so this Archon's prediction loop is a real MLP trained
+      // by exact Eshkol-AD backprop (not a frozen readout) — its forecast error provably falls in-life
+      // and steers its surprise/arousal/planning. Seeded from this Archon's mindSeed (the 5 share a
+      // default name, so mindSeed is what individuates their world-models). Determinism-safe: a SEPARATE
+      // identity-derived substream, no main/super rng draw. See tests/super-creature-learning.test.ts.
+      c.enableLearning({ seed: mindSeed });
       this.superCreatures.push(c);
       // 10x heartbeat re-audit: actually use quakeLife from corpus pulse for Archon aliveness (e.g. econ vitality, future world interactions/percepts). Det from seed.
       const quakeEconBase = 20 + Math.floor(quakeLife * 5);
