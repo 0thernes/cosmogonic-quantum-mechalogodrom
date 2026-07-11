@@ -93,7 +93,7 @@ default/active/focus/collapsed as applicable.
   scale (`text-2xs/3xs/4xs`, `text-display`), radius/shadow/motion tokens,
   telemetry rows `#v9 #v10 #v11`, `#lore` line, `/lab` toolbar nav link.
 - Verified: `bun run build` compiles every token utility (checked in
-  `dist/*.css`); the 2,566-test canonical floor passes; prettier/oxlint/tsc clean.
+  `dist/*.css`); the 2,609-test canonical floor passes; prettier/oxlint/tsc clean.
 
 ### Remediation record (0.2.x controls + color pass)
 
