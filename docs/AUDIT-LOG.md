@@ -11,6 +11,31 @@ changed and why.
 
 ---
 
+## 2026-07-10 (pass 6) — batch 17: 4 more coupling-safe fixes (gate/security/regex hardening)
+
+Continuing to drain the pass-6 confirmed list — the mechanical/security/latent-gate ones.
+
+- **[SEC-1] ai-sandbox: pathspec-less `git diff` bypassed directory confinement** (`ai-sandbox.ts`, LOW
+  security) — a bare `git diff` / `--cached` / `--stat` emits the working-tree/index diff of ALL tracked
+  files (incl. blocked `legacy/`, `.github/`), and with no path argument the per-path confine() loop had
+  nothing to scope. Now requires an explicit pathspec (`git diff -- src/world.ts`). +3 deny regressions.
+- **[GATE-1] sync-surfaces receipt regexes wedged at 10,000 tests** (`sync-surfaces.ts`, MED, latent) —
+  the badge matcher `tests-[0-9]{3,4}` is non-idempotent past 9,999 (appends a digit each sync → corrupts
+  the badge → sync:check perma-red). Widened the badge + primary comma-form + anchored-prose matchers to
+  be width-agnostic + idempotent (`{3,}`, multi-group comma). (Remaining lower-risk comma matchers further
+  down freeze rather than wedge at 10k — a documented follow-up.)
+- **[GATE-2] verify-canonical morphotype detector blind to 100–199** (`verify-canonical-facts.ts`, LOW) —
+  the fact regex forced the leading digit to `[2-9]`, so a drifted `1xx morphotype` count was neither
+  matched nor flagged by the hard verify:facts gate. `[2-9]`→`[1-9]` (still skips bare "1 morphotype").
+- **[FROZEN-1] FROZEN sky-dome never recentered on the roaming God-cam** (`world.ts`/`atmosphere.ts`, LOW)
+  — the observer-centred dome follows the camera in RUNNING/SUSPENDED but stepFrozen() never recentered
+  it, so a narrow-FOV TOP survey in FROZEN escaped the BackSide sphere (background → void). Added a
+  position-only `atmosphere.setViewerPosition()` (no animation advance, byte-golden) + call in stepFrozen.
+
+Receipts 2432→2435 (+3). Still-open pass-6: shoggoths consume-loop indexOf O(m·n) perf refactor (MED),
+copilot failover-can't-reach-keyed-provider (MED) + in-flight tool-call cancel (LOW), alien-flora
+root-seat ~0 margin + false-green test (LOW), sync-surfaces allowlist coverage (LOW). Full gate green.
+
 ## 2026-07-10 (pass 6) — batch 16: 5 coupling-safe correctness fixes from the pass-6 adversarial sweep
 
 A sixth adversarial sweep (27 agents over the fresh Codex code + underexplored subsystems) confirmed 14

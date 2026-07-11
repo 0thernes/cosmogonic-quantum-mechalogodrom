@@ -480,6 +480,18 @@ export class AtmosphereSystem {
    * @param viewerPosition Optional camera position. The fog-exempt sky shells follow the viewer so
    *   extreme TOP framing remains inside the BackSide dome without moving world-space weather.
    */
+  /**
+   * Recenter ONLY the observer-centred sky shells (dome + wireframe) on the viewer, WITHOUT advancing
+   * any atmosphere animation (no haze advection, dust drift, rebake, or rng). Used by the FROZEN
+   * tableau, where the God-mode camera can still roam / switch to a narrow-FOV TOP survey but update()
+   * is intentionally NOT called — this keeps the BackSide sky enclosing the camera exactly as update()
+   * does in RUNNING/SUSPENDED, while leaving the frozen scene byte-identical.
+   */
+  setViewerPosition(viewerPosition: Readonly<THREE.Vector3>): void {
+    this.domeMesh.position.copy(viewerPosition);
+    this.wireMesh.position.copy(viewerPosition);
+  }
+
   update(
     dt: number,
     t: number,

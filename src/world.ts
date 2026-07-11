@@ -2104,6 +2104,10 @@ export class World {
     // into a dead still-frame. Presentation-only uniform write — no sim step, no rng — so the frozen world
     // stays byte-golden while the god alone keeps breathing.
     this.godColossus.update(this.godClock, s.chaos / CHAOS_MAX, (s.entropy ?? 0) / ENTROPY_MAX);
+    // FROZEN: recenter the observer-centred sky shells on the (still-free) God-mode camera so a narrow-FOV
+    // TOP survey stays inside the BackSide dome, matching RUNNING/SUSPENDED. Position-only — no atmosphere
+    // animation is advanced (no haze/dust/rebake/rng), so the frozen tableau stays byte-golden.
+    this.atmosphere.setViewerPosition(this.engine.camera.position);
     this.updateLens();
     this.engine.render();
   }

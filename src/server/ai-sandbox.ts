@@ -335,6 +335,16 @@ function validateCommand(raw: string): { ok: true; argv: string[] } | { ok: fals
     }
     if (sub === 'diff' || sub === 'diff-tree') {
       const positionals = argv.slice(2).filter((a) => !isFlag(a) && a !== '--');
+      // A `git diff` / `git diff --cached` with NO pathspec emits the working-tree/index diff of ALL
+      // tracked files — including tracked-but-blocked areas (legacy/, .github/…) that the file tools
+      // block outright — and with no path argument the per-path confine() loop below has nothing to
+      // confine. Require an explicit pathspec so a working-tree diff can never span a blocked directory.
+      if (positionals.length === 0) {
+        return {
+          ok: false,
+          error: `git ${sub} requires an explicit confined pathspec (e.g. \`git ${sub} -- src/world.ts\`)`,
+        };
+      }
       const revisionLike = positionals.some(
         (a) => !a.includes('/') && !a.includes('\\') && !a.includes('.') && !a.includes(':'),
       );

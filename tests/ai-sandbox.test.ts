@@ -98,6 +98,9 @@ describe('ai-sandbox: command gate is default-deny and write-free', () => {
     'git log -u -3', // `-u` is a documented alias for `-p` — same disclosure, must be denied identically
     'git log --patch-with-stat -1', // combines stat + full patch content, same disclosure as `-p`
     'git diff HEAD~1 HEAD', // revision diffs are history reads, not confined file reads
+    'git diff', // pathspec-less diff emits ALL tracked files incl. blocked legacy/ — needs an explicit confined path
+    'git diff --cached', // same: staged diff of every tracked file, nothing for confine() to scope
+    'git diff --stat', // flags-only, still no pathspec → spans blocked dirs
     // GNU grep recurses via `-d recurse` / `--directories=recurse` too, not just `-r`/`-R` — these
     // reopened the audit-CRITICAL secret leak (native grep recursed root → .env/.git/legacy) past the
     // `-r`/`-R` block (audit 2026-07-01). All directory-handling spellings must be denied.

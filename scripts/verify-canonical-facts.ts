@@ -47,7 +47,7 @@ const FACTS: Fact[] = [
   },
   {
     name: 'Morphotypes',
-    pattern: /\b([2-9]\d{1,2})\s*(?:procedural\s+|deterministic\s+)?morphotypes?\b/gi,
+    pattern: /\b([1-9]\d{1,2})\s*(?:procedural\s+|deterministic\s+)?morphotypes?\b/gi,
     allowed: new Set(['250', '100', '25']), // 250 live · 100 legacy · 25 per phylum (bare "1 morphotype" = cardinality, skipped)
     note: '250 live (10 phyla x 25) / 100 legacy / 25 per phylum',
   },

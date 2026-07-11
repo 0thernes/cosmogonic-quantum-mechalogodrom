@@ -134,14 +134,18 @@ function syncReceipts(s: string): string {
     );
 
   out = out
-    .replace(/tests-[0-9]{3,4}/g, `tests-${TEST}`)
-    .replace(/\b[0-9],[0-9]{3}\s+tests\b/g, `${TEST_COMMA} tests`)
+    // Width-agnostic + idempotent: `{3,}` consumes the whole digit run (the badge ends in `%20`, a
+    // non-digit, so it never over-matches), and the comma form handles 10,000 / 1,000,000. The former
+    // `{3,4}` / single-comma-group forms silently wedged the badge (non-idempotent, appending a digit
+    // each sync) and froze comma surfaces once CANONICAL_TEST_COUNT crossed 9,999.
+    .replace(/tests-[0-9]{3,}/g, `tests-${TEST}`)
+    .replace(/\b[0-9]{1,3}(?:,[0-9]{3})+\s+tests\b/g, `${TEST_COMMA} tests`)
     // Anchored to a RECEIPT marker after "tests" so it never rewrites ordinary prose like
     // "we ran 500 tests of X" into the canonical count — a silent, unrecoverable corruption of the
     // owner's factual numbers on commit (data-loss audit 2026-07-01). A novel receipt form that
     // drifts fails sync:check loudly (safe) rather than corrupting prose (unsafe).
     .replace(
-      /(?<![,0-9])\b[0-9]{3,4}\s+tests\b(?=\s+green\b|,\s*[0-9]|\s*\(0\s+fail\b|\s*·|\s+pass(?:ing)?\b|\s*\/\s*0\s+fail\b)/g,
+      /(?<![,0-9])\b[0-9]{3,}\s+tests\b(?=\s+green\b|,\s*[0-9]|\s*\(0\s+fail\b|\s*·|\s+pass(?:ing)?\b|\s*\/\s*0\s+fail\b)/g,
       `${TEST} tests`,
     )
     // specs.html stat block splits the number and its "tests" label across two divs

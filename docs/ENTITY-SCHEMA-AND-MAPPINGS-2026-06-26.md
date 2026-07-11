@@ -170,7 +170,7 @@ nonetheless, and the composition root (`world.ts`) is effectively its join
 engine. Diagrams below follow ERD (structure), ERM (relationship narrative),
 and ERP (process models).
 
-> **Scope (v0.21.13 TSOTCHKE + NHSI):** Per binding [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md): 20 corpus projects / 22 registry entries = 9 deep, 7 wired, 2 harvest, 3 fenced, 1 meta; honest non-meta scientific wired fraction `18/21 = 0.857`. Full corpus enumerated by explicit depth class, not blanket full-depth wiring. **100-faculty design (~30 deep-wired)**, **5 individuated apex + 20 light-echo Archons**, **25 ToM wired**, **10 emergence angles** (+5 god-scale events), **Butlin 8/14 met + 6/14 partial** (computational indicators, not sentience). Gate: 2,432 tests · 84.64% / 82.21%. Not LLM. 0thernes NHSI.
+> **Scope (v0.21.13 TSOTCHKE + NHSI):** Per binding [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md): 20 corpus projects / 22 registry entries = 9 deep, 7 wired, 2 harvest, 3 fenced, 1 meta; honest non-meta scientific wired fraction `18/21 = 0.857`. Full corpus enumerated by explicit depth class, not blanket full-depth wiring. **100-faculty design (~30 deep-wired)**, **5 individuated apex + 20 light-echo Archons**, **25 ToM wired**, **10 emergence angles** (+5 god-scale events), **Butlin 8/14 met + 6/14 partial** (computational indicators, not sentience). Gate: 2,435 tests · 84.64% / 82.21%. Not LLM. 0thernes NHSI.
 
 #
 
