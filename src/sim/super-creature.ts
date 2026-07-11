@@ -75,8 +75,11 @@ export const SUPER_WORLDMODEL_PARAMS = SENSE * WM_HID + WM_HID + (WM_HID * 1 + 1
  * goal-directed value. Off by default (byte-identical). Trained by the same exact Eshkol-AD backprop.
  */
 const VALUE_HID = 6; // value-head hidden width
+const THREAT_HID = 6; // dread-head hidden width
 /** Total learnable params the value head adds when lit: (SENSE·h + h) + (h·1 + 1). */
 export const SUPER_VALUE_PARAMS = SENSE * VALUE_HID + VALUE_HID + (VALUE_HID * 1 + 1);
+/** Total learnable params the dread (threat-anticipation) head adds when lit — same 18→h→1 shape. */
+export const SUPER_THREAT_PARAMS = SENSE * THREAT_HID + THREAT_HID + (THREAT_HID * 1 + 1);
 
 /** Max living twins the Super Creature may sire (the brief's "twin/offspring creation up to 3"). */
 export const SUPER_MAX_OFFSPRING = 3;
@@ -133,7 +136,9 @@ export interface SuperSnapshot {
   learnedPredErr: number; // EMA of the learned forecaster's error (0 when frozen) — falls as it learns
   learnedValueErr: number; // EMA of the value head's next-energy forecast error (0 when frozen)
   survivalUrgency: number; // learned predicted energy drop biasing the planner (0 when frozen)
-  liveParamCount: number; // cortex+actor (frozen) + world-model + value-head params when learning is lit
+  learnedThreatErr: number; // EMA of the dread head's next-threat forecast error (0 when frozen)
+  dread: number; // learned predicted threat rise biasing the planner toward defense (0 when frozen)
+  liveParamCount: number; // cortex+actor (frozen) + world-model + value + dread head params when lit
   offspring: number; // living twins sired (≤ SUPER_MAX_OFFSPRING)
   plan: SuperPlan;
   intent: {
@@ -217,6 +222,17 @@ export class SuperCreature {
   private survivalUrgency = 0; // clamp(energy − forecastNext): a predicted DROP → seek food / conserve
   private learnedValueErr = 0; // EMA of |value forecast − actual energy| — FALLS as the value head learns
 
+  // ── ONLINE DREAD HEAD — learned threat anticipation: forecasts next-beat threat, biases defense ────
+  // A third 18→6→1 MLP (exact Eshkol-AD backprop) that forecasts next-beat THREAT. A predicted RISE
+  // becomes `dread`, which pre-emptively raises fleeing/deceiving and suppresses hunting/exploring —
+  // anticipatory defense, not reactive. Only the dread pathway touches FLEE/DECEIVE (the world-model and
+  // value head never do), so its operational effect is cleanly isolable. Null until enableLearning().
+  private threatModel: Mlp | null = null; // rides a third decorrelated substream, lit with the others
+  private readonly thrTarget = new Float64Array(1); // scratch target (this beat's actual threat)
+  private threatForecast = 0; // the dread head's forecast (made last beat) for THIS beat's threat
+  private dread = 0; // clamp(forecastNext − threat): a predicted threat RISE → flee, stop feeding
+  private learnedThreatErr = 0; // EMA of |threat forecast − actual threat| — FALLS as the head learns
+
   /**
    * Birth the Super Creature. With no preset weights it rolls a fresh deep mind from `rng` (the
    * prime); twins pass mutated weight arrays + an incremented generation (see {@link maybeSpawn}).
@@ -247,9 +263,12 @@ export class SuperCreature {
   get offspringCount(): number {
     return this.offspring;
   }
-  /** Live params: frozen cortex+actor + the online world-model AND value head when learning is lit. */
+  /** Live params: frozen cortex+actor + the online world-model, value head AND dread head when lit. */
   get liveParamCount(): number {
-    return this.paramCount + (this.worldModel ? SUPER_WORLDMODEL_PARAMS + SUPER_VALUE_PARAMS : 0);
+    return (
+      this.paramCount +
+      (this.worldModel ? SUPER_WORLDMODEL_PARAMS + SUPER_VALUE_PARAMS + SUPER_THREAT_PARAMS : 0)
+    );
   }
   /** Is the online world-model learning this life? (false ⇒ the mind is the frozen baseline). */
   get isLearning(): boolean {
@@ -262,6 +281,10 @@ export class SuperCreature {
   /** EMA of the value head's next-energy forecast error — falls as the survival value is learned. */
   get learnedValueError(): number {
     return this.learnedValueErr;
+  }
+  /** EMA of the dread head's next-threat forecast error — falls as threat anticipation is learned. */
+  get learnedThreatError(): number {
+    return this.learnedThreatErr;
   }
 
   /**
@@ -284,12 +307,17 @@ export class SuperCreature {
     this.worldModel = createMlp(SENSE, WM_HID, 1, mulberry32(seed >>> 0 || 1));
     // the value head rides a further-decorrelated substream so its init is independent of the world-model.
     this.valueModel = createMlp(SENSE, VALUE_HID, 1, mulberry32((seed ^ 0x5a5a5a5a) >>> 0 || 1));
+    // the dread head rides yet another decorrelated substream (threat axis, independent of both above).
+    this.threatModel = createMlp(SENSE, THREAT_HID, 1, mulberry32((seed ^ 0x33cc33cc) >>> 0 || 1));
     this.learn = true;
     this.prevValid = false;
     this.learnedPredErr = 0;
     this.learnedValueErr = 0;
     this.survivalUrgency = 0;
     this.energyForecast = 0;
+    this.learnedThreatErr = 0;
+    this.dread = 0;
+    this.threatForecast = 0;
   }
 
   /**
@@ -352,6 +380,25 @@ export class SuperCreature {
       this.energyForecast = energyNext; // compared to next beat's actual energy for the error EMA
     }
 
+    // ── DREAD HEAD: learned threat anticipation — forecast next-beat threat, derive defensive dread ────
+    // Mirror of the value head on the THREAT axis: trains on (prevSense → this beat's threat) by exact AD
+    // (prevSense is still LAST beat's here — the world-model loop below overwrites it), then forecasts NEXT
+    // beat's threat from the current percept; a predicted RISE becomes `dread`, biasing the planner toward
+    // fleeing/deceiving and away from feeding/wandering. OFF by default ⇒ dread 0 ⇒ planner byte-identical.
+    if (this.learn && this.threatModel) {
+      if (this.prevValid) {
+        this.learnedThreatErr +=
+          WM_TAU * (Math.abs(this.threatForecast - (s[1] ?? 0)) - this.learnedThreatErr);
+        if (this.wmLr > 0) {
+          this.thrTarget[0] = s[1] ?? 0;
+          mlpTrainStep(this.threatModel, this.prevSense, this.thrTarget, this.wmLr);
+        }
+      }
+      const threatNext = clamp01(mlpPredict(this.threatModel, s)[0] ?? 0);
+      this.dread = clamp01(threatNext - (s[1] ?? 0)); // a predicted threat RISE
+      this.threatForecast = threatNext; // compared to next beat's actual threat for the error EMA
+    }
+
     // ── PREDICTION LOOP: compare last beat's forecast to this beat's actual salience → surprise ────
     const salience = clamp01(0.5 * s[1] + 0.3 * s[2] + 0.2 * moveMag); // how eventful "now" is
     this.surprise = clamp01(Math.abs(this.predictedSalience - salience));
@@ -400,6 +447,17 @@ export class SuperCreature {
       drives.REST += su * 0.25 * (1 - (s[1] ?? 0)); // if safe, conserve
       drives.EXPLORE *= 1 - 0.5 * su; // don't wander when starving
       drives.DOMINATE *= 1 - 0.3 * su; // survival over dominance games
+    }
+    // DREAD-AWARE PLANNING: a LEARNED predicted threat RISE pre-emptively raises fleeing/deceiving and
+    // suppresses committing to a hunt or a wander BEFORE the danger fully lands — anticipatory defense.
+    // Only this pathway touches FLEE/DECEIVE, so its effect on plan choice is cleanly attributable to the
+    // dread head. dread is 0 unless learning ⇒ the baseline is byte-identical.
+    const dr = this.dread;
+    if (dr > 0) {
+      drives.FLEE += dr * 0.7 * (1 - this.dominance); // anticipate danger → prepare to bolt
+      drives.DECEIVE += dr * 0.2 * (1 - this.dominance); // or slip away unseen
+      drives.HUNT *= 1 - 0.4 * dr; // don't chase prey into rising danger
+      drives.EXPLORE *= 1 - 0.5 * dr; // hunker rather than wander into it
     }
     // POWER OF MATH (inline, legacy V31 path): number theory gcd resonance for combinatoric plan-limb alignment (Euclid)
     function _gcd(x: number, y: number) {
@@ -502,6 +560,8 @@ export class SuperCreature {
       learnedPredErr: this.learnedPredErr,
       learnedValueErr: this.learnedValueErr,
       survivalUrgency: this.survivalUrgency,
+      learnedThreatErr: this.learnedThreatErr,
+      dread: this.dread,
       liveParamCount: this.liveParamCount,
       offspring: this.offspring,
       plan: this.plan,

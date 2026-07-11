@@ -22,6 +22,38 @@ stronger gains. Seals: `tests/entities-colony-chains.test.ts`.
 
 ---
 
+## 2026-07-11 — batch 32: Super Creature learns to ANTICIPATE DANGER — a dread head that pre-empts threat (pass 3/10)
+
+Pass 3 of the 10-pass "make them smarter" goal. Pass 2 gave the apex creature a value head that anticipates
+_hunger_; this adds a symmetric-but-distinct THIRD learned net that anticipates _danger_ — reactive defense
+becomes anticipatory defense.
+
+- **`src/sim/super-creature.ts` — a learned DREAD head (18→6→1, `SUPER_THREAT_PARAMS`=121).** Trained by the
+  same exact Eshkol-AD backprop to forecast the creature's OWN next-beat THREAT. A predicted RISE becomes
+  `dread`, which pre-emptively raises FLEE + DECEIVE and damps HUNT (don't chase prey into rising danger) +
+  EXPLORE (hunker rather than wander into it) — BEFORE the threat fully lands. Its net rides a third
+  decorrelated substream (`seed ^ 0x33cc33cc`) ⇒ independent init, no rng-order perturbation.
+- **CLEAN ISOLATION (why this gate is airtight).** Of all three learned pathways, ONLY the dread hook touches
+  the FLEE/DECEIVE drives — the world-model steers surprise→arousal, the value head steers
+  HUNT/REST/EXPLORE/DOMINATE. So a rise in defensive-plan frequency between a trained and a frozen creature
+  is attributable to the dread head _alone_, with no seam or confound.
+- **SuperMind predictor attempt reverted first (honesty).** Before this, I probed a learned predictor on the
+  SuperMind consciousness integrator, but its target (`imagined[0]`) is noise-driven (imagitron + NOISE +
+  tree-of-thought selection): only ~1.7× ablation separation, error plateaued at 0.72, surprise unmoved.
+  Borderline-decorative and off-target (SuperMind is not one of the three named beings), so I reverted it —
+  same discipline that dropped the ToM (batch 31) and apex-plan attempts.
+- **GATE (`tests/super-creature-dread.test.ts`, 6 cases).** LEARNS: at a small step the forecast error falls
+  0.168→0.114 over the run (online descent; at the shipped lr=0.05 it converges in ~3 beats). ABLATION:
+  trained EMA **~0.055** vs a frozen-lr0 control **~0.48** (~9× — the AD backprop is load-bearing).
+  OPERATIONAL: defensive-plan (FLEE|DECEIVE) count **120 vs 52** and **>140** beats of plan-sequence shift —
+  isolated to the dread pathway. Plus DETERMINISM, DEFAULT-OFF byte-identical, SCALE. The batch-28/Pass-2
+  gates + baseline determinism stay green (the dread head is a separate net; salience + energy unchanged).
+- **HONESTY (ADR 0014/0015, indicatorOnly).** NO consciousness / Butlin / A-Life score moved. Claim: the apex
+  creature now learns a threat-anticipation function (~9× below frozen, ablation-verified) that measurably
+  redirects it toward defense. Butlin + Consciousness BYTE-IDENTICAL.
+
+Receipts 2807→2813 (+6). Coupling invariant intact (SuperCreature is outside the receipt).
+
 ## 2026-07-11 — ADR 0016: social contact density + multi-altitude Titans + chain ecology
 
 Restored living ALife after ADR 0012 habitat expansion froze social radii at legacy unit lengths.
@@ -31,6 +63,32 @@ disks, social-core spawn packing, nearest-neighbor filament springs (ambient + g
 `tests/habitat-scale.test.ts`, `tests/titans.test.ts`, `tests/graph-mind.test.ts`.
 
 ---
+
+## 2026-07-11 — batch 31: Super Creature learns SURVIVAL VALUE — a second head that redirects the planner (pass 2/10)
+
+Pass 2 of the 10-pass "make them smarter" goal. The apex creature's world-model (batch-28) forecasts
+_salience_; this adds a second learned net that forecasts _value_ and USES it to make decisions — reactive
+instinct becomes learned, goal-directed planning.
+
+- **`src/sim/super-creature.ts` — a learned VALUE head (18→6→1, `SUPER_VALUE_PARAMS`=121).** Trained by the
+  same exact Eshkol-AD backprop to forecast the creature's OWN next-beat energy. A predicted energy DROP
+  becomes `survivalUrgency`, which biases the GOAP planner: boost HUNT (feed) + REST (conserve), damp
+  EXPLORE (don't wander when starving) + DOMINATE (survival over status games). Its net is seeded off a
+  further-decorrelated substream from the world-model ⇒ independent init, no rng-order perturbation.
+- **First ToM attempt reverted (honesty).** I first tried a learning self-model on the ToM pantheon, but its
+  aggregate menace is a smooth 25-organ mean → the self-model nailed it trivially and the operational effect
+  was ~0.001. Too marginal to honestly call "smarter" (the batch-25 decorative-change trap), so I reverted it
+  and pivoted to this value head, whose target (energy) is genuinely dynamic and whose effect is large.
+- **GATE (`tests/super-creature-value.test.ts`, 6 cases).** LEARNS: value error 0.045→0.008. ABLATION:
+  trained EMA **0.0084** vs a frozen-lr0 control **0.237** (~28× — load-bearing). OPERATIONAL: the plans
+  differ trained vs frozen on **>20** beats (HUNT count 147 vs 259 over 300 beats — a substantial, not
+  cosmetic, redirection). Plus DETERMINISM, DEFAULT-OFF byte-identical, SCALE. The batch-28 world-model gate
+  - baseline determinism stay green (the value head is a separate net; salience is unchanged).
+- **HONESTY (ADR 0014/0015, indicatorOnly).** NO consciousness / Butlin / A-Life score moved. Claim: the apex
+  creature now learns a survival-value function (~28× below frozen, ablation-verified) that measurably
+  redirects its planning. Butlin + Consciousness BYTE-IDENTICAL.
+
+Receipts 2796→2802 (+6). Coupling invariant intact (SuperCreature is outside the receipt).
 
 ## 2026-07-11 — batch 30: NHSI DEVELOPS — the 144-faculty pantheon grows an online self-model + adaptive coupling
 

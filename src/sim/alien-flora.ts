@@ -628,8 +628,14 @@ export class AlienFlora {
             pl.rarity * 0.1 +
             1) %
           1;
-        const sat = Math.min(0.98, Math.max(0.55, s.sat + (hash(i * 97 + pl.sp) - 0.5) * 0.2 + pl.rarity * 0.15));
-        const light = Math.min(0.72, Math.max(0.32, s.light + hash(i * 101 + pl.sp) * 0.16 + pl.rarity * 0.1));
+        const sat = Math.min(
+          0.98,
+          Math.max(0.55, s.sat + (hash(i * 97 + pl.sp) - 0.5) * 0.2 + pl.rarity * 0.15),
+        );
+        const light = Math.min(
+          0.72,
+          Math.max(0.32, s.light + hash(i * 101 + pl.sp) * 0.16 + pl.rarity * 0.1),
+        );
         col.setHSL(hueJit, sat, light);
         if (pl.rarity > 0.55) {
           const kick = hash(i * 113 + pl.sp);
