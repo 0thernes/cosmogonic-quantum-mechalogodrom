@@ -24,6 +24,7 @@ import {
   SUPER_WORLDMODEL_PARAMS,
   SUPER_VALUE_PARAMS,
   SUPER_THREAT_PARAMS,
+  SUPER_SOCIAL_PARAMS,
   type SuperPercept,
 } from '../src/sim/super-creature';
 
@@ -145,7 +146,11 @@ describe('SuperCreature online world-model', () => {
     expect(sc.liveParamCount).toBe(SUPER_PARAM_COUNT);
     sc.enableLearning({ seed: WSEED });
     expect(sc.liveParamCount).toBe(
-      SUPER_PARAM_COUNT + SUPER_WORLDMODEL_PARAMS + SUPER_VALUE_PARAMS + SUPER_THREAT_PARAMS,
+      SUPER_PARAM_COUNT +
+        SUPER_WORLDMODEL_PARAMS +
+        SUPER_VALUE_PARAMS +
+        SUPER_THREAT_PARAMS +
+        SUPER_SOCIAL_PARAMS,
     );
   });
 
@@ -157,7 +162,11 @@ describe('SuperCreature online world-model', () => {
     expect(kid).not.toBeNull();
     expect(kid!.isLearning).toBe(true);
     expect(kid!.liveParamCount).toBe(
-      SUPER_PARAM_COUNT + SUPER_WORLDMODEL_PARAMS + SUPER_VALUE_PARAMS + SUPER_THREAT_PARAMS,
+      SUPER_PARAM_COUNT +
+        SUPER_WORLDMODEL_PARAMS +
+        SUPER_VALUE_PARAMS +
+        SUPER_THREAT_PARAMS +
+        SUPER_SOCIAL_PARAMS,
     );
   });
 });

@@ -11,6 +11,38 @@ changed and why.
 
 ---
 
+## 2026-07-11 — batch 34: Super Creature grows SOCIAL cognition — a fourth head anticipates rivals (pass 5/10)
+
+Pass 5 of the 10-pass "make them smarter" goal. Beyond the world-model (salience), value head (energy) and
+dread head (threat), the apex creature gains a new cognitive DOMAIN — social anticipation.
+
+- **`src/sim/super-creature.ts` — a learned SOCIAL head (18→6→1, `SUPER_SOCIAL_PARAMS`=121).** Trained by
+  exact Eshkol-AD backprop to forecast the creature's OWN next-beat RIVAL proximity. The learned expectation
+  of rival presence becomes a continuous combat READINESS (`menace`) that overlays the motor intent every
+  beat — raising aggression + projected dominance in proportion to anticipated rivalry. Rides a fourth
+  decorrelated substream (`seed ^ 0x1c0ffee5`).
+- **Why a CONTINUOUS overlay, not a plan flip (a real lesson).** I first hooked `menace` into the DOMINATE/
+  DECEIVE/FLEE plan scores — but those social plans rarely out-compete hunting/exploring for a typical
+  creature, so the effect was operationally DEAD (0/320 plan changes across seeds). Overlaying the always-
+  consumed motor intent instead makes the effect robust (mean |Δdominance| ≈0.115 on **222/320** beats,
+  stable across 4 seeds). Isolated via a `social:false` seam (the readiness overlay is the only toggle).
+- **Apex-Abomination second-learner ATTEMPTED then REVERTED first (honesty).** Before this I gave the Apex
+  Abomination an agony-anticipation head. It LEARNED cleanly (16× ablation) but had no clean behavioral
+  hook: agony sits near ceiling (~0.87), so a weak plan-bias was muddled (4/140 plan changes) and a strong
+  one COLLAPSED plan diversity to FRACTURE (131/140 — dumber, not smarter). No clean middle ⇒ reverted, same
+  discipline as the ToM / apex-plan / SuperMind reverts. The Abomination's honest ceiling stays its batch-29
+  vitality self-model; the clean behavioral hooks live on the Super Creature's CENTRAL percept axes.
+- **GATE (`tests/super-creature-social.test.ts`, 6 cases).** LEARNS: rival-forecast error to **<0.1**.
+  ABLATION: trained EMA **~0.066** vs a frozen-lr0 control **~0.35** (~8× — load-bearing). OPERATIONAL
+  (isolated): social-on vs social-off lifts dominance by **~0.115** / aggression by ~0.057 mean. Plus
+  DETERMINISM, DEFAULT-OFF byte-identical, SCALE. The batch-28/Pass-2/Pass-3 gates + baseline determinism +
+  pantheon-breeding stay green (the social head is a separate net; salience/energy/threat unchanged).
+- **HONESTY (ADR 0014/0015, indicatorOnly).** NO consciousness / Butlin / A-Life score moved. Claim: the apex
+  creature now learns to anticipate rivals (~8× below frozen) and raises combat readiness accordingly.
+  Butlin + Consciousness BYTE-IDENTICAL.
+
+Receipts 2819→2825 (+6). Coupling invariant intact (SuperCreature is outside the receipt).
+
 ## 2026-07-11 — batch 33: NHSI grows SPATIAL ATTENTION — a second self-model that attends to its surprising faculties (pass 4/10)
 
 Pass 4 of the 10-pass "make them smarter" goal, and the SECOND development on NHSI (owner: "NHSI ... becomes

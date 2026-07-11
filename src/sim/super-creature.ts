@@ -80,6 +80,9 @@ const THREAT_HID = 6; // dread-head hidden width
 export const SUPER_VALUE_PARAMS = SENSE * VALUE_HID + VALUE_HID + (VALUE_HID * 1 + 1);
 /** Total learnable params the dread (threat-anticipation) head adds when lit — same 18→h→1 shape. */
 export const SUPER_THREAT_PARAMS = SENSE * THREAT_HID + THREAT_HID + (THREAT_HID * 1 + 1);
+const SOCIAL_HID = 6; // social (rival-anticipation) head hidden width
+/** Total learnable params the social head adds when lit — same 18→h→1 shape. */
+export const SUPER_SOCIAL_PARAMS = SENSE * SOCIAL_HID + SOCIAL_HID + (SOCIAL_HID * 1 + 1);
 
 /** Max living twins the Super Creature may sire (the brief's "twin/offspring creation up to 3"). */
 export const SUPER_MAX_OFFSPRING = 3;
@@ -138,7 +141,9 @@ export interface SuperSnapshot {
   survivalUrgency: number; // learned predicted energy drop biasing the planner (0 when frozen)
   learnedThreatErr: number; // EMA of the dread head's next-threat forecast error (0 when frozen)
   dread: number; // learned predicted threat rise biasing the planner toward defense (0 when frozen)
-  liveParamCount: number; // cortex+actor (frozen) + world-model + value + dread head params when lit
+  learnedSocialErr: number; // EMA of the social head's next-rival forecast error (0 when frozen)
+  menace: number; // learned predicted rival approach biasing posture/deception (0 when frozen)
+  liveParamCount: number; // cortex+actor (frozen) + world-model + value + dread + social params when lit
   offspring: number; // living twins sired (≤ SUPER_MAX_OFFSPRING)
   plan: SuperPlan;
   intent: {
@@ -233,6 +238,17 @@ export class SuperCreature {
   private dread = 0; // clamp(forecastNext − threat): a predicted threat RISE → flee, stop feeding
   private learnedThreatErr = 0; // EMA of |threat forecast − actual threat| — FALLS as the head learns
 
+  // ── ONLINE SOCIAL HEAD — learned rival anticipation: a fourth 18→6→1 MLP forecasts next-beat rival
+  // proximity. A predicted APPROACH becomes `menace`, which biases the planner toward a social response —
+  // POSTURE (dominate) if strong, FEINT (deceive) if weak — anticipating a rival before it closes. A
+  // decorrelated substream; a `social:false` seam runs the mind WITHOUT the bias (the ablation control). ──
+  private socialModel: Mlp | null = null; // null until enableLearning(); off ⇒ menace 0 ⇒ byte-identical
+  private socialBias = true; // the seam: false learns the model but does not steer the plan
+  private readonly socTarget = new Float64Array(1); // scratch target (this beat's actual rival proximity)
+  private rivalForecast = 0; // the social head's forecast (made last beat) for THIS beat's rival proximity
+  private menace = 0; // clamp(forecastNext − rival): a predicted rival APPROACH → posture / feint
+  private learnedSocialErr = 0; // EMA of |rival forecast − actual rival| — FALLS as the head learns
+
   /**
    * Birth the Super Creature. With no preset weights it rolls a fresh deep mind from `rng` (the
    * prime); twins pass mutated weight arrays + an incremented generation (see {@link maybeSpawn}).
@@ -267,7 +283,9 @@ export class SuperCreature {
   get liveParamCount(): number {
     return (
       this.paramCount +
-      (this.worldModel ? SUPER_WORLDMODEL_PARAMS + SUPER_VALUE_PARAMS + SUPER_THREAT_PARAMS : 0)
+      (this.worldModel
+        ? SUPER_WORLDMODEL_PARAMS + SUPER_VALUE_PARAMS + SUPER_THREAT_PARAMS + SUPER_SOCIAL_PARAMS
+        : 0)
     );
   }
   /** Is the online world-model learning this life? (false ⇒ the mind is the frozen baseline). */
@@ -286,6 +304,10 @@ export class SuperCreature {
   get learnedThreatError(): number {
     return this.learnedThreatErr;
   }
+  /** EMA of the social head's next-rival forecast error — falls as rival anticipation is learned. */
+  get learnedSocialError(): number {
+    return this.learnedSocialErr;
+  }
 
   /**
    * Ignite ONLINE learning: the apex world-model (a real {@link SUPER_WORLDMODEL_PARAMS}-param 18→8→1
@@ -295,7 +317,7 @@ export class SuperCreature {
    * — so lighting learning cannot perturb the world's main draw order. Idempotent. `lr = 0` freezes the
    * net (the ablation control): it still forecasts but never updates, so its error cannot fall.
    */
-  enableLearning(opts?: { lr?: number; seed?: number }): void {
+  enableLearning(opts?: { lr?: number; seed?: number; social?: boolean }): void {
     if (opts?.lr !== undefined) this.wmLr = opts.lr;
     if (this.worldModel) {
       this.learn = true;
@@ -309,6 +331,10 @@ export class SuperCreature {
     this.valueModel = createMlp(SENSE, VALUE_HID, 1, mulberry32((seed ^ 0x5a5a5a5a) >>> 0 || 1));
     // the dread head rides yet another decorrelated substream (threat axis, independent of both above).
     this.threatModel = createMlp(SENSE, THREAT_HID, 1, mulberry32((seed ^ 0x33cc33cc) >>> 0 || 1));
+    // the social head rides a fourth decorrelated substream (rival axis). `social:false` still creates the
+    // model (so it learns and its error is measurable) but suppresses the plan bias — the ablation control.
+    this.socialModel = createMlp(SENSE, SOCIAL_HID, 1, mulberry32((seed ^ 0x1c0ffee5) >>> 0 || 1));
+    this.socialBias = opts?.social !== false;
     this.learn = true;
     this.prevValid = false;
     this.learnedPredErr = 0;
@@ -318,6 +344,9 @@ export class SuperCreature {
     this.learnedThreatErr = 0;
     this.dread = 0;
     this.threatForecast = 0;
+    this.learnedSocialErr = 0;
+    this.menace = 0;
+    this.rivalForecast = 0;
   }
 
   /**
@@ -399,6 +428,28 @@ export class SuperCreature {
       this.threatForecast = threatNext; // compared to next beat's actual threat for the error EMA
     }
 
+    // ── SOCIAL HEAD: learned rival anticipation — forecast next-beat rival proximity (s[6]), derive menace ─
+    // Same mirror on the SOCIAL axis: trains on (prevSense → this beat's rival proximity) by exact AD, then
+    // forecasts NEXT beat's rival proximity; a predicted APPROACH becomes `menace`, biasing the planner
+    // toward a social response (posture if strong, feint if weak). `socialBias` off (or learning off) ⇒
+    // menace does not steer the plan ⇒ byte-identical baseline.
+    if (this.learn && this.socialModel) {
+      if (this.prevValid) {
+        this.learnedSocialErr +=
+          WM_TAU * (Math.abs(this.rivalForecast - (s[6] ?? 0)) - this.learnedSocialErr);
+        if (this.wmLr > 0) {
+          this.socTarget[0] = s[6] ?? 0;
+          mlpTrainStep(this.socialModel, this.prevSense, this.socTarget, this.wmLr);
+        }
+      }
+      const rivalNext = clamp01(mlpPredict(this.socialModel, s)[0] ?? 0);
+      // `menace` = a continuous combat READINESS: the LEARNED expectation of rival presence, above a floor.
+      // It overlays the motor intent every beat (not a rare argmax flip), so its effect is robust regardless
+      // of whether a social plan wins. rivalForecast feeds the error EMA (ablation-verified learning).
+      this.menace = clamp01((rivalNext - 0.3) * 1.4);
+      this.rivalForecast = rivalNext;
+    }
+
     // ── PREDICTION LOOP: compare last beat's forecast to this beat's actual salience → surprise ────
     const salience = clamp01(0.5 * s[1] + 0.3 * s[2] + 0.2 * moveMag); // how eventful "now" is
     this.surprise = clamp01(Math.abs(this.predictedSalience - salience));
@@ -459,6 +510,13 @@ export class SuperCreature {
       drives.HUNT *= 1 - 0.4 * dr; // don't chase prey into rising danger
       drives.EXPLORE *= 1 - 0.5 * dr; // hunker rather than wander into it
     }
+    // SOCIAL-AWARE PLANNING: when a rival is anticipated AND the creature is strong, it also leans to CONTEST
+    // (dominate). Light — the primary social effect is the continuous readiness overlay on the motor intent
+    // below, which does not depend on a social plan out-competing hunting/exploring.
+    const mn = this.socialBias ? this.menace : 0;
+    if (mn > 0) {
+      drives.DOMINATE += mn * 0.5 * this.dominance; // strong → posture toward the anticipated rival
+    }
     // POWER OF MATH (inline, legacy V31 path): number theory gcd resonance for combinatoric plan-limb alignment (Euclid)
     function _gcd(x: number, y: number) {
       while (y) {
@@ -485,11 +543,15 @@ export class SuperCreature {
     this.plan = best;
 
     const wantsSpawn = spawnDesire > 0.8 && this.offspring < SUPER_MAX_OFFSPRING && s[0] > 0.5;
+    // SOCIAL READINESS OVERLAY: a LEARNED expectation of rival presence raises combat readiness (aggression
+    // + projected dominance) every beat it fires — a continuous, always-consumed effect. 0 unless learning
+    // AND the social bias is on ⇒ the frozen baseline and the `social:false` control are byte-identical.
+    const guard = this.socialBias ? this.menace : 0;
     return {
       move: { x: mx, y: my, z: mz },
-      aggression,
+      aggression: guard > 0 ? clamp01(aggression + guard * 0.5) : aggression,
       deception,
-      dominance: domProject,
+      dominance: guard > 0 ? clamp01(domProject + guard * 0.4) : domProject,
       spawn: spawnDesire,
       curiosity,
       wantsSpawn,
@@ -562,6 +624,8 @@ export class SuperCreature {
       survivalUrgency: this.survivalUrgency,
       learnedThreatErr: this.learnedThreatErr,
       dread: this.dread,
+      learnedSocialErr: this.learnedSocialErr,
+      menace: this.menace,
       liveParamCount: this.liveParamCount,
       offspring: this.offspring,
       plan: this.plan,
