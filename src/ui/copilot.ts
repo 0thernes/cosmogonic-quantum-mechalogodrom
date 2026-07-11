@@ -3,9 +3,9 @@
  *
  * A self-mounting side panel that lets the user "ask, learn, and talk about this world" with a
  * free AI which can READ the repo and RUN read-only commands but can never change code. It talks
- * only to our own server routes (`/api/chat`, `/api/tool`, `/api/copilot`) — the LLM provider key,
- * if any, lives server-side. It never imports or touches sim state, so the deterministic golden is
- * unaffected (see docs/research/PRE-TRANSFORMER-GAME-AI.md Part II).
+ * to our server routes (`/api/chat`, `/api/tool`, `/api/copilot`) when Bun is present; the static
+ * Pages artifact is explicitly marked and uses only its browser-direct provider path. It never
+ * imports or touches sim state, so the deterministic golden is unaffected.
  *
  * Two ways to use it:
  *  - Type a question → the server runs the agent loop (model may read files / run read-only
@@ -21,6 +21,7 @@
 import { dockToggle, injectPanelBaseCSS, panelHeader, wireClose } from './panel-shell';
 import { mountToggle } from './panel-dock';
 import { readResponseJsonBounded } from '../core/bounded-response';
+import { serverApiAvailable } from '../core/host-mode';
 
 interface ToolStep {
   tool: string;
@@ -385,12 +386,12 @@ async function populateStaticProviders(sel: HTMLSelectElement, prov: HTMLElement
 
 /**
  * Populate the closed panel without contacting any third party. Live status probes are deliberate
- * network actions and run only after the user opens Copilot or presses diagnostics; boot should not
+ * network actions and run only when the user presses diagnostics; boot and panel-open should not
  * emit seven anonymous LLM requests (and their expected 400/429 console noise).
  */
 function populateStaticProviderCatalog(sel: HTMLSelectElement, prov: HTMLElement): void {
   sel.replaceChildren();
-  const browserGroup = makeOptGroup('○ Browser-direct (probe when opened)');
+  const browserGroup = makeOptGroup('○ Browser-direct (probe with Diagnostics)');
   const serverGroup = makeOptGroup('🔑 Server-only providers');
   let firstBrowser = '';
   for (const row of STATIC_PROVIDER_CATALOG) {
@@ -593,6 +594,7 @@ const STYLE = `
 /** Build, style, and attach the panel to the document. Returns the wired controls. */
 function mount(): void {
   if (document.getElementById('cqm-cop-toggle')) return; // idempotent
+  const serverApi = serverApiAvailable();
 
   injectPanelBaseCSS();
   const style = document.createElement('style');
@@ -769,6 +771,25 @@ function mount(): void {
     input.disabled = b;
   };
 
+  /** Resolve one chat turn through the browser-direct static provider without touching `/api/*`. */
+  async function answerFromStaticAi(thinking: HTMLElement): Promise<void> {
+    try {
+      const reply = await askStaticAi(history, sel.value || selectedProvider || undefined);
+      thinking.remove();
+      addMsg('cqm-cop-ai', reply);
+      appendCopilotHistory(history, { role: 'assistant', content: reply });
+      if (!prov.textContent.includes('online'))
+        prov.textContent = `llm7 · ${sel.value || 'static'}`;
+    } catch {
+      thinking.remove();
+      addMsg(
+        'cqm-cop-sys',
+        'The free static AI (LLM7) was unreachable just now — try again in a moment. For the ' +
+          'full repo-aware agent (/read /ls /grep /run), run `bun dev` locally.',
+      );
+    }
+  }
+
   async function manualTool(cmd: string): Promise<void> {
     const sp = cmd.indexOf(' ');
     const verb = (sp < 0 ? cmd : cmd.slice(0, sp)).toLowerCase();
@@ -777,6 +798,14 @@ function mount(): void {
       addMsg(
         'cqm-cop-sys',
         'Commands: /read <path> · /ls <dir> · /grep <token> · /run <read-only cmd> · /help. Or just type a question — the AI can read files and run read-only commands for you. It can never change code.',
+      );
+      return;
+    }
+    if (!serverApi) {
+      addMsg(
+        'cqm-cop-sys',
+        `${verb} needs the local dev server — the static build has no read-only sandbox. Run ` +
+          '`bun dev` to use /read /ls /grep /run.',
       );
       return;
     }
@@ -832,6 +861,11 @@ function mount(): void {
     appendCopilotHistory(history, { role: 'user', content: text });
     setBusy(true);
     const thinking = addMsg('cqm-cop-sys', 'thinking…');
+    if (!serverApi) {
+      await answerFromStaticAi(thinking);
+      setBusy(false);
+      return;
+    }
     try {
       const res = await copilotFetch('/api/chat', {
         method: 'POST',
@@ -845,21 +879,7 @@ function mount(): void {
       if (!res.ok || !ctype.includes('application/json')) {
         // No Bun server (static GitHub Pages) → call the free, key-less LLM7 DIRECTLY from the browser
         // so the chat still works. The repo-command tools stay dev-only (they need /api/tool).
-        try {
-          const reply = await askStaticAi(history, sel.value || selectedProvider || undefined);
-          thinking.remove();
-          addMsg('cqm-cop-ai', reply);
-          appendCopilotHistory(history, { role: 'assistant', content: reply });
-          if (!prov.textContent.includes('online'))
-            prov.textContent = `llm7 · ${sel.value || 'static'}`;
-        } catch {
-          thinking.remove();
-          addMsg(
-            'cqm-cop-sys',
-            'The free static AI (LLM7) was unreachable just now — try again in a moment. For the ' +
-              'full repo-aware agent (/read /ls /grep /run), run `bun dev` locally.',
-          );
-        }
+        await answerFromStaticAi(thinking);
         return;
       }
       const data = (await res.json()) as AgentResult;
@@ -901,6 +921,7 @@ function mount(): void {
     trimCopilotTranscript(logEl);
     scroll();
     try {
+      if (!serverApi) throw new Error('static host has no server diagnostics endpoint');
       const res = await copilotFetch('/api/copilot/health', {}, COPILOT_AUX_REQUEST_TIMEOUT_MS);
       const d = (await res.json()) as HealthResult;
       card.replaceChildren();
@@ -1030,6 +1051,15 @@ function mount(): void {
         'cqm-cop-sys',
         'Copilot online. I can read this repo and run read-only commands to answer questions about the cosmos and its code — but I can never change anything. Note: messages are sent to a free external AI.',
       );
+      if (!serverApi) {
+        prov.textContent = 'static · browser-direct';
+        populateStaticProviderCatalog(sel, prov);
+        addMsg(
+          'cqm-cop-sys',
+          'Static Pages mode — browser-direct LLM7 is available; repo tools require `bun dev`.',
+        );
+        return;
+      }
       copilotFetch('/api/copilot', {}, COPILOT_AUX_REQUEST_TIMEOUT_MS)
         .then((r) => {
           if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -1120,6 +1150,10 @@ function mount(): void {
   });
 
   // Pre-populate provider list so OPTIONS shows models before first open (static + server).
+  if (!serverApi) {
+    populateStaticProviderCatalog(sel, prov);
+    return;
+  }
   void copilotFetch('/api/copilot', {}, COPILOT_AUX_REQUEST_TIMEOUT_MS)
     .then(
       (r) =>

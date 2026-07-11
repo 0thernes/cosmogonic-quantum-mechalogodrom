@@ -17,6 +17,8 @@ describe('Bible public link law', () => {
 
   test('root docs used by Bible are explicitly copied by the Pages assembler', async () => {
     const script = await Bun.file('scripts/build-pages.ts').text();
+    expect(script).toContain('data-cqm-static-host="true"');
+    expect(script).toContain('matches !== expectedMatches');
     for (const rootDoc of [
       'LICENSE',
       'NOTICE.md',

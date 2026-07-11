@@ -8,6 +8,7 @@
  * absent fetch) — persistence and POSTs simply become no-ops.
  */
 import type { AuditEntry } from '../types';
+import { serverApiAvailable } from '../core/host-mode';
 
 /** localStorage key. Versioned so future shape changes can re-key cleanly. */
 const STORAGE_KEY = 'cqm.audit.v1';
@@ -192,7 +193,8 @@ export class AuditTrail {
 
   /** Rate-shaped fire-and-forget POST of a single entry; every failure mode is swallowed. */
   private post(entry: AuditEntry): void {
-    if (typeof fetch !== 'function' || !this.takeMirrorToken()) {
+    const unavailableDefaultMirror = !serverApiAvailable() && this.endpoint === '/api/audit';
+    if (unavailableDefaultMirror || typeof fetch !== 'function' || !this.takeMirrorToken()) {
       return;
     }
     try {

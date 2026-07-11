@@ -53,6 +53,22 @@ function tick(): Promise<void> {
   });
 }
 
+/** Run a synchronous assertion with the same marker used by the generated static Pages artifact. */
+function withStaticDocument<T>(run: () => T): T {
+  const globals = globalThis as typeof globalThis & { document?: Document };
+  const hadDocument = Object.hasOwn(globals, 'document');
+  const realDocument = globals.document;
+  globals.document = {
+    documentElement: { dataset: { cqmStaticHost: 'true' } },
+  } as unknown as Document;
+  try {
+    return run();
+  } finally {
+    if (hadDocument) globals.document = realDocument;
+    else delete (globals as { document?: Document }).document;
+  }
+}
+
 describe('AuditTrail', () => {
   beforeEach(() => {
     localStorage.removeItem(KEY);
@@ -164,9 +180,11 @@ describe('AuditTrail', () => {
     expect(typeof JSON.parse(String(call?.init?.body)).ts).toBe('number');
   });
 
-  test('custom endpoint is honored', () => {
-    const trail = new AuditTrail({ endpoint: '/custom/audit' });
-    trail.record('ping');
+  test('explicit custom endpoint is honored, including in a static artifact', () => {
+    withStaticDocument(() => {
+      const trail = new AuditTrail({ endpoint: '/custom/audit' });
+      trail.record('ping');
+    });
     expect(calls.at(0)?.url).toBe('/custom/audit');
   });
 
@@ -187,12 +205,20 @@ describe('AuditTrail', () => {
     expect(trail.entries().length).toBe(1);
   });
 
-  test('skips the POST when fetch is unavailable', () => {
+  test('skips the POST when fetch is unavailable or the artifact is static-hosted', () => {
     globalThis.fetch = undefined as unknown as typeof fetch;
     const trail = new AuditTrail();
     expect(() => trail.record('offline')).not.toThrow();
     expect(trail.entries().at(0)?.action).toBe('offline');
     expect(localStorage.getItem(KEY)).not.toBeNull();
+
+    installRecordingFetch();
+    withStaticDocument(() => {
+      const staticTrail = new AuditTrail();
+      staticTrail.record('static-host');
+      expect(calls).toHaveLength(0);
+      expect(staticTrail.entries().at(-1)?.action).toBe('static-host');
+    });
   });
 
   test('degrades to memory-only when localStorage is absent', () => {

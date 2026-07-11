@@ -13,8 +13,8 @@
  *   3. copies `docs/` into `site/docs/`, pruning local-only archived drafts, so public report links
  *      resolve on Pages without stale ignored research artifacts,
  *   4. copies `docs/reports/assets/` for ALife SVG metrics (relative paths in the gallery),
- *   5. rewrites the absolute nav links to be subpath-relative, and neutralizes the server-only
- *      `/api/audit` poll (no server on Pages — leaving it would 404 every 5 s).
+ *   5. marks the static-host runtime, rewrites absolute nav links to be subpath-relative, and
+ *      neutralizes the server-only `/api/audit` poll (no server on Pages).
  *
  * The dev server (server.ts) is untouched: it keeps its absolute `/docs` `/lab` routes for local
  * use. Only the deployed copy is rewritten. Output: `./site` (the Pages artifact).
@@ -72,11 +72,19 @@ const PUBLIC_PAGE_DOCS = [
 
 async function rewrite(
   file: string,
-  edits: ReadonlyArray<readonly [string, string]>,
+  edits: ReadonlyArray<readonly [string, string, number?]>,
 ): Promise<void> {
   const target = new URL(file, SITE);
   let html = await readFile(target, 'utf8');
-  for (const [from, to] of edits) html = html.split(from).join(to);
+  for (const [from, to, expectedMatches] of edits) {
+    const matches = html.split(from).length - 1;
+    if (expectedMatches !== undefined && matches !== expectedMatches) {
+      throw new Error(
+        `${file}: expected ${expectedMatches} occurrence(s) of ${JSON.stringify(from)}, found ${matches}`,
+      );
+    }
+    html = html.split(from).join(to);
+  }
   // Atomic write (temp + rename): a direct writeFile() truncates first, so a crash mid-write
   // (disk full, I/O error on a CI runner) would silently deploy a corrupted HTML artifact.
   const tmp = new URL(file + '.tmp', SITE);
@@ -247,6 +255,7 @@ const navRoot: ReadonlyArray<readonly [string, string]> = base
     ];
 
 await rewrite('index.html', [
+  ['<html lang="en">', '<html lang="en" data-cqm-static-host="true">', 1],
   ...navRoot,
   ['hx-get="/api/audit"', ''], // no server on Pages — stop the 5 s 404 poll; panel stays empty
 ]);
