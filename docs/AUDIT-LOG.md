@@ -11,6 +11,37 @@ changed and why.
 
 ---
 
+## 2026-07-10 (pass 6) — batch 20: copilot in-flight tool-call is cancelled on the turn deadline
+
+- **[NET-2] a running tool kept executing after the turn was cancelled** (`copilot.ts` / `ai-sandbox.ts`
+  / `web-search.ts`, LOW) — `runLoop` checked the turn `AbortSignal` only BEFORE dispatch; once a tool
+  was executing, the turn deadline (75s) or a client disconnect aborted the provider fetch but NOT the
+  tool, which ran out its own internal timeout (run 15s, web 8s) after the caller had already given up.
+  Threaded the signal through `dispatchTool(name, args, signal)` into the two resource-holding tools:
+  `runReadOnly` now `proc.kill()`s the spawned child on abort, and `webSearch` aborts its fetch
+  controller on abort. Pure-JS tools (read/list/grep) are fast + bounded, left unchanged. All signal
+  params are optional, so every existing caller is unaffected.
+
+**13 of 14 pass-6 findings shipped.** Only remaining: the sync-surfaces `SURFACES` allowlist is
+hand-maintained, so a NEW receipt-publishing doc omitted from it would drift undetected (LOW, design —
+needs a coverage guard, not a point fix). Receipts unchanged (2437). Full gate green.
+
+## 2026-07-10 (pass 6) — batch 19: copilot failover reaches keyed providers (host round-robin)
+
+- **[NET-1] automatic provider failover could never reach a configured keyed provider** (`copilot.ts`,
+  MED) — `providerChain()` heads with ~7 keyless LLM7 slots that are ALL on one host (`api.llm7.io`),
+  and the failover walk stops at `MAX_PROVIDER_ATTEMPTS` (3). So a default turn spent all 3 attempts on
+  a single host — if it was dead/rate-limited, every attempt failed together and a configured keyed
+  provider (Groq/Gemini/…, at chain index ≥7) was never tried. Added `roundRobinByHost()`: the chain is
+  reordered so distinct endpoint hosts fill the earliest attempts (one slot per host per round), so the
+  3-attempt budget now spans up to 3 DISTINCT hosts. `out[0]` (the default keyless slot) is unchanged and
+  a single-host/zero-config chain degenerates to the original order exactly — so the default-provider +
+  resolveProvider goldens are byte-stable. +2 regression tests (distinct-hosts-in-budget + zero-config-stable).
+
+Receipts 2435→2437 (+2). **12 of 14 pass-6 findings now shipped.** Still open: copilot in-flight tool-call
+not cancelled on turn deadline (LOW, threads AbortSignal through dispatchTool→run/web_search), and the
+sync-surfaces SURFACES allowlist coverage gap (LOW, design). Full gate green.
+
 ## 2026-07-10 (pass 6) — batch 18: shoggoths consume-loop perf (proven byte-identical) + alien-flora seal
 
 The two pass-6 findings I had deferred as "unverifiable" — re-examined and shipped after PROVING safety.

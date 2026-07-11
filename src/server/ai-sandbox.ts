@@ -578,7 +578,7 @@ async function readCappedStream(
 }
 
 /** Run a single read-only command, repo-confined, time-bounded, output-capped. Never writes. */
-export async function runReadOnly(raw: string): Promise<SandboxResult> {
+export async function runReadOnly(raw: string, signal?: AbortSignal): Promise<SandboxResult> {
   const v = validateCommand(raw);
   if (!v.ok) return v;
   if (v.argv[0] === 'echo') {
@@ -597,6 +597,11 @@ export async function runReadOnly(raw: string): Promise<SandboxResult> {
     });
     let timedOut = false;
     const stopAtLimit = (): void => proc.kill();
+    // Turn deadline / client disconnect (the copilot AbortSignal) kills the child NOW, instead of
+    // letting it run out its own RUN_TIMEOUT_MS after the caller has already given up.
+    const onAbort = (): void => proc.kill();
+    if (signal?.aborted) proc.kill();
+    else signal?.addEventListener('abort', onAbort, { once: true });
     const timer = setTimeout(() => {
       timedOut = true;
       proc.kill();
@@ -620,6 +625,7 @@ export async function runReadOnly(raw: string): Promise<SandboxResult> {
       return { ok: true, output: combined.slice(0, MAX_OUTPUT), truncated };
     } finally {
       clearTimeout(timer);
+      signal?.removeEventListener('abort', onAbort);
     }
   } catch (e) {
     return { ok: false, error: `execution failed: ${e instanceof Error ? e.message : String(e)}` };
@@ -720,10 +726,14 @@ export const SANDBOX_TOOLS = [
   },
 ] as const;
 
-/** Dispatch a tool call by name to its sandbox function. Unknown tools are denied. */
+/** Dispatch a tool call by name to its sandbox function. Unknown tools are denied. The optional
+ *  `signal` (the copilot turn deadline / client-disconnect) is forwarded to the resource-holding tools
+ *  (`run` spawns a child, `web_search` fetches) so a turn cancellation kills them NOW instead of letting
+ *  them run out their own internal timeout after the caller has given up. Pure-JS tools are fast + bounded. */
 export async function dispatchTool(
   name: string,
   args: Record<string, unknown>,
+  signal?: AbortSignal,
 ): Promise<SandboxResult> {
   switch (name) {
     case 'read_file':
@@ -733,9 +743,9 @@ export async function dispatchTool(
     case 'grep':
       return grepRepo(typeof args['pattern'] === 'string' ? args['pattern'] : '');
     case 'run':
-      return runReadOnly(typeof args['command'] === 'string' ? args['command'] : '');
+      return runReadOnly(typeof args['command'] === 'string' ? args['command'] : '', signal);
     case 'web_search':
-      return webSearch(typeof args['query'] === 'string' ? args['query'] : '');
+      return webSearch(typeof args['query'] === 'string' ? args['query'] : '', signal);
     default:
       return { ok: false, error: `unknown tool "${name}"` };
   }

@@ -14,6 +14,7 @@ import {
   providerRecoveryPlan,
   resolveProvider,
   runAgent,
+  roundRobinByHost,
   MAX_PROVIDER_ATTEMPTS,
   type ProviderHealth,
 } from '../src/server/copilot';
@@ -376,5 +377,46 @@ describe('runAgent — bounded recovery window', () => {
     expect(result.reply).toContain('deadline');
     expect(performance.now() - started).toBeLessThan(250);
     expect(calls).toBe(1);
+  });
+});
+
+describe('copilot — host-round-robin failover (a keyed provider is not buried behind one dead host)', () => {
+  type Chain = Parameters<typeof roundRobinByHost>[0];
+  const P = (endpoint: string, model: string): unknown => ({
+    id: model,
+    label: model,
+    endpoint,
+    model,
+    key: '',
+    keySlot: 0,
+    keySlotCount: 1,
+  });
+
+  test('distinct hosts fill the first MAX_PROVIDER_ATTEMPTS slots (out[0] + all providers preserved)', () => {
+    const chain = [
+      P('https://api.llm7.io/v1', 'codestral'),
+      P('https://api.llm7.io/v1', 'devstral'),
+      P('https://api.llm7.io/v1', 'mistral'),
+      P('https://api.groq.com/v1', 'groq'),
+      P('https://generativelanguage.googleapis.com/v1', 'gemini'),
+    ] as Chain;
+    const rr = roundRobinByHost(chain);
+    expect(rr).toHaveLength(5); // every provider preserved
+    expect(rr[0]!.model).toBe('codestral'); // out[0] (the default keyless slot) unchanged
+    const firstHosts = new Set(
+      rr.slice(0, MAX_PROVIDER_ATTEMPTS).map((p) => new URL(p.endpoint).host),
+    );
+    expect(firstHosts.size).toBe(MAX_PROVIDER_ATTEMPTS); // the budget now spans distinct hosts
+    // the keyed provider (groq) is reachable within the attempt budget instead of sitting at index >=3
+    expect(rr.slice(0, MAX_PROVIDER_ATTEMPTS).some((p) => p.model === 'groq')).toBe(true);
+  });
+
+  test('a single-host (zero-config) chain degenerates to the original order (goldens stable)', () => {
+    const chain = [
+      P('https://api.llm7.io/v1', 'a'),
+      P('https://api.llm7.io/v1', 'b'),
+      P('https://api.llm7.io/v1', 'c'),
+    ] as Chain;
+    expect(roundRobinByHost(chain).map((p) => p.model)).toEqual(['a', 'b', 'c']);
   });
 });

@@ -63,12 +63,16 @@ export function formatAnswer(q: string, d: DdgAnswer): string {
  * Run a web lookup. Only basic bounds are checked (empty / over-long); otherwise queries the fixed
  * key-less public endpoint, time-bounded + output-capped. Never throws to the caller, never writes.
  */
-export async function webSearch(query: string): Promise<SandboxResult> {
+export async function webSearch(query: string, signal?: AbortSignal): Promise<SandboxResult> {
   const screen = screenWebQuery(query);
   if (!screen.allowed) return { ok: false, error: `query rejected: ${screen.reason}` };
   const q = query.trim();
   const url = `https://api.duckduckgo.com/?q=${encodeURIComponent(q)}&format=json&no_html=1&skip_disambig=1`;
   const ctrl = new AbortController();
+  // The copilot turn deadline / client disconnect aborts the fetch NOW, not only its own WEB_TIMEOUT_MS.
+  const onAbort = (): void => ctrl.abort();
+  if (signal?.aborted) ctrl.abort();
+  else signal?.addEventListener('abort', onAbort, { once: true });
   const timer = setTimeout(() => ctrl.abort(), WEB_TIMEOUT_MS);
   try {
     const res = await fetch(url, {
@@ -89,5 +93,6 @@ export async function webSearch(query: string): Promise<SandboxResult> {
     };
   } finally {
     clearTimeout(timer);
+    signal?.removeEventListener('abort', onAbort);
   }
 }
