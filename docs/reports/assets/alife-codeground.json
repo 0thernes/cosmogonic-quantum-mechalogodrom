@@ -72,7 +72,7 @@
   "codeGrounded": {
     "axes": [
       4,
-      2.2,
+      2.4,
       3.2,
       3.8,
       3.9,
@@ -81,15 +81,15 @@
       3.5,
       4
     ],
-    "breadth": 3.711,
+    "breadth": 3.733,
     "rank": 1,
     "total": 113,
     "percentile": 100,
-    "zPopulation": 2.881,
-    "zVsPeers": 3.008,
-    "mahalanobis": 10.245,
+    "zPopulation": 2.918,
+    "zVsPeers": 3.049,
+    "mahalanobis": 10.229,
     "dominatedBy9d": 0,
-    "leadOverNearestPeerBreadth": 0.211,
+    "leadOverNearestPeerBreadth": 0.233,
     "perAxisZ": [
       {
         "axis": "Reproduction",
@@ -98,8 +98,8 @@
       },
       {
         "axis": "Open-endedness",
-        "score": 2.2,
-        "z": -0.33
+        "score": 2.4,
+        "z": -0.17
       },
       {
         "axis": "Ecology",
@@ -139,8 +139,8 @@
     ]
   },
   "deltas": {
-    "breadth": -0.733,
-    "zPopulation": -1.138,
-    "mahalanobis": -2.41
+    "breadth": -0.711,
+    "zPopulation": -1.101,
+    "mahalanobis": -2.426
   }
 }

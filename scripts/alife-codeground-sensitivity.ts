@@ -13,7 +13,10 @@
  *
  * Code-grounded Cosmogonic vector — each axis cites the strongest source the auditor could defend:
  *   reproduction        4.0  genome.ts:77-147 + primordial-soup.ts:118-147 (seeded recombine rebirth) — DEFENSIBLE
- *   open-endedness      2.2  emergence-angles.ts:117-184 only real GA; super-evolution.ts:93-287 handcrafted arc — OVERCLAIMED (was 3.5)
+ *   open-endedness      2.4  emergence-angles.ts real GA + TWO live fitness-selection loops (soup harvest
+ *                            world.ts:3085 + petri truncation-selection petri-dish.ts:404) + the birth
+ *                            engine passes the Bedau-Packard verdict NOT-inactive vs a frozen control
+ *                            (GATE-OE-LIVE / GATE-PETRI-SURVIVE) — was 2.2 (super-evolution still handcrafted)
  *   ecology             3.2  titans.ts real economyTick + soup SELECTION loop closed (world.ts:3085 spawns the
  *                            vitality-argmax; GATE-SOUP-SELECT: differential >0 vs a blind pick ~0) — was 3.0
  *   morphology/physics  3.8  reaction-diffusion.ts:87-290 live Gray-Scott PDE; schrodinger.ts dead code, super-body cosmetic — DEFENSIBLE (was 4.0)
@@ -42,10 +45,11 @@ const AXES = [
   'Consciousness-theory',
   'Visual scale',
 ];
-// 2026-07-10 batch-15b: ecology 3.0→3.2 (SOUP-SELECT) + cognition 3.8→3.9 (FORAGE) — each move is 1:1 with
-// a green, ablation-verified gate (tests/soup-harvest-selection.test.ts, tests/ad-forager-baseline.test.ts).
-// The self-scored CSV row is UNCHANGED; only this honest FLOOR rises toward it. Consciousness (idx 7) stays 3.5.
-export const CODE_GROUNDED = [4.0, 2.2, 3.2, 3.8, 3.9, 4.5, 4.3, 3.5, 4.0];
+// Honest FLOOR rises, each move 1:1 with a green ablation-verified gate; the self-scored CSV row is
+// UNCHANGED (lift the floor toward it, never inflate the ceiling); Consciousness (idx 7) stays 3.5.
+//   batch-15b: ecology 3.0→3.2 (GATE-SOUP-SELECT) · cognition 3.8→3.9 (GATE-FORAGE)
+//   batch-22:  open-endedness 2.2→2.4 (two live selection loops + GATE-OE-LIVE + GATE-PETRI-SURVIVE)
+export const CODE_GROUNDED = [4.0, 2.4, 3.2, 3.8, 3.9, 4.5, 4.3, 3.5, 4.0];
 
 interface Row {
   project: string;

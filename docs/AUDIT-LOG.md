@@ -11,6 +11,31 @@ changed and why.
 
 ---
 
+## 2026-07-10 — batch 22: petri differential-survival GA + honest Open-endedness floor 2.2→2.4
+
+More "smarter A-life": a second live fitness-selection loop + the falsifiable open-endedness measurement,
+then the honest metric move they license (drift-locked by batch-21's verify:alife gate).
+
+- **[SMART-3] petri truncation selection** (`petri-dish.ts`) — the ≤64 biologics ring evicted the OLDEST
+  at cap (FIFO `shift()`); now `evictLeastFit()` culls the argmin-`consciousness` strain, so the ring is
+  a real differential-survival GA — a just-born strain must EARN its slot against the pack. The newborn
+  keeps its OWN birthBiologic form (no elitist form-collapse), so novelty keeps entering. Deterministic.
+  GATE-PETRI-SURVIVE: over a fixed-seed varied-fitness stream, truncation keeps a strictly higher mean
+  fitness than FIFO (and evicts the least-fit, not the oldest). +4 assertions.
+- **[SMART-4] GATE-OE-LIVE** — the digital-biologics birth engine's cumulative distinct-forms trajectory
+  is judged NOT 'inactive' by the canonical Bedau-Packard verdict (`open-endedness.ts`), while a frozen /
+  monoculture trajectory IS 'inactive' — a measured separation. (The full petriDishBeat birth-gate needs
+  ignition>0.65 & phi>0.45 & flux>0.55, not reachable under a bare test drive, so the honest measurable
+  is the birth engine `birthBiologic`, the layer's actual form-generation source.) +3 assertions.
+- **Open-endedness floor 2.2 → 2.4** (`CODE_GROUNDED`) — now licensed by TWO live selection loops (soup
+  harvest, batch-15a + petri truncation, this batch) + GATE-OE-LIVE + GATE-PETRI-SURVIVE. Recomputed
+  (deterministic): code-grounded breadth 3.71→3.73, z-pop +2.88→+2.92, z-peers +3.01→+3.05, Mahalanobis
+  10.25→10.23, lead +0.21→+0.23; all 4 surfaces restated and drift-locked by batch-21's consistency test
+  (the test now recomputes at 2.4 and re-verifies every surface). Self-scored CSV row + Consciousness +
+  Butlin unchanged.
+
+Receipts 2440→2447 (+7). Full gate green.
+
 ## 2026-07-10 — batch 21: verify:alife drift-lock (closes the batch-15b metric honesty gap)
 
 Honesty hardening for the batch-15b metric move. batch-15b lifted the code-grounded 9-axis floor and
