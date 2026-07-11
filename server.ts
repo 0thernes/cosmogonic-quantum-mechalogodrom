@@ -17,6 +17,8 @@
  *                       (detail serialized + truncated at storage time; bodies over
  *                       `MAX_BODY_LEN` are rejected with 413; flooding callers get 429 —
  *                       a token bucket shields the ring from eviction-spam)
+ * - `/workers/simulation-worker.js`
+ *                     → the pre-bundled wilderness worker (dist artifact, else bundled on the fly)
  * - anything else     → 404
  *
  * Tailwind is applied to the HTML bundles via `bun-plugin-tailwind` (see bunfig.toml).
@@ -426,6 +428,34 @@ function svgAssetFromPath(pathname: string, prefix: string): BunFile | null {
   return Bun.file(new URL(rel, REPORT_ASSETS_ROOT));
 }
 
+/**
+ * The simulation worker must be served PRE-BUNDLED: world.ts resolves
+ * `new URL('./workers/simulation-worker.js', import.meta.url)` against the served chunk origin,
+ * and Bun's HTML bundler does not follow `new Worker(...)` graphs (the raw `.ts` path 404'd, so
+ * every worker lineage died on startup and a 24-core machine ran the sim main-thread-only).
+ * Prefers the build artifact (dist/); falls back to bundling the TS entry on the fly so a plain
+ * `bun server.ts` without a prior `bun run build` still gets live workers. The fallback bundle is
+ * cached per process — `bun --hot` resets it when server.ts reloads, and the pool requests the
+ * script once per spawned worker (~cores), so rebuilding per request would be pure waste.
+ */
+let workerFallbackBundle: Promise<string | null> | null = null;
+async function simulationWorkerJs(): Promise<string | null> {
+  const dist = Bun.file(new URL('./dist/workers/simulation-worker.js', import.meta.url));
+  if (await dist.exists()) return dist.text();
+  workerFallbackBundle ??= (async () => {
+    const entry = Bun.fileURLToPath(new URL('./src/workers/simulation-worker.ts', import.meta.url));
+    const built = await Bun.build({ entrypoints: [entry], target: 'browser' });
+    const output = built.outputs[0];
+    if (!built.success || !output) {
+      log.warn('simulation-worker bundle failed — worker pool will fall back to sync');
+      for (const message of built.logs) log.warn(String(message));
+      return null;
+    }
+    return output.text();
+  })();
+  return workerFallbackBundle;
+}
+
 function serveHtml(path: string): (req: Request) => Promise<Response> {
   return async (req) => {
     const file = Bun.file(new URL(path, HTML_ROOT));
@@ -500,6 +530,19 @@ if (import.meta.main) {
           logRequest(req, 200);
           return new Response(Bun.file(new URL('./lab/sentience-data.json', import.meta.url)), {
             headers: { 'Content-Type': 'application/json; charset=utf-8' },
+          });
+        },
+      }),
+      '/workers/simulation-worker.js': secured({
+        async GET(req) {
+          const js = await simulationWorkerJs();
+          if (js === null) {
+            logRequest(req, 503);
+            return new Response('worker bundle unavailable', { status: 503 });
+          }
+          logRequest(req, 200);
+          return new Response(js, {
+            headers: { 'Content-Type': 'application/javascript; charset=utf-8' },
           });
         },
       }),

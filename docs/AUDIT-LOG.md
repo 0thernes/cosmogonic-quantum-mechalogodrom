@@ -11,6 +11,26 @@ changed and why.
 
 ---
 
+## 2026-07-10 — worker-pool loader fix (the sim workers actually spawn now)
+
+- **[WRK-1] simulation worker 404 → silent main-thread fallback** (`world.ts` / `server.ts` /
+  `scripts/build.ts`, high) — `world.ts` resolved `new URL('./workers/simulation-worker.ts',
+import.meta.url)` against the served chunk origin, but Bun's HTML bundler does not follow
+  `new Worker(new URL(...))` graphs and server.ts never served that path: every page load spammed
+  ~24 `GET /workers/simulation-worker.ts -> 404` lines (one per core), every worker lineage died on
+  startup, the pool collapsed to 0, and the perf HUD read "cpu 24c · workers off" while the
+  wilderness ran main-thread sync forever. Fixed by shipping the worker as its own PRE-BUNDLED
+  artifact: `scripts/build.ts` bundles the worker entry → `dist/workers/simulation-worker.js` (the
+  build now fails loudly if the artifact goes missing; build-pages' dist→site copy ships it to
+  Pages), `server.ts` serves `/workers/simulation-worker.js` (dist artifact first, else an
+  on-the-fly cached `Bun.build` so a plain `bun server.ts` without a prior build still gets live
+  workers), and `world.ts` points the pool at the `.js` artifact. Runtime-verified in-browser:
+  24× HTTP 200, pool stats `totalWorkers 24 / availableWorkers 24`, and a live `executeAsync`
+  wilderness round-trip (`success: true`, kernel-integrated positions) — the 404 flood is gone.
+  (Gate note: a partial worktree `node_modules` — missing `prettier-plugin-tailwindcss` +
+  `playwright` — first faked 14 format-red files and 2 SBOM failures on an untouched checkout;
+  `bun install` restored the plugin and both stages went green with main's files pristine.)
+
 ## 2026-07-10 (pass 3) — convergence sweep (4 NEW findings) + a batch-9 residual
 
 A third sweep with **complementary lenses** the first two under-covered (cross-module contract

@@ -51,10 +51,21 @@ const docsResult = await Bun.build({
   plugins: [tailwind],
 });
 
+// The simulation worker is its OWN browser entrypoint: Bun's HTML bundler does not follow
+// `new Worker(new URL(...))` references, so the worker graph must be bundled explicitly. world.ts
+// resolves `./workers/simulation-worker.js` against the served chunk origin, so the artifact must
+// sit at that stable path next to the chunks (dev: server.ts route; Pages: dist/ → site/ copy).
+const workerResult = await Bun.build({
+  entrypoints: ['./src/workers/simulation-worker.ts'],
+  outdir: './dist/workers',
+  target: 'browser',
+  minify: true,
+});
+
 const result = {
-  success: staticResult.success && docsResult.success,
-  logs: [...staticResult.logs, ...docsResult.logs],
-  outputs: [...staticResult.outputs, ...docsResult.outputs],
+  success: staticResult.success && docsResult.success && workerResult.success,
+  logs: [...staticResult.logs, ...docsResult.logs, ...workerResult.logs],
+  outputs: [...staticResult.outputs, ...docsResult.outputs, ...workerResult.outputs],
 };
 
 if (!result.success) {
@@ -95,6 +106,12 @@ if (!galSrc) {
 if (!galSrc) throw new Error('build: alife-gallery entry output is missing');
 await cp(`./dist/${galSrc}`, './dist/alife-gallery.js');
 await cp('./dist/alife-gallery.js', './alife-gallery.js');
+
+// The worker pool dies silently (main-thread sync fallback) if this artifact goes missing, so a
+// partial build must fail loudly here rather than ship a workerless bundle.
+if (!(await Bun.file('./dist/workers/simulation-worker.js').exists())) {
+  throw new Error('build: workers/simulation-worker.js output is missing');
+}
 
 // Copy public textures (pantheon equirect atlas + portal sampling) into dist for production.
 await mkdir('./dist/textures', { recursive: true });

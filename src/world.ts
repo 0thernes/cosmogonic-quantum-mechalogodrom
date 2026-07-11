@@ -1383,7 +1383,11 @@ export class World {
     const pool = this.workerPool;
     if (!pool) return;
     try {
-      const url = new URL('./workers/simulation-worker.ts', import.meta.url);
+      // The worker ships as a PRE-BUNDLED sibling artifact (`workers/simulation-worker.js` —
+      // emitted by scripts/build.ts, served/bundled on demand by server.ts). Bun's HTML bundler
+      // does not follow `new Worker(new URL(...))` graphs, so the raw `.ts` path 404s in the
+      // browser and every worker lineage dies on startup, leaving sync fallback despite the cores.
+      const url = new URL('./workers/simulation-worker.js', import.meta.url);
       await pool.initialize(url.href);
     } catch {
       // Wilderness falls back to main-thread sync when workers unavailable.
