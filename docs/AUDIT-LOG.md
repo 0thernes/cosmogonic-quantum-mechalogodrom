@@ -11,6 +11,26 @@ changed and why.
 
 ---
 
+## 2026-07-10 (pass 6) — batch 24: close the sync-allowlist gap — the 14th and final pass-6 finding
+
+- **[SYNC-1] a receipt-publishing living doc was outside the sync allowlist and had drifted**
+  (`sync-surfaces.ts` / the brain assessment, LOW design) — `docs/BRAIN-NEUROLOGY-CONSCIOUSNESS-
+ENGINEERING-ASSESSMENT-2026-07-06.md` (a living doc, "rewritten in place") publishes the current test
+  receipt but was in NEITHER the sync `SURFACES` list nor `docs-receipts-law`, so it froze at "2,360
+  tests" (20 tokens) while canonical moved on. Fixed: updated it to canonical (2,450; receipt-only — no
+  Butlin/consciousness score touched), added it to sync `SURFACES`, and added a hyphenated "N,NNN-test"
+  receipt regex (the mandatory comma-group keeps it off "unit-test"/"A-test") so its "N-test floor"
+  adjective forms auto-sync too. It is now gate-covered by `sync:check`.
+
+Scope note on the finding's PART-2 (a BROAD guard scanning all docs for stale receipts): confirmed
+empirically UNSAFE as a naive test — root docs legitimately mix current-tense receipts (synced) with
+HISTORICAL citations (NHSI + VERIFICATION cite a past "2,418 tests"; the MEGA-MASTER-PASS drafts are
+"local research drafts"), so a blind scan false-positives. A robust current-vs-historical guard is a real
+design task, deliberately not shipped as a fragile point fix. The concrete drift is closed. Receipts
+unchanged (2,450). Full gate green.
+
+**PASS 6 COMPLETE: 14/14 confirmed findings addressed** (batches 16-24).
+
 ## 2026-07-10 — batch 23: the base digital-life population LEARNS (exact Eshkol AD) + Cognition 3.9→4.0
 
 The flagship "a LIVE creature loop learns", done honestly (the tuning-trap I flagged is avoided: the

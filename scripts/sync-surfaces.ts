@@ -105,6 +105,7 @@ const SURFACES = [
   'docs/KANBAN-2026-06-26.md',
   'docs/MODULE-CONTRACTS-2026-06-26.md',
   'docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md',
+  'docs/BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md',
   'docs/VERIFICATION-ANALYTICAL-DATA.md',
   'docs/BOOK-2026-06-26.md',
   'docs/RISK-REGISTER-2026-07-02.md',
@@ -140,6 +141,9 @@ function syncReceipts(s: string): string {
     // each sync) and froze comma surfaces once CANONICAL_TEST_COUNT crossed 9,999.
     .replace(/tests-[0-9]{3,}/g, `tests-${TEST}`)
     .replace(/\b[0-9]{1,3}(?:,[0-9]{3})+\s+tests\b/g, `${TEST_COMMA} tests`)
+    // Hyphenated adjective form "N,NNN-test" (e.g. "2,450-test floor"). The mandatory comma-grouped
+    // number keeps it from matching ordinary compounds like "unit-test" / "A-test". Idempotent.
+    .replace(/\b[0-9]{1,3}(?:,[0-9]{3})+-test\b/g, `${TEST_COMMA}-test`)
     // Anchored to a RECEIPT marker after "tests" so it never rewrites ordinary prose like
     // "we ran 500 tests of X" into the canonical count — a silent, unrecoverable corruption of the
     // owner's factual numbers on commit (data-loss audit 2026-07-01). A novel receipt form that
