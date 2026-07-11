@@ -2,8 +2,8 @@
  * Action audit trail.
  *
  * Each recorded action lands in a bounded in-memory ring, is persisted to
- * localStorage (key `cqm.audit.v1`), and is mirrored to the server with a
- * fire-and-forget JSON POST. All browser globals are feature-guarded, so the
+ * localStorage (key `cqm.audit.v1`), and is best-effort mirrored to the server
+ * with a rate-shaped fire-and-forget JSON POST. All browser globals are feature-guarded, so the
  * module degrades gracefully under `bun test` (no localStorage, stubbed or
  * absent fetch) — persistence and POSTs simply become no-ops.
  */
@@ -17,6 +17,13 @@ const DEFAULT_MAX = 200;
 
 /** Hard ceiling for caller-configured audit retention. */
 const MAX_CONFIGURED_ENTRIES = 1_000;
+
+/**
+ * Keep the optional server mirror comfortably below the server's per-client 60-request burst.
+ * The authoritative local ring never sheds entries; only redundant remote copies may be skipped.
+ */
+const SERVER_MIRROR_BURST = 24;
+const SERVER_MIRROR_REFILL_PER_MS = 10 / 1_000;
 
 /** Normalize an optional capacity to a finite integer inside the documented resource ceiling. */
 function normalizedMax(value: number | undefined): number {
@@ -63,6 +70,9 @@ export class AuditTrail {
   private readonly buf: AuditEntry[] = [];
   /** When set (by World after boot), sim audit timestamps use the tick counter — not wall clock. */
   private simClock: (() => number) | null = null;
+  /** Client-side token bucket for the optional server mirror; local retention is unaffected. */
+  private mirrorTokens = SERVER_MIRROR_BURST;
+  private mirrorLastRefillMs = Date.now();
 
   /**
    * @param opts.endpoint POST target for the server mirror (default `/api/audit`).
@@ -89,10 +99,11 @@ export class AuditTrail {
 
   /**
    * Record one action. Appends to the ring (evicting the oldest past `max`),
-   * persists the ring to localStorage, and fire-and-forget POSTs the single
+   * persists the ring to localStorage, and may fire-and-forget POST the single
    * entry as JSON. O(1) — the persistence write is bounded by the constant
-   * ring cap. Rejections are swallowed; the POST is skipped entirely when
-   * fetch is unavailable.
+   * ring cap. Rejections are swallowed; the optional POST is skipped when
+   * fetch is unavailable or when accelerated automatic events consume the
+   * mirror budget.
    */
   record(action: string, detail?: Record<string, unknown>): void {
     const ts = this.timestamp();
@@ -163,9 +174,25 @@ export class AuditTrail {
     }
   }
 
-  /** Fire-and-forget POST of a single entry; every failure mode is swallowed. */
+  /** Consume one token for the redundant server mirror without affecting local retention. */
+  private takeMirrorToken(): boolean {
+    const now = Date.now();
+    const elapsed = Math.max(0, now - this.mirrorLastRefillMs);
+    this.mirrorLastRefillMs = now;
+    this.mirrorTokens = Math.min(
+      SERVER_MIRROR_BURST,
+      this.mirrorTokens + elapsed * SERVER_MIRROR_REFILL_PER_MS,
+    );
+    if (this.mirrorTokens < 1) {
+      return false;
+    }
+    this.mirrorTokens -= 1;
+    return true;
+  }
+
+  /** Rate-shaped fire-and-forget POST of a single entry; every failure mode is swallowed. */
   private post(entry: AuditEntry): void {
-    if (typeof fetch !== 'function') {
+    if (typeof fetch !== 'function' || !this.takeMirrorToken()) {
       return;
     }
     try {

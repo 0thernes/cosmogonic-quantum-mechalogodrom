@@ -61,8 +61,9 @@ describe('WildernessPopulation', () => {
   test('loads camera-streamed chunks and exposes entity + chunk counts', () => {
     const pop = new WildernessPopulation(null, 0xabc123);
     pop.update(50, 50, 1 / 60);
-    expect(pop.getEntityCount()).toBeGreaterThan(0);
-    expect(pop.getActiveChunkCount()).toBeGreaterThan(0);
+    // Camera-local wilderness census stays fixed: radius 3 => 7×7 chunks, 128 entities each.
+    expect(pop.getActiveChunkCount()).toBe(49);
+    expect(pop.getEntityCount()).toBe(49 * 128);
     let seen = 0;
     pop.forEachEntity(() => {
       seen++;

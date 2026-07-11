@@ -9,6 +9,7 @@
  */
 import { describe, expect, test } from 'bun:test';
 import { leviathanSurge, leviathanDepth } from '../src/sim/leviathans';
+import { HABITAT_Y_SCALE } from '../src/sim/constants';
 
 describe('leviathanSurge (pure)', () => {
   test('zero speed → zero; linear until saturation; clamps at 1', () => {
@@ -41,16 +42,16 @@ describe('leviathanSurge (pure)', () => {
 
 describe('leviathanDepth (pure)', () => {
   test('surface → 0, floor → 1, mid → 0.5; clamps beyond the column', () => {
-    expect(leviathanDepth(28)).toBeCloseTo(0, 6); // top of the roam column
+    expect(leviathanDepth(28 * HABITAT_Y_SCALE)).toBeCloseTo(0, 6); // top of the scaled roam column
     expect(leviathanDepth(0)).toBeCloseTo(1, 6); // deepest
-    expect(leviathanDepth(14)).toBeCloseTo(0.5, 6); // mid
+    expect(leviathanDepth(14 * HABITAT_Y_SCALE)).toBeCloseTo(0.5, 6); // mid
     expect(leviathanDepth(-100)).toBe(1); // below the floor → clamp
     expect(leviathanDepth(1000)).toBe(0); // high above → clamp
   });
 
   test('monotonic DECREASING in height; always within [0,1]', () => {
     let prev = Infinity;
-    for (let y = -10; y <= 40; y += 2) {
+    for (let y = -10 * HABITAT_Y_SCALE; y <= 40 * HABITAT_Y_SCALE; y += 2 * HABITAT_Y_SCALE) {
       const v = leviathanDepth(y);
       expect(v).toBeLessThanOrEqual(prev);
       expect(v).toBeGreaterThanOrEqual(0);

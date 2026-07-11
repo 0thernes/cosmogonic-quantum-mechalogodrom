@@ -155,6 +155,11 @@ describe('persistent dock controls (owner-critical)', () => {
     expect(world).toContain('window.cqmCopilot?.toggle(true)');
     expect(copilot).toContain('window.cqmCopilot =');
     expect(copilot).toContain('toggle(open?: boolean)');
+    // Merely mounting the closed panel must not probe seven external LLMs. The boot tail uses the
+    // inert catalog; live populateStaticProviders remains user-triggered inside openPanel/diagnostics.
+    const prepopulate = copilot.slice(copilot.indexOf('// Pre-populate provider list'));
+    expect(prepopulate).toContain('populateStaticProviderCatalog');
+    expect(prepopulate).not.toContain('populateStaticProviders(sel, prov)');
   });
 
   test('pause action is wired to a true freeze (timeScale -> 0)', () => {

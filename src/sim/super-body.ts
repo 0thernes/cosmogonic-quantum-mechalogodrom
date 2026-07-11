@@ -34,6 +34,7 @@
  * coupling. See [[super-creature-state]], ADR-0008, and ENTITY-SHEETS §5★.
  */
 import * as THREE from 'three';
+import { PLATFORM_CEIL, PLATFORM_FLOOR, PLATFORM_HALF } from './constants';
 import type { SuperSnapshot, SuperPlan } from './super-creature';
 import type { EvoAppearance } from './super-evolution';
 import type { ArchonForm } from './godform';
@@ -901,19 +902,19 @@ export class SuperBodySystem {
     // ── V39 FLIGHT: the apex ROAMS the whole world instead of hovering at the center. A wander-seek
     //    boid steered by its own MIND (the move output), banking toward its heading and QUANTUM-BLINKING
     //    to a fresh locus on a timer (sooner when surprised). Deterministic — a monotonic seed + the sim
-    //    clock, no rng. ARENA_R keeps it inside the dome; FLOOR/CEIL keep it aloft. ──
-    // Owner: the apex super-creatures must ROAM THE WHOLE ±540 square + the full 6..240 column (they
-    // were pinned to a tiny 190-radius, y7..62 central dome). Per-variant phase offset so the 5 apexes
+    //    clock, no rng. The platform constants keep it inside the expanded biosphere. ──
+    // Owner: the apex super-creatures roam the whole platform + full vertical column. Per-variant
+    // phase offset makes the five apexes fan out instead of overlapping.
     // fan out across the platform instead of overlapping. Deterministic — monotonic seed + clock, no rng.
-    const ARENA_R = 540; // PLATFORM_HALF — the square platform half-extent
-    const FLOOR = 6; // PLATFORM_FLOOR
-    const CEIL = 240; // PLATFORM_CEIL — up to the mechalogodrom
+    const ARENA_R = PLATFORM_HALF;
+    const FLOOR = PLATFORM_FLOOR;
+    const CEIL = PLATFORM_CEIL;
     const vph = this.variant * 1.2566; // per-apex sector offset (2π/5)
     this.wanderClock -= dt;
     if (this.wanderClock <= 0) {
       this.seed++;
       const a = this.seed * 2.399963 + vph; // golden-angle walk → visits every sector over time
-      const rr = (0.25 + 0.72 * frac(this.seed * 0.61803)) * ARENA_R; // 135..540 across the platform
+      const rr = (0.25 + 0.72 * frac(this.seed * 0.61803)) * ARENA_R; // 25%..97% across the platform
       this.wander.set(
         Math.cos(a) * rr,
         FLOOR + (CEIL - FLOOR) * frac(this.seed * 0.317),

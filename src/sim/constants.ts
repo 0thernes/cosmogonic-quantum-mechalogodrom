@@ -5,9 +5,9 @@
  */
 
 // ── PANTHEON arena scale (CONTRACTS V3.1) ────────────────────────────────────
-// The 0.3.0 world is 5× the legacy floor plan. Horizontal (XZ) coordinates,
-// containment radii and spawn volumes scale by ARENA; vertical extents scale by
-// the gentler ARENA_Y so the skyline reads as colossal instead of absurd.
+// The authored world is 5× the legacy floor plan. Object dimensions and authored
+// architecture continue to scale by ARENA / ARENA_Y; the habitat itself has its
+// own multipliers so enlarging the biosphere never silently enlarges its inhabitants.
 // Legacy tuple tables below stay authored in LEGACY units and are scaled once
 // at module init — one source of truth, no drifting magic numbers.
 
@@ -20,24 +20,41 @@ export const ARENA_Y = 2;
 /** Mid-field multiplier for actors that must stay near the populated core. */
 export const ARENA_MID = 2.5;
 
-/** Core containment radius: legacy 65 × ARENA. Entities live inside this. */
+/** User-directed habitat expansion: 2× width and 2× length (4× land area). */
+export const HABITAT_XZ_SCALE = 2;
+
+/** User-directed habitat expansion: 3× the former vertical ceiling. */
+export const HABITAT_Y_SCALE = 3;
+
+/** Expanded mid-field coordinate multiplier for world-scale paths and cameras. */
+export const HABITAT_MID = ARENA_MID * HABITAT_XZ_SCALE;
+
+/** Expanded altitude coordinate multiplier; object sizes still use {@link ARENA_Y}. */
+export const HABITAT_Y = ARENA_Y * HABITAT_Y_SCALE;
+
+/** Authored architecture/core radius. This deliberately does not scale object dimensions. */
 export const ARENA_RADIUS = 65 * ARENA;
 
-/** Squared entity containment radius (legacy 4225 = 65² family). */
-export const CONTAIN_RADIUS2 = ARENA_RADIUS * ARENA_RADIUS;
+/** Expanded radial habitat radius for systems that require a circular safety bound. */
+export const HABITAT_RADIUS = ARENA_RADIUS * HABITAT_XZ_SCALE;
 
-/** Ground plane edge length (legacy 240 × ARENA). Maps world XZ → RD texture UV. */
-export const GROUND_EXTENT = 240 * ARENA;
+/** Squared expanded habitat radius (square-platform actors use PLATFORM_HALF per axis). */
+export const CONTAIN_RADIUS2 = HABITAT_RADIUS * HABITAT_RADIUS;
 
-/** USER: the SQUARE PLATFORM box that EVERYTHING roams — per-axis half-extent (just inside the ground
- *  edge), a ground floor, and a ceiling at the mechalogodrom height (ALTITUDE 252). Creatures fill the
- *  whole square + the full vertical column, never outside the square and never above the mechalogodrom. */
-export const PLATFORM_HALF = (GROUND_EXTENT / 2) * 0.9; // 540
-export const PLATFORM_CEIL = 240;
+/** Ground edge: former 1,200 × 2 = 2,400. Maps world XZ → RD texture UV. */
+export const GROUND_EXTENT = 240 * ARENA * HABITAT_XZ_SCALE;
+
+/** USER: the SQUARE PLATFORM box that everything roams — per-axis half-extent (just inside the ground
+ *  edge), a ground floor, and the expanded biosphere ceiling. The central mechalogodrom keeps its
+ *  authored size/altitude while creatures may now roam through the taller surrounding atmosphere. */
+export const PLATFORM_HALF = (GROUND_EXTENT / 2) * 0.9; // 1,080
+export const PLATFORM_CEIL = 240 * HABITAT_Y_SCALE; // 720
 export const PLATFORM_FLOOR = 6;
+export const PLATFORM_HEIGHT = PLATFORM_CEIL - PLATFORM_FLOOR;
+export const PLATFORM_MID_Y = PLATFORM_FLOOR + PLATFORM_HEIGHT * 0.5;
 
-/** Mid-field containment radius (legacy 60 × ARENA_MID): shoggoths, quantum cloud. */
-export const MID_RADIUS = 60 * ARENA_MID;
+/** Expanded mid-field containment radius: leviathans and the quantum cloud. */
+export const MID_RADIUS = 60 * HABITAT_MID;
 
 /** Squared mid-field containment (legacy 3600 = 60² family). */
 export const MID_RADIUS2 = MID_RADIUS * MID_RADIUS;
@@ -58,11 +75,11 @@ export const GRID_CELL = 16;
  */
 export const ULTRA_GRID_CELL = 10;
 
-/** Camera far plane (legacy 900 → 2600 so the 5× rim and star shells resolve). */
-export const CAMERA_FAR = 2600;
+/** Camera far plane doubled with the habitat so the new rim and sky shell resolve. */
+export const CAMERA_FAR = 2600 * HABITAT_XZ_SCALE;
 
-/** Base fog density (legacy 0.003 ÷ ARENA — same optical depth across 5× sightlines). */
-export const FOG_SCALE = 1 / ARENA;
+/** Base fog density preserves optical depth across the doubled horizontal sightline. */
+export const FOG_SCALE = 1 / (ARENA * HABITAT_XZ_SCALE);
 
 /** Weather cycle states, legacy line 178. Order matters: `weatherIdx` indexes this. */
 export const WEATHERS = ['CLEAR', 'RAIN', 'STORM', 'AURORA', 'VOID', 'FOG'] as const;

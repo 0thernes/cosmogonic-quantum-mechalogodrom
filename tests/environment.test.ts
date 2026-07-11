@@ -13,11 +13,26 @@ import { describe, expect, test } from 'bun:test';
 import * as THREE from 'three';
 import { mulberry32 } from '../src/math/rng';
 import { SpatialHash } from '../src/math/spatial-hash';
-import { GRID_CELL, CHAOS_MAX, ENTROPY_MAX } from '../src/sim/constants';
+import {
+  GRID_CELL,
+  CHAOS_MAX,
+  ENTROPY_MAX,
+  GROUND_EXTENT,
+  PLATFORM_CEIL,
+  PLATFORM_FLOOR,
+  PLATFORM_HALF,
+  PLATFORM_MID_Y,
+} from '../src/sim/constants';
 import { createGeometryCache } from '../src/sim/geometry-cache';
 import { createMorphotypes } from '../src/sim/morphotypes';
 import { createPhyla } from '../src/sim/phyla';
 import { EnvironmentSystem } from '../src/sim/environment';
+import {
+  baseTerrainHeightAt,
+  GROUND_BASE_Y,
+  GROUND_GRID_DIVISIONS,
+  GROUND_SEGMENTS,
+} from '../src/sim/terrain-profile';
 import { LoreEngine } from '../src/sim/lore';
 import { getQuantizationConfig } from '../src/math/quantization';
 import type { AuditTrail } from '../src/logging/audit';
@@ -127,14 +142,37 @@ describe('EnvironmentSystem — purity + build contract', () => {
     let ambient = 0;
     let directional = 0;
     let point = 0;
+    const suns: THREE.DirectionalLight[] = [];
     ctx.scene.traverse((o) => {
       if (o instanceof THREE.AmbientLight) ambient++;
-      else if (o instanceof THREE.DirectionalLight) directional++;
-      else if (o instanceof THREE.PointLight) point++;
+      else if (o instanceof THREE.DirectionalLight) {
+        directional++;
+        suns.push(o);
+      } else if (o instanceof THREE.PointLight) point++;
     });
     expect(ambient).toBe(1);
     expect(directional).toBe(1);
     expect(point).toBeGreaterThanOrEqual(6); // 6 colored rig lights + monolith crowns + diorama glows
+
+    // Every expanded floor/ceiling corner must project inside the directional shadow camera.
+    const sun = suns[0]!;
+    expect(sun.target.position.y).toBe(PLATFORM_MID_Y);
+    ctx.scene.updateMatrixWorld(true);
+    sun.shadow.updateMatrices(sun);
+    const shadowCamera = sun.shadow.camera;
+    for (const x of [-PLATFORM_HALF, PLATFORM_HALF]) {
+      for (const y of [PLATFORM_FLOOR, PLATFORM_CEIL]) {
+        for (const z of [-PLATFORM_HALF, PLATFORM_HALF]) {
+          const p = new THREE.Vector3(x, y, z).applyMatrix4(shadowCamera.matrixWorldInverse);
+          expect(p.x).toBeGreaterThanOrEqual(shadowCamera.left);
+          expect(p.x).toBeLessThanOrEqual(shadowCamera.right);
+          expect(p.y).toBeGreaterThanOrEqual(shadowCamera.bottom);
+          expect(p.y).toBeLessThanOrEqual(shadowCamera.top);
+          expect(-p.z).toBeGreaterThanOrEqual(shadowCamera.near);
+          expect(-p.z).toBeLessThanOrEqual(shadowCamera.far);
+        }
+      }
+    }
   });
 
   test('ground shader uniforms track chaos, entropy, wind and time', () => {
@@ -157,6 +195,46 @@ describe('EnvironmentSystem — purity + build contract', () => {
     expect(internals.groundUniforms.uEntropy.value).toBeCloseTo(0.25, 6);
     expect(internals.groundUniforms.uWind.value.x).toBe(3);
     expect(internals.groundUniforms.uWind.value.y).toBe(-2);
+  });
+
+  test('expanded ground preserves mesh/grid resolution and the shared static terrain profile', () => {
+    const ctx = makeCtx(0x771, 1);
+    new EnvironmentSystem(ctx);
+    let ground: THREE.Mesh<THREE.PlaneGeometry> | null = null;
+    let grid: THREE.GridHelper | null = null;
+    ctx.scene.traverse((o) => {
+      if (
+        o instanceof THREE.Mesh &&
+        o.geometry instanceof THREE.PlaneGeometry &&
+        o.geometry.parameters.width === GROUND_EXTENT &&
+        o.geometry.parameters.height === GROUND_EXTENT &&
+        o.position.y === GROUND_BASE_Y
+      ) {
+        ground = o as THREE.Mesh<THREE.PlaneGeometry>;
+      } else if (o instanceof THREE.GridHelper) {
+        grid = o;
+      }
+    });
+    expect(ground).not.toBeNull();
+    expect(ground!.geometry.parameters.widthSegments).toBe(GROUND_SEGMENTS);
+    expect(ground!.geometry.parameters.heightSegments).toBe(GROUND_SEGMENTS);
+    expect(grid).not.toBeNull();
+    const gridPositions = grid!.geometry.getAttribute('position');
+    expect(gridPositions.count).toBe((GROUND_GRID_DIVISIONS + 1) * 4);
+
+    for (const [x, z] of [
+      [0, 0],
+      [540, -360],
+      [1050, 1020],
+      [-1075, 890],
+    ] as const) {
+      const expected =
+        GROUND_BASE_Y -
+        3 +
+        Math.sin((x * 0.06) / 5) * Math.cos((z * 0.05) / 5) * 8 +
+        Math.sin((x * 0.2 - z * 0.15) / 5) * 2;
+      expect(baseTerrainHeightAt(x, z)).toBeCloseTo(expected, 12);
+    }
   });
 });
 

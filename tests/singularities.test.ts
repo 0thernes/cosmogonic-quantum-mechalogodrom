@@ -95,7 +95,7 @@ function rebuildGrid(ctx: SimContext, entities: EntityManager): void {
  * Deterministically re-scatter the population into a dense, uniform-in-ball cloud of radius `rMax`
  * centred on `c` (skipping the first `skip` entities, e.g. hand-placed probes). The O(k) query
  * stress tests below need a genuinely HEAVY in-REACH / in-CONV_R population near the summon point;
- * the live sim now spreads entities across the full ±540 platform AND the full vertical column (owner
+ * the live sim now spreads entities across the full expanded platform and vertical column (owner
  * directive — creatures must use the whole square + height, never huddle a central disc), so the raw
  * `reset(N)` spawn is deliberately too diffuse for any single point to hold thousands. Restoring the
  * density here keeps the test measuring the QUERY (exact-once coverage, un-doubled r⁻², out-of-reach

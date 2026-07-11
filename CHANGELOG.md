@@ -9,6 +9,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Habitat and ecology expansion:
+  - Doubled biosphere width and length (four times the land), tripled the roaming ceiling, and kept
+    every non-plant quality/population ceiling unchanged.
+  - Raised active alien flora from the nominal 15,000 to exactly 60,000 desktop plants (20,800 phone),
+    retained nine instanced draw calls, preserved clearing density, and sealed every transform inside
+    the expanded walls.
+  - Extended entity/fauna/NHI/Pantheon/apex intent paths, camera tours/top framing, atmosphere, fog,
+    shadows, respawns, and reaction-diffusion detail across the new habitat.
+  - Unified static and animated terrain displacement between ground and flora, raised the ground to
+    600 segments, and band-limited its highest detail octave. A 4,096-point × three-phase regression
+    keeps sampled root/triangle deviation within the plants' 0.5-unit seating allowance while the
+    terrain keeps waving, shifting, morphing, and mutating.
+- Browser and runtime hardening:
+  - Built the simulation worker as a stable `/workers/simulation-worker.js` browser entry, emitted it
+    into `dist/workers`, and served the same route from the cached development fallback, eliminating the former
+    `/workers/simulation-worker.ts` 404 and replacement storm.
+  - Made closed-panel Copilot boot use an inert static provider catalog; live provider probes now run
+    only when the user opens Copilot or requests diagnostics, eliminating unsolicited startup calls.
+  - Rate-shaped the best-effort server audit mirror with a client token bucket. Accelerated automatic
+    events no longer trip server burst protection, while every entry still reaches the bounded local
+    audit ring.
+  - Strengthened visual smoke to fail on console errors and verify exact flora counts, draw groups,
+    built-worker delivery/activity, TOP framing at FOV 35, and sustained maximum-stress frame progress
+    on phone and desktop. Its stress duration is wall-clock bounded, so slow renderers cannot turn a
+    15-second sample into an unbounded serialized-timer wait.
+
 ## [0.21.13] — 2026-07-10
 
 - Security and boundedness:

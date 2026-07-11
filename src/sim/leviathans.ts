@@ -14,7 +14,7 @@
  * disturbance into the RD ground — neither draws rng, so bit-reproducibility is preserved.
  */
 import * as THREE from 'three';
-import { ARENA_MID, MID_RADIUS2, GROUND_EXTENT } from './constants';
+import { ARENA_MID, GROUND_EXTENT, HABITAT_MID, HABITAT_Y_SCALE, MID_RADIUS2 } from './constants';
 import { POINT_LIGHT_GAIN } from './environment';
 import type { SimContext } from '../types';
 import type { SingularitySystem } from './singularities';
@@ -31,7 +31,7 @@ const COUNT = 4;
 /** Silhouette scale — large enough to read as colossal against the monoliths. */
 const COLOSSAL = 4;
 /** Roam ring radius (mid-field, inside the shoggoth/quantum containment). */
-const ROAM_R = 48 * ARENA_MID;
+const ROAM_R = 48 * HABITAT_MID;
 /** Per-leviathan additive base hues (cold abyssal palette), indexed by id. */
 const HUES = [0.55, 0.62, 0.48, 0.7] as const;
 /** V1.3 ECOLOGY: a leviathan stirs the RD substrate every STIR_EVERY frames (slow, deterministic, rng-free). */
@@ -57,7 +57,7 @@ export function leviathanSurge(speed: number): number {
 }
 
 /** Depth span (world Y) over which a leviathan reads from surface (0) to deepest (1) — its roam column. */
-const LEVIATHAN_DEPTH_SPAN = 28;
+const LEVIATHAN_DEPTH_SPAN = 28 * HABITAT_Y_SCALE;
 
 /**
  * Map a leviathan's REAL height (world Y) to a `[0,1]` descent signal — high in the column → 0, deep
@@ -177,7 +177,11 @@ export class LeviathanSystem implements PortalCullable, DomeFeeder {
       const hue = HUES[i] ?? 0.55;
       const group = new THREE.Group();
       const ang = (i / COUNT) * Math.PI * 2;
-      group.position.set(Math.cos(ang) * ROAM_R, 18 + (i % 2) * 10, Math.sin(ang) * ROAM_R);
+      group.position.set(
+        Math.cos(ang) * ROAM_R,
+        (18 + (i % 2) * 10) * HABITAT_Y_SCALE,
+        Math.sin(ang) * ROAM_R,
+      );
       const mat = new THREE.MeshStandardMaterial({
         color: new THREE.Color().setHSL(hue, 0.5, 0.25),
         emissive: new THREE.Color().setHSL(hue, 0.7, 0.15),
@@ -311,7 +315,11 @@ export class LeviathanSystem implements PortalCullable, DomeFeeder {
       const r = ROAM_R * (0.85 + Math.sin(t * 0.05 + lv.ph) * 0.15);
       lv.vel.x += (Math.cos(orbit) * r - p.x) * 0.0006 * dt * 60;
       lv.vel.z += (Math.sin(orbit) * r - p.z) * 0.0006 * dt * 60;
-      lv.vel.y += (18 + Math.sin(t * 0.07 + lv.ph) * 12 - p.y) * 0.0005 * dt * 60;
+      lv.vel.y +=
+        (18 * HABITAT_Y_SCALE + Math.sin(t * 0.07 + lv.ph) * 12 * HABITAT_Y_SCALE - p.y) *
+        0.0005 *
+        dt *
+        60;
       lv.vel.multiplyScalar(0.96);
 
       // F-HOLES: an active singularity drags the colossus too (no-op when unattached/inactive).

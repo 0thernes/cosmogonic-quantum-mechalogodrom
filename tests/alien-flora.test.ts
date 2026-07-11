@@ -1,17 +1,23 @@
 /**
  * ALIEN FLORA — the vegetal ground ecology. Falsifiable claims:
  * - construction draws NO rng + needs no WebGL (boot-stream-neutral; headless Scene only);
- * - it places a substantial 15k desktop population across ≥1 family InstancedMesh, all transforms finite;
+ * - it places exactly 60k desktop plants across ≤9 InstancedMeshes, all transforms finite and in bounds;
  * - placement is DETERMINISTIC: two builds from identical context ⇒ bit-identical instance matrices;
  * - `comfortAt` returns a finite world position + a 0..1 cover strength (the fauna's cover readout);
- * - `update` is a pure uniform write (no throw, drives uTime/uWind/uChaos) and never allocates a mesh;
+ * - `update` is allocation-free O(52²) ecology + uniform work and never allocates a mesh;
  * - `dispose()` frees every mesh + removes them from the scene without throwing.
  *
  * Headless: three's Scene / InstancedMesh / ShaderMaterial / BufferGeometry need no WebGL context.
  */
 import { describe, expect, test } from 'bun:test';
 import * as THREE from 'three';
-import { AlienFlora } from '../src/sim/alien-flora';
+import {
+  ALIEN_FLORA_FIELD_HALF,
+  ALIEN_FLORA_TARGET_DESKTOP,
+  ALIEN_FLORA_TARGET_MOBILE,
+  AlienFlora,
+} from '../src/sim/alien-flora';
+import { PLATFORM_HALF } from '../src/sim/constants';
 import type { SimContext } from '../src/types';
 
 /** Minimal headless ctx — AlienFlora only reads `scene` + `quality.isMobile`. */
@@ -22,13 +28,12 @@ function makeCtx(isMobile = false): SimContext {
   } as unknown as SimContext;
 }
 
-/** Concatenate every family mesh's instance-matrix array (the full placement fingerprint). */
-function matrixFingerprint(scene: THREE.Scene): number[] {
-  const out: number[] = [];
+/** Direct typed-array views for every family mesh (avoids million-element boxed-number copies). */
+function matrixArrays(scene: THREE.Scene): Float32Array[] {
+  const out: Float32Array[] = [];
   scene.traverse((o) => {
     if (o instanceof THREE.InstancedMesh) {
-      const arr = o.instanceMatrix.array as ArrayLike<number>;
-      for (let i = 0; i < arr.length; i++) out.push(arr[i]!);
+      out.push(o.instanceMatrix.array as Float32Array);
     }
   });
   return out;
@@ -39,8 +44,7 @@ describe('AlienFlora — the vegetal ground ecology', () => {
     const ctx = makeCtx();
     const f = new AlienFlora(ctx);
     expect(f.speciesCount).toBe(50);
-    expect(f.instanceCount).toBeGreaterThan(10000);
-    expect(f.instanceCount).toBeLessThanOrEqual(15000);
+    expect(f.instanceCount).toBe(ALIEN_FLORA_TARGET_DESKTOP);
     let meshes = 0;
     let total = 0;
     ctx.scene.traverse((o) => {
@@ -58,9 +62,13 @@ describe('AlienFlora — the vegetal ground ecology', () => {
   test('every instance transform is finite (plants seated on the terrain, no NaN matrices)', () => {
     const ctx = makeCtx();
     const f = new AlienFlora(ctx);
-    const fp = matrixFingerprint(ctx.scene);
-    expect(fp.length).toBeGreaterThan(0);
-    for (const v of fp) expect(Number.isFinite(v)).toBe(true);
+    const arrays = matrixArrays(ctx.scene);
+    expect(arrays.length).toBeGreaterThan(0);
+    let finite = true;
+    for (const arr of arrays) {
+      for (let i = 0; i < arr.length; i++) finite &&= Number.isFinite(arr[i]);
+    }
+    expect(finite).toBe(true);
     f.dispose();
   });
 
@@ -70,10 +78,17 @@ describe('AlienFlora — the vegetal ground ecology', () => {
     const fa = new AlienFlora(a);
     const fb = new AlienFlora(b);
     expect(fa.instanceCount).toBe(fb.instanceCount);
-    const pa = matrixFingerprint(a.scene);
-    const pb = matrixFingerprint(b.scene);
+    const pa = matrixArrays(a.scene);
+    const pb = matrixArrays(b.scene);
     expect(pa.length).toBe(pb.length);
-    for (let i = 0; i < pa.length; i++) expect(pa[i]).toBe(pb[i]);
+    let identical = true;
+    for (let m = 0; m < pa.length; m++) {
+      const aa = pa[m]!;
+      const bb = pb[m]!;
+      if (aa.length !== bb.length) identical = false;
+      for (let i = 0; identical && i < aa.length; i++) identical = aa[i] === bb[i];
+    }
+    expect(identical).toBe(true);
     fa.dispose();
     fb.dispose();
   });
@@ -86,6 +101,7 @@ describe('AlienFlora — the vegetal ground ecology', () => {
       [120, -90],
       [-200, 150],
       [300, 300],
+      [900, -900],
     ] as const) {
       const c = f.comfortAt(x, z);
       expect(Number.isFinite(c.x)).toBe(true);
@@ -105,19 +121,53 @@ describe('AlienFlora — the vegetal ground ecology', () => {
     f.dispose();
   });
 
-  test('update is a pure uniform write (drives uTime/uChaos, no throw, no new mesh)', () => {
+  test('every plant stays inside the expanded walls and the field reaches outer corners', () => {
+    const ctx = makeCtx();
+    const f = new AlienFlora(ctx);
+    let maxAbs = 0;
+    let outerCornerPlants = 0;
+    const outerByQuadrant = [0, 0, 0, 0];
+    let withinBounds = true;
+    for (const arr of matrixArrays(ctx.scene)) {
+      for (let i = 0; i < arr.length; i += 16) {
+        const x = arr[i + 12] ?? Infinity;
+        const z = arr[i + 14] ?? Infinity;
+        maxAbs = Math.max(maxAbs, Math.abs(x), Math.abs(z));
+        withinBounds &&= Math.abs(x) <= PLATFORM_HALF && Math.abs(z) <= PLATFORM_HALF;
+        if (Math.abs(x) > PLATFORM_HALF * 0.75 && Math.abs(z) > PLATFORM_HALF * 0.75) {
+          outerCornerPlants++;
+          const quadrant = (x >= 0 ? 1 : 0) + (z >= 0 ? 2 : 0);
+          outerByQuadrant[quadrant] = (outerByQuadrant[quadrant] ?? 0) + 1;
+        }
+      }
+    }
+    expect(ALIEN_FLORA_FIELD_HALF).toBe(PLATFORM_HALF);
+    expect(withinBounds).toBe(true);
+    expect(maxAbs).toBeGreaterThan(PLATFORM_HALF * 0.98);
+    expect(outerCornerPlants).toBeGreaterThan(100);
+    for (const count of outerByQuadrant) expect(count).toBeGreaterThan(20);
+    f.dispose();
+  });
+
+  test('update performs bounded ecology + uniform writes without allocating a new mesh', () => {
     const ctx = makeCtx();
     const f = new AlienFlora(ctx);
     let before = 0;
     ctx.scene.traverse((o) => {
       if (o instanceof THREE.InstancedMesh) before++;
     });
-    expect(() => f.update(1 / 60, 12.5, 0.7)).not.toThrow();
+    expect(() => f.update(1 / 60, 12.5, 0.7, 0.25, 3, -2)).not.toThrow();
+    const mat = (f as unknown as { material: THREE.ShaderMaterial }).material;
+    expect(mat.vertexShader).toContain('float cqmTerrainDisplacement');
+    expect(mat.uniforms['uTerrainEntropy']!.value).toBe(0.25);
+    const wind = mat.uniforms['uTerrainWind']!.value as THREE.Vector2;
+    expect(wind.x).toBe(3);
+    expect(wind.y).toBe(-2);
     let after = 0;
     ctx.scene.traverse((o) => {
       if (o instanceof THREE.InstancedMesh) after++;
     });
-    expect(after).toBe(before); // O(1) update never spawns geometry
+    expect(after).toBe(before); // Fixed-grid update never spawns geometry or scans plant instances.
     f.dispose();
   });
 
@@ -151,7 +201,7 @@ describe('AlienFlora — the vegetal ground ecology', () => {
     let gx = 0;
     let gz = 0;
     let found = false;
-    for (let a = 60; a < 540 && !found; a += 30) {
+    for (let a = 60; a < PLATFORM_HALF && !found; a += 30) {
       for (let ang = 0; ang < 6.28 && !found; ang += 0.4) {
         const c = f.comfortAt(Math.cos(ang) * a, Math.sin(ang) * a);
         if (c.strength > 0.05) {
@@ -178,8 +228,8 @@ describe('AlienFlora — the vegetal ground ecology', () => {
   test('mobile builds a lighter field than desktop', () => {
     const desktop = new AlienFlora(makeCtx(false));
     const mobile = new AlienFlora(makeCtx(true));
-    expect(mobile.instanceCount).toBeLessThan(desktop.instanceCount);
-    expect(mobile.instanceCount).toBeLessThanOrEqual(5200);
+    expect(desktop.instanceCount).toBe(ALIEN_FLORA_TARGET_DESKTOP);
+    expect(mobile.instanceCount).toBe(ALIEN_FLORA_TARGET_MOBILE);
     desktop.dispose();
     mobile.dispose();
   });

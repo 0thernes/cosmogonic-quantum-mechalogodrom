@@ -8,7 +8,10 @@ import { describe, expect, test } from 'bun:test';
 import * as THREE from 'three';
 import { mulberry32 } from '../src/math/rng';
 import { SpatialHash } from '../src/math/spatial-hash';
-import { ReactionDiffusionSystem } from '../src/sim/reaction-diffusion';
+import {
+  DEFAULT_REACTION_DIFFUSION_SIZE,
+  ReactionDiffusionSystem,
+} from '../src/sim/reaction-diffusion';
 import { WEATHERS } from '../src/sim/constants';
 import { getQuantizationConfig } from '../src/math/quantization';
 import type { AuditTrail } from '../src/logging/audit';
@@ -82,15 +85,18 @@ describe('construction', () => {
     expect(() => new ReactionDiffusionSystem(makeCtx(1), 64.5)).toThrow();
   });
 
-  test('defaults to a 128×128 RGBA8 texture, uniform white (u = 1) with opaque alpha', () => {
+  test('defaults to a density-preserving 256×256 RGBA8 texture, uniform white', () => {
     const rd = new ReactionDiffusionSystem(makeCtx(1));
-    expect(rd.texture.image.width).toBe(128);
-    expect(rd.texture.image.height).toBe(128);
+    expect(DEFAULT_REACTION_DIFFUSION_SIZE).toBe(256);
+    expect(rd.texture.image.width).toBe(DEFAULT_REACTION_DIFFUSION_SIZE);
+    expect(rd.texture.image.height).toBe(DEFAULT_REACTION_DIFFUSION_SIZE);
     const data = rd.texture.image.data as Uint8Array;
-    expect(data.length).toBe(128 * 128 * 4);
-    for (let i = 0; i < data.length; i++) expect(data[i]).toBe(255);
-    expect(rd.fieldU.length).toBe(128 * 128);
-    expect(rd.fieldV.length).toBe(128 * 128);
+    expect(data.length).toBe(DEFAULT_REACTION_DIFFUSION_SIZE ** 2 * 4);
+    let allWhite = true;
+    for (let i = 0; i < data.length; i++) allWhite &&= data[i] === 255;
+    expect(allWhite).toBe(true);
+    expect(rd.fieldU.length).toBe(DEFAULT_REACTION_DIFFUSION_SIZE ** 2);
+    expect(rd.fieldV.length).toBe(DEFAULT_REACTION_DIFFUSION_SIZE ** 2);
   });
 
   test('construction draws nothing from the rng (stream stays aligned)', () => {

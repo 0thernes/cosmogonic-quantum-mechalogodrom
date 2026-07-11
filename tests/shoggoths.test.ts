@@ -15,6 +15,7 @@ import { createGeometryCache } from '../src/sim/geometry-cache';
 import { createMorphotypes } from '../src/sim/morphotypes';
 import { EntityManager } from '../src/sim/entities';
 import { ShoggothSystem } from '../src/sim/shoggoths';
+import { PLATFORM_CEIL, PLATFORM_FLOOR, PLATFORM_HALF } from '../src/sim/constants';
 import { getQuantizationConfig } from '../src/math/quantization';
 import type { AuditTrail } from '../src/logging/audit';
 import type { Entity, SimContext, SimState } from '../src/types';
@@ -40,15 +41,16 @@ function makeState(): SimState {
   };
 }
 
-function makeCtx(seed: number): SimContext {
+function makeCtx(seed: number, isMobile = true): SimContext {
   const rng = mulberry32(seed);
   const geos = createGeometryCache();
   const auditNoop = { record: () => undefined, entries: () => [] };
+  const tier = isMobile ? ('phone' as const) : ('desktop' as const);
   return {
     scene: new THREE.Scene(),
     quality: {
-      tier: 'phone' as const,
-      isMobile: true,
+      tier,
+      isMobile,
       instanced: false,
       dprCap: 1.25,
       maxEntities: 400,
@@ -57,7 +59,7 @@ function makeCtx(seed: number): SimContext {
       maxLinks: 100,
       shadows: false,
       starCount: 10,
-      quantization: getQuantizationConfig('phone'),
+      quantization: getQuantizationConfig(tier),
       simRate: 8,
     },
     rng,
@@ -70,8 +72,11 @@ function makeCtx(seed: number): SimContext {
   };
 }
 
-function makeWorld(seed: number): { entities: EntityManager; shog: ShoggothSystem } {
-  const ctx = makeCtx(seed);
+function makeWorld(
+  seed: number,
+  isMobile = true,
+): { entities: EntityManager; shog: ShoggothSystem } {
+  const ctx = makeCtx(seed, isMobile);
   const entities = new EntityManager(ctx);
   entities.reset(80);
   for (const e of entities.list) if (e) ctx.grid.insert(e);
@@ -90,10 +95,13 @@ function entityTrace(entities: EntityManager): number[] {
 }
 
 describe('ShoggothSystem — deterministic predators that never NaN the population', () => {
-  test('count is a positive integer (tier-scaled)', () => {
-    const c = makeWorld(1).shog.count;
-    expect(Number.isInteger(c)).toBe(true);
-    expect(c).toBeGreaterThanOrEqual(1);
+  test('count preserves the exact mobile and desktop census', () => {
+    const mobile = makeWorld(1, true).shog;
+    const desktop = makeWorld(1, false).shog;
+    expect(mobile.count).toBe(16);
+    expect(desktop.count).toBe(100);
+    mobile.dispose();
+    desktop.dispose();
   });
 
   test('dispose() frees per-shoggoth geometries + materials and clears the count (idempotent)', () => {
@@ -120,6 +128,30 @@ describe('ShoggothSystem — deterministic predators that never NaN the populati
       expect(Number.isFinite(p.x) && Number.isFinite(p.y) && Number.isFinite(p.z)).toBe(true);
       expect(Number.isFinite(v.x) && Number.isFinite(v.y) && Number.isFinite(v.z)).toBe(true);
     }
+  });
+
+  test('the horde occupies the expanded habitat and remains hard-contained', () => {
+    const { shog } = makeWorld(0x5a17);
+    const horde = (shog as unknown as { shogs: { group: THREE.Group }[] }).shogs;
+    let maxHorizontal = 0;
+    let maxY = -Infinity;
+    let contained = true;
+    for (let f = 0; f < 300; f++) {
+      shog.update(1 / 60, f / 60);
+      for (const s of horde) {
+        const p = s.group.position;
+        maxHorizontal = Math.max(maxHorizontal, Math.abs(p.x), Math.abs(p.z));
+        maxY = Math.max(maxY, p.y);
+        contained &&=
+          Math.abs(p.x) <= PLATFORM_HALF &&
+          Math.abs(p.z) <= PLATFORM_HALF &&
+          p.y >= PLATFORM_FLOOR &&
+          p.y <= PLATFORM_CEIL;
+      }
+    }
+    expect(maxHorizontal).toBeGreaterThan(540);
+    expect(maxY).toBeGreaterThan(240);
+    expect(contained).toBe(true);
   });
 
   test('identical seeds replay a byte-identical population trace (determinism)', () => {

@@ -14,6 +14,7 @@ import { SpatialHash } from '../src/math/spatial-hash';
 import { EntityManager } from '../src/sim/entities';
 import { LeviathanSystem } from '../src/sim/leviathans';
 import { SingularitySystem } from '../src/sim/singularities';
+import { MID_RADIUS } from '../src/sim/constants';
 import { getQuantizationConfig } from '../src/math/quantization';
 import type { AuditTrail } from '../src/logging/audit';
 import type { Entity, SimContext, SimState } from '../src/types';
@@ -95,6 +96,28 @@ describe('LeviathanSystem', () => {
     new LeviathanSystem(ctxB);
     const y = ctxB.rng();
     expect(y).toBe(x);
+  });
+
+  test('the four colossi use the expanded mid-field route without increasing their count', () => {
+    const ctx = makeCtx(43);
+    const sys = new LeviathanSystem(ctx);
+    const levs = (sys as unknown as { levs: { group: THREE.Group }[] }).levs;
+    expect(levs.length).toBe(4);
+    let maxHorizontal = 0;
+    let maxY = -Infinity;
+    let contained = true;
+    for (let f = 0; f < 600; f++) {
+      sys.update(1 / 60, f / 60);
+      for (const lv of levs) {
+        const p = lv.group.position;
+        maxHorizontal = Math.max(maxHorizontal, Math.hypot(p.x, p.z));
+        maxY = Math.max(maxY, p.y);
+        contained &&= p.length() <= MID_RADIUS;
+      }
+    }
+    expect(maxHorizontal).toBeGreaterThan(120);
+    expect(maxY).toBeGreaterThan(28);
+    expect(contained).toBe(true);
   });
 
   test('positions stay finite and mid-field-contained over a long run, even under a black hole', () => {

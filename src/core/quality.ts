@@ -15,7 +15,8 @@ import { detectWebGpu } from './webgpu-detect';
  * - **desktop** — ≥ 10 cores. 10,000 entities.
  * - **ultra** — 25,000 entities, available via explicit `?tier=ultra` for profiling/experimentation.
  * - **mega** — the explicit `?tier=mega` 50,000-entity stress ceiling. Neither high tier is selected
- *   automatically: the hard ±540 platform intentionally removed the former √N arena expansion, and
+ *   automatically: the fixed expanded ±1,080 platform intentionally avoids population-coupled arena
+ *   resizing, and
  *   current composite measurements exceed a 60 Hz frame budget above the 10,000-entity desktop rung.
  *
  * `targetEntities` is the steady-state population organic growth settles at;

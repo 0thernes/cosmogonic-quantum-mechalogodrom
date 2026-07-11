@@ -28,7 +28,7 @@ const MECHA_X = 0;
 const MECHA_Z = 0;
 // USER V127: the blaze REACHES DOWN — a widening fiery CONE hanging from the mecha into the central
 // column, so high-flyers that rise anywhere under it actually get incinerated (a bare sphere at y=252
-// almost never bit, since organisms cap at the y≤240 ceiling). The cone is narrow at the machine
+// almost never bit, since organisms cap at the habitat ceiling). The cone is narrow at the machine
 // (BASE_R, ≈ its exocage) and fans out as it falls, bottoming out at BLAZE_FLOOR — well above the
 // ground swarm, so only genuine high-flyers in the middle of the dome burn.
 /** Cone radius AT the mecha (a touch beyond the exocage CORE_R·2.7 ≈ 81). */

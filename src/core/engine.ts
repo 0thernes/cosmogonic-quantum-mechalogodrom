@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { CAMERA_FAR, FOG_SCALE } from '../sim/constants';
+import { CAMERA_FAR, FOG_SCALE, HABITAT_XZ_SCALE, HABITAT_Y_SCALE } from '../sim/constants';
 import type { QualityProfile } from '../types';
 import { PostFx, postFxMode } from './postfx';
 
@@ -9,8 +9,8 @@ import { PostFx, postFxMode } from './postfx';
  *
  * Faithful constants: antialias on, `high-performance` power preference,
  * ACES filmic tone mapping at exposure 0.95, `FogExp2(0x020310, 0.003 · FOG_SCALE)`,
- * 68° FOV camera with near/far 0.1..CAMERA_FAR parked at (0, 50, 140). The far
- * plane and fog density carry the V3.1 ARENA scale (legacy 900 / 0.003 at 1×).
+ * 68° FOV camera with near/far 0.1..CAMERA_FAR. Its boot vantage and fog carry
+ * the habitat scale so the enlarged biosphere opens with the same relative framing.
  *
  * r128 color-fidelity fix: `outputColorSpace` is forced to
  * `LinearSRGBColorSpace`. The legacy r128 monolith ran with the old default
@@ -86,7 +86,7 @@ export class Engine {
       0.1,
       CAMERA_FAR,
     );
-    this.camera.position.set(0, 50, 140);
+    this.camera.position.set(0, 50 * HABITAT_Y_SCALE, 140 * HABITAT_XZ_SCALE);
 
     // WebGL context-loss resilience. Mobile GPUs, driver resets, and tab
     // backgrounding can drop the GL context; calling render() on a lost context

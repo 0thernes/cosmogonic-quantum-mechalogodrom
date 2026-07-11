@@ -32,8 +32,11 @@ import type { Rng } from '../math/rng';
 import type { SimContext, SimState } from '../types';
 import { WEATHERS, type Weather } from './constants';
 
-/** Default grid resolution; 128² = 16 384 cells keeps step() well under 0.5 ms. */
-const DEFAULT_SIZE = 128;
+/**
+ * Default grid resolution. The habitat edge doubled, so 256² preserves the former
+ * reaction-diffusion texel size instead of stretching every living-ground feature 2×.
+ */
+export const DEFAULT_REACTION_DIFFUSION_SIZE = 256;
 
 /** Integration step (one step() call advances the PDE by this much model time). */
 const DT = 1.0;
@@ -111,7 +114,7 @@ export class ReactionDiffusionSystem {
    * at construction — the seeded stream is consumed only by `perturb`.
    * One-time O(size²) allocation; throws on a non-integer size or size < 8.
    */
-  constructor(ctx: SimContext, size = DEFAULT_SIZE) {
+  constructor(ctx: SimContext, size = DEFAULT_REACTION_DIFFUSION_SIZE) {
     if (!Number.isInteger(size) || size < 8) {
       throw new Error(`ReactionDiffusionSystem size must be an integer >= 8, got ${size}`);
     }

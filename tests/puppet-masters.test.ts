@@ -15,6 +15,7 @@ import { createGeometryCache } from '../src/sim/geometry-cache';
 import { createMorphotypes } from '../src/sim/morphotypes';
 import { EntityManager } from '../src/sim/entities';
 import { PuppetMasterSystem } from '../src/sim/puppet-masters';
+import { PLATFORM_CEIL, PLATFORM_FLOOR, PLATFORM_HALF } from '../src/sim/constants';
 import { getQuantizationConfig } from '../src/math/quantization';
 import type { AuditTrail } from '../src/logging/audit';
 import type { Entity, PuppetEvent, SimContext, SimState } from '../src/types';
@@ -40,15 +41,16 @@ function makeState(): SimState {
   };
 }
 
-function makeCtx(seed: number): SimContext {
+function makeCtx(seed: number, isMobile = true): SimContext {
   const rng = mulberry32(seed);
   const geos = createGeometryCache();
   const auditNoop = { record: () => undefined, entries: () => [] };
+  const tier = isMobile ? ('phone' as const) : ('desktop' as const);
   return {
     scene: new THREE.Scene(),
     quality: {
-      tier: 'phone' as const,
-      isMobile: true,
+      tier,
+      isMobile,
       instanced: false,
       dprCap: 1.25,
       maxEntities: 400,
@@ -57,7 +59,7 @@ function makeCtx(seed: number): SimContext {
       maxLinks: 100,
       shadows: false,
       starCount: 10,
-      quantization: getQuantizationConfig('phone'),
+      quantization: getQuantizationConfig(tier),
       simRate: 8,
     },
     rng,
@@ -70,12 +72,15 @@ function makeCtx(seed: number): SimContext {
   };
 }
 
-function makeWorld(seed: number): {
+function makeWorld(
+  seed: number,
+  isMobile = true,
+): {
   ctx: SimContext;
   pm: PuppetMasterSystem;
   events: PuppetEvent[];
 } {
-  const ctx = makeCtx(seed);
+  const ctx = makeCtx(seed, isMobile);
   const entities = new EntityManager(ctx);
   entities.reset(50);
   for (const e of entities.list) if (e) ctx.grid.insert(e);
@@ -86,10 +91,13 @@ function makeWorld(seed: number): {
 }
 
 describe('PuppetMasterSystem — deterministic schemers that perturb the world within bounds', () => {
-  test('has at least the 3 named hands (plus tier-scaled lesser puppeteers, V14)', () => {
-    const c = makeWorld(1).pm.count;
-    expect(Number.isInteger(c)).toBe(true);
-    expect(c).toBeGreaterThanOrEqual(3); // AETHON, SELENE, KRONOS are always present
+  test('preserves the exact mobile and desktop census', () => {
+    const mobile = makeWorld(1, true).pm;
+    const desktop = makeWorld(1, false).pm;
+    expect(mobile.count).toBe(14);
+    expect(desktop.count).toBe(100);
+    mobile.dispose();
+    desktop.dispose();
   }, 15_000);
 
   test('dispose() frees per-puppet geometries + materials and clears the count (idempotent)', () => {
@@ -108,7 +116,23 @@ describe('PuppetMasterSystem — deterministic schemers that perturb the world w
 
   test('6000 frames keep world state finite + in bounds and fire valid interventions', () => {
     const { ctx, pm, events } = makeWorld(0x9a77e7);
-    for (let f = 0; f < 6000; f++) pm.update(1 / 60, f / 60); // ~100s — long enough for all 3 hands to act
+    const hands = (pm as unknown as { pms: { mesh: THREE.Mesh }[] }).pms;
+    let maxHorizontal = 0;
+    let maxY = -Infinity;
+    let contained = true;
+    for (let f = 0; f < 6000; f++) {
+      pm.update(1 / 60, f / 60); // ~100s — long enough for all hands to roam + act
+      for (const hand of hands) {
+        const p = hand.mesh.position;
+        maxHorizontal = Math.max(maxHorizontal, Math.abs(p.x), Math.abs(p.z));
+        maxY = Math.max(maxY, p.y);
+        contained &&=
+          Math.abs(p.x) <= PLATFORM_HALF &&
+          Math.abs(p.z) <= PLATFORM_HALF &&
+          p.y >= PLATFORM_FLOOR &&
+          p.y <= PLATFORM_CEIL;
+      }
+    }
     const s = ctx.state;
     expect(Number.isFinite(s.chaos)).toBe(true);
     expect(s.chaos).toBeGreaterThanOrEqual(0);
@@ -119,6 +143,9 @@ describe('PuppetMasterSystem — deterministic schemers that perturb the world w
     expect(Number.isFinite(s.mutations)).toBe(true);
     expect(s.mutations).toBeGreaterThanOrEqual(0);
     expect(events.length).toBeGreaterThan(0); // the hands meddle over 10s
+    expect(maxHorizontal).toBeGreaterThan(540);
+    expect(maxY).toBeGreaterThan(240);
+    expect(contained).toBe(true);
     for (const ev of events) {
       expect(ev.name.length).toBeGreaterThan(0);
       expect(ev.action.length).toBeGreaterThan(0);

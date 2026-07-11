@@ -11,7 +11,13 @@
  */
 import * as THREE from 'three';
 import { clamp, dist2, dist2XZ } from '../math/scalar';
-import { ARENA, MONOLITH_CONFIG, PLATFORM_FLOOR } from './constants';
+import {
+  ARENA,
+  HABITAT_XZ_SCALE,
+  HABITAT_Y_SCALE,
+  MONOLITH_CONFIG,
+  PLATFORM_FLOOR,
+} from './constants';
 import type { Behavior } from './constants';
 import type { Entity, EntityData, SimContext } from '../types';
 
@@ -106,20 +112,24 @@ function swarm(e: Entity, u: EntityData, env: BehaviorEnv): void {
  * 275 (= 55 · ARENA). Unscaled, the ×0.9/frame damping covered ~97% of the arena area and
  * froze every flee organism (audit fix, 0.6.x). dist² units.
  */
-const FLEE_DAMP_R2 = 3025 * ARENA * ARENA;
+const FLEE_DAMP_XZ = 55 * ARENA * HABITAT_XZ_SCALE;
+const FLEE_DAMP_Y = 55 * ARENA * HABITAT_Y_SCALE;
 /**
  * hunt's arrive radius, ARENA-scaled: legacy stopped inside radius 5 (25 in dist² units) of
  * a 65u arena; the monolith ring now sits ×5 farther out. dist² units.
  */
 const HUNT_STOP_R2 = 25 * ARENA * ARENA;
 
-/** Run outward from the origin, damped past radius 275 (legacy 55, line 718). O(1). */
+/** Run outward, damped outside the habitat-scaled ellipsoid (2× XZ, 3× Y). O(1). */
 function flee(e: Entity, u: EntityData, env: BehaviorEnv): void {
   V1.copy(e.position)
     .normalize()
     .multiplyScalar(0.0003 * env.sp2);
   u.vel.add(V1);
-  if (e.position.lengthSq() > FLEE_DAMP_R2) u.vel.multiplyScalar(0.9);
+  const nx = e.position.x / FLEE_DAMP_XZ;
+  const ny = e.position.y / FLEE_DAMP_Y;
+  const nz = e.position.z / FLEE_DAMP_XZ;
+  if (nx * nx + ny * ny + nz * nz > 1) u.vel.multiplyScalar(0.9);
 }
 
 /** Seek the nearest monolith on XZ, stopping inside radius 25 (legacy 5, line 717). O(m). */

@@ -19,7 +19,7 @@ import {
   RNG_DRAWS_PER_PARTICLE,
   RNG_DRAW_COUNT_FIXED,
 } from '../src/sim/atmosphere';
-import { WEATHERS } from '../src/sim/constants';
+import { GROUND_EXTENT, PLATFORM_CEIL, PLATFORM_FLOOR, WEATHERS } from '../src/sim/constants';
 import { getQuantizationConfig } from '../src/math/quantization';
 import type { AtmosphereBands } from '../src/sim/atmosphere';
 import type { AuditTrail } from '../src/logging/audit';
@@ -87,8 +87,11 @@ interface AtmosInternals {
   domeVertCount: number;
   dustPos: Float32Array;
   dustCount: number;
+  rainPos: Float32Array;
   ribbons: { mesh: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial> }[];
   auroraMesh: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
+  domeMesh: THREE.Mesh;
+  wireMesh: THREE.Mesh;
 }
 
 const ZERO_BANDS: AtmosphereBands = { bass: 0, level: 0 };
@@ -108,6 +111,64 @@ describe('construction', () => {
     const points = ctx.scene.children.filter((c) => c instanceof THREE.Points);
     expect(meshes.length).toBe(6);
     expect(points.length).toBe(2);
+  });
+
+  test('rain, dust, haze, and aurora occupy the expanded horizontal and vertical habitat', () => {
+    const ctx = makeCtx(17, 800);
+    const atmos = new AtmosphereSystem(ctx);
+    const a = atmos as unknown as AtmosInternals;
+    let rainMaxY = -Infinity;
+    let dustMaxY = -Infinity;
+    let rainMaxAbsX = 0;
+    let rainMaxAbsZ = 0;
+    let dustMaxAbsX = 0;
+    let dustMaxAbsZ = 0;
+    let inBounds = true;
+    for (let i = 0; i < a.rainPos.length; i += 3) {
+      const x = a.rainPos[i] ?? Infinity;
+      const y = a.rainPos[i + 1] ?? Infinity;
+      const z = a.rainPos[i + 2] ?? Infinity;
+      rainMaxY = Math.max(rainMaxY, y);
+      rainMaxAbsX = Math.max(rainMaxAbsX, Math.abs(x));
+      rainMaxAbsZ = Math.max(rainMaxAbsZ, Math.abs(z));
+      inBounds &&=
+        Math.abs(x) <= GROUND_EXTENT / 2 &&
+        Math.abs(z) <= GROUND_EXTENT / 2 &&
+        y >= PLATFORM_FLOOR &&
+        y <= PLATFORM_CEIL;
+    }
+    for (let i = 0; i < a.dustPos.length; i += 3) {
+      const x = a.dustPos[i] ?? Infinity;
+      const y = a.dustPos[i + 1] ?? Infinity;
+      const z = a.dustPos[i + 2] ?? Infinity;
+      dustMaxY = Math.max(dustMaxY, y);
+      dustMaxAbsX = Math.max(dustMaxAbsX, Math.abs(x));
+      dustMaxAbsZ = Math.max(dustMaxAbsZ, Math.abs(z));
+      inBounds &&=
+        Math.abs(x) <= GROUND_EXTENT / 2 &&
+        Math.abs(z) <= GROUND_EXTENT / 2 &&
+        y >= PLATFORM_FLOOR &&
+        y <= PLATFORM_CEIL;
+    }
+    expect(inBounds).toBe(true);
+    expect(rainMaxY).toBeGreaterThan(PLATFORM_CEIL * 0.95);
+    expect(dustMaxY).toBeGreaterThan(PLATFORM_CEIL * 0.9);
+    expect(rainMaxAbsX).toBeGreaterThan(GROUND_EXTENT * 0.4);
+    expect(rainMaxAbsZ).toBeGreaterThan(GROUND_EXTENT * 0.4);
+    expect(dustMaxAbsX).toBeGreaterThan(GROUND_EXTENT * 0.4);
+    expect(dustMaxAbsZ).toBeGreaterThan(GROUND_EXTENT * 0.4);
+    expect(a.ribbons.every((r) => r.mesh.position.y > 240)).toBe(true);
+    expect(a.ribbons.every((r) => r.mesh.geometry.parameters.width > GROUND_EXTENT * 0.8)).toBe(
+      true,
+    );
+    expect(a.auroraMesh.position.y).toBe(PLATFORM_CEIL);
+    expect(a.auroraMesh.geometry.parameters.width).toBeGreaterThan(1200);
+    expect(a.auroraMesh.geometry.parameters.height).toBeGreaterThan(720);
+    const highTopViewer = new THREE.Vector3(0, 9042, 0);
+    atmos.update(0, 0, ZERO_BANDS, 0, highTopViewer);
+    expect(a.domeMesh.position).toEqual(highTopViewer);
+    expect(a.wireMesh.position).toEqual(highTopViewer);
+    atmos.dispose();
   });
 
   test('dispose() removes every added object from the scene and frees its geometry/material', () => {

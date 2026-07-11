@@ -29,7 +29,14 @@
  */
 import * as THREE from 'three';
 import { TAU, clamp, dist2XZ } from '../math/scalar';
-import { GROUND_EXTENT, PLATFORM_HALF, PLATFORM_CEIL, PLATFORM_FLOOR } from './constants';
+import {
+  GROUND_EXTENT,
+  PLATFORM_HALF,
+  PLATFORM_CEIL,
+  PLATFORM_FLOOR,
+  PLATFORM_HEIGHT,
+  PLATFORM_MID_Y,
+} from './constants';
 import {
   HISTORY_WINDOW,
   PRISONERS_DILEMMA,
@@ -949,12 +956,15 @@ export class TitanSystem implements DomeFeeder {
     // Patrol post: the original 10 hover over phylum home wedges; the extra 10 prefer a
     // small central social ring where they can meet/procreate without attracting all life.
     const angle = (i / TITAN_COUNT) * TAU + 0.31;
-    // USER: distribute ALL titan homes across the WHOLE ±540 square (no central breeder ring — that read
-    // as a racetrack) + up the full column. Each titan roams freely around its own scattered home.
+    // USER: distribute every titan home across the whole expanded square and full column.
     const radius = PLATFORM_HALF * (0.32 + ((i * 7) % 10) * 0.066); // 0.32..0.92 of the rim, well spread
     const homeX = Math.cos(angle) * radius;
     const homeZ = Math.sin(angle) * radius;
-    group.position.set(homeX, PLATFORM_FLOOR + 24 + (i % 10) * 20, homeZ); // vary the vertical start 30..210
+    group.position.set(
+      homeX,
+      PLATFORM_FLOOR + PLATFORM_HEIGHT * (4 / 39 + (i % 10) * (10 / 117)),
+      homeZ,
+    );
 
     const name = lore.name('tribe', 50 + i);
     return {
@@ -1099,7 +1109,7 @@ export class TitanSystem implements DomeFeeder {
     const p = g.position;
     const vel = ti.vel;
 
-    // FREE ROAM (owner: titans must WANDER the whole ±540 square + full 6..240 column, NOT race a central
+    // FREE ROAM (owner: titans wander the whole expanded square + column, not a central
     // ring — the old curl term `vel += (-p.z·k, +p.x·k)` was a pure orbit around origin = the 'racetrack',
     // and the breeder centre-pull + territory spring pinned them to fixed spots). Each titan is a huge,
     // SLOW beast pursuing its OWN drifting Lissajous waypoint (per-id phase ⇒ the 20 fan across the whole
@@ -1107,11 +1117,11 @@ export class TitanSystem implements DomeFeeder {
     // below guards the rim. Low seek accel + heavy damping keeps them majestic, not zippy. Pure trig of
     // (t, id, phase) — draws no rng, so the seeded stream is untouched. Applies to breeders AND roamers
     // alike (breeder status still governs mating elsewhere, just not this racetrack motion).
-    const T_HOME_Y = 120;
+    const T_HOME_Y = PLATFORM_MID_Y;
     const tph = ti.mi * 0.37 + ti.ph; // per-titan phase (mi is distinct per titan) → the 20 spread out
-    const trad = 180 + (ti.mi % 5) * 72; // 180..468 — its waypoint orbit sweeps most of the square
+    const trad = PLATFORM_HALF * (1 / 3 + (ti.mi % 5) * (2 / 15));
     const tdx = Math.cos(t * 0.11 + tph) * trad - p.x;
-    const tdy = T_HOME_Y + Math.sin(t * 0.17 + tph) * 96 - p.y; // sweeps ~24..216 of the column
+    const tdy = T_HOME_Y + Math.sin(t * 0.17 + tph) * PLATFORM_HEIGHT * (16 / 39) - p.y;
     const tdz = Math.sin(t * 0.13 + tph * 1.3) * trad - p.z;
     const tInv = 0.055 / (Math.sqrt(tdx * tdx + tdy * tdy + tdz * tdz) + 1e-6); // USER: faster (0.02→0.055) — visibly roams
     vel.x += tdx * tInv + Math.sin(t * 0.5 + ti.mi * 1.3) * 0.012;
@@ -1150,7 +1160,7 @@ export class TitanSystem implements DomeFeeder {
     }
     // Finite seal: a diverged titan re-anchors home instead of spreading NaN.
     if (!Number.isFinite(p.x + p.y + p.z + vel.x + vel.y + vel.z)) {
-      p.set(ti.homeX, 30, ti.homeZ);
+      p.set(ti.homeX, PLATFORM_FLOOR + PLATFORM_HEIGHT * (4 / 39), ti.homeZ);
       vel.set(0, 0, 0);
     }
 

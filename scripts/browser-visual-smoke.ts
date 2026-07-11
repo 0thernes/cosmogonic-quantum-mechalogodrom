@@ -462,6 +462,110 @@ async function waitForBootOverlayGone(page, tier) {
   return boot;
 }
 
+async function runHabitatStressProbe(page) {
+  return await page.evaluate(async () => {
+    const api = window.__CQM__;
+    if (!api?.world) throw new Error('window.__CQM__.world missing');
+    const world = api.world;
+    const camera = api.camera;
+    const startFrame = world.state.frame;
+    const startedAt = performance.now();
+    let maxWorkerActive = 0;
+
+    // Keep the largest habitat, narrowest supported lens, and strongest dynamic scalars live for a
+    // sustained foreground sample. Real rAF remains in control; this does not fabricate frame steps.
+    do {
+      world.state.viewIdx = 3;
+      world.state.chaos = 10;
+      world.state.entropy = 10;
+      world.state.weatherIdx = 2;
+      camera.fov = 35;
+      camera.updateProjectionMatrix();
+      const stats = world.workerPool?.getStats();
+      maxWorkerActive = Math.max(maxWorkerActive, stats?.activeTasks ?? 0);
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+    } while (performance.now() - startedAt < 15_000);
+
+    const durationMs = performance.now() - startedAt;
+    const endFrame = world.state.frame;
+    const corners = [];
+    for (const x of [-1080, 1080]) {
+      for (const y of [6, 720]) {
+        for (const z of [-1080, 1080]) {
+          const projected = new api.THREE.Vector3(x, y, z).project(camera);
+          corners.push({
+            x: projected.x,
+            y: projected.y,
+            z: projected.z,
+            inside:
+              Number.isFinite(projected.x) &&
+              Number.isFinite(projected.y) &&
+              Number.isFinite(projected.z) &&
+              Math.abs(projected.x) <= 1.001 &&
+              Math.abs(projected.y) <= 1.001 &&
+              projected.z >= -1.001 &&
+              projected.z <= 1.001,
+          });
+        }
+      }
+    }
+
+    const workerResponse = await fetch('/workers/simulation-worker.js', { cache: 'no-store' });
+    const workerBody = await workerResponse.text();
+    const canvas = document.getElementById('c');
+    const gl =
+      canvas instanceof HTMLCanvasElement
+        ? canvas.getContext('webgl2') || canvas.getContext('webgl')
+        : null;
+    const debugRenderer = gl?.getExtension('WEBGL_debug_renderer_info') ?? null;
+    return {
+      tier: world.quality.tier,
+      durationMs,
+      framesAdvanced: endFrame - startFrame,
+      observedFps: durationMs > 0 ? ((endFrame - startFrame) * 1000) / durationMs : 0,
+      stress: {
+        chaos: world.state.chaos,
+        entropy: world.state.entropy,
+        weatherIdx: world.state.weatherIdx,
+      },
+      camera: {
+        viewIdx: world.state.viewIdx,
+        fov: camera.fov,
+        far: camera.far,
+        position: camera.position.toArray(),
+        allEightCornersVisible: corners.every((corner) => corner.inside),
+        corners,
+      },
+      flora: {
+        instances: world.alienFlora?.instanceCount ?? null,
+        meshDrawGroups: world.alienFlora?.meshes?.length ?? null,
+      },
+      workers: {
+        current: world.workerPool?.getStats() ?? null,
+        maxActiveObserved: maxWorkerActive,
+        perfSnapshot: world.getPerfSnapshot(),
+        asset: {
+          ok: workerResponse.ok,
+          status: workerResponse.status,
+          contentType: workerResponse.headers.get('content-type'),
+          bytes: workerBody.length,
+        },
+      },
+      renderer: {
+        vendor: gl
+          ? gl.getParameter(debugRenderer?.UNMASKED_VENDOR_WEBGL ?? gl.VENDOR)
+          : 'unavailable',
+        name: gl
+          ? gl.getParameter(debugRenderer?.UNMASKED_RENDERER_WEBGL ?? gl.RENDERER)
+          : 'unavailable',
+        render: { ...api.renderer.info.render },
+        memory: { ...api.renderer.info.memory },
+      },
+      perfHud: document.querySelector('#perf-hud')?.textContent?.trim() ?? '',
+    };
+  });
+}
+
 try {
   for (const tier of tiers) {
     console.log('visual-smoke: opening ' + tier);
@@ -509,6 +613,8 @@ try {
     const screenshotMetrics = samplePng(screenshot);
     const bootStateAfterScreenshot = await readBootOverlay(page);
     const onboardingStateAfterScreenshot = await readOnboardingOverlay(page);
+    console.log('visual-smoke: habitat stress probe ' + tier);
+    const habitatStress = await runHabitatStressProbe(page);
     const result = {
       tier,
       url: page.url(),
@@ -521,6 +627,7 @@ try {
       onboardingState,
       onboardingStateBeforeScreenshot,
       onboardingStateAfterScreenshot,
+      habitatStress,
       consoleErrors: consoleErrors.slice(0, 10),
       pageErrors,
     };
@@ -530,6 +637,9 @@ try {
 
     if (pageErrors.length > 0) {
       throw new Error(tier + ': page errors: ' + pageErrors.join(' | '));
+    }
+    if (consoleErrors.length > 0) {
+      throw new Error(tier + ': console errors: ' + consoleErrors.join(' | '));
     }
     if (bootStateAfterScreenshot.visible) {
       throw new Error(
@@ -564,6 +674,38 @@ try {
     }
     if (metrics.frame === null || metrics.frame < 1) {
       throw new Error(tier + ': world frames did not advance');
+    }
+    const expectedFlora = tier === 'phone' ? 20800 : 60000;
+    if (habitatStress.flora.instances !== expectedFlora) {
+      throw new Error(
+        tier +
+          ': flora census mismatch, expected ' +
+          expectedFlora +
+          ' but saw ' +
+          habitatStress.flora.instances,
+      );
+    }
+    if (
+      typeof habitatStress.flora.meshDrawGroups !== 'number' ||
+      habitatStress.flora.meshDrawGroups < 1 ||
+      habitatStress.flora.meshDrawGroups > 9
+    ) {
+      throw new Error(tier + ': invalid flora draw-group count: ' + habitatStress.flora.meshDrawGroups);
+    }
+    if (!habitatStress.camera.allEightCornersVisible) {
+      throw new Error(tier + ': TOP/FOV35 does not frame all eight habitat corners');
+    }
+    if (
+      !habitatStress.workers.current ||
+      habitatStress.workers.current.totalWorkers < 1 ||
+      !habitatStress.workers.asset.ok ||
+      habitatStress.workers.asset.bytes < 100 ||
+      !String(habitatStress.workers.asset.contentType).includes('javascript')
+    ) {
+      throw new Error(tier + ': simulation worker is not built, served, and active');
+    }
+    if (habitatStress.framesAdvanced < 1 || !Number.isFinite(habitatStress.observedFps)) {
+      throw new Error(tier + ': sustained foreground performance sample did not advance');
     }
     console.log(
       'visual-smoke: OK ' +
@@ -635,7 +777,7 @@ try {
     },
     stdio: 'inherit',
   });
-  const timeoutMs = Number(process.env.CQM_VISUAL_SMOKE_TIMEOUT_MS ?? 240000);
+  const timeoutMs = Number(process.env.CQM_VISUAL_SMOKE_TIMEOUT_MS ?? 360000);
   const code = await waitForProcess(child, timeoutMs);
   if (code === -1) fail(`Playwright visual smoke timed out after ${timeoutMs}ms`);
   if (code === -2) fail('Playwright visual smoke failed to launch');

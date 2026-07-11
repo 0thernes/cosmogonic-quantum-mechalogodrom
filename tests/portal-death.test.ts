@@ -21,6 +21,7 @@ import { ShoggothSystem } from '../src/sim/shoggoths';
 import { PuppetMasterSystem } from '../src/sim/puppet-masters';
 import { TitanSystem } from '../src/sim/titans';
 import { LeviathanSystem } from '../src/sim/leviathans';
+import { PLATFORM_HALF } from '../src/sim/constants';
 import {
   PortalDeathFauna,
   portalReappearSpot,
@@ -218,7 +219,8 @@ describe('portalReappearSpot', () => {
     expect(a.equals(b)).toBe(true); // deterministic — no rng
     expect(a.y).toBe(42); // height band preserved
     expect(a.z).toBeGreaterThan(0); // +z side, opposite the portal at z≈-101
-    expect(Math.hypot(a.x, a.z)).toBeLessThan(540); // inside the ±540 platform
+    expect(Math.abs(a.x)).toBeLessThan(PLATFORM_HALF);
+    expect(Math.abs(a.z)).toBeLessThan(PLATFORM_HALF);
     expect(Math.hypot(a.x - 0, a.z - PORTAL_Z)).toBeGreaterThan(150); // far from the portal column
   });
 });

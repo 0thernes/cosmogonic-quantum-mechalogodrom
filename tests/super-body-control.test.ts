@@ -6,6 +6,7 @@
 import { describe, expect, test } from 'bun:test';
 import * as THREE from 'three';
 import { SuperBodySystem } from '../src/sim/super-body';
+import { PLATFORM_CEIL, PLATFORM_HALF } from '../src/sim/constants';
 
 function run(
   setup: (b: SuperBodySystem) => void,
@@ -43,6 +44,17 @@ describe('SuperBodySystem flight + control (V41)', () => {
   test('AUTOPILOT roams the world on its own (no player input)', () => {
     const { from, to } = run((b) => b.setControl(0, 0, 0, 0, false)); // mode 0 = autopilot
     expect(to.distanceTo(from)).toBeGreaterThan(6); // it flew somewhere by itself
+  });
+
+  test('manual flight can use the expanded X/Y volume but cannot cross its walls', () => {
+    const body = new SuperBodySystem(new THREE.Scene());
+    body.setControl(2, 1, 1, 0, true);
+    for (let i = 0; i < 3000; i++) body.update(i / 60, 1 / 60);
+    const p = body.worldPosition(new THREE.Vector3());
+    expect(p.x).toBeGreaterThan(540);
+    expect(p.y).toBeGreaterThan(240);
+    expect(p.x).toBeLessThanOrEqual(PLATFORM_HALF);
+    expect(p.y).toBeLessThanOrEqual(PLATFORM_CEIL + 1); // render bob may add ≤0.6
   });
 
   test('worldPosition + heading are always finite (no NaN under any mode)', () => {

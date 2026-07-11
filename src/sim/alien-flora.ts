@@ -1,19 +1,19 @@
 /**
  * ALIEN FLORA — a living vegetal ecology for the dead arena floor.
  *
- * The ground was barren. This grows ~15,000 plants drawn from 50 deterministic SPECIES across
- * six structural FAMILIES (spire, whip, pod, blade, coral, shard), distributed in biome PATCHES
+ * The ground was barren. This grows 60,000 plants drawn from 50 deterministic SPECIES across
+ * nine structural FAMILIES, distributed in biome PATCHES
  * with bare PATHS, open GLADES, and a clear CENTER so the temple/cosmic-crown stay framed — the
  * spacing of a real world, not a uniform lawn. Plants are NOT neural (no brain, no rng draws) —
  * they are a substrate the fauna reads through {@link EntityManager.attachFloraComfort}: creatures
  * find dense cover for rest / camouflage / mating / gathering using this module's {@link comfortAt}
  * spatial readout.
  *
- * RENDER: each family is ONE `InstancedMesh` (≤6 draw calls for 10k plants) sharing one
+ * RENDER: each family is ONE `InstancedMesh` (≤9 draw calls for 60k plants) sharing one
  * `ShaderMaterial`. The wind sway, the up-the-stalk bioluminescent pulse, and the fresnel rim are
- * all done in the vertex/fragment shader on the GPU, so the per-frame CPU cost is O(1) (three
- * uniform writes) — it never scales with plant count. Instance transforms are written ONCE at
- * construction. Per-instance variation (phase, sway frequency, glow, colour, height) rides custom
+ * all done in the vertex/fragment shader on the GPU. Per-frame CPU work is O(biomass-grid cells)
+ * (2,704 cells at the current habitat) and never scales with plant count. Instance transforms are
+ * written once at construction. Per-instance variation (phase, sway, glow, colour, height) rides custom
  * `aParams`/`aColor` instanced attributes, so no `setColorAt`/`setMatrixAt` churn per frame.
  *
  * REACTIVITY: `update(dt, t, chaos)` drives uWind/uChaos so the field leans and luminesces harder
@@ -37,6 +37,9 @@
  */
 import * as THREE from 'three';
 import type { SimContext } from '../types';
+import { ARENA_MID, HABITAT_XZ_SCALE, PLATFORM_HALF } from './constants';
+import { baseTerrainHeightAt } from './terrain-profile';
+import { TERRAIN_DEFORMATION_GLSL } from './terrain-deformation';
 
 const TAU = Math.PI * 2;
 
@@ -46,18 +49,22 @@ const FAMILY_COUNT = 9;
 const SPECIES_COUNT = 50;
 /** Smooth biome field resolution: how many edaphic zones the palette/species cluster into. */
 const BIOME_COUNT = 7;
-/** Target plant population (dense alien forest; still six instanced draw calls). */
-const TARGET_DESKTOP = 15000;
-const TARGET_MOBILE = 5200;
-/** Plant SQUARE half-extent — USER: flora fills the WHOLE SQUARE platform (corners included), not a
- *  central circle. 540 = (GROUND_EXTENT/2)*0.9, a small inset inside the ±600 ground edge. */
-const FIELD_HALF = 540;
+/** Exact desktop plant population: 4× the former 15,000 for 4× the land area. */
+export const ALIEN_FLORA_TARGET_DESKTOP = 60_000;
+/** Phone population also scales 4×, preserving its former density without forcing desktop load. */
+export const ALIEN_FLORA_TARGET_MOBILE = 20_800;
+/** Plant square half-extent follows the authoritative invisible platform wall. */
+export const ALIEN_FLORA_FIELD_HALF = PLATFORM_HALF;
+/** Enough deterministic candidates to fill the requested population after paths/glades are carved. */
+const PLACEMENT_CANDIDATE_FACTOR = 4;
+/** Preserve clearing density over 4× land instead of leaving the expanded outskirts overgrown. */
+const GLADE_COUNT = 7 * HABITAT_XZ_SCALE * HABITAT_XZ_SCALE;
 /** Keep a clear circle at the centre (temple base + cosmic crown column). */
 const CENTER_CLEAR = 78;
 /** USER: the ascension temple + its DEATH portal rise at (0, 0, -100) (= -40·ARENA_MID). Keep a clear
  *  ring so no plant ever grows on the temple/portal — creatures may roam AROUND it, but the portal is
  *  death and the temple footprint stays bare (mirrors {@link CENTER_CLEAR}, purely a placement filter). */
-const TEMPLE_Z = -100;
+const TEMPLE_Z = -40 * ARENA_MID;
 const TEMPLE_CLEAR = 104;
 /** Fixed layout seed — flora is the same world every replay (decor, not heritable state). */
 const FLORA_SEED = 0x5eedf10a;
@@ -76,12 +83,6 @@ const REGROW_SEED = 0.015;
 function hash(n: number): number {
   const s = Math.sin(n * 127.1 + 311.7 + FLORA_SEED * 0.000113) * 43758.5453;
   return s - Math.floor(s);
-}
-
-/** Ground surface height — MIRRORS EnvironmentSystem's displaced plane so plants sit on the dunes.
- *  World Y = mesh.y(-10) + planeZ displacement, with the −90° X rotation mapping (x,z)→(x,−z). */
-function groundHeight(x: number, z: number): number {
-  return -13 + 8 * Math.sin(0.012 * x) * Math.cos(0.01 * z) + 2 * Math.sin(0.04 * x - 0.03 * z);
 }
 
 /** Smooth biome zonation 0..BIOME_COUNT-1 — a continuous function of position ⇒ species cluster. */
@@ -118,6 +119,8 @@ const flora_vert = /* glsl */ `
   uniform float uTime;
   uniform float uWind;
   uniform float uChaos;
+  uniform float uTerrainEntropy;
+  uniform vec2 uTerrainWind;
   uniform vec2 uContactPos;
   uniform float uContact;
   uniform sampler2D uBiomass;
@@ -129,6 +132,7 @@ const flora_vert = /* glsl */ `
   varying float vUp;
   varying vec3 vNormalV;
   varying vec3 vViewDir;
+  ${TERRAIN_DEFORMATION_GLSL}
 
   void main() {
     vColor = aColor;
@@ -161,16 +165,13 @@ const flora_vert = /* glsl */ `
     vGlow *= 0.3 + 0.7 * biomass;
 
     vec4 worldPosition = instanceMatrix * vec4(p, 1.0);
-    float wave =
-      sin(worldPosition.x * 0.035 + uTime * (0.25 + uChaos * 0.35)) *
-      cos(worldPosition.z * 0.031 - uTime * (0.22 + uChaos * 0.28));
-    float tectonic =
-      sin((worldPosition.x + worldPosition.z) * 0.011 + uTime * 0.11) *
-      cos((worldPosition.x - worldPosition.z) * 0.009 - uTime * 0.13);
-    float cellular =
-      sin(worldPosition.x * 0.071 + sin(worldPosition.z * 0.019 + uTime * 0.2) * 2.0) *
-      sin(worldPosition.z * 0.067 - cos(worldPosition.x * 0.017 - uTime * 0.17) * 2.0);
-    float ridge = pow(abs(cellular), 1.6) * sign(cellular);
+    worldPosition.y += cqmTerrainDisplacement(
+      vec3(bmBase.x, 0.0, bmBase.y),
+      uTime,
+      uChaos,
+      uTerrainEntropy,
+      uTerrainWind
+    );
     vec2 away = worldPosition.xz - uContactPos;
     float contactD2 = max(dot(away, away), 1.0);
     float contact = uContact * smoothstep(5200.0, 0.0, contactD2);
@@ -178,7 +179,6 @@ const flora_vert = /* glsl */ `
     worldPosition.xz += contactDir * contact * up * up * (9.0 + uChaos * 8.0);
     worldPosition.y += contact * up * (2.4 + uChaos * 3.2);
     worldPosition.y += sin(contact * 8.0 + uTime * 2.1) * contact * (1.5 + uChaos * 2.0);
-    worldPosition.y += wave * (1.1 + uChaos * 3.1) + tectonic * (0.5 + uChaos * 2.3) + ridge * (0.75 + uChaos * 1.7);
     vec4 mvPosition = modelViewMatrix * worldPosition;
     vNormalV = normalize(normalMatrix * mat3(instanceMatrix) * normal);
     vViewDir = normalize(-mvPosition.xyz);
@@ -249,13 +249,15 @@ export class AlienFlora {
 
   constructor(ctx: SimContext) {
     this.scene = ctx.scene;
-    const target = ctx.quality.isMobile ? TARGET_MOBILE : TARGET_DESKTOP;
+    const target = ctx.quality.isMobile ? ALIEN_FLORA_TARGET_MOBILE : ALIEN_FLORA_TARGET_DESKTOP;
 
     this.material = new THREE.ShaderMaterial({
       uniforms: {
         uTime: { value: 0 },
         uWind: { value: 0.4 },
         uChaos: { value: 0 },
+        uTerrainEntropy: { value: 0 },
+        uTerrainWind: { value: new THREE.Vector2() },
         uContactPos: { value: new THREE.Vector2(99999, 99999) },
         uContact: { value: 0 },
         // USER ecology: live biomass field (grazed down when eaten, regrows over time) → plants shrink
@@ -273,7 +275,7 @@ export class AlienFlora {
     const species = AlienFlora.buildSpecies();
 
     // Density grid spans the field; +1 cell margin so edge plants land in-bounds.
-    this.gridN = Math.ceil((FIELD_HALF * 2) / this.cell) + 2;
+    this.gridN = Math.ceil((ALIEN_FLORA_FIELD_HALF * 2) / this.cell) + 2;
     this.gridHalf = (this.gridN * this.cell) / 2;
     this.density = new Float32Array(this.gridN * this.gridN);
 
@@ -287,7 +289,7 @@ export class AlienFlora {
       tilt: number;
     }
     const perFamily: Placed[][] = Array.from({ length: FAMILY_COUNT }, () => []);
-    const candidates = Math.ceil(target * 3.2);
+    const candidates = Math.ceil(target * PLACEMENT_CANDIDATE_FACTOR);
     // Three winding "bare paths" carved by low values of a smooth corridor field.
     let placed = 0;
     let maxD = 1;
@@ -296,8 +298,10 @@ export class AlienFlora {
       // (deterministic, no rng). Reuses the same per-k hash() draws (order/count unchanged).
       const u = (0.5 + 0.7548776662466927 * (k + 1)) % 1;
       const v = (0.5 + 0.5698402909980532 * (k + 1)) % 1;
-      let x = (u * 2 - 1) * FIELD_HALF + (hash(k * 3 + 1) - 0.5) * this.cell * 1.3;
-      let z = (v * 2 - 1) * FIELD_HALF + (hash(k * 3 + 2) - 0.5) * this.cell * 1.3;
+      let x = (u * 2 - 1) * ALIEN_FLORA_FIELD_HALF + (hash(k * 3 + 1) - 0.5) * this.cell * 1.3;
+      let z = (v * 2 - 1) * ALIEN_FLORA_FIELD_HALF + (hash(k * 3 + 2) - 0.5) * this.cell * 1.3;
+      // Jitter must never put vegetation through the invisible habitat wall.
+      if (Math.abs(x) > ALIEN_FLORA_FIELD_HALF || Math.abs(z) > ALIEN_FLORA_FIELD_HALF) continue;
       if (Math.hypot(x, z) < CENTER_CLEAR) continue; // keep the temple/crown centre clear
       if (Math.hypot(x, z - TEMPLE_Z) < TEMPLE_CLEAR) continue; // USER: no flora on the ascension temple/portal
 
@@ -312,9 +316,9 @@ export class AlienFlora {
 
       // Open glades: a few deterministic clearings.
       let inGlade = false;
-      for (let g = 0; g < 7; g++) {
-        const gx = (hash(g * 7 + 3) - 0.5) * FIELD_HALF * 1.9;
-        const gz = (hash(g * 7 + 5) - 0.5) * FIELD_HALF * 1.9;
+      for (let g = 0; g < GLADE_COUNT; g++) {
+        const gx = (hash(g * 7 + 3) - 0.5) * ALIEN_FLORA_FIELD_HALF * 1.9;
+        const gz = (hash(g * 7 + 5) - 0.5) * ALIEN_FLORA_FIELD_HALF * 1.9;
         const gr = 40 + hash(g * 7 + 9) * 70;
         const dx = x - gx;
         const dz = z - gz;
@@ -399,12 +403,12 @@ export class AlienFlora {
       for (let i = 0; i < n; i++) {
         const pl = list[i]!;
         const s = species[pl.sp]!;
-        const gy = groundHeight(pl.x, pl.z) - 0.5; // sink the base slightly into the soil
+        const gy = baseTerrainHeightAt(pl.x, pl.z) - 0.5; // sink the base slightly into the soil
         pos.set(pl.x, gy, pl.z);
         // USER #15: vary based on the angle (ground slope) for accurate attachment to the terrain.
         // Finite difference approx of normal → additional tilt so plants follow the ground "dunes" slope.
-        const dhx = groundHeight(pl.x + 1, pl.z) - groundHeight(pl.x - 1, pl.z);
-        const dhz = groundHeight(pl.x, pl.z + 1) - groundHeight(pl.x, pl.z - 1);
+        const dhx = baseTerrainHeightAt(pl.x + 1, pl.z) - baseTerrainHeightAt(pl.x - 1, pl.z);
+        const dhz = baseTerrainHeightAt(pl.x, pl.z + 1) - baseTerrainHeightAt(pl.x, pl.z - 1);
         const groundTiltX = -dhz * 0.45;
         const groundTiltZ = dhx * 0.45;
         e.set(
@@ -584,7 +588,7 @@ export class AlienFlora {
       }
     }
     const strength = bestD <= 0 ? 0 : bestD / this.maxDensity;
-    return { x: bx, y: groundHeight(bx, bz), z: bz, strength };
+    return { x: bx, y: baseTerrainHeightAt(bx, bz), z: bz, strength };
   }
 
   /**
@@ -598,13 +602,25 @@ export class AlienFlora {
   private contactVel = 0;
   private contactTarget = 0;
 
-  /** Drive the wind/chaos uniforms + integrate the ragdoll contact spring. O(1). */
-  update(dt: number, t: number, chaos: number): void {
+  /**
+   * Drive render uniforms, integrate the ragdoll spring, and regrow the fixed biomass grid.
+   * Allocation-free per frame; O(gridN²) = O(52²), independent of the 60,000 GPU instances.
+   */
+  update(
+    dt: number,
+    t: number,
+    chaos: number,
+    terrainEntropy = 0,
+    terrainWindX = 0,
+    terrainWindZ = 0,
+  ): void {
     const c = chaos < 0 ? 0 : chaos > 1 ? 1 : chaos;
     const u = this.material.uniforms;
     u['uTime']!.value = t;
     u['uWind']!.value = 0.32 + 0.7 * c + 0.08 * Math.sin(t * 0.31);
     u['uChaos']!.value = c;
+    u['uTerrainEntropy']!.value = Math.max(0, Math.min(1, terrainEntropy));
+    (u['uTerrainWind']!.value as THREE.Vector2).set(terrainWindX, terrainWindZ);
     // Damped-spring ragdoll. Semi-implicit (symplectic) Euler on a clamped step so it stays stable at
     // any frame rate; DAMP < 2·√K ⇒ underdamped (the overshoot + wobble that reads as "alive").
     const h = dt > 0.05 ? 0.05 : dt > 0 ? dt : 0;
@@ -660,7 +676,8 @@ export class AlienFlora {
   /**
    * USER ecology — regrow biomass toward each populated cell's capacity: logistic growth plus a small
    * reseed floor so a fully-eaten (dead) cell slowly regenerates from nothing, like real wildflora.
-   * Deterministic, allocation-free. O(cells) — the grid is tiny (~27²). Called once per {@link update}.
+   * Deterministic, allocation-free. O(cells) — the grid is fixed and small (52²). Called once per
+   * {@link update}; it never scans the 60,000 rendered instances.
    */
   private regrow(dt: number): void {
     const h = dt > 0.05 ? 0.05 : dt > 0 ? dt : 0;

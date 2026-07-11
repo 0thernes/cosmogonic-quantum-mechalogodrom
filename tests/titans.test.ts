@@ -14,7 +14,7 @@ import { describe, expect, test, spyOn } from 'bun:test';
 import * as THREE from 'three';
 import { mulberry32 } from '../src/math/rng';
 import { SpatialHash } from '../src/math/spatial-hash';
-import { GRID_CELL } from '../src/sim/constants';
+import { GRID_CELL, PLATFORM_CEIL, PLATFORM_FLOOR, PLATFORM_HALF } from '../src/sim/constants';
 import { createGeometryCache } from '../src/sim/geometry-cache';
 import { createMorphotypes } from '../src/sim/morphotypes';
 import { createPhyla } from '../src/sim/phyla';
@@ -238,7 +238,7 @@ describe('TitanSystem.setStrategy — NaN seal + bounds (audit fix)', () => {
 
 /** Minimal structural view of a Titan for the roam regression (TS `private` is runtime-accessible). */
 interface TitanRoamView {
-  group: { position: { x: number; z: number } };
+  group: { position: { x: number; y: number; z: number } };
   homeX: number;
   homeZ: number;
   breeder: boolean;
@@ -255,16 +255,23 @@ describe('TitanSystem — roam stays in home territory (anti-clustering regressi
     const entities = new EntityManager(ctx);
     entities.reset(POP);
     const titans = new TitanSystem(ctx, entities, LORE, { perturb: () => undefined });
+    const arr = (titans as unknown as { titans: TitanRoamView[] }).titans;
     const dt = 1 / 60;
+    let verticalContained = true;
+    let maxY = -Infinity;
     for (let f = 1; f <= 1200; f++) {
       ctx.state.frame = f;
       titans.update(dt, f * dt);
+      for (const titan of arr) {
+        const y = titan.group.position.y;
+        maxY = Math.max(maxY, y);
+        verticalContained &&= y >= PLATFORM_FLOOR && y <= PLATFORM_CEIL;
+      }
     }
-    const arr = (titans as unknown as { titans: TitanRoamView[] }).titans;
     expect(arr.length).toBe(20);
     // Owner: titans now ROAM the whole square platform freely — the old central breeder racetrack and
     // home-tether are gone (they read as a race track / a huddle). The anti-clustering invariant is
-    // therefore STRONGER: every colossus stays ON the ±540 platform, the swarm SPREADS across a wide
+    // therefore STRONGER: every colossus stays on the expanded platform, the swarm spreads across a wide
     // band on both axes, and it does NOT collapse to the centre.
     const xs: number[] = [];
     const zs: number[] = [];
@@ -276,19 +283,21 @@ describe('TitanSystem — roam stays in home territory (anti-clustering regressi
       zs.push(p.z);
       const dOrigin = Math.hypot(p.x, p.z);
       meanOriginR += dOrigin;
-      if (dOrigin > 100) offCentre++;
+      if (dOrigin > PLATFORM_HALF * (5 / 27)) offCentre++;
       expect(Number.isFinite(p.x + p.z)).toBe(true);
       // HARD platform containment (owner law: NEVER off the square platform).
-      expect(Math.abs(p.x)).toBeLessThanOrEqual(541);
-      expect(Math.abs(p.z)).toBeLessThanOrEqual(541);
+      expect(Math.abs(p.x)).toBeLessThanOrEqual(PLATFORM_HALF + 1);
+      expect(Math.abs(p.z)).toBeLessThanOrEqual(PLATFORM_HALF + 1);
     }
     meanOriginR /= arr.length;
     // SPREAD across the arena on BOTH axes — a wide band, not a point or a central pile.
-    expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThan(220);
-    expect(Math.max(...zs) - Math.min(...zs)).toBeGreaterThan(220);
+    expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThan(PLATFORM_HALF * (22 / 27));
+    expect(Math.max(...zs) - Math.min(...zs)).toBeGreaterThan(PLATFORM_HALF * (22 / 27));
     // NOT collapsed to the centre: the swarm's mean radius sits well out in the platform and most
     // colossi are genuinely off-centre (the anti-clustering guarantee, now via free roaming).
-    expect(meanOriginR).toBeGreaterThan(100);
+    expect(meanOriginR).toBeGreaterThan(PLATFORM_HALF * (5 / 27));
+    expect(maxY).toBeGreaterThan(240);
+    expect(verticalContained).toBe(true);
     expect(offCentre).toBeGreaterThanOrEqual(10);
   });
 

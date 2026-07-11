@@ -19,7 +19,19 @@
  */
 import * as THREE from 'three';
 import { TAU, clamp, lerp } from '../math/scalar';
-import { ARENA, ARENA_MID, ARENA_Y, CAMERA_FAR, GROUND_EXTENT, WEATHERS } from './constants';
+import {
+  ARENA,
+  ARENA_MID,
+  ARENA_Y,
+  CAMERA_FAR,
+  GROUND_EXTENT,
+  HABITAT_XZ_SCALE,
+  HABITAT_Y,
+  PLATFORM_CEIL,
+  PLATFORM_FLOOR,
+  PLATFORM_HEIGHT,
+  WEATHERS,
+} from './constants';
 import type { Weather } from './constants';
 import type { SimContext } from '../types';
 
@@ -197,7 +209,7 @@ export class AtmosphereSystem {
       const sz = Math.sin(i * 17.13 + 7.7) * 4131.7;
       const hz = sz - Math.floor(sz);
       this.rainPos[i3] = (h - 0.5) * GROUND_EXTENT;
-      this.rainPos[i3 + 1] = hy * 140 * ARENA_Y;
+      this.rainPos[i3 + 1] = PLATFORM_FLOOR + hy * PLATFORM_HEIGHT;
       this.rainPos[i3 + 2] = (hz - 0.5) * GROUND_EXTENT;
     }
     const rainGeo = new THREE.BufferGeometry();
@@ -223,7 +235,7 @@ export class AtmosphereSystem {
     const ribbonSpan = GROUND_EXTENT * 0.9;
     for (let b = 0; b < HAZE_BANDS; b++) {
       const phase = rng() * TAU;
-      const baseY = (70 + b * 22 + (rng() - 0.5) * 16) * ARENA_Y;
+      const baseY = (70 + b * 22 + (rng() - 0.5) * 16) * HABITAT_Y;
       const hue = 0.74 + (rng() - 0.5) * 0.16; // violet/magenta band, away from sky-blue
       const baseOpacity = (0.05 + rng() * 0.05) * 0.3; // USER: fainter — was a washy filter overlay
       const geo = new THREE.PlaneGeometry(ribbonSpan, ribbonSpan * 0.32);
@@ -253,7 +265,7 @@ export class AtmosphereSystem {
       const i3 = i * 3;
       // 5 rng draws per particle: 3 position + 2 velocity (third velocity derived).
       const px = (rng() - 0.5) * GROUND_EXTENT;
-      const py = (10 + rng() * 120) * ARENA_Y;
+      const py = PLATFORM_FLOOR + rng() * PLATFORM_HEIGHT;
       const pz = (rng() - 0.5) * GROUND_EXTENT;
       const vx = (rng() - 0.5) * 0.04;
       const vz = (rng() - 0.5) * 0.04;
@@ -288,7 +300,7 @@ export class AtmosphereSystem {
 
     // ── Aurora curtain: tall emissive ribbon, lit only under AURORA. ─────────────
     this.auroraPhase = rng() * TAU; // 1 rng draw
-    const auroraGeo = new THREE.PlaneGeometry(GROUND_EXTENT * 0.7, 160 * ARENA_Y, 24, 1);
+    const auroraGeo = new THREE.PlaneGeometry(GROUND_EXTENT * 0.7, 160 * HABITAT_Y, 24, 1);
     const auroraMat = new THREE.MeshBasicMaterial({
       color: 0x1affc8,
       transparent: true,
@@ -299,7 +311,7 @@ export class AtmosphereSystem {
       fog: false,
     });
     this.auroraMesh = new THREE.Mesh(auroraGeo, auroraMat);
-    this.auroraMesh.position.set(0, 120 * ARENA_Y, -90 * ARENA);
+    this.auroraMesh.position.set(0, 120 * HABITAT_Y, -90 * ARENA * HABITAT_XZ_SCALE);
     ctx.scene.add(this.auroraMesh);
   }
 
@@ -465,11 +477,27 @@ export class AtmosphereSystem {
    * @param t    Elapsed sim time (seconds) for phase-coherent waves.
    * @param bands Audio bands (bass pulses haze, level twinkles dust).
    * @param qEntropy Normalized 0..1 quantum-register entropy (brightens the aurora).
+   * @param viewerPosition Optional camera position. The fog-exempt sky shells follow the viewer so
+   *   extreme TOP framing remains inside the BackSide dome without moving world-space weather.
    */
-  update(dt: number, t: number, bands: AtmosphereBands, qEntropy: number): void {
+  update(
+    dt: number,
+    t: number,
+    bands: AtmosphereBands,
+    qEntropy: number,
+    viewerPosition?: Readonly<THREE.Vector3>,
+  ): void {
     const s = this.ctx.state;
     const weather: Weather = WEATHERS[s.weatherIdx % WEATHERS.length] ?? 'CLEAR';
     const chaosNorm = clamp(s.chaos / 10, 0, 1);
+
+    // A sky is an observer-centred background, not habitat geometry. Keeping both shells centred on
+    // the active camera prevents a high portrait/narrow-FOV TOP survey from leaving the BackSide
+    // sphere. Haze, rain, dust, and aurora remain fixed in the habitat volume.
+    if (viewerPosition) {
+      this.domeMesh.position.copy(viewerPosition);
+      this.wireMesh.position.copy(viewerPosition);
+    }
 
     // ── Sky dome: gated re-bake (weather change or a new integer chaos bucket). ──
     const chaosBucket = Math.round(s.chaos);
@@ -505,7 +533,7 @@ export class AtmosphereSystem {
       z = ((((z + span) % (span * 2)) + span * 2) % (span * 2)) - span;
       r.mesh.position.x = x;
       r.mesh.position.z = z;
-      r.mesh.position.y = r.baseY + sin(t * 0.05 + ph) * 6 * ARENA_Y;
+      r.mesh.position.y = r.baseY + sin(t * 0.05 + ph) * 6 * HABITAT_Y;
       r.mesh.rotation.z = ph + t * 0.01;
       r.mesh.material.opacity = r.baseOpacity + bass * HAZE_BASS_GAIN;
     }
@@ -514,7 +542,7 @@ export class AtmosphereSystem {
     const pos = this.dustPos;
     const vel = this.dustVel;
     const half = GROUND_EXTENT * 0.5;
-    const topY = 140 * ARENA_Y;
+    const topY = PLATFORM_CEIL;
     const dt60 = dt * 60;
     const driftAmp = (0.6 + chaosNorm * 1.2) * ARENA_MID;
     for (let i = 0; i < this.dustCount; i++) {
@@ -530,8 +558,8 @@ export class AtmosphereSystem {
       else if (px < -half) px += GROUND_EXTENT;
       if (pz > half) pz -= GROUND_EXTENT;
       else if (pz < -half) pz += GROUND_EXTENT;
-      if (py > topY) py = 8 * ARENA_Y;
-      else if (py < 4 * ARENA_Y) py = topY;
+      if (py > topY) py = PLATFORM_FLOOR;
+      else if (py < PLATFORM_FLOOR) py = topY;
       pos[i3] = px;
       pos[i3 + 1] = py;
       pos[i3 + 2] = pz;
@@ -575,7 +603,7 @@ export class AtmosphereSystem {
       const fallSpeed = (30 + chaosNorm * 20) * ARENA_Y;
       const windDrift = s.wind.x * 0.01;
       const halfR = GROUND_EXTENT * 0.5;
-      const topY = 140 * ARENA_Y;
+      const topY = PLATFORM_CEIL;
       for (let i = 0; i < this.rainPos.length; i += 3) {
         const px = this.rainPos[i];
         const py = this.rainPos[i + 1];
@@ -584,7 +612,7 @@ export class AtmosphereSystem {
           let nx = px + windDrift * dt * 60;
           let ny = py - fallSpeed * dt;
           let nz = pz + s.wind.z * 0.005 * dt * 60;
-          if (ny < 0) ny = topY;
+          if (ny < PLATFORM_FLOOR) ny = topY;
           if (nx > halfR) nx -= GROUND_EXTENT;
           else if (nx < -halfR) nx += GROUND_EXTENT;
           if (nz > halfR) nz -= GROUND_EXTENT;

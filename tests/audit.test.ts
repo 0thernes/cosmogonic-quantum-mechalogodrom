@@ -72,14 +72,23 @@ describe('AuditTrail', () => {
   });
 
   test('ring caps at 200 by default', () => {
-    const trail = new AuditTrail();
-    for (let i = 0; i < 205; i++) {
-      trail.record(`a${i}`);
+    const realNow = Date.now;
+    Date.now = () => 1_000;
+    try {
+      const trail = new AuditTrail();
+      for (let i = 0; i < 205; i++) {
+        trail.record(`a${i}`);
+      }
+      const entries = trail.entries();
+      expect(entries.length).toBe(200);
+      expect(entries.at(0)?.action).toBe('a5');
+      expect(entries.at(-1)?.action).toBe('a204');
+      // Accelerated automatic events remain complete locally while their redundant server mirror
+      // stays comfortably below the server's 60-request anti-abuse burst.
+      expect(calls).toHaveLength(24);
+    } finally {
+      Date.now = realNow;
     }
-    const entries = trail.entries();
-    expect(entries.length).toBe(200);
-    expect(entries.at(0)?.action).toBe('a5');
-    expect(entries.at(-1)?.action).toBe('a204');
   });
 
   test('non-finite configured capacities fall back to the finite default', () => {

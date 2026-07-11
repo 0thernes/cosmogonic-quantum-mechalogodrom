@@ -113,6 +113,14 @@ describe('delivery gates fail closed', () => {
     expect(simulationWorker).toContain('MessageEvent<unknown>');
     expect(simulationWorker).toContain("event.origin !== '' && event.origin !== self.origin");
     expect(simulationWorker).toContain('isWorkerMessage(message)');
+    const worldSource = await text('src/world.ts');
+    const buildSource = await text('scripts/build.ts');
+    const serverSource = await text('server.ts');
+    expect(worldSource).toContain("new URL('./workers/simulation-worker.js', import.meta.url)");
+    expect(buildSource).toContain("'./src/workers/simulation-worker.ts'");
+    expect(buildSource).toContain("outdir: './dist/workers'");
+    expect(buildSource).toContain("'./dist/workers/simulation-worker.js'");
+    expect(serverSource).toContain("'/workers/simulation-worker.js': secured");
 
     // Exact values from the Windows/Ubuntu generated-artifact drift caught by hosted CI.
     expect(stabilizeLabNumber(0.38940480984070375)).toBe(stabilizeLabNumber(0.3894048098407037));

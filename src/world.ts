@@ -11,6 +11,7 @@
  */
 import * as THREE from 'three';
 import type { Engine } from './core/engine';
+import { rotatingSquareSurveyHeight } from './core/camera-framing';
 import { Level } from './core/frame-governor';
 import type {
   PersistedState,
@@ -29,10 +30,18 @@ import {
   CHAOS_LEVELS,
   CHAOS_MAX,
   CHAOS_MIN,
+  CAMERA_FAR,
   ENTROPY_MAX,
   ENTROPY_STEP,
   GRID_CELL,
   GROUND_EXTENT,
+  HABITAT_MID,
+  HABITAT_XZ_SCALE,
+  HABITAT_Y,
+  PLATFORM_CEIL,
+  PLATFORM_FLOOR,
+  PLATFORM_HALF,
+  PLATFORM_MID_Y,
   RENDER_MODES,
   SPACE_FOVS,
   TIME_SCALES,
@@ -64,6 +73,7 @@ import { QuantumCloud } from './sim/quantum';
 import { Connectome } from './sim/connectome';
 import { EnvironmentSystem } from './sim/environment';
 import { AlienFlora } from './sim/alien-flora';
+import { writeNhiRoamTarget } from './sim/habitat-roaming';
 import { QuantumCircuitSystem } from './sim/qcircuit';
 import { ReactionDiffusionSystem } from './sim/reaction-diffusion';
 import { GraphMind } from './sim/graph-mind';
@@ -247,7 +257,7 @@ const BRUTAL_FOG = new THREE.Color().setRGB(
   0x52 / 255,
   THREE.LinearSRGBColorSpace,
 );
-const BRUTAL_FOG_DENSITY = 0.0011;
+const BRUTAL_FOG_DENSITY = 0.0011 / HABITAT_XZ_SCALE;
 
 /** V57: singularity kind → telemetry display name (the chaos chooser cycles SINGULARITY_KINDS). */
 const SINGULARITY_LABEL: Record<string, string> = {
@@ -970,7 +980,7 @@ export class World {
     this.audit.setSimClock(() => this.state.frame);
 
     this.environment = new EnvironmentSystem(ctx);
-    this.alienFlora = new AlienFlora(ctx); // alien vegetal ground ecology (10k plants, 50 species, GPU sway)
+    this.alienFlora = new AlienFlora(ctx); // 60k-plant alien ecology, 50 species, GPU-instanced sway
     this.entities = new EntityManager(ctx);
     this.entities.attachFloraComfort((x, z) => this.alienFlora.comfortAt(x, z));
     // USER ecology: hungry organisms EAT the plants (energy), and the flora depletes + regrows its own
@@ -1436,7 +1446,7 @@ export class World {
     this.mechalogodrom.dispose(); // V-MECHA: free the fusion abomination's geometries + materials
     this.floatingMonoliths.dispose(); // free the 16 drifting megaliths' geometries + materials
     this.godColossus.dispose(); // free the colossal god monument
-    this.alienFlora.dispose(); // free the 10k-plant alien-flora field
+    this.alienFlora.dispose(); // free the 60k-plant instanced alien-flora field
     this.alphabetPantheon.dispose(); // V-ABC: free the 100-archetype instanced pools
     this.artifacts.dispose(this.engine.scene);
     this.nhiBody.dispose(); // 3 shared geometries + live body materials
@@ -1905,7 +1915,7 @@ export class World {
     this.atmosphere.setBrutalism(bf);
     // Alien sky + air: dome recolors with weather/chaos, haze advects with wind
     // and breathes with bass, aurora brightens with quantum entropy (V4.1).
-    this.atmosphere.update(dt, t, bands, this.qc.entropy);
+    this.atmosphere.update(dt, t, bands, this.qc.entropy, this.engine.camera.position);
     // Holographic 3D analytics panel reads the LIVE reused snapshot views
     // (phylumCounts/titanLedger/warMatrix), always current; internally cadenced.
     this.viz3d.update(this.viz3dSnap);
@@ -1914,7 +1924,14 @@ export class World {
     this.environment.setCreatureDensity(n / Math.max(1, this.quality.maxEntities));
     this.environment.update(dt, t);
     this.driveFloraContact(n);
-    this.alienFlora.update(dt, t, this.state.chaos / CHAOS_MAX); // flora leans + luminesces with chaos
+    this.alienFlora.update(
+      dt,
+      t,
+      this.state.chaos / CHAOS_MAX,
+      (this.state.entropy ?? 0) / ENTROPY_MAX,
+      this.state.wind.x,
+      this.state.wind.z,
+    );
     // Crossfade the rest of the cosmos — apex bodies, instanced/per-mesh organisms, ground + light rig
     // (AFTER environment.update, so it rides this frame's animated rig).
     const brutalStyle = this.brutalStyleIdx < 0 ? 0 : this.brutalStyleIdx;
@@ -2173,7 +2190,7 @@ export class World {
       capacity: this.quality.maxEntities,
     });
     this.monolithTemple.update(uiDt, vt);
-    this.alienFlora.update(uiDt, vt, chaosN); // flora leans + luminesces with chaos (additive, no rng)
+    this.alienFlora.update(uiDt, vt, chaosN, entropyN, s.wind.x, s.wind.z);
     this.viz3d.update(this.viz3dSnap);
 
     // ── BRUTALISM stays live so the BRUTAL button reskins the super creatures + cosmos DURING pause ──
@@ -2199,7 +2216,7 @@ export class World {
       this.brutalMorphWave = Math.max(0, this.brutalMorphWave - uiDt / 3.0);
       this.instanced?.setMorphWave(this.brutalMorphWave, this.brutalMorphSeed);
     }
-    this.atmosphere.update(uiDt, vt, bands, this.qc.entropy);
+    this.atmosphere.update(uiDt, vt, bands, this.qc.entropy, this.engine.camera.position);
     if (bf > 0) {
       const fog = this.engine.scene.fog;
       if (fog instanceof THREE.FogExp2) {
@@ -3304,15 +3321,16 @@ export class World {
   }
 
   /**
-   * Strided mean of the reaction-diffusion V field (stride 16 ≈ 1k reads of
-   * 16k texels) — the "pattern energy" of the living ground. Allocation-free.
+   * Bounded mean of the reaction-diffusion V field (≈1,024 reads regardless of
+   * texture resolution) — the "pattern energy" of the living ground. Allocation-free.
    */
   private sampleRdEnergy(): number {
     const v = this.rd.fieldV;
     if (v.length === 0) return 0;
+    const stride = Math.max(1, Math.floor(v.length / 1024));
     let sum = 0;
     let count = 0;
-    for (let i = 0; i < v.length; i += 16) {
+    for (let i = 0; i < v.length; i += stride) {
       sum += v[i] ?? 0;
       count++;
     }
@@ -3360,17 +3378,22 @@ export class World {
     return Math.min(this.state.chaos / 2, 3);
   }
 
-  /** Camera modes free/orbit/fly/top — legacy motion constants × ARENA_MID (V3.1). */
+  /** Camera modes: world-scale paths follow the expanded habitat; subject shots keep object scale. */
   private updateCamera(dt: number, uiDt: number, t: number): void {
     const cam = this.engine.camera;
     const mode: ViewMode = cyc(VIEW_MODES, this.state.viewIdx);
+    if (mode !== 'top' && cam.far !== CAMERA_FAR) {
+      cam.far = CAMERA_FAR;
+      cam.updateProjectionMatrix();
+    }
     // USER (player is God Mode — NEVER slowed or frozen): the FREE camera is the player, so it ALWAYS
     // roams on the real frame delta (uiDt), regardless of timeScale or pause. Previously it only used
     // uiDt when fully paused (timeScale===0), so a SLOW time scale (0.1–0.5×) dragged the player's own
     // movement down with the sim — the "speed settings slow down the player" bug. Only the automated
     // cinematic cams (orbit/fly/tracking) ride the scaled sim delta.
     const camDt = mode === 'free' ? uiDt : dt;
-    const spd = 14 * ARENA_MID * camDt;
+    // Preserve edge-to-edge traversal time after the 2× horizontal expansion.
+    const spd = 14 * HABITAT_MID * camDt;
     const rs = 1.5 * camDt;
     if (mode === 'free') {
       const k = this.input.keys;
@@ -3411,24 +3434,24 @@ export class World {
       }
       if (this.input.zoom !== 0) cam.translateZ(this.input.zoom * 0.05);
     } else if (mode === 'orbit') {
-      const oR = (65 + Math.sin(t * 0.05) * 18) * ARENA_MID;
+      const oR = (65 + Math.sin(t * 0.05) * 18) * HABITAT_MID;
       cam.position.set(
         Math.cos(t * 0.12) * oR,
-        (22 + Math.sin(t * 0.08) * 18) * ARENA_Y,
+        (22 + Math.sin(t * 0.08) * 18) * HABITAT_Y,
         Math.sin(t * 0.12) * oR,
       );
-      cam.lookAt(0, 8 * ARENA_Y, 0);
+      cam.lookAt(0, 8 * HABITAT_Y, 0);
     } else if (mode === 'fly') {
       const ft = t * 0.06;
       cam.position.set(
-        (Math.sin(ft) * 45 + Math.cos(ft * 1.3) * 22) * ARENA_MID,
-        (16 + Math.sin(ft * 0.4) * 22) * ARENA_Y,
-        (Math.cos(ft) * 45 + Math.sin(ft * 0.7) * 28) * ARENA_MID,
+        (Math.sin(ft) * 45 + Math.cos(ft * 1.3) * 22) * HABITAT_MID,
+        (16 + Math.sin(ft * 0.4) * 22) * HABITAT_Y,
+        (Math.cos(ft) * 45 + Math.sin(ft * 0.7) * 28) * HABITAT_MID,
       );
       cam.lookAt(
-        Math.sin(ft * 0.3) * 12 * ARENA_MID,
-        (5 + Math.sin(ft * 0.5) * 12) * ARENA_Y,
-        Math.cos(ft * 0.3) * 12 * ARENA_MID,
+        Math.sin(ft * 0.3) * 12 * HABITAT_MID,
+        (5 + Math.sin(ft * 0.5) * 12) * HABITAT_Y,
+        Math.cos(ft * 0.3) * 12 * HABITAT_MID,
       );
     } else if (TRACKING_VIEWS.has(mode)) {
       // F-CAM5 subject-tracking shots: frame a live organism resolved by stable index.
@@ -3438,9 +3461,9 @@ export class World {
       const sz = this.camSubZ;
       if (!found) {
         // Empty world — calm orbit so the camera never freezes staring at nothing.
-        const r = 60 * ARENA_MID;
-        cam.position.set(Math.cos(t * 0.1) * r, 26 * ARENA_Y, Math.sin(t * 0.1) * r);
-        cam.lookAt(0, 6 * ARENA_Y, 0);
+        const r = 60 * HABITAT_MID;
+        cam.position.set(Math.cos(t * 0.1) * r, 26 * HABITAT_Y, Math.sin(t * 0.1) * r);
+        cam.lookAt(0, 6 * HABITAT_Y, 0);
       } else if (mode === 'follow') {
         const r = 16 * ARENA_MID; // close offset that slowly orbits the subject
         const k = Math.min(1, dt * 2.5); // smooth glide toward the target offset
@@ -3477,9 +3500,9 @@ export class World {
       const sy = this.camSubY;
       const sz = this.camSubZ;
       if (!found) {
-        const r = 60 * ARENA_MID;
-        cam.position.set(Math.cos(t * 0.1) * r, 26 * ARENA_Y, Math.sin(t * 0.1) * r);
-        cam.lookAt(0, 6 * ARENA_Y, 0);
+        const r = 60 * HABITAT_MID;
+        cam.position.set(Math.cos(t * 0.1) * r, 26 * HABITAT_Y, Math.sin(t * 0.1) * r);
+        cam.lookAt(0, 6 * HABITAT_Y, 0);
       } else {
         // Distance ≈ 2× the specimen radius so it subtends ~60° and fills the frame at the
         // default FOV; a tight chase keeps the roaming organism locked + centered.
@@ -3509,19 +3532,30 @@ export class World {
       // Slow grand drift across the whole arena (the wide, unhurried sibling of 'fly').
       const ct = t * 0.025;
       cam.position.set(
-        Math.sin(ct) * 80 * ARENA_MID,
-        (40 + Math.sin(ct * 0.5) * 28) * ARENA_Y,
-        Math.cos(ct * 0.8) * 80 * ARENA_MID,
+        Math.sin(ct) * 80 * HABITAT_MID,
+        (40 + Math.sin(ct * 0.5) * 28) * HABITAT_Y,
+        Math.cos(ct * 0.8) * 80 * HABITAT_MID,
       );
-      cam.lookAt(Math.sin(ct * 0.4) * 10 * ARENA_MID, 6 * ARENA_Y, 0);
+      cam.lookAt(Math.sin(ct * 0.4) * 10 * HABITAT_MID, 6 * HABITAT_Y, 0);
     } else if (mode === 'vortex') {
       // Descending/rising spiral around the world axis.
-      const vr = (30 + (Math.sin(t * 0.07) * 0.5 + 0.5) * 50) * ARENA_MID;
-      const vy = (10 + (Math.cos(t * 0.05) * 0.5 + 0.5) * 70) * ARENA_Y;
+      const vr = (30 + (Math.sin(t * 0.07) * 0.5 + 0.5) * 50) * HABITAT_MID;
+      const vy = (10 + (Math.cos(t * 0.05) * 0.5 + 0.5) * 70) * HABITAT_Y;
       cam.position.set(Math.cos(t * 0.5) * vr, vy, Math.sin(t * 0.5) * vr);
-      cam.lookAt(0, 8 * ARENA_Y, 0);
+      cam.lookAt(0, 8 * HABITAT_Y, 0);
     } else {
-      cam.position.set(0, 90 * ARENA_MID + 75, 0); // top-down survey (top + fallback)
+      // Frame every corner at any SPACE FOV and viewport aspect. Portrait/narrow-FOV surveys may
+      // need a farther temporary clip plane; it is restored to CAMERA_FAR on leaving TOP mode.
+      const surveyHeight = rotatingSquareSurveyHeight(PLATFORM_HALF, cam.fov, cam.aspect);
+      const surveyFar = Math.max(
+        CAMERA_FAR,
+        Math.hypot(surveyHeight, PLATFORM_HALF * Math.SQRT2, PLATFORM_CEIL) * 1.1,
+      );
+      if (cam.far !== surveyFar) {
+        cam.far = surveyFar;
+        cam.updateProjectionMatrix();
+      }
+      cam.position.set(0, surveyHeight, 0); // top-down survey (top + fallback)
       cam.lookAt(0, 0, 0);
       cam.rotation.z = t * 0.015;
     }
@@ -3998,25 +4032,21 @@ export class World {
     // climber simply hung at the ceiling (the "floating to the sky" the user still saw). The NHI's
     // intelligence (cognition + game theory + the world actions it takes each beat) lives in its mind;
     // this is just its body, now agile and leashed. Pure t/id trig — deterministic, allocation-free.
-    // USER: NHI beings roam the FULL square platform + up the whole column (was a 150-radius, y≤56 cage).
-    const HOME_Y = 120; // mid-column
-    const HALF = 540; // square platform half-extent (matches PLATFORM_HALF)
-    const Y_LO = 6;
-    const Y_HI = 240; // up to the mechalogodrom (PLATFORM_CEIL), never above
+    // USER: NHI beings roam the FULL expanded square platform + the 3×-taller column.
+    const HOME_Y = PLATFORM_MID_Y;
+    const HALF = PLATFORM_HALF;
+    const Y_LO = PLATFORM_FLOOR;
+    const Y_HI = PLATFORM_CEIL;
     for (const [id, e] of this.nhiEntities) {
       const v = e.userData.vel;
       const p = e.position;
       // Personal orbiting waypoint — a Lissajous path on all three axes (true omnidirectional roam,
       // each NHI on its own phase/radius so a swarm spreads through the volume instead of clumping).
-      const ph = id * 1.7;
-      const rad = 120 + (id % 5) * 80; // weave across the whole platform
-      const tx = Math.cos(t * 0.19 + ph) * rad;
-      const tz = Math.sin(t * 0.23 + ph * 1.3) * rad;
-      const ty = HOME_Y + Math.sin(t * 0.31 + ph) * 90; // sweep the vertical column
+      const target = writeNhiRoamTarget(this.sv2, id, t);
       // Seek the waypoint with a capped, distance-independent accel (smooth intent-like pursuit).
-      const dx = tx - p.x;
-      const dy = ty - p.y;
-      const dz = tz - p.z;
+      const dx = target.x - p.x;
+      const dy = target.y - p.y;
+      const dz = target.z - p.z;
       const d = Math.sqrt(dx * dx + dy * dy + dz * dz) + 1e-6;
       // USER: faster individual motion — seek accel 0.05→0.12 (+ damping 0.985→0.97 below) ≈ 2.5× terminal speed.
       v.x += (dx / d) * 0.12;

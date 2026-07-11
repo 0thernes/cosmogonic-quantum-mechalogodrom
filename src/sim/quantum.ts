@@ -6,7 +6,7 @@
  */
 import * as THREE from 'three';
 import { TAU, clamp } from '../math/scalar';
-import { ARENA_MID, ARENA_Y, MID_RADIUS2 } from './constants';
+import { HABITAT_MID, HABITAT_Y, MID_RADIUS2 } from './constants';
 import type { SimContext } from '../types';
 
 // Module-level scratch color — reused for every HSL conversion (keeps update() allocation-free).
@@ -72,10 +72,10 @@ export class QuantumCloud {
     this.respawned = new Int32Array(n);
     for (let qi = 0; qi < n; qi++) {
       const i3 = qi * 3;
-      // Legacy ±45/±45 × ARENA_MID in XZ, × ARENA_Y vertically (V3.1 mid-field).
-      this.positions[i3] = (rng() - 0.5) * 90 * ARENA_MID;
-      this.positions[i3 + 1] = (rng() * 45 - 12) * ARENA_Y;
-      this.positions[i3 + 2] = (rng() - 0.5) * 90 * ARENA_MID;
+      // Same relative cloud volume inside the 2× horizontal / 3× vertical habitat.
+      this.positions[i3] = (rng() - 0.5) * 90 * HABITAT_MID;
+      this.positions[i3 + 1] = (rng() * 45 - 12) * HABITAT_Y;
+      this.positions[i3 + 2] = (rng() - 0.5) * 90 * HABITAT_MID;
       TMP_COLOR.setHSL(rng(), 0.6, 0.45);
       this.colors[i3] = TMP_COLOR.r;
       this.colors[i3 + 1] = TMP_COLOR.g;
@@ -194,9 +194,9 @@ export class QuantumCloud {
           // Respawn: new position + fresh color outside the 6-frame refresh cadence.
           this.collapsed[qi] = 0;
           this.collapseT[qi] = 0;
-          px = (rng() - 0.5) * 60 * ARENA_MID;
-          py = (rng() * 30 - 8) * ARENA_Y;
-          pz = (rng() - 0.5) * 60 * ARENA_MID;
+          px = (rng() - 0.5) * 60 * HABITAT_MID;
+          py = (rng() * 30 - 8) * HABITAT_Y;
+          pz = (rng() - 0.5) * 60 * HABITAT_MID;
           TMP_COLOR.setHSL(rng(), 0.7, 0.5);
           col[i3] = TMP_COLOR.r;
           col[i3 + 1] = TMP_COLOR.g;
@@ -215,11 +215,11 @@ export class QuantumCloud {
       if (
         !Number.isFinite(px + py + pz) ||
         px * px + pz * pz > MID_RADIUS2 ||
-        Math.abs(py) > 38 * ARENA_Y
+        Math.abs(py) > 38 * HABITAT_Y
       ) {
-        px = (rng() - 0.5) * 35 * ARENA_MID;
-        py = (rng() * 22 - 5) * ARENA_Y;
-        pz = (rng() - 0.5) * 35 * ARENA_MID;
+        px = (rng() - 0.5) * 35 * HABITAT_MID;
+        py = (rng() * 22 - 5) * HABITAT_Y;
+        pz = (rng() - 0.5) * 35 * HABITAT_MID;
       }
       pos[i3] = px;
       pos[i3 + 1] = py;

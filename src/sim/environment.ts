@@ -10,9 +10,22 @@ import {
   DIORAMA_CONFIG,
   ENTROPY_MAX,
   GROUND_EXTENT,
+  HABITAT_MID,
+  HABITAT_XZ_SCALE,
+  HABITAT_Y_SCALE,
   MONOLITH_CONFIG,
   PIPE_LINKS,
+  PLATFORM_HALF,
+  PLATFORM_HEIGHT,
+  PLATFORM_MID_Y,
 } from './constants';
+import {
+  baseTerrainHeightAt,
+  GROUND_BASE_Y,
+  GROUND_GRID_DIVISIONS,
+  GROUND_SEGMENTS,
+} from './terrain-profile';
+import { TERRAIN_DEFORMATION_GLSL } from './terrain-deformation';
 
 const sin = Math.sin;
 const cos = Math.cos;
@@ -545,14 +558,31 @@ export class EnvironmentSystem {
     this.ambient = new THREE.AmbientLight(0x1c1c3c, 0.72 * LEGACY_LIGHT_GAIN);
     scene.add(this.ambient);
     const sun = new THREE.DirectionalLight(0xffeedd, 0.65 * LEGACY_LIGHT_GAIN);
-    sun.position.set(35 * ARENA_MID, 65 * ARENA_Y, 25 * ARENA_MID);
+    // Aim through the centre of the complete habitat while preserving the authored 35:65:25 light
+    // direction. The camera sits two habitat bounding-radii away, so every floor/ceiling corner is in
+    // front of it; the old in-volume light left half the expanded column behind the shadow camera.
+    const shadowRadius = Math.hypot(PLATFORM_HALF, PLATFORM_HALF, PLATFORM_HEIGHT * 0.5);
+    const authoredDirLength = Math.hypot(35, 65, 25);
+    const shadowDistance = shadowRadius * 2;
+    sun.target.position.set(0, PLATFORM_MID_Y, 0);
+    sun.position.set(
+      (35 / authoredDirLength) * shadowDistance,
+      PLATFORM_MID_Y + (65 / authoredDirLength) * shadowDistance,
+      (25 / authoredDirLength) * shadowDistance,
+    );
     sun.castShadow = quality.shadows;
-    sun.shadow.mapSize.set(1024, 1024);
-    sun.shadow.camera.left = -70 * ARENA;
-    sun.shadow.camera.right = 70 * ARENA;
-    sun.shadow.camera.top = 70 * ARENA;
-    sun.shadow.camera.bottom = -70 * ARENA;
+    // Cover the complete expanded habitat. 2,048² keeps useful texel density after the
+    // 2× width/length increase without changing shadow-caster populations.
+    sun.shadow.mapSize.set(2048, 2048);
+    const shadowHalf = shadowRadius * 1.05;
+    sun.shadow.camera.left = -shadowHalf;
+    sun.shadow.camera.right = shadowHalf;
+    sun.shadow.camera.top = shadowHalf;
+    sun.shadow.camera.bottom = -shadowHalf;
+    sun.shadow.camera.near = 0.5;
+    sun.shadow.camera.far = shadowRadius * 4;
     this.sun = sun;
+    scene.add(sun.target);
     scene.add(sun);
     // Legacy intensities × POINT_LIGHT_GAIN, decay 0 (legacy r128 falloff model).
     this.lts = [
@@ -605,21 +635,21 @@ export class EnvironmentSystem {
       );
     }
 
-    // ── Ground + grid (legacy 449-456; V3.1: 240→1200 edge, SAME 60×60 segments —
-    //    displacement frequencies ÷ ARENA so the dunes stretch instead of alias,
-    //    amplitude × ARENA_Y so the swell still reads at distance) ──
-    // V109: higher-res ground plane for richer terrain detail.
-    const groundGeo = new THREE.PlaneGeometry(GROUND_EXTENT, GROUND_EXTENT, 120, 120);
+    // ── Ground + grid (legacy 449-456). The expanded 2,400-edge terrain uses a 600-segment
+    //    mesh (4-unit cells) plus band-limited detail so analytic flora roots remain seated beneath
+    //    the rendered triangles while the surface keeps its four-octave living motion. ──
+    const groundGeo = new THREE.PlaneGeometry(
+      GROUND_EXTENT,
+      GROUND_EXTENT,
+      GROUND_SEGMENTS,
+      GROUND_SEGMENTS,
+    );
     const groundPos = groundGeo.getAttribute('position');
     for (let i = 0; i < groundPos.count; i++) {
       const gx = groundPos.getX(i);
       const gy = groundPos.getY(i);
-      groundPos.setZ(
-        i,
-        sin((gx * 0.06) / ARENA) * cos((gy * 0.05) / ARENA) * 4 * ARENA_Y +
-          sin((gx * 0.2 + gy * 0.15) / ARENA) * ARENA_Y -
-          3,
-      );
+      // After the −90° X rotation below, local plane Y maps to world −Z.
+      groundPos.setZ(i, baseTerrainHeightAt(gx, -gy) - GROUND_BASE_Y);
     }
     groundGeo.computeVertexNormals();
     this.groundMaterial = new THREE.MeshStandardMaterial({
@@ -641,42 +671,15 @@ export class EnvironmentSystem {
         uniform float uEntropy;
         uniform vec2 uWind;
         varying vec3 vWorldPos;
+        ${TERRAIN_DEFORMATION_GLSL}
         ${shader.vertexShader}
       `.replace(
         '#include <begin_vertex>',
         `
         #include <begin_vertex>
         vWorldPos = (modelMatrix * vec4(position, 1.0)).xyz;
-        // V109: richer alive terrain — fbm-like multi-frequency dunes + tectonic swell + chaos ridges.
-        float heatDeath = clamp(uEntropy, 0.0, 1.0);
-        float liveAmp = 1.0 - 0.72 * heatDeath;
-        float wave =
-          sin(vWorldPos.x * 0.035 + uTime * (0.25 + uChaos * 0.35) + uWind.x * 0.15) *
-          cos(vWorldPos.z * 0.031 - uTime * (0.22 + uChaos * 0.28) + uWind.y * 0.15);
-        float tectonic =
-          sin((vWorldPos.x + vWorldPos.z) * 0.011 + uTime * 0.11) *
-          cos((vWorldPos.x - vWorldPos.z) * 0.009 - uTime * 0.13);
-        float cellular =
-          sin(vWorldPos.x * 0.071 + sin(vWorldPos.z * 0.019 + uTime * 0.2) * 2.0) *
-          sin(vWorldPos.z * 0.067 - cos(vWorldPos.x * 0.017 - uTime * 0.17) * 2.0);
-        float ridge = pow(abs(cellular), 1.6) * sign(cellular);
-        // Detail fbm: layered dunes, ripples, and micro-terrain for a mathematical living surface.
-        float detail = 0.0;
-        float amp = 1.0, freq = 0.11;
-        for (int i = 0; i < 4; i++) {
-          detail += amp * sin(vWorldPos.x * freq + uTime * 0.13 * float(i + 1) + uWind.x * 0.05) *
-                          cos(vWorldPos.z * freq * 0.87 - uTime * 0.11 * float(i + 1) + uWind.y * 0.05);
-          amp *= 0.5;
-          freq *= 2.03;
-        }
-        float ripple = sin(vWorldPos.x * 0.23 + vWorldPos.z * 0.19 + uTime * 0.55) * 0.5 + 0.5;
-        transformed.z +=
-          (wave * (2.2 + uChaos * 6.2) +
-            tectonic * (1.0 + uChaos * 4.6) +
-            ridge * (1.5 + uChaos * 3.4) +
-            detail * (1.2 + uChaos * 2.0) +
-            ripple * (0.4 + uChaos * 0.8)) *
-          liveAmp;
+        // The exact same function translates the flora roots, sealing ground/plant parity.
+        transformed.z += cqmTerrainDisplacement(vWorldPos, uTime, uChaos, uEntropy, uWind);
         `,
       );
       shader.fragmentShader = `
@@ -718,10 +721,10 @@ export class EnvironmentSystem {
     };
     const ground = new THREE.Mesh(groundGeo, this.groundMaterial);
     ground.rotation.x = -PI / 2;
-    ground.position.y = -10;
+    ground.position.y = GROUND_BASE_Y;
     ground.receiveShadow = quality.shadows;
     scene.add(ground);
-    const grid = new THREE.GridHelper(GROUND_EXTENT, 50 * 2, 0x0a1530, 0x060d20);
+    const grid = new THREE.GridHelper(GROUND_EXTENT, GROUND_GRID_DIVISIONS, 0x0a1530, 0x060d20);
     grid.position.y = -9.5;
     grid.material.transparent = true;
     grid.material.opacity = 0.22;
@@ -735,7 +738,7 @@ export class EnvironmentSystem {
     const c = new THREE.Color();
     for (let i = 0; i < starCount; i++) {
       // Legacy shell 100..340 × 3 — outside the arena rim, inside CAMERA_FAR.
-      const sr = (100 + rng() * 240) * 3;
+      const sr = (100 + rng() * 240) * 3 * HABITAT_XZ_SCALE;
       const sa = rng() * TAU;
       const sb = (rng() - 0.5) * PI;
       starPos[i * 3] = cos(sb) * cos(sa) * sr;
@@ -752,7 +755,7 @@ export class EnvironmentSystem {
       new THREE.Points(
         starGeo,
         new THREE.PointsMaterial({
-          size: 0.35 * 3, // shells ×3 ⇒ size ×3 keeps the apparent star scale
+          size: 0.35 * 3 * HABITAT_XZ_SCALE,
           vertexColors: true,
           transparent: true,
           opacity: 0.45,
@@ -763,15 +766,15 @@ export class EnvironmentSystem {
 
     // ── Nebula planes (legacy 464). USER: these were big DoubleSide translucent rectangles at EYE LEVEL
     //    over the platform, randomly rotated → they sliced across the view as "filter" overlays that
-    //    washed out colours/clarity. Now: pushed FAR out (×4.2, beyond the ±540 platform) + high, and
+    //    washed out colours/clarity. Now: pushed far beyond the expanded platform + high, and
     //    made much fainter, so they read as distant BACKDROP nebulae behind the world, not a filter over
     //    it. Same rng draw sequence (2 size · 1 hue · 1 opacity · 3 position · 3 rotation) ⇒ boot stream
     //    unchanged; only the OUTPUTS are transformed. ──
     for (let i = 0; i < 6; i++) {
       const nebula = new THREE.Mesh(
         new THREE.PlaneGeometry(
-          (100 + rng() * 80) * ARENA_MID * 1.7,
-          (50 + rng() * 40) * ARENA_MID * 1.7,
+          (100 + rng() * 80) * HABITAT_MID * 1.7,
+          (50 + rng() * 40) * HABITAT_MID * 1.7,
         ),
         new THREE.MeshBasicMaterial({
           color: new THREE.Color().setHSL(rng(), 0.45, 0.09),
@@ -783,9 +786,9 @@ export class EnvironmentSystem {
         }),
       );
       nebula.position.set(
-        (rng() - 0.5) * 130 * ARENA_MID * 4.2, // ±680 — out past the platform rim
-        (15 + rng() * 70) * ARENA_Y + 220, // lifted into the background sky band
-        ((rng() - 0.5) * 130 - 50) * ARENA_MID * 4.2, // mostly behind (−z)
+        (rng() - 0.5) * 130 * HABITAT_MID * 4.2,
+        ((15 + rng() * 70) * ARENA_Y + 220) * HABITAT_Y_SCALE,
+        ((rng() - 0.5) * 130 - 50) * HABITAT_MID * 4.2,
       );
       nebula.rotation.set(rng() * PI, rng() * PI, rng() * PI);
       scene.add(nebula);

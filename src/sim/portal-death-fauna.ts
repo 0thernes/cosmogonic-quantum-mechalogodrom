@@ -18,7 +18,7 @@
  * burst pool, owned + disposed here.
  */
 import * as THREE from 'three';
-import { ARENA_MID } from './constants';
+import { ARENA_MID, PLATFORM_HALF } from './constants';
 import type { SimContext } from '../types';
 
 /** A roster whose members can be blasted by the portal (implemented by shoggoths/puppets/titans/leviathans). */
@@ -50,15 +50,13 @@ const CULL_R2 = CULL_R * CULL_R;
 
 /**
  * Deterministic "elsewhere" for a respawn: a golden-angle ring biased to +z (the portal sits at z≈-101),
- * kept inside the ±540 platform and clear of the kill cylinder. Mutates out.x / out.z, PRESERVES out.y so
- * a member re-enters at its own natural height band. No rng, no alloc.
+ * scaled to the expanded platform and clear of the kill cylinder. Mutates out.x/out.z, preserves out.y.
  */
 export function portalReappearSpot(seq: number, out: THREE.Vector3): void {
   const ang = seq * 2.399963229728653; // golden angle
-  const rad = 150 + (seq % 4) * 60; // 150..330
+  const rad = PLATFORM_HALF * (5 / 18 + (seq % 4) * (1 / 9));
   out.x = Math.cos(ang) * rad;
-  out.z = 90 + Math.abs(Math.sin(ang)) * rad * 0.5; // 90..255: +z, far from the portal at z≈-101,
-  // and hypot(x,z) ≤ ~420 so a re-entrant always lands well inside the ±540 platform.
+  out.z = PLATFORM_HALF / 6 + Math.abs(Math.sin(ang)) * rad * 0.5;
 }
 
 const POOL = 960;

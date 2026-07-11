@@ -175,9 +175,9 @@ export function makeRateLimiter(capacity: number, refillPerSec: number): RateLim
 }
 
 /**
- * Token bucket guarding POST /api/audit: a 60-request burst, refilling 30/s. That is far above any
- * legitimate audit cadence (entries are user-action-driven — a human never posts dozens per
- * second), so the operator is never throttled, yet it caps the ring-eviction flood: an
+ * Token bucket guarding POST /api/audit: a 60-request burst, refilling 30/s. The browser client
+ * independently rate-shapes its best-effort mirror because accelerated simulation events can emit
+ * faster than a human. This server-side bucket still caps a direct ring-eviction flood: an
  * unauthenticated client can no longer evict all 200 real entries (and burn parse CPU) with a tight
  * POST loop. Buckets are keyed per client IP in the server route, so one noisy caller no longer drains
  * every user's allowance.
@@ -630,7 +630,7 @@ if (import.meta.main) {
           }
           // Shed floods BEFORE any work: a tight unauthenticated POST loop would otherwise evict
           // the whole 200-entry ring and burn parse CPU. The bucket is generous enough that real
-          // user-action audit posts never reach it — see auditPostLimiter.
+          // the rate-shaped first-party audit mirror should not reach it — see AuditTrail.
           if (
             !tryRemoveForClient(
               auditPostLimiters,

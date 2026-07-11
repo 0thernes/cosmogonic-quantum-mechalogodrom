@@ -6,7 +6,13 @@
 import * as THREE from 'three';
 import { TAU, clamp, dist2 } from '../math/scalar';
 import { creatureDrive } from './cognition';
-import { PLATFORM_HALF, PLATFORM_CEIL, PLATFORM_FLOOR } from './constants';
+import {
+  PLATFORM_HALF,
+  PLATFORM_CEIL,
+  PLATFORM_FLOOR,
+  PLATFORM_HEIGHT,
+  PLATFORM_MID_Y,
+} from './constants';
 import { POINT_LIGHT_GAIN } from './environment';
 import type { SimContext } from '../types';
 import type { EntityManager } from './entities';
@@ -570,7 +576,7 @@ export class ShoggothSystem implements PortalCullable {
         sg.vel.add(TV);
       }
 
-      // FREE ROAM (owner: shoggoths must range the WHOLE ±540 square + 6..240 column like the entities,
+      // FREE ROAM (owner: shoggoths must range the whole expanded square + column like the entities,
       // not huddle the centre). The old Lorenz drift had an implicit attractor at the origin — it kept
       // the horde bunched. This mirrors world.ts steerNhiBeings: each shoggoth pursues its OWN slowly
       // orbiting 3D Lissajous waypoint (per-index phase ⇒ the horde spreads instead of sharing one
@@ -578,10 +584,10 @@ export class ShoggothSystem implements PortalCullable {
       // the hard clamp below is the guarantee. Pure trig of (t, index, spawn-phase) — draws no rng, so
       // the seeded stream is untouched (a determinism-neutral swap of one rng-free field for another).
       const wph = si * 1.7 + sg.ph;
-      const wrad = 150 + (si % 5) * 95; // 150..530 — reaches the rim and everything between
+      const wrad = PLATFORM_HALF * (5 / 18 + (si % 5) * (19 / 108));
       const wtx = Math.cos(t * 0.17 + wph) * wrad;
       const wtz = Math.sin(t * 0.21 + wph * 1.3) * wrad;
-      const wty = 120 + Math.sin(t * 0.29 + wph) * 100; // sweeps ~20..220 of the column
+      const wty = PLATFORM_MID_Y + Math.sin(t * 0.29 + wph) * PLATFORM_HEIGHT * (50 / 117);
       const wdx = wtx - p.x;
       const wdy = wty - p.y;
       const wdz = wtz - p.z;
@@ -590,7 +596,7 @@ export class ShoggothSystem implements PortalCullable {
       sg.vel.x += wdx * wInv + Math.sin(t * 0.7 + si * 1.3) * 0.07;
       sg.vel.y += wdy * wInv + Math.sin(t * 0.53 + si * 2.1) * 0.05;
       sg.vel.z += wdz * wInv + Math.cos(t * 0.61 + si * 0.7) * 0.07;
-      sg.vel.y += (120 - p.y) * 0.003; // height restore — no sky-float, no floor-crawl
+      sg.vel.y += (PLATFORM_MID_Y - p.y) * 0.003; // height restore — no sky-float/floor-crawl
       if (p.x > PLATFORM_HALF) sg.vel.x -= 0.1;
       else if (p.x < -PLATFORM_HALF) sg.vel.x += 0.1;
       if (p.z > PLATFORM_HALF) sg.vel.z -= 0.1;

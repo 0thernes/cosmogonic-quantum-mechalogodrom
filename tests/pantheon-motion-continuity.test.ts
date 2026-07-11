@@ -11,6 +11,7 @@
 import { describe, expect, test } from 'bun:test';
 import * as THREE from 'three';
 import { AlphabetPantheonRender, softLimit } from '../src/sim/alphabet-pantheon-render';
+import { PLATFORM_HALF } from '../src/sim/constants';
 
 const DT = 1 / 60;
 
@@ -27,15 +28,17 @@ function corePos(scene: THREE.Scene, out: THREE.Vector3): THREE.Vector3 {
 
 describe('softLimit — the anti-fencing soft wall', () => {
   test('identity inside 85%, strictly inside ±half beyond, monotone, odd', () => {
-    expect(softLimit(100, 540)).toBe(100);
-    expect(softLimit(-458, 540)).toBe(-458); // 0.848·540 — still inside the knee
-    const nearWall = softLimit(700, 540);
-    expect(nearWall).toBeLessThan(540);
-    expect(nearWall).toBeGreaterThan(540 * 0.85);
-    expect(softLimit(-700, 540)).toBe(-nearWall); // odd symmetry
+    expect(softLimit(100, PLATFORM_HALF)).toBe(100);
+    const insideKnee = PLATFORM_HALF * 0.848;
+    expect(softLimit(-insideKnee, PLATFORM_HALF)).toBe(-insideKnee);
+    const outside = PLATFORM_HALF * 1.3;
+    const nearWall = softLimit(outside, PLATFORM_HALF);
+    expect(nearWall).toBeLessThan(PLATFORM_HALF);
+    expect(nearWall).toBeGreaterThan(PLATFORM_HALF * 0.85);
+    expect(softLimit(-outside, PLATFORM_HALF)).toBe(-nearWall); // odd symmetry
     let prev = -Infinity;
-    for (let v = -900; v <= 900; v += 25) {
-      const s = softLimit(v, 540);
+    for (let v = -PLATFORM_HALF * 1.7; v <= PLATFORM_HALF * 1.7; v += 50) {
+      const s = softLimit(v, PLATFORM_HALF);
       expect(s).toBeGreaterThan(prev); // strictly monotone — no flat wall-slide band
       prev = s;
     }

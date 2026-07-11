@@ -6,7 +6,16 @@
 import * as THREE from 'three';
 import { clamp } from '../math/scalar';
 import { creatureDrive } from './cognition';
-import { ARENA_MID, ARENA_Y, CHAOS_MAX, CHAOS_MIN, WEATHERS } from './constants';
+import {
+  ARENA_MID,
+  ARENA_Y,
+  CHAOS_MAX,
+  CHAOS_MIN,
+  PLATFORM_HALF,
+  PLATFORM_HEIGHT,
+  PLATFORM_MID_Y,
+  WEATHERS,
+} from './constants';
 import { POINT_LIGHT_GAIN } from './environment';
 import type { PuppetEvent, SimContext } from '../types';
 import type { EntityManager } from './entities';
@@ -375,14 +384,13 @@ export class PuppetMasterSystem implements PortalCullable, DomeFeeder {
       let boldness = 1;
       if (this.econWealth)
         boldness = clamp(this.econWealth(i) / meanWorth, PUP_BOLD_MIN, PUP_BOLD_MAX);
-      // FREE ROAM (owner: puppeteers must range the whole ±540 square + full column, not a tight central
-      // orbit ring at r≈95..245). Per-hand Lissajous waypoint (unique phase per index+hue) sweeping the
-      // full platform + height. Pure trig of (t, i, hue) — draws no rng, so the seeded stream is untouched.
+      // FREE ROAM: preserve the former path's relative coverage inside the expanded platform/column.
+      // Pure trig of (t, i, hue) — draws no rng, so the seeded stream is untouched.
       const pph = i * 1.7 + cfg.hue * 6.2831853;
-      const prad = 160 + ((i + Math.floor(cfg.hue * 5)) % 5) * 90; // 160..520 across the platform (< 540)
+      const prad = PLATFORM_HALF * (8 / 27 + ((i + Math.floor(cfg.hue * 5)) % 5) * (1 / 6));
       pm.mesh.position.set(
         Math.cos(t * 0.17 + pph) * prad,
-        123 + Math.sin(t * 0.29 + pph) * 105, // sweep ~18..228 of the 6..240 column
+        PLATFORM_MID_Y + Math.sin(t * 0.29 + pph) * PLATFORM_HEIGHT * (35 / 78),
         Math.sin(t * 0.21 + pph * 1.3) * prad,
       );
       // F-COGNITION V25: PERCEIVE the disorder in this hand's sector (entity density below) + REMEMBER

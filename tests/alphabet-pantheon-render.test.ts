@@ -13,7 +13,7 @@ import { resolve } from 'node:path';
 import * as THREE from 'three';
 import { AlphabetPantheonRender } from '../src/sim/alphabet-pantheon-render';
 import { ALPHABET_PANTHEON_SIZE } from '../src/sim/alphabet-pantheon';
-import { ARENA_RADIUS, GROUND_EXTENT } from '../src/sim/constants';
+import { ARENA_RADIUS, PLATFORM_CEIL, PLATFORM_FLOOR, PLATFORM_HALF } from '../src/sim/constants';
 
 const root = resolve(import.meta.dir, '..');
 
@@ -140,7 +140,7 @@ describe('AlphabetPantheonRender — 100 archetypes alive in the dome', () => {
     r.dispose();
   });
 
-  test('user #10 — every godform body stays inside the dome and above the floor (max chaos, long run)', () => {
+  test('user #10 — every godform body stays inside the habitat walls (max chaos, long run)', () => {
     // Regression seal for the owner's "biggest incomplete problem": pantheon creatures escaping the
     // dome and sinking underneath it. The prior ring-clamp forced each body's horizontal radius into
     // a fixed outer ring and allowed y down to -20, which flung the inner/upper anchors OUT to
@@ -154,7 +154,11 @@ describe('AlphabetPantheonRender — 100 archetypes alive in the dome', () => {
     const instM = new THREE.Matrix4();
     const pos = new THREE.Vector3();
     let maxDist = 0;
+    let maxAbsX = 0;
+    let maxAbsZ = 0;
     let minY = Infinity;
+    let maxY = -Infinity;
+    let contained = true;
     for (let i = 0; i < 60 * 60; i++) {
       t += dt;
       r.setChaos(1); // worst case — maximum wander drive
@@ -167,20 +171,28 @@ describe('AlphabetPantheonRender — 100 archetypes alive in the dome', () => {
           pos.setFromMatrixPosition(worldM);
           const dist = Math.hypot(pos.x, pos.y, pos.z);
           if (dist > maxDist) maxDist = dist;
+          if (Math.abs(pos.x) > maxAbsX) maxAbsX = Math.abs(pos.x);
+          if (Math.abs(pos.z) > maxAbsZ) maxAbsZ = Math.abs(pos.z);
           if (pos.y < minY) minY = pos.y;
+          if (pos.y > maxY) maxY = pos.y;
+          contained &&=
+            Math.abs(pos.x) <= PLATFORM_HALF &&
+            Math.abs(pos.z) <= PLATFORM_HALF &&
+            pos.y >= PLATFORM_FLOOR &&
+            pos.y <= PLATFORM_CEIL;
         }
       }
     }
-    // USER: godforms roam the full SQUARE platform (GROUND_EXTENT) up to the mechalogodrom height, but
-    // never escape it. Horizontal reach is capped per-axis at ARENA_HALF = (GROUND_EXTENT/2)*0.9 and
-    // height at 240, so the max distance from origin is the platform box diagonal.
-    const platformHalf = (GROUND_EXTENT / 2) * 0.9;
-    const boxDiag = Math.hypot(platformHalf, platformHalf, 240);
-    expect(maxDist).toBeLessThanOrEqual(boxDiag + 1);
+    // Godforms roam the expanded square/column but never escape its invisible walls.
+    expect(contained).toBe(true);
+    expect(maxAbsX).toBeLessThanOrEqual(PLATFORM_HALF);
+    expect(maxAbsZ).toBeLessThanOrEqual(PLATFORM_HALF);
     // ...and they must SPREAD across the platform (fill it), not cluster centrally — reach well past centre.
     expect(maxDist).toBeGreaterThan(ARENA_RADIUS * 0.5);
-    // Never underneath the ground plane.
-    expect(minY).toBeGreaterThanOrEqual(-1);
+    expect(maxY).toBeGreaterThan(240);
+    expect(maxY).toBeLessThanOrEqual(PLATFORM_CEIL);
+    // Never underneath the habitat floor.
+    expect(minY).toBeGreaterThanOrEqual(PLATFORM_FLOOR);
     r.dispose();
   });
 

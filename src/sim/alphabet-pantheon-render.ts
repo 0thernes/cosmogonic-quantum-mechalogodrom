@@ -29,7 +29,7 @@
  */
 import * as THREE from 'three';
 import { clamp } from '../math/scalar';
-import { ARENA_RADIUS, GROUND_EXTENT } from './constants';
+import { ARENA_RADIUS, PLATFORM_CEIL, PLATFORM_FLOOR, PLATFORM_HALF } from './constants';
 import { ALPHABET_ROSTER, type AlphabetArchetype } from './alphabet-pantheon';
 import {
   ApexExteriorAbomination,
@@ -62,11 +62,11 @@ import type { PortalImmune } from './portal-immune-bounce';
 const DOME_R = ARENA_RADIUS * 0.72;
 
 /** USER: godforms roam the FULL SQUARE PLATFORM (the visible ground, GROUND_EXTENT) — out to the edge —
- *  and up to the MECHALOGODROM height, never outside the square and never above the mechalogodrom.
+ *  and through the habitat column, never outside the square and never above the habitat ceiling.
  *  Invisible walls only at the platform bounds (square, per-axis — NOT a circle). */
-const ARENA_HALF = (GROUND_EXTENT / 2) * 0.9; // ~540 — square platform half-extent (just inside the edge)
-const ARENA_CEIL = 240; // vertical ceiling — up to the mechalogodrom (ALTITUDE 252), never above it
-const ARENA_FLOOR = 6; // never below the ground plane
+const ARENA_HALF = PLATFORM_HALF;
+const ARENA_CEIL = PLATFORM_CEIL;
+const ARENA_FLOOR = PLATFORM_FLOOR;
 const PANTHEON_REF_ATLAS_URL = '/textures/pantheon_equirect_refs_atlas.png';
 
 function createPantheonFallbackAtlas(): THREE.DataTexture {
@@ -907,9 +907,9 @@ export class AlphabetPantheonRender implements PortalImmune {
         // flinging them past the dome sphere — and let y sink to -20 (under the ground). Bounding
         // the displacement from the anchor keeps them contained AND slow/inspectable.
         // USER: clamp to the SQUARE platform box — per-axis horizontal to the platform edge (ARENA_HALF)
-        // and vertical ground..mechalogodrom-height (ARENA_FLOOR..ARENA_CEIL). Per-axis (not radial) so
+        // and vertical habitat floor..ceiling (ARENA_FLOOR..ARENA_CEIL). Per-axis (not radial) so
         // godforms fill the whole SQUARE platform out to its edges/corners, never outside it and never
-        // above the mechalogodrom.
+        // above the habitat ceiling.
         // V121 SOFT WALL: tanh-knee the last 15% so an over-shooting target CURVES back inside
         // instead of sliding flat along the wall (the "framing/fencing" read). softLimit output is
         // strictly inside ±half, so the containment guarantee is intact; the hard clamps below stay

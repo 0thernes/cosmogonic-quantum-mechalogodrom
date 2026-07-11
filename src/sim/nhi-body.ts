@@ -11,6 +11,7 @@
  * rather than "broken" if anything is off.
  */
 import * as THREE from 'three';
+import { PLATFORM_CEIL, PLATFORM_FLOOR, PLATFORM_HEIGHT, PLATFORM_MID_Y } from './constants';
 
 interface Body {
   group: THREE.Group;
@@ -83,18 +84,22 @@ function nhiSpecies(idx: number): {
   };
 }
 
-/** World-Y over which a launched being reads from ground (0) to fully ascended (1) — the roam column. */
-const NHI_ASCEND_SPAN = 240;
-
 /**
  * Map a launched being's REAL height (world Y) to a `[0,1]` ascension signal — drives the hyperspace
  * dimensionality lattice (a being flying high shimmers with tesseract light). Finite-guarded, clamped.
  * Pure, no rng. O(1). See tests/nhi-body-ascension.test.ts.
  */
 export function nhiAscension(y: number): number {
-  const a = (Number.isFinite(y) ? y : 0) / NHI_ASCEND_SPAN;
+  const a = ((Number.isFinite(y) ? y : PLATFORM_FLOOR) - PLATFORM_FLOOR) / PLATFORM_HEIGHT;
   return a < 0 ? 0 : a > 1 ? 1 : a;
 }
+
+/** Exported reference levels make the visual contract explicit and easy to seal headlessly. */
+export const NHI_ASCENSION_LEVELS = {
+  floor: PLATFORM_FLOOR,
+  middle: PLATFORM_MID_Y,
+  ceiling: PLATFORM_CEIL,
+} as const;
 
 /** Per-being CORE shader uniforms driven from real state (uSocial = proximity, uAsc = height). */
 interface NhiUniforms {

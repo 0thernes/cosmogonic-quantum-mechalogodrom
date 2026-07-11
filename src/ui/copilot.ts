@@ -352,6 +352,35 @@ async function populateStaticProviders(sel: HTMLSelectElement, prov: HTMLElement
   prov.textContent = `static · ${upCount}/${STATIC_AI_MODELS.length} LLM7 online · ${STATIC_PROVIDER_CATALOG.length} total (${serverCount} server-only)`;
 }
 
+/**
+ * Populate the closed panel without contacting any third party. Live status probes are deliberate
+ * network actions and run only after the user opens Copilot or presses diagnostics; boot should not
+ * emit seven anonymous LLM requests (and their expected 400/429 console noise).
+ */
+function populateStaticProviderCatalog(sel: HTMLSelectElement, prov: HTMLElement): void {
+  sel.replaceChildren();
+  const browserGroup = makeOptGroup('○ Browser-direct (probe when opened)');
+  const serverGroup = makeOptGroup('🔑 Server-only providers');
+  let firstBrowser = '';
+  for (const row of STATIC_PROVIDER_CATALOG) {
+    const opt = document.createElement('option');
+    opt.value = row.model ?? row.id;
+    opt.textContent = row.label;
+    if (row.serverOnly) {
+      opt.disabled = true;
+      serverGroup.appendChild(opt);
+    } else {
+      if (!firstBrowser) firstBrowser = opt.value;
+      browserGroup.appendChild(opt);
+    }
+  }
+  sel.append(browserGroup, serverGroup);
+  sel.style.display = '';
+  sel.disabled = false;
+  if (firstBrowser) sel.value = firstBrowser;
+  prov.textContent = `static · ${STATIC_AI_MODELS.length} browser providers · live probe on open`;
+}
+
 async function enrichServerProviders(
   sel: HTMLSelectElement,
   prov: HTMLElement,
@@ -1069,11 +1098,9 @@ function mount(): void {
       if (d.enabled !== false && d.providers?.length) {
         await enrichServerProviders(sel, prov, d.providers);
         for (const p of d.providers) if (p.def) selectedProvider = p.id;
-      } else {
-        await populateStaticProviders(sel, prov);
-      }
+      } else populateStaticProviderCatalog(sel, prov);
     })
-    .catch(() => void populateStaticProviders(sel, prov));
+    .catch(() => populateStaticProviderCatalog(sel, prov));
 }
 
 // Self-mount once the DOM is ready (UI shell; safe to no-op if there is no document).
