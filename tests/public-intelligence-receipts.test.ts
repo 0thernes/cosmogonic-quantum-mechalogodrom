@@ -17,24 +17,44 @@ interface AlifeSensitivity {
 }
 
 interface IntelligenceReceipt {
+  taskVersion: string;
   indicatorOnly: boolean;
   claimBoundary: string;
-  protocol: { heldOutSeeds: number[] };
-  acceptanceCriteria?: { adaptationRelativeMedianImprovementMin?: number };
+  protocol: { heldOutSeeds: number[]; controls: string[] };
+  acceptanceCriteria: { adaptationRelativeMedianImprovementMin: number };
+  resourceSeeking: {
+    enhancedMinusDisabled: { mean: number; bootstrap95: [number, number] };
+    goalOnlyMinusLegacy: { mean: number; bootstrap95: [number, number] };
+    acceptedAgainstDisabled: boolean;
+  };
   adaptation: {
     relativeMedianImprovement: number;
     accepted: boolean;
   };
   corpusCausality: {
+    evaluatedSeeds: number;
     integrated: number;
     integratedChanged: number;
     excluded: number;
     excludedExactZero: number;
     accepted: boolean;
   };
+  numericalSafety: {
+    forcedSteps: number;
+    allFiniteAndBounded: boolean;
+    finalRevision: number;
+    accepted: boolean;
+  };
+  consumerCoverage: { sourcePathOnly: string[]; accepted: boolean };
   claims: {
+    goalControllerUplift: boolean;
+    corpusConditionedGoalUplift: boolean;
     operationalGoalUplift: boolean;
     adaptivePostReversalUplift: boolean;
+    allIntegratedReposCausal: boolean;
+    numericalSafetyGateMet: boolean;
+    everyConsumerCounterfactualGateMet: boolean;
+    performanceBudgetMet: boolean;
     substrateSpecificUplift: boolean;
     quantumSpecificUplift: boolean;
     numericScoreUpliftAllowed: boolean;
@@ -86,31 +106,57 @@ describe('public A-Life profile freshness', () => {
 });
 
 describe('organism-intelligence claim boundary', () => {
-  test('the held-out receipt blocks score uplift after missing the 5% adaptation threshold', async () => {
-    const path = `${ROOT}/docs/reports/assets/organism-intelligence-causal-benchmark-v2.json`;
+  test('v3 isolates corpus effects and blocks score uplift on the failed adaptation/coverage gates', async () => {
+    const path = `${ROOT}/docs/reports/assets/organism-intelligence-causal-benchmark-v3.json`;
     const receipt = (await Bun.file(path).json()) as IntelligenceReceipt;
-    const requiredImprovement =
-      receipt.acceptanceCriteria?.adaptationRelativeMedianImprovementMin ?? 0.05;
+    const requiredImprovement = receipt.acceptanceCriteria.adaptationRelativeMedianImprovementMin;
 
+    expect(receipt.taskVersion).toBe('organism-intelligence-v3-goal-preserved-control');
     expect(receipt.protocol.heldOutSeeds).toHaveLength(30);
+    expect(receipt.protocol.controls).toContain('substrate-disabled-goal-preserved');
     expect(receipt.indicatorOnly).toBe(true);
     expect(receipt.claimBoundary.toLowerCase()).toContain('not phenomenal consciousness');
     expect(requiredImprovement).toBe(0.05);
     expect(receipt.adaptation.relativeMedianImprovement).toBeCloseTo(0.039129219926143224, 12);
     expect(receipt.adaptation.relativeMedianImprovement).toBeLessThan(requiredImprovement);
     expect(receipt.adaptation.accepted).toBe(false);
+    expect(receipt.resourceSeeking.enhancedMinusDisabled.mean).toBeGreaterThan(0);
+    expect(receipt.resourceSeeking.enhancedMinusDisabled.bootstrap95[0]).toBeGreaterThan(0);
+    expect(receipt.resourceSeeking.goalOnlyMinusLegacy.mean).toBeGreaterThan(0);
+    expect(receipt.resourceSeeking.goalOnlyMinusLegacy.bootstrap95[0]).toBeGreaterThan(0);
+    expect(receipt.resourceSeeking.acceptedAgainstDisabled).toBe(true);
+    expect(receipt.claims.goalControllerUplift).toBe(true);
+    expect(receipt.claims.corpusConditionedGoalUplift).toBe(true);
     expect(receipt.claims.operationalGoalUplift).toBe(true);
     expect(receipt.claims.adaptivePostReversalUplift).toBe(false);
+    expect(receipt.claims.allIntegratedReposCausal).toBe(true);
+    expect(receipt.claims.numericalSafetyGateMet).toBe(true);
+    expect(receipt.claims.everyConsumerCounterfactualGateMet).toBe(false);
+    expect(receipt.claims.performanceBudgetMet).toBe(true);
     expect(receipt.claims.substrateSpecificUplift).toBe(false);
     expect(receipt.claims.quantumSpecificUplift).toBe(false);
     expect(receipt.claims.numericScoreUpliftAllowed).toBe(false);
     expect(receipt.corpusCausality).toMatchObject({
+      evaluatedSeeds: 30,
       integrated: 17,
       integratedChanged: 17,
       excluded: 5,
       excludedExactZero: 5,
       accepted: true,
     });
+    expect(receipt.numericalSafety).toEqual({
+      forcedSteps: 10_000,
+      allFiniteAndBounded: true,
+      finalRevision: 10_000,
+      accepted: true,
+    });
+    expect(receipt.consumerCoverage.sourcePathOnly).toEqual([
+      'shoggoths',
+      'puppeteers',
+      'titans',
+      'leviathans',
+    ]);
+    expect(receipt.consumerCoverage.accepted).toBe(false);
 
     const { contentSha256, ...body } = receipt;
     const computed = new Bun.CryptoHasher('sha256').update(JSON.stringify(body)).digest('hex');
@@ -124,8 +170,10 @@ describe('organism-intelligence claim boundary', () => {
       const html = (await Bun.file(path).text()).toLowerCase();
       const prose = html.replace(/\s+/g, ' ');
       expect(prose).toContain('operational organism intelligence · held-out receipt');
-      expect(prose).toContain('organism-intelligence-causal-benchmark-v2.json');
+      expect(prose).toContain('organism-intelligence-causal-benchmark-v3.json');
+      expect(prose).toContain('goal-preserved control');
       expect(prose).toContain('below the preregistered 5% acceptance threshold');
+      expect(prose).toContain('coverage gate remains open');
       expect(prose).toContain('not sentience');
       expect(prose).toContain('scores remain frozen');
       expect(prose).toContain('static');

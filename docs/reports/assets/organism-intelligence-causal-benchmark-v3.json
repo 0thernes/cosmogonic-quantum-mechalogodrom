@@ -1,0 +1,214 @@
+{
+  "schemaVersion": 1,
+  "taskVersion": "organism-intelligence-v3-goal-preserved-control",
+  "generatedDate": "2026-07-10",
+  "predecessorReceipt": "docs/reports/assets/organism-intelligence-causal-benchmark-v2.json",
+  "predecessorOutcome": "v2 improved the goal-local actor trace but its disabled arm removed both corpus signal and explicit goal, confounding goal-controller and corpus effects. v3 supersedes that resource claim with a goal-preserved substrate ablation and evaluates corpus causality across all 30 held-out seeds.",
+  "indicatorOnly": true,
+  "claimBoundary": "Measures deterministic task behavior only; not phenomenal consciousness, sentience, physical quantum entropy, CSPRNG security, or general intelligence.",
+  "provenance": {
+    "cosmogonicBaseCommit": "bd9fd6e2f611915d83f8b1d0e5addfe315b47472",
+    "eshkolReference": {
+      "tag": "v1.3.2-evolve",
+      "commit": "8443ddaeecec579c60ac858348a23cf1912d7a78",
+      "relationship": "bounded-float64-runtime-analogue-not-native-parity"
+    },
+    "quantumRngReference": {
+      "tag": "v3.0.1",
+      "commit": "a00ad483cbbef31ea7536f09ae99409d81c9a823",
+      "relationship": "deterministic-classical-statevector-adaptation-not-csprng-or-physical-entropy"
+    }
+  },
+  "protocol": {
+    "heldOutSeeds": [
+      272071090,
+      2926506851,
+      1285975316,
+      3940411077,
+      2299879542,
+      659348007,
+      3313783768,
+      1673252233,
+      32720698,
+      2687156459,
+      1046624924,
+      3701060685,
+      2060529150,
+      419997615,
+      3074433376,
+      1433901841,
+      4088337602,
+      2447806067,
+      807274532,
+      3461710293,
+      1821178758,
+      180647223,
+      2835082984,
+      1194551449,
+      3848987210,
+      2208455675,
+      567924140,
+      3222359901,
+      1581828366,
+      4236264127
+    ],
+    "bootstrapSamples": 10000,
+    "controls": [
+      "substrate-disabled-goal-preserved",
+      "legacy-no-goal-context",
+      "repo-channel-permutation",
+      "entropy-matched-classical",
+      "random-policy"
+    ],
+    "resourceTask": "one-step x-axis progress toward identical flora goal",
+    "adaptationTask": "240 steps with resource-goal reversal after step 120; online trace vs frozen trace",
+    "acceptanceRules": {
+      "resourceSeeking": "paired mean enhanced-minus-disabled > 0 and 95% bootstrap lower bound > 0",
+      "goalController": "paired mean goal-only-minus-legacy > 0 and 95% bootstrap lower bound > 0",
+      "adaptation": "median post-reversal return >= 5% above frozen trace, 95% bootstrap lower bound > 0, and no seed loss below -20%",
+      "corpusCausality": "all 17 integrated external rows change final velocity > 1e-9; four fences plus one meta row are exactly inert",
+      "performance": "shared-field p95 < 0.5 ms and incremental 50,000-entity median < 3 ms on the receipt machine",
+      "scoreUplift": "corpus-conditioned resource, adaptation, causality, numerical safety, every-class consumer coverage, performance, and shuffled-substrate specificity must all pass"
+    }
+  },
+  "acceptanceCriteria": {
+    "resourceMeanImprovementMinExclusive": 0,
+    "resourceBootstrapLowerBoundMinExclusive": 0,
+    "adaptationRelativeMedianImprovementMin": 0.05,
+    "adaptationBootstrapLowerBoundMinExclusive": 0,
+    "adaptationWorstSeedRelativeLossMin": -0.2,
+    "corpusDecisionEpsilon": 1e-9,
+    "integratedExternalRows": 17,
+    "excludedExternalRows": 5,
+    "sharedFieldP95MaxMs": 0.5,
+    "incrementalEntityMedianMaxMs": 3,
+    "performancePopulation": 50000
+  },
+  "resourceSeeking": {
+    "means": {
+      "enhanced": 0.014374130663348316,
+      "disabled": 0.006855369062460302,
+      "legacy": -0.0007765767154523202,
+      "shuffled": 0.0144661397422624,
+      "classical": 0.014928489308231286,
+      "random": -0.0061576186786405735
+    },
+    "enhancedMinusDisabled": {
+      "mean": 0.007518761600888019,
+      "bootstrap95": [
+        0.005891651061148594,
+        0.009238776533376803
+      ],
+      "cohenDz": 1.5791418472952083
+    },
+    "goalOnlyMinusLegacy": {
+      "mean": 0.007631945777912622,
+      "bootstrap95": [
+        0.006805921181039884,
+        0.008519529182282277
+      ],
+      "cohenDz": 3.150413721976839
+    },
+    "enhancedMinusShuffled": {
+      "mean": -0.0000920090789140815,
+      "bootstrap95": [
+        -0.0003326717364833753,
+        0.00017295119097604573
+      ],
+      "cohenDz": -0.13152139833851026
+    },
+    "enhancedMinusClassical": {
+      "mean": -0.0005543586448829664,
+      "bootstrap95": [
+        -0.0012357750695679093,
+        0.0001136388683422123
+      ],
+      "cohenDz": -0.2901298770134111
+    },
+    "acceptedAgainstDisabled": true,
+    "substrateSpecific": false,
+    "quantumSpecific": false
+  },
+  "adaptation": {
+    "requiredRelativeMedianImprovement": 0.05,
+    "maximumAllowedSeedRelativeLoss": -0.2,
+    "medianPostReversalEnhanced": 1.522862440765349,
+    "medianPostReversalFrozen": 1.465517869734803,
+    "relativeMedianImprovement": 0.039129219926143224,
+    "enhancedMinusFrozen": {
+      "mean": 0.12050746675240001,
+      "bootstrap95": [
+        0.07706648470318986,
+        0.16991166304806113
+      ],
+      "cohenDz": 0.908794532674938
+    },
+    "worstSeedRelativeLoss": -0.01269826560965952,
+    "accepted": false
+  },
+  "corpusCausality": {
+    "evaluatedSeeds": 30,
+    "integrated": 17,
+    "integratedChanged": 17,
+    "excluded": 5,
+    "excludedExactZero": 5,
+    "accepted": true
+  },
+  "numericalSafety": {
+    "forcedSteps": 10000,
+    "allFiniteAndBounded": true,
+    "finalRevision": 10000,
+    "accepted": true
+  },
+  "performance": {
+    "sharedFieldP95Ms": 0.021599999999992292,
+    "legacyEntityMedianMs": 8.842500000000001,
+    "enhancedEntityMedianMs": 11.512900000000002,
+    "incrementalEntityMedianMs": 2.6704000000000008,
+    "population": 50000,
+    "accepted": true
+  },
+  "consumerCoverage": {
+    "directMatchedCounterfactuals": [
+      "ordinary-entities",
+      "alien-flora",
+      "nhi",
+      "glyph-beings",
+      "wilderness-fauna",
+      "primordial-digital-biologics"
+    ],
+    "sourcePathOnly": [
+      "shoggoths",
+      "puppeteers",
+      "titans",
+      "leviathans"
+    ],
+    "existingDeepPathsOutsideThisGate": [
+      "archon-apex",
+      "mechalogodrom"
+    ],
+    "accepted": false
+  },
+  "claims": {
+    "goalControllerUplift": true,
+    "corpusConditionedGoalUplift": true,
+    "operationalGoalUplift": true,
+    "adaptivePostReversalUplift": false,
+    "allIntegratedReposCausal": true,
+    "numericalSafetyGateMet": true,
+    "everyConsumerCounterfactualGateMet": false,
+    "performanceBudgetMet": true,
+    "substrateSpecificUplift": false,
+    "quantumSpecificUplift": false,
+    "numericScoreUpliftAllowed": false
+  },
+  "machine": {
+    "platform": "win32",
+    "architecture": "x64",
+    "bun": "1.3.14",
+    "logicalCpus": 24,
+    "cpuModel": "Intel(R) Core(TM) Ultra 9 275HX",
+    "totalMemoryBytes": 50910707712
+  },
+  "contentSha256": "bf63db97fa736d1da099b43dc177326e02e34c8cced9d310870229922b6f7b63"
+}
