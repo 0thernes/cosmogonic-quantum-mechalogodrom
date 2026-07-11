@@ -180,6 +180,21 @@ describe('homotopy — exact integer winding + integer linking', () => {
       expect(Number.isFinite(baby.homotopy.linkingRaw)).toBe(true);
     }
   });
+
+  test('linking genuinely DISCRIMINATES (both linked ±1 and unlinked 0 occur) — not a dead constant', () => {
+    // parentLoop3D once put off∈[0.7,1.1) so exactly one of B's crossings always sat inside A's disk ⇒
+    // linking was ALWAYS ±1 and the rarity linking term was a fixed +0.14 for every child. The widened
+    // off range must now yield BOTH unlinked (0) and linked (±1) pairs across the roster.
+    const seen = new Set<number>();
+    for (let i = 0; i < 101; i++) {
+      for (let j = 0; j < 101; j++) {
+        seen.add(breedAt(i, j, 0).homotopy.linking);
+        if (seen.has(0) && [...seen].some((v) => v !== 0)) break;
+      }
+    }
+    expect(seen.has(0)).toBe(true); // unlinked pairs exist (the dead-constant bug is gone)
+    expect([...seen].some((v) => v !== 0)).toBe(true); // linked pairs still exist
+  });
 });
 
 describe('blasean — finite Blaschke product is a genuine inner function', () => {

@@ -1454,6 +1454,7 @@ export class World {
     for (const h of this.heroBodies) h.body.dispose();
     this.superheroHud.dispose();
     this.pantheonArchitecturePanel.dispose();
+    this.superPanel.dispose(); // frees SuperNeural's rAF loop + leaked 'cqm:brutal-style' window listener
     this.input.dispose();
   }
 

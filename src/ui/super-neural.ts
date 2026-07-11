@@ -1782,6 +1782,18 @@ export class SuperNeural {
     if (this.raf) cancelAnimationFrame(this.raf);
     this.raf = 0;
   }
+
+  /**
+   * Release the rAF loop AND the window 'cqm:brutal-style' listener. Without this, a World
+   * re-instantiation (bun --hot) orphaned the old instance yet its window listener kept firing
+   * onBrutalStyle against a detached node, holding the whole object graph alive — one dead listener
+   * per reload. Mirrors the sibling panels' explicit dispose (superhero-hud, pantheon-architecture).
+   */
+  dispose(): void {
+    this.stopLoop();
+    if (typeof window !== 'undefined')
+      window.removeEventListener('cqm:brutal-style', this.onBrutalStyle);
+  }
   private lastPaint = 0;
   private readonly tick = (ts: number): void => {
     this.raf = 0;

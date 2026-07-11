@@ -459,8 +459,14 @@ export class Economy {
         const nw = this.nw[i] ?? 0;
         if (nw > mean * 1.75) {
           const skim = (nw - mean * 1.75) * rate;
-          a.aurum = Math.max(0, a.aurum - skim);
-          pool += skim;
+          // Pool only what is ACTUALLY debited. `skim` is derived from total net worth (aurum + umbra·fx
+          // + commodities) but only AURUM is taken here; booking the full `skim` into the pool while
+          // `a.aurum` floors at 0 MINTED the shortfall (skim − aurum) from nothing whenever a rich agent
+          // held its wealth in umbra/commodities — inflating the AURUM supply and breaking the
+          // "currency conserved exactly" invariant. Take min(skim, aurum) so pool == debited.
+          const took = Math.min(skim, a.aurum);
+          a.aurum -= took;
+          pool += took;
         }
       }
       if (pool > 1e-6) {

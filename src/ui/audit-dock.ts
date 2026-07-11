@@ -321,7 +321,10 @@ function renderDashboard(doc: Document, list: unknown[]): void {
     // 2. [BIO] Organic Metamorphics
     activeEntities = world.entities?.list?.length ?? 0;
     biomass = (activeEntities * 12.5).toFixed(1);
-    mutationQuotient = world.state?.mutations ?? 0.0;
+    // world.state.mutations is a CUMULATIVE integer counter (hundreds→thousands), NOT a 0..1 fraction —
+    // rendering it raw as `${x*100}%` printed nonsense like "Mut: 372900.0%". Normalize to a bounded
+    // fraction on the percept's /1000 scale so the `%` readout is correct and matches the fallback path.
+    mutationQuotient = Math.min(1, (world.state?.mutations ?? 0) / 1000);
 
     // 3. [NEU] Brain Synapse Activity
     synapsesCount = world.connectome?.links ?? 0;

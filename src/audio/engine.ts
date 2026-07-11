@@ -230,21 +230,20 @@ export class AudioEngine {
     screamGain.gain.value = 0.2;
     scream.connect(screamGain);
     screamGain.connect(filter);
-    // Putrid noise wash (shared white-noise buffer, looped) — texture under the tones. Skipped if the
-    // buffer hasn't been lazily built yet; the drone+scream still carry the horror.
-    let noise: AudioBufferSourceNode | null = null;
-    if (this.noiseBuf) {
-      noise = ctx.createBufferSource();
-      noise.buffer = this.noiseBuf;
-      noise.loop = true;
-      const noiseGain = ctx.createGain();
-      noiseGain.gain.value = 0.13;
-      noise.connect(noiseGain);
-      noiseGain.connect(filter);
-    }
+    // Putrid noise wash (shared white-noise buffer, looped) — texture under the tones. EAGERLY
+    // materialise the shared buffer via noiseBuffer(ctx) (deterministic xorshift, memoised + reused by
+    // SFX). buildPortalHorrorBus runs once at init() BEFORE any SFX has lazily built noiseBuf, so the
+    // old `if (this.noiseBuf)` guard was NEVER satisfied — the designed third layer was permanently dead.
+    const noise = ctx.createBufferSource();
+    noise.buffer = this.noiseBuffer(ctx);
+    noise.loop = true;
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.value = 0.13;
+    noise.connect(noiseGain);
+    noiseGain.connect(filter);
     drone.start();
     scream.start();
-    noise?.start();
+    noise.start();
     this._portalHorror = { drone, scream, noise, filter, gain, level: 0 };
   }
 
@@ -881,8 +880,14 @@ export class AudioEngine {
         const intensity = intensityAt(st);
         // Filter-cutoff LFO swell: a slow deep sweep (≈21-beat period) plus the legacy
         // fast ripple, widened by the current intensity so loud phrases open up brighter.
-        const cutoff =
-          song.fBase + (Math.sin(st * 0.3) * 260 + Math.sin(st * 0.1) * 220) * intensity;
+        // Floor at 220 Hz (mirrors the pad's 260 Hz floor below): the ±480 Hz LFO is applied to a
+        // variable fBase, so on the lowest-fBase songs (HORIZON HYMN fBase 440) the un-floored cutoff
+        // dipped to ~13 Hz — a Q=2 lowpass there attenuates the 130–520 Hz chord by 40–64 dB, silencing
+        // the whole 3-voice chord chorus periodically while pad/bass/melody keep sounding.
+        const cutoff = Math.max(
+          220,
+          song.fBase + (Math.sin(st * 0.3) * 260 + Math.sin(st * 0.1) * 220) * intensity,
+        );
         ch.forEach((n, i) => {
           const base = noteFreq(n + (st % 3)) * octave;
           const peak = 0.045 * intensity;

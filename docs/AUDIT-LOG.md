@@ -31,6 +31,56 @@ import.meta.url)` against the served chunk origin, but Bun's HTML bundler does n
   `playwright` — first faked 14 format-red files and 2 SBOM failures on an untouched checkout;
   `bun install` restored the plugin and both stages went green with main's files pristine.)
 
+## 2026-07-10 (pass 4) — subsystem deep-read sweep (7 NEW findings, incl. a HIGH)
+
+A fourth sweep switching strategy from LENSES to **subsystem deep-reads** (audio, economy/titans,
+breeding/pantheon, wilderness/workers, entity-physics, math-primitives, non-observatory UI panels,
+world.ts step-order) — reading each area end-to-end. This opened new territory: **7 confirmed** (1
+dismissed as intentional), the most productive pass yet. Shipped as batch 12.
+
+### Batch 12 — subsystem findings (this commit)
+
+- **[ECON-1] Gini-guard MINTED aurum** (`economy.ts`, **HIGH**) — the progressive redistribution booked
+  the full `skim` into the pool (`pool += skim`) while only debiting `Math.max(0, a.aurum - skim)`;
+  when a rich agent held its wealth in umbra/commodities (`skim > a.aurum`), the shortfall was created
+  from nothing, inflating the AURUM supply and breaking the "currency conserved exactly" invariant.
+  Fixed to `took = Math.min(skim, a.aurum); a.aurum -= took; pool += took` — pool equals what was
+  debited, exactly conservative.
+- **[AUD-1] chord lowpass had no floor** (`engine.ts`, med) — the ±480 Hz cutoff LFO on a variable
+  `fBase` drove the chord filter to ~13 Hz on low-`fBase` songs (HORIZON HYMN), attenuating the
+  130–520 Hz chord by 40–64 dB → the 3-voice chord chorus periodically went silent while pad/bass/
+  melody kept sounding. The pad voice on the same beat WAS floored (`Math.max(260, …)`) — intent
+  proven. Floored the chord cutoff at 220 Hz.
+- **[BREED-1] rarity's homotopy-linking term was a dead +0.14 constant** (`pantheon-breeding.ts`, med)
+  — `parentLoop3D` drew `off∈[0.7,1.1)` which, against `rad∈[0.8,1.2)`, ALWAYS put exactly one of ring
+  B's crossings inside ring A's disk, so `gaussLinking` always rounded to ±1 and the `abs(linking)>0`
+  gate was always true (uniform +0.14, zero discrimination, inflating rarity across `rankOf`
+  thresholds). Widened `off` to `[0.3, 2.4)` so large/small offsets genuinely unlink (Lk≈0). New test
+  asserts linking now takes BOTH 0 and ±1.
+- **[UI-1] mutation COUNT rendered as a percentage** (`audit-dock.ts`, med) — the live path read the
+  cumulative integer `world.state.mutations` and printed `${x*100}%` → "Mut: 372900.0%". Normalized to
+  a bounded fraction on the percept's `/1000` scale (consistent with the no-world fallback path).
+- **[AUD-2] portal-horror noise-wash layer was permanently dead** (`engine.ts`, low) —
+  `buildPortalHorrorBus` only added the noise layer `if (this.noiseBuf)`, but that buffer is built
+  lazily by the FIRST SFX (after `init()`), and the bus is one-shot, so the branch was never taken.
+  Eagerly materialize it via `noiseBuffer(ctx)` (deterministic, memoised) so the designed third layer
+  always plays.
+- **[BREED-2] "inbred same-kin" rite crossed kin ~50%** (`pantheon-breeding.ts`, low) — the branch
+  assumed indices 0–49/50–99 were the two kins, but the roster is INTERLEAVED by script (sisters
+  {0–23, 48–73}, brothers {24–47, 74–99}). Now draws `j` from glyph `i`'s ACTUAL kin cohort
+  (precomputed `SISTER_INDICES`/`BROTHER_INDICES`), still one `rng()` draw so the seeded stream stays
+  aligned — the `+0.45` same-kin bonus now always applies to an inbred child.
+- **[UI-2] SuperNeural leaked a window listener** (`super-neural.ts`, low) — the constructor added a
+  `cqm:brutal-style` window listener with no `dispose()`; each World re-instantiation (bun --hot)
+  orphaned the instance while the listener kept firing against a detached node, holding the graph
+  alive. Added `SuperNeural.dispose()` (removes the listener + stops the rAF loop) + `SuperPanel.dispose()`
+  (forwards + removes its DOM), wired into `World.dispose()` beside the sibling panels.
+
+Dismissed: world.ts:2767 prime-archon noosphere "dead store" — INTENTIONAL (the apex brain's values
+deliberately overwrite the loop's archon-0 write). All sim fixes are deterministic; determinism/
+reproduce goldens stay bit-green. Receipts 2404 → **2405** (+1 breeding linking discriminator test).
+Full `bun run check` green.
+
 ## 2026-07-10 (pass 3) — convergence sweep (4 NEW findings) + a batch-9 residual
 
 A third sweep with **complementary lenses** the first two under-covered (cross-module contract

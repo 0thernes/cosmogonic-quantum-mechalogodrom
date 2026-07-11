@@ -802,6 +802,17 @@ export class SuperPanel {
     m.fill.style.width = (f * 100).toFixed(0) + '%';
     m.num.textContent = signed !== undefined ? signed.toFixed(2) : f.toFixed(2);
   }
+
+  /**
+   * Release owned resources. Forwards to the embedded SuperNeural (its rAF loop + leaked
+   * 'cqm:brutal-style' window listener) and removes the panel + toggle DOM, so a World
+   * re-instantiation (bun --hot) doesn't accumulate a dead listener per reload.
+   */
+  dispose(): void {
+    this.neural.dispose();
+    this.doc.getElementById('cqm-sup-panel')?.remove();
+    this.doc.getElementById('cqm-sup-toggle')?.remove();
+  }
 }
 
 /** Compact human number (1.2k, 3.4M) for the wallet readout. */

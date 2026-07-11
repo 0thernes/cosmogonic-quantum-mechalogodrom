@@ -178,6 +178,16 @@ function buildLineage(): LineageGlyph[] {
 /** The frozen 101-glyph lineage (50 sisters, 50 brothers, the apex ς last). */
 export const LINEAGE: readonly LineageGlyph[] = Object.freeze(buildLineage());
 
+/** Roster indices grouped by kin. The roster is INTERLEAVED by script (greek-upper sisters, greek-lower
+ *  brothers, latin-upper sisters, latin-lower brothers), so sisters occupy {0–23, 48–73} and brothers
+ *  {24–47, 74–99} — NOT two contiguous 50-blocks. The same-kin (inbred) rite must draw from these. */
+const SISTER_INDICES: readonly number[] = LINEAGE.filter((g) => g.kin === 'sister').map(
+  (g) => g.index,
+);
+const BROTHER_INDICES: readonly number[] = LINEAGE.filter((g) => g.kin === 'brother').map(
+  (g) => g.index,
+);
+
 /** Index-addressable glyph (wraps modulo 101, so any integer is valid). */
 export function lineageAt(i: number): LineageGlyph {
   const n = PANTHEON_TOTAL;
@@ -485,7 +495,12 @@ function windingNumber(pts: Float64Array): number {
 function parentLoop3D(g: LineageGlyph, threadAxis: boolean, samples: number): Float64Array {
   const r = mulberry32(g.seed ^ 0x51ed270b);
   const rad = 0.8 + r() * 0.4;
-  const off = threadAxis ? 0.7 + r() * 0.4 : 0;
+  // off spans [0.3, 2.4) so the two rings GENUINELY vary between linked and unlinked: with rad∈[0.8,1.2)
+  // the earlier off∈[0.7,1.1) always put exactly one of B's crossings (x = off±rad_B) inside A's disk,
+  // so gaussLinking always rounded to ±1 and the rarity linking term was a dead +constant. Now a large
+  // off (both crossings outside A's disk) or a small off with rad_A>rad_B (both inside) yields Lk≈0,
+  // making Math.round(gaussLinking) a real 0-vs-±1 discriminator.
+  const off = threadAxis ? 0.3 + r() * 2.1 : 0;
   const pts = new Float64Array(samples * 3);
   for (let i = 0; i < samples; i++) {
     const t = (i / samples) * 2 * Math.PI;
@@ -792,9 +807,11 @@ export function randomBreeding(rng: Rng): BabyGenome {
   if (roll < 0.12) {
     j = i; // asexual self-rite
   } else if (roll < 0.4) {
-    // inbred — same kin (offset within the same 50-block of sisters/brothers)
-    const block = i < SISTER_COUNT ? 0 : SISTER_COUNT;
-    j = block + Math.floor(rng() * SISTER_COUNT);
+    // inbred — same kin. Draw j from glyph i's ACTUAL kin cohort. The roster is interleaved, so the old
+    // `i < 50 ? 0 : 50` block split crossed kin ~50% of the time (missing the +0.45 same-kin bonus in
+    // inbreedingCoefficient). Still exactly one rng() draw ⇒ the seeded stream stays aligned.
+    const cohort = LINEAGE[i]!.kin === 'sister' ? SISTER_INDICES : BROTHER_INDICES;
+    j = cohort[Math.floor(rng() * cohort.length)]!;
   } else {
     j = Math.floor(rng() * 100);
   }
