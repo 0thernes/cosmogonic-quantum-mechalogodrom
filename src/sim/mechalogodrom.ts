@@ -60,12 +60,12 @@ const MECHA_TIME_SCALE = 16;
 const MECHA_EXTERIOR_TIME_SCALE = 0.15;
 const MECHA_SATELLITE_COUNT = 400;
 const MECHA_CORE_SEGMENTS = 128;
-/** Elevation of the whole abomination above the arena floor. Scaled ×3 with the world's VERTICAL
- *  expansion (HABITAT_Y_SCALE = 3, biosphere ceiling PLATFORM_CEIL = 720): when the world grew 3× taller
- *  the god was left sitting at a third of its former relative height, so it is lifted 252 → 756 to keep
- *  CROWNING the enlarged world — its mass now floats just ABOVE the biosphere ceiling and well clear of
- *  the LV100 MONOLITH TEMPLE, a structurally-sensible cosmic crown rather than a sunken ground prop. */
-const ALTITUDE = 756;
+/** Elevation of the whole abomination above the arena floor. Pinned to the GOD-COLOSSUS's VERTICAL
+ *  CENTER so the two god-tier presences share ONE elevation band (owner: "the middle of the God's height
+ *  should be the same as the Mechalogodrom's"). The colossus bounding box is centered at
+ *  `ARENA_RADIUS·0.82` (its half-extent) + `ARENA_RADIUS·0.1` (float gap) = `ARENA_RADIUS·0.92`, so this
+ *  matches its mid-height exactly and tracks any change to the arena scale — see god-colossus.ts. */
+const ALTITUDE = ARENA_RADIUS * 0.92; // ≈ 299 — the middle of the God's height
 /** Mandelbulb iteration budget for the per-vertex escape proxy (power-8 lobes; NaN-guarded). */
 const BULB_ITERS = 4;
 
