@@ -11,6 +11,27 @@ changed and why.
 
 ---
 
+## 2026-07-10 — batch 25: the LIVE base 50k population forages by flora-gradient chemotaxis + Cognition 4.0→4.1
+
+Extends "smarter" BEYOND the digital-life layer to the base 50,000-entity population (the owner's literal
+"every animal") — the deferral I'd flagged as "perturbs the hot path" was over-caution (only hungry+strided
+entities steer; 4 O(1) probes ≈ <0.1ms/frame). Coupling-safe (base entities + flora, apex untouched).
+
+- **[SMART-6] flora-gradient chemotaxis** — base organisms already GRAZED flora at their current position
+  (`applyFloraComfort`) but only drifted to the nearest cover; now a HUNGRY animal FORAGES by climbing the
+  flora BIOMASS gradient toward the richest patch. Added a READ-ONLY `AlienFlora.biomassAt(x,z)` sampler
+  (no consumption), an `attachFloraGradient` inject hook (null in tests ⇒ golden byte-identical, like
+  `floraGraze`), and a deterministic finite-difference gradient steer in `entities.ts` gated on
+  `hunger > 0.2`. Wired live in `world.ts`. GATE-CHEMOTAXIS: over 40 seeds a gradient forager ends on >3×
+  richer flora than a hungry-but-blind wanderer; ablation (zero gradient) regresses to the random walk.
+- **Cognition/Learning floor 4.0 → 4.1** (`CODE_GROUNDED`) — now backed by THREE gate-verified non-apex
+  cognition loops: GATE-FORAGE + GATE-BIOLOGIC-LEARN (live petri) + GATE-CHEMOTAXIS (the LIVE 50k base
+  population). Recomputed: code-grounded breadth 3.74→3.76, z-pop +2.94→+2.95, z-peers +3.07→+3.09, lead
+  +0.24→+0.26 (Mahalanobis 10.23 unchanged); 4 surfaces restated + drift-locked. Self-scored row +
+  Consciousness (3.5) + Butlin unchanged.
+
+Receipts 2450→2453 (+3). Honest code-grounded floor now [4.0,2.4,3.2,3.8,4.1,4.5,4.3,3.5,4.0]. Full gate green.
+
 ## 2026-07-10 (pass 6) — batch 24: close the sync-allowlist gap — the 14th and final pass-6 finding
 
 - **[SYNC-1] a receipt-publishing living doc was outside the sync allowlist and had drifted**

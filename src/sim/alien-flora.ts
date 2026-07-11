@@ -664,6 +664,17 @@ export class AlienFlora {
    * 0..100 creature scale) for the grazer. `pressure` 0..1 scales appetite. Deterministic (no rng);
    * a no-op (returns 0) outside the field or on an already-eaten cell. O(1).
    */
+  /**
+   * READ-ONLY flora biomass at world (x,z) ∈ [0,1] (0 outside the field or on a bare cell). Pure — no
+   * consumption, no side effects — so a grazer can finite-difference it to sense the biomass GRADIENT and
+   * forage UP it toward the richest patch (gradient-ascent chemotaxis), not just drift to the nearest
+   * cover. O(1). See entities.ts applyFloraComfort + tests/flora-chemotaxis.test.ts.
+   */
+  biomassAt(x: number, z: number): number {
+    const gi = this.gridIndex(x, z);
+    return gi < 0 ? 0 : (this.biomass[gi] ?? 0);
+  }
+
   grazeAt(x: number, z: number, pressure: number, dt: number): number {
     const gi = this.gridIndex(x, z);
     if (gi < 0) return 0;

@@ -20,11 +20,12 @@
  *   ecology             3.2  titans.ts real economyTick + soup SELECTION loop closed (world.ts:3085 spawns the
  *                            vitality-argmax; GATE-SOUP-SELECT: differential >0 vs a blind pick ~0) — was 3.0
  *   morphology/physics  3.8  reaction-diffusion.ts:87-290 live Gray-Scott PDE; schrodinger.ts dead code, super-body cosmetic — DEFENSIBLE (was 4.0)
- *   cognition/learning  4.0  super-creature.ts predict->surprise->GOAP + a base agent does exact-AD gradient
- *                            chemotaxis beating a random walk p<0.01 (GATE-FORAGE) AND the base digital-life
- *                            population LEARNS its fitness by exact Eshkol reverse-mode AD, converging to the
- *                            analytic optimum with an ablation-verified load-bearing gradient (GATE-BIOLOGIC-
- *                            LEARN), wired live into the petri loop — both outside the apex — was 3.8
+ *   cognition/learning  4.1  super-creature.ts predict->surprise->GOAP + THREE gate-backed non-apex loops:
+ *                            AD-gradient forager beats a random walk p<0.01 (GATE-FORAGE); the digital-life
+ *                            population LEARNS its fitness by exact Eshkol AD to the analytic optimum, ablation-
+ *                            verified, live in petri (GATE-BIOLOGIC-LEARN); and the LIVE base 50k population
+ *                            FORAGES up the flora biomass gradient (chemotaxis) reaching >3x richer flora than
+ *                            a blind wanderer (GATE-CHEMOTAXIS, entities.ts) — was 3.8
  *   substrate pluralism 4.5  qcircuit.ts real 5-qubit statevector wired + tsotchke-deep-wire real irrep/SVD; schrodinger/causal-graph/predictive-coding isolated — mild (was 5.0)
  *   instrumentation     4.3  analytics.ts:57-215 wired regression+audit; rng-stats.ts isolated — DEFENSIBLE (was 4.5)
  *   consciousness-thy   3.5  integrated-information.ts:44-92 exact quantum Phi + global-workspace wired; causal-graph + predictive-coding NEVER instantiated — OVERCLAIMED (was 4.5)
@@ -52,7 +53,8 @@ const AXES = [
 //   batch-15b: ecology 3.0→3.2 (GATE-SOUP-SELECT) · cognition 3.8→3.9 (GATE-FORAGE)
 //   batch-22:  open-endedness 2.2→2.4 (two live selection loops + GATE-OE-LIVE + GATE-PETRI-SURVIVE)
 //   batch-23:  cognition 3.9→4.0 (GATE-BIOLOGIC-LEARN — the base population learns by exact Eshkol AD)
-export const CODE_GROUNDED = [4.0, 2.4, 3.2, 3.8, 4.0, 4.5, 4.3, 3.5, 4.0];
+//   batch-25:  cognition 4.0→4.1 (GATE-CHEMOTAXIS — the LIVE base 50k population forages up the flora gradient)
+export const CODE_GROUNDED = [4.0, 2.4, 3.2, 3.8, 4.1, 4.5, 4.3, 3.5, 4.0];
 
 interface Row {
   project: string;

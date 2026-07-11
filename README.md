@@ -8,7 +8,7 @@
 [![License: Non-Commercial Research & Play](https://img.shields.io/badge/License-Non--Commercial%20Research%20%26%20Play-2ea043.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
-[![tests](https://img.shields.io/badge/tests-2450%20exact-brightgreen)](./tests)
+[![tests](https://img.shields.io/badge/tests-2453%20exact-brightgreen)](./tests)
 [![coverage](https://img.shields.io/badge/coverage-84.64%25%20line%20%C2%B7%2082.21%25%20func-success)](./docs/TECHNICAL-SPECIFICATION-2026-06-26.md)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION-2026-06-26.md)
 [![Tsotchke](https://img.shields.io/badge/Tsotchke-REAL__MIT__CORPUS-purple)](https://github.com/tsotchke)
@@ -23,7 +23,7 @@ diffusion, **and the Tsotchke corpus wired as the primordial substrate for digit
 **Current public truth (2026-07-10):**
 
 - Package/source version: **v0.21.13**.
-- Exact tracked-suite receipt: **2,450 tests / 0 fail**. Portable public coverage floor: **84.64% line / 82.21% func**.
+- Exact tracked-suite receipt: **2,453 tests / 0 fail**. Portable public coverage floor: **84.64% line / 82.21% func**.
 
 <!-- cqm-sync:local-measurement:start -->
 
@@ -678,13 +678,13 @@ TypeScript source by a 9-agent pass — so the headline is shown **two ways**, h
 
 | Metric                         | Self-scored | Code-grounded (re-audited vs source) |
 | ------------------------------ | ----------: | -----------------------------------: |
-| Breadth (mean of 9 axes)       |    4.44 / 5 |                         **3.74 / 5** |
+| Breadth (mean of 9 axes)       |    4.44 / 5 |                         **3.76 / 5** |
 | Rank among 113 systems         |    #1 / 113 |                         **#1 / 113** |
-| z-score vs population          |      +4.02σ |                           **+2.94σ** |
-| z-score vs peers               |      +4.36σ |                           **+3.07σ** |
+| z-score vs population          |      +4.02σ |                           **+2.95σ** |
+| z-score vs peers               |      +4.36σ |                           **+3.09σ** |
 | Mahalanobis vs peer centroid   |       12.65 |                            **10.23** |
 | Systems that dominate it (9-D) |           0 |                                **0** |
-| Breadth lead over nearest peer |       +0.94 |                            **+0.24** |
+| Breadth lead over nearest peer |       +0.94 |                            **+0.26** |
 
 <p align="center">
   <img src="./docs/reports/assets/alife-breadth-ranked.svg" alt="Ranked breadth of integrated mechanisms — Cosmogonic ranks #1 of 113" width="49%">
