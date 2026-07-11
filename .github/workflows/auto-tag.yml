@@ -55,12 +55,15 @@ jobs:
           HEAD_SHA="$(git rev-parse HEAD)"
           if git show-ref --verify --quiet "refs/tags/$TAG"; then
             EXISTING_SHA="$(git rev-list -n 1 "$TAG")"
-            if [ "$EXISTING_SHA" != "$HEAD_SHA" ]; then
-              echo "::error::Tag $TAG already points to $EXISTING_SHA, not CI-approved $HEAD_SHA."
+            # Maintenance commits legitimately keep the current package version. In that case its
+            # immutable release tag points to an ANCESTOR, not this new HEAD. Reject only a tag from
+            # divergent history; never move an existing release tag and never fail ordinary pushes.
+            if ! git merge-base --is-ancestor "$EXISTING_SHA" "$HEAD_SHA"; then
+              echo "::error::Tag $TAG points to $EXISTING_SHA, which is not an ancestor of CI-approved $HEAD_SHA."
               exit 1
             fi
             echo "exists=true" >> "$GITHUB_OUTPUT"
-            echo "Tag $TAG already points to CI-approved $HEAD_SHA — skipping creation."
+            echo "Tag $TAG already identifies this version's release ancestor $EXISTING_SHA — skipping creation."
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
             echo "Tag $TAG does NOT exist — will create."

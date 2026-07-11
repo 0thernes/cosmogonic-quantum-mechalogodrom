@@ -37,9 +37,9 @@ Snapshot: **2026-07-10**. (Coverage + passing-test counts ARE SSOT-synced — se
 | Metric                                  | Value                                                                 |
 | --------------------------------------- | --------------------------------------------------------------------- |
 | Total tracked authored files            | **768**                                                               |
-| Total tracked authored lines            | **205,618**                                                           |
+| Total tracked authored lines            | **205,626**                                                           |
 | App source (`src/`)                     | 99,555 lines · 294 files                                              |
-| Tests (`tests/`)                        | 36,710 lines · 270 files                                              |
+| Tests (`tests/`)                        | 36,712 lines · 270 files                                              |
 | Native C++ engine (`native/`, ADR-0007) | 1,835 lines · 12 files                                                |
 | Test : source ratio                     | 0.37 → **84.64% line / 82.21% func** coverage (`bun test --coverage`) |
 | Passing tests                           | **2,418** (exact tracked suite; 0 failing)                            |
@@ -51,8 +51,8 @@ Snapshot: **2026-07-10**. (Coverage + passing-test counts ARE SSOT-synced — se
 
 | Type                | Files | Lines   | Share   |
 | ------------------- | ----- | ------- | ------- |
-| TypeScript          | 610   | 141,922 | 69.02 % |
-| Markdown            | 70    | 20,806  | 10.12 % |
+| TypeScript          | 610   | 141,924 | 69.02 % |
+| Markdown            | 70    | 20,809  | 10.12 % |
 | HTML                | 10    | 14,603  | 7.10 %  |
 | JSON                | 13    | 10,385  | 5.05 %  |
 | PNG (shots)         | 4     | 9,552   | 4.65 %  |
@@ -62,23 +62,23 @@ Snapshot: **2026-07-10**. (Coverage + passing-test counts ARE SSOT-synced — se
 | XML (masters)       | 4     | 707     | 0.34 %  |
 | YAML · lock · other | 43    | ~2,796  | ~1.4 %  |
 
-**Code (TS + C++ + HTML + CSS) ≈ 160,528 lines ≈ 78.1 %**; documentation + config + assets ≈ 21.9 %.
+**Code (TS + C++ + HTML + CSS) ≈ 160,530 lines ≈ 78.1 %**; documentation + config + assets ≈ 21.9 %.
 
 ### 1.2 Lines by area
 
 | Area                                  | Files | Lines  |
 | ------------------------------------- | ----- | ------ |
 | `src/` (application)                  | 294   | 99,555 |
-| `tests/`                              | 270   | 36,710 |
+| `tests/`                              | 270   | 36,712 |
 | `docs/`                               | 76    | 21,368 |
 | `lab/` (self-contained artifact)      | 5     | 13,241 |
-| repo root (README, LICENSE, configs)  | 27    | 11,687 |
+| repo root (README, LICENSE, configs)  | 27    | 11,690 |
 | `output/` (tracked visual receipts)   | 3     | 9,551  |
 | `scripts/`                            | 32    | 6,481  |
 | `legacy/` (preserved origin)          | 6     | 2,072  |
 | `native/` (C++ engine, ADR-0007)      | 12    | 1,835  |
 | `bench/`                              | 16    | 1,260  |
-| `.github/`                            | 12    | 1,015  |
+| `.github/`                            | 12    | 1,018  |
 | `masters/` (3 governing XML personas) | 3     | 477    |
 | `.memory/`                            | 5     | 167    |
 | `.vscode/`                            | 3     | 94     |
@@ -383,7 +383,7 @@ Current top-12 by weight: `world.ts` 4,220 (composition root) · `styles/app.css
 |   714 | sim/environment.ts          |   535 | sim/libirrep-qec.ts       |
 |   694 | sim/emergence-angles.ts     |   532 | math/eshkol-ad.ts         |
 
-### `tests/` — heaviest files (270 files · 36,710 lines total)
+### `tests/` — heaviest files (270 files · 36,712 lines total)
 
 `observatory 658 · quantum 462 · graph-mind 389 · viz3d 309 · super-qubits 289 · singularities 286 ·
 atmosphere 276 · reaction-diffusion 273 · phyla 264 · analytics 252 · economy 250 · moonlab-vqe 240` ·

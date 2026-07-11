@@ -40,7 +40,7 @@ Rewritten in place when the facts change (per the binding living-doc law in
 
 <!-- cqm-sync:local-measurement:start -->
 
-- `bun run verify:receipts` → **2,418 tests, zero failures** · **270 test files** · **2,447,564**
+- `bun run verify:receipts` → **2,418 tests, zero failures** · **270 test files** · **2,447,566**
   `expect()` calls · **92.61% line / 90.23% func** on this Windows checkout.
 
 <!-- cqm-sync:local-measurement:end -->

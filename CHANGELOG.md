@@ -34,6 +34,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     built-worker delivery/activity, TOP framing at FOV 35, and sustained maximum-stress frame progress
     on phone and desktop. Its stress duration is wall-clock bounded, so slow renderers cannot turn a
     15-second sample into an unbounded serialized-timer wait.
+  - Fixed automatic tagging for maintenance pushes: an existing immutable version tag may point to a
+    verified ancestor of the new CI-approved commit. Divergent tags still fail closed, while unchanged
+    package versions now skip tag creation instead of producing a false-red workflow.
 
 ## [0.21.13] — 2026-07-10
 

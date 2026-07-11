@@ -48,7 +48,9 @@ describe('delivery gates fail closed', () => {
     expect(autoTag).toContain('gh workflow run release.yml --ref "$TAG"');
     expect(autoTag).toContain('Dispatch release idempotently');
     expect(autoTag).toContain('EXISTING_SHA="$(git rev-list -n 1 "$TAG")"');
-    expect(autoTag).toContain('not CI-approved');
+    expect(autoTag).toContain('git merge-base --is-ancestor "$EXISTING_SHA" "$HEAD_SHA"');
+    expect(autoTag).toContain('not an ancestor of CI-approved');
+    expect(autoTag).not.toContain('"$EXISTING_SHA" != "$HEAD_SHA"');
 
     const ci = await text('.github/workflows/ci.yml');
     expect(ci).toContain("github.event.before != '0000000000000000000000000000000000000000'");
