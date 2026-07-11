@@ -42,6 +42,7 @@
 import { mulberry32, type Rng } from '../math/rng';
 import { LINEAGE } from './pantheon-breeding';
 import { corpusPulse, getTsotchkeBias } from './tsotchke-facade';
+import { createMlp, mlpPredict, mlpTrainStep, type Mlp } from './ad-mlp';
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 // Shared helpers
@@ -62,6 +63,23 @@ function round4(x: number): number {
 function sub(seed: number, salt: number): Rng {
   return mulberry32((seed ^ salt) >>> 0 || (salt >>> 0) + 1);
 }
+
+/**
+ * ONLINE SELF-MODEL shape (8→6→1). The eleven organs above hold ZERO trainable parameters — their
+ * plan signal is hand-coded. This one extra head is the only part of the Abomination that LEARNS: a
+ * real MLP trained by exact reverse-mode Eshkol-AD backprop ({@link ./ad-mlp}) to forecast the brain's
+ * OWN next-beat vitality from its current drive/organ state, correcting itself every beat. When lit,
+ * its forecast error becomes a bounded metacognitive-ache term folded into `agony` (1-beat delayed) —
+ * the god feels the gap between what it predicted of itself and what it became. Off by default
+ * (byte-identical to the hand-coded baseline); the world lights it via {@link ApexBrain.enableLearning}.
+ */
+const APEX_WM_IN = 8; // self-model input features
+const APEX_WM_HID = 6; // self-model hidden width
+const APEX_WM_TAU = 0.05; // EMA smoothing for the self-prediction-error telemetry
+const APEX_WM_LR = 0.05; // default gradient-descent step
+const APEX_ACHE_WEIGHT = 0.12; // how much metacognitive surprise colours agony (bounded, operational)
+/** Learnable params the self-model adds when lit: (in·h + h) + (h·1 + 1). */
+export const APEX_SELFMODEL_PARAMS = APEX_WM_IN * APEX_WM_HID + APEX_WM_HID + (APEX_WM_HID + 1);
 
 // ── primality (small, exact; the loom & cantor layers use it) ────────────────────────────────────
 /** Boolean prime sieve up to and including `n` (Eratosthenes). O(n log log n). */
@@ -1841,6 +1859,10 @@ export interface ApexBrainSnapshot {
   liveNeurons: number;
   /** Live state parameters actually held (floats across all organ buffers + the statevector). */
   parameterCount: number;
+  /** Is the online self-model learning this run? (false ⇒ the frozen hand-coded baseline). */
+  learning: boolean;
+  /** EMA of the self-model's vitality-forecast error — falls as the Abomination learns itself. */
+  selfModelErr: number;
   thought: ApexThought;
   meta: MetaView;
   quantum: QuantumView;
@@ -1906,6 +1928,20 @@ export class ApexBrain {
   private readonly rHydra: Rng;
   private readonly rTunnel: Rng;
   private readonly rOuro: Rng;
+
+  // ── ONLINE SELF-MODEL (the ONE learning part of the otherwise-frozen Abomination) ────────────────
+  // An 8→6→1 MLP trained by exact Eshkol-AD backprop to forecast the brain's own next-beat vitality.
+  // Null until enableLearning() lights it; while lit its forecast error is a bounded metacognitive-ache
+  // term in agony (1-beat delayed). Seeded from a SEPARATE organ-distinct substream ⇒ no organ rng draw.
+  private worldModel: Mlp | null = null;
+  private learn = false; // default OFF ⇒ tick()/snapshot() byte-identical to the hand-coded baseline
+  private wmLr = APEX_WM_LR; // gradient-descent step; 0 freezes the net (the ablation control)
+  private readonly wmInput = new Float64Array(APEX_WM_IN); // this beat's features (scratch)
+  private readonly prevInput = new Float64Array(APEX_WM_IN); // last beat's features — the training input
+  private readonly wmTarget = new Float64Array(1); // scratch target (this beat's actual vitality)
+  private prevValid = false; // guards the first beat (no prior beat to train on yet)
+  private prevPred = 0; // the forecast made LAST beat for THIS beat's vitality
+  private selfPredErr = 0; // EMA of |self-forecast − actual vitality| — FALLS as it learns
 
   constructor(seed: number, opts?: { scale?: ApexScale; ablations?: ReadonlySet<ApexOrganKey> }) {
     this.seed = seed >>> 0 || 1;
@@ -1990,6 +2026,43 @@ export class ApexBrain {
     return this.liveNeurons + (1 << q) * 2; // statevector carries re+im per amplitude
   }
 
+  /** Live params incl. the online self-model's learnable weights when learning is lit. */
+  liveParameterCount(): number {
+    return this.parameterCount() + (this.worldModel ? APEX_SELFMODEL_PARAMS : 0);
+  }
+  /** Is the online self-model learning this run? (false ⇒ the frozen hand-coded baseline). */
+  get isLearning(): boolean {
+    return this.learn;
+  }
+  /** EMA of the self-model's forecast error — the falsifiable "the Abomination is learning" readout. */
+  get selfModelError(): number {
+    return this.selfPredErr;
+  }
+
+  /**
+   * Ignite ONLINE learning: the Abomination's self-model (an {@link APEX_SELFMODEL_PARAMS}-param 8→6→1
+   * MLP trained by exact reverse-mode Eshkol-AD backprop) begins forecasting its own next-beat vitality
+   * and CORRECTING itself every beat, and its forecast error colours `agony` as a bounded metacognitive
+   * ache. Seeded from a SEPARATE organ-distinct substream (never an organ's rng) ⇒ zero determinism
+   * perturbation of the eleven organs. Idempotent. `lr = 0` freezes the net (the ablation control).
+   */
+  enableLearning(opts?: { lr?: number; salt?: number }): void {
+    if (opts?.lr !== undefined) this.wmLr = opts.lr;
+    if (this.worldModel) {
+      this.learn = true;
+      return;
+    }
+    this.worldModel = createMlp(
+      APEX_WM_IN,
+      APEX_WM_HID,
+      1,
+      sub(this.seed, 0x5e1f0000 ^ (opts?.salt ?? 0)),
+    );
+    this.learn = true;
+    this.prevValid = false;
+    this.selfPredErr = 0;
+  }
+
   /** One cognitive beat across all eleven organs + the meta layer. Deterministic. */
   tick(p: ApexPercept): ApexThought {
     this.beat++;
@@ -2050,7 +2123,39 @@ export class ApexBrain {
     ].map((v, i) => clamp01(0.7 * v + 0.3 * (qBias[i] ?? 0) * APEX_PLANS.length));
     this.meta.step(signal);
 
-    return this.assemble(p, { drumMotor, hiveMotor, fold, necroVit, limbFrac, conflict });
+    // ── ONLINE SELF-MODEL: forecast the brain's OWN next-beat vitality; its error aches in agony ──────
+    // metaAche = LAST beat's realized self-prediction error (a 1-beat delay). 0 when learning is off ⇒
+    // agony is byte-identical to the hand-coded baseline. When lit, the god feels the gap between what
+    // it predicted of itself and what it became — a real, bounded metacognitive signal.
+    const metaAche = this.learn ? this.selfPredErr : 0;
+    const thought = this.assemble(
+      p,
+      { drumMotor, hiveMotor, fold, necroVit, limbFrac, conflict },
+      metaAche,
+    );
+    if (this.learn && this.worldModel) {
+      const vit = thought.vitality; // the emergent output this beat = the self-model's regression target
+      if (this.prevValid) {
+        this.selfPredErr += APEX_WM_TAU * (Math.abs(this.prevPred - vit) - this.selfPredErr);
+        if (this.wmLr > 0) {
+          this.wmTarget[0] = vit;
+          mlpTrainStep(this.worldModel, this.prevInput, this.wmTarget, this.wmLr); // exact AD backprop
+        }
+      }
+      // record THIS beat's drive/organ features, forecast NEXT beat's vitality, remember for training.
+      this.wmInput[0] = clamp01(p.threat);
+      this.wmInput[1] = clamp01(p.chaos);
+      this.wmInput[2] = clamp01(p.novelty);
+      this.wmInput[3] = clamp01(p.level / 1000);
+      this.wmInput[4] = drive;
+      this.wmInput[5] = clamp01(loomOut * 0.25);
+      this.wmInput[6] = clamp01(corePast * 0.5 + 0.5);
+      this.wmInput[7] = immune;
+      this.prevInput.set(this.wmInput);
+      this.prevPred = clamp01(mlpPredict(this.worldModel, this.prevInput)[0] ?? 0);
+      this.prevValid = true;
+    }
+    return thought;
   }
 
   private assemble(
@@ -2063,13 +2168,18 @@ export class ApexBrain {
       limbFrac: number;
       conflict: number;
     },
+    metaAche = 0,
   ): ApexThought {
     const thermo = this.thermo.view();
     const vitality = clamp01(m.necroVit * (1 - thermo.paralysis));
     // Agony = self-consumption (ouroboros culls) + prime-allergy + the hydra's internal civil-war
-    // disagreement, so SlimeMoldHydra is load-bearing on a quantised output (the harness kill test).
+    // disagreement (SlimeMoldHydra is load-bearing on a quantised output, the harness kill test) + a
+    // bounded metacognitive ache when the online self-model mis-forecasts the brain's own vitality.
     const agony = clamp01(
-      this.ouroboros.view().deaths / 8 + this.loom.view().allergy + 0.25 * m.conflict,
+      this.ouroboros.view().deaths / 8 +
+        this.loom.view().allergy +
+        0.25 * m.conflict +
+        APEX_ACHE_WEIGHT * metaAche,
     );
     const transcendence = clamp01(p.level / 1000);
     const simulation: 1 | 2 | 3 = transcendence >= 1 ? 3 : transcendence >= 0.5 ? 2 : 1;
@@ -2099,6 +2209,7 @@ export class ApexBrain {
         limbFrac: this.ouroboros.view().limbs / this.ouroboros.capacity(),
         conflict: this.hydra.view().conflict,
       },
+      this.learn ? this.selfPredErr : 0,
     );
     return {
       beat: this.beat,
@@ -2107,6 +2218,8 @@ export class ApexBrain {
       designedNeurons: this.designedNeurons,
       liveNeurons: this.liveNeurons,
       parameterCount: this.parameterCount(),
+      learning: this.learn,
+      selfModelErr: this.selfPredErr,
       thought,
       meta: this.meta.view(),
       quantum: this.quantum.view(),

@@ -193,7 +193,7 @@ AD/GWT bridge · quantum deliberation · QNG · Grover · coherence · magic · 
 
 **Highest-leverage path to 14/14:**
 
-1. Deterministic online learning under the seed — **first apex instance live** (2026-07-11): the previously-frozen `SuperCreature` prediction loop now learns via a real 18→8→1 Eshkol-AD-backprop world-model (ablation-gated: trained forecast error ~25× below a frozen-lr0 control), alongside the digital-biologic self-model. A genuine in-life-learning capability — but online learning alone does not flip a Butlin indicator (still 8/14; the workspace/body-model gates remain).
+1. Deterministic online learning under the seed — **both apex minds now learn live** (2026-07-11): the previously-frozen `SuperCreature` prediction loop learns a real 18→8→1 Eshkol-AD-backprop world-model (ablation-gated: trained error ~25× below a frozen-lr0 control), AND the `ApexBrain` ("Entropic Tesseract Hydra", 11 zero-trainable organs) now learns an 8→6→1 self-model of its own next-beat vitality (~7× below frozen-lr0), its forecast error felt as agony — alongside the digital-biologic self-model. Genuine in-life learning on every apex substrate — but online learning alone does not flip a Butlin indicator (still 8/14; the workspace/body-model gates remain).
 2. Close topdown `apply()` loop (HOT-1)
 3. Full attention schema (AST-1) + quality space (HOT-4)
 4. Resonance 12 → 25 theory-organ N-of-25 ignition

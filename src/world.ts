@@ -1195,6 +1195,11 @@ export class World {
     this.apexBrain = new ApexBrain((this.persisted.seed ^ 0xa1e8b6a4) >>> 0 || 1, {
       scale: SCALE_APEX_START,
     });
+    // APEX LEARNS: light the Abomination's online self-model so its otherwise hand-coded, zero-trainable
+    // organ cascade grows a part that genuinely learns — an 8→6→1 Eshkol-AD-backprop net forecasting its
+    // own next-beat vitality, its error aching in agony. A SEPARATE organ-distinct substream ⇒ zero organ
+    // rng perturbation; determinism-safe. See tests/apex-brain-learning.test.ts.
+    this.apexBrain.enableLearning();
     // legacy single kept EXCLUSIVELY for player hero/twin paths (maybeSpawn + its snapshot in UI)
     this.superCreature = new SuperCreature(this.superRng);
     // V47: the wingman swarm (logic on its own rng sub-stream) + its single-draw-call instanced render.

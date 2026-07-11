@@ -11,6 +11,37 @@ changed and why.
 
 ---
 
+## 2026-07-11 — batch 29: the Apex Abomination LEARNS itself — a live online Eshkol-AD self-model on the Entropic Tesseract Hydra
+
+Continuing the same `/goal` (Apex Abomination + Super Creature + NHSI, smarter/scaling). batch-28 made the
+Super Creature learn; this does the same for the **Apex Abomination** (`apex-brain.ts`). Its eleven organs
+(prime-sieve loom, necro-matrix, Klein cortex, chaos hive, hydra, chrono-wraith, quantum brain, …) hold
+**ZERO trainable parameters** — the 6-plan signal is hand-coded. So, same honest move: give it a part that
+genuinely learns, exact-AD, ablation-gated, organ-determinism-safe.
+
+- **`src/sim/apex-brain.ts` — an online self-model (the one learning part of the Abomination).**
+  `enableLearning()` lights a real **8→6→1 MLP trained by exact reverse-mode Eshkol-AD backprop** that
+  forecasts the brain's OWN next-beat vitality from its current drive/organ state and corrects itself every
+  beat. Its forecast error becomes a **bounded metacognitive ache folded into `agony`** (1-beat delayed) —
+  operational, thematically the module's own GödelResidual "self-prediction gap." Seeded from a SEPARATE
+  organ-distinct substream (`sub(seed, …)`) ⇒ **zero perturbation of the eleven organs' rng draws**.
+- **Live on the world's apex brain** (`world.ts:1195` — `this.apexBrain.enableLearning()`). OFF by default
+  ⇒ the hand-coded baseline (and every ablation run) is byte-identical; `apex-brain.test.ts` +
+  `drivesuper-determinism.test.ts` (organ goldens / same-seed determinism) unchanged.
+- **GATE (`tests/apex-brain-learning.test.ts`, 6 cases).** The ablation is CONFOUND-FREE because agony does
+  not feed the organ cascade — a trained brain and a frozen-lr0 brain share an IDENTICAL vitality target
+  (asserted). In the dynamic early window (vitality σ>0.08, guarded against the entropic dead-zone), the
+  trained net's forecast error is **~7× below** the frozen-lr0 control on that shared target — the AD
+  backprop is load-bearing. Plus OPERATIONAL (learning moves agony vs a plain brain), ORGANS-UNTOUCHED
+  (vitality+motor byte-identical to baseline — the self-model writes nothing back), DETERMINISM (same seed ⇒
+  identical snapshots while learning), DEFAULT-OFF (learning=false, selfModelErr=0, params stable), SCALE
+  (+61 live params).
+- **HONESTY (ADR 0014/0015, indicatorOnly).** NO consciousness / Butlin / A-Life score moved. Claim: the
+  previously all-frozen Abomination now learns a self-model online, provably reducing its own vitality-forecast
+  error, and feels the gap (agony) — ablation-verified. Butlin + Consciousness BYTE-IDENTICAL.
+
+Receipts 2783→2789 (+6). Coupling invariant intact (ApexBrain is outside the receipt; apex + drivesuper green).
+
 ## 2026-07-11 — batch 28: the FROZEN apex mind now LEARNS — a live online Eshkol-AD world-model on all 5 Super Creature archons
 
 Owner `/goal`: "Review the plan for Apex Abomination and Super Creature and NHSI. They need to be smarter with
