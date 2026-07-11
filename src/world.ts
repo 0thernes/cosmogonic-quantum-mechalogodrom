@@ -1477,6 +1477,7 @@ export class World {
     this.instanced?.dispose(); // free every live instance pool — clones + materials (null in per-mesh mode)
     this.connectome.dispose(); // free the axon-web BufferGeometry + LineBasicMaterial
     this.cosmicWeb.dispose(); // free the cosmic-web points/lines geometries + PointsMaterial/LineBasicMaterial
+    this.constellations.dispose(); // free the 2 constellation line-layer geometries + shared LineBasicMaterials
     this.quantumLattice.dispose(); // free the 3 WireframeGeometry shells + shared LineBasicMaterial
     this.goldLattice.dispose(); // free the 7 gold WireframeGeometry forms + shared LineBasicMaterial
     this.quantum.dispose(); // free the quantum point-cloud BufferGeometry + PointsMaterial
@@ -2145,6 +2146,10 @@ export class World {
     // into a dead still-frame. Presentation-only uniform write — no sim step, no rng — so the frozen world
     // stays byte-golden while the god alone keeps breathing.
     this.godColossus.update(this.godClock, s.chaos / CHAOS_MAX, (s.entropy ?? 0) / ENTROPY_MAX);
+    // FROZEN: recenter the observer-centred sky shells on the (still-free) God-mode camera so a narrow-FOV
+    // TOP survey stays inside the BackSide dome, matching RUNNING/SUSPENDED. Position-only — no atmosphere
+    // animation is advanced (no haze/dust/rebake/rng), so the frozen tableau stays byte-golden.
+    this.atmosphere.setViewerPosition(this.engine.camera.position);
     this.updateLens();
     this.engine.render();
   }
@@ -3123,7 +3128,13 @@ export class World {
       }
       if (s.frame % 120 === 0 && n < target) {
         const snap = this.primordialSoup.snapshot();
-        const strain = snap.strains && snap.strains[0] ? snap.strains[0] : null;
+        // Close the soup SELECTION loop: materialize the FITTEST evolved strain (vitality-argmax, which
+        // is driven by the Tsotchke PINN Gray-Scott metabolic residual minus the upkeep leak) instead of
+        // the fitness-blind slot 0 — so differential reproduction finally TRACKS the fitness signal
+        // (previously ~0-correlated). harvestEmergent resets the winner's vitality to 0.35, keeping
+        // turnover; it is deterministic (pure argmax + fixed reset). Falls back to slot 0 when nothing
+        // has crossed the emergent bar yet. Measured by tests/soup-harvest-selection.test.ts.
+        const strain = this.primordialSoup.harvestEmergent() ?? snap.strains[0] ?? null;
         if (strain) {
           const theta = (strain.id * 2.3999632297) % 6.28318530718;
           const r = (8 + strain.vitality * 6) * ARENA_MID;

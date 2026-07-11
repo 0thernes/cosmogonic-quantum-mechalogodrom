@@ -504,6 +504,7 @@ export class ShoggothSystem implements PortalCullable {
         if (sj === si) continue;
         const og = this.shogs[sj];
         if (!og) continue;
+        if (!og.group.visible) continue; // portal-downed = dead (invisible) until respawn — don't perceive/flee-from/trade-with a corpse (mirrors the outer-loop + portalCull guards; determinism-neutral: all shoggoths are visible pre-cull)
         const op = og.group.position;
         const dd = dist2(p.x, p.y, p.z, op.x, op.y, op.z);
         if (dd < THREAT_R2 && dd > 1e-3) {
@@ -717,25 +718,44 @@ export class ShoggothSystem implements PortalCullable {
       ) {
         sg.feedTimer = 0;
         sg.consumed++;
-        // O(k) via spatial hash — same deterministic tie-break as the legacy full scan (closest,
-        // then lowest list index on equal distance).
+        // O(k) via spatial hash + one O(n) index recovery per kill — NOT the O(k + m·n) the previous
+        // per-candidate `list.indexOf(e)` cost (a dense cluster with m in-reach prey did m full-list
+        // scans, the exact frame spike the grid query exists to prevent). Same deterministic tie-break
+        // as the legacy full scan (closest, then lowest list index on equal distance).
         const consumeCandidates = ctx.grid.query(p.x, p.z, CONSUME_RADIUS);
+        // Pass 1 (O(k), no list scan): the minimum squared distance to a reachable, non-NHI, LIVE prey.
+        // `userData.alive === false` is the O(1) liveness gate and is EXACTLY equivalent to the old
+        // `list.indexOf(e) < 0` for a grid candidate: `alive=false` is written ONLY in EntityManager
+        // .dispose() (entities.ts:452), whose sole callers are retire()→disposeAt/disposeManyDescending
+        // (which remove from `list`) and reset() (which clears the whole `list`) — so no entity is ever
+        // alive=false while still in `list`. (Exhaustively verified 2026-07-10; byte-identical selection.)
         let bestD = CONSUME_REACH2;
-        let bestI = -1;
+        let anyReach = false;
         for (let ci = 0; ci < consumeCandidates.length; ci++) {
           const e = consumeCandidates[ci];
-          if (!e) continue;
-          // V122: NHI MATRIX beings are not prey (same guard as the titan harvest — predation was
-          // silently unregistering launched NHI minds and blanking the NHI observatory).
-          if (e.userData.isNhi) continue;
+          // V122: NHI MATRIX beings are not prey; a mesh a sibling shoggoth already devoured this tick
+          // (alive=false, out of `list`) is not prey either.
+          if (!e || e.userData.isNhi || e.userData.alive === false) continue;
           const ep = e.position;
           const sd = dist2(p.x, p.y, p.z, ep.x, ep.y, ep.z);
           if (sd >= CONSUME_REACH2) continue;
-          const idx = list.indexOf(e);
-          if (idx < 0) continue;
-          if (sd < bestD || (sd === bestD && (bestI < 0 || idx < bestI))) {
+          if (!anyReach || sd < bestD) {
             bestD = sd;
-            bestI = idx;
+            anyReach = true;
+          }
+        }
+        // Pass 2: the lowest LIVE list index among the prey tied at that exact minimum distance (the
+        // legacy tie-break). indexOf runs only for the handful at the minimum (normally one) — O(k)+O(n).
+        let bestI = -1;
+        if (anyReach) {
+          for (let ci = 0; ci < consumeCandidates.length; ci++) {
+            const e = consumeCandidates[ci];
+            if (!e || e.userData.isNhi || e.userData.alive === false) continue;
+            const ep = e.position;
+            const sd = dist2(p.x, p.y, p.z, ep.x, ep.y, ep.z);
+            if (sd !== bestD) continue;
+            const idx = list.indexOf(e);
+            if (idx >= 0 && (bestI < 0 || idx < bestI)) bestI = idx;
           }
         }
         if (bestI >= 0) {

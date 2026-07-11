@@ -115,8 +115,10 @@ export class MarketTicker {
   constructor(doc: Document = document) {
     doc.getElementById('cqm-mkt-toggle')?.remove();
     doc.getElementById('cqm-mkt-panel')?.remove();
+    doc.getElementById('cqm-mkt-style')?.remove(); // dedupe: the <style> was id-less → a fresh block piled into <head> on every World reconstruction (HMR / re-init)
     injectPanelBaseCSS(doc);
     const style = doc.createElement('style');
+    style.id = 'cqm-mkt-style';
     style.textContent = STYLE;
     doc.head.appendChild(style);
 

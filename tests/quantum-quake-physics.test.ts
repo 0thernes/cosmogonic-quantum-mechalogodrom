@@ -163,3 +163,38 @@ describe('quantum-quake-physics — perturbation + steps', () => {
     expect(hi).not.toBe(lo); // a real geometric quantity responds to its driver
   });
 });
+
+describe('quantum-quake-physics — qgePhysicsStep is bounded under iteration (no NaN divergence)', () => {
+  test('feeding the step its own output for 2000 iterations never diverges to NaN/overflow', () => {
+    // Before the warp-saturation + finite clamp, momentum grew super-exponentially (g_ii ≥ 0, no
+    // restoring force) and blew up to NaN within a few hundred steps. Nonzero starting momentum.
+    let s: QGEState = {
+      position: [0.1, 0.2, 0.3],
+      momentum: [0.4, -0.3, 0.5],
+      geometricPhase: 0.5,
+      curvature: 0.4,
+    };
+    for (let i = 0; i < 2000; i++) {
+      const out = qgePhysicsStep(s, [0.3, 0.5, 0.7], 0.016);
+      for (const v of [...out.position, ...out.momentum]) {
+        expect(Number.isFinite(v)).toBe(true);
+        expect(Math.abs(v)).toBeLessThanOrEqual(1e4);
+      }
+      s = {
+        position: out.position,
+        momentum: out.momentum,
+        geometricPhase: out.geometricPhase,
+        curvature: out.curvature,
+      };
+    }
+  });
+
+  test('momentum = 0 is a fixed point (the production path is unchanged)', () => {
+    const out = qgePhysicsStep(
+      { position: [0.1, 0.2, 0.3], momentum: [0, 0, 0], geometricPhase: 0.5, curvature: 0.4 },
+      [0.3, 0.5, 0.7],
+      0.016,
+    );
+    expect(out.momentum).toEqual([0, 0, 0]); // warp·0 = 0, clamp(0) = 0 — exact prior output preserved
+  });
+});

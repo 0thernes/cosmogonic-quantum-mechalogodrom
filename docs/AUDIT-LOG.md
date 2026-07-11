@@ -11,6 +11,155 @@ changed and why.
 
 ---
 
+## 2026-07-10 (pass 6) — batch 18: shoggoths consume-loop perf (proven byte-identical) + alien-flora seal
+
+The two pass-6 findings I had deferred as "unverifiable" — re-examined and shipped after PROVING safety.
+
+- **[PERF-1] shoggoths consumption tie-break did `list.indexOf(e)` per grid candidate** (`shoggoths.ts`,
+  MED) — O(k + m·n) per feed (a dense cluster with m in-reach prey did m full-list scans, the frame
+  spike the grid query exists to prevent). Replaced with a two-pass: pass 1 finds the min distance with
+  an O(1) `userData.alive === false` liveness gate; pass 2 recovers the lowest list index only among the
+  prey tied at that minimum (one `indexOf`). **Byte-identical, EXHAUSTIVELY PROVEN**: `alive=false` is
+  written ONLY in `EntityManager.dispose()` (entities.ts:452), whose sole callers are
+  `retire()`→`disposeAt/disposeManyDescending` (remove from `list`) and `reset()` (clears the whole
+  `list`) — so no entity is ever `alive=false` while still in `list`, making the gate exactly equivalent
+  to the old `indexOf(e) < 0`; the closest-then-lowest-index tie-break is preserved (dist2 is
+  bit-deterministic). The full suite caught a SOURCE-TEXT regression guard (goal7-fixes V122 pinned the
+  old `if (e.userData.isNhi) continue;` phrasing) — updated it to assert the folded guard form-agnostically.
+- **[FLORA-1] flora root-seat margin was ~0; the seal test was false-green** (`alien-flora.ts`, LOW) —
+  the coarse ground PlaneGeometry's flat triangle chords dip ~0.53u below the analytic surface at max
+  chaos / zero entropy, but roots were seated only 0.5 below, so a root poked above the RENDERED ground
+  at untested phases while `habitat-scale.test` (3 sampled phases) passed green. Deepened the seat to 0.6
+  (~0.07u seal) and made the test sweep the hostile max-chaos/zero-entropy/large-wind band over time —
+  it now actually exercises the worst case (maxRootGap ≤ 0 holds across it).
+
+**11 of 14 pass-6 findings now shipped.** Still open: copilot failover-can't-reach-keyed-provider (MED) +
+in-flight tool-call cancel (LOW), sync-surfaces allowlist coverage (LOW). Receipts unchanged (2435).
+Full gate green. LESSON: "unverifiable byte-identity" was a false deferral — the equivalence WAS
+provable by exhaustively enumerating the `alive=false` writers + their list-removal contract.
+
+## 2026-07-10 (pass 6) — batch 17: 4 more coupling-safe fixes (gate/security/regex hardening)
+
+Continuing to drain the pass-6 confirmed list — the mechanical/security/latent-gate ones.
+
+- **[SEC-1] ai-sandbox: pathspec-less `git diff` bypassed directory confinement** (`ai-sandbox.ts`, LOW
+  security) — a bare `git diff` / `--cached` / `--stat` emits the working-tree/index diff of ALL tracked
+  files (incl. blocked `legacy/`, `.github/`), and with no path argument the per-path confine() loop had
+  nothing to scope. Now requires an explicit pathspec (`git diff -- src/world.ts`). +3 deny regressions.
+- **[GATE-1] sync-surfaces receipt regexes wedged at 10,000 tests** (`sync-surfaces.ts`, MED, latent) —
+  the badge matcher `tests-[0-9]{3,4}` is non-idempotent past 9,999 (appends a digit each sync → corrupts
+  the badge → sync:check perma-red). Widened the badge + primary comma-form + anchored-prose matchers to
+  be width-agnostic + idempotent (`{3,}`, multi-group comma). (Remaining lower-risk comma matchers further
+  down freeze rather than wedge at 10k — a documented follow-up.)
+- **[GATE-2] verify-canonical morphotype detector blind to 100–199** (`verify-canonical-facts.ts`, LOW) —
+  the fact regex forced the leading digit to `[2-9]`, so a drifted `1xx morphotype` count was neither
+  matched nor flagged by the hard verify:facts gate. `[2-9]`→`[1-9]` (still skips bare "1 morphotype").
+- **[FROZEN-1] FROZEN sky-dome never recentered on the roaming God-cam** (`world.ts`/`atmosphere.ts`, LOW)
+  — the observer-centred dome follows the camera in RUNNING/SUSPENDED but stepFrozen() never recentered
+  it, so a narrow-FOV TOP survey in FROZEN escaped the BackSide sphere (background → void). Added a
+  position-only `atmosphere.setViewerPosition()` (no animation advance, byte-golden) + call in stepFrozen.
+
+Receipts 2432→2435 (+3). Still-open pass-6: shoggoths consume-loop indexOf O(m·n) perf refactor (MED),
+copilot failover-can't-reach-keyed-provider (MED) + in-flight tool-call cancel (LOW), alien-flora
+root-seat ~0 margin + false-green test (LOW), sync-surfaces allowlist coverage (LOW). Full gate green.
+
+## 2026-07-10 (pass 6) — batch 16: 5 coupling-safe correctness fixes from the pass-6 adversarial sweep
+
+A sixth adversarial sweep (27 agents over the fresh Codex code + underexplored subsystems) confirmed 14
+findings; this batch ships the highest-value coupling-safe ones (apex untouched). 3 MEDIUM + 2 LOW.
+
+- **[QQP-1] quantum-quake momentum integration diverged to NaN** (`quantum-quake-physics.ts`, MED) —
+  `qgePerturb` warped momentum by `1 + strength·g_ii` where the Fubini-Study metric diagonal g_ii ≥ 0 is
+  unbounded and there is no restoring force, so iterating `qgePhysicsStep` grew momentum super-
+  exponentially → NaN. Saturated the gain to `1 + strength·g/(1+|g|)` and finite-clamp momentum/position
+  in the step. Production feeds momentum=0 (a fixed point), so the exact output is preserved — this only
+  removes the latent divergence. +2 regression tests (2000-iteration finiteness + the fixed-point).
+- **[ECON-2] Vickrey auction minted currency on an insolvent winner** (`economy.ts`, MED) — `debit()`
+  caps a withdrawal at the purse's liquid funds (no borrowing), but the auction distributed the full
+  nominal `price` as the dividend, minting the shortfall when the winner couldn't cover it (same class as
+  the batch-12 Gini-guard mint). `debit()` now returns what it actually removed; the dividend uses that —
+  credited == debited, exactly conservative.
+- **[GPU-1] ConstellationSystem leaked 2 BufferGeometries + a scene Group** (`constellations.ts`, MED) —
+  the build-once group/geometries were locals with no `dispose()`, so they leaked on every World
+  teardown/HMR (the recurring dispose-leak class). Mirrored the sibling `CosmicWeb.dispose()` idiom
+  (retain the group, traverse to free geometries + shared materials, unparent) and wired it into
+  `World.dispose()`. +regression test (spyOn geometry.dispose → called; group unparented).
+- **[SHOG-1] shoggoths perceived/fled-from/traded-with portal-downed corpses** (`shoggoths.ts`, LOW) —
+  the inner neighbour scan skipped the outer-loop visibility guard, so a portal-culled (invisible) shoggoth
+  still counted into crowd/flee-centroid/`nearJ` (bargaining partner) until respawn. Added the
+  `!og.group.visible` guard. Determinism-neutral (all shoggoths visible pre-cull; tests never portalCull).
+- **[UI-3] MarketTicker piled up id-less `<style>` blocks** (`market-ticker.ts`, LOW) — the injected
+  `<style>` had no id, so a fresh block accumulated in `<head>` on every World reconstruction (the sibling
+  toggle/panel are already id-deduped). Gave it `id='cqm-mkt-style'` + remove-before-inject.
+
+Receipts 2429→2432 (+3). Deferred to a follow-up (documented): shoggoths consume-loop `indexOf` O(m·n)
+perf refactor (MED, byte-identical), sync-surfaces 10k-count regex wedge (MED), copilot failover +
+ai-sandbox `git diff` confinement (server), alien-flora root-seat false-green test, verify-canonical
+morphotype-100-199 blind spot, world FROZEN sky-dome recenter. Full gate green.
+
+## 2026-07-10 — batch 15b: honest metric move — the code-grounded 9-axis FLOOR rises (gate-backed)
+
+> **Correction from the later ADR-0013 integration audit:** `ad-forager.ts` is a deterministic,
+> ablation-tested standalone controller benchmark; it is not called by the live `EntityManager` loop.
+> GATE-FORAGE therefore cannot by itself establish live base-population cognition. The current 3.9
+> cognition floor is instead grounded by the subsequently shipped ordinary-entity ecology-goal and
+> bounded actor/value paths in `entity-brain.ts`, with matched controls and lifecycle tests. The CSV row
+> is now the canonical code-grounded row; the earlier optimistic vector survives only as historical
+> evidence in `alife-codeground.json`.
+
+The metric half of the "smarter A-life" goal, done to the honesty discipline: the shipped, ablation-
+verified batch-15a gates LICENSE a rise in the **code-grounded** 9-axis floor (`alife-codeground-
+sensitivity.ts`) — the source-audited honest lower bound — NOT the self-scored CSV row. Each +0.x is
+1:1 with a green gate; the self-score ceiling is untouched (the point is to lift the floor TOWARD it,
+never inflate the ceiling). Nothing here measures a consciousness/sentience indicator, so the
+Consciousness-theory axis (3.5), Butlin 8/6/14, and every Sentientness surface stay BYTE-IDENTICAL.
+
+- **Ecology 3.0 → 3.2** — licensed by GATE-SOUP-SELECT (batch-15a): the soup selection loop is now
+  closed (world.ts spawns the vitality-argmax; measured differential > 0 vs a blind pick ~0), a real
+  ecological selection dynamic the old fitness-blind spawn lacked.
+- **Cognition/Learning 3.8 → 3.9** — now licensed by the live ordinary-entity goal/adaptation path.
+  GATE-FORAGE remains a useful exact-AD reference benchmark (p<0.01, ablation-verified), but is not a
+  live-population wiring receipt.
+
+Recomputed (via `bun scripts/alife-codeground-sensitivity.ts`, deterministic): code-grounded breadth
+**3.68 → 3.71**, z-population **+2.83 → +2.88σ**, z-peers **+2.95 → +3.01σ**, lead over nearest peer
+**+0.18 → +0.21**; rank stays #1/113, Mahalanobis 10.25 (unchanged at 2dp). The 4 current narrative
+surfaces (README, docs.html, specs.html, NHSI dashboard) restated to match; `alife-codeground.json`
+regenerated. The self-scored CSV row + all self-scored SVG charts are unchanged. Full gate green.
+(Remaining hardening: a gating `verify:alife` that recompute-diffs the JSON from CODE_GROUNDED + asserts
+the surfaces match, so a future hand-edit of any of these numbers fails `check` — batch-15c.)
+
+## 2026-07-10 — "smarter A-life" batch 15a: standalone AD forager benchmark + live soup selection
+
+First increment of the owner's "make every living thing genuinely smarter — operational, not decorative"
+directive. Coupling-safe by construction (routes entirely around the apex: `super-mind.ts` /
+`topdown-perception.ts` untouched, so the `coupling-audit` "selfAware not ISOLATED" receipt is not even
+at risk). Honesty discipline: every claim is a falsifiable, **ablation-verified** gate; nothing measures
+a consciousness/sentience indicator, so no Consciousness/Sentientness surface moves.
+
+- **[SMART-1] AD-gradient forager reference** (new `src/sim/ad-forager.ts` + `tests/ad-forager-baseline.test.ts`) —
+  the first consumption of the exact Eshkol reverse-mode AD tape (`src/math/eshkol-ad.ts`) OUTSIDE the
+  coupling-critical apex. The standalone test agent senses a differentiable food potential `f(p)=Σ ampᵢ·exp(−‖p−cᵢ‖²/σ)`
+  and climbs its EXACT analytic gradient (reverse-mode, not finite difference). GATE-FORAGE proves over
+  50 seeds that it reaches food in <0.6× the steps of an unbiased seeded random walk (paired-permutation
+  p<0.01), and — the load-bearing check — zeroing the sensed gradient makes the forager **byte-identical**
+  to the random walk (the gradient, not the scaffolding, is what wins). Pure/deterministic.
+- **[SMART-2] soup closes its selection loop** (`world.ts:3085`) — the emergent-spawn now materializes
+  the FITTEST evolved strain (`PrimordialSoup.harvestEmergent`, a vitality-argmax driven by the Tsotchke
+  PINN metabolic residual) instead of the fitness-blind slot 0. GATE-SOUP-SELECT proves selection
+  produces a clearly positive vitality differential (fittest − population-mean ≈ 0.12) while a
+  uniformly-random blind pick is ~0, beating both the blind pick and the old slot-0 spawn.
+- **[SMART-2b] harvestEmergent relative bar** (`primordial-soup.ts`) — fixing SMART-2 exposed that the
+  batch-13 SOUP-1 metabolic leak had made harvestEmergent's fixed `vitality > 0.85` bar UNREACHABLE
+  (pre-leak everything ratcheted to 1.0 so 0.85 was trivially met; post-leak the fittest equilibrate
+  below it), so it always returned null and the spawn silently fell back to slot 0. Replaced with a
+  relative "stands clearly above the live-population mean" criterion, robust to the equilibrium level.
+
+Receipts 2420→2429 (+9 gate assertions across 2 new files). Metric floors NOT moved yet — the
+code-grounded 9-axis floor (`alife-codeground-sensitivity.ts`) moves only once the full FORAGE +
+BIOLOGIC-LEARN + SOUP-SELECT + PETRI + OE gate set is green and drift-gated (batch 15b), so the honest
+mapping stays 1 gate ⇒ 1 floor move. Full gate green.
+
 ## 2026-07-10 (pass 5) — subsystem sweep batch 13 (8 fixes) + batch 14 ABANDONED (coupling-safe discipline)
 
 A fifth adversarial sweep (12 confirmed findings). **Batch 13 shipped 8** render/UI/sim-field fixes.

@@ -4,10 +4,10 @@
   "nSystems": 113,
   "nPeers": 112,
   "cosmogonic": {
-    "breadthMean": 3.68,
+    "breadthMean": 3.71,
     "breadthRank": 1,
-    "zScorePopulation": 2.83,
-    "zScoreVsPeers": 2.95,
+    "zScorePopulation": 2.88,
+    "zScoreVsPeers": 3.01,
     "percentile": 100,
     "peerMaturity": 1.5
   },
@@ -18,7 +18,7 @@
     "breadthStdPeers": 0.54,
     "medianBreadth": 2.11,
     "medianPeerMaturity": 3.5,
-    "corrBreadthVsMaturity": -0.109
+    "corrBreadthVsMaturity": -0.11
   },
   "perAxis": [
     {
@@ -66,11 +66,11 @@
     },
     {
       "axis": "Ecology",
-      "mean": 2.19,
+      "mean": 2.2,
       "std": 1.38,
       "max": 5,
-      "cosmo": 3,
-      "cosmoZ": 0.59,
+      "cosmo": 3.2,
+      "cosmoZ": 0.73,
       "leaders": [
         "Polyworld",
         "Sugarscape",
@@ -107,8 +107,8 @@
       "mean": 1.9,
       "std": 1.59,
       "max": 5,
-      "cosmo": 3.8,
-      "cosmoZ": 1.2,
+      "cosmo": 3.9,
+      "cosmoZ": 1.26,
       "leaders": [
         "DERL (Deep Evolutionary Reinforcement Learning)",
         "UNIMAL (Universal Animal design space)",
@@ -185,22 +185,22 @@
     {
       "name": "ALIEN",
       "full": "ALIEN",
-      "d": 4.5
+      "d": 4.48
     },
     {
       "name": "Creatures",
       "full": "Creatures",
-      "d": 4.97
+      "d": 4.93
     },
     {
       "name": "Framsticks",
       "full": "Framsticks",
-      "d": 5.31
+      "d": 5.33
     },
     {
       "name": "Division Blocks",
       "full": "Division Blocks",
-      "d": 5.34
+      "d": 5.36
     },
     {
       "name": "biosim4",
@@ -210,7 +210,7 @@
     {
       "name": "Karl Sims VC",
       "full": "Karl Sims Evolved Virtual Creatures",
-      "d": 5.56
+      "d": 5.61
     },
     {
       "name": "Species: Artificial Life, Real Evolution",
@@ -218,19 +218,19 @@
       "d": 5.63
     },
     {
-      "name": "Neural Graph Evolution (NGE)",
-      "full": "Neural Graph Evolution (NGE)",
-      "d": 5.65
-    },
-    {
       "name": "The Bibites",
       "full": "The Bibites",
-      "d": 5.67
+      "d": 5.63
+    },
+    {
+      "name": "Neural Graph Evolution (NGE)",
+      "full": "Neural Graph Evolution (NGE)",
+      "d": 5.72
     },
     {
       "name": "OpenWorm",
       "full": "OpenWorm",
-      "d": 5.74
+      "d": 5.77
     }
   ]
 }

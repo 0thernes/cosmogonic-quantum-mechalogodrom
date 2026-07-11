@@ -413,7 +413,11 @@ export class AlienFlora {
       for (let i = 0; i < n; i++) {
         const pl = list[i]!;
         const s = species[pl.sp]!;
-        const gy = baseTerrainHeightAt(pl.x, pl.z) - 0.5; // sink the base slightly into the soil
+        // Sink the base 0.6 into the soil. The rendered ground is a coarse PlaneGeometry whose flat
+        // triangle chords dip up to ~0.53u BELOW the analytic surface at max chaos / zero entropy, so a
+        // 0.5 seat left an effectively-zero margin (roots poked above the rendered triangle at untested
+        // animation phases); 0.6 restores a real ~0.07u seal. See tests/habitat-scale.test.ts.
+        const gy = baseTerrainHeightAt(pl.x, pl.z) - 0.6;
         pos.set(pl.x, gy, pl.z);
         // USER #15: vary based on the angle (ground slope) for accurate attachment to the terrain.
         // Finite difference approx of normal → additional tilt so plants follow the ground "dunes" slope.
