@@ -22,6 +22,7 @@ import {
   SuperCreature,
   SUPER_PARAM_COUNT,
   SUPER_WORLDMODEL_PARAMS,
+  SUPER_VALUE_PARAMS,
   type SuperPercept,
 } from '../src/sim/super-creature';
 
@@ -142,7 +143,9 @@ describe('SuperCreature online world-model', () => {
     const sc = new SuperCreature(mulberry32(SEED));
     expect(sc.liveParamCount).toBe(SUPER_PARAM_COUNT);
     sc.enableLearning({ seed: WSEED });
-    expect(sc.liveParamCount).toBe(SUPER_PARAM_COUNT + SUPER_WORLDMODEL_PARAMS);
+    expect(sc.liveParamCount).toBe(
+      SUPER_PARAM_COUNT + SUPER_WORLDMODEL_PARAMS + SUPER_VALUE_PARAMS,
+    );
   });
 
   test('6. LINEAGE: a learning parent births learning twins (own net, deterministic)', () => {
@@ -152,6 +155,8 @@ describe('SuperCreature online world-model', () => {
     const kid = prime.maybeSpawn(rng);
     expect(kid).not.toBeNull();
     expect(kid!.isLearning).toBe(true);
-    expect(kid!.liveParamCount).toBe(SUPER_PARAM_COUNT + SUPER_WORLDMODEL_PARAMS);
+    expect(kid!.liveParamCount).toBe(
+      SUPER_PARAM_COUNT + SUPER_WORLDMODEL_PARAMS + SUPER_VALUE_PARAMS,
+    );
   });
 });

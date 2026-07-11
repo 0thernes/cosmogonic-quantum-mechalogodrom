@@ -68,6 +68,16 @@ const WM_TAU = 0.05; // EMA smoothing for the learned prediction-error telemetry
 /** Total learnable params the online world-model adds when lit: (SENSE·h + h) + (h·1 + 1). */
 export const SUPER_WORLDMODEL_PARAMS = SENSE * WM_HID + WM_HID + (WM_HID * 1 + 1);
 
+/**
+ * Online VALUE head (18→6→1). A second learned net that forecasts the creature's OWN next-beat energy
+ * (survival value). When lit, a predicted energy DROP raises "survival urgency" that biases the GOAP
+ * planner toward feeding/conserving and away from risky wandering — reactive instinct becomes learned,
+ * goal-directed value. Off by default (byte-identical). Trained by the same exact Eshkol-AD backprop.
+ */
+const VALUE_HID = 6; // value-head hidden width
+/** Total learnable params the value head adds when lit: (SENSE·h + h) + (h·1 + 1). */
+export const SUPER_VALUE_PARAMS = SENSE * VALUE_HID + VALUE_HID + (VALUE_HID * 1 + 1);
+
 /** Max living twins the Super Creature may sire (the brief's "twin/offspring creation up to 3"). */
 export const SUPER_MAX_OFFSPRING = 3;
 
@@ -121,7 +131,9 @@ export interface SuperSnapshot {
   surprise: number; // |predicted − actual| salience last beat — the prediction-loop error
   learning: boolean; // is the online world-model lit this life?
   learnedPredErr: number; // EMA of the learned forecaster's error (0 when frozen) — falls as it learns
-  liveParamCount: number; // cortex+actor (frozen) + world-model params when learning is lit
+  learnedValueErr: number; // EMA of the value head's next-energy forecast error (0 when frozen)
+  survivalUrgency: number; // learned predicted energy drop biasing the planner (0 when frozen)
+  liveParamCount: number; // cortex+actor (frozen) + world-model + value-head params when learning is lit
   offspring: number; // living twins sired (≤ SUPER_MAX_OFFSPRING)
   plan: SuperPlan;
   intent: {
@@ -198,6 +210,13 @@ export class SuperCreature {
   private prevValid = false; // guards the first beat (no prior percept to train on yet)
   private learnedPredErr = 0; // EMA of |world-model forecast − actual salience| — FALLS as it learns
 
+  // ── ONLINE VALUE HEAD — learned survival value: forecasts next-beat energy, biases the planner ─────
+  private valueModel: Mlp | null = null; // 18→6→1, created alongside the world-model when learning is lit
+  private readonly valTarget = new Float64Array(1); // scratch target (this beat's actual energy)
+  private energyForecast = 0; // the value head's forecast (made last beat) for THIS beat's energy
+  private survivalUrgency = 0; // clamp(energy − forecastNext): a predicted DROP → seek food / conserve
+  private learnedValueErr = 0; // EMA of |value forecast − actual energy| — FALLS as the value head learns
+
   /**
    * Birth the Super Creature. With no preset weights it rolls a fresh deep mind from `rng` (the
    * prime); twins pass mutated weight arrays + an incremented generation (see {@link maybeSpawn}).
@@ -228,9 +247,9 @@ export class SuperCreature {
   get offspringCount(): number {
     return this.offspring;
   }
-  /** Live params: the frozen cortex+actor, plus the online world-model's learnable weights when lit. */
+  /** Live params: frozen cortex+actor + the online world-model AND value head when learning is lit. */
   get liveParamCount(): number {
-    return this.paramCount + (this.worldModel ? SUPER_WORLDMODEL_PARAMS : 0);
+    return this.paramCount + (this.worldModel ? SUPER_WORLDMODEL_PARAMS + SUPER_VALUE_PARAMS : 0);
   }
   /** Is the online world-model learning this life? (false ⇒ the mind is the frozen baseline). */
   get isLearning(): boolean {
@@ -239,6 +258,10 @@ export class SuperCreature {
   /** EMA of the online world-model's forecast error — the falsifiable "it is actually learning" readout. */
   get learnedPredictionError(): number {
     return this.learnedPredErr;
+  }
+  /** EMA of the value head's next-energy forecast error — falls as the survival value is learned. */
+  get learnedValueError(): number {
+    return this.learnedValueErr;
   }
 
   /**
@@ -259,9 +282,14 @@ export class SuperCreature {
       ((hashSeed(this.name) ^ ((this.generation + 1) * 0x9e3779b9)) >>> 0 || 1) ^
       ((opts?.seed ?? 0) >>> 0);
     this.worldModel = createMlp(SENSE, WM_HID, 1, mulberry32(seed >>> 0 || 1));
+    // the value head rides a further-decorrelated substream so its init is independent of the world-model.
+    this.valueModel = createMlp(SENSE, VALUE_HID, 1, mulberry32((seed ^ 0x5a5a5a5a) >>> 0 || 1));
     this.learn = true;
     this.prevValid = false;
     this.learnedPredErr = 0;
+    this.learnedValueErr = 0;
+    this.survivalUrgency = 0;
+    this.energyForecast = 0;
   }
 
   /**
@@ -305,6 +333,25 @@ export class SuperCreature {
     const curiosity = unit(a[7] ?? 0);
     const moveMag = clamp01(Math.sqrt(mx * mx + my * my + mz * mz) / Math.SQRT2);
 
+    // ── VALUE HEAD: learned survival value — forecast next-beat energy, derive planning urgency ────
+    // Trains on (prevSense → this beat's energy) by exact AD (prevSense is still LAST beat's here — the
+    // world-model loop below overwrites it), then forecasts NEXT beat's energy from the current percept;
+    // a predicted DROP becomes survivalUrgency, which biases the planner. OFF by default ⇒ survivalUrgency
+    // stays 0 ⇒ the planner is byte-identical to the frozen baseline.
+    if (this.learn && this.valueModel) {
+      if (this.prevValid) {
+        this.learnedValueErr +=
+          WM_TAU * (Math.abs(this.energyForecast - (s[0] ?? 0)) - this.learnedValueErr);
+        if (this.wmLr > 0) {
+          this.valTarget[0] = s[0] ?? 0;
+          mlpTrainStep(this.valueModel, this.prevSense, this.valTarget, this.wmLr);
+        }
+      }
+      const energyNext = clamp01(mlpPredict(this.valueModel, s)[0] ?? 0);
+      this.survivalUrgency = clamp01((s[0] ?? 0) - energyNext); // a predicted energy DROP
+      this.energyForecast = energyNext; // compared to next beat's actual energy for the error EMA
+    }
+
     // ── PREDICTION LOOP: compare last beat's forecast to this beat's actual salience → surprise ────
     const salience = clamp01(0.5 * s[1] + 0.3 * s[2] + 0.2 * moveMag); // how eventful "now" is
     this.surprise = clamp01(Math.abs(this.predictedSalience - salience));
@@ -344,6 +391,16 @@ export class SuperCreature {
       EXPLORE: curiosity * (1 - s[1]) * (0.5 + 0.5 * (1 - s[2])),
       REST: (1 - this.arousal) * (1 - s[1]) * s[0],
     };
+    // SURVIVAL-AWARE PLANNING: a LEARNED predicted energy drop pulls toward feeding/conserving and away
+    // from risky wandering/dominance games. survivalUrgency is 0 unless learning ⇒ the baseline is
+    // byte-identical; when lit, reactive instinct becomes learned, value-directed goal selection.
+    const su = this.survivalUrgency;
+    if (su > 0) {
+      drives.HUNT += su * 0.6 * (0.4 + 0.6 * (s[5] ?? 0)); // hungry → hunt toward prey harder
+      drives.REST += su * 0.25 * (1 - (s[1] ?? 0)); // if safe, conserve
+      drives.EXPLORE *= 1 - 0.5 * su; // don't wander when starving
+      drives.DOMINATE *= 1 - 0.3 * su; // survival over dominance games
+    }
     // POWER OF MATH (inline, legacy V31 path): number theory gcd resonance for combinatoric plan-limb alignment (Euclid)
     function _gcd(x: number, y: number) {
       while (y) {
@@ -443,6 +500,8 @@ export class SuperCreature {
       surprise: this.surprise,
       learning: this.learn,
       learnedPredErr: this.learnedPredErr,
+      learnedValueErr: this.learnedValueErr,
+      survivalUrgency: this.survivalUrgency,
       liveParamCount: this.liveParamCount,
       offspring: this.offspring,
       plan: this.plan,
