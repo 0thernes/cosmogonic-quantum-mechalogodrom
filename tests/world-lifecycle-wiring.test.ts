@@ -86,7 +86,7 @@ describe('World lifecycle wiring', () => {
     expect(body).toContain('logicalRollbackPostconditions');
     expect(body).toContain("resourceCleanupStatus: 'best-effort-unverified'");
     expect(body).toContain('bodyAbsent: !this.nhiBody.has(nid)');
-    expect(WORLD).toContain('const kin = this.grid.query(p.x, p.z, 90);');
+    expect(WORLD).toContain('const kin = this.grid.query(p.x, p.z, SOCIAL_NHI_KIN_R);');
     expect(WORLD).toContain('const oid = this.nhiIdsByEntity.get(oe);');
   });
 

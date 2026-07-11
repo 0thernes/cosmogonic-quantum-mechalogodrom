@@ -13,11 +13,12 @@
 import * as THREE from 'three';
 import type { SimContext } from '../types';
 import type { EntityManager } from './entities';
+import { SOCIAL_CONNECTOME_R, socialR2 } from './constants';
 
-/** Grid query radius for link candidates (legacy `SG.query(..., 8)`). */
-const LINK_RADIUS = 8;
-/** Squared link reach — 8^2 (legacy threshold 64). */
-const LINK_REACH2 = 64;
+/** Grid query radius for link candidates (legacy 8 × SOCIAL_SCALE — ADR 0016). */
+const LINK_RADIUS = SOCIAL_CONNECTOME_R;
+/** Squared link reach — matches {@link LINK_RADIUS}. */
+const LINK_REACH2 = socialR2(8);
 /** 8-hue tribe palette step: communities map to evenly spaced hues `(c & 7) / 8`. */
 const TRIBE_HUE_STEP = 1 / 8;
 /** Within-tribe neural-weight shimmer — half a palette step so tribes stay distinguishable. */

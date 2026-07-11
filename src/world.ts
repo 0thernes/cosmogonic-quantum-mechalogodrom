@@ -49,6 +49,9 @@ import {
   ULTRA_GRID_CELL,
   VIEW_MODES,
   WEATHERS,
+  SOCIAL_APEX_SENSE_R,
+  SOCIAL_NHI_ACTION_R,
+  SOCIAL_NHI_KIN_R,
 } from './sim/constants';
 import { ALGOS, ALGO_GLYPHS, ALGO_IGNITE } from './sim/algorithms';
 import { SONGS, SFX_EXTRA_BANDS } from './audio/songs';
@@ -2778,7 +2781,7 @@ export class World {
         this.superBodies[i]!.worldPosition(this.sv1);
         const lx = this.sv1.x,
           lz = this.sv1.z;
-        const near = this.grid.query(lx, lz, 24);
+        const near = this.grid.query(lx, lz, SOCIAL_APEX_SENSE_R);
         const localD = Math.min(1, near.length / 14);
         const net = this.economy.wealthOf(World.ECON_SUPER_BASE + i)?.netWorth ?? 0;
         const wealthRel = clamp(net / (2 * (mean || 1)), 0, 1);
@@ -4244,7 +4247,7 @@ export class World {
     if (e) {
       const p = e.position;
       const KIN_R2 = 90 * 90;
-      const kin = this.grid.query(p.x, p.z, 90);
+      const kin = this.grid.query(p.x, p.z, SOCIAL_NHI_KIN_R);
       for (let i = 0; i < kin.length; i++) {
         const oe = kin[i];
         if (!oe || oe === e || !oe.userData.isNhi || oe.userData.alive === false) continue;
@@ -4359,7 +4362,7 @@ export class World {
       // action over up to 50k entities). The 3D `d2 < r2` filter still runs, so the affected set is
       // identical to the old full scan (XZ-radius query is a superset of the 3D-radius hits); the
       // per-entity vel/strategy write is order-independent, so grid order preserves determinism.
-      const near = this.grid.query(p.x, p.z, 36);
+      const near = this.grid.query(p.x, p.z, SOCIAL_NHI_ACTION_R);
       for (let i = 0; i < near.length; i++) {
         const o = near[i];
         if (!o || o === e || o.userData.alive === false || o.userData.isNhi) continue;

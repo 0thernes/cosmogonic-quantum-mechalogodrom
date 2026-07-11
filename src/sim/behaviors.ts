@@ -17,6 +17,14 @@ import {
   HABITAT_Y_SCALE,
   MONOLITH_CONFIG,
   PLATFORM_FLOOR,
+  SOCIAL_FLOCK_R,
+  SOCIAL_GRAPHSEEK_R,
+  SOCIAL_MARKET_R,
+  SOCIAL_NASH_R,
+  SOCIAL_SCALE,
+  SOCIAL_SETUNION_R,
+  SOCIAL_TYPEMORPH_R,
+  socialR2,
 } from './constants';
 import type { Behavior } from './constants';
 import type { Entity, EntityData, SimContext } from '../types';
@@ -24,6 +32,13 @@ import type { Entity, EntityData, SimContext } from '../types';
 /** Module-level scratch vectors — behavior math allocates nothing per frame. */
 const V1 = new THREE.Vector3();
 const V2 = new THREE.Vector3();
+const FLOCK_R2 = socialR2(8);
+const NASH_R2 = socialR2(10);
+const MARKET_R2 = socialR2(12);
+const TYPEMORPH_R2 = socialR2(10);
+const SETUNION_SAME_R2 = socialR2(15);
+const SETUNION_REPEL_R2 = socialR2(6);
+const GRAPHSEEK_MIN_R2 = socialR2(1.5);
 
 /**
  * Clamp bound for the 'lorenz' attractor samples, in attractor units (world units × 0.1).
@@ -209,7 +224,7 @@ function bounce(e: Entity, u: EntityData, _env: BehaviorEnv): void {
 
 /** Cohere toward XZ neighbors within distance 8 (legacy lines 723-727). O(k). */
 function flock(e: Entity, u: EntityData, env: BehaviorEnv): void {
-  const nb = env.ctx.grid.query(e.position.x, e.position.z, 8);
+  const nb = env.ctx.grid.query(e.position.x, e.position.z, SOCIAL_FLOCK_R);
   let fx = 0;
   let fz = 0;
   let fn = 0;
@@ -218,15 +233,15 @@ function flock(e: Entity, u: EntityData, env: BehaviorEnv): void {
     if (!ne || ne === e) continue;
     const dx = ne.position.x - e.position.x;
     const dz = ne.position.z - e.position.z;
-    if (dx * dx + dz * dz < 64) {
+    if (dx * dx + dz * dz < FLOCK_R2) {
       fx += dx;
       fz += dz;
       fn++;
     }
   }
   if (fn > 0) {
-    u.vel.x += (fx / fn) * 0.0002 * env.sp2;
-    u.vel.z += (fz / fn) * 0.0002 * env.sp2;
+    u.vel.x += (fx / fn) * 0.00032 * env.sp2;
+    u.vel.z += (fz / fn) * 0.00032 * env.sp2;
   }
 }
 
@@ -283,17 +298,17 @@ function quantum(_e: Entity, u: EntityData, env: BehaviorEnv): void {
  * strategy (legacy lines 735-739). O(k).
  */
 function nash(e: Entity, u: EntityData, env: BehaviorEnv): void {
-  const nb = env.ctx.grid.query(e.position.x, e.position.z, 10);
+  const nb = env.ctx.grid.query(e.position.x, e.position.z, SOCIAL_NASH_R);
   for (let i = 0; i < nb.length; i++) {
     const ne = nb[i];
     if (!ne || ne === e) continue;
-    if (dist2XZ(e.position.x, e.position.z, ne.position.x, ne.position.z) < 100) {
+    if (dist2XZ(e.position.x, e.position.z, ne.position.x, ne.position.z) < NASH_R2) {
       const them = ne.userData.strategy;
       u.payoff = u.strategy === 0 ? (them === 0 ? 3 : 0) : them === 0 ? 5 : 1;
       V1.copy(ne.position)
         .sub(e.position)
         .normalize()
-        .multiplyScalar(them === 0 ? 0.001 * env.sp2 : -0.0008 * env.sp2);
+        .multiplyScalar(them === 0 ? 0.0012 * env.sp2 : -0.0009 * env.sp2);
       u.vel.add(V1);
     }
   }
@@ -309,11 +324,11 @@ function market(e: Entity, u: EntityData, env: BehaviorEnv): void {
   u.energy += (rng() - 0.5) * env.cm * 0.5;
   u.energy = clamp(u.energy, 0, 100);
   e.scale.setScalar(u.sc * (0.5 + u.energy / 100));
-  const nb = env.ctx.grid.query(e.position.x, e.position.z, 12);
+  const nb = env.ctx.grid.query(e.position.x, e.position.z, SOCIAL_MARKET_R);
   for (let i = 0; i < nb.length; i++) {
     const ne = nb[i];
     if (!ne || ne === e) continue;
-    if (dist2XZ(e.position.x, e.position.z, ne.position.x, ne.position.z) < 144) {
+    if (dist2XZ(e.position.x, e.position.z, ne.position.x, ne.position.z) < MARKET_R2) {
       const diff = ne.userData.energy - u.energy;
       if (Math.abs(diff) > 20) {
         V1.copy(ne.position)
@@ -333,17 +348,17 @@ function market(e: Entity, u: EntityData, env: BehaviorEnv): void {
  * (legacy lines 745-748). O(k).
  */
 function typemorph(e: Entity, u: EntityData, env: BehaviorEnv): void {
-  const nb = env.ctx.grid.query(e.position.x, e.position.z, 10);
+  const nb = env.ctx.grid.query(e.position.x, e.position.z, SOCIAL_TYPEMORPH_R);
   for (let i = 0; i < nb.length; i++) {
     const ne = nb[i];
     if (!ne || ne === e) continue;
-    if (dist2XZ(e.position.x, e.position.z, ne.position.x, ne.position.z) < 100) {
+    if (dist2XZ(e.position.x, e.position.z, ne.position.x, ne.position.z) < TYPEMORPH_R2) {
       const same = u.typeId === ne.userData.typeId;
       const sub = Math.abs(u.typeId - ne.userData.typeId) === 1;
       V1.copy(ne.position)
         .sub(e.position)
         .normalize()
-        .multiplyScalar((same ? 0.002 : sub ? 0.0005 : -0.0003) * env.sp2);
+        .multiplyScalar((same ? 0.0024 : sub ? 0.0007 : -0.00025) * env.sp2);
       u.vel.add(V1);
     }
   }
@@ -354,21 +369,21 @@ function typemorph(e: Entity, u: EntityData, env: BehaviorEnv): void {
  * from other-group members within 6 (legacy lines 749-753). O(k).
  */
 function setunion(e: Entity, u: EntityData, env: BehaviorEnv): void {
-  const nb = env.ctx.grid.query(e.position.x, e.position.z, 15);
+  const nb = env.ctx.grid.query(e.position.x, e.position.z, SOCIAL_SETUNION_R);
   V2.set(0, 0, 0);
   let cnt = 0;
   for (let i = 0; i < nb.length; i++) {
     const ne = nb[i];
     if (!ne || ne === e) continue;
     const dd = dist2XZ(e.position.x, e.position.z, ne.position.x, ne.position.z);
-    if (ne.userData.setGroup === u.setGroup && dd < 225) {
+    if (ne.userData.setGroup === u.setGroup && dd < SETUNION_SAME_R2) {
       V2.add(ne.position);
       cnt++;
-    } else if (ne.userData.setGroup !== u.setGroup && dd < 36) {
+    } else if (ne.userData.setGroup !== u.setGroup && dd < SETUNION_REPEL_R2) {
       V1.copy(e.position)
         .sub(ne.position)
         .normalize()
-        .multiplyScalar(0.002 * env.sp2);
+        .multiplyScalar(0.0022 * env.sp2);
       u.vel.add(V1);
     }
   }
@@ -376,7 +391,7 @@ function setunion(e: Entity, u: EntityData, env: BehaviorEnv): void {
     V2.divideScalar(cnt)
       .sub(e.position)
       .normalize()
-      .multiplyScalar(0.001 * env.sp2);
+      .multiplyScalar(0.0014 * env.sp2);
     u.vel.add(V2);
   }
 }
@@ -386,8 +401,8 @@ function setunion(e: Entity, u: EntityData, env: BehaviorEnv): void {
  * (legacy lines 754-758). Uses full 3D distance like the legacy `d2`. O(k).
  */
 function graphseek(e: Entity, u: EntityData, env: BehaviorEnv): void {
-  const nb = env.ctx.grid.query(e.position.x, e.position.z, 16);
-  let minD2 = 9999;
+  const nb = env.ctx.grid.query(e.position.x, e.position.z, SOCIAL_GRAPHSEEK_R);
+  let minD2 = 9999 * SOCIAL_SCALE * SOCIAL_SCALE;
   let minE: Entity | null = null;
   for (let i = 0; i < nb.length; i++) {
     const ne = nb[i];
@@ -400,17 +415,18 @@ function graphseek(e: Entity, u: EntityData, env: BehaviorEnv): void {
       ne.position.y,
       ne.position.z,
     );
-    if (dd < minD2 && dd > 2.25) {
+    if (dd < minD2 && dd > GRAPHSEEK_MIN_R2) {
       minD2 = dd;
       minE = ne;
     }
   }
   if (minE) {
+    // Classic ideal edge — tight filaments (not sparse beads).
     const optD = 4 + u.typeId;
     V1.copy(minE.position)
       .sub(e.position)
       .normalize()
-      .multiplyScalar((Math.sqrt(minD2) - optD) * 0.0008 * env.sp2);
+      .multiplyScalar((Math.sqrt(minD2) - optD) * 0.0022 * env.sp2);
     u.vel.add(V1);
   }
 }

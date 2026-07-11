@@ -18,6 +18,20 @@ import {
   PLATFORM_HALF,
   PLATFORM_HEIGHT,
   PLATFORM_MID_Y,
+  SOCIAL_APEX_SENSE_R,
+  SOCIAL_CASTE_SCALE,
+  SOCIAL_CONNECTOME_R,
+  SOCIAL_FLOCK_R,
+  SOCIAL_MARKET_R,
+  SOCIAL_NASH_R,
+  SOCIAL_NHI_ACTION_R,
+  SOCIAL_NHI_KIN_R,
+  SOCIAL_SCALE,
+  SOCIAL_SPAWN_INNER,
+  SOCIAL_SPAWN_OUTER,
+  SOCIAL_SPAWN_XZ_FRAC,
+  SOCIAL_SPAWN_Y_FRAC,
+  SOCIAL_TRADE_R,
 } from '../src/sim/constants';
 import {
   baseTerrainHeightAt,
@@ -145,16 +159,40 @@ describe('expanded habitat contract', () => {
     expect(tiers.map((q) => q.starCount)).toEqual([2000, 3000, 4500, 6000, 7000, 8000]);
   });
 
-  test('NHI intent waypoints use the expanded volume and remain inside it', () => {
+  test('social contact law scales organism and caste radii with habitat (ADR 0016)', () => {
+    // Habitat may grow; social disks must grow with it — never freeze at legacy unit lengths.
+    expect(SOCIAL_SCALE).toBe(HABITAT_XZ_SCALE * 2);
+    expect(SOCIAL_CASTE_SCALE).toBe(HABITAT_XZ_SCALE * ARENA);
+    expect(SOCIAL_FLOCK_R).toBe(8 * SOCIAL_SCALE);
+    expect(SOCIAL_NASH_R).toBe(10 * SOCIAL_SCALE);
+    expect(SOCIAL_MARKET_R).toBe(12 * SOCIAL_SCALE);
+    expect(SOCIAL_CONNECTOME_R).toBe(8 * SOCIAL_SCALE);
+    expect(SOCIAL_TRADE_R).toBe(30 * SOCIAL_CASTE_SCALE);
+    expect(SOCIAL_NHI_KIN_R).toBe(90 * SOCIAL_CASTE_SCALE);
+    expect(SOCIAL_FLOCK_R).toBeGreaterThanOrEqual(8 * HABITAT_XZ_SCALE * 2);
+    expect(SOCIAL_TRADE_R).toBeGreaterThanOrEqual(30 * HABITAT_XZ_SCALE * ARENA);
+    expect(SOCIAL_NHI_ACTION_R).toBe(36 * SOCIAL_SCALE);
+    expect(SOCIAL_APEX_SENSE_R).toBe(24 * SOCIAL_SCALE);
+    // Social-core packing: founders must NOT fill the full platform (isolation fog).
+    expect(SOCIAL_SPAWN_OUTER).toBeLessThanOrEqual(0.5);
+    expect(SOCIAL_SPAWN_INNER).toBeGreaterThan(0);
+    expect(SOCIAL_SPAWN_INNER).toBeLessThan(SOCIAL_SPAWN_OUTER);
+    expect(SOCIAL_SPAWN_XZ_FRAC).toBeLessThanOrEqual(0.5);
+    expect(SOCIAL_SPAWN_Y_FRAC).toBeLessThanOrEqual(0.4);
+  });
+
+  test('NHI intent waypoints stay inside habitat and pack a mid-field social core (ADR 0016)', () => {
     const p = { x: 0, y: 0, z: 0 };
     let maxHorizontal = 0;
     let maxY = -Infinity;
+    let minY = Infinity;
     let contained = true;
     for (let id = 0; id < 10; id++) {
       for (let t = 0; t < 200; t += 0.25) {
         writeNhiRoamTarget(p, id, t);
         maxHorizontal = Math.max(maxHorizontal, Math.abs(p.x), Math.abs(p.z));
         maxY = Math.max(maxY, p.y);
+        minY = Math.min(minY, p.y);
         contained &&=
           Math.abs(p.x) <= PLATFORM_HALF &&
           Math.abs(p.z) <= PLATFORM_HALF &&
@@ -162,8 +200,11 @@ describe('expanded habitat contract', () => {
           p.y <= PLATFORM_CEIL;
       }
     }
-    expect(maxHorizontal).toBeGreaterThan(540);
-    expect(maxY).toBeGreaterThan(240);
+    // Social core: uses expanded habitat volume but does NOT isolation-spread to the rim.
+    expect(maxHorizontal).toBeGreaterThan(PLATFORM_HALF * 0.1);
+    expect(maxHorizontal).toBeLessThan(PLATFORM_HALF * 0.45);
+    expect(maxY).toBeGreaterThan(PLATFORM_MID_Y);
+    expect(minY).toBeLessThan(PLATFORM_MID_Y);
     expect(contained).toBe(true);
   });
 });

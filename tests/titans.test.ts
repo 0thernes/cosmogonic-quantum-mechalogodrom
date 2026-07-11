@@ -14,7 +14,13 @@ import { describe, expect, test, spyOn } from 'bun:test';
 import * as THREE from 'three';
 import { mulberry32 } from '../src/math/rng';
 import { SpatialHash } from '../src/math/spatial-hash';
-import { GRID_CELL, PLATFORM_CEIL, PLATFORM_FLOOR, PLATFORM_HALF } from '../src/sim/constants';
+import {
+  GRID_CELL,
+  PLATFORM_CEIL,
+  PLATFORM_FLOOR,
+  PLATFORM_HALF,
+  PLATFORM_HEIGHT,
+} from '../src/sim/constants';
 import { createGeometryCache } from '../src/sim/geometry-cache';
 import { createMorphotypes } from '../src/sim/morphotypes';
 import { createPhyla } from '../src/sim/phyla';
@@ -481,13 +487,16 @@ describe('TitanSystem — roam stays in home territory (anti-clustering regressi
       expect(Math.abs(p.z)).toBeLessThanOrEqual(PLATFORM_HALF + 1);
     }
     meanOriginR /= arr.length;
-    // SPREAD across the arena on BOTH axes — a wide band, not a point or a central pile.
-    expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThan(PLATFORM_HALF * (22 / 27));
-    expect(Math.max(...zs) - Math.min(...zs)).toBeGreaterThan(PLATFORM_HALF * (22 / 27));
-    // NOT collapsed to the centre: the swarm's mean radius sits well out in the platform and most
-    // colossi are genuinely off-centre (the anti-clustering guarantee, now via free roaming).
+    // Social-core roam (ADR 0016): wide mid-field band — not rim isolation, not a pile.
+    expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThan(PLATFORM_HALF * 0.25);
+    expect(Math.max(...zs) - Math.min(...zs)).toBeGreaterThan(PLATFORM_HALF * 0.25);
+    expect(Math.max(...xs) - Math.min(...xs)).toBeLessThan(PLATFORM_HALF * 1.1);
     expect(meanOriginR).toBeGreaterThan(PLATFORM_HALF * (5 / 27));
-    expect(maxY).toBeGreaterThan(240);
+    expect(meanOriginR).toBeLessThan(PLATFORM_HALF * 0.55);
+    // Multi-altitude: titans must use stacked elevation bands (not one mid-plane shelf).
+    const ys = arr.map((t) => t.group.position.y);
+    expect(Math.max(...ys) - Math.min(...ys)).toBeGreaterThan(PLATFORM_HEIGHT * 0.12);
+    expect(maxY).toBeGreaterThan(PLATFORM_FLOOR + 80);
     expect(verticalContained).toBe(true);
     expect(offCentre).toBeGreaterThanOrEqual(10);
   });

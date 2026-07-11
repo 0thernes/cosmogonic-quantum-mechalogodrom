@@ -183,12 +183,12 @@ describe('Connectome.pairs (V2 amendment)', () => {
 
   test('pairs refresh across updates as the population shifts', () => {
     const ctx = makeCtx(3);
-    // Two pairs out of link reach (8) of each other: (0,2) and (12,14).
+    // Two pairs out of SOCIAL_CONNECTOME_R (legacy 8 × SOCIAL_SCALE = 32) of each other.
     const list = [
       makeEntity(0, 0, 0),
       makeEntity(2, 0, 0),
-      makeEntity(12, 0, 0),
-      makeEntity(14, 0, 0),
+      makeEntity(100, 0, 0),
+      makeEntity(102, 0, 0),
     ];
     const conn = new Connectome(ctx, makeEntityManager(list));
     for (const e of list) ctx.grid.insert(e);
@@ -200,7 +200,7 @@ describe('Connectome.pairs (V2 amendment)', () => {
     ctx.grid.clear();
     for (const e of list) ctx.grid.insert(e);
     conn.update(0.016, 0.016);
-    // Survivors at their NEW indices: index 1 (x=12) links index 2 (x=14).
+    // Survivors at their NEW indices: index 1 (x=100) links index 2 (x=102).
     expect(conn.pairCount).toBe(1);
     expect(at(conn.pairs, 0)).toBe(1);
     expect(at(conn.pairs, 1)).toBe(2);

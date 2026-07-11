@@ -15,6 +15,7 @@ import {
   PLATFORM_HEIGHT,
   PLATFORM_MID_Y,
   WEATHERS,
+  SOCIAL_PUP_OPP_R,
 } from './constants';
 import { POINT_LIGHT_GAIN } from './environment';
 import type { PuppetEvent, SimContext } from '../types';
@@ -102,7 +103,7 @@ const PUP_BOLD_MAX = 2.4;
 /** F-COGNITION V25: a puppeteer is a SCHEMER — it perceives the disorder in its sector (entity
  *  density below its orbit) and meddles MORE where there's chaos to exploit, remembering when it last
  *  acted. Reuses the {@link creatureDrive} kernel with threat=0 (disembodied — it never flees). */
-const PUP_OPP_R = 42; // opportunity sense radius (XZ) — the meddling sector
+const PUP_OPP_R = SOCIAL_PUP_OPP_R;
 const PUP_OPP_CAP = 28; // this many entities below ⇒ max opportunity
 const PUP_SAT_DECAY = 0.05; // meddle-satiation creep per second
 const PUP_SAT_BUMP = 0.6; // satiation gained each time it meddles

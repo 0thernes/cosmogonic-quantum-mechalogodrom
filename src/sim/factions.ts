@@ -284,3 +284,36 @@ export function decideFaction(
       return { intent: 'wander', nextState: fsmState };
   }
 }
+
+/**
+ * Map a faction Intent to planar steering impulse. Pure + allocation-free (ADR 0016).
+ */
+export function intentSteerXZ(
+  intent: Intent,
+  toCrowdX: number,
+  toCrowdZ: number,
+  toKinX: number,
+  toKinZ: number,
+  awayX: number,
+  awayZ: number,
+): { x: number; z: number } {
+  switch (intent) {
+    case 'socialize':
+      return { x: toKinX * 0.75 + toCrowdX * 0.45, z: toKinZ * 0.75 + toCrowdZ * 0.45 };
+    case 'seek':
+      return { x: toCrowdX * 0.9 + toKinX * 0.25, z: toCrowdZ * 0.9 + toKinZ * 0.25 };
+    case 'hunt':
+      return { x: toCrowdX * 1.05, z: toCrowdZ * 1.05 };
+    case 'gather':
+      return { x: toCrowdX * 0.55 + toKinX * 0.2, z: toCrowdZ * 0.55 + toKinZ * 0.2 };
+    case 'guard':
+      return { x: toKinX * 0.5 - awayX * 0.15, z: toKinZ * 0.5 - awayZ * 0.15 };
+    case 'flee':
+      return { x: awayX * 1.1, z: awayZ * 1.1 };
+    case 'rest':
+      return { x: toKinX * 0.15, z: toKinZ * 0.15 };
+    case 'wander':
+    default:
+      return { x: toCrowdX * 0.2, z: toCrowdZ * 0.2 };
+  }
+}

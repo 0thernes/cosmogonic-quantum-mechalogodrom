@@ -11,31 +11,15 @@ changed and why.
 
 ---
 
-## 2026-07-11 — batch 31: Super Creature learns SURVIVAL VALUE — a second head that redirects the planner (pass 2/10)
+## 2026-07-11 — ADR 0016: social contact density + multi-altitude Titans + chain ecology
 
-Pass 2 of the 10-pass "make them smarter" goal. The apex creature's world-model (batch-28) forecasts
-_salience_; this adds a second learned net that forecasts _value_ and USES it to make decisions — reactive
-instinct becomes learned, goal-directed planning.
+Restored living ALife after ADR 0012 habitat expansion froze social radii at legacy unit lengths.
+Added `SOCIAL_SCALE` / `SOCIAL_CASTE_SCALE`, scaled flock/Nash/market/graphseek/connectome/shoggoth/NHI/pup
+disks, social-core spawn packing, nearest-neighbor filament springs (ambient + graphseek `optD=4+typeId`),
+`theoryStride=1`, Titan per-stratum multi-altitude roam. No consciousness claims. Seals in
+`tests/habitat-scale.test.ts`, `tests/titans.test.ts`, `tests/graph-mind.test.ts`.
 
-- **`src/sim/super-creature.ts` — a learned VALUE head (18→6→1, `SUPER_VALUE_PARAMS`=121).** Trained by the
-  same exact Eshkol-AD backprop to forecast the creature's OWN next-beat energy. A predicted energy DROP
-  becomes `survivalUrgency`, which biases the GOAP planner: boost HUNT (feed) + REST (conserve), damp
-  EXPLORE (don't wander when starving) + DOMINATE (survival over status games). Its net is seeded off a
-  further-decorrelated substream from the world-model ⇒ independent init, no rng-order perturbation.
-- **First ToM attempt reverted (honesty).** I first tried a learning self-model on the ToM pantheon, but its
-  aggregate menace is a smooth 25-organ mean → the self-model nailed it trivially and the operational effect
-  was ~0.001. Too marginal to honestly call "smarter" (the batch-25 decorative-change trap), so I reverted it
-  and pivoted to this value head, whose target (energy) is genuinely dynamic and whose effect is large.
-- **GATE (`tests/super-creature-value.test.ts`, 6 cases).** LEARNS: value error 0.045→0.008. ABLATION:
-  trained EMA **0.0084** vs a frozen-lr0 control **0.237** (~28× — load-bearing). OPERATIONAL: the plans
-  differ trained vs frozen on **>20** beats (HUNT count 147 vs 259 over 300 beats — a substantial, not
-  cosmetic, redirection). Plus DETERMINISM, DEFAULT-OFF byte-identical, SCALE. The batch-28 world-model gate
-  - baseline determinism stay green (the value head is a separate net; salience is unchanged).
-- **HONESTY (ADR 0014/0015, indicatorOnly).** NO consciousness / Butlin / A-Life score moved. Claim: the apex
-  creature now learns a survival-value function (~28× below frozen, ablation-verified) that measurably
-  redirects its planning. Butlin + Consciousness BYTE-IDENTICAL.
-
-Receipts 2796→2802 (+6). Coupling invariant intact (SuperCreature is outside the receipt).
+---
 
 ## 2026-07-11 — batch 30: NHSI DEVELOPS — the 144-faculty pantheon grows an online self-model + adaptive coupling
 

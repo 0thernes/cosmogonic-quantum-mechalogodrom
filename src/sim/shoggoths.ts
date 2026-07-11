@@ -12,6 +12,9 @@ import {
   PLATFORM_FLOOR,
   PLATFORM_HEIGHT,
   PLATFORM_MID_Y,
+  SOCIAL_CONSUME_R,
+  SOCIAL_TENDRIL_R,
+  casteR2,
 } from './constants';
 import { POINT_LIGHT_GAIN } from './environment';
 import type { SimContext } from '../types';
@@ -26,13 +29,13 @@ import {
 /** Tendril line segments per shoggoth (legacy `tc`). */
 const TENDRIL_COUNT = 8;
 /** Grid query radius for tendril candidates (legacy `SG.query(..., 15)`). */
-const TENDRIL_RADIUS = 15;
+const TENDRIL_RADIUS = SOCIAL_TENDRIL_R;
 /** Squared tendril reach — 15^2 (legacy threshold 225). */
-const TENDRIL_REACH2 = 225;
+const TENDRIL_REACH2 = casteR2(15);
 /** Squared consumption reach — 12^2 (legacy threshold 144). */
-const CONSUME_REACH2 = 144;
+const CONSUME_REACH2 = casteR2(12);
 /** Grid query radius for consumption candidates (matches √CONSUME_REACH2). */
-const CONSUME_RADIUS = 12;
+const CONSUME_RADIUS = SOCIAL_CONSUME_R;
 
 /** Population targets (CONTRACTS V14 — "100 Shoggoths"). Desktop+ gets the full century; the phone
  *  tier stays light for fill rate. Determinism is unaffected — no test constructs this system, and
@@ -51,7 +54,7 @@ const BOLD_MIN = 0.5;
 const BOLD_MAX = 2.2;
 
 /** F-COGNITION V24: perception + memory tuning for the Shoggoth mind. */
-const THREAT_R2 = 38 * 38; // rival-crowding sense radius (squared) — wide enough to sense the horde
+const THREAT_R2 = casteR2(38);
 const THREAT_CAP = 3; // this many rivals nearby ⇒ max danger signal
 const PREY_CAP = 8; // this many exploitable neighbours ⇒ max prey signal
 const SATIATION_DECAY = 0.04; // hunger creeps in per second
@@ -59,7 +62,7 @@ const SATIATION_BUMP = 0.5; // satiation gained per successful consumption
 const FLEE_KICK = 0.02; // away-from-danger impulse strength
 
 /** F-CREATURE-TRADE V29: bargaining + alliance tuning (the social-economic write-back). */
-const TRADE_R2 = 30 * 30; // a deal needs a neighbour within this (squared) range — a partner, not the horde
+const TRADE_R2 = casteR2(30);
 const TRADE_EVERY = 24; // each shoggoth attempts a deal ~once per this many frames (staggered → bounded churn)
 const PEER_SPAN = 2; // boldness gap (on the ~0.3..2.2 scale) at which two shoggoths read as different strata
 const TRADE_FRACTION = 0.03; // a hard bargain moves at most this share of the mean purse toward the bolder

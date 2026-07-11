@@ -60,21 +60,98 @@ export const MID_RADIUS = 60 * HABITAT_MID;
 /** Squared mid-field containment (legacy 3600 = 60² family). */
 export const MID_RADIUS2 = MID_RADIUS * MID_RADIUS;
 
+// ── SOCIAL CONTACT LAW (binding — ADR 0016) ──────────────────────────────────
+// Habitat expansion without population growth MUST NOT freeze social/game-theory
+// radii at legacy unit lengths. That collapse is what made living systems read as
+// avoidant isolates. SOCIAL_SCALE multiplies organism-local contact radii so mid-
+// tier populations still average multiple neighbors in flock/nash/trade disks.
+// SOCIAL_CASTE_SCALE is harder for fixed small populations (Shoggoths / NHI /
+// puppeteers) that must still form economies, alliances, and kin fields.
+
+/**
+ * Organism social / theory / connectome radius multiplier vs legacy unit radii.
+ * Equals `HABITAT_XZ_SCALE * 2` so a 4× land expansion restores multi-neighbor contact
+ * without replaying the pre-expansion overcrowding regime.
+ */
+export const SOCIAL_SCALE = HABITAT_XZ_SCALE * 2;
+
+/**
+ * Sparse-caste social radius multiplier (fixed counts of ~16–100 beings on the full platform).
+ * Equals `HABITAT_XZ_SCALE * ARENA` so trade/kin/opportunity disks still find partners.
+ */
+export const SOCIAL_CASTE_SCALE = HABITAT_XZ_SCALE * ARENA;
+
+/** Scale a legacy organism social radius (units) by {@link SOCIAL_SCALE}. */
+export const socialR = (legacy: number): number => legacy * SOCIAL_SCALE;
+
+/** Scale a legacy organism social radius to squared units. */
+export const socialR2 = (legacy: number): number => {
+  const r = legacy * SOCIAL_SCALE;
+  return r * r;
+};
+
+/** Scale a legacy sparse-caste social radius by {@link SOCIAL_CASTE_SCALE}. */
+export const casteR = (legacy: number): number => legacy * SOCIAL_CASTE_SCALE;
+
+/** Scale a legacy sparse-caste social radius to squared units. */
+export const casteR2 = (legacy: number): number => {
+  const r = legacy * SOCIAL_CASTE_SCALE;
+  return r * r;
+};
+
+/** Canonical organism social radii (legacy bases × {@link SOCIAL_SCALE}). */
+export const SOCIAL_FLOCK_R = socialR(8);
+export const SOCIAL_NASH_R = socialR(10);
+export const SOCIAL_MARKET_R = socialR(12);
+export const SOCIAL_TYPEMORPH_R = socialR(10);
+export const SOCIAL_SETUNION_R = socialR(15);
+export const SOCIAL_SETUNION_REPEL_R = socialR(6);
+export const SOCIAL_GRAPHSEEK_R = socialR(16);
+export const SOCIAL_CONNECTOME_R = socialR(8);
+
+/** Canonical sparse-caste social radii (legacy bases × {@link SOCIAL_CASTE_SCALE}). */
+export const SOCIAL_TRADE_R = casteR(30);
+export const SOCIAL_THREAT_R = casteR(38);
+export const SOCIAL_TENDRIL_R = casteR(15);
+export const SOCIAL_CONSUME_R = casteR(12);
+/** Puppeteers sense organism density under their orbit — organism-scale, not caste-scale. */
+export const SOCIAL_PUP_OPP_R = socialR(42);
+export const SOCIAL_NHI_KIN_R = casteR(90);
+export const SOCIAL_NHI_BODY_R = casteR(55);
+/** NHI dominate/manipulate body-force disk (legacy 36 × SOCIAL_SCALE). */
+export const SOCIAL_NHI_ACTION_R = socialR(36);
+/** Apex / super-creature local crowding sense (legacy 24 × SOCIAL_SCALE). */
+export const SOCIAL_APEX_SENSE_R = socialR(24);
+/** Ordinary HUNT capture disk (legacy 5 × SOCIAL_SCALE). */
+export const SOCIAL_HUNT_CAPTURE_R = socialR(5);
+
+// ── SOCIAL CORE PACKING (founders + sparse castes live where contact can form) ──
+/** Inner radial fraction of PLATFORM_HALF for phylum-wedge founder spawn. */
+export const SOCIAL_SPAWN_INNER = 0.06;
+/** Outer radial fraction of PLATFORM_HALF for founder spawn (was ~0.87 → isolation fog). */
+export const SOCIAL_SPAWN_OUTER = 0.42;
+/** Non-phylum founders fill a square of half-extent PLATFORM_HALF × this (was 0.94). */
+export const SOCIAL_SPAWN_XZ_FRAC = 0.4;
+/** Vertical band: founders spawn in [floor, floor + height × this] (not the full 720u column). */
+export const SOCIAL_SPAWN_Y_FRAC = 0.32;
+/** Ambient social-gravity gain (all ordinary organisms, staggered) — living contact force. */
+export const SOCIAL_GRAVITY_GAIN = 0.00014;
+/** Extra gain toward same-setGroup kin under ambient social gravity. */
+export const SOCIAL_KIN_GAIN = 0.00022;
+/** Soft separation when neighbors closer than SOCIAL_SETUNION_REPEL_R × this. */
+export const SOCIAL_SEPARATION_FRAC = 0.45;
+
 /** Spatial-hash cell edge (legacy 8 → 16: queries stay 1-2 cells at 5× spread). */
 export const GRID_CELL = 16;
 
 /**
- * Ultra-tier (10k entities) spatial-hash cell edge. At 10k the arena is ~4× denser than the
- * desktop tier, so the legacy 16-unit cell returns ~214 candidates per behavior query. A
- * 10-unit cell is the measured cost sweet spot (docs/BENCHMARKS-2026-06-26.md "Ultra-tier 10k
- * optimization"): it cuts neighbors-per-query ~36% (214 → 136) while the radius-8..16 queries
- * still span only a 3×3 / 5×5 cell block. Rejected: 8 (15.8ms, per-query cell overhead climbs),
- * 6 (16.3ms), 4 (16.0ms) — all WORSE than 10 (13.5ms) and even than 16, because shrinking the
- * cell multiplies the (2·ceil(r/cs)+1)² cells visited faster than it thins each cell. Applied
- * ONLY above 5,000 entities (world.ts): at ≤5,000 the cell size is part of the seeded rng
- * stream (nash/market draw conditional on neighbor payoffs) and must stay at GRID_CELL.
+ * Ultra-tier (10k entities) spatial-hash cell edge. Sized for SOCIAL_SCALE contact radii
+ * (flock..graphseek ≈ 32..64u): a 16-unit cell keeps 3×3–9×9 blocks while avoiding the
+ * pre-social-era 10-unit cell's inflated cell-visit cost on the larger social disks.
+ * Applied ONLY above 5,000 entities (world.ts): at ≤5,000 the cell size is part of the seeded
+ * rng stream (nash/market draw conditional on neighbor payoffs) and must stay at GRID_CELL.
  */
-export const ULTRA_GRID_CELL = 10;
+export const ULTRA_GRID_CELL = 16;
 
 /** Camera far plane doubled with the habitat so the new rim and sky shell resolve. */
 export const CAMERA_FAR = 2600 * HABITAT_XZ_SCALE;

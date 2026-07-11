@@ -11,7 +11,13 @@
  * rather than "broken" if anything is off.
  */
 import * as THREE from 'three';
-import { PLATFORM_CEIL, PLATFORM_FLOOR, PLATFORM_HEIGHT, PLATFORM_MID_Y } from './constants';
+import {
+  PLATFORM_CEIL,
+  PLATFORM_FLOOR,
+  PLATFORM_HEIGHT,
+  PLATFORM_MID_Y,
+  SOCIAL_NHI_BODY_R,
+} from './constants';
 
 interface Body {
   group: THREE.Group;
@@ -346,7 +352,7 @@ export class NhiBodySystem {
    * Allocation-free. Position callbacks are O(bodies); pairwise visual proximity is O(bodies²/2)
    * and the composition root caps the launched population at 32.
    *
-   * @param onSocial optional callback fired when this body is within 55u of another NHI; the scalar
+   * @param onSocial optional callback fired when this body is within SOCIAL_NHI_BODY_R of another NHI; the scalar
    *   `0..1` is the social proximity level so callers can layer sound (e.g. NhiBodySystem emits no
    *   audio itself; AudioEngine is wired from world.ts).
    */
@@ -377,8 +383,8 @@ export class NhiBodySystem {
         const dy = p.y - op.y;
         const dz = p.z - op.z;
         const d2 = dx * dx + dy * dy + dz * dz;
-        if (d2 < 55 * 55) {
-          const proximity = 1 - Math.sqrt(d2) / 55;
+        if (d2 < SOCIAL_NHI_BODY_R * SOCIAL_NHI_BODY_R) {
+          const proximity = 1 - Math.sqrt(d2) / SOCIAL_NHI_BODY_R;
           if (proximity > b.social) b.social = proximity;
           if (proximity > other.social) other.social = proximity;
         }

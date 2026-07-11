@@ -19,7 +19,16 @@ import {
   PLATFORM_FLOOR,
   RENDER_MODE_FX,
   RENDER_MODE_DYN,
+  SOCIAL_FLOCK_R,
+  SOCIAL_GRAVITY_GAIN,
+  SOCIAL_KIN_GAIN,
+  SOCIAL_SPAWN_INNER,
+  SOCIAL_SPAWN_OUTER,
+  SOCIAL_SPAWN_XZ_FRAC,
+  SOCIAL_SPAWN_Y_FRAC,
 } from './constants';
+import { decideFaction, intentSteerXZ, FACTION_COUNT, type FactionPercept } from './factions';
+import { mulberry32 } from '../math/rng';
 import type { RenderMode } from './constants';
 import { PHYLUM_COUNT } from './phyla';
 import type { PhylumMorphType } from './phyla';
@@ -435,24 +444,18 @@ export class EntityManager {
     if (pos) {
       mesh.position.copy(pos);
     } else if (phylum >= 0) {
-      // V3.2 home-sector bias: phylum p spawns in its angular wedge of the
-      // arena (matching titan p's patrol angle), radius 12%..67% of the rim.
+      // Social-core packing (ADR 0016): still exactly 3 rng draws when placing (stream shape preserved).
       const ang = (phylum / PHYLUM_COUNT) * TAU + (rng() - 0.5) * 0.9;
-      // Reach out across the platform + spread up the full height (same 3 rng draws → stream-safe).
-      // Inset to 0.94·rim so no founder spawns exactly on the hard edge that the containment clamps.
-      const rad = (0.12 + rng() * 0.75) * PLATFORM_HALF * 0.94;
-      mesh.position.set(
-        Math.cos(ang) * rad,
-        PLATFORM_FLOOR + rng() * (PLATFORM_CEIL - PLATFORM_FLOOR),
-        Math.sin(ang) * rad,
-      );
+      const rad =
+        (SOCIAL_SPAWN_INNER + rng() * (SOCIAL_SPAWN_OUTER - SOCIAL_SPAWN_INNER)) * PLATFORM_HALF;
+      const y = PLATFORM_FLOOR + rng() * (PLATFORM_CEIL - PLATFORM_FLOOR) * SOCIAL_SPAWN_Y_FRAC;
+      mesh.position.set(Math.cos(ang) * rad, y, Math.sin(ang) * rad);
     } else {
-      // Founders spawn across the FULL square platform + full height (same 3 rng draws → stream-safe).
-      // 0.94·rim inset keeps every founder just inside the hard containment edge.
-      const xz = 2 * PLATFORM_HALF * 0.94;
+      // Non-phylum founders fill a mid-field square (not the full isolation fog).
+      const xz = 2 * PLATFORM_HALF * SOCIAL_SPAWN_XZ_FRAC;
       mesh.position.set(
         (rng() - 0.5) * xz,
-        PLATFORM_FLOOR + rng() * (PLATFORM_CEIL - PLATFORM_FLOOR),
+        PLATFORM_FLOOR + rng() * (PLATFORM_CEIL - PLATFORM_FLOOR) * SOCIAL_SPAWN_Y_FRAC,
         (rng() - 0.5) * xz,
       );
     }
@@ -822,7 +825,7 @@ export class EntityManager {
     env.t = t;
     env.cm = cm;
     // Full-rate behavior re-evaluation on every tier — no ultra cadence throttle (quality contract).
-    const theoryStride = 2;
+    const theoryStride = 1; // ADR 0016: full-rate social/theory re-eval
     const flockEvery = 1;
     // F-SPAWN-BUDGET: cap material organism births at the ultra tier so synchronized mitosis RAMPS
     // over ~seconds instead of allocating thousands of entities in one frame. This counter remains
@@ -895,6 +898,8 @@ export class EntityManager {
         applyBehavior(e, env);
       }
       this.applyFloraComfort(e, i, frame, dt);
+      // Ambient filament springs + faction intent (ADR 0016) — every organism, half-rate stagger.
+      if (((frame + i) & 1) === 0) this.applyAmbientSocial(e, u, i, frame, sp2);
 
       // Neural activation decay — slower decay so connectome + brain firing reads as sustained live activity.
       u.act *= 0.975;
@@ -1038,9 +1043,10 @@ export class EntityManager {
           for (let r = 0; r < 3; r++) {
             if (!this.hasFrameSpawnCapacity()) break;
             SPAWN_AT.set(
-              (rng() - 0.5) * 2 * PLATFORM_HALF * 0.6 + ex * 0.3,
-              PLATFORM_FLOOR + rng() * (PLATFORM_CEIL - PLATFORM_FLOOR),
-              (rng() - 0.5) * 2 * PLATFORM_HALF * 0.6 + ez * 0.3,
+              // Respawn near death site within social flock reach (ADR 0016 — not isolation scatter).
+              (rng() - 0.5) * SOCIAL_FLOCK_R * 1.5 + ex * 0.85,
+              PLATFORM_FLOOR + rng() * (PLATFORM_CEIL - PLATFORM_FLOOR) * SOCIAL_SPAWN_Y_FRAC,
+              (rng() - 0.5) * SOCIAL_FLOCK_R * 1.5 + ez * 0.85,
             );
             this.spawnWithinFrameBudget(SPAWN_AT, Math.floor(rng() * ctx.morphs.length));
           }
@@ -1268,6 +1274,133 @@ export class EntityManager {
         }
       }
     }
+  }
+
+  /**
+   * Nearest-neighbor chain springs + faction intent (ADR 0016).
+   * Builds long filaments (graphseek-class ideal edge) rather than crowd-centroid blobs.
+   * Private mulberry stream — does not consume the main entity rng.
+   */
+  private applyAmbientSocial(
+    e: Entity,
+    u: Entity['userData'],
+    index: number,
+    frame: number,
+    sp2: number,
+  ): void {
+    const r = SOCIAL_FLOCK_R;
+    const r2 = r * r;
+    const nb = this.ctx.grid.query(e.position.x, e.position.z, r);
+    let n = 0;
+    let kn = 0;
+    let nearThreatX = 0;
+    let nearThreatZ = 0;
+    let threatN = 0;
+    let minD2 = Infinity;
+    let min2D2 = Infinity;
+    let near: Entity | null = null;
+    let near2: Entity | null = null;
+    let kinNear: Entity | null = null;
+    let kinMinD2 = Infinity;
+    const px = e.position.x;
+    const py = e.position.y;
+    const pz = e.position.z;
+    const myGroup = u.setGroup;
+    for (let j = 0; j < nb.length; j++) {
+      const ne = nb[j];
+      if (!ne || ne === e || ne.userData.alive === false) continue;
+      const dx = ne.position.x - px;
+      const dy = ne.position.y - py;
+      const dz = ne.position.z - pz;
+      const dd = dx * dx + dz * dz;
+      if (dd >= r2 || dd < 1e-8) continue;
+      const d3 = dx * dx + dy * dy + dz * dz;
+      n++;
+      if (d3 < minD2) {
+        min2D2 = minD2;
+        near2 = near;
+        minD2 = d3;
+        near = ne;
+      } else if (d3 < min2D2) {
+        min2D2 = d3;
+        near2 = ne;
+      }
+      if (ne.userData.setGroup === myGroup) {
+        kn++;
+        if (d3 < kinMinD2) {
+          kinMinD2 = d3;
+          kinNear = ne;
+        }
+      }
+      if (ne.userData.strategy === 1 || ne.userData.setGroup !== myGroup) {
+        if (dd < r2 * 0.25) {
+          nearThreatX += dx;
+          nearThreatZ += dz;
+          threatN++;
+        }
+      }
+    }
+
+    const optD = 4 + (u.typeId % 5);
+    const spring = (partner: Entity, d2: number, gain: number): void => {
+      const d = Math.sqrt(d2);
+      if (d < 1e-4) return;
+      const force = (d - optD) * gain * sp2;
+      u.vel.x += ((partner.position.x - px) / d) * force;
+      u.vel.y += ((partner.position.y - py) / d) * force * 0.55;
+      u.vel.z += ((partner.position.z - pz) / d) * force;
+    };
+    if (near && Number.isFinite(minD2)) spring(near, minD2, SOCIAL_GRAVITY_GAIN * 18);
+    if (near2 && Number.isFinite(min2D2)) spring(near2, min2D2, SOCIAL_GRAVITY_GAIN * 7);
+    if (kinNear && kinNear !== near && Number.isFinite(kinMinD2)) {
+      spring(kinNear, kinMinD2, SOCIAL_KIN_GAIN * 4);
+    }
+
+    if (n === 0) {
+      const md = Math.sqrt(px * px + pz * pz) + 1e-6;
+      u.vel.x += (-px / md) * SOCIAL_GRAVITY_GAIN * 0.35 * sp2;
+      u.vel.z += (-pz / md) * SOCIAL_GRAVITY_GAIN * 0.35 * sp2;
+    }
+
+    let toCrowdX = 0;
+    let toCrowdZ = 0;
+    if (near) {
+      const d = Math.sqrt(minD2) + 1e-6;
+      toCrowdX = (near.position.x - px) / d;
+      toCrowdZ = (near.position.z - pz) / d;
+    }
+    let toKinX = 0;
+    let toKinZ = 0;
+    if (kinNear) {
+      const d = Math.sqrt(kinMinD2) + 1e-6;
+      toKinX = (kinNear.position.x - px) / d;
+      toKinZ = (kinNear.position.z - pz) / d;
+    }
+    let awayX = 0;
+    let awayZ = 0;
+    if (threatN > 0) {
+      const inv = 1 / (Math.sqrt(nearThreatX * nearThreatX + nearThreatZ * nearThreatZ) + 1e-6);
+      awayX = -nearThreatX * inv;
+      awayZ = -nearThreatZ * inv;
+    } else {
+      const md = Math.sqrt(px * px + pz * pz) + 1e-6;
+      awayX = px / md;
+      awayZ = pz / md;
+    }
+    const energy = typeof u.energy === 'number' ? u.energy : 50;
+    const percept: FactionPercept = {
+      threat: Math.min(1, threatN / 3),
+      crowd: Math.min(1, n / 8),
+      energy: clamp01(energy / 100),
+      kin: Math.min(1, kn / 4),
+      resource: clamp01(energy / 100),
+      novelty: clamp01((frame % 97) / 97),
+    };
+    const frng = mulberry32(((index * 0x9e3779b9) ^ (frame * 0x85ebca6b) ^ (myGroup * 17)) >>> 0);
+    const { intent } = decideFaction(myGroup % FACTION_COUNT, percept, frng);
+    const steer = intentSteerXZ(intent, toCrowdX, toCrowdZ, toKinX, toKinZ, awayX, awayZ);
+    u.vel.x += steer.x * SOCIAL_GRAVITY_GAIN * 0.7 * sp2;
+    u.vel.z += steer.z * SOCIAL_GRAVITY_GAIN * 0.7 * sp2;
   }
 
   /**

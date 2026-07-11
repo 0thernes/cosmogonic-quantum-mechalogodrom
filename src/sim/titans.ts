@@ -35,7 +35,6 @@ import {
   PLATFORM_CEIL,
   PLATFORM_FLOOR,
   PLATFORM_HEIGHT,
-  PLATFORM_MID_Y,
 } from './constants';
 import {
   HISTORY_WINDOW,
@@ -1177,19 +1176,21 @@ export class TitanSystem implements DomeFeeder {
     const p = g.position;
     const vel = ti.vel;
 
-    // FREE ROAM (owner: titans wander the whole expanded square + column, not a central
-    // ring — the old curl term `vel += (-p.z·k, +p.x·k)` was a pure orbit around origin = the 'racetrack',
-    // and the breeder centre-pull + territory spring pinned them to fixed spots). Each titan is a huge,
-    // SLOW beast pursuing its OWN drifting Lissajous waypoint (per-id phase ⇒ the 20 fan across the whole
-    // platform), with a gentle weave, a continuous height restore, and a soft square leash; the hard clamp
-    // below guards the rim. Low seek accel + heavy damping keeps them majestic, not zippy. Pure trig of
-    // (t, id, phase) — draws no rng, so the seeded stream is untouched. Applies to breeders AND roamers
-    // alike (breeder status still governs mating elsewhere, just not this racetrack motion).
-    const T_HOME_Y = PLATFORM_MID_Y;
-    const tph = ti.mi * 0.37 + ti.ph; // per-titan phase (mi is distinct per titan) → the 20 spread out
-    const trad = PLATFORM_HALF * (1 / 3 + (ti.mi % 5) * (2 / 15));
+    // MULTI-ALTITUDE ROAM (like Super Creatures, not a single mid-plane shelf).
+    // Bug: every titan shared PLATFORM_MID_Y + a strong height restore ⇒ all stuck on one level.
+    // Fix: per-titan altitude stratum + large dual-frequency vertical wander across the column,
+    // weak restore only to OWN homeY. XZ stays social-core so war/alliance still meet.
+    const stratum = ti.mi % 10;
+    const tph = ti.mi * 0.37 + ti.ph;
+    const homeY = PLATFORM_FLOOR + 36 + stratum * (PLATFORM_HEIGHT * 0.082) + Math.sin(ti.ph) * 18;
+    // Social-core horizontal band — not full rim isolation fog, not a tiny pin.
+    const trad = PLATFORM_HALF * (0.18 + (ti.mi % 5) * 0.05);
+    // Dual-frequency vertical path: primary + slow secondary (Super-Creature style full column use).
+    const yAmp = PLATFORM_HEIGHT * (0.2 + (ti.mi % 4) * 0.055);
+    const targetY =
+      homeY + Math.sin(t * 0.11 + tph) * yAmp + Math.sin(t * 0.037 + tph * 1.7) * yAmp * 0.45;
     const tdx = Math.cos(t * 0.11 + tph) * trad - p.x;
-    const tdy = T_HOME_Y + Math.sin(t * 0.17 + tph) * PLATFORM_HEIGHT * (16 / 39) - p.y;
+    const tdy = targetY - p.y;
     const tdz = Math.sin(t * 0.13 + tph * 1.3) * trad - p.z;
     const intelligence = this.ctx.organismIntelligence;
     const intelligenceEvidence = intelligence?.enabled
@@ -1212,7 +1213,8 @@ export class TitanSystem implements DomeFeeder {
     vel.x += tdx * tInv + Math.sin(t * 0.5 + ti.mi * 1.3) * 0.012;
     vel.y += tdy * tInv + Math.sin(t * 0.37 + ti.mi * 2.1) * 0.008;
     vel.z += tdz * tInv + Math.cos(t * 0.43 + ti.mi * 0.7) * 0.012;
-    vel.y += (T_HOME_Y - p.y) * 0.0025; // height restore — no sky-float, no ground-crawl
+    // Weak restore to OWN stratum only — never yank every titan to PLATFORM_MID_Y.
+    vel.y += (homeY - p.y) * 0.00055;
     if (p.x > PLATFORM_HALF) vel.x -= 0.06;
     else if (p.x < -PLATFORM_HALF) vel.x += 0.06;
     if (p.z > PLATFORM_HALF) vel.z -= 0.06;
