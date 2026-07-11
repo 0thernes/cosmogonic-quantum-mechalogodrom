@@ -43,6 +43,22 @@ describe('DarkEnergy', () => {
     }
   });
 
+  test('w stays in its physical band [-1, -1/3] even with the live ∂w/∂φ AD nudge', () => {
+    // Regression for the equation-of-state sign fix: the eos MODEL is now `-1 + ratio` (φ-dependent in
+    // the operating band) instead of the former `-1 - ratio` that clamped to a constant −1 and made the
+    // central-difference gradient identically 0. With the gradient live, `this.w += adGrad*0.005` is a
+    // real nudge, so w must be re-clamped to keep its documented range — this drives φ hard (high energy)
+    // for many steps and asserts the band holds every step. A revert that drops the re-clamp regresses it.
+    const d = new DarkEnergy();
+    for (let i = 0; i < 2000; i++) {
+      d.step(0.85 + 0.15 * Math.sin(i * 0.3), 0.05); // energetic + sparse → φ grows, ratio unsaturates
+      const w = d.snapshot().w;
+      expect(w).toBeGreaterThanOrEqual(-1);
+      expect(w).toBeLessThanOrEqual(-1 / 3);
+      expect(Number.isFinite(w)).toBe(true);
+    }
+  });
+
   test('the matter/energy densities are load-bearing (a sparse energetic universe expands faster)', () => {
     // The World coupling reads expansion, gated on acceleration; that is only meaningful if the densities
     // actually drive it. A sparse+energetic universe must expand faster than a crowded matter-dominated one.

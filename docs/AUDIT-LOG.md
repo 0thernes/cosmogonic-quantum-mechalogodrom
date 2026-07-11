@@ -11,6 +11,69 @@ changed and why.
 
 ---
 
+## 2026-07-10 (pass 5) — subsystem sweep batch 13 (8 fixes) + batch 14 ABANDONED (coupling-safe discipline)
+
+A fifth adversarial sweep (12 confirmed findings). **Batch 13 shipped 8** render/UI/sim-field fixes.
+**Batch 14 (4 super-mind/topdown "de-degeneracy" fixes) was measured, found to break the core
+`coupling > count` receipt, and fully reverted** — the most important result of the pass.
+
+### Batch 13 — clear fixes (this commit)
+
+- **[ENV-1] BRUTALISM restore bases were sRGB-linearized before ColorManagement is disabled**
+  (`environment.ts`, **HIGH**) — the 5 restore-base + 3 BRUTAL\_\* module-const Colors were built with
+  `new THREE.Color(0xHEX)` at import-eval time, i.e. BEFORE `main.ts` sets `ColorManagement.enabled =
+false`, so three linearized them (GROUND_BASE ~13× toward black). A single BRUTALISM on→off cycle
+  restored the ground + ambient + 6-light rig to the WRONG dark bases permanently. Fixed with a
+  `linHex()` helper (setRGB into `LinearSRGBColorSpace`, a flag-independent no-op conversion) — matching
+  the already-fixed BRUTAL_FOG and the raw hex the runtime-built lights use. `entities.ts` FLORA_CAMO
+  had the identical bug (**[ENT-1]**, low) — same fix.
+- **[INPUT-1] canvas pinch-zoom read the global TouchList** (`input.ts`, low) — `e.touches` counts a
+  joystick/look-pad finger elsewhere on screen, so one-canvas + one-joystick finger false-triggered a
+  pinch. Scoped to `e.targetTouches` (canvas-only) in `spread()` + both length checks + `endPinch`.
+- **[FIELD-1] dark-energy ∂w/∂φ was identically zero** (`dark-energy.ts`, low) — the eos MODEL
+  `-1 - ratio` clamps to a constant −1 for all φ, so its central-difference AD gradient was 0 and the
+  `w += adGrad*0.005` nudge was dead. Flipped to `-1 + ratio` (φ-dependent in the operating band) and
+  re-clamped w to its documented [−1, −1/3] range now that the nudge is live. +regression test.
+- **[SOUP-1] strain vitality ratcheted to the clamp** (`primordial-soup.ts`, low) — growth's
+  unconditional +0.001 floor made the per-beat delta always positive, so every strain climbed to 1.0
+  and pinned (meanVitality→1, vitality carried no fitness signal). Added a metabolic-upkeep leak
+  (leaky integrator): fitness-dependent equilibrium below the clamp, fittest still near 1.0 so
+  harvest's 0.85 threshold stays reachable. +regression test.
+- **[PETRI-1] brutal-release vitality clobbered same beat** (`petri-dish.ts`, med) — the evolve loop
+  hard-mirrored `b.vitality = consciousness` every beat, erasing applyBrutalRelease's consume/drain/
+  rebirth perturbation. Made it a decaying blend (0.85 carry + 0.15 pull) so spikes persist and relax.
+- **[HUD-1] HUD hot-reload dropped the DOCS/SPEC/BIBLE/LAB nav links** (`center-hud.ts`, med) —
+  `adoptFrontControls` relocates the `<a data-nav>` anchors INTO the strip, so `replaceChildren()`
+  detached them and the re-adopt's `doc.querySelector` could not find them. Re-home the anchors to
+  `<body>` before wiping (proxy buttons are rebuilt fresh, so only anchors need saving).
+- **[COPILOT-1] server-mode picker marked the 7 keyless LLM7 providers offline + listed each twice**
+  (`copilot.ts`, low) — the LLM7 catalog rows keyed health on their MODEL string (`id`) but the server
+  health map + resolveProvider key on the preset id (`llm7`, `llm7-devstral`, …). Added a `serverId`
+  field (verified against `server/copilot.ts` PRESETS), matched health + option value + `seenIds` on it;
+  static mode keys off `model` and is unaffected.
+
+### Batch 14 — ABANDONED after measurement (super-mind / topdown; coupling-receipt regression)
+
+Four "de-degeneracy" fixes were implemented then **reverted** when the `coupling-audit` receipt
+(`selfAware is not ISOLATED`, the owner-central "coupling > count" invariant) went red. Measured on the
+live `SuperMind`: committed baseline has selfAware max-correlation **0.354** (coupled, > the 0.3
+isolation cutoff); each candidate change pushed it UNDER 0.3:
+
+- **topdown-perception `|x−L0|` → squared error** (adGrad constant 1 → state-dependent): ALONE dropped
+  selfAware to **0.258** (isolated). The constant `adGrad=1` is LOAD-BEARING — it supplies a steady
+  shared bias in the HOT-1 percept loop that couples the faculties (same class as the deliberately-
+  constant temporal-crystal AD drag). Not a real defect.
+- **super-mind surprise dead-store carry + workspace-fold + srAd/hrrAd `x*x`**: together dropped
+  selfAware to **0.285**; the surprise-carry + workspace-fold alone to **0.242**. These are NOT no-ops —
+  they change the REPORTED `surprise` (faculty 5) and `workspace`→`resonance` (faculty 15) the audit
+  measures; the coupling is tuned around the current values, so every change decouples selfAware.
+
+**Ruling:** the apex consciousness faculties are a tuned coupled system — per `EMERGENCE = COUPLING >
+COUNT`, the system-level binding invariant outranks de-degenerating individual internal AD/dead-store
+signals. These 4 sites are owner-scoped/load-bearing; do not "fix" them. (The one legitimately
+observable win, dark-energy's ∂w/∂φ, lives in a field module that does NOT feed the coupling and shipped
+in batch 13.) Full gate green at 2407 tests; the coupling receipt stays 12/0.
+
 ## 2026-07-10 — worker-pool loader fix (the sim workers actually spawn now)
 
 - **[WRK-1] simulation worker 404 → silent main-thread fallback** (`world.ts` / `server.ts` /

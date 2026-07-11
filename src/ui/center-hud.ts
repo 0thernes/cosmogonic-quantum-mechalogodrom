@@ -834,6 +834,17 @@ function buildPersistentNav(doc: Document): void {
     strip.id = 'cqm-persist-nav';
     strip.setAttribute('aria-label', 'Documentation, lab, simulation controls, and settings');
   } else {
+    // Re-home the adopted static nav anchors back to <body> BEFORE wiping. adoptFrontControls
+    // RELOCATED the <a data-nav> anchors into this strip (their parent is now rowDocs), so a bare
+    // replaceChildren() would detach them from the document along with rowDocs — and the re-adopt
+    // below does doc.querySelector('a[data-nav=…]'), which can NOT find a detached node, so the
+    // DOCS/SPEC/BIBLE/LAB links would disappear permanently on every HUD hot-reload. Moving them to
+    // body keeps them in the document tree for re-adoption; the ⛓ ACCESS / ◈ STAGE II proxy buttons
+    // are rebuilt fresh by adoptFrontControls, so only the irreplaceable anchors must be preserved.
+    for (const a of Array.from(strip.querySelectorAll<HTMLAnchorElement>('a[data-nav]'))) {
+      a.classList.remove('cqm-persist-btn');
+      doc.body.appendChild(a);
+    }
     strip.replaceChildren();
   }
   strip.removeAttribute('hidden');

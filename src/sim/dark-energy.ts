@@ -80,9 +80,14 @@ export class DarkEnergy {
     // V(φ) = λ_q φ⁴
     const vacuumEnergy = LAMBDA_Q * this.phi ** 4;
 
-    // Eshkol AD: ∂w/∂φ (equation of state gradient)
+    // Eshkol AD: ∂w/∂φ (equation of state gradient). The ratio is ADDED (not subtracted): quintessence
+    // w rises from the −1 cosmological-constant floor toward the −1/3 acceleration boundary as the
+    // potential term grows. Subtracting it drove the model ≤ −1 for all φ, so the clamp pinned it to a
+    // constant −1 and the central-difference gradient was identically 0 — `this.w += adGrad*0.005`
+    // below then contributed nothing. With `-1 + ratio` the model is φ-dependent inside the band
+    // (φ₀=0.1 → ratio≈6e-5, unsaturated), so the AD nudge is finally live.
     const adGrad = eshkolADGradient(
-      (phi: number) => clamp(-1 - (LAMBDA_Q * phi ** 4) / (0.5 + LAMBDA_Q * phi ** 4), -1, -1 / 3),
+      (phi: number) => clamp(-1 + (LAMBDA_Q * phi ** 4) / (0.5 + LAMBDA_Q * phi ** 4), -1, -1 / 3),
       this.phi,
     );
 
@@ -90,7 +95,10 @@ export class DarkEnergy {
     const K = 0.5 * this.phiDot ** 2;
     const V = Math.max(0, vacuumEnergy);
     this.w = K + V > 1e-9 ? clamp((K - V) / (K + V), -1, -1 / 3) : -1;
-    this.w += adGrad * 0.005;
+    // Re-clamp after the AD nudge so w keeps its documented physical range. Before the sign fix above
+    // adGrad was identically 0, so this addition was a silent no-op and w never left [-1,-1/3]; now that
+    // the nudge is live it must be bounded here rather than relying on it staying incidentally small.
+    this.w = clamp(this.w + adGrad * 0.005, -1, -1 / 3);
 
     // Friedmann equation: H² = (8πG/3)(ρ_m + ρ_Λ)
     // ρ_Λ = Λ / (8πG) → normalized

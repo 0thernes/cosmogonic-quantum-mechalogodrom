@@ -182,8 +182,18 @@ const ENT_BRUTAL_BASE = new THREE.Color();
 const MOVE = new THREE.Vector3();
 /** Scratch vector for spawn positions — `spawn()` copies it, so reuse is safe. */
 const SPAWN_AT = new THREE.Vector3();
-/** Scratch colour for flora-camouflage tinting; shared by the hot loop. */
-const FLORA_CAMO = new THREE.Color(0x7ea88a);
+/**
+ * Scratch colour for flora-camouflage tinting; shared by the hot loop. Built via setRGB into the
+ * LINEAR working space (flag-independent, a no-op conversion), NOT `new THREE.Color(0x7ea88a)`: this
+ * const is import-eval-time, so a hex constructor would sRGB→linear it before main.ts disables
+ * ColorManagement, storing a darker/wrong hue as the camo lerp target. Raw sage = 0.494/0.659/0.541.
+ */
+const FLORA_CAMO = new THREE.Color().setRGB(
+  0x7e / 255,
+  0xa8 / 255,
+  0x8a / 255,
+  THREE.LinearSRGBColorSpace,
+);
 
 /**
  * Max NEW organisms an auto-split surge may create per frame at the ultra tier (>5,000). A

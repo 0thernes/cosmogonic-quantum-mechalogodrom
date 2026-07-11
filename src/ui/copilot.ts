@@ -154,17 +154,48 @@ const STATIC_PROVIDER_CATALOG: readonly {
   label: string;
   model?: string;
   serverOnly?: boolean;
+  // Server-side preset id, when it differs from the LLM7 model string (`id`). In server mode the
+  // health map + /api/chat resolveProvider key on the preset id (e.g. 'llm7', 'llm7-devstral'), NOT
+  // the model name — without this the 7 keyless LLM7 rows never matched health (shown offline) and
+  // the health-loop re-appended each preset a second time. Static mode keys off `model` and ignores it.
+  serverId?: string;
 }[] = [
-  { id: 'codestral-latest', label: 'LLM7 · Codestral (no key)', model: 'codestral-latest' },
-  { id: 'devstral-small-2:24b', label: 'LLM7 · Devstral (no key)', model: 'devstral-small-2:24b' },
-  { id: 'open-mistral-nemo', label: 'LLM7 · Mistral Nemo (no key)', model: 'open-mistral-nemo' },
-  { id: 'google/gemma-3-12b-it', label: 'LLM7 · Gemma 3 (no key)', model: 'google/gemma-3-12b-it' },
-  { id: 'qwen3-4b', label: 'LLM7 · Qwen3 (no key)', model: 'qwen3-4b' },
-  { id: 'ministral-3b-latest', label: 'LLM7 · Ministral (no key)', model: 'ministral-3b-latest' },
+  {
+    id: 'codestral-latest',
+    label: 'LLM7 · Codestral (no key)',
+    model: 'codestral-latest',
+    serverId: 'llm7',
+  },
+  {
+    id: 'devstral-small-2:24b',
+    label: 'LLM7 · Devstral (no key)',
+    model: 'devstral-small-2:24b',
+    serverId: 'llm7-devstral',
+  },
+  {
+    id: 'open-mistral-nemo',
+    label: 'LLM7 · Mistral Nemo (no key)',
+    model: 'open-mistral-nemo',
+    serverId: 'llm7-mistral',
+  },
+  {
+    id: 'google/gemma-3-12b-it',
+    label: 'LLM7 · Gemma 3 (no key)',
+    model: 'google/gemma-3-12b-it',
+    serverId: 'llm7-gemma',
+  },
+  { id: 'qwen3-4b', label: 'LLM7 · Qwen3 (no key)', model: 'qwen3-4b', serverId: 'llm7-qwen' },
+  {
+    id: 'ministral-3b-latest',
+    label: 'LLM7 · Ministral (no key)',
+    model: 'ministral-3b-latest',
+    serverId: 'llm7-ministral',
+  },
   {
     id: 'llama-3.2-3b-instruct',
     label: 'LLM7 · Llama 3.2 (no key)',
     model: 'llama-3.2-3b-instruct',
+    serverId: 'llm7-llama',
   },
   { id: 'freellmapi', label: 'FreeLLMAPI · 16-provider pool', serverOnly: true },
   { id: 'pollinations', label: 'Pollinations · openai', serverOnly: true },
@@ -412,8 +443,11 @@ async function enrichServerProviders(
   const seenIds = new Set<string>();
   for (const row of STATIC_PROVIDER_CATALOG) {
     const opt = document.createElement('option');
-    opt.value = row.model ?? row.id;
-    const h = healthMap.get(row.id);
+    // Server mode: the option value must be the server PRESET id (serverId), so /api/chat's
+    // resolveProvider gets a real preset — not the raw LLM7 model string, which it can't resolve.
+    const presetId = row.serverId ?? row.id;
+    opt.value = row.serverId ?? row.model ?? row.id;
+    const h = healthMap.get(presetId);
     if (h) {
       const dot = h.reachable ? '🟢' : /429|rate/i.test(h.detail) ? '🟡' : '🔴';
       opt.textContent = `${dot} ${row.label}${h.keyed ? ' 🔑' : ''}`;
@@ -433,8 +467,8 @@ async function enrichServerProviders(
       opt.textContent = `⚪ ${row.label}`;
       downGroup.appendChild(opt);
     }
-    if (list.some((p) => p.id === row.id && p.def)) opt.selected = true;
-    seenIds.add(row.id);
+    if (list.some((p) => p.id === presetId && p.def)) opt.selected = true;
+    seenIds.add(presetId);
   }
   // Also show any health-checked providers not in the static catalog (e.g. custom/freellmapi).
   for (const [id, h] of healthMap) {

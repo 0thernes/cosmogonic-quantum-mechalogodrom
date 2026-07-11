@@ -515,16 +515,19 @@ export class InputSystem {
     // accumulator as the wheel. Spreading fingers apart pulls the camera in
     // (zoom in); pinching together pushes it out. While pinching, one-finger
     // look is suppressed so the gesture cannot also yank the camera around.
+    // targetTouches (not touches): scope the pinch to fingers that actually landed ON the canvas.
+    // A global TouchList also counts a joystick/look-pad finger elsewhere on the screen, so a
+    // one-finger-on-canvas + one-finger-on-joystick pose would false-trigger a pinch and yank zoom.
     const spread = (e: TouchEvent): number => {
-      const a = e.touches[0];
-      const b = e.touches[1];
+      const a = e.targetTouches[0];
+      const b = e.targetTouches[1];
       if (!a || !b) return 0;
       return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
     };
     canvas.addEventListener(
       'touchstart',
       (e) => {
-        if (e.touches.length >= 2) {
+        if (e.targetTouches.length >= 2) {
           this.pinching = true;
           this.lookId = null; // a pinch is not a look drag
           this.pinchDist = spread(e);
@@ -535,7 +538,7 @@ export class InputSystem {
     canvas.addEventListener(
       'touchmove',
       (e) => {
-        if (!this.pinching || e.touches.length < 2) return;
+        if (!this.pinching || e.targetTouches.length < 2) return;
         e.preventDefault();
         const d = spread(e);
         if (d > 0 && this.pinchDist > 0) this.zoom += (this.pinchDist - d) * PINCH_ZOOM_GAIN;
@@ -544,7 +547,7 @@ export class InputSystem {
       { passive: false, signal: this.ac.signal },
     );
     const endPinch = (e: TouchEvent): void => {
-      if (e.touches.length < 2) {
+      if (e.targetTouches.length < 2) {
         this.pinching = false;
         this.pinchDist = 0;
       }

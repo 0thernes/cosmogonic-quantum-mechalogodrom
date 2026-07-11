@@ -411,7 +411,19 @@ export function petriDishBeat(
     if (typeof b.adFitness !== 'number') continue; // not a full Biologic
     if (b.alive === false) continue;
     stepBiologic(b as Biologic, bioFlux);
-    b.vitality = Math.min(3, Math.max(0.01, b.consciousness ?? b.vitality ?? 0.01));
+    // Decaying blend, NOT a hard re-mirror to consciousness. Vitality is already born as a
+    // consciousness/bioFlux blend (line ~402), so it doesn't need re-pinning every beat — and a hard
+    // `= consciousness` overwrite ERASED applyBrutalRelease's consume/drain/rebirth perturbation the
+    // same beat it was applied, making the whole in-dish brutal release dead for full biologics. This
+    // carries 85% of the current vitality (so a brutal spike/drop persists and relaxes over several
+    // beats) while pulling 15% toward consciousness. Deterministic; still clamped to [0.01, 3].
+    b.vitality = Math.min(
+      3,
+      Math.max(
+        0.01,
+        (b.vitality ?? b.consciousness ?? 0.01) * 0.85 + (b.consciousness ?? 0.01) * 0.15,
+      ),
+    );
   }
   // Drop dead full-biologic strains so the ring doesn't fill with corpses.
   if (state.biologics.some((b) => b.alive === false && typeof b.adFitness === 'number')) {

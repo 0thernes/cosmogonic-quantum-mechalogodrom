@@ -166,7 +166,17 @@ export class PrimordialSoup {
         grayScottResidual(0.5 + (i % 5) * 0.1, 0.3, 0.5, 0.5, 0.5, 0.5, 0.04, 0.06),
       ); // full sig: u v L R U D feed kill; Tsotchke PINN real math for biologics metabolism (deepened)
       const pinnFactor = 0.0005 * (pinnHealth - 0.5); // signed modulation; positive health aids growth
-      this.vitality[i] = Math.min(1, v + growth + pinnFactor);
+      // Metabolic upkeep (leaky integrator): holding vitality costs a fixed fraction per beat. Without
+      // it, growth (floor +0.001) + pinnFactor is unconditionally >0, so EVERY strain's vitality
+      // ratchets monotonically to the clamp and pins at 1.0 — vitality stops carrying any fitness
+      // signal (meanVitality→1, harvestEmergent ties, all strains indistinguishable). The leak gives a
+      // FITNESS-DEPENDENT equilibrium v* ≈ growth/UPKEEP: the fittest (growth≈UPKEEP) still hold near
+      // 1.0 so the 0.85 harvest threshold stays reachable, while weaker strains settle lower — vitality
+      // spans its range again. The young-strain death cull below remains reachable via external drain
+      // (brutal-release), which the strictly-increasing internal loop never triggered anyway. Pure &
+      // deterministic (no rng), so per-seed telemetry stays identical.
+      const UPKEEP = 0.004;
+      this.vitality[i] = clamp01(v * (1 - UPKEEP) + growth + pinnFactor);
       this.consciousness[i] = clamp01(
         c * 0.98 + (corpus + (this.symmetry[i] ?? 0)) * 0.01 * wiring,
       );

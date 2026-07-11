@@ -263,7 +263,16 @@ describe('EnvironmentSystem — BRUTALISM restores the reaction-diffusion ground
 
     // Full concrete: every collected monolith body material lerps to the rig concrete grey (0x9a9aa0).
     env.applyBrutalism(1);
-    const concrete = new THREE.Color(0x9a9aa0);
+    // Build the expected grey in the LINEAR working space — matching how the module's BRUTAL_LIGHT const
+    // is now built (setRGB into LinearSRGBColorSpace), so the assertion holds regardless of the ambient
+    // ColorManagement flag. A bare `new THREE.Color(0x9a9aa0)` would sRGB→linear it under the three
+    // default (enabled) and no longer equal the raw grey the material lerps to. See environment.ts:linHex.
+    const concrete = new THREE.Color().setRGB(
+      0x9a / 255,
+      0x9a / 255,
+      0xa0 / 255,
+      THREE.LinearSRGBColorSpace,
+    );
     for (const m of bodyMats) {
       expect(m.color.r).toBeCloseTo(concrete.r, 5);
       expect(m.color.g).toBeCloseTo(concrete.g, 5);

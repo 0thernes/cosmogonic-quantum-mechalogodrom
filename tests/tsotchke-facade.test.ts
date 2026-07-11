@@ -111,4 +111,21 @@ describe('Primordial soup (Petri dish growth)', () => {
     expect(a.snapshot().meanVitality).toBe(b.snapshot().meanVitality);
     expect(a.snapshot().liveCount).toBe(b.snapshot().liveCount);
   });
+
+  test('strain vitality does not ratchet to the clamp (metabolic upkeep de-saturates it)', () => {
+    // Regression for the vitality ratchet: growth had an unconditional +0.001 floor and pinnFactor was
+    // too small to ever make the per-beat delta negative, so EVERY strain climbed monotonically to the
+    // 1.0 clamp and pinned there — meanVitality → 1 and vitality carried no fitness signal. With the
+    // metabolic-upkeep leak, vitality settles at a fitness-dependent equilibrium below the clamp. After
+    // enough beats to have saturated the old code, meanVitality must be meaningfully under 1.
+    const soup = new PrimordialSoup(4242);
+    const rng = mulberry32(4242);
+    for (let i = 0; i < 900; i++) soup.update(0, i, rng);
+    const snap = soup.snapshot();
+    expect(snap.liveCount).toBeGreaterThan(0); // strains did not all die
+    expect(snap.meanVitality).toBeLessThan(0.98); // de-ratcheted — not pinned at the clamp
+    expect(snap.meanVitality).toBeGreaterThan(0.02); // still a live, non-collapsed population
+    // Not every strain sits at the ceiling.
+    expect(snap.strains.some((s) => s.alive && s.vitality < 0.95)).toBe(true);
+  });
 });

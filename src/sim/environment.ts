@@ -39,16 +39,30 @@ const MONOLITH_TIME = { value: 0 };
 // ── BRUTALISM: concrete targets + base colours (module consts → zero per-frame allocation). The
 //    rig + ground are lerped from these bases toward concrete by the 0..1 factor, so the f=0 path
 //    early-returns and leaves the animated cosmos byte-identical. ──
-const BRUTAL_GROUND = new THREE.Color(0x3a3a3e);
-const BRUTAL_GROUND_EMISSIVE = new THREE.Color(0x141416);
-const BRUTAL_LIGHT = new THREE.Color(0x9a9aa0); // cold overcast grey for the whole light rig
-const GROUND_BASE = new THREE.Color(0x080812);
-const GROUND_BASE_EMISSIVE = new THREE.Color(0x040410);
-const AMBIENT_BASE = new THREE.Color(0x1c1c3c); // matches the constructor's USER-lifted fill (0x1c1c3c @ 0.72)
-const SUN_BASE = new THREE.Color(0xffeedd);
+// Build every module-const colour in the LINEAR working space. These are import-eval-time constants,
+// so they are created BEFORE main.ts runs `THREE.ColorManagement.enabled = false` (ES modules evaluate
+// imports before the importer body). A bare `new THREE.Color(hex)` would then be sRGB→linear converted
+// (GROUND_BASE ~13× darker toward black), so a single BRUTALISM on→off cycle RESTORED the ground +
+// ambient + 6-light rig to the WRONG dark bases permanently (until reload). setRGB into
+// LinearSRGBColorSpace is a no-op conversion regardless of the flag — matching BRUTAL_FOG and the raw
+// hex the constructor's lights/materials (built at runtime, flag-off) use, so the restore is exact.
+const linHex = (hex: number): THREE.Color =>
+  new THREE.Color().setRGB(
+    ((hex >> 16) & 0xff) / 255,
+    ((hex >> 8) & 0xff) / 255,
+    (hex & 0xff) / 255,
+    THREE.LinearSRGBColorSpace,
+  );
+const BRUTAL_GROUND = linHex(0x3a3a3e);
+const BRUTAL_GROUND_EMISSIVE = linHex(0x141416);
+const BRUTAL_LIGHT = linHex(0x9a9aa0); // cold overcast grey for the whole light rig
+const GROUND_BASE = linHex(0x080812);
+const GROUND_BASE_EMISSIVE = linHex(0x040410);
+const AMBIENT_BASE = linHex(0x1c1c3c); // matches the constructor's USER-lifted fill (0x1c1c3c @ 0.72)
+const SUN_BASE = linHex(0xffeedd);
 const LIGHT_BASE: readonly THREE.Color[] = [
   0xff0066, 0x00ffcc, 0xffaa00, 0x4488ff, 0xff2200, 0x8800ff,
-].map((h) => new THREE.Color(h));
+].map(linHex);
 
 /**
  * Light-unit conversion gain for the r128 → r0.184 lighting migration.
