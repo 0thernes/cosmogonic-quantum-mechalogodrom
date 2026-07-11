@@ -662,7 +662,9 @@ async function runLoop(
     for (const call of calls) {
       if (signal.aborted) throw new Error('agent turn cancelled');
       const args = parseArgs(call.function.arguments);
-      const result = await dispatchTool(call.function.name, args);
+      // Forward the turn signal so a deadline/disconnect mid-tool kills the child process / aborts the
+      // web fetch NOW, instead of the tool running out its own internal timeout after we've given up.
+      const result = await dispatchTool(call.function.name, args, signal);
       const output = result.ok ? result.output : `ERROR: ${result.error}`;
       // Forensic trail of what the (untrusted) model invoked through the sandbox (RISK-06): the
       // tool + ok-status + arg keys, never the (potentially large) output body.

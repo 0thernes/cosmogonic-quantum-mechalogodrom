@@ -11,6 +11,21 @@ changed and why.
 
 ---
 
+## 2026-07-10 (pass 6) — batch 20: copilot in-flight tool-call is cancelled on the turn deadline
+
+- **[NET-2] a running tool kept executing after the turn was cancelled** (`copilot.ts` / `ai-sandbox.ts`
+  / `web-search.ts`, LOW) — `runLoop` checked the turn `AbortSignal` only BEFORE dispatch; once a tool
+  was executing, the turn deadline (75s) or a client disconnect aborted the provider fetch but NOT the
+  tool, which ran out its own internal timeout (run 15s, web 8s) after the caller had already given up.
+  Threaded the signal through `dispatchTool(name, args, signal)` into the two resource-holding tools:
+  `runReadOnly` now `proc.kill()`s the spawned child on abort, and `webSearch` aborts its fetch
+  controller on abort. Pure-JS tools (read/list/grep) are fast + bounded, left unchanged. All signal
+  params are optional, so every existing caller is unaffected.
+
+**13 of 14 pass-6 findings shipped.** Only remaining: the sync-surfaces `SURFACES` allowlist is
+hand-maintained, so a NEW receipt-publishing doc omitted from it would drift undetected (LOW, design —
+needs a coverage guard, not a point fix). Receipts unchanged (2437). Full gate green.
+
 ## 2026-07-10 (pass 6) — batch 19: copilot failover reaches keyed providers (host round-robin)
 
 - **[NET-1] automatic provider failover could never reach a configured keyed provider** (`copilot.ts`,
