@@ -744,7 +744,10 @@ export class World {
     sound: 0,
     phase: 0,
   };
-  private readonly superMpoInput = new Float32Array(2);
+  // Length-3 (not 2): moonlabMpoStep packs a length-2 input into a rank-1 outer product whose
+  // truncation ratio is a constant, discarding the 2nd feature. Slot[2] holds the cross term so the
+  // packed 2×2 is rank-2 and BOTH features move the result.
+  private readonly superMpoInput = new Float32Array(3);
   /** V-APEX: the Entropic Tesseract Hydra brain (10 organs + quantum + meta-paradox). Wired into the apex beat. */
   private readonly apexBrain: ApexBrain;
   private lastApexThought: ApexThought | null = null;
@@ -1181,6 +1184,7 @@ export class World {
       const qge = quakeQgeFactor(quakeLife, 0.3);
       this.superMpoInput[0] = quakeLife;
       this.superMpoInput[1] = hybridAliv;
+      this.superMpoInput[2] = quakeLife * hybridAliv; // cross term ⇒ rank-2 packed matrix (both features live)
       const mpoW = moonlabMpoStep(this.superMpoInput, 2);
       // feed hybrid into econ for corpus aliveness effect (deterministic)
       const econBoost =
@@ -2587,6 +2591,7 @@ export class World {
         const mpoInput = this.superMpoInput;
         mpoInput[0] = pulseForArchon.quakeAliveness ?? 0.5;
         mpoInput[1] = localD;
+        mpoInput[2] = (pulseForArchon.quakeAliveness ?? 0.5) * localD; // cross term ⇒ rank-2 (localD now live)
         const mpoF = moonlabMpoStep(mpoInput, 2);
         // Ralph continue 10x: quakeQgeFactor for more quantum-quake aliveness in world step percepts
         const qgeF = quakeQgeFactor(pulseForArchon.quakeAliveness, 0.15);

@@ -60,14 +60,22 @@ export function moonlabTensorContract(
   chi = 4,
   bond = 2,
 ): number {
-  const d = squareSide(Math.min(a.length, b.length));
+  // Floor d at 2 (the moonlabTensorQualia fix, line ~86): a length-2/3 input otherwise reshapes to a
+  // 1×1 matrix that reads only a[0], discarding the rest — an inert constant.
+  const d = Math.max(2, squareSide(Math.min(a.length, b.length)));
   const bnd = Math.max(1, Math.min(bond, d));
   const A = packMatrix(a, d, bnd);
   const B = packMatrix(b, bnd, d);
   const C = matMul(A, B);
   const full = frobenius(C);
   if (full <= 1e-12) return 0;
-  const { approx } = lowRankApprox(C, Math.max(1, Math.min(chi, d)));
+  // Keep STRICTLY below the matrix side. `min(chi, d)` was a no-op whenever chi ≥ d (every production
+  // call passes chi 3–4 against a d≤2 matrix), so the Eckart–Young truncation dropped nothing and the
+  // retained-energy ratio was a fixed 1 regardless of the inputs — a degenerate constant "coupling"
+  // that violated "real math under every effect" (audit). Forcing keep ≤ d−1 guarantees at least one
+  // singular value is dropped, so the ratio genuinely tracks the input's spectral structure. For calls
+  // that already truncate (chi < d, e.g. the length-9 test inputs, chi=1) this is unchanged.
+  const { approx } = lowRankApprox(C, Math.max(1, Math.min(chi, d - 1)));
   return clamp01(frobenius(approx) / (full + 1e-12));
 }
 
@@ -103,12 +111,16 @@ export function moonlabTensorQualia(v: ArrayLike<number>, chi: number): number {
  * the retained Frobenius-energy ratio in [0,1].
  */
 export function moonlabMpoStep(state: Float32Array, bond: number, chi = 4): number {
-  const d = squareSide(state.length);
+  // d≥2 (read past state[0]) + keep ≤ d−1 (force a real truncation) — same de-degeneracy as contract.
+  // NOTE: a length-2 state still packs to a rank-1 M (the transfer column ⊗ state outer product), so its
+  // ratio stays ~1 by construction; the two length-2 call sites (world.superMpoInput, godform) were
+  // widened to length-3 with a cross-term so the packed matrix is genuinely rank-2.
+  const d = Math.max(2, squareSide(state.length));
   const S = packMatrix(state, d, d);
   const M = matMul(transferOperator(d, bond), S);
   const full = frobenius(M);
   if (full <= 1e-12) return 0;
-  const { approx } = lowRankApprox(M, Math.max(1, Math.min(chi, d)));
+  const { approx } = lowRankApprox(M, Math.max(1, Math.min(chi, d - 1)));
   return clamp01(frobenius(approx) / (full + 1e-12));
 }
 
@@ -119,9 +131,10 @@ export function moonlabMpoStep(state: Float32Array, bond: number, chi = 4): numb
  */
 export function moonlabMpoApply(state: Float32Array, bond: number, chi = 4): Float32Array {
   const out = new Float32Array(state.length);
-  const d = squareSide(state.length);
+  // d≥2 + keep ≤ d−1: same de-degeneracy — a full-rank keep left the transformed block unchanged.
+  const d = Math.max(2, squareSide(state.length));
   const M = matMul(transferOperator(d, bond), packMatrix(state, d, d));
-  const { approx } = lowRankApprox(M, Math.max(1, Math.min(chi, d)));
+  const { approx } = lowRankApprox(M, Math.max(1, Math.min(chi, d - 1)));
   const block = d * d;
   for (let i = 0; i < state.length; i++) {
     out[i] = clamp01(i < block ? approx.data[i]! : (state[i] ?? 0));

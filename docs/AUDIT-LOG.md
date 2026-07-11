@@ -41,6 +41,39 @@ gated commits: batch 9 (behavior-preserving) and batch 10 (the Moonlab degenerat
   once via `??=` arrays (the existing `cachedMechaPulse`/`cachedGlyphPulse` idiom). Byte-identical
   values, zero behaviour change.
 
+### Batch 10 — the Moonlab degenerate-constant class (this commit)
+
+Two verified findings, same root cause: real MIT tensor-network kernels (`moonlab-tensor.ts`) fed
+inputs that reshape to a **full-rank / rank-1** matrix, so the Eckart–Young bond truncation dropped
+nothing and the returned retained-energy ratio was a fixed constant (~1) regardless of the inputs —
+an inert "coupling" violating the PHILOSOPHY contract ("real math under every effect"). The sibling
+`moonlabTensorQualia` was already patched for exactly this class (with a comment calling the
+unguarded form an audit violation); `moonlabTensorContract` / `moonlabMpoStep` / `moonlabMpoApply`
+were not. **These are real MIT kernels — the bug was the wiring feeding them degenerate shapes, never
+the math.**
+
+- **[MOON-1] kernel de-degeneracy** (`moonlab-tensor.ts`) — floored the reshape side `d = max(2, …)`
+  (read past `state[0]`) and forced the retained rank **strictly below** the matrix side
+  (`keep = max(1, min(chi, d − 1))`) in all three kernels. This is a **strict no-op for every call
+  that already truncated** (`chi < d`, e.g. the length-9 golden inputs / `chi=1` sites) and only
+  changes the degenerate `chi ≥ d` / length-2·3 cases — so a genuine rank-1 truncation now makes the
+  ratio track the input's singular spectrum. Fixes ~20 contract sites (all `Float32Array(4)` operands:
+  causal-graph, dark-energy, morphic, noosphere, omega-point, stigmergy, strange-attractor,
+  temporal-crystal, xenomind, quality-space, super-body, super-mind tPred/tQ/tQ2/srT/empT,
+  tsotchke-brain-intake) plus the length-≥3 MPO sites.
+- **[MOON-2] residual length-2 call sites** — a length-2 MPO/contract operand packs to a rank-1 outer
+  product whose ratio stays constant even after the kernel guard, silently dropping the 2nd feature.
+  Widened the six such operands to length-3 with a cross term so the packed matrix is genuinely
+  rank-2 and **both** features move the result: `godform.GODFORM_MPO_INPUT` (adDepth·quakeFactor),
+  `world.superMpoInput` ×2 (quakeLife·hybridAliv; quakeAliveness·localD),
+  `quality-space.mpoInput` (state0·state1), `topdown-perception.mpoInput` (imaginedLatent0·novelty),
+  and `super-mind` hrrT's `[conf, 0.5]` → `[conf, 0.5, conf·0.5]` (its zero second row forced rank-1).
+
+New `moonlab-tensor.test.ts` cases lock it: the contract ratio is now state-dependent (< 1 and varies
+across inputs — the pre-fix constant 1 would fail), and a length-3 MPO input genuinely reads both
+features. Behaviour-shifting but fully deterministic — the determinism/reproduce goldens stay bit-green
+and the coupling-audit / Butlin thresholds absorb the shift. Receipts 2396 → **2399** (+3).
+
 ## 2026-07-10 — autonomous whole-repo audit (deps + ~60 findings across 8 batches)
 
 A multi-agent audit (27 finder agents + adversarial verifiers) swept every file for bugs, dead

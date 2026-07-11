@@ -62,6 +62,43 @@ describe('moonlab-tensor: bond-χ contraction + MPO are bounded & deterministic'
   });
 });
 
+describe('moonlab-tensor: de-degeneracy — the retained-energy ratio is state-dependent', () => {
+  // These pin the audit fix: keep ≤ d−1 and d ≥ 2 so the Eckart–Young truncation always drops a
+  // singular value. Pre-fix `min(chi, d)` kept the full rank whenever chi ≥ d (every production call:
+  // chi 3–4 vs a d≤2 matrix), making the ratio a fixed 1 regardless of the inputs — an inert constant.
+
+  test('contract with chi ≥ d is NOT a fixed 1 and varies with the input', () => {
+    // Length-4 ⇒ 2×2 product; chi=4 ≥ 2 kept both modes pre-fix ⇒ ratio ≡ 1 for ALL inputs.
+    const r1 = moonlabTensorContract([0.9, 0.1, 0.2, 0.05], [0.9, 0.1, 0.2, 0.05], 4);
+    const r2 = moonlabTensorContract([0.2, 0.8, 0.6, 0.7], [0.2, 0.8, 0.6, 0.7], 4);
+    expect(r1 >= 0 && r1 <= 1).toBe(true);
+    expect(r2 >= 0 && r2 <= 1).toBe(true);
+    // A genuine truncation (strictly < 1) that differs across inputs ⇒ not a degenerate constant.
+    expect(Math.min(r1, r2)).toBeLessThan(1 - 1e-6);
+    expect(Math.abs(r1 - r2)).toBeGreaterThan(1e-6);
+  });
+
+  test('MPO step on a length-3 input reads BOTH features (a length-2 input is a rank-1 constant)', () => {
+    // Same slot[0]; only slot[1] (+ its cross term) changes. Pre-fix a length-3 input reshaped to 1×1
+    // (d = ⌊√3⌋ = 1), reading only slot[0] ⇒ identical output. Post-fix (d≥2) both features move it.
+    const base = new Float32Array([0.7, 0.3, 0.7 * 0.3]);
+    const changed = new Float32Array([0.7, 0.9, 0.7 * 0.9]);
+    const r0 = moonlabMpoStep(base, 2);
+    const r1 = moonlabMpoStep(changed, 2);
+    expect(r0 >= 0 && r0 <= 1).toBe(true);
+    expect(Math.abs(r0 - r1)).toBeGreaterThan(1e-6);
+  });
+
+  test('a length-2 MPO input stays bounded and deterministic (rank-1 by construction — safe)', () => {
+    // We do NOT claim a length-2 input varies (its packed matrix is a rank-1 outer product); we only
+    // require it stay in-range and deterministic so the kernel is safe for any legacy 2-vector caller.
+    const s = new Float32Array([0.4, 0.6]);
+    const v = moonlabMpoStep(s, 2);
+    expect(v >= 0 && v <= 1).toBe(true);
+    expect(moonlabMpoStep(s, 2)).toBe(v);
+  });
+});
+
 describe('moonlab-tensor: ulg handoff coupling', () => {
   test('weighted blend, clamped', () => {
     expect(close(ulgHandoff(1, 1), 1)).toBe(true);

@@ -236,7 +236,7 @@ import {
   type AlphabetArchetype,
 } from './alphabet-pantheon';
 
-const GODFORM_MPO_INPUT = new Float32Array(2);
+const GODFORM_MPO_INPUT = new Float32Array(3);
 
 export function getFullTsotchkeBias(i: number): GodformBias & {
   quakeFactor: number;
@@ -256,6 +256,10 @@ export function getFullTsotchkeBias(i: number): GodformBias & {
   // mpo (Moonlab from Tsotchke) in godform for tensor net bias
   GODFORM_MPO_INPUT[0] = extra.adDepth;
   GODFORM_MPO_INPUT[1] = extra.quakeFactor;
+  // Third slot = the adDepth·quakeFactor cross term so the packed 2×2 is genuinely rank-2 — a length-2
+  // input reshapes to a rank-1 outer product whose truncation ratio is a constant ~1 (quakeFactor in
+  // slot[1] would be unread). With the cross term both inputs move the per-Archon tensor-net bias.
+  GODFORM_MPO_INPUT[2] = extra.adDepth * extra.quakeFactor;
   const mpo = moonlabMpoStep(GODFORM_MPO_INPUT, 2);
   // use libirrepSymmetry (Tsotchke) for more symmetry modulation in godform bias
   const irBias = libirrepSymmetry(extra.irrepDegree, 2);

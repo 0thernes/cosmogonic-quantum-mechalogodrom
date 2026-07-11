@@ -46,7 +46,7 @@ export class QualitySpace {
   private readonly tensorA = new Float32Array(4);
   private readonly tensorB = new Float32Array(4);
   private readonly qualiaInput = [0, 0, 0];
-  private readonly mpoInput = new Float32Array(2);
+  private readonly mpoInput = new Float32Array(3); // len-3: slot[2]=cross term so moonlabMpoStep reads both features (a len-2 input packs to a rank-1 constant)
   private readonly gwtContent = [0, 0];
   private readonly gwtSalience = [0.4, 0.3];
   private readonly toneGwtContent = [0, 0];
@@ -115,6 +115,7 @@ export class QualitySpace {
       if (d === 3) {
         this.mpoInput[0] = state[0] || 0;
         this.mpoInput[1] = state[1] || 0;
+        this.mpoInput[2] = (state[0] || 0) * (state[1] || 0);
         acc += 0.02 * Math.abs(moonlabMpoStep(this.mpoInput, 2));
         this.gwtContent[0] = acc;
         this.gwtContent[1] = state[4] || 0;

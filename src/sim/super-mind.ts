@@ -1642,7 +1642,14 @@ export class SuperMind {
     }
     // Moonlab tensor + AD on holographic for more corpus in recall (Tsotchke wiring deeper)
     this.tensorScratch1.set(this.quantumOut.subarray(0, 2));
-    const hrrT = moonlabTensorContract([this.holographic.confidence, 0.5], this.tensorScratch1, 2);
+    // Length-3 first arg (was [conf,0.5]): a length-2 operand packs to a matrix with a ZERO second row,
+    // forcing the contraction product to rank-1 so its truncation ratio is a constant ~1 regardless of
+    // the quantum-state operand. The conf·0.5 cross term fills the row so both operands move hrrT.
+    const hrrT = moonlabTensorContract(
+      [this.holographic.confidence, 0.5, this.holographic.confidence * 0.5],
+      this.tensorScratch1,
+      2,
+    );
     const hrrAd = eshkolADGradient((x) => x, this.holographic.confidence);
     if (hrrPlan >= 0) {
       const hp = SUPER_PLANS[hrrPlan];
