@@ -8,7 +8,7 @@
 
 **Machine-readable result:**
 [`organism-intelligence-causal-benchmark-v3.json`](./assets/organism-intelligence-causal-benchmark-v3.json)
-(`contentSha256` `dbf77fa42c9490eb38763c2f1a281b52667bec9e5081c24a3a283b1a78dcc23a`)
+(`contentSha256` `96495964f03eca1860ba7f869cbd35e929bbdfdd75f801eb4479e6239dfd1b9f`)
 
 ## Verdict
 
@@ -72,9 +72,9 @@ consciousness, sentience, physical quantum entropy, quantum advantage, or crypto
 | Worst reversal seed                      | relative loss `-0.0027290855917749624`                                                                            | safety bound pass                    |
 | External-row causality                   | `17/17` integrated changed velocity on each of 30 seeds; `5/5` excluded were exact zero on each seed              | **pass**                             |
 | Numerical fault run                      | 10,000/10,000 revisions; every signal finite and in `[0,1]`                                                       | **pass**                             |
-| Shared-field worst-process p95           | `0.11370000000000147 ms`                                                                                          | **pass**                             |
-| 50,000-entity process-median increment   | `1.3580999999999506 ms` across three isolated, order-counterbalanced processes                                    | **pass**                             |
-| 50,000-entity repeat stability           | worst of 30 batch medians `2.740300000000161 ms`; `30/30 < 3 ms`                                                  | **pass**                             |
+| Shared-field worst-process p95           | `0.10890000000000555 ms`                                                                                          | **pass**                             |
+| 50,000-entity process-median increment   | `1.3857499999999163 ms` across three isolated, order-counterbalanced processes                                    | **pass**                             |
+| 50,000-entity repeat stability           | worst of 30 batch medians `2.8494000000000597 ms`; `30/30 < 3 ms`                                                 | **pass**                             |
 | Every-consumer counterfactual            | targeted ten-file run: `101` tests, `0` fail, `377,438` assertions across all ten named classes                   | **pass**                             |
 
 ## Evidence inventory and complete named-consumer coverage
@@ -142,7 +142,7 @@ physical Bell experiment, or quantum-advantage result. A simulated CHSH value ne
 model conformance. The upstream audit also observed a current ARM64 duplicate-output test failure, so
 no production/security-readiness claim is made.
 
-The provisional measured runtime parent is commit `628ff6bfbf861a393b1af63b69df8f5efbbe1494`. The exact benchmark
+The exact measured runtime is commit `517c1a41c0d5fbcbdf791a318056c7b28be5013c`. The exact benchmark
 source has SHA-256 `542e44bd6a502788f511ecb9e2be46414d17cfefae13fb416faeacfb3360ea68`.
 
 ## Public 9-axis profile and 113-system comparison

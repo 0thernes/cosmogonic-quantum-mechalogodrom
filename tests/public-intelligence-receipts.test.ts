@@ -44,7 +44,7 @@ interface IntelligenceReceipt {
   taskVersion: string;
   indicatorOnly: boolean;
   claimBoundary: string;
-  provenance: { benchmarkScriptSha256: string };
+  provenance: { runtimeBaseCommit: string; benchmarkScriptSha256: string };
   protocol: {
     evaluationSeeds: number[];
     evaluationSeedPolicy: string;
@@ -281,17 +281,43 @@ describe('organism-intelligence claim boundary', () => {
     const benchmarkHash = new Bun.CryptoHasher('sha256').update(benchmarkSource).digest('hex');
     expect(receipt.provenance.benchmarkScriptSha256).toBe(benchmarkHash);
 
+    expect(receipt.provenance.runtimeBaseCommit).toMatch(/^[0-9a-f]{40}$/);
+    for (const sourcePath of [
+      'src/sim/entity-brain.ts',
+      'scripts/organism-intelligence-benchmark.ts',
+    ]) {
+      const committedSource = Bun.spawnSync(
+        ['git', 'show', `${receipt.provenance.runtimeBaseCommit}:${sourcePath}`],
+        { cwd: ROOT },
+      );
+      expect(committedSource.exitCode).toBe(0);
+      expect(committedSource.stdout.toString().replaceAll('\r\n', '\n')).toBe(
+        (await Bun.file(`${ROOT}/${sourcePath}`).text()).replaceAll('\r\n', '\n'),
+      );
+    }
+
     const { contentSha256, ...body } = receipt;
     const computed = new Bun.CryptoHasher('sha256').update(JSON.stringify(body)).digest('hex');
     expect(contentSha256).toBe(computed);
+
+    const report = await Bun.file(
+      `${ROOT}/docs/reports/2026-07-10-OPERATIONAL-ORGANISM-INTELLIGENCE-CAUSAL-AUDIT.md`,
+    ).text();
+    const verification = await Bun.file(`${ROOT}/docs/VERIFICATION-ANALYTICAL-DATA.md`).text();
+    expect(report).toContain(contentSha256);
+    expect(verification).toContain(contentSha256);
   });
 
   test('both lab pages publish the operational receipt without relabeling static proxies', async () => {
+    const receipt = (await Bun.file(
+      `${ROOT}/docs/reports/assets/organism-intelligence-causal-benchmark-v3.json`,
+    ).json()) as IntelligenceReceipt;
     const paths = [`${ROOT}/lab/consciousness.html`, `${ROOT}/lab/sentience.html`];
 
     for (const path of paths) {
       const html = (await Bun.file(path).text()).toLowerCase();
       const prose = html.replace(/\s+/g, ' ');
+      expect(html).toContain(`data-receipt-sha="${receipt.contentSha256}"`);
       expect(prose).toContain('operational organism intelligence · fixed evaluation receipt');
       expect(prose).toContain('organism-intelligence-causal-benchmark-v3.json');
       expect(prose).toContain('goal-preserved control');
@@ -304,6 +330,19 @@ describe('organism-intelligence claim boundary', () => {
       expect(prose).toContain('scores remain frozen');
       expect(prose).toContain('static');
       expect(prose).toContain('no substrate-specific or quantum-specific uplift');
+    }
+  });
+
+  test('docs, specification, and bible expose the same bounded V3 receipt', async () => {
+    for (const name of ['docs.html', 'specs.html', 'bible.html']) {
+      const prose = (await Bun.file(`${ROOT}/${name}`).text()).toLowerCase().replace(/\s+/g, ' ');
+      expect(prose).toContain(
+        'docs/reports/2026-07-10-operational-organism-intelligence-causal-audit.md',
+      );
+      expect(prose).toContain('docs/reports/assets/organism-intelligence-causal-benchmark-v3.json');
+      expect(prose).toContain('corpus-conditioned goal-response');
+      expect(prose).toContain('three-process/30-batch performance gates');
+      expect(prose).toContain('no numeric a-life-score uplift');
     }
   });
 });

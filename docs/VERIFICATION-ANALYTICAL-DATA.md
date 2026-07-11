@@ -21,7 +21,7 @@ Rewritten in place when the facts change (per the binding living-doc law in
 | Fact                                     | Canonical value                                                                                                                                                                                 | Source of truth                                                                                                    | Propagated by           |
 | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------- |
 | Package version                          | `0.21.13`                                                                                                                                                                                       | `package.json` `version`                                                                                           | `sync-surfaces.ts`      |
-| Test count (exact tracked suite)         | `2490`                                                                                                                                                                                          | `scripts/canonical-receipts.ts`                                                                                    | `sync-surfaces.ts`      |
+| Test count (exact tracked suite)         | `2491`                                                                                                                                                                                          | `scripts/canonical-receipts.ts`                                                                                    | `sync-surfaces.ts`      |
 | Line coverage                            | `84.64%`                                                                                                                                                                                        | `scripts/canonical-receipts.ts`                                                                                    | `sync-surfaces.ts`      |
 | Function coverage                        | `82.21%`                                                                                                                                                                                        | `scripts/canonical-receipts.ts`                                                                                    | `sync-surfaces.ts`      |
 | Faculties (design)                       | `100` (~30 deep-wired)                                                                                                                                                                          | `CANONICAL_FACULTIES`                                                                                              | `sync-surfaces.ts`      |
@@ -42,8 +42,8 @@ Rewritten in place when the facts change (per the binding living-doc law in
 
 <!-- cqm-sync:local-measurement:start -->
 
-- `bun run verify:receipts` → **2,418 tests, zero failures** · **270 test files** · **2,447,566**
-  `expect()` calls · **92.61% line / 90.23% func** on this Windows checkout.
+- `bun run verify:receipts` → **2,491 tests, zero failures** · **276 test files** · **2,838,652**
+  `expect()` calls · **92.85% line / 90.47% func** on this Windows checkout.
 
 <!-- cqm-sync:local-measurement:end -->
 
@@ -60,7 +60,7 @@ The binding readable report is
 [`2026-07-10-OPERATIONAL-ORGANISM-INTELLIGENCE-CAUSAL-AUDIT.md`](./reports/2026-07-10-OPERATIONAL-ORGANISM-INTELLIGENCE-CAUSAL-AUDIT.md);
 the machine receipt is
 [`organism-intelligence-causal-benchmark-v3.json`](./reports/assets/organism-intelligence-causal-benchmark-v3.json)
-with content hash `dbf77fa42c9490eb38763c2f1a281b52667bec9e5081c24a3a283b1a78dcc23a`.
+with content hash `96495964f03eca1860ba7f869cbd35e929bbdfdd75f801eb4479e6239dfd1b9f`.
 
 - Seed policy: fresh deterministic 30-seed family disjoint from V1/V2, fixed in source but not externally
   preregistered.
@@ -76,9 +76,9 @@ with content hash `dbf77fa42c9490eb38763c2f1a281b52667bec9e5081c24a3a283b1a78dcc
   seed; four fences plus metadata were `5/5` exact zero.
 - Numerical safety: 10,000/10,000 forced revisions remained finite and bounded.
 - Performance: three fresh processes × ten batches × seven samples with isolated branch state and
-  counterbalanced first-run order; worst shared-field p95 `0.11370000000000147 ms`, median process-level
-  50,000-entity increment `1.3580999999999506 ms`, worst of all 30 batch medians
-  `2.740300000000161 ms` — stable pass.
+  counterbalanced first-run order; worst shared-field p95 `0.10890000000000555 ms`, median process-level
+  50,000-entity increment `1.3857499999999163 ms`, worst of all 30 batch medians
+  `2.8494000000000597 ms` — stable pass.
 - A four-aggregate-channel rotation and a uniform final-exploration surrogate were tied. They are not a
   repository permutation, entropy-matched control, or evidence of quantum specificity.
 - Consumer evidence is an executed ten-file targeted gate (`101` tests, `0` fail, `377,438` assertions);
@@ -407,7 +407,7 @@ verify:facts` = 0 drift / 80 surfaces, 0 git-conflict-markers tree-wide, 100% of
 | `src/ui/**`                                                                       | 20    | subsystems agent                                         | clean (3 cosmetic Low: DPR-on-monitor-move)                                                      |
 | `src/core,audio,server,memory,logging` + `main/types/docs-page` + `server.ts`     | ~14   | subsystems agent                                         | clean; security exceptionally hardened                                                           |
 | `src/styles/app.css`                                                              | 1     | front-end agent                                          | clean                                                                                            |
-| `tests/**`                                                                        | 263   | exact gate (2,490 tests) + tooling agent                 | healthy, 0 disabled, all assert                                                                  |
+| `tests/**`                                                                        | 276   | exact gate (2,491 tests) + tooling agent                 | healthy, 0 disabled, all assert                                                                  |
 | `scripts/**`                                                                      | 16    | scripts/tooling agents                                   | sound; **CI sync:check gap FIXED**, dead `.sync-receipts.cjs` removed                            |
 | `bench/**`                                                                        | 13    | tooling agent                                            | clean; aggregate now includes the P1 quantum-classical bench                                     |
 | `.github/workflows/*.yml` + issue/PR templates                                    | 8+    | CI agent                                                 | SHA-pinned, least-priv; `master`->`main` URLs FIXED; **gate now runs sync:check + verify:facts** |
