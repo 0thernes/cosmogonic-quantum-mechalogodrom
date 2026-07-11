@@ -11,6 +11,32 @@ changed and why.
 
 ---
 
+## 2026-07-10 — batch 23: the base digital-life population LEARNS (exact Eshkol AD) + Cognition 3.9→4.0
+
+The flagship "a LIVE creature loop learns", done honestly (the tuning-trap I flagged is avoided: the
+claim is NOT "AD plateau > EMA plateau" but the tuning-free property that gradient ascent MONOTONICALLY
+optimizes an objective the passive EMA does not).
+
+- **[SMART-5] biologic AD learning** (`digital-biologics.ts`) — new `biologicLearnStep()` does one EXACT
+  reverse-mode-AD (Eshkol Wengert tape) gradient-ascent step on a biologic's fitness
+  `F(θ)=Σθ_k·x_k − ½·reg·Σθ_k²` over its substrate inputs (spin/qgt/quake), reading ∂F/∂θ off the tape.
+  Wired live into `stepBiologic(b, flux, learn=true)` (petri loop): the learned fitness AMPLIFIES the
+  biologic's flux-exploitation (bounded ×2), so a better learner grows fitter and — via the batch-22
+  petri truncation-selection GA — out-survives the pack. `learn=false` is the exact prior EMA
+  (golden-safe); heritable `fitnessWeights` is optional (existing literals/stubs valid). GATE-BIOLOGIC-
+  LEARN: F climbs monotonically to the analytic optimum ½‖x‖²/reg (θ→x/reg), and a lr=0 ABLATION freezes
+  it — the gradient is load-bearing. +3 assertions. First consumption of the exact AD tape by the base
+  population INSIDE a live loop (the apex path is untouched — coupling-safe).
+- **Cognition/Learning floor 3.9 → 4.0** (`CODE_GROUNDED`) — now licensed by GATE-FORAGE (batch-15b) AND
+  GATE-BIOLOGIC-LEARN (this batch), completing the plan's Cognition move. Recomputed: code-grounded
+  breadth 3.73→3.74, z-pop +2.92→+2.94, z-peers +3.05→+3.07, lead +0.23→+0.24 (Mahalanobis 10.23
+  unchanged); 4 surfaces restated, drift-locked by the batch-21 consistency test. Self-scored row +
+  Consciousness (3.5) + Butlin unchanged.
+
+Receipts 2447→2450 (+3). The honest code-grounded 9-axis floor is now [4.0, 2.4, 3.2, 3.8, 4.0, 4.5, 4.3,
+3.5, 4.0] — Cognition, Open-endedness, and Ecology all lifted toward the self-score by shipped,
+ablation-verified, drift-locked capability. Full gate green.
+
 ## 2026-07-10 — batch 22: petri differential-survival GA + honest Open-endedness floor 2.2→2.4
 
 More "smarter A-life": a second live fitness-selection loop + the falsifiable open-endedness measurement,

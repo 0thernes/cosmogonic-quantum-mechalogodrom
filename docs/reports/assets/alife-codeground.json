@@ -75,21 +75,21 @@
       2.4,
       3.2,
       3.8,
-      3.9,
+      4,
       4.5,
       4.3,
       3.5,
       4
     ],
-    "breadth": 3.733,
+    "breadth": 3.744,
     "rank": 1,
     "total": 113,
     "percentile": 100,
-    "zPopulation": 2.918,
-    "zVsPeers": 3.049,
-    "mahalanobis": 10.229,
+    "zPopulation": 2.936,
+    "zVsPeers": 3.07,
+    "mahalanobis": 10.23,
     "dominatedBy9d": 0,
-    "leadOverNearestPeerBreadth": 0.233,
+    "leadOverNearestPeerBreadth": 0.244,
     "perAxisZ": [
       {
         "axis": "Reproduction",
@@ -113,8 +113,8 @@
       },
       {
         "axis": "Cognition/Learning",
-        "score": 3.9,
-        "z": 1.26
+        "score": 4,
+        "z": 1.32
       },
       {
         "axis": "Substrate pluralism",
@@ -139,8 +139,8 @@
     ]
   },
   "deltas": {
-    "breadth": -0.711,
-    "zPopulation": -1.101,
-    "mahalanobis": -2.426
+    "breadth": -0.7,
+    "zPopulation": -1.083,
+    "mahalanobis": -2.425
   }
 }

@@ -432,7 +432,7 @@ export function petriDishBeat(
     const b = state.biologics[bi]!;
     if (typeof b.adFitness !== 'number') continue; // not a full Biologic
     if (b.alive === false) continue;
-    stepBiologic(b as Biologic, bioFlux);
+    stepBiologic(b as Biologic, bioFlux, true); // learn=true: the live population adapts by Eshkol-AD gradient ascent
     // Decaying blend, NOT a hard re-mirror to consciousness. Vitality is already born as a
     // consciousness/bioFlux blend (line ~402), so it doesn't need re-pinning every beat — and a hard
     // `= consciousness` overwrite ERASED applyBrutalRelease's consume/drain/rebirth perturbation the
