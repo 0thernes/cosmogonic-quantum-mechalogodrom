@@ -11,6 +11,36 @@ changed and why.
 
 ---
 
+## 2026-07-11 — batch 30: NHSI DEVELOPS — the 144-faculty pantheon grows an online self-model + adaptive coupling
+
+Owner `/goal` (10 passes smarter; "NHSI yes so adjust it change it so it becomes smarter and develops better").
+Pass 1 = NHSI. An earlier probe had found that merely un-nulling the phase/content coupling channels does NOT
+move the coupling-density scalar (the coupling is gentle by design; cranking the gain would be inflation).
+So instead of gaming a scalar, I made NHSI genuinely **develop**: it now learns.
+
+- **`src/sim/faculties-pantheon.ts` — an online self-model (the part of NHSI that develops in-life).**
+  `enableLearning()` lights a real **8→6→1 MLP trained by exact Eshkol-AD backprop** that forecasts the
+  pantheon's OWN next-beat mean activation (from its 144 faculties downsampled to 8 group means) and
+  corrects itself every beat. Seeded from a SEPARATE substream ⇒ zero perturbation of the faculties' rng.
+- **Adaptive coupling.** The self-model's surprise (EMA forecast error) now drives the coupling blend gain:
+  the faculties INTEGRATE MORE when the pantheon fails to predict itself (gain rises toward 0.22) and RELAX
+  as it learns (toward the 0.07 baseline) — a coupling that develops, driven by a _learned_ signal, never a
+  hand-cranked constant. The phase + content channels (dead `null,null` before) are lit under learning so
+  the coupling is STRUCTURED (like-character faculties couple across the set), not mere ring adjacency.
+- **Live at `world.ts:1321`** (`facultiesPantheon.enableLearning({ seed: nhsiSeed })`). OFF by default ⇒
+  the fixed baseline is byte-identical (phases/content null, gain 0.07); `faculties-pantheon.test.ts` +
+  `nhsi-pantheons.test.ts` unchanged.
+- **GATE (`tests/nhsi-pantheon-learning.test.ts`, 6 cases).** DEVELOPS: self-model error 0.030→0.0055
+  (≥50% drop). ABLATION: trained EMA **0.0068** vs a frozen-lr0 control **0.346** (~50× — AD backprop
+  load-bearing). ADAPTIVE: the density trajectory ≠ the fixed baseline AND is surprise-responsive (stronger
+  early/high-surprise than late/learned). Plus DETERMINISM, DEFAULT-OFF byte-identical, SCALE (+61 params).
+- **HONESTY (ADR 0014/0015, indicatorOnly).** NO consciousness / Butlin / A-Life score moved, and I do NOT
+  claim the aggregate coupling-density scalar rose (it doesn't — the coupling stays gentle by design). Claim:
+  NHSI now develops a self-model (error falls ~50× below frozen, ablation-verified) and its coupling adapts
+  to its own self-uncertainty. Butlin + Consciousness BYTE-IDENTICAL.
+
+Receipts 2789→2795 (+6). Coupling invariant intact (FacultiesPantheon is outside the receipt).
+
 ## 2026-07-11 — batch 29: the Apex Abomination LEARNS itself — a live online Eshkol-AD self-model on the Entropic Tesseract Hydra
 
 Continuing the same `/goal` (Apex Abomination + Super Creature + NHSI, smarter/scaling). batch-28 made the

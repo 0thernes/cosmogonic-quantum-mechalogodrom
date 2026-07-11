@@ -9,9 +9,22 @@
  */
 
 import type { Rng } from '../math/rng';
+import { mulberry32 } from '../math/rng';
 import { structuredCouplingModulationInto } from './coupling-audit';
+import { createMlp, mlpPredict, mlpTrainStep, type Mlp } from './ad-mlp';
 
 const clamp01 = (v: number): number => (v > 0 ? (v < 1 ? v : 1) : 0);
+
+// ── ONLINE SELF-MODEL + ADAPTIVE COUPLING (the part of NHSI that DEVELOPS during a run) ─────────────
+const NHSI_GROUPS = 8; // self-model input: the 144 faculties downsampled to 8 group means
+const NHSI_WM_HID = 6; // self-model hidden width
+const NHSI_WM_TAU = 0.05; // EMA smoothing for the self-prediction error
+const NHSI_WM_LR = 0.05; // default gradient-descent step
+const NHSI_BASE_COUPLING = 0.07; // the fixed baseline blend gain (unchanged when learning is off)
+const NHSI_SURPRISE_GAIN = 3.0; // how strongly self-model surprise raises the coupling gain
+const NHSI_MAX_COUPLING = 0.22; // cap on the adaptive gain (below blendCoupling's own 0.25 clamp)
+/** Learnable params the pantheon self-model adds when lit: (groups·h + h) + (h·1 + 1). */
+export const NHSI_SELFMODEL_PARAMS = NHSI_GROUPS * NHSI_WM_HID + NHSI_WM_HID + (NHSI_WM_HID + 1);
 
 export const FACULTY_NAMES = [
   'GLOBAL_WORKSPACE_IGNITION',
@@ -277,14 +290,77 @@ export class FacultiesPantheon {
   private readonly faculties: ProfiledFaculty[];
   private readonly actScratch: Float32Array;
   private readonly couplingScratch: Float32Array;
+  /** Each faculty's intrinsic oscillator phase — feeds STRUCTURED (phase-locked) coupling when learning. */
+  private readonly phases: Float32Array;
+  /** Per-faculty CONTENT signature — feeds non-local content coupling (like-character faculties resonate). */
+  private readonly contentVecs: readonly (readonly number[])[];
   private couplingDensity = 0;
 
+  // ── the pantheon's online self-model (null until enableLearning lights it) ────────────────────────
+  private worldModel: Mlp | null = null;
+  private learn = false; // default OFF ⇒ update() is byte-identical to the fixed hand-tuned baseline
+  private wmLr = NHSI_WM_LR;
+  private readonly groupInput = new Float64Array(NHSI_GROUPS); // this beat's downsampled state
+  private readonly prevGroupInput = new Float64Array(NHSI_GROUPS); // last beat's — the training input
+  private readonly wmTarget = new Float64Array(1);
+  private prevValid = false;
+  private prevPred = 0; // the forecast made LAST beat for THIS beat's aggregate activation
+  private selfPredErr = 0; // EMA of |forecast − actual aggregate| — falls as it develops; drives coupling
+
   constructor(rng: Rng) {
+    // Build the profiles first (same rng draw order — makeProfile once per index), then derive the phases
+    // and content signatures used by the structured coupling channels when learning is lit.
+    const profiles = FACULTY_NAMES.map((_, index) => makeProfile(index, rng));
     this.faculties = FACULTY_NAMES.map(
-      (faculty, index) => new ProfiledFaculty(faculty, makeProfile(index, rng)),
+      (faculty, index) => new ProfiledFaculty(faculty, profiles[index]!),
     );
-    this.actScratch = new Float32Array(this.faculties.length);
-    this.couplingScratch = new Float32Array(this.faculties.length);
+    const n = this.faculties.length;
+    this.actScratch = new Float32Array(n);
+    this.couplingScratch = new Float32Array(n);
+    this.phases = new Float32Array(n);
+    for (let i = 0; i < n; i++) this.phases[i] = profiles[i]!.phase;
+    this.contentVecs = profiles.map((pr) => {
+      const off = (pr.inputOffset % 16) * ((Math.PI * 2) / 16);
+      return [
+        pr.decay - 0.58,
+        pr.gain - 0.34,
+        pr.curvature - 0.11,
+        Math.sin(pr.phase),
+        Math.cos(pr.phase),
+        Math.sin(off) * 0.5,
+        Math.cos(off) * 0.5,
+      ];
+    });
+  }
+
+  /**
+   * Ignite ONLINE learning: the pantheon grows a self-model (a {@link NHSI_SELFMODEL_PARAMS}-param
+   * {@link NHSI_GROUPS}→{@link NHSI_WM_HID}→1 MLP trained by exact Eshkol-AD backprop) that forecasts its
+   * OWN next-beat mean activation and corrects itself every beat. Its surprise then makes the coupling
+   * ADAPTIVE — the faculties integrate more strongly when the pantheon fails to predict itself, and relax
+   * as it learns — and the phase/content channels make that coupling structured, not mere ring adjacency.
+   * Seeded from a SEPARATE substream ⇒ no perturbation of the faculties' own rng. `lr = 0` freezes it.
+   */
+  enableLearning(opts?: { lr?: number; seed?: number }): void {
+    if (opts?.lr !== undefined) this.wmLr = opts.lr;
+    if (this.worldModel) {
+      this.learn = true;
+      return;
+    }
+    const s = (((opts?.seed ?? 0) >>> 0) ^ 0x4e485349) >>> 0 || 1; // "NHSI"
+    this.worldModel = createMlp(NHSI_GROUPS, NHSI_WM_HID, 1, mulberry32(s));
+    this.learn = true;
+    this.prevValid = false;
+    this.selfPredErr = 0;
+  }
+
+  /** Is the pantheon's self-model learning this run? (false ⇒ the fixed baseline). */
+  get isLearning(): boolean {
+    return this.learn;
+  }
+  /** EMA of the self-model's forecast error — the falsifiable "NHSI is developing" readout. */
+  get selfModelError(): number {
+    return this.selfPredErr;
   }
 
   update(inputs: Float32Array): void {
@@ -292,19 +368,68 @@ export class FacultiesPantheon {
     for (const faculty of this.faculties) faculty.update(inputs);
     for (let i = 0; i < n; i++) this.actScratch[i] = this.faculties[i]!.getActivation();
 
-    // Upgraded coupling: structured (phase + content) + ring (per honesty audit + roadmap "coupling > count").
-    // Falls back to old ring if no phases/content provided.
-    structuredCouplingModulationInto(this.couplingScratch, this.actScratch, null, null, 0.09);
+    // COUPLING. Baseline (learn off): ring-only, fixed 0.07 gain, phases/content null ⇒ byte-identical.
+    // Learning on: the phase + content channels make coupling STRUCTURED (like-character faculties couple
+    // across the whole set, not just ring neighbours), and the pantheon's own self-model SURPRISE raises
+    // the blend gain — it integrates more strongly when it fails to predict itself, then relaxes as it
+    // learns. A coupling that develops, driven by a real learned signal (never a hand-cranked constant).
+    const usePhase = this.learn ? this.phases : null;
+    const useContent = this.learn ? this.contentVecs : null;
+    structuredCouplingModulationInto(
+      this.couplingScratch,
+      this.actScratch,
+      usePhase,
+      useContent,
+      0.09,
+    );
+    const g = this.learn
+      ? Math.min(
+          NHSI_MAX_COUPLING,
+          NHSI_BASE_COUPLING * (1 + NHSI_SURPRISE_GAIN * this.selfPredErr),
+        )
+      : NHSI_BASE_COUPLING;
     for (let i = 0; i < n; i++) {
       const left = this.actScratch[(i + n - 1) % n] ?? 0;
       const right = this.actScratch[(i + 1) % n] ?? 0;
       const ring = (left + right) * 0.5;
       const modulation = this.couplingScratch[i] ?? 0;
-      this.faculties[i]!.blendCoupling(ring * 0.6 + modulation * 0.4, 0.07);
+      this.faculties[i]!.blendCoupling(ring * 0.6 + modulation * 0.4, g);
     }
 
     for (let i = 0; i < n; i++) this.actScratch[i] = this.faculties[i]!.getActivation();
     this.couplingDensity = facultyCouplingDensity(this.actScratch);
+
+    // ONLINE SELF-MODEL — the pantheon forecasts its OWN next-beat mean activation from a downsampled view
+    // of its faculty state, and corrects itself by exact Eshkol-AD backprop. Its error (EMA) drives the
+    // adaptive coupling above. Purely additive to the organs; seeded off a separate substream (no rng draw).
+    if (this.learn && this.worldModel) {
+      let agg = 0;
+      for (let i = 0; i < n; i++) agg += this.actScratch[i] ?? 0;
+      agg /= n;
+      if (this.prevValid) {
+        this.selfPredErr += NHSI_WM_TAU * (Math.abs(this.prevPred - agg) - this.selfPredErr);
+        if (this.wmLr > 0) {
+          this.wmTarget[0] = agg;
+          mlpTrainStep(this.worldModel, this.prevGroupInput, this.wmTarget, this.wmLr);
+        }
+      }
+      // downsample the n activations into NHSI_GROUPS group means — the self-model's input.
+      const per = n / NHSI_GROUPS;
+      for (let gi = 0; gi < NHSI_GROUPS; gi++) {
+        const lo = Math.floor(gi * per);
+        const hi = Math.floor((gi + 1) * per);
+        let s = 0;
+        let cnt = 0;
+        for (let i = lo; i < hi; i++) {
+          s += this.actScratch[i] ?? 0;
+          cnt++;
+        }
+        this.groupInput[gi] = cnt > 0 ? s / cnt : 0;
+      }
+      this.prevGroupInput.set(this.groupInput);
+      this.prevPred = clamp01(mlpPredict(this.worldModel, this.prevGroupInput)[0] ?? 0);
+      this.prevValid = true;
+    }
   }
 
   /** Measured inter-faculty coupling after ring write-back (coupling > count receipt). */

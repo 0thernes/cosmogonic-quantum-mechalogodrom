@@ -1319,6 +1319,11 @@ export class World {
     this.primordialSoup = new PrimordialSoup(soupSeed);
     const nhsiSeed = (master ^ 0x4e485349) >>> 0 || 1; // "NHSI"
     this.facultiesPantheon = new FacultiesPantheon(mulberry32(nhsiSeed));
+    // NHSI DEVELOPS: light the pantheon's online self-model so it learns to forecast its own aggregate
+    // state (error falls in-life) and its coupling becomes ADAPTIVE — the faculties integrate more when
+    // the pantheon fails to predict itself, then relax as it learns. SEPARATE substream ⇒ no rng draw
+    // perturbation; default-off would be byte-identical. See tests/nhsi-pantheon-learning.test.ts.
+    this.facultiesPantheon.enableLearning({ seed: nhsiSeed });
     this.tomPantheon = new TomPantheon(mulberry32((nhsiSeed ^ 0x546f4d21) >>> 0 || 1));
     this.emergenceAngles = new EmergenceAnglesController();
     this.symbiosis = new Symbiosis(this.superRng);
