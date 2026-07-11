@@ -3076,7 +3076,13 @@ export class World {
       }
       if (s.frame % 120 === 0 && n < target) {
         const snap = this.primordialSoup.snapshot();
-        const strain = snap.strains && snap.strains[0] ? snap.strains[0] : null;
+        // Close the soup SELECTION loop: materialize the FITTEST evolved strain (vitality-argmax, which
+        // is driven by the Tsotchke PINN Gray-Scott metabolic residual minus the upkeep leak) instead of
+        // the fitness-blind slot 0 — so differential reproduction finally TRACKS the fitness signal
+        // (previously ~0-correlated). harvestEmergent resets the winner's vitality to 0.35, keeping
+        // turnover; it is deterministic (pure argmax + fixed reset). Falls back to slot 0 when nothing
+        // has crossed the emergent bar yet. Measured by tests/soup-harvest-selection.test.ts.
+        const strain = this.primordialSoup.harvestEmergent() ?? snap.strains[0] ?? null;
         if (strain) {
           const theta = (strain.id * 2.3999632297) % 6.28318530718;
           const r = (8 + strain.vitality * 6) * ARENA_MID;

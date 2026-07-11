@@ -11,6 +11,37 @@ changed and why.
 
 ---
 
+## 2026-07-10 — "smarter A-life" batch 15a: base agents forage by exact AD gradient + soup selects the fittest
+
+First increment of the owner's "make every living thing genuinely smarter — operational, not decorative"
+directive. Coupling-safe by construction (routes entirely around the apex: `super-mind.ts` /
+`topdown-perception.ts` untouched, so the `coupling-audit` "selfAware not ISOLATED" receipt is not even
+at risk). Honesty discipline: every claim is a falsifiable, **ablation-verified** gate; nothing measures
+a consciousness/sentience indicator, so no Consciousness/Sentientness surface moves.
+
+- **[SMART-1] AD-gradient forager** (new `src/sim/ad-forager.ts` + `tests/ad-forager-baseline.test.ts`) —
+  the first consumption of the exact Eshkol reverse-mode AD tape (`src/math/eshkol-ad.ts`) OUTSIDE the
+  coupling-critical apex. A base agent senses a differentiable food potential `f(p)=Σ ampᵢ·exp(−‖p−cᵢ‖²/σ)`
+  and climbs its EXACT analytic gradient (reverse-mode, not finite difference). GATE-FORAGE proves over
+  50 seeds that it reaches food in <0.6× the steps of an unbiased seeded random walk (paired-permutation
+  p<0.01), and — the load-bearing check — zeroing the sensed gradient makes the forager **byte-identical**
+  to the random walk (the gradient, not the scaffolding, is what wins). Pure/deterministic.
+- **[SMART-2] soup closes its selection loop** (`world.ts:3085`) — the emergent-spawn now materializes
+  the FITTEST evolved strain (`PrimordialSoup.harvestEmergent`, a vitality-argmax driven by the Tsotchke
+  PINN metabolic residual) instead of the fitness-blind slot 0. GATE-SOUP-SELECT proves selection
+  produces a clearly positive vitality differential (fittest − population-mean ≈ 0.12) while a
+  uniformly-random blind pick is ~0, beating both the blind pick and the old slot-0 spawn.
+- **[SMART-2b] harvestEmergent relative bar** (`primordial-soup.ts`) — fixing SMART-2 exposed that the
+  batch-13 SOUP-1 metabolic leak had made harvestEmergent's fixed `vitality > 0.85` bar UNREACHABLE
+  (pre-leak everything ratcheted to 1.0 so 0.85 was trivially met; post-leak the fittest equilibrate
+  below it), so it always returned null and the spawn silently fell back to slot 0. Replaced with a
+  relative "stands clearly above the live-population mean" criterion, robust to the equilibrium level.
+
+Receipts 2420→2429 (+9 gate assertions across 2 new files). Metric floors NOT moved yet — the
+code-grounded 9-axis floor (`alife-codeground-sensitivity.ts`) moves only once the full FORAGE +
+BIOLOGIC-LEARN + SOUP-SELECT + PETRI + OE gate set is green and drift-gated (batch 15b), so the honest
+mapping stays 1 gate ⇒ 1 floor move. Full gate green.
+
 ## 2026-07-10 (pass 5) — subsystem sweep batch 13 (8 fixes) + batch 14 ABANDONED (coupling-safe discipline)
 
 A fifth adversarial sweep (12 confirmed findings). **Batch 13 shipped 8** render/UI/sim-field fixes.

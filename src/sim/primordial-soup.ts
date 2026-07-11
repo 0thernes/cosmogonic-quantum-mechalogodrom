@@ -17,6 +17,9 @@ const clamp01 = (v: number): number => clamp(v, 0, 1);
 
 export const SOUP_SLOTS = 128; // Expanded 0.16: depth-classed Tsotchke corpus (local Z:\[Vibe Coded (AI)]\(Tsotchke) + GH) — Eshkol .esk programs as native heritable DNA for digital biologics.
 export const SOUP_GENOME_LEN = 24;
+/** How far above the live-population mean vitality the fittest strain must stand to count as "emergent"
+ *  in {@link PrimordialSoup.harvestEmergent} — a relative bar, robust to the metabolic-upkeep equilibrium. */
+const HARVEST_MARGIN = 0.06;
 
 /** Real Eshkol program DNA from corpus (gradient_descent_demo.esk core, AD-as-primitive). Used as heritable genome for soup strains. */
 export const ESHKOL_NATIVE_DNA_EXAMPLE = `;; Eshkol AD/GWT DNA from Z:\\[Vibe Coded (AI)]\\(Tsotchke)\\Eshkol\\eshkol_repo\\examples\\gradient_descent_demo.esk
@@ -191,17 +194,29 @@ export class PrimordialSoup {
   }
 
   harvestEmergent(): SoupStrain | null {
+    // Relative emergent criterion: the FITTEST live strain, harvested only when it stands clearly above
+    // the live-population mean (HARVEST_MARGIN). The old fixed `vitality > 0.85` bar became UNREACHABLE
+    // once the metabolic-upkeep leak de-ratcheted vitality to a sub-0.85 fitness-dependent equilibrium —
+    // it then always returned null and the world's emergent-spawn silently fell back to the fitness-blind
+    // slot 0. A relative bar is robust to the equilibrium level and still means "an individual that
+    // genuinely emerged from the pack." Deterministic (single argmax + mean scan). Winner resets to 0.35
+    // for turnover. Measured by tests/soup-harvest-selection.test.ts.
     let best = -1;
-    let bestVitality = 0.85;
+    let bestVitality = -Infinity;
+    let sumV = 0;
+    let live = 0;
     for (let i = 0; i < SOUP_SLOTS; i++) {
       if (!this.alive[i]) continue;
       const vitality = this.vitality[i] ?? 0;
+      sumV += vitality;
+      live++;
       if (vitality > bestVitality) {
-        best = i;
         bestVitality = vitality;
+        best = i;
       }
     }
-    if (best < 0) return null;
+    if (best < 0 || live === 0) return null;
+    if (bestVitality <= sumV / live + HARVEST_MARGIN) return null;
     const strain = this.strainAt(best);
     this.vitality[best] = 0.35;
     return strain;
