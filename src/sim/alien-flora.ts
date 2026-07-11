@@ -180,28 +180,27 @@ const flora_vert = /* glsl */ `
     float react = clamp(aMeta.w, 0.2, 2.2);
     float rarity = aMeta.x;
 
-    // ALWAYS-ON thrash so the field reads alive even at low chaos (user: plants still looked static).
+    // Wind + chaos lean (tip-weighted). Stiffer plants resist; rare plants whip harder.
     float soft = 1.0 / stiff;
-    float alive = 0.55 + 0.9 * uWind + 1.15 * uChaos + 0.45 * rarity;
-    float bend = up * up * alive * soft;
-    float turb = up * up * (0.35 + uChaos) * soft;
+    float bend = up * up * (uWind + uChaos * 0.8) * soft * (0.85 + rarity * 0.55);
+    float turb = up * up * uChaos * 0.6 * soft;
     vec3 p = position;
-    // Multi-harmonic thrash — big enough to read at habitat distance.
-    p.x += sin(uTime * freq + phase) * bend * 4.2
-         + sin(uTime * freq * 3.7 + phase * 2.1) * turb * 2.0
-         + sin(uTime * freq * 7.1 + phase * 0.4) * turb * 0.7 * (0.4 + rarity);
-    p.z += cos(uTime * freq * 0.8 + phase * 1.3) * bend * 3.6
-         + cos(uTime * freq * 2.9 + phase * 1.7) * turb * 1.7
-         + cos(uTime * freq * 5.3 + phase * 1.1) * turb * 0.6 * (0.4 + rarity);
-    p.y += sin(uTime * freq * 0.5 + phase) * up * 0.35 * alive
-         + sin(uTime * freq * 4.3 + phase) * up * 0.12 * (0.5 + uChaos)
-         + sin(uTime * freq * 9.0 + phase * 2.0) * up * 0.1 * (0.3 + rarity);
+    // Multi-harmonic stalk thrash — SEM-spicule / crystal-fan energy, not a single sine.
+    p.x += sin(uTime * freq + phase) * bend * 2.6
+         + sin(uTime * freq * 3.7 + phase * 2.1) * turb * 1.2
+         + sin(uTime * freq * 7.1 + phase * 0.4) * turb * 0.35 * rarity;
+    p.z += cos(uTime * freq * 0.8 + phase * 1.3) * bend * 2.1
+         + cos(uTime * freq * 2.9 + phase * 1.7) * turb * 1.0
+         + cos(uTime * freq * 5.3 + phase * 1.1) * turb * 0.3 * rarity;
+    p.y += sin(uTime * freq * 0.5 + phase) * up * 0.18 * (uWind + uChaos)
+         + sin(uTime * freq * 4.3 + phase) * up * 0.05 * uChaos
+         + sin(uTime * freq * 9.0 + phase * 2.0) * up * 0.04 * rarity;
 
-    // Living breath / flare on ALL plants (rarity amplifies) — not a subtle rare-only micro-morph.
-    float morph = up * (0.08 + 0.22 * rarity) * (0.55 + 0.45 * sin(uTime * (1.1 + freq * 0.4) + phase));
-    p.x *= 1.0 + morph * 1.6;
-    p.z *= 1.0 + morph * 1.6;
-    p.y *= 1.0 + morph * 0.55;
+    // Rare crystal morph: mid-stalk breathing / flare (still rooted at base).
+    float morph = rarity * up * (0.06 + 0.1 * sin(uTime * (1.1 + freq * 0.4) + phase));
+    p.x *= 1.0 + morph * 0.9;
+    p.z *= 1.0 + morph * 0.9;
+    p.y *= 1.0 + morph * 0.35;
 
     // USER ecology: shrink by cell BIOMASS — grazed stub vs regrown full.
     vec2 bmBase = (instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xz;
@@ -319,40 +318,39 @@ const flora_frag = /* glsl */ `
   void main() {
     vec3 n = normalize(vNormalV);
     vec3 v = normalize(vViewDir);
-    float fres = pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 1.8);
+    float fres = pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 2.2);
 
-    // Macro banding so texture reads from far (not micro-noise that vanishes at habitat scale).
-    float stria = sin(vWorldP.y * 6.0 + vWorldP.x * 1.6) * sin(vWorldP.z * 5.0 - vWorldP.y * 2.5);
-    float pores = sin(vWorldP.x * 14.0 + vWorldP.z * 16.0) * sin(vWorldP.y * 11.0);
-    float freck = sin((vWorldP.x + vWorldP.z) * 9.0 + uTime * 1.4) * 0.5 + 0.5;
-    float tex = 0.55 + 0.28 * stria + 0.18 * pores + 0.14 * freck;
+    // Procedural micro-texture: crystal striations + SEM pores + mycelial freckle.
+    float stria = sin(vWorldP.y * 14.0 + vWorldP.x * 3.5) * sin(vWorldP.z * 11.0 - vWorldP.y * 6.0);
+    float pores = sin(vWorldP.x * 37.0 + vWorldP.z * 41.0) * sin(vWorldP.y * 29.0);
+    float freck = sin((vWorldP.x + vWorldP.z) * 53.0 + uTime * 0.7) * 0.5 + 0.5;
+    float tex = 0.72 + 0.18 * stria + 0.12 * pores + 0.08 * freck * vRarity;
 
-    // HARD iridescence + live hue drift — oil-slick / holographic, never flat lawn green.
-    float viewHue = fract(vSecHue + fres * 0.35 + vUp * 0.14 + stria * 0.08 + uTime * 0.08);
-    vec3 iri = hsl2rgb(viewHue, 0.85 + vRarity * 0.15, 0.52 + fres * 0.22);
-    vec3 iri2 = hsl2rgb(fract(viewHue + 0.28 + vRarity * 0.12), 0.95, 0.58);
-    vec3 spectrum = mix(iri, iri2, 0.35 + fres * 0.45 + vRarity * 0.25);
+    // View-dependent iridescence (holographic / oil-slick mineral — not a flat solid).
+    float viewHue = fract(vSecHue + fres * 0.22 + vUp * 0.08 + stria * 0.04 + uTime * 0.015);
+    vec3 iri = hsl2rgb(viewHue, 0.55 + vRarity * 0.35, 0.48 + fres * 0.18);
+    // Secondary band (rare plants carry twin-spectrum shimmer).
+    vec3 iri2 = hsl2rgb(fract(viewHue + 0.33 + vRarity * 0.1), 0.7, 0.55);
+    vec3 spectrum = mix(iri, iri2, fres * (0.35 + vRarity * 0.5));
 
-    float key = 0.45 + 0.75 * clamp(dot(n, normalize(vec3(0.35, 0.8, 0.45))), 0.0, 1.0);
-    // Majority spectrum, minority base color — plants must NOT read as solid dull props.
-    vec3 base = mix(vColor * tex, spectrum, 0.55 + vRarity * 0.35 + fres * 0.15) * key;
+    float key = 0.32 + 0.68 * clamp(dot(n, normalize(vec3(0.35, 0.8, 0.45))), 0.0, 1.0);
+    vec3 base = mix(vColor * tex, spectrum, 0.22 + vRarity * 0.45 + fres * 0.25) * key;
 
-    // Loud bioluminescence: always-on pulse, chaos + rarity + contact amplify.
-    float pulse = 0.45 + 0.55 * sin(uTime * 2.4 + vUp * 6.2831 + vRarity * 3.0 + vWorldP.x * 0.05);
-    float contactFlash = clamp(vContactLive, 0.0, 1.5) * (0.45 + vRarity * 0.55);
-    float glow = vGlow * (0.35 + 0.9 * vUp) * pulse * (0.85 + 1.1 * uChaos + contactFlash + vRarity * 0.6);
-    vec3 glowCol = mix(vColor * vec3(1.6, 1.9, 2.4), spectrum * vec3(1.9, 1.5, 2.3), 0.55 + vRarity * 0.4);
-    glowCol += vec3(0.08, 0.18, 0.28);
+    // Bioluminescence rides UP the stalk; chaos + contact excite it.
+    float pulse = 0.55 + 0.45 * sin(uTime * 1.7 + vUp * 6.2831 + vRarity * 2.0);
+    float contactFlash = clamp(vContactLive, 0.0, 1.5) * (0.25 + vRarity * 0.4);
+    float glow = vGlow * (0.18 + 0.82 * vUp) * pulse * (0.5 + 0.9 * uChaos + contactFlash);
+    vec3 glowCol = mix(vColor * vec3(1.25, 1.55, 1.95), spectrum * vec3(1.4, 1.2, 1.8), vRarity);
+    glowCol += vec3(0.04, 0.10, 0.16);
 
-    // Crystal rim + spore dust visible at distance.
-    vec3 rim = spectrum * fres * (1.1 + vRarity * 1.4 + contactFlash * 0.9);
-    float spore = pow(max(0.0, 0.5 + 0.5 * pores), 2.5) * (0.25 + vRarity) * (0.5 + 0.5 * pulse);
-    vec3 sporeCol = hsl2rgb(fract(vSecHue + 0.12 + uTime * 0.05), 0.95, 0.68) * spore * 1.4;
+    // Crystal-edge rim + rare golden spore dust (reference: iridescent organism + mineral fans).
+    vec3 rim = spectrum * fres * (0.55 + vRarity * 0.9 + contactFlash * 0.5);
+    float spore = pow(max(0.0, pores), 4.0) * vRarity * (0.4 + 0.6 * pulse);
+    vec3 sporeCol = hsl2rgb(fract(vSecHue + 0.12), 0.85, 0.62) * spore;
 
     vec3 col = base + glowCol * glow + rim + sporeCol;
-    col += spectrum * contactFlash * 0.45 * vUp;
-    // Soft lift so dark ground never kills the neon.
-    col = col * 1.15 + spectrum * 0.08;
+    // Contact makes plants briefly "wake" (brighter, more metallic) without solid color wash.
+    col += spectrum * contactFlash * 0.18 * vUp;
     gl_FragColor = vec4(col, 1.0);
   }
 `;
@@ -435,9 +433,6 @@ export class AlienFlora {
       },
       vertexShader: flora_vert,
       fragmentShader: flora_frag,
-      // Neon food-plants must not get crushed by tone-mapping / fog into dull grey sticks.
-      toneMapped: false,
-      fog: false,
     });
 
     this.families = AlienFlora.buildFamilies();
@@ -504,17 +499,17 @@ export class AlienFlora {
       const biome = biomeAt(x, z);
       const sp = AlienFlora.pickSpecies(biome, k);
       const s = species[sp]!;
-      // Rarity: more specials so the field actually looks unique (was too rare to notice).
+      // Rarity: most common, some uncommon, a few legendary specials (food-rich, flashier).
       const rRoll = hash(k * 41 + 77);
       const rarity =
-        rRoll > 0.97
-          ? 0.88 + hash(k * 43) * 0.12 // legendary ~3%
-          : rRoll > 0.82
-            ? 0.5 + hash(k * 43) * 0.35 // uncommon ~15%
-            : 0.08 + s.rarityBias * (0.15 + hash(k * 47) * 0.35);
-      const giant = hash(k * 23 + 29) > 0.94 ? 2.6 + hash(k * 23 + 31) * 3.2 : 1;
-      // Bigger overall so crowns read at habitat distance.
-      const scale = s.size * (0.7 + hash(k * 5 + 11) * 1.55) * giant * (1 + rarity * 0.55);
+        rRoll > 0.992
+          ? 0.85 + hash(k * 43) * 0.15 // legendary ~0.8%
+          : rRoll > 0.94
+            ? 0.45 + hash(k * 43) * 0.35 // uncommon ~5%
+            : s.rarityBias * (0.05 + hash(k * 47) * 0.25); // common low rarity
+      const giant = hash(k * 23 + 29) > 0.965 ? 2.4 + hash(k * 23 + 31) * 2.8 : 1;
+      // Rare plants slightly larger / more food-bearing silhouette.
+      const scale = s.size * (0.44 + hash(k * 5 + 11) * 1.45) * giant * (1 + rarity * 0.35);
       const yaw = hash(k * 5 + 13) * TAU;
       const tilt = (hash(k * 5 + 17) - 0.5) * (0.28 + hash(k * 5 + 19) * 0.42);
       perFamily[s.family]!.push({ x, z, sp, scale, yaw, tilt, rarity });
@@ -587,34 +582,29 @@ export class AlienFlora {
         m.compose(pos, q, scl);
         mesh.setMatrixAt(i, m);
 
-        // NEON base colors — high sat/light so they don't die against dark ground.
+        // Wild palettes — not lawn-green solids. Biome band + strong jitter + rarity spectral kick.
         const hueJit =
           (s.hue +
-            (hash(pl.sp * 31 + i) - 0.5) * 0.1 +
-            0.04 * Math.sin(pl.x * 0.009 + pl.z * 0.011) +
-            pl.rarity * 0.08 +
+            (hash(pl.sp * 31 + i) - 0.5) * 0.22 +
+            0.05 * Math.sin(pl.x * 0.009 + pl.z * 0.011) +
+            pl.rarity * 0.12 +
             1) %
           1;
-        const sat = Math.min(1, Math.max(0.78, s.sat + pl.rarity * 0.12));
-        const light = Math.min(
-          0.82,
-          Math.max(0.42, s.light + hash(i * 101 + pl.sp) * 0.15 + pl.rarity * 0.1),
-        );
+        const sat = Math.min(0.99, s.sat + (hash(i * 97 + pl.sp) - 0.5) * 0.28 + pl.rarity * 0.2);
+        const light = Math.min(0.78, s.light + hash(i * 101 + pl.sp) * 0.22 + pl.rarity * 0.12);
         col.setHSL(hueJit, sat, light);
-        // Uncommon+ plants get a hard holographic kick (cyan/magenta/gold/lime).
-        if (pl.rarity > 0.35) {
+        // Legendary plants get a second-channel push toward holographic cyan/magenta/gold.
+        if (pl.rarity > 0.8) {
           const kick = hash(i * 113 + pl.sp);
-          const t = 0.4 + pl.rarity * 0.35;
-          if (kick < 0.25) col.lerp(new THREE.Color(0.15, 1.0, 1.0), t);
-          else if (kick < 0.5) col.lerp(new THREE.Color(1.0, 0.2, 0.95), t);
-          else if (kick < 0.75) col.lerp(new THREE.Color(1.0, 0.85, 0.15), t);
-          else col.lerp(new THREE.Color(0.45, 1.0, 0.25), t);
+          if (kick < 0.33) col.lerp(new THREE.Color(0.3, 0.95, 1.0), 0.35);
+          else if (kick < 0.66) col.lerp(new THREE.Color(1.0, 0.35, 0.85), 0.35);
+          else col.lerp(new THREE.Color(1.0, 0.82, 0.25), 0.35);
         }
 
         const o4 = i * 4;
         params[o4] = hash(pl.sp * 13 + i * 7) * TAU; // phase
         params[o4 + 1] = s.swayFreq * (0.55 + hash(i * 73 + pl.sp) * 1.55);
-        params[o4 + 2] = Math.min(1, s.glow + hash(i * 79 + pl.sp) * 0.25 + pl.rarity * 0.35);
+        params[o4 + 2] = Math.min(1, s.glow + hash(i * 79 + pl.sp) * 0.38 + pl.rarity * 0.25);
         params[o4 + 3] = fmly.height;
 
         // aMeta: rarity, stiffness, secondaryHue, reactGain
@@ -652,179 +642,152 @@ export class AlienFlora {
   private static buildFamilies(): Family[] {
     const fams: Family[] = [];
 
-    // 0 SPIRE — tall crystal tree with WIDE tetra crown (reads at distance)
+    // 0 SPIRE — needle with crystal side blades (mineral fan energy)
     {
-      const stem = new THREE.ConeGeometry(0.55, 7.5, 8, 2);
-      stem.translate(0, 3.75, 0);
-      const crown = new THREE.OctahedronGeometry(2.2, 0);
-      crown.scale(1.4, 0.55, 1.4);
-      crown.translate(0, 7.2, 0);
-      const bladeA = new THREE.BoxGeometry(0.12, 3.2, 2.4, 1, 2, 1);
-      bladeA.translate(0, 5.5, 0);
-      bladeA.rotateZ(0.55);
+      const stem = new THREE.ConeGeometry(0.42, 6.2, 7, 2);
+      stem.translate(0, 3.1, 0);
+      const bladeA = new THREE.BoxGeometry(0.08, 2.4, 1.1, 1, 3, 1);
+      bladeA.translate(0.35, 3.8, 0);
+      bladeA.rotateZ(0.35);
       const bladeB = bladeA.clone();
       bladeB.rotateY((Math.PI * 2) / 3);
       const bladeC = bladeA.clone();
       bladeC.rotateY((Math.PI * 4) / 3);
-      const tip = new THREE.OctahedronGeometry(0.55, 0);
-      tip.scale(0.5, 1.8, 0.5);
-      tip.translate(0, 8.4, 0);
-      fams.push({ geo: adoptMerged([stem, crown, bladeA, bladeB, bladeC, tip]), height: 9.0 });
+      const tip = new THREE.OctahedronGeometry(0.35, 0);
+      tip.scale(0.6, 1.4, 0.6);
+      tip.translate(0, 6.1, 0);
+      fams.push({ geo: adoptMerged([stem, bladeA, bladeB, bladeC, tip]), height: 6.5 });
     }
 
-    // 1 WHIP — tendril capped with BIG fruiting bulbs (SEM food)
+    // 1 WHIP — tapered tendril + mid nodules (SEM organic)
     {
-      const stem = new THREE.CylinderGeometry(0.08, 0.55, 9.0, 7, 4);
-      stem.translate(0, 4.5, 0);
-      const n1 = new THREE.SphereGeometry(0.75, 10, 8);
-      n1.scale(1.3, 0.85, 1.3);
-      n1.translate(0.35, 2.8, 0);
-      const n2 = new THREE.SphereGeometry(0.65, 10, 8);
-      n2.scale(1.2, 0.8, 1.2);
-      n2.translate(-0.4, 5.2, 0.2);
-      const n3 = new THREE.SphereGeometry(0.55, 9, 7);
-      n3.translate(0.15, 7.6, -0.1);
-      const n4 = new THREE.SphereGeometry(0.35, 8, 6);
-      n4.translate(0, 9.0, 0);
-      fams.push({ geo: adoptMerged([stem, n1, n2, n3, n4]), height: 9.4 });
+      const stem = new THREE.CylinderGeometry(0.04, 0.38, 8.2, 6, 4);
+      stem.translate(0, 4.1, 0);
+      const n1 = new THREE.SphereGeometry(0.28, 7, 5);
+      n1.scale(1.2, 0.7, 1.2);
+      n1.translate(0.15, 2.4, 0);
+      const n2 = new THREE.SphereGeometry(0.22, 7, 5);
+      n2.scale(1.1, 0.65, 1.1);
+      n2.translate(-0.12, 4.6, 0.1);
+      const n3 = new THREE.SphereGeometry(0.16, 6, 4);
+      n3.translate(0.08, 6.5, -0.05);
+      fams.push({ geo: adoptMerged([stem, n1, n2, n3]), height: 8.2 });
     }
 
-    // 2 POD — chunky multi-orb fruiting body (food cluster)
+    // 2 POD — knobby ground bulb cluster (SEM fruiting body)
     {
-      const core = new THREE.IcosahedronGeometry(1.6, 1);
-      core.scale(1.25, 1.05, 1.25);
-      core.translate(0, 1.6, 0);
-      const budA = new THREE.SphereGeometry(0.85, 10, 8);
-      budA.translate(1.1, 0.9, 0.3);
-      const budB = new THREE.SphereGeometry(0.75, 10, 8);
-      budB.translate(-0.95, 1.1, 0.65);
-      const budC = new THREE.SphereGeometry(0.7, 9, 7);
-      budC.translate(0.25, 2.5, -0.9);
-      const budD = new THREE.SphereGeometry(0.55, 8, 6);
-      budD.translate(-0.5, 2.3, -0.55);
-      const pore = new THREE.TorusGeometry(0.85, 0.14, 6, 14);
+      const core = new THREE.IcosahedronGeometry(1.0, 1);
+      core.scale(1.15, 1.05, 1.15);
+      core.translate(0, 1.1, 0);
+      const budA = new THREE.SphereGeometry(0.45, 8, 6);
+      budA.translate(0.7, 0.55, 0.2);
+      const budB = new THREE.SphereGeometry(0.38, 8, 6);
+      budB.translate(-0.55, 0.7, 0.45);
+      const budC = new THREE.SphereGeometry(0.32, 7, 5);
+      budC.translate(0.15, 1.55, -0.55);
+      const pore = new THREE.TorusGeometry(0.35, 0.08, 5, 10);
       pore.rotateX(Math.PI / 2);
-      pore.translate(0, 2.85, 0);
-      fams.push({ geo: adoptMerged([core, budA, budB, budC, budD, pore]), height: 3.6 });
+      pore.translate(0, 1.9, 0);
+      fams.push({ geo: adoptMerged([core, budA, budB, budC, pore]), height: 2.4 });
     }
 
-    // 3 BLADE — broad alien sail leaf (wide silhouette)
+    // 3 BLADE — thin tall leaf fan with striated plate (mineral sheet)
     {
-      const plate = new THREE.BoxGeometry(0.18, 6.5, 3.2, 1, 4, 2);
-      plate.translate(0, 3.25, 0);
-      const rib = new THREE.BoxGeometry(0.35, 6.2, 0.28, 1, 4, 1);
-      rib.translate(0, 3.1, 0);
-      const fringe = new THREE.ConeGeometry(1.4, 2.0, 6, 1);
-      fringe.translate(0, 7.0, 0);
-      const fin = new THREE.BoxGeometry(0.12, 3.5, 1.6, 1, 2, 1);
-      fin.translate(0.9, 4.0, 0);
-      fin.rotateZ(-0.4);
-      fams.push({ geo: adoptMerged([plate, rib, fringe, fin]), height: 8.0 });
+      const plate = new THREE.BoxGeometry(0.12, 5.2, 1.55, 1, 5, 2);
+      plate.translate(0, 2.6, 0);
+      const rib = new THREE.BoxGeometry(0.22, 5.0, 0.18, 1, 4, 1);
+      rib.translate(0, 2.5, 0);
+      const fringe = new THREE.ConeGeometry(0.55, 1.2, 5, 1);
+      fringe.translate(0, 5.5, 0);
+      fams.push({ geo: adoptMerged([plate, rib, fringe]), height: 6.1 });
     }
 
-    // 4 CORAL — branching crystal with big satellite spikes
+    // 4 CORAL — spiky diamond with satellite crystals
     {
-      const core = new THREE.OctahedronGeometry(2.0, 1);
-      core.scale(0.75, 2.4, 0.75);
-      core.translate(0, 4.2, 0);
-      const s1 = new THREE.TetrahedronGeometry(1.1, 0);
-      s1.scale(0.75, 2.0, 0.75);
-      s1.translate(1.3, 2.8, 0.3);
-      const s2 = new THREE.TetrahedronGeometry(0.95, 0);
-      s2.scale(0.75, 1.9, 0.75);
-      s2.translate(-1.15, 4.8, -0.4);
-      const s3 = new THREE.TetrahedronGeometry(0.85, 0);
-      s3.scale(0.7, 1.8, 0.7);
-      s3.translate(0.45, 6.6, 0.85);
-      const s4 = new THREE.OctahedronGeometry(0.55, 0);
-      s4.translate(0, 8.2, 0);
-      fams.push({ geo: adoptMerged([core, s1, s2, s3, s4]), height: 8.8 });
+      const core = new THREE.OctahedronGeometry(1.5, 1);
+      core.scale(0.65, 2.1, 0.65);
+      core.translate(0, 3.6, 0);
+      const s1 = new THREE.TetrahedronGeometry(0.55, 0);
+      s1.scale(0.7, 1.6, 0.7);
+      s1.translate(0.7, 2.4, 0.2);
+      const s2 = new THREE.TetrahedronGeometry(0.45, 0);
+      s2.scale(0.7, 1.5, 0.7);
+      s2.translate(-0.6, 4.2, -0.25);
+      const s3 = new THREE.TetrahedronGeometry(0.4, 0);
+      s3.scale(0.65, 1.4, 0.65);
+      s3.translate(0.25, 5.5, 0.45);
+      fams.push({ geo: adoptMerged([core, s1, s2, s3]), height: 7.4 });
     }
 
-    // 5 SHARD — giant stacked crystal (mineral lattice)
+    // 5 SHARD — crystal tetra stack (mineral lattice)
     {
-      const a = new THREE.TetrahedronGeometry(2.4, 0);
-      a.scale(0.95, 2.2, 0.95);
-      a.translate(0, 3.4, 0);
-      const b = new THREE.TetrahedronGeometry(1.5, 0);
-      b.scale(0.8, 1.8, 0.8);
-      b.translate(0.55, 5.8, 0.15);
+      const a = new THREE.TetrahedronGeometry(1.5, 0);
+      a.scale(0.85, 1.9, 0.85);
+      a.translate(0, 2.8, 0);
+      const b = new THREE.TetrahedronGeometry(0.9, 0);
+      b.scale(0.7, 1.5, 0.7);
+      b.translate(0.35, 4.6, 0.1);
       b.rotateY(0.7);
-      const c = new THREE.OctahedronGeometry(0.7, 0);
-      c.translate(0, 7.6, 0);
-      const d = new THREE.BoxGeometry(0.35, 2.5, 0.35);
-      d.translate(-0.7, 4.0, 0.5);
-      d.rotateZ(0.4);
-      fams.push({ geo: adoptMerged([a, b, c, d]), height: 8.2 });
+      const c = new THREE.OctahedronGeometry(0.35, 0);
+      c.translate(0, 5.9, 0);
+      fams.push({ geo: adoptMerged([a, b, c]), height: 6.3 });
     }
 
-    // 6 HELIX — thick twisted shell + glowing spore orbs
+    // 6 HELIX — twisted shell stalk + spore orbs (mycelial network vibe)
     {
       const pts: THREE.Vector3[] = [];
-      for (let i = 0; i <= 40; i++) {
-        const y = (i / 40) * 7.2;
-        const a = i * 0.62;
-        const r = 0.85 * (1 - i / 40) + 0.18;
+      for (let i = 0; i <= 36; i++) {
+        const y = (i / 36) * 5.8;
+        const a = i * 0.58;
+        const r = 0.42 * (1 - i / 36) + 0.08;
         pts.push(new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r));
       }
-      const tube = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 32, 0.28, 7, false);
-      const orb1 = new THREE.SphereGeometry(0.55, 10, 8);
-      orb1.translate(0.7, 2.2, 0.15);
-      const orb2 = new THREE.SphereGeometry(0.48, 9, 7);
-      orb2.translate(-0.55, 4.2, 0.35);
-      const orb3 = new THREE.SphereGeometry(0.42, 9, 7);
-      orb3.translate(0.35, 6.0, -0.25);
-      const orb4 = new THREE.SphereGeometry(0.32, 8, 6);
-      orb4.translate(0, 7.3, 0);
-      fams.push({ geo: adoptMerged([tube, orb1, orb2, orb3, orb4]), height: 7.5 });
+      const tube = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 28, 0.14, 6, false);
+      const orb1 = new THREE.SphereGeometry(0.28, 8, 6);
+      orb1.translate(0.35, 2.0, 0.1);
+      const orb2 = new THREE.SphereGeometry(0.22, 7, 5);
+      orb2.translate(-0.25, 3.8, 0.2);
+      const orb3 = new THREE.SphereGeometry(0.18, 7, 5);
+      orb3.translate(0.15, 5.2, -0.15);
+      fams.push({ geo: adoptMerged([tube, orb1, orb2, orb3]), height: 5.8 });
     }
 
-    // 7 BUBBLE — dense mycelial fruiting cluster + orbital rings
+    // 7 BUBBLE — clustered porous orbs (SEM fruiting cluster / mycelial nodes)
     {
-      const main = new THREE.SphereGeometry(1.35, 12, 10);
-      main.scale(1.2, 0.95, 1.2);
-      main.translate(0, 1.35, 0);
-      const a = new THREE.SphereGeometry(0.8, 10, 8);
-      a.translate(1.2, 0.85, 0.25);
-      const b = new THREE.SphereGeometry(0.72, 10, 8);
-      b.translate(-1.05, 1.05, 0.7);
-      const c = new THREE.SphereGeometry(0.65, 9, 7);
-      c.translate(0.2, 2.3, -0.95);
-      const d = new THREE.SphereGeometry(0.55, 9, 7);
-      d.translate(-0.65, 2.1, -0.45);
-      const e = new THREE.SphereGeometry(0.45, 8, 6);
-      e.translate(0.85, 1.9, 0.75);
-      const ring = new THREE.TorusGeometry(1.15, 0.12, 6, 16);
+      const main = new THREE.SphereGeometry(0.75, 10, 8);
+      main.scale(1.1, 0.9, 1.1);
+      main.translate(0, 0.85, 0);
+      const a = new THREE.SphereGeometry(0.42, 8, 6);
+      a.translate(0.65, 0.55, 0.15);
+      const b = new THREE.SphereGeometry(0.38, 8, 6);
+      b.translate(-0.5, 0.7, 0.4);
+      const c = new THREE.SphereGeometry(0.32, 7, 5);
+      c.translate(0.1, 1.35, -0.5);
+      const d = new THREE.SphereGeometry(0.25, 7, 5);
+      d.translate(-0.35, 1.2, -0.25);
+      const ring = new THREE.TorusGeometry(0.55, 0.06, 5, 12);
       ring.rotateX(Math.PI / 2);
-      ring.translate(0, 2.55, 0);
-      const ring2 = new THREE.TorusGeometry(0.7, 0.08, 5, 14);
-      ring2.rotateX(Math.PI / 2);
-      ring2.translate(0, 3.0, 0);
-      fams.push({ geo: adoptMerged([main, a, b, c, d, e, ring, ring2]), height: 3.4 });
+      ring.translate(0, 1.55, 0);
+      fams.push({ geo: adoptMerged([main, a, b, c, d, ring]), height: 2.0 });
     }
 
-    // 8 FAN — huge mineral radial sail (crystal-fan reference)
+    // 8 FAN — broad curved sail with radial ribs (mineral radial crystal)
     {
-      const sail = new THREE.CylinderGeometry(0.04, 3.2, 5.8, 6, 2, true);
-      sail.scale(1, 1, 0.28);
-      sail.translate(0, 2.9, 0);
-      const rib1 = new THREE.BoxGeometry(0.1, 5.4, 0.18, 1, 3, 1);
-      rib1.translate(0, 2.7, 0.08);
-      const rib2 = new THREE.BoxGeometry(0.08, 4.8, 0.15, 1, 2, 1);
-      rib2.translate(0.9, 2.5, 0);
-      rib2.rotateZ(-0.35);
-      const rib3 = new THREE.BoxGeometry(0.08, 4.8, 0.15, 1, 2, 1);
-      rib3.translate(-0.9, 2.5, 0);
-      rib3.rotateZ(0.35);
-      const rib4 = new THREE.BoxGeometry(0.07, 4.0, 0.12, 1, 2, 1);
-      rib4.translate(1.6, 2.2, 0);
-      rib4.rotateZ(-0.55);
-      const base = new THREE.SphereGeometry(0.7, 9, 7);
-      base.scale(1.4, 0.65, 0.95);
-      base.translate(0, 0.4, 0);
-      const jewel = new THREE.OctahedronGeometry(0.45, 0);
-      jewel.translate(0, 5.9, 0);
-      fams.push({ geo: adoptMerged([sail, rib1, rib2, rib3, rib4, base, jewel]), height: 6.4 });
+      const sail = new THREE.CylinderGeometry(0.02, 1.75, 4.6, 5, 2, true);
+      sail.scale(1, 1, 0.22);
+      sail.translate(0, 2.3, 0);
+      const rib1 = new THREE.BoxGeometry(0.06, 4.2, 0.12, 1, 3, 1);
+      rib1.translate(0, 2.2, 0.05);
+      const rib2 = new THREE.BoxGeometry(0.05, 3.6, 0.1, 1, 2, 1);
+      rib2.translate(0.4, 2.0, 0);
+      rib2.rotateZ(-0.25);
+      const rib3 = new THREE.BoxGeometry(0.05, 3.6, 0.1, 1, 2, 1);
+      rib3.translate(-0.4, 2.0, 0);
+      rib3.rotateZ(0.25);
+      const base = new THREE.SphereGeometry(0.35, 7, 5);
+      base.scale(1.2, 0.6, 0.8);
+      base.translate(0, 0.25, 0);
+      fams.push({ geo: adoptMerged([sail, rib1, rib2, rib3, base]), height: 4.7 });
     }
 
     return fams;
@@ -832,25 +795,23 @@ export class AlienFlora {
 
   /** 50 deterministic species, biome-banded so each zone has a coherent alien palette. */
   private static buildSpecies(): Species[] {
-    // Forced neon palette anchors — cyan / magenta / gold / violet / lime / hot pink / electric blue.
-    const NEON = [0.52, 0.88, 0.12, 0.75, 0.32, 0.95, 0.58];
     const out: Species[] = [];
     for (let i = 0; i < SPECIES_COUNT; i++) {
       const biome = i % BIOME_COUNT;
       const family = Math.floor(hash(i * 17 + 101) * FAMILY_COUNT) % FAMILY_COUNT;
-      const anchor = NEON[i % NEON.length]!;
-      const hue = (anchor + (hash(i * 19 + 2) - 0.5) * 0.08 + 1) % 1;
+      // Wild non-lawn palettes: stretch across cyan / magenta / gold / violet / rust / lime.
+      const band = biome / BIOME_COUNT;
+      const hue = (band + (hash(i * 19 + 2) - 0.5) * 0.18 + hash(i * 53) * 0.08 + 1) % 1;
       out.push({
         family,
         biome,
         hue,
-        sat: 0.82 + hash(i * 23 + 3) * 0.18,
-        light: 0.48 + hash(i * 29 + 5) * 0.28,
-        // Larger on average so silhouettes read against the expanded habitat.
-        size: 0.85 + hash(i * 31 + 7) * 2.8,
-        swayFreq: 0.35 + hash(i * 37 + 11) * 2.4,
-        glow: 0.55 + hash(i * 41 + 13) * 0.45,
-        rarityBias: 0.15 + hash(i * 59 + 17) * 0.55,
+        sat: 0.58 + hash(i * 23 + 3) * 0.4,
+        light: 0.3 + hash(i * 29 + 5) * 0.34,
+        size: 0.45 + hash(i * 31 + 7) * 2.4,
+        swayFreq: 0.22 + hash(i * 37 + 11) * 2.2,
+        glow: 0.25 + hash(i * 41 + 13) * 0.7,
+        rarityBias: hash(i * 59 + 17) * 0.35,
       });
     }
     return out;
