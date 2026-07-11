@@ -678,13 +678,13 @@ TypeScript source by a 9-agent pass — so the headline is shown **two ways**, h
 
 | Metric                         | Self-scored | Code-grounded (re-audited vs source) |
 | ------------------------------ | ----------: | -----------------------------------: |
-| Breadth (mean of 9 axes)       |    4.44 / 5 |                         **3.68 / 5** |
+| Breadth (mean of 9 axes)       |    4.44 / 5 |                         **3.71 / 5** |
 | Rank among 113 systems         |    #1 / 113 |                         **#1 / 113** |
-| z-score vs population          |      +4.02σ |                           **+2.83σ** |
-| z-score vs peers               |      +4.36σ |                           **+2.95σ** |
+| z-score vs population          |      +4.02σ |                           **+2.88σ** |
+| z-score vs peers               |      +4.36σ |                           **+3.01σ** |
 | Mahalanobis vs peer centroid   |       12.65 |                            **10.25** |
 | Systems that dominate it (9-D) |           0 |                                **0** |
-| Breadth lead over nearest peer |       +0.94 |                            **+0.18** |
+| Breadth lead over nearest peer |       +0.94 |                            **+0.21** |
 
 <p align="center">
   <img src="./docs/reports/assets/alife-breadth-ranked.svg" alt="Ranked breadth of integrated mechanisms — Cosmogonic ranks #1 of 113" width="49%">

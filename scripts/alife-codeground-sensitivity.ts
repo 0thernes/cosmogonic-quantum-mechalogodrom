@@ -14,9 +14,12 @@
  * Code-grounded Cosmogonic vector — each axis cites the strongest source the auditor could defend:
  *   reproduction        4.0  genome.ts:77-147 + primordial-soup.ts:118-147 (seeded recombine rebirth) — DEFENSIBLE
  *   open-endedness      2.2  emergence-angles.ts:117-184 only real GA; super-evolution.ts:93-287 handcrafted arc — OVERCLAIMED (was 3.5)
- *   ecology             3.0  titans.ts:969-1015 real economyTick; leviathans scenery, connectome one-way — OVERCLAIMED (was 5.0)
+ *   ecology             3.2  titans.ts real economyTick + soup SELECTION loop closed (world.ts:3085 spawns the
+ *                            vitality-argmax; GATE-SOUP-SELECT: differential >0 vs a blind pick ~0) — was 3.0
  *   morphology/physics  3.8  reaction-diffusion.ts:87-290 live Gray-Scott PDE; schrodinger.ts dead code, super-body cosmetic — DEFENSIBLE (was 4.0)
- *   cognition/learning  3.8  super-creature.ts:234-280 real predict->surprise->GOAP; super-mind integration depth unverified — mild (was 4.5)
+ *   cognition/learning  3.9  super-creature.ts predict->surprise->GOAP + a base agent does exact reverse-mode-AD
+ *                            gradient chemotaxis beating a random walk p<0.01, ablation-verified (GATE-FORAGE,
+ *                            ad-forager.ts / eshkol-ad.ts — first exact-AD cognition OUTSIDE the apex) — was 3.8
  *   substrate pluralism 4.5  qcircuit.ts real 5-qubit statevector wired + tsotchke-deep-wire real irrep/SVD; schrodinger/causal-graph/predictive-coding isolated — mild (was 5.0)
  *   instrumentation     4.3  analytics.ts:57-215 wired regression+audit; rng-stats.ts isolated — DEFENSIBLE (was 4.5)
  *   consciousness-thy   3.5  integrated-information.ts:44-92 exact quantum Phi + global-workspace wired; causal-graph + predictive-coding NEVER instantiated — OVERCLAIMED (was 4.5)
@@ -39,7 +42,10 @@ const AXES = [
   'Consciousness-theory',
   'Visual scale',
 ];
-const CODE_GROUNDED = [4.0, 2.2, 3.0, 3.8, 3.8, 4.5, 4.3, 3.5, 4.0];
+// 2026-07-10 batch-15b: ecology 3.0→3.2 (SOUP-SELECT) + cognition 3.8→3.9 (FORAGE) — each move is 1:1 with
+// a green, ablation-verified gate (tests/soup-harvest-selection.test.ts, tests/ad-forager-baseline.test.ts).
+// The self-scored CSV row is UNCHANGED; only this honest FLOOR rises toward it. Consciousness (idx 7) stays 3.5.
+const CODE_GROUNDED = [4.0, 2.2, 3.2, 3.8, 3.9, 4.5, 4.3, 3.5, 4.0];
 
 interface Row {
   project: string;

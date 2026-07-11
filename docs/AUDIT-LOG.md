@@ -11,6 +11,30 @@ changed and why.
 
 ---
 
+## 2026-07-10 — batch 15b: honest metric move — the code-grounded 9-axis FLOOR rises (gate-backed)
+
+The metric half of the "smarter A-life" goal, done to the honesty discipline: the shipped, ablation-
+verified batch-15a gates LICENSE a rise in the **code-grounded** 9-axis floor (`alife-codeground-
+sensitivity.ts`) — the source-audited honest lower bound — NOT the self-scored CSV row. Each +0.x is
+1:1 with a green gate; the self-score ceiling is untouched (the point is to lift the floor TOWARD it,
+never inflate the ceiling). Nothing here measures a consciousness/sentience indicator, so the
+Consciousness-theory axis (3.5), Butlin 8/6/14, and every Sentientness surface stay BYTE-IDENTICAL.
+
+- **Ecology 3.0 → 3.2** — licensed by GATE-SOUP-SELECT (batch-15a): the soup selection loop is now
+  closed (world.ts spawns the vitality-argmax; measured differential > 0 vs a blind pick ~0), a real
+  ecological selection dynamic the old fitness-blind spawn lacked.
+- **Cognition/Learning 3.8 → 3.9** — licensed by GATE-FORAGE (batch-15a): a base agent provably does
+  exact reverse-mode-AD gradient chemotaxis beating a random-walk baseline (p<0.01, ablation-verified),
+  the first exact-AD cognition wired OUTSIDE the coupling-critical apex.
+
+Recomputed (via `bun scripts/alife-codeground-sensitivity.ts`, deterministic): code-grounded breadth
+**3.68 → 3.71**, z-population **+2.83 → +2.88σ**, z-peers **+2.95 → +3.01σ**, lead over nearest peer
+**+0.18 → +0.21**; rank stays #1/113, Mahalanobis 10.25 (unchanged at 2dp). The 4 current narrative
+surfaces (README, docs.html, specs.html, NHSI dashboard) restated to match; `alife-codeground.json`
+regenerated. The self-scored CSV row + all self-scored SVG charts are unchanged. Full gate green.
+(Remaining hardening: a gating `verify:alife` that recompute-diffs the JSON from CODE_GROUNDED + asserts
+the surfaces match, so a future hand-edit of any of these numbers fails `check` — batch-15c.)
+
 ## 2026-07-10 — "smarter A-life" batch 15a: base agents forage by exact AD gradient + soup selects the fittest
 
 First increment of the owner's "make every living thing genuinely smarter — operational, not decorative"

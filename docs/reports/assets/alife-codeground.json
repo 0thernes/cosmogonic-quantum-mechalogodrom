@@ -73,23 +73,23 @@
     "axes": [
       4,
       2.2,
-      3,
+      3.2,
       3.8,
-      3.8,
+      3.9,
       4.5,
       4.3,
       3.5,
       4
     ],
-    "breadth": 3.678,
+    "breadth": 3.711,
     "rank": 1,
     "total": 113,
     "percentile": 100,
-    "zPopulation": 2.827,
-    "zVsPeers": 2.946,
-    "mahalanobis": 10.252,
+    "zPopulation": 2.881,
+    "zVsPeers": 3.008,
+    "mahalanobis": 10.245,
     "dominatedBy9d": 0,
-    "leadOverNearestPeerBreadth": 0.178,
+    "leadOverNearestPeerBreadth": 0.211,
     "perAxisZ": [
       {
         "axis": "Reproduction",
@@ -103,8 +103,8 @@
       },
       {
         "axis": "Ecology",
-        "score": 3,
-        "z": 0.59
+        "score": 3.2,
+        "z": 0.73
       },
       {
         "axis": "Morphology/Physics",
@@ -113,8 +113,8 @@
       },
       {
         "axis": "Cognition/Learning",
-        "score": 3.8,
-        "z": 1.2
+        "score": 3.9,
+        "z": 1.26
       },
       {
         "axis": "Substrate pluralism",
@@ -139,8 +139,8 @@
     ]
   },
   "deltas": {
-    "breadth": -0.766,
-    "zPopulation": -1.192,
-    "mahalanobis": -2.403
+    "breadth": -0.733,
+    "zPopulation": -1.138,
+    "mahalanobis": -2.41
   }
 }
