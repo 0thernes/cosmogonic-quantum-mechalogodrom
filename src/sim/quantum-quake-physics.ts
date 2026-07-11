@@ -226,11 +226,16 @@ export function qgePerturb(state: QGEState, parameters: number[], strength = 0.1
   const gyz = metric[5]!;
   const gzx = metric[6]!;
 
-  // Geometric warping of momentum by the diagonal metric (state-sensitive scaling).
+  // Geometric warping of momentum by the diagonal metric (state-sensitive scaling). SATURATE the
+  // per-step gain: g_ii ≥ 0 is unbounded and there is no restoring force, so the bare `1 + strength·g`
+  // drove super-exponential momentum growth → NaN when the QGE state is iterated (its documented use).
+  // `g/(1+|g|)` bounds the gain to (1, 1+strength]. Production feeds momentum=0 each call, so this is a
+  // no-op there (warp·0 = 0) — the exact output is preserved; only the latent divergence is removed.
+  const warp = (g: number): number => 1 + (strength * g) / (1 + Math.abs(g));
   const newMomentum: [number, number, number] = [
-    state.momentum[0] * (1 + strength * gxx),
-    state.momentum[1] * (1 + strength * gyy),
-    state.momentum[2] * (1 + strength * gzz),
+    state.momentum[0] * warp(gxx),
+    state.momentum[1] * warp(gyy),
+    state.momentum[2] * warp(gzz),
   ];
 
   // Position update with off-diagonal (geodesic-coupling) corrections.
@@ -348,10 +353,23 @@ export function qgePhysicsStep(
 ): QGEState & { aliveness: number } {
   const perturbation = qgePerturb(state, parameters, dt * 10);
   const curvature = state.curvature + dt * 0.1 * Math.sin(state.geometricPhase);
+  // Bound momentum + position to a finite range (belt-and-suspenders with the warp saturation above),
+  // mirroring the curvature clamp: a non-finite input collapses to 0, a large finite value saturates.
+  // Production values are tiny so this never engages there; it hard-stops any NaN/overflow under iteration.
+  const bnd = (v: number): number =>
+    !Number.isFinite(v) ? 0 : v > 1e4 ? 1e4 : v < -1e4 ? -1e4 : v;
 
   return {
-    position: perturbation.newPosition,
-    momentum: perturbation.newMomentum,
+    position: [
+      bnd(perturbation.newPosition[0]),
+      bnd(perturbation.newPosition[1]),
+      bnd(perturbation.newPosition[2]),
+    ],
+    momentum: [
+      bnd(perturbation.newMomentum[0]),
+      bnd(perturbation.newMomentum[1]),
+      bnd(perturbation.newMomentum[2]),
+    ],
     geometricPhase: perturbation.phaseShift,
     curvature: Math.max(-1, Math.min(1, curvature)),
     // Surface the QFI-derived aliveness (previously computed by qgePerturb then discarded). NOT added

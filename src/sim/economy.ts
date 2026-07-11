@@ -591,9 +591,13 @@ export class Economy {
       const { winner, price } = vickreyOutcome(this.dQ);
       if (winner >= 0 && price > 0) {
         const w = this.agents[winner]!;
-        this.debit(w, price); // winner pays the SECOND price
+        // Dividend the ACTUAL amount paid, not the nominal price: debit() caps at the winner's liquid
+        // funds (no borrowing/negative balance), so an insolvent winner pays < price. Distributing the
+        // full price while debiting less MINTED the shortfall, breaking "currency conserved exactly"
+        // (same class as the Gini-guard mint, batch-12). Now credited == debited, exactly conservative.
+        const paid = this.debit(w, price); // winner pays the SECOND price (capped at its purse)
         w[field] += AUCTION_LOT; // and takes the windfall lot
-        const share = price / (n - 1);
+        const share = paid / (n - 1);
         for (let i = 0; i < n; i++) if (i !== winner) this.credit(this.agents[i]!, share);
         this.auctions++;
         this.lastAuctionPrice = price;
@@ -626,8 +630,9 @@ export class Economy {
     }
   }
 
-  /** Remove `aurumValue` of money from a purse, preferring its less-favoured currency first. */
-  private debit(a: Agent, aurumValue: number): void {
+  /** Remove `aurumValue` of money from a purse, preferring its less-favoured currency first.
+   *  Returns the amount ACTUALLY removed (== aurumValue unless the purse was too poor to cover it). */
+  private debit(a: Agent, aurumValue: number): number {
     let need = aurumValue;
     // Spend the currency the agent likes LESS first (keeps its preferred reserve).
     if (a.loyalty >= 0) {
@@ -649,6 +654,7 @@ export class Economy {
         need -= fromU;
       }
     }
+    return aurumValue - need; // what was actually removed (leftover `need` = uncovered shortfall)
   }
 
   /** Add `aurumValue` of money to a purse, into its favoured currency. */

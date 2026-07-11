@@ -102,6 +102,9 @@ export class ConstellationSystem {
   private readonly delaunay: Delaunay<Delaunay.Point>;
   private readonly cellMat: THREE.LineBasicMaterial;
   private readonly linkMat: THREE.LineBasicMaterial;
+  /** Retained so world teardown / HMR can free the two line-layer geometries + unparent the group
+   *  (was a local const → the geometries + scene Group leaked on every World reconstruction). */
+  private readonly group: THREE.Group;
   /** Warm-start index for `delaunay.find` — coherent camera paths make lookups ~O(1). */
   private lastCell = 0;
 
@@ -148,10 +151,21 @@ export class ConstellationSystem {
     const links = new THREE.LineSegments(linkGeo, this.linkMat);
     links.name = 'constellation-links';
 
-    const group = new THREE.Group();
-    group.name = 'constellations';
-    group.add(cells, links);
-    ctx.scene.add(group);
+    this.group = new THREE.Group();
+    this.group.name = 'constellations';
+    this.group.add(cells, links);
+    ctx.scene.add(this.group);
+  }
+
+  /** Free the two line-layer geometries + shared materials and unparent the group (HMR / world teardown).
+   *  Mirrors the sibling CosmicWeb.dispose() — same 2-geometry/2-material footprint. */
+  dispose(): void {
+    this.group.traverse((o) => {
+      if (o instanceof THREE.LineSegments) o.geometry.dispose();
+    });
+    this.cellMat.dispose();
+    this.linkMat.dispose();
+    this.group.removeFromParent();
   }
 
   /**

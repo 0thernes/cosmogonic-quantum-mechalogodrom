@@ -504,6 +504,7 @@ export class ShoggothSystem implements PortalCullable {
         if (sj === si) continue;
         const og = this.shogs[sj];
         if (!og) continue;
+        if (!og.group.visible) continue; // portal-downed = dead (invisible) until respawn — don't perceive/flee-from/trade-with a corpse (mirrors the outer-loop + portalCull guards; determinism-neutral: all shoggoths are visible pre-cull)
         const op = og.group.position;
         const dd = dist2(p.x, p.y, p.z, op.x, op.y, op.z);
         if (dd < THREAT_R2 && dd > 1e-3) {

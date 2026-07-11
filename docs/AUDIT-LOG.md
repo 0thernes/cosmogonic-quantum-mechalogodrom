@@ -11,6 +11,40 @@ changed and why.
 
 ---
 
+## 2026-07-10 (pass 6) — batch 16: 5 coupling-safe correctness fixes from the pass-6 adversarial sweep
+
+A sixth adversarial sweep (27 agents over the fresh Codex code + underexplored subsystems) confirmed 14
+findings; this batch ships the highest-value coupling-safe ones (apex untouched). 3 MEDIUM + 2 LOW.
+
+- **[QQP-1] quantum-quake momentum integration diverged to NaN** (`quantum-quake-physics.ts`, MED) —
+  `qgePerturb` warped momentum by `1 + strength·g_ii` where the Fubini-Study metric diagonal g_ii ≥ 0 is
+  unbounded and there is no restoring force, so iterating `qgePhysicsStep` grew momentum super-
+  exponentially → NaN. Saturated the gain to `1 + strength·g/(1+|g|)` and finite-clamp momentum/position
+  in the step. Production feeds momentum=0 (a fixed point), so the exact output is preserved — this only
+  removes the latent divergence. +2 regression tests (2000-iteration finiteness + the fixed-point).
+- **[ECON-2] Vickrey auction minted currency on an insolvent winner** (`economy.ts`, MED) — `debit()`
+  caps a withdrawal at the purse's liquid funds (no borrowing), but the auction distributed the full
+  nominal `price` as the dividend, minting the shortfall when the winner couldn't cover it (same class as
+  the batch-12 Gini-guard mint). `debit()` now returns what it actually removed; the dividend uses that —
+  credited == debited, exactly conservative.
+- **[GPU-1] ConstellationSystem leaked 2 BufferGeometries + a scene Group** (`constellations.ts`, MED) —
+  the build-once group/geometries were locals with no `dispose()`, so they leaked on every World
+  teardown/HMR (the recurring dispose-leak class). Mirrored the sibling `CosmicWeb.dispose()` idiom
+  (retain the group, traverse to free geometries + shared materials, unparent) and wired it into
+  `World.dispose()`. +regression test (spyOn geometry.dispose → called; group unparented).
+- **[SHOG-1] shoggoths perceived/fled-from/traded-with portal-downed corpses** (`shoggoths.ts`, LOW) —
+  the inner neighbour scan skipped the outer-loop visibility guard, so a portal-culled (invisible) shoggoth
+  still counted into crowd/flee-centroid/`nearJ` (bargaining partner) until respawn. Added the
+  `!og.group.visible` guard. Determinism-neutral (all shoggoths visible pre-cull; tests never portalCull).
+- **[UI-3] MarketTicker piled up id-less `<style>` blocks** (`market-ticker.ts`, LOW) — the injected
+  `<style>` had no id, so a fresh block accumulated in `<head>` on every World reconstruction (the sibling
+  toggle/panel are already id-deduped). Gave it `id='cqm-mkt-style'` + remove-before-inject.
+
+Receipts 2429→2432 (+3). Deferred to a follow-up (documented): shoggoths consume-loop `indexOf` O(m·n)
+perf refactor (MED, byte-identical), sync-surfaces 10k-count regex wedge (MED), copilot failover +
+ai-sandbox `git diff` confinement (server), alien-flora root-seat false-green test, verify-canonical
+morphotype-100-199 blind spot, world FROZEN sky-dome recenter. Full gate green.
+
 ## 2026-07-10 — batch 15b: honest metric move — the code-grounded 9-axis FLOOR rises (gate-backed)
 
 The metric half of the "smarter A-life" goal, done to the honesty discipline: the shipped, ablation-

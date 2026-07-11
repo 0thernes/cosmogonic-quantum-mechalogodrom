@@ -1454,6 +1454,7 @@ export class World {
     this.instanced?.dispose(); // free every live instance pool — clones + materials (null in per-mesh mode)
     this.connectome.dispose(); // free the axon-web BufferGeometry + LineBasicMaterial
     this.cosmicWeb.dispose(); // free the cosmic-web points/lines geometries + PointsMaterial/LineBasicMaterial
+    this.constellations.dispose(); // free the 2 constellation line-layer geometries + shared LineBasicMaterials
     this.quantumLattice.dispose(); // free the 3 WireframeGeometry shells + shared LineBasicMaterial
     this.goldLattice.dispose(); // free the 7 gold WireframeGeometry forms + shared LineBasicMaterial
     this.quantum.dispose(); // free the quantum point-cloud BufferGeometry + PointsMaterial

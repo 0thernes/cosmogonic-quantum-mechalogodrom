@@ -6,7 +6,7 @@
  * property), and the sub-sector lore lookup. Headless: real three.js scene graph + d3-delaunay,
  * no WebGL renderer, no DOM — exactly the fake-ctx pattern the sim suites use.
  */
-import { describe, expect, test } from 'bun:test';
+import { describe, expect, test, spyOn } from 'bun:test';
 import * as THREE from 'three';
 import { ConstellationSystem } from '../src/sim/constellations';
 import { LoreEngine } from '../src/sim/lore';
@@ -152,5 +152,22 @@ describe('ConstellationSystem — sub-sector lore lookup', () => {
       expect(typeof name).toBe('string');
       expect(name.length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe('ConstellationSystem — dispose frees GPU resources (no leak on teardown / HMR)', () => {
+  test('dispose() disposes both line-layer geometries + materials and unparents the group', () => {
+    const ctx = makeCtx(1);
+    const sys = new ConstellationSystem(ctx, new LoreEngine(0x0c05));
+    const group = ctx.scene.children.find((o) => o.name === 'constellations') as THREE.Group;
+    expect(group).toBeDefined();
+    const geos = group.children
+      .filter((o): o is THREE.LineSegments => o instanceof THREE.LineSegments)
+      .map((l) => l.geometry);
+    expect(geos.length).toBe(2);
+    const geoSpies = geos.map((g) => spyOn(g, 'dispose'));
+    sys.dispose();
+    for (const s of geoSpies) expect(s).toHaveBeenCalledTimes(1); // both geometries freed
+    expect(ctx.scene.children.some((o) => o.name === 'constellations')).toBe(false); // group unparented
   });
 });
