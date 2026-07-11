@@ -11,6 +11,33 @@ changed and why.
 
 ---
 
+## 2026-07-10 (pass 6) — batch 18: shoggoths consume-loop perf (proven byte-identical) + alien-flora seal
+
+The two pass-6 findings I had deferred as "unverifiable" — re-examined and shipped after PROVING safety.
+
+- **[PERF-1] shoggoths consumption tie-break did `list.indexOf(e)` per grid candidate** (`shoggoths.ts`,
+  MED) — O(k + m·n) per feed (a dense cluster with m in-reach prey did m full-list scans, the frame
+  spike the grid query exists to prevent). Replaced with a two-pass: pass 1 finds the min distance with
+  an O(1) `userData.alive === false` liveness gate; pass 2 recovers the lowest list index only among the
+  prey tied at that minimum (one `indexOf`). **Byte-identical, EXHAUSTIVELY PROVEN**: `alive=false` is
+  written ONLY in `EntityManager.dispose()` (entities.ts:452), whose sole callers are
+  `retire()`→`disposeAt/disposeManyDescending` (remove from `list`) and `reset()` (clears the whole
+  `list`) — so no entity is ever `alive=false` while still in `list`, making the gate exactly equivalent
+  to the old `indexOf(e) < 0`; the closest-then-lowest-index tie-break is preserved (dist2 is
+  bit-deterministic). The full suite caught a SOURCE-TEXT regression guard (goal7-fixes V122 pinned the
+  old `if (e.userData.isNhi) continue;` phrasing) — updated it to assert the folded guard form-agnostically.
+- **[FLORA-1] flora root-seat margin was ~0; the seal test was false-green** (`alien-flora.ts`, LOW) —
+  the coarse ground PlaneGeometry's flat triangle chords dip ~0.53u below the analytic surface at max
+  chaos / zero entropy, but roots were seated only 0.5 below, so a root poked above the RENDERED ground
+  at untested phases while `habitat-scale.test` (3 sampled phases) passed green. Deepened the seat to 0.6
+  (~0.07u seal) and made the test sweep the hostile max-chaos/zero-entropy/large-wind band over time —
+  it now actually exercises the worst case (maxRootGap ≤ 0 holds across it).
+
+**11 of 14 pass-6 findings now shipped.** Still open: copilot failover-can't-reach-keyed-provider (MED) +
+in-flight tool-call cancel (LOW), sync-surfaces allowlist coverage (LOW). Receipts unchanged (2435).
+Full gate green. LESSON: "unverifiable byte-identity" was a false deferral — the equivalence WAS
+provable by exhaustively enumerating the `alive=false` writers + their list-removal contract.
+
 ## 2026-07-10 (pass 6) — batch 17: 4 more coupling-safe fixes (gate/security/regex hardening)
 
 Continuing to drain the pass-6 confirmed list — the mechanical/security/latent-gate ones.

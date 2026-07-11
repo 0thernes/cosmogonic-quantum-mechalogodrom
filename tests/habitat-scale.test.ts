@@ -79,11 +79,20 @@ describe('expanded habitat contract', () => {
       }
       return value;
     };
-    const phases = [
+    const phases: [number, number, number, number, number][] = [
       [0, 0, 0, 0, 0],
       [37.25, 1, 0, 3, -2],
       [123, 1, 0.35, -4, 5],
-    ] as const;
+    ];
+    // Hostile regime: max chaos (uChaos=1) + zero entropy (liveAmp=1, full amplitude) + large wind,
+    // swept over time — the band where the flat ground-triangle chord dips FURTHEST below the analytic
+    // surface. The old 3-phase sample missed every worst case, so the seal test passed green while the
+    // guarantee (maxRootGap ≤ 0) was actually violated at other live phases. This sweep exercises it.
+    for (let t = 140; t <= 175; t += 0.5) {
+      phases.push([t, 1, 0, -10, -10]);
+      phases.push([t, 1, 0, -10, 5]);
+    }
+    const ROOT_SEAT = 0.6; // mirrors alien-flora.ts:406 (baseTerrainHeightAt − ROOT_SEAT)
     let maxRootGap = -Infinity;
     for (const [time, chaos, entropy, windX, windZ] of phases) {
       const height = (x: number, z: number): number =>
@@ -105,7 +114,7 @@ describe('expanded habitat contract', () => {
           u + v <= 1
             ? a * (1 - u - v) + b * v + d * u
             : b * (1 - u) + c * (u + v - 1) + d * (1 - v);
-        const plantedRoot = height(x, z) - 0.5;
+        const plantedRoot = height(x, z) - ROOT_SEAT;
         maxRootGap = Math.max(maxRootGap, plantedRoot - rendered);
       }
     }

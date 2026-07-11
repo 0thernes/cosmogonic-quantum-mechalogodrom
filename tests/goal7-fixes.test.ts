@@ -54,7 +54,9 @@ describe('V122 — NHI episodic memory is WRITTEN (USER #3: MEMORY pane no longe
 describe('V122 — static seals: NHI predation guards + owner spawn counts', () => {
   test('titan harvest and shoggoth feed both skip NHI MATRIX beings', () => {
     expect(src('src/sim/titans.ts')).toContain('if (e.userData.isNhi) continue;');
-    expect(src('src/sim/shoggoths.ts')).toContain('if (e.userData.isNhi) continue;');
+    // shoggoths folds the NHI guard into a compound consume-loop skip (`… || e.userData.isNhi || …`)
+    // after the O(m·n)→O(k+n) two-pass refactor — assert the guard is present form-agnostically.
+    expect(src('src/sim/shoggoths.ts')).toContain('e.userData.isNhi');
   });
 
   test('burst defaults to +25 and apocalypse passes exactly 250 (USER #8)', () => {
