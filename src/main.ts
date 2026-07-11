@@ -451,7 +451,18 @@ async function boot(): Promise<void> {
   );
 }
 
-void boot();
+// Only the `new Engine(...)` construction inside boot() has its own try/catch; the rest of boot
+// (MemoryStore/AuditTrail/`new World(...)` — dozens of GPU/three.js subsystem constructors) is
+// unguarded. A throw there would otherwise become an unhandled rejection AND leave the #cqm-boot
+// overlay up forever (it is torn down only by bootDone/bootAbort — there is no timeout fallback),
+// stranding the user on a frozen loading screen. This catch guarantees the overlay is removed and a
+// recovery card shown for ANY boot rejection. Lifecycle-cancellation early-returns resolve normally,
+// so they never reach here; a successful boot resolves undefined and skips the handler.
+boot().catch((err: unknown) => {
+  log.warn('boot failed', { error: err instanceof Error ? err.message : String(err) });
+  bootAbort();
+  showWebglRecovery(err);
+});
 
 // ROBUSTNESS (USER: the "docs-row buttons are gone / AUDIT is wrecked" symptom, intermittently): the
 // deferred click-to-open panels (⛓ ACCESS / ◈ STAGE II / 🗒 AUDIT / SETTINGS / HELP / COPILOT) mount only

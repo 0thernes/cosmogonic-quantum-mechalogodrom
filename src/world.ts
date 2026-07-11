@@ -543,6 +543,13 @@ export class World {
   // twice per frame; bit-identical (same object, read-only downstream), zero visual change.
   private cachedMechaPulse: ReturnType<typeof corpusPulse> | null = null;
   private cachedGlyphPulse: ReturnType<typeof corpusPulse> | null = null;
+  // PERF: same story for the per-archon drive bias + pulse read every RUNNING frame in driveSuper.
+  // `getFullTsotchkeBias(i)` is a pure function of `i` (godform/corpus constants) and
+  // `getCorpusPulseForArchon(i, seed)` a pure function of (i, boot-constant seed) — both frame-invariant,
+  // yet the loop re-folded the full Tsotchke facade (~12 literal-array allocs each, twice per archon)
+  // every frame for 5 archons (~6–9k throwaway allocs/sec) to produce 5 constant results. Cache once.
+  private superFullBias: ReturnType<typeof getFullTsotchkeBias>[] | null = null;
+  private superDrivePulse: ReturnType<typeof getCorpusPulseForArchon>[] | null = null;
   /** V-MECHA brain snapshot getter (for architect panel telemetry). */
   get mechaBrain(): MechalogodromBrain {
     return this.mechalogodromBrain;
@@ -2558,8 +2565,15 @@ export class World {
       // GOAL5: drive EXACTLY 5 SUPER CREATURES (archetypes 0-4) with per-position percepts.
       // local crowding/threat from grid query at body pos; light/sound/chaos biased by godform.ts (exclusive).
       let primeMindOut: SuperMindIntent | null = null; // typed; avoid any per contract
+      // PERF: both are frame-invariant (pure in i / boot-seed) — fold the corpus once, reuse every frame.
+      this.superFullBias ??= Array.from({ length: APEX_INDIVIDUATED }, (_, k) =>
+        getFullTsotchkeBias(k),
+      );
+      this.superDrivePulse ??= Array.from({ length: APEX_INDIVIDUATED }, (_, k) =>
+        getCorpusPulseForArchon(k, (this.persisted.seed ^ (k * 0x9e37)) >>> 0),
+      );
       for (let i = 0; i < APEX_INDIVIDUATED; i++) {
-        const bias = getFullTsotchkeBias(i); // depth-ledger corpus extension (Eshkol/Moonlab/Quake factors) // ARCHITECT rule: use the facade bias for differentiation
+        const bias = this.superFullBias[i]!; // depth-ledger corpus extension (Eshkol/Moonlab/Quake factors), cached // ARCHITECT rule: use the facade bias for differentiation
         this.superBodies[i]!.worldPosition(this.sv1);
         const lx = this.sv1.x,
           lz = this.sv1.z;
@@ -2567,11 +2581,8 @@ export class World {
         const localD = Math.min(1, near.length / 14);
         const net = this.economy.wealthOf(World.ECON_SUPER_BASE + i)?.netWorth ?? 0;
         const wealthRel = clamp(net / (2 * (mean || 1)), 0, 1);
-        // 10x: recompute pulse here for det use (Eshkol AD/Moonlab not needed, quake for body/world feedback) Ralph re-audit
-        const pulseForArchon = getCorpusPulseForArchon(
-          i,
-          /* det seed proxy */ (this.persisted.seed ^ (i * 0x9e37)) >>> 0,
-        );
+        // 10x: pulse for det use (Eshkol AD/Moonlab not needed, quake for body/world feedback) — cached (frame-invariant)
+        const pulseForArchon = this.superDrivePulse[i]!;
         // Ralph loop continue 10x more: compute hybrid ulg/gwt + moonlabMpo (Tsotchke corpus Moonlab)
         const mpoInput = this.superMpoInput;
         mpoInput[0] = pulseForArchon.quakeAliveness ?? 0.5;

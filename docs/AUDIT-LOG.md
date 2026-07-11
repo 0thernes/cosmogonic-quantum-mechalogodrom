@@ -11,7 +11,37 @@ changed and why.
 
 ---
 
-## 2026-07-10 — autonomous whole-repo audit (deps + ~60 findings across 5 batches)
+## 2026-07-10 (pass 2) — fresh adversarial sweep (5 NEW findings beyond the original 69)
+
+A second multi-agent sweep (12 hunter lenses — dispose-leaks, numerical-edge, determinism, ratchet,
+dead-compute, boundary, async-error, perf-hotpath, world.ts, shader-GLSL, tsotchke-facade,
+type-safety — each candidate adversarially verified) over the post-batch-8 tree. **5 findings survived
+verification** (the rest were false-positives or adjudicated-intentional). Split by risk into two
+gated commits: batch 9 (behavior-preserving) and batch 10 (the Moonlab degenerate-constant class).
+
+### Batch 9 — behavior-preserving safety + perf (this commit)
+
+- **[NQS-1] VMC `localEnergy` non-finite guard** (`nqs-vmc-learning.ts`) — the guard caught only
+  underflow (`norm < 1e-12`); if the RBM weights diverge during training, `logAmp` overflows `exp()`
+  → `norm` becomes NaN/Infinity, bypassing the guard and injecting a NaN `E_L` that propagates to
+  permanently-NaN weights (the net re-initialises only in the constructor), which then pins the apex
+  `cons.surprise` to NaN every beat forever. Widened to `!Number.isFinite(norm) || norm < 1e-12`, plus
+  a defense-in-depth non-finite skip before the live weight update in `vmcStep`. A latent/tail hazard
+  (needs weight divergence), now closed. Identical behaviour on every finite run.
+- **[BOOT-1] unguarded `boot()` rejection** (`main.ts`) — `void boot()` had no `.catch()` and only the
+  `new Engine(...)` construction was wrapped; a throw from `new World(...)`/`AuditTrail`/`MemoryStore`
+  (dozens of GPU/three.js constructors) would become an unhandled rejection AND leave the `#cqm-boot`
+  overlay up forever (removed only by `bootDone`/`bootAbort`, no timeout fallback) — a frozen loading
+  screen. Now `boot().catch(...)` → `bootAbort()` + `showWebglRecovery(err)`, matching the Engine path.
+  Lifecycle cancels resolve normally (never hit the handler); a clean boot skips it.
+- **[PERF-1] `driveSuper` frame-invariant recompute** (`world.ts`) — the per-frame 5-archon loop called
+  `getFullTsotchkeBias(i)` and `getCorpusPulseForArchon(i, seed^…)` — both **pure functions of `i` /
+  the boot-constant seed** — every RUNNING frame, re-folding the whole Tsotchke facade (~12 literal
+  arrays each, twice per archon ⇒ ~6–9k throwaway allocs/sec) to produce 5 constant results. Cached
+  once via `??=` arrays (the existing `cachedMechaPulse`/`cachedGlyphPulse` idiom). Byte-identical
+  values, zero behaviour change.
+
+## 2026-07-10 — autonomous whole-repo audit (deps + ~60 findings across 8 batches)
 
 A multi-agent audit (27 finder agents + adversarial verifiers) swept every file for bugs, dead
 compute, determinism violations, and efficiency. 69 findings survived verification; ~60 were shipped
@@ -93,7 +123,7 @@ genuinely load-bearing** couplings (not metric-gaming) + determinism/boundedness
   clamp-and-stick, which would freeze the chaos dead-constant). Now bounded + genuinely varying over
   2000+ steps. New `tests/strange-attractor.test.ts`.
 
-### Batch 6 — the three former deferrals, resolved honestly (this commit)
+### Batch 6 — the three former deferrals, resolved honestly (`5a97ba8f`)
 
 The owner directive is to handle everything; on review the earlier deferrals were over-cautious, so
 each was resolved to its honest maximum (without shipping any fake/degenerate signal):
@@ -117,9 +147,41 @@ each was resolved to its honest maximum (without shipping any fake/degenerate si
   degenerate, and reduced-state mixedness is already computed inline in super-qubits) — NOT shipped
   rather than a fake or redundant signal.
 
+### Batch 7 — adversarial self-review of batches 3–6 (`9a48cade`)
+
+An 11-agent adversarial self-review (each agent tasked to _refute_ one of my own batch-3→6 wires by
+reading the shipped code) returned **10 SOUND, 2 DEFECT** — both defects real, both fixed:
+
+- **[44] temporal-crystal → `cons.workspace` was a DEAD STORE.** `super-mind.ts` reassigns
+  `this.cons` to a fresh object mid-`think()` (STAGE-5, workspace ← `eshkolEngine.workspace`) and
+  finalizes `cons.workspace` again at ~1902, so my earlier leaky-pull (written at ~1273, _before_
+  both writes) was silently discarded — the coupling never reached the workspace `g01` reads next
+  beat nor the snapshot. **Fix:** moved the leaky-pull to _after_ the ~1902 finalize, so
+  `temporalCrystal.order` genuinely feeds the workspace. Now a live coupling, as claimed.
+- **[9] mixed-state-qgt test had two vacuous assertions.** The "Im-sign" check asserted only
+  antisymmetry + magnitude (invariant under the very ρ↔ρᵀ transpose bug it was meant to guard), and
+  `fisher ≈ 4·volume` was tautological (both derive from `volume`). **Fix:** replaced with the ACTUAL
+  expected Im sign (−cos·sin·sinφ < 0, which the pre-fix `ar·bi − ai·br` formula flips) and
+  Berry-curvature antisymmetry (Ω = Im Q antisymmetric with zero diagonal) — genuinely sign-sensitive.
+
+**Lesson (recorded to memory):** `this.cons` in `super-mind` is rebuilt mid-think; couple to `cons`
+fields _at or after_ the ~1902 finalize (or to the source `eshkolEngine.workspace`), never before the
+reassignment. Always adversarially self-review coupling wires — a plausible-looking wire can be a
+no-op.
+
+### Batch 8 — `spark()` sprite cache (`ff30c1af`)
+
+The deferred sub-item of [60]: `super-neural.ts`'s `spark()` built a fresh radial-gradient every call
+(hundreds/frame). Now bakes one 64×64 offscreen sprite per quantized hue (each RGB channel snapped to
+/8 ⇒ measured **103** distinct sprites across all 360 hues × 4 bands + fixed colours; shift ≤7/channel,
+imperceptible) and `drawImage`s it. Falls back to the original gradient when there is no DOM (headless
+tests import but never draw). Together with the batch-4 pair-hoist this removes both the `O(n²)`
+iteration and the per-surviving-pair gradient allocation on that render path.
+
 Receipts: 2369 → **2396** tests (batches 1–3 → 2371; batch 5 → 2389; batch 6 adds dark-energy +2 and
-mixed-state-qgt +5 → 2396), coverage floor unchanged (84.64% line / 82.21% func — Windows measured
-higher). Full `bun run check` green on each commit.
+mixed-state-qgt +5 → 2396; batches 7–8 strengthen assertions / cache a render path, no new tests),
+coverage floor unchanged (84.64% line / 82.21% func — Windows measured higher). Full `bun run check`
+green on each commit.
 
 ---
 

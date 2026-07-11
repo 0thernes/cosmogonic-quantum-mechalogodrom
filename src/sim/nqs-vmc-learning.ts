@@ -231,7 +231,11 @@ export function localEnergy(
 ): number {
   const psi = amplitude(arch, bitstring);
   const norm = psi.re * psi.re + psi.im * psi.im;
-  if (norm < 1e-12) return 0;
+  // Guard BOTH ends: underflow (norm≈0) AND overflow. If the RBM weights diverge during training,
+  // logAmp can exceed ~709 so exp() overflows to Infinity → norm becomes NaN (Infinity·0 in the phase
+  // product) or Infinity; either bypasses a bare `norm < 1e-12` check and injects a NaN E_L that
+  // propagates to sticky-NaN weights (initNQS runs only once). `!Number.isFinite` closes that tail.
+  if (!Number.isFinite(norm) || norm < 1e-12) return 0;
 
   let energy = 0;
 
@@ -359,6 +363,20 @@ export function vmcStep(
     gradNorm += g * g;
   }
   gradNorm = Math.sqrt(gradNorm);
+
+  // Defense-in-depth: never write a non-finite update into the LIVE parameters. The localEnergy
+  // guard above keeps E_L finite, so meanEnergy/gradients should stay finite — but if a non-finite
+  // value ever reaches here it would be permanent (weights are re-initialised only in the
+  // constructor). Skip the step and report zeroed telemetry rather than poison the learner forever.
+  if (!Number.isFinite(meanEnergy) || !Number.isFinite(gradNorm)) {
+    return {
+      energy: 0,
+      energyVariance: 0,
+      acceptanceRate,
+      gradientNorm: 0,
+      parameterCount: arch.weights.length + arch.visibleCount + arch.hiddenCount,
+    };
+  }
 
   // Apply gradient descent with regularization
   const lr = config.learningRate;
