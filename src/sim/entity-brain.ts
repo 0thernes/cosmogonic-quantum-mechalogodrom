@@ -75,6 +75,25 @@ export class EntityBrainField {
   /** Time-normalizes online updates so 30/60/120 Hz do not learn at different wall-sim rates. */
   private lastThinkTime = Number.NaN;
   private learningStepScale = 1;
+  /** Per-population-call controller constants; avoids repeated optional reads and 50k `Math.pow`s. */
+  private activeSignal: OrganismIntelligenceSignal | null = null;
+  private controllerActive = false;
+  private adaptiveLearningRate = 0;
+  private goalGainBase = 0.22;
+  private corpusU = 0;
+  private corpusV = 0;
+  private signalConfidence = 0;
+  private explorationNudge = 0;
+  private explorationCosOffset = 1;
+  private explorationSinOffset = 0;
+  private explorationCosZOffset = 1;
+  private explorationSinZOffset = 0;
+  private verticalThreatNudge = 0;
+  private signalGainScale = 1;
+  /** Slot-local corpus rotation is invariant until an entity/phase replaces that slot. */
+  private readonly corpusAnglePhase: Float64Array;
+  private readonly corpusAngleCos: Float64Array;
+  private readonly corpusAngleSin: Float64Array;
 
   /** Roll one deterministic genome per slot from the injected (dedicated) rng. O(capacity). */
   constructor(capacity: number, rng: Rng, quantization: QuantizationConfig = DEFAULT_QUANTIZATION) {
@@ -96,6 +115,10 @@ export class EntityBrainField {
     this.lastEnergy = new Float32Array(this.capacity);
     this.adaptiveReady = new Uint8Array(this.capacity);
     this.slotToBrain = new Uint32Array(this.capacity);
+    this.corpusAnglePhase = new Float64Array(this.capacity);
+    this.corpusAngleCos = new Float64Array(this.capacity);
+    this.corpusAngleSin = new Float64Array(this.capacity);
+    this.corpusAnglePhase.fill(Number.NaN);
 
     for (let i = 0; i < this.capacity; i++) {
       this.slotToBrain[i] = i;
@@ -153,8 +176,12 @@ export class EntityBrainField {
     this.lastActionZ.fill(0);
     this.lastEnergy.fill(0);
     this.adaptiveReady.fill(0);
+    this.corpusAnglePhase.fill(Number.NaN);
     this.lastThinkTime = Number.NaN;
     this.learningStepScale = 1;
+    this.activeSignal = null;
+    this.controllerActive = false;
+    this.adaptiveLearningRate = 0;
   }
 
   /** Low-cadence evidence view for one slot; never called by the population hot loop. */
@@ -256,6 +283,7 @@ export class EntityBrainField {
     const n = Math.min(list.length, this.capacity);
     if (n === 0) return 0;
     this.prepareThinkTime(t);
+    this.prepareControllerContext(t);
     const chaosN = clamp01(chaos / 10);
     let thought = 0;
     for (let i = 0; i < n; i++) {
@@ -278,6 +306,7 @@ export class EntityBrainField {
   ): number {
     if (indices.length === 0 || this.capacity === 0) return 0;
     this.prepareThinkTime(t);
+    this.prepareControllerContext(t);
     const chaosN = clamp01(chaos / 10);
     let thought = 0;
     for (const slot of indices) {
@@ -294,6 +323,7 @@ export class EntityBrainField {
    */
   thinkAll(list: ReadonlyArray<Entity | undefined>, chaos: number, t: number): number {
     this.prepareThinkTime(t);
+    this.prepareControllerContext(t);
     const chaosN = clamp01(chaos / 10);
     const n = Math.min(list.length, this.capacity);
     let thought = 0;
@@ -315,9 +345,7 @@ export class EntityBrainField {
     s[1] = clamp01(ud.age / (ud.life > 1 ? ud.life : 1)); // mortality (age toward death)
     const sp = Math.hypot(ud.vel.x, ud.vel.y, ud.vel.z);
     s[2] = clamp01(sp / 6); // own speed
-    const intelligence = this.intelligence;
-    const signal = intelligence?.enabled === true ? intelligence : null;
-    const controllerActive = signal !== null || this.goals !== null;
+    const signal = this.activeSignal;
     s[3] = signal ? clamp01(chaosN * 0.7 + signal.threatResponse * 0.3) : chaosN; // world disorder + shared threat forecast
     const fp32 = this.fp32Genomes;
     const curiosity = fp32
@@ -336,14 +364,10 @@ export class EntityBrainField {
     let actionX = o[0] ?? 0;
     let actionZ = o[1] ?? 0;
     let actionY = o[2] ?? 0;
-    if (controllerActive) {
+    if (this.controllerActive) {
       const metabolic = clamp01(ud.energy / 100);
       const payoff = Number.isFinite(ud.payoff) ? Math.tanh(ud.payoff * 0.1) : 0;
-      const baseLearningRate = 0.004 + (signal?.plasticity ?? 0) * 0.022;
-      const learningRate =
-        this.learningStepScale <= 0
-          ? 0
-          : 1 - Math.pow(1 - baseLearningRate, this.learningStepScale);
+      const learningRate = this.adaptiveLearningRate;
       if (this.onlineLearningEnabled && (this.adaptiveReady[brainSlot] ?? 0) !== 0) {
         // Temporal-difference reward: food/wealth gain dominates; payoff supplies a smaller social term.
         const reward = Math.max(
@@ -383,10 +407,7 @@ export class EntityBrainField {
       const goals = this.goals;
       const goalDesire = clamp01(goals?.desire[slot] ?? 0);
       const goalCover = clamp01(goals?.cover[slot] ?? 0);
-      const goalGain =
-        goalDesire *
-        goalCover *
-        (0.22 + (signal?.resourcePressure ?? 0) * 0.2 + (signal?.confidence ?? 0) * 0.08);
+      const goalGain = goalDesire * goalCover * this.goalGainBase;
       const goalX = goals?.directionX[slot] ?? 0;
       const goalZ = goals?.directionZ[slot] ?? 0;
       const hasGoal = goalDesire > 0.001 && goalX * goalX + goalZ * goalZ > 1e-8;
@@ -402,49 +423,48 @@ export class EntityBrainField {
       // The aggregate corpus remains causal after the MLP rather than disappearing inside a saturated
       // intermediate. Rotate by slot phase so a global field does not make the whole population march in
       // lockstep. Each integrated-repo ablation therefore reaches final velocity; fenced/meta rows do not.
-      const ch = signal?.channels;
-      const corpusU = ch ? (ch[0] ?? 0) - (ch[1] ?? 0) : 0;
-      const corpusV = ch ? (ch[2] ?? 0) - (ch[3] ?? 0) : 0;
-      const angle = slot * 2.399963229728653 + ud.ph;
-      const ca = Math.cos(angle);
-      const sa = Math.sin(angle);
-      const corpusX = (corpusU * ca - corpusV * sa) * 0.11 * (signal?.confidence ?? 0);
-      const corpusZ = (corpusU * sa + corpusV * ca) * 0.11 * (signal?.confidence ?? 0);
-      const exploratory = signal ? (signal.exploration - 0.5) * 0.08 : 0;
+      let corpusX = 0;
+      let corpusZ = 0;
+      let explorationX = 0;
+      let explorationZ = 0;
+      if (signal) {
+        let ca = this.corpusAngleCos[slot] ?? 0;
+        let sa = this.corpusAngleSin[slot] ?? 0;
+        if (this.corpusAnglePhase[slot] !== ud.ph) {
+          const angle = slot * 2.399963229728653 + ud.ph;
+          ca = Math.cos(angle);
+          sa = Math.sin(angle);
+          this.corpusAnglePhase[slot] = ud.ph;
+          this.corpusAngleCos[slot] = ca;
+          this.corpusAngleSin[slot] = sa;
+        }
+        corpusX = (this.corpusU * ca - this.corpusV * sa) * 0.11 * this.signalConfidence;
+        corpusZ = (this.corpusU * sa + this.corpusV * ca) * 0.11 * this.signalConfidence;
+        // Angle-addition reuses the corpus sin/cos pair; two extra transcendental calls per organism
+        // become four scalar multiplies while remaining the exact same trigonometric model.
+        explorationX =
+          (ca * this.explorationCosOffset - sa * this.explorationSinOffset) * this.explorationNudge;
+        explorationZ =
+          (sa * this.explorationCosZOffset + ca * this.explorationSinZOffset) *
+          this.explorationNudge;
+      }
 
       actionX = Math.max(
         -1.5,
-        Math.min(
-          1.5,
-          actionX +
-            learnedX +
-            goalX * goalGain +
-            corpusX +
-            Math.cos(angle + t * 0.17) * exploratory,
-        ),
+        Math.min(1.5, actionX + learnedX + goalX * goalGain + corpusX + explorationX),
       );
       actionZ = Math.max(
         -1.5,
-        Math.min(
-          1.5,
-          actionZ +
-            learnedZ +
-            goalZ * goalGain +
-            corpusZ +
-            Math.sin(angle + t * 0.19) * exploratory,
-        ),
+        Math.min(1.5, actionZ + learnedZ + goalZ * goalGain + corpusZ + explorationZ),
       );
       if (signal) {
-        actionY = Math.max(-1.25, Math.min(1.25, actionY + (signal.threatResponse - 0.5) * 0.05));
+        actionY = Math.max(-1.25, Math.min(1.25, actionY + this.verticalThreatNudge));
       }
       this.lastActionX[brainSlot] = hasGoal ? actionX * goalX + actionZ * goalZ : actionX;
       this.lastActionZ[brainSlot] = hasGoal ? -actionX * goalZ + actionZ * goalX : actionZ;
     }
     // ── ACTION: a small, bounded steer; out[3] is an excitation that scales the authority ──
-    const gain =
-      STEER_GAIN *
-      (0.5 + 0.75 * ((o[3] ?? 0) + 1) * 0.5) *
-      (signal ? 0.92 + signal.confidence * 0.16 : 1);
+    const gain = STEER_GAIN * (0.5 + 0.75 * ((o[3] ?? 0) + 1) * 0.5) * this.signalGainScale;
     ud.vel.x += actionX * gain;
     ud.vel.z += actionZ * gain;
     ud.vel.y += actionY * gain * 0.5; // gentler vertical
@@ -549,5 +569,52 @@ export class EntityBrainField {
       this.learningStepScale = Math.max(0, Math.min(4, (t - this.lastThinkTime) * 60));
     }
     this.lastThinkTime = t;
+  }
+
+  /** Fold shared controller terms once per population pass rather than once per organism. */
+  private prepareControllerContext(t: number): void {
+    const intelligence = this.intelligence;
+    const signal = intelligence?.enabled === true ? intelligence : null;
+    this.activeSignal = signal;
+    this.controllerActive = signal !== null || this.goals !== null;
+    if (!this.controllerActive) {
+      this.adaptiveLearningRate = 0;
+      this.goalGainBase = 0.22;
+      this.corpusU = 0;
+      this.corpusV = 0;
+      this.signalConfidence = 0;
+      this.explorationNudge = 0;
+      this.explorationCosOffset = 1;
+      this.explorationSinOffset = 0;
+      this.explorationCosZOffset = 1;
+      this.explorationSinZOffset = 0;
+      this.verticalThreatNudge = 0;
+      this.signalGainScale = 1;
+      return;
+    }
+
+    const baseLearningRate = 0.004 + (signal?.plasticity ?? 0) * 0.022;
+    this.adaptiveLearningRate =
+      this.learningStepScale <= 0 ? 0 : 1 - Math.pow(1 - baseLearningRate, this.learningStepScale);
+    this.goalGainBase =
+      0.22 + (signal?.resourcePressure ?? 0) * 0.2 + (signal?.confidence ?? 0) * 0.08;
+    const channels = signal?.channels;
+    this.corpusU = channels ? (channels[0] ?? 0) - (channels[1] ?? 0) : 0;
+    this.corpusV = channels ? (channels[2] ?? 0) - (channels[3] ?? 0) : 0;
+    this.signalConfidence = signal?.confidence ?? 0;
+    this.explorationNudge = signal ? (signal.exploration - 0.5) * 0.08 : 0;
+    if (signal) {
+      this.explorationCosOffset = Math.cos(t * 0.17);
+      this.explorationSinOffset = Math.sin(t * 0.17);
+      this.explorationCosZOffset = Math.cos(t * 0.19);
+      this.explorationSinZOffset = Math.sin(t * 0.19);
+    } else {
+      this.explorationCosOffset = 1;
+      this.explorationSinOffset = 0;
+      this.explorationCosZOffset = 1;
+      this.explorationSinZOffset = 0;
+    }
+    this.verticalThreatNudge = signal ? (signal.threatResponse - 0.5) * 0.05 : 0;
+    this.signalGainScale = signal ? 0.92 + signal.confidence * 0.16 : 1;
   }
 }

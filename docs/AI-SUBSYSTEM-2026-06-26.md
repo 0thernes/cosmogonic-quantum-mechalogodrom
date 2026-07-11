@@ -7,11 +7,14 @@
 > module named here is pure, seeded, allocation-disciplined, and unit-tested.
 
 > **2026-07-10 causal update.** The living systems now share a bounded corpus-conditioned intelligence
-> field that affects resource, threat, exploration, social, forecast, and plasticity signals. On 30
-> held-out seeds it improved resource-goal progress against the disabled control and made all `17/17`
-> integrated external channels causally visible, with all `5/5` excluded channels inert. It did not pass
-> the preregistered 5% reversal-adaptation threshold (`3.9129%`), and shuffled/classical controls did not
-> establish substrate- or quantum-specific uplift. This supports bounded task behavior only; see the
+> field that affects resource, threat, exploration, social, forecast, and plasticity signals. On a fresh
+> disjoint fixed 30-seed family, goal-only and corpus-conditioned effects passed, adaptation cleared the
+> script-declared 5% threshold at `6.1213%`, all `17/17` integrated rows were causal, and all `5/5`
+> excluded rows stayed inert. Three-process performance stability and matched coverage for every named
+> consumer class now pass after the population hot-path/test seal. Uniform random-action baseline separation and
+> aggregate-mapping specificity did not pass. The aggregate
+> rotation and uniform final-exploration surrogate are not repository-permutation or entropy-matched
+> quantum controls. This supports bounded task behavior only; see the
 > [full causal audit](./reports/2026-07-10-OPERATIONAL-ORGANISM-INTELLIGENCE-CAUSAL-AUDIT.md).
 
 ## The two halves, and the hard line between them

@@ -5,17 +5,18 @@
 Technical reports and audits for Cosmogonic Quantum Mechalogodrom. Dated filenames (`2026-*`) are
 **historical worldline snapshots** when present — they preserve evidence from their authoring pass.
 **Current** gate receipts: [VERIFICATION-ANALYTICAL-DATA.md](../VERIFICATION-ANALYTICAL-DATA.md) §1 ·
-`scripts/canonical-receipts.ts` (v0.21.13 · **2,486-test floor** · **84.64 % / 82.21 %** coverage).
+`scripts/canonical-receipts.ts` (v0.21.13 · **2,490-test floor** · **84.64 % / 82.21 %** coverage).
 Latest Windows-local receipt observed by the current audit: **2,385 completed cases, zero failures, 2,867,279
 expect() calls**.
 
 ## Reports
 
 - [2026-07-10-OPERATIONAL-ORGANISM-INTELLIGENCE-CAUSAL-AUDIT.md](./2026-07-10-OPERATIONAL-ORGANISM-INTELLIGENCE-CAUSAL-AUDIT.md)
-  — current matched-seed causal report for the shared living-system intelligence field: resource-goal
-  effect, `17/17` integrated-channel reach, `5/5` excluded-channel inertness, performance pass, and the
-  honestly failed 5% reversal-adaptation criterion. Includes the 22-repository ledger, Eshkol/QRNG
-  boundaries, the code-grounded 9-axis profile, and the no-sentience/no-numeric-uplift gate.
+  — current fresh-disjoint fixed-family causal report for the shared living-system intelligence field:
+  synthetic goal-only/corpus effects, `6.1213%` adaptation, `17/17` integrated-row reach, `5/5`
+  excluded-row inertness, numerical safety, three-process performance stability, and complete named
+  consumer coverage pass; uniform random-action baseline separation and aggregate specificity fail. Includes the 22-repository ledger,
+  Eshkol/QRNG boundaries, the code-grounded 9-axis profile, and the no-additional-uplift gate.
 - [VERIFICATION-ANALYTICAL-DATA.md](../VERIFICATION-ANALYTICAL-DATA.md) — canonical current facts.
 - [CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md](../CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md)
   — active 22-report master synthesis and current publication-facing truth pass.

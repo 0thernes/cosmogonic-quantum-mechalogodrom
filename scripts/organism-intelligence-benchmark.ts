@@ -25,15 +25,21 @@ import type {
 } from '../src/types';
 
 const RECEIPT_PATH = 'docs/reports/assets/organism-intelligence-causal-benchmark-v3.json';
-const TASK_VERSION = 'organism-intelligence-v3-goal-preserved-control';
-const HELD_OUT_SEEDS = Array.from(
+const TASK_VERSION = 'organism-intelligence-v3-disjoint-synthetic-goal-evaluation';
+// Fresh V3 family: disjoint from the V1/V2 seed arrays. These are fixed deterministic evaluation
+// seeds, not an externally preregistered or untouched validation set.
+const EVALUATION_SEEDS = Array.from(
   { length: 30 },
-  (_, i) => (0x7200_0001 + Math.imul(i + 1, 0x9e37_79b1)) >>> 0,
+  (_, i) => (0x9d00_0001 + Math.imul(i + 1, 0x85eb_ca6b)) >>> 0,
 );
 const BOOTSTRAP_SAMPLES = 10_000;
+const PERFORMANCE_PROCESSES = 3;
+const PERFORMANCE_BATCHES = 10;
+const PERFORMANCE_SAMPLES_PER_BRANCH = 7;
+const PERFORMANCE_WORKER_FLAG = '--performance-worker';
 const ACCEPTANCE = Object.freeze({
-  resourceMeanImprovementMinExclusive: 0,
-  resourceBootstrapLowerBoundMinExclusive: 0,
+  goalMeanImprovementMinExclusive: 0,
+  goalBootstrapLowerBoundMinExclusive: 0,
   adaptationRelativeMedianImprovementMin: 0.05,
   adaptationBootstrapLowerBoundMinExclusive: 0,
   adaptationWorstSeedRelativeLossMin: -0.2,
@@ -146,30 +152,41 @@ function cloneSignal(
   return { ...source, channels };
 }
 
-function oneStepProgress(
+function oneStepGoalResponse(
   seed: number,
-  mode: 'enhanced' | 'disabled' | 'legacy' | 'shuffled' | 'classical' | 'random',
+  mode:
+    | 'enhanced'
+    | 'disabled'
+    | 'legacy'
+    | 'aggregateRotated'
+    | 'uniformExplorationSurrogate'
+    | 'random',
 ): number {
   if (mode === 'random') return (mulberry32(seed ^ 0x8bad_f00d)() * 2 - 1) * 0.045;
   const brain = new EntityBrainField(1, mulberry32(seed ^ 0xb7a1_9e3d));
   const goal = goalField(1);
   if (mode === 'disabled') {
-    // True substrate ablation: preserve the identical explicit flora goal/controller and remove only
-    // the shared corpus signal. This avoids attributing the goal-loop addition to corpus intelligence.
+    // True substrate ablation: preserve the identical synthetic +x goal/controller and remove only the
+    // shared corpus signal. This avoids attributing the goal-loop addition to corpus intelligence.
     brain.attachAdaptiveField(null, goal);
   } else if (mode !== 'legacy') {
     const full = signalFor(seed);
     const signal =
-      mode === 'shuffled'
+      mode === 'aggregateRotated'
         ? cloneSignal(full, (channels) => {
-            const first = channels[0] ?? 0;
-            channels[0] = channels[2] ?? 0;
-            channels[2] = channels[1] ?? 0;
-            channels[1] = channels[3] ?? 0;
-            channels[3] = first;
+            // The live signal exposes four aggregate semantic channels, not 22 repo-indexed lanes.
+            // Rotate all four with a non-zero seed-derived shift; this is an aggregate-mapping
+            // sensitivity control and is deliberately not described as a repository permutation.
+            const source = new Float32Array(channels);
+            const shift = 1 + (seed % Math.max(1, channels.length - 1));
+            for (let i = 0; i < channels.length; i++) {
+              channels[i] = source[(i + shift) % source.length] ?? 0;
+            }
           })
-        : mode === 'classical'
-          ? { ...cloneSignal(full), exploration: mulberry32(seed ^ 0xc1a5_51c)() }
+        : mode === 'uniformExplorationSurrogate'
+          ? // This replaces the final composed exploration value with a deterministic uniform
+            // surrogate. It is not entropy/distribution matched and is not a physical-quantum control.
+            { ...cloneSignal(full), exploration: mulberry32(seed ^ 0xc1a5_51c)() }
           : full;
     brain.attachAdaptiveField(signal, goal);
   }
@@ -245,7 +262,13 @@ function performanceReceipt(): {
   legacyEntityMedianMs: number;
   enhancedEntityMedianMs: number;
   incrementalEntityMedianMs: number;
+  incrementalEntityWorstBatchMs: number;
+  incrementalEntityBatchMediansMs: number[];
+  repeatBatches: number;
+  samplesPerBranchPerBatch: number;
   population: number;
+  orderCounterbalanced: boolean;
+  branchStateIsolated: boolean;
 } {
   const field = new TsotchkeOrganismIntelligence(0xdecafbad, { cadenceFrames: 1 });
   const sharedTimes: number[] = [];
@@ -269,38 +292,106 @@ function performanceReceipt(): {
   }
 
   const population = ACCEPTANCE.performancePopulation;
-  const brain = new EntityBrainField(population, mulberry32(0x5050));
-  const entities = Array.from({ length: population }, (_, i) => fakeEntity(i));
+  const legacyBrain = new EntityBrainField(population, mulberry32(0x5050));
+  const enhancedBrain = new EntityBrainField(population, mulberry32(0x5050));
+  const legacyEntities = Array.from({ length: population }, (_, i) => fakeEntity(i));
+  const enhancedEntities = Array.from({ length: population }, (_, i) => fakeEntity(i));
   const goals = goalField(population);
   const signal = signalFor(0x5050);
   const legacyTimes: number[] = [];
   const enhancedTimes: number[] = [];
-  // One warm-up per branch, then alternating samples to reduce JIT/thermal ordering bias.
-  brain.attachAdaptiveField(null, null);
-  brain.thinkAll(entities, 4, 0);
-  brain.attachAdaptiveField(signal, goals);
-  brain.thinkAll(entities, 4, 1 / 60);
-  for (let sample = 0; sample < 7; sample++) {
+  const incrementalBatchMedians: number[] = [];
+  // Isolate branch state, warm each branch once, and counterbalance which branch runs first. This
+  // prevents the enhanced arm from inheriting a systematic second-run cache/JIT/thermal advantage.
+  legacyBrain.attachAdaptiveField(null, null);
+  legacyBrain.thinkAll(legacyEntities, 4, 0);
+  enhancedBrain.attachAdaptiveField(signal, goals);
+  enhancedBrain.thinkAll(enhancedEntities, 4, 0);
+  const measure = (
+    brain: EntityBrainField,
+    entities: readonly Entity[],
+    enhanced: boolean,
+    t: number,
+  ): number => {
     for (const entity of entities) entity.userData.vel.set(0, 0, 0);
-    brain.attachAdaptiveField(null, null);
-    let start = performance.now();
-    brain.thinkAll(entities, 4, (sample * 2 + 2) / 60);
-    legacyTimes.push(performance.now() - start);
-
-    for (const entity of entities) entity.userData.vel.set(0, 0, 0);
-    brain.attachAdaptiveField(signal, goals);
-    start = performance.now();
-    brain.thinkAll(entities, 4, (sample * 2 + 3) / 60);
-    enhancedTimes.push(performance.now() - start);
+    brain.attachAdaptiveField(enhanced ? signal : null, enhanced ? goals : null);
+    const start = performance.now();
+    brain.thinkAll(entities, 4, t);
+    return performance.now() - start;
+  };
+  for (let batch = 0; batch < PERFORMANCE_BATCHES; batch++) {
+    const legacyBatch: number[] = [];
+    const enhancedBatch: number[] = [];
+    for (let sample = 0; sample < PERFORMANCE_SAMPLES_PER_BRANCH; sample++) {
+      const ordinal = batch * PERFORMANCE_SAMPLES_PER_BRANCH + sample;
+      const t = (ordinal + 1) / 60;
+      let legacyMs: number;
+      let enhancedMs: number;
+      if ((ordinal & 1) === 0) {
+        legacyMs = measure(legacyBrain, legacyEntities, false, t);
+        enhancedMs = measure(enhancedBrain, enhancedEntities, true, t);
+      } else {
+        enhancedMs = measure(enhancedBrain, enhancedEntities, true, t);
+        legacyMs = measure(legacyBrain, legacyEntities, false, t);
+      }
+      legacyBatch.push(legacyMs);
+      legacyTimes.push(legacyMs);
+      enhancedBatch.push(enhancedMs);
+      enhancedTimes.push(enhancedMs);
+    }
+    incrementalBatchMedians.push(median(enhancedBatch) - median(legacyBatch));
   }
   const legacyMedian = median(legacyTimes);
   const enhancedMedian = median(enhancedTimes);
+  const incrementalMedian = median(incrementalBatchMedians);
   return {
     sharedFieldP95Ms: percentile(sharedTimes.slice(20), 0.95),
     legacyEntityMedianMs: legacyMedian,
     enhancedEntityMedianMs: enhancedMedian,
-    incrementalEntityMedianMs: enhancedMedian - legacyMedian,
+    incrementalEntityMedianMs: incrementalMedian,
+    incrementalEntityWorstBatchMs: Math.max(...incrementalBatchMedians),
+    incrementalEntityBatchMediansMs: incrementalBatchMedians,
+    repeatBatches: PERFORMANCE_BATCHES,
+    samplesPerBranchPerBatch: PERFORMANCE_SAMPLES_PER_BRANCH,
     population,
+    orderCounterbalanced: true,
+    branchStateIsolated: true,
+  };
+}
+
+function performanceEnvelope(): ReturnType<typeof performanceReceipt> & {
+  repeatProcesses: number;
+  totalBatches: number;
+  processRuns: ReturnType<typeof performanceReceipt>[];
+} {
+  const processRuns: ReturnType<typeof performanceReceipt>[] = [];
+  for (let run = 0; run < PERFORMANCE_PROCESSES; run++) {
+    const child = Bun.spawnSync([process.execPath, import.meta.path, PERFORMANCE_WORKER_FLAG]);
+    if (child.exitCode !== 0) {
+      throw new Error(
+        `performance worker ${run + 1} failed: ${child.stderr.toString().trim() || `exit ${child.exitCode}`}`,
+      );
+    }
+    processRuns.push(
+      JSON.parse(child.stdout.toString().trim()) as ReturnType<typeof performanceReceipt>,
+    );
+  }
+  const allBatchMedians = processRuns.flatMap((run) => run.incrementalEntityBatchMediansMs);
+  return {
+    sharedFieldP95Ms: Math.max(...processRuns.map((run) => run.sharedFieldP95Ms)),
+    legacyEntityMedianMs: median(processRuns.map((run) => run.legacyEntityMedianMs)),
+    enhancedEntityMedianMs: median(processRuns.map((run) => run.enhancedEntityMedianMs)),
+    incrementalEntityMedianMs: median(processRuns.map((run) => run.incrementalEntityMedianMs)),
+    incrementalEntityWorstBatchMs: Math.max(...allBatchMedians),
+    incrementalEntityBatchMediansMs: allBatchMedians,
+    repeatProcesses: PERFORMANCE_PROCESSES,
+    repeatBatches: PERFORMANCE_BATCHES,
+    totalBatches: PERFORMANCE_PROCESSES * PERFORMANCE_BATCHES,
+    samplesPerBranchPerBatch: PERFORMANCE_SAMPLES_PER_BRANCH,
+    population: ACCEPTANCE.performancePopulation,
+    orderCounterbalanced: processRuns.every((run) => run.orderCounterbalanced),
+    branchStateIsolated: processRuns.every((run) => run.branchStateIsolated),
+    processRuns,
   };
 }
 
@@ -351,16 +442,28 @@ function numericalSafetyReceipt(): {
   };
 }
 
-const modes = ['enhanced', 'disabled', 'legacy', 'shuffled', 'classical', 'random'] as const;
-const resourceByMode = Object.fromEntries(modes.map((mode) => [mode, [] as number[]])) as Record<
+if (process.argv.includes(PERFORMANCE_WORKER_FLAG)) {
+  console.log(JSON.stringify(performanceReceipt()));
+  process.exit(0);
+}
+
+const modes = [
+  'enhanced',
+  'disabled',
+  'legacy',
+  'aggregateRotated',
+  'uniformExplorationSurrogate',
+  'random',
+] as const;
+const goalByMode = Object.fromEntries(modes.map((mode) => [mode, [] as number[]])) as Record<
   (typeof modes)[number],
   number[]
 >;
 const adaptive: number[] = [];
 const frozen: number[] = [];
 const catastrophicLosses: number[] = [];
-for (const seed of HELD_OUT_SEEDS) {
-  for (const mode of modes) resourceByMode[mode].push(oneStepProgress(seed, mode));
+for (const seed of EVALUATION_SEEDS) {
+  for (const mode of modes) goalByMode[mode].push(oneStepGoalResponse(seed, mode));
   const live = adaptationReturn(seed, true);
   const control = adaptationReturn(seed, false);
   adaptive.push(live.postReversal);
@@ -371,19 +474,24 @@ for (const seed of HELD_OUT_SEEDS) {
 
 const paired = (a: readonly number[], b: readonly number[]): number[] =>
   a.map((value, i) => value - (b[i] ?? 0));
-const resourceDisabledDiff = paired(resourceByMode.enhanced, resourceByMode.disabled);
-const goalOnlyLegacyDiff = paired(resourceByMode.disabled, resourceByMode.legacy);
-const resourceShuffledDiff = paired(resourceByMode.enhanced, resourceByMode.shuffled);
-const resourceClassicalDiff = paired(resourceByMode.enhanced, resourceByMode.classical);
+const corpusGoalDiff = paired(goalByMode.enhanced, goalByMode.disabled);
+const goalOnlyLegacyDiff = paired(goalByMode.disabled, goalByMode.legacy);
+const goalAggregateRotationDiff = paired(goalByMode.enhanced, goalByMode.aggregateRotated);
+const goalExplorationSurrogateDiff = paired(
+  goalByMode.enhanced,
+  goalByMode.uniformExplorationSurrogate,
+);
+const goalRandomDiff = paired(goalByMode.enhanced, goalByMode.random);
 const adaptationDiff = paired(adaptive, frozen);
-const resourceDisabledCi = pairedBootstrap95(resourceDisabledDiff);
+const corpusGoalCi = pairedBootstrap95(corpusGoalDiff);
 const goalOnlyLegacyCi = pairedBootstrap95(goalOnlyLegacyDiff);
-const resourceShuffledCi = pairedBootstrap95(resourceShuffledDiff);
-const resourceClassicalCi = pairedBootstrap95(resourceClassicalDiff);
+const goalAggregateRotationCi = pairedBootstrap95(goalAggregateRotationDiff);
+const goalExplorationSurrogateCi = pairedBootstrap95(goalExplorationSurrogateDiff);
+const goalRandomCi = pairedBootstrap95(goalRandomDiff);
 const adaptationCi = pairedBootstrap95(adaptationDiff);
-const benchmarkPerformance = performanceReceipt();
+const benchmarkPerformance = performanceEnvelope();
 const numericalSafety = numericalSafetyReceipt();
-const causalityRuns = HELD_OUT_SEEDS.map((seed) => corpusCausality(seed));
+const causalityRuns = EVALUATION_SEEDS.map((seed) => corpusCausality(seed));
 const causality = {
   evaluatedSeeds: causalityRuns.length,
   integrated: Math.min(...causalityRuns.map((run) => run.integrated)),
@@ -392,12 +500,15 @@ const causality = {
   excludedExactZero: Math.min(...causalityRuns.map((run) => run.excludedExactZero)),
 };
 
-const resourceAccepted =
-  mean(resourceDisabledDiff) > ACCEPTANCE.resourceMeanImprovementMinExclusive &&
-  resourceDisabledCi[0] > ACCEPTANCE.resourceBootstrapLowerBoundMinExclusive;
+const corpusGoalAccepted =
+  mean(corpusGoalDiff) > ACCEPTANCE.goalMeanImprovementMinExclusive &&
+  corpusGoalCi[0] > ACCEPTANCE.goalBootstrapLowerBoundMinExclusive;
 const goalControllerAccepted =
-  mean(goalOnlyLegacyDiff) > ACCEPTANCE.resourceMeanImprovementMinExclusive &&
-  goalOnlyLegacyCi[0] > ACCEPTANCE.resourceBootstrapLowerBoundMinExclusive;
+  mean(goalOnlyLegacyDiff) > ACCEPTANCE.goalMeanImprovementMinExclusive &&
+  goalOnlyLegacyCi[0] > ACCEPTANCE.goalBootstrapLowerBoundMinExclusive;
+const beatsRandomPolicy =
+  mean(goalRandomDiff) > ACCEPTANCE.goalMeanImprovementMinExclusive &&
+  goalRandomCi[0] > ACCEPTANCE.goalBootstrapLowerBoundMinExclusive;
 const adaptationRelative =
   (median(adaptive) - median(frozen)) / Math.max(1e-9, Math.abs(median(frozen)));
 const adaptationAccepted =
@@ -411,44 +522,89 @@ const causalityAccepted = causalityRuns.every(
     run.excluded === ACCEPTANCE.excludedExternalRows &&
     run.excludedExactZero === ACCEPTANCE.excludedExternalRows,
 );
-const performanceAccepted =
+const performanceMedianBudgetMet =
   benchmarkPerformance.sharedFieldP95Ms < ACCEPTANCE.sharedFieldP95MaxMs &&
   benchmarkPerformance.incrementalEntityMedianMs < ACCEPTANCE.incrementalEntityMedianMaxMs;
+const performanceStable = benchmarkPerformance.incrementalEntityBatchMediansMs.every(
+  (value) => value < ACCEPTANCE.incrementalEntityMedianMaxMs,
+);
+const performanceAccepted = performanceMedianBudgetMet && performanceStable;
 const numericalSafetyAccepted =
   numericalSafety.allFiniteAndBounded &&
   numericalSafety.finalRevision === numericalSafety.forcedSteps;
-// Direct matched counterfactuals exist for six live consumer classes. The four specialist aggregate
-// systems below have deterministic source paths but still lack full-class matched controls, so the
-// preregistered every-class coverage gate remains explicitly open rather than being inferred from prose.
+// Full-class matched counterfactuals cover every living-system class in ADR-0013. Bind the receipt to
+// an actual targeted Bun test run so `accepted` is emitted from executed evidence, not a hard-coded list.
+const consumerEvidenceTestFiles = [
+  'tests/operational-organism-intelligence.test.ts',
+  'tests/alien-flora.test.ts',
+  'tests/nhi.test.ts',
+  'tests/glyph-brain.test.ts',
+  'tests/wilderness.test.ts',
+  'tests/tsotchke-facade.test.ts',
+  'tests/shoggoths.test.ts',
+  'tests/puppet-masters.test.ts',
+  'tests/titans.test.ts',
+  'tests/leviathans.test.ts',
+] as const;
+const directMatchedCounterfactuals = [
+  'ordinary-entities',
+  'alien-flora',
+  'nhi',
+  'glyph-beings',
+  'wilderness-fauna',
+  'primordial-digital-biologics',
+  'shoggoths',
+  'puppeteers',
+  'titans',
+  'leviathans',
+] as const;
+const consumerEvidenceCommand = [process.execPath, 'test', ...consumerEvidenceTestFiles];
+const consumerEvidenceProcess = Bun.spawnSync(consumerEvidenceCommand, {
+  env: { ...process.env, NO_COLOR: '1', FORCE_COLOR: '0' },
+});
+const consumerEvidenceOutput = `${consumerEvidenceProcess.stdout.toString()}\n${consumerEvidenceProcess.stderr.toString()}`;
+const readSummaryCount = (pattern: RegExp): number => {
+  const matches = [...consumerEvidenceOutput.matchAll(pattern)];
+  return Number(matches.at(-1)?.[1] ?? 0);
+};
+const consumerEvidenceRun = {
+  command: ['bun', 'test', ...consumerEvidenceTestFiles],
+  exitCode: consumerEvidenceProcess.exitCode,
+  passedTests: readSummaryCount(/(\d+)\s+pass\b/g),
+  failedTests: readSummaryCount(/(\d+)\s+fail\b/g),
+  expectCalls: readSummaryCount(/(\d+)\s+expect\(\) calls\b/g),
+};
 const consumerCoverage = {
-  directMatchedCounterfactuals: [
-    'ordinary-entities',
-    'alien-flora',
-    'nhi',
-    'glyph-beings',
-    'wilderness-fauna',
-    'primordial-digital-biologics',
-  ],
-  sourcePathOnly: ['shoggoths', 'puppeteers', 'titans', 'leviathans'],
+  evidenceKind: 'targeted-bun-test-run-plus-exact-test-suite-inventory',
+  evidenceTestFiles: consumerEvidenceTestFiles,
+  evidenceRun: consumerEvidenceRun,
+  directMatchedCounterfactuals,
+  sourcePathOnly: [],
   existingDeepPathsOutsideThisGate: ['archon-apex', 'mechalogodrom'],
-  accepted: false,
+  accepted:
+    consumerEvidenceRun.exitCode === 0 &&
+    consumerEvidenceRun.passedTests > 0 &&
+    consumerEvidenceRun.failedTests === 0,
 } as const;
-const shuffledSpecific = resourceShuffledCi[0] > 0;
-const quantumSpecific = resourceClassicalCi[0] > 0;
+const aggregateChannelMappingSpecific = goalAggregateRotationCi[0] > 0;
+const uniformExplorationSurrogateSpecific = goalExplorationSurrogateCi[0] > 0;
 
 const commit = Bun.spawnSync(['git', 'rev-parse', 'HEAD']).stdout.toString().trim();
+const benchmarkSource = await Bun.file(import.meta.path).text();
+const benchmarkScriptSha256 = new Bun.CryptoHasher('sha256').update(benchmarkSource).digest('hex');
 const receiptBase = {
   schemaVersion: 1,
   taskVersion: TASK_VERSION,
   generatedDate: '2026-07-10',
   predecessorReceipt: 'docs/reports/assets/organism-intelligence-causal-benchmark-v2.json',
   predecessorOutcome:
-    'v2 improved the goal-local actor trace but its disabled arm removed both corpus signal and explicit goal, confounding goal-controller and corpus effects. v3 supersedes that resource claim with a goal-preserved substrate ablation and evaluates corpus causality across all 30 held-out seeds.',
+    'v2 improved the goal-local actor trace but its disabled arm removed both corpus signal and explicit goal, confounding goal-controller and corpus effects. v3 supersedes that synthetic goal-response claim with a goal-preserved substrate ablation and evaluates corpus causality across a fresh 30-seed deterministic family disjoint from v1/v2.',
   indicatorOnly: true,
   claimBoundary:
-    'Measures deterministic task behavior only; not phenomenal consciousness, sentience, physical quantum entropy, CSPRNG security, or general intelligence.',
+    'Measures deterministic response to a synthetic +x goal field and fixed reversal task only; not a flora/resource simulation, not phenomenal consciousness or sentience, and not physical quantum entropy, CSPRNG security, or general intelligence.',
   provenance: {
-    cosmogonicBaseCommit: commit,
+    runtimeBaseCommit: commit,
+    benchmarkScriptSha256,
     eshkolReference: {
       tag: 'v1.3.2-evolve',
       commit: '8443ddaeecec579c60ac858348a23cf1912d7a78',
@@ -461,57 +617,68 @@ const receiptBase = {
     },
   },
   protocol: {
-    heldOutSeeds: HELD_OUT_SEEDS,
+    evaluationSeeds: EVALUATION_SEEDS,
+    evaluationSeedPolicy:
+      'fresh deterministic family disjoint from v1/v2; fixed in source before this receipt; not external preregistration',
     bootstrapSamples: BOOTSTRAP_SAMPLES,
     controls: [
       'substrate-disabled-goal-preserved',
       'legacy-no-goal-context',
-      'repo-channel-permutation',
-      'entropy-matched-classical',
-      'random-policy',
+      'four-aggregate-channel-cyclic-rotation',
+      'uniform-final-exploration-surrogate-not-entropy-matched',
+      'uniform-random-action-baseline',
     ],
-    resourceTask: 'one-step x-axis progress toward identical flora goal',
+    goalTask:
+      'one-step x-axis response to an identical synthetic +x goal field; no flora/resource environment is constructed',
     adaptationTask:
-      '240 steps with resource-goal reversal after step 120; online trace vs frozen trace',
+      '240 steps with synthetic goal-direction reversal after step 120; online trace vs frozen trace',
     acceptanceRules: {
-      resourceSeeking: 'paired mean enhanced-minus-disabled > 0 and 95% bootstrap lower bound > 0',
+      corpusConditionedGoal:
+        'paired mean enhanced-minus-disabled > 0 and 95% bootstrap lower bound > 0',
       goalController: 'paired mean goal-only-minus-legacy > 0 and 95% bootstrap lower bound > 0',
+      randomPolicy: 'paired mean enhanced-minus-random > 0 and 95% bootstrap lower bound > 0',
       adaptation:
         'median post-reversal return >= 5% above frozen trace, 95% bootstrap lower bound > 0, and no seed loss below -20%',
       corpusCausality:
         'all 17 integrated external rows change final velocity > 1e-9; four fences plus one meta row are exactly inert',
       performance:
-        'shared-field p95 < 0.5 ms and incremental 50,000-entity median < 3 ms on the receipt machine',
+        'across three fresh processes: shared-field worst p95 < 0.5 ms, median of process-level incremental 50,000-entity medians < 3 ms, and all thirty batch medians < 3 ms',
       scoreUplift:
-        'corpus-conditioned resource, adaptation, causality, numerical safety, every-class consumer coverage, performance, and shuffled-substrate specificity must all pass',
+        'goal-controller, corpus-conditioned goal response, random-action baseline, adaptation, causality, numerical safety, every-class consumer coverage, performance, aggregate-channel mapping specificity, and exploration-surrogate specificity must all pass',
     },
   },
   acceptanceCriteria: ACCEPTANCE,
-  resourceSeeking: {
-    means: Object.fromEntries(modes.map((mode) => [mode, mean(resourceByMode[mode])])),
+  goalResponse: {
+    means: Object.fromEntries(modes.map((mode) => [mode, mean(goalByMode[mode])])),
     enhancedMinusDisabled: {
-      mean: mean(resourceDisabledDiff),
-      bootstrap95: resourceDisabledCi,
-      cohenDz: cohenDz(resourceDisabledDiff),
+      mean: mean(corpusGoalDiff),
+      bootstrap95: corpusGoalCi,
+      cohenDz: cohenDz(corpusGoalDiff),
     },
     goalOnlyMinusLegacy: {
       mean: mean(goalOnlyLegacyDiff),
       bootstrap95: goalOnlyLegacyCi,
       cohenDz: cohenDz(goalOnlyLegacyDiff),
     },
-    enhancedMinusShuffled: {
-      mean: mean(resourceShuffledDiff),
-      bootstrap95: resourceShuffledCi,
-      cohenDz: cohenDz(resourceShuffledDiff),
+    enhancedMinusAggregateRotation: {
+      mean: mean(goalAggregateRotationDiff),
+      bootstrap95: goalAggregateRotationCi,
+      cohenDz: cohenDz(goalAggregateRotationDiff),
     },
-    enhancedMinusClassical: {
-      mean: mean(resourceClassicalDiff),
-      bootstrap95: resourceClassicalCi,
-      cohenDz: cohenDz(resourceClassicalDiff),
+    enhancedMinusUniformExplorationSurrogate: {
+      mean: mean(goalExplorationSurrogateDiff),
+      bootstrap95: goalExplorationSurrogateCi,
+      cohenDz: cohenDz(goalExplorationSurrogateDiff),
     },
-    acceptedAgainstDisabled: resourceAccepted,
-    substrateSpecific: shuffledSpecific,
-    quantumSpecific,
+    enhancedMinusRandom: {
+      mean: mean(goalRandomDiff),
+      bootstrap95: goalRandomCi,
+      cohenDz: cohenDz(goalRandomDiff),
+    },
+    acceptedAgainstDisabled: corpusGoalAccepted,
+    acceptedAgainstRandom: beatsRandomPolicy,
+    aggregateChannelMappingSpecific,
+    uniformExplorationSurrogateSpecific,
   },
   adaptation: {
     requiredRelativeMedianImprovement: ACCEPTANCE.adaptationRelativeMedianImprovementMin,
@@ -529,27 +696,41 @@ const receiptBase = {
   },
   corpusCausality: { ...causality, accepted: causalityAccepted },
   numericalSafety: { ...numericalSafety, accepted: numericalSafetyAccepted },
-  performance: { ...benchmarkPerformance, accepted: performanceAccepted },
+  performance: {
+    ...benchmarkPerformance,
+    medianBudgetMet: performanceMedianBudgetMet,
+    stableAcrossBatches: performanceStable,
+    accepted: performanceAccepted,
+  },
   consumerCoverage,
   claims: {
     goalControllerUplift: goalControllerAccepted,
-    corpusConditionedGoalUplift: resourceAccepted,
-    operationalGoalUplift: resourceAccepted,
+    corpusConditionedGoalUplift: corpusGoalAccepted,
+    beatsRandomPolicy,
+    operationalGoalUplift: corpusGoalAccepted && goalControllerAccepted && beatsRandomPolicy,
     adaptivePostReversalUplift: adaptationAccepted,
     allIntegratedReposCausal: causalityAccepted,
     numericalSafetyGateMet: numericalSafetyAccepted,
     everyConsumerCounterfactualGateMet: consumerCoverage.accepted,
+    performanceMedianBudgetMet,
     performanceBudgetMet: performanceAccepted,
-    substrateSpecificUplift: shuffledSpecific,
-    quantumSpecificUplift: quantumSpecific,
+    performanceStabilityGateMet: performanceStable,
+    aggregateChannelMappingSpecificUplift: aggregateChannelMappingSpecific,
+    uniformExplorationSurrogateSpecificUplift: uniformExplorationSurrogateSpecific,
+    substrateSpecificUplift: false,
+    quantumSpecificUplift: false,
     numericScoreUpliftAllowed:
-      resourceAccepted &&
+      corpusGoalAccepted &&
+      goalControllerAccepted &&
+      beatsRandomPolicy &&
       adaptationAccepted &&
       causalityAccepted &&
       numericalSafetyAccepted &&
       consumerCoverage.accepted &&
       performanceAccepted &&
-      shuffledSpecific,
+      performanceStable &&
+      aggregateChannelMappingSpecific &&
+      uniformExplorationSurrogateSpecific,
   },
   machine: {
     platform: process.platform,

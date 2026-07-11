@@ -16,11 +16,12 @@ Audit HTML: `docs/CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.html`
 >
 > **Operational-intelligence refresh (2026-07-10):** the corrected external Tsotchke ledger is
 > `8 deep / 7 wired / 2 harvest / 4 fenced / 1 meta`, or `17/21` non-meta integrated; the internal
-> `classical-contrast` control is separate. The V2 30-seed causal receipt passed resource seeking,
-> `17/17` integrated-channel reach, `5/5` excluded-channel inertness, and performance, but failed its
-> preregistered 5% reversal-adaptation criterion (`3.9129%`). The current code-grounded A-Life vector
-> remains `[4.0, 2.2, 3.0, 3.8, 3.8, 4.5, 4.3, 3.5, 4.0]`; no consciousness, sentience, or numeric
-> capability score changes. See the
+> `classical-contrast` control is separate. The current V3 fresh disjoint fixed-family evaluation passed
+> goal-only and corpus-conditioned effects, `6.1213%` reversal adaptation, `17/17` integrated-row reach,
+> `5/5` excluded-row inertness, numerical safety, three-process performance stability, and all named
+> consumer counterfactuals. Uniform random-action baseline separation and aggregate-mapping specificity failed. The current
+> code-grounded A-Life vector is `[4.0, 2.2, 3.2, 3.8, 3.9, 4.5, 4.3, 3.5, 4.0]`; V3 authorizes no
+> additional consciousness, sentience, or numeric capability score change. See the
 > [current causal audit](./reports/2026-07-10-OPERATIONAL-ORGANISM-INTELLIGENCE-CAUSAL-AUDIT.md).
 
 ## Current Truth Banner

@@ -6,9 +6,10 @@
 > `TsotchkeOrganismIntelligence` field now converts the integrated corpus channels into a stable signal
 > consumed by ordinary entities and the wider living-system paths. The corrected external ledger is
 > `8 deep / 7 wired / 2 harvest / 4 fenced / 1 meta`, or `17/21` integrated after excluding metadata;
-> `classical-contrast` is an internal control. The V2 causal benchmark passed resource seeking,
-> `17/17` channel reach, `5/5` excluded-channel inertness, and performance, but failed its 5% reversal
-> adaptation criterion (`3.9129%`). See the
+> `classical-contrast` is an internal control. The current V3 fixed-family evaluation passed goal-only
+> and corpus-conditioned effects, `17/17` row causality, `5/5` exclusion inertness, numerical safety,
+> and `6.1213%` reversal adaptation. Three fresh performance processes and all named consumer-class
+> counterfactuals now pass; the uniform random-action baseline and aggregate-mapping specificity remain tied. See the
 > [causal audit](./reports/2026-07-10-OPERATIONAL-ORGANISM-INTELLIGENCE-CAUSAL-AUDIT.md).
 
 How the Cosmogonic Quantum Mechalogodrom is wired. The binding per-module API

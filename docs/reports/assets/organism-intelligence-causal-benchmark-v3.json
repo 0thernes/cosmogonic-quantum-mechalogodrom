@@ -1,13 +1,14 @@
 {
   "schemaVersion": 1,
-  "taskVersion": "organism-intelligence-v3-goal-preserved-control",
+  "taskVersion": "organism-intelligence-v3-disjoint-synthetic-goal-evaluation",
   "generatedDate": "2026-07-10",
   "predecessorReceipt": "docs/reports/assets/organism-intelligence-causal-benchmark-v2.json",
-  "predecessorOutcome": "v2 improved the goal-local actor trace but its disabled arm removed both corpus signal and explicit goal, confounding goal-controller and corpus effects. v3 supersedes that resource claim with a goal-preserved substrate ablation and evaluates corpus causality across all 30 held-out seeds.",
+  "predecessorOutcome": "v2 improved the goal-local actor trace but its disabled arm removed both corpus signal and explicit goal, confounding goal-controller and corpus effects. v3 supersedes that synthetic goal-response claim with a goal-preserved substrate ablation and evaluates corpus causality across a fresh 30-seed deterministic family disjoint from v1/v2.",
   "indicatorOnly": true,
-  "claimBoundary": "Measures deterministic task behavior only; not phenomenal consciousness, sentience, physical quantum entropy, CSPRNG security, or general intelligence.",
+  "claimBoundary": "Measures deterministic response to a synthetic +x goal field and fixed reversal task only; not a flora/resource simulation, not phenomenal consciousness or sentience, and not physical quantum entropy, CSPRNG security, or general intelligence.",
   "provenance": {
-    "cosmogonicBaseCommit": "bd9fd6e2f611915d83f8b1d0e5addfe315b47472",
+    "runtimeBaseCommit": "628ff6bfbf861a393b1af63b69df8f5efbbe1494",
+    "benchmarkScriptSha256": "542e44bd6a502788f511ecb9e2be46414d17cfefae13fb416faeacfb3360ea68",
     "eshkolReference": {
       "tag": "v1.3.2-evolve",
       "commit": "8443ddaeecec579c60ac858348a23cf1912d7a78",
@@ -20,60 +21,62 @@
     }
   },
   "protocol": {
-    "heldOutSeeds": [
-      272071090,
-      2926506851,
-      1285975316,
-      3940411077,
-      2299879542,
-      659348007,
-      3313783768,
-      1673252233,
-      32720698,
-      2687156459,
-      1046624924,
-      3701060685,
-      2060529150,
-      419997615,
-      3074433376,
-      1433901841,
-      4088337602,
-      2447806067,
-      807274532,
-      3461710293,
-      1821178758,
-      180647223,
-      2835082984,
-      1194551449,
-      3848987210,
-      2208455675,
-      567924140,
-      3222359901,
-      1581828366,
-      4236264127
+    "evaluationSeeds": [
+      585878124,
+      2832700631,
+      784555842,
+      3031378349,
+      983233560,
+      3230056067,
+      1181911278,
+      3428733785,
+      1380588996,
+      3627411503,
+      1579266714,
+      3826089221,
+      1777944432,
+      4024766939,
+      1976622150,
+      4223444657,
+      2175299868,
+      127155079,
+      2373977586,
+      325832797,
+      2572655304,
+      524510515,
+      2771333022,
+      723188233,
+      2970010740,
+      921865951,
+      3168688458,
+      1120543669,
+      3367366176,
+      1319221387
     ],
+    "evaluationSeedPolicy": "fresh deterministic family disjoint from v1/v2; fixed in source before this receipt; not external preregistration",
     "bootstrapSamples": 10000,
     "controls": [
       "substrate-disabled-goal-preserved",
       "legacy-no-goal-context",
-      "repo-channel-permutation",
-      "entropy-matched-classical",
-      "random-policy"
+      "four-aggregate-channel-cyclic-rotation",
+      "uniform-final-exploration-surrogate-not-entropy-matched",
+      "uniform-random-action-baseline"
     ],
-    "resourceTask": "one-step x-axis progress toward identical flora goal",
-    "adaptationTask": "240 steps with resource-goal reversal after step 120; online trace vs frozen trace",
+    "goalTask": "one-step x-axis response to an identical synthetic +x goal field; no flora/resource environment is constructed",
+    "adaptationTask": "240 steps with synthetic goal-direction reversal after step 120; online trace vs frozen trace",
     "acceptanceRules": {
-      "resourceSeeking": "paired mean enhanced-minus-disabled > 0 and 95% bootstrap lower bound > 0",
+      "corpusConditionedGoal": "paired mean enhanced-minus-disabled > 0 and 95% bootstrap lower bound > 0",
       "goalController": "paired mean goal-only-minus-legacy > 0 and 95% bootstrap lower bound > 0",
+      "randomPolicy": "paired mean enhanced-minus-random > 0 and 95% bootstrap lower bound > 0",
       "adaptation": "median post-reversal return >= 5% above frozen trace, 95% bootstrap lower bound > 0, and no seed loss below -20%",
       "corpusCausality": "all 17 integrated external rows change final velocity > 1e-9; four fences plus one meta row are exactly inert",
-      "performance": "shared-field p95 < 0.5 ms and incremental 50,000-entity median < 3 ms on the receipt machine",
-      "scoreUplift": "corpus-conditioned resource, adaptation, causality, numerical safety, every-class consumer coverage, performance, and shuffled-substrate specificity must all pass"
+      "performance": "across three fresh processes: shared-field worst p95 < 0.5 ms, median of process-level incremental 50,000-entity medians < 3 ms, and all thirty batch medians < 3 ms",
+      "scoreUplift": "goal-controller, corpus-conditioned goal response, random-action baseline, adaptation, causality, numerical safety, every-class consumer coverage, performance, aggregate-channel mapping specificity, and exploration-surrogate specificity must all pass"
     }
   },
   "acceptanceCriteria": {
-    "resourceMeanImprovementMinExclusive": 0,
-    "resourceBootstrapLowerBoundMinExclusive": 0,
+    "goalMeanImprovementMinExclusive": 0,
+    "goalBootstrapLowerBoundMinExclusive": 0,
     "adaptationRelativeMedianImprovementMin": 0.05,
     "adaptationBootstrapLowerBoundMinExclusive": 0,
     "adaptationWorstSeedRelativeLossMin": -0.2,
@@ -84,67 +87,76 @@
     "incrementalEntityMedianMaxMs": 3,
     "performancePopulation": 50000
   },
-  "resourceSeeking": {
+  "goalResponse": {
     "means": {
-      "enhanced": 0.014374130663348316,
-      "disabled": 0.006855369062460302,
-      "legacy": -0.0007765767154523202,
-      "shuffled": 0.0144661397422624,
-      "classical": 0.014928489308231286,
-      "random": -0.0061576186786405735
+      "enhanced": 0.013675299144226055,
+      "disabled": 0.004748495700307164,
+      "legacy": -0.0043330574796032395,
+      "aggregateRotated": 0.013705023844583821,
+      "uniformExplorationSurrogate": 0.013501028123179682,
+      "random": 0.009705811435589566
     },
     "enhancedMinusDisabled": {
-      "mean": 0.007518761600888019,
+      "mean": 0.008926803443918892,
       "bootstrap95": [
-        0.005891651061148594,
-        0.009238776533376803
+        0.0074709186839338375,
+        0.010524275559338788
       ],
-      "cohenDz": 1.5791418472952083
+      "cohenDz": 2.0584821748050905
     },
     "goalOnlyMinusLegacy": {
-      "mean": 0.007631945777912622,
+      "mean": 0.009081553179910407,
       "bootstrap95": [
-        0.006805921181039884,
-        0.008519529182282277
+        0.008224136063586919,
+        0.009901016159411519
       ],
-      "cohenDz": 3.150413721976839
+      "cohenDz": 3.7930432385228356
     },
-    "enhancedMinusShuffled": {
-      "mean": -0.0000920090789140815,
+    "enhancedMinusAggregateRotation": {
+      "mean": -0.000029724700357763793,
       "bootstrap95": [
-        -0.0003326717364833753,
-        0.00017295119097604573
+        -0.00034302817854577695,
+        0.0002708306663364767
       ],
-      "cohenDz": -0.13152139833851026
+      "cohenDz": -0.033895147462430615
     },
-    "enhancedMinusClassical": {
-      "mean": -0.0005543586448829664,
+    "enhancedMinusUniformExplorationSurrogate": {
+      "mean": 0.00017427102104637573,
       "bootstrap95": [
-        -0.0012357750695679093,
-        0.0001136388683422123
+        -0.0005910144811096056,
+        0.0010254502857670654
       ],
-      "cohenDz": -0.2901298770134111
+      "cohenDz": 0.0754619380605088
+    },
+    "enhancedMinusRandom": {
+      "mean": 0.003969487708636489,
+      "bootstrap95": [
+        -0.010601483800813,
+        0.0189792125751305
+      ],
+      "cohenDz": 0.09414009637952211
     },
     "acceptedAgainstDisabled": true,
-    "substrateSpecific": false,
-    "quantumSpecific": false
+    "acceptedAgainstRandom": false,
+    "aggregateChannelMappingSpecific": false,
+    "uniformExplorationSurrogateSpecific": false
   },
   "adaptation": {
     "requiredRelativeMedianImprovement": 0.05,
     "maximumAllowedSeedRelativeLoss": -0.2,
-    "medianPostReversalEnhanced": 1.522862440765349,
-    "medianPostReversalFrozen": 1.465517869734803,
-    "relativeMedianImprovement": 0.039129219926143224,
+    "medianPostReversalEnhanced": 1.2743610106013112,
+    "medianPostReversalFrozen": 1.2008535611966096,
+    "relativeMedianImprovement": 0.06121266720602802,
     "enhancedMinusFrozen": {
-      "mean": 0.12050746675240001,
+      "mean": 0.15978181829699184,
       "bootstrap95": [
-        0.07706648470318986,
-        0.16991166304806113
+        0.11788071166290177,
+        0.20429248191903368
       ],
-      "cohenDz": 0.908794532674938
+      "cohenDz": 1.3134377665377908
     },
-    "worstSeedRelativeLoss": -0.01269826560965952,
-    "accepted": false
+    "worstSeedRelativeLoss": -0.0027290855917749624,
+    "accepted": true
   },
   "corpusCausality": {
     "evaluatedSeeds": 30,
@@ -161,43 +173,195 @@
     "accepted": true
   },
   "performance": {
-    "sharedFieldP95Ms": 0.021599999999992292,
-    "legacyEntityMedianMs": 8.842500000000001,
-    "enhancedEntityMedianMs": 11.512900000000002,
-    "incrementalEntityMedianMs": 2.6704000000000008,
+    "sharedFieldP95Ms": 0.11370000000000147,
+    "legacyEntityMedianMs": 9.311099999999954,
+    "enhancedEntityMedianMs": 10.717100000000016,
+    "incrementalEntityMedianMs": 1.3580999999999506,
+    "incrementalEntityWorstBatchMs": 2.740300000000161,
+    "incrementalEntityBatchMediansMs": [
+      1.3880000000000052,
+      1.4918000000000688,
+      1.588700000000017,
+      1.3097999999999956,
+      1.095700000000079,
+      1.367200000000139,
+      1.5820999999998548,
+      1.1887000000001535,
+      1.4002000000000407,
+      2.112900000000309,
+      0.9636999999999887,
+      1.2198000000000206,
+      1.5184999999999604,
+      1.1847000000000207,
+      1.6616000000000213,
+      1.402400000000057,
+      2.1636000000000877,
+      1.9488999999998668,
+      1.2783999999999196,
+      1.1675000000000182,
+      0.5541000000000054,
+      1.5287000000000148,
+      1.3906000000000063,
+      1.6013000000000375,
+      1.3255999999998949,
+      1.2210999999998648,
+      2.740300000000161,
+      1.1204000000000178,
+      2.056500000000142,
+      0.6734999999998763
+    ],
+    "repeatProcesses": 3,
+    "repeatBatches": 10,
+    "totalBatches": 30,
+    "samplesPerBranchPerBatch": 7,
     "population": 50000,
+    "orderCounterbalanced": true,
+    "branchStateIsolated": true,
+    "processRuns": [
+      {
+        "sharedFieldP95Ms": 0.10290000000000532,
+        "legacyEntityMedianMs": 9.190099999999973,
+        "enhancedEntityMedianMs": 10.603250000000003,
+        "incrementalEntityMedianMs": 1.394100000000023,
+        "incrementalEntityWorstBatchMs": 2.112900000000309,
+        "incrementalEntityBatchMediansMs": [
+          1.3880000000000052,
+          1.4918000000000688,
+          1.588700000000017,
+          1.3097999999999956,
+          1.095700000000079,
+          1.367200000000139,
+          1.5820999999998548,
+          1.1887000000001535,
+          1.4002000000000407,
+          2.112900000000309
+        ],
+        "repeatBatches": 10,
+        "samplesPerBranchPerBatch": 7,
+        "population": 50000,
+        "orderCounterbalanced": true,
+        "branchStateIsolated": true
+      },
+      {
+        "sharedFieldP95Ms": 0.0818000000000012,
+        "legacyEntityMedianMs": 9.311099999999954,
+        "enhancedEntityMedianMs": 10.717100000000016,
+        "incrementalEntityMedianMs": 1.3403999999999883,
+        "incrementalEntityWorstBatchMs": 2.1636000000000877,
+        "incrementalEntityBatchMediansMs": [
+          0.9636999999999887,
+          1.2198000000000206,
+          1.5184999999999604,
+          1.1847000000000207,
+          1.6616000000000213,
+          1.402400000000057,
+          2.1636000000000877,
+          1.9488999999998668,
+          1.2783999999999196,
+          1.1675000000000182
+        ],
+        "repeatBatches": 10,
+        "samplesPerBranchPerBatch": 7,
+        "population": 50000,
+        "orderCounterbalanced": true,
+        "branchStateIsolated": true
+      },
+      {
+        "sharedFieldP95Ms": 0.11370000000000147,
+        "legacyEntityMedianMs": 9.580399999999997,
+        "enhancedEntityMedianMs": 11.071199999999976,
+        "incrementalEntityMedianMs": 1.3580999999999506,
+        "incrementalEntityWorstBatchMs": 2.740300000000161,
+        "incrementalEntityBatchMediansMs": [
+          0.5541000000000054,
+          1.5287000000000148,
+          1.3906000000000063,
+          1.6013000000000375,
+          1.3255999999998949,
+          1.2210999999998648,
+          2.740300000000161,
+          1.1204000000000178,
+          2.056500000000142,
+          0.6734999999998763
+        ],
+        "repeatBatches": 10,
+        "samplesPerBranchPerBatch": 7,
+        "population": 50000,
+        "orderCounterbalanced": true,
+        "branchStateIsolated": true
+      }
+    ],
+    "medianBudgetMet": true,
+    "stableAcrossBatches": true,
     "accepted": true
   },
   "consumerCoverage": {
+    "evidenceKind": "targeted-bun-test-run-plus-exact-test-suite-inventory",
+    "evidenceTestFiles": [
+      "tests/operational-organism-intelligence.test.ts",
+      "tests/alien-flora.test.ts",
+      "tests/nhi.test.ts",
+      "tests/glyph-brain.test.ts",
+      "tests/wilderness.test.ts",
+      "tests/tsotchke-facade.test.ts",
+      "tests/shoggoths.test.ts",
+      "tests/puppet-masters.test.ts",
+      "tests/titans.test.ts",
+      "tests/leviathans.test.ts"
+    ],
+    "evidenceRun": {
+      "command": [
+        "bun",
+        "test",
+        "tests/operational-organism-intelligence.test.ts",
+        "tests/alien-flora.test.ts",
+        "tests/nhi.test.ts",
+        "tests/glyph-brain.test.ts",
+        "tests/wilderness.test.ts",
+        "tests/tsotchke-facade.test.ts",
+        "tests/shoggoths.test.ts",
+        "tests/puppet-masters.test.ts",
+        "tests/titans.test.ts",
+        "tests/leviathans.test.ts"
+      ],
+      "exitCode": 0,
+      "passedTests": 101,
+      "failedTests": 0,
+      "expectCalls": 377438
+    },
     "directMatchedCounterfactuals": [
       "ordinary-entities",
       "alien-flora",
       "nhi",
       "glyph-beings",
       "wilderness-fauna",
-      "primordial-digital-biologics"
-    ],
-    "sourcePathOnly": [
+      "primordial-digital-biologics",
       "shoggoths",
       "puppeteers",
       "titans",
       "leviathans"
     ],
+    "sourcePathOnly": [],
     "existingDeepPathsOutsideThisGate": [
       "archon-apex",
       "mechalogodrom"
     ],
-    "accepted": false
+    "accepted": true
   },
   "claims": {
     "goalControllerUplift": true,
     "corpusConditionedGoalUplift": true,
-    "operationalGoalUplift": true,
-    "adaptivePostReversalUplift": false,
+    "beatsRandomPolicy": false,
+    "operationalGoalUplift": false,
+    "adaptivePostReversalUplift": true,
     "allIntegratedReposCausal": true,
     "numericalSafetyGateMet": true,
-    "everyConsumerCounterfactualGateMet": false,
+    "everyConsumerCounterfactualGateMet": true,
+    "performanceMedianBudgetMet": true,
     "performanceBudgetMet": true,
+    "performanceStabilityGateMet": true,
+    "aggregateChannelMappingSpecificUplift": false,
+    "uniformExplorationSurrogateSpecificUplift": false,
     "substrateSpecificUplift": false,
     "quantumSpecificUplift": false,
     "numericScoreUpliftAllowed": false
@@ -210,5 +374,5 @@
     "cpuModel": "Intel(R) Core(TM) Ultra 9 275HX",
     "totalMemoryBytes": 50910707712
   },
-  "contentSha256": "bf63db97fa736d1da099b43dc177326e02e34c8cced9d310870229922b6f7b63"
+  "contentSha256": "dbf77fa42c9490eb38763c2f1a281b52667bec9e5081c24a3a283b1a78dcc23a"
 }

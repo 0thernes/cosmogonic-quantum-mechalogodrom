@@ -8,7 +8,7 @@
 [![License: Non-Commercial Research & Play](https://img.shields.io/badge/License-Non--Commercial%20Research%20%26%20Play-2ea043.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
-[![tests](https://img.shields.io/badge/tests-2486%20exact-brightgreen)](./tests)
+[![tests](https://img.shields.io/badge/tests-2490%20exact-brightgreen)](./tests)
 [![coverage](https://img.shields.io/badge/coverage-84.64%25%20line%20%C2%B7%2082.21%25%20func-success)](./docs/TECHNICAL-SPECIFICATION-2026-06-26.md)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION-2026-06-26.md)
 [![Tsotchke](https://img.shields.io/badge/Tsotchke-REAL__MIT__CORPUS-purple)](https://github.com/tsotchke)
@@ -23,7 +23,7 @@ diffusion, **and the Tsotchke corpus wired as the primordial substrate for digit
 **Current public truth (2026-07-10):**
 
 - Package/source version: **v0.21.13**.
-- Exact tracked-suite receipt: **2,486 tests / 0 fail**. Portable public coverage floor: **84.64% line / 82.21% func**.
+- Exact tracked-suite receipt: **2,490 tests / 0 fail**. Portable public coverage floor: **84.64% line / 82.21% func**.
 
 <!-- cqm-sync:local-measurement:start -->
 
@@ -31,11 +31,14 @@ diffusion, **and the Tsotchke corpus wired as the primordial substrate for digit
 
 <!-- cqm-sync:local-measurement:end -->
 
-- `verify:facts` exits 0 with no drift across 73 Markdown/HTML/XML surfaces.
+- `verify:facts` exits 0 with no drift across 74 Markdown/HTML/XML surfaces.
 - Consciousness/sentience language is **indicatorOnly**: computational proxies, falsifiers, and controls; never proof of phenomenal experience or completion of the sentience goal.
 - The [2026-07-10 organism-intelligence causal audit](./docs/reports/2026-07-10-OPERATIONAL-ORGANISM-INTELLIGENCE-CAUSAL-AUDIT.md)
-  measured a real resource-goal effect and `17/17` integrated-repository causal reach, but its primary
-  reversal-adaptation criterion failed (`3.9129% < 5%`). No A-Life, consciousness, or sentience score was raised.
+  uses a fresh disjoint fixed 30-seed family. Goal-only and corpus-conditioned effects passed,
+  adaptation cleared `5%` at `6.1213%`, `17/17` integrated rows stayed causal, all named consumer
+  classes gained matched tests, and three-process performance stability passed after hot-path
+  optimization. Uniform random-action baseline separation and aggregate-mapping specificity did not pass. V3 authorizes
+  no additional A-Life, consciousness, or sentience score uplift.
 
 Built with **Bun + TypeScript + three.js 0.185.1 + Tailwind CSS 4 +
 HTMX 2**, ported from a single 882-line HTML monolith into a strict,
@@ -473,7 +476,7 @@ full gate with same-seed determinism preserved. The major arcs:
   ported primitive. The whole apex beat is now measured honestly: **~1.99 ms** per `SuperMind.think()`
   (range 1.41–5.62 ms) and **~9.77 ms** for the staggered 5-mind batch (~58% of a 60 fps frame, which is
   why 5 minds run staggered against 20 light echoes); the older sub-millisecond / `<2%` GOAL5 claim is
-  superseded until re-proven. **2,418 exact tracked tests · 0 fail (receipts enforced) · 84.64% line / 82.21% func portable coverage floor.**
+  superseded until re-proven. **2,490 exact tracked tests · 0 fail (receipts enforced) · 84.64% line / 82.21% func portable coverage floor.**
   <!-- cqm-sync:local-measurement:start -->
   **Latest Windows-local measurement: 2,418 tests / 0 fail / 2,447,566 assertions at `92.61%` line / `90.23%` func.**
   <!-- cqm-sync:local-measurement:end -->
@@ -684,7 +687,7 @@ Every figure is computed (never hand-typed) by three deterministic engines from 
 [`alife-codeground-sensitivity.ts`](./scripts/alife-codeground-sensitivity.ts).
 
 The 112 peers are literature judgments. Cosmogonic's current CSV row is the code-grounded vector
-`[4.0, 2.2, 3.0, 3.8, 3.8, 4.5, 4.3, 3.5, 4.0]`; the table retains the earlier self-score only as a
+`[4.0, 2.2, 3.2, 3.8, 3.9, 4.5, 4.3, 3.5, 4.0]`; the table retains the earlier self-score only as a
 historical sensitivity baseline:
 
 | Metric                         | Self-scored | Code-grounded (re-audited vs source) |
@@ -710,8 +713,11 @@ substrate pluralism and consciousness-theory instrumentation; **scientific matur
 and the code-grounded pass deliberately lowers the open-endedness/ecology story where the runtime proof is
 thinner. Butlin remains **8/14 met + 6/14 partial** as computational indicators only. Tsotchke-derived math is
 classified by direct ports, adaptations, facades, and fenced provenance rather than blanket full-depth wiring.
-The current causal receipt explicitly blocks numeric uplift: shuffled-channel and entropy-matched classical controls
-did not establish substrate- or quantum-specific advantage, and reversal adaptation missed its 5% primary threshold.
+The current causal receipt explicitly blocks additional numeric uplift: enhanced behavior did not
+separate from the uniform random-action baseline, and neither aggregate-channel mapping nor exploration-
+surrogate specificity was established. Fixed-family reversal adaptation, all 10 consumer-class
+counterfactuals, and all 30 counterbalanced performance batches passed their declared gates; those are
+fixed-family results, not independent validation.
 
 ## License & legal
 

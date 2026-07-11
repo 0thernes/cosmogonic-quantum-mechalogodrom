@@ -64,37 +64,43 @@ The upstream release audit also established two hard scientific boundaries:
   root injects the field. The single field owner sanitizes and clamps its output; exported worker/pure
   kernels also sanitize direct numeric parameters. Object consumers read that owner-bounded signal and
   remain deterministic—they do not each duplicate the complete sanitization layer.
-- Matched counterfactual tests currently cover ordinary entities, flora, NHIs, glyph beings, wilderness
-  fauna, and primordial digital biologics. Shoggoths, puppeteers, titans, and leviathans have bounded
-  source-level action/policy paths, but their full-class matched-control tests remain an open gate. This
-  distinction is carried into the machine receipt and blocks an every-consumer or numeric-uplift claim.
+- Matched counterfactual tests cover ordinary entities, flora, NHIs, glyph beings, wilderness fauna,
+  primordial digital biologics, shoggoths, puppeteers, titans, and leviathans. Each specialist seal holds
+  seed/config/signal values constant and toggles only the shared-field enable state; deterministic replay
+  and full-class action/trajectory divergence are enforced. The machine receipt inventories the exact ten
+  test files rather than treating source-path inspection as evidence.
 
 ### Claim boundary
 
-The implementation may claim deterministic corpus-conditioned adaptation only after the preregistered
-tests below pass. It must continue to say `indicatorOnly`: no benchmark establishes phenomenal
+The implementation may claim deterministic corpus-conditioned adaptation only within the exact fixed
+evaluation conditions whose tests below pass. It must continue to say `indicatorOnly`: no benchmark establishes phenomenal
 consciousness, sentience, physical quantumness, or general intelligence. Nine-axis, A-Life, scrutiny,
 consciousness, and sentience scores change only from generated evidence receipts, never from prose.
 
-## Preregistered Evaluation
+## Fixed Evaluation (not external preregistration)
 
-All comparisons use identical initial state and seeds. The enhanced controller is compared with four
-controls: substrate disabled, repo-channel permutation, entropy-matched classical exploration, and a
-random-policy controller. Development and held-out seed sets are fixed before reading outcomes.
+All paired comparisons use identical initial state and seeds. V3 uses a fresh deterministic 30-seed
+family disjoint from V1/V2 and fixed in benchmark source before receipt generation; it is not an
+externally preregistered or untouched validation set. The enhanced controller is compared with a
+goal-preserved substrate disable, exact legacy/no-goal context, a uniform random-action baseline, a cyclic rotation of all
+four exposed aggregate semantic channels, and a uniform replacement of the final composed exploration
+value. The last two are sensitivity checks—not a 22-repository permutation, entropy-matched control, or
+physical-quantum experiment.
 
-| Gate                | Metric                                                | Acceptance rule                                                                                                                                       |
-| ------------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Replay              | World/action fingerprint                              | Same seed, config, and substrate snapshot is byte-identical on every run.                                                                             |
-| Resource seeking    | Cosine progress toward a depleted-organism flora goal | Paired mean improvement over disabled is positive and the 95% bootstrap interval excludes zero on 30 held-out seeds.                                  |
-| Adaptation          | Return after a resource-goal reversal                 | Enhanced median post-reversal return is at least 5% above its frozen-trace ablation; no catastrophic seed loses more than 20%.                        |
-| Corpus causality    | Final action/velocity counterfactual                  | Ablating each of the 17 integrated external rows changes a downstream decision above `1e-9`; all four fenced rows and meta change it by exactly zero. |
-| Coverage            | Explicit consumer inventory                           | Every living-system class named above must have a behavioral or ecological counterfactual test; source-path inspection alone does not pass this gate. |
-| Numerical safety    | Runtime signals and state                             | All values remain finite and within documented bounds under fault injection and 10,000 steps.                                                         |
-| Cost                | Shared-field and 50,000-entity benchmark              | Shared-field p95 is below 0.5 ms and incremental 50,000-entity median cost is below 3 ms on the release machine; exact machine metadata is stored.    |
-| Scientific controls | Shuffled/classical/random comparisons                 | Report all outcomes and effect sizes. A failed or tied control blocks an uplift claim but does not get hidden.                                        |
+| Gate                    | Metric                                                     | Acceptance rule                                                                                                                                                                                   |
+| ----------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Replay                  | World/action fingerprint                                   | Same seed, config, and substrate snapshot is byte-identical on every run.                                                                                                                         |
+| Synthetic goal response | One-step velocity response to an identical `+x` goal field | Report goal-only minus legacy, enhanced minus goal-preserved disabled, and enhanced minus random; each accepted difference must have a positive paired mean and 95% bootstrap lower bound.        |
+| Adaptation              | Return after a synthetic goal-direction reversal           | Enhanced median post-reversal return is at least 5% above its frozen-trace ablation; no catastrophic seed loses more than 20%.                                                                    |
+| Corpus causality        | Final action/velocity counterfactual                       | Ablating each of the 17 integrated external rows changes a downstream decision above `1e-9`; all four fenced rows and meta change it by exactly zero.                                             |
+| Coverage                | Explicit consumer inventory                                | Every living-system class named above must have a behavioral or ecological counterfactual test; source-path inspection alone does not pass this gate.                                             |
+| Numerical safety        | Runtime signals and state                                  | All values remain finite and within documented bounds under fault injection and 10,000 steps.                                                                                                     |
+| Cost                    | Shared-field and 50,000-entity benchmark                   | Across three fresh processes, worst-process shared-field p95 is below 0.5 ms, the median process-level increment is below 3 ms, and all 30 counterbalanced 7-sample batch medians are below 3 ms. |
+| Scientific controls     | Aggregate rotation / exploration surrogate / random        | Report all outcomes, limitations, and effect sizes. A failed or tied control blocks an uplift claim but does not get hidden.                                                                      |
 
-The machine-readable receipt records seeds, task version, source commits, artifact hashes, effect sizes,
-confidence intervals, regressions, and runtime cost. The public surfaces must render from that receipt.
+The machine-readable receipt records seeds, task version, runtime commit, benchmark-source SHA-256,
+artifact hash, test-evidence inventory, effect sizes, confidence intervals, regressions, and runtime
+cost. The public surfaces must render from that receipt.
 
 ## Consequences
 

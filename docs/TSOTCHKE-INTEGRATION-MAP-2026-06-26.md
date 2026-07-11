@@ -38,30 +38,30 @@ but it is listed separately and never inflates external coverage.
 
 ## All 22 external repositories
 
-|   # | Repository                  | Owner        | Depth   | Representation               | Cosmogonic leaf / role                                      | Declared source boundary                                      |
-| --: | --------------------------- | ------------ | ------- | ---------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------- |
-|   1 | `eshkol`                    | user         | deep    | direct port + local analogue | `sim/eshkol-bridge.ts`; AD/GWT bridge and `.esk` DNA        | MIT; attribution required                                     |
-|   2 | `moonlab`                   | user         | deep    | direct port                  | `sim/moonlab-tensor.ts`; Clifford/tensor substrate          | MIT; attribution required                                     |
-|   3 | `tensorcore`                | user         | deep    | deterministic facade         | `sim/tensorcore-facade.ts`; local GEMM/attention role       | MIT; facade, not source parity                                |
-|   4 | `libirrep`                  | user         | deep    | direct port                  | `sim/irrep-symmetry.ts`; symmetry constraints               | MIT; attribution required                                     |
-|   5 | `spin_based_neural_network` | user         | deep    | direct port                  | Hopfield/spin-glass path                                    | MIT; attribution required                                     |
-|   6 | `quantum_geometric_tensor`  | user         | deep    | direct port                  | quantum-geometry path                                       | MIT; attribution required                                     |
-|   7 | `quantum_rng`               | user         | deep    | deterministic adaptation     | `eshkol-qrng`; seeded classical statevector path            | MIT; no hardware-entropy claim                                |
-|   8 | `classical_rng`             | user         | deep    | direct port                  | `sim/classical-contrast.ts`; entropy-matched control source | MIT; feeds separately ledgered internal control               |
-|   9 | `simple_mnist`              | user         | wired   | deterministic facade         | `sim/perceptron-baseline.ts`                                | MIT; local baseline facade                                    |
-|  10 | `asteroids`                 | user         | wired   | deterministic facade         | `sim/asteroids-physics.ts`; motility physics                | MIT; local physics facade                                     |
-|  11 | `PINN`                      | user         | wired   | deterministic facade         | `sim/pinn-residual.ts`; residual channel                    | no LICENSE; chain-of-title pending                            |
-|  12 | `PIMC`                      | user         | wired   | deterministic facade         | `sim/pimc-paths.ts`; path-sampling channel                  | no LICENSE; chain-of-title pending                            |
-|  13 | `ulg`                       | organization | wired   | deterministic facade         | `sim/ulg-bridge.ts`; rule/law channel                       | no LICENSE; assignment pending                                |
-|  14 | `logo-lab`                  | organization | wired   | deterministic facade         | `sim/logo-turtle.ts`; procedural morph channel              | no LICENSE; assignment and NOTICE pending                     |
-|  15 | `quantum-quake`             | organization | wired   | deterministic facade         | `sim/qge-aliveness.ts`; aliveness observable                | GPL-derived upstream quarantined; separability review pending |
-|  16 | `homebrew-eshkol`           | user         | harvest | harvest only                 | `sim/homebrew-eshkol.ts`; toolchain/catalog signal          | no LICENSE; no upstream source port                           |
-|  17 | `Quantum-RNG-API`           | organization | harvest | harvest only                 | `sim/quantum-rng-api.ts`; API/toolchain signal              | MIT; REST wrapper is redundant to integrated core             |
-|  18 | `gpt2-basic`                | user         | fenced  | none                         | no simulation leaf                                          | MIT; excluded by non-LLM mandate                              |
-|  19 | `llm-arbitrator`            | user         | fenced  | none                         | no simulation leaf                                          | MIT; excluded by non-LLM mandate                              |
-|  20 | `SolanaQuantumFlux`         | organization | fenced  | none                         | no simulation leaf                                          | proprietary; incompatible without explicit license            |
-|  21 | `OBLITERATUS`               | organization | fenced  | none                         | no simulation leaf                                          | AGPL-3.0 refusal-removal LLM toolkit; mandate-fenced          |
-|  22 | `.github`                   | organization | meta    | metadata                     | registry provenance only                                    | no runtime source or simulation leaf                          |
+|   # | Repository                  | Owner        | Depth   | Representation               | Cosmogonic leaf / role                                                                       | Declared source boundary                                      |
+| --: | --------------------------- | ------------ | ------- | ---------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+|   1 | `eshkol`                    | user         | deep    | direct port + local analogue | `sim/eshkol-bridge.ts`; AD/GWT bridge and `.esk` DNA                                         | MIT; attribution required                                     |
+|   2 | `moonlab`                   | user         | deep    | direct port                  | `sim/moonlab-tensor.ts`; Clifford/tensor substrate                                           | MIT; attribution required                                     |
+|   3 | `tensorcore`                | user         | deep    | deterministic facade         | `sim/tensorcore-facade.ts`; local GEMM/attention role                                        | MIT; facade, not source parity                                |
+|   4 | `libirrep`                  | user         | deep    | direct port                  | `sim/irrep-symmetry.ts`; symmetry constraints                                                | MIT; attribution required                                     |
+|   5 | `spin_based_neural_network` | user         | deep    | direct port                  | Hopfield/spin-glass path                                                                     | MIT; attribution required                                     |
+|   6 | `quantum_geometric_tensor`  | user         | deep    | direct port                  | quantum-geometry path                                                                        | MIT; attribution required                                     |
+|   7 | `quantum_rng`               | user         | deep    | deterministic adaptation     | `eshkol-qrng`; seeded classical statevector path                                             | MIT; no hardware-entropy claim                                |
+|   8 | `classical_rng`             | user         | deep    | direct port                  | `sim/classical-contrast.ts`; same-seed/same-length descriptive contrast, not entropy matched | MIT; feeds separately ledgered internal control               |
+|   9 | `simple_mnist`              | user         | wired   | deterministic facade         | `sim/perceptron-baseline.ts`                                                                 | MIT; local baseline facade                                    |
+|  10 | `asteroids`                 | user         | wired   | deterministic facade         | `sim/asteroids-physics.ts`; motility physics                                                 | MIT; local physics facade                                     |
+|  11 | `PINN`                      | user         | wired   | deterministic facade         | `sim/pinn-residual.ts`; residual channel                                                     | no LICENSE; chain-of-title pending                            |
+|  12 | `PIMC`                      | user         | wired   | deterministic facade         | `sim/pimc-paths.ts`; path-sampling channel                                                   | no LICENSE; chain-of-title pending                            |
+|  13 | `ulg`                       | organization | wired   | deterministic facade         | `sim/ulg-bridge.ts`; rule/law channel                                                        | no LICENSE; assignment pending                                |
+|  14 | `logo-lab`                  | organization | wired   | deterministic facade         | `sim/logo-turtle.ts`; procedural morph channel                                               | no LICENSE; assignment and NOTICE pending                     |
+|  15 | `quantum-quake`             | organization | wired   | deterministic facade         | `sim/qge-aliveness.ts`; aliveness observable                                                 | GPL-derived upstream quarantined; separability review pending |
+|  16 | `homebrew-eshkol`           | user         | harvest | harvest only                 | `sim/homebrew-eshkol.ts`; toolchain/catalog signal                                           | no LICENSE; no upstream source port                           |
+|  17 | `Quantum-RNG-API`           | organization | harvest | harvest only                 | `sim/quantum-rng-api.ts`; API/toolchain signal                                               | MIT; REST wrapper is redundant to integrated core             |
+|  18 | `gpt2-basic`                | user         | fenced  | none                         | no simulation leaf                                                                           | MIT; excluded by non-LLM mandate                              |
+|  19 | `llm-arbitrator`            | user         | fenced  | none                         | no simulation leaf                                                                           | MIT; excluded by non-LLM mandate                              |
+|  20 | `SolanaQuantumFlux`         | organization | fenced  | none                         | no simulation leaf                                                                           | proprietary; incompatible without explicit license            |
+|  21 | `OBLITERATUS`               | organization | fenced  | none                         | no simulation leaf                                                                           | AGPL-3.0 refusal-removal LLM toolkit; mandate-fenced          |
+|  22 | `.github`                   | organization | meta    | metadata                     | registry provenance only                                                                     | no runtime source or simulation leaf                          |
 
 ### Internal control, not an external repository
 
@@ -71,25 +71,31 @@ but it is listed separately and never inflates external coverage.
 
 ## Shared organism-intelligence path
 
-`src/sim/tsotchke-organism-intelligence.ts` evaluates the 22-channel corpus field at a bounded cadence
-and reuses one stable signal object. Ordinary entities, flora, shoggoths, puppeteers, titans,
+`src/sim/tsotchke-organism-intelligence.ts` evaluates all 22 repository rows at a bounded cadence,
+folds them into four aggregate semantic channels, and reuses one stable signal object. Ordinary
+entities, flora, shoggoths, puppeteers, titans,
 leviathans, NHI, glyph beings, wilderness fauna, and primordial digital biologics consume bounded
 parts of that signal; existing Archon/apex paths remain in place. The field carries resource pressure,
 threat response, exploration, social drive, plasticity, Taylor forecast, confidence, channel values,
 and health/revision state.
 
-The V2 causal receipt found:
+The current V3 fixed-family receipt found:
 
-- all `17/17` integrated external channels changed final entity velocity;
-- all `5/5` excluded channels (four fences plus metadata) were exactly inert;
-- resource progress passed against the disabled control;
-- the 5% post-reversal adaptation threshold failed (`3.9129%` median improvement);
-- shuffled-channel and entropy-matched classical controls did not establish substrate- or
-  quantum-specific uplift;
-- the shared field and 50,000-organism incremental cost stayed within the preregistered budget.
+- all `17/17` integrated external rows changed final entity velocity on every evaluation seed;
+- all `5/5` excluded rows (four fences plus metadata) were exactly inert;
+- goal-only and corpus-conditioned differences passed their matched controls;
+- reversal adaptation cleared the script-declared 5% threshold at `6.1213%` on the fresh disjoint fixed
+  seed family;
+- enhanced behavior did not separate from the uniform random-action baseline;
+- rotating all four exposed aggregate channels and replacing the final exploration value with a uniform
+  surrogate did not establish mapping, substrate, or quantum specificity;
+- all 30 batch medians across three fresh 50,000-entity processes stayed below `3 ms` after hot-path
+  precomputation and trigonometric reuse;
+- all named living-system classes now have matched full-class counterfactuals.
 
-These findings support deterministic corpus-conditioned goal behavior. They do not support a general
-intelligence, consciousness, sentience, or quantum-advantage claim.
+These findings support bounded deterministic corpus-conditioned behavior on a fixed evaluation family.
+They do not support general intelligence, consciousness, sentience, repository-identity specificity,
+quantum advantage, or additional numeric score uplift.
 
 ## Eshkol boundary
 

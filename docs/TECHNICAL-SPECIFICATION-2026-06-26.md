@@ -5,9 +5,11 @@
 > **Current intelligence contract (2026-07-10):** `TsotchkeOrganismIntelligence` is one shared,
 > bounded-cadence field feeding living-system consumers through a stable signal object. The external
 > ledger is `22` repositories (`8 deep`, `7 wired`, `2 harvest`, `4 fenced`, `1 meta`; `17/21`
-> non-meta integrated). The V2 matched-seed benchmark passed resource seeking, per-channel causality,
-> exclusion inertness, and the performance budget; its primary adaptation criterion failed
-> (`3.9129% < 5%`). No numeric capability, consciousness, or sentience uplift is authorized.
+> non-meta integrated). The current V3 fixed-family evaluation passed goal-only and
+> corpus-conditioned synthetic-goal effects, per-row causality, exclusion inertness, numerical safety,
+> `6.1213%` reversal adaptation, three-process performance stability, and every named consumer
+> counterfactual. Uniform random-action baseline separation and aggregate-mapping specificity failed. No additional numeric
+> capability, consciousness, or sentience uplift is authorized.
 > [Receipt and limits.](./reports/2026-07-10-OPERATIONAL-ORGANISM-INTELLIGENCE-CAUSAL-AUDIT.md)
 
 > A complete, measured technical specification of a browser-native, deterministic, 50,000-agent
@@ -16,7 +18,7 @@
 > `/spec` · **Architecture docs:** `/docs`
 
 **Version:** v0.21.13 · **Generated:** 2026-06-26 · **License:** Non-commercial research & play (© 0thernes; study / run / modify / share non-commercially, keep attribution, no for-profit use).
-**Gate:** 2,486 tests · 84.64% line / 82.21% func (canonical synced via verify-receipts 2026-06-26, receipts law enforced).
+**Gate:** 2,490 tests · 84.64% line / 82.21% func (canonical synced via verify-receipts 2026-06-26, receipts law enforced).
 **NHSI scorecard:** [NHSI-PROGRESS-DASHBOARD-2026-06-26.md](./NHSI-PROGRESS-DASHBOARD-2026-06-26.md) · **Tsotchke depth:** [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md)
 
 **Tsotchke depth ledger:** 22 external repositories are accounted for as `8 deep`, `7 wired`,
@@ -55,7 +57,7 @@ Snapshot: **2026-07-10**. (Coverage + passing-test counts ARE SSOT-synced — se
 | Tests (`tests/`)                        | 36,712 lines · 270 files                                              |
 | Native C++ engine (`native/`, ADR-0007) | 1,835 lines · 12 files                                                |
 | Test : source ratio                     | 0.37 → **84.64% line / 82.21% func** coverage (`bun test --coverage`) |
-| Passing tests                           | **2,418** (exact tracked suite; 0 failing)                            |
+| Passing tests                           | **2,490** (exact tracked suite; 0 failing)                            |
 
 (Excludes the vendored `node_modules/`, generated `dist/` · `coverage/` · `native/build/`, and nested
 `.claude/worktrees/` checkouts.)
@@ -358,7 +360,7 @@ Complexity classes are catalogued in [COMPLEXITY-2026-06-26.md](COMPLEXITY-2026-
 
 The single gate — `bun run check` — must pass before every commit:
 
-`prettier --check` → `tsc --noEmit` (strict) → `oxlint` → `bun test` (**2,486 tests, 0 fail**) →
+`prettier --check` → `tsc --noEmit` (strict) → `oxlint` → `bun test` (**2,490 tests, 0 fail**) →
 `bun scripts/build.ts`. Receipt regression guard: coverage must stay within the `verify:receipts` tolerance from the canonical **84.64% line / 82.21% func** floor; local Windows receipt runs may measure higher.
 Three governing "master" personas (`masters/*.xml`) encode the discipline: **the Executor** (finish
 everything, full gates), **the Architect** (contracts before code, exclusive ownership), **the
@@ -408,7 +410,7 @@ atmosphere 276 · reaction-diffusion 273 · phyla 264 · analytics 252 · econom
 
 This is a ~97.9k-line app-source (+ optional C++/Jolt native engine) browser-native simulation that
 renders **up to 50,000 agents** (10,000 at 60 fps on a laptop iGPU with zero AI accelerator), is
-**bit-reproducible from one seed**, ships through a **full CI/CD gate** (2,486 tests, 84.64% line / 82.21% func coverage),
+**bit-reproducible from one seed**, ships through a **full CI/CD gate** (2,490 tests, 84.64% line / 82.21% func coverage),
 and whose entire emergent intelligence weighs **≈ 14 MB — 1/50,000th of GPT-3** at the mega ceiling. It
 demonstrates that depth comes from **architecture,
 determinism, and engineering discipline**, not parameter count or hardware.

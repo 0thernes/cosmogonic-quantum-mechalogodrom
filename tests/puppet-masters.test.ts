@@ -18,7 +18,33 @@ import { PuppetMasterSystem } from '../src/sim/puppet-masters';
 import { PLATFORM_CEIL, PLATFORM_FLOOR, PLATFORM_HALF } from '../src/sim/constants';
 import { getQuantizationConfig } from '../src/math/quantization';
 import type { AuditTrail } from '../src/logging/audit';
-import type { Entity, PuppetEvent, SimContext, SimState } from '../src/types';
+import type {
+  Entity,
+  OrganismIntelligenceSignal,
+  PuppetEvent,
+  SimContext,
+  SimState,
+} from '../src/types';
+
+/** Same corpus lanes in both causal arms; only the live enable gate differs. */
+function matchedIntelligenceSignal(enabled: boolean): OrganismIntelligenceSignal {
+  return {
+    enabled,
+    indicatorOnly: true,
+    revision: 7,
+    resourcePressure: 1,
+    threatResponse: 0.85,
+    exploration: 1,
+    socialDrive: 1,
+    plasticity: 0.8,
+    forecast: 0.75,
+    confidence: 1,
+    corpusDrive: 1,
+    channels: new Float32Array([0.8, 0.9, 1, 0.7]),
+    integratedRepoCount: 17,
+    diagnosticAlert: false,
+  };
+}
 
 function makeState(): SimState {
   return {
@@ -41,7 +67,11 @@ function makeState(): SimState {
   };
 }
 
-function makeCtx(seed: number, isMobile = true): SimContext {
+function makeCtx(
+  seed: number,
+  isMobile = true,
+  organismIntelligence?: OrganismIntelligenceSignal,
+): SimContext {
   const rng = mulberry32(seed);
   const geos = createGeometryCache();
   const auditNoop = { record: () => undefined, entries: () => [] };
@@ -67,6 +97,7 @@ function makeCtx(seed: number, isMobile = true): SimContext {
     morphs: createMorphotypes(rng, geos.length),
     geos,
     state: makeState(),
+    organismIntelligence,
     audit: auditNoop as unknown as AuditTrail,
     sfx: () => undefined,
   };
@@ -75,12 +106,13 @@ function makeCtx(seed: number, isMobile = true): SimContext {
 function makeWorld(
   seed: number,
   isMobile = true,
+  organismIntelligence?: OrganismIntelligenceSignal,
 ): {
   ctx: SimContext;
   pm: PuppetMasterSystem;
   events: PuppetEvent[];
 } {
-  const ctx = makeCtx(seed, isMobile);
+  const ctx = makeCtx(seed, isMobile, organismIntelligence);
   const entities = new EntityManager(ctx);
   entities.reset(50);
   for (const e of entities.list) if (e) ctx.grid.insert(e);
@@ -88,6 +120,31 @@ function makeWorld(
   // EVENT is a reused module scratch object — copy it on receipt to retain a history.
   const pm = new PuppetMasterSystem(ctx, entities, (e) => events.push({ ...e }));
   return { ctx, pm, events };
+}
+
+/** Pre-intervention state used to prove both matched arms start from the same class state. */
+function puppetActionTrace(pm: PuppetMasterSystem): number[][] {
+  const hands = (
+    pm as unknown as {
+      pms: {
+        mesh: THREE.Mesh;
+        ti: number;
+        satiation: number;
+        u: { uHunt: { value: number }; uAgitation: { value: number } };
+      }[];
+    }
+  ).pms;
+  return hands.map((p) => [
+    p.mesh.position.x,
+    p.mesh.position.y,
+    p.mesh.position.z,
+    p.mesh.rotation.x,
+    p.mesh.rotation.y,
+    p.ti,
+    p.satiation,
+    p.u.uHunt.value,
+    p.u.uAgitation.value,
+  ]);
 }
 
 describe('PuppetMasterSystem — deterministic schemers that perturb the world within bounds', () => {
@@ -164,6 +221,52 @@ describe('PuppetMasterSystem — deterministic schemers that perturb the world w
     expect(a.ctx.state.weatherIdx).toBe(b.ctx.state.weatherIdx);
     expect(a.ctx.state.mutations).toBe(b.ctx.state.mutations);
     expect(a.events.length).toBe(b.events.length);
+  });
+
+  test('matched organism-intelligence counterfactual advances the first live intervention deterministically', () => {
+    const seed = 0x51a0c;
+    const control = makeWorld(seed, true, matchedIntelligenceSignal(false));
+    const operational = makeWorld(seed, true, matchedIntelligenceSignal(true));
+    const replay = makeWorld(seed, true, matchedIntelligenceSignal(true));
+
+    // Same hands, entities, RNG state, timers, and geometry before the enabled gate is observed.
+    expect(puppetActionTrace(operational.pm)).toEqual(puppetActionTrace(control.pm));
+    expect(puppetActionTrace(replay.pm)).toEqual(puppetActionTrace(control.pm));
+
+    let controlFirst = -1;
+    let operationalFirst = -1;
+    let replayFirst = -1;
+    for (
+      let f = 0;
+      f < 2500 && (controlFirst < 0 || operationalFirst < 0 || replayFirst < 0);
+      f++
+    ) {
+      const t = f / 60;
+      if (controlFirst < 0) {
+        control.pm.update(1 / 60, t);
+        if (control.events.length > 0) controlFirst = f;
+      }
+      if (operationalFirst < 0) {
+        operational.pm.update(1 / 60, t);
+        if (operational.events.length > 0) operationalFirst = f;
+      }
+      if (replayFirst < 0) {
+        replay.pm.update(1 / 60, t);
+        if (replay.events.length > 0) replayFirst = f;
+      }
+    }
+
+    expect(controlFirst).toBeGreaterThanOrEqual(0);
+    expect(operationalFirst).toBeGreaterThanOrEqual(0);
+    expect(replayFirst).toBe(operationalFirst); // exact deterministic replay of the enabled arm
+    expect(operational.events[0]).toEqual(replay.events[0]);
+    // Confidence/exploration enter the actual planning gain, so the enabled hand emits a real world
+    // intervention sooner than its otherwise-identical counterfactual; this is not shader telemetry.
+    expect(operationalFirst).toBeLessThan(controlFirst);
+
+    control.pm.dispose();
+    operational.pm.dispose();
+    replay.pm.dispose();
   });
 
   test('the manipulator shader uniforms are driven from the REAL per-puppet signals (bounded readouts)', () => {

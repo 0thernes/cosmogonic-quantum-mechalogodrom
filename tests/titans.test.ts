@@ -28,7 +28,7 @@ import {
 } from '../src/sim/titans';
 import { getQuantizationConfig } from '../src/math/quantization';
 import type { AuditTrail } from '../src/logging/audit';
-import type { Entity, SimContext } from '../src/types';
+import type { Entity, OrganismIntelligenceSignal, SimContext } from '../src/types';
 
 const RESOURCE_CAP = 1000; // mirrors the module-private cap clamped on titan energy
 const POP = 400;
@@ -39,8 +39,27 @@ const LORE: TitanLore = {
   epithet: (kind, key) => `${kind}:${key}`,
 };
 
+function makeIntelligenceSignal(enabled: boolean): OrganismIntelligenceSignal {
+  return {
+    enabled,
+    indicatorOnly: true,
+    revision: 7,
+    resourcePressure: 0.4,
+    threatResponse: 0.6,
+    exploration: 1,
+    socialDrive: 0.5,
+    plasticity: 0.7,
+    forecast: 0.8,
+    confidence: 1,
+    corpusDrive: 0.9,
+    channels: new Float32Array([0.2, 0.4, 0.6, 0.8]),
+    integratedRepoCount: 17,
+    diagnosticAlert: false,
+  };
+}
+
 /** Headless SimContext with real geometries/morphotypes at a small tier (fake-ctx pattern). */
-function makeCtx(seed: number): SimContext {
+function makeCtx(seed: number, organismIntelligence?: OrganismIntelligenceSignal): SimContext {
   const rng = mulberry32(seed);
   const auditNoop = { record: () => undefined, entries: () => [] };
   const geos = createGeometryCache();
@@ -85,6 +104,7 @@ function makeCtx(seed: number): SimContext {
       frame: 0,
       elapsed: 0,
     },
+    organismIntelligence,
     audit: auditNoop as unknown as AuditTrail,
     sfx: () => undefined,
   };
@@ -239,10 +259,56 @@ describe('TitanSystem.setStrategy — NaN seal + bounds (audit fix)', () => {
 /** Minimal structural view of a Titan for the roam regression (TS `private` is runtime-accessible). */
 interface TitanRoamView {
   group: { position: { x: number; y: number; z: number } };
+  vel: { x: number; y: number; z: number };
   homeX: number;
   homeZ: number;
   breeder: boolean;
 }
+
+interface TitanActionSnapshot {
+  position: readonly [number, number, number];
+  velocity: readonly [number, number, number];
+}
+
+function driveTitanIntelligenceCounterfactual(enabled: boolean): TitanActionSnapshot[] {
+  const ctx = makeCtx(0x71a11, makeIntelligenceSignal(enabled));
+  const entities = new EntityManager(ctx);
+  entities.reset(POP);
+  const titans = new TitanSystem(ctx, entities, LORE, { perturb: () => undefined });
+  const arr = (titans as unknown as { titans: TitanRoamView[] }).titans;
+  const dt = 1 / 60;
+  for (let f = 1; f <= 240; f++) {
+    ctx.state.frame = f;
+    titans.update(dt, f * dt);
+  }
+  return arr.map((titan) => ({
+    position: [titan.group.position.x, titan.group.position.y, titan.group.position.z],
+    velocity: [titan.vel.x, titan.vel.y, titan.vel.z],
+  }));
+}
+
+describe('TitanSystem — organism-intelligence matched counterfactual', () => {
+  test('the live signal changes every titan action vector and trajectory with seed/config held fixed', () => {
+    const disabled = driveTitanIntelligenceCounterfactual(false);
+    const operational = driveTitanIntelligenceCounterfactual(true);
+
+    // A second operational run proves the observed delta is deterministic, not test noise.
+    expect(operational).toEqual(driveTitanIntelligenceCounterfactual(true));
+    expect(disabled).toHaveLength(20);
+    expect(operational).toHaveLength(disabled.length);
+
+    for (let i = 0; i < operational.length; i++) {
+      const base = disabled[i]!;
+      const live = operational[i]!;
+      expect(
+        Math.hypot(...live.velocity.map((value, axis) => value - base.velocity[axis]!)),
+      ).toBeGreaterThan(1e-7);
+      expect(
+        Math.hypot(...live.position.map((value, axis) => value - base.position[axis]!)),
+      ).toBeGreaterThan(1e-6);
+    }
+  });
+});
 
 describe('TitanSystem — roam stays in home territory (anti-clustering regression)', () => {
   // Guards the 2026-06-27 fix: the old roam "core pull" sprang EVERY titan toward the global origin,

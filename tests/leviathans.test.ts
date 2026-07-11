@@ -17,7 +17,7 @@ import { SingularitySystem } from '../src/sim/singularities';
 import { MID_RADIUS } from '../src/sim/constants';
 import { getQuantizationConfig } from '../src/math/quantization';
 import type { AuditTrail } from '../src/logging/audit';
-import type { Entity, SimContext, SimState } from '../src/types';
+import type { Entity, OrganismIntelligenceSignal, SimContext, SimState } from '../src/types';
 
 function makeState(): SimState {
   return {
@@ -41,7 +41,26 @@ function makeState(): SimState {
   };
 }
 
-function makeCtx(seed: number): SimContext {
+function makeIntelligenceSignal(enabled: boolean): OrganismIntelligenceSignal {
+  return {
+    enabled,
+    indicatorOnly: true,
+    revision: 7,
+    resourcePressure: 0.4,
+    threatResponse: 0.6,
+    exploration: 0.8,
+    socialDrive: 0.5,
+    plasticity: 0.7,
+    forecast: 1,
+    confidence: 1,
+    corpusDrive: 0.9,
+    channels: new Float32Array([0.2, 0.4, 0.6, 0.8]),
+    integratedRepoCount: 17,
+    diagnosticAlert: false,
+  };
+}
+
+function makeCtx(seed: number, organismIntelligence?: OrganismIntelligenceSignal): SimContext {
   const rng = mulberry32(seed);
   const auditNoop = { record: () => undefined, entries: () => [] };
   return {
@@ -65,9 +84,34 @@ function makeCtx(seed: number): SimContext {
     morphs: [],
     geos: [],
     state: makeState(),
+    organismIntelligence,
     audit: auditNoop as unknown as AuditTrail,
     sfx: () => undefined,
   };
+}
+
+interface LeviathanActionSnapshot {
+  position: readonly [number, number, number];
+  velocity: readonly [number, number, number];
+}
+
+function driveIntelligenceCounterfactual(enabled: boolean): LeviathanActionSnapshot[] {
+  const ctx = makeCtx(0x1e71a7, makeIntelligenceSignal(enabled));
+  const sys = new LeviathanSystem(ctx);
+  const levs = (
+    sys as unknown as {
+      levs: { group: THREE.Group; vel: THREE.Vector3 }[];
+    }
+  ).levs;
+  const dt = 1 / 60;
+  for (let f = 0; f < 240; f++) {
+    ctx.state.frame = f;
+    sys.update(dt, f * dt);
+  }
+  return levs.map((leviathan) => ({
+    position: [leviathan.group.position.x, leviathan.group.position.y, leviathan.group.position.z],
+    velocity: [leviathan.vel.x, leviathan.vel.y, leviathan.vel.z],
+  }));
 }
 
 describe('LeviathanSystem', () => {
@@ -155,5 +199,26 @@ describe('LeviathanSystem', () => {
       return out;
     };
     expect(run()).toEqual(run());
+  });
+
+  test('the live organism-intelligence signal changes every leviathan action vector and trajectory in a matched run', () => {
+    const disabled = driveIntelligenceCounterfactual(false);
+    const operational = driveIntelligenceCounterfactual(true);
+
+    // Exact replay rules out ambient randomness: only the signal's enabled bit differs from control.
+    expect(operational).toEqual(driveIntelligenceCounterfactual(true));
+    expect(disabled).toHaveLength(4);
+    expect(operational).toHaveLength(disabled.length);
+
+    for (let i = 0; i < operational.length; i++) {
+      const base = disabled[i]!;
+      const live = operational[i]!;
+      expect(
+        Math.hypot(...live.velocity.map((value, axis) => value - base.velocity[axis]!)),
+      ).toBeGreaterThan(1e-7);
+      expect(
+        Math.hypot(...live.position.map((value, axis) => value - base.position[axis]!)),
+      ).toBeGreaterThan(1e-6);
+    }
   });
 });

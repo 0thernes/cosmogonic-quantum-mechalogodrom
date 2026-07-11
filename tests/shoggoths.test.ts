@@ -18,7 +18,30 @@ import { ShoggothSystem } from '../src/sim/shoggoths';
 import { PLATFORM_CEIL, PLATFORM_FLOOR, PLATFORM_HALF } from '../src/sim/constants';
 import { getQuantizationConfig } from '../src/math/quantization';
 import type { AuditTrail } from '../src/logging/audit';
-import type { Entity, SimContext, SimState } from '../src/types';
+import type { Entity, OrganismIntelligenceSignal, SimContext, SimState } from '../src/types';
+
+/**
+ * Matched causal-control signal. The two arms differ only by `enabled`; retaining identical numeric
+ * lanes makes the test isolate the live organism-intelligence gate rather than a seed/config change.
+ */
+function matchedIntelligenceSignal(enabled: boolean): OrganismIntelligenceSignal {
+  return {
+    enabled,
+    indicatorOnly: true,
+    revision: 7,
+    resourcePressure: 1,
+    threatResponse: 0.85,
+    exploration: 1,
+    socialDrive: 0.9,
+    plasticity: 0.8,
+    forecast: 0.75,
+    confidence: 0.95,
+    corpusDrive: 1,
+    channels: new Float32Array([0.8, 0.9, 1, 0.7]),
+    integratedRepoCount: 17,
+    diagnosticAlert: false,
+  };
+}
 
 function makeState(): SimState {
   return {
@@ -41,7 +64,11 @@ function makeState(): SimState {
   };
 }
 
-function makeCtx(seed: number, isMobile = true): SimContext {
+function makeCtx(
+  seed: number,
+  isMobile = true,
+  organismIntelligence?: OrganismIntelligenceSignal,
+): SimContext {
   const rng = mulberry32(seed);
   const geos = createGeometryCache();
   const auditNoop = { record: () => undefined, entries: () => [] };
@@ -67,6 +94,7 @@ function makeCtx(seed: number, isMobile = true): SimContext {
     morphs: createMorphotypes(rng, geos.length),
     geos,
     state: makeState(),
+    organismIntelligence,
     audit: auditNoop as unknown as AuditTrail,
     sfx: () => undefined,
   };
@@ -75,13 +103,38 @@ function makeCtx(seed: number, isMobile = true): SimContext {
 function makeWorld(
   seed: number,
   isMobile = true,
+  organismIntelligence?: OrganismIntelligenceSignal,
 ): { entities: EntityManager; shog: ShoggothSystem } {
-  const ctx = makeCtx(seed, isMobile);
+  const ctx = makeCtx(seed, isMobile, organismIntelligence);
   const entities = new EntityManager(ctx);
   entities.reset(80);
   for (const e of entities.list) if (e) ctx.grid.insert(e);
   const shog = new ShoggothSystem(ctx, entities);
   return { entities, shog };
+}
+
+/** Per-member behavioral/action trace: locomotion, spin, and cognition-driven hunt/agitation. */
+function shoggothActionTrace(shog: ShoggothSystem): number[][] {
+  const horde = (
+    shog as unknown as {
+      shogs: {
+        group: THREE.Group;
+        vel: THREE.Vector3;
+        u: { uHunt: { value: number }; uAgitation: { value: number } };
+      }[];
+    }
+  ).shogs;
+  return horde.map((s) => [
+    s.group.position.x,
+    s.group.position.y,
+    s.group.position.z,
+    s.vel.x,
+    s.vel.y,
+    s.vel.z,
+    s.group.rotation.y,
+    s.u.uHunt.value,
+    s.u.uAgitation.value,
+  ]);
 }
 
 function entityTrace(entities: EntityManager): number[] {
@@ -165,6 +218,41 @@ describe('ShoggothSystem — deterministic predators that never NaN the populati
     const tb = entityTrace(b.entities);
     expect(tb.length).toBe(ta.length);
     expect(tb).toEqual(ta);
+  });
+
+  test('matched organism-intelligence counterfactual changes every shoggoth action trace deterministically', () => {
+    const seed = 0x51a09;
+    const control = makeWorld(seed, true, matchedIntelligenceSignal(false));
+    const operational = makeWorld(seed, true, matchedIntelligenceSignal(true));
+    const replay = makeWorld(seed, true, matchedIntelligenceSignal(true));
+
+    // Construction, population, and RNG stream are byte-identical before the single causal toggle acts.
+    expect(shoggothActionTrace(operational.shog)).toEqual(shoggothActionTrace(control.shog));
+    expect(shoggothActionTrace(replay.shog)).toEqual(shoggothActionTrace(control.shog));
+
+    for (let f = 0; f < 3; f++) {
+      const t = f / 60;
+      control.shog.update(1 / 60, t);
+      operational.shog.update(1 / 60, t);
+      replay.shog.update(1 / 60, t);
+    }
+
+    const controlTrace = shoggothActionTrace(control.shog);
+    const operationalTrace = shoggothActionTrace(operational.shog);
+    const replayTrace = shoggothActionTrace(replay.shog);
+    expect(operationalTrace).toEqual(replayTrace); // same seed + same live signal => exact replay
+    expect(operationalTrace.length).toBe(control.shog.count);
+    // The field's exploration/cognition lanes feed each member's velocity/spin/action path, not a
+    // decorative aggregate: every member diverges from its otherwise-identical disabled control.
+    for (let i = 0; i < operationalTrace.length; i++) {
+      expect(operationalTrace[i]).not.toEqual(controlTrace[i]);
+      expect(operationalTrace[i]!.slice(0, 3)).not.toEqual(controlTrace[i]!.slice(0, 3));
+      expect(operationalTrace[i]!.slice(3, 6)).not.toEqual(controlTrace[i]!.slice(3, 6));
+    }
+
+    control.shog.dispose();
+    operational.shog.dispose();
+    replay.shog.dispose();
   });
 
   test('the MIND shader uniforms are driven from the real cognition drives (bounded readouts)', () => {
