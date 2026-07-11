@@ -10,6 +10,7 @@
  */
 
 import type { Rng } from '../math/rng';
+import type { OrganismIntelligenceSignal } from '../types';
 import {
   corpusBeatForArchon,
   primaryRepoForArchon,
@@ -77,6 +78,10 @@ export interface PetriDishState {
   eshkolSentientBorn: number;
   /** Registry catalysis from the 17 represented external entries; four fences and meta remain inert. */
   tsotchkeBiologicFlux: number;
+  /** Last shared organism-field revision consumed by differential biologic selection. */
+  organismIntelligenceRevision: number;
+  /** Bounded magnitude of semantic affinity pressure applied across live full biologics. */
+  organismSelectionPressure: number;
   /**
    * Live digital-biologics population. Prefer full `birthBiologic` records
    * (wired 2026-07-08) with a `vitality` bridge for brutal-release apply; thin
@@ -134,6 +139,8 @@ export interface PetriDishView {
   corpusBeat: number;
   eshkolSentientBorn: number;
   tsotchkeBiologicFlux: number;
+  organismIntelligenceRevision: number;
+  organismSelectionPressure: number;
   complexity: number;
   beats: number;
   /** IIT phi + QGE aliveness + corpus beat — sentience proxy, not phenomenal consciousness. */
@@ -173,6 +180,8 @@ export function createPetriDish(seed: number): PetriDishState {
     geneticDivergence: 0,
     eshkolSentientBorn: 0,
     tsotchkeBiologicFlux: s * 0.2,
+    organismIntelligenceRevision: 0,
+    organismSelectionPressure: 0,
     biologics: [],
     godPower: 0,
     wiringCoverage: s * 0.8,
@@ -207,12 +216,104 @@ export function evictLeastFit(biologics: { consciousness?: number; vitality?: nu
   biologics.splice(worst, 1);
 }
 
-/** One simulation beat — nutrients diffuse, workspace broadcasts, colony grows. O(n), n=8. */
+const clamp01 = (value: number): number =>
+  !Number.isFinite(value) || value <= 0 ? 0 : value >= 1 ? 1 : value;
+
+const mean3 = (a: number, b: number, c: number): number => (a + b + c) / 3;
+
+/**
+ * Shared ecology intensity from the four named non-LLM organism-intelligence lanes. The weights sum
+ * to one; the result is a bounded control signal, not a consciousness or sentience measurement.
+ */
+export function petriSharedEcologyFlux(signal?: OrganismIntelligenceSignal): number {
+  if (signal?.enabled !== true) return 0;
+  return clamp01(
+    clamp01(signal.resourcePressure) * 0.34 +
+      clamp01(signal.threatResponse) * 0.26 +
+      clamp01(signal.exploration) * 0.22 +
+      clamp01(signal.socialDrive) * 0.18,
+  );
+}
+
+/**
+ * Match one biologic's existing substrate traits against the four named ecology lanes. This makes the
+ * shared field differential: resource, threat, exploration, and social regimes favor distinct strain
+ * profiles instead of adding one uniform scalar to the whole population.
+ */
+export function biologicSemanticAffinity(
+  biologic: Biologic,
+  signal?: OrganismIntelligenceSignal,
+): number {
+  if (signal?.enabled !== true) return 0;
+  const resource = clamp01(signal.resourcePressure);
+  const threat = clamp01(signal.threatResponse);
+  const exploration = clamp01(signal.exploration);
+  const social = clamp01(signal.socialDrive);
+  const laneTotal = resource + threat + exploration + social;
+  // No evidence is neutral, not anti-fitness. Returning zero here would become -0.5 after centering
+  // and suppress every strain merely because an enabled field had not emitted a semantic lane yet.
+  if (laneTotal <= 1e-12) return 0.5;
+
+  const resourceTraits = mean3(
+    clamp01(biologic.adFitness / 2),
+    clamp01(biologic.pinnResidual),
+    clamp01(biologic.metalCompute),
+  );
+  const threatTraits = mean3(
+    clamp01(biologic.spinOrder),
+    clamp01(biologic.qgtCurvature),
+    clamp01(biologic.quakeAliveness),
+  );
+  const explorationTraits =
+    (clamp01(biologic.qrngEntropy) +
+      clamp01(biologic.pimcPath) +
+      clamp01(biologic.logoMorph) +
+      clamp01(biologic.asteroidDynamics)) /
+    4;
+  const socialTraits = mean3(
+    clamp01(biologic.gwtIgnition),
+    clamp01(biologic.ulgLawfulness),
+    clamp01(biologic.irrepSymmetry),
+  );
+
+  return clamp01(
+    (resource * resourceTraits +
+      threat * threatTraits +
+      exploration * explorationTraits +
+      social * socialTraits) /
+      laneTotal,
+  );
+}
+
+/**
+ * Bounded per-strain flux used by `stepBiologic`. No/disabled signal returns the base value exactly,
+ * preserving every legacy caller and golden. Enabled fields reward above-neutral semantic affinity
+ * and suppress below-neutral affinity, creating actual differential fitness pressure.
+ */
+export function petriBiologicSelectionFlux(
+  baseFlux: number,
+  biologic: Biologic,
+  signal?: OrganismIntelligenceSignal,
+): number {
+  if (signal?.enabled !== true) return baseFlux;
+  const ecology = petriSharedEcologyFlux(signal);
+  const centeredAffinity = biologicSemanticAffinity(biologic, signal) - 0.5;
+  // A live but evidence-free field is a true neutral intervention. Preserve even an above-one
+  // caller flux exactly; clamping it here would silently turn the enabled zero-evidence arm into
+  // a different ecology from the disabled/legacy arm.
+  if (centeredAffinity === 0) return baseFlux;
+  const selected =
+    clamp01(baseFlux) * (1 + centeredAffinity * 0.4) + ecology * centeredAffinity * 0.3;
+  return Math.max(0, Math.min(2, Number.isFinite(selected) ? selected : 0));
+}
+
+/** One simulation beat — 12 nutrients diffuse, workspace broadcasts, and live biologics adapt. O(n). */
 export function petriDishBeat(
   state: PetriDishState,
   archonIdx: number,
   beat: number,
   rng: Rng,
+  organismIntelligence?: OrganismIntelligenceSignal,
 ): void {
   const sub = substrateVectorForArchon(archonIdx);
   const primary = primaryRepoForArchon(archonIdx);
@@ -425,13 +526,24 @@ export function petriDishBeat(
     if (state.biologics.length > 64) evictLeastFit(state.biologics);
   }
 
-  // Evolve full birthBiologic records each beat (substrate metrics + death).
+  // Evolve full birthBiologic records each beat (substrate metrics + death). The optional shared
+  // ecology field acts through per-strain semantic affinity, so it changes differential fitness and
+  // later truncation survival rather than merely changing display telemetry. O(population), no RNG.
+  let affinityPressure = 0;
+  let affinityCount = 0;
   // Thin stubs (tests/fixtures with only form/vitality) are left as-is.
   for (let bi = 0; bi < state.biologics.length; bi++) {
     const b = state.biologics[bi]!;
     if (typeof b.adFitness !== 'number') continue; // not a full Biologic
     if (b.alive === false) continue;
-    stepBiologic(b as Biologic, bioFlux, true); // learn=true: the live population adapts by Eshkol-AD gradient ascent
+    const full = b as Biologic;
+    const affinity = biologicSemanticAffinity(full, organismIntelligence);
+    const selectedFlux = petriBiologicSelectionFlux(bioFlux, full, organismIntelligence);
+    stepBiologic(full, selectedFlux, true); // learn=true: exact-AD adaptation under differential ecology
+    if (organismIntelligence?.enabled === true) {
+      affinityPressure += Math.abs(affinity - 0.5) * 2;
+      affinityCount++;
+    }
     // Decaying blend, NOT a hard re-mirror to consciousness. Vitality is already born as a
     // consciousness/bioFlux blend (line ~402), so it doesn't need re-pinning every beat — and a hard
     // `= consciousness` overwrite ERASED applyBrutalRelease's consume/drain/rebirth perturbation the
@@ -446,6 +558,14 @@ export function petriDishBeat(
       ),
     );
   }
+  state.organismIntelligenceRevision =
+    organismIntelligence?.enabled === true && Number.isFinite(organismIntelligence.revision)
+      ? Math.max(0, Math.floor(organismIntelligence.revision))
+      : 0;
+  state.organismSelectionPressure =
+    affinityCount > 0
+      ? clamp01(petriSharedEcologyFlux(organismIntelligence) * (affinityPressure / affinityCount))
+      : 0;
   // Drop dead full-biologic strains so the ring doesn't fill with corpses.
   if (state.biologics.some((b) => b.alive === false && typeof b.adFitness === 'number')) {
     state.biologics = state.biologics.filter((b) => b.alive !== false);
@@ -512,6 +632,8 @@ export function petriDishView(state: PetriDishState): PetriDishView {
     phiSurrogate: state.phiSurrogate,
     eshkolSentientBorn: state.eshkolSentientBorn || 0,
     tsotchkeBiologicFlux: state.tsotchkeBiologicFlux || 0,
+    organismIntelligenceRevision: state.organismIntelligenceRevision,
+    organismSelectionPressure: state.organismSelectionPressure,
     aliveness: state.aliveness,
     ignitionSlot: state.ignitionSlot,
     wiringCoverage: tsotchkeWiredSubstrateFraction(), // honest de-inflated fraction (not the ~1.0 mean-weight)

@@ -21,6 +21,8 @@ import { createPhyla } from '../src/sim/phyla';
 import { EntityManager } from '../src/sim/entities';
 import { LoreEngine } from '../src/sim/lore';
 import {
+  REL_ALLIANCE,
+  REL_WAR,
   TitanSystem,
   type TitanLedgerEntry,
   type TitanLore,
@@ -52,6 +54,8 @@ function makeIntelligenceSignal(enabled: boolean): OrganismIntelligenceSignal {
     forecast: 0.8,
     confidence: 1,
     corpusDrive: 0.9,
+    ecologyRisk: 0.5,
+    ecologySurprise: 0.25,
     channels: new Float32Array([0.2, 0.4, 0.6, 0.8]),
     integratedRepoCount: 17,
     diagnosticAlert: false,
@@ -270,8 +274,14 @@ interface TitanActionSnapshot {
   velocity: readonly [number, number, number];
 }
 
-function driveTitanIntelligenceCounterfactual(enabled: boolean): TitanActionSnapshot[] {
-  const ctx = makeCtx(0x71a11, makeIntelligenceSignal(enabled));
+function driveTitanIntelligenceCounterfactual(
+  enabledOrSignal: boolean | OrganismIntelligenceSignal,
+): TitanActionSnapshot[] {
+  const signal =
+    typeof enabledOrSignal === 'boolean'
+      ? makeIntelligenceSignal(enabledOrSignal)
+      : enabledOrSignal;
+  const ctx = makeCtx(0x71a11, signal);
   const entities = new EntityManager(ctx);
   entities.reset(POP);
   const titans = new TitanSystem(ctx, entities, LORE, { perturb: () => undefined });
@@ -307,6 +317,92 @@ describe('TitanSystem — organism-intelligence matched counterfactual', () => {
         Math.hypot(...live.position.map((value, axis) => value - base.position[axis]!)),
       ).toBeGreaterThan(1e-6);
     }
+  });
+
+  test('enabled zero-evidence intelligence is motion-neutral', () => {
+    const zero = {
+      ...makeIntelligenceSignal(true),
+      resourcePressure: 0,
+      threatResponse: 0,
+      exploration: 0,
+      socialDrive: 0,
+      confidence: 0,
+      corpusDrive: 0,
+      ecologyRisk: 0,
+      ecologySurprise: 0,
+      channels: new Float32Array(4),
+    } satisfies OrganismIntelligenceSignal;
+    expect(driveTitanIntelligenceCounterfactual(zero)).toEqual(
+      driveTitanIntelligenceCounterfactual(false),
+    );
+  });
+
+  interface TitanDiplomacyHarness {
+    diplomacy(pairIndex: number): void;
+    titans: Array<{ energy: number }>;
+  }
+
+  function driveDiplomacy(
+    strategy: number,
+    organismIntelligence?: OrganismIntelligenceSignal,
+    sample = 0.1,
+  ): { relation: number; energy: readonly [number, number]; rngDraws: number } {
+    const ctx = makeCtx(0xd1f10, organismIntelligence);
+    const entities = new EntityManager(ctx);
+    entities.reset(POP);
+    const titans = new TitanSystem(ctx, entities, LORE, { perturb: () => undefined });
+    titans.setStrategy(0, strategy);
+    titans.setStrategy(1, strategy);
+
+    // Reset only the post-boot decision stream. A fixed in-range sample makes all three rounds an
+    // exact matched counterfactual with two draws per round and exposes the intended probability tail.
+    let rngDraws = 0;
+    ctx.rng = () => {
+      rngDraws++;
+      return sample;
+    };
+    const harness = titans as unknown as TitanDiplomacyHarness;
+    for (let round = 0; round < 3; round++) harness.diplomacy(0);
+    return {
+      relation: titans.warMatrix[1]!,
+      energy: [harness.titans[0]!.energy, harness.titans[1]!.energy],
+      rngDraws,
+    };
+  }
+
+  test('social cooperation and pressure raid biases change real diplomacy with no RNG drift', () => {
+    const disabled = makeIntelligenceSignal(false);
+    const social = {
+      ...makeIntelligenceSignal(true),
+      resourcePressure: 0,
+      threatResponse: 0,
+      socialDrive: 1,
+    } satisfies OrganismIntelligenceSignal;
+    const pressure = {
+      ...makeIntelligenceSignal(true),
+      resourcePressure: 1,
+      threatResponse: 1,
+      socialDrive: 0,
+    } satisfies OrganismIntelligenceSignal;
+
+    const defectLegacy = driveDiplomacy(3, undefined, 0.9);
+    const defectDisabled = driveDiplomacy(3, disabled, 0.9);
+    const defectSocial = driveDiplomacy(3, social, 0.9);
+    expect(defectDisabled).toEqual(defectLegacy);
+    expect(defectLegacy.relation).toBe(REL_WAR);
+    expect(defectSocial.relation).toBe(REL_ALLIANCE);
+    expect(defectSocial.energy).not.toEqual(defectLegacy.energy);
+
+    const cooperateLegacy = driveDiplomacy(0);
+    const cooperatePressure = driveDiplomacy(0, pressure);
+    expect(cooperateLegacy.relation).toBe(REL_ALLIANCE);
+    expect(cooperatePressure.relation).toBe(REL_WAR);
+    expect(cooperatePressure.energy).not.toEqual(cooperateLegacy.energy);
+
+    expect(defectLegacy.rngDraws).toBe(6);
+    expect(defectSocial.rngDraws).toBe(defectLegacy.rngDraws);
+    expect(cooperatePressure.rngDraws).toBe(cooperateLegacy.rngDraws);
+    expect(driveDiplomacy(3, social, 0.9)).toEqual(defectSocial);
   });
 });
 

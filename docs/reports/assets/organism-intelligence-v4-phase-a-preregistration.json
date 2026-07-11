@@ -1,0 +1,407 @@
+{
+  "schemaVersion": 1,
+  "protocolVersion": "organism-intelligence-v4-phase-a-semantic-cross-family",
+  "createdDate": "2026-07-11",
+  "status": "protocol-frozen-before-result-generation",
+  "indicatorOnly": true,
+  "repositoryPreregistrationOnly": true,
+  "externallyPreregistered": false,
+  "independentlyReplicated": false,
+  "claimBoundary": "This protocol can test bounded task behavior, semantic routing, recurrent context, online prediction, ecological selection, game-policy causality, replay, and cost. It cannot establish phenomenal consciousness, sentience, general intelligence, physical quantum advantage, CSPRNG security, or cross-family neural scaling.",
+  "protocolAuthority": {
+    "canonicalSource": "scripts/organism-intelligence-v4-protocol.ts",
+    "canonicalSourceSha256": "120318627c437ac08b1c752015b586b306d68bbc843c676948c3c7eec5721541",
+    "canonicalRule": "The executable source is authoritative for seed arrays, task fixtures, normalized outcomes, exclusions, resampling, denominator rules, and acceptance arithmetic. If prose differs, the protocol is invalid until a new version is committed before result generation.",
+    "pinnedDependencies": [
+      {
+        "path": "src/math/rng.ts",
+        "sha256": "87c880ed2b7f1e97c37f0c04cbdeb2d9e74a555a7fce22200ceaa756b7b6bcb0",
+        "symbols": [
+          "mulberry32"
+        ]
+      }
+    ],
+    "fixtureCanonicalization": "SHA-256 of JSON.stringify(V4_FAMILY_FIXTURES[familyId]) using source insertion order",
+    "familyFixtureSha256": {
+      "ordinary-organisms": "169265e8a9b8d3c2a64dc7944c46ef9efb6f07faa8bdfb02f7273d83aac8ec83",
+      "simple-mnist-ecology-predictor": "924970e52c7e263e9a9274f3f7393251bc91df9aa1ffbc3a55a53696af6f87ff",
+      "petri-digital-biologics": "862c0878f176af78185f6be0e270a100674cb0f84204ad5fffda2a9cd58e0700",
+      "titans": "17dc8acf2ad9644c2265338d1155a981029fd62f0b517b7d49862a1d7f8b6757"
+    }
+  },
+  "predecessorReceipt": "docs/reports/assets/organism-intelligence-causal-benchmark-v3.json",
+  "predecessorFailuresRetained": [
+    "enhanced did not separate from the V3 uniform random-action baseline",
+    "aggregate channel rotation did not establish mapping specificity",
+    "uniform exploration replacement did not establish substrate specificity",
+    "ten-class reachability did not establish per-family beneficial outcomes"
+  ],
+  "provenancePolicy": {
+    "manifestMustBeCommittedBeforeResults": true,
+    "resultCommitMustDescendFromManifestCommit": true,
+    "resultMustRecordManifestCommit": true,
+    "resultMustRecordManifestSha256": true,
+    "resultMustRecordRuntimeCommit": true,
+    "resultMustRecordBenchmarkSha256": true,
+    "resultMustRecordRawDataSha256": true,
+    "resultMustRecordMachineAndToolchain": true,
+    "resultGeneratorMustImportCanonicalSource": true,
+    "resultMustRecordCanonicalSourceSha256": true,
+    "resultMustRecordFamilyFixtureSha256": true,
+    "runtimeRowsMustRecordInitialStatePerceptGoalAndRngHashes": true
+  },
+  "seedPolicy": {
+    "evaluationSeedCount": 64,
+    "evaluationSeeds": [
+      3957713710,
+      331011675,
+      999276936,
+      1667542197,
+      2335807458,
+      3004072719,
+      3672337980,
+      45635945,
+      713901206,
+      1382166467,
+      2050431728,
+      2718696989,
+      3386962250,
+      4055227511,
+      428525476,
+      1096790737,
+      1765055998,
+      2433321259,
+      3101586520,
+      3769851781,
+      143149746,
+      811415007,
+      1479680268,
+      2147945529,
+      2816210790,
+      3484476051,
+      4152741312,
+      526039277,
+      1194304538,
+      1862569799,
+      2530835060,
+      3199100321,
+      3867365582,
+      240663547,
+      908928808,
+      1577194069,
+      2245459330,
+      2913724591,
+      3581989852,
+      4250255113,
+      623553078,
+      1291818339,
+      1960083600,
+      2628348861,
+      3296614122,
+      3964879383,
+      338177348,
+      1006442609,
+      1674707870,
+      2342973131,
+      3011238392,
+      3679503653,
+      52801618,
+      721066879,
+      1389332140,
+      2057597401,
+      2725862662,
+      3394127923,
+      4062393184,
+      435691149,
+      1103956410,
+      1772221671,
+      2440486932,
+      3108752193
+    ],
+    "surrogateCalibrationSeeds": [
+      3925305266,
+      5099363,
+      379860756,
+      754622149,
+      1129383542,
+      1504144935,
+      1878906328,
+      2253667721,
+      2628429114,
+      3003190507,
+      3377951900,
+      3752713293,
+      4127474686,
+      207268783,
+      582030176,
+      956791569
+    ],
+    "requiredDisjointSets": [
+      "pinned V1 /protocol/heldOutSeeds",
+      "pinned V2 /protocol/heldOutSeeds",
+      "pinned V3 /protocol/evaluationSeeds",
+      "surrogateCalibrationSeeds"
+    ],
+    "historicalSeedSources": [
+      {
+        "path": "docs/reports/assets/organism-intelligence-causal-benchmark.json",
+        "jsonPointer": "/protocol/heldOutSeeds",
+        "sha256": "a8954e7925087b554a3e17573899dd86eaa8979143df8bbbf755838607afb60c"
+      },
+      {
+        "path": "docs/reports/assets/organism-intelligence-causal-benchmark-v2.json",
+        "jsonPointer": "/protocol/heldOutSeeds",
+        "sha256": "3a0ee6aa9f1aa1f21b412aa36b30b6f507114253d8768fd10098e200c717a940"
+      },
+      {
+        "path": "docs/reports/assets/organism-intelligence-causal-benchmark-v3.json",
+        "jsonPointer": "/protocol/evaluationSeeds",
+        "sha256": "32f527a009a0b0da6f430c411d2bda9bea8cb92b8b779293877cc3128c8ef15d"
+      }
+    ],
+    "developmentAndTuningSeedSets": [
+      {
+        "id": "surrogate-calibration",
+        "source": "seedPolicy.surrogateCalibrationSeeds",
+        "seedCount": 16
+      }
+    ],
+    "otherDevelopmentOrTuningSeeds": [],
+    "seedGeneration": {
+      "evaluation": "uint32(0xc4110001 + imul(i+1, 0x27d4eb2d)), i=0..63",
+      "surrogateCalibration": "uint32(0xd3a10001 + imul(i+1, 0x165667b1)), i=0..15"
+    }
+  },
+  "families": [
+    {
+      "id": "ordinary-organisms",
+      "controllerType": "neural",
+      "evidenceTier": "live-action",
+      "liveParameters": {
+        "inheritedTinyMlp": 70,
+        "persistentSemanticContextStates": 4,
+        "semanticContextTrainableParameters": 0
+      },
+      "task": "480 steps in eight 60-step segments: +x cue-present, +x resource-cue dropout, -x cue-present, -x resource-cue dropout, then repeat once. Goal direction remains observable in every segment; only the resource semantic cue is withheld in the four scored dropout segments.",
+      "primaryOutcome": "dropout-goal-aligned-action-score [0,1]: mean over 240 scored dropout steps of ordinaryActionScore(deltaVelocityX,deltaVelocityZ,goalX,goalZ)",
+      "secondaryOutcomes": [
+        "time to recover positive goal-aligned velocity after each reversal",
+        "bounded action rate",
+        "semantic context retention",
+        "replay fingerprint"
+      ],
+      "arms": [
+        "full-semantic-recurrent",
+        "recurrence-disabled-current-input",
+        "semantic-channel-cyclic-permutation",
+        "goal-preserved-shared-field-disabled",
+        "exact-legacy",
+        "action-distribution-matched-surrogate"
+      ],
+      "eligibleClaims": [
+        "semantic task response",
+        "recurrent context benefit"
+      ]
+    },
+    {
+      "id": "simple-mnist-ecology-predictor",
+      "controllerType": "neural",
+      "evidenceTier": "shared-cadence-online-prediction",
+      "liveParameters": {
+        "architecture": "4-4-1",
+        "trainableParameters": 25
+      },
+      "task": "240-cadence delayed pressure prediction: 120 input indices under relationship A followed by 120 under reversed relationship B; feedback at cadence t updates only the prediction retained from input t-1. The shuffled control receives permuted training feedback, but every arm is scored against the same unshuffled true labels.",
+      "primaryOutcome": "post-reversal-prediction-quality [0,1]: predictionQuality(predictions,labels) over inclusive label cadences 145..239",
+      "secondaryOutcomes": [
+        "pre-reversal Brier error",
+        "recovery cadence",
+        "parameter bound violations",
+        "snapshot continuation fingerprint"
+      ],
+      "arms": [
+        "adaptive",
+        "frozen-identical-initial-weights",
+        "target-shuffled",
+        "row-ablated"
+      ],
+      "eligibleClaims": [
+        "adaptive next-cadence pressure prediction"
+      ]
+    },
+    {
+      "id": "petri-digital-biologics",
+      "controllerType": "ecological",
+      "evidenceTier": "live-differential-selection",
+      "liveParameters": {
+        "perBiologicAdFitnessWeights": 3,
+        "neuralScalingEligible": false
+      },
+      "task": "240 matched Petri beats with preregistered resource-specialist and exploration-specialist strains; resource scarcity dominates beats 0..119 and exploration opportunity dominates beats 120..239",
+      "primaryOutcome": "favored-adfitness-share [0,1]: mean over beats 80..119 and 200..239 of petriFavoredAdFitnessShare(favored,other)",
+      "secondaryOutcomes": [
+        "favored strain speciation",
+        "lineage persistence",
+        "selection-pressure telemetry",
+        "legacy trajectory equality when disabled"
+      ],
+      "arms": [
+        "full-semantic-selection",
+        "shared-field-disabled",
+        "semantic-channel-cyclic-permutation",
+        "uniform-flux-no-affinity"
+      ],
+      "eligibleClaims": [
+        "ecological semantic-selection causality"
+      ]
+    },
+    {
+      "id": "titans",
+      "controllerType": "game-policy",
+      "evidenceTier": "live-diplomacy-payoff-world-state",
+      "liveParameters": {
+        "iteratedStrategies": 5,
+        "neuralScalingEligible": false
+      },
+      "task": "30 matched diplomacy rounds in balanced social-cooperation and threat/resource-defense regimes using identical initial strategies, histories, economies, and RNG tapes",
+      "primaryOutcome": "regime-correct-move-rate [0,1]: titanCorrectMoveRate(cooperation under the social regime plus defection under the defense regime,60)",
+      "secondaryOutcomes": [
+        "pair payoff",
+        "energy transfer",
+        "relation state",
+        "strategy-fitness EMA",
+        "RNG draw-count equality"
+      ],
+      "arms": [
+        "full-intelligence-diplomacy",
+        "shared-field-disabled",
+        "semantic-channel-cyclic-permutation",
+        "action-rate-matched-policy-surrogate"
+      ],
+      "eligibleClaims": [
+        "game-policy semantic causality"
+      ]
+    }
+  ],
+  "excludedFamilies": [
+    {
+      "id": "alien-flora",
+      "reason": "ecological rate consumer lacks a frozen Phase-A primary task"
+    },
+    {
+      "id": "primordial-soup",
+      "reason": "separate from live Petri biologics and lacks a frozen Phase-A outcome"
+    },
+    {
+      "id": "wilderness-fauna",
+      "reason": "policy kernel has no frozen beneficial-outcome task"
+    },
+    {
+      "id": "nhi",
+      "reason": "native neural/GOAP controller requires an independent world-state task"
+    },
+    {
+      "id": "glyph-beings",
+      "reason": "current downstream consequence is visual-only"
+    },
+    {
+      "id": "shoggoths",
+      "reason": "heuristic/economy task not yet frozen"
+    },
+    {
+      "id": "puppeteers",
+      "reason": "intervention task not yet frozen"
+    },
+    {
+      "id": "leviathans",
+      "reason": "navigation-gain consumer has no native neural state"
+    },
+    {
+      "id": "archons",
+      "reason": "SuperMind path is outside the Phase-A shared-field evaluation"
+    },
+    {
+      "id": "apex",
+      "reason": "native ApexBrain task and capacity tiers are not frozen"
+    },
+    {
+      "id": "mechalogodrom",
+      "reason": "native fusion/STDP task and capacity tiers are not frozen"
+    },
+    {
+      "id": "wingmen",
+      "reason": "neural assist outcome is not frozen"
+    },
+    {
+      "id": "hero-and-twins",
+      "reason": "native SuperCreature task is not frozen"
+    },
+    {
+      "id": "light-archons",
+      "reason": "scalar-memory policy task is not frozen"
+    },
+    {
+      "id": "foundationals",
+      "reason": "current output is telemetry-only"
+    },
+    {
+      "id": "god-colossus",
+      "reason": "visual architecture is not a neural controller"
+    }
+  ],
+  "matchedArmLaw": [
+    "initial world state hash equal",
+    "percept hash equal before intervention",
+    "goal/task schedule hash equal",
+    "population and capacity equal",
+    "action bounds equal",
+    "update cadence equal",
+    "environment RNG tape hash and draw count equal",
+    "dedicated surrogate RNG stream is isolated and hash-recorded where declared",
+    "only the declared controller arm differs"
+  ],
+  "statistics": {
+    "paired": true,
+    "bootstrapSamples": 20000,
+    "signFlipSamples": 20000,
+    "confidenceLevel": 0.95,
+    "bootstrapInterval": "unadjusted two-sided percentile paired-bootstrap interval for the mean full-minus-control normalized outcome",
+    "signFlipAlternative": "one-sided paired sign-flip test for full-minus-control outcome greater than zero",
+    "multipleComparison": "Holm step-down adjustment of one-sided sign-flip p-values within each family across every declared primary contrast; bootstrap intervals are not multiplicity-adjusted",
+    "alpha": 0.05,
+    "effectSize": "JSON-safe paired Cohen dz object (undefined with null value for fewer than two pairs or zero variance) plus paired median absolute normalized-point gain",
+    "negativeRowsRetained": true,
+    "missingRows": "fail unless preregistered notEvaluated reason exists"
+  },
+  "acceptance": {
+    "outcomeScale": "every family primary outcome is normalized to [0,1] before contrasts",
+    "inference": "every declared primary contrast requires paired mean full-minus-control > 0, unadjusted paired-bootstrap 95% lower bound > 0, and Holm-adjusted one-sided paired sign-flip p < 0.05 within family",
+    "semanticSpecificity": "the full correct mapping must pass the inference rule against every declared cyclic-permutation contrast",
+    "recurrentContext": "ordinary full recurrence minus recurrence-disabled primary outcome must have paired median >= 0.05 absolute normalized outcome points and minimum per-seed delta >= -0.20 points, in addition to the inference rule",
+    "adaptivePrediction": "for each arm compute one true-label mean Brier per seed over scored cadences, then average those 64 seed errors; against both frozen and shuffled-training controls, (controlMeanBrier - adaptiveMeanBrier) / controlMeanBrier >= 0.05; controlMeanBrier <= 1e-12 is an undefined failing contrast; paired per-seed true-label quality deltas must also pass the inference rule",
+    "familyBehavior": "every declared primary contrast must pass; for ordinary organisms, Petri biologics, and Titans, every full-minus-control contrast requires paired median >= 0.05 absolute normalized outcome points and minimum per-seed delta >= -0.20 normalized points",
+    "replay": "same seed, arm, and task replays byte-identically",
+    "numericalSafety": "all signals, context states, predictor parameters, actions, outcomes, and snapshots finite and within declared bounds for 10000 faulted steps",
+    "populationCost": "ordinary population points 1000, 5000, 10000, 50000; log-log runtime slope <= 1.15; 50000 incremental median and every counterbalanced batch median < 3 ms; semantic storage exactly 17 bytes/entity",
+    "neuralCapacity": "not evaluated in Phase A because no three live within-family parameter tiers exist",
+    "crossFamilyNeuralScaling": "not allowed in Phase A"
+  },
+  "publication": {
+    "receipt": "docs/reports/assets/organism-intelligence-causal-benchmark-v4.json",
+    "rawCsv": "docs/reports/assets/cross-being-neural-causality-v1.csv",
+    "forestSvg": "docs/reports/assets/organism-intelligence-v4-cross-being-forest.svg",
+    "forestRule": "one row per family using the declared contrast with the smallest across-seed mean full-minus-control delta (source-order tie break), unadjusted paired-bootstrap 95% interval, separate Holm-adjusted sign-flip pass marker, zero line, failures red, ineligible non-neural rows gray",
+    "generatedVisualMustBeByteStable": true,
+    "failedGatesMustRemainVisible": true,
+    "publicPagesMayUpdateOnlyAfterReceiptVerification": true
+  },
+  "claimLaw": {
+    "numericScoreUpliftAllowed": false,
+    "v4VersusV3UpliftAllowed": false,
+    "consciousnessUpliftAllowed": false,
+    "sentienceUpliftAllowed": false,
+    "generalIntelligenceClaimAllowed": false,
+    "physicalQuantumClaimAllowed": false,
+    "securityClaimAllowed": false
+  }
+}

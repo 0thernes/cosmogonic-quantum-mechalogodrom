@@ -282,6 +282,7 @@ describe('organism-intelligence claim boundary', () => {
     expect(receipt.provenance.benchmarkScriptSha256).toBe(benchmarkHash);
 
     expect(receipt.provenance.runtimeBaseCommit).toMatch(/^[0-9a-f]{40}$/);
+    const frozenSources = new Map<string, string>();
     for (const sourcePath of [
       'src/sim/entity-brain.ts',
       'scripts/organism-intelligence-benchmark.ts',
@@ -291,10 +292,20 @@ describe('organism-intelligence claim boundary', () => {
         { cwd: ROOT },
       );
       expect(committedSource.exitCode).toBe(0);
-      expect(committedSource.stdout.toString().replaceAll('\r\n', '\n')).toBe(
-        (await Bun.file(`${ROOT}/${sourcePath}`).text()).replaceAll('\r\n', '\n'),
-      );
+      frozenSources.set(sourcePath, committedSource.stdout.toString().replaceAll('\r\n', '\n'));
     }
+    // The V3 benchmark remains frozen and hash-pinned. Runtime code may evolve in a later protocol;
+    // the receipt's commit—not an impossible forever-equality rule—preserves the exact V3 source.
+    expect(frozenSources.get('scripts/organism-intelligence-benchmark.ts')).toBe(
+      (await Bun.file(`${ROOT}/scripts/organism-intelligence-benchmark.ts`).text()).replaceAll(
+        '\r\n',
+        '\n',
+      ),
+    );
+    expect(frozenSources.get('src/sim/entity-brain.ts')).toContain('private corpusU = 0');
+    expect(await Bun.file(`${ROOT}/src/sim/entity-brain.ts`).text()).toContain(
+      'private readonly semanticContext',
+    );
 
     const { contentSha256, ...body } = receipt;
     const computed = new Bun.CryptoHasher('sha256').update(JSON.stringify(body)).digest('hex');

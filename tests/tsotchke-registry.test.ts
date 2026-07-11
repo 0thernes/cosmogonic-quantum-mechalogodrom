@@ -7,6 +7,7 @@ import {
   TSOTCHKE_REPO_COUNT,
   TSOTCHKE_USER_REPOS,
   TSOTCHKE_ORG_REPOS,
+  TSOTCHKE_BRAIN_CHANNELS,
   TSOTCHKE_INTERNAL_CONTROLS,
   getTsotchkeRepo,
   getTsotchkeRepoByIndex,
@@ -20,8 +21,11 @@ import {
   primaryRepoForArchon,
   tsotchkeSimWiringFraction,
   wiredSimRepoCount,
+  tsotchkeBrainChannelFor,
+  tsotchkeBrainChannelIndex,
   tsotchkeDepthFor,
   type DepthKind,
+  type TsotchkeBrainChannel,
   type TsotchkeIntegrationMode,
   type TsotchkeRepoSlug,
 } from '../src/sim/tsotchke-registry';
@@ -62,6 +66,31 @@ const EXPECTED_ORG_REPOS = [
   '.github',
 ] as const;
 
+const EXPECTED_BRAIN_CHANNELS = [
+  ['eshkol', 'resource'],
+  ['moonlab', 'social'],
+  ['tensorcore', 'resource'],
+  ['libirrep', 'social'],
+  ['spin_based_neural_network', 'threat'],
+  ['quantum_geometric_tensor', 'exploration'],
+  ['quantum_rng', 'exploration'],
+  ['gpt2-basic', null],
+  ['homebrew-eshkol', 'resource'],
+  ['llm-arbitrator', null],
+  ['simple_mnist', 'threat'],
+  ['asteroids', 'threat'],
+  ['classical_rng', 'exploration'],
+  ['PINN', 'resource'],
+  ['PIMC', 'exploration'],
+  ['ulg', 'social'],
+  ['logo-lab', 'resource'],
+  ['quantum-quake', 'threat'],
+  ['SolanaQuantumFlux', null],
+  ['Quantum-RNG-API', 'exploration'],
+  ['OBLITERATUS', null],
+  ['.github', null],
+] as const satisfies readonly (readonly [TsotchkeRepoSlug, TsotchkeBrainChannel | null])[];
+
 describe('Tsotchke registry — exact external ledger and internal-control boundary', () => {
   test('live external parity is exactly 15 user + 7 org repositories', () => {
     expect(TSOTCHKE_USER_REPOS).toEqual(EXPECTED_USER_REPOS);
@@ -86,6 +115,42 @@ describe('Tsotchke registry — exact external ledger and internal-control bound
       TSOTCHKE_INTERNAL_CONTROLS[0].id,
     );
     expect(getTsotchkeRepo(TSOTCHKE_INTERNAL_CONTROLS[0].id as TsotchkeRepoSlug)).toBeUndefined();
+  });
+
+  test('the reviewed semantic brain-channel mapping and channel counts are exact', () => {
+    const actual = Array.from({ length: TSOTCHKE_REPO_COUNT }, (_, index) => {
+      const repo = getTsotchkeRepoByIndex(index);
+      return [repo.slug, repo.brainChannel] as const;
+    });
+    expect(actual).toEqual([...EXPECTED_BRAIN_CHANNELS]);
+
+    const counts: Record<TsotchkeBrainChannel, number> & { excluded: number } = {
+      resource: 0,
+      threat: 0,
+      exploration: 0,
+      social: 0,
+      excluded: 0,
+    };
+    for (const [, channel] of actual) {
+      if (channel === null) counts.excluded++;
+      else counts[channel]++;
+    }
+    expect(counts).toEqual({ resource: 5, threat: 4, exploration: 5, social: 3, excluded: 5 });
+    expect(TSOTCHKE_BRAIN_CHANNELS).toEqual(['resource', 'threat', 'exploration', 'social']);
+    expect(TSOTCHKE_BRAIN_CHANNELS.map(tsotchkeBrainChannelIndex)).toEqual([0, 1, 2, 3]);
+    for (const [slug, channel] of EXPECTED_BRAIN_CHANNELS) {
+      expect(tsotchkeBrainChannelFor(slug)).toBe(channel);
+    }
+  });
+
+  test('every wired row is mapped while fenced and metadata rows remain unmapped', () => {
+    for (let index = 0; index < TSOTCHKE_REPO_COUNT; index++) {
+      const repo = getTsotchkeRepoByIndex(index);
+      if (repo.wiring > 0) expect(repo.brainChannel).not.toBeNull();
+      if (repo.depth === 'fenced' || repo.depth === 'meta') {
+        expect(repo.brainChannel).toBeNull();
+      }
+    }
   });
 
   test('all legacy registry helpers weight hue by wiring so fences and metadata are inert', () => {

@@ -15,6 +15,10 @@ import { EshkolTaylorJet } from '../math/eshkol-taylor-jet';
 import { DeterministicStatevectorRng } from '../math/deterministic-statevector-rng';
 import type { OrganismIntelligenceSignal } from '../types';
 import { corpusBrainVectorInto, type MutableCorpusBrainVector } from './tsotchke-brain-intake';
+import {
+  TsotchkeEcologyPredictor,
+  type TsotchkeEcologyPredictorSnapshot,
+} from './tsotchke-ecology-predictor';
 import type { TsotchkeRepoSlug } from './tsotchke-registry';
 
 const DEFAULT_CADENCE_FRAMES = 12;
@@ -44,10 +48,12 @@ export interface TsotchkeOrganismIntelligenceOptions {
   cadenceFrames?: number;
   /** Fixed at 2..8 by the state-vector model; four qubits keep the shared cadence inexpensive. */
   statevectorQubits?: number;
+  /** Counterfactual control: false scores the same predictor but freezes its 25 trainable parameters. */
+  ecologyPredictorAdaptive?: boolean;
 }
 
 export interface TsotchkeOrganismIntelligenceSnapshot {
-  schemaVersion: 1;
+  schemaVersion: 2;
   model: 'shared-tsotchke-organism-intelligence';
   indicatorOnly: true;
   seed: number;
@@ -66,11 +72,14 @@ export interface TsotchkeOrganismIntelligenceSnapshot {
     forecast: number;
     confidence: number;
     corpusDrive: number;
+    ecologyRisk: number;
+    ecologySurprise: number;
     channels: number[];
     integratedRepoCount: number;
     diagnosticAlert: boolean;
   };
   substrate: ReturnType<DeterministicStatevectorRng['snapshot']>;
+  ecologyPredictor: TsotchkeEcologyPredictorSnapshot;
 }
 
 /** Shared field owner. Construct once, call {@link step}, and hand {@link signal} to consumers. */
@@ -80,6 +89,7 @@ export class TsotchkeOrganismIntelligence {
   private readonly seed: number;
   private readonly cadenceFrames: number;
   private readonly statevector: DeterministicStatevectorRng;
+  private ecologyPredictor: TsotchkeEcologyPredictor;
   private readonly pressureHistory = new Float64Array(4);
   private readonly coefficients = new Float64Array(FORECAST_ORDER + 1);
   private readonly forecastJet = new EshkolTaylorJet(FORECAST_ORDER);
@@ -105,6 +115,9 @@ export class TsotchkeOrganismIntelligence {
         repetitionCutoff: 32,
       },
     );
+    this.ecologyPredictor = new TsotchkeEcologyPredictor((this.seed ^ 0x4d4c_5031) >>> 0 || 1, {
+      adaptive: options.ecologyPredictorAdaptive ?? true,
+    });
     this.signal = {
       enabled: options.enabled ?? true,
       indicatorOnly: true,
@@ -117,6 +130,8 @@ export class TsotchkeOrganismIntelligence {
       forecast: 0,
       confidence: 0,
       corpusDrive: 0,
+      ecologyRisk: 0,
+      ecologySurprise: 0,
       channels: new Float32Array(4),
       integratedRepoCount: 0,
       diagnosticAlert: false,
@@ -132,6 +147,7 @@ export class TsotchkeOrganismIntelligence {
       enabled: snapshot.signal.enabled,
       cadenceFrames: snapshot.cadenceFrames,
       statevectorQubits: snapshot.substrate.qubits,
+      ecologyPredictorAdaptive: snapshot.ecologyPredictor.adaptive,
     });
     instance.restore(snapshot);
     return instance;
@@ -141,6 +157,7 @@ export class TsotchkeOrganismIntelligence {
   setEnabled(enabled: boolean): void {
     this.signal.enabled = enabled;
     if (!enabled) this.clearSignal();
+    this.ecologyPredictor.clearPending();
     // Force the next enabled call to recompute even if it shares the prior frame number.
     this.lastFrame = -Infinity;
   }
@@ -157,6 +174,10 @@ export class TsotchkeOrganismIntelligence {
     const frame = Number.isFinite(input.frame) ? Math.max(0, Math.floor(input.frame)) : 0;
     if (!this.signal.enabled) return this.signal;
     if (!force && frame - this.lastFrame < this.cadenceFrames) return this.signal;
+    const previousFrame = this.lastFrame;
+    const predictorCadenceContinuous =
+      Number.isFinite(previousFrame) && frame - previousFrame === this.cadenceFrames;
+    if (!predictorCadenceContinuous) this.ecologyPredictor.clearPending();
     this.lastFrame = frame;
 
     const chaos = clamp01(input.chaos);
@@ -180,7 +201,27 @@ export class TsotchkeOrganismIntelligence {
         thermalStress * 0.08,
     );
     const forecast = this.pushAndForecast(pressure);
-    const corpus = corpusBrainVectorInto(this.corpusVector, this.seed, frame, ablated);
+    // The simple_mnist row is now an actual trainable, delayed-target model rather than a fixed tag.
+    // Current pressure is the supervised outcome for the preceding cadence; current observations are
+    // retained to predict the next cadence. Ablation keeps model telemetry available but removes every
+    // causal route from its prediction/error into the shared control signal.
+    const ecologyPrediction = this.ecologyPredictor.step(
+      {
+        biomassDepletion: 1 - biomass,
+        metabolicDepletion: 1 - metabolic,
+        crowding,
+        chaosThermalStress: clamp01(chaos * 0.65 + thermalStress * 0.35),
+      },
+      predictorCadenceContinuous ? pressure : undefined,
+    );
+    const ecologyRisk = clamp01(ecologyPrediction.prediction);
+    const ecologySurprise = clamp01(Math.sqrt(ecologyPrediction.previousBrier ?? 0));
+    const predictorAblated = ablated?.has('simple_mnist') ?? false;
+    const effectiveRisk = predictorAblated ? 0 : ecologyRisk;
+    const effectiveSurprise = predictorAblated ? 0 : ecologySurprise;
+    const corpus = corpusBrainVectorInto(this.corpusVector, this.seed, frame, ablated, {
+      simpleMnistRisk: ecologyRisk,
+    });
     const channels = this.signal.channels;
 
     const quantumSample = this.statevector.next01();
@@ -194,12 +235,18 @@ export class TsotchkeOrganismIntelligence {
     const confidence = alert ? 0.2 : health.status === 'diagnostic-pass' ? 0.88 : 0.65;
     const novelty = clamp01(Math.abs(forecast - pressure) * 3);
 
-    this.signal.resourcePressure = clamp01(pressure * 0.5 + forecast * 0.28 + channels[0]! * 0.22);
+    this.signal.resourcePressure = clamp01(
+      pressure * 0.47 + forecast * 0.25 + channels[0]! * 0.2 + effectiveRisk * 0.08,
+    );
     this.signal.threatResponse = clamp01(
-      chaos * 0.42 + entropy * 0.18 + thermalStress * 0.12 + channels[1]! * 0.28,
+      chaos * 0.36 +
+        entropy * 0.16 +
+        thermalStress * 0.1 +
+        channels[1]! * 0.26 +
+        effectiveRisk * 0.12,
     );
     this.signal.exploration = clamp01(
-      explorationSample * 0.42 + novelty * 0.18 + channels[2]! * 0.4,
+      explorationSample * 0.39 + novelty * 0.16 + channels[2]! * 0.37 + effectiveSurprise * 0.08,
     );
     this.signal.socialDrive = clamp01(
       (1 - Math.abs(crowding - 0.58)) * 0.34 + channels[3]! * 0.46 + metabolic * 0.2,
@@ -207,9 +254,11 @@ export class TsotchkeOrganismIntelligence {
     this.signal.forecast = forecast;
     this.signal.confidence = confidence;
     this.signal.corpusDrive = clamp01(corpus.drive);
+    this.signal.ecologyRisk = effectiveRisk;
+    this.signal.ecologySurprise = effectiveSurprise;
     this.signal.plasticity = clamp01(
       confidence *
-        (0.22 + corpus.drive * 0.58 + novelty * 0.2) *
+        (0.2 + corpus.drive * 0.52 + novelty * 0.16 + effectiveSurprise * 0.12) *
         (1 - this.signal.threatResponse * 0.35),
     );
     this.signal.integratedRepoCount = corpus.repoCount;
@@ -222,7 +271,7 @@ export class TsotchkeOrganismIntelligence {
   snapshot(): TsotchkeOrganismIntelligenceSnapshot {
     const s = this.signal;
     return {
-      schemaVersion: 1,
+      schemaVersion: 2,
       model: 'shared-tsotchke-organism-intelligence',
       indicatorOnly: true,
       seed: this.seed,
@@ -241,11 +290,14 @@ export class TsotchkeOrganismIntelligence {
         forecast: s.forecast,
         confidence: s.confidence,
         corpusDrive: s.corpusDrive,
+        ecologyRisk: s.ecologyRisk,
+        ecologySurprise: s.ecologySurprise,
         channels: Array.from(s.channels),
         integratedRepoCount: s.integratedRepoCount,
         diagnosticAlert: s.diagnosticAlert,
       },
       substrate: this.statevector.snapshot(),
+      ecologyPredictor: this.ecologyPredictor.snapshot(),
     };
   }
 
@@ -255,7 +307,7 @@ export class TsotchkeOrganismIntelligence {
    */
   restore(snapshot: TsotchkeOrganismIntelligenceSnapshot): void {
     if (
-      snapshot.schemaVersion !== 1 ||
+      snapshot.schemaVersion !== 2 ||
       snapshot.model !== 'shared-tsotchke-organism-intelligence' ||
       snapshot.indicatorOnly !== true
     ) {
@@ -303,6 +355,8 @@ export class TsotchkeOrganismIntelligence {
       signal.forecast,
       signal.confidence,
       signal.corpusDrive,
+      signal.ecologyRisk,
+      signal.ecologySurprise,
       ...signal.channels,
     ];
     if (bounded.some((value) => !Number.isFinite(value) || value < 0 || value > 1)) {
@@ -315,7 +369,18 @@ export class TsotchkeOrganismIntelligence {
       throw new RangeError('a disabled organism-intelligence snapshot must have a zero signal');
     }
 
+    const expectedPredictorSeed = (this.seed ^ 0x4d4c_5031) >>> 0 || 1;
+    if (snapshot.ecologyPredictor.seed !== expectedPredictorSeed) {
+      throw new RangeError(
+        'organism-intelligence ecology predictor seed does not match this field',
+      );
+    }
+    if (snapshot.ecologyPredictor.adaptive !== this.ecologyPredictor.isAdaptive) {
+      throw new RangeError('organism-intelligence predictor arm does not match this field');
+    }
+    const restoredPredictor = TsotchkeEcologyPredictor.fromSnapshot(snapshot.ecologyPredictor);
     this.statevector.restore(snapshot.substrate);
+    this.ecologyPredictor = restoredPredictor;
     this.lastFrame = snapshot.lastFrame < 0 ? -Infinity : snapshot.lastFrame;
     this.historyCount = snapshot.historyCount;
     this.pressureHistory.set(snapshot.pressureHistory);
@@ -330,6 +395,8 @@ export class TsotchkeOrganismIntelligence {
     target.forecast = signal.forecast;
     target.confidence = signal.confidence;
     target.corpusDrive = signal.corpusDrive;
+    target.ecologyRisk = signal.ecologyRisk;
+    target.ecologySurprise = signal.ecologySurprise;
     target.channels.set(signal.channels);
     target.integratedRepoCount = signal.integratedRepoCount;
     target.diagnosticAlert = signal.diagnosticAlert;
@@ -369,6 +436,8 @@ export class TsotchkeOrganismIntelligence {
     s.forecast = 0;
     s.confidence = 0;
     s.corpusDrive = 0;
+    s.ecologyRisk = 0;
+    s.ecologySurprise = 0;
     s.channels.fill(0);
     s.integratedRepoCount = 0;
     s.diagnosticAlert = false;

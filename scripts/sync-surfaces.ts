@@ -224,6 +224,10 @@ function syncReceipts(s: string): string {
     .replace(/\b[0-9]{2}\.[0-9]{2} % \/ [0-9]{2}\.[0-9]{2} %/g, `${LINE} % / ${FUNC} %`)
     .replace(/\b[0-9],[0-9]{3} passing tests\b/g, `${TEST_COMMA} passing tests`)
     .replace(/\b[0-9],[0-9]{3} \(0 failing\)/g, `${TEST_COMMA} (0 failing)`)
+    .replace(
+      /\*\*[0-9][0-9,]*\*\*\s+pass\s*\/\s*\*\*[0-9][0-9,]*\*\*\s+fail/g,
+      `**${TEST_COMMA}** pass / **0** fail`,
+    )
     .replace(/bun test \([0-9],[0-9]{3} tests\)/g, `bun test (${TEST_COMMA} tests)`)
     .replace(/"([0-9],[0-9]{3}) tests, 0 failing"/g, `"${TEST_COMMA} tests, 0 failing"`)
     .replace(/"([0-9]{2}\.[0-9]{2})% line coverage"/g, `"${LINE}% line coverage"`)

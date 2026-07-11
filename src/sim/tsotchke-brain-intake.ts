@@ -20,6 +20,7 @@
 import {
   getTsotchkeRepoByIndex,
   TSOTCHKE_REPO_COUNT,
+  tsotchkeBrainChannelIndex,
   type TsotchkeRepoEntry,
   type TsotchkeRepoSlug,
 } from './tsotchke-registry';
@@ -64,7 +65,7 @@ const harmonicPotential = (x: number): number => 0.5 * x * x;
 
 /** True ⇔ this repo is a WIRED scientific substrate that should feed a brain (not fenced, not org-meta). */
 export function isBrainWired(repo: TsotchkeRepoEntry): boolean {
-  return repo.wiring > 0 && repo.substrate !== 'meta';
+  return repo.wiring > 0 && repo.substrate !== 'meta' && repo.brainChannel !== null;
 }
 
 /**
@@ -192,9 +193,9 @@ export function substrateScalar(
   return squash(raw);
 }
 
-/** The brain-facing corpus intake: four aggregate channels + an overall drive, over ALL wired substrates. */
+/** The brain-facing corpus intake: four semantic channels + an overall drive, over ALL wired substrates. */
 export interface CorpusBrainVector {
-  /** Four aggregate channels (repo `idx % 4`), each a mean over its contributing wired repos in [0,1]. */
+  /** Resource, threat, exploration, and social means over their explicitly assigned repos, in [0,1]. */
   channels: [number, number, number, number];
   /** Overall corpus drive into the brain in [0,1] (mean of all wired contributions). */
   drive: number;
@@ -209,12 +210,19 @@ export interface MutableCorpusBrainVector {
   repoCount: number;
 }
 
+/** Live adaptive values that replace a repository's fixed facade without changing registry semantics. */
+export interface CorpusBrainRuntimeOverrides {
+  /** Trainable simple_mnist next-cadence ecological-pressure prediction, already bounded to [0,1]. */
+  simpleMnistRisk?: number;
+}
+
 /** Fill a caller-owned vector. `out.channels.length` must be at least four. O(external repos). */
 export function corpusBrainVectorInto(
   out: MutableCorpusBrainVector,
   seed: number,
   frame: number,
   ablated?: ReadonlySet<TsotchkeRepoSlug>,
+  runtime?: CorpusBrainRuntimeOverrides,
 ): MutableCorpusBrainVector {
   if (out.channels.length < 4) throw new RangeError('corpus brain output requires four channels');
   const channels = out.channels;
@@ -228,8 +236,13 @@ export function corpusBrainVectorInto(
   for (let i = 0; i < TSOTCHKE_REPO_COUNT; i++) {
     const repo = getTsotchkeRepoByIndex(i);
     if (!isBrainWired(repo) || ablated?.has(repo.slug)) continue;
-    const contribution = repo.wiring * substrateScalar(repo, seed, frame, i);
-    const ch = i % 4;
+    const adaptiveRisk = runtime?.simpleMnistRisk;
+    const scalar =
+      repo.slug === 'simple_mnist' && Number.isFinite(adaptiveRisk)
+        ? clamp01(adaptiveRisk!)
+        : substrateScalar(repo, seed, frame, i);
+    const contribution = repo.wiring * scalar;
+    const ch = tsotchkeBrainChannelIndex(repo.brainChannel!);
     channels[ch] = (channels[ch] ?? 0) + contribution;
     if (ch === 0) count0++;
     else if (ch === 1) count1++;
@@ -255,13 +268,14 @@ export function corpusBrainVector(
   seed: number,
   frame: number,
   ablated?: ReadonlySet<TsotchkeRepoSlug>,
+  runtime?: CorpusBrainRuntimeOverrides,
 ): CorpusBrainVector {
   const mutable: MutableCorpusBrainVector = {
     channels: new Float32Array(4),
     drive: 0,
     repoCount: 0,
   };
-  corpusBrainVectorInto(mutable, seed, frame, ablated);
+  corpusBrainVectorInto(mutable, seed, frame, ablated, runtime);
   return {
     channels: [
       mutable.channels[0] ?? 0,
@@ -302,11 +316,12 @@ export function corpusBrainDistance(a: CorpusBrainVector, b: CorpusBrainVector):
 export interface RepoBrainAblation {
   slug: TsotchkeRepoSlug;
   substrate: string;
+  brainChannel: NonNullable<TsotchkeRepoEntry['brainChannel']>;
   distance: number;
   loadBearing: boolean;
 }
 
-/** The full corpus→brain wiring report — the measured proof that every wired repo feeds the brain. */
+/** Structural corpus→brain reachability report; it does not by itself establish useful behavior. */
 export interface CorpusBrainReport {
   seed: number;
   frame: number;
@@ -326,19 +341,24 @@ const LOAD_TOL = 1e-9;
  * "all integrated external repos measurably feed the brain" (currently 17 of 21 non-meta entries).
  * Deterministic. O(repos²).
  */
-export function corpusBrainAblation(seed: number, frame: number): CorpusBrainReport {
-  const baseline = corpusBrainVector(seed, frame);
+export function corpusBrainAblation(
+  seed: number,
+  frame: number,
+  runtime?: CorpusBrainRuntimeOverrides,
+): CorpusBrainReport {
+  const baseline = corpusBrainVector(seed, frame, undefined, runtime);
   const ablations: RepoBrainAblation[] = [];
   for (let i = 0; i < TSOTCHKE_REPO_COUNT; i++) {
     const repo = getTsotchkeRepoByIndex(i);
     if (!isBrainWired(repo)) continue;
     const distance = corpusBrainDistance(
       baseline,
-      corpusBrainVector(seed, frame, new Set([repo.slug])),
+      corpusBrainVector(seed, frame, new Set([repo.slug]), runtime),
     );
     ablations.push({
       slug: repo.slug,
       substrate: repo.substrate,
+      brainChannel: repo.brainChannel!,
       distance,
       loadBearing: distance > LOAD_TOL,
     });

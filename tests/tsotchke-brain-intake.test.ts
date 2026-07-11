@@ -13,9 +13,14 @@ import {
   corpusBrainScalar,
   corpusBrainAblation,
   corpusBrainDistance,
+  isBrainWired,
   substrateScalar,
 } from '../src/sim/tsotchke-brain-intake';
-import { FENCED_REPO_SLUGS, getTsotchkeRepo } from '../src/sim/tsotchke-registry';
+import {
+  FENCED_REPO_SLUGS,
+  getTsotchkeRepo,
+  tsotchkeBrainChannelIndex,
+} from '../src/sim/tsotchke-registry';
 
 const SEED = 0x5eed_beef;
 
@@ -62,6 +67,44 @@ describe('no decoration — every wired repo is load-bearing on the brain', () =
 
   test('the report is deterministic', () => {
     expect(JSON.stringify(corpusBrainAblation(SEED, 9))).toBe(JSON.stringify(report));
+  });
+
+  test('each repo ablation changes only its declared semantic channel aggregate', () => {
+    const baseline = corpusBrainVector(SEED, 9);
+    const channelIndices = [0, 1, 2, 3] as const;
+
+    for (const ablation of report.ablations) {
+      const repo = getTsotchkeRepo(ablation.slug)!;
+      expect(isBrainWired(repo)).toBe(true);
+      expect(repo.brainChannel).not.toBeNull();
+      if (repo.brainChannel === null) throw new Error(`${repo.slug} must have a semantic channel`);
+      expect(ablation.brainChannel).toBe(repo.brainChannel);
+
+      const intendedIndex = tsotchkeBrainChannelIndex(ablation.brainChannel);
+      const withoutRepo = corpusBrainVector(SEED, 9, new Set([ablation.slug]));
+      expect(withoutRepo.repoCount).toBe(baseline.repoCount - 1);
+
+      for (const channelIndex of channelIndices) {
+        if (channelIndex === intendedIndex) {
+          expect(withoutRepo.channels[channelIndex]).not.toBe(baseline.channels[channelIndex]);
+        } else {
+          expect(withoutRepo.channels[channelIndex]).toBe(baseline.channels[channelIndex]);
+        }
+      }
+    }
+  });
+
+  test('runtime-aware ablation exercises the live adaptive simple_mnist value', () => {
+    const fixed = corpusBrainVector(SEED, 9);
+    const runtime = { simpleMnistRisk: 0.99 };
+    const adaptive = corpusBrainVector(SEED, 9, undefined, runtime);
+    expect(adaptive.channels[1]).not.toBe(fixed.channels[1]);
+
+    const liveReport = corpusBrainAblation(SEED, 9, runtime);
+    const simpleMnist = liveReport.ablations.find((row) => row.slug === 'simple_mnist');
+    expect(simpleMnist).toBeDefined();
+    expect(simpleMnist?.brainChannel).toBe('threat');
+    expect(simpleMnist?.loadBearing).toBe(true);
   });
 });
 

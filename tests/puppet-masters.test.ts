@@ -40,6 +40,8 @@ function matchedIntelligenceSignal(enabled: boolean): OrganismIntelligenceSignal
     forecast: 0.75,
     confidence: 1,
     corpusDrive: 1,
+    ecologyRisk: 0.5,
+    ecologySurprise: 0.25,
     channels: new Float32Array([0.8, 0.9, 1, 0.7]),
     integratedRepoCount: 17,
     diagnosticAlert: false,

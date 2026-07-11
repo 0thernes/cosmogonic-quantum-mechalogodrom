@@ -64,6 +64,19 @@ export type DepthKind =
 export type TsotchkeIntegrationMode =
   'direct-port' | 'deterministic-facade' | 'harvest' | 'fenced' | 'meta';
 
+/**
+ * Explicit semantic destination for a represented repository's brain contribution. The order is a
+ * runtime contract shared with `OrganismIntelligenceSignal.channels`; it replaces the former arbitrary
+ * `registryIndex % 4` grouping so channel-rotation controls can test a meaningful mapping.
+ */
+export type TsotchkeBrainChannel = 'resource' | 'threat' | 'exploration' | 'social';
+export const TSOTCHKE_BRAIN_CHANNELS = [
+  'resource',
+  'threat',
+  'exploration',
+  'social',
+] as const satisfies readonly TsotchkeBrainChannel[];
+
 /** Substrate roles for digital biologics (primordial soup evolution). */
 export type SubstrateKind =
   | 'consciousness-engine' // Eshkol: AD, GWT, active inference, programs as life code
@@ -76,7 +89,7 @@ export type SubstrateKind =
   | 'fenced-llm' // explicitly not used for life
   | 'toolchain' // homebrew-eshkol: build tools for biologics
   | 'fenced-arbitrator' // fenced
-  | 'classical-baseline' // contrast only
+  | 'classical-baseline' // live simple_mnist-inspired predictor; separate Petri perceptron/contrast remains
   | 'game-physics' // asteroids: dynamics for body movement
   | 'classical-rng' // baseline entropy
   | 'pinn-physics' // PINN: field "metabolism" residuals
@@ -94,6 +107,8 @@ export interface TsotchkeRepoEntry {
   slug: TsotchkeRepoSlug;
   origin: 'user' | 'org';
   substrate: SubstrateKind;
+  /** Semantic brain lane, or null when the row is deliberately fenced/metadata-only. */
+  brainChannel: TsotchkeBrainChannel | null;
   cosmogonicLeaf: string;
   /**
    * Declared integration status (a design-intent weight, NOT a measured behavioural metric):
@@ -138,6 +153,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     slug: 'eshkol',
     origin: 'user',
     substrate: 'consciousness-engine',
+    brainChannel: 'resource',
     cosmogonicLeaf: 'sim/eshkol-bridge.ts',
     wiring: 1.0,
     depth: 'deep',
@@ -154,6 +170,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     slug: 'moonlab',
     origin: 'user',
     substrate: 'clifford-tensor',
+    brainChannel: 'social',
     cosmogonicLeaf: 'sim/moonlab-tensor.ts',
     wiring: 1.0,
     depth: 'deep',
@@ -165,6 +182,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     slug: 'tensorcore',
     origin: 'user',
     substrate: 'metal-sim',
+    brainChannel: 'resource',
     cosmogonicLeaf: 'sim/tensorcore-facade.ts',
     wiring: 1.0,
     depth: 'deep',
@@ -176,6 +194,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     slug: 'libirrep',
     origin: 'user',
     substrate: 'equivariant-sym',
+    brainChannel: 'social',
     cosmogonicLeaf: 'sim/irrep-symmetry.ts',
     wiring: 1.0,
     depth: 'deep',
@@ -187,6 +206,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     slug: 'spin_based_neural_network',
     origin: 'user',
     substrate: 'hopfield-spin',
+    brainChannel: 'threat',
     cosmogonicLeaf: 'math/hopfield + spin-glass',
     wiring: 1.0,
     depth: 'deep',
@@ -198,6 +218,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     slug: 'quantum_geometric_tensor',
     origin: 'user',
     substrate: 'quantum-geometry',
+    brainChannel: 'exploration',
     cosmogonicLeaf: 'quantum-geometry',
     wiring: 1.0,
     depth: 'deep',
@@ -209,6 +230,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     slug: 'quantum_rng',
     origin: 'user',
     substrate: 'qrng-entropy',
+    brainChannel: 'exploration',
     cosmogonicLeaf: 'eshkol-qrng',
     wiring: 1.0,
     depth: 'deep',
@@ -221,6 +243,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     slug: 'gpt2-basic',
     origin: 'user',
     substrate: 'fenced-llm',
+    brainChannel: null,
     cosmogonicLeaf: '',
     wiring: 0,
     depth: 'fenced',
@@ -232,6 +255,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     slug: 'homebrew-eshkol',
     origin: 'user',
     substrate: 'toolchain',
+    brainChannel: 'resource',
     cosmogonicLeaf: 'sim/homebrew-eshkol.ts',
     wiring: 1.0,
     depth: 'harvest',
@@ -243,6 +267,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     slug: 'llm-arbitrator',
     origin: 'user',
     substrate: 'fenced-arbitrator',
+    brainChannel: null,
     cosmogonicLeaf: '',
     wiring: 0,
     depth: 'fenced',
@@ -254,17 +279,20 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     slug: 'simple_mnist',
     origin: 'user',
     substrate: 'classical-baseline',
-    cosmogonicLeaf: 'sim/perceptron-baseline.ts',
+    brainChannel: 'threat',
+    cosmogonicLeaf: 'sim/tsotchke-ecology-predictor.ts',
     wiring: 1.0,
     depth: 'wired',
     integrationMode: 'deterministic-facade',
-    sourceBoundary: 'MIT; local leaf is a deterministic baseline facade.',
+    sourceBoundary:
+      'MIT; simple_mnist-inspired local 4-4-1 online adaptation; Petri retains the separate perceptron baseline.',
     hue: 0.27,
   },
   {
     slug: 'asteroids',
     origin: 'user',
     substrate: 'game-physics',
+    brainChannel: 'threat',
     cosmogonicLeaf: 'sim/asteroids-physics.ts',
     wiring: 1.0,
     depth: 'wired',
@@ -276,6 +304,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     slug: 'classical_rng',
     origin: 'user',
     substrate: 'classical-rng',
+    brainChannel: 'exploration',
     cosmogonicLeaf: 'sim/classical-contrast.ts',
     wiring: 1.0,
     depth: 'deep',
@@ -287,6 +316,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     slug: 'PINN',
     origin: 'user',
     substrate: 'pinn-physics',
+    brainChannel: 'resource',
     cosmogonicLeaf: 'sim/pinn-residual.ts',
     wiring: 1.0,
     depth: 'wired',
@@ -298,6 +328,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     slug: 'PIMC',
     origin: 'user',
     substrate: 'path-integral',
+    brainChannel: 'exploration',
     cosmogonicLeaf: 'sim/pimc-paths.ts',
     wiring: 1.0,
     depth: 'wired',
@@ -309,6 +340,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     slug: 'ulg',
     origin: 'org',
     substrate: 'browser-hybrid',
+    brainChannel: 'social',
     cosmogonicLeaf: 'sim/ulg-bridge.ts',
     wiring: 1.0,
     depth: 'wired',
@@ -320,6 +352,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     slug: 'logo-lab',
     origin: 'org',
     substrate: 'logo-turtle',
+    brainChannel: 'resource',
     cosmogonicLeaf: 'sim/logo-turtle.ts',
     wiring: 1.0,
     depth: 'wired',
@@ -331,6 +364,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     slug: 'quantum-quake',
     origin: 'org',
     substrate: 'quake-aliveness',
+    brainChannel: 'threat',
     cosmogonicLeaf: 'sim/qge-aliveness.ts',
     wiring: 1.0,
     depth: 'wired',
@@ -343,6 +377,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     slug: 'SolanaQuantumFlux',
     origin: 'org',
     substrate: 'fenced-chain',
+    brainChannel: null,
     cosmogonicLeaf: '',
     wiring: 0,
     depth: 'fenced',
@@ -354,6 +389,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     slug: 'Quantum-RNG-API',
     origin: 'org',
     substrate: 'qrng-api',
+    brainChannel: 'exploration',
     cosmogonicLeaf: 'sim/quantum-rng-api.ts',
     wiring: 1.0,
     depth: 'harvest',
@@ -365,6 +401,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     slug: 'OBLITERATUS',
     origin: 'org',
     substrate: 'fenced-refusal-toolkit',
+    brainChannel: null,
     cosmogonicLeaf: '',
     wiring: 0,
     depth: 'fenced',
@@ -376,6 +413,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     slug: '.github',
     origin: 'org',
     substrate: 'meta',
+    brainChannel: null,
     cosmogonicLeaf: 'tsotchke-registry',
     wiring: 0,
     depth: 'meta',
@@ -398,6 +436,20 @@ export function getTsotchkeRepoByIndex(i: number): TsotchkeRepoEntry {
   const n = ENTRIES.length;
   const idx = ((i % n) + n) % n;
   return ENTRIES[idx]!;
+}
+
+/** Stable semantic-channel index shared by the corpus intake and entity recurrent adapter. */
+export function tsotchkeBrainChannelIndex(channel: TsotchkeBrainChannel): 0 | 1 | 2 | 3 {
+  if (channel === 'resource') return 0;
+  if (channel === 'threat') return 1;
+  if (channel === 'exploration') return 2;
+  return 3;
+}
+
+export function tsotchkeBrainChannelFor(
+  slug: TsotchkeRepoSlug,
+): TsotchkeBrainChannel | null | undefined {
+  return getTsotchkeRepo(slug)?.brainChannel;
 }
 
 /** Public depth of integration for a repo (deep / wired / harvest / fenced / meta). */

@@ -155,7 +155,11 @@ export interface OrganismIntelligenceSignal {
   forecast: number;
   confidence: number;
   corpusDrive: number;
-  /** Four bounded aggregate corpus channels; the Float32Array identity is stable. */
+  /** Trainable simple_mnist prediction of next-cadence ecological pressure; proxy-only. */
+  ecologyRisk: number;
+  /** Absolute error for the preceding cadence's ecology prediction, or zero before a label exists. */
+  ecologySurprise: number;
+  /** Resource, threat, exploration, and social corpus channels; bounded and identity-stable. */
   channels: Float32Array;
   integratedRepoCount: number;
   diagnosticAlert: boolean;

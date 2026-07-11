@@ -19,6 +19,8 @@ const lifeSignal = (enabled: boolean): OrganismIntelligenceSignal => ({
   forecast: 0.6,
   confidence: 0.9,
   corpusDrive: 0.8,
+  ecologyRisk: 0.5,
+  ecologySurprise: 0.25,
   channels: new Float32Array([0.2, 0.4, 0.6, 0.8]),
   integratedRepoCount: 17,
   diagnosticAlert: false,

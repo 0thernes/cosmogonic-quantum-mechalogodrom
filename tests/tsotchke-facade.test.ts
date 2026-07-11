@@ -30,6 +30,8 @@ const OPERATIONAL_SIGNAL: OrganismIntelligenceSignal = {
   forecast: 1,
   confidence: 1,
   corpusDrive: 1,
+  ecologyRisk: 0.5,
+  ecologySurprise: 0.25,
   channels: new Float32Array([1, 1, 1, 1]),
   integratedRepoCount: 17,
   diagnosticAlert: false,

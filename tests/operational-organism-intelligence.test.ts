@@ -46,6 +46,29 @@ function buildSignal(ablated?: ReadonlySet<TsotchkeRepoSlug>): OrganismIntellige
   return field.signal;
 }
 
+function semanticSignal(
+  channels: readonly [number, number, number, number],
+): OrganismIntelligenceSignal {
+  return {
+    enabled: true,
+    indicatorOnly: true,
+    revision: 1,
+    resourcePressure: 0.5,
+    threatResponse: 0.5,
+    exploration: 0.5,
+    socialDrive: 0.5,
+    plasticity: 0.5,
+    forecast: 0.5,
+    confidence: 1,
+    corpusDrive: channels.reduce((sum, value) => sum + value, 0) / 4,
+    ecologyRisk: 0.5,
+    ecologySurprise: 0.25,
+    channels: Float32Array.from(channels),
+    integratedRepoCount: 17,
+    diagnosticAlert: false,
+  };
+}
+
 function goals(directionX = 1, directionZ = 0): OrganismGoalField {
   return {
     directionX: new Float32Array([directionX]),
@@ -162,6 +185,73 @@ describe('ADR-0013 operational organism intelligence', () => {
     expect(field.signal.forecast).toBeGreaterThan(0.5);
   });
 
+  test('live simple_mnist predictor learns on cadence and ablation removes its control routes', () => {
+    const full = new TsotchkeOrganismIntelligence(0x4d4c_5001, { cadenceFrames: 1 });
+    const ablated = new TsotchkeOrganismIntelligence(0x4d4c_5001, { cadenceFrames: 1 });
+    const withoutSimpleMnist = new Set<TsotchkeRepoSlug>(['simple_mnist']);
+    for (let frame = 0; frame < 12; frame++) {
+      const input = {
+        ...INPUT,
+        frame,
+        floraBiomass: frame < 6 ? 0.8 - frame * 0.06 : 0.25 + (frame - 6) * 0.08,
+        meanMetabolicEnergy: frame < 6 ? 0.72 - frame * 0.05 : 0.3 + (frame - 6) * 0.07,
+      };
+      full.step(input);
+      ablated.step(input, withoutSimpleMnist);
+    }
+    const fullSnapshot = full.snapshot();
+    const ablatedSnapshot = ablated.snapshot();
+    expect(fullSnapshot.ecologyPredictor.updateCount).toBe(11);
+    expect(ablatedSnapshot.ecologyPredictor).toEqual(fullSnapshot.ecologyPredictor);
+    expect(ablated.signal.ecologyRisk).toBe(0);
+    expect(ablated.signal.ecologySurprise).toBe(0);
+    expect(ablated.signal.channels[1]).not.toBe(full.signal.channels[1]);
+    expect(ablated.signal.resourcePressure).not.toBe(full.signal.resourcePressure);
+    expect(ablated.signal.threatResponse).not.toBe(full.signal.threatResponse);
+    expect(ablated.signal.plasticity).not.toBe(full.signal.plasticity);
+  });
+
+  test('frozen live predictor scores lagged outcomes without mutating its parameters', () => {
+    const field = new TsotchkeOrganismIntelligence(0x4d4c_f20a, {
+      cadenceFrames: 1,
+      ecologyPredictorAdaptive: false,
+    });
+    const initial = field.snapshot().ecologyPredictor;
+    for (let frame = 0; frame < 8; frame++) {
+      field.step({
+        ...INPUT,
+        frame,
+        floraBiomass: 0.9 - frame * 0.1,
+        meanMetabolicEnergy: 0.8 - frame * 0.07,
+      });
+    }
+    const after = field.snapshot().ecologyPredictor;
+    expect(after.adaptive).toBe(false);
+    expect(after.updateCount).toBe(0);
+    expect({ w1: after.w1, b1: after.b1, w2: after.w2, b2: after.b2 }).toEqual({
+      w1: initial.w1,
+      b1: initial.b1,
+      w2: initial.w2,
+      b2: initial.b2,
+    });
+    expect(field.signal.ecologySurprise).toBeGreaterThan(0);
+  });
+
+  test('predictor arm restore cannot cross frozen/adaptive controls and cadence gaps do not train', () => {
+    const adaptive = new TsotchkeOrganismIntelligence(0x4d4c_a2a2, { cadenceFrames: 1 });
+    adaptive.step({ ...INPUT, frame: 0 });
+    const frozen = new TsotchkeOrganismIntelligence(0x4d4c_a2a2, {
+      cadenceFrames: 1,
+      ecologyPredictorAdaptive: false,
+    });
+    expect(() => frozen.restore(adaptive.snapshot())).toThrow(/predictor arm/);
+
+    adaptive.setEnabled(false);
+    adaptive.setEnabled(true);
+    adaptive.step({ ...INPUT, frame: 100, floraBiomass: 0.1 });
+    expect(adaptive.snapshot().ecologyPredictor.updateCount).toBe(0);
+  });
+
   test('explicit flora goal improves final resource-direction progress over the identical legacy brain', () => {
     const enhanced = new EntityBrainField(1, mulberry32(0xb7a1));
     const legacy = new EntityBrainField(1, mulberry32(0xb7a1));
@@ -256,6 +346,142 @@ describe('ADR-0013 operational organism intelligence', () => {
     expect(brain.adaptiveStateAt(1).ready).toBe(false);
   });
 
+  test('four semantic recurrent context states follow brain identity and clear on birth/reset', () => {
+    const brain = new EntityBrainField(2, mulberry32(0x4c41_4e45));
+    const signal = semanticSignal([1, 0, 0, 0]);
+    const goalField: OrganismGoalField = {
+      directionX: new Float32Array([1, -1]),
+      directionZ: new Float32Array(2),
+      desire: new Float32Array([1, 1]),
+      cover: new Float32Array([1, 1]),
+      revision: new Uint32Array([1, 1]),
+    };
+    brain.attachAdaptiveField(signal, goalField);
+    const left = entity();
+    const right = entity();
+    brain.thinkAll([left, right], 3, 0);
+    signal.channels.set([0, 1, 0, 0]);
+    brain.thinkIndices([left, right], [0], 3, 1 / 60);
+
+    const beforeLeft = brain.semanticStateAt(0);
+    const beforeRight = brain.semanticStateAt(1);
+    expect(beforeLeft.ready).toBe(true);
+    expect(beforeRight.ready).toBe(true);
+    expect(beforeLeft).not.toEqual(beforeRight);
+    for (const state of [beforeLeft, beforeRight]) {
+      for (const value of [state.resource, state.threat, state.exploration, state.social]) {
+        expect(Number.isFinite(value)).toBe(true);
+        expect(value).toBeGreaterThanOrEqual(0);
+        expect(value).toBeLessThanOrEqual(1);
+      }
+    }
+    expect(brain.semanticStorageBytes()).toBe(2 * 17);
+
+    brain.swapEntitySlots(0, 1);
+    expect(brain.semanticStateAt(0)).toEqual(beforeRight);
+    expect(brain.semanticStateAt(1)).toEqual(beforeLeft);
+    brain.clearEntitySlot(0);
+    expect(brain.semanticStateAt(0)).toEqual({
+      resource: 0,
+      threat: 0,
+      exploration: 0,
+      social: 0,
+      ready: false,
+    });
+    expect(brain.semanticStateAt(1)).toEqual(beforeLeft);
+    brain.resetEntitySlots();
+    expect(brain.semanticStateAt(0).ready).toBe(false);
+    expect(brain.semanticStateAt(1).ready).toBe(false);
+  });
+
+  test('semantic recurrence retains a delayed resource cue beyond an otherwise identical stateless control', () => {
+    const recurrent = new EntityBrainField(1, mulberry32(0x5e6a_4e71));
+    const stateless = new EntityBrainField(1, mulberry32(0x5e6a_4e71));
+    stateless.setSemanticRecurrenceEnabled(false);
+    const recurrentSignal = semanticSignal([1, 0, 0, 0]);
+    const statelessSignal = semanticSignal([1, 0, 0, 0]);
+    recurrent.attachAdaptiveField(recurrentSignal, goals(1, 0));
+    stateless.attachAdaptiveField(statelessSignal, goals(1, 0));
+    const a = entity();
+    const b = entity();
+    recurrent.thinkAll([a], 3, 0);
+    stateless.thinkAll([b], 3, 0);
+
+    recurrentSignal.channels[0] = 0;
+    statelessSignal.channels[0] = 0;
+    a.userData.vel.set(0, 0, 0);
+    b.userData.vel.set(0, 0, 0);
+    recurrent.thinkAll([a], 3, 1 / 60);
+    stateless.thinkAll([b], 3, 1 / 60);
+
+    expect(recurrent.semanticStateAt(0).resource).toBeGreaterThan(0.5);
+    expect(a.userData.vel.x - b.userData.vel.x).toBeGreaterThan(0.001);
+  });
+
+  test('semantic recurrent decay is normalized by simulated time across 30 and 60 Hz', () => {
+    const run = (hz: number) => {
+      const brain = new EntityBrainField(1, mulberry32(0x30_60_5e6a));
+      const signal = semanticSignal([1, 0, 0, 0]);
+      brain.attachAdaptiveField(signal, goals(1, 0));
+      const organism = entity();
+      brain.thinkAll([organism], 3, 0);
+      signal.channels[0] = 0;
+      for (let step = 1; step <= hz * 2; step++) {
+        organism.userData.vel.set(0, 0, 0);
+        brain.thinkAll([organism], 3, step / hz);
+      }
+      return brain.semanticStateAt(0);
+    };
+    const at30 = run(30);
+    const at60 = run(60);
+    expect(Math.abs(at30.resource - at60.resource)).toBeLessThan(1e-5);
+    expect(Math.abs(at30.threat - at60.threat)).toBeLessThan(1e-5);
+    expect(Math.abs(at30.exploration - at60.exploration)).toBeLessThan(1e-5);
+    expect(Math.abs(at30.social - at60.social)).toBeLessThan(1e-5);
+  });
+
+  test('changing the recurrence control clears retained context instead of resuming stale memory', () => {
+    const brain = new EntityBrainField(1, mulberry32(0xc1ea_5e6a));
+    const signal = semanticSignal([1, 0, 0, 0]);
+    brain.attachAdaptiveField(signal, goals(1, 0));
+    const organism = entity();
+    brain.thinkAll([organism], 3, 0);
+    expect(brain.semanticStateAt(0).resource).toBeGreaterThan(0.5);
+
+    brain.setSemanticRecurrenceEnabled(false);
+    expect(brain.semanticStateAt(0).ready).toBe(false);
+    expect(brain.semanticStateAt(0).resource).toBe(0);
+    signal.channels[0] = 0;
+    brain.setSemanticRecurrenceEnabled(true);
+    brain.thinkAll([organism], 3, 1 / 60);
+    expect(brain.semanticStateAt(0).resource).toBeLessThan(0.5);
+  });
+
+  test('each named semantic lane has a bounded causal route into final action', () => {
+    const run = (channels: readonly [number, number, number, number]) => {
+      const brain = new EntityBrainField(1, mulberry32(0x53e4_4e71));
+      brain.attachAdaptiveField(semanticSignal(channels), goals(1, 0));
+      const organism = entity();
+      brain.thinkAll([organism], 3, 0);
+      return organism.userData.vel.clone();
+    };
+    const baseline = run([0, 0, 0, 0]);
+    const resource = run([1, 0, 0, 0]);
+    const threat = run([0, 1, 0, 0]);
+    const exploration = run([0, 0, 1, 0]);
+    const social = run([0, 0, 0, 1]);
+    const distance = (value: THREE.Vector3) => value.distanceTo(baseline);
+
+    expect(resource.x).toBeGreaterThan(baseline.x);
+    expect(threat.y).toBeGreaterThan(baseline.y);
+    expect(Math.abs(exploration.z - baseline.z)).toBeGreaterThan(1e-5);
+    expect(social.x).toBeGreaterThan(baseline.x);
+    for (const action of [resource, threat, exploration, social]) {
+      expect(distance(action)).toBeGreaterThan(1e-5);
+      expect(Number.isFinite(action.x + action.y + action.z)).toBe(true);
+    }
+  });
+
   test('every integrated external repo reaches final organism velocity; fences and meta remain exact zero', () => {
     const baselineSignal = buildSignal();
     const baselineAction = actionFor(baselineSignal);
@@ -295,6 +521,8 @@ describe('ADR-0013 operational organism intelligence', () => {
     expect(field.signal.enabled).toBe(false);
     expect(field.signal.indicatorOnly).toBe(true);
     expect(Array.from(field.signal.channels)).toEqual([0, 0, 0, 0]);
+    expect(field.signal.ecologyRisk).toBe(0);
+    expect(field.signal.ecologySurprise).toBe(0);
     expect(field.signal.integratedRepoCount).toBe(0);
   });
 
@@ -326,6 +554,8 @@ describe('ADR-0013 operational organism intelligence', () => {
         signal.forecast,
         signal.confidence,
         signal.corpusDrive,
+        signal.ecologyRisk,
+        signal.ecologySurprise,
         ...signal.channels,
       ]) {
         expect(Number.isFinite(value)).toBe(true);

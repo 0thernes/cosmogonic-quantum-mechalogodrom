@@ -41,15 +41,18 @@ import {
   HISTORY_WINDOW,
   PRISONERS_DILEMMA,
   STRATEGIES,
+  COOPERATE,
+  DEFECT,
   createHistory,
   defections,
   meanPayoff,
+  payoff,
   playRound,
   pushHistory,
   replicatorStep,
 } from '../math/games';
-import type { PairHistory } from '../math/games';
-import type { SimContext } from '../types';
+import type { Move, PairHistory } from '../math/games';
+import type { OrganismIntelligenceSignal, SimContext } from '../types';
 import type { EntityManager } from './entities';
 import type { SingularitySystem } from './singularities';
 import { PORTAL_RESPAWN_DELAY, portalReappearSpot } from './portal-death-fauna';
@@ -111,6 +114,13 @@ const PAYOFF_STAKE_SCALE = 0.004;
  *  (raid), coupling the economy into PD diplomacy. 0 ⇒ no coupling; the bias only fires when the
  *  composition root has wired an economy (tests leave it null → byte-identical PD behaviour). */
 const WEALTH_AGGRESSION = 0.38;
+/**
+ * Maximum probability-mass shift that the bounded organism-intelligence signal can apply to a
+ * played diplomacy move. The existing strategy sample is reused, so the causal consumer adds no RNG
+ * draws: social pressure can forgive a defection, while threat/resource pressure can harden a
+ * cooperation into a defensive raid. Disabled/absent signals preserve the legacy move exactly.
+ */
+const INTELLIGENCE_DIPLOMACY_MAX_SHIFT = 0.35;
 /** EMA decay for per-strategy fitness fed into the bankruptcy replicator. */
 const FITNESS_DECAY = 0.95;
 const REPLICATOR_DT = 0.5;
@@ -593,6 +603,37 @@ function relationOf(h: PairHistory): number {
   const half = (w + 1) >> 1;
   if (dA >= half || dB >= half) return REL_WAR;
   return REL_TRUCE;
+}
+
+/** Clamp an intelligence scalar defensively; the composition-root contract is finite `[0,1]`. */
+function intelligence01(value: number): number {
+  return Number.isFinite(value) ? clamp(value, 0, 1) : 0;
+}
+
+/**
+ * Apply the operational intelligence signal to one already-played diplomacy move without consuming
+ * another random sample. Positive social-minus-pressure intent can turn defection into cooperation;
+ * negative intent can turn cooperation into a defensive/raid defection. The shift is deterministic,
+ * confidence-gated, and bounded by {@link INTELLIGENCE_DIPLOMACY_MAX_SHIFT}.
+ */
+function intelligenceDiplomacyMove(
+  move: Move,
+  sample: number,
+  intelligence: OrganismIntelligenceSignal | undefined,
+): Move {
+  if (!intelligence?.enabled) return move;
+  const social = intelligence01(intelligence.socialDrive);
+  const pressure =
+    (intelligence01(intelligence.threatResponse) + intelligence01(intelligence.resourcePressure)) *
+    0.5;
+  const confidence = intelligence01(intelligence.confidence);
+  const shift = clamp(social - pressure, -1, 1) * confidence * INTELLIGENCE_DIPLOMACY_MAX_SHIFT;
+  // Use opposite tails for the two directions. This shifts up to `|shift|` of total probability mass
+  // even for GENEROUS-TFT, whose native defection already occupies the high-sample tail; testing
+  // `sample < shift` here would make a positive social shift nearly inert for that strategy.
+  if (shift > 0 && move === DEFECT && sample >= 1 - shift) return COOPERATE;
+  if (shift < 0 && move === COOPERATE && sample < -shift) return DEFECT;
+  return move;
 }
 
 /**
@@ -1124,9 +1165,22 @@ export class TitanSystem implements DomeFeeder {
     const tdy = T_HOME_Y + Math.sin(t * 0.17 + tph) * PLATFORM_HEIGHT * (16 / 39) - p.y;
     const tdz = Math.sin(t * 0.13 + tph * 1.3) * trad - p.z;
     const intelligence = this.ctx.organismIntelligence;
-    const intentGain = intelligence?.enabled
-      ? 0.88 + intelligence.exploration * 0.16 + intelligence.confidence * 0.08
-      : 1;
+    const intelligenceEvidence = intelligence?.enabled
+      ? Math.max(
+          intelligence01(intelligence.resourcePressure),
+          intelligence01(intelligence.threatResponse),
+          intelligence01(intelligence.exploration),
+          intelligence01(intelligence.socialDrive),
+          intelligence01(intelligence.corpusDrive),
+        )
+      : 0;
+    const intentGain =
+      intelligence?.enabled && intelligenceEvidence > 0
+        ? 1 +
+          intelligence01(intelligence.confidence) *
+            (intelligence01(intelligence.exploration) - 0.5) *
+            0.24
+        : 1;
     const tInv = (0.055 * intentGain) / (Math.sqrt(tdx * tdx + tdy * tdy + tdz * tdz) + 1e-6); // USER: faster (0.02→0.055) — visibly roams
     vel.x += tdx * tInv + Math.sin(t * 0.5 + ti.mi * 1.3) * 0.012;
     vel.y += tdy * tInv + Math.sin(t * 0.37 + ti.mi * 2.1) * 0.008;
@@ -1446,7 +1500,20 @@ export class TitanSystem implements DomeFeeder {
     const sb = STRATEGIES[b.strategy];
     if (!sa || !sb) return; // invariant: strategy clamped to registry range
     const rng = this.ctx.rng;
-    const round = playRound(PRISONERS_DILEMMA, sa.move, sb.move, h, rng(), rng());
+    // Keep the seeded draw schedule identical: these are the same two unconditional draws used by
+    // the legacy strategy round, retained so enabled and counterfactual runs consume equal streams.
+    const sampleA = rng();
+    const sampleB = rng();
+    const round = playRound(PRISONERS_DILEMMA, sa.move, sb.move, h, sampleA, sampleB);
+    const intelligence = this.ctx.organismIntelligence;
+    if (intelligence?.enabled) {
+      round.a = intelligenceDiplomacyMove(round.a, sampleA, intelligence);
+      round.b = intelligenceDiplomacyMove(round.b, sampleB, intelligence);
+      // The adjusted moves are the actual played round: history, economy payoff, and strategy fitness
+      // all consume these values rather than an indicator-only navigation side channel.
+      round.payoffA = payoff(PRISONERS_DILEMMA, round.a, round.b);
+      round.payoffB = payoff(PRISONERS_DILEMMA, round.b, round.a);
+    }
     pushHistory(h, round.a, round.b);
 
     // F-DIPLO-ECON V16: the AURUM/UMBRA economy steers diplomacy. When one titan is far richer than

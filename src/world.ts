@@ -2783,7 +2783,7 @@ export class World {
         // Registry-driven soup update; only the 17 represented entries contribute, while fences/meta are inert.
         this.primordialSoup.update(i, s.frame, this.petriRng, this.organismIntelligence.signal);
         const dish = this.petriDishes[i];
-        if (dish) petriDishBeat(dish, i, s.frame, this.petriRng);
+        if (dish) petriDishBeat(dish, i, s.frame, this.petriRng, this.organismIntelligence.signal);
         this.superBodies[i]!.setMind(this.superCreatures[i]!.snapshot());
         this.superBodies[i]!.setConsciousness(
           mindOut.quantum,

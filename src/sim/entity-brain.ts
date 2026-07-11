@@ -5,6 +5,10 @@
  * + the world (energy, age, speed, chaos, a stable personality bias, a phase clock), and STEERS itself
  * — a small, bounded velocity nudge layered on top of the morphotype's behavior field, so 50,000
  * entities each move with their own reactive, individual character instead of a single shared rule.
+ * Four diagonal leaky recurrent context states retain semantic resource, threat, exploration, and social
+ * evidence per persistent brain identity when the shared Tsotchke ecology field is active. Storage is
+ * allocated up front so attachment stays allocation-free: 17 bytes/organism (4×FP32 + ready bit). These
+ * EMA-style states are runtime memory, not extra inherited parameters or an unqualified RNN claim.
  *
  * EFFICIENT AT 50k: `World` uses full evaluation every frame to maintain visual quality. The genome
  * pool is one flat typed array; normal runtime tiers keep FP32 fidelity and use a direct FP32 hot path
@@ -40,7 +44,7 @@ const DEFAULT_QUANTIZATION: QuantizationConfig = {
   int8MaxError: 0.01,
 };
 
-const clamp01 = (x: number): number => (x < 0 ? 0 : x > 1 ? 1 : x);
+const clamp01 = (x: number): number => (!Number.isFinite(x) || x <= 0 ? 0 : x >= 1 ? 1 : x);
 type GenomeStorage = Float32Array | Uint16Array | Uint8Array;
 type GenomeStorageKind = 'fp32' | 'fp16' | 'int8';
 
@@ -67,6 +71,11 @@ export class EntityBrainField {
   private readonly lastActionZ: Float32Array;
   private readonly lastEnergy: Float32Array;
   private readonly adaptiveReady: Uint8Array;
+  /** Four bounded diagonal leaky recurrent context states per persistent brain identity. */
+  private readonly semanticContext: Float32Array;
+  private readonly semanticReady: Uint8Array;
+  /** Counterfactual control: false reads the same semantic inputs without retaining prior context. */
+  private semanticRecurrenceEnabled = true;
   /**
    * Current entity slot -> persistent brain identity. EntityManager swaps two uint32 entries while
    * compacting, so a survivor keeps its genome and learned state without copying 70 genes per move.
@@ -80,8 +89,11 @@ export class EntityBrainField {
   private controllerActive = false;
   private adaptiveLearningRate = 0;
   private goalGainBase = 0.22;
-  private corpusU = 0;
-  private corpusV = 0;
+  private semanticResourceInput = 0;
+  private semanticThreatInput = 0;
+  private semanticExplorationInput = 0;
+  private semanticSocialInput = 0;
+  private semanticUpdateRate = 0;
   private signalConfidence = 0;
   private explorationNudge = 0;
   private explorationCosOffset = 1;
@@ -114,6 +126,8 @@ export class EntityBrainField {
     this.lastActionZ = new Float32Array(this.capacity);
     this.lastEnergy = new Float32Array(this.capacity);
     this.adaptiveReady = new Uint8Array(this.capacity);
+    this.semanticContext = new Float32Array(this.capacity * 4);
+    this.semanticReady = new Uint8Array(this.capacity);
     this.slotToBrain = new Uint32Array(this.capacity);
     this.corpusAnglePhase = new Float64Array(this.capacity);
     this.corpusAngleCos = new Float64Array(this.capacity);
@@ -150,6 +164,17 @@ export class EntityBrainField {
     this.onlineLearningEnabled = enabled;
   }
 
+  /**
+   * Counterfactual control: retain semantic routing but replace recurrent context with current input.
+   * A mode transition clears all retained context so re-enabling cannot resume stale pre-control memory.
+   */
+  setSemanticRecurrenceEnabled(enabled: boolean): void {
+    if (enabled === this.semanticRecurrenceEnabled) return;
+    this.semanticRecurrenceEnabled = enabled;
+    this.semanticContext.fill(0);
+    this.semanticReady.fill(0);
+  }
+
   /** O(1) entity-list compaction hook: exchange persistent brain identities for two live slots. */
   swapEntitySlots(a: number, b: number): void {
     this.assertSlot(a);
@@ -176,6 +201,8 @@ export class EntityBrainField {
     this.lastActionZ.fill(0);
     this.lastEnergy.fill(0);
     this.adaptiveReady.fill(0);
+    this.semanticContext.fill(0);
+    this.semanticReady.fill(0);
     this.corpusAnglePhase.fill(Number.NaN);
     this.lastThinkTime = Number.NaN;
     this.learningStepScale = 1;
@@ -203,6 +230,31 @@ export class EntityBrainField {
       lastActionZ: this.lastActionZ[brainSlot] ?? 0,
       ready: (this.adaptiveReady[brainSlot] ?? 0) !== 0,
     };
+  }
+
+  /** Low-cadence evidence view of one identity's four semantic recurrent context states. */
+  semanticStateAt(slot: number): {
+    resource: number;
+    threat: number;
+    exploration: number;
+    social: number;
+    ready: boolean;
+  } {
+    this.assertSlot(slot);
+    const brainSlot = this.slotToBrain[slot]!;
+    const base = brainSlot * 4;
+    return {
+      resource: this.semanticContext[base] ?? 0,
+      threat: this.semanticContext[base + 1] ?? 0,
+      exploration: this.semanticContext[base + 2] ?? 0,
+      social: this.semanticContext[base + 3] ?? 0,
+      ready: (this.semanticReady[brainSlot] ?? 0) !== 0,
+    };
+  }
+
+  /** Packed recurrent-context storage bytes, separate from inherited genome storage. */
+  semanticStorageBytes(): number {
+    return this.semanticContext.byteLength + this.semanticReady.byteLength;
   }
 
   /** Underlying genome storage bytes (used by perf receipts and memory budgets). */
@@ -407,10 +459,68 @@ export class EntityBrainField {
       const goals = this.goals;
       const goalDesire = clamp01(goals?.desire[slot] ?? 0);
       const goalCover = clamp01(goals?.cover[slot] ?? 0);
-      const goalGain = goalDesire * goalCover * this.goalGainBase;
       const goalX = goals?.directionX[slot] ?? 0;
       const goalZ = goals?.directionZ[slot] ?? 0;
       const hasGoal = goalDesire > 0.001 && goalX * goalX + goalZ * goalZ > 1e-8;
+
+      // Four identity-stable, diagonal recurrent context neurons. Named corpus/ecology evidence keeps
+      // its meaning here: resource influences goal pursuit, threat evasive motion, exploration roaming,
+      // and social evidence goal/heading coordination. Personality changes sensitivity without changing
+      // lane identity. The stateless control sees the exact same current targets without memory.
+      let semanticResource = 0;
+      let semanticThreat = 0;
+      let semanticExploration = 0;
+      let semanticSocial = 0;
+      if (signal) {
+        const metabolismTrait = clamp01(
+          fp32 ? (fp32[base + TRAIT.metabolism] ?? 0.5) : this.getGene(base + TRAIT.metabolism),
+        );
+        const aggressionTrait = clamp01(
+          fp32 ? (fp32[base + TRAIT.aggression] ?? 0.5) : this.getGene(base + TRAIT.aggression),
+        );
+        const socialTrait = clamp01(
+          fp32 ? (fp32[base + TRAIT.social] ?? 0.5) : this.getGene(base + TRAIT.social),
+        );
+        // Inputs and trait multipliers are already bounded [0,1], so these products cannot escape it.
+        const resourceTarget = this.semanticResourceInput * (0.65 + metabolismTrait * 0.35);
+        const threatTarget = this.semanticThreatInput * (0.65 + (1 - aggressionTrait) * 0.35);
+        const explorationTarget = this.semanticExplorationInput * (0.65 + curiosityN * 0.35);
+        const socialTarget = this.semanticSocialInput * (0.65 + socialTrait * 0.35);
+        if (this.semanticRecurrenceEnabled) {
+          const semanticBase = brainSlot * 4;
+          const context = this.semanticContext;
+          if ((this.semanticReady[brainSlot] ?? 0) === 0) {
+            semanticResource = resourceTarget;
+            semanticThreat = threatTarget;
+            semanticExploration = explorationTarget;
+            semanticSocial = socialTarget;
+            this.semanticReady[brainSlot] = 1;
+          } else {
+            const rate = this.semanticUpdateRate;
+            semanticResource = context[semanticBase] ?? 0;
+            semanticThreat = context[semanticBase + 1] ?? 0;
+            semanticExploration = context[semanticBase + 2] ?? 0;
+            semanticSocial = context[semanticBase + 3] ?? 0;
+            semanticResource += rate * (resourceTarget - semanticResource);
+            semanticThreat += rate * (threatTarget - semanticThreat);
+            semanticExploration += rate * (explorationTarget - semanticExploration);
+            semanticSocial += rate * (socialTarget - semanticSocial);
+          }
+          context[semanticBase] = semanticResource;
+          context[semanticBase + 1] = semanticThreat;
+          context[semanticBase + 2] = semanticExploration;
+          context[semanticBase + 3] = semanticSocial;
+        } else {
+          semanticResource = resourceTarget;
+          semanticThreat = threatTarget;
+          semanticExploration = explorationTarget;
+          semanticSocial = socialTarget;
+        }
+      }
+      const goalGain =
+        goalDesire *
+        goalCover *
+        (this.goalGainBase + semanticResource * 0.1 + semanticSocial * 0.035);
 
       // Actor traces live in the GOAL'S LOCAL FRAME: biasX = along-goal, biasZ = lateral. A learned
       // preference for successful goal pursuit therefore transfers when a resource patch moves or a
@@ -420,11 +530,10 @@ export class EntityBrainField {
       const learnedX = hasGoal ? goalX * learnedAlong - goalZ * learnedLateral : learnedAlong;
       const learnedZ = hasGoal ? goalZ * learnedAlong + goalX * learnedLateral : learnedLateral;
 
-      // The aggregate corpus remains causal after the MLP rather than disappearing inside a saturated
-      // intermediate. Rotate by slot phase so a global field does not make the whole population march in
-      // lockstep. Each integrated-repo ablation therefore reaches final velocity; fenced/meta rows do not.
-      let corpusX = 0;
-      let corpusZ = 0;
+      // Threat and exploration need a spatial projection because the shared field has no world-space
+      // bearing. Stable entity phase provides diversity without permuting semantic channel identity.
+      let threatX = 0;
+      let threatZ = 0;
       let explorationX = 0;
       let explorationZ = 0;
       if (signal) {
@@ -438,27 +547,37 @@ export class EntityBrainField {
           this.corpusAngleCos[slot] = ca;
           this.corpusAngleSin[slot] = sa;
         }
-        corpusX = (this.corpusU * ca - this.corpusV * sa) * 0.11 * this.signalConfidence;
-        corpusZ = (this.corpusU * sa + this.corpusV * ca) * 0.11 * this.signalConfidence;
+        const threatNudge = semanticThreat * 0.055 * this.signalConfidence;
+        threatX = ca * threatNudge;
+        threatZ = sa * threatNudge;
         // Angle-addition reuses the corpus sin/cos pair; two extra transcendental calls per organism
         // become four scalar multiplies while remaining the exact same trigonometric model.
+        const semanticExplorationNudge =
+          (semanticExploration - semanticSocial * 0.35) * 0.055 * this.signalConfidence;
         explorationX =
-          (ca * this.explorationCosOffset - sa * this.explorationSinOffset) * this.explorationNudge;
+          (ca * this.explorationCosOffset - sa * this.explorationSinOffset) *
+          (this.explorationNudge + semanticExplorationNudge);
         explorationZ =
           (sa * this.explorationCosZOffset + ca * this.explorationSinZOffset) *
-          this.explorationNudge;
+          (this.explorationNudge + semanticExplorationNudge);
       }
 
       actionX = Math.max(
         -1.5,
-        Math.min(1.5, actionX + learnedX + goalX * goalGain + corpusX + explorationX),
+        Math.min(1.5, actionX + learnedX + goalX * goalGain + threatX + explorationX),
       );
       actionZ = Math.max(
         -1.5,
-        Math.min(1.5, actionZ + learnedZ + goalZ * goalGain + corpusZ + explorationZ),
+        Math.min(1.5, actionZ + learnedZ + goalZ * goalGain + threatZ + explorationZ),
       );
       if (signal) {
-        actionY = Math.max(-1.25, Math.min(1.25, actionY + this.verticalThreatNudge));
+        actionY = Math.max(
+          -1.25,
+          Math.min(
+            1.25,
+            actionY + this.verticalThreatNudge + semanticThreat * 0.03 * this.signalConfidence,
+          ),
+        );
       }
       this.lastActionX[brainSlot] = hasGoal ? actionX * goalX + actionZ * goalZ : actionX;
       this.lastActionZ[brainSlot] = hasGoal ? -actionX * goalZ + actionZ * goalX : actionZ;
@@ -555,6 +674,12 @@ export class EntityBrainField {
     this.lastActionZ[brainSlot] = 0;
     this.lastEnergy[brainSlot] = 0;
     this.adaptiveReady[brainSlot] = 0;
+    const semanticBase = brainSlot * 4;
+    this.semanticContext[semanticBase] = 0;
+    this.semanticContext[semanticBase + 1] = 0;
+    this.semanticContext[semanticBase + 2] = 0;
+    this.semanticContext[semanticBase + 3] = 0;
+    this.semanticReady[brainSlot] = 0;
   }
 
   private prepareThinkTime(t: number): void {
@@ -580,8 +705,11 @@ export class EntityBrainField {
     if (!this.controllerActive) {
       this.adaptiveLearningRate = 0;
       this.goalGainBase = 0.22;
-      this.corpusU = 0;
-      this.corpusV = 0;
+      this.semanticResourceInput = 0;
+      this.semanticThreatInput = 0;
+      this.semanticExplorationInput = 0;
+      this.semanticSocialInput = 0;
+      this.semanticUpdateRate = 0;
       this.signalConfidence = 0;
       this.explorationNudge = 0;
       this.explorationCosOffset = 1;
@@ -599,8 +727,23 @@ export class EntityBrainField {
     this.goalGainBase =
       0.22 + (signal?.resourcePressure ?? 0) * 0.2 + (signal?.confidence ?? 0) * 0.08;
     const channels = signal?.channels;
-    this.corpusU = channels ? (channels[0] ?? 0) - (channels[1] ?? 0) : 0;
-    this.corpusV = channels ? (channels[2] ?? 0) - (channels[3] ?? 0) : 0;
+    this.semanticResourceInput = signal
+      ? clamp01((channels?.[0] ?? 0) * 0.65 + signal.resourcePressure * 0.35)
+      : 0;
+    this.semanticThreatInput = signal
+      ? clamp01((channels?.[1] ?? 0) * 0.65 + signal.threatResponse * 0.35)
+      : 0;
+    this.semanticExplorationInput = signal
+      ? clamp01((channels?.[2] ?? 0) * 0.65 + signal.exploration * 0.35)
+      : 0;
+    this.semanticSocialInput = signal
+      ? clamp01((channels?.[3] ?? 0) * 0.65 + signal.socialDrive * 0.35)
+      : 0;
+    const baseSemanticRate = 0.08 + (signal?.plasticity ?? 0) * 0.14;
+    this.semanticUpdateRate =
+      signal && this.learningStepScale > 0
+        ? 1 - Math.pow(1 - baseSemanticRate, this.learningStepScale)
+        : 0;
     this.signalConfidence = signal?.confidence ?? 0;
     this.explorationNudge = signal ? (signal.exploration - 0.5) * 0.08 : 0;
     if (signal) {
