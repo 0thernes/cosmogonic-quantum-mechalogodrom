@@ -1,13 +1,13 @@
-<!-- reviewed: 2026-07-10 | current causal report + historical snapshot policy | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-11 | V4 failure-forward result + historical snapshot policy | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # Reports
 
 Technical reports and audits for Cosmogonic Quantum Mechalogodrom. Dated filenames (`2026-*`) are
 **historical worldline snapshots** when present — they preserve evidence from their authoring pass.
 **Current** gate receipts: [VERIFICATION-ANALYTICAL-DATA.md](../VERIFICATION-ANALYTICAL-DATA.md) §1 ·
-`scripts/canonical-receipts.ts` (v0.21.13 · **2,609-test floor** · **84.64 % / 82.21 %** coverage).
-Latest Windows-local receipt observed by the current audit: **2,521 completed cases, zero failures,
-2,839,000 expect() calls, 92.85% line coverage, and 90.56% function coverage across 281 test files**.
+`scripts/canonical-receipts.ts` (v0.21.13 · **2,613-test floor** · **84.64 % / 82.21 %** coverage).
+Latest Windows-local receipt observed by the current audit: **2,613 completed cases, zero failures,
+3,022,764 expect() calls, 92.97% line coverage, and 90.86% function coverage across 295 test files**.
 
 The batch-26 adversarial repair pass made the flora sampler bilinear and sealed chemotaxis against
 the real cell-quantized field, corrected forager final-position telemetry, and closed root-pathspec
@@ -16,6 +16,12 @@ A-Life vector and do not add organism-intelligence, consciousness, or sentience 
 
 ## Reports
 
+- [ORGANISM-INTELLIGENCE-V4-RESULTS-2026-07-11.md](./ORGANISM-INTELLIGENCE-V4-RESULTS-2026-07-11.md)
+  — repository-preregistered 64-seed-per-family descendant result with a complete 1,152-row CSV,
+  replay/source/fixture hashes, three exact 10,000-step numerical campaigns, machine-local ordinary
+  population cost, and an accessible forest. Ordinary, predictor, and Petri family gates fail; Titans
+  pass only the bounded game-policy behavior gate. No score, neural-scaling, consciousness, sentience,
+  or general-intelligence uplift is authorized.
 - [2026-07-10-OPERATIONAL-ORGANISM-INTELLIGENCE-CAUSAL-AUDIT.md](./2026-07-10-OPERATIONAL-ORGANISM-INTELLIGENCE-CAUSAL-AUDIT.md)
   — current fresh-disjoint fixed-family causal report for the shared living-system intelligence field:
   synthetic goal-only/corpus effects, `6.1213%` adaptation, `17/17` integrated-row reach, `5/5`

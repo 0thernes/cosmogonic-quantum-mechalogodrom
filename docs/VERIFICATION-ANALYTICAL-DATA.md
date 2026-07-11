@@ -21,7 +21,7 @@ Rewritten in place when the facts change (per the binding living-doc law in
 | Fact                                     | Canonical value                                                                                                                                                                                 | Source of truth                                                                                                    | Propagated by           |
 | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------- |
 | Package version                          | `0.21.13`                                                                                                                                                                                       | `package.json` `version`                                                                                           | `sync-surfaces.ts`      |
-| Test count (exact tracked suite)         | `2609`                                                                                                                                                                                          | `scripts/canonical-receipts.ts`                                                                                    | `sync-surfaces.ts`      |
+| Test count (exact tracked suite)         | `2613`                                                                                                                                                                                          | `scripts/canonical-receipts.ts`                                                                                    | `sync-surfaces.ts`      |
 | Line coverage                            | `84.64%`                                                                                                                                                                                        | `scripts/canonical-receipts.ts`                                                                                    | `sync-surfaces.ts`      |
 | Function coverage                        | `82.21%`                                                                                                                                                                                        | `scripts/canonical-receipts.ts`                                                                                    | `sync-surfaces.ts`      |
 | Faculties (design)                       | `100` (~30 deep-wired)                                                                                                                                                                          | `CANONICAL_FACULTIES`                                                                                              | `sync-surfaces.ts`      |
@@ -42,10 +42,30 @@ Rewritten in place when the facts change (per the binding living-doc law in
 
 <!-- cqm-sync:local-measurement:start -->
 
-- `bun run verify:receipts` → **2,521 tests, zero failures** · **281 test files** · **2,839,000**
-  `expect()` calls · **92.85% line / 90.56% func** on this Windows checkout.
+- `bun run verify:receipts` → **2,613 tests, zero failures** · **295 test files** · **3,022,764**
+  `expect()` calls · **92.97% line / 90.86% func** on this Windows checkout.
 
 <!-- cqm-sync:local-measurement:end -->
+
+### Organism-intelligence V4 descendant result (2026-07-11)
+
+The [V4 result report](./reports/ORGANISM-INTELLIGENCE-V4-RESULTS-2026-07-11.md) is backed by a
+[canonical receipt](./reports/assets/organism-intelligence-causal-benchmark-v4.json), complete
+[1,152-row CSV](./reports/assets/cross-being-neural-causality-v1.csv), and accessible
+[forest SVG](./reports/assets/organism-intelligence-v4-cross-being-forest.svg). Its post-write integrity
+test recomputes receipt/raw/source/fixture hashes, Git ancestry, the exact raw matrix, forbidden claims,
+and SVG bytes.
+
+| Family                     | Frozen result                                                   | Authorized claim                                                    |
+| -------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Ordinary organisms         | **FAIL** — magnitude floor                                      | None                                                                |
+| Adaptive ecology predictor | **FAIL** — inference and magnitude controls                     | None                                                                |
+| Petri digital biologics    | **FAIL** — magnitude floor                                      | None                                                                |
+| Titans                     | **PASS** — inference, magnitude, replay, numerical release gate | Bounded game-policy semantic causality on the frozen diplomacy task |
+
+The result is one family pass and three failures, not an overall V4 pass. It authorizes no numeric
+score, V4-over-V3, neural-capacity, pooled scaling, consciousness, sentience, general-intelligence,
+physical-quantum, or security claim.
 
 - **Batch-26 corrective audit:** the originally shipped nearest-cell flora sampler made the ±6-unit
   chemotaxis probe degenerate across much of the 44-unit grid even though a smooth synthetic-field
@@ -416,7 +436,7 @@ verify:facts` = 0 drift / 80 surfaces, 0 git-conflict-markers tree-wide, 100% of
 | `src/ui/**`                                                                       | 20    | subsystems agent                                         | clean (3 cosmetic Low: DPR-on-monitor-move)                                                      |
 | `src/core,audio,server,memory,logging` + `main/types/docs-page` + `server.ts`     | ~14   | subsystems agent                                         | clean; security exceptionally hardened                                                           |
 | `src/styles/app.css`                                                              | 1     | front-end agent                                          | clean                                                                                            |
-| `tests/**`                                                                        | 294   | exact gate (2,609 tests) + tooling agent                 | healthy, 0 disabled, all assert                                                                  |
+| `tests/**`                                                                        | 295   | exact gate (2,613 tests) + tooling agent                 | healthy, 0 disabled, all assert                                                                  |
 | `scripts/**`                                                                      | 16    | scripts/tooling agents                                   | sound; **CI sync:check gap FIXED**, dead `.sync-receipts.cjs` removed                            |
 | `bench/**`                                                                        | 13    | tooling agent                                            | clean; aggregate now includes the P1 quantum-classical bench                                     |
 | `.github/workflows/*.yml` + issue/PR templates                                    | 8+    | CI agent                                                 | SHA-pinned, least-priv; `master`->`main` URLs FIXED; **gate now runs sync:check + verify:facts** |
