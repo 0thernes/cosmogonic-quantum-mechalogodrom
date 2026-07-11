@@ -11,6 +11,17 @@ changed and why.
 
 ---
 
+## 2026-07-11 — colony / chain ecology deep pass (kin filaments + feeding trails)
+
+Owner: entities used to form long living chains (ant/bee-like tribal filaments) from behaviors +
+neural contact geometry; that read thinned after habitat growth. Deepened ADR 0016 without
+consciousness claims: every organism runs full-rate ambient colony springs (kin-first primary bond,
+2nd/3rd-neighbor net, soft separation), hungry kin feeding-trail bias, graphseek prefers same
+`setGroup` then `typeId`, setunion nearest-kin filament + centroid, tighter social-core spawn,
+stronger gains. Seals: `tests/entities-colony-chains.test.ts`.
+
+---
+
 ## 2026-07-11 — ADR 0016: social contact density + multi-altitude Titans + chain ecology
 
 Restored living ALife after ADR 0012 habitat expansion froze social radii at legacy unit lengths.

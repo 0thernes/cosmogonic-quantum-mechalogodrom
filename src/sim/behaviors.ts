@@ -365,13 +365,18 @@ function typemorph(e: Entity, u: EntityData, env: BehaviorEnv): void {
 }
 
 /**
- * Set-theory clustering: drift toward the centroid of same-group neighbors within 15, repel
- * from other-group members within 6 (legacy lines 749-753). O(k).
+ * Set-theory tribal clustering (legacy lines 749-753 × colony law):
+ * - soft spring toward nearest same-group kin (filament, not pure centroid blob)
+ * - mild pull to kin centroid (colony cohesion)
+ * - repel other groups inside the repel disk
+ * O(k).
  */
 function setunion(e: Entity, u: EntityData, env: BehaviorEnv): void {
   const nb = env.ctx.grid.query(e.position.x, e.position.z, SOCIAL_SETUNION_R);
   V2.set(0, 0, 0);
   let cnt = 0;
+  let kinMinD2 = Infinity;
+  let kinE: Entity | null = null;
   for (let i = 0; i < nb.length; i++) {
     const ne = nb[i];
     if (!ne || ne === e) continue;
@@ -379,31 +384,51 @@ function setunion(e: Entity, u: EntityData, env: BehaviorEnv): void {
     if (ne.userData.setGroup === u.setGroup && dd < SETUNION_SAME_R2) {
       V2.add(ne.position);
       cnt++;
+      if (dd > 1e-8 && dd < kinMinD2) {
+        kinMinD2 = dd;
+        kinE = ne;
+      }
     } else if (ne.userData.setGroup !== u.setGroup && dd < SETUNION_REPEL_R2) {
       V1.copy(e.position)
         .sub(ne.position)
         .normalize()
-        .multiplyScalar(0.0022 * env.sp2);
+        .multiplyScalar(0.0026 * env.sp2);
       u.vel.add(V1);
     }
+  }
+  // Nearest-kin spring at classic chain length — tribes form strings, not one ball.
+  if (kinE && Number.isFinite(kinMinD2)) {
+    const optD = 4 + (u.typeId % 5);
+    const d = Math.sqrt(kinMinD2);
+    V1.copy(kinE.position)
+      .sub(e.position)
+      .normalize()
+      .multiplyScalar((d - optD) * 0.002 * env.sp2);
+    u.vel.add(V1);
   }
   if (cnt > 0) {
     V2.divideScalar(cnt)
       .sub(e.position)
       .normalize()
-      .multiplyScalar(0.0014 * env.sp2);
+      .multiplyScalar(0.0011 * env.sp2);
     u.vel.add(V2);
   }
 }
 
 /**
- * Spring toward the nearest non-touching neighbor at an ideal edge length of `4 + typeId`
- * (legacy lines 754-758). Uses full 3D distance like the legacy `d2`. O(k).
+ * Spring toward a preferred non-touching neighbor at ideal edge `4 + typeId`
+ * (legacy lines 754-758 × tribal preference). Uses full 3D distance like legacy `d2`.
+ * Preference order builds colony filaments: same setGroup → same typeId → any nearest.
+ * O(k).
  */
 function graphseek(e: Entity, u: EntityData, env: BehaviorEnv): void {
   const nb = env.ctx.grid.query(e.position.x, e.position.z, SOCIAL_GRAPHSEEK_R);
   let minD2 = 9999 * SOCIAL_SCALE * SOCIAL_SCALE;
   let minE: Entity | null = null;
+  let kinD2 = 9999 * SOCIAL_SCALE * SOCIAL_SCALE;
+  let kinE: Entity | null = null;
+  let typeD2 = 9999 * SOCIAL_SCALE * SOCIAL_SCALE;
+  let typeE: Entity | null = null;
   for (let i = 0; i < nb.length; i++) {
     const ne = nb[i];
     if (!ne || ne === e) continue;
@@ -415,20 +440,31 @@ function graphseek(e: Entity, u: EntityData, env: BehaviorEnv): void {
       ne.position.y,
       ne.position.z,
     );
-    if (dd < minD2 && dd > GRAPHSEEK_MIN_R2) {
+    if (dd <= GRAPHSEEK_MIN_R2) continue;
+    if (dd < minD2) {
       minD2 = dd;
       minE = ne;
     }
+    if (ne.userData.setGroup === u.setGroup && dd < kinD2) {
+      kinD2 = dd;
+      kinE = ne;
+    }
+    if (ne.userData.typeId === u.typeId && dd < typeD2) {
+      typeD2 = dd;
+      typeE = ne;
+    }
   }
-  if (minE) {
-    // Classic ideal edge — tight filaments (not sparse beads).
-    const optD = 4 + u.typeId;
-    V1.copy(minE.position)
-      .sub(e.position)
-      .normalize()
-      .multiplyScalar((Math.sqrt(minD2) - optD) * 0.0022 * env.sp2);
-    u.vel.add(V1);
-  }
+  const partner = kinE ?? typeE ?? minE;
+  if (!partner) return;
+  const d2 = kinE ? kinD2 : typeE ? typeD2 : minD2;
+  // Classic ideal edge — tight filaments (not sparse beads).
+  const optD = 4 + u.typeId;
+  const gain = (kinE ? 0.0032 : typeE ? 0.0026 : 0.0022) * env.sp2;
+  V1.copy(partner.position)
+    .sub(e.position)
+    .normalize()
+    .multiplyScalar((Math.sqrt(d2) - optD) * gain);
+  u.vel.add(V1);
 }
 
 /**

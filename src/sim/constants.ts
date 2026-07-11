@@ -129,17 +129,22 @@ export const SOCIAL_HUNT_CAPTURE_R = socialR(5);
 /** Inner radial fraction of PLATFORM_HALF for phylum-wedge founder spawn. */
 export const SOCIAL_SPAWN_INNER = 0.06;
 /** Outer radial fraction of PLATFORM_HALF for founder spawn (was ~0.87 → isolation fog). */
-export const SOCIAL_SPAWN_OUTER = 0.42;
+export const SOCIAL_SPAWN_OUTER = 0.38;
 /** Non-phylum founders fill a square of half-extent PLATFORM_HALF × this (was 0.94). */
-export const SOCIAL_SPAWN_XZ_FRAC = 0.4;
+export const SOCIAL_SPAWN_XZ_FRAC = 0.36;
 /** Vertical band: founders spawn in [floor, floor + height × this] (not the full 720u column). */
-export const SOCIAL_SPAWN_Y_FRAC = 0.32;
-/** Ambient social-gravity gain (all ordinary organisms, staggered) — living contact force. */
-export const SOCIAL_GRAVITY_GAIN = 0.00014;
-/** Extra gain toward same-setGroup kin under ambient social gravity. */
-export const SOCIAL_KIN_GAIN = 0.00022;
-/** Soft separation when neighbors closer than SOCIAL_SETUNION_REPEL_R × this. */
-export const SOCIAL_SEPARATION_FRAC = 0.45;
+export const SOCIAL_SPAWN_Y_FRAC = 0.28;
+/**
+ * Ambient filament / colony spring gain (all ordinary organisms, every frame).
+ * Tuned so nearest-neighbor graphseek-class edges win over wander/jitter and form visible chains.
+ */
+export const SOCIAL_GRAVITY_GAIN = 0.00032;
+/** Extra gain toward same-setGroup kin — tribal colony bonds (ants/bees-style cohort filaments). */
+export const SOCIAL_KIN_GAIN = 0.00055;
+/** Soft separation when neighbors closer than ideal edge × this (prevents blob collapse). */
+export const SOCIAL_SEPARATION_FRAC = 0.42;
+/** Hungry organisms trail toward higher-energy kin (trophallaxis / feeding-trail bias). */
+export const SOCIAL_FEED_TRAIL_GAIN = 0.0004;
 
 /** Spatial-hash cell edge (legacy 8 → 16: queries stay 1-2 cells at 5× spread). */
 export const GRID_CELL = 16;

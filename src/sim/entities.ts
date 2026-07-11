@@ -19,9 +19,11 @@ import {
   PLATFORM_FLOOR,
   RENDER_MODE_FX,
   RENDER_MODE_DYN,
+  SOCIAL_FEED_TRAIL_GAIN,
   SOCIAL_FLOCK_R,
   SOCIAL_GRAVITY_GAIN,
   SOCIAL_KIN_GAIN,
+  SOCIAL_SEPARATION_FRAC,
   SOCIAL_SPAWN_INNER,
   SOCIAL_SPAWN_OUTER,
   SOCIAL_SPAWN_XZ_FRAC,
@@ -898,8 +900,9 @@ export class EntityManager {
         applyBehavior(e, env);
       }
       this.applyFloraComfort(e, i, frame, dt);
-      // Ambient filament springs + faction intent (ADR 0016) — every organism, half-rate stagger.
-      if (((frame + i) & 1) === 0) this.applyAmbientSocial(e, u, i, frame, sp2);
+      // Ambient colony filaments + tribal intent (ADR 0016 deep) — every organism, every frame.
+      // Half-rate thinned the springs and dissolved chains under wander/jitter.
+      this.applyAmbientSocial(e, u, i, frame, sp2);
 
       // Neural activation decay — slower decay so connectome + brain firing reads as sustained live activity.
       u.act *= 0.975;
@@ -1277,8 +1280,18 @@ export class EntityManager {
   }
 
   /**
-   * Nearest-neighbor chain springs + faction intent (ADR 0016).
-   * Builds long filaments (graphseek-class ideal edge) rather than crowd-centroid blobs.
+   * Colony / chain ecology for every ordinary organism (ADR 0016 deep).
+   *
+   * Why entities used to look like ant/bee filaments: graphseek + setunion + connectome contact
+   * made nearest-neighbor springs + tribal affinity the dominant local force. Habitat expansion
+   * thinned contact; only 1/26 morphs still ran graphseek. This path restores that geometry for
+   * ALL organisms without claiming consciousness:
+   * - primary spring to nearest **kin** (same setGroup) when present → tribal chains
+   * - secondary/tertiary springs to nearest/2nd-nearest anyone → longer nets
+   * - soft separation under ideal edge → filaments, not one blob
+   * - hungry trail toward higher-energy kin → feeding-trail / trophallaxis bias
+   * - faction intent as a weak bias only (never stronger than the chain spring)
+   *
    * Private mulberry stream — does not consume the main entity rng.
    */
   private applyAmbientSocial(
@@ -1298,14 +1311,22 @@ export class EntityManager {
     let threatN = 0;
     let minD2 = Infinity;
     let min2D2 = Infinity;
+    let min3D2 = Infinity;
     let near: Entity | null = null;
     let near2: Entity | null = null;
+    let near3: Entity | null = null;
     let kinNear: Entity | null = null;
     let kinMinD2 = Infinity;
+    let typeNear: Entity | null = null;
+    let typeMinD2 = Infinity;
+    let fedKin: Entity | null = null;
+    let fedKinEnergy = -Infinity;
     const px = e.position.x;
     const py = e.position.y;
     const pz = e.position.z;
     const myGroup = u.setGroup;
+    const myType = u.typeId;
+    const myEnergy = typeof u.energy === 'number' ? u.energy : 50;
     for (let j = 0; j < nb.length; j++) {
       const ne = nb[j];
       if (!ne || ne === e || ne.userData.alive === false) continue;
@@ -1317,13 +1338,20 @@ export class EntityManager {
       const d3 = dx * dx + dy * dy + dz * dz;
       n++;
       if (d3 < minD2) {
+        min3D2 = min2D2;
+        near3 = near2;
         min2D2 = minD2;
         near2 = near;
         minD2 = d3;
         near = ne;
       } else if (d3 < min2D2) {
+        min3D2 = min2D2;
+        near3 = near2;
         min2D2 = d3;
         near2 = ne;
+      } else if (d3 < min3D2) {
+        min3D2 = d3;
+        near3 = ne;
       }
       if (ne.userData.setGroup === myGroup) {
         kn++;
@@ -1331,6 +1359,15 @@ export class EntityManager {
           kinMinD2 = d3;
           kinNear = ne;
         }
+        const neE = typeof ne.userData.energy === 'number' ? ne.userData.energy : 50;
+        if (neE > fedKinEnergy) {
+          fedKinEnergy = neE;
+          fedKin = ne;
+        }
+      }
+      if (ne.userData.typeId === myType && d3 < typeMinD2) {
+        typeMinD2 = d3;
+        typeNear = ne;
       }
       if (ne.userData.strategy === 1 || ne.userData.setGroup !== myGroup) {
         if (dd < r2 * 0.25) {
@@ -1341,25 +1378,61 @@ export class EntityManager {
       }
     }
 
-    const optD = 4 + (u.typeId % 5);
+    // Ideal chain edge — classic graphseek length so connectome axons bridge every link.
+    const optD = 4 + (myType % 5);
     const spring = (partner: Entity, d2: number, gain: number): void => {
       const d = Math.sqrt(d2);
       if (d < 1e-4) return;
-      const force = (d - optD) * gain * sp2;
+      // Soft separation below ideal edge × frac — keeps beads on a string, not a crowd pile.
+      const sepFloor = optD * SOCIAL_SEPARATION_FRAC;
+      const target = d < sepFloor ? sepFloor : optD;
+      const force = (d - target) * gain * sp2;
       u.vel.x += ((partner.position.x - px) / d) * force;
       u.vel.y += ((partner.position.y - py) / d) * force * 0.55;
       u.vel.z += ((partner.position.z - pz) / d) * force;
     };
-    if (near && Number.isFinite(minD2)) spring(near, minD2, SOCIAL_GRAVITY_GAIN * 18);
-    if (near2 && Number.isFinite(min2D2)) spring(near2, min2D2, SOCIAL_GRAVITY_GAIN * 7);
-    if (kinNear && kinNear !== near && Number.isFinite(kinMinD2)) {
-      spring(kinNear, kinMinD2, SOCIAL_KIN_GAIN * 4);
+
+    // Kin-first primary filament (tribal colony backbone).
+    if (kinNear && Number.isFinite(kinMinD2)) {
+      spring(kinNear, kinMinD2, SOCIAL_KIN_GAIN * 22);
+    } else if (typeNear && Number.isFinite(typeMinD2)) {
+      spring(typeNear, typeMinD2, SOCIAL_GRAVITY_GAIN * 16);
+    } else if (near && Number.isFinite(minD2)) {
+      spring(near, minD2, SOCIAL_GRAVITY_GAIN * 18);
+    }
+    // Secondary/tertiary geometry → longer chains / branch nets (not only isolated pairs).
+    if (near && near !== kinNear && Number.isFinite(minD2)) {
+      spring(near, minD2, SOCIAL_GRAVITY_GAIN * 9);
+    }
+    if (near2 && near2 !== kinNear && near2 !== near && Number.isFinite(min2D2)) {
+      spring(near2, min2D2, SOCIAL_GRAVITY_GAIN * 6);
+    }
+    if (
+      near3 &&
+      near3 !== kinNear &&
+      near3 !== near &&
+      near3 !== near2 &&
+      Number.isFinite(min3D2)
+    ) {
+      spring(near3, min3D2, SOCIAL_GRAVITY_GAIN * 3.5);
     }
 
+    // Feeding trail: hungry → step toward the richest nearby kin (colony food-sharing geometry).
+    const hunger = 1 - clamp01(myEnergy / 100);
+    if (hunger > 0.2 && fedKin && fedKinEnergy > myEnergy + 4) {
+      const fdx = fedKin.position.x - px;
+      const fdz = fedKin.position.z - pz;
+      const fd = Math.sqrt(fdx * fdx + fdz * fdz) + 1e-6;
+      const trail = SOCIAL_FEED_TRAIL_GAIN * hunger * hunger * sp2;
+      u.vel.x += (fdx / fd) * trail;
+      u.vel.z += (fdz / fd) * trail;
+    }
+
+    // Alone → gentle social-core drift (not a hard collapse that erases structure).
     if (n === 0) {
       const md = Math.sqrt(px * px + pz * pz) + 1e-6;
-      u.vel.x += (-px / md) * SOCIAL_GRAVITY_GAIN * 0.35 * sp2;
-      u.vel.z += (-pz / md) * SOCIAL_GRAVITY_GAIN * 0.35 * sp2;
+      u.vel.x += (-px / md) * SOCIAL_GRAVITY_GAIN * 0.4 * sp2;
+      u.vel.z += (-pz / md) * SOCIAL_GRAVITY_GAIN * 0.4 * sp2;
     }
 
     let toCrowdX = 0;
@@ -1387,20 +1460,20 @@ export class EntityManager {
       awayX = px / md;
       awayZ = pz / md;
     }
-    const energy = typeof u.energy === 'number' ? u.energy : 50;
     const percept: FactionPercept = {
       threat: Math.min(1, threatN / 3),
       crowd: Math.min(1, n / 8),
-      energy: clamp01(energy / 100),
+      energy: clamp01(myEnergy / 100),
       kin: Math.min(1, kn / 4),
-      resource: clamp01(energy / 100),
+      resource: clamp01(myEnergy / 100),
       novelty: clamp01((frame % 97) / 97),
     };
     const frng = mulberry32(((index * 0x9e3779b9) ^ (frame * 0x85ebca6b) ^ (myGroup * 17)) >>> 0);
     const { intent } = decideFaction(myGroup % FACTION_COUNT, percept, frng);
     const steer = intentSteerXZ(intent, toCrowdX, toCrowdZ, toKinX, toKinZ, awayX, awayZ);
-    u.vel.x += steer.x * SOCIAL_GRAVITY_GAIN * 0.7 * sp2;
-    u.vel.z += steer.z * SOCIAL_GRAVITY_GAIN * 0.7 * sp2;
+    // Faction intent is a bias on the filament — never stronger than the chain spring.
+    u.vel.x += steer.x * SOCIAL_GRAVITY_GAIN * 0.55 * sp2;
+    u.vel.z += steer.z * SOCIAL_GRAVITY_GAIN * 0.55 * sp2;
   }
 
   /**
