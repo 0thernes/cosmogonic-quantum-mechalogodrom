@@ -695,6 +695,40 @@ async function runLoop(
  * chain `runAgent` walks so a single dead/rate-limited provider or exhausted key no longer sinks
  * the whole box — it falls through to the next live slot.
  */
+/**
+ * Reorder a failover chain into host-round-robin while preserving each host's internal slot order.
+ * Distinct endpoint hosts are visited in first-seen order, one slot per round, so the earliest N
+ * attempts span up to N DISTINCT hosts instead of N slots of a single (possibly dead) host. out[0]
+ * (first host, first slot) is unchanged, and a single-host (zero-config) chain degenerates to the
+ * original order exactly — so the default provider + resolveProvider goldens are byte-for-byte stable.
+ */
+export function roundRobinByHost(chain: readonly ResolvedProvider[]): ResolvedProvider[] {
+  const buckets = new Map<string, ResolvedProvider[]>();
+  const hostOrder: string[] = [];
+  for (const p of chain) {
+    const host = safeHost(p.endpoint);
+    let bucket = buckets.get(host);
+    if (!bucket) {
+      bucket = [];
+      buckets.set(host, bucket);
+      hostOrder.push(host);
+    }
+    bucket.push(p);
+  }
+  const out: ResolvedProvider[] = [];
+  for (let round = 0, added = true; added; round++) {
+    added = false;
+    for (const host of hostOrder) {
+      const p = buckets.get(host)![round];
+      if (p) {
+        out.push(p);
+        added = true;
+      }
+    }
+  }
+  return out;
+}
+
 function providerChain(): ResolvedProvider[] {
   const out: ResolvedProvider[] = [];
   const seen = new Set<string>();
@@ -713,7 +747,12 @@ function providerChain(): ResolvedProvider[] {
   for (const p of PRESETS) {
     if (p.keyEnv !== undefined) for (const slot of presetSlots(p)) add(slot);
   }
-  return out;
+  // Failover budget (MAX_PROVIDER_ATTEMPTS) is smaller than the ~7 same-host keyless LLM7 slots that
+  // head the chain, so a single dead/rate-limited host (api.llm7.io) burned every attempt before any
+  // distinct host was tried — a configured keyed provider (Groq/Gemini/…) sat at index ≥7, never
+  // reached. Round-robin by host so the earliest attempts span DISTINCT hosts; out[0] + zero-config
+  // (single-host) order are unchanged.
+  return roundRobinByHost(out);
 }
 
 /**
