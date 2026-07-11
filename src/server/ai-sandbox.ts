@@ -334,22 +334,36 @@ function validateCommand(raw: string): { ok: true; argv: string[] } | { ok: fals
       };
     }
     if (sub === 'diff' || sub === 'diff-tree') {
-      const positionals = argv.slice(2).filter((a) => !isFlag(a) && a !== '--');
-      // A `git diff` / `git diff --cached` with NO pathspec emits the working-tree/index diff of ALL
-      // tracked files — including tracked-but-blocked areas (legacy/, .github/…) that the file tools
-      // block outright — and with no path argument the per-path confine() loop below has nothing to
-      // confine. Require an explicit pathspec so a working-tree diff can never span a blocked directory.
-      if (positionals.length === 0) {
+      // Diff is allowed only in the unambiguous `git diff [flags] -- <literal paths...>` form. Git's
+      // pathspec language can make apparently non-root tokens span the entire tree (`:`, `:!src`,
+      // `./*`, `**/*`), so resolving the token as a filesystem path is NOT a sufficient confinement
+      // check. Require the `--` boundary, reject revisions before it, and reject all pathspec magic.
+      const separator = argv.indexOf('--', 2);
+      const revisions = separator < 0 ? [] : argv.slice(2, separator).filter((a) => !isFlag(a));
+      const pathspecs = separator < 0 ? [] : argv.slice(separator + 1);
+      if (separator < 0 || pathspecs.length === 0) {
         return {
           ok: false,
-          error: `git ${sub} requires an explicit confined pathspec (e.g. \`git ${sub} -- src/world.ts\`)`,
+          error: `git ${sub} requires \`--\` plus an explicit confined literal path (e.g. \`git ${sub} -- src/world.ts\`)`,
         };
       }
-      const revisionLike = positionals.some(
-        (a) => !a.includes('/') && !a.includes('\\') && !a.includes('.') && !a.includes(':'),
-      );
-      if (revisionLike) {
+      if (revisions.length > 0) {
         return { ok: false, error: `git ${sub} revision diffs are denied` };
+      }
+      for (const pathspec of pathspecs) {
+        if (pathspec.length === 0 || isFlag(pathspec) || /[:*?[\]!^]/.test(pathspec)) {
+          return {
+            ok: false,
+            error: `git ${sub} pathspec must be a literal path (pathspec magic/globs are denied)`,
+          };
+        }
+        const c = confine(pathspec);
+        if (!c.ok || relative(ROOT, c.abs) === '') {
+          return {
+            ok: false,
+            error: `git ${sub} pathspec must name a path strictly inside the permitted repo`,
+          };
+        }
       }
     }
     // branch/tag/remote can MUTATE with a positional arg; permit only the listing forms (flags only).
@@ -433,7 +447,11 @@ function repoRelative(abs: string): string {
   return relative(ROOT, abs).split(sep).join('/');
 }
 
-async function grepLiteral(pattern: string, roots: string[] = ['.']): Promise<SandboxResult> {
+async function grepLiteral(
+  pattern: string,
+  roots: string[] = ['.'],
+  signal?: AbortSignal,
+): Promise<SandboxResult> {
   const out: string[] = [];
   let outLen = 0;
   let truncated = false;
@@ -450,6 +468,7 @@ async function grepLiteral(pattern: string, roots: string[] = ['.']): Promise<Sa
   }
 
   async function scanFile(abs: string): Promise<boolean> {
+    if (signal?.aborted) return true; // turn cancelled → stop the walk (partial result is discarded by the race)
     const file = Bun.file(abs);
     if (file.size > MAX_GREP_FILE_BYTES) return false;
     try {
@@ -470,6 +489,7 @@ async function grepLiteral(pattern: string, roots: string[] = ['.']): Promise<Sa
   // call stack overflows (a DoS on the grep sandbox). 40 levels is far beyond any real source layout.
   const MAX_WALK_DEPTH = 40;
   async function walk(abs: string, depth: number): Promise<boolean> {
+    if (signal?.aborted) return true; // short-circuit the recursion at the next dir boundary on cancel
     if (depth > MAX_WALK_DEPTH) return false;
     try {
       const entries = await readdir(abs, { withFileTypes: true });
@@ -586,7 +606,7 @@ export async function runReadOnly(raw: string, signal?: AbortSignal): Promise<Sa
     return { ok: true, output, truncated: false };
   }
   const grep = gitGrepRequest(v.argv);
-  if (grep) return grepLiteral(grep.pattern, grep.roots);
+  if (grep) return grepLiteral(grep.pattern, grep.roots, signal);
   try {
     const proc = Bun.spawn(v.argv, {
       cwd: ROOT,
@@ -633,7 +653,7 @@ export async function runReadOnly(raw: string, signal?: AbortSignal): Promise<Sa
 }
 
 /** Content search via `git grep` (read-only, repo-confined). `pattern` is passed as a literal. */
-export async function grepRepo(pattern: string): Promise<SandboxResult> {
+export async function grepRepo(pattern: string, signal?: AbortSignal): Promise<SandboxResult> {
   if (typeof pattern !== 'string' || pattern.trim().length === 0) {
     return { ok: false, error: 'empty pattern' };
   }
@@ -652,7 +672,7 @@ export async function grepRepo(pattern: string): Promise<SandboxResult> {
     };
   }
   // -n line numbers, -I skip binary, --fixed-strings = literal (no injection via regex), capped.
-  return runReadOnly(`git grep -n -I --fixed-strings ${pattern}`);
+  return runReadOnly(`git grep -n -I --fixed-strings ${pattern}`, signal);
 }
 
 /** The tool surface advertised to the model (OpenAI function-tool schema). */
@@ -728,8 +748,9 @@ export const SANDBOX_TOOLS = [
 
 /** Dispatch a tool call by name to its sandbox function. Unknown tools are denied. The optional
  *  `signal` (the copilot turn deadline / client-disconnect) is forwarded to the resource-holding tools
- *  (`run` spawns a child, `web_search` fetches) so a turn cancellation kills them NOW instead of letting
- *  them run out their own internal timeout after the caller has given up. Pure-JS tools are fast + bounded. */
+ *  (`run` spawns a child, `web_search` fetches, `grep`'s tree walk) so a turn cancellation stops them NOW
+ *  instead of letting them run out their own internal timeout after the caller has given up. The remaining
+ *  pure-JS tools (read_file/list_dir) are single-file/single-dir and inherently fast + bounded. */
 export async function dispatchTool(
   name: string,
   args: Record<string, unknown>,
@@ -741,7 +762,7 @@ export async function dispatchTool(
     case 'list_dir':
       return listDir(typeof args['path'] === 'string' ? args['path'] : '');
     case 'grep':
-      return grepRepo(typeof args['pattern'] === 'string' ? args['pattern'] : '');
+      return grepRepo(typeof args['pattern'] === 'string' ? args['pattern'] : '', signal);
     case 'run':
       return runReadOnly(typeof args['command'] === 'string' ? args['command'] : '', signal);
     case 'web_search':

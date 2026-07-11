@@ -8,7 +8,7 @@
 [![License: Non-Commercial Research & Play](https://img.shields.io/badge/License-Non--Commercial%20Research%20%26%20Play-2ea043.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
-[![tests](https://img.shields.io/badge/tests-2507%20exact-brightgreen)](./tests)
+[![tests](https://img.shields.io/badge/tests-2521%20exact-brightgreen)](./tests)
 [![coverage](https://img.shields.io/badge/coverage-84.64%25%20line%20%C2%B7%2082.21%25%20func-success)](./docs/TECHNICAL-SPECIFICATION-2026-06-26.md)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION-2026-06-26.md)
 [![Tsotchke](https://img.shields.io/badge/Tsotchke-REAL__MIT__CORPUS-purple)](https://github.com/tsotchke)
@@ -23,16 +23,20 @@ diffusion, **and the Tsotchke corpus wired as the primordial substrate for digit
 **Current public truth (2026-07-10):**
 
 - Package/source version: **v0.21.13**.
-- Exact tracked-suite receipt: **2,507 tests / 0 fail**. Portable public coverage floor: **84.64% line / 82.21% func**.
+- Exact tracked-suite receipt: **2,521 tests / 0 fail**. Portable public coverage floor: **84.64% line / 82.21% func**.
 
 <!-- cqm-sync:local-measurement:start -->
 
-- Latest Windows-local measurement in this checkout: **2,507 tests / 0 fail · 2,838,975 `expect()` calls**; coverage measured `92.85%` line / `90.55%` func across 281 test files.
+- Latest Windows-local measurement in this checkout: **2,521 tests / 0 fail · 2,839,000 `expect()` calls**; coverage measured `92.85%` line / `90.56%` func across 281 test files.
 
 <!-- cqm-sync:local-measurement:end -->
 
 - `verify:facts` exits 0 with no drift across 74 Markdown/HTML/XML surfaces.
 - Consciousness/sentience language is **indicatorOnly**: computational proxies, falsifiers, and controls; never proof of phenomenal experience or completion of the sentience goal.
+- The batch-26 adversarial repair pass replaced cell-snapped flora lookup with an `O(1)` four-cell
+  bilinear sampler and sealed chemotaxis against the shipped field, corrected final-position forager
+  telemetry, and closed root-pathspec plus cancellation gaps in the read-only AI sandbox. These are
+  defect repairs, not evidence for an A-Life, consciousness, or sentience score increase.
 - The [2026-07-10 organism-intelligence causal audit](./docs/reports/2026-07-10-OPERATIONAL-ORGANISM-INTELLIGENCE-CAUSAL-AUDIT.md)
   uses a fresh disjoint fixed 30-seed family. Goal-only and corpus-conditioned effects passed,
   adaptation cleared `5%` at `6.1213%`, `17/17` integrated rows stayed causal, all named consumer
@@ -478,9 +482,9 @@ full gate with same-seed determinism preserved. The major arcs:
   ported primitive. The whole apex beat is now measured honestly: **~1.99 ms** per `SuperMind.think()`
   (range 1.41–5.62 ms) and **~9.77 ms** for the staggered 5-mind batch (~58% of a 60 fps frame, which is
   why 5 minds run staggered against 20 light echoes); the older sub-millisecond / `<2%` GOAL5 claim is
-  superseded until re-proven. **2,507 exact tracked tests · 0 fail (receipts enforced) · 84.64% line / 82.21% func portable coverage floor.**
+  superseded until re-proven. **2,521 exact tracked tests · 0 fail (receipts enforced) · 84.64% line / 82.21% func portable coverage floor.**
   <!-- cqm-sync:local-measurement:start -->
-  **Latest Windows-local measurement: 2,507 tests / 0 fail / 2,838,975 assertions at `92.85%` line / `90.55%` func.**
+  **Latest Windows-local measurement: 2,521 tests / 0 fail / 2,839,000 assertions at `92.85%` line / `90.56%` func.**
   <!-- cqm-sync:local-measurement:end -->
 - **State-of-the-art report (2026-06-17)** — a historical measured, frontier-comparison
   assessment of the whole repository + the apex Super Creature, now summarized through

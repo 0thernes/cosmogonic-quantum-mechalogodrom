@@ -346,7 +346,10 @@ function syncVersion(s: string): string {
 function syncNHSI(s: string): string {
   return (
     s
-      .replace(/\b[0-9]+(-faculty\b)/g, `${FACULTIES}$1`)
+      // (?!\s+subset): a "16-faculty subset" is a coupling-audit window, NOT the 100-faculty design total,
+      // so it must never be rewritten to FACULTIES. verify-canonical-facts.ts:74 carries the identical guard;
+      // without it here, adding a doc that mentions the subset to SURFACES silently corrupts 16 → 100.
+      .replace(/\b[0-9]+(-faculty\b)(?!\s+subset)/g, `${FACULTIES}$1`)
       .replace(/\b[0-9]+( Archon pantheons?\b)/g, `${ARCHONS}$1`)
       // NOTE: bare "N-Archon" is NOT synced — "5-Archon live table" legitimately means the 5 individuated
       // apex minds, not the 25-Archon pantheon. Only the unambiguous "Archon pantheon" form is enforced.

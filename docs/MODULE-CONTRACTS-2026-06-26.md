@@ -1562,7 +1562,8 @@ AI in `src/sim/**`); the live LLM Copilot is a NON-deterministic shell organ (`s
   `KEY`); a bounded agent loop over the read-only tools.
 - **`src/server/ai-sandbox.ts`** — default-deny tool gate: repo-confined `read_file`/`list_dir`/
   `grep` + a single-command `run` (ALLOW-bin + DENY-token + no shell metacharacter + git/bun
-  subcommand gating). Writes nothing.
+  subcommand gating). Repository-root Git pathspecs (`.` / `./`) are denied, and turn cancellation
+  propagates through Git-grep walks. Writes nothing.
 - **`src/ui/copilot.ts`** — self-mounting chat panel + `/read /ls /grep /run` terminal;
   `textContent`-only rendering (no HTML injection).
 
@@ -1574,9 +1575,9 @@ Copilot are constructed boot-stream-neutral and never write sim state, so the go
 
 ### V9 acceptance
 
-Full `bun run check` green: prettier → tsc strict → oxlint → 2507 tests (0 fail, 300-frame golden
+Full `bun run check` green: prettier → tsc strict → oxlint → 2521 tests (0 fail, 300-frame golden
 included) → build. The Copilot sandbox verified live (allow: `git log`, file reads; deny:
-path-escape, `git push`, `legacy/`, shell redirection).
+path-escape, repository-root pathspecs, `git push`, `legacy/`, shell redirection).
 
 ---
 

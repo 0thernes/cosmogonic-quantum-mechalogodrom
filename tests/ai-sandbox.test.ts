@@ -101,6 +101,20 @@ describe('ai-sandbox: command gate is default-deny and write-free', () => {
     'git diff', // pathspec-less diff emits ALL tracked files incl. blocked legacy/ — needs an explicit confined path
     'git diff --cached', // same: staged diff of every tracked file, nothing for confine() to scope
     'git diff --stat', // flags-only, still no pathspec → spans blocked dirs
+    // A `.`/`./` pathspec satisfies the non-empty check yet resolves to ROOT (confine('.') → relative ''),
+    // spanning every tracked file incl. blocked legacy/ & .github/ — the "explicit confined pathspec"
+    // requirement is defeated unless a root-resolving pathspec is rejected (self-review batch-26).
+    'git diff -- .',
+    'git diff .',
+    'git diff -- ./',
+    'git diff --cached -- .',
+    'git diff-tree -- .',
+    // Git pathspec magic/globs can span the whole tree even when the token does not resolve to ROOT as
+    // a normal filesystem path. Only literal, non-root paths after `--` are accepted.
+    'git diff -- :',
+    'git diff -- :!src',
+    'git diff -- ./*',
+    'git diff -- **/*',
     // GNU grep recurses via `-d recurse` / `--directories=recurse` too, not just `-r`/`-R` — these
     // reopened the audit-CRITICAL secret leak (native grep recursed root → .env/.git/legacy) past the
     // `-r`/`-R` block (audit 2026-07-01). All directory-handling spellings must be denied.
@@ -163,6 +177,9 @@ describe('ai-sandbox: success paths (the gate ALLOWS + executes valid read-only 
       expect(r.ok).toBe(true);
       if (r.ok) expect(r.output.trim()).toContain('cosmogonic-sandbox-ok');
 
+      const confinedDiff = await runReadOnly('git diff -- src/server/ai-sandbox.ts');
+      expect(confinedDiff.ok).toBe(true);
+
       // Exercise the real subprocess stream path with a source blob far larger than MAX_OUTPUT.
       // The child must be stopped while streaming; buffering its complete output before slicing would
       // make this boundary vulnerable to memory exhaustion from any verbose allowed command.
@@ -193,6 +210,13 @@ describe('ai-sandbox: success paths (the gate ALLOWS + executes valid read-only 
     expect((await dispatchTool('read_file', {})).ok).toBe(false); // empty path
     expect((await dispatchTool('grep', {})).ok).toBe(false); // empty pattern
     expect((await dispatchTool('run', {})).ok).toBe(false); // empty command
+  });
+
+  test('an aborted grep walk stops before returning any partial repository content', async () => {
+    const controller = new AbortController();
+    controller.abort();
+    const result = await grepRepo('cosmogonic', controller.signal);
+    expect(result).toEqual({ ok: true, output: '', truncated: false });
   });
 });
 

@@ -672,22 +672,45 @@ export class AlienFlora {
   }
 
   /**
+   * Read-only flora biomass at world (x,z), bilinearly interpolated over the four surrounding cells.
+   * Continuous (C0) by construction: a small centred finite difference senses a real gradient
+   * instead of reading 0 whenever both probes fall inside the same 44u cell — which is what makes the
+   * entities.ts chemotaxis steer non-degenerate on the true quantized grid. Pure, deterministic,
+   * allocation-free, O(1), no rng; only called at runtime (grazeAt/the shader own the raw cells), so
+   * goldens are unmoved. See entities.ts applyFloraComfort + tests/flora-chemotaxis.test.ts.
+   */
+  biomassAt(x: number, z: number): number {
+    if (!Number.isFinite(x) || !Number.isFinite(z)) return 0;
+    // Cell-CENTRE space: an integer fx lands exactly on cell ix's centre, so interpolating between
+    // ix0 and ix0+1 reconstructs a smooth field that equals biomass[ix] at every cell centre.
+    const fx = (x + this.gridHalf) / this.cell - 0.5;
+    const fz = (z + this.gridHalf) / this.cell - 0.5;
+    const ix0 = Math.floor(fx);
+    const iz0 = Math.floor(fz);
+    const tx = fx - ix0;
+    const tz = fz - iz0;
+    const n = this.gridN;
+    const ix1 = ix0 + 1;
+    const iz1 = iz0 + 1;
+    const row0Valid = iz0 >= 0 && iz0 < n;
+    const row1Valid = iz1 >= 0 && iz1 < n;
+    const col0Valid = ix0 >= 0 && ix0 < n;
+    const col1Valid = ix1 >= 0 && ix1 < n;
+    const b00 = row0Valid && col0Valid ? (this.biomass[iz0 * n + ix0] ?? 0) : 0;
+    const b10 = row0Valid && col1Valid ? (this.biomass[iz0 * n + ix1] ?? 0) : 0;
+    const b01 = row1Valid && col0Valid ? (this.biomass[iz1 * n + ix0] ?? 0) : 0;
+    const b11 = row1Valid && col1Valid ? (this.biomass[iz1 * n + ix1] ?? 0) : 0;
+    const bx0 = b00 + (b10 - b00) * tx;
+    const bx1 = b01 + (b11 - b01) * tx;
+    return bx0 + (bx1 - bx0) * tz;
+  }
+
+  /**
    * USER ecology — a creature GRAZES the plants at world (x,z): the cell's biomass is eaten down (it
    * becomes a nibbled stub in the shader) and the amount consumed is returned as FOOD (energy on the
    * 0..100 creature scale) for the grazer. `pressure` 0..1 scales appetite. Deterministic (no rng);
    * a no-op (returns 0) outside the field or on an already-eaten cell. O(1).
    */
-  /**
-   * READ-ONLY flora biomass at world (x,z) ∈ [0,1] (0 outside the field or on a bare cell). Pure — no
-   * consumption, no side effects — so a grazer can finite-difference it to sense the biomass GRADIENT and
-   * forage UP it toward the richest patch (gradient-ascent chemotaxis), not just drift to the nearest
-   * cover. O(1). See entities.ts applyFloraComfort + tests/flora-chemotaxis.test.ts.
-   */
-  biomassAt(x: number, z: number): number {
-    const gi = this.gridIndex(x, z);
-    return gi < 0 ? 0 : (this.biomass[gi] ?? 0);
-  }
-
   grazeAt(x: number, z: number, pressure: number, dt: number): number {
     const gi = this.gridIndex(x, z);
     if (gi < 0) return 0;

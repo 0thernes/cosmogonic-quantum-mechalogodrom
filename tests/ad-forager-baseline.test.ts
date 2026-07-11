@@ -87,5 +87,24 @@ describe('GATE-FORAGE: AD-gradient forager provably beats a random walk', () => 
     const b = runForager(sources, sx, sz, CFG, mulberry32(8), 'gradient');
     expect(a.steps).toBe(b.steps);
     expect(a.reached).toBe(b.reached);
+    expect(a.finalPotential).toBe(b.finalPotential);
+  });
+
+  test('finalPotential is measured at the true final position for random and ablated modes', () => {
+    const { sources, sx, sz } = trial(11);
+    const random = runForager(sources, sx, sz, CFG, mulberry32(12), 'random');
+    const ablated = runForager(sources, sx, sz, CFG, mulberry32(12), 'gradient', true);
+
+    // The two modes share a byte-identical trajectory, so their final field reading must match.
+    // The pre-fix implementation returned a hard-coded zero outside the live gradient branch.
+    expect(random.finalPotential).toBeGreaterThan(0);
+    expect(random.finalPotential).toBe(ablated.finalPotential);
+  });
+
+  test('an immediate-reach result reports the source potential instead of a stale zero', () => {
+    const result = runForager([{ x: 0, z: 0, amp: 1 }], 0, 0, CFG, mulberry32(1), 'random');
+    expect(result.steps).toBe(0);
+    expect(result.reached).toBe(true);
+    expect(result.finalPotential).toBeCloseTo(1, 12);
   });
 });

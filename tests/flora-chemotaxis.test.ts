@@ -1,24 +1,49 @@
 /**
  * GATE-CHEMOTAXIS — proves the base-population foraging upgrade is wired into the live
- * `EntityManager`, not merely reproduced by a test helper. Two identically seeded organisms run
- * through the real update loop; the only ablation is the attached read-only biomass gradient.
- * The sensed organism must gain velocity and displacement toward the richer patch while the
- * detached twin follows the unchanged seeded trajectory.
+ * `EntityManager` and senses the real cell-quantized `AlienFlora` field. Two identically seeded
+ * organisms run through the production update loop; the only ablation is the attached read-only
+ * biomass gradient. The field sampler is the shipped bilinear kernel, not a smooth test double:
+ * this catches the earlier nearest-cell no-op where both +/-6u probes often occupied one 44u cell.
  */
 import { describe, expect, test } from 'bun:test';
 import * as THREE from 'three';
 import { mulberry32 } from '../src/math/rng';
 import { SpatialHash } from '../src/math/spatial-hash';
 import { getQuantizationConfig } from '../src/math/quantization';
+import { AlienFlora } from '../src/sim/alien-flora';
 import { EntityManager } from '../src/sim/entities';
 import { createGeometryCache } from '../src/sim/geometry-cache';
 import { createMorphotypes } from '../src/sim/morphotypes';
 import type { AuditTrail } from '../src/logging/audit';
 import type { Entity, SimContext, SimState } from '../src/types';
 
-/** A synthetic flora field: a single rich patch (Gaussian in biomass). */
-function patchField(cx: number, cz: number, sigma: number): (x: number, z: number) => number {
-  return (x, z) => Math.exp(-((x - cx) ** 2 + (z - cz) ** 2) / sigma);
+const CELL = 44;
+
+/**
+ * A REAL quantized flora field: biomass sampled per 44u cell as a radial cone (dense core → sparse rim),
+ * then read through the shipped bilinear `AlienFlora.prototype.biomassAt`. Graded values are what the live
+ * `biomass` Float32Array actually holds after grazing/regrowth — this is the production sampler, not a stand-in.
+ */
+function quantizedFloraSampler(gridN: number, maxR: number): (x: number, z: number) => number {
+  const gridHalf = (gridN * CELL) / 2;
+  const biomass = new Float32Array(gridN * gridN);
+  for (let iz = 0; iz < gridN; iz++) {
+    for (let ix = 0; ix < gridN; ix++) {
+      const cx = -gridHalf + (ix + 0.5) * CELL;
+      const cz = -gridHalf + (iz + 0.5) * CELL;
+      const r = Math.hypot(cx, cz);
+      biomass[iz * gridN + ix] = r < maxR ? 1 - r / maxR : 0;
+    }
+  }
+  const stub = { cell: CELL, gridN, gridHalf, biomass };
+  // Invoke the ACTUAL shipped method against the stub's fields — tests the deployed bilinear code path,
+  // not a reimplementation. biomassAt reads only cell/gridN/gridHalf/biomass, all present on the stub.
+  const biomassAt = AlienFlora.prototype.biomassAt as (
+    this: unknown,
+    x: number,
+    z: number,
+  ) => number;
+  return (x, z) => biomassAt.call(stub, x, z);
 }
 
 function makeState(): SimState {
@@ -110,8 +135,33 @@ function runArm(sampler: ((x: number, z: number) => number) | null): Endpoint {
   };
 }
 
-describe('GATE-CHEMOTAXIS: a hungry animal forages UP the flora gradient toward the richest patch', () => {
-  const sampler = patchField(0, 0, 900);
+describe('GATE-CHEMOTAXIS: a hungry animal forages UP the REAL quantized flora gradient', () => {
+  const gridN = 41; // 41×44 = 1804u span, cell 20 centred on the origin
+  const maxR = 400; // radial cone: biomass 1 at origin → 0 at r≥400
+  const sampler = quantizedFloraSampler(gridN, maxR);
+
+  test('bilinear biomassAt is non-degenerate at SUB-CELL scale (the old nearest-cell no-op is fixed)', () => {
+    // A point deep in the INTERIOR of one 44u cell (not near a boundary): the old nearest-cell sampler
+    // returned the SAME value for x±6 (both in cell 15) → gx=0. The bilinear sampler must differ.
+    const x = -220; // cell 15 centre (-902 + 15.5*44)
+    const z = 0;
+    const left = sampler(x - 6, z);
+    const right = sampler(x + 6, z);
+    expect(right).not.toBe(left); // continuous field → real sub-cell gradient
+    expect(right).toBeGreaterThan(left); // and correctly signed: closer to the dense core ⇒ richer
+  });
+
+  test('uniform region reads a flat field (honest: no phantom gradient where none exists)', () => {
+    // Far outside the cone (r≫maxR) every surrounding cell is 0 → the steer is correctly silent.
+    const x = 780;
+    const z = 780;
+    expect(sampler(x, z)).toBe(0);
+    expect(sampler(x + 6, z)).toBe(0);
+    expect(sampler(x, z + 6)).toBe(0);
+    expect(sampler(Number.NaN, 0)).toBe(0);
+    expect(sampler(Number.POSITIVE_INFINITY, 0)).toBe(0);
+    expect(sampler(0, Number.NEGATIVE_INFINITY)).toBe(0);
+  });
 
   test('live EntityManager trajectory turns toward richer flora versus the detached ablation', () => {
     const sensed = runArm(sampler);
@@ -129,9 +179,9 @@ describe('GATE-CHEMOTAXIS: a hungry animal forages UP the flora gradient toward 
     expect(runArm(sampler)).toEqual(runArm(sampler));
   });
 
-  test('AlienFlora exposes the read-only biomassAt sampler used by the world wiring', async () => {
-    // World wires `(x,z) => alienFlora.biomassAt(x,z)` into the runtime attachment exercised above.
-    const { AlienFlora } = await import('../src/sim/alien-flora');
+  test('biomassAt sampler is the real read-only kernel wired into world.ts', () => {
+    // The wired sampler (world.ts) is `(x,z) => alienFlora.biomassAt(x,z)`; this gate exercises that exact
+    // method (via prototype.call above), then the live EntityManager attachment consumes that same sampler.
     expect(typeof AlienFlora.prototype.biomassAt).toBe('function');
   });
 });
