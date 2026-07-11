@@ -11,6 +11,36 @@ changed and why.
 
 ---
 
+## 2026-07-11 — batch 33: NHSI grows SPATIAL ATTENTION — a second self-model that attends to its surprising faculties (pass 4/10)
+
+Pass 4 of the 10-pass "make them smarter" goal, and the SECOND development on NHSI (owner: "NHSI ... becomes
+smarter and develops better"). Batch-30 gave the pantheon a scalar self-model whose surprise raises a GLOBAL
+coupling gain. This adds a parallel, richer learner that makes the integration SPATIALLY SELECTIVE.
+
+- **`src/sim/faculties-pantheon.ts` — a learned ATTENTION model (`NHSI_GROUPS`→6→`NHSI_GROUPS`,
+  `NHSI_ATTENTION_PARAMS`=110).** Where the batch-30 self-model forecasts one scalar (the aggregate), this
+  forecasts the whole per-GROUP activation profile. Each group's realized forecast error becomes a LOCAL
+  coupling multiplier (1-beat delayed, exactly like the global gain): the pantheon integrates the faculty
+  groups it fails to predict MORE — learned attention to the surprising — and relaxes toward neutral where it
+  models itself well. Rides its own decorrelated substream (`s ^ 0xa77e0000`); zero perturbation of the
+  faculties' rng or the batch-30 scalar model.
+- **CLEAN ISOLATION via a real seam.** `enableLearning({ attention: false })` runs the scalar self-model
+  ALONE — the ablation control for the attention pathway. So the operational effect is measured with the
+  attention pathway as the ONLY toggle (everything else — scalar model, lr, seed — held equal).
+- **GATE (`tests/nhsi-attention-learning.test.ts`, 6 cases).** LEARNS: per-group error 0.052→0.0067.
+  ABLATION: trained EMA **0.0067** vs a frozen-lr0 control **0.273** (~40× — load-bearing). SPATIAL +
+  SELF-REGULATING: a perpetually-wrong (frozen) pantheon attends selectively (gain **spread 0.72**, genuinely
+  per-group not a scalar), while a trained one **relaxes to ≈1.0** (attends only when uncertain). OPERATIONAL
+  (isolated): at a developing beat, attention redistributes coupling across **137/144** faculties vs the
+  attention-off control. Plus DETERMINISM + DEFAULT-OFF byte-identical + SCALE. **The batch-30 gate stays
+  green (6/6)** — the scalar model is untouched; `faculties-pantheon.test.ts` + `nhsi-pantheons.test.ts` +
+  `world-lifecycle-wiring.test.ts` all pass. Live on NHSI via the existing `world.ts` `enableLearning` (default on).
+- **HONESTY (ADR 0014/0015, indicatorOnly).** NO consciousness / Butlin / A-Life score moved. Claim: NHSI now
+  develops SPATIAL attention (~40× below frozen, ablation-verified) that measurably and selectively
+  redistributes its coupling. Did NOT claim the coupling-density scalar rose. Butlin + Consciousness BYTE-IDENTICAL.
+
+Receipts 2813→2819 (+6).
+
 ## 2026-07-11 — colony / chain ecology deep pass (kin filaments + feeding trails)
 
 Owner: entities used to form long living chains (ant/bee-like tribal filaments) from behaviors +

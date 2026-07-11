@@ -26,6 +26,17 @@ const NHSI_MAX_COUPLING = 0.22; // cap on the adaptive gain (below blendCoupling
 /** Learnable params the pantheon self-model adds when lit: (groups·h + h) + (h·1 + 1). */
 export const NHSI_SELFMODEL_PARAMS = NHSI_GROUPS * NHSI_WM_HID + NHSI_WM_HID + (NHSI_WM_HID + 1);
 
+// ── SPATIAL ATTENTION (pass 4) — a SECOND self-model that forecasts the per-GROUP activation profile
+// (not just the scalar aggregate). Each group's forecast error becomes a LOCAL coupling multiplier: the
+// pantheon integrates the faculty groups it fails to predict MORE (learned attention to the surprising)
+// and relaxes toward neutral where it models itself well. Distinct from the batch-30 GLOBAL adaptive gain.
+const NHSI_ATTN_HID = 6; // attention self-model hidden width (groups→h→groups profile forecaster)
+const NHSI_ATTN_GAIN = 2.5; // how strongly a group's self-prediction error amplifies its coupling
+const NHSI_ATTN_MAX = 1.8; // cap on a group's attention multiplier (× the global adaptive gain)
+/** Learnable params the attention model adds when lit: (groups·h + h) + (h·groups + groups). */
+export const NHSI_ATTENTION_PARAMS =
+  NHSI_GROUPS * NHSI_ATTN_HID + NHSI_ATTN_HID + (NHSI_ATTN_HID * NHSI_GROUPS + NHSI_GROUPS);
+
 export const FACULTY_NAMES = [
   'GLOBAL_WORKSPACE_IGNITION',
   'INTEGRATED_INFORMATION_PHI',
@@ -307,6 +318,13 @@ export class FacultiesPantheon {
   private prevPred = 0; // the forecast made LAST beat for THIS beat's aggregate activation
   private selfPredErr = 0; // EMA of |forecast − actual aggregate| — falls as it develops; drives coupling
 
+  // ── the pantheon's SPATIAL ATTENTION model (pass 4) — parallel to the scalar self-model above ──────
+  private attnModel: Mlp | null = null; // groups→h→groups; forecasts the per-group profile
+  private readonly attnGains = new Float64Array(NHSI_GROUPS).fill(1); // per-group coupling multiplier (1 = neutral)
+  private readonly attnPrevPred = new Float64Array(NHSI_GROUPS); // last beat's per-group forecast
+  private readonly attnTarget = new Float64Array(NHSI_GROUPS); // scratch target (this beat's group means)
+  private attnPredErr = 0; // EMA of mean per-group forecast error — falls as attention develops
+
   constructor(rng: Rng) {
     // Build the profiles first (same rng draw order — makeProfile once per index), then derive the phases
     // and content signatures used by the structured coupling channels when learning is lit.
@@ -341,7 +359,7 @@ export class FacultiesPantheon {
    * as it learns — and the phase/content channels make that coupling structured, not mere ring adjacency.
    * Seeded from a SEPARATE substream ⇒ no perturbation of the faculties' own rng. `lr = 0` freezes it.
    */
-  enableLearning(opts?: { lr?: number; seed?: number }): void {
+  enableLearning(opts?: { lr?: number; seed?: number; attention?: boolean }): void {
     if (opts?.lr !== undefined) this.wmLr = opts.lr;
     if (this.worldModel) {
       this.learn = true;
@@ -349,6 +367,18 @@ export class FacultiesPantheon {
     }
     const s = (((opts?.seed ?? 0) >>> 0) ^ 0x4e485349) >>> 0 || 1; // "NHSI"
     this.worldModel = createMlp(NHSI_GROUPS, NHSI_WM_HID, 1, mulberry32(s));
+    // the attention model rides a decorrelated substream so its init is independent of the scalar model.
+    // `attention: false` runs the scalar self-model ALONE (the ablation control for the attention pathway).
+    if (opts?.attention !== false) {
+      this.attnModel = createMlp(
+        NHSI_GROUPS,
+        NHSI_ATTN_HID,
+        NHSI_GROUPS,
+        mulberry32((s ^ 0xa77e0000) >>> 0 || 1),
+      );
+    }
+    this.attnGains.fill(1);
+    this.attnPredErr = 0;
     this.learn = true;
     this.prevValid = false;
     this.selfPredErr = 0;
@@ -361,6 +391,14 @@ export class FacultiesPantheon {
   /** EMA of the self-model's forecast error — the falsifiable "NHSI is developing" readout. */
   get selfModelError(): number {
     return this.selfPredErr;
+  }
+  /** EMA of the attention model's mean per-group forecast error — falls as spatial attention develops. */
+  get attentionError(): number {
+    return this.attnPredErr;
+  }
+  /** The current per-group coupling multipliers (1 = neutral). Copy; safe to read in tests/telemetry. */
+  attentionGains(): number[] {
+    return Array.from(this.attnGains);
   }
 
   update(inputs: Float32Array): void {
@@ -388,12 +426,17 @@ export class FacultiesPantheon {
           NHSI_BASE_COUPLING * (1 + NHSI_SURPRISE_GAIN * this.selfPredErr),
         )
       : NHSI_BASE_COUPLING;
+    // SPATIAL ATTENTION (pass 4): each faculty's group carries a learned coupling multiplier — 1 (neutral)
+    // when learning is off, so this is byte-identical to the baseline; when lit, groups the pantheon fails
+    // to predict integrate MORE. The multiplier rides a 1-beat delay (set from last beat's group errors),
+    // exactly like the global gain rides last beat's selfPredErr.
     for (let i = 0; i < n; i++) {
       const left = this.actScratch[(i + n - 1) % n] ?? 0;
       const right = this.actScratch[(i + 1) % n] ?? 0;
       const ring = (left + right) * 0.5;
       const modulation = this.couplingScratch[i] ?? 0;
-      this.faculties[i]!.blendCoupling(ring * 0.6 + modulation * 0.4, g);
+      const gain = this.learn ? g * (this.attnGains[((i * NHSI_GROUPS) / n) | 0] ?? 1) : g;
+      this.faculties[i]!.blendCoupling(ring * 0.6 + modulation * 0.4, gain);
     }
 
     for (let i = 0; i < n; i++) this.actScratch[i] = this.faculties[i]!.getActivation();
@@ -426,6 +469,28 @@ export class FacultiesPantheon {
         }
         this.groupInput[gi] = cnt > 0 ? s / cnt : 0;
       }
+
+      // SPATIAL ATTENTION model: forecast the per-GROUP profile (not just the aggregate). Each group's
+      // realized forecast error becomes its coupling multiplier for the NEXT beat (attention to the
+      // surprising), and the net is corrected on (prevGroupInput → this beat's group means) by exact AD.
+      if (this.attnModel) {
+        if (this.prevValid) {
+          let errSum = 0;
+          for (let gi = 0; gi < NHSI_GROUPS; gi++) {
+            const e = Math.abs((this.attnPrevPred[gi] ?? 0) - (this.groupInput[gi] ?? 0));
+            errSum += e;
+            this.attnGains[gi] = Math.min(NHSI_ATTN_MAX, 1 + NHSI_ATTN_GAIN * e);
+          }
+          this.attnPredErr += NHSI_WM_TAU * (errSum / NHSI_GROUPS - this.attnPredErr);
+          if (this.wmLr > 0) {
+            this.attnTarget.set(this.groupInput);
+            mlpTrainStep(this.attnModel, this.prevGroupInput, this.attnTarget, this.wmLr);
+          }
+        }
+        const pred = mlpPredict(this.attnModel, this.groupInput);
+        for (let gi = 0; gi < NHSI_GROUPS; gi++) this.attnPrevPred[gi] = clamp01(pred[gi] ?? 0);
+      }
+
       this.prevGroupInput.set(this.groupInput);
       this.prevPred = clamp01(mlpPredict(this.worldModel, this.prevGroupInput)[0] ?? 0);
       this.prevValid = true;
