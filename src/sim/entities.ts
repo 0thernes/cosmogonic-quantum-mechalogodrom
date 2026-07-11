@@ -277,6 +277,10 @@ export class EntityManager {
     null;
   /** Optional persistent brain-identity owner; attached by World after both systems exist. */
   private brainSlots: EntityBrainSlotLifecycle | null = null;
+  /** USER ecology: optional READ-ONLY flora biomass sampler — a hungry animal finite-differences it to
+   *  climb the biomass gradient toward the RICHEST patch (chemotaxis), not just drift to nearest cover.
+   *  Null (the default, e.g. tests) detaches it so the seeded golden is byte-identical. */
+  private floraGradient: ((x: number, z: number) => number) | null = null;
   /** New organisms created so far THIS frame (auto-split), reset each {@link update}. See {@link SPAWN_BUDGET_ULTRA}. */
   private spawnsThisFrame = 0;
 
@@ -343,6 +347,12 @@ export class EntityManager {
     g.desire[index] = 0;
     g.cover[index] = 0;
     g.revision[index] = ((g.revision[index] ?? 0) + 1) >>> 0;
+  }
+
+  /** USER ecology: wire the READ-ONLY flora biomass sampler so a hungry animal can climb the biomass
+   *  gradient toward the richest patch (gradient-ascent chemotaxis). Deterministic; null detaches it. */
+  attachFloraGradient(sampler: ((x: number, z: number) => number) | null): void {
+    this.floraGradient = sampler;
   }
 
   /**
@@ -1056,6 +1066,25 @@ export class EntityManager {
     if (desire <= 0.02) {
       this.clearOrganismGoal(index);
       return;
+    }
+
+    // Smarter foraging: a HUNGRY animal climbs the flora BIOMASS gradient toward the RICHEST patch —
+    // gradient-ascent chemotaxis on the live biomass field via a deterministic finite difference of the
+    // read-only sampler — instead of only drifting to the nearest cover below. Only hungry entities; the
+    // sampler is null in tests ⇒ the seeded golden is byte-identical. See tests/flora-chemotaxis.test.ts.
+    const grad = this.floraGradient;
+    if (grad && hunger > 0.2) {
+      const px = e.position.x;
+      const pz = e.position.z;
+      const P = 6; // probe span (world units) — a few flora cells wide
+      const gx = grad(px + P, pz) - grad(px - P, pz);
+      const gz = grad(px, pz + P) - grad(px, pz - P);
+      const gn = Math.hypot(gx, gz);
+      if (gn > 1e-6) {
+        const chemo = hunger * dt * 0.7; // hungrier ⇒ stronger climb toward food
+        u.vel.x += (gx / gn) * chemo;
+        u.vel.z += (gz / gn) * chemo;
+      }
     }
 
     const cover = query(e.position.x, e.position.z);

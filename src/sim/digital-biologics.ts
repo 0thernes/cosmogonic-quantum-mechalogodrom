@@ -25,7 +25,64 @@ import {
 // signals as heritable DNA bias; native VM execution stays a measured next contract, not a shipped claim.
 import { homebrewEshkolBeat } from './homebrew-eshkol'; // EVERY Tsotchke: homebrew for ancient/forbidden god DNA in brutal forms
 // qrngApiDraw from quantum-rng-api (Tsotchke) used for Mxy/Jaspers chaos in catalysis - referenced in tsotchke-facade
+import {
+  adTapeNew,
+  adTapeReset,
+  adVar,
+  adConst,
+  adMul,
+  adAdd,
+  adSub,
+  adBackward,
+  adGradient,
+  adValue,
+  type AdTape,
+} from '../math/eshkol-ad';
 const clamp01 = (v: number): number => (v > 0 ? (v < 1 ? v : 1) : 0);
+
+/** Module-scope reused Wengert tape for the biologic learner — allocation-free on the per-beat hot path. */
+const LEARN_TAPE: AdTape = adTapeNew(64);
+/** Reused gradient-node scratch; grows only for an uncommon wider external call. */
+const LEARN_THETA_NODES: number[] = Array.from({ length: 8 }, () => 0);
+/** Reused three-feature substrate vector for the live petri population. */
+const LEARN_INPUTS = new Float64Array(3);
+
+/**
+ * One EXACT reverse-mode-AD (Eshkol tape) gradient-ASCENT step on a biologic's fitness
+ *   F(θ) = Σ θ_k·x_k − ½·reg·Σ θ_k²
+ * — a linear reward for exploiting substrate inputs `x`, with L2 regularisation so θ converges to
+ * x/reg rather than diverging. The gradient ∂F/∂θ_k = x_k − reg·θ_k is READ off the tape (not
+ * hand-coded), so this is a genuine consumption of the AD engine by the base digital-life population.
+ * Steps `weights` in place and returns the achieved F BEFORE the step (so a caller that loops sees F
+ * climb monotonically to the plateau F* = ½‖x‖²/reg). Deterministic — exact AD, no rng. See
+ * tests/biologic-learning.test.ts for the monotone-climb + ablation gate.
+ */
+export function biologicLearnStep(
+  weights: number[],
+  inputs: ArrayLike<number>,
+  lr = 0.05,
+  reg = 1,
+): number {
+  const tape = LEARN_TAPE;
+  adTapeReset(tape);
+  const n = weights.length;
+  if (LEARN_THETA_NODES.length < n) LEARN_THETA_NODES.length = n;
+  const halfReg = adConst(tape, 0.5 * reg);
+  let f = adConst(tape, 0);
+  for (let k = 0; k < n; k++) {
+    const th = adVar(tape, weights[k] ?? 0);
+    LEARN_THETA_NODES[k] = th;
+    const reward = adMul(tape, th, adConst(tape, inputs[k] ?? 0)); // θ_k·x_k
+    const penalty = adMul(tape, halfReg, adMul(tape, th, th)); // ½·reg·θ_k²
+    f = adAdd(tape, f, adSub(tape, reward, penalty));
+  }
+  adBackward(tape, f);
+  const fValue = adValue(tape, f);
+  for (let k = 0; k < n; k++) {
+    weights[k] = (weights[k] ?? 0) + lr * adGradient(tape, LEARN_THETA_NODES[k]!);
+  }
+  return fValue;
+}
 const WORKSPACE_SUBSTRATE = new Float32Array(3);
 
 /** Digital biologic forms from the depth-classed Tsotchke corpus - different substrates yield different life. */
@@ -82,6 +139,9 @@ export interface Biologic {
   alive: boolean;
   generation: number;
   speciation: number; // Genetic distance from primordial
+  /** Heritable weights the biologic hill-climbs by exact Eshkol-AD gradient ascent to exploit its
+   *  substrate ({@link biologicLearnStep}); optional so existing literals/stubs stay valid. */
+  fitnessWeights?: number[];
 }
 
 /** Grow a new biologic form from the depth-classed Tsotchke corpus. */
@@ -132,6 +192,7 @@ export function birthBiologic(archon: number, tick: number): Biologic {
     alive: true,
     generation: 0,
     speciation: 0,
+    fitnessWeights: [0.4, 0.4, 0.4], // learned by AD gradient ascent to exploit spin/qgt/quake substrate
   };
 }
 
@@ -142,11 +203,25 @@ export function fullCorpusSentience(archon: number, flux: number): number {
   return (archon % 5) * 0.1 + flux * 0.4;
 }
 
-export function stepBiologic(b: Biologic, flux: number): void {
+export function stepBiologic(b: Biologic, flux: number, learn = false): void {
   // Substrate-specific evolution based on form
   const formMultiplier = b.form.includes('HYPER') ? 1.15 : 1.0;
 
-  b.adFitness = Math.min(2, b.adFitness * 0.99 + flux * 0.02 * formMultiplier);
+  // ADAPTIVE (opt-in via `learn`, on in the live petri loop): the biologic hill-climbs its heritable
+  // `fitnessWeights` by EXACT Eshkol reverse-mode AD to better exploit its substrate (spin/qgt/quake),
+  // and that learned fitness AMPLIFIES its flux-exploitation (up to ~2×). A better learner grows fitter
+  // and — via the petri truncation-selection GA — out-survives the pack. Bounded (learnGain ∈ [0,1]) so
+  // adFitness stays in range; `learn=false` zeroes the gain ⇒ the exact prior EMA (golden-safe). The
+  // capability + its gradient's load-bearing role are proven headlessly in tests/biologic-learning.test.ts.
+  let learnGain = 0;
+  if (learn && b.fitnessWeights) {
+    LEARN_INPUTS[0] = b.spinOrder;
+    LEARN_INPUTS[1] = b.qgtCurvature;
+    LEARN_INPUTS[2] = b.quakeAliveness;
+    const f = biologicLearnStep(b.fitnessWeights, LEARN_INPUTS, 0.05, 1);
+    learnGain = clamp01(f * 0.5);
+  }
+  b.adFitness = Math.min(2, b.adFitness * 0.99 + flux * 0.02 * formMultiplier * (1 + learnGain));
   b.gwtIgnition = Math.min(1, b.gwtIgnition * 0.97 + (flux > 0.5 ? 0.04 : 0) * formMultiplier);
   b.spinOrder = Math.min(
     1,

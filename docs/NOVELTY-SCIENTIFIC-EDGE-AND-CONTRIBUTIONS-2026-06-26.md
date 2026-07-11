@@ -88,7 +88,9 @@ It is **not** a world-first on any single component, nor a refutation of mainstr
 **If it succeeds at specific measurable things:**
 
 - Showing that libirrep symmetry + QGT curvature + GWT ignition together produce qualitatively more robust or interesting collective behaviors than neural-only or rule-only baselines.
-- Demonstrating that real Eshkol programs as mutable DNA + corpus catalysis leads to open-ended evolution of more complex "minds" or strategies than hand-designed genomes.
+- Demonstrating sustained novelty beyond the fixed 26-form catalog and increasingly complex strategies
+  would be required before claiming open-ended evolution; the current bounded generator and selection
+  controls do not establish it.
 - Providing a clean testbed for computational versions of "what minimal mathematical structures are sufficient for certain signatures of integration or broadcasting?"
 
 These would be incremental but genuine contributions to alife, computational cognitive science, and the "substrates for life-like computation" conversation.

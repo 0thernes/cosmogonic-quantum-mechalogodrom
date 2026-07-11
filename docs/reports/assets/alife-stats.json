@@ -4,10 +4,10 @@
   "nSystems": 113,
   "nPeers": 112,
   "cosmogonic": {
-    "breadthMean": 3.71,
+    "breadthMean": 3.76,
     "breadthRank": 1,
-    "zScorePopulation": 2.88,
-    "zScoreVsPeers": 3.01,
+    "zScorePopulation": 2.95,
+    "zScoreVsPeers": 3.09,
     "percentile": 100,
     "peerMaturity": 1.5
   },
@@ -18,7 +18,7 @@
     "breadthStdPeers": 0.54,
     "medianBreadth": 2.11,
     "medianPeerMaturity": 3.5,
-    "corrBreadthVsMaturity": -0.11
+    "corrBreadthVsMaturity": -0.112
   },
   "perAxis": [
     {
@@ -50,8 +50,8 @@
       "mean": 2.62,
       "std": 1.28,
       "max": 5,
-      "cosmo": 2.2,
-      "cosmoZ": -0.33,
+      "cosmo": 2.4,
+      "cosmoZ": -0.17,
       "leaders": [
         "Picbreeder",
         "POET",
@@ -105,10 +105,10 @@
     {
       "axis": "Cognition/Learning",
       "mean": 1.9,
-      "std": 1.59,
+      "std": 1.6,
       "max": 5,
-      "cosmo": 3.9,
-      "cosmoZ": 1.26,
+      "cosmo": 4.1,
+      "cosmoZ": 1.38,
       "leaders": [
         "DERL (Deep Evolutionary Reinforcement Learning)",
         "UNIMAL (Universal Animal design space)",
@@ -185,52 +185,52 @@
     {
       "name": "ALIEN",
       "full": "ALIEN",
-      "d": 4.48
+      "d": 4.45
     },
     {
       "name": "Creatures",
       "full": "Creatures",
-      "d": 4.93
+      "d": 4.86
     },
     {
       "name": "Framsticks",
       "full": "Framsticks",
-      "d": 5.33
+      "d": 5.3
     },
     {
       "name": "Division Blocks",
       "full": "Division Blocks",
-      "d": 5.36
+      "d": 5.37
     },
     {
       "name": "biosim4",
       "full": "biosim4",
-      "d": 5.52
-    },
-    {
-      "name": "Karl Sims VC",
-      "full": "Karl Sims Evolved Virtual Creatures",
-      "d": 5.61
-    },
-    {
-      "name": "Species: Artificial Life, Real Evolution",
-      "full": "Species: Artificial Life, Real Evolution",
-      "d": 5.63
+      "d": 5.54
     },
     {
       "name": "The Bibites",
       "full": "The Bibites",
-      "d": 5.63
+      "d": 5.61
+    },
+    {
+      "name": "Karl Sims VC",
+      "full": "Karl Sims Evolved Virtual Creatures",
+      "d": 5.62
+    },
+    {
+      "name": "Species: Artificial Life, Real Evolution",
+      "full": "Species: Artificial Life, Real Evolution",
+      "d": 5.68
     },
     {
       "name": "Neural Graph Evolution (NGE)",
       "full": "Neural Graph Evolution (NGE)",
-      "d": 5.72
+      "d": 5.7
     },
     {
-      "name": "OpenWorm",
-      "full": "OpenWorm",
-      "d": 5.77
+      "name": "DERL (Deep Evolutionary Reinforcement Learning)",
+      "full": "DERL (Deep Evolutionary Reinforcement Learning)",
+      "d": 5.75
     }
   ]
 }

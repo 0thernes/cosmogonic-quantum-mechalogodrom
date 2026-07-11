@@ -102,7 +102,7 @@ describe('receipts law — every published test count matches the canonical (mea
     const measured = measureGate(
       `All files | ${CANONICAL_FUNC_COV} | ${CANONICAL_LINE_COV} |\n` +
         ` ${CANONICAL_TEST_COUNT} pass\n 0 fail\n` +
-        `Ran ${CANONICAL_TEST_COUNT} tests across 257 files.`,
+        `Ran ${CANONICAL_TEST_COUNT} tests across 281 files.`,
     );
     expect(receiptProblems(measured)).toEqual([]);
     expect(receiptProblems({ ...measured, count: CANONICAL_TEST_COUNT - 1 })).toContain(
@@ -155,5 +155,16 @@ describe('receipts law — historical snapshots remain immutable', () => {
     expect(blocks[0]).toContain('v0.21.11 (2026-07-07 public-doc truth repair)');
     expect(blocks[0]).toContain('2,360-test');
     expect(blocks[0]).toContain('Package **v0.21.11**');
+
+    const brain = await Bun.file(
+      'docs/BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md',
+    ).text();
+    const brainHistorical = brain.match(HISTORICAL_SECTION_RE) ?? [];
+    expect(brainHistorical).toHaveLength(3);
+    expect(brainHistorical.join('\n')).toContain('Version under review:** `v0.21.9`');
+    expect(brainHistorical.join('\n')).toContain('2,867,279');
+    expect(currentClaimsOnly(brain)).toContain(
+      `**${CANONICAL_TEST_COUNT.toLocaleString('en-US')}** pass / **0** fail`,
+    );
   });
 });

@@ -185,6 +185,28 @@ export function createPetriDish(seed: number): PetriDishState {
   };
 }
 
+/**
+ * Truncation selection at the ring cap: remove the LEAST-fit biologic (argmin `consciousness`, falling
+ * back to `vitality` for thin stubs) rather than the OLDEST (FIFO). This turns the ≤64 ring into a real
+ * differential-survival GA — an unfit strain is preferentially culled and a just-born strain must EARN
+ * its slot against the pack — instead of a birth/decay queue where fitness never gated survival.
+ * Deterministic argmin (no rng), in-place. Exported so the fitness advantage is directly gate-measured.
+ */
+export function evictLeastFit(biologics: { consciousness?: number; vitality?: number }[]): void {
+  if (biologics.length === 0) return;
+  let worst = 0;
+  let worstFit = Infinity;
+  for (let i = 0; i < biologics.length; i++) {
+    const b = biologics[i]!;
+    const fit = b.consciousness ?? b.vitality ?? 0;
+    if (fit < worstFit) {
+      worstFit = fit;
+      worst = i;
+    }
+  }
+  biologics.splice(worst, 1);
+}
+
 /** One simulation beat — nutrients diffuse, workspace broadcasts, colony grows. O(n), n=8. */
 export function petriDishBeat(
   state: PetriDishState,
@@ -400,7 +422,7 @@ export function petriDishBeat(
       ...born,
       vitality: Math.min(1, born.consciousness * 0.6 + bioFlux * 0.4),
     });
-    if (state.biologics.length > 64) state.biologics.shift();
+    if (state.biologics.length > 64) evictLeastFit(state.biologics);
   }
 
   // Evolve full birthBiologic records each beat (substrate metrics + death).
@@ -409,7 +431,7 @@ export function petriDishBeat(
     const b = state.biologics[bi]!;
     if (typeof b.adFitness !== 'number') continue; // not a full Biologic
     if (b.alive === false) continue;
-    stepBiologic(b as Biologic, bioFlux);
+    stepBiologic(b as Biologic, bioFlux, true); // learn=true: the live population adapts by Eshkol-AD gradient ascent
     // Decaying blend, NOT a hard re-mirror to consciousness. Vitality is already born as a
     // consciousness/bioFlux blend (line ~402), so it doesn't need re-pinning every beat — and a hard
     // `= consciousness` overwrite ERASED applyBrutalRelease's consume/drain/rebirth perturbation the

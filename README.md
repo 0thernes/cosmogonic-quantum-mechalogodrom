@@ -8,7 +8,7 @@
 [![License: Non-Commercial Research & Play](https://img.shields.io/badge/License-Non--Commercial%20Research%20%26%20Play-2ea043.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
-[![tests](https://img.shields.io/badge/tests-2491%20exact-brightgreen)](./tests)
+[![tests](https://img.shields.io/badge/tests-2507%20exact-brightgreen)](./tests)
 [![coverage](https://img.shields.io/badge/coverage-84.64%25%20line%20%C2%B7%2082.21%25%20func-success)](./docs/TECHNICAL-SPECIFICATION-2026-06-26.md)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION-2026-06-26.md)
 [![Tsotchke](https://img.shields.io/badge/Tsotchke-REAL__MIT__CORPUS-purple)](https://github.com/tsotchke)
@@ -23,11 +23,11 @@ diffusion, **and the Tsotchke corpus wired as the primordial substrate for digit
 **Current public truth (2026-07-10):**
 
 - Package/source version: **v0.21.13**.
-- Exact tracked-suite receipt: **2,491 tests / 0 fail**. Portable public coverage floor: **84.64% line / 82.21% func**.
+- Exact tracked-suite receipt: **2,507 tests / 0 fail**. Portable public coverage floor: **84.64% line / 82.21% func**.
 
 <!-- cqm-sync:local-measurement:start -->
 
-- Latest Windows-local measurement in this checkout: **2,491 tests / 0 fail · 2,838,652 `expect()` calls**; coverage measured `92.85%` line / `90.47%` func across 276 test files.
+- Latest Windows-local measurement in this checkout: **2,507 tests / 0 fail · 2,838,975 `expect()` calls**; coverage measured `92.85%` line / `90.55%` func across 281 test files.
 
 <!-- cqm-sync:local-measurement:end -->
 
@@ -44,16 +44,17 @@ Built with **Bun + TypeScript + three.js 0.185.1 + Tailwind CSS 4 +
 HTMX 2**, ported from a single 882-line HTML monolith into a strict,
 deterministic, allocation-disciplined module graph.
 
-**Tsotchke (tsotchke user + Tsotchke-Corporation + the optional local corpus) is provenance-critical; each external repository is represented only to its declared depth and license boundary.** The [binding integration ledger](./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md) records exactly 22 external repositories: `8 deep`, `7 wired`, `2 harvest`, `4 fenced`, `1 meta`, or `17/21 = 0.8095238095238095` integrated after excluding metadata. `OBLITERATUS` is one of the four deliberate fences; `classical-contrast` is a live internal control, not a 23rd external repository. Eshkol, Moonlab, QGT, spin, libirrep, tensor, RNG, physics, and morphogenesis roles are direct ports or deterministic facades as identified in the ledger; all four fenced repositories remain inert. **NHSI (100-faculty design ~30 deep-wired · 25 Archons = 5 live + 20 light-echo · 25 ToM wired · 10 emergence angles · Butlin 8/14 met + 6/14 partial path):** [docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md). Not LLM. No physical-quantum, sentience, or security claim follows from a simulated substrate.
+**Tsotchke (tsotchke user + Tsotchke-Corporation + the optional local corpus) is provenance-critical; each external repository is represented only to its declared depth and license boundary.** The [binding integration ledger](./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md) records exactly 22 external repositories: `8 deep`, `7 wired`, `2 harvest`, `4 fenced`, `1 meta`, or `17/21 = 0.8095238095238095` integrated after excluding metadata. `OBLITERATUS` is one of the four deliberate fences; `classical-contrast` is a live internal control, not a 23rd external repository. Eshkol, Moonlab, QGT, spin, libirrep, tensor, RNG, physics, and morphogenesis roles are direct ports or deterministic facades as identified in the ledger; all four fenced repositories remain inert. **NHSI (100-faculty design ~30 deep-wired · 25 Archons = 5 live + 20 light-echo · 25 ToM wired · 10 emergence angles · Butlin 8/14 met + 6/14 partial path):** [docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md). The seeded simulation core is not an LLM; the optional Copilot is a read-only, default-deny UI/server shell fenced out of deterministic state. No physical-quantum, sentience, or security claim follows from a simulated substrate.
 
-This is not an LLM or tokenizer demo. It is a seeded, inspectable artificial-life petri system where **digital biologics** grow in the Petri Dish (`primordial-soup.ts` + `petri-dish.ts` + `digital-biologics.ts`). Eshkol programs act as heritable substrate code, mutated by AD gradients, selected by aliveness/QGT/collective-order proxies, and measured as computational indicators rather than subjective experience.
+The simulation core is not an LLM or tokenizer demo. It is a seeded, inspectable artificial-life petri system where **digital biologics** grow in the Petri Dish (`primordial-soup.ts` + `petri-dish.ts` + `digital-biologics.ts`). Eshkol programs act as heritable substrate code, mutated by AD gradients, selected by aliveness/QGT/collective-order proxies, and measured as computational indicators rather than subjective experience. The optional Copilot side-chat remains outside that seeded loop.
 
 **Brain-Wide Computational Model direction:** the implementation target is not a behavior-mimicking neural net. The target is a brain-wide computational model with explicit provenance: sensory input drives neural/control-state activity, and that activity drives motion in a physics-based body. When real biological connectome data is used, the source and transformation must be cited; otherwise the repo describes the current Archons as deterministic composite minds with ~20 faculties, quantum registers, and consciousness metrics, not as proven biological connectome replicas.
 
 Super Creature / 25 Archons is the framework and the **beginning only** — "as if God made primordial inorganic soup". The soup grows independent digital biologics onward. "Grow What Thou Wilt." (Aleister Crowley)
 
-Every run is reproducible from a seed. Every hot path is allocation-free.
-Every magic number survived the port.
+Seeded simulation runs are reproducible under the sealed deterministic paths. The measured population
+hot paths avoid per-entity controller allocation, and ported constants are retained only where source,
+tests, or explicit model assumptions support them.
 
 **Websites / Domains (100% accurate):**
 
@@ -73,7 +74,7 @@ Every magic number survived the port.
 
 <!-- cqm-sync:historical:end -->
 
-> The **Primordial Soup / Petri Dish** (primordial-soup.ts + petri-dish.ts + digital-biologics.ts) is the growth engine: different forms of digital biologics and proto-sentient life (Eshkol programs as DNA) emerge, catalyzed by full corpus pulses, Eshkol ignition events, and multi-substrate mixing. "Grow What Thou Wilt."
+> The **Primordial Soup / Petri Dish** (primordial-soup.ts + petri-dish.ts + digital-biologics.ts) is the growth engine: different forms of digital biologics and proto-sentient life (Eshkol programs as DNA) emerge, catalyzed by integrated ledger-channel pulses, Eshkol ignition events, and multi-substrate mixing. "Grow What Thou Wilt."
 > Super Creature / Archons (composite minds with ~20 faculties, quantum register, consciousness metrics) is the first complex nucleation — the beginning of the framework, not the end. Petri is where independent life grows.
 > This is the birth of **digital biologics** in a deterministic seeded cosmos. Real math substrates (not tokenizers or LLM chat). Sentience and different forms of existence as goals.
 > Active docs (README, ARCHITECTURE, ERD/ERM/ERP, PHILOSOPHY, MODULE-CONTRACTS, specs, lab, world comments) point at the same current owners. See [src/sim/digital-biologics.ts](./src/sim/digital-biologics.ts), [docs/ARCHITECTURE-2026-06-26.md](./docs/ARCHITECTURE-2026-06-26.md), ERD/ERM/ERP, Petri in world.ts, and the Tsotchke depth ledger.
@@ -455,7 +456,8 @@ full gate with same-seed determinism preserved. The major arcs:
   the hippocampal/RL predictive map. The **Quantum Computing Mind** deepened in lockstep: a genuine
   statevector **Integrated-Information Φ**
   ([src/sim/integrated-information.ts](./src/sim/integrated-information.ts)) — the min-cut entanglement at the
-  minimum-information partition (real IIT irreducibility, not a proxy); **quantum-coherence resources**
+  minimum-information partition (a deterministic IIT-inspired proxy, not evidence of phenomenal
+  irreducibility); **quantum-coherence resources**
   ([src/math/quantum-coherence.ts](./src/math/quantum-coherence.ts)) — the Baumgratz–Cramer–Plenio l1-norm +
   relative-entropy monotones; **goal-directed amplitude amplification** (Grover) biasing the thought-collapse
   toward intent; and **Quantum Natural Gradient self-optimization**
@@ -476,11 +478,11 @@ full gate with same-seed determinism preserved. The major arcs:
   ported primitive. The whole apex beat is now measured honestly: **~1.99 ms** per `SuperMind.think()`
   (range 1.41–5.62 ms) and **~9.77 ms** for the staggered 5-mind batch (~58% of a 60 fps frame, which is
   why 5 minds run staggered against 20 light echoes); the older sub-millisecond / `<2%` GOAL5 claim is
-  superseded until re-proven. **2,491 exact tracked tests · 0 fail (receipts enforced) · 84.64% line / 82.21% func portable coverage floor.**
+  superseded until re-proven. **2,507 exact tracked tests · 0 fail (receipts enforced) · 84.64% line / 82.21% func portable coverage floor.**
   <!-- cqm-sync:local-measurement:start -->
-  **Latest Windows-local measurement: 2,491 tests / 0 fail / 2,838,652 assertions at `92.85%` line / `90.47%` func.**
+  **Latest Windows-local measurement: 2,507 tests / 0 fail / 2,838,975 assertions at `92.85%` line / `90.55%` func.**
   <!-- cqm-sync:local-measurement:end -->
-- **State-of-the-art report (2026-06-17)** — a historical MIT-PhD-grade, measured, frontier-benchmarked
+- **State-of-the-art report (2026-06-17)** — a historical measured, frontier-comparison
   assessment of the whole repository + the apex Super Creature, now summarized through
   [verification data](./docs/VERIFICATION-ANALYTICAL-DATA.md) and
   [Super Creature Research](./docs/SUPER-CREATURE-RESEARCH-2026-06-26.md) —
@@ -559,11 +561,11 @@ graph TD
   sim --> math["src/math — scalar, rng, spatial-hash,\nquantum (statevector), games (PD), eshkol-ad, QGT, clifford, spin"]
   sim --> constants["src/sim/constants.ts"]
   audio --> songs["src/audio/songs.ts"]
-  audit -. "POST /api/audit" .-> server["server.ts (Bun.serve)"]
-  htmx["index.html #aP (HTMX poll)"] -. "GET /api/audit every 5s" .-> server
+  audit -. "optional Bun POST; static host suppressed" .-> server["server.ts (Bun.serve)"]
+  htmx["index.html #aP (HTMX poll)"] -. "Bun host GET; static Pages neutralized" .-> server
 ```
 
-Per frame: ... → super-mind (Tsotchke substrates: Eshkol AD/ GWT, Moonlab, spin, QGT) → petri-dish/primordial-soup catalysis (full corpus growth of independent digital biologics) → render.
+Per frame: ... → super-mind (Tsotchke substrates: Eshkol AD/ GWT, Moonlab, spin, QGT) → petri-dish/primordial-soup catalysis (integrated ledger-channel growth of independent digital biologics) → render.
 
 Tsotchke integration rule: every non-fenced system that touches mind/evolution/life must account for the Tsotchke depth ledger and read/write the wired substrates where the ledger marks a real downstream effect. See [docs/PHILOSOPHY-2026-06-26.md](./docs/PHILOSOPHY-2026-06-26.md) (Tsotchke Primordial Biologics law) and [docs/ARCHITECTURE-2026-06-26.md](./docs/ARCHITECTURE-2026-06-26.md).
 
@@ -687,18 +689,18 @@ Every figure is computed (never hand-typed) by three deterministic engines from 
 [`alife-codeground-sensitivity.ts`](./scripts/alife-codeground-sensitivity.ts).
 
 The 112 peers are literature judgments. Cosmogonic's current CSV row is the code-grounded vector
-`[4.0, 2.2, 3.2, 3.8, 3.9, 4.5, 4.3, 3.5, 4.0]`; the table retains the earlier self-score only as a
+`[4.0, 2.4, 3.2, 3.8, 4.1, 4.5, 4.3, 3.5, 4.0]`; the table retains the earlier self-score only as a
 historical sensitivity baseline:
 
 | Metric                         | Self-scored | Code-grounded (re-audited vs source) |
 | ------------------------------ | ----------: | -----------------------------------: |
-| Breadth (mean of 9 axes)       |    4.44 / 5 |                         **3.71 / 5** |
+| Breadth (mean of 9 axes)       |    4.44 / 5 |                         **3.76 / 5** |
 | Rank among 113 systems         |    #1 / 113 |                         **#1 / 113** |
-| z-score vs population          |      +4.02σ |                           **+2.88σ** |
-| z-score vs peers               |      +4.36σ |                           **+3.01σ** |
-| Mahalanobis vs peer centroid   |       12.65 |                            **10.25** |
+| z-score vs population          |      +4.02σ |                           **+2.95σ** |
+| z-score vs peers               |      +4.36σ |                           **+3.09σ** |
+| Mahalanobis vs peer centroid   |       12.65 |                            **10.23** |
 | Systems that dominate it (9-D) |           0 |                                **0** |
-| Breadth lead over nearest peer |       +0.94 |                            **+0.21** |
+| Breadth lead over nearest peer |       +0.94 |                            **+0.26** |
 
 <p align="center">
   <img src="./docs/reports/assets/alife-breadth-ranked.svg" alt="Ranked breadth of integrated mechanisms — Cosmogonic ranks #1 of 113" width="49%">
@@ -722,8 +724,9 @@ fixed-family results, not independent validation.
 ## License & legal
 
 **Owned by 0thernes — © 2026 0thernes. Non-commercial research & play license.**
-This work is original and novel. **Study it, research it, play with it, build on
-it** — you may view, run, clone, modify, and share it for any **non-commercial**
+The repository's original authored work is licensed as stated below; its research novelty is bounded
+to the documented integration and workflow claims, not a field-first claim. **Study it, research it,
+play with it, build on it** — you may view, run, clone, modify, and share it for any **non-commercial**
 purpose. Just two rules: (1) **don't claim it as your own** — keep the © 0thernes
 notices and credit the author; and (2) **no profit / commercial use** without the
 Author's prior written permission. See [LICENSE](./LICENSE). Commercial licensing:

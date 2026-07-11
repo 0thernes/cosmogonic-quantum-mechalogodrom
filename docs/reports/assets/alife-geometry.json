@@ -3,12 +3,12 @@
   "note": "extended multivariate geometry; companion to alife-stats.json. deterministic.",
   "pca": {
     "explainedVariance": [
-      0.2497,
-      0.2177,
-      0.1601,
-      0.1377,
-      0.1012,
-      0.056,
+      0.2512,
+      0.2171,
+      0.1593,
+      0.1376,
+      0.1011,
+      0.0559,
       0.0437,
       0.0211,
       0.0129
@@ -17,73 +17,73 @@
       "pc1": [
         {
           "axis": "Substrate pluralism",
-          "w": 0.568
+          "w": 0.562
         },
         {
           "axis": "Consciousness-theory",
-          "w": 0.538
+          "w": 0.533
         },
         {
           "axis": "Cognition/Learning",
-          "w": 0.356
+          "w": 0.369
         },
         {
           "axis": "Morphology/Physics",
-          "w": 0.336
-        },
-        {
-          "axis": "Visual scale",
-          "w": 0.211
+          "w": 0.327
         },
         {
           "axis": "Open-endedness",
-          "w": 0.203
+          "w": 0.222
+        },
+        {
+          "axis": "Visual scale",
+          "w": 0.198
         },
         {
           "axis": "Instrumentation",
-          "w": 0.169
+          "w": 0.177
         },
         {
           "axis": "Reproduction",
-          "w": 0.159
+          "w": 0.168
         },
         {
           "axis": "Ecology",
-          "w": 0.092
+          "w": 0.093
         }
       ],
       "pc2": [
         {
           "axis": "Visual scale",
-          "w": 0.494
+          "w": 0.505
         },
         {
           "axis": "Open-endedness",
-          "w": -0.466
-        },
-        {
-          "axis": "Cognition/Learning",
-          "w": -0.377
+          "w": -0.454
         },
         {
           "axis": "Reproduction",
-          "w": -0.374
+          "w": -0.368
+        },
+        {
+          "axis": "Cognition/Learning",
+          "w": -0.361
         },
         {
           "axis": "Instrumentation",
-          "w": -0.359
+          "w": -0.356
         },
         {
           "axis": "Morphology/Physics",
-          "w": 0.285
+          "w": 0.303
         },
         {
           "axis": "Substrate pluralism",
-          "w": 0.15
+          "w": 0.163
         },
         {
           "axis": "Consciousness-theory",
-          "w": 0.132
+          "w": 0.142
         },
         {
           "axis": "Ecology",
@@ -94,680 +94,680 @@
     "scores": [
       {
         "name": "COSMOGONIC",
-        "pc1": 10.802,
-        "pc2": 2.053,
+        "pc1": 10.79,
+        "pc2": 2.188,
         "cosmo": true
       },
       {
         "name": "Game of Life",
-        "pc1": -0.617,
-        "pc2": 0.142,
+        "pc1": -0.63,
+        "pc2": 0.115,
         "cosmo": false
       },
       {
         "name": "Boids",
-        "pc1": -0.941,
-        "pc2": 1.368,
+        "pc1": -0.992,
+        "pc2": 1.321,
         "cosmo": false
       },
       {
         "name": "Biomorphs",
-        "pc1": -0.799,
-        "pc2": 1.006,
+        "pc1": -0.828,
+        "pc2": 0.986,
         "cosmo": false
       },
       {
         "name": "Core War",
-        "pc1": -1.025,
-        "pc2": -1.504,
+        "pc1": -0.985,
+        "pc2": -1.553,
         "cosmo": false
       },
       {
         "name": "Tierra",
-        "pc1": -0.888,
-        "pc2": -1.962,
+        "pc1": -0.831,
+        "pc2": -2.004,
         "cosmo": false
       },
       {
         "name": "Avida",
-        "pc1": -0.359,
-        "pc2": -2.062,
+        "pc1": -0.302,
+        "pc2": -2.086,
         "cosmo": false
       },
       {
         "name": "Polyworld",
-        "pc1": 1.443,
-        "pc2": -0.713,
+        "pc1": 1.469,
+        "pc2": -0.658,
         "cosmo": false
       },
       {
         "name": "Framsticks",
-        "pc1": 1.951,
-        "pc2": -0.409,
+        "pc1": 1.965,
+        "pc2": -0.326,
         "cosmo": false
       },
       {
         "name": "Karl Sims VC",
-        "pc1": 1.102,
-        "pc2": 0.668,
+        "pc1": 1.087,
+        "pc2": 0.732,
         "cosmo": false
       },
       {
         "name": "Creatures",
-        "pc1": 3.924,
-        "pc2": 0.453,
+        "pc1": 3.913,
+        "pc2": 0.573,
         "cosmo": false
       },
       {
         "name": "Darwin Pond",
-        "pc1": 0.418,
-        "pc2": 0.256,
+        "pc1": 0.417,
+        "pc2": 0.288,
         "cosmo": false
       },
       {
         "name": "Gene Pool",
-        "pc1": 0.771,
-        "pc2": 0.192,
+        "pc1": 0.769,
+        "pc2": 0.236,
         "cosmo": false
       },
       {
         "name": "Sugarscape",
-        "pc1": -0.206,
-        "pc2": -1.395,
+        "pc1": -0.171,
+        "pc2": -1.414,
         "cosmo": false
       },
       {
         "name": "Echo",
-        "pc1": -0.533,
-        "pc2": -1.628,
+        "pc1": -0.489,
+        "pc2": -1.656,
         "cosmo": false
       },
       {
         "name": "Swarm",
-        "pc1": -0.381,
-        "pc2": -1.004,
+        "pc1": -0.355,
+        "pc2": -1.028,
         "cosmo": false
       },
       {
         "name": "breve",
-        "pc1": 0.738,
-        "pc2": 0.569,
+        "pc1": 0.722,
+        "pc2": 0.609,
         "cosmo": false
       },
       {
         "name": "Picbreeder",
-        "pc1": 0.992,
-        "pc2": 0.007,
+        "pc1": 1.004,
+        "pc2": 0.068,
         "cosmo": false
       },
       {
         "name": "MABE",
-        "pc1": 0.426,
-        "pc2": -2.132,
+        "pc1": 0.488,
+        "pc2": -2.114,
         "cosmo": false
       },
       {
         "name": "Lenia",
-        "pc1": -0.111,
-        "pc2": 1.908,
+        "pc1": -0.161,
+        "pc2": 1.921,
         "cosmo": false
       },
       {
         "name": "Growing NCA",
-        "pc1": 0.703,
-        "pc2": 1.393,
+        "pc1": 0.66,
+        "pc2": 1.422,
         "cosmo": false
       },
       {
         "name": "OpenWorm",
-        "pc1": 4.341,
-        "pc2": 2.202,
+        "pc1": 4.255,
+        "pc2": 2.307,
         "cosmo": false
       },
       {
         "name": "POET",
-        "pc1": 0.375,
-        "pc2": -1.816,
+        "pc1": 0.439,
+        "pc2": -1.792,
         "cosmo": false
       },
       {
         "name": "EvoGym",
-        "pc1": 0.661,
-        "pc2": -0.051,
+        "pc1": 0.657,
+        "pc2": -0.017,
         "cosmo": false
       },
       {
         "name": "ALIEN",
-        "pc1": 4.689,
-        "pc2": 1.043,
+        "pc1": 4.654,
+        "pc2": 1.189,
         "cosmo": false
       },
       {
         "name": "ASAL",
-        "pc1": 1.989,
-        "pc2": -0.209,
+        "pc1": 2.003,
+        "pc2": -0.136,
         "cosmo": false
       },
       {
         "name": "Wireworld",
-        "pc1": -2.113,
-        "pc2": 1.277,
+        "pc1": -2.151,
+        "pc2": 1.194,
         "cosmo": false
       },
       {
         "name": "Langton's Ant",
-        "pc1": -2.113,
-        "pc2": 1.277,
+        "pc1": -2.151,
+        "pc2": 1.194,
         "cosmo": false
       },
       {
         "name": "Langton's Loops",
-        "pc1": -1.497,
-        "pc2": 0.793,
+        "pc1": -1.526,
+        "pc2": 0.732,
         "cosmo": false
       },
       {
         "name": "von Neumann Universal Constructor",
-        "pc1": -1.757,
-        "pc2": 0.412,
+        "pc1": -1.767,
+        "pc2": 0.347,
         "cosmo": false
       },
       {
         "name": "Rule 110",
-        "pc1": -2.113,
-        "pc2": 1.277,
+        "pc1": -2.151,
+        "pc2": 1.194,
         "cosmo": false
       },
       {
         "name": "SmoothLife",
-        "pc1": -0.822,
-        "pc2": 2.02,
+        "pc1": -0.878,
+        "pc2": 2.001,
         "cosmo": false
       },
       {
         "name": "Larger than Life",
-        "pc1": -0.822,
-        "pc2": 2.02,
+        "pc1": -0.878,
+        "pc2": 2.001,
         "cosmo": false
       },
       {
         "name": "Flow Lenia",
-        "pc1": 0.495,
-        "pc2": 0.976,
+        "pc1": 0.474,
+        "pc2": 1.011,
         "cosmo": false
       },
       {
         "name": "Particle Lenia",
-        "pc1": -0.246,
-        "pc2": 1.676,
+        "pc1": -0.291,
+        "pc2": 1.679,
         "cosmo": false
       },
       {
         "name": "Primordial Particle Systems",
-        "pc1": -0.339,
-        "pc2": 1.12,
+        "pc1": -0.376,
+        "pc2": 1.11,
         "cosmo": false
       },
       {
         "name": "Gray-Scott Reaction-Diffusion",
-        "pc1": -0.813,
-        "pc2": 2.029,
+        "pc1": -0.877,
+        "pc2": 2.004,
         "cosmo": false
       },
       {
         "name": "Aevol",
-        "pc1": -0.865,
-        "pc2": -1.335,
+        "pc1": -0.84,
+        "pc2": -1.384,
         "cosmo": false
       },
       {
         "name": "Avida-ED",
-        "pc1": -0.389,
-        "pc2": -1.385,
+        "pc1": -0.36,
+        "pc2": -1.415,
         "cosmo": false
       },
       {
         "name": "Nanopond",
-        "pc1": -1.14,
-        "pc2": -0.696,
+        "pc1": -1.121,
+        "pc2": -0.746,
         "cosmo": false
       },
       {
         "name": "Physis",
-        "pc1": -1.298,
-        "pc2": -0.423,
+        "pc1": -1.285,
+        "pc2": -0.475,
         "cosmo": false
       },
       {
         "name": "Cosmos",
-        "pc1": -1.065,
-        "pc2": -0.836,
+        "pc1": -1.044,
+        "pc2": -0.885,
         "cosmo": false
       },
       {
         "name": "Geb",
-        "pc1": 0.58,
-        "pc2": -2.749,
+        "pc1": 0.666,
+        "pc2": -2.726,
         "cosmo": false
       },
       {
         "name": "Amoeba",
-        "pc1": -1.065,
-        "pc2": -0.836,
+        "pc1": -1.044,
+        "pc2": -0.885,
         "cosmo": false
       },
       {
         "name": "Evolve 4.0",
-        "pc1": 0.027,
-        "pc2": -0.417,
+        "pc1": 0.044,
+        "pc2": -0.408,
         "cosmo": false
       },
       {
         "name": "Squirm3",
-        "pc1": -0.498,
-        "pc2": 0.534,
+        "pc1": -0.52,
+        "pc2": 0.517,
         "cosmo": false
       },
       {
         "name": "Network Tierra",
-        "pc1": -0.907,
-        "pc2": -1.109,
+        "pc1": -0.88,
+        "pc2": -1.155,
         "cosmo": false
       },
       {
         "name": "biosim4",
-        "pc1": 0.26,
-        "pc2": -0.645,
+        "pc1": 0.276,
+        "pc2": -0.631,
         "cosmo": false
       },
       {
         "name": "GOLEM (Genetically Organized Lifelike Electro Mechanics)",
-        "pc1": 0.219,
-        "pc2": 0.523,
+        "pc1": 0.203,
+        "pc2": 0.548,
         "cosmo": false
       },
       {
         "name": "Voxelyze / VoxCAD",
-        "pc1": -0.492,
-        "pc2": 1.648,
+        "pc1": -0.548,
+        "pc2": 1.637,
         "cosmo": false
       },
       {
         "name": "3D Virtual Creature Evolution (3DVCE)",
-        "pc1": 0.685,
-        "pc2": 0.649,
+        "pc1": 0.673,
+        "pc2": 0.7,
         "cosmo": false
       },
       {
         "name": "DERL (Deep Evolutionary Reinforcement Learning)",
-        "pc1": 1.281,
-        "pc2": -0.962,
+        "pc1": 1.311,
+        "pc2": -0.895,
         "cosmo": false
       },
       {
         "name": "UNIMAL (Universal Animal design space)",
-        "pc1": 1.189,
-        "pc2": -0.748,
+        "pc1": 1.215,
+        "pc2": -0.684,
         "cosmo": false
       },
       {
         "name": "Evolving Soft Robots (Cheney / Unshackling Evolution)",
-        "pc1": 0.405,
-        "pc2": 0.77,
+        "pc1": 0.384,
+        "pc2": 0.803,
         "cosmo": false
       },
       {
         "name": "RoboGrammar",
-        "pc1": 0.652,
-        "pc2": -0.061,
+        "pc1": 0.656,
+        "pc2": -0.02,
         "cosmo": false
       },
       {
         "name": "Transform2Act",
-        "pc1": 0.636,
-        "pc2": -0.998,
+        "pc1": 0.671,
+        "pc2": -0.958,
         "cosmo": false
       },
       {
         "name": "NerveNet",
-        "pc1": -0.155,
-        "pc2": 0.197,
+        "pc1": -0.161,
+        "pc2": 0.2,
         "cosmo": false
       },
       {
         "name": "Neural Graph Evolution (NGE)",
-        "pc1": 0.688,
-        "pc2": -0.544,
+        "pc1": 0.709,
+        "pc2": -0.501,
         "cosmo": false
       },
       {
         "name": "Krcah Evolved Virtual Creatures (ERO)",
-        "pc1": -0.083,
-        "pc2": 0.645,
+        "pc1": -0.101,
+        "pc2": 0.657,
         "cosmo": false
       },
       {
         "name": "NEAT (NeuroEvolution of Augmenting Topologies)",
-        "pc1": -0.029,
-        "pc2": -2.491,
+        "pc1": 0.042,
+        "pc2": -2.493,
         "cosmo": false
       },
       {
         "name": "HyperNEAT",
-        "pc1": 0.357,
-        "pc2": -1.888,
+        "pc1": 0.412,
+        "pc2": -1.869,
         "cosmo": false
       },
       {
         "name": "ES-HyperNEAT",
-        "pc1": 0.191,
-        "pc2": -1.534,
+        "pc1": 0.238,
+        "pc2": -1.518,
         "cosmo": false
       },
       {
         "name": "Novelty Search",
-        "pc1": 0.174,
-        "pc2": -2.593,
+        "pc1": 0.257,
+        "pc2": -2.58,
         "cosmo": false
       },
       {
         "name": "MAP-Elites",
-        "pc1": 0.57,
-        "pc2": -1.981,
+        "pc1": 0.628,
+        "pc2": -1.953,
         "cosmo": false
       },
       {
         "name": "Quality-Diversity (illumination algorithms)",
-        "pc1": 0.57,
-        "pc2": -1.981,
+        "pc1": 0.628,
+        "pc2": -1.953,
         "cosmo": false
       },
       {
         "name": "Go-Explore",
-        "pc1": 0.176,
-        "pc2": -0.6,
+        "pc1": 0.198,
+        "pc2": -0.584,
         "cosmo": false
       },
       {
         "name": "OMNI (Open-endedness via Models of human Notions of Interestingness)",
-        "pc1": 0.375,
-        "pc2": -1.816,
+        "pc1": 0.439,
+        "pc2": -1.792,
         "cosmo": false
       },
       {
         "name": "Minimal Criterion Coevolution (MCC)",
-        "pc1": 0.326,
-        "pc2": -1.927,
+        "pc1": 0.391,
+        "pc2": -1.907,
         "cosmo": false
       },
       {
         "name": "Innovation Engines",
-        "pc1": 0.199,
-        "pc2": -0.755,
+        "pc1": 0.231,
+        "pc2": -0.735,
         "cosmo": false
       },
       {
         "name": "EndlessForms",
-        "pc1": 0.058,
-        "pc2": 0.357,
+        "pc1": 0.056,
+        "pc2": 0.375,
         "cosmo": false
       },
       {
         "name": "NetLogo",
-        "pc1": -0.644,
-        "pc2": 0.132,
+        "pc1": -0.663,
+        "pc2": 0.092,
         "cosmo": false
       },
       {
         "name": "MASON",
-        "pc1": -0.218,
-        "pc2": 0.067,
+        "pc1": -0.234,
+        "pc2": 0.048,
         "cosmo": false
       },
       {
         "name": "Repast",
-        "pc1": -0.421,
-        "pc2": -0.105,
+        "pc1": -0.431,
+        "pc2": -0.135,
         "cosmo": false
       },
       {
         "name": "StarLogo",
-        "pc1": -1.228,
-        "pc2": 0.467,
+        "pc1": -1.25,
+        "pc2": 0.411,
         "cosmo": false
       },
       {
         "name": "Ascape",
-        "pc1": -0.994,
-        "pc2": 0.054,
+        "pc1": -1.009,
+        "pc2": 0.001,
         "cosmo": false
       },
       {
         "name": "GAMA Platform",
-        "pc1": -0.034,
-        "pc2": 0.499,
+        "pc1": -0.061,
+        "pc2": 0.489,
         "cosmo": false
       },
       {
         "name": "Mesa",
-        "pc1": -0.644,
-        "pc2": 0.132,
+        "pc1": -0.663,
+        "pc2": 0.092,
         "cosmo": false
       },
       {
         "name": "OpenSteer",
-        "pc1": -0.964,
-        "pc2": 1.87,
+        "pc1": -1.021,
+        "pc2": 1.838,
         "cosmo": false
       },
       {
         "name": "Artificial Anasazi",
-        "pc1": -1.351,
-        "pc2": 0.499,
+        "pc1": -1.384,
+        "pc2": 0.43,
         "cosmo": false
       },
       {
         "name": "Schelling Segregation Model",
-        "pc1": -1.7,
-        "pc2": 1.281,
+        "pc1": -1.751,
+        "pc2": 1.202,
         "cosmo": false
       },
       {
         "name": "El Farol Bar Problem",
-        "pc1": -1.259,
-        "pc2": -0.396,
+        "pc1": -1.253,
+        "pc2": -0.455,
         "cosmo": false
       },
       {
         "name": "Spore",
-        "pc1": -0.312,
-        "pc2": 2.681,
+        "pc1": -0.383,
+        "pc2": 2.689,
         "cosmo": false
       },
       {
         "name": "SimLife: The Genetic Playground",
-        "pc1": -0.988,
-        "pc2": -0.03,
+        "pc1": -0.991,
+        "pc2": -0.073,
         "cosmo": false
       },
       {
         "name": "SimEarth: The Living Planet",
-        "pc1": -1.46,
-        "pc2": 0.695,
+        "pc1": -1.482,
+        "pc2": 0.634,
         "cosmo": false
       },
       {
         "name": "SimAnt: The Electric Ant Colony",
-        "pc1": -1.328,
-        "pc2": 0.761,
+        "pc1": -1.356,
+        "pc2": 0.702,
         "cosmo": false
       },
       {
         "name": "Thrive",
-        "pc1": -0.215,
-        "pc2": 1.088,
+        "pc1": -0.242,
+        "pc2": 1.091,
         "cosmo": false
       },
       {
         "name": "Cell Lab: Evolution Sandbox",
-        "pc1": -0.212,
+        "pc1": -0.256,
         "pc2": 1.432,
         "cosmo": false
       },
       {
         "name": "Species: Artificial Life, Real Evolution",
-        "pc1": 0.424,
-        "pc2": 0.01,
+        "pc1": 0.423,
+        "pc2": 0.033,
         "cosmo": false
       },
       {
         "name": "The Bibites",
-        "pc1": 0.484,
-        "pc2": -1.067,
+        "pc1": 0.516,
+        "pc2": -1.044,
         "cosmo": false
       },
       {
         "name": "The Powder Toy",
-        "pc1": -1.321,
-        "pc2": 2.225,
+        "pc1": -1.387,
+        "pc2": 2.183,
         "cosmo": false
       },
       {
         "name": "Noita",
-        "pc1": -0.851,
-        "pc2": 3.554,
+        "pc1": -0.951,
+        "pc2": 3.54,
         "cosmo": false
       },
       {
         "name": "The Life Engine",
-        "pc1": -0.845,
-        "pc2": 0.121,
+        "pc1": -0.848,
+        "pc2": 0.089,
         "cosmo": false
       },
       {
         "name": "Clusters (Particle Life)",
-        "pc1": -1.031,
-        "pc2": 2.788,
+        "pc1": -1.106,
+        "pc2": 2.761,
         "cosmo": false
       },
       {
         "name": "Sandspiel",
-        "pc1": -0.887,
-        "pc2": 3.028,
+        "pc1": -0.975,
+        "pc2": 3.007,
         "cosmo": false
       },
       {
         "name": "Sebastian Lague Ecosystem",
-        "pc1": -0.124,
-        "pc2": 0.963,
+        "pc1": -0.155,
+        "pc2": 0.964,
         "cosmo": false
       },
       {
         "name": "Pezzza's Ant Colony Simulation",
-        "pc1": -0.713,
-        "pc2": 2.242,
+        "pc1": -0.781,
+        "pc2": 2.22,
         "cosmo": false
       },
       {
         "name": "Primer Evolution Simulations",
-        "pc1": -0.393,
-        "pc2": 0.85,
+        "pc1": -0.419,
+        "pc2": 0.84,
         "cosmo": false
       },
       {
         "name": "Keiwan Evolution",
-        "pc1": 0.527,
-        "pc2": 1.012,
+        "pc1": 0.501,
+        "pc2": 1.054,
         "cosmo": false
       },
       {
         "name": "DevoWorm",
-        "pc1": 0.903,
-        "pc2": 0.847,
+        "pc1": 0.866,
+        "pc2": 0.865,
         "cosmo": false
       },
       {
         "name": "Morphozoic",
-        "pc1": -0.773,
-        "pc2": 1.361,
+        "pc1": -0.818,
+        "pc2": 1.336,
         "cosmo": false
       },
       {
         "name": "Chromaria",
-        "pc1": 0.037,
-        "pc2": -0.682,
+        "pc1": 0.063,
+        "pc2": -0.674,
         "cosmo": false
       },
       {
         "name": "Division Blocks",
-        "pc1": 0.599,
-        "pc2": -0.426,
+        "pc1": 0.612,
+        "pc2": -0.393,
         "cosmo": false
       },
       {
         "name": "Voyager (Minecraft LLM agent)",
-        "pc1": 0.31,
-        "pc2": -0.808,
+        "pc1": 0.342,
+        "pc2": -0.786,
         "cosmo": false
       },
       {
         "name": "Generative Agents (Smallville)",
-        "pc1": -0.074,
-        "pc2": -0.373,
+        "pc1": -0.066,
+        "pc2": -0.38,
         "cosmo": false
       },
       {
         "name": "OMNI-EPIC",
-        "pc1": 0.713,
-        "pc2": -1.412,
+        "pc1": 0.766,
+        "pc2": -1.367,
         "cosmo": false
       },
       {
         "name": "Genie (Generative Interactive Environments)",
-        "pc1": 0.081,
-        "pc2": 0.808,
+        "pc1": 0.067,
+        "pc2": 0.828,
         "cosmo": false
       },
       {
         "name": "Evolution through Large Models (ELM)",
-        "pc1": 0.439,
-        "pc2": -1.101,
+        "pc1": 0.478,
+        "pc2": -1.069,
         "cosmo": false
       },
       {
         "name": "OpenELM",
-        "pc1": -0.075,
-        "pc2": -2.016,
+        "pc1": -0.012,
+        "pc2": -2.015,
         "cosmo": false
       },
       {
         "name": "Automated Design of Agentic Systems (ADAS)",
-        "pc1": -0.256,
-        "pc2": -2.598,
+        "pc1": -0.175,
+        "pc2": -2.607,
         "cosmo": false
       },
       {
         "name": "The AI Scientist",
-        "pc1": -0.255,
-        "pc2": -1.738,
+        "pc1": -0.196,
+        "pc2": -1.744,
         "cosmo": false
       },
       {
         "name": "Darwin Godel Machine (DGM)",
-        "pc1": -0.007,
-        "pc2": -3.174,
+        "pc1": 0.094,
+        "pc2": -3.172,
         "cosmo": false
       },
       {
         "name": "Promptbreeder",
-        "pc1": -1.029,
-        "pc2": -1.223,
+        "pc1": -0.994,
+        "pc2": -1.264,
         "cosmo": false
       },
       {
         "name": "Quality-Diversity through AI Feedback (QDAIF)",
-        "pc1": -0.871,
-        "pc2": -1.585,
+        "pc1": -0.821,
+        "pc2": -1.617,
         "cosmo": false
       }
     ]
@@ -1447,7 +1447,7 @@
       {
         "a": "COSMOGONIC",
         "b": "(112)",
-        "height": 7.014
+        "height": 7.06
       }
     ]
   },
@@ -1461,7 +1461,7 @@
     ],
     "cosmogonicOnFront": true,
     "dominatedByCount9d": 0,
-    "dominatesCount9d": 22,
+    "dominatesCount9d": 23,
     "dominatesNames": [
       "Biomorphs",
       "Wireworld",
@@ -1474,6 +1474,7 @@
       "Primordial Particle Systems",
       "Gray-Scott Reaction-Diffusion",
       "Squirm3",
+      "biosim4",
       "StarLogo",
       "OpenSteer",
       "Artificial Anasazi",
@@ -1490,8 +1491,8 @@
   "evenness": [
     {
       "name": "COSMOGONIC",
-      "evenness": 0.992,
-      "gini": 0.091
+      "evenness": 0.994,
+      "gini": 0.086
     },
     {
       "name": "Creatures",
@@ -2056,9 +2057,9 @@
   ],
   "cosmogonicEvenness": {
     "name": "COSMOGONIC",
-    "evenness": 0.992,
-    "gini": 0.091,
-    "breadth": 3.711,
+    "evenness": 0.994,
+    "gini": 0.086,
+    "breadth": 3.756,
     "cosmo": true
   },
   "axisCorrelation": {
@@ -2076,32 +2077,32 @@
     "matrix": [
       [
         1,
-        0.522,
+        0.523,
         0.164,
         0.003,
-        0.151,
+        0.152,
         0.022,
         -0.015,
         0.075,
         -0.13
       ],
       [
-        0.522,
+        0.523,
         1,
-        0.057,
-        0.066,
-        0.452,
-        -0.012,
-        0.144,
-        -0.039,
-        -0.073
+        0.058,
+        0.067,
+        0.453,
+        -0.001,
+        0.146,
+        -0.026,
+        -0.072
       ],
       [
         0.164,
-        0.057,
+        0.058,
         1,
         -0.203,
-        -0.068,
+        -0.067,
         0.12,
         0.121,
         0.109,
@@ -2109,32 +2110,32 @@
       ],
       [
         0.003,
-        0.066,
+        0.067,
         -0.203,
         1,
-        0.239,
+        0.24,
         0.247,
         -0.059,
         0.148,
         0.61
       ],
       [
-        0.151,
-        0.452,
-        -0.068,
-        0.239,
+        0.152,
+        0.453,
+        -0.067,
+        0.24,
         1,
-        0.228,
+        0.236,
         0.378,
-        0.185,
-        -0.184
+        0.195,
+        -0.183
       ],
       [
         0.022,
-        -0.012,
+        -0.001,
         0.12,
         0.247,
-        0.228,
+        0.236,
         1,
         0.125,
         0.87,
@@ -2142,7 +2143,7 @@
       ],
       [
         -0.015,
-        0.144,
+        0.146,
         0.121,
         -0.059,
         0.378,
@@ -2153,10 +2154,10 @@
       ],
       [
         0.075,
-        -0.039,
+        -0.026,
         0.109,
         0.148,
-        0.185,
+        0.195,
         0.87,
         0.092,
         1,
@@ -2164,10 +2165,10 @@
       ],
       [
         -0.13,
-        -0.073,
+        -0.072,
         0.106,
         0.61,
-        -0.184,
+        -0.183,
         0.206,
         -0.293,
         0.152,
@@ -2176,10 +2177,10 @@
     ]
   },
   "mahalanobis": {
-    "d": 10.245,
-    "d2": 104.964,
+    "d": 10.232,
+    "d2": 104.698,
     "ridge": 0.15,
-    "eqEuclidSigma": 4.106
+    "eqEuclidSigma": 4.1
   },
   "perAxisPercentile": [
     {
@@ -2189,7 +2190,7 @@
     },
     {
       "axis": "Open-endedness",
-      "score": 2.2,
+      "score": 2.4,
       "percentile": 45.1
     },
     {
@@ -2204,8 +2205,8 @@
     },
     {
       "axis": "Cognition/Learning",
-      "score": 3.9,
-      "percentile": 79.6
+      "score": 4.1,
+      "percentile": 96.5
     },
     {
       "axis": "Substrate pluralism",
@@ -2229,8 +2230,8 @@
     }
   ],
   "ratios": {
-    "breadthOverMaturity": 2.474,
-    "emptyAxisLeadShare": 0.61,
-    "breadthMean": 3.711
+    "breadthOverMaturity": 2.504,
+    "emptyAxisLeadShare": 0.607,
+    "breadthMean": 3.756
   }
 }

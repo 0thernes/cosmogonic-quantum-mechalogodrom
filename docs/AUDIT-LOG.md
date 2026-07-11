@@ -11,6 +11,119 @@ changed and why.
 
 ---
 
+## 2026-07-10 — batch 25: the LIVE base 50k population forages by flora-gradient chemotaxis + Cognition 4.0→4.1
+
+Extends "smarter" BEYOND the digital-life layer to the base 50,000-entity population (the owner's literal
+"every animal") — the deferral I'd flagged as "perturbs the hot path" was over-caution (only hungry+strided
+entities steer; 4 O(1) probes ≈ <0.1ms/frame). Coupling-safe (base entities + flora, apex untouched).
+
+- **[SMART-6] flora-gradient chemotaxis** — base organisms already GRAZED flora at their current position
+  (`applyFloraComfort`) but only drifted to the nearest cover; now a HUNGRY animal FORAGES by climbing the
+  flora BIOMASS gradient toward the richest patch. Added a READ-ONLY `AlienFlora.biomassAt(x,z)` sampler
+  (no consumption), an `attachFloraGradient` inject hook (null in tests ⇒ golden byte-identical, like
+  `floraGraze`), and a deterministic finite-difference gradient steer in `entities.ts` gated on
+  `hunger > 0.2`. Wired live in `world.ts`. GATE-CHEMOTAXIS: over 40 seeds a gradient forager ends on >3×
+  richer flora than a hungry-but-blind wanderer; ablation (zero gradient) regresses to the random walk.
+- **Cognition/Learning floor 4.0 → 4.1** (`CODE_GROUNDED`) — now backed by THREE gate-verified non-apex
+  cognition loops: GATE-FORAGE + GATE-BIOLOGIC-LEARN (live petri) + GATE-CHEMOTAXIS (the LIVE 50k base
+  population). Recomputed: code-grounded breadth 3.74→3.76, z-pop +2.94→+2.95, z-peers +3.07→+3.09, lead
+  +0.24→+0.26 (Mahalanobis 10.23 unchanged); 4 surfaces restated + drift-locked. Self-scored row +
+  Consciousness (3.5) + Butlin unchanged.
+
+Receipts 2450→2453 (+3). Honest code-grounded floor now [4.0,2.4,3.2,3.8,4.1,4.5,4.3,3.5,4.0]. Full gate green.
+
+## 2026-07-10 (pass 6) — batch 24: close the sync-allowlist gap — the 14th and final pass-6 finding
+
+- **[SYNC-1] a receipt-publishing living doc was outside the sync allowlist and had drifted**
+  (`sync-surfaces.ts` / the brain assessment, LOW design) — `docs/BRAIN-NEUROLOGY-CONSCIOUSNESS-
+ENGINEERING-ASSESSMENT-2026-07-06.md` (a living doc, "rewritten in place") publishes the current test
+  receipt but was in NEITHER the sync `SURFACES` list nor `docs-receipts-law`, so it froze at "2,360
+  tests" (20 tokens) while canonical moved on. Fixed: updated it to canonical (2,450; receipt-only — no
+  Butlin/consciousness score touched), added it to sync `SURFACES`, and added a hyphenated "N,NNN-test"
+  receipt regex (the mandatory comma-group keeps it off "unit-test"/"A-test") so its "N-test floor"
+  adjective forms auto-sync too. It is now gate-covered by `sync:check`.
+
+Scope note on the finding's PART-2 (a BROAD guard scanning all docs for stale receipts): confirmed
+empirically UNSAFE as a naive test — root docs legitimately mix current-tense receipts (synced) with
+HISTORICAL citations (NHSI + VERIFICATION cite a past "2,418 tests"; the MEGA-MASTER-PASS drafts are
+"local research drafts"), so a blind scan false-positives. A robust current-vs-historical guard is a real
+design task, deliberately not shipped as a fragile point fix. The concrete drift is closed. Receipts
+unchanged (2,450). Full gate green.
+
+**PASS 6 COMPLETE: 14/14 confirmed findings addressed** (batches 16-24).
+
+## 2026-07-10 — batch 23: the base digital-life population LEARNS (exact Eshkol AD) + Cognition 3.9→4.0
+
+The flagship "a LIVE creature loop learns", done honestly (the tuning-trap I flagged is avoided: the
+claim is NOT "AD plateau > EMA plateau" but the tuning-free property that gradient ascent MONOTONICALLY
+optimizes an objective the passive EMA does not).
+
+- **[SMART-5] biologic AD learning** (`digital-biologics.ts`) — new `biologicLearnStep()` does one EXACT
+  reverse-mode-AD (Eshkol Wengert tape) gradient-ascent step on a biologic's fitness
+  `F(θ)=Σθ_k·x_k − ½·reg·Σθ_k²` over its substrate inputs (spin/qgt/quake), reading ∂F/∂θ off the tape.
+  Wired live into `stepBiologic(b, flux, learn=true)` (petri loop): the learned fitness AMPLIFIES the
+  biologic's flux-exploitation (bounded ×2), so a better learner grows fitter and — via the batch-22
+  petri truncation-selection GA — out-survives the pack. `learn=false` is the exact prior EMA
+  (golden-safe); heritable `fitnessWeights` is optional (existing literals/stubs valid). GATE-BIOLOGIC-
+  LEARN: F climbs monotonically to the analytic optimum ½‖x‖²/reg (θ→x/reg), and a lr=0 ABLATION freezes
+  it — the gradient is load-bearing. +3 assertions. First consumption of the exact AD tape by the base
+  population INSIDE a live loop (the apex path is untouched — coupling-safe).
+- **Cognition/Learning floor 3.9 → 4.0** (`CODE_GROUNDED`) — now licensed by GATE-FORAGE (batch-15b) AND
+  GATE-BIOLOGIC-LEARN (this batch), completing the plan's Cognition move. Recomputed: code-grounded
+  breadth 3.73→3.74, z-pop +2.92→+2.94, z-peers +3.05→+3.07, lead +0.23→+0.24 (Mahalanobis 10.23
+  unchanged); 4 surfaces restated, drift-locked by the batch-21 consistency test. Self-scored row +
+  Consciousness (3.5) + Butlin unchanged.
+
+Receipts 2447→2450 (+3). The honest code-grounded 9-axis floor is now [4.0, 2.4, 3.2, 3.8, 4.0, 4.5, 4.3,
+3.5, 4.0] — Cognition, Open-endedness, and Ecology all lifted toward the self-score by shipped,
+ablation-verified, drift-locked capability. Full gate green.
+
+## 2026-07-10 — batch 22: petri differential-survival GA + honest Open-endedness floor 2.2→2.4
+
+More "smarter A-life": a second live fitness-selection loop + the falsifiable open-endedness measurement,
+then the honest metric move they license (drift-locked by batch-21's verify:alife gate).
+
+- **[SMART-3] petri truncation selection** (`petri-dish.ts`) — the ≤64 biologics ring evicted the OLDEST
+  at cap (FIFO `shift()`); now `evictLeastFit()` culls the argmin-`consciousness` strain, so the ring is
+  a real differential-survival GA — a just-born strain must EARN its slot against the pack. The newborn
+  keeps its OWN birthBiologic form (no elitist form-collapse), so novelty keeps entering. Deterministic.
+  GATE-PETRI-SURVIVE: over a fixed-seed varied-fitness stream, truncation keeps a strictly higher mean
+  fitness than FIFO (and evicts the least-fit, not the oldest). +4 assertions.
+- **[SMART-4] GATE-OE-LIVE** — the digital-biologics birth engine's cumulative distinct-forms trajectory
+  visits its finite 26-form catalog and is judged NOT 'inactive' by the Bedau-Packard-inspired verdict
+  (`open-endedness.ts`), while a frozen / monoculture trajectory IS 'inactive' — bounded active novelty,
+  not evidence of unbounded open-ended evolution. (The full petriDishBeat birth-gate needs
+  ignition>0.65 & phi>0.45 & flux>0.55, not reachable under a bare test drive, so the honest measurable
+  is the birth engine `birthBiologic`, the layer's actual form-generation source.) +3 assertions.
+- **Open-endedness floor 2.2 → 2.4** (`CODE_GROUNDED`) — now licensed by TWO live selection loops (soup
+  harvest, batch-15a + petri truncation, this batch) + GATE-OE-LIVE + GATE-PETRI-SURVIVE. Recomputed
+  (deterministic): code-grounded breadth 3.71→3.73, z-pop +2.88→+2.92, z-peers +3.01→+3.05, Mahalanobis
+  10.25→10.23, lead +0.21→+0.23; all 4 surfaces restated and drift-locked by batch-21's consistency test
+  (the test now recomputes at 2.4 and re-verifies every surface). Self-scored CSV row + Consciousness +
+  Butlin unchanged.
+
+Receipts 2440→2447 (+7). Full gate green.
+
+## 2026-07-10 — batch 21: verify:alife drift-lock (closes the batch-15b metric honesty gap)
+
+Honesty hardening for the batch-15b metric move. batch-15b lifted the code-grounded 9-axis floor and
+hand-updated the numbers on 4 surfaces, but nothing GATED them — `alife-codeground.json` is not a
+generated:check artifact and verify:facts does not check breadth, so a future CODE_GROUNDED/CSV edit
+that skipped regeneration, or a hand-edit of any surface number, would drift silently. Fixed:
+
+- Refactored `alife-codeground-sensitivity.ts` to export `CODE_GROUNDED` + a PURE `computeAlifeCodeground(csv)`
+  and guarded the CLI with `if (import.meta.main)` (importing it no longer runs/writes).
+- New `tests/alife-codeground-consistency.test.ts` (runs in the existing `bun test` gate, same SSOT
+  discipline as docs-receipts-law): (a) recompute-from-CSV must deep-equal the committed
+  `alife-codeground.json` (stale-JSON → fail), (b) every current surface (README/docs.html/specs.html/NHSI)
+  must cite the current computed breadth/z (hand-edit → fail), (c) the honest FLOOR must never exceed the
+  self-scored ceiling on ANY axis (guards against inflating past the self-score).
+
+**Declined the plan's suggested Instrumentation 4.3→4.5 move:** the Instrumentation axis rates the SIM's
+observability (analytics/telemetry), and a doc-consistency gate does not raise that — moving it for this
+would be the "decorative BS" inflation the owner forbids. Under-claim is the honest error direction; the
+gate ships as pure hardening. Receipts 2437→2440 (+3). Full gate green.
+
 ## 2026-07-10 (pass 6) — batch 20: copilot in-flight tool-call is cancelled on the turn deadline
 
 - **[NET-2] a running tool kept executing after the turn was cancelled** (`copilot.ts` / `ai-sandbox.ts`

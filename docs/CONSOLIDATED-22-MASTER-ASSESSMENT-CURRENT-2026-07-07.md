@@ -19,9 +19,12 @@ Audit HTML: `docs/CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.html`
 > `classical-contrast` control is separate. The current V3 fresh disjoint fixed-family evaluation passed
 > goal-only and corpus-conditioned effects, `6.1213%` reversal adaptation, `17/17` integrated-row reach,
 > `5/5` excluded-row inertness, numerical safety, three-process performance stability, and all named
-> consumer counterfactuals. Uniform random-action baseline separation and aggregate-mapping specificity failed. The current
-> code-grounded A-Life vector is `[4.0, 2.2, 3.2, 3.8, 3.9, 4.5, 4.3, 3.5, 4.0]`; V3 authorizes no
-> additional consciousness, sentience, or numeric capability score change. See the
+> consumer counterfactuals. Uniform random-action baseline separation and aggregate-mapping specificity
+> failed. Separate gate-backed A-Life mechanisms now set the current code-grounded vector to
+> `[4.0, 2.4, 3.2, 3.8, 4.1, 4.5, 4.3, 3.5, 4.0]`: breadth `3.756`, rank `#1/113`, population z
+> `+2.954`, and peer z `+3.090`. The finite 26-form generator plus differential selection establishes
+> bounded active novelty against a frozen control, not unbounded open-ended evolution. V3 itself
+> authorizes no additional consciousness, sentience, or numeric capability score change. See the
 > [current causal audit](./reports/2026-07-10-OPERATIONAL-ORGANISM-INTELLIGENCE-CAUSAL-AUDIT.md).
 
 ## Current Truth Banner
