@@ -351,6 +351,22 @@ function validateCommand(raw: string): { ok: true; argv: string[] } | { ok: fals
       if (revisionLike) {
         return { ok: false, error: `git ${sub} revision diffs are denied` };
       }
+      // A pathspec that resolves to the repo ROOT itself (`.`, `./`, or `<rev>:.`) spans EVERY tracked
+      // file — including blocked dirs (legacy/, .github/) — which defeats the "explicit confined pathspec"
+      // requirement above: `.` is non-empty, is NOT revisionLike (it contains a `.`), and confine('.')
+      // resolves to ROOT (relative === '') so it sails through the per-path loop below. Require every
+      // pathspec to name a path strictly INSIDE the repo, never root.
+      const spansRoot = positionals.some((a) => {
+        const pathPart = a.includes(':') ? (a.split(':').pop() ?? a) : a;
+        const c = confine(pathPart);
+        return c.ok && relative(ROOT, c.abs) === '';
+      });
+      if (spansRoot) {
+        return {
+          ok: false,
+          error: `git ${sub} pathspec must name a path INSIDE the repo (\`.\`/root spans blocked dirs); use e.g. \`git ${sub} -- src/world.ts\``,
+        };
+      }
     }
     // branch/tag/remote can MUTATE with a positional arg; permit only the listing forms (flags only).
     if (
@@ -433,7 +449,11 @@ function repoRelative(abs: string): string {
   return relative(ROOT, abs).split(sep).join('/');
 }
 
-async function grepLiteral(pattern: string, roots: string[] = ['.']): Promise<SandboxResult> {
+async function grepLiteral(
+  pattern: string,
+  roots: string[] = ['.'],
+  signal?: AbortSignal,
+): Promise<SandboxResult> {
   const out: string[] = [];
   let outLen = 0;
   let truncated = false;
@@ -450,6 +470,7 @@ async function grepLiteral(pattern: string, roots: string[] = ['.']): Promise<Sa
   }
 
   async function scanFile(abs: string): Promise<boolean> {
+    if (signal?.aborted) return true; // turn cancelled → stop the walk (partial result is discarded by the race)
     const file = Bun.file(abs);
     if (file.size > MAX_GREP_FILE_BYTES) return false;
     try {
@@ -470,6 +491,7 @@ async function grepLiteral(pattern: string, roots: string[] = ['.']): Promise<Sa
   // call stack overflows (a DoS on the grep sandbox). 40 levels is far beyond any real source layout.
   const MAX_WALK_DEPTH = 40;
   async function walk(abs: string, depth: number): Promise<boolean> {
+    if (signal?.aborted) return true; // short-circuit the recursion at the next dir boundary on cancel
     if (depth > MAX_WALK_DEPTH) return false;
     try {
       const entries = await readdir(abs, { withFileTypes: true });
@@ -586,7 +608,7 @@ export async function runReadOnly(raw: string, signal?: AbortSignal): Promise<Sa
     return { ok: true, output, truncated: false };
   }
   const grep = gitGrepRequest(v.argv);
-  if (grep) return grepLiteral(grep.pattern, grep.roots);
+  if (grep) return grepLiteral(grep.pattern, grep.roots, signal);
   try {
     const proc = Bun.spawn(v.argv, {
       cwd: ROOT,
@@ -633,7 +655,7 @@ export async function runReadOnly(raw: string, signal?: AbortSignal): Promise<Sa
 }
 
 /** Content search via `git grep` (read-only, repo-confined). `pattern` is passed as a literal. */
-export async function grepRepo(pattern: string): Promise<SandboxResult> {
+export async function grepRepo(pattern: string, signal?: AbortSignal): Promise<SandboxResult> {
   if (typeof pattern !== 'string' || pattern.trim().length === 0) {
     return { ok: false, error: 'empty pattern' };
   }
@@ -652,7 +674,7 @@ export async function grepRepo(pattern: string): Promise<SandboxResult> {
     };
   }
   // -n line numbers, -I skip binary, --fixed-strings = literal (no injection via regex), capped.
-  return runReadOnly(`git grep -n -I --fixed-strings ${pattern}`);
+  return runReadOnly(`git grep -n -I --fixed-strings ${pattern}`, signal);
 }
 
 /** The tool surface advertised to the model (OpenAI function-tool schema). */
@@ -728,8 +750,9 @@ export const SANDBOX_TOOLS = [
 
 /** Dispatch a tool call by name to its sandbox function. Unknown tools are denied. The optional
  *  `signal` (the copilot turn deadline / client-disconnect) is forwarded to the resource-holding tools
- *  (`run` spawns a child, `web_search` fetches) so a turn cancellation kills them NOW instead of letting
- *  them run out their own internal timeout after the caller has given up. Pure-JS tools are fast + bounded. */
+ *  (`run` spawns a child, `web_search` fetches, `grep`'s tree walk) so a turn cancellation stops them NOW
+ *  instead of letting them run out their own internal timeout after the caller has given up. The remaining
+ *  pure-JS tools (read_file/list_dir) are single-file/single-dir and inherently fast + bounded. */
 export async function dispatchTool(
   name: string,
   args: Record<string, unknown>,
@@ -741,7 +764,7 @@ export async function dispatchTool(
     case 'list_dir':
       return listDir(typeof args['path'] === 'string' ? args['path'] : '');
     case 'grep':
-      return grepRepo(typeof args['pattern'] === 'string' ? args['pattern'] : '');
+      return grepRepo(typeof args['pattern'] === 'string' ? args['pattern'] : '', signal);
     case 'run':
       return runReadOnly(typeof args['command'] === 'string' ? args['command'] : '', signal);
     case 'web_search':

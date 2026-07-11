@@ -670,9 +670,32 @@ export class AlienFlora {
    * forage UP it toward the richest patch (gradient-ascent chemotaxis), not just drift to the nearest
    * cover. O(1). See entities.ts applyFloraComfort + tests/flora-chemotaxis.test.ts.
    */
+  /**
+   * Read the live biomass field at world (x,z), BILINEARLY interpolated over the four surrounding
+   * cells. Continuous (C0) by construction: a small centred finite difference senses a real gradient
+   * instead of reading 0 whenever both probes fall inside the same 44u cell — which is what makes the
+   * entities.ts chemotaxis steer non-degenerate on the true quantized grid. Pure, deterministic, O(1),
+   * no rng; only ever called at runtime (grazeAt/the shader own the raw cells) so goldens are unmoved.
+   */
   biomassAt(x: number, z: number): number {
-    const gi = this.gridIndex(x, z);
-    return gi < 0 ? 0 : (this.biomass[gi] ?? 0);
+    // Cell-CENTRE space: an integer fx lands exactly on cell ix's centre, so interpolating between
+    // ix0 and ix0+1 reconstructs a smooth field that equals biomass[ix] at every cell centre.
+    const fx = (x + this.gridHalf) / this.cell - 0.5;
+    const fz = (z + this.gridHalf) / this.cell - 0.5;
+    const ix0 = Math.floor(fx);
+    const iz0 = Math.floor(fz);
+    const tx = fx - ix0;
+    const tz = fz - iz0;
+    const n = this.gridN;
+    const sample = (ix: number, iz: number): number =>
+      ix < 0 || iz < 0 || ix >= n || iz >= n ? 0 : (this.biomass[iz * n + ix] ?? 0);
+    const b00 = sample(ix0, iz0);
+    const b10 = sample(ix0 + 1, iz0);
+    const b01 = sample(ix0, iz0 + 1);
+    const b11 = sample(ix0 + 1, iz0 + 1);
+    const bx0 = b00 + (b10 - b00) * tx;
+    const bx1 = b01 + (b11 - b01) * tx;
+    return bx0 + (bx1 - bx0) * tz;
   }
 
   grazeAt(x: number, z: number, pressure: number, dt: number): number {

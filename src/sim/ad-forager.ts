@@ -126,16 +126,21 @@ export function runForager(
   let z = startZ;
   const senseGradient = mode === 'gradient' && !ablate;
   let steps = 0;
-  let potential = 0;
   for (; steps < cfg.maxSteps; steps++) {
     if (nearestDist(x, z, sources) <= cfg.reachRadius) {
-      return { steps, reached: true, finalPotential: potential };
+      // Report the potential at the ACTUAL final (x,z) for every mode — the mid-loop `g.value` was only
+      // computed in the gradient branch (0 for random/ablate) and lagged one step. foodPotentialGradient
+      // is pure (no rng) and resets the shared tape internally, so this extra AD pass is determinism-safe.
+      return {
+        steps,
+        reached: true,
+        finalPotential: foodPotentialGradient(tape, x, z, sources, cfg.sigma).value,
+      };
     }
     let dirX: number;
     let dirZ: number;
     if (senseGradient) {
       const g = foodPotentialGradient(tape, x, z, sources, cfg.sigma);
-      potential = g.value;
       const norm = Math.hypot(g.gx, g.gz);
       if (norm > 1e-9) {
         dirX = g.gx / norm;
@@ -156,6 +161,6 @@ export function runForager(
   return {
     steps,
     reached: nearestDist(x, z, sources) <= cfg.reachRadius,
-    finalPotential: potential,
+    finalPotential: foodPotentialGradient(tape, x, z, sources, cfg.sigma).value,
   };
 }

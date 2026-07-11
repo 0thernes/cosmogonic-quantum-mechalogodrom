@@ -101,6 +101,14 @@ describe('ai-sandbox: command gate is default-deny and write-free', () => {
     'git diff', // pathspec-less diff emits ALL tracked files incl. blocked legacy/ — needs an explicit confined path
     'git diff --cached', // same: staged diff of every tracked file, nothing for confine() to scope
     'git diff --stat', // flags-only, still no pathspec → spans blocked dirs
+    // A `.`/`./` pathspec satisfies the non-empty check yet resolves to ROOT (confine('.') → relative ''),
+    // spanning every tracked file incl. blocked legacy/ & .github/ — the "explicit confined pathspec"
+    // requirement is defeated unless a root-resolving pathspec is rejected (self-review batch-26).
+    'git diff -- .',
+    'git diff .',
+    'git diff -- ./',
+    'git diff --cached -- .',
+    'git diff-tree -- .',
     // GNU grep recurses via `-d recurse` / `--directories=recurse` too, not just `-r`/`-R` — these
     // reopened the audit-CRITICAL secret leak (native grep recursed root → .env/.git/legacy) past the
     // `-r`/`-R` block (audit 2026-07-01). All directory-handling spellings must be denied.

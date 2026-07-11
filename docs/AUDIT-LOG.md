@@ -11,6 +11,48 @@ changed and why.
 
 ---
 
+## 2026-07-11 — batch 26: adversarial SELF-review of this session's changes — 7 confirmed bugs I introduced, fixed
+
+Ran a 17-agent adversarial workflow over batches 15a–25 (6 review lenses → per-finding verifiers). It
+CONFIRMED 7 real defects in my OWN work (3 false-positives / 1 intentional correctly rejected). The
+headline is a hard honesty catch: **my batch-25 "smarter" chemotaxis was a NO-OP on the real field, and
+my own gate masked it.**
+
+- **[SELF-2, MEDIUM — chemotaxis no-op] `alien-flora.ts` / `flora-chemotaxis.test.ts`** — the batch-25
+  finite-difference steer probes biomass at ±6 world-units, but `biomassAt` was a NEAREST-CELL lookup over
+  44u cells (piecewise-constant), so both probes landed in the SAME cell for ~53% of positions → gradient
+  exactly 0 → no steer. The feature did not actually forage in production. Worse, GATE-CHEMOTAXIS substituted
+  a SMOOTH Gaussian for the sampler ("Mirrors what biomassAt returns" — false), so the gate passed on a field
+  the sim never runs. FIX: `biomassAt` now BILINEARLY interpolates the 4 surrounding cells (pure, O(1),
+  deterministic, runtime-only ⇒ goldens unmoved) so a small centred difference senses a real gradient; the
+  gate was rewritten to drive the REAL shipped `AlienFlora.prototype.biomassAt` over a genuinely CELL-QUANTIZED
+  field (via `.call` on a field stub), with a direct sub-cell non-degeneracy assertion that FAILS against the
+  old nearest-cell sampler. **This is what retroactively earns the batch-25 Cognition 4.0→4.1 move — it was
+  licensed by a gate that didn't test reality; the feature is now genuinely operational.**
+- **[SELF-3, MEDIUM — security] `ai-sandbox.ts`** — the batch-17 git-diff confinement (`positionals.length
+=== 0` deny) was bypassable by an explicit `.`/`./` pathspec: `.` is non-empty, is not revisionLike, and
+  `confine('.')` resolves to ROOT, so `git diff -- .` ran UNCONFINED across blocked dirs (legacy/, .github/).
+  FIX: reject any diff pathspec that resolves to the repo root; `git diff -- src/world.ts` still allowed.
+  +5 denial cases added to the ai-sandbox suite.
+- **[SELF-4, LOW — cancellation gap] `ai-sandbox.ts`** — batch-20 threaded the turn AbortSignal into
+  `run`/`web_search` but NOT `git grep`, so a cancelled turn's tree walk ran to completion. FIX: signal now
+  reaches `grepLiteral`/`grepRepo`/dispatchTool; `walk`+`scanFile` short-circuit on abort.
+- **[SELF-1, LOW — latent correctness] `ad-forager.ts`** — `finalPotential` was 0 for random/ablate mode
+  (assigned only in the gradient branch) and lagged one step in gradient mode. FIX: compute the potential at
+  the true final (x,z) unconditionally via the pure `foodPotentialGradient` at each exit.
+- **[SELF-5/6/7, MEDIUM/MEDIUM/LOW — batch-24 sync collateral] BRAIN doc + `sync-surfaces.ts`** — adding the
+  BRAIN doc to SURFACES (batch-24) without protection markers let the broad sync regexes CORRUPT non-canonical
+  values: the Windows-local coverage receipt was clobbered to the Ubuntu floor (92.03/89.67 → 84.64/82.21,
+  now false + self-contradictory); "coupling audit's 16-faculty subset" → "100-faculty subset" (the exact case
+  `verify:facts` excludes but sync did not); and a point-in-time record read "receipts at 2,373 (floor 2,450)"
+  (impossible: measured < floor). FIX: restored all three true values; wrapped the Windows-local + historical
+  figures in `cqm-sync:local-measurement`/`:historical` markers; added the `(?!\s+subset)` negative lookahead
+  to `syncNHSI` so a subset window is never rewritten to the design total. `verify:facts` clean across 73 surfaces.
+
+Receipts 2453→2460 (+7: 2 chemotaxis-gate + 5 diff-bypass denials). Coupling invariant intact (12/12,
+selfAware still not ISOLATED). Full gate green. Lesson: adversarial self-review of a session's own diff is
+worth its cost — it caught a shipped no-op the normal gate green-lit.
+
 ## 2026-07-10 — batch 25: the LIVE base 50k population forages by flora-gradient chemotaxis + Cognition 4.0→4.1
 
 Extends "smarter" BEYOND the digital-life layer to the base 50,000-entity population (the owner's literal
