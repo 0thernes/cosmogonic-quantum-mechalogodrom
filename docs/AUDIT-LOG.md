@@ -11,6 +11,41 @@ changed and why.
 
 ---
 
+## 2026-07-12 — batch 42: Tsotchke recency check → EXACT second-order AD + curvature-aware self-model learning
+
+/goal ("more intelligence, smarter everything… Tsotchke is key; check his repos + recent drops"). Checked the
+live `tsotchke` GitHub corpus directly (API): **eshkol** pushed **2026-07-12** (HEAD `4d94ab6`, v1.3.3-evolve),
+**moonlab** 2026-07-12 (v1.1.0, now shipping `@moonlab/quantum-core` WASM + `@moonlab/quantum-algorithms` TS
+packages), **quantum_rng** 2026-07-11 (v3). The most impactful genuinely-new upstream capability is Eshkol's
+AD second-order campaign — "exact jacobian/hessian through inner forward-mode derivatives" (ESH-0120/0121, PR
+#246), the custom-VJP nodes that differentiate through Moonlab VQE circuits (PR #270, `d4154f6`), and the
+generative AD-vs-finite-difference oracle (PR #245). Our reverse-mode tape (`math/eshkol-ad`) was first-order
+only; the online neural self-models trained by plain fixed-rate SGD. This pass brings the second-order path
+across and puts it to work — a genuinely SMARTER learner, not a bigger one.
+
+- **`src/math/eshkol-ad.ts` — exact forward-over-reverse Hessian·vector products (`adHvp`, Pearlmutter
+  R-operator) + `adHessianDiag`.** Purely additive: local scratch arrays, zero change to any existing function
+  ⇒ every current AD consumer is byte-identical. Per-op tangent formulas mirror the exact second derivatives
+  already in `math/hyperdual` (Fike & Alonso), so the two independent engines cross-check.
+- **`src/sim/ad-mlp.ts` — `mlpTrainStepCurvature`: exact Gauss-Newton-DIAGONAL preconditioned step** with
+  Levenberg–Marquardt damping. Curvature Hᵍⁿᵢᵢ = 2·Σₖ(∂fₖ/∂θᵢ)² is the PSD part of the MSE Hessian, computed
+  exactly by one extra reverse pass seeded at the network output (the output-Jacobian). `mlpTrainStep` is
+  UNTOUCHED — apex-brain, faculties-pantheon, super-* keep their byte-identical first-order trajectories.
+- **`src/sim/digital-biologics.ts` — the LIVE petri self-model now learns by curvature.** `stepBiologic`'s
+  `learn=true` path (driven live in `petri-dish.ts:542`) swaps SGD → `mlpTrainStepCurvature`. Still purely
+  observational (feeds only `selfModelErr`, never adFitness/consciousness/selection ⇒ every petri golden and the
+  `learn=false` byte-identical path intact) and on a SEPARATE brain rng substream ⇒ whole-sim determinism intact.
+- **GATES.** `tests/eshkol-ad-hvp.test.ts` (8): analytic Hessians (x², x·y), the GENERATIVE AD-vs-FD ORACLE on
+  120 random point/direction components, CROSS-ENGINE agreement with `hyperdual` f″ to 1e-8, Hessian symmetry,
+  piecewise-linear zero-curvature, determinism. `tests/ad-mlp-curvature.test.ts` (5): EXACTNESS (one step =
+  −lr·g/(Hᵍⁿ+damping) vs independent finite differences), SMARTER (seed-aggregate: curvature ~19× lower loss
+  than SGD, wins ≥6/8 seeds, at a conservative global lr on an ill-conditioned task), CONVERGES+BOUNDED+FASTER
+  (fewer steps to threshold, never diverges — diagonal 2nd-order is honestly NOT unconditionally monotone),
+  DISTINCT-from-SGD, determinism. The existing self-model/learning goldens stay green.
+
+Receipts 2877→2890 (+13). indicatorOnly: NO Consciousness / Butlin / A-Life score moved — this deepens the
+Eshkol substrate (a HOT-BUTTON "wire MORE, never less") and makes a live learner converge faster, nothing more.
+
 ## 2026-07-11 — batch 41: the WINGMAN ESCORT develops — a learned flight coordinator per swarm (NN growth)
 
 Part 2 of the /goal ("continue with the neural networks that could use development"). The 500 wingman robot

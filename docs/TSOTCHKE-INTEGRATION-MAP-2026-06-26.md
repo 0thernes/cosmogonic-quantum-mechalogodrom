@@ -117,6 +117,18 @@ parity, unlimited Taylor order, exact-rational arithmetic, or full R7RS.
 available. A harvested fingerprint records provenance and supplies a simulation signal; it does not
 make the TypeScript runtime an Eshkol interpreter by itself.
 
+**Second-order AD (2026-07-12).** The reverse-mode tape (`math/eshkol-ad`) now carries an exact
+forward-over-reverse Hessian·vector-product path (`adHvp`, Pearlmutter R-operator) and a
+Gauss-Newton-diagonal preconditioned learner (`sim/ad-mlp.mlpTrainStepCurvature`, wired live into the
+petri self-model). This mirrors Eshkol's upstream AD second-order work — "exact jacobian/hessian
+through inner forward-mode derivatives" (ESH-0120/0121, PR #246) and the custom-VJP nodes bridging
+Moonlab VQE gradients (PR #270, `d4154f6`) — observed at eshkol HEAD `4d94ab6` (v1.3.3-evolve,
+2026-07-12). It is a local exact implementation cross-checked against the independent hyper-dual engine
+and finite differences, not a native Eshkol build. **Observed-but-not-yet-integrated upstream drops**
+(follow-up lanes, not claimed as wired): moonlab `v1.1.0` now publishes TypeScript/WASM packages
+(`@moonlab/quantum-core`, `@moonlab/quantum-algorithms` with a typed Grover) and an exact VQE gradient
+through its stable ABI; eshkol added gated ML-KEM (FIPS 203) PQC builtins over Moonlab.
+
 ## Quantum RNG boundary
 
 The reference is Quantum RNG `v3.0.1` commit

@@ -162,3 +162,109 @@ export function mlpTrainStep(
 export function mlpParamCount(net: Mlp): number {
   return net.w1.length + net.b1.length + net.w2.length + net.b2.length;
 }
+
+// Module-scoped, auto-growing scratch for the curvature step: the flat per-parameter gradient and the
+// exact Gauss-Newton curvature diagonal. Kept off the hot path's allocator (mirrors MLP_TAPE's reuse).
+let CURV_G = new Float64Array(0);
+let CURV_H = new Float64Array(0);
+function ensureCurvScratch(p: number): void {
+  if (CURV_G.length < p) {
+    CURV_G = new Float64Array(p);
+    CURV_H = new Float64Array(p);
+  }
+}
+
+/**
+ * One CURVATURE-AWARE training step: exact Gauss-Newton (generalized Gauss-Newton) DIAGONAL
+ * preconditioning of the same MSE objective as {@link mlpTrainStep}, with Levenberg–Marquardt damping.
+ *
+ * Where {@link mlpTrainStep} takes a fixed-rate first-order step `θ ← θ − lr·gᵢ`, this rescales each
+ * parameter by the local curvature of the loss:  `θ ← θ − lr·gᵢ / (Hᵍⁿᵢᵢ + damping)`. The curvature
+ * used is the GENERALIZED GAUSS-NEWTON diagonal — the positive-semidefinite part of the Hessian for a
+ * squared-error objective — computed EXACTLY (no finite differences) as
+ *   Hᵍⁿᵢᵢ = Σ_k (∂fₖ/∂θᵢ)² · ∂²L/∂fₖ²  =  2·Σ_k (∂fₖ/∂θᵢ)²,
+ * i.e. one extra exact reverse-mode pass seeded at each network OUTPUT (the output-Jacobian) on top of
+ * the loss-gradient pass. Being PSD, it never flips the descent direction; damping bounds the step when
+ * curvature is tiny. This is the diagonal natural-gradient / Fisher preconditioner for squared loss —
+ * on an ill-conditioned objective it converges in far fewer steps than fixed-rate SGD (proved in
+ * tests/ad-mlp-curvature.test.ts), so a being's online self-model becomes accurate faster.
+ *
+ * Exact, deterministic (no rng), allocation-free on the hot path. Returns the pre-step loss, same
+ * contract as {@link mlpTrainStep}. {@link mlpTrainStep} itself is untouched — every existing consumer
+ * keeps its byte-identical first-order trajectory; only callers that opt into this get curvature.
+ *
+ * Provenance: the exact output-Jacobian / second-order path mirrors Eshkol's upstream AD second-order
+ * work — "exact jacobian/hessian through inner forward-mode derivatives" (ESH-0120/0121) and the
+ * custom-VJP nodes bridging Moonlab VQE gradients (PR #270) — see math/eshkol-ad.adHvp.
+ */
+export function mlpTrainStepCurvature(
+  net: Mlp,
+  input: ArrayLike<number>,
+  target: ArrayLike<number>,
+  lr = 0.1,
+  damping = 1e-3,
+): number {
+  const tape = MLP_TAPE;
+  adTapeReset(tape);
+  const { din, h, dout } = net;
+  const t = recordForward(tape, net, input);
+
+  let loss = adConst(tape, 0);
+  for (let k = 0; k < dout; k++) {
+    const d = adSub(tape, t.outNodes[k]!, adConst(tape, target[k] ?? 0));
+    loss = adAdd(tape, loss, adMul(tape, d, d));
+  }
+  const lossValue = adValue(tape, loss);
+
+  const P = h + h * din + dout + dout * h;
+  ensureCurvScratch(P);
+
+  // Pass 1: exact loss gradient gᵢ = ∂L/∂θᵢ, flattened in the weight layout order (b1, w1, b2, w2).
+  adBackward(tape, loss);
+  {
+    let p = 0;
+    for (let j = 0; j < h; j++) CURV_G[p++] = adGradient(tape, t.b1Nodes[j]!);
+    for (let idx = 0; idx < h * din; idx++) CURV_G[p++] = adGradient(tape, t.w1Nodes[idx]!);
+    for (let k = 0; k < dout; k++) CURV_G[p++] = adGradient(tape, t.b2Nodes[k]!);
+    for (let idx = 0; idx < dout * h; idx++) CURV_G[p++] = adGradient(tape, t.w2Nodes[idx]!);
+  }
+
+  // Pass 2..(1+dout): exact output-Jacobian per output → accumulate the PSD Gauss-Newton diagonal.
+  // adBackward re-zeroes and reseeds, so each call yields ∂fₖ/∂θ cleanly; ∂²L/∂fₖ² = 2 for MSE.
+  for (let i = 0; i < P; i++) CURV_H[i] = 0;
+  for (let k = 0; k < dout; k++) {
+    adBackward(tape, t.outNodes[k]!);
+    let p = 0;
+    for (let j = 0; j < h; j++) {
+      const jc = adGradient(tape, t.b1Nodes[j]!);
+      CURV_H[p++]! += 2 * jc * jc;
+    }
+    for (let idx = 0; idx < h * din; idx++) {
+      const jc = adGradient(tape, t.w1Nodes[idx]!);
+      CURV_H[p++]! += 2 * jc * jc;
+    }
+    for (let kk = 0; kk < dout; kk++) {
+      const jc = adGradient(tape, t.b2Nodes[kk]!);
+      CURV_H[p++]! += 2 * jc * jc;
+    }
+    for (let idx = 0; idx < dout * h; idx++) {
+      const jc = adGradient(tape, t.w2Nodes[idx]!);
+      CURV_H[p++]! += 2 * jc * jc;
+    }
+  }
+
+  // Preconditioned descent: θ ← θ − lr·gᵢ / (Hᵍⁿᵢᵢ + damping). PSD denominator ⇒ always a descent step.
+  {
+    let p = 0;
+    for (let j = 0; j < h; j++, p++)
+      net.b1[j] = (net.b1[j] ?? 0) - (lr * CURV_G[p]!) / (CURV_H[p]! + damping);
+    for (let idx = 0; idx < h * din; idx++, p++)
+      net.w1[idx] = (net.w1[idx] ?? 0) - (lr * CURV_G[p]!) / (CURV_H[p]! + damping);
+    for (let k = 0; k < dout; k++, p++)
+      net.b2[k] = (net.b2[k] ?? 0) - (lr * CURV_G[p]!) / (CURV_H[p]! + damping);
+    for (let idx = 0; idx < dout * h; idx++, p++)
+      net.w2[idx] = (net.w2[idx] ?? 0) - (lr * CURV_G[p]!) / (CURV_H[p]! + damping);
+  }
+
+  return lossValue;
+}

@@ -555,3 +555,321 @@ export function adTapeReset(tape: AdTape): void {
 export function adTapeLen(tape: AdTape): number {
   return tape.len;
 }
+
+/* ===========================================================================================
+ * EXACT SECOND ORDER — forward-over-reverse Hessian·vector products (Pearlmutter R-operator).
+ *
+ * This is the reverse-mode companion to the univariate hyper-dual engine in `math/hyperdual.ts`:
+ * where hyper-dual numbers give an exact second derivative of a SCALAR function in one forward
+ * pass, this gives an exact Hessian-times-vector product `H·v` of a MULTIVARIATE tape function in
+ * one extra sweep pair — the machinery real curvature-aware optimisers (Gauss-Newton, natural
+ * gradient, Newton-CG) are built on, with NO finite-difference truncation error.
+ *
+ * Method (Pearlmutter, "Fast Exact Multiplication by the Hessian", Neural Computation 6(1), 1994):
+ * apply the directional-derivative operator Rᵥ{·} = d/dr[·](x + r·v)|_{r=0} to the reverse-mode
+ * adjoint recurrence. Concretely, alongside the usual forward value and backward adjoint we carry
+ *   • valueDot[i]  = Rᵥ{value[i]}    — the forward tangent (how node i moves as x moves along v);
+ *   • adjDot[i]    = Rᵥ{adjoint[i]}  — the tangent of the adjoint.
+ * Seeding the tangent with `v` at the VAR leaves and reading `adjDot` back at those leaves yields
+ * exactly (H·v)_i, while `adj` yields the ordinary gradient ∇f_i for free.
+ *
+ * UPSTREAM lineage (Tsotchke/Eshkol — see THIRD-PARTY-NOTICES.md): this extends the ported
+ * reverse-mode tape (`vm_autodiff.c`) with the same exact forward-over-reverse second-order path
+ * Eshkol added upstream in its AD fix campaign — "exact jacobian/hessian through inner forward-mode
+ * derivatives" (ESH-0120 / ESH-0121, PR #246) and the "custom-VJP AD nodes" that differentiate
+ * through Moonlab VQE circuits (PR #270, commit d4154f6), observed at eshkol HEAD 4d94ab6
+ * (2026-07-12, v1.3.3-evolve). Per-op tangent formulas mirror the exact second derivatives already
+ * proven in `hyperdual.ts` (Fike & Alonso), so the two engines cross-check each other.
+ *
+ * Determinism: pure — no Rng, no Date.now, no Math.random. Exact analytic derivatives throughout.
+ * =========================================================================================== */
+
+/** Reusable scratch for {@link adHvp}: forward tangent + adjoint + adjoint-tangent, one slot/node. */
+export interface HvpScratch {
+  /** valueDot[i] = Rᵥ{value[i]} — forward directional derivative of each node. */
+  valueDot: Float64Array;
+  /** adj[i] = ∂output/∂value[i] — the ordinary reverse-mode adjoint (gradient at the leaves). */
+  adj: Float64Array;
+  /** adjDot[i] = Rᵥ{adj[i]} — the directional derivative of the adjoint; = (H·v) at the VAR leaves. */
+  adjDot: Float64Array;
+}
+
+/** Allocate HVP scratch for a tape of up to `cap` nodes (grow with the tape as needed). */
+export function adHvpScratch(cap: number): HvpScratch {
+  const n = cap > 0 ? cap : 1;
+  return { valueDot: new Float64Array(n), adj: new Float64Array(n), adjDot: new Float64Array(n) };
+}
+
+/**
+ * Exact Hessian·vector product by forward-over-reverse AD over an already-recorded tape.
+ *
+ * Computes both the gradient ∇f and the Hessian-vector product H·v of the scalar tape output
+ * `output` with respect to every VAR leaf, in one forward-tangent sweep + one reverse sweep. The
+ * perturbation direction is supplied per node in `dir` (length ≥ tape.len; nonzero only at the VAR
+ * leaves you are perturbing — CONST leaves ignore their entry). Results are written into `scratch`
+ * (allocated to fit if omitted or too small) and also returned by reference:
+ *   • `scratch.adj[node]`    = ∂f/∂value[node]  (the gradient at a VAR leaf);
+ *   • `scratch.adjDot[node]` = (H·v)_node       (the Hessian-vector product at a VAR leaf).
+ *
+ * Pure and exact (analytic per-op tangents; no finite differences). O(tape.len).
+ *
+ * @param tape recorded forward tape (call the forward ops, then this — do NOT call adBackward first)
+ * @param output index of the scalar output node
+ * @param dir per-node perturbation direction v (length ≥ tape.len)
+ * @param scratch optional reusable scratch; grown/allocated to fit
+ * @returns the scratch holding `adj` (gradient) and `adjDot` (H·v)
+ */
+export function adHvp(
+  tape: AdTape,
+  output: number,
+  dir: ArrayLike<number>,
+  scratch?: HvpScratch,
+): HvpScratch {
+  const len = tape.len;
+  const s =
+    scratch && scratch.valueDot.length >= len ? scratch : adHvpScratch(Math.max(len, tape.cap));
+  const vd = s.valueDot;
+  const adj = s.adj;
+  const adjDot = s.adjDot;
+  const nodes = tape.nodes;
+
+  // --- Forward tangent sweep: valueDot[i] = Rᵥ{value[i]}, parents-before-children by construction.
+  for (let i = 0; i < len; i++) {
+    const n = nodes[i]!;
+    const L = n.left;
+    const R = n.right;
+    const lv = L >= 0 ? nodes[L]!.value : 0;
+    const rv = R >= 0 ? nodes[R]!.value : 0;
+    const lvd = L >= 0 ? vd[L]! : 0;
+    const rvd = R >= 0 ? vd[R]! : 0;
+    let d = 0;
+    switch (n.op) {
+      case AdOpType.AD_ADD:
+        d = lvd + rvd;
+        break;
+      case AdOpType.AD_SUB:
+        d = lvd - rvd;
+        break;
+      case AdOpType.AD_MUL:
+        d = lvd * rv + lv * rvd;
+        break;
+      case AdOpType.AD_DIV: {
+        const r = rv;
+        if (r !== 0) d = lvd / r - (lv * rvd) / (r * r);
+        break;
+      }
+      case AdOpType.AD_SIN:
+        d = Math.cos(lv) * lvd;
+        break;
+      case AdOpType.AD_COS:
+        d = -Math.sin(lv) * lvd;
+        break;
+      case AdOpType.AD_EXP:
+        d = n.value * lvd; // exp(lv) = n.value
+        break;
+      case AdOpType.AD_LOG:
+        if (lv > 0) d = lvd / lv;
+        break;
+      case AdOpType.AD_SQRT:
+        if (n.value > 0) d = lvd / (2 * n.value);
+        break;
+      case AdOpType.AD_POW: {
+        const ev = n.saved; // exponent value at forward time
+        d = ev * Math.pow(lv, ev - 1) * lvd;
+        if (R >= 0 && lv > 0) d += n.value * Math.log(lv) * rvd; // variable-exponent term
+        break;
+      }
+      case AdOpType.AD_NEG:
+        d = -lvd;
+        break;
+      case AdOpType.AD_ABS:
+        d = (lv > 0 ? 1 : lv < 0 ? -1 : 0) * lvd;
+        break;
+      case AdOpType.AD_RELU:
+        d = lv > 0 ? lvd : 0;
+        break;
+      case AdOpType.AD_SIGMOID: {
+        const sg = n.value;
+        d = sg * (1 - sg) * lvd;
+        break;
+      }
+      case AdOpType.AD_TANH: {
+        const t = n.value;
+        d = (1 - t * t) * lvd;
+        break;
+      }
+      case AdOpType.AD_VAR:
+        d = i < dir.length ? (dir[i] ?? 0) : 0; // seed the perturbation direction
+        break;
+      case AdOpType.AD_CONST:
+      default:
+        d = 0;
+        break;
+    }
+    vd[i] = d;
+    adj[i] = 0;
+    adjDot[i] = 0;
+  }
+
+  if (output < 0 || output >= len) return s;
+
+  // --- Reverse sweep carrying BOTH the adjoint and its tangent (the R-operator applied to backprop).
+  adj[output] = 1;
+  adjDot[output] = 0;
+  for (let i = output; i >= 0; i--) {
+    const g = adj[i]!;
+    const gd = adjDot[i]!;
+    if (g === 0 && gd === 0) continue; // neither the adjoint nor its tangent flows through here
+    const n = nodes[i]!;
+    const L = n.left;
+    const R = n.right;
+    const lv = L >= 0 ? nodes[L]!.value : 0;
+    const rv = R >= 0 ? nodes[R]!.value : 0;
+    const lvd = L >= 0 ? vd[L]! : 0;
+    const rvd = R >= 0 ? vd[R]! : 0;
+
+    switch (n.op) {
+      case AdOpType.AD_ADD:
+        adj[L]! += g;
+        adj[R]! += g;
+        adjDot[L]! += gd;
+        adjDot[R]! += gd;
+        break;
+      case AdOpType.AD_SUB:
+        adj[L]! += g;
+        adj[R]! -= g;
+        adjDot[L]! += gd;
+        adjDot[R]! -= gd;
+        break;
+      case AdOpType.AD_MUL:
+        // ∂/∂L = rv, ∂/∂R = lv ; Rᵥ{rv}=rvd, Rᵥ{lv}=lvd
+        adj[L]! += g * rv;
+        adj[R]! += g * lv;
+        adjDot[L]! += gd * rv + g * rvd;
+        adjDot[R]! += gd * lv + g * lvd;
+        break;
+      case AdOpType.AD_DIV: {
+        const r = n.saved; // rv at forward time
+        if (r !== 0) {
+          const r2 = r * r;
+          // ∂/∂L = 1/r ; Rᵥ{1/r} = -rvd/r²
+          adj[L]! += g / r;
+          adjDot[L]! += gd / r + g * (-rvd / r2);
+          // ∂/∂R = -lv/r² ; Rᵥ{-lv/r²} = -lvd/r² + 2·lv·rvd/r³
+          adj[R]! += (-g * lv) / r2;
+          adjDot[R]! += gd * (-lv / r2) + g * (-lvd / r2 + (2 * lv * rvd) / (r2 * r));
+        }
+        break;
+      }
+      case AdOpType.AD_SIN: {
+        const c = Math.cos(lv);
+        adj[L]! += g * c;
+        adjDot[L]! += gd * c + g * (-Math.sin(lv) * lvd);
+        break;
+      }
+      case AdOpType.AD_COS: {
+        const sn = Math.sin(lv);
+        adj[L]! += g * -sn;
+        adjDot[L]! += gd * -sn + g * (-Math.cos(lv) * lvd);
+        break;
+      }
+      case AdOpType.AD_EXP: {
+        const e = n.value; // exp(lv)
+        adj[L]! += g * e;
+        adjDot[L]! += gd * e + g * (e * lvd);
+        break;
+      }
+      case AdOpType.AD_LOG:
+        if (lv > 0) {
+          adj[L]! += g / lv;
+          adjDot[L]! += gd / lv + g * (-lvd / (lv * lv));
+        }
+        break;
+      case AdOpType.AD_SQRT: {
+        const sq = n.value;
+        if (sq > 0) {
+          adj[L]! += g / (2 * sq);
+          adjDot[L]! += gd / (2 * sq) + g * (-lvd / (4 * sq * sq * sq));
+        }
+        break;
+      }
+      case AdOpType.AD_POW: {
+        const ev = n.saved;
+        const p1 = ev * Math.pow(lv, ev - 1); // ∂/∂L
+        const p1dot = ev * (ev - 1) * Math.pow(lv, ev - 2) * lvd; // Rᵥ{∂/∂L} (base term)
+        adj[L]! += g * p1;
+        adjDot[L]! += gd * p1 + g * p1dot;
+        if (R >= 0 && lv > 0) {
+          const lnL = Math.log(lv);
+          const q = n.value * lnL; // ∂/∂R = L^R·ln L
+          // Rᵥ{L^R} = L^R·(R/L·lvd + lnL·rvd); Rᵥ{ln L} = lvd/L
+          const powDot = n.value * ((ev / lv) * lvd + lnL * rvd);
+          const qdot = powDot * lnL + n.value * (lvd / lv);
+          adj[R]! += g * q;
+          adjDot[R]! += gd * q + g * qdot;
+        }
+        break;
+      }
+      case AdOpType.AD_NEG:
+        adj[L]! -= g;
+        adjDot[L]! -= gd;
+        break;
+      case AdOpType.AD_ABS: {
+        const sgn = lv > 0 ? 1 : lv < 0 ? -1 : 0;
+        adj[L]! += g * sgn;
+        adjDot[L]! += gd * sgn; // second derivative 0 a.e.
+        break;
+      }
+      case AdOpType.AD_RELU:
+        if (lv > 0) {
+          adj[L]! += g;
+          adjDot[L]! += gd; // slope 1, curvature 0 on the active side
+        }
+        break;
+      case AdOpType.AD_SIGMOID: {
+        const sg = n.value;
+        const d1 = sg * (1 - sg);
+        adj[L]! += g * d1;
+        adjDot[L]! += gd * d1 + g * ((1 - 2 * sg) * d1 * lvd);
+        break;
+      }
+      case AdOpType.AD_TANH: {
+        const t = n.value;
+        const d1 = 1 - t * t;
+        adj[L]! += g * d1;
+        adjDot[L]! += gd * d1 + g * (-2 * t * d1 * lvd);
+        break;
+      }
+      case AdOpType.AD_CONST:
+      case AdOpType.AD_VAR:
+        break; // leaves — gradient/tangent collect here, nothing to propagate
+    }
+  }
+
+  return s;
+}
+
+/**
+ * Exact Hessian DIAGONAL of a scalar tape output w.r.t. a chosen set of VAR leaves, by `varNodes.length`
+ * unit-direction {@link adHvp} calls (H_ii = eᵢᵀ·H·eᵢ). O(k·tape.len) for k probed vars — intended for
+ * verification and small nets, not the per-frame hot path (curvature-aware training uses the cheaper
+ * PSD Gauss-Newton diagonal instead; see `sim/ad-mlp.mlpTrainStepCurvature`).
+ *
+ * @param tape recorded forward tape
+ * @param output scalar output node index
+ * @param varNodes the VAR leaf node indices whose Hessian diagonal entries are wanted
+ * @returns array `H_ii` aligned to `varNodes`
+ */
+export function adHessianDiag(tape: AdTape, output: number, varNodes: number[]): number[] {
+  const dir = new Float64Array(tape.len);
+  const scratch = adHvpScratch(tape.cap);
+  const out: number[] = [];
+  for (let k = 0; k < varNodes.length; k++) {
+    const node = varNodes[k]!;
+    dir.fill(0);
+    dir[node] = 1;
+    adHvp(tape, output, dir, scratch);
+    out.push(scratch.adjDot[node] ?? 0);
+  }
+  return out;
+}

@@ -38,7 +38,7 @@ import {
   adValue,
   type AdTape,
 } from '../math/eshkol-ad';
-import { createMlp, mlpPredict, mlpTrainStep, type Mlp } from './ad-mlp';
+import { createMlp, mlpPredict, mlpTrainStepCurvature, type Mlp } from './ad-mlp';
 import { mulberry32 } from '../math/rng';
 const clamp01 = (v: number): number => (v > 0 ? (v < 1 ? v : 1) : 0);
 
@@ -461,16 +461,22 @@ export function stepBiologic(b: Biologic, flux: number, learn = false): void {
     }
   }
 
-  // === ONLINE SELF-MODEL (Eshkol-AD MLP backprop) ===
+  // === ONLINE SELF-MODEL (Eshkol-AD MLP, EXACT curvature-aware backprop) ===
   // The biologic trains its brain to predict the consciousness it JUST reached from the substrate it
   // STARTED the beat with, and tracks the (falling) prediction error. This is a real adaptive faculty —
   // measurable (selfModelErr decreases over life; a frozen brain's does not) and PURELY observational:
   // it never feeds back into adFitness/consciousness/selection, so every existing petri golden is byte-
-  // identical. Proven live in tests/biologic-self-model.test.ts. `learn=false` skips this entirely.
+  // identical. The optimiser is now EXACT second-order: mlpTrainStepCurvature preconditions each step by
+  // the positive-semidefinite Gauss-Newton curvature diagonal of the loss (an extra exact reverse pass
+  // seeded at the network output), so the self-model converges FASTER and more stably than the prior
+  // fixed-rate SGD — a genuinely smarter learner, not a bigger one. Deterministic (no rng, exact AD) and
+  // on a SEPARATE brain substream, so whole-sim determinism and the learn=false byte-identical golden
+  // path are both preserved. Provenance: mirrors Eshkol's upstream forward-over-reverse second-order AD
+  // (ESH-0120/0121; custom-VJP PR #270). Proven live in tests/biologic-self-model.test.ts.
   if (learn && b.brain && selfInput) {
     const pred = mlpPredict(b.brain, selfInput)[0] ?? 0;
     const err = Math.abs(pred - b.consciousness);
     b.selfModelErr = b.selfModelErr === undefined ? err : b.selfModelErr * 0.9 + err * 0.1;
-    mlpTrainStep(b.brain, selfInput, [b.consciousness], 0.05);
+    mlpTrainStepCurvature(b.brain, selfInput, [b.consciousness], 0.05);
   }
 }
