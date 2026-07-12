@@ -192,6 +192,25 @@ export interface DriveResolutionSignal {
 }
 
 /**
+ * Predictive metacognition shared by every living system (see `sim/predictive-metacognition.ts`). An
+ * arbitrary-order Taylor jet (the exact Eshkol v1.3 primitive) is fit to the recent trajectory; the
+ * magnitude of its highest-order coefficient is a bounded predictive-confidence — high when a low-order
+ * model already fits (smooth, trustworthy forecast), low when the trajectory is volatile. Indicator
+ * only: operational control data, not a claim of phenomenal metacognition or consciousness.
+ */
+export interface PredictiveMetacognitionSignal {
+  enabled: boolean;
+  indicatorOnly: true;
+  revision: number;
+  /** One-step-ahead Taylor forecast of the tracked signal, clamped to [0,1]. */
+  forecast: number;
+  /** Magnitude of the highest-order Taylor coefficient — the leading-term truncation estimate. */
+  remainder: number;
+  /** Bounded confidence in (0,1]: 1/(1 + scale·remainder). */
+  predictiveConfidence: number;
+}
+
+/**
  * EntityManager-owned ecological goals, indexed by the current compacted entity/brain slot.
  * Typed arrays are allocated once at the quality-tier ceiling and updated in place; EntityBrainField
  * reads them one frame later without a query or allocation.
@@ -310,6 +329,11 @@ export interface SimContext {
    * headless/legacy contexts; absent ⇒ consumers fall back to the pre-resolver linear behavior.
    */
   driveResolution?: DriveResolutionSignal;
+  /**
+   * Predictive-confidence of the world's forecast (arbitrary-order Taylor remainder). Optional;
+   * absent ⇒ full confidence. Read for observability; the resolver receives it directly from world.
+   */
+  predictiveMetacognition?: PredictiveMetacognitionSignal;
   audit: AuditTrail;
   sfx: (type: SfxType) => void;
   /** Rare per-morph creature voice (palette index); optional — wired by world.ts. */

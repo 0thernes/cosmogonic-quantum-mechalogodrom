@@ -118,6 +118,7 @@ import { AlphabetPantheonRender } from './sim/alphabet-pantheon-render';
 import { corpusPulse } from './sim/tsotchke-facade';
 import { TsotchkeOrganismIntelligence } from './sim/tsotchke-organism-intelligence';
 import { VqeDriveResolver } from './sim/vqe-drive-resolver';
+import { PredictiveMetacognition } from './sim/predictive-metacognition';
 import {
   GlyphBrainBatch,
   writeGlyphEnvironmentalPercept,
@@ -369,6 +370,8 @@ export class World {
   private readonly organismIntelligence: TsotchkeOrganismIntelligence;
   /** One VQE per cadence resolves the four competing drives into a minimum-frustration commitment. */
   private readonly driveResolver: VqeDriveResolver;
+  /** Arbitrary-order Taylor remainder → how much to trust the world forecast; gates resolver commit. */
+  private readonly metacognition: PredictiveMetacognition;
   /** V127 (USER): Thaler "Death of a Gedanken Creature" — measured on every portal death (dying nets
    *  confabulate; the ledger accumulates the population-scale evidence). `gedankenSenses` is reused. */
   private readonly gedankenLedger = new GedankenLedger();
@@ -1012,6 +1015,7 @@ export class World {
       (this.persisted.seed ^ 0x0a11_f1fe) >>> 0 || 1,
     );
     this.driveResolver = new VqeDriveResolver();
+    this.metacognition = new PredictiveMetacognition();
     const ctx: SimContext = {
       scene: this.engine.scene,
       quality: this.quality,
@@ -1023,6 +1027,7 @@ export class World {
       state: this.state,
       organismIntelligence: this.organismIntelligence.signal,
       driveResolution: this.driveResolver.signal,
+      predictiveMetacognition: this.metacognition.signal,
       audit: this.audit,
       sfx: (type) => this.audio.play(type),
       creatureSfx: (mi) => {
@@ -1724,11 +1729,15 @@ export class World {
       floraBiomass: this.alienFlora.meanBiomass(),
     });
 
+    // METACOGNITION FIRST: fit an arbitrary-order Taylor jet to the recent resource-pressure trajectory
+    // and read its leading-term remainder → how much the near-future forecast can be trusted right now.
+    const life = this.organismIntelligence.signal;
+    this.metacognition.step(life.resourcePressure, s.frame);
+
     // The four competing drives that the corpus field just published are resolved into a single
     // minimum-frustration COMMITMENT by one VQE per cadence (exact parameter-shift gradient through the
-    // Eshkol AD tape). Every living system reads the resolved bias in O(1) — the quantum substrate now
-    // DECIDES rather than only being wired.
-    const life = this.organismIntelligence.signal;
+    // Eshkol AD tape), DAMPED by the metacognitive confidence — a creature commits less hard when the
+    // world is volatile. Every living system reads the resolved bias in O(1).
     this.driveResolver.step(
       {
         resource: life.resourcePressure,
@@ -1737,6 +1746,8 @@ export class World {
         social: life.socialDrive,
       },
       s.frame,
+      false,
+      this.metacognition.confidence,
     );
 
     // Audio couplings, each ≤ 0.35 per contract: bass shimmers the six-lamp

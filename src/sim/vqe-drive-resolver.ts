@@ -203,8 +203,17 @@ export class VqeDriveResolver {
   /**
    * Resolve the current drive conflict on the configured cadence. Returns the same signal object
    * every call. `force` bypasses the cadence gate (used by the resolve-every-frame gate tests).
+   *
+   * `predictiveConfidence` ∈ (0,1] (default 1) DAMPS the resolved coherence: when the world's recent
+   * dynamics are volatile (low confidence, from {@link ../sim/predictive-metacognition}), a creature
+   * commits less hard to its resolved decision. At confidence 1 the output is byte-identical.
    */
-  step(drives: DriveVector, frame: number, force = false): DriveResolutionSignal {
+  step(
+    drives: DriveVector,
+    frame: number,
+    force = false,
+    predictiveConfidence = 1,
+  ): DriveResolutionSignal {
     if (!this.signal.enabled) return this.signal;
     const f = Number.isFinite(frame) ? Math.max(0, Math.floor(frame)) : 0;
     if (!force && f - this.lastFrame < this.cadenceFrames) return this.signal;
@@ -257,9 +266,10 @@ export class VqeDriveResolver {
       ];
     }
 
-    // Only claim the energy improvement the VQE ACTUALLY achieved over the greedy baseline.
+    // Only claim the energy improvement the VQE ACTUALLY achieved over the greedy baseline, then damp
+    // it by how much the world's near-future is currently trustworthy (metacognitive gating).
     const improvement = naiveEnergy - achievedEnergy;
-    const coherence = clamp01(improvement / span);
+    const coherence = clamp01(improvement / span) * clamp01(predictiveConfidence);
 
     const s = this.signal;
     s.resourceCommit = clamp01(commits[0]);

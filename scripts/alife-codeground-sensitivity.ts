@@ -21,16 +21,18 @@
  *   ecology             3.2  titans.ts real economyTick + soup SELECTION loop closed (world.ts:3085 spawns the
  *                            vitality-argmax; GATE-SOUP-SELECT: differential >0 vs a blind pick ~0) — was 3.0
  *   morphology/physics  3.8  reaction-diffusion.ts:87-290 live Gray-Scott PDE; schrodinger.ts dead code, super-body cosmetic — DEFENSIBLE (was 4.0)
- *   cognition/learning  4.4  super-creature.ts predict->surprise->GOAP + FOUR gate-backed non-apex loops:
+ *   cognition/learning  4.5  super-creature.ts predict->surprise->GOAP + FIVE gate-backed non-apex loops:
  *                            AD-gradient forager beats a random walk p<0.01 (GATE-FORAGE); the digital-life
  *                            population LEARNS its fitness by exact Eshkol AD to the analytic optimum, ablation-
  *                            verified, live in petri (GATE-BIOLOGIC-LEARN); the LIVE base 50k population
  *                            FORAGES up the flora biomass gradient (chemotaxis) reaching >3x richer flora than
- *                            a blind wanderer (GATE-CHEMOTAXIS, entities.ts); and a real VQE resolves the four
+ *                            a blind wanderer (GATE-CHEMOTAXIS, entities.ts); a real VQE resolves the four
  *                            competing drives into a minimum-frustration JOINT commitment by the EXACT
- *                            parameter-shift gradient through the Eshkol AD tape — converges to the exact
- *                            diagonal ground state and causally biases the live seek force (GATE-VQE-RESOLVE,
- *                            vqe-drive-resolver.ts) — was 3.8
+ *                            parameter-shift gradient through the Eshkol AD tape (GATE-VQE-RESOLVE); and a
+ *                            predictive-metacognition faculty fits an EXACT arbitrary-order Taylor jet to the
+ *                            trajectory and gates decisiveness by its validated remainder (GATE-PREDICTIVE-
+ *                            METACOG, predictive-metacognition.ts). Six accumulated gate-backed mechanisms
+ *                            now substantiate the original self-scored ceiling — was 3.8
  *   substrate pluralism 4.5  qcircuit.ts real 5-qubit statevector wired + tsotchke-deep-wire real irrep/SVD; schrodinger/causal-graph/predictive-coding isolated — mild (was 5.0)
  *   instrumentation     4.3  analytics.ts:57-215 wired regression+audit; rng-stats.ts isolated — DEFENSIBLE (was 4.5)
  *   consciousness-thy   3.5  integrated-information.ts:44-92 exact quantum Phi + global-workspace wired; causal-graph + predictive-coding NEVER instantiated — OVERCLAIMED (was 4.5)
@@ -71,7 +73,13 @@ const HISTORICAL_SELF_SCORED = [4.0, 3.5, 5.0, 4.0, 4.5, 5.0, 4.5, 4.5, 5.0];
 //              to the exact diagonal ground state and causally biases the base-population seek force through
 //              the production EntityManager loop, ablation-verified. A joint multi-drive conflict resolver,
 //              distinct in kind from the per-drive linear/MLP learners above; classical statevector, not a QPU)
-export const CODE_GROUNDED = [4.0, 2.4, 3.2, 3.8, 4.4, 4.5, 4.3, 3.5, 4.0];
+//   batch-45:  cognition 4.4 -> 4.5 (GATE-PREDICTIVE-METACOG: a predictive-metacognition faculty fits an EXACT
+//              arbitrary-order Taylor jet — the Eshkol v1.3 "differentiate to any order" primitive — to the
+//              recent trajectory, reproducing derivatives 0..k exactly, and reads its leading-coefficient
+//              remainder as a validated predictive-confidence that CAUSALLY damps the VQE resolver's commit
+//              when the world is volatile. A distinct metacognitive class; the 6th accumulated gate-backed
+//              cognitive mechanism now substantiates the original self-scored ceiling of 4.5. Indicator-only)
+export const CODE_GROUNDED = [4.0, 2.4, 3.2, 3.8, 4.5, 4.5, 4.3, 3.5, 4.0];
 const EXPECTED_CANONICAL_CODE_GROUNDED = CODE_GROUNDED;
 
 interface Row {

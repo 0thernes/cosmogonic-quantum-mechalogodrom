@@ -4,10 +4,10 @@
   "nSystems": 113,
   "nPeers": 112,
   "cosmogonic": {
-    "breadthMean": 3.79,
+    "breadthMean": 3.8,
     "breadthRank": 1,
-    "zScorePopulation": 3.01,
-    "zScoreVsPeers": 3.15,
+    "zScorePopulation": 3.03,
+    "zScoreVsPeers": 3.17,
     "percentile": 100,
     "peerMaturity": 1.5
   },
@@ -107,8 +107,8 @@
       "mean": 1.9,
       "std": 1.6,
       "max": 5,
-      "cosmo": 4.4,
-      "cosmoZ": 1.56,
+      "cosmo": 4.5,
+      "cosmoZ": 1.62,
       "leaders": [
         "DERL (Deep Evolutionary Reinforcement Learning)",
         "UNIMAL (Universal Animal design space)",
@@ -185,52 +185,52 @@
     {
       "name": "ALIEN",
       "full": "ALIEN",
-      "d": 4.53
+      "d": 4.56
     },
     {
       "name": "Creatures",
       "full": "Creatures",
-      "d": 4.88
+      "d": 4.89
     },
     {
       "name": "Framsticks",
       "full": "Framsticks",
-      "d": 5.37
+      "d": 5.4
     },
     {
       "name": "Division Blocks",
       "full": "Division Blocks",
-      "d": 5.44
+      "d": 5.47
     },
     {
       "name": "biosim4",
       "full": "biosim4",
-      "d": 5.55
+      "d": 5.56
     },
     {
       "name": "The Bibites",
       "full": "The Bibites",
-      "d": 5.62
-    },
-    {
-      "name": "Karl Sims VC",
-      "full": "Karl Sims Evolved Virtual Creatures",
-      "d": 5.69
+      "d": 5.63
     },
     {
       "name": "DERL (Deep Evolutionary Reinforcement Learning)",
       "full": "DERL (Deep Evolutionary Reinforcement Learning)",
-      "d": 5.71
+      "d": 5.7
+    },
+    {
+      "name": "Karl Sims VC",
+      "full": "Karl Sims Evolved Virtual Creatures",
+      "d": 5.72
     },
     {
       "name": "Neural Graph Evolution (NGE)",
       "full": "Neural Graph Evolution (NGE)",
-      "d": 5.71
+      "d": 5.72
     },
     {
-      "name": "Polyworld",
-      "full": "Polyworld",
-      "d": 5.8
+      "name": "UNIMAL (Universal Animal design space)",
+      "full": "UNIMAL (Universal Animal design space)",
+      "d": 5.79
     }
   ]
 }

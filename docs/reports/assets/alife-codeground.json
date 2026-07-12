@@ -76,21 +76,21 @@
       2.4,
       3.2,
       3.8,
-      4.4,
+      4.5,
       4.5,
       4.3,
       3.5,
       4
     ],
-    "breadth": 3.789,
+    "breadth": 3.8,
     "rank": 1,
     "total": 113,
     "percentile": 100,
-    "zPopulation": 3.008,
-    "zVsPeers": 3.152,
-    "mahalanobis": 10.242,
+    "zPopulation": 3.026,
+    "zVsPeers": 3.172,
+    "mahalanobis": 10.246,
     "dominatedBy9d": 0,
-    "leadOverNearestPeerBreadth": 0.289,
+    "leadOverNearestPeerBreadth": 0.3,
     "perAxisZ": [
       {
         "axis": "Reproduction",
@@ -114,8 +114,8 @@
       },
       {
         "axis": "Cognition/Learning",
-        "score": 4.4,
-        "z": 1.56
+        "score": 4.5,
+        "z": 1.62
       },
       {
         "axis": "Substrate pluralism",
@@ -214,21 +214,21 @@
       2.4,
       3.2,
       3.8,
-      4.4,
+      4.5,
       4.5,
       4.3,
       3.5,
       4
     ],
-    "breadth": 3.789,
+    "breadth": 3.8,
     "rank": 1,
     "total": 113,
     "percentile": 100,
-    "zPopulation": 3.008,
-    "zVsPeers": 3.152,
-    "mahalanobis": 10.242,
+    "zPopulation": 3.026,
+    "zVsPeers": 3.172,
+    "mahalanobis": 10.246,
     "dominatedBy9d": 0,
-    "leadOverNearestPeerBreadth": 0.289,
+    "leadOverNearestPeerBreadth": 0.3,
     "perAxisZ": [
       {
         "axis": "Reproduction",
@@ -252,8 +252,8 @@
       },
       {
         "axis": "Cognition/Learning",
-        "score": 4.4,
-        "z": 1.56
+        "score": 4.5,
+        "z": 1.62
       },
       {
         "axis": "Substrate pluralism",
@@ -279,8 +279,8 @@
   },
   "deltas": {
     "basis": "canonical-minus-historical",
-    "breadth": -0.655,
-    "zPopulation": -1.011,
-    "mahalanobis": -2.413
+    "breadth": -0.644,
+    "zPopulation": -0.993,
+    "mahalanobis": -2.409
   }
 }
