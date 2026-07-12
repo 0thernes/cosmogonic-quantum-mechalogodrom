@@ -34,7 +34,7 @@
  */
 import * as THREE from 'three';
 import { TAU, clamp, lerp } from '../math/scalar';
-import { ARENA_RADIUS } from './constants';
+import { ARENA_RADIUS, HABITAT_XZ_SCALE, HABITAT_Y_SCALE } from './constants';
 import { MechaExteriorAbomination } from './creature-exterior-layers';
 import {
   createMechalogodromDarkStarMaterial,
@@ -60,12 +60,15 @@ const MECHA_TIME_SCALE = 16;
 const MECHA_EXTERIOR_TIME_SCALE = 0.15;
 const MECHA_SATELLITE_COUNT = 400;
 const MECHA_CORE_SEGMENTS = 128;
-/** Elevation of the whole abomination above the arena floor. Pinned to the GOD-COLOSSUS's VERTICAL
- *  CENTER so the two god-tier presences share ONE elevation band (owner: "the middle of the God's height
- *  should be the same as the Mechalogodrom's"). The colossus bounding box is centered at
- *  `ARENA_RADIUS·0.82` (its half-extent) + `ARENA_RADIUS·0.1` (float gap) = `ARENA_RADIUS·0.92`, so this
- *  matches its mid-height exactly and tracks any change to the arena scale — see god-colossus.ts. */
-const ALTITUDE = ARENA_RADIUS * 0.92; // ≈ 299 — the middle of the God's height
+/** Diameter multiplier for the whole abomination — matches the world's 2× HORIZONTAL expansion
+ *  (HABITAT_XZ_SCALE) so the shiny spinning center-star grows WITH the enlarged world. Applied as a
+ *  uniform group scale in the constructor (owner: "make it twice as big in diameter, the world expanded 2×2"). */
+const DIAMETER_SCALE = HABITAT_XZ_SCALE; // ×2
+/** Elevation of the whole abomination above the arena floor. Raised to 3× the original authored 252 =
+ *  756, matching the world's 3× VERTICAL expansion (HABITAT_Y_SCALE) — owner: "the center star should be
+ *  3× higher." The god now scales WITH the world on both axes (3× up, 2× wide) instead of sitting at its
+ *  old authored height (this supersedes the brief God-Colossus mid-height alignment). */
+const ALTITUDE = 252 * HABITAT_Y_SCALE; // = 756 — 3× higher
 /** Mandelbulb iteration budget for the per-vertex escape proxy (power-8 lobes; NaN-guarded). */
 const BULB_ITERS = 4;
 
@@ -172,6 +175,7 @@ export class Mechalogodrom {
 
   constructor(scene: THREE.Scene) {
     this.group.position.set(0, ALTITUDE, 0);
+    this.group.scale.setScalar(DIAMETER_SCALE); // ×2 diameter — the god grows with the 2×-wider world
 
     this.coreMat = createMechalogodromDarkStarMaterial();
     this.core = new THREE.Mesh(

@@ -18,29 +18,29 @@
  * based (frame-deterministic), never Date.now. One additive `THREE.Points` ember pool, owned + disposed.
  */
 import * as THREE from 'three';
-import { ARENA_MID, ARENA_RADIUS } from './constants';
+import { ARENA_MID, HABITAT_XZ_SCALE, HABITAT_Y_SCALE } from './constants';
 import type { EntityManager } from './entities';
 import type { Entity, SimContext } from '../types';
 
-/** Mechalogodrom altitude — mirrors mechalogodrom.ts ALTITUDE = ARENA_RADIUS·0.92 (the God-Colossus's
- *  vertical center, ≈ 299). The group sits at (0, MECHA_Y, 0). */
-export const MECHA_Y = ARENA_RADIUS * 0.92;
+/** Mechalogodrom altitude — mirrors mechalogodrom.ts ALTITUDE = 252·HABITAT_Y_SCALE (3× higher = 756).
+ *  The group sits at (0, MECHA_Y, 0). */
+export const MECHA_Y = 252 * HABITAT_Y_SCALE; // 756
 const MECHA_X = 0;
 const MECHA_Z = 0;
 // USER V127: the blaze REACHES DOWN — a widening fiery CONE hanging from the mecha into the central
-// column, so high-flyers that rise anywhere under it actually get incinerated (a bare sphere at y≈299
+// column, so high-flyers that rise anywhere under it actually get incinerated (a bare sphere at y=756
 // almost never bit, since organisms cap at the habitat ceiling). The cone is narrow at the machine
 // (BASE_R, ≈ its exocage) and fans out as it falls, bottoming out at BLAZE_FLOOR — well above the
 // ground swarm, so only genuine high-flyers in the middle of the dome burn.
-/** Cone radius AT the mecha (a touch beyond the exocage CORE_R·2.7 ≈ 81). Tied to the god's body size,
- *  which is unchanged by the altitude change, so it stays 90. */
-const BASE_R = 36 * ARENA_MID; // 90
+/** Cone radius AT the mecha (a touch beyond the exocage). Scaled ×2 with the god's 2×-bigger body
+ *  (HABITAT_XZ_SCALE) so the fire cone still hugs the enlarged exocage. */
+const BASE_R = 36 * ARENA_MID * HABITAT_XZ_SCALE; // 180
 /** Extra radius per world-unit of descent below the mecha — the cone fans out as the fire falls. */
 const CONE_SPREAD = 0.34;
-/** Lowest altitude the blaze reaches — below this, organisms are safe. The god hovers at the God-Colossus
- *  center (≈ 299); the cone hangs ~150u beneath it (floor 150 → god ≈ 299), sparing the ground swarm while
- *  catching genuine high-flyers in the central column. */
-const BLAZE_FLOOR = 150;
+/** Lowest altitude the blaze reaches — below this, organisms are safe. Scaled ×3 with the god's 3×
+ *  altitude (150·HABITAT_Y_SCALE = 450) so the cone keeps its shape hanging beneath the raised god,
+ *  sparing the ground swarm while catching genuine high-flyers in the central column. */
+const BLAZE_FLOOR = 150 * HABITAT_Y_SCALE; // 450
 /** A small cap above the mecha so an organism touching it from directly overhead still burns. */
 const BLAZE_CEIL = MECHA_Y + 24 * ARENA_MID;
 /** "respawn in 5 seconds randomly new place." */

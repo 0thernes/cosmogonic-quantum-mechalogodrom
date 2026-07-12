@@ -29,7 +29,14 @@
  */
 import * as THREE from 'three';
 import { clamp } from '../math/scalar';
-import { ARENA_RADIUS, PLATFORM_CEIL, PLATFORM_FLOOR, PLATFORM_HALF } from './constants';
+import {
+  ARENA_RADIUS,
+  HABITAT_XZ_SCALE,
+  HABITAT_Y_SCALE,
+  PLATFORM_CEIL,
+  PLATFORM_FLOOR,
+  PLATFORM_HALF,
+} from './constants';
 import { ALPHABET_ROSTER, type AlphabetArchetype } from './alphabet-pantheon';
 import {
   ApexExteriorAbomination,
@@ -108,11 +115,11 @@ const NAV_SPEED = 320;
  * drifts within a hazard's radius, an outward repulsion is added to its heading so it veers gracefully
  * around the danger instead of blundering through it (it still ricochets on true contact — that's the
  * immune bounce). `ARENA_MID`=2.5, so these mirror the portal void-throat (0,60,-101.25) and the
- * Mechalogodrom (0,~299,0). Pure geometry, deterministic — object-aware, adaptive, responsive flight.
+ * Mechalogodrom (0,756,0). Pure geometry, deterministic — object-aware, adaptive, responsive flight.
  */
 const PANTHEON_HAZARDS: readonly { x: number; y: number; z: number; r: number; push: number }[] = [
   { x: 0, y: 60, z: -101.25, r: 95, push: 48 }, // the ascension DEATH portal
-  { x: 0, y: ARENA_RADIUS * 0.92, z: 0, r: 135, push: 42 }, // the fiery Mechalogodrom (God-Colossus center height)
+  { x: 0, y: 252 * HABITAT_Y_SCALE, z: 0, r: 135 * HABITAT_XZ_SCALE, push: 42 }, // the fiery Mechalogodrom (3× higher, 2× wider)
 ];
 /** Fractional part in [0,1) — a deterministic pseudo-random when fed `counter · irrational`. */
 const nfrac = (x: number): number => x - Math.floor(x);

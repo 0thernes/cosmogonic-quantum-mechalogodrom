@@ -45,9 +45,9 @@ export const CONTAIN_RADIUS2 = HABITAT_RADIUS * HABITAT_RADIUS;
 export const GROUND_EXTENT = 240 * ARENA * HABITAT_XZ_SCALE;
 
 /** USER: the SQUARE PLATFORM box that everything roams — per-axis half-extent (just inside the ground
- *  edge), a ground floor, and the expanded biosphere ceiling. The central mechalogodrom keeps its
- *  authored size, but its ALTITUDE now tracks the GOD-COLOSSUS's vertical center (see mechalogodrom.ts
- *  ALTITUDE = ARENA_RADIUS·0.92 ≈ 299) so the two god-tier presences share one elevation band. */
+ *  edge), a ground floor, and the expanded biosphere ceiling. The central mechalogodrom now scales WITH
+ *  the world expansion: ALTITUDE = 252·HABITAT_Y_SCALE (3× higher = 756) and a ×HABITAT_XZ_SCALE group
+ *  scale (2× diameter) — see mechalogodrom.ts — so the god grows 3× up and 2× wide with the 2×2×3 world. */
 export const PLATFORM_HALF = (GROUND_EXTENT / 2) * 0.9; // 1,080
 export const PLATFORM_CEIL = 240 * HABITAT_Y_SCALE; // 720
 export const PLATFORM_FLOOR = 6;
