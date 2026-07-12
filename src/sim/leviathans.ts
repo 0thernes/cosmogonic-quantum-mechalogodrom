@@ -338,7 +338,7 @@ export class LeviathanSystem implements PortalCullable, DomeFeeder {
         lv.vel.add(V1);
       }
 
-      V1.copy(lv.vel).multiplyScalar(dt * 60);
+      V1.copy(lv.vel).multiplyScalar(dt * 60 * 0.14);
       p.add(V1);
       // V1.3 ECOLOGY: stir the primordial substrate at the colossus's wake (deterministic, rng-free).
       if (doStir && this.rd) {

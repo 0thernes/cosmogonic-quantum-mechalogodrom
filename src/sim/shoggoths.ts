@@ -618,7 +618,7 @@ export class ShoggothSystem implements PortalCullable {
       // F-HOLES: an active singularity drags the shoggoth toward/away from its centre (force already
       // computed once in the perception step above; reused here so we never query the hole twice).
       if (singActive) sg.vel.add(HOLE_F);
-      V1.copy(sg.vel).multiplyScalar(dt * 60);
+      V1.copy(sg.vel).multiplyScalar(dt * 60 * 0.14);
       p.add(V1);
       if (!Number.isFinite(p.x + p.y + p.z + sg.vel.x + sg.vel.y + sg.vel.z)) {
         p.set(0, 5, 0);

@@ -1220,7 +1220,7 @@ export class TitanSystem implements DomeFeeder {
     if (p.z > PLATFORM_HALF) vel.z -= 0.06;
     else if (p.z < -PLATFORM_HALF) vel.z += 0.06;
     vel.multiplyScalar(0.97); // USER: livelier (0.985→0.97)
-    VA.copy(vel).multiplyScalar(dt * 60);
+    VA.copy(vel).multiplyScalar(dt * 60 * 0.14);
     p.add(VA);
     // USER: square platform + up to the mechalogodrom (was a ROAM_RADIUS 300 circle capped at y90).
     // HARD clamp so a roaming/homing titan can never overshoot the rim (owner law: never off-platform).

@@ -97,6 +97,8 @@ export interface EntityData {
   sT: number;
   /** Post-split digestion timer (visual pulse). */
   belly: number;
+  /** Metabolic waste 0..1 → WasteEcology pollution/fertilizer/constructs. */
+  wasteLoad?: number;
   /** Value the sorting-field algorithms operate on. */
   sortVal: number;
   /** Neural weight for connectome links. */

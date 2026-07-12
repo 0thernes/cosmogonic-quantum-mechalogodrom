@@ -169,8 +169,9 @@ describe('GATE-CHEMOTAXIS: a hungry animal forages UP the REAL quantized flora g
 
     // The organism starts on +x with the biomass maximum at the origin. Production chemotaxis must
     // therefore add a clear -x component; all non-flora behavior is identical between the twins.
+    // Velocity force unscaled; position delta smaller under GLOBAL_MOTION_SCALE on integrate.
     expect(sensed.vx).toBeLessThan(detached.vx - 0.005);
-    expect(sensed.x).toBeLessThan(detached.x - 0.005);
+    expect(sensed.x).toBeLessThan(detached.x - 0.0005);
     expect(sensed.vz).toBeCloseTo(detached.vz, 12);
     expect(sensed.z).toBeCloseTo(detached.z, 12);
   });

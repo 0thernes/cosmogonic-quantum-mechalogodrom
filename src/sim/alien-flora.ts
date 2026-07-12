@@ -693,35 +693,34 @@ const flora_frag = /* glsl */ `
     // Möbius warp of hue circle driven by stress/contact (extreme remapping, continuous).
     float viewHue = moebiusHue(rawHue, vStress * 0.45 + contactFlash * 0.2 - 0.15, debt * 0.35 - health * 0.2);
 
-    // Strong sat + mid lit — high lit was the white-wash that killed field readability.
+    // Skin sat/lit may breathe — but must NOT flatten every plant to white/grey candy.
     float sat = clamp(
-      0.92 + vRarity * 0.28 - hunger * 0.12 + contactFlash * 0.15 + f2 * 0.1
-      + uChaos * 0.12 - vStress * 0.03 + health * 0.06 - debt * 0.08 + crowd * 0.05,
-      0.55, 1.0);
+      0.5 + vRarity * 0.4 - hunger * 0.1 + contactFlash * 0.12 + f2 * 0.08
+      + uChaos * 0.1 - vStress * 0.04 + health * 0.05 - debt * 0.08,
+      0.22, 1.0);
     float lit = clamp(
-      0.34 + fres * 0.14 - hunger * 0.08 + health * 0.08 - vStress * 0.05
-      + f * 0.05 + contactFlash * 0.06 - debt * 0.06 + skinPulse * 0.03,
-      0.14, 0.58);
+      0.2 + fres * 0.1 - hunger * 0.07 + health * 0.05 - vStress * 0.04
+      + f * 0.03 + contactFlash * 0.04 - debt * 0.05 + skinPulse * 0.02,
+      0.07, 0.42);
 
     vec2 hopf = hopfAngles(vWorldP * 0.08 + n * 0.3, uTime + vStress);
     float hopfHue = fract(hopf.x / 6.2831853 + hopf.y / 6.2831853 * 0.5 + viewHue * 0.3);
 
-    // Wider hue offsets between skin manifolds so chroma bands actually diverge.
+    // Narrow hue wander so family identity (vColor H/S/L) still reads as type.
     vec3 iri = hsl2rgb(viewHue, sat, lit);
-    vec3 iri2 = hsl2rgb(fract(viewHue + 0.28 + f * 0.12 + vStress * 0.1), sat, lit + 0.04);
-    vec3 iri3 = hsl2rgb(fract(viewHue + 0.55 - f2 * 0.08 + contactFlash * 0.06), sat * 0.98, 0.36 + fres * 0.16);
-    vec3 iri4 = hsl2rgb(hopfHue, sat, lit * 0.95 + fres * 0.08);
-    // Spectrum morph: biosphere-weighted blend of four skin manifolds.
-    float w12 = clamp(0.35 + f * 0.28 + skinPulse2 * 0.18 + health * 0.1, 0.0, 1.0);
-    float w3 = clamp(0.22 + contactFlash * 0.24 + vRarity * 0.2 + uChaos * 0.12, 0.0, 0.9);
-    float w4 = clamp(0.15 + vStress * 0.16 + debt * 0.12 + crowd * 0.12, 0.0, 0.75);
+    vec3 iri2 = hsl2rgb(fract(viewHue + 0.1 + f * 0.05), sat, lit + 0.03);
+    vec3 iri3 = hsl2rgb(fract(viewHue + 0.18 + contactFlash * 0.04), sat * 0.95, 0.24 + fres * 0.1);
+    vec3 iri4 = hsl2rgb(hopfHue, sat * 0.9, lit * 0.88 + fres * 0.05);
+    float w12 = clamp(0.22 + f * 0.18 + skinPulse2 * 0.1, 0.0, 1.0);
+    float w3 = clamp(0.1 + contactFlash * 0.18 + vRarity * 0.12, 0.0, 0.65);
+    float w4 = clamp(0.06 + vStress * 0.1 + debt * 0.08 + crowd * 0.06, 0.0, 0.5);
     vec3 spectrum = mix(mix(iri, iri2, w12), iri3, w3);
     spectrum = mix(spectrum, iri4, w4);
 
-    float key = 0.45 + 0.65 * clamp(dot(n, normalize(vec3(0.3, 0.85, 0.4))), 0.0, 1.0);
-    // Keep more of the per-instance base hue (vColor) so plant-to-plant diversity survives skin morph.
-    float skinMix = 0.28 + vRarity * 0.42 + fres * 0.22 + vStress * 0.18 + contactFlash * 0.14 + health * 0.08 + uChaos * 0.08;
-    vec3 body = mix(vColor * tex * 1.15, spectrum, clamp(skinMix, 0.0, 0.92)) * key;
+    float key = 0.52 + 0.5 * clamp(dot(n, normalize(vec3(0.3, 0.85, 0.4))), 0.0, 1.0);
+    // FAMILY IDENTITY LAW: vColor dominates (sat/light/hue of type); spectrum is a living tint only.
+    float skinMix = 0.1 + vRarity * 0.25 + fres * 0.12 + vStress * 0.1 + contactFlash * 0.12 + uChaos * 0.05;
+    vec3 body = mix(vColor * tex * 1.3, spectrum, clamp(skinMix, 0.0, 0.48)) * key;
     // Degrade / bruise / ash when biomass low or debt (operational food state).
     vec3 bruise = hsl2rgb(fract(viewHue + 0.55 + f * 0.05 + vStress * 0.1), 0.38, 0.22);
     vec3 ash = hsl2rgb(fract(viewHue + 0.08), 0.18, 0.14);
@@ -1107,42 +1106,34 @@ export class AlienFlora {
         m.compose(pos, q, scl);
         mesh.setMatrixAt(i, m);
 
-        // HARD chroma diversity — full spectrum, high sat, mid-dark light (kills white wash).
-        // Per-plant + spatial + family salt so neighbors never paint the same hue slab.
+        // Family-locked H+S+L identity + species variance — NEVER white/grey blanket.
         const hueJit =
           (s.hue +
-            (hash(pl.sp * 31 + i) - 0.5) * 0.38 +
-            0.14 * Math.sin(pl.x * 0.007 + pl.z * 0.009) +
-            0.1 * Math.cos(pl.x * 0.013 - pl.z * 0.011) +
-            pl.rarity * 0.18 +
-            hash(i * 17 + pl.sp * 3) * 0.22 +
+            (hash(pl.sp * 31 + i) - 0.5) * 0.05 +
+            0.025 * Math.sin(pl.x * 0.006 + pl.z * 0.008) +
+            pl.rarity * 0.04 +
             1) %
           1;
+        // Sat: full dusty→neon swing by species (0.28..1.0), not all max-candy.
         const sat = Math.min(
           1.0,
-          Math.max(0.78, s.sat + (hash(i * 97 + pl.sp) - 0.3) * 0.28 + pl.rarity * 0.22),
+          Math.max(0.28, s.sat + (hash(i * 97 + pl.sp) - 0.5) * 0.14 + pl.rarity * 0.1),
         );
-        // Lightness floor/ceiling tight mid-band — high L was washing everything toward white.
+        // Light: often DARK (0.08..0.42) — greys/whites were the readability kill.
+        const darkBias =
+          hash(i * 101 + pl.sp) < 0.45 ? -0.12 : hash(i * 101 + pl.sp) > 0.85 ? 0.06 : 0;
         const light = Math.min(
-          0.52,
-          Math.max(0.22, s.light + (hash(i * 101 + pl.sp) - 0.5) * 0.14 + pl.rarity * 0.06),
+          0.42,
+          Math.max(0.08, s.light + darkBias + (hash(i * 103) - 0.5) * 0.07 + pl.rarity * 0.04),
         );
         col.setHSL(hueJit, sat, light);
-        // Accent punches on a wide share of plants (not only rare) so the field reads multicolored.
-        {
+        // Rare alien accent only — does not repaint whole field.
+        if (pl.rarity > 0.58) {
           const kick = hash(i * 113 + pl.sp);
-          const t = 0.22 + pl.rarity * 0.28 + (kick > 0.55 ? 0.18 : 0.08);
-          if (kick < 0.2)
-            col.lerp(new THREE.Color(0.15, 0.95, 1.0), t); // cyan
-          else if (kick < 0.35)
-            col.lerp(new THREE.Color(1.0, 0.2, 0.75), t); // magenta
-          else if (kick < 0.48)
-            col.lerp(new THREE.Color(1.0, 0.75, 0.12), t); // gold
-          else if (kick < 0.58)
-            col.lerp(new THREE.Color(0.45, 1.0, 0.2), t); // lime
-          else if (kick < 0.68)
-            col.lerp(new THREE.Color(0.55, 0.2, 1.0), t); // violet
-          else if (kick < 0.78) col.lerp(new THREE.Color(1.0, 0.35, 0.15), t); // rust/orange
+          const t = 0.14 + pl.rarity * 0.2;
+          if (kick < 0.33) col.lerp(new THREE.Color(0.05, 0.85, 0.95), t);
+          else if (kick < 0.66) col.lerp(new THREE.Color(0.95, 0.08, 0.55), t);
+          else col.lerp(new THREE.Color(0.95, 0.55, 0.05), t);
         }
 
         const o4 = i * 4;
@@ -1685,33 +1676,48 @@ export class AlienFlora {
     return fams;
   }
 
-  /** 50 deterministic species, biome-banded with FULL-spectrum strong chroma (not white wash). */
+  /**
+   * Per-FAMILY visual identity (9 types). H + S + L signatures so SPIRE≠WHIP≠CORAL at a glance.
+   * 0 SPIRE · 1 WHIP · 2 POD · 3 BLADE · 4 CORAL · 5 SHARD · 6 HELIX · 7 BUBBLE · 8 FAN
+   */
+  private static readonly FAMILY_LOOK: ReadonlyArray<{
+    h0: number;
+    hSpan: number;
+    s0: number;
+    sSpan: number;
+    l0: number;
+    lSpan: number;
+  }> = [
+    { h0: 0.5, hSpan: 0.1, s0: 0.55, sSpan: 0.4, l0: 0.12, lSpan: 0.22 }, // SPIRE teal→cyan dark
+    { h0: 0.86, hSpan: 0.12, s0: 0.72, sSpan: 0.28, l0: 0.18, lSpan: 0.24 }, // WHIP magenta vivid
+    { h0: 0.06, hSpan: 0.1, s0: 0.78, sSpan: 0.22, l0: 0.22, lSpan: 0.2 }, // POD amber/rust warm
+    { h0: 0.3, hSpan: 0.1, s0: 0.35, sSpan: 0.5, l0: 0.1, lSpan: 0.18 }, // BLADE olive dusty dark
+    { h0: 0.78, hSpan: 0.12, s0: 0.88, sSpan: 0.12, l0: 0.26, lSpan: 0.18 }, // CORAL neon orchid
+    { h0: 0.56, hSpan: 0.08, s0: 0.3, sSpan: 0.45, l0: 0.28, lSpan: 0.16 }, // SHARD ice low-sat
+    { h0: 0.02, hSpan: 0.12, s0: 0.9, sSpan: 0.1, l0: 0.1, lSpan: 0.2 }, // HELIX blood/orange dark
+    { h0: 0.38, hSpan: 0.12, s0: 0.22, sSpan: 0.55, l0: 0.14, lSpan: 0.24 }, // BUBBLE mint var sat
+    { h0: 0.66, hSpan: 0.12, s0: 0.6, sSpan: 0.38, l0: 0.08, lSpan: 0.2 }, // FAN indigo shadow
+  ];
+
+  /** 50 species: family-locked H/S/L + species variance (identifiable types, not one blanket). */
   private static buildSpecies(): Species[] {
     const out: Species[] = [];
     for (let i = 0; i < SPECIES_COUNT; i++) {
       const biome = i % BIOME_COUNT;
       const family = Math.floor(hash(i * 17 + 101) * FAMILY_COUNT) % FAMILY_COUNT;
-      // Spread hues hard across the wheel (not tight biome bands that all look the same).
-      const band = biome / BIOME_COUNT;
-      const hue =
-        (band * 0.55 +
-          (i / SPECIES_COUNT) * 0.45 +
-          (hash(i * 19 + 2) - 0.5) * 0.35 +
-          hash(i * 53) * 0.15 +
-          1) %
-        1;
+      const look = AlienFlora.FAMILY_LOOK[family] ?? AlienFlora.FAMILY_LOOK[0]!;
+      const hue = (look.h0 + hash(i * 19 + 2) * look.hSpan + (biome / BIOME_COUNT) * 0.025 + 1) % 1;
+      const sat = Math.min(1, Math.max(0.22, look.s0 + hash(i * 23 + 3) * look.sSpan));
+      const light = Math.min(0.42, Math.max(0.07, look.l0 + hash(i * 29 + 5) * look.lSpan));
       out.push({
         family,
         biome,
         hue,
-        // High saturation floor — pale/white was the visibility killer.
-        sat: 0.82 + hash(i * 23 + 3) * 0.18,
-        // Mid-dark lightness — high L washes to white under dome lighting.
-        light: 0.26 + hash(i * 29 + 5) * 0.22,
-        // Bigger / taller — floor kills tiny invisibles; rare size via placement giants.
+        sat,
+        light,
         size: 0.95 + hash(i * 31 + 7) * 1.7,
         swayFreq: 0.4 + hash(i * 37 + 11) * 2.2,
-        glow: 0.45 + hash(i * 41 + 13) * 0.55,
+        glow: 0.2 + sat * 0.4 + hash(i * 41 + 13) * 0.3,
         rarityBias: hash(i * 59 + 17) * 0.55,
       });
     }
@@ -1938,6 +1944,13 @@ export class AlienFlora {
   /**
    * Regrow toward capacity under neighbor seed, overgraze debt, climate, intelligence gain.
    */
+  /** Optional waste-ecology fertilizer sampler (null in tests keeps golden path). */
+  private fertilizer: ((x: number, z: number) => number) | null = null;
+
+  attachFertilizer(sampler: ((x: number, z: number) => number) | null): void {
+    this.fertilizer = sampler;
+  }
+
   private regrow(dt: number): void {
     const h = dt > 0.05 ? 0.05 : dt > 0 ? dt : 0;
     if (h <= 0) return;
@@ -1959,6 +1972,9 @@ export class AlienFlora {
       (1 - 0.45 * this.climateEntropy) * (1 - 0.28 * Math.max(0, this.climateChaos - 0.25));
     climate = climate < 0.2 ? 0.2 : climate > 1.2 ? 1.2 : climate;
     const decay = Math.exp(-PRESSURE_DECAY * h);
+    const fert = this.fertilizer;
+    const half = this.gridHalf;
+    const cell = this.cell;
     for (let i = 0; i < bm.length; i++) {
       if ((den[i] ?? 0) <= 0) continue;
       const p0 = this.pressure[i] ?? 0;
@@ -1999,15 +2015,24 @@ export class AlienFlora {
       const nMean = nc > 0 ? neigh / nc : 0;
       const room = Math.max(0, cap - b);
       const pDebt = 1 - 0.5 * (this.pressure[i] ?? 0);
+      // Waste pollution → fertilizer boost (xeno ecology, not earthly compost).
+      let fertBoost = 1;
+      if (fert) {
+        const wx = ix * cell - half + cell * 0.5;
+        const wz = iz * cell - half + cell * 0.5;
+        const f = fert(wx, wz);
+        fertBoost = f > 0.05 ? f : 1;
+      }
       // Dual recovery: logistic + exp approach. Calm climate ≈5s respawn; entropy/chaos stretch τ.
       const logistic =
         (REGROW_SEED * cap + REGROW_RATE * b * room + REGROW_NEIGHBOR * nMean * room) *
         h *
         adaptiveGain *
         climate *
-        pDebt;
+        pDebt *
+        fertBoost;
       const tau = REGROW_TAU / Math.max(0.22, climate * climate);
-      const expPull = room * (1 - Math.exp(-h / tau)) * adaptiveGain * pDebt;
+      const expPull = room * (1 - Math.exp(-h / tau)) * adaptiveGain * pDebt * fertBoost;
       const raw = Math.max(logistic, expPull * 0.75);
       const next = b + raw > cap ? cap : b + raw;
       bm[i] = next;

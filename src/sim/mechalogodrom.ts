@@ -56,7 +56,7 @@ const RING_R = ARENA_RADIUS * 0.72;
 /** Intrinsic churn rate of the god's body, DOME-INDEPENDENT (localT advances at this × real time).
  *  V109: calibrated down from 60 to 38 so the orbiting satellites and body writhe read as stately,
  *  god-tier motion rather than a frantic buzz, while still staying unmistakably alive. */
-const MECHA_TIME_SCALE = 16;
+const MECHA_TIME_SCALE = 3.5;
 const MECHA_EXTERIOR_TIME_SCALE = 0.15;
 const MECHA_SATELLITE_COUNT = 400;
 const MECHA_CORE_SEGMENTS = 128;
@@ -473,12 +473,11 @@ export class Mechalogodrom {
    */
   update(_t: number, dt: number): void {
     const scale =
-      this.worldTimeScale > 0 ? MECHA_TIME_SCALE * (0.5 + 0.5 * this.worldTimeScale) : 0;
+      this.worldTimeScale > 0 ? MECHA_TIME_SCALE * (0.3 + 0.7 * this.worldTimeScale) : 0;
     this.localT += dt * scale;
     const lt = this.localT;
-    // Fusion is the ONE-TIME genesis intro — keep it on dome-real time (~CONVERGE_SECONDS), NOT the
-    // 50× body churn, so the ten titans visibly fly in and fuse instead of snapping whole instantly.
-    this.fusion = clamp(this.fusion + dt / CONVERGE_SECONDS, 0, 1);
+    // Freeze fusion when paused; otherwise use already-timeScaled dt.
+    if (scale > 0) this.fusion = clamp(this.fusion + dt / CONVERGE_SECONDS, 0, 1);
     const f = this.fusion;
     const ease = f * f * f * (f * (f * 6 - 15) + 10);
 

@@ -489,6 +489,7 @@ export class EntityManager {
       wa: m.wa,
       sT: 300 + rng() * 500,
       belly: 0,
+      wasteLoad: 0,
       sortVal: rng() * 100,
       // nW: inherited from genomeRng when present, else the legacy main-rng draw at this position.
       nW: bred ? bred.nW : rng(),
@@ -930,18 +931,20 @@ export class EntityManager {
       u.vel.x += (rng() - 0.5) * 0.003 * cm * jitterGain + windX;
       u.vel.y += (rng() - 0.5) * 0.0015 * cm * jitterGain;
       u.vel.z += (rng() - 0.5) * 0.003 * cm * jitterGain + windZ;
-      u.vel.multiplyScalar(0.98);
+      u.vel.multiplyScalar(0.985);
       // dt * 60 is the legacy frame-rate normalizer; dyn.speed (F-RENDER-DYN, 1 in 'solid') scales
       // the per-frame displacement so the render style alters how fast the field travels.
-      MOVE.copy(u.vel).multiplyScalar(dt * 60 * dyn.speed);
+      // GLOBAL_MOTION_SCALE: owner still finds 0.5×/1× too fast — ~7× slower travel (morph goldens intact).
+      const GLOBAL_MOTION_SCALE = 0.14;
+      MOVE.copy(u.vel).multiplyScalar(dt * 60 * dyn.speed * GLOBAL_MOTION_SCALE);
       e.position.add(MOVE);
       // F-NHI: launched beings get "Matrix" buoyancy — a gentle anti-gravity lift so they fly and
       // float through the upper world (the y-ceiling further down still catches them). No rng, and
       // the branch is never taken until you launch one, so the default world is byte-identical.
       if (u.isNhi) u.vel.y += 0.006;
-      e.rotation.x += sinWF * 0.012 * sp2 * 0.4;
-      e.rotation.y += cosWF * 0.01 * sp2 * 0.35;
-      e.rotation.z += Math.sin(wfph + 1) * 0.007 * sp2;
+      e.rotation.x += sinWF * 0.006 * sp2 * 0.4;
+      e.rotation.y += cosWF * 0.005 * sp2 * 0.35;
+      e.rotation.z += Math.sin(wfph + 1) * 0.0035 * sp2;
 
       // Belly pulse — post-split digestion visual (legacy line 779).
       if (u.belly > 0) {
@@ -1269,11 +1272,12 @@ export class EntityManager {
       // USER ecology: a HUNGRY animal resting in the plants GRAZES them — it eats the biomass down (the
       // flora depletes + regrows on its side) and gains the returned FOOD as energy. Gated behind the
       // injected sink (null in tests ⇒ the seeded golden is untouched); deterministic (no rng).
-      if (this.floraGraze && hunger > 0.15) {
-        const food = this.floraGraze(cover.x, cover.z, hunger, dt);
+      if (this.floraGraze && hunger > 0.05) {
+        const food = this.floraGraze(cover.x, cover.z, Math.max(hunger, 0.4), dt);
         if (food > 0) {
           const ne = u.energy + food;
           u.energy = ne > 100 ? 100 : ne;
+          u.wasteLoad = Math.min(1, (u.wasteLoad ?? 0) + food * 0.055);
         }
       }
     }

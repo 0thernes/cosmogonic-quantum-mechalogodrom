@@ -112,6 +112,7 @@ import { GodColossus } from './sim/god-colossus';
 import { QuantumLattice } from './sim/quantum-lattice';
 import { AbominationArchitecture } from './sim/abomination-architecture';
 import { Mechalogodrom } from './sim/mechalogodrom';
+import { WasteEcology } from './sim/waste-ecology';
 import { MechalogodromBrain, type MechalogodromBrainSnapshot } from './sim/mechalogodrom-brain';
 import { AlphabetPantheonRender } from './sim/alphabet-pantheon-render';
 import { corpusPulse } from './sim/tsotchke-facade';
@@ -376,6 +377,8 @@ export class World {
   private readonly environment: EnvironmentSystem;
   /** Alien vegetal ground ecology — 10k plants / 50 species seated on the dunes (read-only coupling). */
   private readonly alienFlora: AlienFlora;
+  /** Metabolic waste → fertilizer + self-building xeno constructs. */
+  private readonly wasteEcology: WasteEcology;
   private readonly hud: Hud;
   private readonly panel: TelemetryPanel;
   private readonly input: InputSystem;
@@ -943,10 +946,8 @@ export class World {
       chaos: 0.5,
       entropy: 0,
       mutations: 0,
-      // Boot at a calmer 0.5× baseline (owner directive #14: "SLOW IT DOWN"). The whole sim's dt is
-      // `uiDt * timeScale` (see step()), so this halves ALL motion uniformly; the ▦ time cycler and the
-      // ⏸ PAUSE button (→ togglePause) move it through TIME_SCALES [0,0.1,0.2,0.5,1,2,3,5] from here.
-      timeScale: 0.5,
+      // Boot 0.25× + GLOBAL_MOTION_SCALE 0.14 on integrate (owner: still too fast at 0.5×/1×).
+      timeScale: 0.25,
       renderMode: cyc(RENDER_MODES, this.persisted.renderIdx ?? 0),
       brutalism: false, // BRUTALISM: session-only Super Creature concrete-monolith mode (B hotkey)
       sim: this.persisted.sim === 2 ? 2 : 1,
@@ -1050,6 +1051,8 @@ export class World {
 
     this.environment = new EnvironmentSystem(ctx);
     this.alienFlora = new AlienFlora(ctx); // 60k-plant alien ecology, 50 species, GPU-instanced sway
+    this.wasteEcology = new WasteEcology(ctx.scene);
+    this.alienFlora.attachFertilizer((x, z) => this.wasteEcology.regrowBoost(x, z));
     this.entities = new EntityManager(ctx);
     this.entities.attachFloraComfort((x, z) => this.alienFlora.comfortAt(x, z));
     // USER ecology: hungry organisms EAT the plants (energy), and the flora depletes + regrows its own
@@ -1544,6 +1547,7 @@ export class World {
     this.floatingMonoliths.dispose(); // free the 16 drifting megaliths' geometries + materials
     this.godColossus.dispose(); // free the colossal god monument
     this.alienFlora.dispose(); // free the 60k-plant instanced alien-flora field
+    this.wasteEcology.dispose(); // free sludge constructs + waste/gas grids
     this.alphabetPantheon.dispose(); // V-ABC: free the 100-archetype instanced pools
     this.artifacts.dispose(this.engine.scene);
     this.nhiBody.dispose(); // shared core/spike/ring/eye + per-body tendril geometries/materials
@@ -1628,11 +1632,8 @@ export class World {
     const uiDt = Math.min(Math.max(rawDt, 0), 0.05); // real frame delta, UNSCALED by timeScale
     const dt = uiDt * s.timeScale;
     s.elapsed += dt;
-    // USER: the God-Colossus is the ONE always-alive structure. Advance its REAL-TIME clock here — BEFORE
-    // the three-state-pause branches below each `return` — so it accrues the true frame delta in RUNNING,
-    // SUSPENDED and FROZEN alike. Its morph therefore looks identical at any ▦ time-scale and keeps
-    // writhing through every pause state (fed to a presentation-only uniform; draws no rng).
-    this.godClock += uiDt;
+    // GOD clock follows ▦ timeScale and freezes on pause.
+    if (s.timeScale > 0) this.godClock += dt;
 
     s.frame++;
     const t = s.elapsed;
@@ -1936,6 +1937,8 @@ export class World {
 
     const stats = this.entities.update(dt, t);
     this.energy = stats.energy; // stats object is reused — copy immediately
+    // Xeno waste ecology: drain metabolic waste → pollution → fertilizer + self-building constructs.
+    this.wasteEcology.update(dt, this.entities.list, t);
     // USER stage E: RAGDOLL BOUNCE — organisms ricochet off the big solid bodies (Super Creatures /
     // APEX / Temple) instead of ghosting through. Refill the collider scratch from their live positions
     // (no per-frame alloc), then bounce. Runs AFTER entities.update so the deflection sticks this frame.
@@ -2314,8 +2317,8 @@ export class World {
       population: n,
       capacity: this.quality.maxEntities,
     });
-    this.monolithTemple.update(uiDt, vt);
-    this.alienFlora.update(uiDt, vt, chaosN, entropyN, s.wind.x, s.wind.z);
+    this.monolithTemple.update(0, vt);
+    this.alienFlora.update(0, vt, chaosN, entropyN, s.wind.x, s.wind.z);
     this.viz3d.update(this.viz3dSnap);
 
     // ── BRUTALISM stays live so the BRUTAL button reskins the super creatures + cosmos DURING pause ──
@@ -2331,7 +2334,8 @@ export class World {
     }
     this.atmosphere.setBrutalism(bf);
     this.environment.setCreatureDensity(n / Math.max(1, this.quality.maxEntities));
-    this.environment.update(uiDt, vt);
+    // dt=0 freezes diorama minis / packets (green gem that kept dancing on pause).
+    this.environment.update(0, vt);
     this.environment.applyBrutalism(bf);
     if (this.instanced) this.instanced.setBrutalism(bf);
     else this.entities.applyBrutalism(bf);
@@ -2632,6 +2636,12 @@ export class World {
     // Hot spring targets — one creature thrashs local flora hard (not hollow decorative tap).
     for (const s of seeds) s.strength = Math.min(1, s.strength / 1.85);
     this.alienFlora.setContacts(seeds);
+    // Waste constructs thrash near the hottest being seed (DAR — not decorative).
+    let best = seeds[0]!;
+    for (let i = 1; i < seeds.length; i++) {
+      if (seeds[i]!.strength > best.strength) best = seeds[i]!;
+    }
+    this.wasteEcology.setContact(best.x, best.z, best.strength);
   }
 
   /**
