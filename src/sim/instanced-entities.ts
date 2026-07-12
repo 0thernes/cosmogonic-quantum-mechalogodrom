@@ -505,42 +505,32 @@ const RELIQUARY_FRAG_BODY = /* glsl */ `#include <emissivemap_fragment>
 	vec3 rqSSS = diffuseColor.rgb * RQ_SSS;
 	float rqThin = 1.0 - rqN0;
 	float rqBack = pow(1.0 - clamp(dot(rqN, rqV), 0.0, 1.0), 1.5) * rqThin;
-	totalEmissiveRadiance += rqSSS * rqBack * RQ_SSSAMT * (0.7 + 0.6 * uBass);
-	// Thin-film interference riding the rim + ridge crests, phase drifting with time + chaos.
+	totalEmissiveRadiance += rqSSS * rqBack * RQ_SSSAMT * (0.35 + 0.25 * uBass);
+	// Thin-film — dimmed; was a major white-wash at range with stacked vitals.
 	vec3 rqFilm = 0.5 + 0.5 * cos(6.2831853 * (vec3(1.0, 0.85, 0.7) * rqFres * 2.2
 		+ vec3(0.0, 0.18, 0.36) + rqDetail * 1.5 + uTime * 0.04 + uChaos * 0.015));
-	totalEmissiveRadiance += rqFilm * (rqFres * 0.38 + rqRidge * 0.26) * RQ_FILM * 0.6;
-	// Wet-glass rim glint — colored, not white, to prevent ACES washout.
-	totalEmissiveRadiance += vec3(0.40, 0.55, 0.75) * pow(rqFres, 1.4) * 0.08;
+	totalEmissiveRadiance += rqFilm * (rqFres * 0.2 + rqRidge * 0.12) * RQ_FILM * 0.25;
+	// Wet-glass rim glint — colored, not white (ACES washout ban).
+	totalEmissiveRadiance += vec3(0.40, 0.55, 0.75) * pow(rqFres, 1.4) * 0.035;
+	// Global emissive suite scale — stacked vitals were blowing distant bodies pure white.
+	const float RQ_VITAL_EM = 0.28;
 
-	// ══ V-VITALS REAL-BOUND EFFECT SUITE ══════════════════════════════════════════════════════
-	// Every term's strength is a FALSIFIABLE readout of one packed per-entity signal (vVitals:
-	// x=wealth energy, y=senescence age/life, z=neural firing act, w=exertion speed). The spectacle
-	// IS the state: a poor, young, idle, still organism stays quiet; a rich, ancient, firing, sprinting
-	// one blazes. GPU-only, zero per-entity CPU; reuses the relief/fresnel/normal already computed.
+	// ══ V-VITALS REAL-BOUND EFFECT SUITE (dimmed — signal still falsifiable, not flood) ══
 	float vWealth = vVitals.x, vSen = vVitals.y, vNeu = vVitals.z, vExe = vVitals.w;
-	// PHOSPHOR GASEOUSNESS (wealth) — a slow roiling luminous gas wreathes the well-fed body.
 	float rqGas = fract(rqDetail * 1.9 + uTime * 0.12); rqGas = rqGas * (1.0 - rqGas) * 4.0;
-	totalEmissiveRadiance += vec3(0.30, 0.95, 0.72) * rqGas * vWealth * 0.3;
-	// LASER-DANCE SYNAPSE ARCS (neural firing) — thin electric filaments race across the shell.
+	totalEmissiveRadiance += vec3(0.30, 0.95, 0.72) * rqGas * vWealth * 0.12 * RQ_VITAL_EM;
 	float rqArc = pow(0.5 + 0.5 * sin(vObjPos.y * 24.0 + vObjPos.x * 15.0 + uTime * 9.0), 20.0);
-	totalEmissiveRadiance += vec3(0.45, 0.85, 1.0) * rqArc * vNeu * 1.6;
-	// ASHEN CATARACT (senescence) — pigment greys and a cold frost rim creeps in; the body ages on screen.
+	totalEmissiveRadiance += vec3(0.45, 0.85, 1.0) * rqArc * vNeu * 0.55 * RQ_VITAL_EM;
 	float rqLum = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
 	diffuseColor.rgb = mix(diffuseColor.rgb, vec3(rqLum * 0.72), vSen * 0.04);
-	totalEmissiveRadiance += vec3(0.55, 0.62, 0.80) * pow(rqFres, 2.0) * vSen * 0.5;
-	// HYPERSPACE IONIZING FLUTTER (exertion) — ion streaks band along the engraved normal as it sprints.
+	totalEmissiveRadiance += vec3(0.55, 0.62, 0.80) * pow(rqFres, 2.0) * vSen * 0.18 * RQ_VITAL_EM;
 	float rqStreak = pow(0.5 + 0.5 * sin(rqN.y * 28.0 - uTime * 15.0), 7.0);
-	totalEmissiveRadiance += vec3(0.30, 0.60, 1.0) * rqStreak * vExe * 1.4;
-	// GILDED BUFFER SHIMMER (wealth) — a high-frequency sparkle gilds the fresnel rim of the rich.
+	totalEmissiveRadiance += vec3(0.30, 0.60, 1.0) * rqStreak * vExe * 0.45 * RQ_VITAL_EM;
 	float rqSpk = step(0.85, rqFbm(vObjPos * 21.0 + uTime * 0.6)) * pow(rqFres, 1.5);
-	totalEmissiveRadiance += vec3(1.0, 0.85, 0.45) * rqSpk * vWealth * 0.9;
-	// SINGULROSITY BLOOM (vitality = wealth × firing) — the most alive bodies bloom a hot core halo.
-	totalEmissiveRadiance += vec3(1.0, 0.70, 1.0) * pow(rqFres, 0.6) * (vWealth * vNeu) * 1.0;
-	// BIT-GLITCH CHAOS CORE (global chaos × senescence) — the shell quantizes into flickering data blocks,
-	// scrambling harder on stressed, aged bodies; ties the body to the real world-chaos system.
+	totalEmissiveRadiance += vec3(1.0, 0.85, 0.45) * rqSpk * vWealth * 0.28 * RQ_VITAL_EM;
+	totalEmissiveRadiance += vec3(1.0, 0.70, 1.0) * pow(rqFres, 0.6) * (vWealth * vNeu) * 0.3 * RQ_VITAL_EM;
 	float rqGlitch = floor((rqN0 + sin(uTime * 11.0) * 0.25) * 6.0) / 6.0;
-	totalEmissiveRadiance += vec3(0.10, 1.0, 0.40) * rqGlitch * uChaos * (0.25 + 0.75 * vSen) * 0.4;
+	totalEmissiveRadiance += vec3(0.10, 1.0, 0.40) * rqGlitch * uChaos * (0.25 + 0.75 * vSen) * 0.15 * RQ_VITAL_EM;
 
 	// ══ V-VITALS2 SOCIAL + QUANTUM SUITE ══════════════════════════════════════════════════════════
 	// Bound to the second packed lane (vVit2: x=strategy coop/defect, y=payoff, z=community hue,
@@ -550,21 +540,17 @@ const RELIQUARY_FRAG_BODY = /* glsl */ `#include <emissivemap_fragment>
 	vec3 sAlleg = mix(vec3(0.25, 1.0, 0.55), vec3(1.0, 0.30, 0.20), sStrat); // green coop ↔ red defect
 	float sHalo = pow(rqFres, 2.2) * (1.0 - sStrat); // cooperators wear a soft broad halo
 	float sBarb = pow(0.5 + 0.5 * sin(atan(rqN.z, rqN.x) * 16.0 + uTime * 3.0), 18.0) * pow(rqFres, 1.3) * sStrat; // defectors a spiked corona
-	totalEmissiveRadiance += sAlleg * (sHalo * 0.30 + sBarb * 1.2);
-	// PAYOFF-SWING IRIDESCENCE (payoff, phase-drifted by the quantum lane) — winners flare iridescent.
+	totalEmissiveRadiance += sAlleg * (sHalo * 0.12 + sBarb * 0.4) * RQ_VITAL_EM;
 	vec3 sIris = 0.5 + 0.5 * cos(vec3(0.0, 2.094, 4.188) + rqFres * 8.0 + sQ * 6.2831853);
-	totalEmissiveRadiance += sIris * sPay * pow(rqFres, 1.5) * 0.8;
-	// FACTION WAR-PAINT (community hue) — same louvain tribe ⇒ same hue + banded sigil.
+	totalEmissiveRadiance += sIris * sPay * pow(rqFres, 1.5) * 0.28 * RQ_VITAL_EM;
 	vec3 sTribe = 0.5 + 0.5 * cos(6.2831853 * (sComm + vec3(0.0, 0.33, 0.67)));
 	float sSigil = step(0.62, fract(rqDetail * 3.0 + sComm * 7.0));
-	diffuseColor.rgb = mix(diffuseColor.rgb, sTribe, sSigil * 0.45);
-	totalEmissiveRadiance += sTribe * sSigil * 0.4;
-	// HIVE-RESONANCE (community) — a tribe breathes in phase: same hue ⇒ same pulse offset.
+	diffuseColor.rgb = mix(diffuseColor.rgb, sTribe, sSigil * 0.35);
+	totalEmissiveRadiance += sTribe * sSigil * 0.12 * RQ_VITAL_EM;
 	float sHive = 0.5 + 0.5 * sin(uTime * 2.0 + sComm * 6.2831853);
-	totalEmissiveRadiance += sTribe * sHive * 0.18;
-	// SUPERPOSITION PROBABILITY SHIMMER (quantum phase) — an interference shimmer cycles with qP.
+	totalEmissiveRadiance += sTribe * sHive * 0.06 * RQ_VITAL_EM;
 	float sShim = 0.5 + 0.5 * sin(vObjPos.x * 10.0 + vObjPos.y * 8.0 + sQ * 12.566370);
-	totalEmissiveRadiance += vec3(0.55, 0.40, 1.0) * pow(sShim, 6.0) * 0.45;
+	totalEmissiveRadiance += vec3(0.55, 0.40, 1.0) * pow(sShim, 6.0) * 0.14 * RQ_VITAL_EM;
 
 	// ══ V-VITALS3 KINETIC + ENVIRONMENTAL SUITE ═══════════════════════════════════════════════════
 	// More named effects, each still bound to a REAL signal — the per-entity lanes already unpacked
@@ -572,21 +558,16 @@ const RELIQUARY_FRAG_BODY = /* glsl */ `#include <emissivemap_fragment>
 	// signal-gated, additive: detail not flood. GPU-only, no rng.
 	// VORTEXICAL SWIRL (exertion) — a sprinting body twists a vortex into its rim.
 	float v3ang = atan(rqN.z, rqN.x) + vExe * sin(length(vObjPos) * 5.0 - uTime * 6.0) * 3.0;
-	totalEmissiveRadiance += (0.5 + 0.5 * cos(vec3(0.0, 2.094, 4.188) + v3ang * 3.0)) * vExe * pow(rqFres, 2.0) * 0.5;
-	// HELIXOLOGY COSMOS (quantum phase) — twin bright strands wind the shell, advancing with qP.
+	totalEmissiveRadiance += (0.5 + 0.5 * cos(vec3(0.0, 2.094, 4.188) + v3ang * 3.0)) * vExe * pow(rqFres, 2.0) * 0.15 * RQ_VITAL_EM;
 	float v3hel = pow(0.5 + 0.5 * sin(vObjPos.y * 12.0 + atan(rqN.z, rqN.x) * 2.0 + sQ * 12.566370), 10.0);
-	totalEmissiveRadiance += vec3(0.7, 0.5, 1.0) * v3hel * 0.55;
-	// ORBITAL PLASMOIDS (neural firing) — plasma blobs orbit a firing body.
+	totalEmissiveRadiance += vec3(0.7, 0.5, 1.0) * v3hel * 0.18 * RQ_VITAL_EM;
 	float v3orb = pow(0.5 + 0.5 * sin(atan(rqN.z, rqN.x) * 5.0 + uTime * 4.0) * sin(rqN.y * 6.0 - uTime * 3.0), 16.0);
-	totalEmissiveRadiance += vec3(1.0, 0.6, 0.3) * v3orb * vNeu * 1.6;
-	// LAPSE-COLLAPSE BREATH (senescence × audio) — an aged body's glow expands/contracts with the bass.
+	totalEmissiveRadiance += vec3(1.0, 0.6, 0.3) * v3orb * vNeu * 0.45 * RQ_VITAL_EM;
 	float v3breath = 0.5 + 0.5 * sin(uTime * 1.5 + length(vObjPos) * 6.0 - uBass * 6.2831853);
-	totalEmissiveRadiance += vec3(0.6, 0.3, 0.5) * v3breath * vSen * (0.3 + 0.7 * uBass) * 0.4;
-	// STORM THERMAL RADIANCE (world chaos × firing) — a chaotic, firing body glows blackbody-hot.
-	totalEmissiveRadiance += vec3(1.0, 0.45, 0.12) * uChaos * vNeu * (0.5 + 0.5 * rqGlitch) * 0.7;
-	// CYMATIC RIPPLES (audio) — concentric standing waves ride the surface with the bass.
+	totalEmissiveRadiance += vec3(0.6, 0.3, 0.5) * v3breath * vSen * (0.3 + 0.7 * uBass) * 0.12 * RQ_VITAL_EM;
+	totalEmissiveRadiance += vec3(1.0, 0.45, 0.12) * uChaos * vNeu * (0.5 + 0.5 * rqGlitch) * 0.2 * RQ_VITAL_EM;
 	float v3cym = 0.5 + 0.5 * sin(length(vObjPos) * 22.0 - uTime * 5.0);
-	totalEmissiveRadiance += vec3(0.3, 0.8, 0.9) * pow(v3cym, 4.0) * uBass * 0.5;
+	totalEmissiveRadiance += vec3(0.3, 0.8, 0.9) * pow(v3cym, 4.0) * uBass * 0.15 * RQ_VITAL_EM;
 
 	// ══ V-VITALS4 IDENTITY + TRUE-KINETIC SUITE ═══════════════════════════════════════════════════
 	// Bound to the NEW third packed lane (vVit3): x=lineage hue (phylum), y=species hue (morphotype),
@@ -599,37 +580,25 @@ const RELIQUARY_FRAG_BODY = /* glsl */ `#include <emissivemap_fragment>
 	vec3 vLinCol = 0.5 + 0.5 * cos(6.2831853 * (vLin + vec3(0.0, 0.33, 0.67)));
 	float vBrush = 0.5 + 0.5 * sin(dot(vObjPos.xz, vec2(17.0, 13.0)) + uTime * 0.35);
 	diffuseColor.rgb = mix(diffuseColor.rgb, vLinCol, vBrush * 0.10);
-	totalEmissiveRadiance += vLinCol * pow(rqFres, 2.2) * vBrush * 0.14;
-	// SHARDWARP SPECIES SIGILS (species) — a per-morphotype crystalline shard sigil flickers; creatures
-	// of one species wear the same shards, a different species different ones.
+	totalEmissiveRadiance += vLinCol * pow(rqFres, 2.2) * vBrush * 0.05 * RQ_VITAL_EM;
 	vec3 vSpecCol = 0.5 + 0.5 * cos(6.2831853 * (vSpec + vec3(0.12, 0.5, 0.88)));
 	float vShard = step(0.70, fract(rqDetail * 5.0 + vSpec * 11.0 + sin(uTime * 1.3) * 0.2));
-	totalEmissiveRadiance += vSpecCol * vShard * pow(rqFres, 1.2) * 0.5;
-	// ASCENSION THERMAL UPDRAFT (true vel.y) — a RISING body sheds warm thermal radiance, a SINKING one a
-	// cool downwell: the creature's real climb/dive is legible as heat.
+	totalEmissiveRadiance += vSpecCol * vShard * pow(rqFres, 1.2) * 0.15 * RQ_VITAL_EM;
 	float vRise = vAsc - 0.5;
 	vec3 vThermCol = mix(vec3(0.20, 0.50, 1.0), vec3(1.0, 0.55, 0.18), step(0.0, vRise));
 	float vTherm = abs(vRise) * 2.0 * pow(0.5 + 0.5 * sin(vObjPos.y * 9.0 - uTime * 7.0), 4.0);
-	totalEmissiveRadiance += vThermCol * vTherm * 0.9;
-	// SUNSET-EXPANDED HORIZON (senescence) — an aging body bleeds a warm dusk→violet vertical gradient
-	// (a HUE read of age, distinct from the ashen GREY cataract): old age is a sunset, not just a fade.
+	totalEmissiveRadiance += vThermCol * vTherm * 0.25 * RQ_VITAL_EM;
 	vec3 vSunset = mix(vec3(1.0, 0.42, 0.12), vec3(0.5, 0.14, 0.6), clamp(vObjPos.y * 0.5 + 0.5, 0.0, 1.0));
-	totalEmissiveRadiance += vSunset * vSen * pow(rqFres, 1.6) * 0.45;
-	// PLASMA-EXPANDED FILAMENTS (neural × world-chaos) — writhing plasma crawls a stressed, firing body,
-	// hotter as the cosmos's real chaos rises (a cross-system coupling: turbulence feeds the body).
+	totalEmissiveRadiance += vSunset * vSen * pow(rqFres, 1.6) * 0.14 * RQ_VITAL_EM;
 	float vPlasma = pow(0.5 + 0.5 * sin(rqDetail * 17.0 + uTime * 4.0 + vObjPos.x * 6.0), 8.0);
-	totalEmissiveRadiance += vec3(0.7, 0.3, 1.0) * vPlasma * vNeu * (0.4 + 0.6 * uChaos) * 1.0;
-	// NEURALMIMETIC LATTICE (neural) — a mimetic synaptic mesh flickers, denser as the body fires harder.
+	totalEmissiveRadiance += vec3(0.7, 0.3, 1.0) * vPlasma * vNeu * (0.4 + 0.6 * uChaos) * 0.28 * RQ_VITAL_EM;
 	float vCell = floor(vObjPos.x * 8.0) + floor(vObjPos.y * 8.0) + floor(vObjPos.z * 8.0);
 	float vLat = step(0.8, fract(sin(vCell * 12.9898 + uTime * 0.6) * 43758.5453));
-	totalEmissiveRadiance += vec3(0.4, 1.0, 0.85) * vLat * vNeu * 0.55;
-	// PLASMOID GIRTH ORBS (size) — the market-fattened large orbit slow plasmoid light-orbs; a thin,
-	// destitute body shows none (size is wealth made geometric, here made luminous).
+	totalEmissiveRadiance += vec3(0.4, 1.0, 0.85) * vLat * vNeu * 0.16 * RQ_VITAL_EM;
 	float vOrb = pow(0.5 + 0.5 * sin(atan(rqN.y, rqN.x) * 5.0 + uTime * 2.0), 16.0);
-	totalEmissiveRadiance += vec3(1.0, 0.8, 0.5) * vOrb * vGirth * pow(rqFres, 0.8) * 0.7;
-	// VISION-EXPANDED OCULUS (lineage) — a faint iris/oculus gradient blooms on the rim in the lineage hue.
+	totalEmissiveRadiance += vec3(1.0, 0.8, 0.5) * vOrb * vGirth * pow(rqFres, 0.8) * 0.2 * RQ_VITAL_EM;
 	float vIris = pow(rqFres, 0.5) * (0.5 + 0.5 * sin(length(vObjPos) * 7.0 - uTime * 1.2));
-	totalEmissiveRadiance += vLinCol * vIris * 0.18;
+	totalEmissiveRadiance += vLinCol * vIris * 0.06 * RQ_VITAL_EM;
 
 	// Exotic render modes layer on top (V7-beyond). Higher indices (7/8/9 = plasma/obsidian/prismatic,
 	// USER 10-renders) are checked first so the ladder stays a single else-if chain.
@@ -680,14 +649,15 @@ const RELIQUARY_FRAG_BODY = /* glsl */ `#include <emissivemap_fragment>
 		totalEmissiveRadiance += vec3(0.65, 0.8, 1.0) * ghW * 0.5;
 		diffuseColor.a *= 0.85 + 0.15 * sin(uTime * 1.1 + vInstId * 0.9);
 	}
-	// LIVING HUE DRIFT (V115): each organism breathes its hue/sat/value slightly over time, driven by
-	// its instance id and the world clock. Keeps the population chromatic and alive without per-entity CPU.
+	// LIVING HUE DRIFT — hue only; do NOT lift value (that washed distant bodies white).
 	vec3 hsv = rqRgb2hsv(diffuseColor.rgb);
 	float idPh = vInstId * 0.073;
 	hsv.x = fract(hsv.x + sin(uTime * 0.25 + idPh) * 0.03);
-	hsv.y = clamp(hsv.y * (1.0 + 0.06 * sin(uTime * 0.17 + idPh * 1.3)), 0.0, 1.0);
-	hsv.z = clamp(hsv.z * (1.0 + 0.04 * sin(uTime * 0.21 + idPh * 1.7)), 0.0, 1.0);
+	hsv.y = clamp(hsv.y * (1.0 + 0.05 * sin(uTime * 0.17 + idPh * 1.3)), 0.15, 1.0);
+	hsv.z = clamp(hsv.z * (1.0 + 0.02 * sin(uTime * 0.21 + idPh * 1.7)), 0.0, 0.72);
 	diffuseColor.rgb = rqHsv2rgb(hsv);
+	// Hard ceiling on self-glow so stacked vitals never searing white at any range.
+	totalEmissiveRadiance = min(totalEmissiveRadiance, vec3(0.55));
 	// BRUTALISM: collapse ALL self-glow (the vital / social / quantum / render-mode emissive accumulated
 	// above) toward zero so a concrete organism stops emitting neon and reads as a raw, scene-lit grey
 	// form — the diffuse is already greyed in <color_fragment>. At uBrutalism=0 this is an exact ×1.

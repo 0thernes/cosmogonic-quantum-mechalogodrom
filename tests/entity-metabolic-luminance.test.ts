@@ -171,11 +171,12 @@ describe('metabolic-luminance coupling is wired into EntityManager.update', () =
     expect(Number.isFinite(b)).toBe(true);
     // The core falsifiable claim: condition is legible on the body.
     expect(a).toBeGreaterThan(b);
-    expect(a - b).toBeGreaterThan(0.3); // clear separation, not float noise
-    // Both have converged on morphBase(1.0) × metabolicLuminance(state).
-    expect(a).toBeCloseTo(1.0, 1);
+    expect(a - b).toBeGreaterThan(0.12);
+    // Converge on painted baseEmI × metabolicLuminance (not raw morph emI — white-wash ban).
+    const painted = (thriving.material.userData as { entityBaseEmI?: number }).entityBaseEmI ?? 0.4;
+    expect(a).toBeCloseTo(painted * metabolicLuminance(100, 0, thriving.userData.life), 1);
     expect(b).toBeCloseTo(
-      metabolicLuminance(0, failing.userData.life * 0.7, failing.userData.life),
+      painted * metabolicLuminance(0, failing.userData.life * 0.7, failing.userData.life),
       1,
     );
   });

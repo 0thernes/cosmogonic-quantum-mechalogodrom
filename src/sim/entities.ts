@@ -39,14 +39,18 @@ import type { BehaviorEnv } from './behaviors';
 import type { Entity, OrganismGoalField, SimContext, UpdateStats } from '../types';
 import type { Rng } from '../math/rng';
 
-/** Push morph colours toward a BRIGHT, CRYSTAL-WATERY, DREAMY read (render-only — morph tables unchanged).
- * V109: lifted base diffuse into the white-crystal zone (~0.35..0.55 lightness), softened
- * saturation to pastel-watery hues, stronger colored emissive core, high metallic + low roughness
- * for a glassy, liquid-gem shimmer that catches light as entities drift. */
-/** V123 (USER #7): the ALIEN OLD-MONEY / ANNIHILATION oil-slick hue anchors (0..1) — oxblood ·
- *  patina gold · deep teal · gunmetal cyan · cold amethyst · bruise violet. Deliberately skips the
- *  bright-green (~0.30-0.40) and hot-pink (~0.90-0.96) "girlie" zones. */
+/**
+ * Paint morph colours for readable detail — NOT white crystal wash (owner 2026-07-12).
+ * Pastel high-L + high metal/low rough + stacked emissive made distant bodies pure white.
+ * Deeper L, richer S, dimmer self-glow, less mirror metal — form reads at every range.
+ * Morph tables unchanged; this is render-only.
+ */
+/** V123 (USER #7): ALIEN OLD-MONEY / ANNIHILATION oil-slick hue anchors (0..1) — oxblood ·
+ *  patina gold · deep teal · gunmetal cyan · cold amethyst · bruise violet. */
 const OMINOUS_ANCHORS = [0.02, 0.11, 0.5, 0.57, 0.74, 0.85] as const;
+/** Resting emissive scale — update() lerps toward this (not raw morph emI which blows white). */
+const ENTITY_EM_SCALE = 0.32;
+const ENTITY_EM_CAP = 0.72;
 /** Snap a free hue toward its nearest ominous anchor (65% pull) so the palette CLUSTERS on rich
  *  ominous tones while keeping per-morph variety (the residual 35% + the jitter). Circular-safe. */
 function warpOminous(h: number, mi: number): number {
@@ -100,29 +104,29 @@ function paintVibrant(mat: THREE.MeshStandardMaterial, m: PhylumMorphType, mi: n
   const ominous = warpOminous(baseHue, mi);
   const family = mi % 3;
   if (family === 0) {
-    // 1/3 — DARK graphite / grey / GOLD tones: deep bodies with metallic glints. Owner likes them
-    // darker; lightness floor 0.14 (+ the emissive below) keeps them readable, not invisible.
-    mat.color.setHSL((0.1 + j2 * 0.06) % 1, 0.4 + j3 * 0.28, 0.14 + j4 * 0.08);
+    // 1/3 — dark graphite / gold: deep bodies, metallic glints (readable, not black voids).
+    mat.color.setHSL((0.1 + j2 * 0.06) % 1, 0.48 + j3 * 0.28, 0.1 + j4 * 0.06);
   } else if (family === 1) {
-    // 1/3 — ominous living CHROMA: oil-slick oxblood/teal/violet/gold, moody, not neon.
-    mat.color.setHSL(ominous, 0.6 + j5 * 0.14, 0.26 + j3 * 0.14);
+    // 1/3 — oil-slick chroma: rich mid-tones, NOT pastel white.
+    mat.color.setHSL(ominous, 0.72 + j5 * 0.14, 0.16 + j3 * 0.1);
   } else {
-    // 1/3 — WILD high-contrast morphic combos: a partner ominous hue, deep, still rich.
-    mat.color.setHSL((ominous + 0.34) % 1, 0.68 + j2 * 0.12, 0.2 + j2 * 0.16);
+    // 1/3 — partner hue, still deep and saturated.
+    mat.color.setHSL((ominous + 0.34) % 1, 0.75 + j2 * 0.12, 0.14 + j2 * 0.1);
   }
   m.em.getHSL(hsl);
-  // Coloured inner glow — an ominous partner tone, dimmed so the dark family stays readable.
+  // Coloured inner glow — saturated partner tone, LOW lightness so it never sears white at range.
   mat.emissive.setHSL(
     family === 0 ? (0.11 + j1 * 0.06) % 1 : (ominous + 0.1 + j3 * 0.12) % 1,
-    family === 0 ? 0.85 : 0.78,
-    family === 0 ? 0.26 + j2 * 0.1 : Math.min(0.4, 0.2 + hsl.l * 0.12 + j2 * 0.1),
+    family === 0 ? 0.8 : 0.75,
+    family === 0 ? 0.14 + j2 * 0.06 : Math.min(0.22, 0.1 + hsl.l * 0.08 + j2 * 0.05),
   );
-  // USER: dimmer so entities never blow to white near the camera (was min 2.5 / base 0.7).
-  mat.emissiveIntensity = Math.min(1.7, m.emI * 0.7 + 0.45 + family * 0.08);
-  // Glassy/crystal surface: high metal, low roughness for a liquid-gem shimmer.
-  // USER: cap metalness + raise roughness floor so glassy bodies stop mirror-searing white near camera.
-  mat.metalness = Math.min(0.8, mat.metalness * 0.6 + j5 * 0.4 + 0.2);
-  mat.roughness = Math.max(0.12, mat.roughness * 0.4 + j3 * 0.08);
+  // Resting self-glow — hard-capped. Update() must lerp toward THIS, not raw morph emI.
+  const baseEmI = Math.min(ENTITY_EM_CAP, m.emI * ENTITY_EM_SCALE + 0.08 + family * 0.03);
+  mat.emissiveIntensity = baseEmI;
+  (mat.userData as { entityBaseEmI?: number }).entityBaseEmI = baseEmI;
+  // Pigment-first surface: less metal, more roughness → form + hue survive distance/ACES.
+  mat.metalness = Math.min(0.45, mat.metalness * 0.35 + j5 * 0.2 + 0.08);
+  mat.roughness = Math.max(0.28, mat.roughness * 0.55 + j3 * 0.12 + 0.18);
 }
 
 /** Base material parameters a {@link RenderMode} is layered on top of. */
@@ -858,7 +862,8 @@ export class EntityManager {
     // the mode's boost so NEON's self-glow holds against the decay below. 1 for every other
     // mode ⇒ this loop stays byte-identical outside NEON.
     const emiBoost = RENDER_MODE_FX[state.renderMode].emissiveBoost;
-    const emiCap = 2.5 * emiBoost;
+    // Hard cap — was 2.5 and blew distant entities pure white (owner 2026-07-12).
+    const emiCap = Math.min(1.15, ENTITY_EM_CAP * 1.35 * emiBoost);
 
     for (let i = list.length - 1; i >= 0; i--) {
       const e = list[i];
@@ -909,20 +914,20 @@ export class EntityManager {
       u.act *= 0.975;
       u.act += cm * 0.028 * sinWF;
       if (u.act > 1) {
-        e.material.emissiveIntensity = Math.min(e.material.emissiveIntensity + 0.1, emiCap);
+        e.material.emissiveIntensity = Math.min(e.material.emissiveIntensity + 0.05, emiCap);
       } else {
         const m = ctx.morphs[u.mi];
-        if (m)
-          // Resting self-glow = morphotype base × the organism's REAL metabolic vitality (wealth
-          // sustains the burn, senescence fades it), so an idle body reads out its condition rather
-          // than holding a decorative constant. A neural spike (the `act > 1` branch above) or a
-          // connectome-hub boost (graph-mind) still overrides this floor and then decays back toward
-          // it. Pure f(state), no rng → the seeded trajectory is unchanged.
+        if (m) {
+          // Rest toward painted baseEmI (not raw morph emI — that washed bodies pure white).
+          const painted =
+            (e.material.userData as { entityBaseEmI?: number }).entityBaseEmI ??
+            Math.min(ENTITY_EM_CAP, m.emI * ENTITY_EM_SCALE + 0.1);
           e.material.emissiveIntensity = lerp(
             e.material.emissiveIntensity,
-            m.emI * emiBoost * metabolicLuminance(u.energy, u.age, u.life),
+            painted * emiBoost * metabolicLuminance(u.energy, u.age, u.life),
             clamp01(dt * 2),
           );
+        }
       }
 
       // Chaos jitter + wind physics, damping, integration (legacy lines 771-776).
@@ -1082,15 +1087,11 @@ export class EntityManager {
     const mat = e.material;
     mat.color.copy(m.col);
     mat.emissive.copy(m.em);
-    paintVibrant(mat, m, (mi % morphCount) + this.list.length);
-    // BRUTALISM (phone tier): the material's TRUE colour just changed — drop its captured base so the
-    // next applyBrutalism re-captures the new morph colour. Without this, a remorph WHILE concrete
-    // (mutation / puppet-master / titan effects) would desaturate from — and restore to — the OLD
-    // colour, silently losing the remorph. WeakMap delete is a no-op when no base was captured.
-    this.brutalBase.delete(mat);
-    // metalness/roughness/transparent/opacity/side/wireframe/emissive + depthWrite are all set
-    // by applyRenderModeTo on top of the morphotype base (CONTRACTS V7.3).
+    // Mode first, then paint — paintVibrant must win on emI/color (was inverted → white wash).
     applyRenderModeTo(mat, ctx.state.renderMode, m);
+    paintVibrant(mat, m, (mi % morphCount) + this.list.length);
+    // BRUTALISM (phone tier): drop captured base so next applyBrutalism re-captures new morph colour.
+    this.brutalBase.delete(mat);
     const u = e.userData;
     // Remorph in place: move the morphotype live-count from the old mi to the new one.
     const remorphMi = mi % morphCount;
