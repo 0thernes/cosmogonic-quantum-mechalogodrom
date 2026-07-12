@@ -36,6 +36,7 @@ import { PHYLUM_COUNT } from './phyla';
 import type { PhylumMorphType } from './phyla';
 import { applyBehavior } from './behaviors';
 import type { BehaviorEnv } from './behaviors';
+import { resolverCommitFactor } from './vqe-drive-resolver';
 import type { Entity, OrganismGoalField, SimContext, UpdateStats } from '../types';
 import type { Rng } from '../math/rng';
 
@@ -1259,7 +1260,11 @@ export class EntityManager {
     const seekGain = intelligence?.enabled
       ? 0.8 + intelligence.confidence * 0.18 + intelligence.corpusDrive * 0.12
       : 1;
-    const pull = strength * desire * dt * 0.9 * seekGain;
+    // The VQE-resolved drive commitment biases how decisively the organism seeks its resource goal: a
+    // coherent exploit-leaning resolution commits harder, an explore-leaning one eases off. Exactly 1
+    // (byte-identical) when no drive conflict has actually been resolved or the signal is absent.
+    const commitFactor = resolverCommitFactor(this.ctx.driveResolution);
+    const pull = strength * desire * dt * 0.9 * seekGain * commitFactor;
     u.vel.x += dx * inv * pull;
     u.vel.z += dz * inv * pull;
     if (d2 < 28 * 28) {

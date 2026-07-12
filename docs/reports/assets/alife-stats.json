@@ -4,10 +4,10 @@
   "nSystems": 113,
   "nPeers": 112,
   "cosmogonic": {
-    "breadthMean": 3.78,
+    "breadthMean": 3.79,
     "breadthRank": 1,
-    "zScorePopulation": 2.99,
-    "zScoreVsPeers": 3.13,
+    "zScorePopulation": 3.01,
+    "zScoreVsPeers": 3.15,
     "percentile": 100,
     "peerMaturity": 1.5
   },
@@ -107,8 +107,8 @@
       "mean": 1.9,
       "std": 1.6,
       "max": 5,
-      "cosmo": 4.3,
-      "cosmoZ": 1.5,
+      "cosmo": 4.4,
+      "cosmoZ": 1.56,
       "leaders": [
         "DERL (Deep Evolutionary Reinforcement Learning)",
         "UNIMAL (Universal Animal design space)",
@@ -185,52 +185,52 @@
     {
       "name": "ALIEN",
       "full": "ALIEN",
-      "d": 4.5
+      "d": 4.53
     },
     {
       "name": "Creatures",
       "full": "Creatures",
-      "d": 4.87
+      "d": 4.88
     },
     {
       "name": "Framsticks",
       "full": "Framsticks",
-      "d": 5.35
+      "d": 5.37
     },
     {
       "name": "Division Blocks",
       "full": "Division Blocks",
-      "d": 5.41
+      "d": 5.44
     },
     {
       "name": "biosim4",
       "full": "biosim4",
-      "d": 5.54
+      "d": 5.55
     },
     {
       "name": "The Bibites",
       "full": "The Bibites",
-      "d": 5.61
+      "d": 5.62
     },
     {
       "name": "Karl Sims VC",
       "full": "Karl Sims Evolved Virtual Creatures",
-      "d": 5.67
-    },
-    {
-      "name": "Neural Graph Evolution (NGE)",
-      "full": "Neural Graph Evolution (NGE)",
-      "d": 5.7
+      "d": 5.69
     },
     {
       "name": "DERL (Deep Evolutionary Reinforcement Learning)",
       "full": "DERL (Deep Evolutionary Reinforcement Learning)",
-      "d": 5.72
+      "d": 5.71
     },
     {
-      "name": "Species: Artificial Life, Real Evolution",
-      "full": "Species: Artificial Life, Real Evolution",
-      "d": 5.75
+      "name": "Neural Graph Evolution (NGE)",
+      "full": "Neural Graph Evolution (NGE)",
+      "d": 5.71
+    },
+    {
+      "name": "Polyworld",
+      "full": "Polyworld",
+      "d": 5.8
     }
   ]
 }

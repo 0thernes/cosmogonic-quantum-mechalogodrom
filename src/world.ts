@@ -117,6 +117,7 @@ import { MechalogodromBrain, type MechalogodromBrainSnapshot } from './sim/mecha
 import { AlphabetPantheonRender } from './sim/alphabet-pantheon-render';
 import { corpusPulse } from './sim/tsotchke-facade';
 import { TsotchkeOrganismIntelligence } from './sim/tsotchke-organism-intelligence';
+import { VqeDriveResolver } from './sim/vqe-drive-resolver';
 import {
   GlyphBrainBatch,
   writeGlyphEnvironmentalPercept,
@@ -366,6 +367,8 @@ export class World {
   private readonly entityBrains: EntityBrainField; // V42: per-organism 70-param neural controller
   /** ADR-0013: one O(22)-cadenced corpus field, consumed O(1) by every living-system controller. */
   private readonly organismIntelligence: TsotchkeOrganismIntelligence;
+  /** One VQE per cadence resolves the four competing drives into a minimum-frustration commitment. */
+  private readonly driveResolver: VqeDriveResolver;
   /** V127 (USER): Thaler "Death of a Gedanken Creature" — measured on every portal death (dying nets
    *  confabulate; the ledger accumulates the population-scale evidence). `gedankenSenses` is reused. */
   private readonly gedankenLedger = new GedankenLedger();
@@ -1008,6 +1011,7 @@ export class World {
     this.organismIntelligence = new TsotchkeOrganismIntelligence(
       (this.persisted.seed ^ 0x0a11_f1fe) >>> 0 || 1,
     );
+    this.driveResolver = new VqeDriveResolver();
     const ctx: SimContext = {
       scene: this.engine.scene,
       quality: this.quality,
@@ -1018,6 +1022,7 @@ export class World {
       geos,
       state: this.state,
       organismIntelligence: this.organismIntelligence.signal,
+      driveResolution: this.driveResolver.signal,
       audit: this.audit,
       sfx: (type) => this.audio.play(type),
       creatureSfx: (mi) => {
@@ -1718,6 +1723,21 @@ export class World {
       meanMetabolicEnergy: this.entities.meanMetabolicEnergy,
       floraBiomass: this.alienFlora.meanBiomass(),
     });
+
+    // The four competing drives that the corpus field just published are resolved into a single
+    // minimum-frustration COMMITMENT by one VQE per cadence (exact parameter-shift gradient through the
+    // Eshkol AD tape). Every living system reads the resolved bias in O(1) — the quantum substrate now
+    // DECIDES rather than only being wired.
+    const life = this.organismIntelligence.signal;
+    this.driveResolver.step(
+      {
+        resource: life.resourcePressure,
+        threat: life.threatResponse,
+        exploration: life.exploration,
+        social: life.socialDrive,
+      },
+      s.frame,
+    );
 
     // Audio couplings, each ≤ 0.35 per contract: bass shimmers the six-lamp
     // rig (inside environment.update — the contracted LOCAL coupling, which

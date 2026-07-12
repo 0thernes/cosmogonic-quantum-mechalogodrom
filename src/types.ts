@@ -168,6 +168,30 @@ export interface OrganismIntelligenceSignal {
 }
 
 /**
+ * The variational-quantum drive resolution shared by every living system (see
+ * `sim/vqe-drive-resolver.ts`). A 4-qubit diagonal Ising Hamiltonian encodes the four competing
+ * drives; a real VQE (exact parameter-shift gradient through the Eshkol AD tape) commits to the
+ * minimum-frustration JOINT resolution instead of a linear blend. Bounded, identity-stable, indicator
+ * only — a deterministic classical statevector, not physical quantum entropy or consciousness.
+ */
+export interface DriveResolutionSignal {
+  enabled: boolean;
+  indicatorOnly: true;
+  /** False = counterfactual arm: greedy baseline, no VQE, decisionCoherence pinned at 0. */
+  adaptive: boolean;
+  revision: number;
+  /** Resolved commitment P(bit=1) per drive, each in [0,1]. */
+  resourceCommit: number;
+  threatCommit: number;
+  exploreCommit: number;
+  socialCommit: number;
+  /** Exploit↔explore axis in [0,1]: >0.5 leans explore, <0.5 leans exploit, 0.5 neutral. */
+  actionBias: number;
+  /** Energy improvement the VQE actually achieved over the greedy baseline, normalized to [0,1]. */
+  decisionCoherence: number;
+}
+
+/**
  * EntityManager-owned ecological goals, indexed by the current compacted entity/brain slot.
  * Typed arrays are allocated once at the quality-tier ceiling and updated in place; EntityBrainField
  * reads them one frame later without a query or allocation.
@@ -281,6 +305,11 @@ export interface SimContext {
   state: SimState;
   /** Optional in headless/legacy contexts; the live World always supplies one stable signal object. */
   organismIntelligence?: OrganismIntelligenceSignal;
+  /**
+   * Variational-quantum resolution of the four competing drives, shared world-wide. Optional in
+   * headless/legacy contexts; absent ⇒ consumers fall back to the pre-resolver linear behavior.
+   */
+  driveResolution?: DriveResolutionSignal;
   audit: AuditTrail;
   sfx: (type: SfxType) => void;
   /** Rare per-morph creature voice (palette index); optional — wired by world.ts. */
