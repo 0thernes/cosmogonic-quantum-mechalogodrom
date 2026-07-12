@@ -28,6 +28,7 @@ import {
   SUPER_FORESIGHT_PARAMS,
   SUPER_CROWD_PARAMS,
   SUPER_FORAGE_PARAMS,
+  SUPER_EVASION_PARAMS,
   type SuperPercept,
 } from '../src/sim/super-creature';
 
@@ -156,7 +157,8 @@ describe('SuperCreature online world-model', () => {
         SUPER_SOCIAL_PARAMS +
         SUPER_FORESIGHT_PARAMS +
         SUPER_CROWD_PARAMS +
-        SUPER_FORAGE_PARAMS,
+        SUPER_FORAGE_PARAMS +
+        SUPER_EVASION_PARAMS,
     );
   });
 
@@ -175,7 +177,8 @@ describe('SuperCreature online world-model', () => {
         SUPER_SOCIAL_PARAMS +
         SUPER_FORESIGHT_PARAMS +
         SUPER_CROWD_PARAMS +
-        SUPER_FORAGE_PARAMS,
+        SUPER_FORAGE_PARAMS +
+        SUPER_EVASION_PARAMS,
     );
   });
 });

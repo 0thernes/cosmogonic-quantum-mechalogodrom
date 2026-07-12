@@ -95,6 +95,9 @@ export const SUPER_CROWD_PARAMS = SENSE * CROWD_HID + CROWD_HID + (CROWD_HID * 1
 const FORAGE_HID = 6; // forage (prey-scarcity-anticipation) head hidden width
 /** Total learnable params the forage head adds when lit — same 18→h→1 shape. */
 export const SUPER_FORAGE_PARAMS = SENSE * FORAGE_HID + FORAGE_HID + (FORAGE_HID * 1 + 1);
+const EVASION_HID = 6; // evasion (chaos-anticipation) head hidden width
+/** Total learnable params the evasion head adds when lit — same 18→h→1 shape. */
+export const SUPER_EVASION_PARAMS = SENSE * EVASION_HID + EVASION_HID + (EVASION_HID * 1 + 1);
 
 /** Max living twins the Super Creature may sire (the brief's "twin/offspring creation up to 3"). */
 export const SUPER_MAX_OFFSPRING = 3;
@@ -161,7 +164,9 @@ export interface SuperSnapshot {
   spacing: number; // learned anticipated crowding driving dispersal (0 when frozen)
   learnedForageErr: number; // EMA of the forage head's next-prey forecast error (0 when frozen)
   forage: number; // learned anticipated prey scarcity driving exploration for new grounds (0 when frozen)
-  liveParamCount: number; // cortex+actor + world-model + value + dread + social + foresight + spacing + forage when lit
+  learnedEvasionErr: number; // EMA of the evasion head's next-chaos forecast error (0 when frozen)
+  evasion: number; // learned anticipated world-chaos driving deception/camouflage (0 when frozen)
+  liveParamCount: number; // cortex+actor + world-model + value + dread + social + foresight + spacing + forage + evasion when lit
   offspring: number; // living twins sired (≤ SUPER_MAX_OFFSPRING)
   plan: SuperPlan;
   intent: {
@@ -301,6 +306,17 @@ export class SuperCreature {
   private forage = 0; // clamp(floor − forecast): anticipated prey scarcity → explore for new grounds
   private learnedForageErr = 0; // EMA of |prey forecast − actual prey| — FALLS as the head learns
 
+  // ── ONLINE EVASION HEAD — learned world-chaos anticipation: an eighth 18→6→1 MLP forecasts next-beat chaos
+  // (s[3]). A predicted RISE in disorder becomes `evasion`, a continuous overlay that raises DECEPTION —
+  // slip into camouflage / feint under the cover of a chaotic world before it fully breaks. Continuous ⇒
+  // robust; the `evasion:false` seam learns the model but does not steer, isolating the deception effect. ──
+  private evasionModel: Mlp | null = null; // null until enableLearning(); off ⇒ evasion 0 ⇒ byte-identical
+  private evasionBias = true; // the seam: false learns the model but does not steer deception
+  private readonly evasionTarget = new Float64Array(1); // scratch target (this beat's actual chaos)
+  private chaosForecast = 0; // the evasion head's forecast (made last beat) for THIS beat's chaos
+  private evasion = 0; // clamp(forecast − floor): anticipated HIGH disorder → deceive / hide
+  private learnedEvasionErr = 0; // EMA of |chaos forecast − actual chaos| — FALLS as the head learns
+
   /**
    * Birth the Super Creature. With no preset weights it rolls a fresh deep mind from `rng` (the
    * prime); twins pass mutated weight arrays + an incremented generation (see {@link maybeSpawn}).
@@ -342,7 +358,8 @@ export class SuperCreature {
           SUPER_SOCIAL_PARAMS +
           SUPER_FORESIGHT_PARAMS +
           SUPER_CROWD_PARAMS +
-          SUPER_FORAGE_PARAMS
+          SUPER_FORAGE_PARAMS +
+          SUPER_EVASION_PARAMS
         : 0)
     );
   }
@@ -378,6 +395,10 @@ export class SuperCreature {
   get learnedForageError(): number {
     return this.learnedForageErr;
   }
+  /** EMA of the evasion head's next-chaos forecast error — falls as chaos anticipation is learned. */
+  get learnedEvasionError(): number {
+    return this.learnedEvasionErr;
+  }
 
   /**
    * Ignite ONLINE learning: the apex world-model (a real {@link SUPER_WORLDMODEL_PARAMS}-param 18→8→1
@@ -394,6 +415,7 @@ export class SuperCreature {
     foresight?: boolean;
     spacing?: boolean;
     forage?: boolean;
+    evasion?: boolean;
   }): void {
     if (opts?.lr !== undefined) this.wmLr = opts.lr;
     if (this.worldModel) {
@@ -429,6 +451,14 @@ export class SuperCreature {
     // the forage head rides a seventh decorrelated substream (prey axis). `forage:false` = ablation control.
     this.forageModel = createMlp(SENSE, FORAGE_HID, 1, mulberry32((seed ^ 0x0fa63a1e) >>> 0 || 1));
     this.forageBias = opts?.forage !== false;
+    // the evasion head rides an eighth decorrelated substream (chaos axis). `evasion:false` = ablation control.
+    this.evasionModel = createMlp(
+      SENSE,
+      EVASION_HID,
+      1,
+      mulberry32((seed ^ 0x3ca05e77) >>> 0 || 1),
+    );
+    this.evasionBias = opts?.evasion !== false;
     this.learn = true;
     this.prevValid = false;
     this.learnedPredErr = 0;
@@ -449,6 +479,9 @@ export class SuperCreature {
     this.learnedForageErr = 0;
     this.forage = 0;
     this.preyForecast = 0;
+    this.learnedEvasionErr = 0;
+    this.evasion = 0;
+    this.chaosForecast = 0;
   }
 
   /**
@@ -586,6 +619,25 @@ export class SuperCreature {
       const preyNext = clamp01(mlpPredict(this.forageModel, s)[0] ?? 0);
       this.forage = clamp01((0.5 - preyNext) * 1.5); // predicted prey below the 0.5 "thinning" floor → range out
       this.preyForecast = preyNext; // compared to next beat's actual prey for the error EMA
+    }
+
+    // ── EVASION HEAD: learned world-chaos anticipation — forecast next-beat chaos (s[3]), derive `evasion`.
+    // Same mirror on the CHAOS axis: trains on (prevSense → this beat's chaos) by exact AD, then forecasts NEXT
+    // beat's chaos; anticipated HIGH disorder (forecast above a floor) becomes `evasion`, a continuous overlay
+    // that raises DECEPTION — slip into camouflage / feint under the cover of the coming chaos. `evasionBias`
+    // off (or learning off) ⇒ evasion 0 ⇒ the deception overlay is byte-identical to baseline.
+    if (this.learn && this.evasionModel) {
+      if (this.prevValid) {
+        this.learnedEvasionErr +=
+          WM_TAU * (Math.abs(this.chaosForecast - (s[3] ?? 0)) - this.learnedEvasionErr);
+        if (this.wmLr > 0) {
+          this.evasionTarget[0] = s[3] ?? 0;
+          mlpTrainStep(this.evasionModel, this.prevSense, this.evasionTarget, this.wmLr);
+        }
+      }
+      const chaosNext = clamp01(mlpPredict(this.evasionModel, s)[0] ?? 0);
+      this.evasion = clamp01((chaosNext - 0.4) * 1.4); // anticipated HIGH disorder (above 0.4) → deceive/hide
+      this.chaosForecast = chaosNext; // compared to next beat's actual chaos for the error EMA
     }
 
     // ── FORESIGHT HEAD: learned PLANNING HORIZON — forecast energy FORESIGHT_K beats ahead, derive proactive
@@ -734,10 +786,13 @@ export class SuperCreature {
     // FORAGE OVERLAY: anticipated prey scarcity RAISES curiosity (investigate for new grounds) every beat it
     // fires — a continuous, always-consumed effect that does not depend on EXPLORE winning the argmax. 0 unless
     // learning AND the forage bias is on ⇒ the frozen baseline and the `forage:false` control are byte-identical.
+    // EVASION OVERLAY: anticipated world-chaos RAISES deception (camouflage under the coming disorder) — a
+    // continuous, always-consumed effect. 0 unless learning AND the evasion bias is on ⇒ byte-identical baseline.
+    const ev = this.evasionBias ? this.evasion : 0;
     return {
       move: { x: mx * disperse, y: my * disperse, z: mz * disperse },
       aggression: guard > 0 ? clamp01(aggression + guard * 0.5) : aggression,
-      deception,
+      deception: ev > 0 ? clamp01(deception + ev * 0.5) : deception,
       dominance: guard > 0 ? clamp01(domProject + guard * 0.4) : domProject,
       spawn: spawnDesire,
       curiosity: fo > 0 ? clamp01(curiosity + fo * 0.4) : curiosity,
@@ -819,6 +874,8 @@ export class SuperCreature {
       spacing: this.spacing,
       learnedForageErr: this.learnedForageErr,
       forage: this.forage,
+      learnedEvasionErr: this.learnedEvasionErr,
+      evasion: this.evasion,
       liveParamCount: this.liveParamCount,
       offspring: this.offspring,
       plan: this.plan,

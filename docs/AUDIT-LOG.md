@@ -11,6 +11,40 @@ changed and why.
 
 ---
 
+## 2026-07-11 — batch 38: Super Creature grows EVASION — an eighth head hides under coming chaos (pass 9/10)
+
+Pass 9 of the 10-pass "make them smarter" goal. Beyond salience, energy (1-step + 6-step), threat, rival,
+crowding and prey, the apex creature gains a new behavioral DOMAIN — anticipatory evasion.
+
+- **`src/sim/super-creature.ts` — a learned EVASION head (18→6→1, `SUPER_EVASION_PARAMS`=121).** Trained by
+  exact Eshkol-AD backprop to forecast the creature's OWN next-beat world CHAOS (`s[3]`). Anticipated HIGH
+  disorder (forecast above a 0.4 floor) becomes `evasion`, a continuous overlay that raises DECEPTION — slip
+  into camouflage / feint under the cover of the coming chaos. Eighth decorrelated substream
+  (`seed ^ 0x3ca05e77`); an `evasion:false` seam is the ablation control. Uses the last free continuous intent
+  output (deception) on a fresh percept axis (chaos), so its effect is cleanly attributable.
+- **NHSI thoroughly re-probed for a THIRD learned mechanism — all three angles honestly rejected (no forced
+  pass).** (1) Top-down predictive coding = NO-OP (self-model ~124× accurate ⇒ forecast ≈ reality). (2) Hebbian
+  co-activation coupling = TRIVIAL (groups are 0.81-correlated — no differentiated structure to bind; it would
+  collapse to a uniform global-mean pull). (3) Homeostatic intrinsic plasticity = MARGINAL (faculties already
+  healthy: 0/144 dead/saturated, mean entropy already 0.951). NHSI's two killer properties — too predictable,
+  too synchronized — rule out forecast- AND association-based additions; its 2 shipped learned nets (scalar
+  self-model batch-30 + spatial attention batch-33) already provably develop. Same discipline as the batch-25
+  no-op / pass-5 revert lessons: don't ship a no-op/marginal to force an NHSI pass.
+- **CONTINUOUS overlay, level-based (per the pass-5 lesson).** The deception overlay is the robust hook —
+  Δdeception ≈**0.105**, remarkably stable across seeds (0.104–0.106). A first _rise_-based signal
+  (`forecast − chaos`) gave only ~0.009; switching to a _level_-based signal (anticipated chaos above a floor)
+  made the effect sustained and robust. The DECEIVE plan argmax is NOT relied on.
+- **GATE (`tests/super-creature-evasion.test.ts`, 6 cases).** LEARNS: chaos-forecast error to **<0.1** (~0.043).
+  ABLATION: trained **<0.5×** a frozen-lr0 control (≈5× — load-bearing; frozen stays >0.1). OPERATIONAL
+  (isolated): evasion-on vs evasion-off lifts mean deception by **>0.05** (≈0.105). Plus DETERMINISM,
+  DEFAULT-OFF byte-identical, SCALE. All prior Super Creature gates + baseline + pantheon-breeding stay green.
+- **HONESTY (ADR 0014/0015, indicatorOnly).** NO consciousness / Butlin / A-Life score moved. Claim: the apex
+  creature now anticipates world-chaos (~5× below frozen, ablation-verified) and evades under its cover. Butlin
+  - Consciousness BYTE-IDENTICAL. SuperCreature now carries EIGHT learned heads (salience, energy 1-step,
+    threat, rival, energy 6-step, crowding, prey, chaos).
+
+Receipts 2844→2850 (+6). Coupling invariant intact (SuperCreature is outside the receipt).
+
 ## 2026-07-11 — batch 37: Super Creature grows FORAGE — a seventh head ranges out before prey thins (pass 8/10)
 
 Pass 8 of the 10-pass "make them smarter" goal. Beyond salience, energy (1-step + 6-step), threat, rival and
