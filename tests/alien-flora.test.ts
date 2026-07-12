@@ -241,7 +241,7 @@ describe('AlienFlora — the vegetal ground ecology', () => {
     expect(Math.abs(cs.y)).toBeGreaterThan(0.05);
     expect(Math.abs(cs.z)).toBeGreaterThan(0.05);
     // Shader must use tight local falloff (not the old ~72u slab radius).
-    expect(mat.vertexShader).toContain('smoothstep(256.0, 25.0, d2)');
+    expect(mat.vertexShader).toContain('smoothstep(196.0, 16.0, d2)');
     expect(mat.vertexShader).toContain('aMeta');
     expect(mat.vertexShader).toContain('rootPin');
     // Upright multi-axis morph (Y-spin + lateral thrash) — never pitch/roll into dirt.
@@ -254,6 +254,11 @@ describe('AlienFlora — the vegetal ground ecology', () => {
     expect(mat.vertexShader).toContain('zeno');
     expect(mat.vertexShader).toContain('Kakeya');
     expect(mat.vertexShader).toContain('needleLen');
+    // Soft-body plant↔plant collision + hard contact thrash (not hollow decorative).
+    expect(mat.vertexShader).toContain('SOFT COLLISION');
+    expect(mat.vertexShader).toContain('plantHit');
+    expect(mat.vertexShader).toContain('hitSquash');
+    expect(mat.vertexShader).toContain('selfFlee');
     // Plant↔land: rigid crest ride (one Y for whole plant — per-vertex lift sheared stems thin).
     expect(mat.vertexShader).toContain('cqmTerrainDisplacement');
     expect(mat.vertexShader).toContain('liftMax');

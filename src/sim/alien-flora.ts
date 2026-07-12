@@ -78,8 +78,8 @@ const PRESSURE_STAMP = 0.9;
 const REGROW_TAU = 5 / 3;
 /** Max simultaneous local contact seeds (multi-point; kills the single giant-patch slide). */
 export const FLORA_CONTACT_SLOTS = 4;
-/** Local contact radius (world units). Old falloff was ~72u — that moved entire lawn slabs. */
-const CONTACT_RADIUS = 16;
+/** Local contact radius (world units). Tight enough for per-being thrash, not lawn slabs. */
+const CONTACT_RADIUS = 14;
 /** Squared radius for GPU falloff — must match `smoothstep` edge in the vertex shader. */
 const CONTACT_RADIUS2 = CONTACT_RADIUS * CONTACT_RADIUS;
 
@@ -209,17 +209,20 @@ const flora_vert = /* glsl */ `
   varying vec3 vWorldP;
   ${TERRAIN_DEFORMATION_GLSL}
 
+  // Per-plant local contact impulse. Falloff is sharp so only nearby beings thrash a plant
+  // (individual physics, not decorative cluster sway).
   float localContact(vec2 base, float cx, float cz, float strength, float phase, float stiff, float react) {
     if (strength < 0.001) return 0.0;
     vec2 d = base - vec2(cx, cz);
     float d2 = dot(d, d);
-    float fall = smoothstep(${CONTACT_RADIUS2.toFixed(1)}, 25.0, d2);
+    // Sharper kernel: full at ~0–5u, dead by CONTACT_RADIUS (was soft 25→256 slab feel).
+    float fall = smoothstep(${CONTACT_RADIUS2.toFixed(1)}, 16.0, d2);
     if (fall <= 0.0) return 0.0;
-    // Per-plant phase hash — neighbors thrash off-beat (crossover ↓ without amplitude caps).
-    float personal = 0.38 + 0.62 * sin(phase * 3.1 + stiff * 5.7 + base.x * 0.37 + base.y * 0.33);
-    float wobble = 0.7 + 0.4 * sin(uTime * (2.9 + stiff * 4.4) + phase * 2.3);
-    float counter = 0.85 + 0.25 * cos(phase * 1.7 - stiff * 2.2 + uTime * 0.4);
-    return strength * fall * personal * react * wobble * counter;
+    float personal = 0.5 + 0.5 * sin(phase * 3.4 + stiff * 5.9 + base.x * 0.41 + base.y * 0.37);
+    float wobble = 0.65 + 0.45 * sin(uTime * (3.4 + stiff * 4.6) + phase * 2.5);
+    float counter = 0.8 + 0.3 * cos(phase * 1.9 - stiff * 2.4 + uTime * 0.5);
+    // Soft plants (low stiff) + high react = harder thrash when touched.
+    return strength * fall * personal * react * wobble * counter * (0.85 + 0.35 / max(stiff, 0.15));
   }
 
   // UPRIGHT multi-axis morph — HARD LAW (do not break again):
@@ -425,31 +428,49 @@ const flora_vert = /* glsl */ `
     p.y = position.y < 0.0 ? p.y * (0.9 + 0.1 * grow) : p.y * mix(1.0, grow, rootPin);
     vGlow *= 0.28 + 0.72 * biomass * (1.0 - debt * 0.25);
 
-    // Density peel — stronger desync toward open space (crossover ↓, thrash NOT capped).
-    float sep = density * rootPin * up * up * (0.85 + 0.4 * rarity + 0.25 * uChaos);
+    // ── PLANT↔PLANT SOFT COLLISION (always on — not decorative cluster sway) ──
+    // Density G-channel = local packing. High density = soft-body pressure from neighbors.
+    // Each plant flees the density gradient + a deterministic self-orbit so co-cell plants
+    // don't stack (bleed). Crowding compresses crowns (collision squash).
+    float crowd = density * density; // nonlinear: only dense packs really collide
+    float tipW = rootPin * up * up;
+    // Strong separation along open-space gradient.
+    float sep = density * tipW * (1.85 + 0.55 * rarity + 0.4 * uChaos + react * 0.2);
     p.x += avoid.x * sep;
     p.z += avoid.y * sep;
-    // Orthogonal peel + personal orbit so neighbors don't share swing arcs.
-    float peel = sep * (0.45 + 0.3 * idHash);
-    p.x += -avoid.y * peel * sin(phase * 2.5 + idHash * 6.28);
-    p.z += avoid.x * peel * cos(phase * 2.0 + idHash2 * 4.1);
-    float orbit = rootPin * up * up * (0.1 + 0.14 * rarity) * (0.4 + 0.6 * density);
-    p.x += cos(uTime * (1.05 + freq * 0.48) + phase + idHash2 * 6.28) * orbit;
-    p.z += sin(uTime * (1.2 + freq * 0.42) - phase * 1.5) * orbit;
+    // Orthogonal peel so neighbors don't share the same thrash plane.
+    float peel = sep * (0.55 + 0.35 * idHash);
+    p.x += -avoid.y * peel * sin(phase * 2.6 + idHash * 6.28);
+    p.z += avoid.x * peel * cos(phase * 2.1 + idHash2 * 4.1);
+    // Deterministic self-flee: two plants in the same density cell push opposite hash orbits.
+    vec2 selfFlee = vec2(
+      cos(idHash * 6.2831853 + phase * 0.7),
+      sin(idHash2 * 6.2831853 - phase * 0.55)
+    );
+    p.x += selfFlee.x * crowd * tipW * (1.55 + rarity * 0.4);
+    p.z += selfFlee.y * crowd * tipW * (1.55 + rarity * 0.4);
+    // Soft-body compress when packed (collision deformation — isotropic, not thin shear).
+    float packSquash = crowd * rootPin * (0.08 + 0.06 * up);
+    p.x *= 1.0 - packSquash;
+    p.z *= 1.0 - packSquash;
+    // Brace heave: packed crowns lift slightly so they don't occupy the same height band.
+    p.y += crowd * tipW * 0.18 * (0.5 + 0.5 * sin(phase + uTime * 1.1));
 
     vec4 worldPosition = instanceMatrix * vec4(p, 1.0);
-    // RIGID land attach — identical Y on every vertex (fixes stretch/thin shear).
+    // RIGID land attach — identical Y on every vertex (no stretch/thin shear).
     worldPosition.y += rigidRide + ${SURFACE_RIDE.toFixed(3)};
 
-    // MULTI-POINT CONTACT PHYSICS — tip thrash lateral + up flee + Y-invert spin; root planted.
-    // Per-slot phase offsets so multi-body contact doesn't lockstep thrash (crossover ↓).
+    // ── BEING CONTACT PHYSICS (per-plant, local seeds — not hollow decorative) ──
     float c0 = localContact(bmBase, uContactX.x, uContactZ.x, uContactS.x, phase + idHash * 2.0, stiff, react);
     float c1 = localContact(bmBase, uContactX.y, uContactZ.y, uContactS.y, phase + 2.3 + idHash2 * 3.1, stiff, react);
     float c2 = localContact(bmBase, uContactX.z, uContactZ.z, uContactS.z, phase + 4.1 + idHash * 1.7, stiff, react);
     float c3 = localContact(bmBase, uContactX.w, uContactZ.w, uContactS.w, phase + 5.9 + idHash2 * 2.4, stiff, react);
     float cSum = c0 + c1 + c2 + c3;
-    vContactLive = clamp(cSum, 0.0, 2.5);
-    vStress = clamp(uChaos * 0.4 + cSum * 0.55 + hunger * 0.3 + debt * 0.5, 0.0, 1.5);
+    // Neighbor "virtual contact": high crowd is continuous plant↔plant collision pressure.
+    float plantHit = crowd * (0.55 + 0.45 * sin(uTime * 2.2 + phase));
+    float hit = cSum + plantHit * 0.85;
+    vContactLive = clamp(hit, 0.0, 2.8);
+    vStress = clamp(uChaos * 0.4 + hit * 0.6 + hunger * 0.3 + debt * 0.5, 0.0, 1.6);
 
     vec2 push = vec2(0.0);
     float wsum = 0.001;
@@ -473,42 +494,48 @@ const flora_vert = /* glsl */ `
       float inv = inversesqrt(max(dot(a, a), 1.0));
       push += a * inv * c3; wsum += c3;
     }
+    // Plant-plant push always contributes (soft collision field).
+    push += avoid * plantHit * 1.2 + selfFlee * plantHit * 0.8;
+    wsum += plantHit + 0.001;
     push /= wsum;
-    // Flee open density + personal phase so thrash arcs diverge (crossover ↓).
     push = normalize(
-      push + avoid * density * 0.7
-      + vec2(sin(phase * 1.9 + idHash * 6.28), cos(phase * 1.5 - idHash2 * 4.2)) * 0.28
+      push
+      + vec2(sin(phase * 2.1 + idHash * 6.28), cos(phase * 1.7 - idHash2 * 4.2)) * 0.2
       + vec2(0.0001)
     );
 
     float tip = rootPin * rootPin * rootPin;
     float mid = rootPin * rootPin * (1.0 - up) * 4.0;
-    float amp = (3.35 + uChaos * 3.4 + rarity * 2.0 + react * 1.05) * soft;
-    worldPosition.xz += push * (cSum * tip * amp + biomass * cSum * mid * 0.42);
+    // Hot contact amp — individual plant reacts hard when hit (not gentle decorative sway).
+    float amp = (4.0 + uChaos * 3.6 + rarity * 2.2 + react * 1.25) * soft;
+    worldPosition.xz += push * (hit * tip * amp + biomass * hit * mid * 0.5);
     vec2 ortho = vec2(-push.y, push.x);
-    // Multi-harmonic whip; mid and tip counter-phase (vectorized thrash).
-    worldPosition.xz += ortho * sin(uTime * (5.6 + stiff * 3.4) + phase) * cSum * mid * amp * 0.65;
-    worldPosition.xz += push * cos(uTime * (3.6 + stiff * 2.2) - phase * 1.8) * cSum * tip * amp * 0.38;
-    worldPosition.xz += ortho * cos(uTime * (7.1 + react) + phase * 2.2) * cSum * tip * amp * 0.22;
-    // Contact turbo-spin around Y only.
-    // Quantum-Zeno-ish: very strong continuous contact freezes thrash amp slightly;
-    // Josephson invert flips spin + UP spike (NOT faceplant).
-    float zeno = 1.0 / (1.0 + cSum * 0.35); // freeze under sustained contact
-    float cTwist = cSum * tip * (2.4 + react) * (0.5 + 0.5 * sin(uTime * 4.5 + phase + idHash * 3.0)) * zeno;
-    float invert = smoothstep(0.32, 1.1, cSum + uChaos * 0.55 + phaseSlip * 0.15) * tip * (0.55 + rarity * 0.32);
-    cTwist *= (1.0 - 2.0 * invert) * chirality; // reverse spin under heavy contact + chirality
+    // Multi-harmonic whip; mid vs tip counter-phase (per-plant, not cluster).
+    worldPosition.xz += ortho * sin(uTime * (6.0 + stiff * 3.6) + phase) * hit * mid * amp * 0.75;
+    worldPosition.xz += push * cos(uTime * (3.9 + stiff * 2.4) - phase * 1.9) * hit * tip * amp * 0.45;
+    worldPosition.xz += ortho * cos(uTime * (7.5 + react) + phase * 2.3) * hit * tip * amp * 0.28;
+    // Collision squash under hit (soft-body compression — isotropic XZ).
+    float hitSquash = clamp(hit * tip * 0.14 * soft, 0.0, 0.22);
+    worldPosition.xz = bmBase + (worldPosition.xz - bmBase) * (1.0 - hitSquash);
+    // Contact turbo-spin around Y only (invert = reverse spin + UP, NOT faceplant).
+    float zeno = 1.0 / (1.0 + cSum * 0.28);
+    float cTwist = hit * tip * (2.7 + react) * (0.5 + 0.5 * sin(uTime * 4.8 + phase + idHash * 3.0)) * zeno;
+    float invert = smoothstep(0.25, 1.0, hit + uChaos * 0.5 + phaseSlip * 0.15) * tip * (0.6 + rarity * 0.35);
+    cTwist *= (1.0 - 2.0 * invert) * chirality;
     float cca = cos(cTwist);
     float csa = sin(cTwist);
     vec2 rel = worldPosition.xz - bmBase;
     worldPosition.xz = bmBase + vec2(cca * rel.x - csa * rel.y, csa * rel.x + cca * rel.y);
-    worldPosition.xz += ortho * invert * sin(uTime * 6.7 + phase) * 1.1;
+    worldPosition.xz += ortho * invert * sin(uTime * 7.0 + phase) * 1.2;
     // Contact flee UP + lateral — never into dirt.
-    worldPosition.y += cSum * tip * (1.65 + uChaos * 1.7 + rarity * 1.15 + react * 0.3) * (0.85 + 0.15 * zeno);
-    worldPosition.y += sin(cSum * 8.4 + uTime * 2.8 + phase) * cSum * tip * 1.05;
-    worldPosition.y += invert * tip * 0.7;
-    worldPosition.y += cos(uTime * 3.9 + phase * 1.5) * cSum * tip * 0.4;
-    worldPosition.y += sin(uTime * 6.2 - phase * 2.0 + josephson) * invert * tip * 0.35; // slip thrash UP
-    worldPosition.xz += push * invert * 1.35;
+    worldPosition.y += hit * tip * (1.9 + uChaos * 1.85 + rarity * 1.25 + react * 0.4) * (0.85 + 0.15 * zeno);
+    worldPosition.y += sin(hit * 9.0 + uTime * 3.0 + phase) * hit * tip * 1.2;
+    worldPosition.y += invert * tip * 0.85;
+    worldPosition.y += cos(uTime * 4.2 + phase * 1.6) * hit * tip * 0.5;
+    worldPosition.y += sin(uTime * 6.5 - phase * 2.0 + josephson) * invert * tip * 0.45;
+    worldPosition.xz += push * invert * 1.55;
+    // Extra plant-plant bounce when packed and thrashing into density.
+    worldPosition.xz += avoid * crowd * tip * (0.9 + hit * 0.6) * soft;
 
     vWorldP = worldPosition.xyz;
     vec4 mvPosition = modelViewMatrix * worldPosition;
@@ -1319,15 +1346,15 @@ export class AlienFlora {
     u['uTerrainEntropy']!.value = e;
     (u['uTerrainWind']!.value as THREE.Vector2).set(terrainWindX, terrainWindZ);
 
-    // Per-slot underdamped springs — snappy local thrash (DAR contact), not one global slab.
+    // Per-slot underdamped springs — hard snappy thrash when touched (not hollow soft sway).
     const h = dt > 0.05 ? 0.05 : dt > 0 ? dt : 0;
-    const K = 48;
-    const DAMP = 5.2;
+    const K = 95;
+    const DAMP = 3.6;
     const cx = u['uContactX']!.value as THREE.Vector4;
     const cz = u['uContactZ']!.value as THREE.Vector4;
     const cs = u['uContactS']!.value as THREE.Vector4;
     for (let i = 0; i < FLORA_CONTACT_SLOTS; i++) {
-      this.contactTarget[i]! *= 0.84;
+      this.contactTarget[i]! *= 0.78; // faster release when being leaves
       this.contactVel[i]! +=
         (this.contactTarget[i]! - this.contactDisp[i]!) * K * h - this.contactVel[i]! * DAMP * h;
       this.contactDisp[i]! += this.contactVel[i]! * h;
@@ -1336,7 +1363,8 @@ export class AlienFlora {
         this.contactVel[i] = 0;
       }
       const d = this.contactDisp[i]!;
-      this.contactDisp[i] = d < -1.2 ? -1.2 : d > 1.6 ? 1.6 : d;
+      // Allow stronger overshoot so a touch visibly thrashs (still clamped).
+      this.contactDisp[i] = d < -1.4 ? -1.4 : d > 2.1 ? 2.1 : d;
     }
     cx.set(this.contactPX[0]!, this.contactPX[1]!, this.contactPX[2]!, this.contactPX[3]!);
     cz.set(this.contactPZ[0]!, this.contactPZ[1]!, this.contactPZ[2]!, this.contactPZ[3]!);
@@ -1566,9 +1594,13 @@ export class AlienFlora {
       const str = s.strength < 0 ? 0 : s.strength > 1 ? 1 : s.strength;
       this.contactPX[i] = s.x;
       this.contactPZ[i] = s.z;
+      // Impulse on rising contact — plant reacts immediately to a touch, not a slow blend.
       if (str > this.contactTarget[i]!) {
-        this.contactVel[i]! += (str - this.contactTarget[i]!) * 6;
+        this.contactVel[i]! += (str - this.contactTarget[i]!) * 14;
         this.contactTarget[i] = str;
+      } else if (str > 0.05) {
+        // Maintain presence while a being stays in the pocket.
+        this.contactTarget[i] = Math.max(this.contactTarget[i]!, str * 0.85);
       }
     }
     // Mirror positions into uniforms immediately (spring strength still integrates in update).
