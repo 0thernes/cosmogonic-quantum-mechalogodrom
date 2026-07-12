@@ -8,6 +8,7 @@
 import { describe, expect, test } from 'bun:test';
 import { ChaosField } from '../src/sim/chaos-field';
 import type { Entity, SimState } from '../src/types';
+import { expectWallBudgetMs } from './coverage-mode';
 
 /** A colour stub whose `lerp` is a no-op (entanglement recolours; irrelevant to the signature). */
 function mkColor(): { lerp: (o: unknown, a: number) => unknown } {
@@ -183,6 +184,7 @@ describe('ChaosField — mega-tier perf guard', () => {
     expect(f.intensity).toBeGreaterThan(0); // confirm the heavy (engaged) path was measured
     const samples: number[] = [];
     for (let i = 0; i < 40; i++) samples.push(step());
-    expect(median(samples)).toBeLessThan(CHAOS_MEGA_BUDGET_MS);
-  }, 30000);
+    // Wall-clock budgets only falsifiable without coverage instrumentation (see coverage-mode.ts).
+    expectWallBudgetMs(median(samples), CHAOS_MEGA_BUDGET_MS);
+  }, 60000);
 });

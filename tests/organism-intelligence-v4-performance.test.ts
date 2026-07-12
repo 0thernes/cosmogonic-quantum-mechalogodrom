@@ -152,7 +152,8 @@ describe('organism-intelligence V4 performance harness', () => {
         'failed its schema',
       );
     },
-    { timeout: 15_000 },
+    // Schema/assertion path is light cold; under full-suite coverage still give headroom.
+    { timeout: 45_000 },
   );
 
   test(

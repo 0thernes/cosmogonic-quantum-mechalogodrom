@@ -435,7 +435,7 @@ describe('Phase-B NHI closed-loop development harness', () => {
       expect(hunt.neuralSemanticInterpretationAllowed).toBe(true);
     },
     // The exact 41,472-row matrix is intentionally retained; instrumented CI needs extra headroom.
-    { timeout: 15_000 },
+    { timeout: 45_000 },
   );
 
   test('labels reversal only as paired conflict response and authorizes no adaptation, reward-learning, consciousness, sentience, or publication claim', async () => {

@@ -120,7 +120,8 @@ describe('same-seed golden determinism (integrated population sim)', () => {
       // toEqual on the arrays gives exact (bit) comparison for finite doubles.
       expect(b).toEqual(a);
     },
-    { timeout: 10000 },
+    // Heavy multi-seed replay; coverage suite load can push past 10s.
+    { timeout: 30_000 },
   ); // allow for heavy integrated sim in full suite (was timing out at default 5s under load)
 
   test('a different seed diverges (the trace is sensitive, not vacuous)', () => {

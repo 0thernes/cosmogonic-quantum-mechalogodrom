@@ -27,8 +27,9 @@ function run(args: string[]): CoverageTranscript {
   const r = spawnSync('bun', args, {
     encoding: 'utf8',
     maxBuffer: 128 * 1024 * 1024,
-    // Sentinel kept for compatibility; the fast test no longer spawns, but harmless to set.
-    env: { ...process.env, RECEIPTS_LAW_CHILD: '1' },
+    // Gate sentinels: RECEIPTS_LAW_CHILD (legacy) + CQM_COVERAGE so wall-clock budget
+    // tests skip meaningless instrumented timings (see tests/coverage-mode.ts).
+    env: { ...process.env, RECEIPTS_LAW_CHILD: '1', CQM_COVERAGE: '1' },
   });
   if (r.error) {
     throw new Error(

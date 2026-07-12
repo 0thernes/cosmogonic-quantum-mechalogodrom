@@ -106,7 +106,8 @@ describe('Mechalogodrom — the fusion abomination', () => {
       a.dispose();
       b.dispose();
     },
-    { timeout: 15_000 },
+    // Long max-chaos run; coverage instrumentation + suite contention needs headroom.
+    { timeout: 45_000 },
   );
 
   test('FUSION-MIND → BODY: the winning sub-brain blazes its shell, consciousness glows the core, strangeness warps the mass', () => {

@@ -34,6 +34,7 @@ import type { Entity, SimContext, SimState } from '../src/types';
 import { SuperMind } from '../src/sim/super-mind';
 import { getQuantizationConfig } from '../src/math/quantization';
 import type { SuperPercept } from '../src/sim/super-creature';
+import { expectWallBudgetMs } from './coverage-mode';
 
 /** High population for the stress frame — the ultra-class regime where the cliff lived. */
 const POP = 8000;
@@ -136,11 +137,6 @@ function median(xs: readonly number[]): number {
   return s.length % 2 === 1 ? s[mid]! : (s[mid - 1]! + s[mid]!) / 2;
 }
 
-/** Coverage instrumentation multiplies wall time; CPU budgets are meaningless under --coverage. */
-function underCoverage(): boolean {
-  return process.argv.some((a) => a === '--coverage' || a.startsWith('--coverage='));
-}
-
 describe('per-frame sim-CPU budget at the ultra tier', () => {
   test(`entity-update + grid rebuild at ${POP} entities stays under ${FRAME_BUDGET_MS}ms/frame (median)`, () => {
     const ctx = makeCtx(0xb0d6e7, POP);
@@ -176,13 +172,8 @@ describe('per-frame sim-CPU budget at the ultra tier', () => {
     // The population is held near POP by the auto-split/death equilibrium — confirm the guard
     // actually measured the heavy regime, not a collapsed world.
     expect(entities.list.length).toBeGreaterThan(POP * 0.7);
-    // Wall-clock budgets are only falsifiable without coverage instrumentation.
-    if (!underCoverage()) {
-      expect(med).toBeLessThan(FRAME_BUDGET_MS);
-    } else {
-      expect(med).toBeGreaterThan(0);
-      expect(Number.isFinite(med)).toBe(true);
-    }
+    // Wall-clock budgets only falsifiable without coverage instrumentation (see coverage-mode.ts).
+    expectWallBudgetMs(med, FRAME_BUDGET_MS);
   }, 60000);
 });
 
@@ -249,8 +240,8 @@ describe('per-frame instanced-render sync budget at the ultra tier', () => {
     // Confirm the pools actually carried the population (guard measured the heavy regime).
     const live = pools.reduce((sum, p) => sum + (p as THREE.InstancedMesh).count, 0);
     expect(live).toBeGreaterThan(POP * 0.7);
-    expect(median(samples)).toBeLessThan(SYNC_BUDGET_MS);
-  }, 30000);
+    expectWallBudgetMs(median(samples), SYNC_BUDGET_MS);
+  }, 60000);
 });
 
 describe('per-beat apex-mind cognitive budget', () => {
@@ -303,6 +294,6 @@ describe('per-beat apex-mind cognitive budget', () => {
       mind.think(p);
       samples.push(performance.now() - t0);
     }
-    expect(median(samples)).toBeLessThan(THINK_BUDGET_MS);
-  }, 30000);
+    expectWallBudgetMs(median(samples), THINK_BUDGET_MS);
+  }, 60000);
 });
