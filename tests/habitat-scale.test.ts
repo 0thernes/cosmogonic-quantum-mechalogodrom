@@ -106,7 +106,9 @@ describe('expanded habitat contract', () => {
       phases.push([t, 1, 0, -10, -10]);
       phases.push([t, 1, 0, -10, 5]);
     }
-    const ROOT_SEAT = 0.6; // mirrors alien-flora.ts:406 (baseTerrainHeightAt − ROOT_SEAT)
+    // Mirrors FLORA_ROOT_SINK (origin below analytic surface; seal vs rendered triangle chord).
+    // GPU SURFACE_RIDE lifts collars to the wave top without violating this root-under-mesh seal.
+    const ROOT_SEAT = 0.5;
     let maxRootGap = -Infinity;
     for (const [time, chaos, entropy, windX, windZ] of phases) {
       const height = (x: number, z: number): number =>

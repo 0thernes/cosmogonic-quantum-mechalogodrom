@@ -50,8 +50,8 @@ export function terrainDisplacementAt(
 
 /**
  * One GLSL implementation of the living-ground displacement shared by the ground mesh and every
- * planted instance. The band-limited detail plus 600-segment mesh keeps the rendered triangles
- * within the plants' intentional 0.5-unit root seating depth.
+ * planted instance. Plants seat slightly below the analytic surface (`FLORA_ROOT_SINK`) and re-add
+ * this displacement each frame so collars ride the wave top instead of being swallowed by it.
  */
 export const TERRAIN_DEFORMATION_GLSL = /* glsl */ `
 float cqmTerrainDisplacement(

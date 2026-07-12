@@ -124,8 +124,16 @@ interface Family {
   readonly height: number;
 }
 
-/** How deep the instance origin sits below the analytic surface so roots bury and no coplanar z-fight. */
-const ROOT_SINK = 0.72;
+/**
+ * How deep the instance origin sits below the analytic surface.
+ * Must clear the ground-triangle chord (habitat seal: origin ≤ rendered mesh) so roots never float.
+ * Collar is local y=0; root bulbs are negative-Y. Shared `cqmTerrainDisplacement` re-attaches every frame.
+ * SURFACE_RIDE then lifts the whole plant so collars kiss the wave top instead of being swallowed.
+ */
+export const FLORA_ROOT_SINK = 0.5;
+const ROOT_SINK = FLORA_ROOT_SINK;
+/** GPU lift after shared terrain displacement — ride the crest (visual), sink still seals under the chord. */
+const SURFACE_RIDE = 0.18;
 
 /** Dispose extras after merge, keep the final geometry. */
 function adoptMerged(parts: THREE.BufferGeometry[]): THREE.BufferGeometry {
@@ -265,24 +273,27 @@ const flora_vert = /* glsl */ `
     float hunger = 1.0 - health;
 
     float soft = 1.0 / stiff;
-    // f8c6eadb thrash language — tip-weighted lateral, not rotation into the dirt.
-    float bend = rootPin * rootPin * (uWind + uChaos * 0.85) * soft * (0.9 + rarity * 0.55);
-    float turb = rootPin * rootPin * uChaos * 0.65 * soft;
+    // Environment-driven thrash (wind + chaos) — tip-weighted LATERAL only (upright).
+    float env = uWind + uChaos * 0.95;
+    float bend = rootPin * rootPin * env * soft * (0.95 + rarity * 0.6);
+    float turb = rootPin * rootPin * uChaos * 0.75 * soft;
     vec3 p = position;
 
-    // Continuous Y-spin (purpose: living response) — free, height-preserving.
-    float yaw = (uTime * (0.7 + freq * 0.9 + rarity * 0.55) * soft
+    // Continuous Y-spin (purpose: living response to climate) — free, height-preserving.
+    float yaw = (uTime * (0.75 + freq * 0.95 + rarity * 0.6 + uChaos * 0.35) * soft
               + (1.0 + rarity) * sin(uTime * freq * 0.38 + phase)
-              + sin(uTime * freq * 1.7 + phase * 2.4) * 0.5 * turb)
+              + sin(uTime * freq * 1.7 + phase * 2.4) * 0.55 * turb)
               * yawBias;
-    // Curved multi-harmonic LATERAL thrash (f8c6eadb) — multi-freq, counter axes.
-    float leanX = (sin(uTime * freq + phase) * bend * 2.5
-                + sin(uTime * freq * 3.5 + phase * 2.1) * turb * 1.15
-                + sin(uTime * freq * 6.0 + phase * 0.6) * turb * 0.45 * rarity)
+    // Curved multi-harmonic LATERAL thrash — multi-freq, counter axes, wind-reactive.
+    float leanX = (sin(uTime * freq + phase) * bend * 2.6
+                + sin(uTime * freq * 3.5 + phase * 2.1) * turb * 1.25
+                + sin(uTime * freq * 6.0 + phase * 0.6) * turb * 0.5 * rarity
+                + sin(uTime * 0.7 + phase) * uWind * rootPin * rootPin * 0.55)
                 * leanBias;
-    float leanZ = (cos(uTime * freq * 0.82 + phase * 1.37) * bend * 2.2
-                + cos(uTime * freq * 2.9 + phase * 1.7) * turb * 1.0
-                + cos(uTime * freq * 5.1 + phase * 1.1) * turb * 0.4 * rarity)
+    float leanZ = (cos(uTime * freq * 0.82 + phase * 1.37) * bend * 2.3
+                + cos(uTime * freq * 2.9 + phase * 1.7) * turb * 1.1
+                + cos(uTime * freq * 5.1 + phase * 1.1) * turb * 0.45 * rarity
+                + cos(uTime * 0.65 + phase * 1.2) * uWind * rootPin * rootPin * 0.5)
                 * leanBias;
     p = tipMorph(p, up, rootPin, yaw, leanX, leanZ);
 
@@ -335,21 +346,31 @@ const flora_vert = /* glsl */ `
     vec2 avoid = vec2(dW - dE, dS - dN);
     float al = length(avoid);
     if (al > 1e-5) avoid /= al;
-    float sep = density * rootPin * up * up * (0.85 + 0.4 * rarity);
+    // Density peel — stronger toward open space so thrashing crowns don't merge into one mass.
+    float sep = density * rootPin * up * up * (1.15 + 0.55 * rarity + 0.35 * uChaos);
     p.x += avoid.x * sep;
     p.z += avoid.y * sep;
-    // Orthogonal peel so neighbors don't share the same swing arc.
-    p.x += -avoid.y * sep * 0.45 * sin(phase * 2.3 + idHash * 6.28);
-    p.z += avoid.x * sep * 0.45 * cos(phase * 1.9 + idHash * 4.1);
+    // Orthogonal peel + personal phase so neighbors don't share the same swing arc.
+    float peel = sep * (0.55 + 0.25 * idHash);
+    p.x += -avoid.y * peel * sin(phase * 2.3 + idHash * 6.28);
+    p.z += avoid.x * peel * cos(phase * 1.9 + idHash * 4.1);
+    // Micro-orbit desync (still upright): tips circle slightly off each other.
+    float orbit = rootPin * up * up * (0.12 + 0.18 * rarity) * (0.5 + 0.5 * density);
+    p.x += cos(uTime * (0.9 + freq * 0.4) + phase) * orbit;
+    p.z += sin(uTime * (1.1 + freq * 0.35) - phase * 1.4) * orbit;
 
     vec4 worldPosition = instanceMatrix * vec4(p, 1.0);
-    worldPosition.y += cqmTerrainDisplacement(
+    // SHARED living-ground attach (same GLSL as ground mesh): plants RIDE the wave top.
+    // CPU seats origin slightly below static base; GPU re-adds displacement + surface ride so
+    // decorative land waves never swallow the collar (roots stay buried via negative-Y bulbs).
+    float groundLift = cqmTerrainDisplacement(
       vec3(bmBase.x, 0.0, bmBase.y),
       uTime,
       uChaos,
       uTerrainEntropy,
       uTerrainWind
     );
+    worldPosition.y += groundLift + ${SURFACE_RIDE.toFixed(3)};
 
     // MULTI-POINT CONTACT — tip thrash lateral + up flee + Y-spin; root stays planted.
     float c0 = localContact(bmBase, uContactX.x, uContactZ.x, uContactS.x, phase, stiff, react);
@@ -765,15 +786,15 @@ export class AlienFlora {
         // Seat origin into the soil so curved roots bury; GPU adds the same living-ground displacement.
         const gy = baseTerrainHeightAt(pl.x, pl.z) - ROOT_SINK;
         pos.set(pl.x, gy, pl.z);
-        // Soft terrain-slope align only (f8c6eadb) — never lever stems parallel to the dirt.
+            // Soft terrain-slope align only — collar follows land tilt, never laid flat.
         const dhx = baseTerrainHeightAt(pl.x + 1, pl.z) - baseTerrainHeightAt(pl.x - 1, pl.z);
         const dhz = baseTerrainHeightAt(pl.x, pl.z + 1) - baseTerrainHeightAt(pl.x, pl.z - 1);
-        const groundTiltX = Math.max(-0.18, Math.min(0.18, -dhz * 0.22));
-        const groundTiltZ = Math.max(-0.18, Math.min(0.18, dhx * 0.22));
+        const groundTiltX = Math.max(-0.14, Math.min(0.14, -dhz * 0.18));
+        const groundTiltZ = Math.max(-0.14, Math.min(0.14, dhx * 0.18));
         e.set(
-          groundTiltX + Math.sin(pl.yaw) * pl.tilt,
+          groundTiltX + Math.sin(pl.yaw) * pl.tilt * 0.65,
           pl.yaw,
-          groundTiltZ + Math.cos(pl.yaw) * pl.tilt,
+          groundTiltZ + Math.cos(pl.yaw) * pl.tilt * 0.65,
         );
         q.setFromEuler(e);
         scl.setScalar(pl.scale);
@@ -1189,10 +1210,10 @@ export class AlienFlora {
     u['uTerrainEntropy']!.value = e;
     (u['uTerrainWind']!.value as THREE.Vector2).set(terrainWindX, terrainWindZ);
 
-    // Per-slot underdamped springs — local thrash, not one global slab.
+    // Per-slot underdamped springs — snappier local thrash (responsive contact), not one global slab.
     const h = dt > 0.05 ? 0.05 : dt > 0 ? dt : 0;
-    const K = 34;
-    const DAMP = 6.5;
+    const K = 42;
+    const DAMP = 5.8;
     const cx = u['uContactX']!.value as THREE.Vector4;
     const cz = u['uContactZ']!.value as THREE.Vector4;
     const cs = u['uContactS']!.value as THREE.Vector4;
