@@ -7,13 +7,13 @@
  * spacing of a real world, not a uniform lawn. Plants are NOT neural (no brain, no rng draws) —
  * they are a substrate the fauna reads through {@link EntityManager.attachFloraComfort}: creatures
  * find dense cover for rest / camouflage / mating / gathering using this module's {@link comfortAt}
- * spatial readout. They are FOOD with operational fields: biomass, edaphic capacity/quality,
- * and overgraze pressure. Creatures graze to stubs; cells REGENERATE toward capacity under
- * neighbor seed, climate stress, and pressure debt. Chemotaxis climbs foodAt (not paint).
+ * spatial readout. They are FOOD: creatures graze biomass to stubs; cells REGENERATE (logistic +
+ * neighbor-seeded recovery). Some plants are RARE (iridescent / crystal / mycelial specials).
  *
  * RENDER: each family is ONE `InstancedMesh` (≤9 draw calls for 60k plants) sharing one
- * `ShaderMaterial`. Skins/motion read the same ecology fields. CPU hot path is O(grid cells)
- * + O(4 contacts), independent of plant count.
+ * `ShaderMaterial`. Wind sway, bioluminescence, mineral iridescence, and LOCAL multi-point
+ * ragdoll contact all run on the GPU. Per-frame CPU work is O(biomass-grid cells) + O(4 contacts)
+ * and never scales with plant count.
  *
  * CONTACT (USER fix): NEVER one gigantic solid patch. Up to 4 local contact seeds with a tight
  * falloff (~16u). Each plant desyncs by phase/stiffness/rarity so neighbors thrash differently —
@@ -69,9 +69,8 @@ const REGROW_RATE = 0.22;
 const REGROW_SEED = 0.015;
 /** Neighbor diffusion assist — dense live neighbors speed recovery of depleted cells. */
 const REGROW_NEIGHBOR = 0.08;
-/** Overgraze residual decay rate (1/s) — PRESSURE is real recovery suppression, not a paint flag. */
+/** Overgraze residual decay (1/s) — real recovery debt. */
 const PRESSURE_DECAY = 0.18;
-/** How hard grazing stamps residual pressure (dimensionless, eaten/capacity). */
 const PRESSURE_STAMP = 0.9;
 /** Max simultaneous local contact seeds (multi-point; kills the single giant-patch slide). */
 export const FLORA_CONTACT_SLOTS = 4;
@@ -93,10 +92,7 @@ function biomeAt(x: number, z: number): number {
   return b < 0 ? 0 : b >= BIOME_COUNT ? BIOME_COUNT - 1 : b;
 }
 
-/**
- * Edaphic nutrient quality 0..1 from continuous zonation (same fields as biomeAt).
- * Falsifiable: different (x,z) return different values; independent of live biomass.
- */
+/** Edaphic nutrient quality 0..1 — fixed field, independent of live biomass (falsifiable). */
 function edaphicQuality(x: number, z: number): number {
   const f =
     0.5 +
@@ -173,11 +169,10 @@ const flora_vert = /* glsl */ `
   uniform float uChaos;
   uniform float uTerrainEntropy;
   uniform vec2 uTerrainWind;
-  // MULTI-POINT local contact (4 seeds) — purposeful contact physics, not lawn slabs.
+  // MULTI-POINT local contact (4 seeds). Old single-point used ~72u falloff → giant solid patches.
   uniform vec4 uContactX;
   uniform vec4 uContactZ;
   uniform vec4 uContactS;
-  // R = live biomass (food/health), G = local plant density (adaptive bracing vs crossover)
   uniform sampler2D uBiomass;
   uniform float uGridExtent;
   uniform vec2 uScorchCenter;
@@ -190,8 +185,7 @@ const flora_vert = /* glsl */ `
   varying float vContactLive;
   varying float vRoot;
   varying float vBiomass;
-  varying float vDensity;
-  varying float vStress; // chaos + contact + hunger — drives skin mutation
+  varying float vStress;
   varying vec3 vNormalV;
   varying vec3 vViewDir;
   varying vec3 vWorldP;
@@ -208,32 +202,14 @@ const flora_vert = /* glsl */ `
     return strength * fall * personal * react * wobble;
   }
 
-  // Full multi-axis morph: continuous spin + counter-spin + lean + roll. Root collar stays fixed.
-  vec3 multiAxisMorph(
-    vec3 p, float up, float rootPin, float phase, float freq,
-    float twistWave, float spinRate, float counterSpin, float leanX, float leanZ, float roll
-  ) {
+  // Spin + lean on tip only — same mesh proportions, unique rotation per plant.
+  vec3 tipSpin(vec3 p, float up, float rootPin, float ang, float leanX, float leanZ) {
     float u2 = up * up * rootPin;
-    // Primary yaw spin (continuous) + oscillating twist + counter-axis spin (weird).
-    float ang = (twistWave * up + spinRate * uTime * u2 + counterSpin * uTime * up + phase * 0.2) * rootPin;
-    float ca = cos(ang);
-    float sa = sin(ang);
+    float ca = cos(ang * u2);
+    float sa = sin(ang * u2);
     vec3 q = vec3(ca * p.x + sa * p.z, p.y, -sa * p.x + ca * p.z);
-    // Roll around lean axis (multi-axis vectorized).
-    float cr = cos(roll * u2);
-    float sr = sin(roll * u2);
-    float qy = q.y * cr - q.z * sr;
-    float qz = q.y * sr + q.z * cr;
-    q.y = qy;
-    q.z = qz;
-    // Tip lean + precession (no amplitude kill).
     q.x += leanX * u2;
     q.z += leanZ * u2;
-    float pre = 0.55 * sin(uTime * freq * 0.65 + phase * 1.7) * u2;
-    float pre2 = 0.4 * cos(uTime * freq * 0.41 + phase * 2.3) * rootPin * up;
-    float pre3 = 0.28 * sin(uTime * freq * 1.15 + phase * 0.5) * u2;
-    q.x += pre * cos(phase) + pre2 * sin(phase * 0.7) + pre3 * cos(phase * 2.1);
-    q.z += pre * sin(phase * 1.3) + pre2 * cos(phase * 1.1) + pre3 * sin(phase * 1.9);
     return q;
   }
 
@@ -244,90 +220,60 @@ const flora_vert = /* glsl */ `
     vSecHue = aMeta.z;
     float up = clamp(position.y / max(aParams.w, 0.001), 0.0, 1.0);
     vUp = up;
-    // HARD root pin — ONLY structural seating, not a thrash cap.
-    float rootPin = smoothstep(0.0, 0.2, up);
+    // rootPin: seating only — collar never leaves soil.
+    float rootPin = smoothstep(0.0, 0.22, up);
     vRoot = 1.0 - rootPin;
 
-    // Spatial desync: neighbors never phase-lock (purpose: reduce lockstep crossover without caps).
     vec2 bmBase = (instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xz;
-    float spatialPhase = bmBase.x * 0.13 + bmBase.y * 0.17 + sin(bmBase.x * 0.07 - bmBase.y * 0.09) * 1.7;
-    float phase = aParams.x + spatialPhase;
-    float freq = aParams.y * (0.85 + 0.35 * fract(sin(bmBase.x * 12.9898 + bmBase.y * 78.233) * 43758.5453));
-    float stiff = clamp(aMeta.y, 0.1, 1.6);
-    float react = clamp(aMeta.w, 0.25, 2.4);
+    // Spatial desync so neighbors don't thrash in lockstep (crossover ↓ without amplitude caps).
+    float spatial = bmBase.x * 0.11 + bmBase.y * 0.14 + sin(bmBase.x * 0.06 - bmBase.y * 0.08) * 1.4;
+    float phase = aParams.x + spatial;
+    float freq = aParams.y * (0.9 + 0.25 * fract(sin(bmBase.x * 12.9 + bmBase.y * 78.2) * 43758.5));
+    float stiff = clamp(aMeta.y, 0.08, 1.4);
+    float react = clamp(aMeta.w, 0.2, 2.2);
     float rarity = aMeta.x;
 
-    // Operational fields: R=food, G=crowd density, B=overgraze debt.
+    // R=biomass food, G=density, B=overgraze pressure (operational; not paint).
     vec4 field = texture2D(uBiomass, (bmBase + 0.5 * uGridExtent) / uGridExtent);
     float biomass = field.r;
     float density = field.g;
     float overgraze = field.b;
     vBiomass = biomass;
-    vDensity = density;
-
-    // Finite-difference density gradient — PURPOSEFUL separation (seek open canopy space).
-    // Not a motion cap: thrash stays full; we ADD a desync/avoidance bias from real crowding.
-    float eps = 6.0;
-    float dE = texture2D(uBiomass, (bmBase + vec2(eps, 0.0) + 0.5 * uGridExtent) / uGridExtent).g;
-    float dW = texture2D(uBiomass, (bmBase + vec2(-eps, 0.0) + 0.5 * uGridExtent) / uGridExtent).g;
-    float dN = texture2D(uBiomass, (bmBase + vec2(0.0, eps) + 0.5 * uGridExtent) / uGridExtent).g;
-    float dS = texture2D(uBiomass, (bmBase + vec2(0.0, -eps) + 0.5 * uGridExtent) / uGridExtent).g;
-    vec2 avoid = vec2(dW - dE, dS - dN); // toward lower density
-    float avoidLen = length(avoid);
-    if (avoidLen > 1e-5) avoid /= avoidLen;
-
-    float soft = 1.0 / stiff;
     float health = clamp(biomass, 0.0, 1.0);
     float hunger = 1.0 - health;
-    float vigor = 0.55 + 0.65 * health + 0.35 * rarity - 0.25 * overgraze;
 
-    // Weird surface / edge artifact — SEM micro-deform so spinning silhouettes look broken/unique.
+    float soft = 1.0 / stiff;
+    // Same thrash language as f8c6eadb — modestly richer, not longer/thinner.
+    float bend = rootPin * rootPin * (uWind + uChaos * 0.85) * soft * (0.9 + rarity * 0.55);
+    float turb = rootPin * rootPin * uChaos * 0.65 * soft;
     vec3 p = position;
-    float edgeArt =
-      sin(position.x * 14.0 + phase * 3.1) * cos(position.z * 12.0 - phase * 2.2) *
-      sin(position.y * 9.0 + uTime * freq * 0.4 + phase);
-    float lobeArt = sin(atan(position.z, position.x) * 5.0 + uTime * 0.8 + phase) * 0.5 + 0.5;
-    p += normal * (edgeArt * 0.12 + (lobeArt - 0.5) * 0.1) * rootPin * (0.7 + rarity * 0.6 + vigor * 0.3);
 
-    float bend = rootPin * rootPin * (0.75 + uWind * 1.4 + uChaos * 1.35) * soft * (1.15 + rarity * 0.8) * vigor;
-    float turb = rootPin * rootPin * (0.4 + uChaos * 1.1) * soft * vigor;
+    // Continuous tip spin + multi-harmonic lean (purpose: living response to wind/chaos).
+    float spin = uTime * (0.55 + freq * 0.7 + rarity * 0.5) * soft
+               + (0.8 + rarity) * sin(uTime * freq * 0.35 + phase);
+    float leanX = sin(uTime * freq + phase) * bend * 2.5
+                + sin(uTime * freq * 3.5 + phase * 2.1) * turb * 1.15
+                + sin(uTime * freq * 6.0 + phase * 0.6) * turb * 0.45 * rarity;
+    float leanZ = cos(uTime * freq * 0.8 + phase * 1.3) * bend * 2.2
+                + cos(uTime * freq * 2.9 + phase * 1.7) * turb * 1.0
+                + cos(uTime * freq * 5.0 + phase * 1.1) * turb * 0.4 * rarity;
+    p = tipSpin(p, up, rootPin, spin, leanX, leanZ);
 
-    // ── STRONG unique rotation (the cool bit) — full power ──
-    float twistWave = (2.0 + rarity * 2.4 + uChaos * 1.3) * sin(uTime * freq * 1.05 + phase)
-                    + (1.1 + hunger * 0.8) * sin(uTime * freq * 2.3 + phase * 2.0)
-                    + 0.7 * sin(uTime * freq * 3.8 + phase * 0.4);
-    // Fast continuous spin so odd shapes read as living artifacts.
-    float spinRate = (1.25 + freq * 1.55 + rarity * 1.7 + uChaos * 1.1 + health * 0.55) * soft * vigor;
-    float counterSpin = (0.55 + rarity * 0.75 + uChaos * 0.55) * soft
-                      * sin(uTime * 0.22 + phase) * (0.7 + density * 0.45);
-    float leanX = sin(uTime * freq + phase) * bend * 3.6
-                + sin(uTime * freq * 3.1 + phase * 1.4) * turb * 2.0
-                + sin(uTime * freq * 5.5 + phase * 0.5) * turb * 0.9
-                + avoid.x * density * rootPin * up * up * (1.2 + vigor); // canopy separation
-    float leanZ = cos(uTime * freq * 0.88 + phase * 1.2) * bend * 3.4
-                + cos(uTime * freq * 2.7 + phase * 1.6) * turb * 1.85
-                + cos(uTime * freq * 5.0 + phase * 0.9) * turb * 0.85
-                + avoid.y * density * rootPin * up * up * (1.2 + vigor);
-    float roll = (0.7 + rarity * 0.9) * sin(uTime * freq * 0.5 + phase * 1.5)
-               + (0.4 + uChaos * 0.5) * cos(uTime * freq * 1.3 + phase);
-    p = multiAxisMorph(p, up, rootPin, phase, freq, twistWave, spinRate, counterSpin, leanX, leanZ, roll);
-
-    // ── UP/DOWN + EXPAND/CONTRACT + DEGRADE + MORPH ──
-    // Chunky breathe: expand width more than height (stocky weird, not thin poles).
-    float heave = sin(uTime * freq * 0.9 + phase) * rootPin * (0.08 + 0.1 * health) * (0.5 + uWind * 0.45 + uChaos * 0.3);
-    float pulse = 0.5 + 0.5 * sin(uTime * (1.5 + freq * 0.45) + phase + rarity * 2.2);
-    float expand = rootPin * (0.1 + 0.18 * health) * pulse * vigor
-                 - rootPin * hunger * 0.12
-                 - rootPin * overgraze * 0.08;
-    float squash = 1.0 + expand * (1.05 + 0.35 * up) + 0.18 * sin(uTime * freq * 0.65 + phase) * rootPin * up;
-    float stretch = 1.0 + expand * (0.95 + 0.3 * up) - 0.15 * sin(uTime * freq * 0.65 + phase + 1.1) * rootPin * up;
+    // Up/down heave + expand/contract (health expands; hunger degrades) — lateral-heavy.
+    float heave = sin(uTime * freq * 0.55 + phase) * rootPin * 0.14 * (uWind + uChaos + 0.4);
+    float pulse = 0.5 + 0.5 * sin(uTime * (1.1 + freq * 0.3) + phase + rarity);
+    float expand = rootPin * (0.05 + 0.1 * health) * pulse - rootPin * hunger * 0.1 - rootPin * overgraze * 0.06;
     p.y += heave * up;
-    p.x *= squash;
-    p.z *= stretch;
-    p.y *= mix(1.0, 0.9 + 0.1 * health, rootPin * 0.65);
+    p.x *= 1.0 + expand * (0.85 + 0.35 * up);
+    p.z *= 1.0 + expand * (0.85 + 0.35 * up);
+    p.y *= mix(1.0, 0.88 + 0.12 * health, rootPin * 0.75);
 
-    // Biomass graze scale (above collar).
-    float grow = 0.12 + 0.88 * health;
+    // Soft organic breath (f8c6eadb language).
+    float morph = rootPin * (0.04 + 0.12 * rarity) * (0.55 + 0.45 * sin(uTime * (1.05 + freq * 0.35) + phase));
+    p.x *= 1.0 + morph;
+    p.z *= 1.0 + morph;
+
+    float grow = 0.12 + 0.88 * biomass;
     if (uScorchRadius > 0.0) {
       float scorchD = length(bmBase - uScorchCenter);
       grow *= smoothstep(uScorchRadius * 0.82, uScorchRadius, scorchD);
@@ -336,7 +282,19 @@ const flora_vert = /* glsl */ `
     p.x *= gRoot;
     p.z *= gRoot;
     p.y = position.y < 0.0 ? p.y * (0.9 + 0.1 * grow) : p.y * mix(1.0, grow, rootPin);
-    vGlow *= 0.25 + 0.75 * health;
+    vGlow *= 0.3 + 0.7 * biomass;
+
+    // Density-gradient separation (additive desync toward open space — not a thrash cap).
+    float eps = 6.0;
+    float dE = texture2D(uBiomass, (bmBase + vec2(eps, 0.0) + 0.5 * uGridExtent) / uGridExtent).g;
+    float dW = texture2D(uBiomass, (bmBase + vec2(-eps, 0.0) + 0.5 * uGridExtent) / uGridExtent).g;
+    float dN = texture2D(uBiomass, (bmBase + vec2(0.0, eps) + 0.5 * uGridExtent) / uGridExtent).g;
+    float dS = texture2D(uBiomass, (bmBase + vec2(0.0, -eps) + 0.5 * uGridExtent) / uGridExtent).g;
+    vec2 avoid = vec2(dW - dE, dS - dN);
+    float al = length(avoid);
+    if (al > 1e-5) avoid /= al;
+    p.x += avoid.x * density * rootPin * up * up * 0.55;
+    p.z += avoid.y * density * rootPin * up * up * 0.55;
 
     vec4 worldPosition = instanceMatrix * vec4(p, 1.0);
     worldPosition.y += cqmTerrainDisplacement(
@@ -347,14 +305,14 @@ const flora_vert = /* glsl */ `
       uTerrainWind
     );
 
-    // ── CONTACT PHYSICS (multi-point, tip-weighted, FULL reaction) ──
+    // MULTI-POINT CONTACT PHYSICS — tip thrash + spin; root stays.
     float c0 = localContact(bmBase, uContactX.x, uContactZ.x, uContactS.x, phase, stiff, react);
     float c1 = localContact(bmBase, uContactX.y, uContactZ.y, uContactS.y, phase + 1.7, stiff, react);
     float c2 = localContact(bmBase, uContactX.z, uContactZ.z, uContactS.z, phase + 3.1, stiff, react);
     float c3 = localContact(bmBase, uContactX.w, uContactZ.w, uContactS.w, phase + 4.9, stiff, react);
     float cSum = c0 + c1 + c2 + c3;
     vContactLive = clamp(cSum, 0.0, 2.5);
-    vStress = clamp(uChaos * 0.4 + cSum * 0.5 + hunger * 0.3 + overgraze * 0.45, 0.0, 1.5);
+    vStress = clamp(uChaos * 0.4 + cSum * 0.5 + hunger * 0.3 + overgraze * 0.4, 0.0, 1.5);
 
     vec2 push = vec2(0.0);
     float wsum = 0.001;
@@ -379,31 +337,26 @@ const flora_vert = /* glsl */ `
       push += a * inv * c3; wsum += c3;
     }
     push /= wsum;
-    // Blend contact flee with canopy separation (both purposeful, neither is a thrash cap).
-    push = normalize(push * 1.2 + avoid * density * 0.55 + vec2(0.0001));
+    push = normalize(push + avoid * density * 0.4 + vec2(0.0001));
 
     float tip = rootPin * rootPin * rootPin;
     float mid = rootPin * rootPin * (1.0 - up) * 4.0;
-    float amp = (3.8 + uChaos * 3.4 + rarity * 2.0 + react * 1.2) * soft * vigor;
-    float contactLat = cSum * tip * amp;
-    worldPosition.xz += push * (contactLat + density * cSum * mid * 0.35);
-    // Crowd-driven continuous tip bias toward open space (desyncs overlapping arcs).
-    worldPosition.xz += avoid * density * tip * (0.8 + vigor * 0.6) * (0.5 + 0.5 * sin(uTime * freq + phase));
+    float amp = (2.8 + uChaos * 3.0 + rarity * 1.6 + react * 0.7) * soft;
+    worldPosition.xz += push * (cSum * tip * amp + biomass * cSum * mid * 0.35);
     vec2 ortho = vec2(-push.y, push.x);
-    worldPosition.xz += ortho * sin(uTime * (7.5 + stiff * 4.2) + phase) * cSum * mid * amp * 0.9;
-    // Contact turbo-spin + counter-spin.
-    float cTwist = cSum * tip * (2.6 + react * 1.6) * (0.5 + 0.5 * sin(uTime * 5.2 + phase));
-    float cTwist2 = cSum * mid * 0.7 * cos(uTime * 3.1 + phase * 1.3);
-    float cca = cos(cTwist + cTwist2);
-    float csa = sin(cTwist + cTwist2);
+    worldPosition.xz += ortho * sin(uTime * (5.0 + stiff * 3.0) + phase) * cSum * mid * amp * 0.55;
+    // Contact turbo-spin (tip only).
+    float cTwist = cSum * tip * (1.5 + react) * (0.55 + 0.45 * sin(uTime * 3.8 + phase));
+    float cca = cos(cTwist);
+    float csa = sin(cTwist);
     vec2 rel = worldPosition.xz - bmBase;
     worldPosition.xz = bmBase + vec2(cca * rel.x - csa * rel.y, csa * rel.x + cca * rel.y);
-
-    worldPosition.y += cSum * tip * (1.6 + uChaos * 1.8 + rarity * 1.15);
-    worldPosition.y += sin(cSum * 11.0 + uTime * 3.8 + phase) * cSum * tip * 1.35;
-    float invert = smoothstep(0.2, 0.95, cSum + uChaos * 0.55) * tip * (0.75 + rarity * 0.5);
-    worldPosition.y -= invert * (0.85 + up * 1.6);
-    worldPosition.xz += push * invert * 1.35;
+    // Up/down flee + tip invert under heavy contact (root stays planted).
+    worldPosition.y += cSum * tip * (1.0 + uChaos * 1.3 + rarity * 0.8);
+    worldPosition.y += sin(cSum * 8.0 + uTime * 2.6 + phase) * cSum * tip * 0.85;
+    float invert = smoothstep(0.3, 1.1, cSum + uChaos * 0.45) * tip * (0.45 + rarity * 0.3);
+    worldPosition.y -= invert * (0.55 + up * 1.1);
+    worldPosition.xz += push * invert * 0.9;
 
     vWorldP = worldPosition.xyz;
     vec4 mvPosition = modelViewMatrix * worldPosition;
@@ -424,7 +377,6 @@ const flora_frag = /* glsl */ `
   varying float vContactLive;
   varying float vRoot;
   varying float vBiomass;
-  varying float vDensity;
   varying float vStress;
   varying vec3 vNormalV;
   varying vec3 vViewDir;
@@ -444,7 +396,7 @@ const flora_frag = /* glsl */ `
     return rgb + (l - 0.5 * c);
   }
 
-  // Soft domain-warped field (4D-ish: xyz + time) — living skin, not stripe paint.
+  // Soft domain-warped field (4D-ish: xyz + time) — f8c6eadb language, no candy stripes.
   float field4(vec3 p, float t) {
     vec3 q = p * 0.11;
     q.x += 0.35 * sin(q.y * 1.7 + t * 0.31);
@@ -463,62 +415,42 @@ const flora_frag = /* glsl */ `
 
     float f = field4(vWorldP, uTime);
     float f2 = field4(vWorldP.yzx * 1.3 + 2.1, uTime * 0.7 + vStress);
-    float tex = 0.58 + 0.28 * f + 0.14 * f2;
+    float tex = 0.62 + 0.28 * f + 0.12 * f2;
 
-    // DYNAMIC SKIN: hue migrates with health, stress, contact, and time (mutating, purposeful).
+    // Dynamic skin: hue drifts with health/stress/contact (purpose: food + threat readout).
     float health = clamp(vBiomass, 0.0, 1.0);
     float hunger = 1.0 - health;
     float contactFlash = clamp(vContactLive, 0.0, 1.5);
-    // Healthy → cool-lush spectrum; hungry → warm/ash; stressed/contact → hot iridescent alarm.
-    // Mutating skin — hue races with stress, contact, health, and continuous morph phase.
-    float hueDrift = vSecHue
-      + fres * 0.28
-      + vUp * 0.12
-      + f * 0.1
-      + uTime * (0.055 + vRarity * 0.04 + vStress * 0.03 + contactFlash * 0.02)
-      + hunger * 0.14
-      + vStress * 0.22
-      + contactFlash * 0.14
-      + vDensity * 0.06
-      + sin(uTime * 1.3 + vWorldP.x * 0.05 + vWorldP.z * 0.04) * 0.05;
-    float viewHue = fract(hueDrift);
-    float sat = clamp(0.55 + vRarity * 0.25 + health * 0.2 - hunger * 0.15 + contactFlash * 0.15, 0.25, 0.98);
-    float lit = clamp(0.38 + fres * 0.15 + health * 0.18 - hunger * 0.12 + contactFlash * 0.1, 0.15, 0.78);
-    vec3 iri = hsl2rgb(viewHue, sat, lit);
-    vec3 iri2 = hsl2rgb(fract(viewHue + 0.18 + f * 0.04 + vDensity * 0.05), sat * 0.95, lit + 0.05);
-    vec3 spectrum = mix(iri, iri2, 0.28 + fres * 0.35 + vRarity * 0.2 + vStress * 0.15);
+    float viewHue = fract(
+      vSecHue + fres * 0.28 + vUp * 0.1 + f * 0.08
+      + uTime * (0.04 + vRarity * 0.025 + vStress * 0.02)
+      + hunger * 0.1 + vStress * 0.15 + contactFlash * 0.1
+    );
+    vec3 iri = hsl2rgb(viewHue, 0.72 + vRarity * 0.25, 0.5 + fres * 0.16 - hunger * 0.08);
+    vec3 iri2 = hsl2rgb(fract(viewHue + 0.22 + f * 0.05), 0.8, 0.55);
+    vec3 spectrum = mix(iri, iri2, 0.3 + fres * 0.4 + vRarity * 0.2 + vStress * 0.12);
 
     float key = 0.38 + 0.72 * clamp(dot(n, normalize(vec3(0.35, 0.8, 0.45))), 0.0, 1.0);
-    // Base species color mutates toward living spectrum with stress/health.
-    float skinMix = 0.28 + vRarity * 0.35 + fres * 0.18 + vStress * 0.2 + (1.0 - health) * 0.12;
-    vec3 body = mix(vColor * tex, spectrum, clamp(skinMix, 0.0, 0.92)) * key;
+    float skinMix = 0.32 + vRarity * 0.4 + fres * 0.2 + vStress * 0.15;
+    vec3 body = mix(vColor * tex, spectrum, clamp(skinMix, 0.0, 0.9)) * key;
+    // Degrade skin when biomass low (food state).
+    body = mix(body, hsl2rgb(fract(vSecHue + 0.06), 0.3, 0.28), hunger * 0.45 * (1.0 - vRoot));
 
-    // Degraded (low biomass) skin desaturates + browns — food state, not paint.
-    vec3 degrade = mix(body, hsl2rgb(fract(vSecHue + 0.05), 0.25, 0.28), hunger * 0.55 * (1.0 - vRoot));
-    body = mix(body, degrade, hunger * 0.65);
+    vec3 rootCol = mix(vColor * 0.35, hsl2rgb(fract(vSecHue + 0.08), 0.45, 0.22), 0.5);
+    body = mix(body, rootCol, vRoot * 0.85);
 
-    // Buried root: dark mycelial mat.
-    vec3 rootCol = mix(vColor * 0.32, hsl2rgb(fract(vSecHue + 0.08), 0.4, 0.2), 0.55);
-    body = mix(body, rootCol, vRoot * 0.88);
+    float pulse = 0.5 + 0.5 * sin(uTime * 1.9 + vUp * 5.5 + f * 2.0 + vRarity * 1.5 + vStress);
+    float glow = vGlow * (0.2 + 0.85 * vUp) * pulse
+               * (0.55 + 0.9 * uChaos + contactFlash * 0.45 + health * 0.2)
+               * (1.0 - vRoot * 0.7);
+    vec3 glowCol = mix(vColor * vec3(1.3, 1.55, 2.0), spectrum * 1.35, 0.45 + vRarity * 0.4);
 
-    float pulse = 0.45 + 0.55 * sin(uTime * 2.0 + vUp * 5.5 + f * 2.0 + vRarity * 1.5 + vStress);
-    float glow = vGlow * (0.18 + 0.88 * vUp) * pulse
-               * (0.5 + 0.85 * uChaos + contactFlash * 0.5 + health * 0.25)
-               * (1.0 - vRoot * 0.75);
-    vec3 glowCol = mix(vColor * vec3(1.25, 1.5, 2.0), spectrum * 1.4, 0.5 + vRarity * 0.35 + vStress * 0.2);
+    vec3 rim = spectrum * fres * (0.7 + vRarity * 1.0 + contactFlash * 0.55) * (1.0 - vRoot * 0.5);
+    float spore = pow(max(0.0, 0.5 + 0.5 * f2), 3.0) * (0.2 + vRarity * 0.7) * pulse * vUp;
+    vec3 sporeCol = hsl2rgb(fract(viewHue + 0.15), 0.9, 0.62) * spore;
 
-    // Hard weird edge artifact — chromatic fresnel fringe when shapes spin.
-    float edgeBreak = pow(fres, 1.4) * (0.85 + 0.4 * sin(vWorldP.x * 7.0 + vWorldP.z * 6.0 + uTime * 2.0));
-    vec3 fringe = hsl2rgb(fract(viewHue + 0.4 + edgeBreak * 0.15), 0.95, 0.62) * edgeBreak * (1.1 + vRarity);
-    vec3 rim = spectrum * fres * (0.75 + vRarity * 1.05 + contactFlash * 0.65 + vStress * 0.3) * (1.0 - vRoot * 0.55) + fringe;
-    float spore = pow(max(0.0, 0.5 + 0.5 * f2), 2.8) * (0.18 + vRarity * 0.65 + health * 0.2) * pulse * vUp;
-    vec3 sporeCol = hsl2rgb(fract(viewHue + 0.12), 0.88, 0.6) * spore;
-
-    // Contact alarm flash + density brace tint (crowded cells go cooler).
     vec3 col = body + glowCol * glow + rim + sporeCol;
-    col += spectrum * contactFlash * 0.28 * vUp;
-    col = mix(col, col * vec3(0.85, 1.05, 1.15), vDensity * 0.2);
-
+    col += spectrum * contactFlash * 0.25 * vUp;
     gl_FragColor = vec4(col, 1.0);
   }
 `;
@@ -555,20 +487,16 @@ export class AlienFlora {
   private readonly gridHalf: number;
   private readonly density: Float32Array;
   private readonly maxDensity: number;
-  // ── USER ecology: LIVE mutable fields — food, capacity, overgraze pressure (not paint). ──
+  // ── Operational ecology fields (food, capacity, overgraze debt) — not decorative paint. ──
   private readonly biomass: Float32Array;
-  /** Per-cell carrying capacity from edaphic quality (fixed at construction). */
   private readonly capacity: Float32Array;
-  /** Overgraze residual 0..1 — suppresses regrowth until it decays (responsive debt). */
   private readonly pressure: Float32Array;
-  /** Fixed edaphic nutrient quality 0..1 per cell (biome/position). */
   private readonly quality: Float32Array;
   private readonly biomassTex: THREE.DataTexture;
   private biomassTotal = 0;
   private biomassCells = 0;
   private biomassDirty = true;
   private texAccum = 0;
-  /** Last climate scalars from update — drive regrowth (adaptive to chaos/entropy). */
   private climateChaos = 0;
   private climateEntropy = 0;
 
@@ -675,26 +603,26 @@ export class AlienFlora {
         0.3 * Math.sin(x * 0.028 - z * 0.023) +
         0.18 * Math.sin(x * 0.061 + z * 0.057);
       const clump = 0.5 + 0.5 * Math.max(-1, Math.min(1, grove * 0.62));
-      // Higher acceptance → denser living field (still thinned by paths/glades).
-      const accept = 0.12 + 0.88 * Math.pow(clump, 1.45);
+      const accept = 0.06 + 0.94 * Math.pow(clump, 1.8);
       if (hash(k * 3) > accept) continue;
 
       const biome = biomeAt(x, z);
       const sp = AlienFlora.pickSpecies(biome, k);
       const s = species[sp]!;
+      // Rarity: most common, some uncommon, a few legendary specials (food-rich, flashier).
       const rRoll = hash(k * 41 + 77);
       const rarity =
-        rRoll > 0.985
-          ? 0.85 + hash(k * 43) * 0.15 // legendary ~1.5%
-          : rRoll > 0.9
-            ? 0.45 + hash(k * 43) * 0.35 // uncommon ~8.5%
-            : s.rarityBias * (0.08 + hash(k * 47) * 0.3);
-      // Chunky presence (wide weird shapes), not tall thin sticks.
-      const giant = hash(k * 23 + 29) > 0.96 ? 1.35 + hash(k * 23 + 31) * 0.45 : 1;
-      const scale = s.size * (0.75 + hash(k * 5 + 11) * 0.85) * giant * (1 + rarity * 0.2);
+        rRoll > 0.992
+          ? 0.85 + hash(k * 43) * 0.15 // legendary ~0.8%
+          : rRoll > 0.94
+            ? 0.45 + hash(k * 43) * 0.35 // uncommon ~5%
+            : s.rarityBias * (0.05 + hash(k * 47) * 0.25); // common low rarity
+      // Rare giants stay modest so the field stays proportional to the habitat (never nuclear-scale).
+      const giant = hash(k * 23 + 29) > 0.97 ? 1.7 + hash(k * 23 + 31) * 1.1 : 1;
+      const scale = s.size * (0.5 + hash(k * 5 + 11) * 1.15) * giant * (1 + rarity * 0.22);
       const yaw = hash(k * 5 + 13) * TAU;
-      // Modest lean only — roots stay seated; motion lives in the shader spin.
-      const tilt = (hash(k * 5 + 17) - 0.5) * (0.1 + hash(k * 5 + 19) * 0.12);
+      // Small intrinsic lean only — big random tilt levers roots out of the ground and looks broken.
+      const tilt = (hash(k * 5 + 17) - 0.5) * (0.08 + hash(k * 5 + 19) * 0.1);
       perFamily[s.family]!.push({ x, z, sp, scale, yaw, tilt, rarity });
       placed++;
 
@@ -707,7 +635,7 @@ export class AlienFlora {
     this.instanceCount = placed;
     this.maxDensity = maxD;
 
-    // Operational ecology grids: capacity + quality from edaphics; biomass starts at capacity.
+    // Operational grids: capacity/quality from edaphics; biomass starts at capacity.
     const cells = this.gridN * this.gridN;
     this.biomass = new Float32Array(cells);
     this.capacity = new Float32Array(cells);
@@ -721,7 +649,6 @@ export class AlienFlora {
       const wz = iz * this.cell - this.gridHalf + this.cell / 2;
       const q = edaphicQuality(wx, wz);
       this.quality[i] = q;
-      // Capacity 0.55..1.0 — richer edaphics hold more food (falsifiable vs barren cells).
       const cap = 0.55 + 0.45 * q;
       this.capacity[i] = cap;
       this.biomass[i] = cap;
@@ -731,9 +658,9 @@ export class AlienFlora {
     const texData = new Uint8Array(cells * 4);
     const densScale = this.maxDensity > 0 ? 1 / this.maxDensity : 0;
     for (let i = 0; i < cells; i++) {
-      texData[i * 4] = Math.round((this.biomass[i] ?? 0) * 255); // R = food/health
-      texData[i * 4 + 1] = Math.round((this.density[i] ?? 0) * densScale * 255); // G = crowd brace
-      texData[i * 4 + 2] = Math.round((this.pressure[i] ?? 0) * 255); // B = overgraze debt
+      texData[i * 4] = Math.round((this.biomass[i] ?? 0) * 255);
+      texData[i * 4 + 1] = Math.round((this.density[i] ?? 0) * densScale * 255);
+      texData[i * 4 + 2] = Math.round((this.pressure[i] ?? 0) * 255);
     }
     this.biomassTex = new THREE.DataTexture(texData, this.gridN, this.gridN, THREE.RGBAFormat);
     this.biomassTex.minFilter = THREE.LinearFilter;
@@ -789,14 +716,8 @@ export class AlienFlora {
             pl.rarity * 0.1 +
             1) %
           1;
-        const sat = Math.min(
-          0.98,
-          Math.max(0.55, s.sat + (hash(i * 97 + pl.sp) - 0.5) * 0.2 + pl.rarity * 0.15),
-        );
-        const light = Math.min(
-          0.72,
-          Math.max(0.32, s.light + hash(i * 101 + pl.sp) * 0.16 + pl.rarity * 0.1),
-        );
+        const sat = Math.min(0.98, Math.max(0.55, s.sat + (hash(i * 97 + pl.sp) - 0.5) * 0.2 + pl.rarity * 0.15));
+        const light = Math.min(0.72, Math.max(0.32, s.light + hash(i * 101 + pl.sp) * 0.16 + pl.rarity * 0.1));
         col.setHSL(hueJit, sat, light);
         if (pl.rarity > 0.55) {
           const kick = hash(i * 113 + pl.sp);
@@ -807,17 +728,17 @@ export class AlienFlora {
         }
 
         const o4 = i * 4;
-        // Wide phase + spatial salt so neighbors never lockstep-thrash through each other.
-        params[o4] = hash(pl.sp * 13 + i * 7) * TAU + pl.x * 0.041 + pl.z * 0.037;
-        params[o4 + 1] = s.swayFreq * (0.7 + hash(i * 73 + pl.sp) * 2.1);
-        params[o4 + 2] = Math.min(1, s.glow + hash(i * 79 + pl.sp) * 0.4 + pl.rarity * 0.3);
+        // Spatial salt in phase so neighbors don't lockstep-crossover.
+        params[o4] = hash(pl.sp * 13 + i * 7) * TAU + pl.x * 0.035 + pl.z * 0.031;
+        params[o4 + 1] = s.swayFreq * (0.6 + hash(i * 73 + pl.sp) * 1.7);
+        params[o4 + 2] = Math.min(1, s.glow + hash(i * 79 + pl.sp) * 0.38 + pl.rarity * 0.25);
         params[o4 + 3] = fmly.height;
 
         // aMeta: rarity, stiffness, secondaryHue, reactGain
         meta[o4] = pl.rarity;
-        meta[o4 + 1] = 0.12 + hash(i * 83 + pl.sp) * 1.15; // stiffness — softer tips thrash more
-        meta[o4 + 2] = (hueJit + 0.18 + pl.rarity * 0.25 + hash(i * 89) * 0.25) % 1;
-        meta[o4 + 3] = 0.7 + hash(i * 91 + pl.sp) * 1.1 + pl.rarity * 0.85; // contact react
+        meta[o4 + 1] = 0.18 + hash(i * 83 + pl.sp) * 1.0; // stiffness variance
+        meta[o4 + 2] = (hueJit + 0.18 + pl.rarity * 0.25 + hash(i * 89) * 0.2) % 1;
+        meta[o4 + 3] = 0.55 + hash(i * 91 + pl.sp) * 0.9 + pl.rarity * 0.7; // react gain
 
         const o3 = i * 3;
         colors[o3] = col.r;
@@ -842,201 +763,191 @@ export class AlienFlora {
   }
 
   /**
-   * Nine SHORT + FAT weird silhouettes (SEM / knot / lobe / ring). Not thin poles, not tall sticks.
-   * Odd shapes for unique spin silhouettes; roots buried.
+   * Nine curved alien silhouettes (lathe / tube / knot) + buried root bulbs.
+   * Collar at y=0; roots below (y negative). No boxy plates — organic revolution profiles and helices.
    */
   private static buildFamilies(): Family[] {
     const fams: Family[] = [];
 
-    // 0 LOBE — fat compound fruit with offset bulbs (weird silhouette when spinning)
+    // 0 SPIRE — curved lathe needle + soft crown bulb + buried root
     {
-      const core = new THREE.SphereGeometry(0.85, 14, 12);
-      core.scale(1.25, 0.9, 1.15);
-      core.translate(0, 0.95, 0);
-      const a = new THREE.SphereGeometry(0.55, 12, 10);
-      a.scale(1.3, 0.85, 1.1);
-      a.translate(0.7, 1.15, 0.15);
-      const b = new THREE.SphereGeometry(0.5, 12, 10);
-      b.scale(1.2, 0.9, 1.25);
-      b.translate(-0.65, 0.85, 0.35);
-      const c = new THREE.SphereGeometry(0.42, 11, 9);
-      c.translate(0.15, 1.55, -0.55);
-      const ring = new THREE.TorusGeometry(0.7, 0.12, 10, 20);
-      ring.rotateX(Math.PI / 2.4);
-      ring.rotateZ(0.4);
-      ring.translate(0, 1.2, 0);
-      const geo = adoptMerged([core, a, b, c, ring, rootBulb(0.55, 0.5)]);
-      fams.push({ geo, height: peakHeight(geo) });
-    }
-
-    // 1 KNOT — fat torus-knot blob (iconic weird rotation)
-    {
-      const k1 = new THREE.TorusKnotGeometry(0.7, 0.22, 80, 10, 2, 3);
-      k1.scale(1.1, 0.95, 1.1);
-      k1.translate(0, 1.15, 0);
-      const k2 = new THREE.TorusKnotGeometry(0.4, 0.12, 64, 8, 3, 2);
-      k2.scale(1.0, 1.1, 1.0);
-      k2.translate(0.15, 1.55, 0.1);
-      k2.rotateY(0.9);
-      const bulb = new THREE.SphereGeometry(0.35, 12, 10);
-      bulb.translate(0, 1.95, 0);
-      const geo = adoptMerged([k1, k2, bulb, rootBulb(0.5, 0.48)]);
-      fams.push({ geo, height: peakHeight(geo) });
-    }
-
-    // 2 URN — fat lathe body with thick waist
-    {
-      const body = lathe(
+      const stem = lathe(
         [
-          [0.2, 0.0],
-          [0.85, 0.2],
-          [1.15, 0.55],
-          [1.2, 0.95],
-          [0.95, 1.3],
-          [0.55, 1.55],
-          [0.35, 1.75],
-          [0.5, 1.95],
-          [0.25, 2.1],
+          [0.02, 0.0],
+          [0.28, 0.35],
+          [0.38, 1.2],
+          [0.32, 2.6],
+          [0.22, 4.0],
+          [0.12, 5.2],
+          [0.04, 5.9],
         ],
-        18,
+        16,
       );
-      const lip = new THREE.TorusGeometry(0.55, 0.1, 10, 18);
-      lip.rotateX(Math.PI / 2);
-      lip.translate(0, 1.95, 0);
-      const geo = adoptMerged([body, lip, rootBulb(0.6, 0.45)]);
+      const crown = new THREE.SphereGeometry(0.42, 12, 10);
+      crown.scale(1.3, 0.7, 1.3);
+      crown.translate(0, 5.85, 0);
+      const geo = adoptMerged([stem, crown, rootBulb(0.42, 0.55)]);
       fams.push({ geo, height: peakHeight(geo) });
     }
 
-    // 3 RINGSTACK — stacked offset tori (edge artifact king when spinning)
-    {
-      const t1 = new THREE.TorusGeometry(0.75, 0.18, 12, 24);
-      t1.rotateX(Math.PI / 2);
-      t1.translate(0, 0.55, 0);
-      const t2 = new THREE.TorusGeometry(0.6, 0.16, 12, 22);
-      t2.rotateX(Math.PI / 2.3);
-      t2.rotateZ(0.5);
-      t2.translate(0.1, 1.05, 0);
-      const t3 = new THREE.TorusGeometry(0.45, 0.14, 10, 20);
-      t3.rotateX(Math.PI / 1.8);
-      t3.rotateY(0.7);
-      t3.translate(-0.08, 1.5, 0.05);
-      const core = new THREE.SphereGeometry(0.45, 12, 10);
-      core.translate(0, 1.0, 0);
-      const geo = adoptMerged([t1, t2, t3, core, rootBulb(0.52, 0.48)]);
-      fams.push({ geo, height: peakHeight(geo) });
-    }
-
-    // 4 CORAL — wide multi-lobe coral head
-    {
-      const base = new THREE.SphereGeometry(0.7, 12, 10);
-      base.scale(1.3, 0.7, 1.3);
-      base.translate(0, 0.55, 0);
-      const arms: THREE.BufferGeometry[] = [base];
-      for (let i = 0; i < 5; i++) {
-        const a = (i / 5) * Math.PI * 2;
-        const lobe = new THREE.SphereGeometry(0.38, 10, 8);
-        lobe.scale(1.1, 1.35, 0.95);
-        lobe.translate(Math.cos(a) * 0.55, 1.15 + (i % 2) * 0.2, Math.sin(a) * 0.55);
-        arms.push(lobe);
-      }
-      const tip = new THREE.SphereGeometry(0.32, 10, 8);
-      tip.translate(0, 1.75, 0);
-      arms.push(tip, rootBulb(0.55, 0.5));
-      const geo = adoptMerged(arms);
-      fams.push({ geo, height: peakHeight(geo) });
-    }
-
-    // 5 CRYSTAL — chunky lathe gem (wide, not needle)
-    {
-      const crystal = lathe(
-        [
-          [0.15, 0.0],
-          [0.75, 0.3],
-          [0.95, 0.8],
-          [0.7, 1.35],
-          [0.9, 1.85],
-          [0.45, 2.25],
-          [0.12, 2.5],
-        ],
-        14,
-      );
-      const facet = new THREE.OctahedronGeometry(0.4, 0);
-      facet.scale(1.2, 0.7, 1.2);
-      facet.translate(0, 2.35, 0);
-      const geo = adoptMerged([crystal, facet, rootBulb(0.5, 0.48)]);
-      fams.push({ geo, height: peakHeight(geo) });
-    }
-
-    // 6 HELIX — thick short coil (fat tube)
+    // 1 WHIP — helical tube tendril + fruiting nodules
     {
       const pts: THREE.Vector3[] = [];
       for (let i = 0; i <= 40; i++) {
         const t = i / 40;
-        const y = t * 2.4;
-        const a = t * Math.PI * 5.5;
-        const r = 0.55 * (1 - t * 0.35) + 0.2;
+        const y = t * 6.4;
+        const a = t * Math.PI * 4.2;
+        const r = 0.32 * (1 - t * 0.75) + 0.06;
         pts.push(new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r));
       }
-      const tube = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 40, 0.22, 10, false);
-      const orb1 = new THREE.SphereGeometry(0.38, 12, 10);
-      orb1.translate(0.5, 0.7, 0.1);
-      const orb2 = new THREE.SphereGeometry(0.34, 11, 9);
-      orb2.translate(-0.4, 1.5, 0.2);
-      const orb3 = new THREE.SphereGeometry(0.3, 10, 8);
-      orb3.translate(0.2, 2.15, -0.15);
-      const geo = adoptMerged([tube, orb1, orb2, orb3, rootBulb(0.55, 0.5)]);
+      const tube = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 36, 0.12, 7, false);
+      const n1 = new THREE.SphereGeometry(0.32, 10, 8);
+      n1.scale(1.25, 0.75, 1.25);
+      n1.translate(0.28, 2.0, 0.05);
+      const n2 = new THREE.SphereGeometry(0.26, 10, 8);
+      n2.scale(1.15, 0.7, 1.15);
+      n2.translate(-0.22, 3.8, 0.12);
+      const n3 = new THREE.SphereGeometry(0.2, 9, 7);
+      n3.translate(0.1, 5.5, -0.08);
+      const geo = adoptMerged([tube, n1, n2, n3, rootBulb(0.36, 0.5)]);
       fams.push({ geo, height: peakHeight(geo) });
     }
 
-    // 7 CLUSTER — dense SEM fruiting mass
+    // 2 POD — lathe urn fruiting body (SEM organic)
     {
-      const parts: THREE.BufferGeometry[] = [];
-      const main = new THREE.SphereGeometry(0.8, 14, 12);
-      main.scale(1.25, 0.95, 1.25);
-      main.translate(0, 0.85, 0);
-      parts.push(main);
-      const offsets: [number, number, number, number][] = [
-        [0.7, 0.7, 0.25, 0.48],
-        [-0.65, 0.75, 0.4, 0.45],
-        [0.2, 1.25, -0.55, 0.42],
-        [-0.35, 1.15, -0.4, 0.38],
-        [0.55, 1.1, -0.15, 0.36],
-        [-0.15, 0.55, 0.65, 0.4],
-      ];
-      for (const [x, y, z, r] of offsets) {
-        const s = new THREE.SphereGeometry(r, 11, 9);
-        s.translate(x, y, z);
-        parts.push(s);
-      }
-      const ring = new THREE.TorusGeometry(0.65, 0.1, 10, 20);
-      ring.rotateX(Math.PI / 2);
-      ring.translate(0, 1.35, 0);
-      parts.push(ring, rootBulb(0.58, 0.45));
-      const geo = adoptMerged(parts);
-      fams.push({ geo, height: peakHeight(geo) });
-    }
-
-    // 8 DISH — wide low fan / bowl (unique when spinning)
-    {
-      const bowl = lathe(
+      const body = lathe(
         [
           [0.15, 0.0],
-          [0.7, 0.15],
-          [1.2, 0.4],
-          [1.45, 0.75],
-          [1.35, 1.15],
-          [0.95, 1.45],
-          [0.4, 1.65],
-          [0.15, 1.8],
+          [0.7, 0.25],
+          [0.95, 0.7],
+          [1.05, 1.15],
+          [0.85, 1.55],
+          [0.45, 1.85],
+          [0.2, 2.05],
         ],
         18,
       );
-      const rim = new THREE.TorusGeometry(1.15, 0.1, 10, 24);
-      rim.rotateX(Math.PI / 2);
-      rim.translate(0, 1.15, 0);
-      const jewel = new THREE.SphereGeometry(0.35, 12, 10);
-      jewel.translate(0, 1.55, 0);
-      const geo = adoptMerged([bowl, rim, jewel, rootBulb(0.5, 0.45)]);
+      const lip = new THREE.TorusGeometry(0.42, 0.07, 8, 16);
+      lip.rotateX(Math.PI / 2);
+      lip.translate(0, 1.95, 0);
+      const geo = adoptMerged([body, lip, rootBulb(0.55, 0.48)]);
+      fams.push({ geo, height: peakHeight(geo) });
+    }
+
+    // 3 BLADE — curved lathe sail (leaf without hard boxes)
+    {
+      const sail = lathe(
+        [
+          [0.02, 0.0],
+          [0.15, 0.4],
+          [0.55, 1.4],
+          [0.85, 2.6],
+          [0.95, 3.6],
+          [0.7, 4.5],
+          [0.25, 5.2],
+          [0.02, 5.5],
+        ],
+        14,
+      );
+      sail.scale(0.35, 1, 1.0); // flatten into a soft blade
+      const geo = adoptMerged([sail, rootBulb(0.34, 0.5)]);
+      fams.push({ geo, height: peakHeight(geo) });
+    }
+
+    // 4 CORAL — torus-knot body + soft satellite bulbs (math weirdness, still connected)
+    {
+      const core = new THREE.TorusKnotGeometry(0.55, 0.16, 64, 8, 2, 3);
+      core.scale(0.85, 1.9, 0.85);
+      core.translate(0, 2.6, 0);
+      const s1 = new THREE.SphereGeometry(0.28, 10, 8);
+      s1.translate(0.55, 1.6, 0.15);
+      const s2 = new THREE.SphereGeometry(0.24, 9, 7);
+      s2.translate(-0.45, 3.2, -0.2);
+      const s3 = new THREE.SphereGeometry(0.2, 9, 7);
+      s3.translate(0.2, 4.4, 0.3);
+      const geo = adoptMerged([core, s1, s2, s3, rootBulb(0.4, 0.52)]);
+      fams.push({ geo, height: peakHeight(geo) });
+    }
+
+    // 5 SHARD — lathe crystal with curved waist (not tetra edges)
+    {
+      const crystal = lathe(
+        [
+          [0.05, 0.0],
+          [0.45, 0.5],
+          [0.55, 1.4],
+          [0.4, 2.6],
+          [0.55, 3.8],
+          [0.35, 4.8],
+          [0.08, 5.6],
+        ],
+        12,
+      );
+      const tip = new THREE.SphereGeometry(0.18, 10, 8);
+      tip.scale(0.7, 1.4, 0.7);
+      tip.translate(0, 5.7, 0);
+      const geo = adoptMerged([crystal, tip, rootBulb(0.38, 0.5)]);
+      fams.push({ geo, height: peakHeight(geo) });
+    }
+
+    // 6 HELIX — thick mycelial coil + spore orbs
+    {
+      const pts: THREE.Vector3[] = [];
+      for (let i = 0; i <= 42; i++) {
+        const t = i / 42;
+        const y = t * 5.6;
+        const a = t * Math.PI * 5.5;
+        const r = 0.48 * (1 - t * 0.7) + 0.1;
+        pts.push(new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r));
+      }
+      const tube = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 40, 0.16, 8, false);
+      const orb1 = new THREE.SphereGeometry(0.3, 10, 8);
+      orb1.translate(0.4, 1.6, 0.1);
+      const orb2 = new THREE.SphereGeometry(0.26, 10, 8);
+      orb2.translate(-0.32, 3.2, 0.18);
+      const orb3 = new THREE.SphereGeometry(0.22, 9, 7);
+      orb3.translate(0.18, 4.7, -0.12);
+      const geo = adoptMerged([tube, orb1, orb2, orb3, rootBulb(0.4, 0.5)]);
+      fams.push({ geo, height: peakHeight(geo) });
+    }
+
+    // 7 BUBBLE — fruiting cluster (connected via root mat)
+    {
+      const main = new THREE.SphereGeometry(0.7, 14, 12);
+      main.scale(1.15, 0.9, 1.15);
+      main.translate(0, 0.85, 0);
+      const a = new THREE.SphereGeometry(0.4, 12, 10);
+      a.translate(0.55, 0.55, 0.2);
+      const b = new THREE.SphereGeometry(0.36, 12, 10);
+      b.translate(-0.48, 0.7, 0.35);
+      const c = new THREE.SphereGeometry(0.32, 11, 9);
+      c.translate(0.12, 1.35, -0.45);
+      const ring = new THREE.TorusGeometry(0.48, 0.06, 8, 18);
+      ring.rotateX(Math.PI / 2);
+      ring.translate(0, 1.45, 0);
+      const geo = adoptMerged([main, a, b, c, ring, rootBulb(0.5, 0.45)]);
+      fams.push({ geo, height: peakHeight(geo) });
+    }
+
+    // 8 FAN — lathe mineral sail (curved radial profile, no boxes)
+    {
+      const sail = lathe(
+        [
+          [0.02, 0.0],
+          [0.2, 0.3],
+          [0.75, 1.0],
+          [1.15, 2.0],
+          [1.25, 3.0],
+          [0.9, 3.9],
+          [0.35, 4.5],
+          [0.02, 4.7],
+        ],
+        16,
+      );
+      sail.scale(0.28, 1, 1); // soft fan thickness
+      const jewel = new THREE.SphereGeometry(0.22, 10, 8);
+      jewel.translate(0, 4.55, 0);
+      const geo = adoptMerged([sail, jewel, rootBulb(0.36, 0.48)]);
       fams.push({ geo, height: peakHeight(geo) });
     }
 
@@ -1058,11 +969,11 @@ export class AlienFlora {
         hue,
         sat: 0.62 + hash(i * 23 + 3) * 0.36,
         light: 0.34 + hash(i * 29 + 5) * 0.3,
-        // Medium stocky scale — fat weird silhouettes that read when spinning.
-        size: 0.85 + hash(i * 31 + 7) * 1.15,
-        swayFreq: 0.55 + hash(i * 37 + 11) * 2.8,
-        glow: 0.45 + hash(i * 41 + 13) * 0.55,
-        rarityBias: hash(i * 59 + 17) * 0.45,
+        // Proportional habitat scale — never nuclear giants.
+        size: 0.5 + hash(i * 31 + 7) * 1.65,
+        swayFreq: 0.28 + hash(i * 37 + 11) * 2.0,
+        glow: 0.35 + hash(i * 41 + 13) * 0.6,
+        rarityBias: hash(i * 59 + 17) * 0.4,
       });
     }
     return out;
@@ -1125,8 +1036,7 @@ export class AlienFlora {
     this.climateEntropy = e;
     const u = this.material.uniforms;
     u['uTime']!.value = t;
-    // Full ambient drive — field keeps spinning/thrashing hard.
-    u['uWind']!.value = 0.7 + 1.0 * c + 0.15 * Math.sin(t * 0.41);
+    u['uWind']!.value = 0.4 + 0.8 * c + 0.1 * Math.sin(t * 0.33);
     u['uChaos']!.value = c;
     u['uTerrainEntropy']!.value = e;
     (u['uTerrainWind']!.value as THREE.Vector2).set(terrainWindX, terrainWindZ);
@@ -1164,10 +1074,9 @@ export class AlienFlora {
         this.texAccum = 0;
         this.biomassDirty = false;
         const data = this.biomassTex.image.data as Uint8Array;
-        const bm = this.biomass;
         const densScale = this.maxDensity > 0 ? 1 / this.maxDensity : 0;
-        for (let i = 0; i < bm.length; i++) {
-          data[i * 4] = Math.round((bm[i] ?? 0) * 255);
+        for (let i = 0; i < this.biomass.length; i++) {
+          data[i * 4] = Math.round((this.biomass[i] ?? 0) * 255);
           data[i * 4 + 1] = Math.round((this.density[i] ?? 0) * densScale * 255);
           data[i * 4 + 2] = Math.round((this.pressure[i] ?? 0) * 255);
         }
@@ -1204,9 +1113,8 @@ export class AlienFlora {
   }
 
   /**
-   * Effective food field for chemotaxis: biomass × edaphic quality × (1 − overgraze penalty).
-   * Falsifiable vs biomassAt: foodAt ≤ biomassAt; richer biomes rank higher at equal biomass.
-   * Bilinear, O(1), pure.
+   * Effective forage field: biomass × quality × (1 − overgraze). Chemotaxis climbs this.
+   * Falsifiable: foodAt ≤ biomassAt; richer edaphics rank higher at equal biomass.
    */
   foodAt(x: number, z: number): number {
     if (!Number.isFinite(x) || !Number.isFinite(z)) return 0;
@@ -1230,35 +1138,26 @@ export class AlienFlora {
     const f10 = sample(ix0 + 1, iz0);
     const f01 = sample(ix0, iz0 + 1);
     const f11 = sample(ix0 + 1, iz0 + 1);
-    const fx0 = f00 + (f10 - f00) * tx;
-    const fx1 = f01 + (f11 - f01) * tx;
-    return fx0 + (fx1 - fx0) * tz;
+    return f00 + (f10 - f00) * tx + ((f01 + (f11 - f01) * tx) - (f00 + (f10 - f00) * tx)) * tz;
   }
 
-  /** Read-only overgraze residual at cell containing (x,z). O(1). */
   pressureAt(x: number, z: number): number {
     const gi = this.gridIndex(x, z);
-    if (gi < 0) return 0;
-    return this.pressure[gi] ?? 0;
+    return gi < 0 ? 0 : (this.pressure[gi] ?? 0);
   }
 
-  /** Read-only edaphic quality at cell containing (x,z). O(1). */
   qualityAt(x: number, z: number): number {
     const gi = this.gridIndex(x, z);
-    if (gi < 0) return 0;
-    return this.quality[gi] ?? 0;
+    return gi < 0 ? 0 : (this.quality[gi] ?? 0);
   }
 
-  /** Read-only carrying capacity at cell containing (x,z). O(1). */
   capacityAt(x: number, z: number): number {
     const gi = this.gridIndex(x, z);
-    if (gi < 0) return 0;
-    return this.capacity[gi] ?? 0;
+    return gi < 0 ? 0 : (this.capacity[gi] ?? 0);
   }
 
   /**
-   * USER ecology — graze: biomass → food energy. Yield scales with edaphic quality (richer biomes
-   * feed more per unit biomass). Stamps overgraze pressure that slows later recovery. Deterministic.
+   * Graze: biomass → food. Yield scales with edaphic quality; stamps overgraze debt.
    */
   grazeAt(x: number, z: number, pressure: number, dt: number): number {
     const gi = this.gridIndex(x, z);
@@ -1272,28 +1171,22 @@ export class AlienFlora {
     this.biomass[gi] = have - eaten;
     const stored = this.biomass[gi] ?? 0;
     this.biomassTotal = Math.max(0, this.biomassTotal + stored - have);
-    // Overgraze debt — real recovery suppression (not a visual flag).
     const cap = Math.max(0.05, this.capacity[gi] ?? 1);
-    const stamp = (eaten / cap) * PRESSURE_STAMP;
-    const pr = (this.pressure[gi] ?? 0) + stamp;
+    const pr = (this.pressure[gi] ?? 0) + (eaten / cap) * PRESSURE_STAMP;
     this.pressure[gi] = pr > 1 ? 1 : pr;
     this.biomassDirty = true;
-    // Richer edaphics yield more energy per unit eaten (falsifiable: qualityAt ↑ ⇒ yield ↑).
     const q = this.quality[gi] ?? 0.5;
     return eaten * GRAZE_YIELD * (0.65 + 0.55 * q);
   }
 
   /**
-   * Regrow toward per-cell CAPACITY with: logistic growth, neighbor seed, overgraze debt,
-   * climate (chaos/entropy), and organism-intelligence adaptive gain. Deterministic O(cells).
+   * Regrow toward capacity under neighbor seed, overgraze debt, climate, intelligence gain.
    */
   private regrow(dt: number): void {
     const h = dt > 0.05 ? 0.05 : dt > 0 ? dt : 0;
     if (h <= 0) return;
     const bm = this.biomass;
     const den = this.density;
-    const capArr = this.capacity;
-    const press = this.pressure;
     const n = this.gridN;
     const intelligence = this.intelligence;
     const adaptiveGain = intelligence?.enabled
@@ -1305,21 +1198,18 @@ export class AlienFlora {
             intelligence.confidence * 0.05,
         )
       : 1;
-    // Climate: entropy throttles recovery; high chaos stresses regrowth (defensible stress model).
-    const climateGain =
-      (1 - 0.45 * this.climateEntropy) *
-      (1 - 0.28 * Math.max(0, this.climateChaos - 0.25));
-    const climate = climateGain < 0.2 ? 0.2 : climateGain > 1.2 ? 1.2 : climateGain;
+    let climate =
+      (1 - 0.45 * this.climateEntropy) * (1 - 0.28 * Math.max(0, this.climateChaos - 0.25));
+    climate = climate < 0.2 ? 0.2 : climate > 1.2 ? 1.2 : climate;
     const decay = Math.exp(-PRESSURE_DECAY * h);
     for (let i = 0; i < bm.length; i++) {
       if ((den[i] ?? 0) <= 0) continue;
-      // Pressure residual decays every frame even at full capacity.
-      const p0 = press[i] ?? 0;
+      const p0 = this.pressure[i] ?? 0;
       if (p0 > 1e-6) {
-        press[i] = p0 * decay;
+        this.pressure[i] = p0 * decay;
         this.biomassDirty = true;
       }
-      const cap = capArr[i] ?? 1;
+      const cap = this.capacity[i] ?? 1;
       const b = bm[i]!;
       if (b >= cap - 1e-6) {
         if (b > cap) {
@@ -1351,7 +1241,7 @@ export class AlienFlora {
       }
       const nMean = nc > 0 ? neigh / nc : 0;
       const room = Math.max(0, cap - b);
-      const pDebt = 1 - 0.55 * (press[i] ?? 0);
+      const pDebt = 1 - 0.55 * (this.pressure[i] ?? 0);
       const raw =
         (REGROW_SEED * cap + REGROW_RATE * b * room + REGROW_NEIGHBOR * nMean * room) *
         h *
