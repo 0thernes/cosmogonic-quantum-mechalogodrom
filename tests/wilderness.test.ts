@@ -238,16 +238,15 @@ describe('WildernessPopulation', () => {
 });
 
 describe('WildernessRenderer', () => {
-  test('sync is allocation-free and toggles visibility from population count', () => {
+  test('is a deliberate visual no-op — no confetti Points attached to the scene', () => {
     const scene = new THREE.Scene();
     const pop = new WildernessPopulation(null, 0xdef456);
     const render = new WildernessRenderer(scene);
     pop.update(120, 120, 1 / 60);
     render.sync(pop, 1.5);
-    const pts = scene.children.find((c) => c instanceof THREE.Points) as THREE.Points | undefined;
-    expect(pts).toBeDefined();
-    expect(pts!.visible).toBe(true);
-    expect((pts!.geometry as THREE.BufferGeometry).drawRange.count).toBeGreaterThan(0);
+    const pts = scene.children.find((c) => c instanceof THREE.Points);
+    expect(pts).toBeUndefined();
+    expect(scene.children.length).toBe(0);
     render.dispose();
     pop.dispose();
   });
