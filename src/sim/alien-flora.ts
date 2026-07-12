@@ -91,6 +91,10 @@ const COLLIDE_HASH_CELL = 5.5;
 const COLLIDE_RADIUS_MUL = 2.35;
 /** Max soft separation push (world units) per pair — keeps solve stable. */
 const COLLIDE_PUSH_MAX = 2.8;
+/** Global soft-solve cadence (s). Scalable O(N·k) ~8Hz cold / faster when beings touch. */
+const COLLIDE_PERIOD = 0.12;
+/** Thrash-offset amp (world units) for dynamic crown collision proxies. */
+const COLLIDE_THRASH_AMP = 1.15;
 
 /** Deterministic positional hash → [0,1). No bitwise, no rng stream. */
 function hash(n: number): number {
@@ -737,22 +741,34 @@ export class AlienFlora {
   private readonly contactPX = new Float32Array(FLORA_CONTACT_SLOTS);
   private readonly contactPZ = new Float32Array(FLORA_CONTACT_SLOTS);
 
-  // ── Spatial-hash soft plant↔plant collision (bases fixed; O(N·k) not N²). ──
+  // ── Spatial-hash soft plant↔plant collision — O(N·k), scales with N & field size. ──
   private readonly plantX: Float32Array;
   private readonly plantZ: Float32Array;
   private readonly plantR: Float32Array;
+  private readonly plantPhase: Float32Array;
+  private readonly plantFreq: Float32Array;
   /** mesh index into {@link meshes} for each plant. */
   private readonly plantMeshIdx: Uint16Array;
   /** instance index within that mesh. */
   private readonly plantInstIdx: Uint32Array;
   /** Accumulated soft push (xz interleaved). */
   private readonly plantPush: Float32Array;
+  /** Scratch for thrash proxies (preallocated — no per-solve GC). */
+  private readonly plantPX: Float32Array;
+  private readonly plantPZ: Float32Array;
+  private readonly plantRR: Float32Array;
+  private readonly plantOX: Float32Array;
+  private readonly plantOZ: Float32Array;
+  private readonly plantTouch: Float32Array;
   /** Per-mesh aPush buffers (same order as meshes). */
   private readonly pushAttrs: Float32Array[] = [];
   private readonly hashBuckets: number[][];
   private readonly hashOrigin: number;
   private readonly hashN: number;
   private collideAccum = 0;
+  private collideTime = 0;
+  private collideChaos = 0;
+  private collideWind = 0.4;
 
   constructor(ctx: SimContext) {
     this.scene = ctx.scene;
@@ -892,9 +908,17 @@ export class AlienFlora {
     this.plantX = new Float32Array(placed);
     this.plantZ = new Float32Array(placed);
     this.plantR = new Float32Array(placed);
+    this.plantPhase = new Float32Array(placed);
+    this.plantFreq = new Float32Array(placed);
     this.plantMeshIdx = new Uint16Array(placed);
     this.plantInstIdx = new Uint32Array(placed);
     this.plantPush = new Float32Array(placed * 2);
+    this.plantPX = new Float32Array(placed);
+    this.plantPZ = new Float32Array(placed);
+    this.plantRR = new Float32Array(placed);
+    this.plantOX = new Float32Array(placed);
+    this.plantOZ = new Float32Array(placed);
+    this.plantTouch = new Float32Array(placed);
     let pi = 0;
     for (let fam = 0; fam < FAMILY_COUNT; fam++) {
       const list = perFamily[fam]!;
@@ -903,6 +927,13 @@ export class AlienFlora {
         this.plantX[pi] = pl.x;
         this.plantZ[pi] = pl.z;
         this.plantR[pi] = Math.max(0.95, pl.scale * COLLIDE_RADIUS_MUL);
+        // Same family of phase/freq as GPU thrash so crown proxies stay coherent with sway.
+        this.plantPhase[pi] =
+          hash(pl.sp * 13 + i * 7 + fam * 101) * TAU +
+          pl.x * 0.041 +
+          pl.z * 0.037 +
+          Math.sin(pl.x * 0.09 - pl.z * 0.07) * 1.7;
+        this.plantFreq[pi] = 0.45 + hash(pl.sp * 37 + i * 11) * 2.1;
         // mesh/inst filled when InstancedMeshes are built (same fam order).
         this.plantInstIdx[pi] = i;
         pi++;
@@ -1061,20 +1092,64 @@ export class AlienFlora {
       this.scene.add(mesh);
       this.meshes.push(mesh);
     }
-    // Resolve once at boot so packing is correct before first frame.
-    this.resolvePlantCollisions();
+    // Boot packing solve (dynamic thrash/biomass/contact continue in update).
+    this.resolvePlantCollisions(0, 0, 0.4);
   }
 
   /**
-   * Spatial-hash soft plant↔plant solve. O(N·k) neighbor pairs — NOT N².
-   * Writes aPush instance attributes the vertex shader applies as crown separation.
-   * Falsifiable: overlapping soft radii produce opposing push forces.
+   * Spatial-hash soft plant↔plant solve — O(N·k), scales with plant count & field area
+   * (hash cells grow with extent; each plant only tests local buckets).
+   *
+   * Dynamic / adaptive / reactive:
+   * - crown proxies thrash with phase/freq (same family as GPU sway)
+   * - soft radii shrink when biomass is eaten (grazed stubs stop shoving)
+   * - climate chaos/wind amplify thrash proxies
+   * - beings in contact slots boost local separation (touch reaction)
+   *
+   * Falsifiable: overlapping soft envelopes ⇒ equal-opposite aPush forces.
    */
-  private resolvePlantCollisions(): void {
+  private resolvePlantCollisions(t: number, chaos: number, wind: number): void {
     const n = this.plantX.length;
     if (n === 0) return;
     const push = this.plantPush;
     push.fill(0);
+    // Precompute thrash proxies + biomass-scaled radii once (O(N), pair loop stays hot).
+    const px = this.plantPX;
+    const pz = this.plantPZ;
+    const rr = this.plantRR;
+    const ox = this.plantOX;
+    const oz = this.plantOZ;
+    const touch = this.plantTouch;
+    const thrashScale = COLLIDE_THRASH_AMP * (0.55 + chaos * 0.9 + wind * 0.35);
+    const boostR2 = (CONTACT_RADIUS * 1.15) * (CONTACT_RADIUS * 1.15);
+    const cpx = this.contactPX;
+    const cpz = this.contactPZ;
+    const cstr = this.contactDisp;
+    for (let i = 0; i < n; i++) {
+      const xi = this.plantX[i]!;
+      const zi = this.plantZ[i]!;
+      const bm = this.biomassNear(xi, zi);
+      const grow = 0.28 + 0.72 * bm;
+      rr[i] = this.plantR[i]! * grow;
+      const ph = this.plantPhase[i]!;
+      const fq = this.plantFreq[i]!;
+      const amp = thrashScale * (0.65 + 0.35 * grow);
+      const oxi = Math.cos(t * fq + ph) * amp;
+      const ozi = Math.sin(t * fq * 0.82 + ph * 1.3) * amp;
+      ox[i] = oxi;
+      oz[i] = ozi;
+      px[i] = xi + oxi;
+      pz[i] = zi + ozi;
+      let tch = 1;
+      for (let s = 0; s < FLORA_CONTACT_SLOTS; s++) {
+        const cs = cstr[s]!;
+        if (cs < 0.04) continue;
+        const dx = xi - cpx[s]!;
+        const dz = zi - cpz[s]!;
+        if (dx * dx + dz * dz < boostR2) tch = Math.max(tch, 1 + cs * 1.35);
+      }
+      touch[i] = tch;
+    }
     const hn = this.hashN;
     const origin = this.hashOrigin;
     const cell = COLLIDE_HASH_CELL;
@@ -1082,7 +1157,12 @@ export class AlienFlora {
     for (let i = 0; i < n; i++) {
       const xi = this.plantX[i]!;
       const zi = this.plantZ[i]!;
-      const ri = this.plantR[i]!;
+      const ri = rr[i]!;
+      const pxi = px[i]!;
+      const pzi = pz[i]!;
+      const oxi = ox[i]!;
+      const ozi = oz[i]!;
+      const touchI = touch[i]!;
       const hx = Math.floor((xi - origin) / cell);
       const hz = Math.floor((zi - origin) / cell);
       for (let dz = -1; dz <= 1; dz++) {
@@ -1093,24 +1173,20 @@ export class AlienFlora {
           const bucket = buckets[cz * hn + cx]!;
           for (let b = 0; b < bucket.length; b++) {
             const j = bucket[b]!;
-            if (j <= i) continue; // each pair once
-            const xj = this.plantX[j]!;
-            const zj = this.plantZ[j]!;
-            const rj = this.plantR[j]!;
-            let ddx = xi - xj;
-            let ddz = zi - zj;
-            let d2 = ddx * ddx + ddz * ddz;
+            if (j <= i) continue;
+            const rj = rr[j]!;
+            let ddx = pxi - px[j]!;
+            let ddz = pzi - pz[j]!;
+            const d2 = ddx * ddx + ddz * ddz;
             const minDist = ri + rj;
-            const min2 = minDist * minDist;
-            if (d2 >= min2 || d2 < 1e-8) continue;
+            if (d2 >= minDist * minDist || d2 < 1e-8) continue;
             const d = Math.sqrt(d2);
-            // Soft overlap 0..1
             const overlap = 1 - d / minDist;
             const inv = 1 / d;
             ddx *= inv;
             ddz *= inv;
-            // Equal-opposite push, scaled by overlap² for stable packing
-            let mag = overlap * overlap * minDist * 0.55;
+            const closing = (oxi - ox[j]!) * -ddx + (ozi - oz[j]!) * -ddz > 0 ? 1.15 : 1;
+            let mag = overlap * overlap * minDist * 0.62 * closing * Math.max(touchI, touch[j]!);
             if (mag > COLLIDE_PUSH_MAX) mag = COLLIDE_PUSH_MAX;
             const fx = ddx * mag;
             const fz = ddz * mag;
@@ -1124,7 +1200,6 @@ export class AlienFlora {
         }
       }
     }
-    // Scatter into per-mesh aPush buffers.
     for (let i = 0; i < n; i++) {
       const mi = this.plantMeshIdx[i]!;
       const ii = this.plantInstIdx[i]!;
@@ -1138,6 +1213,14 @@ export class AlienFlora {
       const attr = mesh.geometry.getAttribute('aPush') as THREE.InstancedBufferAttribute | undefined;
       if (attr) attr.needsUpdate = true;
     }
+  }
+
+  /** Nearest-cell biomass for collision radius scaling (O(1)). */
+  private biomassNear(x: number, z: number): number {
+    const gi = this.gridIndex(x, z);
+    if (gi < 0) return 0;
+    const b = this.biomass[gi] ?? 0;
+    return b < 0 ? 0 : b > 1 ? 1 : b;
   }
 
   /** Map world (x,z) → density-grid index, or −1 if outside. */
@@ -1497,8 +1580,23 @@ export class AlienFlora {
     u['uTerrainEntropy']!.value = e;
     (u['uTerrainWind']!.value as THREE.Vector2).set(terrainWindX, terrainWindZ);
 
-    // Plant bases are fixed: soft plant↔plant packing is solved once at construction
-    // (aPush). Crowns still thrash via GPU density field + contact seeds — O(1) per frame.
+    this.collideTime = t;
+    this.collideChaos = c;
+    this.collideWind = 0.4 + 0.8 * c;
+    // Dynamic soft plant↔plant: thrash proxies + biomass radii + contact boost.
+    // Cadenced O(N·k) — scales with plant count/area (hash grows with field, local k stays bounded).
+    this.collideAccum += dt > 0 ? dt : 0;
+    const hot =
+      Math.abs(this.contactDisp[0]!) +
+        Math.abs(this.contactDisp[1]!) +
+        Math.abs(this.contactDisp[2]!) +
+        Math.abs(this.contactDisp[3]!) >
+      0.08;
+    const period = hot ? COLLIDE_PERIOD * 0.45 : COLLIDE_PERIOD;
+    if (this.collideAccum >= period) {
+      this.collideAccum = 0;
+      this.resolvePlantCollisions(t, c, this.collideWind);
+    }
 
     // Per-slot underdamped springs — hard snappy thrash when touched (not hollow soft sway).
     const h = dt > 0.05 ? 0.05 : dt > 0 ? dt : 0;
@@ -1752,6 +1850,8 @@ export class AlienFlora {
       if (str > this.contactTarget[i]!) {
         this.contactVel[i]! += (str - this.contactTarget[i]!) * 14;
         this.contactTarget[i] = str;
+        // Nudge collide cadence so the next update runs a hot soft-solve (still O(N·k)).
+        this.collideAccum = Math.max(this.collideAccum, COLLIDE_PERIOD * 0.5);
       } else if (str > 0.05) {
         // Maintain presence while a being stays in the pocket.
         this.contactTarget[i] = Math.max(this.contactTarget[i]!, str * 0.85);
