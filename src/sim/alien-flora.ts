@@ -7,13 +7,13 @@
  * spacing of a real world, not a uniform lawn. Plants are NOT neural (no brain, no rng draws) —
  * they are a substrate the fauna reads through {@link EntityManager.attachFloraComfort}: creatures
  * find dense cover for rest / camouflage / mating / gathering using this module's {@link comfortAt}
- * spatial readout. They are FOOD: creatures graze biomass to stubs; cells REGENERATE (logistic +
- * neighbor-seeded recovery). Some plants are RARE (iridescent / crystal / mycelial specials).
+ * spatial readout. They are FOOD with operational fields: biomass, edaphic capacity/quality,
+ * and overgraze pressure. Creatures graze to stubs; cells REGENERATE toward capacity under
+ * neighbor seed, climate stress, and pressure debt. Chemotaxis climbs foodAt (not paint).
  *
  * RENDER: each family is ONE `InstancedMesh` (≤9 draw calls for 60k plants) sharing one
- * `ShaderMaterial`. Wind sway, bioluminescence, mineral iridescence, and LOCAL multi-point
- * ragdoll contact all run on the GPU. Per-frame CPU work is O(biomass-grid cells) + O(4 contacts)
- * and never scales with plant count.
+ * `ShaderMaterial`. Skins/motion read the same ecology fields. CPU hot path is O(grid cells)
+ * + O(4 contacts), independent of plant count.
  *
  * CONTACT (USER fix): NEVER one gigantic solid patch. Up to 4 local contact seeds with a tight
  * falloff (~16u). Each plant desyncs by phase/stiffness/rarity so neighbors thrash differently —
@@ -69,6 +69,10 @@ const REGROW_RATE = 0.22;
 const REGROW_SEED = 0.015;
 /** Neighbor diffusion assist — dense live neighbors speed recovery of depleted cells. */
 const REGROW_NEIGHBOR = 0.08;
+/** Overgraze residual decay rate (1/s) — PRESSURE is real recovery suppression, not a paint flag. */
+const PRESSURE_DECAY = 0.18;
+/** How hard grazing stamps residual pressure (dimensionless, eaten/capacity). */
+const PRESSURE_STAMP = 0.9;
 /** Max simultaneous local contact seeds (multi-point; kills the single giant-patch slide). */
 export const FLORA_CONTACT_SLOTS = 4;
 /** Local contact radius (world units). Old falloff was ~72u — that moved entire lawn slabs. */
@@ -87,6 +91,19 @@ function biomeAt(x: number, z: number): number {
   const f = Math.sin(x * 0.0042) * Math.cos(z * 0.0051) + Math.sin((x + z) * 0.0031 + 1.7) + 2; // ∈ [0,4]
   const b = Math.floor((f / 4) * BIOME_COUNT);
   return b < 0 ? 0 : b >= BIOME_COUNT ? BIOME_COUNT - 1 : b;
+}
+
+/**
+ * Edaphic nutrient quality 0..1 from continuous zonation (same fields as biomeAt).
+ * Falsifiable: different (x,z) return different values; independent of live biomass.
+ */
+function edaphicQuality(x: number, z: number): number {
+  const f =
+    0.5 +
+    0.25 * Math.sin(x * 0.0042) * Math.cos(z * 0.0051) +
+    0.15 * Math.sin((x + z) * 0.0031 + 1.7) +
+    0.1 * Math.sin(x * 0.011 - z * 0.009);
+  return f < 0 ? 0 : f > 1 ? 1 : f;
 }
 
 interface Species {
@@ -226,9 +243,11 @@ const flora_vert = /* glsl */ `
     float rarity = aMeta.x;
 
     vec2 bmBase = (instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xz;
+    // R=biomass (food), G=density (brace), B=overgraze pressure (recovery debt) — operational fields.
     vec4 field = texture2D(uBiomass, (bmBase + 0.5 * uGridExtent) / uGridExtent);
     float biomass = field.r;
-    float density = field.g; // local crowding — purpose: brace, reduce crossover
+    float density = field.g;
+    float overgraze = field.b;
     vBiomass = biomass;
     vDensity = density;
 
@@ -298,7 +317,7 @@ const flora_vert = /* glsl */ `
     float c3 = localContact(bmBase, uContactX.w, uContactZ.w, uContactS.w, phase + 4.9, stiff, react);
     float cSum = c0 + c1 + c2 + c3;
     vContactLive = clamp(cSum, 0.0, 2.5);
-    vStress = clamp(uChaos * 0.45 + cSum * 0.55 + hunger * 0.35, 0.0, 1.5);
+    vStress = clamp(uChaos * 0.4 + cSum * 0.5 + hunger * 0.3 + overgraze * 0.45, 0.0, 1.5);
 
     vec2 push = vec2(0.0);
     float wsum = 0.001;
@@ -491,13 +510,22 @@ export class AlienFlora {
   private readonly gridHalf: number;
   private readonly density: Float32Array;
   private readonly maxDensity: number;
-  // ── USER ecology: the LIVE, mutable biomass life-cycle (grazed → eaten stub; regrows → full). ──
+  // ── USER ecology: LIVE mutable fields — food, capacity, overgraze pressure (not paint). ──
   private readonly biomass: Float32Array;
+  /** Per-cell carrying capacity from edaphic quality (fixed at construction). */
+  private readonly capacity: Float32Array;
+  /** Overgraze residual 0..1 — suppresses regrowth until it decays (responsive debt). */
+  private readonly pressure: Float32Array;
+  /** Fixed edaphic nutrient quality 0..1 per cell (biome/position). */
+  private readonly quality: Float32Array;
   private readonly biomassTex: THREE.DataTexture;
   private biomassTotal = 0;
   private biomassCells = 0;
   private biomassDirty = true;
   private texAccum = 0;
+  /** Last climate scalars from update — drive regrowth (adaptive to chaos/entropy). */
+  private climateChaos = 0;
+  private climateEntropy = 0;
 
   // Multi-point ragdoll springs (one per contact slot).
   private readonly contactDisp = new Float32Array(FLORA_CONTACT_SLOTS);
@@ -634,21 +662,33 @@ export class AlienFlora {
     this.instanceCount = placed;
     this.maxDensity = maxD;
 
-    // Live BIOMASS field starts FULL wherever plants were placed.
-    this.biomass = new Float32Array(this.gridN * this.gridN);
-    for (let i = 0; i < this.biomass.length; i++) {
-      const occupied = (this.density[i] ?? 0) > 0;
-      this.biomass[i] = occupied ? 1 : 0;
-      if (occupied) {
-        this.biomassTotal += 1;
-        this.biomassCells++;
-      }
+    // Operational ecology grids: capacity + quality from edaphics; biomass starts at capacity.
+    const cells = this.gridN * this.gridN;
+    this.biomass = new Float32Array(cells);
+    this.capacity = new Float32Array(cells);
+    this.pressure = new Float32Array(cells);
+    this.quality = new Float32Array(cells);
+    for (let i = 0; i < cells; i++) {
+      if ((this.density[i] ?? 0) <= 0) continue;
+      const ix = i % this.gridN;
+      const iz = (i / this.gridN) | 0;
+      const wx = ix * this.cell - this.gridHalf + this.cell / 2;
+      const wz = iz * this.cell - this.gridHalf + this.cell / 2;
+      const q = edaphicQuality(wx, wz);
+      this.quality[i] = q;
+      // Capacity 0.55..1.0 — richer edaphics hold more food (falsifiable vs barren cells).
+      const cap = 0.55 + 0.45 * q;
+      this.capacity[i] = cap;
+      this.biomass[i] = cap;
+      this.biomassTotal += cap;
+      this.biomassCells++;
     }
-    const texData = new Uint8Array(this.gridN * this.gridN * 4);
+    const texData = new Uint8Array(cells * 4);
     const densScale = this.maxDensity > 0 ? 1 / this.maxDensity : 0;
-    for (let i = 0; i < this.biomass.length; i++) {
-      texData[i * 4] = Math.round((this.biomass[i] ?? 0) * 255); // R = food/health biomass
+    for (let i = 0; i < cells; i++) {
+      texData[i * 4] = Math.round((this.biomass[i] ?? 0) * 255); // R = food/health
       texData[i * 4 + 1] = Math.round((this.density[i] ?? 0) * densScale * 255); // G = crowd brace
+      texData[i * 4 + 2] = Math.round((this.pressure[i] ?? 0) * 255); // B = overgraze debt
     }
     this.biomassTex = new THREE.DataTexture(texData, this.gridN, this.gridN, THREE.RGBAFormat);
     this.biomassTex.minFilter = THREE.LinearFilter;
@@ -1024,11 +1064,14 @@ export class AlienFlora {
     terrainWindZ = 0,
   ): void {
     const c = chaos < 0 ? 0 : chaos > 1 ? 1 : chaos;
+    const e = terrainEntropy < 0 ? 0 : terrainEntropy > 1 ? 1 : terrainEntropy;
+    this.climateChaos = c;
+    this.climateEntropy = e;
     const u = this.material.uniforms;
     u['uTime']!.value = t;
     u['uWind']!.value = 0.32 + 0.7 * c + 0.08 * Math.sin(t * 0.31);
     u['uChaos']!.value = c;
-    u['uTerrainEntropy']!.value = Math.max(0, Math.min(1, terrainEntropy));
+    u['uTerrainEntropy']!.value = e;
     (u['uTerrainWind']!.value as THREE.Vector2).set(terrainWindX, terrainWindZ);
 
     // Per-slot underdamped springs — local thrash, not one global slab.
@@ -1069,6 +1112,7 @@ export class AlienFlora {
         for (let i = 0; i < bm.length; i++) {
           data[i * 4] = Math.round((bm[i] ?? 0) * 255);
           data[i * 4 + 1] = Math.round((this.density[i] ?? 0) * densScale * 255);
+          data[i * 4 + 2] = Math.round((this.pressure[i] ?? 0) * 255);
         }
         this.biomassTex.needsUpdate = true;
       }
@@ -1103,7 +1147,61 @@ export class AlienFlora {
   }
 
   /**
-   * USER ecology — a creature GRAZES the plants at world (x,z): biomass eaten → food energy.
+   * Effective food field for chemotaxis: biomass × edaphic quality × (1 − overgraze penalty).
+   * Falsifiable vs biomassAt: foodAt ≤ biomassAt; richer biomes rank higher at equal biomass.
+   * Bilinear, O(1), pure.
+   */
+  foodAt(x: number, z: number): number {
+    if (!Number.isFinite(x) || !Number.isFinite(z)) return 0;
+    const fx = (x + this.gridHalf) / this.cell - 0.5;
+    const fz = (z + this.gridHalf) / this.cell - 0.5;
+    const ix0 = Math.floor(fx);
+    const iz0 = Math.floor(fz);
+    const tx = fx - ix0;
+    const tz = fz - iz0;
+    const n = this.gridN;
+    const sample = (ix: number, iz: number): number => {
+      if (ix < 0 || iz < 0 || ix >= n || iz >= n) return 0;
+      const i = iz * n + ix;
+      const b = this.biomass[i] ?? 0;
+      if (b <= 0) return 0;
+      const q = this.quality[i] ?? 0;
+      const p = this.pressure[i] ?? 0;
+      return b * (0.55 + 0.45 * q) * (1 - 0.5 * p);
+    };
+    const f00 = sample(ix0, iz0);
+    const f10 = sample(ix0 + 1, iz0);
+    const f01 = sample(ix0, iz0 + 1);
+    const f11 = sample(ix0 + 1, iz0 + 1);
+    const fx0 = f00 + (f10 - f00) * tx;
+    const fx1 = f01 + (f11 - f01) * tx;
+    return fx0 + (fx1 - fx0) * tz;
+  }
+
+  /** Read-only overgraze residual at cell containing (x,z). O(1). */
+  pressureAt(x: number, z: number): number {
+    const gi = this.gridIndex(x, z);
+    if (gi < 0) return 0;
+    return this.pressure[gi] ?? 0;
+  }
+
+  /** Read-only edaphic quality at cell containing (x,z). O(1). */
+  qualityAt(x: number, z: number): number {
+    const gi = this.gridIndex(x, z);
+    if (gi < 0) return 0;
+    return this.quality[gi] ?? 0;
+  }
+
+  /** Read-only carrying capacity at cell containing (x,z). O(1). */
+  capacityAt(x: number, z: number): number {
+    const gi = this.gridIndex(x, z);
+    if (gi < 0) return 0;
+    return this.capacity[gi] ?? 0;
+  }
+
+  /**
+   * USER ecology — graze: biomass → food energy. Yield scales with edaphic quality (richer biomes
+   * feed more per unit biomass). Stamps overgraze pressure that slows later recovery. Deterministic.
    */
   grazeAt(x: number, z: number, pressure: number, dt: number): number {
     const gi = this.gridIndex(x, z);
@@ -1117,19 +1215,28 @@ export class AlienFlora {
     this.biomass[gi] = have - eaten;
     const stored = this.biomass[gi] ?? 0;
     this.biomassTotal = Math.max(0, this.biomassTotal + stored - have);
+    // Overgraze debt — real recovery suppression (not a visual flag).
+    const cap = Math.max(0.05, this.capacity[gi] ?? 1);
+    const stamp = (eaten / cap) * PRESSURE_STAMP;
+    const pr = (this.pressure[gi] ?? 0) + stamp;
+    this.pressure[gi] = pr > 1 ? 1 : pr;
     this.biomassDirty = true;
-    return eaten * GRAZE_YIELD;
+    // Richer edaphics yield more energy per unit eaten (falsifiable: qualityAt ↑ ⇒ yield ↑).
+    const q = this.quality[gi] ?? 0.5;
+    return eaten * GRAZE_YIELD * (0.65 + 0.55 * q);
   }
 
   /**
-   * USER ecology — regrow biomass: logistic + reseed floor + neighbor-assisted recovery.
-   * Dense live neighbors accelerate depleted cells (mycelial / root-network metaphor). Deterministic.
+   * Regrow toward per-cell CAPACITY with: logistic growth, neighbor seed, overgraze debt,
+   * climate (chaos/entropy), and organism-intelligence adaptive gain. Deterministic O(cells).
    */
   private regrow(dt: number): void {
     const h = dt > 0.05 ? 0.05 : dt > 0 ? dt : 0;
     if (h <= 0) return;
     const bm = this.biomass;
     const den = this.density;
+    const capArr = this.capacity;
+    const press = this.pressure;
     const n = this.gridN;
     const intelligence = this.intelligence;
     const adaptiveGain = intelligence?.enabled
@@ -1141,11 +1248,30 @@ export class AlienFlora {
             intelligence.confidence * 0.05,
         )
       : 1;
+    // Climate: entropy throttles recovery; high chaos stresses regrowth (defensible stress model).
+    const climateGain =
+      (1 - 0.45 * this.climateEntropy) *
+      (1 - 0.28 * Math.max(0, this.climateChaos - 0.25));
+    const climate = climateGain < 0.2 ? 0.2 : climateGain > 1.2 ? 1.2 : climateGain;
+    const decay = Math.exp(-PRESSURE_DECAY * h);
     for (let i = 0; i < bm.length; i++) {
       if ((den[i] ?? 0) <= 0) continue;
+      // Pressure residual decays every frame even at full capacity.
+      const p0 = press[i] ?? 0;
+      if (p0 > 1e-6) {
+        press[i] = p0 * decay;
+        this.biomassDirty = true;
+      }
+      const cap = capArr[i] ?? 1;
       const b = bm[i]!;
-      if (b >= 1) continue;
-      // Neighbor mean biomass (4-connected) — dense live neighbors seed recovery.
+      if (b >= cap - 1e-6) {
+        if (b > cap) {
+          this.biomassTotal += cap - b;
+          bm[i] = cap;
+          this.biomassDirty = true;
+        }
+        continue;
+      }
       const ix = i % n;
       const iz = (i / n) | 0;
       let neigh = 0;
@@ -1167,14 +1293,17 @@ export class AlienFlora {
         nc++;
       }
       const nMean = nc > 0 ? neigh / nc : 0;
-      const nb =
-        b +
-        (REGROW_SEED + REGROW_RATE * b * (1 - b) + REGROW_NEIGHBOR * nMean * (1 - b)) *
-          h *
-          adaptiveGain;
-      const next = nb > 1 ? 1 : nb;
+      const room = Math.max(0, cap - b);
+      const pDebt = 1 - 0.55 * (press[i] ?? 0);
+      const raw =
+        (REGROW_SEED * cap + REGROW_RATE * b * room + REGROW_NEIGHBOR * nMean * room) *
+        h *
+        adaptiveGain *
+        climate *
+        pDebt;
+      const next = b + raw > cap ? cap : b + raw;
       bm[i] = next;
-      this.biomassTotal += (bm[i] ?? 0) - b;
+      this.biomassTotal += next - b;
       this.biomassDirty = true;
     }
   }

@@ -1052,10 +1052,10 @@ export class World {
     this.entities.attachFloraGraze((x, z, pressure, dt) =>
       this.alienFlora.grazeAt(x, z, pressure, dt),
     );
-    // USER ecology: hungry organisms now FORAGE — they read the flora biomass field (read-only, no
-    // consumption) and climb its gradient toward the richest patch instead of drifting to the nearest
-    // cover. Deterministic; only wired here so tests stay golden-clean.
-    this.entities.attachFloraGradient((x, z) => this.alienFlora.biomassAt(x, z));
+    // USER ecology: hungry organisms FORAGE on the operational FOOD field (biomass × edaphic quality ×
+    // overgraze penalty) — not raw biomass alone — so richer, less-stressed patches outrank bare stubs.
+    // Deterministic; only wired here so tests stay golden-clean.
+    this.entities.attachFloraGradient((x, z) => this.alienFlora.foodAt(x, z));
     this.instanced = this.quality.instanced ? new InstancedEntityRenderer(ctx) : null;
     this.entities.reset(this.bootPopulation());
     this.shoggoths = new ShoggothSystem(ctx, this.entities);

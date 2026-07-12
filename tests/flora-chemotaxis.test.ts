@@ -179,9 +179,10 @@ describe('GATE-CHEMOTAXIS: a hungry animal forages UP the REAL quantized flora g
     expect(runArm(sampler)).toEqual(runArm(sampler));
   });
 
-  test('biomassAt sampler is the real read-only kernel wired into world.ts', () => {
-    // The wired sampler (world.ts) is `(x,z) => alienFlora.biomassAt(x,z)`; this gate exercises that exact
-    // method (via prototype.call above), then the live EntityManager attachment consumes that same sampler.
+  test('foodAt is the operational forage field wired into world.ts (biomassAt remains the bilinear kernel)', () => {
+    // Production chemotaxis climbs foodAt (biomass × quality × overgraze penalty). biomassAt stays
+    // the pure bilinear biomass kernel used by this gate and by foodAt's composition.
     expect(typeof AlienFlora.prototype.biomassAt).toBe('function');
+    expect(typeof AlienFlora.prototype.foodAt).toBe('function');
   });
 });

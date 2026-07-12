@@ -248,6 +248,63 @@ describe('AlienFlora — the vegetal ground ecology', () => {
     f.dispose();
   });
 
+  test('operational ecology: food field, overgraze debt, and climate are load-bearing (falsifiable)', () => {
+    const ctx = makeCtx(true);
+    const f = new AlienFlora(ctx);
+    let gx = 0;
+    let gz = 0;
+    let found = false;
+    for (let a = 60; a < PLATFORM_HALF && !found; a += 30) {
+      for (let ang = 0; ang < 6.28 && !found; ang += 0.4) {
+        const c = f.comfortAt(Math.cos(ang) * a, Math.sin(ang) * a);
+        if (c.strength > 0.05) {
+          gx = c.x;
+          gz = c.z;
+          found = true;
+        }
+      }
+    }
+    expect(found).toBe(true);
+    // Food field is never above raw biomass; quality is positive on occupied cells.
+    const bm = f.biomassAt(gx, gz);
+    const food = f.foodAt(gx, gz);
+    expect(food).toBeLessThanOrEqual(bm + 1e-9);
+    expect(f.qualityAt(gx, gz)).toBeGreaterThan(0);
+    expect(f.capacityAt(gx, gz)).toBeGreaterThan(0.5);
+    // Heavy graze stamps pressure debt; food ranking falls while pressure is elevated.
+    for (let i = 0; i < 40; i++) f.grazeAt(gx, gz, 1, 1 / 60);
+    expect(f.pressureAt(gx, gz)).toBeGreaterThan(0.05);
+    const foodAfter = f.foodAt(gx, gz);
+    expect(foodAfter).toBeLessThan(f.biomassAt(gx, gz) + 1e-9);
+    // Edaphic quality is position-dependent (not a flat constant).
+    let sawDiff = false;
+    const q0 = f.qualityAt(gx, gz);
+    for (let a = 80; a < PLATFORM_HALF && !sawDiff; a += 40) {
+      for (let ang = 0; ang < 6.28 && !sawDiff; ang += 0.7) {
+        const c = f.comfortAt(Math.cos(ang) * a, Math.sin(ang) * a);
+        if (c.strength > 0.05 && Math.abs(f.qualityAt(c.x, c.z) - q0) > 0.02) sawDiff = true;
+      }
+    }
+    expect(sawDiff).toBe(true);
+    // High entropy climate slows recovery vs calm climate (matched starting debt).
+    const slow = new AlienFlora(makeCtx(true));
+    const fast = new AlienFlora(makeCtx(true));
+    let sx = gx;
+    let sz = gz;
+    for (let i = 0; i < 80; i++) {
+      slow.grazeAt(sx, sz, 1, 1 / 60);
+      fast.grazeAt(sx, sz, 1, 1 / 60);
+    }
+    for (let i = 0; i < 400; i++) {
+      slow.update(1 / 60, 1, 0.2, 0.95); // high entropy
+      fast.update(1 / 60, 1, 0.2, 0.05); // low entropy
+    }
+    expect(fast.biomassAt(sx, sz)).toBeGreaterThan(slow.biomassAt(sx, sz));
+    f.dispose();
+    slow.dispose();
+    fast.dispose();
+  });
+
   test('grazing offers food + eats plants down to stubs, and biomass regrows (life-cycle)', () => {
     const ctx = makeCtx();
     const f = new AlienFlora(ctx);
