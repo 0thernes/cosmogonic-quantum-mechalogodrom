@@ -203,36 +203,40 @@ const flora_vert = /* glsl */ `
     return strength * fall * personal * react * wobble * counter;
   }
 
-  // MULTI-AXIS tip morph: yaw + pitch + roll + lean. Tip-weighted; root collar fixed.
-  // Purpose: living multi-degree response to wind/chaos/contact — not decorative spin.
+  // MULTI-AXIS tip morph: yaw + modest pitch/roll + lean. Tip-weighted; root collar fixed.
+  // Pitch/roll are HARD-CLAMPED so crowns thrash without laying flat on the soil.
   vec3 tipMorph(vec3 p, float up, float rootPin, float yaw, float pitch, float roll, float leanX, float leanZ) {
     float u2 = up * up * rootPin;
     float mid = rootPin * up * (1.0 - up * 0.55); // mid-stem counter band
-    // Counter-yaw at mid vs tip (inhuman reverse helix).
+    float y0 = p.y; // upright reference — never fold below this fraction of original height
+    // Counter-yaw at mid vs tip (inhuman reverse helix) — spin stays free.
     float yawMid = -yaw * 0.55 * mid;
     float yawTip = yaw * u2;
     float ca = cos(yawTip + yawMid);
     float sa = sin(yawTip + yawMid);
     vec3 q = vec3(ca * p.x + sa * p.z, p.y, -sa * p.x + ca * p.z);
-    // Pitch (X) + roll (Z) — degrees-dynamic, tip only.
-    float cp = cos(pitch * u2);
-    float sp = sin(pitch * u2);
-    float cr = cos(roll * u2);
-    float sr = sin(roll * u2);
+    // Pitch/roll capped (~±0.55 rad tip) — sway/twist, not faceplant into dirt.
+    float pAng = clamp(pitch, -0.55, 0.55) * u2 * 0.55;
+    float rAng = clamp(roll, -0.55, 0.55) * u2 * 0.55;
+    float cp = cos(pAng);
+    float sp = sin(pAng);
+    float cr = cos(rAng);
+    float sr = sin(rAng);
     float y1 = cp * q.y - sp * q.z;
     float z1 = sp * q.y + cp * q.z;
     q.y = y1; q.z = z1;
     float x2 = cr * q.x - sr * q.y;
     float y2 = sr * q.x + cr * q.y;
     q.x = x2; q.y = y2;
+    // Lateral thrash carries the weird motion (doesn't collapse height).
     q.x += leanX * u2;
     q.z += leanZ * u2;
-    // Radial surface warp (mutate silhouette without lengthening).
+    // Radial surface warp (mutate silhouette without lengthening or flattening).
     float rad = length(q.xz) + 1e-4;
-    float warp = 1.0 + u2 * 0.18 * sin(atan(q.z, q.x) * 3.0 + yaw * 2.0 + q.y * 1.7);
+    float warp = 1.0 + u2 * 0.14 * sin(atan(q.z, q.x) * 3.0 + yaw * 2.0 + q.y * 1.7);
     q.x *= warp; q.z *= warp;
-    // Slight tip invert (fold toward base under high morph energy).
-    q.y -= u2 * u2 * abs(pitch + roll) * 0.12 * rad;
+    // Stand-tall floor: positive stems keep ≥72% of original local height after morph.
+    if (y0 > 0.0) q.y = max(q.y, y0 * 0.72);
     return q;
   }
 
@@ -279,44 +283,45 @@ const flora_vert = /* glsl */ `
     float turb = rootPin * rootPin * uChaos * 0.75 * soft;
     vec3 p = position;
 
-    // Continuous multi-axis spin/twist (purpose: living response to wind/chaos/stress).
+    // Continuous multi-axis spin/twist — yaw free; pitch/roll mild (stand tall, thrash lateral).
     float yaw = (uTime * (0.65 + freq * 0.85 + rarity * 0.55) * soft
               + (1.0 + rarity) * sin(uTime * freq * 0.38 + phase)
               + sin(uTime * freq * 1.7 + phase * 2.4) * 0.45 * turb)
               * yawBias;
-    float pitch = (sin(uTime * freq * 0.72 + phase * 1.6) * bend * 1.35
-                + cos(uTime * freq * 2.1 + phase * 0.9) * turb * 0.85
-                + sin(uTime * freq * 4.4 + phase * 3.2) * turb * 0.35 * rarity)
+    float pitch = (sin(uTime * freq * 0.72 + phase * 1.6) * bend * 0.55
+                + cos(uTime * freq * 2.1 + phase * 0.9) * turb * 0.35
+                + sin(uTime * freq * 4.4 + phase * 3.2) * turb * 0.15 * rarity)
                 * pitchBias;
-    float roll = (cos(uTime * freq * 0.91 + phase * 2.2) * bend * 1.2
-               + sin(uTime * freq * 2.6 + phase * 1.4) * turb * 0.9
-               + cos(uTime * freq * 5.2 + phase * 0.7) * turb * 0.4 * rarity)
+    float roll = (cos(uTime * freq * 0.91 + phase * 2.2) * bend * 0.5
+               + sin(uTime * freq * 2.6 + phase * 1.4) * turb * 0.38
+               + cos(uTime * freq * 5.2 + phase * 0.7) * turb * 0.16 * rarity)
                * rollBias;
-    // Counter-phase lean vs spin so motion is multivector, not planar sway.
-    float leanX = sin(uTime * freq + phase + 1.2) * bend * 2.7
-                + sin(uTime * freq * 3.7 + phase * 2.3) * turb * 1.25
-                + cos(uTime * freq * 6.3 + phase * 0.5) * turb * 0.5 * rarity
-                - roll * 0.35;
-    float leanZ = cos(uTime * freq * 0.85 + phase * 1.5) * bend * 2.4
-                + cos(uTime * freq * 3.1 + phase * 1.9) * turb * 1.1
-                + sin(uTime * freq * 5.4 + phase * 1.2) * turb * 0.45 * rarity
-                + pitch * 0.3;
+    // Lateral thrash carries the motion energy (was dumping into pitch → faceplant).
+    float leanX = sin(uTime * freq + phase + 1.2) * bend * 2.9
+                + sin(uTime * freq * 3.7 + phase * 2.3) * turb * 1.35
+                + cos(uTime * freq * 6.3 + phase * 0.5) * turb * 0.55 * rarity
+                - roll * 0.2;
+    float leanZ = cos(uTime * freq * 0.85 + phase * 1.5) * bend * 2.6
+                + cos(uTime * freq * 3.1 + phase * 1.9) * turb * 1.2
+                + sin(uTime * freq * 5.4 + phase * 1.2) * turb * 0.5 * rarity
+                + pitch * 0.2;
     p = tipMorph(p, up, rootPin, yaw, pitch, roll, leanX, leanZ);
 
-    // Up/down heave + expand/contract + degrade (health expands; hunger/pressure contracts).
-    float heave = sin(uTime * freq * 0.58 + phase) * rootPin * 0.16 * (uWind + uChaos + 0.45)
-                + cos(uTime * freq * 1.4 + phase * 2.0) * rootPin * turb * 0.08;
+    // Up/down heave (bias UP) + expand/contract — health expands; never squash flat.
+    float heave = (0.04 + 0.14 * sin(uTime * freq * 0.58 + phase)) * rootPin * (uWind + uChaos + 0.45)
+                + cos(uTime * freq * 1.4 + phase * 2.0) * rootPin * turb * 0.06;
     float pulse = 0.5 + 0.5 * sin(uTime * (1.15 + freq * 0.32) + phase + rarity);
     float pulse2 = 0.5 + 0.5 * cos(uTime * (0.7 + freq * 0.5) - phase * 1.3);
     float expand = rootPin * (0.06 + 0.12 * health) * pulse
-                 - rootPin * hunger * 0.12
-                 - rootPin * overgraze * 0.08
+                 - rootPin * hunger * 0.08
+                 - rootPin * overgraze * 0.05
                  + rootPin * rarity * 0.04 * pulse2;
     // Anisotropic expand: X/Z out of phase → morphing cross-section (not uniform scale).
     p.y += heave * up;
     p.x *= 1.0 + expand * (0.9 + 0.4 * up) * (0.85 + 0.3 * pulse2);
     p.z *= 1.0 + expand * (0.9 + 0.4 * up) * (0.85 + 0.3 * (1.0 - pulse2));
-    p.y *= mix(1.0, 0.86 + 0.14 * health - overgraze * 0.06, rootPin * 0.8);
+    // Mild height breath only — floor at ~92% so hunger never lays the plant down.
+    p.y *= mix(1.0, 0.92 + 0.08 * health - overgraze * 0.03, rootPin * 0.55);
 
     // Organic breath + rarity morph (lateral; never lengthens mesh).
     float morph = rootPin * (0.05 + 0.14 * rarity) * (0.5 + 0.5 * sin(uTime * (1.1 + freq * 0.4) + phase));
@@ -411,23 +416,24 @@ const flora_vert = /* glsl */ `
     // Multi-harmonic whip (counter-phase mid vs tip).
     worldPosition.xz += ortho * sin(uTime * (5.2 + stiff * 3.2) + phase) * cSum * mid * amp * 0.6;
     worldPosition.xz += push * cos(uTime * (3.4 + stiff * 2.1) - phase * 1.7) * cSum * tip * amp * 0.35;
-    // Contact multi-axis turbo: yaw twist + pitch heave + roll (tip only).
+    // Contact multi-axis turbo: yaw twist + mild pitch/roll (tip only) — stay upright.
     float cTwist = cSum * tip * (1.7 + react) * (0.5 + 0.5 * sin(uTime * 4.1 + phase));
-    float cPitch = cSum * tip * (0.8 + react * 0.4) * sin(uTime * 3.2 + phase * 1.5);
-    float cRoll = cSum * tip * (0.7 + react * 0.35) * cos(uTime * 3.6 - phase * 1.1);
+    float cPitch = cSum * tip * (0.45 + react * 0.25) * sin(uTime * 3.2 + phase * 1.5);
+    float cRoll = cSum * tip * (0.4 + react * 0.2) * cos(uTime * 3.6 - phase * 1.1);
     float cca = cos(cTwist);
     float csa = sin(cTwist);
     vec2 rel = worldPosition.xz - bmBase;
     worldPosition.xz = bmBase + vec2(cca * rel.x - csa * rel.y, csa * rel.x + cca * rel.y);
     worldPosition.xz += ortho * cRoll * 0.55;
-    // Up/down flee + tip invert/fold under heavy contact (root stays planted).
-    worldPosition.y += cSum * tip * (1.15 + uChaos * 1.4 + rarity * 0.9) + cPitch * 0.65;
-    worldPosition.y += sin(cSum * 8.5 + uTime * 2.8 + phase) * cSum * tip * 0.95;
-    worldPosition.y += cos(uTime * 4.5 + phase * 2.0) * cSum * tip * cRoll * 0.4;
-    float invert = smoothstep(0.28, 1.05, cSum + uChaos * 0.5) * tip * (0.5 + rarity * 0.35);
-    worldPosition.y -= invert * (0.65 + up * 1.25 + cPitch * 0.3);
-    worldPosition.xz += push * invert * 1.05;
-    worldPosition.xz += ortho * invert * sin(uTime * 6.0 + phase) * 0.55;
+    // Contact flee is mostly UP + lateral whip — light tip nod only (no faceplant invert).
+    worldPosition.y += cSum * tip * (1.35 + uChaos * 1.5 + rarity * 1.0) + abs(cPitch) * 0.35;
+    worldPosition.y += (0.55 + 0.45 * sin(cSum * 8.5 + uTime * 2.8 + phase)) * cSum * tip * 0.9;
+    worldPosition.y += cos(uTime * 4.5 + phase * 2.0) * cSum * tip * abs(cRoll) * 0.25;
+    float invert = smoothstep(0.35, 1.15, cSum + uChaos * 0.5) * tip * (0.28 + rarity * 0.18);
+    // Nod tip slightly under shock — dump energy into lateral thrash, not into the dirt.
+    worldPosition.y -= invert * (0.2 + up * 0.35);
+    worldPosition.xz += push * invert * 1.35;
+    worldPosition.xz += ortho * invert * sin(uTime * 6.0 + phase) * 0.75;
 
     vWorldP = worldPosition.xyz;
     vec4 mvPosition = modelViewMatrix * worldPosition;
