@@ -92,6 +92,9 @@ export const SUPER_FORESIGHT_PARAMS =
 const CROWD_HID = 6; // spacing (crowding-anticipation) head hidden width
 /** Total learnable params the spacing head adds when lit — same 18→h→1 shape. */
 export const SUPER_CROWD_PARAMS = SENSE * CROWD_HID + CROWD_HID + (CROWD_HID * 1 + 1);
+const FORAGE_HID = 6; // forage (prey-scarcity-anticipation) head hidden width
+/** Total learnable params the forage head adds when lit — same 18→h→1 shape. */
+export const SUPER_FORAGE_PARAMS = SENSE * FORAGE_HID + FORAGE_HID + (FORAGE_HID * 1 + 1);
 
 /** Max living twins the Super Creature may sire (the brief's "twin/offspring creation up to 3"). */
 export const SUPER_MAX_OFFSPRING = 3;
@@ -156,7 +159,9 @@ export interface SuperSnapshot {
   foresightUrgency: number; // learned predicted FUTURE energy drop biasing proactive foraging (0 when frozen)
   learnedCrowdErr: number; // EMA of the spacing head's next-crowding forecast error (0 when frozen)
   spacing: number; // learned anticipated crowding driving dispersal (0 when frozen)
-  liveParamCount: number; // cortex+actor + world-model + value + dread + social + foresight + spacing when lit
+  learnedForageErr: number; // EMA of the forage head's next-prey forecast error (0 when frozen)
+  forage: number; // learned anticipated prey scarcity driving exploration for new grounds (0 when frozen)
+  liveParamCount: number; // cortex+actor + world-model + value + dread + social + foresight + spacing + forage when lit
   offspring: number; // living twins sired (≤ SUPER_MAX_OFFSPRING)
   plan: SuperPlan;
   intent: {
@@ -284,6 +289,18 @@ export class SuperCreature {
   private spacing = 0; // clamp((forecast − 0.3)·k): anticipated congestion → disperse
   private learnedCrowdErr = 0; // EMA of |crowding forecast − actual crowding| — FALLS as the head learns
 
+  // ── ONLINE FORAGE HEAD — learned prey-scarcity anticipation: a seventh 18→6→1 MLP forecasts next-beat prey
+  // proximity (s[5]). A predicted SCARCITY (prey below a floor) becomes `forage`, a continuous drive that
+  // RAISES exploration + curiosity — the anticipatory counterpart to the reactive hunt heads: when the model
+  // foresees prey thinning HERE, it ranges out to find new hunting grounds. Continuous ⇒ robust; the
+  // `forage:false` seam learns the model but does not steer, isolating the exploratory effect. ─────────────
+  private forageModel: Mlp | null = null; // null until enableLearning(); off ⇒ forage 0 ⇒ byte-identical
+  private forageBias = true; // the seam: false learns the model but does not steer exploration
+  private readonly forageTarget = new Float64Array(1); // scratch target (this beat's actual prey proximity)
+  private preyForecast = 0; // the forage head's forecast (made last beat) for THIS beat's prey proximity
+  private forage = 0; // clamp(floor − forecast): anticipated prey scarcity → explore for new grounds
+  private learnedForageErr = 0; // EMA of |prey forecast − actual prey| — FALLS as the head learns
+
   /**
    * Birth the Super Creature. With no preset weights it rolls a fresh deep mind from `rng` (the
    * prime); twins pass mutated weight arrays + an incremented generation (see {@link maybeSpawn}).
@@ -324,7 +341,8 @@ export class SuperCreature {
           SUPER_THREAT_PARAMS +
           SUPER_SOCIAL_PARAMS +
           SUPER_FORESIGHT_PARAMS +
-          SUPER_CROWD_PARAMS
+          SUPER_CROWD_PARAMS +
+          SUPER_FORAGE_PARAMS
         : 0)
     );
   }
@@ -356,6 +374,10 @@ export class SuperCreature {
   get learnedCrowdError(): number {
     return this.learnedCrowdErr;
   }
+  /** EMA of the forage head's next-prey forecast error — falls as prey-scarcity anticipation is learned. */
+  get learnedForageError(): number {
+    return this.learnedForageErr;
+  }
 
   /**
    * Ignite ONLINE learning: the apex world-model (a real {@link SUPER_WORLDMODEL_PARAMS}-param 18→8→1
@@ -371,6 +393,7 @@ export class SuperCreature {
     social?: boolean;
     foresight?: boolean;
     spacing?: boolean;
+    forage?: boolean;
   }): void {
     if (opts?.lr !== undefined) this.wmLr = opts.lr;
     if (this.worldModel) {
@@ -403,6 +426,9 @@ export class SuperCreature {
     // the spacing head rides a sixth decorrelated substream (crowding axis). `spacing:false` = ablation control.
     this.crowdModel = createMlp(SENSE, CROWD_HID, 1, mulberry32((seed ^ 0x5aac1a60) >>> 0 || 1));
     this.crowdBias = opts?.spacing !== false;
+    // the forage head rides a seventh decorrelated substream (prey axis). `forage:false` = ablation control.
+    this.forageModel = createMlp(SENSE, FORAGE_HID, 1, mulberry32((seed ^ 0x0fa63a1e) >>> 0 || 1));
+    this.forageBias = opts?.forage !== false;
     this.learn = true;
     this.prevValid = false;
     this.learnedPredErr = 0;
@@ -420,6 +446,9 @@ export class SuperCreature {
     this.learnedCrowdErr = 0;
     this.spacing = 0;
     this.crowdForecast = 0;
+    this.learnedForageErr = 0;
+    this.forage = 0;
+    this.preyForecast = 0;
   }
 
   /**
@@ -540,6 +569,25 @@ export class SuperCreature {
       this.crowdForecast = crowdNext;
     }
 
+    // ── FORAGE HEAD: learned prey-scarcity anticipation — forecast next-beat prey proximity (s[5]), derive
+    // `forage`. Same mirror on the PREY axis: trains on (prevSense → this beat's prey proximity) by exact AD,
+    // then forecasts NEXT beat's prey; a predicted SCARCITY (prey below a floor) becomes `forage`, a continuous
+    // drive that RAISES exploration + curiosity — range out for new hunting grounds before prey thins here.
+    // `forageBias` off (or learning off) ⇒ forage 0 ⇒ the exploration overlay is byte-identical to baseline.
+    if (this.learn && this.forageModel) {
+      if (this.prevValid) {
+        this.learnedForageErr +=
+          WM_TAU * (Math.abs(this.preyForecast - (s[5] ?? 0)) - this.learnedForageErr);
+        if (this.wmLr > 0) {
+          this.forageTarget[0] = s[5] ?? 0;
+          mlpTrainStep(this.forageModel, this.prevSense, this.forageTarget, this.wmLr);
+        }
+      }
+      const preyNext = clamp01(mlpPredict(this.forageModel, s)[0] ?? 0);
+      this.forage = clamp01((0.5 - preyNext) * 1.5); // predicted prey below the 0.5 "thinning" floor → range out
+      this.preyForecast = preyNext; // compared to next beat's actual prey for the error EMA
+    }
+
     // ── FORESIGHT HEAD: learned PLANNING HORIZON — forecast energy FORESIGHT_K beats ahead, derive proactive
     // urgency. Unlike the value head (1 beat), it trains on the DELAYED pair (percept_{t−K} → energy_t) held
     // in a K-deep ring, so it learns the longer arc. A predicted FUTURE drop → forage/conserve EARLY. OFF by
@@ -625,6 +673,13 @@ export class SuperCreature {
     // the primary dispersal effect is the continuous MOVE-magnitude overlay in the returned intent below.
     const sp = this.crowdBias ? this.spacing : 0;
     if (sp > 0) drives.EXPLORE *= 1 - 0.3 * sp;
+    // FORAGE-AWARE PLANNING: a LEARNED predicted prey SCARCITY raises exploration — range out for new hunting
+    // grounds before prey thins here (the anticipatory counterpart to the reactive hunt heads). This is the
+    // ONLY head that RAISES EXPLORE, so its plan effect is cleanly attributable; the primary robust effect is
+    // the continuous curiosity overlay in the returned intent below. fo is 0 unless learning AND the forage
+    // bias is on ⇒ the baseline (and the `forage:false` control) are byte-identical.
+    const fo = this.forageBias ? this.forage : 0;
+    if (fo > 0) drives.EXPLORE *= 1 + 0.6 * fo;
     // DREAD-AWARE PLANNING: a LEARNED predicted threat RISE pre-emptively raises fleeing/deceiving and
     // suppresses committing to a hunt or a wander BEFORE the danger fully lands — anticipatory defense.
     // Only this pathway touches FLEE/DECEIVE, so its effect on plan choice is cleanly attributable to the
@@ -676,13 +731,16 @@ export class SuperCreature {
     // SPACING OVERLAY: anticipated congestion AMPLIFIES movement (disperse ahead of the crush) — a
     // continuous, always-consumed effect. 0 unless learning AND spacing bias on ⇒ byte-identical baseline.
     const disperse = sp > 0 ? 1 + sp * 0.6 : 1;
+    // FORAGE OVERLAY: anticipated prey scarcity RAISES curiosity (investigate for new grounds) every beat it
+    // fires — a continuous, always-consumed effect that does not depend on EXPLORE winning the argmax. 0 unless
+    // learning AND the forage bias is on ⇒ the frozen baseline and the `forage:false` control are byte-identical.
     return {
       move: { x: mx * disperse, y: my * disperse, z: mz * disperse },
       aggression: guard > 0 ? clamp01(aggression + guard * 0.5) : aggression,
       deception,
       dominance: guard > 0 ? clamp01(domProject + guard * 0.4) : domProject,
       spawn: spawnDesire,
-      curiosity,
+      curiosity: fo > 0 ? clamp01(curiosity + fo * 0.4) : curiosity,
       wantsSpawn,
       plan: best,
     };
@@ -759,6 +817,8 @@ export class SuperCreature {
       foresightUrgency: this.foresightUrgency,
       learnedCrowdErr: this.learnedCrowdErr,
       spacing: this.spacing,
+      learnedForageErr: this.learnedForageErr,
+      forage: this.forage,
       liveParamCount: this.liveParamCount,
       offspring: this.offspring,
       plan: this.plan,

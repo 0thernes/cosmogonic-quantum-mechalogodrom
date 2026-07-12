@@ -11,6 +11,38 @@ changed and why.
 
 ---
 
+## 2026-07-11 — batch 37: Super Creature grows FORAGE — a seventh head ranges out before prey thins (pass 8/10)
+
+Pass 8 of the 10-pass "make them smarter" goal. Beyond salience, energy (1-step + 6-step), threat, rival and
+crowding, the apex creature gains a new behavioral DOMAIN — anticipatory foraging.
+
+- **`src/sim/super-creature.ts` — a learned FORAGE head (18→6→1, `SUPER_FORAGE_PARAMS`=121).** Trained by exact
+  Eshkol-AD backprop to forecast the creature's OWN next-beat PREY proximity (`s[5]`). A predicted SCARCITY
+  (prey below a 0.5 "thinning" floor) becomes `forage`, a continuous drive that RAISES curiosity + exploration
+  — range out for new hunting grounds BEFORE prey thins here, the farsighted counterpart to the reactive hunt
+  heads. Seventh decorrelated substream (`seed ^ 0x0fa63a1e`); a `forage:false` seam is the ablation control.
+- **NHSI top-down predictive coding ATTEMPTED first, then REVERTED (honesty).** Before this I wired the NHSI
+  attention model's forecast VECTOR (computed-but-unread) as a top-down expectation pulling the coupling target.
+  Probe verdict: a NO-OP — the NHSI self-model is so accurate (~124× vs frozen) that its forecast ≈ reality, so
+  pulling the target toward it moved nothing (opDiv 0.0036; selfErr + volatility byte-identical on/off, 1.00×).
+  Forecast-based NHSI extensions are inherently no-ops on that substrate. Reverted, same discipline as the
+  batch-25/pass-5 no-op lesson. (NHSI keeps its two shipped learned nets — scalar self-model + spatial attention.)
+- **CONTINUOUS overlay, per the pass-5 lesson.** The primary hook is the curiosity overlay (scales the
+  always-emitted curiosity), robust across seeds (0.019–0.064). The EXPLORE plan-diff is FRAGILE (1–25 across
+  seeds — for a creature whose regime keeps EXPLORE off the argmax boundary it barely moves), so the gate rests
+  on the continuous overlay, NOT the plan count.
+- **GATE (`tests/super-creature-forage.test.ts`, 6 cases).** LEARNS: prey-forecast error to **<0.1** (~0.028
+  EMA). ABLATION: trained **<0.5×** a frozen-lr0 control (≈5× — load-bearing; frozen stays >0.1). OPERATIONAL
+  (isolated): forage-on vs forage-off lifts mean curiosity by **>0.01** (≈0.019). Plus DETERMINISM, DEFAULT-OFF
+  byte-identical, SCALE. All prior Super Creature gates + baseline + pantheon-breeding stay green (the forage
+  head is a separate net; the other six axes unchanged).
+- **HONESTY (ADR 0014/0015, indicatorOnly).** NO consciousness / Butlin / A-Life score moved. Claim: the apex
+  creature now anticipates prey scarcity (~5× below frozen, ablation-verified) and ranges out proactively.
+  Butlin + Consciousness BYTE-IDENTICAL. SuperCreature now carries SEVEN learned heads (salience, energy
+  1-step, threat, rival, energy 6-step, crowding, prey).
+
+Receipts 2838→2844 (+6). Coupling invariant intact (SuperCreature is outside the receipt).
+
 ## 2026-07-11 — batch 36: Super Creature grows SPACING — a sixth head disperses ahead of the crush (pass 7/10)
 
 Pass 7 of the 10-pass "make them smarter" goal. Beyond salience, energy (1-step + 6-step), threat and rival,
