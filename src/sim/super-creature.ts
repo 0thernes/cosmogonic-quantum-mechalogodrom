@@ -98,6 +98,9 @@ export const SUPER_FORAGE_PARAMS = SENSE * FORAGE_HID + FORAGE_HID + (FORAGE_HID
 const EVASION_HID = 6; // evasion (chaos-anticipation) head hidden width
 /** Total learnable params the evasion head adds when lit — same 18→h→1 shape. */
 export const SUPER_EVASION_PARAMS = SENSE * EVASION_HID + EVASION_HID + (EVASION_HID * 1 + 1);
+const AMBITION_HID = 6; // ambition (wealth-opportunity-anticipation) head hidden width
+/** Total learnable params the ambition head adds when lit — same 18→h→1 shape. */
+export const SUPER_AMBITION_PARAMS = SENSE * AMBITION_HID + AMBITION_HID + (AMBITION_HID * 1 + 1);
 
 /** Max living twins the Super Creature may sire (the brief's "twin/offspring creation up to 3"). */
 export const SUPER_MAX_OFFSPRING = 3;
@@ -166,7 +169,9 @@ export interface SuperSnapshot {
   forage: number; // learned anticipated prey scarcity driving exploration for new grounds (0 when frozen)
   learnedEvasionErr: number; // EMA of the evasion head's next-chaos forecast error (0 when frozen)
   evasion: number; // learned anticipated world-chaos driving deception/camouflage (0 when frozen)
-  liveParamCount: number; // cortex+actor + world-model + value + dread + social + foresight + spacing + forage + evasion when lit
+  learnedAmbitionErr: number; // EMA of the ambition head's next-wealth forecast error (0 when frozen)
+  ambition: number; // learned anticipated wealth opportunity driving reproduction timing (0 when frozen)
+  liveParamCount: number; // cortex+actor + world-model + value + dread + social + foresight + spacing + forage + evasion + ambition when lit
   offspring: number; // living twins sired (≤ SUPER_MAX_OFFSPRING)
   plan: SuperPlan;
   intent: {
@@ -317,6 +322,18 @@ export class SuperCreature {
   private evasion = 0; // clamp(forecast − floor): anticipated HIGH disorder → deceive / hide
   private learnedEvasionErr = 0; // EMA of |chaos forecast − actual chaos| — FALLS as the head learns
 
+  // ── ONLINE AMBITION HEAD — learned wealth-opportunity anticipation: a ninth 18→6→1 MLP forecasts next-beat
+  // relative wealth (s[4]). An anticipated RICH window (forecast above a floor) becomes `ambition`, a
+  // continuous overlay that raises the SPAWN drive — time reproduction to resource-plentiful windows (an
+  // r-strategy). Continuous ⇒ robust; the `ambition:false` seam learns the model but does not steer, isolating
+  // the reproduction-timing effect. This completes an anticipatory head on every core survival sense. ────────
+  private ambitionModel: Mlp | null = null; // null until enableLearning(); off ⇒ ambition 0 ⇒ byte-identical
+  private ambitionBias = true; // the seam: false learns the model but does not steer reproduction
+  private readonly ambitionTarget = new Float64Array(1); // scratch target (this beat's actual wealth)
+  private wealthForecast = 0; // the ambition head's forecast (made last beat) for THIS beat's wealth
+  private ambition = 0; // clamp(forecast − floor): an anticipated rich window → reproduce now
+  private learnedAmbitionErr = 0; // EMA of |wealth forecast − actual wealth| — FALLS as the head learns
+
   /**
    * Birth the Super Creature. With no preset weights it rolls a fresh deep mind from `rng` (the
    * prime); twins pass mutated weight arrays + an incremented generation (see {@link maybeSpawn}).
@@ -359,7 +376,8 @@ export class SuperCreature {
           SUPER_FORESIGHT_PARAMS +
           SUPER_CROWD_PARAMS +
           SUPER_FORAGE_PARAMS +
-          SUPER_EVASION_PARAMS
+          SUPER_EVASION_PARAMS +
+          SUPER_AMBITION_PARAMS
         : 0)
     );
   }
@@ -399,6 +417,10 @@ export class SuperCreature {
   get learnedEvasionError(): number {
     return this.learnedEvasionErr;
   }
+  /** EMA of the ambition head's next-wealth forecast error — falls as opportunity anticipation is learned. */
+  get learnedAmbitionError(): number {
+    return this.learnedAmbitionErr;
+  }
 
   /**
    * Ignite ONLINE learning: the apex world-model (a real {@link SUPER_WORLDMODEL_PARAMS}-param 18→8→1
@@ -416,6 +438,7 @@ export class SuperCreature {
     spacing?: boolean;
     forage?: boolean;
     evasion?: boolean;
+    ambition?: boolean;
   }): void {
     if (opts?.lr !== undefined) this.wmLr = opts.lr;
     if (this.worldModel) {
@@ -459,6 +482,14 @@ export class SuperCreature {
       mulberry32((seed ^ 0x3ca05e77) >>> 0 || 1),
     );
     this.evasionBias = opts?.evasion !== false;
+    // the ambition head rides a ninth decorrelated substream (wealth axis). `ambition:false` = ablation control.
+    this.ambitionModel = createMlp(
+      SENSE,
+      AMBITION_HID,
+      1,
+      mulberry32((seed ^ 0x0a3b1710) >>> 0 || 1),
+    );
+    this.ambitionBias = opts?.ambition !== false;
     this.learn = true;
     this.prevValid = false;
     this.learnedPredErr = 0;
@@ -482,6 +513,9 @@ export class SuperCreature {
     this.learnedEvasionErr = 0;
     this.evasion = 0;
     this.chaosForecast = 0;
+    this.learnedAmbitionErr = 0;
+    this.ambition = 0;
+    this.wealthForecast = 0;
   }
 
   /**
@@ -640,6 +674,25 @@ export class SuperCreature {
       this.chaosForecast = chaosNext; // compared to next beat's actual chaos for the error EMA
     }
 
+    // ── AMBITION HEAD: learned wealth-opportunity anticipation — forecast next-beat relative wealth (s[4]),
+    // derive `ambition`. Same mirror on the WEALTH axis: trains on (prevSense → this beat's wealth) by exact AD,
+    // then forecasts NEXT beat's wealth; an anticipated RICH window (forecast above a floor) becomes `ambition`,
+    // a continuous overlay that raises the SPAWN drive — time reproduction to resource-plentiful windows (an
+    // r-strategy). `ambitionBias` off (or learning off) ⇒ ambition 0 ⇒ the spawn overlay is byte-identical.
+    if (this.learn && this.ambitionModel) {
+      if (this.prevValid) {
+        this.learnedAmbitionErr +=
+          WM_TAU * (Math.abs(this.wealthForecast - (s[4] ?? 0)) - this.learnedAmbitionErr);
+        if (this.wmLr > 0) {
+          this.ambitionTarget[0] = s[4] ?? 0;
+          mlpTrainStep(this.ambitionModel, this.prevSense, this.ambitionTarget, this.wmLr);
+        }
+      }
+      const wealthNext = clamp01(mlpPredict(this.ambitionModel, s)[0] ?? 0);
+      this.ambition = clamp01((wealthNext - 0.5) * 1.4); // anticipated RICH window (above 0.5) → reproduce now
+      this.wealthForecast = wealthNext; // compared to next beat's actual wealth for the error EMA
+    }
+
     // ── FORESIGHT HEAD: learned PLANNING HORIZON — forecast energy FORESIGHT_K beats ahead, derive proactive
     // urgency. Unlike the value head (1 beat), it trains on the DELAYED pair (percept_{t−K} → energy_t) held
     // in a K-deep ring, so it learns the longer arc. A predicted FUTURE drop → forage/conserve EARLY. OFF by
@@ -775,7 +828,13 @@ export class SuperCreature {
     }
     this.plan = best;
 
-    const wantsSpawn = spawnDesire > 0.8 && this.offspring < SUPER_MAX_OFFSPRING && s[0] > 0.5;
+    // AMBITION OVERLAY: an anticipated RICH window raises the SPAWN drive — time reproduction to plenty (an
+    // r-strategy), a continuous, always-consumed effect. 0 unless learning AND the ambition bias is on ⇒ the
+    // frozen baseline and the `ambition:false` control are byte-identical (spawnOut === spawnDesire, so
+    // wantsSpawn is unchanged too).
+    const am = this.ambitionBias ? this.ambition : 0;
+    const spawnOut = am > 0 ? clamp01(spawnDesire + am * 0.5) : spawnDesire;
+    const wantsSpawn = spawnOut > 0.8 && this.offspring < SUPER_MAX_OFFSPRING && s[0] > 0.5;
     // SOCIAL READINESS OVERLAY: a LEARNED expectation of rival presence raises combat readiness (aggression
     // + projected dominance) every beat it fires — a continuous, always-consumed effect. 0 unless learning
     // AND the social bias is on ⇒ the frozen baseline and the `social:false` control are byte-identical.
@@ -794,7 +853,7 @@ export class SuperCreature {
       aggression: guard > 0 ? clamp01(aggression + guard * 0.5) : aggression,
       deception: ev > 0 ? clamp01(deception + ev * 0.5) : deception,
       dominance: guard > 0 ? clamp01(domProject + guard * 0.4) : domProject,
-      spawn: spawnDesire,
+      spawn: spawnOut,
       curiosity: fo > 0 ? clamp01(curiosity + fo * 0.4) : curiosity,
       wantsSpawn,
       plan: best,
@@ -876,6 +935,8 @@ export class SuperCreature {
       forage: this.forage,
       learnedEvasionErr: this.learnedEvasionErr,
       evasion: this.evasion,
+      learnedAmbitionErr: this.learnedAmbitionErr,
+      ambition: this.ambition,
       liveParamCount: this.liveParamCount,
       offspring: this.offspring,
       plan: this.plan,

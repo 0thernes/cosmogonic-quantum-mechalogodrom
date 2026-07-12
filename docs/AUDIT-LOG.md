@@ -11,6 +11,39 @@ changed and why.
 
 ---
 
+## 2026-07-11 — batch 39: Super Creature grows AMBITION — a ninth head breeds in rich windows (pass 10/10 — SUITE COMPLETE)
+
+Pass 10 (capstone) of the 10-pass "make them smarter" goal. The apex creature gains its last core-sense
+anticipatory head — reproduction timing.
+
+- **`src/sim/super-creature.ts` — a learned AMBITION head (18→6→1, `SUPER_AMBITION_PARAMS`=121).** Trained by
+  exact Eshkol-AD backprop to forecast the creature's OWN next-beat relative WEALTH (`s[4]`). An anticipated
+  RICH window (forecast above a 0.5 floor) becomes `ambition`, a continuous overlay that raises the SPAWN drive
+  (and feeds `wantsSpawn`) — time reproduction to resource-plentiful windows, an r-strategy. Ninth decorrelated
+  substream (`seed ^ 0x0a3b1710`); an `ambition:false` seam isolates the reproduction-timing effect.
+- **CONTINUOUS overlay (per the pass-5 lesson).** Δspawn ≈**0.09**, robust across seeds (0.07–0.09); the
+  wantsSpawn hard threshold is fragile per-seed (0/0 on some), so the gate rests on the continuous spawn
+  overlay, NOT the threshold crossings.
+- **GATE (`tests/super-creature-ambition.test.ts`, 6 cases).** LEARNS: wealth-forecast error to **<0.1**
+  (~0.018). ABLATION: trained **<0.4×** a frozen-lr0 control (≈8–10× — load-bearing; frozen stays >0.1).
+  OPERATIONAL (isolated): ambition-on vs ambition-off lifts mean spawn by **>0.05** (≈0.09). Plus DETERMINISM,
+  DEFAULT-OFF byte-identical, SCALE. All prior Super Creature gates + baseline + pantheon-breeding stay green.
+- **HONESTY (ADR 0014/0015, indicatorOnly).** NO consciousness / Butlin / A-Life score moved. Butlin +
+  Consciousness BYTE-IDENTICAL.
+
+**10-PASS SUITE COMPLETE.** The apex Super Creature now carries NINE online learned heads (world-model
+salience, energy 1-step, threat, rival, energy 6-step horizon, crowding, prey, chaos, wealth) — an
+anticipatory competence on every core survival sense, each a real Eshkol-AD-trained MLP, each ablation-gated
+(load-bearing: 5–13× below a frozen-lr0 control), each isolated via its own `:false` seam, all OFF by default
+⇒ the frozen baseline is byte-identical. NHSI carries 2 shipped learned nets (scalar self-model + spatial
+attention) that provably develop; three further NHSI mechanisms (top-down PC, Hebbian coupling, homeostatic
+plasticity) were probed and HONESTLY REJECTED as no-op/trivial/marginal (its dynamics are too predictable and
+too synchronized) rather than forced. The Apex-Abomination stays at its batch-29 vitality self-model (a poor
+substrate for behavioral heads; the agony experiment was reverted). Emergence = coupling > count; every claim
+is indicatorOnly — computational anticipation, NOT sentience.
+
+Receipts 2850→2856 (+6). Coupling invariant intact (SuperCreature is outside the receipt).
+
 ## 2026-07-11 — batch 38: Super Creature grows EVASION — an eighth head hides under coming chaos (pass 9/10)
 
 Pass 9 of the 10-pass "make them smarter" goal. Beyond salience, energy (1-step + 6-step), threat, rival,
