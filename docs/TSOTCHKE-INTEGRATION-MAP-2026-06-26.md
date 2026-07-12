@@ -129,6 +129,21 @@ and finite differences, not a native Eshkol build. **Observed-but-not-yet-integr
 (`@moonlab/quantum-core`, `@moonlab/quantum-algorithms` with a typed Grover) and an exact VQE gradient
 through its stable ABI; eshkol added gated ML-KEM (FIPS 203) PQC builtins over Moonlab.
 
+**Custom-VJP + quantum parameter-shift AD (2026-07-12).** The tape now has opaque custom-VJP nodes
+(`adCustom`, new `AD_CUSTOM` op), a faithful port of Eshkol's custom-VJP nodes (PR #270, `d4154f6`)
+whose stated purpose is "differentiate through Moonlab VQE circuits". On top of it, `math/quantum-ad`
+differentiates a variational-circuit expectation over our own deterministic statevector by the EXACT
+**parameter-shift rule** and drives a functional VQE (`vqeMinimize`) end-to-end through the unified AD
+tape — reaching the exact diagonal ground energy. This is a local exact capability, not a Moonlab build;
+it is the differentiation foundation the observed Moonlab exact-VQE-gradient ABI would slot into.
+
+**Full corpus recency audit (2026-07-12).** Live sweep of all user + `Tsotchke-Corporation` org repos.
+Active/fresh upstream beyond the deep three: `ulg` (org, pushed 2026-07-11 — "physics engine in eshkol +
+moonlab"; our `ulg-bridge.ts` facade); `quantum_geometric_tensor` at **v0.777 beta** heading to QGTL v1.0
+(Q3 2026 — our quantum-geometry path); `spin_based_neural_network` added a "skyrmion magnetisation field
+generator (v0.6)" (our Hopfield/spin path); `quantum-quake` (org) Moonlab runtime diagnostics. These are
+recorded as observed follow-up lanes; none is newly wired by this pass.
+
 ## Quantum RNG boundary
 
 The reference is Quantum RNG `v3.0.1` commit

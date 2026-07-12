@@ -60,6 +60,21 @@ export enum AdOpType {
   AD_TANH = 14 /* unary:  tanh(left) */,
   AD_CONST = 15 /* leaf:   constant value (no gradient flows through) */,
   AD_VAR = 16 /* leaf:   variable (gradient collection point) */,
+  AD_CUSTOM = 17 /* opaque: forward value supplied by the caller; backward supplied as a VJP closure */,
+}
+
+/**
+ * A custom vector-Jacobian-product node's backward rule: given the incoming adjoint `gradOut`
+ * (= ∂output/∂thisNode) and the forward VALUES of this node's inputs, return the gradient
+ * contribution to EACH input (aligned to `inputs`). This is the hook a black-box differentiable
+ * op plugs into — e.g. the exact parameter-shift gradient of a quantum-circuit expectation.
+ */
+export type CustomVjpBackward = (gradOut: number, inputValues: number[]) => number[];
+
+/** Bookkeeping for one {@link adCustom} node: its input node indices + its VJP closure. */
+interface CustomVjpEntry {
+  inputs: number[];
+  backward: CustomVjpBackward;
 }
 
 /** Tape node structure (mirrors C struct AdNode) */
@@ -77,6 +92,9 @@ export interface AdTape {
   nodes: AdNode[]; /* preallocated node array */
   len: number; /* number of nodes on tape */
   cap: number; /* capacity */
+  /** Backward closures for AD_CUSTOM nodes, keyed by node index. Lazily created; cleared on reset.
+   *  Empty (undefined) for the common all-classical tape ⇒ zero overhead for every existing consumer. */
+  customVjps?: Map<number, CustomVjpEntry>;
 }
 
 /** Initial tape capacity (mirrors C AD_TAPE_INIT_CAP) */
@@ -169,6 +187,40 @@ export function adConst(tape: AdTape, value: number): number {
  */
 export function adVar(tape: AdTape, value: number): number {
   return adTapePush(tape, AdOpType.AD_VAR, value, -1, -1, 0.0);
+}
+
+/**
+ * Record an OPAQUE differentiable node: a black box whose forward value `value` is computed by the
+ * caller and whose gradient w.r.t. its `inputs` is supplied by a custom VJP closure `backward`. This
+ * is the reverse-mode AD extension point — a faithful port of Eshkol's custom-VJP AD nodes (upstream
+ * `feat(ad): custom-VJP AD nodes` PR #270, commit d4154f6, observed at HEAD 4d94ab6, v1.3.3-evolve),
+ * whose flagship use is differentiating through a Moonlab VQE circuit by wrapping its exact adjoint.
+ *
+ * During {@link adBackward}, when this node's adjoint `g` is reached, `backward(g, inputValues)` is
+ * invoked and its returned per-input gradients are ACCUMULATED into the corresponding input leaves —
+ * so a black-box op (e.g. a quantum-circuit expectation differentiated by the exact parameter-shift
+ * rule) composes with the surrounding classical tape under one unified chain rule.
+ *
+ * The inputs must already be on the tape (created before this node) so reverse topological order holds.
+ * {@link adHvp} does not propagate second-order derivatives through custom nodes (they are treated as
+ * having zero curvature); use custom nodes for gradients, the smooth classical ops for Hessian work.
+ *
+ * @param tape tape to record on
+ * @param value the forward value f(inputs), computed by the caller
+ * @param inputs node indices this custom value depends on (gradient flows back to these)
+ * @param backward VJP closure: (gradOut, inputValues) → gradient contribution to each input
+ * @returns the new node index
+ */
+export function adCustom(
+  tape: AdTape,
+  value: number,
+  inputs: number[],
+  backward: CustomVjpBackward,
+): number {
+  const node = adTapePush(tape, AdOpType.AD_CUSTOM, value, inputs[0] ?? -1, inputs[1] ?? -1, 0.0);
+  if (!tape.customVjps) tape.customVjps = new Map();
+  tape.customVjps.set(node, { inputs: inputs.slice(), backward });
+  return node;
 }
 
 /**
@@ -502,6 +554,22 @@ export function adBackward(tape: AdTape, output: number): void {
         tape.nodes[L]!.gradient += g * (1.0 - n.value * n.value);
         break;
 
+      case AdOpType.AD_CUSTOM: {
+        // Opaque node: fold in the caller-supplied VJP. grads[k] = ∂output/∂input_k, accumulated onto
+        // each input leaf — the seam where a black-box gradient (e.g. exact parameter-shift on a quantum
+        // circuit) joins the classical chain rule. Absent entry ⇒ no gradient flows (treated as constant).
+        const entry = tape.customVjps?.get(i);
+        if (entry) {
+          const inputValues = entry.inputs.map((idx) => (idx >= 0 ? tape.nodes[idx]!.value : 0));
+          const grads = entry.backward(g, inputValues);
+          for (let k = 0; k < entry.inputs.length; k++) {
+            const inNode = entry.inputs[k]!;
+            if (inNode >= 0) tape.nodes[inNode]!.gradient += grads[k] ?? 0;
+          }
+        }
+        break;
+      }
+
       case AdOpType.AD_CONST:
       case AdOpType.AD_VAR:
         // Leaf nodes — no parents to propagate to
@@ -544,6 +612,7 @@ export function adTapeReset(tape: AdTape): void {
     tape.nodes[i]!.gradient = 0.0;
   }
   tape.len = 0;
+  if (tape.customVjps) tape.customVjps.clear();
 }
 
 /**

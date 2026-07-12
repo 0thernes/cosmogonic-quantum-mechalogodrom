@@ -11,6 +11,40 @@ changed and why.
 
 ---
 
+## 2026-07-12 — batch 43: full Tsotchke corpus audit → custom-VJP AD nodes + EXACT quantum parameter-shift AD
+
+Continuation of the /goal after batch 42, closing the "check ALL his repos + start a big lane" gaps. **Full
+corpus recency audit** (all user + Tsotchke-Corporation org repos, live GitHub API + X/tsotchke.org): beyond
+the batch-42 hot three (eshkol/moonlab/qrng), fresh/active upstream = `ulg` (org, pushed 2026-07-11 — "physics
+engine in **eshkol + moonlab**"), `quantum_geometric_tensor` **v0.777 beta** (→ QGTL v1.0 Q3 2026),
+`spin_based_neural_network` new "skyrmion magnetisation field generator (v0.6)", `quantum-quake` Moonlab runtime
+diagnostics. Recorded in the integration map (observed follow-up lanes, not overclaimed).
+
+Then STARTED the highest-value lane — the direct next step in Eshkol's own AD arc (reverse-mode → custom-VJP →
+VQE-differentiable):
+
+- **`src/math/eshkol-ad.ts` — `adCustom` opaque custom-VJP nodes** (new `AD_CUSTOM` op + a lazy `customVjps`
+  registry on the tape, cleared on reset). A caller supplies a node's forward value + a VJP closure; backward
+  folds it into the chain rule. Purely additive — the registry is undefined for every existing all-classical
+  tape ⇒ zero overhead, byte-identical for all current consumers (verified: the full AD/MLP/HVP/curvature/
+  biologic/super-creature suites stay green). Faithful port of Eshkol's custom-VJP nodes (PR #270, `d4154f6`).
+- **`src/math/quantum-ad.ts` — EXACT parameter-shift quantum-classical AD.** A variational circuit's expectation
+  ⟨H⟩(θ) over our deterministic statevector (`math/quantum`) for a diagonal Pauli-Z/ZZ Hamiltonian, differentiated
+  by the **exact parameter-shift rule** ∂⟨H⟩/∂θ_k = ½[E(θ_k+π/2) − E(θ_k−π/2)] (Mitarai 2018 / Schuld 2019 /
+  arXiv:2107.12390), wrapped as a custom-VJP node (`adQuantumExpectation`) so a quantum energy composes inside a
+  classical loss and differentiates end-to-end. Plus a functional **`vqeMinimize`** (VQE via gradient descent
+  through the unified tape) and `pauliZHamiltonian`/`diagonalGroundEnergy` helpers. This is Moonlab's "production
+  quantum AI training loop" contract in the small — deterministic, exact, on our own circuit.
+- **GATES.** `tests/eshkol-ad-custom-vjp.test.ts` (5): composition to exact analytic gradient, multi-input VJP,
+  hybrid classical∘custom∘classical vs finite differences, reset hygiene (no stale closure), determinism.
+  `tests/quantum-ad.test.ts` (7): ⟨Z⟩=cos θ, parameter-shift = −sin θ in closed form, shift-rule vs central
+  differences on an ENTANGLED 2-qubit circuit, tape backward = parameter-shift, HYBRID end-to-end vs FD, VQE
+  reaches the EXACT diagonal ground energy (−2.5), determinism.
+
+Receipts 2890→2902 (+12). indicatorOnly: this is an additive AD/quantum CAPABILITY + a self-contained functional
+VQE; it is NOT yet wired into live-sim behaviour, and NO Consciousness / Butlin / A-Life score moved. It deepens
+the Eshkol substrate (HOT-BUTTON "wire MORE") and is the foundation for quantum-differentiable learning.
+
 ## 2026-07-12 — batch 42: Tsotchke recency check → EXACT second-order AD + curvature-aware self-model learning
 
 /goal ("more intelligence, smarter everything… Tsotchke is key; check his repos + recent drops"). Checked the
