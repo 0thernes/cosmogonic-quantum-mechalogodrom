@@ -259,6 +259,7 @@ describe('AlienFlora — the vegetal ground ecology', () => {
     expect(mat.vertexShader).toContain('plantHit');
     expect(mat.vertexShader).toContain('hitSquash');
     expect(mat.vertexShader).toContain('selfFlee');
+    expect(mat.vertexShader).toContain('aPush'); // CPU spatial-hash pair forces
     // Plant↔land: rigid crest ride (one Y for whole plant — per-vertex lift sheared stems thin).
     expect(mat.vertexShader).toContain('cqmTerrainDisplacement');
     expect(mat.vertexShader).toContain('liftMax');

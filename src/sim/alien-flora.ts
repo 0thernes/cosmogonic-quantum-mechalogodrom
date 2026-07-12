@@ -82,6 +82,15 @@ export const FLORA_CONTACT_SLOTS = 4;
 const CONTACT_RADIUS = 14;
 /** Squared radius for GPU falloff — must match `smoothstep` edge in the vertex shader. */
 const CONTACT_RADIUS2 = CONTACT_RADIUS * CONTACT_RADIUS;
+/**
+ * Spatial-hash soft plant↔plant collision (O(N·k), NOT N²).
+ * Bases are fixed; crowns thrash — hash uses base xz + scale for soft radii.
+ */
+const COLLIDE_HASH_CELL = 5.5;
+/** Soft collision radius multiplier on plant scale (crown envelope). */
+const COLLIDE_RADIUS_MUL = 2.35;
+/** Max soft separation push (world units) per pair — keeps solve stable. */
+const COLLIDE_PUSH_MAX = 2.8;
 
 /** Deterministic positional hash → [0,1). No bitwise, no rng stream. */
 function hash(n: number): number {
@@ -182,6 +191,7 @@ const flora_vert = /* glsl */ `
   attribute vec4 aParams;   // x: phase, y: swayFreq, z: glow, w: localHeight (stem peak)
   attribute vec4 aMeta;     // x: rarity, y: stiffness, z: secondaryHue, w: reactGain
   attribute vec3 aColor;
+  attribute vec2 aPush;     // CPU spatial-hash soft collision push (world XZ) — real plant↔plant
   uniform float uTime;
   uniform float uWind;
   uniform float uChaos;
@@ -459,6 +469,11 @@ const flora_vert = /* glsl */ `
     vec4 worldPosition = instanceMatrix * vec4(p, 1.0);
     // RIGID land attach — identical Y on every vertex (no stretch/thin shear).
     worldPosition.y += rigidRide + ${SURFACE_RIDE.toFixed(3)};
+    // CPU spatial-hash soft plant↔plant push (O(N·k) pairs) — real packing, not decorative peel.
+    // Tip weights more so crowns separate; roots stay seated.
+    float pushW = rootPin * (0.4 + 0.6 * rootPin * up);
+    worldPosition.x += aPush.x * pushW;
+    worldPosition.z += aPush.y * pushW;
 
     // ── BEING CONTACT PHYSICS (per-plant, local seeds — not hollow decorative) ──
     float c0 = localContact(bmBase, uContactX.x, uContactZ.x, uContactS.x, phase + idHash * 2.0, stiff, react);
@@ -722,6 +737,23 @@ export class AlienFlora {
   private readonly contactPX = new Float32Array(FLORA_CONTACT_SLOTS);
   private readonly contactPZ = new Float32Array(FLORA_CONTACT_SLOTS);
 
+  // ── Spatial-hash soft plant↔plant collision (bases fixed; O(N·k) not N²). ──
+  private readonly plantX: Float32Array;
+  private readonly plantZ: Float32Array;
+  private readonly plantR: Float32Array;
+  /** mesh index into {@link meshes} for each plant. */
+  private readonly plantMeshIdx: Uint16Array;
+  /** instance index within that mesh. */
+  private readonly plantInstIdx: Uint32Array;
+  /** Accumulated soft push (xz interleaved). */
+  private readonly plantPush: Float32Array;
+  /** Per-mesh aPush buffers (same order as meshes). */
+  private readonly pushAttrs: Float32Array[] = [];
+  private readonly hashBuckets: number[][];
+  private readonly hashOrigin: number;
+  private readonly hashN: number;
+  private collideAccum = 0;
+
   constructor(ctx: SimContext) {
     this.scene = ctx.scene;
     this.intelligence = ctx.organismIntelligence ?? null;
@@ -856,6 +888,36 @@ export class AlienFlora {
     this.instanceCount = placed;
     this.maxDensity = maxD;
 
+    // Flatten plant bases for spatial-hash soft collision (real plant↔plant, O(N·k) not N²).
+    this.plantX = new Float32Array(placed);
+    this.plantZ = new Float32Array(placed);
+    this.plantR = new Float32Array(placed);
+    this.plantMeshIdx = new Uint16Array(placed);
+    this.plantInstIdx = new Uint32Array(placed);
+    this.plantPush = new Float32Array(placed * 2);
+    let pi = 0;
+    for (let fam = 0; fam < FAMILY_COUNT; fam++) {
+      const list = perFamily[fam]!;
+      for (let i = 0; i < list.length; i++) {
+        const pl = list[i]!;
+        this.plantX[pi] = pl.x;
+        this.plantZ[pi] = pl.z;
+        this.plantR[pi] = Math.max(0.95, pl.scale * COLLIDE_RADIUS_MUL);
+        // mesh/inst filled when InstancedMeshes are built (same fam order).
+        this.plantInstIdx[pi] = i;
+        pi++;
+      }
+    }
+    this.hashOrigin = -ALIEN_FLORA_FIELD_HALF - COLLIDE_HASH_CELL;
+    this.hashN = Math.ceil((ALIEN_FLORA_FIELD_HALF * 2 + COLLIDE_HASH_CELL * 2) / COLLIDE_HASH_CELL) + 1;
+    this.hashBuckets = Array.from({ length: this.hashN * this.hashN }, () => []);
+    for (let i = 0; i < placed; i++) {
+      const hx = Math.floor((this.plantX[i]! - this.hashOrigin) / COLLIDE_HASH_CELL);
+      const hz = Math.floor((this.plantZ[i]! - this.hashOrigin) / COLLIDE_HASH_CELL);
+      if (hx < 0 || hz < 0 || hx >= this.hashN || hz >= this.hashN) continue;
+      this.hashBuckets[hz * this.hashN + hx]!.push(i);
+    }
+
     // Operational grids: capacity/quality from edaphics; biomass starts at capacity.
     const cells = this.gridN * this.gridN;
     this.biomass = new Float32Array(cells);
@@ -897,6 +959,8 @@ export class AlienFlora {
     const pos = new THREE.Vector3();
     const scl = new THREE.Vector3();
     const col = new THREE.Color();
+    // Global plant index follows the same fam→list order used when filling plantX/Z.
+    let globalPlant = 0;
     for (let fam = 0; fam < FAMILY_COUNT; fam++) {
       const list = perFamily[fam]!;
       if (list.length === 0) continue;
@@ -906,15 +970,23 @@ export class AlienFlora {
       const params = new Float32Array(n * 4);
       const meta = new Float32Array(n * 4);
       const colors = new Float32Array(n * 3);
+      const pushArr = new Float32Array(n * 2); // aPush: soft plant↔plant separation
       const mesh = new THREE.InstancedMesh(geo, this.material, n);
       mesh.frustumCulled = false;
+      const meshIdx = this.meshes.length;
       for (let i = 0; i < n; i++) {
         const pl = list[i]!;
         const s = species[pl.sp]!;
+        // Wire spatial-hash plant id → this instance.
+        if (globalPlant < this.plantMeshIdx.length) {
+          this.plantMeshIdx[globalPlant] = meshIdx;
+          this.plantInstIdx[globalPlant] = i;
+          globalPlant++;
+        }
         // Seat origin into the soil so curved roots bury; GPU adds the same living-ground displacement.
         const gy = baseTerrainHeightAt(pl.x, pl.z) - ROOT_SINK;
         pos.set(pl.x, gy, pl.z);
-            // Soft terrain-slope align only — collar follows land tilt, never laid flat.
+        // Soft terrain-slope align only — collar follows land tilt, never laid flat.
         const dhx = baseTerrainHeightAt(pl.x + 1, pl.z) - baseTerrainHeightAt(pl.x - 1, pl.z);
         const dhz = baseTerrainHeightAt(pl.x, pl.z + 1) - baseTerrainHeightAt(pl.x, pl.z - 1);
         const groundTiltX = Math.max(-0.14, Math.min(0.14, -dhz * 0.18));
@@ -983,9 +1055,88 @@ export class AlienFlora {
       geo.setAttribute('aParams', new THREE.InstancedBufferAttribute(params, 4));
       geo.setAttribute('aMeta', new THREE.InstancedBufferAttribute(meta, 4));
       geo.setAttribute('aColor', new THREE.InstancedBufferAttribute(colors, 3));
+      geo.setAttribute('aPush', new THREE.InstancedBufferAttribute(pushArr, 2));
+      this.pushAttrs.push(pushArr);
       mesh.instanceMatrix.needsUpdate = true;
       this.scene.add(mesh);
       this.meshes.push(mesh);
+    }
+    // Resolve once at boot so packing is correct before first frame.
+    this.resolvePlantCollisions();
+  }
+
+  /**
+   * Spatial-hash soft plant↔plant solve. O(N·k) neighbor pairs — NOT N².
+   * Writes aPush instance attributes the vertex shader applies as crown separation.
+   * Falsifiable: overlapping soft radii produce opposing push forces.
+   */
+  private resolvePlantCollisions(): void {
+    const n = this.plantX.length;
+    if (n === 0) return;
+    const push = this.plantPush;
+    push.fill(0);
+    const hn = this.hashN;
+    const origin = this.hashOrigin;
+    const cell = COLLIDE_HASH_CELL;
+    const buckets = this.hashBuckets;
+    for (let i = 0; i < n; i++) {
+      const xi = this.plantX[i]!;
+      const zi = this.plantZ[i]!;
+      const ri = this.plantR[i]!;
+      const hx = Math.floor((xi - origin) / cell);
+      const hz = Math.floor((zi - origin) / cell);
+      for (let dz = -1; dz <= 1; dz++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          const cx = hx + dx;
+          const cz = hz + dz;
+          if (cx < 0 || cz < 0 || cx >= hn || cz >= hn) continue;
+          const bucket = buckets[cz * hn + cx]!;
+          for (let b = 0; b < bucket.length; b++) {
+            const j = bucket[b]!;
+            if (j <= i) continue; // each pair once
+            const xj = this.plantX[j]!;
+            const zj = this.plantZ[j]!;
+            const rj = this.plantR[j]!;
+            let ddx = xi - xj;
+            let ddz = zi - zj;
+            let d2 = ddx * ddx + ddz * ddz;
+            const minDist = ri + rj;
+            const min2 = minDist * minDist;
+            if (d2 >= min2 || d2 < 1e-8) continue;
+            const d = Math.sqrt(d2);
+            // Soft overlap 0..1
+            const overlap = 1 - d / minDist;
+            const inv = 1 / d;
+            ddx *= inv;
+            ddz *= inv;
+            // Equal-opposite push, scaled by overlap² for stable packing
+            let mag = overlap * overlap * minDist * 0.55;
+            if (mag > COLLIDE_PUSH_MAX) mag = COLLIDE_PUSH_MAX;
+            const fx = ddx * mag;
+            const fz = ddz * mag;
+            const i2 = i * 2;
+            const j2 = j * 2;
+            push[i2] = (push[i2] ?? 0) + fx;
+            push[i2 + 1] = (push[i2 + 1] ?? 0) + fz;
+            push[j2] = (push[j2] ?? 0) - fx;
+            push[j2 + 1] = (push[j2 + 1] ?? 0) - fz;
+          }
+        }
+      }
+    }
+    // Scatter into per-mesh aPush buffers.
+    for (let i = 0; i < n; i++) {
+      const mi = this.plantMeshIdx[i]!;
+      const ii = this.plantInstIdx[i]!;
+      const buf = this.pushAttrs[mi];
+      if (!buf) continue;
+      const o = ii * 2;
+      buf[o] = this.plantPush[i * 2] ?? 0;
+      buf[o + 1] = this.plantPush[i * 2 + 1] ?? 0;
+    }
+    for (const mesh of this.meshes) {
+      const attr = mesh.geometry.getAttribute('aPush') as THREE.InstancedBufferAttribute | undefined;
+      if (attr) attr.needsUpdate = true;
     }
   }
 
@@ -1345,6 +1496,9 @@ export class AlienFlora {
     u['uChaos']!.value = c;
     u['uTerrainEntropy']!.value = e;
     (u['uTerrainWind']!.value as THREE.Vector2).set(terrainWindX, terrainWindZ);
+
+    // Plant bases are fixed: soft plant↔plant packing is solved once at construction
+    // (aPush). Crowns still thrash via GPU density field + contact seeds — O(1) per frame.
 
     // Per-slot underdamped springs — hard snappy thrash when touched (not hollow soft sway).
     const h = dt > 0.05 ? 0.05 : dt > 0 ? dt : 0;
