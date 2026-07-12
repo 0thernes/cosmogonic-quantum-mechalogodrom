@@ -11,6 +11,32 @@ changed and why.
 
 ---
 
+## 2026-07-12 — batch 45: Eshkol v1.3 Taylor-tower self-foresight for the digital biologic
+
+Continuation of the /goal after the batch-44 NIST work, acting on the Eshkol v1.3-evolve drop
+(arbitrary-order Taylor towers + a validated error bar). Gave every digital biologic a **measurable
+self-foresight** faculty, a companion to its existing `selfModelErr`: on each `learn=true` beat it fits
+a cubic Eshkol Taylor tower (`EshkolTaylorJet`, 4-point backward differences) to its own last four
+`consciousness` beats and reads the tower's embedded truncation-error proxy — new
+`EshkolTaylorJet.tailMagnitude(h) = |c[order]|·h^order`, a validated error bar in the spirit of
+Eshkol v1.3's Taylor-model (exact on a genuine polynomial, zero for a line) — to estimate how far ahead
+it can trust its OWN trajectory. **GATE-SELF-FORESIGHT** (`tests/biologic-self-foresight.test.ts`, 4
+tests) proves it is real, not decorative: the tail proxy is exact; a predictable constant-drive
+self-trajectory yields foresight ≈1.0 while a hard-oscillating drive drops it to ≈0.90 (a decisive gap);
+deterministic; and `learn=false` computes nothing (byte-identical to the prior sim). **Purely
+observational** — never feeds adFitness/consciousness/selection, so every petri golden is byte-identical
+(verified). Deterministic (finite differences, no rng), shared module-scope jet so a 50k-biologic beat
+allocates nothing. No metric axis moved (this deepens an existing measured faculty, not a new axis).
+
+Also folded a **gate-robustness fix** surfaced while gating: several deterministic headless-sim
+integration tests (entity-dynamism, alien-flora life-cycle, super-body development) legitimately run
+10–30 s each under `bun test --coverage` on a contended machine (measured worst ~26 s) and sporadically
+tripped Bun's 5 s default per-test cap — reddening the gate on machine load, NOT on any correctness fault
+(each passes in isolation, and a fresh run failed a _different_ heavy set each time). Fixed at the source:
+the gate's coverage run in `scripts/verify-receipts.ts` now passes `--timeout=120000`, a generous ceiling
+that absorbs contention while still catching a genuine unbounded hang. It is a MAXIMUM, so fast tests are
+unaffected; no assertion weakened, no golden or receipt touched.
+
 ## 2026-07-12 — batch 44: Quantum RNG v3.0.0 → genuine NIST SP 800-90B §4.4 RCT/APT health tests
 
 Continuation of the /goal after batch 43, acting on the newest Quantum RNG v3.0.0 drop. New leaf

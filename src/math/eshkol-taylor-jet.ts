@@ -367,6 +367,26 @@ export class EshkolTaylorJet {
     return value;
   }
 
+  /**
+   * Magnitude of the highest-order (last) term of the truncated series at displacement h:
+   * `|c[order]| * |h|^order`.
+   *
+   * This is an EMBEDDED, convergence-based truncation-error PROXY — the same idea an embedded
+   * Runge–Kutta pair uses to judge its own step: when the last retained term is small relative to the
+   * evaluated value, the truncated Taylor tower has converged and an extrapolation to `h` is
+   * trustworthy; when it is large, the series is not converging there and the forecast should be
+   * distrusted. It is a validated *estimate* in the spirit of Eshkol v1.3's Taylor-model error bar,
+   * NOT a rigorous outward-rounded interval remainder. Exact when `c[order]` is exact (e.g. a genuine
+   * degree-`order` polynomial history). O(1) apart from the tiny integer power.
+   */
+  tailMagnitude(displacement: number): number {
+    assertBounded(displacement, 'Taylor tail displacement');
+    const magnitude =
+      Math.abs(this.coefficients[this.order]!) * Math.abs(displacement) ** this.order;
+    assertBounded(magnitude, 'Taylor tail magnitude');
+    return magnitude;
+  }
+
   private trig(a: EshkolTaylorJet, cosine: boolean): this {
     this.assertCompatible(a);
     this.work0.fill(0); // sin(a)

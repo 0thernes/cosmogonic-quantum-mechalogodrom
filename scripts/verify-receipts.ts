@@ -23,6 +23,9 @@ interface CoverageTranscript {
   exitCode: number | null;
 }
 
+/** Per-test timeout (ms) for the gate's `bun test --coverage` run — a contention ceiling, not a target. */
+const GATE_COVERAGE_TEST_TIMEOUT_MS = 120_000;
+
 function run(args: string[]): CoverageTranscript {
   const r = spawnSync('bun', args, {
     encoding: 'utf8',
@@ -68,7 +71,12 @@ async function coverageOutput(): Promise<CoverageTranscript> {
     process.stdout.write(text);
     return { text, exitCode: declaredExitCode() };
   }
-  const transcript = run(['test', '--coverage']);
+  // Per-test ceiling for the gate's coverage run. Several deterministic headless-sim integration tests
+  // legitimately run 10–30 s each under `--coverage` on a contended machine (measured worst ~26 s), which
+  // sporadically trips Bun's 5 s default and reds the gate on load, NOT on any correctness fault (they
+  // pass in isolation). A generous 120 s ceiling makes the gate robust to contention while still catching
+  // a genuine hang (which runs unbounded). It is a MAXIMUM, so fast tests are unaffected.
+  const transcript = run(['test', '--coverage', `--timeout=${GATE_COVERAGE_TEST_TIMEOUT_MS}`]);
   process.stdout.write(transcript.text);
   return transcript;
 }

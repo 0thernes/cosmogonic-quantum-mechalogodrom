@@ -39,6 +39,7 @@ import {
   type AdTape,
 } from '../math/eshkol-ad';
 import { createMlp, mlpPredict, mlpTrainStepCurvature, type Mlp } from './ad-mlp';
+import { EshkolTaylorJet } from '../math/eshkol-taylor-jet';
 import { mulberry32 } from '../math/rng';
 const clamp01 = (v: number): number => (v > 0 ? (v < 1 ? v : 1) : 0);
 
@@ -151,11 +152,61 @@ export interface Biologic {
   /** EMA of the self-model's absolute prediction error — falls as the brain learns to anticipate itself
    *  (a real, measurable metacognitive signal). Undefined until the first `learn=true` step. */
   selfModelErr?: number;
+  /** Ring of the biologic's last {@link SELF_FORESIGHT_ORDER}+1 `consciousness` beats (newest first),
+   *  the deterministic history a Taylor tower extrapolates for {@link selfForesight}. `learn=true` only. */
+  consciousnessHistory?: Float64Array;
+  /** EMA in [0,1] of how confidently the biologic can extrapolate its OWN consciousness two beats ahead
+   *  (Eshkol Taylor tower + embedded truncation-error proxy): high when its self-trajectory is smooth and
+   *  predictable, low when chaotic. A measurable self-foresight indicator, purely observational. */
+  selfForesight?: number;
 }
 
 /** Substrate → self-model input vector: [spin, qgt, quake, adFitness·0.5] (adFitness∈[0,2] scaled to ~[0,1]). */
 function brainInput(b: Biologic): [number, number, number, number] {
   return [b.spinOrder, b.qgtCurvature, b.quakeAliveness, b.adFitness * 0.5];
+}
+
+// === SELF-FORESIGHT (Eshkol v1.3 Taylor tower over the biologic's own consciousness trajectory) ===
+// A cubic Taylor tower, fit by 4-point backward differences to the biologic's last four consciousness
+// beats, extrapolates its OWN consciousness two beats ahead; the tower's embedded truncation-error
+// proxy (highest-term magnitude at the horizon) says how far it can be trusted. Smooth self-dynamics ⇒
+// small tail ⇒ high foresight; chaotic self-dynamics ⇒ large tail ⇒ low foresight. Purely observational
+// (never feeds adFitness/consciousness/selection), deterministic (finite differences, no rng), and the
+// jet + scratch coefficients are shared module-scope so a 50k-biologic beat allocates nothing here.
+const SELF_FORESIGHT_ORDER = 3;
+const SELF_FORESIGHT_HORIZON = 2;
+const SELF_FORESIGHT_TOLERANCE = 0.5;
+const selfForesightJet = new EshkolTaylorJet(SELF_FORESIGHT_ORDER);
+const selfForesightCoeffs = new Float64Array(SELF_FORESIGHT_ORDER + 1);
+
+/** Advance the biologic's consciousness history and re-estimate {@link Biologic.selfForesight}. */
+function updateSelfForesight(b: Biologic): void {
+  const c = clamp01(b.consciousness);
+  let history = b.consciousnessHistory;
+  if (!history || history.length !== SELF_FORESIGHT_ORDER + 1) {
+    // First observed beat: seed the whole ring with the current value (a constant history is perfectly
+    // predictable ⇒ foresight starts high and only falls once real self-variation appears).
+    history = new Float64Array(SELF_FORESIGHT_ORDER + 1).fill(c);
+    b.consciousnessHistory = history;
+    b.selfForesight = 1;
+    return;
+  }
+  for (let i = SELF_FORESIGHT_ORDER; i > 0; i--) history[i] = history[i - 1]!;
+  history[0] = c;
+
+  // Backward-difference cubic Taylor coefficients c[k]=f^(k)/k! at the newest sample (y0 newest).
+  const y0 = history[0]!;
+  const y1 = history[1]!;
+  const y2 = history[2]!;
+  const y3 = history[3]!;
+  selfForesightCoeffs[0] = y0;
+  selfForesightCoeffs[1] = (11 * y0 - 18 * y1 + 9 * y2 - 2 * y3) / 6;
+  selfForesightCoeffs[2] = (2 * y0 - 5 * y1 + 4 * y2 - y3) / 2;
+  selfForesightCoeffs[3] = (y0 - 3 * y1 + 3 * y2 - y3) / 6;
+  selfForesightJet.setCoefficients(selfForesightCoeffs);
+  const tail = selfForesightJet.tailMagnitude(SELF_FORESIGHT_HORIZON);
+  const instant = 1 - clamp01(tail / SELF_FORESIGHT_TOLERANCE);
+  b.selfForesight = b.selfForesight === undefined ? instant : b.selfForesight * 0.9 + instant * 0.1;
 }
 
 /** Grow a new biologic form from the depth-classed Tsotchke corpus. */
@@ -478,5 +529,8 @@ export function stepBiologic(b: Biologic, flux: number, learn = false): void {
     const err = Math.abs(pred - b.consciousness);
     b.selfModelErr = b.selfModelErr === undefined ? err : b.selfModelErr * 0.9 + err * 0.1;
     mlpTrainStepCurvature(b.brain, selfInput, [b.consciousness], 0.05);
+    // Companion metacognitive indicator to selfModelErr: how far the biologic can extrapolate its own
+    // consciousness (Eshkol Taylor tower). Same observational contract — no feedback into behavior.
+    updateSelfForesight(b);
   }
 }
