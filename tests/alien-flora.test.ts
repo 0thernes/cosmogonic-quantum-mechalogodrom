@@ -246,13 +246,16 @@ describe('AlienFlora — the vegetal ground ecology', () => {
     expect(mat.vertexShader).toContain('rootPin');
     // Upright multi-axis morph (Y-spin + lateral thrash) — never pitch/roll into dirt.
     expect(mat.vertexShader).toContain('tipMorph');
-    expect(mat.vertexShader).toContain('counter-rotate');
+    expect(mat.vertexShader).toContain('Dual counter-spins');
+    expect(mat.vertexShader).toContain('twist2');
     // Plant↔land: rigid crest ride (one Y for whole plant — per-vertex lift sheared stems thin).
     expect(mat.vertexShader).toContain('cqmTerrainDisplacement');
     expect(mat.vertexShader).toContain('liftMax');
     expect(mat.vertexShader).toContain('rigidRide');
     expect(mat.vertexShader).not.toContain('liftHere');
     expect(mat.fragmentShader).toContain('field4');
+    // Operational skins (food/stress/contact), not decorative paint.
+    expect(mat.fragmentShader).toContain('Mutating operational skins');
     f.dispose();
   });
 

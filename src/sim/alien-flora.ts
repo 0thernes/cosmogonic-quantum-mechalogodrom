@@ -217,23 +217,24 @@ const flora_vert = /* glsl */ `
     return strength * fall * personal * react * wobble * counter;
   }
 
-  // UPRIGHT multi-axis morph (f8c6eadb law): Y-spin + lateral thrash + heave.
-  // NEVER pitch/roll the mesh — that converts height → horizontal ("flat on dirt").
-  // Multi-axis = counter-yaw mid vs tip + orthogonal lean freqs + anisotropic expand.
+  // UPRIGHT multi-axis morph — HARD LAW (do not break again):
+  // • Y-spin + lateral thrash + heave only. NEVER pitch/roll (faceplant).
+  // • NEVER per-vertex land Y deltas (stretch/thin shear).
+  // Multi-axis = counter-yaw mid vs tip + orthogonal lean freqs + isotropic expand.
   // rootPin seats collar; tips thrash; stems stay standing.
-  vec3 tipMorph(vec3 p, float up, float rootPin, float yaw, float leanX, float leanZ) {
+  vec3 tipMorph(vec3 p, float up, float rootPin, float yaw, float leanX, float leanZ, float twist2) {
     float u2 = up * up * rootPin;          // tip weight
     float mid = rootPin * up * (1.0 - up); // mid band (counter motion)
-    // Spin around vertical only — preserves local Y exactly.
-    float ang = yaw * u2 - yaw * 0.65 * mid; // tip and mid counter-rotate
+    // Dual counter-spins around vertical only — preserves local Y exactly.
+    float ang = yaw * u2 - yaw * 0.72 * mid + twist2 * u2 * 0.45 - twist2 * mid * 0.55;
     float ca = cos(ang);
     float sa = sin(ang);
     vec3 q = vec3(ca * p.x + sa * p.z, p.y, -sa * p.x + ca * p.z);
-    // Lateral thrash (tip) + counter-lateral (mid) — vectorized, not planar lockstep.
-    q.x += leanX * u2 + leanZ * mid * 0.55;
-    q.z += leanZ * u2 - leanX * mid * 0.55;
-    // Mild radial breath only — never large warp (read as stretch/thin).
-    float warp = 1.0 + u2 * 0.06 * sin(atan(q.z, q.x) * 3.0 + yaw * 2.0 + q.y * 1.4);
+    // Lateral thrash (tip) + orthogonal counter-lateral (mid) — vectorized, not planar lockstep.
+    q.x += leanX * u2 + leanZ * mid * 0.62 + leanX * mid * 0.18;
+    q.z += leanZ * u2 - leanX * mid * 0.62 + leanZ * mid * 0.18;
+    // Mild isotropic radial breath — never large warp (stretch/thin).
+    float warp = 1.0 + u2 * 0.07 * sin(atan(q.z, q.x) * 2.5 + yaw * 1.8 + q.y * 1.2 + twist2);
     q.x *= warp;
     q.z *= warp;
     return q;
@@ -251,23 +252,26 @@ const flora_vert = /* glsl */ `
     vRoot = 1.0 - rootPin;
 
     vec2 bmBase = (instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xz;
-    // Strong multi-scale spatial desync — neighbors thrash off-phase (crossover ↓).
-    float spatial = bmBase.x * 0.17 + bmBase.y * 0.21
-                  + sin(bmBase.x * 0.09 - bmBase.y * 0.11) * 2.1
-                  + cos(bmBase.x * 0.047 + bmBase.y * 0.061) * 1.4
-                  + sin((bmBase.x - bmBase.y) * 0.033) * 1.15
-                  + cos(bmBase.x * 0.019 - bmBase.y * 0.027) * 0.9;
+    // Multi-scale spatial desync — neighbors never share swing period/phase (crossover ↓).
+    float spatial = bmBase.x * 0.19 + bmBase.y * 0.24
+                  + sin(bmBase.x * 0.11 - bmBase.y * 0.13) * 2.4
+                  + cos(bmBase.x * 0.053 + bmBase.y * 0.067) * 1.6
+                  + sin((bmBase.x - bmBase.y) * 0.037) * 1.3
+                  + cos(bmBase.x * 0.021 - bmBase.y * 0.029) * 1.05
+                  + sin(bmBase.x * 0.31 + bmBase.y * 0.27) * 0.55;
     float phase = aParams.x + spatial;
     float idHash = fract(sin(bmBase.x * 12.9 + bmBase.y * 78.2) * 43758.5);
-    // Per-plant freq skew so adjacent stems don't share the same swing period.
-    float freq = aParams.y * (0.75 + 0.55 * idHash);
+    float idHash2 = fract(sin(bmBase.y * 91.7 - bmBase.x * 43.1) * 24634.7);
+    // Per-plant freq skew + incommensurate ratio so thrash arcs desync hard.
+    float freq = aParams.y * (0.65 + 0.7 * idHash) * (0.9 + 0.2 * idHash2);
     float stiff = clamp(aMeta.y, 0.08, 1.4);
     float react = clamp(aMeta.w, 0.2, 2.2);
     float rarity = aMeta.x;
-    // Axis energy split: some plants spin-dominant, some lean-dominant (still upright).
+    // Axis energy split: spin-dominant vs lean-dominant (still upright, still capped).
     float axisBias = fract(sin(phase * 19.7 + idHash * 91.3) * 23421.1);
-    float yawBias = 0.7 + 0.9 * axisBias;
-    float leanBias = 0.75 + 0.7 * fract(axisBias * 5.3);
+    float yawBias = 0.75 + 0.95 * axisBias;
+    float leanBias = 0.7 + 0.75 * fract(axisBias * 5.3);
+    float twistBias = 0.6 + 0.9 * fract(axisBias * 11.3);
 
     // R=biomass food, G=density, B=overgraze pressure (operational; not paint).
     vec4 field = texture2D(uBiomass, (bmBase + 0.5 * uGridExtent) / uGridExtent);
@@ -277,12 +281,13 @@ const flora_vert = /* glsl */ `
     vBiomass = biomass;
     float health = clamp(biomass, 0.0, 1.0);
     float hunger = 1.0 - health;
+    float debt = clamp(overgraze, 0.0, 1.0); // overgraze debt → degrade morph + skin
 
     float soft = 1.0 / stiff;
     // Environment-driven thrash (wind + chaos) — tip-weighted LATERAL only (upright, alive).
-    float env = uWind + uChaos * 1.05 + 0.15;
-    float bend = rootPin * rootPin * env * soft * (1.05 + rarity * 0.7);
-    float turb = rootPin * rootPin * uChaos * 0.9 * soft;
+    float env = uWind + uChaos * 1.1 + 0.18 + react * 0.08;
+    float bend = rootPin * rootPin * env * soft * (1.1 + rarity * 0.75) * (0.85 + 0.15 * health);
+    float turb = rootPin * rootPin * (uChaos * 0.95 + debt * 0.2) * soft;
     vec3 p = position;
 
     // ── Living-ground crest — ONE rigid Y for whole plant (no per-vertex shear). ──
@@ -310,45 +315,56 @@ const flora_vert = /* glsl */ `
     // Rigid ride: same on every vertex — crest max + mild slope safety (no shear).
     float rigidRide = liftMax + min(gLen, 0.4) * (1.6 + uChaos * 0.8) + crestHeave * 0.35;
 
-    // Y-spin — livelier, still height-preserving (no pitch/roll faceplant).
-    float yaw = (uTime * (0.95 + freq * 1.05 + rarity * 0.65 + uChaos * 0.45) * soft
-              + (1.15 + rarity) * sin(uTime * freq * 0.42 + phase)
-              + sin(uTime * freq * 1.9 + phase * 2.4) * 0.55 * turb)
+    // Y-spin + secondary counter-twist (height-preserving; no pitch/roll faceplant).
+    float yaw = (uTime * (1.0 + freq * 1.1 + rarity * 0.7 + uChaos * 0.5) * soft
+              + (1.2 + rarity) * sin(uTime * freq * 0.42 + phase)
+              + sin(uTime * freq * 1.9 + phase * 2.4) * 0.6 * turb
+              + cos(uTime * freq * 0.27 - phase * 1.1) * 0.35 * react * soft)
               * yawBias;
-    // Lateral thrash: more alive, hard-capped so tips never read as horizontal wires.
-    float leanAmp = 1.9;
+    float twist2 = (uTime * (0.55 + freq * 0.4) * soft * twistBias
+                 + sin(uTime * freq * 2.7 + phase * 3.1 + idHash2 * 6.28) * (0.8 + turb)
+                 + cos(uTime * freq * 0.9 - phase) * debt * 0.6)
+                 * (0.7 + rarity * 0.5);
+    // Lateral thrash: multi-harmonic + orthogonal, hard-capped (never horizontal wires).
+    float leanAmp = 1.85;
     float leanX = clamp(
-      (sin(uTime * freq + phase) * bend * 2.25
-      + sin(uTime * freq * 3.5 + phase * 2.1) * turb * 1.05
-      + sin(uTime * freq * 5.5 + phase * 0.7) * turb * 0.35 * rarity
-      + sin(uTime * 0.75 + phase) * uWind * rootPin * rootPin * 0.55)
+      (sin(uTime * freq + phase) * bend * 2.3
+      + sin(uTime * freq * 3.6 + phase * 2.1) * turb * 1.1
+      + sin(uTime * freq * 5.6 + phase * 0.7 + idHash2 * 4.0) * turb * 0.4 * rarity
+      + sin(uTime * 0.78 + phase) * uWind * rootPin * rootPin * 0.6
+      + cos(uTime * freq * 1.15 - phase * 1.8) * bend * 0.45 * twistBias)
       * leanBias,
       -leanAmp, leanAmp);
     float leanZ = clamp(
-      (cos(uTime * freq * 0.82 + phase * 1.37) * bend * 2.0
-      + cos(uTime * freq * 2.9 + phase * 1.7) * turb * 0.95
-      + cos(uTime * freq * 5.0 + phase * 1.1) * turb * 0.3 * rarity
-      + cos(uTime * 0.7 + phase * 1.2) * uWind * rootPin * rootPin * 0.5)
+      (cos(uTime * freq * 0.79 + phase * 1.41) * bend * 2.05
+      + cos(uTime * freq * 3.0 + phase * 1.7) * turb * 1.0
+      + cos(uTime * freq * 5.1 + phase * 1.1 - idHash * 3.0) * turb * 0.35 * rarity
+      + cos(uTime * 0.72 + phase * 1.25) * uWind * rootPin * rootPin * 0.55
+      + sin(uTime * freq * 1.25 + phase * 2.2) * bend * 0.45 * twistBias)
       * leanBias,
       -leanAmp, leanAmp);
-    p = tipMorph(p, up, rootPin, yaw, leanX, leanZ);
+    p = tipMorph(p, up, rootPin, yaw, leanX, leanZ, twist2);
 
-    // Stronger vertical life (heave) + mild isotropic breath — tall presence, not fat/thin.
-    float heave = sin(uTime * freq * 0.55 + phase) * rootPin * 0.22 * (uWind + uChaos + 0.55)
-                + sin(uTime * freq * 4.2 + phase) * rootPin * 0.08 * uChaos
-                + cos(uTime * freq * 1.3 + phase * 1.5) * rootPin * 0.06 * (0.5 + health)
-                + 0.04 * rootPin * health;
-    float pulse = 0.5 + 0.5 * sin(uTime * (1.35 + freq * 0.38) + phase + rarity);
-    float expand = rootPin * (0.05 + 0.1 * health) * pulse
-                 - rootPin * hunger * 0.05
-                 - rootPin * overgraze * 0.03;
+    // Vertical life (heave) + expand/contract/degrade — operational food+debt readout.
+    float heave = sin(uTime * freq * 0.55 + phase) * rootPin * 0.24 * (uWind + uChaos + 0.55)
+                + sin(uTime * freq * 4.3 + phase * 1.2) * rootPin * 0.09 * uChaos
+                + cos(uTime * freq * 1.35 + phase * 1.5) * rootPin * 0.07 * (0.45 + health)
+                + 0.045 * rootPin * health
+                - debt * rootPin * 0.04 * up; // overgraze sags slightly (degrade), never faceplant
+    float pulse = 0.5 + 0.5 * sin(uTime * (1.4 + freq * 0.4) + phase + rarity + debt * 2.0);
+    float pulse2 = 0.5 + 0.5 * cos(uTime * (0.85 + freq * 0.55) - phase * 1.4);
+    // Expand healthy / contract hunger+overgraze (falsifiable ecology state on silhouette).
+    float expand = rootPin * (0.055 + 0.12 * health) * pulse
+                 - rootPin * hunger * 0.07
+                 - rootPin * debt * 0.055
+                 + rootPin * rarity * 0.03 * pulse2;
     p.y += heave * up;
-    float morph = rootPin * (0.035 + 0.09 * rarity) * (0.55 + 0.45 * sin(uTime * (1.15 + freq * 0.4) + phase));
-    // Radial breath mild; slight vertical stretch of breath (taller presence, not width).
-    float radScale = 1.0 + expand * 0.7 + morph * 0.85;
+    float morph = rootPin * (0.04 + 0.1 * rarity) * (0.5 + 0.5 * sin(uTime * (1.2 + freq * 0.42) + phase));
+    // Isotropic radial breath only — never XZ-only thin-out.
+    float radScale = 1.0 + expand * 0.72 + morph * 0.8;
     p.x *= radScale;
     p.z *= radScale;
-    p.y *= 1.0 + morph * 0.4 * rootPin * health + expand * 0.2 * up;
+    p.y *= 1.0 + morph * 0.42 * rootPin * health + expand * 0.22 * up - debt * 0.04 * rootPin * up;
 
     float grow = 0.12 + 0.88 * biomass;
     if (uScorchRadius > 0.0) {
@@ -359,9 +375,9 @@ const flora_vert = /* glsl */ `
     p.x *= gRoot;
     p.z *= gRoot;
     p.y = position.y < 0.0 ? p.y * (0.9 + 0.1 * grow) : p.y * mix(1.0, grow, rootPin);
-    vGlow *= 0.3 + 0.7 * biomass;
+    vGlow *= 0.28 + 0.72 * biomass * (1.0 - debt * 0.25);
 
-    // Modest density peel (crossover ↓ without wire-stretch).
+    // Density peel — stronger desync toward open space (crossover ↓, thrash NOT capped).
     float eps = 6.0;
     float dE = texture2D(uBiomass, (bmBase + vec2(eps, 0.0) + 0.5 * uGridExtent) / uGridExtent).g;
     float dW = texture2D(uBiomass, (bmBase + vec2(-eps, 0.0) + 0.5 * uGridExtent) / uGridExtent).g;
@@ -370,24 +386,30 @@ const flora_vert = /* glsl */ `
     vec2 avoid = vec2(dW - dE, dS - dN);
     float al = length(avoid);
     if (al > 1e-5) avoid /= al;
-    float sep = density * rootPin * up * up * (0.55 + 0.25 * rarity);
+    float sep = density * rootPin * up * up * (0.75 + 0.35 * rarity + 0.2 * uChaos);
     p.x += avoid.x * sep;
     p.z += avoid.y * sep;
-    p.x += -avoid.y * sep * 0.3 * sin(phase * 2.3 + idHash * 6.28);
-    p.z += avoid.x * sep * 0.3 * cos(phase * 1.9 + idHash * 4.1);
+    // Orthogonal peel + personal orbit so neighbors don't share swing arcs.
+    float peel = sep * (0.4 + 0.25 * idHash);
+    p.x += -avoid.y * peel * sin(phase * 2.5 + idHash * 6.28);
+    p.z += avoid.x * peel * cos(phase * 2.0 + idHash2 * 4.1);
+    float orbit = rootPin * up * up * (0.08 + 0.12 * rarity) * (0.4 + 0.6 * density);
+    p.x += cos(uTime * (1.0 + freq * 0.45) + phase + idHash2 * 6.28) * orbit;
+    p.z += sin(uTime * (1.15 + freq * 0.4) - phase * 1.5) * orbit;
 
     vec4 worldPosition = instanceMatrix * vec4(p, 1.0);
     // RIGID land attach — identical Y on every vertex (fixes stretch/thin shear).
     worldPosition.y += rigidRide + ${SURFACE_RIDE.toFixed(3)};
 
-    // MULTI-POINT CONTACT — tip thrash lateral + up flee + Y-spin; root stays planted.
-    float c0 = localContact(bmBase, uContactX.x, uContactZ.x, uContactS.x, phase, stiff, react);
-    float c1 = localContact(bmBase, uContactX.y, uContactZ.y, uContactS.y, phase + 2.1, stiff, react);
-    float c2 = localContact(bmBase, uContactX.z, uContactZ.z, uContactS.z, phase + 3.7, stiff, react);
-    float c3 = localContact(bmBase, uContactX.w, uContactZ.w, uContactS.w, phase + 5.5, stiff, react);
+    // MULTI-POINT CONTACT PHYSICS — tip thrash lateral + up flee + Y-invert spin; root planted.
+    // Per-slot phase offsets so multi-body contact doesn't lockstep thrash (crossover ↓).
+    float c0 = localContact(bmBase, uContactX.x, uContactZ.x, uContactS.x, phase + idHash * 2.0, stiff, react);
+    float c1 = localContact(bmBase, uContactX.y, uContactZ.y, uContactS.y, phase + 2.3 + idHash2 * 3.1, stiff, react);
+    float c2 = localContact(bmBase, uContactX.z, uContactZ.z, uContactS.z, phase + 4.1 + idHash * 1.7, stiff, react);
+    float c3 = localContact(bmBase, uContactX.w, uContactZ.w, uContactS.w, phase + 5.9 + idHash2 * 2.4, stiff, react);
     float cSum = c0 + c1 + c2 + c3;
     vContactLive = clamp(cSum, 0.0, 2.5);
-    vStress = clamp(uChaos * 0.4 + cSum * 0.55 + hunger * 0.3 + overgraze * 0.45, 0.0, 1.5);
+    vStress = clamp(uChaos * 0.4 + cSum * 0.55 + hunger * 0.3 + debt * 0.5, 0.0, 1.5);
 
     vec2 push = vec2(0.0);
     float wsum = 0.001;
@@ -412,35 +434,37 @@ const flora_vert = /* glsl */ `
       push += a * inv * c3; wsum += c3;
     }
     push /= wsum;
-    // Personal phase bias so thrash arcs diverge (crossover ↓).
+    // Flee open density + personal phase so thrash arcs diverge (crossover ↓).
     push = normalize(
-      push + avoid * density * 0.6
-      + vec2(sin(phase * 1.7 + idHash * 6.28), cos(phase * 1.3 - idHash * 4.0)) * 0.22
+      push + avoid * density * 0.7
+      + vec2(sin(phase * 1.9 + idHash * 6.28), cos(phase * 1.5 - idHash2 * 4.2)) * 0.28
       + vec2(0.0001)
     );
 
     float tip = rootPin * rootPin * rootPin;
     float mid = rootPin * rootPin * (1.0 - up) * 4.0;
-    float amp = (3.2 + uChaos * 3.3 + rarity * 1.9 + react * 0.95) * soft;
-    worldPosition.xz += push * (cSum * tip * amp + biomass * cSum * mid * 0.4);
+    float amp = (3.35 + uChaos * 3.4 + rarity * 2.0 + react * 1.05) * soft;
+    worldPosition.xz += push * (cSum * tip * amp + biomass * cSum * mid * 0.42);
     vec2 ortho = vec2(-push.y, push.x);
-    // Multi-harmonic lateral whip; mid and tip counter-phase.
-    worldPosition.xz += ortho * sin(uTime * (5.4 + stiff * 3.2) + phase) * cSum * mid * amp * 0.6;
-    worldPosition.xz += push * cos(uTime * (3.5 + stiff * 2.1) - phase * 1.7) * cSum * tip * amp * 0.35;
+    // Multi-harmonic whip; mid and tip counter-phase (vectorized thrash).
+    worldPosition.xz += ortho * sin(uTime * (5.6 + stiff * 3.4) + phase) * cSum * mid * amp * 0.65;
+    worldPosition.xz += push * cos(uTime * (3.6 + stiff * 2.2) - phase * 1.8) * cSum * tip * amp * 0.38;
+    worldPosition.xz += ortho * cos(uTime * (7.1 + react) + phase * 2.2) * cSum * tip * amp * 0.22;
     // Contact turbo-spin around Y only (invert = reverse spin + UP spike, NOT faceplant).
-    float cTwist = cSum * tip * (2.1 + react) * (0.5 + 0.5 * sin(uTime * 4.2 + phase));
-    float invert = smoothstep(0.4, 1.2, cSum + uChaos * 0.45) * tip * (0.45 + rarity * 0.28);
-    cTwist *= (1.0 - 2.0 * invert);
+    float cTwist = cSum * tip * (2.25 + react) * (0.5 + 0.5 * sin(uTime * 4.4 + phase + idHash * 3.0));
+    float invert = smoothstep(0.35, 1.15, cSum + uChaos * 0.5) * tip * (0.5 + rarity * 0.3);
+    cTwist *= (1.0 - 2.0 * invert); // reverse spin under heavy contact
     float cca = cos(cTwist);
     float csa = sin(cTwist);
     vec2 rel = worldPosition.xz - bmBase;
     worldPosition.xz = bmBase + vec2(cca * rel.x - csa * rel.y, csa * rel.x + cca * rel.y);
-    worldPosition.xz += ortho * invert * sin(uTime * 6.2 + phase) * 0.95;
+    worldPosition.xz += ortho * invert * sin(uTime * 6.5 + phase) * 1.05;
     // Contact flee UP + lateral — never into dirt.
-    worldPosition.y += cSum * tip * (1.45 + uChaos * 1.55 + rarity * 1.05);
-    worldPosition.y += sin(cSum * 8.0 + uTime * 2.6 + phase) * cSum * tip * 0.95;
-    worldPosition.y += invert * tip * 0.55;
-    worldPosition.xz += push * invert * 1.25;
+    worldPosition.y += cSum * tip * (1.55 + uChaos * 1.6 + rarity * 1.1 + react * 0.25);
+    worldPosition.y += sin(cSum * 8.2 + uTime * 2.7 + phase) * cSum * tip * 1.0;
+    worldPosition.y += invert * tip * 0.65;
+    worldPosition.y += cos(uTime * 3.8 + phase * 1.5) * cSum * tip * 0.35; // multi-axis up/down thrash
+    worldPosition.xz += push * invert * 1.3;
 
     vWorldP = worldPosition.xyz;
     vec4 mvPosition = modelViewMatrix * worldPosition;
@@ -504,53 +528,65 @@ const flora_frag = /* glsl */ `
     float f3 = field4(vWorldP.zxy * 0.9 - 1.4, uTime * 0.45 - vContactLive);
     float tex = 0.55 + 0.25 * f + 0.12 * f2 + 0.08 * f3;
 
-    // Mutating skin: hue/sat/light track health, stress, contact, rarity (food + threat readout).
+    // Mutating operational skins: food / stress / contact / rarity (not paint stripes).
     float health = clamp(vBiomass, 0.0, 1.0);
     float hunger = 1.0 - health;
     float contactFlash = clamp(vContactLive, 0.0, 1.5);
-    float skinPulse = 0.5 + 0.5 * sin(uTime * (1.4 + vRarity * 0.8) + vUp * 4.0 + f * 3.0);
+    float skinPulse = 0.5 + 0.5 * sin(uTime * (1.55 + vRarity * 0.9 + vStress * 0.5) + vUp * 4.2 + f * 3.2);
+    float skinPulse2 = 0.5 + 0.5 * cos(uTime * (0.9 + vStress * 0.7) - vUp * 2.5 + f2 * 2.0);
+    // Hue drifts with health (food), stress (threat), contact (impact), rarity (special).
     float viewHue = fract(
-      vSecHue + fres * 0.32 + vUp * 0.12 + f * 0.1 + f3 * 0.06
-      + uTime * (0.05 + vRarity * 0.035 + vStress * 0.03)
-      + hunger * 0.12 + vStress * 0.18 + contactFlash * 0.14
-      + skinPulse * 0.04 * vRarity
+      vSecHue + fres * 0.34 + vUp * 0.14 + f * 0.12 + f3 * 0.07
+      + uTime * (0.06 + vRarity * 0.04 + vStress * 0.035 + contactFlash * 0.02)
+      + hunger * 0.14 + vStress * 0.2 + contactFlash * 0.16
+      + skinPulse * 0.05 * vRarity + skinPulse2 * 0.03 * vStress
     );
-    float sat = clamp(0.68 + vRarity * 0.28 - hunger * 0.22 + contactFlash * 0.12 + f2 * 0.08, 0.15, 1.0);
-    float lit = clamp(0.48 + fres * 0.18 - hunger * 0.12 + health * 0.08 - vStress * 0.06 + f * 0.05, 0.12, 0.78);
+    float sat = clamp(
+      0.7 + vRarity * 0.3 - hunger * 0.28 + contactFlash * 0.14 + f2 * 0.09 - vStress * 0.08,
+      0.12, 1.0);
+    float lit = clamp(
+      0.5 + fres * 0.2 - hunger * 0.14 + health * 0.1 - vStress * 0.08 + f * 0.06 + contactFlash * 0.05,
+      0.1, 0.82);
     vec3 iri = hsl2rgb(viewHue, sat, lit);
-    vec3 iri2 = hsl2rgb(fract(viewHue + 0.18 + f * 0.07 + vStress * 0.05), sat * 1.05, lit + 0.06);
-    vec3 iri3 = hsl2rgb(fract(viewHue + 0.42 - f2 * 0.04), 0.75 + vRarity * 0.2, 0.42 + fres * 0.2);
-    // Counter-weird spectrum: triple-skin morph (not candy stripes).
-    vec3 spectrum = mix(mix(iri, iri2, 0.45 + f * 0.2), iri3, 0.2 + contactFlash * 0.15 + vRarity * 0.15);
+    vec3 iri2 = hsl2rgb(fract(viewHue + 0.2 + f * 0.08 + vStress * 0.06), sat * 1.08, lit + 0.07);
+    vec3 iri3 = hsl2rgb(fract(viewHue + 0.45 - f2 * 0.05 + contactFlash * 0.04), 0.78 + vRarity * 0.22, 0.44 + fres * 0.22);
+    // Counter-weird spectrum morph (triple skin, operational blend).
+    float sm = clamp(0.32 + fres * 0.25 + vRarity * 0.2 + vStress * 0.15 + contactFlash * 0.12 + skinPulse * 0.08, 0.0, 0.95);
+    vec3 spectrum = mix(mix(iri, iri2, 0.48 + f * 0.22 + skinPulse2 * 0.1), iri3, 0.22 + contactFlash * 0.18 + vRarity * 0.16);
 
-    float key = 0.36 + 0.74 * clamp(dot(n, normalize(vec3(0.35, 0.8, 0.45))), 0.0, 1.0);
-    float skinMix = 0.3 + vRarity * 0.42 + fres * 0.22 + vStress * 0.18 + contactFlash * 0.1;
-    vec3 body = mix(vColor * tex, spectrum, clamp(skinMix, 0.0, 0.95)) * key;
-    // Degrade / bruise when biomass low or overgrazed (operational food state).
-    vec3 bruise = hsl2rgb(fract(vSecHue + 0.55 + f * 0.03), 0.35, 0.22);
-    body = mix(body, bruise, hunger * 0.5 * (1.0 - vRoot));
-    body = mix(body, hsl2rgb(fract(vSecHue + 0.08), 0.25, 0.18), vStress * hunger * 0.25 * (1.0 - vRoot));
+    float key = 0.34 + 0.76 * clamp(dot(n, normalize(vec3(0.35, 0.8, 0.45))), 0.0, 1.0);
+    float skinMix = 0.32 + vRarity * 0.44 + fres * 0.24 + vStress * 0.2 + contactFlash * 0.12 + health * 0.06;
+    vec3 body = mix(vColor * tex, spectrum, clamp(skinMix, 0.0, 0.96)) * key;
+    // Degrade / bruise when biomass low or stressed (operational food state).
+    vec3 bruise = hsl2rgb(fract(vSecHue + 0.58 + f * 0.04 + vStress * 0.08), 0.32, 0.2);
+    body = mix(body, bruise, hunger * 0.55 * (1.0 - vRoot));
+    body = mix(body, hsl2rgb(fract(vSecHue + 0.1), 0.22, 0.16), vStress * (0.2 + hunger * 0.25) * (1.0 - vRoot));
+    // Healthy tips gain chroma (food-rich signal); mid degrades under stress.
+    body = mix(body, spectrum * 1.08, health * vUp * 0.12 * (1.0 - vStress * 0.5));
 
-    vec3 rootCol = mix(vColor * 0.32, hsl2rgb(fract(vSecHue + 0.1), 0.42, 0.2), 0.55);
-    body = mix(body, rootCol, vRoot * 0.88);
+    vec3 rootCol = mix(vColor * 0.3, hsl2rgb(fract(vSecHue + 0.12), 0.4, 0.18), 0.55);
+    body = mix(body, rootCol, vRoot * 0.9);
 
-    float pulse = 0.5 + 0.5 * sin(uTime * 2.0 + vUp * 5.8 + f * 2.2 + vRarity * 1.6 + vStress);
-    float glow = vGlow * (0.18 + 0.9 * vUp) * pulse
-               * (0.5 + 0.95 * uChaos + contactFlash * 0.55 + health * 0.25)
-               * (1.0 - vRoot * 0.72);
-    vec3 glowCol = mix(vColor * vec3(1.25, 1.5, 2.05), spectrum * 1.4, 0.5 + vRarity * 0.4);
+    float pulse = 0.5 + 0.5 * sin(uTime * 2.15 + vUp * 6.0 + f * 2.3 + vRarity * 1.7 + vStress);
+    float glow = vGlow * (0.2 + 0.95 * vUp) * pulse
+               * (0.5 + 0.95 * uChaos + contactFlash * 0.6 + health * 0.28)
+               * (1.0 - vRoot * 0.74) * (1.0 - hunger * 0.2);
+    vec3 glowCol = mix(vColor * vec3(1.28, 1.52, 2.1), spectrum * 1.45, 0.52 + vRarity * 0.42);
 
-    vec3 rim = spectrum * fres * (0.75 + vRarity * 1.1 + contactFlash * 0.65) * (1.0 - vRoot * 0.5);
-    float spore = pow(max(0.0, 0.5 + 0.5 * f2), 2.8) * (0.18 + vRarity * 0.75) * pulse * vUp;
-    vec3 sporeCol = hsl2rgb(fract(viewHue + 0.18 + f3 * 0.05), 0.92, 0.64) * spore;
+    vec3 rim = spectrum * fres * (0.8 + vRarity * 1.15 + contactFlash * 0.7) * (1.0 - vRoot * 0.5);
+    float spore = pow(max(0.0, 0.5 + 0.5 * f2), 2.7) * (0.2 + vRarity * 0.78) * pulse * vUp * health;
+    vec3 sporeCol = hsl2rgb(fract(viewHue + 0.2 + f3 * 0.06), 0.93, 0.66) * spore;
     // Contact chromatic flash (threat signal — multi-hue, not flat white).
-    vec3 threat = hsl2rgb(fract(viewHue + 0.33 + uTime * 0.1), 0.95, 0.58) * contactFlash * 0.35 * vUp;
+    vec3 threat = hsl2rgb(fract(viewHue + 0.35 + uTime * 0.12 + vStress * 0.05), 0.96, 0.6)
+                * contactFlash * 0.4 * vUp;
 
     vec3 col = body + glowCol * glow + rim + sporeCol + threat;
-    col += spectrum * contactFlash * 0.2 * vUp * (0.6 + 0.4 * skinPulse);
-    // Shade dynamism: stress desaturates mid-body slightly (degrade), rarity boosts tip chroma.
-    col = mix(col, col * vec3(0.85, 0.9, 0.95), vStress * 0.2 * (1.0 - vUp));
-    col += spectrum * vRarity * vUp * 0.08 * skinPulse;
+    col += spectrum * contactFlash * 0.24 * vUp * (0.55 + 0.45 * skinPulse);
+    // Shade dynamism: stress desaturates mid (degrade), rarity + health boost tip chroma.
+    col = mix(col, col * vec3(0.82, 0.88, 0.94), vStress * 0.24 * (1.0 - vUp));
+    col += spectrum * vRarity * vUp * 0.1 * skinPulse * (0.6 + 0.4 * health);
+    // Secondary skin morph band (counter-weird shade shift with stress/contact).
+    col = mix(col, col * vec3(1.05, 0.95, 1.12), skinPulse2 * 0.08 * (vStress + contactFlash * 0.5));
     gl_FragColor = vec4(col, 1.0);
   }
 `;
@@ -837,8 +873,14 @@ export class AlienFlora {
 
         const o4 = i * 4;
         // Spatial salt in phase so neighbors don't lockstep-crossover.
-        params[o4] = hash(pl.sp * 13 + i * 7) * TAU + pl.x * 0.035 + pl.z * 0.031;
-        params[o4 + 1] = s.swayFreq * (0.6 + hash(i * 73 + pl.sp) * 1.7);
+        // Spatial salt so neighbors never lockstep thrash (crossover ↓ at source).
+        params[o4] =
+          hash(pl.sp * 13 + i * 7) * TAU +
+          pl.x * 0.041 +
+          pl.z * 0.037 +
+          Math.sin(pl.x * 0.09 - pl.z * 0.07) * 1.7 +
+          Math.cos(pl.x * 0.05 + pl.z * 0.06) * 1.1;
+        params[o4 + 1] = s.swayFreq * (0.55 + hash(i * 73 + pl.sp) * 1.9);
         params[o4 + 2] = Math.min(1, s.glow + hash(i * 79 + pl.sp) * 0.38 + pl.rarity * 0.25);
         params[o4 + 3] = fmly.height;
 
