@@ -279,10 +279,10 @@ const flora_vert = /* glsl */ `
     float hunger = 1.0 - health;
 
     float soft = 1.0 / stiff;
-    // Environment-driven thrash (wind + chaos) — tip-weighted LATERAL only (upright).
-    float env = uWind + uChaos * 0.95;
-    float bend = rootPin * rootPin * env * soft * (0.95 + rarity * 0.6);
-    float turb = rootPin * rootPin * uChaos * 0.75 * soft;
+    // Environment-driven thrash (wind + chaos) — tip-weighted LATERAL only (upright, alive).
+    float env = uWind + uChaos * 1.05 + 0.15;
+    float bend = rootPin * rootPin * env * soft * (1.05 + rarity * 0.7);
+    float turb = rootPin * rootPin * uChaos * 0.9 * soft;
     vec3 p = position;
 
     // ── Living-ground crest — ONE rigid Y for whole plant (no per-vertex shear). ──
@@ -310,41 +310,45 @@ const flora_vert = /* glsl */ `
     // Rigid ride: same on every vertex — crest max + mild slope safety (no shear).
     float rigidRide = liftMax + min(gLen, 0.4) * (1.6 + uChaos * 0.8) + crestHeave * 0.35;
 
-    // Y-spin only (height-preserving).
-    float yaw = (uTime * (0.7 + freq * 0.85 + rarity * 0.55 + uChaos * 0.3) * soft
-              + (1.0 + rarity) * sin(uTime * freq * 0.38 + phase)
-              + sin(uTime * freq * 1.7 + phase * 2.4) * 0.45 * turb)
+    // Y-spin — livelier, still height-preserving (no pitch/roll faceplant).
+    float yaw = (uTime * (0.95 + freq * 1.05 + rarity * 0.65 + uChaos * 0.45) * soft
+              + (1.15 + rarity) * sin(uTime * freq * 0.42 + phase)
+              + sin(uTime * freq * 1.9 + phase * 2.4) * 0.55 * turb)
               * yawBias;
-    // Lateral thrash capped — no grade lean (that laid stems flat / into ribbons).
-    float leanAmp = 1.55;
+    // Lateral thrash: more alive, hard-capped so tips never read as horizontal wires.
+    float leanAmp = 1.9;
     float leanX = clamp(
-      (sin(uTime * freq + phase) * bend * 2.0
-      + sin(uTime * freq * 3.5 + phase * 2.1) * turb * 0.9
-      + sin(uTime * 0.7 + phase) * uWind * rootPin * rootPin * 0.4)
+      (sin(uTime * freq + phase) * bend * 2.25
+      + sin(uTime * freq * 3.5 + phase * 2.1) * turb * 1.05
+      + sin(uTime * freq * 5.5 + phase * 0.7) * turb * 0.35 * rarity
+      + sin(uTime * 0.75 + phase) * uWind * rootPin * rootPin * 0.55)
       * leanBias,
       -leanAmp, leanAmp);
     float leanZ = clamp(
-      (cos(uTime * freq * 0.82 + phase * 1.37) * bend * 1.8
-      + cos(uTime * freq * 2.9 + phase * 1.7) * turb * 0.85
-      + cos(uTime * 0.65 + phase * 1.2) * uWind * rootPin * rootPin * 0.35)
+      (cos(uTime * freq * 0.82 + phase * 1.37) * bend * 2.0
+      + cos(uTime * freq * 2.9 + phase * 1.7) * turb * 0.95
+      + cos(uTime * freq * 5.0 + phase * 1.1) * turb * 0.3 * rarity
+      + cos(uTime * 0.7 + phase * 1.2) * uWind * rootPin * rootPin * 0.5)
       * leanBias,
       -leanAmp, leanAmp);
     p = tipMorph(p, up, rootPin, yaw, leanX, leanZ);
 
-    // Heave + isotropic radial breath (never XZ-only thin-out).
-    float heave = sin(uTime * freq * 0.55 + phase) * rootPin * 0.14 * (uWind + uChaos + 0.5)
-                + sin(uTime * freq * 4.2 + phase) * rootPin * 0.05 * uChaos
-                + 0.03 * rootPin * health;
-    float pulse = 0.5 + 0.5 * sin(uTime * (1.15 + freq * 0.32) + phase + rarity);
-    float expand = rootPin * (0.04 + 0.08 * health) * pulse
+    // Stronger vertical life (heave) + mild isotropic breath — tall presence, not fat/thin.
+    float heave = sin(uTime * freq * 0.55 + phase) * rootPin * 0.22 * (uWind + uChaos + 0.55)
+                + sin(uTime * freq * 4.2 + phase) * rootPin * 0.08 * uChaos
+                + cos(uTime * freq * 1.3 + phase * 1.5) * rootPin * 0.06 * (0.5 + health)
+                + 0.04 * rootPin * health;
+    float pulse = 0.5 + 0.5 * sin(uTime * (1.35 + freq * 0.38) + phase + rarity);
+    float expand = rootPin * (0.05 + 0.1 * health) * pulse
                  - rootPin * hunger * 0.05
                  - rootPin * overgraze * 0.03;
     p.y += heave * up;
-    float morph = rootPin * (0.03 + 0.08 * rarity) * (0.55 + 0.45 * sin(uTime * (1.05 + freq * 0.35) + phase));
-    float radScale = 1.0 + expand * 0.85 + morph;
+    float morph = rootPin * (0.035 + 0.09 * rarity) * (0.55 + 0.45 * sin(uTime * (1.15 + freq * 0.4) + phase));
+    // Radial breath mild; slight vertical stretch of breath (taller presence, not width).
+    float radScale = 1.0 + expand * 0.7 + morph * 0.85;
     p.x *= radScale;
     p.z *= radScale;
-    p.y *= 1.0 + morph * 0.25 * rootPin * health;
+    p.y *= 1.0 + morph * 0.4 * rootPin * health + expand * 0.2 * up;
 
     float grow = 0.12 + 0.88 * biomass;
     if (uScorchRadius > 0.0) {
@@ -417,27 +421,26 @@ const flora_vert = /* glsl */ `
 
     float tip = rootPin * rootPin * rootPin;
     float mid = rootPin * rootPin * (1.0 - up) * 4.0;
-    float amp = (2.9 + uChaos * 3.0 + rarity * 1.7 + react * 0.8) * soft;
-    worldPosition.xz += push * (cSum * tip * amp + biomass * cSum * mid * 0.35);
+    float amp = (3.2 + uChaos * 3.3 + rarity * 1.9 + react * 0.95) * soft;
+    worldPosition.xz += push * (cSum * tip * amp + biomass * cSum * mid * 0.4);
     vec2 ortho = vec2(-push.y, push.x);
     // Multi-harmonic lateral whip; mid and tip counter-phase.
-    worldPosition.xz += ortho * sin(uTime * (5.0 + stiff * 3.0) + phase) * cSum * mid * amp * 0.55;
-    worldPosition.xz += push * cos(uTime * (3.3 + stiff * 2.0) - phase * 1.7) * cSum * tip * amp * 0.3;
-    // Contact turbo-spin around Y only (invert = reverse spin + radial spike, NOT faceplant).
-    float cTwist = cSum * tip * (1.8 + react) * (0.5 + 0.5 * sin(uTime * 4.0 + phase));
-    // Stress invert: spin direction flips under heavy contact (still upright).
-    float invert = smoothstep(0.4, 1.2, cSum + uChaos * 0.45) * tip * (0.4 + rarity * 0.25);
-    cTwist *= (1.0 - 2.0 * invert); // reverse spin when inverted
+    worldPosition.xz += ortho * sin(uTime * (5.4 + stiff * 3.2) + phase) * cSum * mid * amp * 0.6;
+    worldPosition.xz += push * cos(uTime * (3.5 + stiff * 2.1) - phase * 1.7) * cSum * tip * amp * 0.35;
+    // Contact turbo-spin around Y only (invert = reverse spin + UP spike, NOT faceplant).
+    float cTwist = cSum * tip * (2.1 + react) * (0.5 + 0.5 * sin(uTime * 4.2 + phase));
+    float invert = smoothstep(0.4, 1.2, cSum + uChaos * 0.45) * tip * (0.45 + rarity * 0.28);
+    cTwist *= (1.0 - 2.0 * invert);
     float cca = cos(cTwist);
     float csa = sin(cTwist);
     vec2 rel = worldPosition.xz - bmBase;
     worldPosition.xz = bmBase + vec2(cca * rel.x - csa * rel.y, csa * rel.x + cca * rel.y);
-    worldPosition.xz += ortho * invert * sin(uTime * 6.2 + phase) * 0.9;
-    // Contact flee is UP + lateral only — zero downward invert (f8c6eadb law).
-    worldPosition.y += cSum * tip * (1.2 + uChaos * 1.4 + rarity * 0.95);
-    worldPosition.y += sin(cSum * 8.0 + uTime * 2.6 + phase) * cSum * tip * 0.85;
-    worldPosition.y += invert * tip * 0.45; // inverted plants spike UP, not into dirt
-    worldPosition.xz += push * invert * 1.2;
+    worldPosition.xz += ortho * invert * sin(uTime * 6.2 + phase) * 0.95;
+    // Contact flee UP + lateral — never into dirt.
+    worldPosition.y += cSum * tip * (1.45 + uChaos * 1.55 + rarity * 1.05);
+    worldPosition.y += sin(cSum * 8.0 + uTime * 2.6 + phase) * cSum * tip * 0.95;
+    worldPosition.y += invert * tip * 0.55;
+    worldPosition.xz += push * invert * 1.25;
 
     vWorldP = worldPosition.xyz;
     vec4 mvPosition = modelViewMatrix * worldPosition;
@@ -714,9 +717,9 @@ export class AlienFlora {
           : rRoll > 0.94
             ? 0.45 + hash(k * 43) * 0.35 // uncommon ~5%
             : s.rarityBias * (0.05 + hash(k * 47) * 0.25); // common low rarity
-      // Rare giants stay modest so the field stays proportional to the habitat (never nuclear-scale).
-      const giant = hash(k * 23 + 29) > 0.97 ? 1.7 + hash(k * 23 + 31) * 1.1 : 1;
-      const scale = s.size * (0.5 + hash(k * 5 + 11) * 1.15) * giant * (1 + rarity * 0.22);
+      // Bigger presence, not nuclear poles — rare tall specimens stay proportional.
+      const giant = hash(k * 23 + 29) > 0.96 ? 1.55 + hash(k * 23 + 31) * 0.85 : 1;
+      const scale = s.size * (0.62 + hash(k * 5 + 11) * 1.28) * giant * (1 + rarity * 0.26);
       const yaw = hash(k * 5 + 13) * TAU;
       // Small intrinsic lean only — big random tilt levers roots out of the ground and looks broken.
       const tilt = (hash(k * 5 + 17) - 0.5) * (0.08 + hash(k * 5 + 19) * 0.1);
@@ -801,7 +804,9 @@ export class AlienFlora {
           groundTiltZ + Math.cos(pl.yaw) * pl.tilt * 0.65,
         );
         q.setFromEuler(e);
-        scl.setScalar(pl.scale);
+        // Taller than wide: bigger vertical presence without fat/wide blobs or thin poles.
+        const s0 = pl.scale;
+        scl.set(s0 * 0.92, s0 * 1.22, s0 * 0.92);
         m.compose(pos, q, scl);
         mesh.setMatrixAt(i, m);
 
@@ -1142,9 +1147,9 @@ export class AlienFlora {
         hue,
         sat: 0.62 + hash(i * 23 + 3) * 0.36,
         light: 0.34 + hash(i * 29 + 5) * 0.3,
-        // Proportional habitat scale — never nuclear giants.
-        size: 0.5 + hash(i * 31 + 7) * 1.65,
-        swayFreq: 0.28 + hash(i * 37 + 11) * 2.0,
+        // Bigger / taller habitat presence — not nuclear giants, not lawn stubs.
+        size: 0.62 + hash(i * 31 + 7) * 1.85,
+        swayFreq: 0.35 + hash(i * 37 + 11) * 2.15,
         glow: 0.35 + hash(i * 41 + 13) * 0.6,
         rarityBias: hash(i * 59 + 17) * 0.4,
       });
@@ -1214,10 +1219,10 @@ export class AlienFlora {
     u['uTerrainEntropy']!.value = e;
     (u['uTerrainWind']!.value as THREE.Vector2).set(terrainWindX, terrainWindZ);
 
-    // Per-slot underdamped springs — snappier local thrash (responsive contact), not one global slab.
+    // Per-slot underdamped springs — snappy local thrash (DAR contact), not one global slab.
     const h = dt > 0.05 ? 0.05 : dt > 0 ? dt : 0;
-    const K = 42;
-    const DAMP = 5.8;
+    const K = 48;
+    const DAMP = 5.2;
     const cx = u['uContactX']!.value as THREE.Vector4;
     const cz = u['uContactZ']!.value as THREE.Vector4;
     const cs = u['uContactS']!.value as THREE.Vector4;
