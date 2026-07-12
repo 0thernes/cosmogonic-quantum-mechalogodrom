@@ -306,18 +306,19 @@ const flora_vert = /* glsl */ `
     p = multiAxisMorph(p, up, rootPin, phase, freq, twistWave, spinRate, counterSpin, leanX, leanZ, roll);
 
     // ── UP/DOWN + EXPAND/CONTRACT + DEGRADE + MORPH ──
-    float heave = sin(uTime * freq * 0.9 + phase) * rootPin * (0.22 + 0.28 * health) * (0.7 + uWind + uChaos * 0.55);
+    // Heave/expand stay lateral-heavy so plants don't look like endless poles.
+    float heave = sin(uTime * freq * 0.9 + phase) * rootPin * (0.1 + 0.12 * health) * (0.55 + uWind * 0.5 + uChaos * 0.35);
     float pulse = 0.5 + 0.5 * sin(uTime * (1.4 + freq * 0.4) + phase + rarity * 2.2);
-    float expand = rootPin * (0.08 + 0.2 * health) * pulse * vigor
-                 - rootPin * hunger * 0.16
-                 - rootPin * overgraze * 0.1;
-    // Mutating cross-section (elliptical morph) — unique skins of motion.
-    float squash = 1.0 + expand * (0.75 + 0.55 * up) + 0.12 * sin(uTime * freq * 0.6 + phase) * rootPin * up;
-    float stretch = 1.0 + expand * (0.55 + 0.45 * up) - 0.1 * sin(uTime * freq * 0.6 + phase + 1.1) * rootPin * up;
+    float expand = rootPin * (0.07 + 0.14 * health) * pulse * vigor
+                 - rootPin * hunger * 0.12
+                 - rootPin * overgraze * 0.08;
+    float squash = 1.0 + expand * (0.85 + 0.4 * up) + 0.14 * sin(uTime * freq * 0.6 + phase) * rootPin * up;
+    float stretch = 1.0 + expand * (0.7 + 0.35 * up) - 0.12 * sin(uTime * freq * 0.6 + phase + 1.1) * rootPin * up;
     p.y += heave * up;
     p.x *= squash;
     p.z *= stretch;
-    p.y *= mix(1.0, 0.76 + 0.24 * health, rootPin * 0.85);
+    // Hunger degrades a little height — no vertical stretch morph.
+    p.y *= mix(1.0, 0.88 + 0.12 * health, rootPin * 0.7);
 
     // Biomass graze scale (above collar).
     float grow = 0.12 + 0.88 * health;
@@ -679,9 +680,9 @@ export class AlienFlora {
           : rRoll > 0.9
             ? 0.45 + hash(k * 43) * 0.35 // uncommon ~8.5%
             : s.rarityBias * (0.08 + hash(k * 47) * 0.3);
-      // Bigger presence + occasional giants (not habitat-breaking nuclear scale).
-      const giant = hash(k * 23 + 29) > 0.955 ? 2.0 + hash(k * 23 + 31) * 1.6 : 1;
-      const scale = s.size * (0.65 + hash(k * 5 + 11) * 1.35) * giant * (1 + rarity * 0.3);
+      // Compact stocky scale — cool motion, not "everything is longer."
+      const giant = hash(k * 23 + 29) > 0.96 ? 1.45 + hash(k * 23 + 31) * 0.55 : 1;
+      const scale = s.size * (0.55 + hash(k * 5 + 11) * 0.95) * giant * (1 + rarity * 0.18);
       const yaw = hash(k * 5 + 13) * TAU;
       // Modest lean only — roots stay seated; motion lives in the shader spin.
       const tilt = (hash(k * 5 + 17) - 0.5) * (0.1 + hash(k * 5 + 19) * 0.12);
@@ -832,191 +833,191 @@ export class AlienFlora {
   }
 
   /**
-   * Nine curved alien silhouettes (lathe / tube / knot) + buried root bulbs.
-   * Collar at y=0; roots below (y negative). No boxy plates — organic revolution profiles and helices.
+   * Nine curved silhouettes + buried roots. Compact heights (stocky, not tall poles).
+   * Motion lives in the shader; base meshes stay short and connected.
    */
   private static buildFamilies(): Family[] {
     const fams: Family[] = [];
 
-    // 0 SPIRE — curved lathe needle + soft crown bulb + buried root
+    // 0 SPIRE — short curved needle + crown
     {
       const stem = lathe(
         [
           [0.02, 0.0],
-          [0.28, 0.35],
-          [0.38, 1.2],
-          [0.32, 2.6],
-          [0.22, 4.0],
-          [0.12, 5.2],
-          [0.04, 5.9],
+          [0.32, 0.25],
+          [0.4, 0.85],
+          [0.34, 1.6],
+          [0.22, 2.4],
+          [0.1, 3.0],
+          [0.04, 3.35],
         ],
         16,
       );
-      const crown = new THREE.SphereGeometry(0.42, 12, 10);
-      crown.scale(1.3, 0.7, 1.3);
-      crown.translate(0, 5.85, 0);
-      const geo = adoptMerged([stem, crown, rootBulb(0.42, 0.55)]);
+      const crown = new THREE.SphereGeometry(0.38, 12, 10);
+      crown.scale(1.35, 0.65, 1.35);
+      crown.translate(0, 3.25, 0);
+      const geo = adoptMerged([stem, crown, rootBulb(0.4, 0.5)]);
       fams.push({ geo, height: peakHeight(geo) });
     }
 
-    // 1 WHIP — helical tube tendril + fruiting nodules
+    // 1 WHIP — compact helix + nodules
     {
       const pts: THREE.Vector3[] = [];
-      for (let i = 0; i <= 40; i++) {
-        const t = i / 40;
-        const y = t * 6.4;
-        const a = t * Math.PI * 4.2;
-        const r = 0.32 * (1 - t * 0.75) + 0.06;
+      for (let i = 0; i <= 36; i++) {
+        const t = i / 36;
+        const y = t * 3.5;
+        const a = t * Math.PI * 4.0;
+        const r = 0.28 * (1 - t * 0.7) + 0.06;
         pts.push(new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r));
       }
-      const tube = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 36, 0.12, 7, false);
-      const n1 = new THREE.SphereGeometry(0.32, 10, 8);
-      n1.scale(1.25, 0.75, 1.25);
-      n1.translate(0.28, 2.0, 0.05);
-      const n2 = new THREE.SphereGeometry(0.26, 10, 8);
-      n2.scale(1.15, 0.7, 1.15);
-      n2.translate(-0.22, 3.8, 0.12);
-      const n3 = new THREE.SphereGeometry(0.2, 9, 7);
-      n3.translate(0.1, 5.5, -0.08);
-      const geo = adoptMerged([tube, n1, n2, n3, rootBulb(0.36, 0.5)]);
+      const tube = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 32, 0.11, 7, false);
+      const n1 = new THREE.SphereGeometry(0.3, 10, 8);
+      n1.scale(1.3, 0.7, 1.3);
+      n1.translate(0.25, 1.1, 0.05);
+      const n2 = new THREE.SphereGeometry(0.24, 10, 8);
+      n2.scale(1.2, 0.65, 1.2);
+      n2.translate(-0.2, 2.15, 0.1);
+      const n3 = new THREE.SphereGeometry(0.18, 9, 7);
+      n3.translate(0.08, 3.15, -0.06);
+      const geo = adoptMerged([tube, n1, n2, n3, rootBulb(0.34, 0.48)]);
       fams.push({ geo, height: peakHeight(geo) });
     }
 
-    // 2 POD — lathe urn fruiting body (SEM organic)
+    // 2 POD — low urn fruiting body
     {
       const body = lathe(
         [
           [0.15, 0.0],
-          [0.7, 0.25],
-          [0.95, 0.7],
-          [1.05, 1.15],
-          [0.85, 1.55],
-          [0.45, 1.85],
-          [0.2, 2.05],
+          [0.65, 0.2],
+          [0.88, 0.55],
+          [0.95, 0.9],
+          [0.75, 1.2],
+          [0.4, 1.4],
+          [0.18, 1.55],
         ],
         18,
       );
-      const lip = new THREE.TorusGeometry(0.42, 0.07, 8, 16);
+      const lip = new THREE.TorusGeometry(0.38, 0.06, 8, 16);
       lip.rotateX(Math.PI / 2);
-      lip.translate(0, 1.95, 0);
-      const geo = adoptMerged([body, lip, rootBulb(0.55, 0.48)]);
+      lip.translate(0, 1.48, 0);
+      const geo = adoptMerged([body, lip, rootBulb(0.5, 0.45)]);
       fams.push({ geo, height: peakHeight(geo) });
     }
 
-    // 3 BLADE — curved lathe sail (leaf without hard boxes)
+    // 3 BLADE — short soft sail
     {
       const sail = lathe(
         [
           [0.02, 0.0],
-          [0.15, 0.4],
-          [0.55, 1.4],
-          [0.85, 2.6],
-          [0.95, 3.6],
-          [0.7, 4.5],
-          [0.25, 5.2],
-          [0.02, 5.5],
+          [0.18, 0.3],
+          [0.5, 0.9],
+          [0.72, 1.6],
+          [0.78, 2.2],
+          [0.55, 2.7],
+          [0.2, 3.05],
+          [0.02, 3.2],
         ],
         14,
       );
-      sail.scale(0.35, 1, 1.0); // flatten into a soft blade
-      const geo = adoptMerged([sail, rootBulb(0.34, 0.5)]);
+      sail.scale(0.4, 1, 1.0);
+      const geo = adoptMerged([sail, rootBulb(0.32, 0.48)]);
       fams.push({ geo, height: peakHeight(geo) });
     }
 
-    // 4 CORAL — torus-knot body + soft satellite bulbs (math weirdness, still connected)
+    // 4 CORAL — squat torus-knot + bulbs
     {
-      const core = new THREE.TorusKnotGeometry(0.55, 0.16, 64, 8, 2, 3);
-      core.scale(0.85, 1.9, 0.85);
-      core.translate(0, 2.6, 0);
-      const s1 = new THREE.SphereGeometry(0.28, 10, 8);
-      s1.translate(0.55, 1.6, 0.15);
-      const s2 = new THREE.SphereGeometry(0.24, 9, 7);
-      s2.translate(-0.45, 3.2, -0.2);
-      const s3 = new THREE.SphereGeometry(0.2, 9, 7);
-      s3.translate(0.2, 4.4, 0.3);
-      const geo = adoptMerged([core, s1, s2, s3, rootBulb(0.4, 0.52)]);
+      const core = new THREE.TorusKnotGeometry(0.48, 0.14, 56, 8, 2, 3);
+      core.scale(0.95, 1.15, 0.95);
+      core.translate(0, 1.55, 0);
+      const s1 = new THREE.SphereGeometry(0.26, 10, 8);
+      s1.translate(0.48, 1.0, 0.12);
+      const s2 = new THREE.SphereGeometry(0.22, 9, 7);
+      s2.translate(-0.4, 1.9, -0.15);
+      const s3 = new THREE.SphereGeometry(0.18, 9, 7);
+      s3.translate(0.15, 2.55, 0.22);
+      const geo = adoptMerged([core, s1, s2, s3, rootBulb(0.38, 0.5)]);
       fams.push({ geo, height: peakHeight(geo) });
     }
 
-    // 5 SHARD — lathe crystal with curved waist (not tetra edges)
+    // 5 SHARD — short curved crystal
     {
       const crystal = lathe(
         [
           [0.05, 0.0],
-          [0.45, 0.5],
-          [0.55, 1.4],
-          [0.4, 2.6],
-          [0.55, 3.8],
-          [0.35, 4.8],
-          [0.08, 5.6],
+          [0.42, 0.35],
+          [0.5, 0.95],
+          [0.38, 1.7],
+          [0.48, 2.35],
+          [0.28, 2.9],
+          [0.07, 3.3],
         ],
         12,
       );
-      const tip = new THREE.SphereGeometry(0.18, 10, 8);
-      tip.scale(0.7, 1.4, 0.7);
-      tip.translate(0, 5.7, 0);
-      const geo = adoptMerged([crystal, tip, rootBulb(0.38, 0.5)]);
+      const tip = new THREE.SphereGeometry(0.16, 10, 8);
+      tip.scale(0.75, 1.2, 0.75);
+      tip.translate(0, 3.35, 0);
+      const geo = adoptMerged([crystal, tip, rootBulb(0.36, 0.48)]);
       fams.push({ geo, height: peakHeight(geo) });
     }
 
-    // 6 HELIX — thick mycelial coil + spore orbs
+    // 6 HELIX — short coil + orbs
     {
       const pts: THREE.Vector3[] = [];
-      for (let i = 0; i <= 42; i++) {
-        const t = i / 42;
-        const y = t * 5.6;
-        const a = t * Math.PI * 5.5;
-        const r = 0.48 * (1 - t * 0.7) + 0.1;
+      for (let i = 0; i <= 36; i++) {
+        const t = i / 36;
+        const y = t * 3.2;
+        const a = t * Math.PI * 5.0;
+        const r = 0.42 * (1 - t * 0.65) + 0.1;
         pts.push(new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r));
       }
-      const tube = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 40, 0.16, 8, false);
-      const orb1 = new THREE.SphereGeometry(0.3, 10, 8);
-      orb1.translate(0.4, 1.6, 0.1);
-      const orb2 = new THREE.SphereGeometry(0.26, 10, 8);
-      orb2.translate(-0.32, 3.2, 0.18);
-      const orb3 = new THREE.SphereGeometry(0.22, 9, 7);
-      orb3.translate(0.18, 4.7, -0.12);
-      const geo = adoptMerged([tube, orb1, orb2, orb3, rootBulb(0.4, 0.5)]);
+      const tube = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 36, 0.14, 8, false);
+      const orb1 = new THREE.SphereGeometry(0.28, 10, 8);
+      orb1.translate(0.35, 0.95, 0.08);
+      const orb2 = new THREE.SphereGeometry(0.24, 10, 8);
+      orb2.translate(-0.28, 1.85, 0.14);
+      const orb3 = new THREE.SphereGeometry(0.2, 9, 7);
+      orb3.translate(0.15, 2.75, -0.1);
+      const geo = adoptMerged([tube, orb1, orb2, orb3, rootBulb(0.38, 0.48)]);
       fams.push({ geo, height: peakHeight(geo) });
     }
 
-    // 7 BUBBLE — fruiting cluster (connected via root mat)
+    // 7 BUBBLE — low fruiting cluster
     {
-      const main = new THREE.SphereGeometry(0.7, 14, 12);
-      main.scale(1.15, 0.9, 1.15);
-      main.translate(0, 0.85, 0);
-      const a = new THREE.SphereGeometry(0.4, 12, 10);
-      a.translate(0.55, 0.55, 0.2);
-      const b = new THREE.SphereGeometry(0.36, 12, 10);
-      b.translate(-0.48, 0.7, 0.35);
-      const c = new THREE.SphereGeometry(0.32, 11, 9);
-      c.translate(0.12, 1.35, -0.45);
-      const ring = new THREE.TorusGeometry(0.48, 0.06, 8, 18);
+      const main = new THREE.SphereGeometry(0.65, 14, 12);
+      main.scale(1.2, 0.85, 1.2);
+      main.translate(0, 0.7, 0);
+      const a = new THREE.SphereGeometry(0.38, 12, 10);
+      a.translate(0.5, 0.45, 0.18);
+      const b = new THREE.SphereGeometry(0.34, 12, 10);
+      b.translate(-0.45, 0.55, 0.3);
+      const c = new THREE.SphereGeometry(0.3, 11, 9);
+      c.translate(0.1, 1.1, -0.4);
+      const ring = new THREE.TorusGeometry(0.44, 0.055, 8, 18);
       ring.rotateX(Math.PI / 2);
-      ring.translate(0, 1.45, 0);
-      const geo = adoptMerged([main, a, b, c, ring, rootBulb(0.5, 0.45)]);
+      ring.translate(0, 1.15, 0);
+      const geo = adoptMerged([main, a, b, c, ring, rootBulb(0.48, 0.42)]);
       fams.push({ geo, height: peakHeight(geo) });
     }
 
-    // 8 FAN — lathe mineral sail (curved radial profile, no boxes)
+    // 8 FAN — short mineral sail
     {
       const sail = lathe(
         [
           [0.02, 0.0],
-          [0.2, 0.3],
-          [0.75, 1.0],
-          [1.15, 2.0],
-          [1.25, 3.0],
-          [0.9, 3.9],
-          [0.35, 4.5],
-          [0.02, 4.7],
+          [0.22, 0.25],
+          [0.7, 0.75],
+          [1.0, 1.4],
+          [1.05, 2.0],
+          [0.75, 2.5],
+          [0.3, 2.85],
+          [0.02, 3.0],
         ],
         16,
       );
-      sail.scale(0.28, 1, 1); // soft fan thickness
-      const jewel = new THREE.SphereGeometry(0.22, 10, 8);
-      jewel.translate(0, 4.55, 0);
-      const geo = adoptMerged([sail, jewel, rootBulb(0.36, 0.48)]);
+      sail.scale(0.32, 1, 1);
+      const jewel = new THREE.SphereGeometry(0.2, 10, 8);
+      jewel.translate(0, 2.9, 0);
+      const geo = adoptMerged([sail, jewel, rootBulb(0.34, 0.45)]);
       fams.push({ geo, height: peakHeight(geo) });
     }
 
@@ -1038,8 +1039,8 @@ export class AlienFlora {
         hue,
         sat: 0.62 + hash(i * 23 + 3) * 0.36,
         light: 0.34 + hash(i * 29 + 5) * 0.3,
-        // Larger, livelier presence (still below the broken nuclear pass).
-        size: 0.75 + hash(i * 31 + 7) * 2.15,
+        // Compact base size — thrash/spin live in the shader, not vertical stretch.
+        size: 0.55 + hash(i * 31 + 7) * 1.25,
         swayFreq: 0.45 + hash(i * 37 + 11) * 2.6,
         glow: 0.45 + hash(i * 41 + 13) * 0.55,
         rarityBias: hash(i * 59 + 17) * 0.45,
