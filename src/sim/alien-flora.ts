@@ -11,14 +11,13 @@
  * neighbor-seeded recovery). Some plants are RARE (iridescent / crystal / mycelial specials).
  *
  * RENDER: each family is ONE `InstancedMesh` (≤9 draw calls for 60k plants) sharing one
- * `ShaderMaterial`. Wind sway, bioluminescence, mineral iridescence, and LOCAL multi-point
- * ragdoll contact all run on the GPU. Per-frame CPU work is O(biomass-grid cells) + O(4 contacts)
- * and never scales with plant count.
+ * `ShaderMaterial`. Multi-axis tipMorph (yaw/pitch/roll + counter-mid), mutating skins
+ * (field4 + health/stress/contact hue), and LOCAL multi-point ragdoll contact all run on the GPU.
+ * Per-frame CPU work is O(biomass-grid cells) + O(4 contacts) and never scales with plant count.
  *
  * CONTACT (USER fix): NEVER one gigantic solid patch. Up to 4 local contact seeds with a tight
- * falloff (~16u). Each plant desyncs by phase/stiffness/rarity so neighbors thrash differently —
- * proximity to living beings AND to dense biomass, ragdoll-but-weirder (tip lag, mid twist,
- * root anchor, mycelial whip).
+ * falloff (~16u). Spatial multi-scale phase desync + density separation peel so neighbors don't
+ * lockstep-crossover. Root pin seats; tip thrash is multi-degree (spin/invert/heave/expand).
  *
  * DETERMINISM (ADR 0004): placement + per-instance params from a pure positional hash — ZERO
  * draws from `ctx.rng`. No Date.now, no Math.random.
@@ -197,19 +196,43 @@ const flora_vert = /* glsl */ `
     float d2 = dot(d, d);
     float fall = smoothstep(${CONTACT_RADIUS2.toFixed(1)}, 25.0, d2);
     if (fall <= 0.0) return 0.0;
-    float personal = 0.42 + 0.58 * sin(phase * 2.7 + stiff * 5.1 + base.x * 0.31 + base.y * 0.29);
-    float wobble = 0.75 + 0.35 * sin(uTime * (3.2 + stiff * 4.0) + phase * 1.9);
-    return strength * fall * personal * react * wobble;
+    // Per-plant phase hash — neighbors thrash off-beat (crossover ↓ without amplitude caps).
+    float personal = 0.38 + 0.62 * sin(phase * 3.1 + stiff * 5.7 + base.x * 0.37 + base.y * 0.33);
+    float wobble = 0.7 + 0.4 * sin(uTime * (2.9 + stiff * 4.4) + phase * 2.3);
+    float counter = 0.85 + 0.25 * cos(phase * 1.7 - stiff * 2.2 + uTime * 0.4);
+    return strength * fall * personal * react * wobble * counter;
   }
 
-  // Spin + lean on tip only — same mesh proportions, unique rotation per plant.
-  vec3 tipSpin(vec3 p, float up, float rootPin, float ang, float leanX, float leanZ) {
+  // MULTI-AXIS tip morph: yaw + pitch + roll + lean. Tip-weighted; root collar fixed.
+  // Purpose: living multi-degree response to wind/chaos/contact — not decorative spin.
+  vec3 tipMorph(vec3 p, float up, float rootPin, float yaw, float pitch, float roll, float leanX, float leanZ) {
     float u2 = up * up * rootPin;
-    float ca = cos(ang * u2);
-    float sa = sin(ang * u2);
+    float mid = rootPin * up * (1.0 - up * 0.55); // mid-stem counter band
+    // Counter-yaw at mid vs tip (inhuman reverse helix).
+    float yawMid = -yaw * 0.55 * mid;
+    float yawTip = yaw * u2;
+    float ca = cos(yawTip + yawMid);
+    float sa = sin(yawTip + yawMid);
     vec3 q = vec3(ca * p.x + sa * p.z, p.y, -sa * p.x + ca * p.z);
+    // Pitch (X) + roll (Z) — degrees-dynamic, tip only.
+    float cp = cos(pitch * u2);
+    float sp = sin(pitch * u2);
+    float cr = cos(roll * u2);
+    float sr = sin(roll * u2);
+    float y1 = cp * q.y - sp * q.z;
+    float z1 = sp * q.y + cp * q.z;
+    q.y = y1; q.z = z1;
+    float x2 = cr * q.x - sr * q.y;
+    float y2 = sr * q.x + cr * q.y;
+    q.x = x2; q.y = y2;
     q.x += leanX * u2;
     q.z += leanZ * u2;
+    // Radial surface warp (mutate silhouette without lengthening).
+    float rad = length(q.xz) + 1e-4;
+    float warp = 1.0 + u2 * 0.18 * sin(atan(q.z, q.x) * 3.0 + yaw * 2.0 + q.y * 1.7);
+    q.x *= warp; q.z *= warp;
+    // Slight tip invert (fold toward base under high morph energy).
+    q.y -= u2 * u2 * abs(pitch + roll) * 0.12 * rad;
     return q;
   }
 
@@ -225,13 +248,22 @@ const flora_vert = /* glsl */ `
     vRoot = 1.0 - rootPin;
 
     vec2 bmBase = (instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xz;
-    // Spatial desync so neighbors don't thrash in lockstep (crossover ↓ without amplitude caps).
-    float spatial = bmBase.x * 0.11 + bmBase.y * 0.14 + sin(bmBase.x * 0.06 - bmBase.y * 0.08) * 1.4;
+    // Multi-scale spatial desync — neighbors never lockstep (crossover ↓).
+    float spatial = bmBase.x * 0.13 + bmBase.y * 0.17
+                  + sin(bmBase.x * 0.07 - bmBase.y * 0.09) * 1.7
+                  + cos(bmBase.x * 0.041 + bmBase.y * 0.053) * 1.1
+                  + sin((bmBase.x + bmBase.y) * 0.029) * 0.85;
     float phase = aParams.x + spatial;
-    float freq = aParams.y * (0.9 + 0.25 * fract(sin(bmBase.x * 12.9 + bmBase.y * 78.2) * 43758.5));
+    float idHash = fract(sin(bmBase.x * 12.9 + bmBase.y * 78.2) * 43758.5);
+    float freq = aParams.y * (0.85 + 0.35 * idHash);
     float stiff = clamp(aMeta.y, 0.08, 1.4);
     float react = clamp(aMeta.w, 0.2, 2.2);
     float rarity = aMeta.x;
+    // Per-plant axis bias: some prefer pitch, some roll, some yaw-dominant (vectorized weird).
+    float axisBias = fract(sin(phase * 19.7 + idHash * 91.3) * 23421.1);
+    float yawBias = 0.55 + 0.9 * axisBias;
+    float pitchBias = 0.45 + 0.95 * fract(axisBias * 3.7);
+    float rollBias = 0.4 + 1.0 * fract(axisBias * 7.1);
 
     // R=biomass food, G=density, B=overgraze pressure (operational; not paint).
     vec4 field = texture2D(uBiomass, (bmBase + 0.5 * uGridExtent) / uGridExtent);
@@ -243,35 +275,61 @@ const flora_vert = /* glsl */ `
     float hunger = 1.0 - health;
 
     float soft = 1.0 / stiff;
-    // Same thrash language as f8c6eadb — modestly richer, not longer/thinner.
-    float bend = rootPin * rootPin * (uWind + uChaos * 0.85) * soft * (0.9 + rarity * 0.55);
-    float turb = rootPin * rootPin * uChaos * 0.65 * soft;
+    float bend = rootPin * rootPin * (uWind + uChaos * 0.95) * soft * (0.95 + rarity * 0.65);
+    float turb = rootPin * rootPin * uChaos * 0.75 * soft;
     vec3 p = position;
 
-    // Continuous tip spin + multi-harmonic lean (purpose: living response to wind/chaos).
-    float spin = uTime * (0.55 + freq * 0.7 + rarity * 0.5) * soft
-               + (0.8 + rarity) * sin(uTime * freq * 0.35 + phase);
-    float leanX = sin(uTime * freq + phase) * bend * 2.5
-                + sin(uTime * freq * 3.5 + phase * 2.1) * turb * 1.15
-                + sin(uTime * freq * 6.0 + phase * 0.6) * turb * 0.45 * rarity;
-    float leanZ = cos(uTime * freq * 0.8 + phase * 1.3) * bend * 2.2
-                + cos(uTime * freq * 2.9 + phase * 1.7) * turb * 1.0
-                + cos(uTime * freq * 5.0 + phase * 1.1) * turb * 0.4 * rarity;
-    p = tipSpin(p, up, rootPin, spin, leanX, leanZ);
+    // Continuous multi-axis spin/twist (purpose: living response to wind/chaos/stress).
+    float yaw = (uTime * (0.65 + freq * 0.85 + rarity * 0.55) * soft
+              + (1.0 + rarity) * sin(uTime * freq * 0.38 + phase)
+              + sin(uTime * freq * 1.7 + phase * 2.4) * 0.45 * turb)
+              * yawBias;
+    float pitch = (sin(uTime * freq * 0.72 + phase * 1.6) * bend * 1.35
+                + cos(uTime * freq * 2.1 + phase * 0.9) * turb * 0.85
+                + sin(uTime * freq * 4.4 + phase * 3.2) * turb * 0.35 * rarity)
+                * pitchBias;
+    float roll = (cos(uTime * freq * 0.91 + phase * 2.2) * bend * 1.2
+               + sin(uTime * freq * 2.6 + phase * 1.4) * turb * 0.9
+               + cos(uTime * freq * 5.2 + phase * 0.7) * turb * 0.4 * rarity)
+               * rollBias;
+    // Counter-phase lean vs spin so motion is multivector, not planar sway.
+    float leanX = sin(uTime * freq + phase + 1.2) * bend * 2.7
+                + sin(uTime * freq * 3.7 + phase * 2.3) * turb * 1.25
+                + cos(uTime * freq * 6.3 + phase * 0.5) * turb * 0.5 * rarity
+                - roll * 0.35;
+    float leanZ = cos(uTime * freq * 0.85 + phase * 1.5) * bend * 2.4
+                + cos(uTime * freq * 3.1 + phase * 1.9) * turb * 1.1
+                + sin(uTime * freq * 5.4 + phase * 1.2) * turb * 0.45 * rarity
+                + pitch * 0.3;
+    p = tipMorph(p, up, rootPin, yaw, pitch, roll, leanX, leanZ);
 
-    // Up/down heave + expand/contract (health expands; hunger degrades) — lateral-heavy.
-    float heave = sin(uTime * freq * 0.55 + phase) * rootPin * 0.14 * (uWind + uChaos + 0.4);
-    float pulse = 0.5 + 0.5 * sin(uTime * (1.1 + freq * 0.3) + phase + rarity);
-    float expand = rootPin * (0.05 + 0.1 * health) * pulse - rootPin * hunger * 0.1 - rootPin * overgraze * 0.06;
+    // Up/down heave + expand/contract + degrade (health expands; hunger/pressure contracts).
+    float heave = sin(uTime * freq * 0.58 + phase) * rootPin * 0.16 * (uWind + uChaos + 0.45)
+                + cos(uTime * freq * 1.4 + phase * 2.0) * rootPin * turb * 0.08;
+    float pulse = 0.5 + 0.5 * sin(uTime * (1.15 + freq * 0.32) + phase + rarity);
+    float pulse2 = 0.5 + 0.5 * cos(uTime * (0.7 + freq * 0.5) - phase * 1.3);
+    float expand = rootPin * (0.06 + 0.12 * health) * pulse
+                 - rootPin * hunger * 0.12
+                 - rootPin * overgraze * 0.08
+                 + rootPin * rarity * 0.04 * pulse2;
+    // Anisotropic expand: X/Z out of phase → morphing cross-section (not uniform scale).
     p.y += heave * up;
-    p.x *= 1.0 + expand * (0.85 + 0.35 * up);
-    p.z *= 1.0 + expand * (0.85 + 0.35 * up);
-    p.y *= mix(1.0, 0.88 + 0.12 * health, rootPin * 0.75);
+    p.x *= 1.0 + expand * (0.9 + 0.4 * up) * (0.85 + 0.3 * pulse2);
+    p.z *= 1.0 + expand * (0.9 + 0.4 * up) * (0.85 + 0.3 * (1.0 - pulse2));
+    p.y *= mix(1.0, 0.86 + 0.14 * health - overgraze * 0.06, rootPin * 0.8);
 
-    // Soft organic breath (f8c6eadb language).
-    float morph = rootPin * (0.04 + 0.12 * rarity) * (0.55 + 0.45 * sin(uTime * (1.05 + freq * 0.35) + phase));
-    p.x *= 1.0 + morph;
-    p.z *= 1.0 + morph;
+    // Organic breath + rarity morph (lateral; never lengthens mesh).
+    float morph = rootPin * (0.05 + 0.14 * rarity) * (0.5 + 0.5 * sin(uTime * (1.1 + freq * 0.4) + phase));
+    float morph2 = rootPin * (0.03 + 0.08 * rarity) * cos(uTime * (0.9 + freq * 0.55) - phase);
+    p.x *= 1.0 + morph + morph2 * 0.5;
+    p.z *= 1.0 + morph - morph2 * 0.5;
+
+    // Surface artifact displacement (mutating skin topology — operational stress readout).
+    float art = rootPin * up * (0.04 + 0.1 * rarity + 0.06 * uChaos)
+              * sin(p.y * 4.2 + phase + uTime * (1.3 + freq * 0.2))
+              * cos(atan(p.z, p.x) * 2.0 + uTime * 0.6 + phase);
+    p.x += art * cos(phase);
+    p.z += art * sin(phase * 1.3);
 
     float grow = 0.12 + 0.88 * biomass;
     if (uScorchRadius > 0.0) {
@@ -293,8 +351,13 @@ const flora_vert = /* glsl */ `
     vec2 avoid = vec2(dW - dE, dS - dN);
     float al = length(avoid);
     if (al > 1e-5) avoid /= al;
-    p.x += avoid.x * density * rootPin * up * up * 0.55;
-    p.z += avoid.y * density * rootPin * up * up * 0.55;
+    // Stronger lateral peel in dense stands so thrashing crowns separate.
+    float sep = density * rootPin * up * up * (0.7 + 0.35 * rarity);
+    p.x += avoid.x * sep;
+    p.z += avoid.y * sep;
+    // Orthogonal micro-peel so neighbors don't share the same swing arc.
+    p.x += -avoid.y * sep * 0.35 * sin(phase * 2.1);
+    p.z += avoid.x * sep * 0.35 * cos(phase * 1.8);
 
     vec4 worldPosition = instanceMatrix * vec4(p, 1.0);
     worldPosition.y += cqmTerrainDisplacement(
@@ -305,14 +368,14 @@ const flora_vert = /* glsl */ `
       uTerrainWind
     );
 
-    // MULTI-POINT CONTACT PHYSICS — tip thrash + spin; root stays.
+    // MULTI-POINT CONTACT PHYSICS — multi-axis tip thrash; root stays planted.
     float c0 = localContact(bmBase, uContactX.x, uContactZ.x, uContactS.x, phase, stiff, react);
-    float c1 = localContact(bmBase, uContactX.y, uContactZ.y, uContactS.y, phase + 1.7, stiff, react);
-    float c2 = localContact(bmBase, uContactX.z, uContactZ.z, uContactS.z, phase + 3.1, stiff, react);
-    float c3 = localContact(bmBase, uContactX.w, uContactZ.w, uContactS.w, phase + 4.9, stiff, react);
+    float c1 = localContact(bmBase, uContactX.y, uContactZ.y, uContactS.y, phase + 1.9, stiff, react);
+    float c2 = localContact(bmBase, uContactX.z, uContactZ.z, uContactS.z, phase + 3.4, stiff, react);
+    float c3 = localContact(bmBase, uContactX.w, uContactZ.w, uContactS.w, phase + 5.2, stiff, react);
     float cSum = c0 + c1 + c2 + c3;
     vContactLive = clamp(cSum, 0.0, 2.5);
-    vStress = clamp(uChaos * 0.4 + cSum * 0.5 + hunger * 0.3 + overgraze * 0.4, 0.0, 1.5);
+    vStress = clamp(uChaos * 0.4 + cSum * 0.55 + hunger * 0.3 + overgraze * 0.45, 0.0, 1.5);
 
     vec2 push = vec2(0.0);
     float wsum = 0.001;
@@ -337,26 +400,34 @@ const flora_vert = /* glsl */ `
       push += a * inv * c3; wsum += c3;
     }
     push /= wsum;
-    push = normalize(push + avoid * density * 0.4 + vec2(0.0001));
+    // Bias flee toward open density + personal phase so thrash arcs diverge.
+    push = normalize(push + avoid * density * 0.55 + vec2(sin(phase), cos(phase * 1.3)) * 0.15 + vec2(0.0001));
 
     float tip = rootPin * rootPin * rootPin;
     float mid = rootPin * rootPin * (1.0 - up) * 4.0;
-    float amp = (2.8 + uChaos * 3.0 + rarity * 1.6 + react * 0.7) * soft;
-    worldPosition.xz += push * (cSum * tip * amp + biomass * cSum * mid * 0.35);
+    float amp = (3.0 + uChaos * 3.2 + rarity * 1.8 + react * 0.85) * soft;
+    worldPosition.xz += push * (cSum * tip * amp + biomass * cSum * mid * 0.4);
     vec2 ortho = vec2(-push.y, push.x);
-    worldPosition.xz += ortho * sin(uTime * (5.0 + stiff * 3.0) + phase) * cSum * mid * amp * 0.55;
-    // Contact turbo-spin (tip only).
-    float cTwist = cSum * tip * (1.5 + react) * (0.55 + 0.45 * sin(uTime * 3.8 + phase));
+    // Multi-harmonic whip (counter-phase mid vs tip).
+    worldPosition.xz += ortho * sin(uTime * (5.2 + stiff * 3.2) + phase) * cSum * mid * amp * 0.6;
+    worldPosition.xz += push * cos(uTime * (3.4 + stiff * 2.1) - phase * 1.7) * cSum * tip * amp * 0.35;
+    // Contact multi-axis turbo: yaw twist + pitch heave + roll (tip only).
+    float cTwist = cSum * tip * (1.7 + react) * (0.5 + 0.5 * sin(uTime * 4.1 + phase));
+    float cPitch = cSum * tip * (0.8 + react * 0.4) * sin(uTime * 3.2 + phase * 1.5);
+    float cRoll = cSum * tip * (0.7 + react * 0.35) * cos(uTime * 3.6 - phase * 1.1);
     float cca = cos(cTwist);
     float csa = sin(cTwist);
     vec2 rel = worldPosition.xz - bmBase;
     worldPosition.xz = bmBase + vec2(cca * rel.x - csa * rel.y, csa * rel.x + cca * rel.y);
-    // Up/down flee + tip invert under heavy contact (root stays planted).
-    worldPosition.y += cSum * tip * (1.0 + uChaos * 1.3 + rarity * 0.8);
-    worldPosition.y += sin(cSum * 8.0 + uTime * 2.6 + phase) * cSum * tip * 0.85;
-    float invert = smoothstep(0.3, 1.1, cSum + uChaos * 0.45) * tip * (0.45 + rarity * 0.3);
-    worldPosition.y -= invert * (0.55 + up * 1.1);
-    worldPosition.xz += push * invert * 0.9;
+    worldPosition.xz += ortho * cRoll * 0.55;
+    // Up/down flee + tip invert/fold under heavy contact (root stays planted).
+    worldPosition.y += cSum * tip * (1.15 + uChaos * 1.4 + rarity * 0.9) + cPitch * 0.65;
+    worldPosition.y += sin(cSum * 8.5 + uTime * 2.8 + phase) * cSum * tip * 0.95;
+    worldPosition.y += cos(uTime * 4.5 + phase * 2.0) * cSum * tip * cRoll * 0.4;
+    float invert = smoothstep(0.28, 1.05, cSum + uChaos * 0.5) * tip * (0.5 + rarity * 0.35);
+    worldPosition.y -= invert * (0.65 + up * 1.25 + cPitch * 0.3);
+    worldPosition.xz += push * invert * 1.05;
+    worldPosition.xz += ortho * invert * sin(uTime * 6.0 + phase) * 0.55;
 
     vWorldP = worldPosition.xyz;
     vec4 mvPosition = modelViewMatrix * worldPosition;
@@ -396,16 +467,18 @@ const flora_frag = /* glsl */ `
     return rgb + (l - 0.5 * c);
   }
 
-  // Soft domain-warped field (4D-ish: xyz + time) — f8c6eadb language, no candy stripes.
+  // Soft domain-warped field (4D-ish: xyz + time) — no candy stripes; operational skin field.
   float field4(vec3 p, float t) {
     vec3 q = p * 0.11;
-    q.x += 0.35 * sin(q.y * 1.7 + t * 0.31);
-    q.y += 0.35 * cos(q.z * 1.5 - t * 0.27);
-    q.z += 0.3 * sin(q.x * 1.9 + t * 0.23);
+    q.x += 0.4 * sin(q.y * 1.7 + t * 0.31);
+    q.y += 0.4 * cos(q.z * 1.5 - t * 0.27);
+    q.z += 0.35 * sin(q.x * 1.9 + t * 0.23);
+    q.x += 0.2 * cos(q.z * 2.3 + t * 0.19 + vStress);
     float a = sin(q.x * 2.1 + t * 0.4) * cos(q.y * 1.8 - t * 0.33);
     float b = sin(q.y * 2.4 + q.z * 1.3 + t * 0.21);
     float c = cos(length(q.xy) * 3.1 - t * 0.29 + q.z);
-    return a * 0.45 + b * 0.35 + c * 0.2;
+    float d = sin(length(q.yz) * 2.6 + t * 0.17 + q.x);
+    return a * 0.38 + b * 0.3 + c * 0.18 + d * 0.14;
   }
 
   void main() {
@@ -414,43 +487,57 @@ const flora_frag = /* glsl */ `
     float fres = pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 2.0);
 
     float f = field4(vWorldP, uTime);
-    float f2 = field4(vWorldP.yzx * 1.3 + 2.1, uTime * 0.7 + vStress);
-    float tex = 0.62 + 0.28 * f + 0.12 * f2;
+    float f2 = field4(vWorldP.yzx * 1.35 + 2.1, uTime * 0.72 + vStress);
+    float f3 = field4(vWorldP.zxy * 0.9 - 1.4, uTime * 0.45 - vContactLive);
+    float tex = 0.55 + 0.25 * f + 0.12 * f2 + 0.08 * f3;
 
-    // Dynamic skin: hue drifts with health/stress/contact (purpose: food + threat readout).
+    // Mutating skin: hue/sat/light track health, stress, contact, rarity (food + threat readout).
     float health = clamp(vBiomass, 0.0, 1.0);
     float hunger = 1.0 - health;
     float contactFlash = clamp(vContactLive, 0.0, 1.5);
+    float skinPulse = 0.5 + 0.5 * sin(uTime * (1.4 + vRarity * 0.8) + vUp * 4.0 + f * 3.0);
     float viewHue = fract(
-      vSecHue + fres * 0.28 + vUp * 0.1 + f * 0.08
-      + uTime * (0.04 + vRarity * 0.025 + vStress * 0.02)
-      + hunger * 0.1 + vStress * 0.15 + contactFlash * 0.1
+      vSecHue + fres * 0.32 + vUp * 0.12 + f * 0.1 + f3 * 0.06
+      + uTime * (0.05 + vRarity * 0.035 + vStress * 0.03)
+      + hunger * 0.12 + vStress * 0.18 + contactFlash * 0.14
+      + skinPulse * 0.04 * vRarity
     );
-    vec3 iri = hsl2rgb(viewHue, 0.72 + vRarity * 0.25, 0.5 + fres * 0.16 - hunger * 0.08);
-    vec3 iri2 = hsl2rgb(fract(viewHue + 0.22 + f * 0.05), 0.8, 0.55);
-    vec3 spectrum = mix(iri, iri2, 0.3 + fres * 0.4 + vRarity * 0.2 + vStress * 0.12);
+    float sat = clamp(0.68 + vRarity * 0.28 - hunger * 0.22 + contactFlash * 0.12 + f2 * 0.08, 0.15, 1.0);
+    float lit = clamp(0.48 + fres * 0.18 - hunger * 0.12 + health * 0.08 - vStress * 0.06 + f * 0.05, 0.12, 0.78);
+    vec3 iri = hsl2rgb(viewHue, sat, lit);
+    vec3 iri2 = hsl2rgb(fract(viewHue + 0.18 + f * 0.07 + vStress * 0.05), sat * 1.05, lit + 0.06);
+    vec3 iri3 = hsl2rgb(fract(viewHue + 0.42 - f2 * 0.04), 0.75 + vRarity * 0.2, 0.42 + fres * 0.2);
+    // Counter-weird spectrum: triple-skin morph (not candy stripes).
+    vec3 spectrum = mix(mix(iri, iri2, 0.45 + f * 0.2), iri3, 0.2 + contactFlash * 0.15 + vRarity * 0.15);
 
-    float key = 0.38 + 0.72 * clamp(dot(n, normalize(vec3(0.35, 0.8, 0.45))), 0.0, 1.0);
-    float skinMix = 0.32 + vRarity * 0.4 + fres * 0.2 + vStress * 0.15;
-    vec3 body = mix(vColor * tex, spectrum, clamp(skinMix, 0.0, 0.9)) * key;
-    // Degrade skin when biomass low (food state).
-    body = mix(body, hsl2rgb(fract(vSecHue + 0.06), 0.3, 0.28), hunger * 0.45 * (1.0 - vRoot));
+    float key = 0.36 + 0.74 * clamp(dot(n, normalize(vec3(0.35, 0.8, 0.45))), 0.0, 1.0);
+    float skinMix = 0.3 + vRarity * 0.42 + fres * 0.22 + vStress * 0.18 + contactFlash * 0.1;
+    vec3 body = mix(vColor * tex, spectrum, clamp(skinMix, 0.0, 0.95)) * key;
+    // Degrade / bruise when biomass low or overgrazed (operational food state).
+    vec3 bruise = hsl2rgb(fract(vSecHue + 0.55 + f * 0.03), 0.35, 0.22);
+    body = mix(body, bruise, hunger * 0.5 * (1.0 - vRoot));
+    body = mix(body, hsl2rgb(fract(vSecHue + 0.08), 0.25, 0.18), vStress * hunger * 0.25 * (1.0 - vRoot));
 
-    vec3 rootCol = mix(vColor * 0.35, hsl2rgb(fract(vSecHue + 0.08), 0.45, 0.22), 0.5);
-    body = mix(body, rootCol, vRoot * 0.85);
+    vec3 rootCol = mix(vColor * 0.32, hsl2rgb(fract(vSecHue + 0.1), 0.42, 0.2), 0.55);
+    body = mix(body, rootCol, vRoot * 0.88);
 
-    float pulse = 0.5 + 0.5 * sin(uTime * 1.9 + vUp * 5.5 + f * 2.0 + vRarity * 1.5 + vStress);
-    float glow = vGlow * (0.2 + 0.85 * vUp) * pulse
-               * (0.55 + 0.9 * uChaos + contactFlash * 0.45 + health * 0.2)
-               * (1.0 - vRoot * 0.7);
-    vec3 glowCol = mix(vColor * vec3(1.3, 1.55, 2.0), spectrum * 1.35, 0.45 + vRarity * 0.4);
+    float pulse = 0.5 + 0.5 * sin(uTime * 2.0 + vUp * 5.8 + f * 2.2 + vRarity * 1.6 + vStress);
+    float glow = vGlow * (0.18 + 0.9 * vUp) * pulse
+               * (0.5 + 0.95 * uChaos + contactFlash * 0.55 + health * 0.25)
+               * (1.0 - vRoot * 0.72);
+    vec3 glowCol = mix(vColor * vec3(1.25, 1.5, 2.05), spectrum * 1.4, 0.5 + vRarity * 0.4);
 
-    vec3 rim = spectrum * fres * (0.7 + vRarity * 1.0 + contactFlash * 0.55) * (1.0 - vRoot * 0.5);
-    float spore = pow(max(0.0, 0.5 + 0.5 * f2), 3.0) * (0.2 + vRarity * 0.7) * pulse * vUp;
-    vec3 sporeCol = hsl2rgb(fract(viewHue + 0.15), 0.9, 0.62) * spore;
+    vec3 rim = spectrum * fres * (0.75 + vRarity * 1.1 + contactFlash * 0.65) * (1.0 - vRoot * 0.5);
+    float spore = pow(max(0.0, 0.5 + 0.5 * f2), 2.8) * (0.18 + vRarity * 0.75) * pulse * vUp;
+    vec3 sporeCol = hsl2rgb(fract(viewHue + 0.18 + f3 * 0.05), 0.92, 0.64) * spore;
+    // Contact chromatic flash (threat signal — multi-hue, not flat white).
+    vec3 threat = hsl2rgb(fract(viewHue + 0.33 + uTime * 0.1), 0.95, 0.58) * contactFlash * 0.35 * vUp;
 
-    vec3 col = body + glowCol * glow + rim + sporeCol;
-    col += spectrum * contactFlash * 0.25 * vUp;
+    vec3 col = body + glowCol * glow + rim + sporeCol + threat;
+    col += spectrum * contactFlash * 0.2 * vUp * (0.6 + 0.4 * skinPulse);
+    // Shade dynamism: stress desaturates mid-body slightly (degrade), rarity boosts tip chroma.
+    col = mix(col, col * vec3(0.85, 0.9, 0.95), vStress * 0.2 * (1.0 - vUp));
+    col += spectrum * vRarity * vUp * 0.08 * skinPulse;
     gl_FragColor = vec4(col, 1.0);
   }
 `;
@@ -716,8 +803,14 @@ export class AlienFlora {
             pl.rarity * 0.1 +
             1) %
           1;
-        const sat = Math.min(0.98, Math.max(0.55, s.sat + (hash(i * 97 + pl.sp) - 0.5) * 0.2 + pl.rarity * 0.15));
-        const light = Math.min(0.72, Math.max(0.32, s.light + hash(i * 101 + pl.sp) * 0.16 + pl.rarity * 0.1));
+        const sat = Math.min(
+          0.98,
+          Math.max(0.55, s.sat + (hash(i * 97 + pl.sp) - 0.5) * 0.2 + pl.rarity * 0.15),
+        );
+        const light = Math.min(
+          0.72,
+          Math.max(0.32, s.light + hash(i * 101 + pl.sp) * 0.16 + pl.rarity * 0.1),
+        );
         col.setHSL(hueJit, sat, light);
         if (pl.rarity > 0.55) {
           const kick = hash(i * 113 + pl.sp);
@@ -763,191 +856,261 @@ export class AlienFlora {
   }
 
   /**
-   * Nine curved alien silhouettes (lathe / tube / knot) + buried root bulbs.
-   * Collar at y=0; roots below (y negative). No boxy plates — organic revolution profiles and helices.
+   * Nine unearthly silhouettes (lathe / tube / knot / compound) + buried root bulbs.
+   * Same height envelope as f8c6eadb (~2–6u) — bizarro asymmetry & surface artifacts, NOT tall thin poles.
+   * Collar at y=0; roots below (y negative). No boxy plates.
    */
   private static buildFamilies(): Family[] {
     const fams: Family[] = [];
 
-    // 0 SPIRE — curved lathe needle + soft crown bulb + buried root
+    // 0 SPIRE — bulbous mid-swell + off-axis crown lobe (not a thin needle)
     {
       const stem = lathe(
         [
-          [0.02, 0.0],
-          [0.28, 0.35],
-          [0.38, 1.2],
-          [0.32, 2.6],
-          [0.22, 4.0],
-          [0.12, 5.2],
-          [0.04, 5.9],
-        ],
-        16,
-      );
-      const crown = new THREE.SphereGeometry(0.42, 12, 10);
-      crown.scale(1.3, 0.7, 1.3);
-      crown.translate(0, 5.85, 0);
-      const geo = adoptMerged([stem, crown, rootBulb(0.42, 0.55)]);
-      fams.push({ geo, height: peakHeight(geo) });
-    }
-
-    // 1 WHIP — helical tube tendril + fruiting nodules
-    {
-      const pts: THREE.Vector3[] = [];
-      for (let i = 0; i <= 40; i++) {
-        const t = i / 40;
-        const y = t * 6.4;
-        const a = t * Math.PI * 4.2;
-        const r = 0.32 * (1 - t * 0.75) + 0.06;
-        pts.push(new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r));
-      }
-      const tube = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 36, 0.12, 7, false);
-      const n1 = new THREE.SphereGeometry(0.32, 10, 8);
-      n1.scale(1.25, 0.75, 1.25);
-      n1.translate(0.28, 2.0, 0.05);
-      const n2 = new THREE.SphereGeometry(0.26, 10, 8);
-      n2.scale(1.15, 0.7, 1.15);
-      n2.translate(-0.22, 3.8, 0.12);
-      const n3 = new THREE.SphereGeometry(0.2, 9, 7);
-      n3.translate(0.1, 5.5, -0.08);
-      const geo = adoptMerged([tube, n1, n2, n3, rootBulb(0.36, 0.5)]);
-      fams.push({ geo, height: peakHeight(geo) });
-    }
-
-    // 2 POD — lathe urn fruiting body (SEM organic)
-    {
-      const body = lathe(
-        [
-          [0.15, 0.0],
-          [0.7, 0.25],
-          [0.95, 0.7],
-          [1.05, 1.15],
-          [0.85, 1.55],
-          [0.45, 1.85],
-          [0.2, 2.05],
+          [0.04, 0.0],
+          [0.42, 0.3],
+          [0.55, 0.9],
+          [0.48, 1.8],
+          [0.62, 2.8],
+          [0.38, 4.0],
+          [0.22, 5.0],
+          [0.08, 5.7],
         ],
         18,
       );
-      const lip = new THREE.TorusGeometry(0.42, 0.07, 8, 16);
-      lip.rotateX(Math.PI / 2);
-      lip.translate(0, 1.95, 0);
-      const geo = adoptMerged([body, lip, rootBulb(0.55, 0.48)]);
+      const crown = new THREE.SphereGeometry(0.48, 12, 10);
+      crown.scale(1.45, 0.65, 1.2);
+      crown.rotateZ(0.35);
+      crown.translate(0.18, 5.55, 0.05);
+      const lobe = new THREE.SphereGeometry(0.28, 10, 8);
+      lobe.scale(1.3, 0.7, 0.9);
+      lobe.rotateX(0.5);
+      lobe.translate(-0.35, 3.4, 0.2);
+      const geo = adoptMerged([stem, crown, lobe, rootBulb(0.48, 0.58)]);
       fams.push({ geo, height: peakHeight(geo) });
     }
 
-    // 3 BLADE — curved lathe sail (leaf without hard boxes)
+    // 1 WHIP — double-helix counter-coil + asymmetric fruiting nodules
     {
-      const sail = lathe(
-        [
-          [0.02, 0.0],
-          [0.15, 0.4],
-          [0.55, 1.4],
-          [0.85, 2.6],
-          [0.95, 3.6],
-          [0.7, 4.5],
-          [0.25, 5.2],
-          [0.02, 5.5],
-        ],
-        14,
-      );
-      sail.scale(0.35, 1, 1.0); // flatten into a soft blade
-      const geo = adoptMerged([sail, rootBulb(0.34, 0.5)]);
-      fams.push({ geo, height: peakHeight(geo) });
-    }
-
-    // 4 CORAL — torus-knot body + soft satellite bulbs (math weirdness, still connected)
-    {
-      const core = new THREE.TorusKnotGeometry(0.55, 0.16, 64, 8, 2, 3);
-      core.scale(0.85, 1.9, 0.85);
-      core.translate(0, 2.6, 0);
-      const s1 = new THREE.SphereGeometry(0.28, 10, 8);
-      s1.translate(0.55, 1.6, 0.15);
-      const s2 = new THREE.SphereGeometry(0.24, 9, 7);
-      s2.translate(-0.45, 3.2, -0.2);
-      const s3 = new THREE.SphereGeometry(0.2, 9, 7);
-      s3.translate(0.2, 4.4, 0.3);
-      const geo = adoptMerged([core, s1, s2, s3, rootBulb(0.4, 0.52)]);
-      fams.push({ geo, height: peakHeight(geo) });
-    }
-
-    // 5 SHARD — lathe crystal with curved waist (not tetra edges)
-    {
-      const crystal = lathe(
-        [
-          [0.05, 0.0],
-          [0.45, 0.5],
-          [0.55, 1.4],
-          [0.4, 2.6],
-          [0.55, 3.8],
-          [0.35, 4.8],
-          [0.08, 5.6],
-        ],
-        12,
-      );
-      const tip = new THREE.SphereGeometry(0.18, 10, 8);
-      tip.scale(0.7, 1.4, 0.7);
-      tip.translate(0, 5.7, 0);
-      const geo = adoptMerged([crystal, tip, rootBulb(0.38, 0.5)]);
-      fams.push({ geo, height: peakHeight(geo) });
-    }
-
-    // 6 HELIX — thick mycelial coil + spore orbs
-    {
-      const pts: THREE.Vector3[] = [];
-      for (let i = 0; i <= 42; i++) {
-        const t = i / 42;
-        const y = t * 5.6;
-        const a = t * Math.PI * 5.5;
-        const r = 0.48 * (1 - t * 0.7) + 0.1;
-        pts.push(new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r));
+      const ptsA: THREE.Vector3[] = [];
+      const ptsB: THREE.Vector3[] = [];
+      for (let i = 0; i <= 40; i++) {
+        const t = i / 40;
+        const y = t * 5.9;
+        const a = t * Math.PI * 4.6;
+        const r = 0.42 * (1 - t * 0.65) + 0.1;
+        ptsA.push(new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r));
+        ptsB.push(
+          new THREE.Vector3(
+            Math.cos(a + Math.PI) * r * 0.75,
+            y * 0.95,
+            Math.sin(a + Math.PI) * r * 0.75,
+          ),
+        );
       }
-      const tube = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 40, 0.16, 8, false);
-      const orb1 = new THREE.SphereGeometry(0.3, 10, 8);
-      orb1.translate(0.4, 1.6, 0.1);
-      const orb2 = new THREE.SphereGeometry(0.26, 10, 8);
-      orb2.translate(-0.32, 3.2, 0.18);
-      const orb3 = new THREE.SphereGeometry(0.22, 9, 7);
-      orb3.translate(0.18, 4.7, -0.12);
-      const geo = adoptMerged([tube, orb1, orb2, orb3, rootBulb(0.4, 0.5)]);
+      const tubeA = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(ptsA), 36, 0.14, 7, false);
+      const tubeB = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(ptsB), 32, 0.1, 6, false);
+      const n1 = new THREE.SphereGeometry(0.36, 10, 8);
+      n1.scale(1.4, 0.7, 1.15);
+      n1.rotateY(0.8);
+      n1.translate(0.38, 1.9, 0.08);
+      const n2 = new THREE.SphereGeometry(0.3, 10, 8);
+      n2.scale(1.2, 0.65, 1.35);
+      n2.rotateZ(-0.4);
+      n2.translate(-0.32, 3.5, 0.18);
+      const n3 = new THREE.SphereGeometry(0.24, 9, 7);
+      n3.scale(1.1, 0.8, 1.5);
+      n3.translate(0.14, 5.15, -0.12);
+      const geo = adoptMerged([tubeA, tubeB, n1, n2, n3, rootBulb(0.4, 0.52)]);
       fams.push({ geo, height: peakHeight(geo) });
     }
 
-    // 7 BUBBLE — fruiting cluster (connected via root mat)
+    // 2 POD — warped urn + tilted mouth ring + side blister
     {
-      const main = new THREE.SphereGeometry(0.7, 14, 12);
-      main.scale(1.15, 0.9, 1.15);
-      main.translate(0, 0.85, 0);
-      const a = new THREE.SphereGeometry(0.4, 12, 10);
-      a.translate(0.55, 0.55, 0.2);
-      const b = new THREE.SphereGeometry(0.36, 12, 10);
-      b.translate(-0.48, 0.7, 0.35);
-      const c = new THREE.SphereGeometry(0.32, 11, 9);
-      c.translate(0.12, 1.35, -0.45);
-      const ring = new THREE.TorusGeometry(0.48, 0.06, 8, 18);
-      ring.rotateX(Math.PI / 2);
-      ring.translate(0, 1.45, 0);
-      const geo = adoptMerged([main, a, b, c, ring, rootBulb(0.5, 0.45)]);
+      const body = lathe(
+        [
+          [0.18, 0.0],
+          [0.82, 0.22],
+          [1.12, 0.65],
+          [1.18, 1.1],
+          [0.9, 1.5],
+          [0.5, 1.85],
+          [0.28, 2.1],
+        ],
+        20,
+      );
+      body.scale(1.05, 1, 0.88); // elliptic cross-section
+      const lip = new THREE.TorusGeometry(0.48, 0.09, 8, 18);
+      lip.rotateX(Math.PI / 2 + 0.25);
+      lip.rotateZ(0.3);
+      lip.translate(0.08, 1.95, 0.05);
+      const blister = new THREE.SphereGeometry(0.38, 11, 9);
+      blister.scale(1.2, 0.75, 1.0);
+      blister.translate(0.72, 0.95, 0.15);
+      const geo = adoptMerged([body, lip, blister, rootBulb(0.58, 0.5)]);
       fams.push({ geo, height: peakHeight(geo) });
     }
 
-    // 8 FAN — lathe mineral sail (curved radial profile, no boxes)
+    // 3 BLADE — twisted sail + mid ridge bulb (asymmetric leaf-body)
     {
       const sail = lathe(
         [
-          [0.02, 0.0],
-          [0.2, 0.3],
-          [0.75, 1.0],
-          [1.15, 2.0],
-          [1.25, 3.0],
-          [0.9, 3.9],
-          [0.35, 4.5],
-          [0.02, 4.7],
+          [0.03, 0.0],
+          [0.22, 0.35],
+          [0.65, 1.2],
+          [0.95, 2.4],
+          [1.05, 3.4],
+          [0.75, 4.4],
+          [0.3, 5.1],
+          [0.04, 5.4],
         ],
         16,
       );
-      sail.scale(0.28, 1, 1); // soft fan thickness
-      const jewel = new THREE.SphereGeometry(0.22, 10, 8);
-      jewel.translate(0, 4.55, 0);
-      const geo = adoptMerged([sail, jewel, rootBulb(0.36, 0.48)]);
+      sail.scale(0.42, 1, 1.05);
+      sail.rotateY(0.35);
+      const ridge = new THREE.SphereGeometry(0.22, 10, 8);
+      ridge.scale(0.6, 1.6, 0.7);
+      ridge.rotateZ(0.4);
+      ridge.translate(0.15, 2.8, 0);
+      const tipLobe = new THREE.SphereGeometry(0.2, 9, 7);
+      tipLobe.scale(1.4, 0.55, 0.9);
+      tipLobe.translate(-0.12, 5.15, 0.08);
+      const geo = adoptMerged([sail, ridge, tipLobe, rootBulb(0.36, 0.52)]);
+      fams.push({ geo, height: peakHeight(geo) });
+    }
+
+    // 4 CORAL — dual torus-knots + off-axis satellites (math alien, connected)
+    {
+      const core = new THREE.TorusKnotGeometry(0.52, 0.15, 72, 8, 2, 5);
+      core.scale(0.9, 1.75, 0.95);
+      core.rotateX(0.2);
+      core.translate(0, 2.45, 0);
+      const core2 = new THREE.TorusKnotGeometry(0.32, 0.1, 48, 7, 3, 2);
+      core2.scale(0.8, 1.3, 0.8);
+      core2.rotateZ(0.7);
+      core2.translate(0.25, 3.5, 0.1);
+      const s1 = new THREE.SphereGeometry(0.32, 10, 8);
+      s1.scale(1.2, 0.7, 1.1);
+      s1.translate(0.62, 1.45, 0.2);
+      const s2 = new THREE.SphereGeometry(0.26, 9, 7);
+      s2.translate(-0.5, 3.0, -0.25);
+      const s3 = new THREE.SphereGeometry(0.22, 9, 7);
+      s3.scale(1.3, 0.6, 1.1);
+      s3.translate(0.25, 4.35, 0.35);
+      const geo = adoptMerged([core, core2, s1, s2, s3, rootBulb(0.44, 0.54)]);
+      fams.push({ geo, height: peakHeight(geo) });
+    }
+
+    // 5 SHARD — multi-waist crystal + canted tip + mid wart
+    {
+      const crystal = lathe(
+        [
+          [0.06, 0.0],
+          [0.52, 0.4],
+          [0.62, 1.1],
+          [0.38, 2.0],
+          [0.58, 2.9],
+          [0.42, 3.9],
+          [0.55, 4.7],
+          [0.12, 5.5],
+        ],
+        14,
+      );
+      crystal.scale(1.05, 1, 0.9);
+      const tip = new THREE.SphereGeometry(0.22, 10, 8);
+      tip.scale(0.65, 1.5, 0.75);
+      tip.rotateX(0.35);
+      tip.translate(0.08, 5.55, 0);
+      const wart = new THREE.SphereGeometry(0.2, 9, 7);
+      wart.scale(1.4, 0.7, 1.0);
+      wart.translate(0.4, 2.6, 0.1);
+      const geo = adoptMerged([crystal, tip, wart, rootBulb(0.4, 0.52)]);
+      fams.push({ geo, height: peakHeight(geo) });
+    }
+
+    // 6 HELIX — fat counter-rotating mycelial coils + spore orbs
+    {
+      const pts: THREE.Vector3[] = [];
+      const pts2: THREE.Vector3[] = [];
+      for (let i = 0; i <= 42; i++) {
+        const t = i / 42;
+        const y = t * 5.4;
+        const a = t * Math.PI * 5.8;
+        const r = 0.55 * (1 - t * 0.62) + 0.12;
+        pts.push(new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r));
+        pts2.push(
+          new THREE.Vector3(
+            Math.cos(-a * 0.85 + 1.2) * r * 0.7,
+            y * 0.92 + 0.15,
+            Math.sin(-a * 0.85 + 1.2) * r * 0.7,
+          ),
+        );
+      }
+      const tube = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 40, 0.18, 8, false);
+      const tube2 = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts2), 36, 0.12, 7, false);
+      const orb1 = new THREE.SphereGeometry(0.34, 10, 8);
+      orb1.scale(1.25, 0.7, 1.15);
+      orb1.translate(0.48, 1.5, 0.12);
+      const orb2 = new THREE.SphereGeometry(0.28, 10, 8);
+      orb2.translate(-0.38, 3.05, 0.22);
+      const orb3 = new THREE.SphereGeometry(0.24, 9, 7);
+      orb3.scale(1.2, 0.65, 1.3);
+      orb3.translate(0.22, 4.55, -0.15);
+      const geo = adoptMerged([tube, tube2, orb1, orb2, orb3, rootBulb(0.44, 0.52)]);
+      fams.push({ geo, height: peakHeight(geo) });
+    }
+
+    // 7 BUBBLE — clustered fruiting bodies + tilted rings (alien polyp)
+    {
+      const main = new THREE.SphereGeometry(0.75, 14, 12);
+      main.scale(1.25, 0.85, 1.15);
+      main.translate(0, 0.9, 0);
+      const a = new THREE.SphereGeometry(0.45, 12, 10);
+      a.scale(1.15, 0.8, 1.0);
+      a.translate(0.62, 0.5, 0.25);
+      const b = new THREE.SphereGeometry(0.4, 12, 10);
+      b.translate(-0.55, 0.75, 0.4);
+      const c = new THREE.SphereGeometry(0.36, 11, 9);
+      c.scale(1.1, 0.75, 1.2);
+      c.translate(0.15, 1.45, -0.5);
+      const d = new THREE.SphereGeometry(0.28, 10, 8);
+      d.translate(-0.2, 1.7, 0.35);
+      const ring = new THREE.TorusGeometry(0.52, 0.07, 8, 18);
+      ring.rotateX(Math.PI / 2 + 0.2);
+      ring.rotateZ(0.4);
+      ring.translate(0.05, 1.5, 0.05);
+      const ring2 = new THREE.TorusGeometry(0.28, 0.05, 7, 14);
+      ring2.rotateY(0.9);
+      ring2.translate(0.4, 1.1, -0.2);
+      const geo = adoptMerged([main, a, b, c, d, ring, ring2, rootBulb(0.55, 0.48)]);
+      fams.push({ geo, height: peakHeight(geo) });
+    }
+
+    // 8 FAN — warped mineral sail + canted jewel + side shelf
+    {
+      const sail = lathe(
+        [
+          [0.03, 0.0],
+          [0.28, 0.25],
+          [0.85, 0.9],
+          [1.25, 1.85],
+          [1.35, 2.85],
+          [1.0, 3.75],
+          [0.4, 4.4],
+          [0.05, 4.65],
+        ],
+        18,
+      );
+      sail.scale(0.32, 1, 1.08);
+      sail.rotateY(0.25);
+      const jewel = new THREE.SphereGeometry(0.26, 10, 8);
+      jewel.scale(1.3, 0.6, 1.1);
+      jewel.rotateX(0.4);
+      jewel.translate(0.1, 4.4, 0.05);
+      const shelf = new THREE.SphereGeometry(0.22, 9, 7);
+      shelf.scale(1.5, 0.5, 1.0);
+      shelf.translate(0.35, 2.4, 0.1);
+      const geo = adoptMerged([sail, jewel, shelf, rootBulb(0.4, 0.5)]);
       fams.push({ geo, height: peakHeight(geo) });
     }
 
@@ -1138,7 +1301,7 @@ export class AlienFlora {
     const f10 = sample(ix0 + 1, iz0);
     const f01 = sample(ix0, iz0 + 1);
     const f11 = sample(ix0 + 1, iz0 + 1);
-    return f00 + (f10 - f00) * tx + ((f01 + (f11 - f01) * tx) - (f00 + (f10 - f00) * tx)) * tz;
+    return f00 + (f10 - f00) * tx + (f01 + (f11 - f01) * tx - (f00 + (f10 - f00) * tx)) * tz;
   }
 
   pressureAt(x: number, z: number): number {
