@@ -38,14 +38,16 @@ export function terrainDisplacementAt(
     freq *= TERRAIN_DETAIL_LACUNARITY;
   }
   const ripple = Math.sin(x * 0.23 + z * 0.19 + terrainTime * 0.55) * 0.5 + 0.5;
-  return (
+  const raw =
     (wave * (2.2 + terrainChaos * 6.2) +
       tectonic * (1 + terrainChaos * 4.6) +
       ridge * (1.5 + terrainChaos * 3.4) +
       detail * (1.2 + terrainChaos * 2) +
       ripple * (0.4 + terrainChaos * 0.8)) *
-    liveAmp
-  );
+    liveAmp;
+  // Soft-knee: keep lively dunes, compress extreme walls (~±17 → gentler) so decorative
+  // waves don't form multi-unit faces that visually erase seated flora (CPU/GPU parity).
+  return raw / (1 + Math.abs(raw) * 0.028);
 }
 
 /**
@@ -85,12 +87,14 @@ float cqmTerrainDisplacement(
   }
   float ripple =
     sin(worldPos.x * 0.23 + worldPos.z * 0.19 + terrainTime * 0.55) * 0.5 + 0.5;
-  return (
+  float raw = (
     wave * (2.2 + terrainChaos * 6.2) +
     tectonic * (1.0 + terrainChaos * 4.6) +
     ridge * (1.5 + terrainChaos * 3.4) +
     detail * (1.2 + terrainChaos * 2.0) +
     ripple * (0.4 + terrainChaos * 0.8)
   ) * liveAmp;
+  // Soft-knee (matches CPU): lively motion without multi-unit walls that swallow plants.
+  return raw / (1.0 + abs(raw) * 0.028);
 }
 `;
