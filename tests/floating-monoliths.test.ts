@@ -36,8 +36,9 @@ describe('FloatingMonoliths — suspended dome architecture', () => {
       if (o instanceof THREE.Group) groups++;
     });
     expect(groups).toBe(16);
-    expect(f.panelCount).toBeGreaterThan(2000); // ~14 greebled megaliths × 180 panels
-    expect(instanceMeshes(scene).length).toBeGreaterThanOrEqual(13);
+    // Every megalith is greebled (no bare dead tori) — 16 × 180 panels.
+    expect(f.panelCount).toBe(16 * 180);
+    expect(instanceMeshes(scene).length).toBe(16);
     f.dispose();
   });
 

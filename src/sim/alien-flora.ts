@@ -693,33 +693,35 @@ const flora_frag = /* glsl */ `
     // Möbius warp of hue circle driven by stress/contact (extreme remapping, continuous).
     float viewHue = moebiusHue(rawHue, vStress * 0.45 + contactFlash * 0.2 - 0.15, debt * 0.35 - health * 0.2);
 
+    // Strong sat + mid lit — high lit was the white-wash that killed field readability.
     float sat = clamp(
-      0.78 + vRarity * 0.35 - hunger * 0.25 + contactFlash * 0.18 + f2 * 0.12
-      + uChaos * 0.1 - vStress * 0.05 + health * 0.08 - debt * 0.12 + crowd * 0.06,
-      0.2, 1.0);
+      0.92 + vRarity * 0.28 - hunger * 0.12 + contactFlash * 0.15 + f2 * 0.1
+      + uChaos * 0.12 - vStress * 0.03 + health * 0.06 - debt * 0.08 + crowd * 0.05,
+      0.55, 1.0);
     float lit = clamp(
-      0.52 + fres * 0.22 - hunger * 0.12 + health * 0.12 - vStress * 0.07
-      + f * 0.07 + contactFlash * 0.08 - debt * 0.08 + skinPulse * 0.04,
-      0.12, 0.88);
+      0.34 + fres * 0.14 - hunger * 0.08 + health * 0.08 - vStress * 0.05
+      + f * 0.05 + contactFlash * 0.06 - debt * 0.06 + skinPulse * 0.03,
+      0.14, 0.58);
 
     vec2 hopf = hopfAngles(vWorldP * 0.08 + n * 0.3, uTime + vStress);
     float hopfHue = fract(hopf.x / 6.2831853 + hopf.y / 6.2831853 * 0.5 + viewHue * 0.3);
 
+    // Wider hue offsets between skin manifolds so chroma bands actually diverge.
     vec3 iri = hsl2rgb(viewHue, sat, lit);
-    vec3 iri2 = hsl2rgb(fract(viewHue + 0.22 + f * 0.1 + vStress * 0.08), sat * 1.1, lit + 0.08);
-    vec3 iri3 = hsl2rgb(fract(viewHue + 0.48 - f2 * 0.06 + contactFlash * 0.05), 0.82 + vRarity * 0.25, 0.46 + fres * 0.24);
-    vec3 iri4 = hsl2rgb(hopfHue, sat * 0.95, lit * 0.92 + fres * 0.1);
+    vec3 iri2 = hsl2rgb(fract(viewHue + 0.28 + f * 0.12 + vStress * 0.1), sat, lit + 0.04);
+    vec3 iri3 = hsl2rgb(fract(viewHue + 0.55 - f2 * 0.08 + contactFlash * 0.06), sat * 0.98, 0.36 + fres * 0.16);
+    vec3 iri4 = hsl2rgb(hopfHue, sat, lit * 0.95 + fres * 0.08);
     // Spectrum morph: biosphere-weighted blend of four skin manifolds.
-    float w12 = clamp(0.4 + f * 0.25 + skinPulse2 * 0.15 + health * 0.1, 0.0, 1.0);
-    float w3 = clamp(0.18 + contactFlash * 0.22 + vRarity * 0.18 + uChaos * 0.1, 0.0, 0.85);
-    float w4 = clamp(0.12 + vStress * 0.15 + debt * 0.12 + crowd * 0.1, 0.0, 0.7);
+    float w12 = clamp(0.35 + f * 0.28 + skinPulse2 * 0.18 + health * 0.1, 0.0, 1.0);
+    float w3 = clamp(0.22 + contactFlash * 0.24 + vRarity * 0.2 + uChaos * 0.12, 0.0, 0.9);
+    float w4 = clamp(0.15 + vStress * 0.16 + debt * 0.12 + crowd * 0.12, 0.0, 0.75);
     vec3 spectrum = mix(mix(iri, iri2, w12), iri3, w3);
     spectrum = mix(spectrum, iri4, w4);
 
-    float key = 0.3 + 0.8 * clamp(dot(n, normalize(vec3(0.3, 0.85, 0.4))), 0.0, 1.0);
-    // Skin almost fully spectrum when rare/healthy/contacted — base color only as residual.
-    float skinMix = 0.4 + vRarity * 0.5 + fres * 0.28 + vStress * 0.22 + contactFlash * 0.16 + health * 0.1 + uChaos * 0.08;
-    vec3 body = mix(vColor * tex, spectrum, clamp(skinMix, 0.0, 0.98)) * key;
+    float key = 0.45 + 0.65 * clamp(dot(n, normalize(vec3(0.3, 0.85, 0.4))), 0.0, 1.0);
+    // Keep more of the per-instance base hue (vColor) so plant-to-plant diversity survives skin morph.
+    float skinMix = 0.28 + vRarity * 0.42 + fres * 0.22 + vStress * 0.18 + contactFlash * 0.14 + health * 0.08 + uChaos * 0.08;
+    vec3 body = mix(vColor * tex * 1.15, spectrum, clamp(skinMix, 0.0, 0.92)) * key;
     // Degrade / bruise / ash when biomass low or debt (operational food state).
     vec3 bruise = hsl2rgb(fract(viewHue + 0.55 + f * 0.05 + vStress * 0.1), 0.38, 0.22);
     vec3 ash = hsl2rgb(fract(viewHue + 0.08), 0.18, 0.14);
@@ -1105,29 +1107,42 @@ export class AlienFlora {
         m.compose(pos, q, scl);
         mesh.setMatrixAt(i, m);
 
-        // Wild palettes — saturated alien food colors, not lawn green.
+        // HARD chroma diversity — full spectrum, high sat, mid-dark light (kills white wash).
+        // Per-plant + spatial + family salt so neighbors never paint the same hue slab.
         const hueJit =
           (s.hue +
-            (hash(pl.sp * 31 + i) - 0.5) * 0.14 +
-            0.04 * Math.sin(pl.x * 0.009 + pl.z * 0.011) +
-            pl.rarity * 0.1 +
+            (hash(pl.sp * 31 + i) - 0.5) * 0.38 +
+            0.14 * Math.sin(pl.x * 0.007 + pl.z * 0.009) +
+            0.1 * Math.cos(pl.x * 0.013 - pl.z * 0.011) +
+            pl.rarity * 0.18 +
+            hash(i * 17 + pl.sp * 3) * 0.22 +
             1) %
           1;
         const sat = Math.min(
-          0.98,
-          Math.max(0.55, s.sat + (hash(i * 97 + pl.sp) - 0.5) * 0.2 + pl.rarity * 0.15),
+          1.0,
+          Math.max(0.78, s.sat + (hash(i * 97 + pl.sp) - 0.3) * 0.28 + pl.rarity * 0.22),
         );
+        // Lightness floor/ceiling tight mid-band — high L was washing everything toward white.
         const light = Math.min(
-          0.72,
-          Math.max(0.32, s.light + hash(i * 101 + pl.sp) * 0.16 + pl.rarity * 0.1),
+          0.52,
+          Math.max(0.22, s.light + (hash(i * 101 + pl.sp) - 0.5) * 0.14 + pl.rarity * 0.06),
         );
         col.setHSL(hueJit, sat, light);
-        if (pl.rarity > 0.55) {
+        // Accent punches on a wide share of plants (not only rare) so the field reads multicolored.
+        {
           const kick = hash(i * 113 + pl.sp);
-          const t = 0.28 + pl.rarity * 0.25;
-          if (kick < 0.33) col.lerp(new THREE.Color(0.25, 0.95, 1.0), t);
-          else if (kick < 0.66) col.lerp(new THREE.Color(1.0, 0.3, 0.85), t);
-          else col.lerp(new THREE.Color(1.0, 0.8, 0.28), t);
+          const t = 0.22 + pl.rarity * 0.28 + (kick > 0.55 ? 0.18 : 0.08);
+          if (kick < 0.2)
+            col.lerp(new THREE.Color(0.15, 0.95, 1.0), t); // cyan
+          else if (kick < 0.35)
+            col.lerp(new THREE.Color(1.0, 0.2, 0.75), t); // magenta
+          else if (kick < 0.48)
+            col.lerp(new THREE.Color(1.0, 0.75, 0.12), t); // gold
+          else if (kick < 0.58)
+            col.lerp(new THREE.Color(0.45, 1.0, 0.2), t); // lime
+          else if (kick < 0.68)
+            col.lerp(new THREE.Color(0.55, 0.2, 1.0), t); // violet
+          else if (kick < 0.78) col.lerp(new THREE.Color(1.0, 0.35, 0.15), t); // rust/orange
         }
 
         const o4 = i * 4;
@@ -1146,7 +1161,9 @@ export class AlienFlora {
         // aMeta: rarity, stiffness, secondaryHue, reactGain
         meta[o4] = pl.rarity;
         meta[o4 + 1] = 0.18 + hash(i * 83 + pl.sp) * 1.0; // stiffness variance
-        meta[o4 + 2] = (hueJit + 0.18 + pl.rarity * 0.25 + hash(i * 89) * 0.2) % 1;
+        // Secondary hue far from primary so skins can swing across the wheel.
+        meta[o4 + 2] =
+          (hueJit + 0.28 + pl.rarity * 0.35 + hash(i * 89) * 0.35 + hash(pl.sp * 7) * 0.2) % 1;
         meta[o4 + 3] = 0.55 + hash(i * 91 + pl.sp) * 0.9 + pl.rarity * 0.7; // react gain
 
         const o3 = i * 3;
@@ -1668,26 +1685,34 @@ export class AlienFlora {
     return fams;
   }
 
-  /** 50 deterministic species, biome-banded so each zone has a coherent alien palette. */
+  /** 50 deterministic species, biome-banded with FULL-spectrum strong chroma (not white wash). */
   private static buildSpecies(): Species[] {
     const out: Species[] = [];
     for (let i = 0; i < SPECIES_COUNT; i++) {
       const biome = i % BIOME_COUNT;
       const family = Math.floor(hash(i * 17 + 101) * FAMILY_COUNT) % FAMILY_COUNT;
-      // Wild non-lawn palettes: stretch across cyan / magenta / gold / violet / rust / lime.
+      // Spread hues hard across the wheel (not tight biome bands that all look the same).
       const band = biome / BIOME_COUNT;
-      const hue = (band + (hash(i * 19 + 2) - 0.5) * 0.18 + hash(i * 53) * 0.08 + 1) % 1;
+      const hue =
+        (band * 0.55 +
+          (i / SPECIES_COUNT) * 0.45 +
+          (hash(i * 19 + 2) - 0.5) * 0.35 +
+          hash(i * 53) * 0.15 +
+          1) %
+        1;
       out.push({
         family,
         biome,
         hue,
-        sat: 0.62 + hash(i * 23 + 3) * 0.36,
-        light: 0.34 + hash(i * 29 + 5) * 0.3,
+        // High saturation floor — pale/white was the visibility killer.
+        sat: 0.82 + hash(i * 23 + 3) * 0.18,
+        // Mid-dark lightness — high L washes to white under dome lighting.
+        light: 0.26 + hash(i * 29 + 5) * 0.22,
         // Bigger / taller — floor kills tiny invisibles; rare size via placement giants.
         size: 0.95 + hash(i * 31 + 7) * 1.7,
         swayFreq: 0.4 + hash(i * 37 + 11) * 2.2,
-        glow: 0.35 + hash(i * 41 + 13) * 0.6,
-        rarityBias: hash(i * 59 + 17) * 0.4,
+        glow: 0.45 + hash(i * 41 + 13) * 0.55,
+        rarityBias: hash(i * 59 + 17) * 0.55,
       });
     }
     return out;

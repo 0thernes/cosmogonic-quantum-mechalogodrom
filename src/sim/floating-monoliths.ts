@@ -2,7 +2,8 @@
  * FLOATING MONOLITHS — suspended abomination-architecture adrift in the dome.
  *
  * Sparse, deliberate megaliths hanging in the dome air (NOT the neon V11 lattices, NOT the
- * ground temple): greebled obelisks, fractured cubes, broken slabs, crystal shards and a ring-arch,
+ * ground temple): greebled obelisks, fractured cubes, broken slabs, crystal shards, stepped
+ * chunks, and bizarro compound ring-arches (voxelized torus + knot — NEVER bare dead donuts),
  * each slowly bobbing, swaying and tumbling so the volume reads as inhabited architecture rather
  * than empty space. Kept FEW and well-spaced (the owner: "not too many to destroy visuals… still
  * open spacing, but enough to give it life and materialism"), and held off the central column so
@@ -11,11 +12,11 @@
  * RENDER: each megalith is its own small Group (so it can drift independently for an O(count)
  * per-frame transform update, NOT O(panels)); inside, a shared unit-box geometry + shared material
  * draw ~180 instanced greeble panels encrusting the core, plus one lit core mesh. Panels carry
- * per-instance albedo (instanceColor) with rare neon accents. Total ≈ 16 cores + 16 instanced
- * panel meshes ≈ a few dozen draw calls for thousands of boxes.
+ * per-instance albedo (instanceColor) with chromatic accents so forms stand out from the field.
+ * Total ≈ 16 cores + 16 instanced panel meshes ≈ a few dozen draw calls for thousands of boxes.
  *
- * REACTIVITY (defensible, not decoration): the shared emissive glow is a monotone readout of world
- * chaos — pin chaos to 0 and the megaliths go cold stone; agitate it and their accents kindle. The
+ * REACTIVITY (defensible, not decoration): the shared emissive glow is a readout of world chaos —
+ * pin chaos to 0 and the megaliths go cold stone; agitate it and their accents kindle. The
  * drift/tumble is pure deterministic trig of `t`.
  *
  * DETERMINISM (ADR 0004): positions + per-instance params from a pure positional hash — ZERO rng
@@ -23,6 +24,7 @@
  * reads world chaos but never writes sim state, so the population golden stays byte-identical.
  */
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { ARENA_RADIUS } from './constants';
 
 const COUNT = 16;
@@ -41,7 +43,7 @@ interface Archetype {
   readonly bx: number;
   readonly by: number;
   readonly bz: number;
-  /** Greeble the bounding shell? (false for the ring-arch, which reads cleaner bare). */
+  /** Always true — bare cores (esp. plain tori) read as unfinished dead props. */
   readonly greeble: boolean;
 }
 
@@ -83,29 +85,32 @@ export class FloatingMonoliths {
       { geo: new THREE.BoxGeometry(13, 3.4, 7), bx: 6.5, by: 1.7, bz: 3.5, greeble: true }, // slab
       { geo: this.makeCrystal(), bx: 4, by: 7.2, bz: 4, greeble: true }, // crystal shard
       { geo: new THREE.BoxGeometry(6, 11, 6), bx: 3, by: 5.5, bz: 3, greeble: true }, // stepped chunk
-      { geo: new THREE.TorusGeometry(7, 1.5, 10, 36), bx: 8.5, by: 8.5, bz: 2, greeble: false }, // ring-arch
+      // Was bare TorusGeometry (dead dark donut). Now voxel-ring + knot, ALWAYS greebled.
+      { geo: this.makeBizarroRing(), bx: 8.2, by: 3.6, bz: 8.2, greeble: true },
+      { geo: this.makeSpindleStack(), bx: 3.4, by: 7.5, bz: 3.4, greeble: true }, // twisted spindle
+      { geo: this.makeKnotCluster(), bx: 5.5, by: 5.5, bz: 5.5, greeble: true }, // multi-knot freak
     ];
 
     this.panelMat = new THREE.MeshStandardMaterial({
-      color: 0xffffff, // per-instance via instanceColor
-      roughness: 0.74,
-      metalness: 0.34,
-      emissive: 0x101010, // strict monochrome (rebuild V124) — grey, no blue/violet tint
-      emissiveIntensity: 0.3,
+      color: 0xffffff, // per-instance via instanceColor (chromatic diversity)
+      roughness: 0.62,
+      metalness: 0.42,
+      emissive: 0x1a1228,
+      emissiveIntensity: 0.38,
     });
     this.coreMat = new THREE.MeshStandardMaterial({
-      color: 0x0d0d0d,
-      roughness: 0.55,
-      metalness: 0.5,
-      emissive: 0x111111,
-      emissiveIntensity: 0.45,
+      color: 0x141018,
+      roughness: 0.48,
+      metalness: 0.58,
+      emissive: 0x2a1840,
+      emissiveIntensity: 0.55,
     });
     // V109: energy beam — thin additive cylinder from each monolith to ground (scanning/energizing)
     this.beamGeo = new THREE.CylinderGeometry(0.12, 0.06, 1, 6, 1, true);
     this.beamMat = new THREE.MeshBasicMaterial({
-      color: 0xb0b0b0, // strict monochrome (rebuild V124) — silver beam, no blue
+      color: 0xc8a0ff, // chromatic beam so megaliths read as live architecture
       transparent: true,
-      opacity: 0.18,
+      opacity: 0.22,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       side: THREE.DoubleSide,
@@ -181,11 +186,14 @@ export class FloatingMonoliths {
           q.setFromEuler(e);
           m.compose(pos, q, scl);
           panelMesh.setMatrixAt(p, m);
-          // Strict MONOCHROME (rebuild V124): a rare panel glints brighter silver over dark grey —
-          // the drifting megaliths match the black/white/silver Monolith Megalith, zero hue.
-          const accent = hash(salt * 7 + 31) > 0.9;
-          const lit = accent ? 0.64 : 0.12 + hash(salt * 3) * 0.14;
-          col.setRGB(lit, lit, lit);
+          // Chromatic greeble: each megalith family gets a hue band; accents punch neon so forms
+          // stand out against the field (no more grey mush / dead props).
+          const familyHue = (archIdx / this.archetypes.length + hash(i * 13 + 2) * 0.12) % 1;
+          const accent = hash(salt * 7 + 31) > 0.82;
+          const hue = (familyHue + (hash(salt * 5 + 3) - 0.5) * 0.22 + (accent ? 0.08 : 0) + 1) % 1;
+          const sat = accent ? 0.78 + hash(salt) * 0.22 : 0.42 + hash(salt * 3) * 0.4;
+          const lit = accent ? 0.48 + hash(salt * 2) * 0.22 : 0.14 + hash(salt * 4) * 0.22;
+          col.setHSL(hue, sat, lit);
           panelMesh.setColorAt(p, col);
           panels++;
         }
@@ -226,6 +234,106 @@ export class FloatingMonoliths {
     const g = new THREE.OctahedronGeometry(5.5, 0);
     g.scale(0.78, 1.45, 0.78);
     return g;
+  }
+
+  /** Force non-indexed so mergeGeometries never fails on mixed index attrs. */
+  private static adopt(g: THREE.BufferGeometry): THREE.BufferGeometry {
+    if (!g.index) return g;
+    const ni = g.toNonIndexed();
+    g.dispose();
+    return ni;
+  }
+
+  private static mergeParts(parts: THREE.BufferGeometry[]): THREE.BufferGeometry {
+    const adopted = parts.map((p) => FloatingMonoliths.adopt(p));
+    const merged = mergeGeometries(adopted);
+    for (const p of adopted) {
+      if (p !== merged) p.dispose();
+    }
+    return merged ?? new THREE.BoxGeometry(6, 6, 6);
+  }
+
+  /**
+   * Bizarro ring-arch: voxelized torus of boxes + torus-knot spine.
+   * Replaces the old bare TorusGeometry that read as unfinished dead donuts.
+   */
+  private makeBizarroRing(): THREE.BufferGeometry {
+    const parts: THREE.BufferGeometry[] = [];
+    const segs = 18;
+    const R = 6.4;
+    for (let i = 0; i < segs; i++) {
+      const a = (i / segs) * Math.PI * 2;
+      const box = new THREE.BoxGeometry(
+        1.35 + (i % 3) * 0.45,
+        1.55 + (i % 4) * 0.55,
+        1.7 + (i % 2) * 0.7,
+      );
+      box.rotateY(-a);
+      box.rotateZ(((i % 5) - 2) * 0.18);
+      box.rotateX(((i % 3) - 1) * 0.22);
+      box.translate(Math.cos(a) * R, Math.sin(a * 3) * 0.55, Math.sin(a) * R);
+      parts.push(box);
+      // Occasional secondary block for irregular silhouette (not a smooth tire).
+      if (i % 3 === 0) {
+        const nub = new THREE.BoxGeometry(0.9, 2.2, 0.9);
+        nub.rotateZ(a * 0.5);
+        nub.translate(Math.cos(a) * (R + 1.4), 0.8, Math.sin(a) * (R + 1.4));
+        parts.push(nub);
+      }
+    }
+    const knot = new THREE.TorusKnotGeometry(5.2, 0.72, 72, 8, 2, 5);
+    knot.scale(1.05, 0.65, 1.05);
+    knot.rotateX(0.35);
+    parts.push(knot);
+    const knot2 = new THREE.TorusKnotGeometry(3.6, 0.45, 48, 6, 3, 2);
+    knot2.rotateY(1.1);
+    knot2.rotateZ(0.4);
+    parts.push(knot2);
+    return FloatingMonoliths.mergeParts(parts);
+  }
+
+  /** Stacked twisted boxes — vertical freak spindle (not a smooth primitive). */
+  private makeSpindleStack(): THREE.BufferGeometry {
+    const parts: THREE.BufferGeometry[] = [];
+    for (let i = 0; i < 9; i++) {
+      const t = i / 8;
+      const y = (t - 0.5) * 14;
+      const w = 1.2 + Math.sin(t * Math.PI) * 2.4 + (i % 2) * 0.5;
+      const box = new THREE.BoxGeometry(w, 1.5, w * (0.7 + (i % 3) * 0.2));
+      box.rotateY(i * 0.55);
+      box.rotateZ((i % 2 === 0 ? 1 : -1) * 0.12);
+      box.translate((i % 3) * 0.25 - 0.25, y, (i % 2) * 0.2 - 0.1);
+      parts.push(box);
+    }
+    const tip = new THREE.OctahedronGeometry(1.6, 0);
+    tip.scale(0.7, 1.4, 0.7);
+    tip.translate(0, 7.2, 0);
+    parts.push(tip);
+    return FloatingMonoliths.mergeParts(parts);
+  }
+
+  /** Multi-knot cluster — math-alien core instead of a single smooth solid. */
+  private makeKnotCluster(): THREE.BufferGeometry {
+    const parts: THREE.BufferGeometry[] = [];
+    const k1 = new THREE.TorusKnotGeometry(3.2, 0.85, 64, 8, 2, 3);
+    parts.push(k1);
+    const k2 = new THREE.TorusKnotGeometry(2.4, 0.55, 48, 6, 3, 5);
+    k2.rotateX(1.1);
+    k2.rotateY(0.6);
+    k2.translate(1.2, 0.8, -0.6);
+    parts.push(k2);
+    const k3 = new THREE.TorusKnotGeometry(1.8, 0.4, 40, 6, 2, 5);
+    k3.rotateZ(0.9);
+    k3.translate(-1.4, -0.5, 1.1);
+    parts.push(k3);
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2;
+      const box = new THREE.BoxGeometry(1.1, 2.4, 1.1);
+      box.rotateZ(a * 0.4);
+      box.translate(Math.cos(a) * 3.2, Math.sin(a * 2) * 1.2, Math.sin(a) * 3.2);
+      parts.push(box);
+    }
+    return FloatingMonoliths.mergeParts(parts);
   }
 
   /** Drift + tumble each megalith; kindle the shared emissive with world chaos. O(COUNT). */

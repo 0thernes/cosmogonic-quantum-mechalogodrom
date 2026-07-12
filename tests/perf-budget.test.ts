@@ -136,6 +136,11 @@ function median(xs: readonly number[]): number {
   return s.length % 2 === 1 ? s[mid]! : (s[mid - 1]! + s[mid]!) / 2;
 }
 
+/** Coverage instrumentation multiplies wall time; CPU budgets are meaningless under --coverage. */
+function underCoverage(): boolean {
+  return process.argv.some((a) => a === '--coverage' || a.startsWith('--coverage='));
+}
+
 describe('per-frame sim-CPU budget at the ultra tier', () => {
   test(`entity-update + grid rebuild at ${POP} entities stays under ${FRAME_BUDGET_MS}ms/frame (median)`, () => {
     const ctx = makeCtx(0xb0d6e7, POP);
@@ -171,8 +176,14 @@ describe('per-frame sim-CPU budget at the ultra tier', () => {
     // The population is held near POP by the auto-split/death equilibrium — confirm the guard
     // actually measured the heavy regime, not a collapsed world.
     expect(entities.list.length).toBeGreaterThan(POP * 0.7);
-    expect(med).toBeLessThan(FRAME_BUDGET_MS);
-  }, 30000);
+    // Wall-clock budgets are only falsifiable without coverage instrumentation.
+    if (!underCoverage()) {
+      expect(med).toBeLessThan(FRAME_BUDGET_MS);
+    } else {
+      expect(med).toBeGreaterThan(0);
+      expect(Number.isFinite(med)).toBe(true);
+    }
+  }, 60000);
 });
 
 describe('production-scale connectome structural receipt', () => {
