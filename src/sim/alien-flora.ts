@@ -252,31 +252,26 @@ const flora_vert = /* glsl */ `
     vBiomass = biomass;
     vDensity = density;
 
-    // ADAPTIVE brace: dense groves only mildly stiffen — still ALIVE, not frozen.
-    float brace = mix(1.0, 0.72, density);
-    float soft = (1.0 / stiff) * brace;
+    // No artificial motion caps — density is ecology (food/brace paint), NOT a thrash governor.
+    float soft = 1.0 / stiff;
     float health = clamp(biomass, 0.0, 1.0);
     float hunger = 1.0 - health;
 
-    // Lively multi-axis motion (tip-weighted; roots still pinned). Soft cap only.
-    float maxLat = 2.8 * brace;
-    float bend = rootPin * rootPin * (0.55 + uWind * 1.1 + uChaos * 0.95) * soft * (1.0 + rarity * 0.55);
-    float turb = rootPin * rootPin * (0.25 + uChaos * 0.7) * soft;
+    // Full multi-axis thrash (tip-weighted; roots pinned only so they stay in the ground).
+    float bend = rootPin * rootPin * (0.7 + uWind * 1.35 + uChaos * 1.2) * soft * (1.1 + rarity * 0.7);
+    float turb = rootPin * rootPin * (0.35 + uChaos * 0.95) * soft;
     vec3 p = position;
 
-    // ── TWIST / CONTINUOUS SPIN / LEAN ──
-    float twistWave = (1.1 + rarity * 1.4 + uChaos * 0.7) * sin(uTime * freq * 0.7 + phase)
-                    + (0.55 + hunger * 0.4) * sin(uTime * freq * 1.6 + phase * 2.0);
-    // Continuous spin rate (rad/s) — plants SPIN, not just wiggle.
-    float spinRate = (0.55 + freq * 0.85 + rarity * 0.9 + uChaos * 0.5 + health * 0.25) * soft;
-    float leanX = sin(uTime * freq + phase) * bend * 2.4
-                + sin(uTime * freq * 2.9 + phase * 1.4) * turb * 1.2
-                + sin(uTime * freq * 5.1 + phase * 0.5) * turb * 0.45;
-    float leanZ = cos(uTime * freq * 0.85 + phase * 1.2) * bend * 2.2
-                + cos(uTime * freq * 2.5 + phase * 1.6) * turb * 1.1
-                + cos(uTime * freq * 4.7 + phase * 0.9) * turb * 0.4;
-    leanX = clamp(leanX, -maxLat, maxLat);
-    leanZ = clamp(leanZ, -maxLat, maxLat);
+    // ── TWIST / CONTINUOUS SPIN / LEAN — uncapped ──
+    float twistWave = (1.4 + rarity * 1.8 + uChaos * 1.0) * sin(uTime * freq * 0.85 + phase)
+                    + (0.75 + hunger * 0.55) * sin(uTime * freq * 1.9 + phase * 2.0);
+    float spinRate = (0.75 + freq * 1.1 + rarity * 1.2 + uChaos * 0.75 + health * 0.35) * soft;
+    float leanX = sin(uTime * freq + phase) * bend * 3.2
+                + sin(uTime * freq * 2.9 + phase * 1.4) * turb * 1.7
+                + sin(uTime * freq * 5.1 + phase * 0.5) * turb * 0.7;
+    float leanZ = cos(uTime * freq * 0.85 + phase * 1.2) * bend * 3.0
+                + cos(uTime * freq * 2.5 + phase * 1.6) * turb * 1.55
+                + cos(uTime * freq * 4.7 + phase * 0.9) * turb * 0.65;
     p = multiAxisMorph(p, up, rootPin, phase, freq, twistWave, spinRate, leanX, leanZ);
 
     // ── UP / DOWN + EXPAND / CONTRACT + DEGRADE ──
@@ -347,25 +342,24 @@ const flora_vert = /* glsl */ `
 
     float tip = rootPin * rootPin * rootPin;
     float mid = rootPin * rootPin * (1.0 - up) * 4.0;
-    // Contact physics — strong reactive flee + spin, root pinned, soft lateral cap.
-    float amp = (2.6 + uChaos * 2.2 + rarity * 1.4 + react * 0.6) * soft;
-    float contactLat = min(cSum * tip * amp, maxLat * 2.0);
-    worldPosition.xz += push * (contactLat + density * cSum * mid * 0.15);
+    // Contact physics — full reactive flee + turbo-spin. No lateral cap. Root collar only is pinned.
+    float amp = (3.4 + uChaos * 3.0 + rarity * 1.8 + react * 1.0) * soft;
+    float contactLat = cSum * tip * amp;
+    worldPosition.xz += push * (contactLat + density * cSum * mid * 0.25);
     vec2 ortho = vec2(-push.y, push.x);
-    worldPosition.xz += ortho * sin(uTime * (6.5 + stiff * 3.5) + phase) * cSum * mid * amp * 0.55;
-    // Contact turbo-spin (tip reels when brushed).
-    float cTwist = cSum * tip * (1.4 + react * 0.9) * (0.6 + 0.4 * sin(uTime * 4.2 + phase));
+    worldPosition.xz += ortho * sin(uTime * (7.0 + stiff * 4.0) + phase) * cSum * mid * amp * 0.75;
+    float cTwist = cSum * tip * (2.2 + react * 1.4) * (0.55 + 0.45 * sin(uTime * 4.8 + phase));
     float cca = cos(cTwist);
     float csa = sin(cTwist);
     vec2 rel = worldPosition.xz - bmBase;
     worldPosition.xz = bmBase + vec2(cca * rel.x - csa * rel.y, csa * rel.x + cca * rel.y);
 
-    // Vertical flee + tip invert under heavy contact (fold over; root stays).
-    worldPosition.y += cSum * tip * (1.0 + uChaos * 1.2 + rarity * 0.7);
-    worldPosition.y += sin(cSum * 9.0 + uTime * 3.0 + phase) * cSum * tip * 0.85;
-    float invert = smoothstep(0.35, 1.1, cSum + uChaos * 0.45) * tip * (0.5 + rarity * 0.35);
-    worldPosition.y -= invert * (0.55 + up * 1.15);
-    worldPosition.xz += push * invert * 0.85;
+    // Vertical flee + tip invert under contact (fold over; root stays in soil).
+    worldPosition.y += cSum * tip * (1.4 + uChaos * 1.6 + rarity * 1.0);
+    worldPosition.y += sin(cSum * 10.0 + uTime * 3.4 + phase) * cSum * tip * 1.15;
+    float invert = smoothstep(0.25, 1.0, cSum + uChaos * 0.5) * tip * (0.65 + rarity * 0.45);
+    worldPosition.y -= invert * (0.7 + up * 1.4);
+    worldPosition.xz += push * invert * 1.15;
 
     vWorldP = worldPosition.xyz;
     vec4 mvPosition = modelViewMatrix * worldPosition;
@@ -1070,8 +1064,8 @@ export class AlienFlora {
     this.climateEntropy = e;
     const u = this.material.uniforms;
     u['uTime']!.value = t;
-    // Stronger ambient drive so the field keeps spinning/thrashing even at moderate chaos.
-    u['uWind']!.value = 0.55 + 0.85 * c + 0.12 * Math.sin(t * 0.37);
+    // Full ambient drive — field keeps spinning/thrashing hard.
+    u['uWind']!.value = 0.7 + 1.0 * c + 0.15 * Math.sin(t * 0.41);
     u['uChaos']!.value = c;
     u['uTerrainEntropy']!.value = e;
     (u['uTerrainWind']!.value as THREE.Vector2).set(terrainWindX, terrainWindZ);
