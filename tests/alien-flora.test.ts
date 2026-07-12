@@ -248,6 +248,10 @@ describe('AlienFlora — the vegetal ground ecology', () => {
     expect(mat.vertexShader).toContain('tipMorph');
     expect(mat.vertexShader).toContain('Dual counter-spins');
     expect(mat.vertexShader).toContain('twist2');
+    expect(mat.vertexShader).toContain('chirality');
+    expect(mat.vertexShader).toContain('berry');
+    expect(mat.vertexShader).toContain('josephson');
+    expect(mat.vertexShader).toContain('zeno');
     // Plant↔land: rigid crest ride (one Y for whole plant — per-vertex lift sheared stems thin).
     expect(mat.vertexShader).toContain('cqmTerrainDisplacement');
     expect(mat.vertexShader).toContain('liftMax');
