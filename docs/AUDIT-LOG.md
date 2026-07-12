@@ -11,6 +11,25 @@ changed and why.
 
 ---
 
+## 2026-07-12 — batch 46: wilderness fauna avoid walls ANTICIPATORILY, not reactively
+
+Continuation of the /goal ("make every living thing smarter — operational, not decorative"), targeting
+the ambient **wilderness population** (thousands of camera-streamed fauna, ADR 0010 — explicitly OUTSIDE
+the golden). Its threat response was purely **reactive**: an entity was only pushed once it was ALREADY
+inside a chunk-wall margin (`localX < margin`). Replaced that with **anticipatory** avoidance in the
+shared `simulateWildernessData` kernel: each fauna forecasts where it will be `horizon` steps ahead from
+its current velocity (a first-order kinematic lookahead whose depth grows with the threat intelligence
+signal) and steers away from any wall it is PREDICTED to breach — before it enters the margin, and only
+when actually heading in (an entity already escaping the wall is left alone, no wasted force). Pure
+arithmetic: **no new rng draw** (the exact 3-draws-per-entity worker/main parity contract is intact),
+O(1) per entity, steer intensity clamped to [0,1] (bounded + finite). **GATE-WILDERNESS-ANTICIPATION**
+(`tests/wilderness-anticipation.test.ts`, 4 tests) proves it: an entity OUTSIDE the reactive band aimed
+at the left wall — and symmetrically the right wall — is steered away THIS step by the threat signal under
+a matched-seed / matched-`exploreGain` control that isolates the effect to the threat term (something the
+old reactive rule provably could not do); an entity whose forecast clears the wall gets no push;
+deterministic + finite. No metric axis moved (wilderness is ambient and un-scored); every existing
+wilderness contract stays green (determinism, dt-clamp, worker/main fallback parity, `adaptive≠baseline`).
+
 ## 2026-07-12 — batch 45: Eshkol v1.3 Taylor-tower self-foresight for the digital biologic
 
 Continuation of the /goal after the batch-44 NIST work, acting on the Eshkol v1.3-evolve drop

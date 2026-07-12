@@ -117,12 +117,25 @@ export function simulateWildernessData(
         const localX = x - chunkX * chunkSize;
         const localZ = z - chunkZ * chunkSize;
         const margin = chunkSize * 0.16;
-        if (localX < margin) vx += (1 - localX / margin) * threat * 0.012 * frameScale;
-        else if (localX > chunkSize - margin)
-          vx -= (1 - (chunkSize - localX) / margin) * threat * 0.012 * frameScale;
-        if (localZ < margin) vz += (1 - localZ / margin) * threat * 0.012 * frameScale;
-        else if (localZ > chunkSize - margin)
-          vz -= (1 - (chunkSize - localZ) / margin) * threat * 0.012 * frameScale;
+        // ANTICIPATORY boundary avoidance — smarter than the old reactive "already-inside-the-margin"
+        // push. Forecast where this fauna will be `horizon` steps ahead from its current velocity and
+        // steer away from any wall it is PREDICTED to breach, before it enters the margin and only when
+        // actually heading into it (an entity already leaving a wall is not pushed). A first-order
+        // kinematic lookahead whose depth grows with the threat signal, so a smarter (higher-threat)
+        // organism sees the wall coming sooner. Pure arithmetic — no rng draw (worker/main parity intact),
+        // O(1), and the steer intensity is clamped to [0,1] so it stays bounded and finite.
+        const horizon = safeDt * (6 + threat * 10);
+        const predLocalX = localX + vx * horizon;
+        const predLocalZ = localZ + vz * horizon;
+        const avoid = threat * 0.012 * frameScale;
+        const breachLeft = (margin - predLocalX) / margin;
+        if (breachLeft > 0) vx += Math.min(1, breachLeft) * avoid;
+        const breachRight = (predLocalX - (chunkSize - margin)) / margin;
+        if (breachRight > 0) vx -= Math.min(1, breachRight) * avoid;
+        const breachBack = (margin - predLocalZ) / margin;
+        if (breachBack > 0) vz += Math.min(1, breachBack) * avoid;
+        const breachFront = (predLocalZ - (chunkSize - margin)) / margin;
+        if (breachFront > 0) vz -= Math.min(1, breachFront) * avoid;
       }
       x += vx * safeDt;
       y += vy * safeDt;
