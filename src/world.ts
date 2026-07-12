@@ -2533,21 +2533,22 @@ export class World {
   private driveFloraContact(n: number): void {
     if (n <= 0) return;
     const list = this.entities.list;
-    const stride = Math.max(1, Math.floor(n / 200));
+    // Denser round-robin sample — more beings write local thrash pockets per frame.
+    const stride = Math.max(1, Math.floor(n / 280));
     const start = this.state.frame % stride;
     const seeds: { x: number; z: number; strength: number }[] = [];
-    const minSep2 = 12 * 12; // tight pockets so single beings own local thrash
+    const minSep2 = 10 * 10; // tighter pockets so single beings own local thrash
     for (let i = start; i < n; i += stride) {
       const e = list[i];
       if (!e) continue;
       const u = e.userData;
       const v2 = u.vel.lengthSq();
-      const motion = v2 > 0 ? Math.min(1.2, Math.sqrt(v2) * 0.28) : 0;
-      const neural = Math.min(1, Math.abs(u.act) * 0.28);
+      const motion = v2 > 0 ? Math.min(1.35, Math.sqrt(v2) * 0.32) : 0;
+      const neural = Math.min(1.1, Math.abs(u.act) * 0.32);
       // Presence + graze belly + NHI mass — stationary beings still press the flora.
-      const body = 0.22 + (u.belly > 0 ? 0.45 : 0) + (u.isNhi ? 0.7 : 0);
+      const body = 0.28 + (u.belly > 0 ? 0.55 : 0) + (u.isNhi ? 0.85 : 0);
       const w = motion + neural + body;
-      if (w <= 0.08) continue;
+      if (w <= 0.06) continue;
       const px = e.position.x;
       const pz = e.position.z;
       // Reinforce nearest existing seed if close; else open a new local pocket.
@@ -2584,10 +2585,10 @@ export class World {
     }
     // Super creature is its own heavy local seed when low over the field.
     this.superBody.worldPosition(this.sv1);
-    if (this.sv1.y < 24) {
+    if (this.sv1.y < 28) {
       const sx = this.sv1.x;
       const sz = this.sv1.z;
-      const sw = 1.4;
+      const sw = 1.65;
       let merged = false;
       for (const s of seeds) {
         const dx = sx - s.x;
@@ -2614,7 +2615,7 @@ export class World {
     }
     if (seeds.length === 0) return;
     // Hot spring targets — one creature thrashs local flora hard (not hollow decorative tap).
-    for (const s of seeds) s.strength = Math.min(1, s.strength / 2.2);
+    for (const s of seeds) s.strength = Math.min(1, s.strength / 1.85);
     this.alienFlora.setContacts(seeds);
   }
 

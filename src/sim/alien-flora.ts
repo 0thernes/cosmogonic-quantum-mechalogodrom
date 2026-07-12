@@ -79,7 +79,7 @@ const REGROW_TAU = 5 / 3;
 /** Max simultaneous local contact seeds (multi-point; kills the single giant-patch slide). */
 export const FLORA_CONTACT_SLOTS = 4;
 /** Local contact radius (world units). Tight enough for per-being thrash, not lawn slabs. */
-const CONTACT_RADIUS = 14;
+const CONTACT_RADIUS = 15;
 /** Squared radius for GPU falloff — must match `smoothstep` edge in the vertex shader. */
 const CONTACT_RADIUS2 = CONTACT_RADIUS * CONTACT_RADIUS;
 /**
@@ -88,13 +88,13 @@ const CONTACT_RADIUS2 = CONTACT_RADIUS * CONTACT_RADIUS;
  */
 const COLLIDE_HASH_CELL = 5.5;
 /** Soft collision radius multiplier on plant scale (crown envelope). */
-const COLLIDE_RADIUS_MUL = 2.35;
+const COLLIDE_RADIUS_MUL = 2.55;
 /** Max soft separation push (world units) per pair — keeps solve stable. */
-const COLLIDE_PUSH_MAX = 2.8;
+const COLLIDE_PUSH_MAX = 3.2;
 /** Global soft-solve cadence (s). Scalable O(N·k) ~8Hz cold / faster when beings touch. */
-const COLLIDE_PERIOD = 0.12;
+const COLLIDE_PERIOD = 0.11;
 /** Thrash-offset amp (world units) for dynamic crown collision proxies. */
-const COLLIDE_THRASH_AMP = 1.15;
+const COLLIDE_THRASH_AMP = 1.35;
 
 /** Deterministic positional hash → [0,1). No bitwise, no rng stream. */
 function hash(n: number): number {
@@ -231,14 +231,14 @@ const flora_vert = /* glsl */ `
     if (strength < 0.001) return 0.0;
     vec2 d = base - vec2(cx, cz);
     float d2 = dot(d, d);
-    // Sharper kernel: full at ~0–5u, dead by CONTACT_RADIUS (was soft 25→256 slab feel).
-    float fall = smoothstep(${CONTACT_RADIUS2.toFixed(1)}, 16.0, d2);
+    // Sharper kernel: full at ~0–4u, dead by CONTACT_RADIUS (local thrash, not slab).
+    float fall = smoothstep(${CONTACT_RADIUS2.toFixed(1)}, 12.0, d2);
     if (fall <= 0.0) return 0.0;
-    float personal = 0.5 + 0.5 * sin(phase * 3.4 + stiff * 5.9 + base.x * 0.41 + base.y * 0.37);
-    float wobble = 0.65 + 0.45 * sin(uTime * (3.4 + stiff * 4.6) + phase * 2.5);
-    float counter = 0.8 + 0.3 * cos(phase * 1.9 - stiff * 2.4 + uTime * 0.5);
+    float personal = 0.55 + 0.45 * sin(phase * 3.4 + stiff * 5.9 + base.x * 0.41 + base.y * 0.37);
+    float wobble = 0.7 + 0.5 * sin(uTime * (3.6 + stiff * 4.8) + phase * 2.5);
+    float counter = 0.85 + 0.35 * cos(phase * 1.9 - stiff * 2.4 + uTime * 0.55);
     // Soft plants (low stiff) + high react = harder thrash when touched.
-    return strength * fall * personal * react * wobble * counter * (0.85 + 0.35 / max(stiff, 0.15));
+    return strength * fall * personal * react * wobble * counter * (0.95 + 0.4 / max(stiff, 0.15));
   }
 
   // UPRIGHT multi-axis morph — HARD LAW (do not break again):
@@ -262,9 +262,10 @@ const flora_vert = /* glsl */ `
     float phi = 2.3999632; // golden angle
     float az = atan(q.z, q.x);
     float warp = 1.0
-      + u2 * 0.07 * sin(az * 3.0 + yaw * 1.9 + q.y * 1.3 + twist2)
-      + mid * 0.08 * sin(az * phi + twist2 * 2.0 + band)
-      + mid * band * 0.11 - u2 * band * 0.07;
+      + u2 * 0.09 * sin(az * 3.0 + yaw * 1.9 + q.y * 1.3 + twist2)
+      + mid * 0.1 * sin(az * phi + twist2 * 2.0 + band)
+      + mid * 0.06 * sin(az * 5.0 - yaw + q.y * 2.1)
+      + mid * band * 0.13 - u2 * band * 0.08;
     q.x *= warp;
     q.z *= warp;
     return q;
@@ -386,7 +387,7 @@ const flora_vert = /* glsl */ `
     float band = (health * 0.55 - debt * 0.65 - hunger * 0.25) * (0.65 + 0.35 * pulse);
 
     // Lateral thrash: multi-harmonic + orthogonal, hard-capped (never horizontal wires).
-    float leanAmp = 1.9;
+    float leanAmp = 2.0;
     float leanX = (
       sin(uTime * freq + phase) * bend * 2.35
       + sin(uTime * freq * 3.7 + phase * 2.1) * turb * 1.15
@@ -418,19 +419,19 @@ const flora_vert = /* glsl */ `
 
     // Vertical life (heave) + expand/contract/degrade — operational food+debt readout.
     // FPU-like multi-mode energy bounce between heave harmonics (incommensurate freqs).
-    float heave = sin(uTime * freq * 0.55 + phase) * rootPin * 0.26 * (uWind + uChaos + 0.55)
-                + sin(uTime * freq * 4.4 + phase * 1.2) * rootPin * 0.1 * uChaos
-                + cos(uTime * freq * 1.35 + phase * 1.5) * rootPin * 0.08 * (0.45 + health)
-                + sin(uTime * freq * 7.1 + phase * 0.6 + idHash2) * rootPin * 0.04 * turb
-                + 0.05 * rootPin * health
+    float heave = sin(uTime * freq * 0.55 + phase) * rootPin * 0.32 * (uWind + uChaos + 0.55)
+                + sin(uTime * freq * 4.4 + phase * 1.2) * rootPin * 0.12 * uChaos
+                + cos(uTime * freq * 1.35 + phase * 1.5) * rootPin * 0.1 * (0.45 + health)
+                + sin(uTime * freq * 7.1 + phase * 0.6 + idHash2) * rootPin * 0.05 * turb
+                + 0.06 * rootPin * health
                 + crestHeave * 0.08 * rootPin
                 - debt * rootPin * 0.045 * up; // overgraze sags slightly (degrade), never faceplant
     // Expand healthy / contract hunger+overgraze (falsifiable ecology state on silhouette).
-    float expand = rootPin * (0.06 + 0.13 * health) * pulse
-                 - rootPin * hunger * 0.075
-                 - rootPin * debt * 0.06
-                 + rootPin * rarity * 0.035 * pulse2
-                 + rootPin * band * 0.04;
+    float expand = rootPin * (0.08 + 0.15 * health) * pulse
+                 - rootPin * hunger * 0.08
+                 - rootPin * debt * 0.065
+                 + rootPin * rarity * 0.04 * pulse2
+                 + rootPin * band * 0.05;
     p.y += heave * up;
     float morph = rootPin * (0.045 + 0.11 * rarity) * (0.5 + 0.5 * sin(uTime * (1.25 + freq * 0.45) + phase));
     // Isotropic radial breath only — never XZ-only thin-out.
@@ -456,12 +457,12 @@ const flora_vert = /* glsl */ `
     // don't stack (bleed). Crowding compresses crowns (collision squash).
     float crowd = density * density; // nonlinear: only dense packs really collide
     float tipW = rootPin * up * up;
-    // Strong separation along open-space gradient.
-    float sep = density * tipW * (1.85 + 0.55 * rarity + 0.4 * uChaos + react * 0.2);
+    // Strong separation along open-space gradient (plant↔plant soft body).
+    float sep = density * tipW * (2.4 + 0.7 * rarity + 0.55 * uChaos + react * 0.3);
     p.x += avoid.x * sep;
     p.z += avoid.y * sep;
     // Orthogonal peel so neighbors don't share the same thrash plane.
-    float peel = sep * (0.55 + 0.35 * idHash);
+    float peel = sep * (0.65 + 0.4 * idHash);
     p.x += -avoid.y * peel * sin(phase * 2.6 + idHash * 6.28);
     p.z += avoid.x * peel * cos(phase * 2.1 + idHash2 * 4.1);
     // Deterministic self-flee: two plants in the same density cell push opposite hash orbits.
@@ -469,23 +470,22 @@ const flora_vert = /* glsl */ `
       cos(idHash * 6.2831853 + phase * 0.7),
       sin(idHash2 * 6.2831853 - phase * 0.55)
     );
-    p.x += selfFlee.x * crowd * tipW * (1.55 + rarity * 0.4);
-    p.z += selfFlee.y * crowd * tipW * (1.55 + rarity * 0.4);
+    p.x += selfFlee.x * crowd * tipW * (2.1 + rarity * 0.5);
+    p.z += selfFlee.y * crowd * tipW * (2.1 + rarity * 0.5);
     // Soft-body compress when packed (collision deformation — isotropic, not thin shear).
-    float packSquash = crowd * rootPin * (0.08 + 0.06 * up);
+    float packSquash = crowd * rootPin * (0.1 + 0.08 * up);
     p.x *= 1.0 - packSquash;
     p.z *= 1.0 - packSquash;
-    // Brace heave: packed crowns lift slightly so they don't occupy the same height band.
-    p.y += crowd * tipW * 0.18 * (0.5 + 0.5 * sin(phase + uTime * 1.1));
+    // Brace heave: packed crowns lift so they don't occupy the same height band.
+    p.y += crowd * tipW * 0.28 * (0.5 + 0.5 * sin(phase + uTime * 1.2));
 
     vec4 worldPosition = instanceMatrix * vec4(p, 1.0);
     // RIGID land attach — identical Y on every vertex (no stretch/thin shear).
     worldPosition.y += rigidRide + ${SURFACE_RIDE.toFixed(3)};
-    // CPU spatial-hash soft plant↔plant push (O(N·k) pairs) — real packing, not decorative peel.
-    // Tip weights more so crowns separate; roots stay seated.
-    float pushW = rootPin * (0.4 + 0.6 * rootPin * up);
-    worldPosition.x += aPush.x * pushW;
-    worldPosition.z += aPush.y * pushW;
+    // CPU spatial-hash soft plant↔plant push (O(N·k)) — real packing; tip-weighted.
+    float pushW = rootPin * (0.55 + 0.75 * rootPin * up);
+    worldPosition.x += aPush.x * pushW * 1.35;
+    worldPosition.z += aPush.y * pushW * 1.35;
 
     // ── BEING CONTACT PHYSICS (per-plant, local seeds — not hollow decorative) ──
     float c0 = localContact(bmBase, uContactX.x, uContactZ.x, uContactS.x, phase + idHash * 2.0, stiff, react);
@@ -534,35 +534,36 @@ const flora_vert = /* glsl */ `
     float tip = rootPin * rootPin * rootPin;
     float mid = rootPin * rootPin * (1.0 - up) * 4.0;
     // Hot contact amp — individual plant reacts hard when hit (not gentle decorative sway).
-    float amp = (4.0 + uChaos * 3.6 + rarity * 2.2 + react * 1.25) * soft;
-    worldPosition.xz += push * (hit * tip * amp + biomass * hit * mid * 0.5);
+    float amp = (4.6 + uChaos * 4.0 + rarity * 2.4 + react * 1.4) * soft;
+    worldPosition.xz += push * (hit * tip * amp + biomass * hit * mid * 0.55);
     vec2 ortho = vec2(-push.y, push.x);
     // Multi-harmonic whip; mid vs tip counter-phase (per-plant, not cluster).
-    worldPosition.xz += ortho * sin(uTime * (6.0 + stiff * 3.6) + phase) * hit * mid * amp * 0.75;
-    worldPosition.xz += push * cos(uTime * (3.9 + stiff * 2.4) - phase * 1.9) * hit * tip * amp * 0.45;
-    worldPosition.xz += ortho * cos(uTime * (7.5 + react) + phase * 2.3) * hit * tip * amp * 0.28;
+    worldPosition.xz += ortho * sin(uTime * (6.4 + stiff * 3.8) + phase) * hit * mid * amp * 0.85;
+    worldPosition.xz += push * cos(uTime * (4.1 + stiff * 2.5) - phase * 1.9) * hit * tip * amp * 0.52;
+    worldPosition.xz += ortho * cos(uTime * (8.0 + react) + phase * 2.4) * hit * tip * amp * 0.32;
     // Collision squash under hit (soft-body compression — isotropic XZ).
-    float hitSquash = clamp(hit * tip * 0.14 * soft, 0.0, 0.22);
+    float hitSquash = clamp(hit * tip * 0.18 * soft, 0.0, 0.28);
     worldPosition.xz = bmBase + (worldPosition.xz - bmBase) * (1.0 - hitSquash);
     // Contact turbo-spin around Y only (invert = reverse spin + UP, NOT faceplant).
-    float zeno = 1.0 / (1.0 + cSum * 0.28);
-    float cTwist = hit * tip * (2.7 + react) * (0.5 + 0.5 * sin(uTime * 4.8 + phase + idHash * 3.0)) * zeno;
-    float invert = smoothstep(0.25, 1.0, hit + uChaos * 0.5 + phaseSlip * 0.15) * tip * (0.6 + rarity * 0.35);
+    float zeno = 1.0 / (1.0 + cSum * 0.25);
+    float cTwist = hit * tip * (3.1 + react) * (0.5 + 0.5 * sin(uTime * 5.1 + phase + idHash * 3.0)) * zeno;
+    float invert = smoothstep(0.2, 0.95, hit + uChaos * 0.55 + phaseSlip * 0.15) * tip * (0.65 + rarity * 0.38);
     cTwist *= (1.0 - 2.0 * invert) * chirality;
     float cca = cos(cTwist);
     float csa = sin(cTwist);
     vec2 rel = worldPosition.xz - bmBase;
     worldPosition.xz = bmBase + vec2(cca * rel.x - csa * rel.y, csa * rel.x + cca * rel.y);
-    worldPosition.xz += ortho * invert * sin(uTime * 7.0 + phase) * 1.2;
+    worldPosition.xz += ortho * invert * sin(uTime * 7.4 + phase) * 1.35;
     // Contact flee UP + lateral — never into dirt.
-    worldPosition.y += hit * tip * (1.9 + uChaos * 1.85 + rarity * 1.25 + react * 0.4) * (0.85 + 0.15 * zeno);
-    worldPosition.y += sin(hit * 9.0 + uTime * 3.0 + phase) * hit * tip * 1.2;
-    worldPosition.y += invert * tip * 0.85;
-    worldPosition.y += cos(uTime * 4.2 + phase * 1.6) * hit * tip * 0.5;
-    worldPosition.y += sin(uTime * 6.5 - phase * 2.0 + josephson) * invert * tip * 0.45;
-    worldPosition.xz += push * invert * 1.55;
+    worldPosition.y += hit * tip * (2.2 + uChaos * 2.0 + rarity * 1.35 + react * 0.5) * (0.85 + 0.15 * zeno);
+    worldPosition.y += sin(hit * 9.5 + uTime * 3.2 + phase) * hit * tip * 1.35;
+    worldPosition.y += invert * tip * 0.95;
+    worldPosition.y += cos(uTime * 4.5 + phase * 1.6) * hit * tip * 0.6;
+    worldPosition.y += sin(uTime * 6.8 - phase * 2.0 + josephson) * invert * tip * 0.55;
+    worldPosition.xz += push * invert * 1.75;
     // Extra plant-plant bounce when packed and thrashing into density.
-    worldPosition.xz += avoid * crowd * tip * (0.9 + hit * 0.6) * soft;
+    worldPosition.xz += avoid * crowd * tip * (1.15 + hit * 0.75) * soft;
+    worldPosition.xz += selfFlee * crowd * tip * (0.7 + hit * 0.5);
 
     vWorldP = worldPosition.xyz;
     vec4 mvPosition = modelViewMatrix * worldPosition;
@@ -837,8 +838,6 @@ export class AlienFlora {
   private readonly hashOrigin: number;
   private readonly hashN: number;
   private collideAccum = 0;
-  private collideTime = 0;
-  private collideChaos = 0;
   private collideWind = 0.4;
 
   constructor(ctx: SimContext) {
@@ -1011,7 +1010,8 @@ export class AlienFlora {
       }
     }
     this.hashOrigin = -ALIEN_FLORA_FIELD_HALF - COLLIDE_HASH_CELL;
-    this.hashN = Math.ceil((ALIEN_FLORA_FIELD_HALF * 2 + COLLIDE_HASH_CELL * 2) / COLLIDE_HASH_CELL) + 1;
+    this.hashN =
+      Math.ceil((ALIEN_FLORA_FIELD_HALF * 2 + COLLIDE_HASH_CELL * 2) / COLLIDE_HASH_CELL) + 1;
     this.hashBuckets = Array.from({ length: this.hashN * this.hashN }, () => []);
     for (let i = 0; i < placed; i++) {
       const hx = Math.floor((this.plantX[i]! - this.hashOrigin) / COLLIDE_HASH_CELL);
@@ -1192,7 +1192,7 @@ export class AlienFlora {
     const oz = this.plantOZ;
     const touch = this.plantTouch;
     const thrashScale = COLLIDE_THRASH_AMP * (0.55 + chaos * 0.9 + wind * 0.35);
-    const boostR2 = (CONTACT_RADIUS * 1.15) * (CONTACT_RADIUS * 1.15);
+    const boostR2 = CONTACT_RADIUS * 1.15 * (CONTACT_RADIUS * 1.15);
     const cpx = this.contactPX;
     const cpz = this.contactPZ;
     const cstr = this.contactDisp;
@@ -1217,7 +1217,7 @@ export class AlienFlora {
         if (cs < 0.04) continue;
         const dx = xi - cpx[s]!;
         const dz = zi - cpz[s]!;
-        if (dx * dx + dz * dz < boostR2) tch = Math.max(tch, 1 + cs * 1.35);
+        if (dx * dx + dz * dz < boostR2) tch = Math.max(tch, 1 + cs * 1.55);
       }
       touch[i] = tch;
     }
@@ -1257,7 +1257,7 @@ export class AlienFlora {
             ddx *= inv;
             ddz *= inv;
             const closing = (oxi - ox[j]!) * -ddx + (ozi - oz[j]!) * -ddz > 0 ? 1.15 : 1;
-            let mag = overlap * overlap * minDist * 0.62 * closing * Math.max(touchI, touch[j]!);
+            let mag = overlap * overlap * minDist * 0.72 * closing * Math.max(touchI, touch[j]!);
             if (mag > COLLIDE_PUSH_MAX) mag = COLLIDE_PUSH_MAX;
             const fx = ddx * mag;
             const fz = ddz * mag;
@@ -1281,7 +1281,8 @@ export class AlienFlora {
       buf[o + 1] = this.plantPush[i * 2 + 1] ?? 0;
     }
     for (const mesh of this.meshes) {
-      const attr = mesh.geometry.getAttribute('aPush') as THREE.InstancedBufferAttribute | undefined;
+      const attr = mesh.geometry.getAttribute('aPush') as
+        THREE.InstancedBufferAttribute | undefined;
       if (attr) attr.needsUpdate = true;
     }
   }
@@ -1345,38 +1346,56 @@ export class AlienFlora {
       fams.push({ geo, height: peakHeight(geo) });
     }
 
-    // 1 WHIP — double-helix counter-coil + asymmetric fruiting nodules
+    // 1 WHIP — triple-coil lash + fruiting nodules + mid knot limb (limbs, not spaghetti)
     {
       const ptsA: THREE.Vector3[] = [];
       const ptsB: THREE.Vector3[] = [];
-      for (let i = 0; i <= 40; i++) {
-        const t = i / 40;
+      const ptsC: THREE.Vector3[] = [];
+      for (let i = 0; i <= 42; i++) {
+        const t = i / 42;
         const y = t * 5.9;
-        const a = t * Math.PI * 4.6;
-        const r = 0.42 * (1 - t * 0.65) + 0.1;
+        const a = t * Math.PI * 4.8;
+        const r = 0.48 * (1 - t * 0.58) + 0.14;
         ptsA.push(new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r));
         ptsB.push(
           new THREE.Vector3(
-            Math.cos(a + Math.PI) * r * 0.75,
-            y * 0.95,
-            Math.sin(a + Math.PI) * r * 0.75,
+            Math.cos(a + Math.PI) * r * 0.82,
+            y * 0.96,
+            Math.sin(a + Math.PI) * r * 0.82,
+          ),
+        );
+        // Third lash: slower wind, fatter mid radius (extra limb, not thin wire).
+        const rC = r * (0.55 + 0.2 * Math.sin(t * Math.PI));
+        ptsC.push(
+          new THREE.Vector3(
+            Math.cos(-a * 0.7 + 0.9) * rC,
+            y * 0.88 + 0.2,
+            Math.sin(-a * 0.7 + 0.9) * rC,
           ),
         );
       }
-      const tubeA = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(ptsA), 36, 0.14, 7, false);
-      const tubeB = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(ptsB), 32, 0.1, 6, false);
-      const n1 = new THREE.SphereGeometry(0.36, 10, 8);
-      n1.scale(1.4, 0.7, 1.15);
+      const tubeA = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(ptsA), 38, 0.17, 8, false);
+      const tubeB = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(ptsB), 34, 0.13, 7, false);
+      const tubeC = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(ptsC), 30, 0.11, 6, false);
+      const knot = new THREE.TorusKnotGeometry(0.2, 0.07, 36, 6, 2, 3);
+      knot.scale(1.1, 1.35, 1.1);
+      knot.rotateX(0.5);
+      knot.translate(0.25, 2.6, -0.15);
+      const n1 = new THREE.SphereGeometry(0.38, 10, 8);
+      n1.scale(1.45, 0.72, 1.2);
       n1.rotateY(0.8);
-      n1.translate(0.38, 1.9, 0.08);
-      const n2 = new THREE.SphereGeometry(0.3, 10, 8);
-      n2.scale(1.2, 0.65, 1.35);
-      n2.rotateZ(-0.4);
-      n2.translate(-0.32, 3.5, 0.18);
-      const n3 = new THREE.SphereGeometry(0.24, 9, 7);
-      n3.scale(1.1, 0.8, 1.5);
-      n3.translate(0.14, 5.15, -0.12);
-      const geo = adoptMerged([tubeA, tubeB, n1, n2, n3, rootBulb(0.4, 0.52)]);
+      n1.translate(0.42, 1.85, 0.1);
+      const n2 = new THREE.SphereGeometry(0.32, 10, 8);
+      n2.scale(1.25, 0.68, 1.4);
+      n2.rotateZ(-0.45);
+      n2.translate(-0.36, 3.4, 0.2);
+      const n3 = new THREE.SphereGeometry(0.28, 9, 7);
+      n3.scale(1.15, 0.75, 1.45);
+      n3.translate(0.18, 5.05, -0.14);
+      const n4 = new THREE.SphereGeometry(0.22, 8, 6);
+      n4.scale(1.3, 0.6, 1.1);
+      n4.translate(-0.22, 4.2, 0.28);
+      const geo = adoptMerged([tubeA, tubeB, tubeC, knot, n1, n2, n3, n4, rootBulb(0.42, 0.54)]);
       fams.push({ geo, height: peakHeight(geo) });
     }
 
@@ -1406,31 +1425,50 @@ export class AlienFlora {
       fams.push({ geo, height: peakHeight(geo) });
     }
 
-    // 3 BLADE — twisted sail + mid ridge bulb (asymmetric leaf-body)
+    // 3 BLADE — thick twisted sail + secondary fin + mid ridge (not wafer)
     {
       const sail = lathe(
         [
-          [0.03, 0.0],
-          [0.22, 0.35],
-          [0.65, 1.2],
-          [0.95, 2.4],
-          [1.05, 3.4],
-          [0.75, 4.4],
-          [0.3, 5.1],
-          [0.04, 5.4],
+          [0.06, 0.0],
+          [0.32, 0.35],
+          [0.78, 1.15],
+          [1.05, 2.3],
+          [1.12, 3.35],
+          [0.82, 4.35],
+          [0.38, 5.05],
+          [0.08, 5.35],
         ],
         16,
       );
-      sail.scale(0.42, 1, 1.05);
-      sail.rotateY(0.35);
-      const ridge = new THREE.SphereGeometry(0.22, 10, 8);
-      ridge.scale(0.6, 1.6, 0.7);
-      ridge.rotateZ(0.4);
-      ridge.translate(0.15, 2.8, 0);
-      const tipLobe = new THREE.SphereGeometry(0.2, 9, 7);
-      tipLobe.scale(1.4, 0.55, 0.9);
-      tipLobe.translate(-0.12, 5.15, 0.08);
-      const geo = adoptMerged([sail, ridge, tipLobe, rootBulb(0.36, 0.52)]);
+      // Keep body volume — scale X ≥ 0.55 so it never reads as paper wafer.
+      sail.scale(0.58, 1, 1.08);
+      sail.rotateY(0.32);
+      // Secondary fin at 70° — multi-axis silhouette, still solid mass.
+      const fin = lathe(
+        [
+          [0.04, 0.4],
+          [0.35, 1.0],
+          [0.55, 2.2],
+          [0.48, 3.4],
+          [0.22, 4.2],
+          [0.05, 4.6],
+        ],
+        12,
+      );
+      fin.scale(0.48, 1, 0.85);
+      fin.rotateY(1.15);
+      fin.rotateZ(0.18);
+      const ridge = new THREE.SphereGeometry(0.28, 10, 8);
+      ridge.scale(0.75, 1.55, 0.85);
+      ridge.rotateZ(0.35);
+      ridge.translate(0.18, 2.7, 0.05);
+      const midBulb = new THREE.SphereGeometry(0.24, 9, 7);
+      midBulb.scale(1.35, 0.7, 1.15);
+      midBulb.translate(-0.28, 1.9, 0.22);
+      const tipLobe = new THREE.SphereGeometry(0.24, 9, 7);
+      tipLobe.scale(1.45, 0.6, 1.0);
+      tipLobe.translate(-0.1, 5.1, 0.1);
+      const geo = adoptMerged([sail, fin, ridge, midBulb, tipLobe, rootBulb(0.4, 0.54)]);
       fams.push({ geo, height: peakHeight(geo) });
     }
 
@@ -1490,35 +1528,63 @@ export class AlienFlora {
       fams.push({ geo, height: peakHeight(geo) });
     }
 
-    // 6 HELIX — fat counter-rotating mycelial coils + spore orbs
+    // 6 HELIX — triple mycelial coils + spore orbs + mid knot (fat limbs, not poles)
     {
       const pts: THREE.Vector3[] = [];
       const pts2: THREE.Vector3[] = [];
-      for (let i = 0; i <= 42; i++) {
-        const t = i / 42;
-        const y = t * 5.4;
-        const a = t * Math.PI * 5.8;
-        const r = 0.55 * (1 - t * 0.62) + 0.12;
+      const pts3: THREE.Vector3[] = [];
+      for (let i = 0; i <= 44; i++) {
+        const t = i / 44;
+        const y = t * 5.5;
+        const a = t * Math.PI * 5.9;
+        const r = 0.62 * (1 - t * 0.55) + 0.16;
         pts.push(new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r));
         pts2.push(
           new THREE.Vector3(
-            Math.cos(-a * 0.85 + 1.2) * r * 0.7,
-            y * 0.92 + 0.15,
-            Math.sin(-a * 0.85 + 1.2) * r * 0.7,
+            Math.cos(-a * 0.88 + 1.2) * r * 0.78,
+            y * 0.93 + 0.12,
+            Math.sin(-a * 0.88 + 1.2) * r * 0.78,
+          ),
+        );
+        const r3 = r * (0.5 + 0.25 * Math.sin(t * Math.PI * 2));
+        pts3.push(
+          new THREE.Vector3(
+            Math.cos(a * 0.55 + 2.1) * r3,
+            y * 0.85 + 0.35,
+            Math.sin(a * 0.55 + 2.1) * r3,
           ),
         );
       }
-      const tube = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 40, 0.18, 8, false);
-      const tube2 = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts2), 36, 0.12, 7, false);
-      const orb1 = new THREE.SphereGeometry(0.34, 10, 8);
-      orb1.scale(1.25, 0.7, 1.15);
-      orb1.translate(0.48, 1.5, 0.12);
-      const orb2 = new THREE.SphereGeometry(0.28, 10, 8);
-      orb2.translate(-0.38, 3.05, 0.22);
-      const orb3 = new THREE.SphereGeometry(0.24, 9, 7);
-      orb3.scale(1.2, 0.65, 1.3);
-      orb3.translate(0.22, 4.55, -0.15);
-      const geo = adoptMerged([tube, tube2, orb1, orb2, orb3, rootBulb(0.44, 0.52)]);
+      const tube = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 42, 0.2, 8, false);
+      const tube2 = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts2), 38, 0.15, 7, false);
+      const tube3 = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts3), 32, 0.12, 6, false);
+      const midKnot = new THREE.TorusKnotGeometry(0.22, 0.075, 40, 6, 3, 2);
+      midKnot.scale(1.05, 1.4, 1.05);
+      midKnot.rotateZ(0.55);
+      midKnot.translate(-0.15, 2.8, 0.2);
+      const orb1 = new THREE.SphereGeometry(0.36, 10, 8);
+      orb1.scale(1.3, 0.72, 1.2);
+      orb1.translate(0.52, 1.45, 0.14);
+      const orb2 = new THREE.SphereGeometry(0.3, 10, 8);
+      orb2.scale(1.15, 0.7, 1.25);
+      orb2.translate(-0.42, 3.0, 0.24);
+      const orb3 = new THREE.SphereGeometry(0.26, 9, 7);
+      orb3.scale(1.25, 0.68, 1.35);
+      orb3.translate(0.26, 4.5, -0.16);
+      const orb4 = new THREE.SphereGeometry(0.2, 8, 6);
+      orb4.scale(1.2, 0.75, 1.1);
+      orb4.translate(-0.18, 4.0, 0.35);
+      const geo = adoptMerged([
+        tube,
+        tube2,
+        tube3,
+        midKnot,
+        orb1,
+        orb2,
+        orb3,
+        orb4,
+        rootBulb(0.46, 0.54),
+      ]);
       fams.push({ geo, height: peakHeight(geo) });
     }
 
@@ -1548,31 +1614,54 @@ export class AlienFlora {
       fams.push({ geo, height: peakHeight(geo) });
     }
 
-    // 8 FAN — warped mineral sail + canted jewel + side shelf
+    // 8 FAN — dual thick mineral sails + jewel + shelves (volume, not wafer)
     {
       const sail = lathe(
         [
-          [0.03, 0.0],
-          [0.28, 0.25],
-          [0.85, 0.9],
-          [1.25, 1.85],
-          [1.35, 2.85],
-          [1.0, 3.75],
-          [0.4, 4.4],
-          [0.05, 4.65],
+          [0.06, 0.0],
+          [0.38, 0.28],
+          [0.95, 0.95],
+          [1.32, 1.9],
+          [1.4, 2.9],
+          [1.05, 3.8],
+          [0.48, 4.4],
+          [0.1, 4.7],
         ],
         18,
       );
-      sail.scale(0.32, 1, 1.08);
-      sail.rotateY(0.25);
-      const jewel = new THREE.SphereGeometry(0.26, 10, 8);
-      jewel.scale(1.3, 0.6, 1.1);
-      jewel.rotateX(0.4);
-      jewel.translate(0.1, 4.4, 0.05);
-      const shelf = new THREE.SphereGeometry(0.22, 9, 7);
-      shelf.scale(1.5, 0.5, 1.0);
-      shelf.translate(0.35, 2.4, 0.1);
-      const geo = adoptMerged([sail, jewel, shelf, rootBulb(0.4, 0.5)]);
+      // Body volume floor: X scale ≥ 0.48 kills paper-thin wafer look.
+      sail.scale(0.5, 1, 1.12);
+      sail.rotateY(0.22);
+      // Counter-rotated secondary sail — multi-plane silhouette with real mass.
+      const sail2 = lathe(
+        [
+          [0.04, 0.35],
+          [0.42, 0.9],
+          [0.75, 1.8],
+          [0.85, 2.7],
+          [0.55, 3.5],
+          [0.18, 4.0],
+        ],
+        14,
+      );
+      sail2.scale(0.45, 1, 0.95);
+      sail2.rotateY(-0.95);
+      sail2.rotateZ(-0.12);
+      const jewel = new THREE.SphereGeometry(0.3, 10, 8);
+      jewel.scale(1.35, 0.65, 1.15);
+      jewel.rotateX(0.35);
+      jewel.translate(0.12, 4.35, 0.08);
+      const shelf = new THREE.SphereGeometry(0.26, 9, 7);
+      shelf.scale(1.55, 0.55, 1.1);
+      shelf.translate(0.4, 2.35, 0.12);
+      const shelf2 = new THREE.SphereGeometry(0.22, 9, 7);
+      shelf2.scale(1.4, 0.55, 1.2);
+      shelf2.translate(-0.35, 1.7, -0.15);
+      const rim = new THREE.TorusGeometry(0.42, 0.07, 7, 16);
+      rim.rotateX(Math.PI / 2 + 0.35);
+      rim.rotateY(0.4);
+      rim.translate(0.08, 3.2, 0.05);
+      const geo = adoptMerged([sail, sail2, jewel, shelf, shelf2, rim, rootBulb(0.44, 0.52)]);
       fams.push({ geo, height: peakHeight(geo) });
     }
 
@@ -1666,8 +1755,6 @@ export class AlienFlora {
     u['uTerrainEntropy']!.value = e;
     (u['uTerrainWind']!.value as THREE.Vector2).set(terrainWindX, terrainWindZ);
 
-    this.collideTime = t;
-    this.collideChaos = c;
     this.collideWind = 0.4 + 0.8 * c;
     // Dynamic soft plant↔plant: thrash proxies + biomass radii + contact boost.
     // Cadenced O(N·k) — scales with plant count/area (hash grows with field, local k stays bounded).

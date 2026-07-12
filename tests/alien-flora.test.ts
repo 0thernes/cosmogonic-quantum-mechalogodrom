@@ -212,7 +212,8 @@ describe('AlienFlora — the vegetal ground ecology', () => {
     }
     expect(peak).toBeGreaterThan(0.1);
     // With no further contact the spring settles back toward rest — bounded, never a runaway.
-    for (let i = 0; i < 400; i++) f.update(1 / 60, 1, 0.3);
+    // Keep loop short under coverage (collision O(N·k) is real work; spring is fast).
+    for (let i = 0; i < 180; i++) f.update(1 / 60, 1, 0.3);
     expect(Math.abs(mat.uniforms['uContact']!.value as number)).toBeLessThan(0.05);
     f.dispose();
   });
@@ -241,7 +242,8 @@ describe('AlienFlora — the vegetal ground ecology', () => {
     expect(Math.abs(cs.y)).toBeGreaterThan(0.05);
     expect(Math.abs(cs.z)).toBeGreaterThan(0.05);
     // Shader must use tight local falloff (not the old ~72u slab radius).
-    expect(mat.vertexShader).toContain('smoothstep(196.0, 16.0, d2)');
+    // CONTACT_RADIUS=15 → r²=225; inner full-strength knee at 12 (local thrash, not slab).
+    expect(mat.vertexShader).toContain('smoothstep(225.0, 12.0, d2)');
     expect(mat.vertexShader).toContain('aMeta');
     expect(mat.vertexShader).toContain('rootPin');
     // Upright multi-axis morph (Y-spin + lateral thrash) — never pitch/roll into dirt.
@@ -380,8 +382,8 @@ describe('AlienFlora — the vegetal ground ecology', () => {
     for (let i = 0; i < 250; i++) totalFood += f.grazeAt(gx, gz, 1, 1 / 60);
     expect(totalFood).toBeGreaterThan(0); // plants offered food
     expect(f.grazeAt(gx, gz, 1, 1 / 60)).toBeCloseTo(0, 3); // eaten to a stub → no more food
-    // With no grazing, the cell REGROWS and becomes edible again (regenerate from death).
-    for (let i = 0; i < 1400; i++) f.update(1 / 60, 1, 0.3);
+    // With no grazing, the cell REGROWS and becomes edible again (~5s respawn; don't over-spin collision).
+    for (let i = 0; i < 420; i++) f.update(1 / 60, 1, 0.3);
     expect(f.grazeAt(gx, gz, 1, 1 / 60)).toBeGreaterThan(0);
     // A location off the field yields nothing (no plants there).
     expect(f.grazeAt(1e6, 1e6, 1, 1 / 60)).toBe(0);
