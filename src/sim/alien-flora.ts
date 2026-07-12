@@ -156,10 +156,11 @@ const flora_vert = /* glsl */ `
   uniform float uChaos;
   uniform float uTerrainEntropy;
   uniform vec2 uTerrainWind;
-  // MULTI-POINT local contact (4 seeds). Old single-point used ~72u falloff → giant solid patches.
+  // MULTI-POINT local contact (4 seeds) — purposeful contact physics, not lawn slabs.
   uniform vec4 uContactX;
   uniform vec4 uContactZ;
   uniform vec4 uContactS;
+  // R = live biomass (food/health), G = local plant density (adaptive bracing vs crossover)
   uniform sampler2D uBiomass;
   uniform float uGridExtent;
   uniform vec2 uScorchCenter;
@@ -171,12 +172,14 @@ const flora_vert = /* glsl */ `
   varying float vSecHue;
   varying float vContactLive;
   varying float vRoot;
+  varying float vBiomass;
+  varying float vDensity;
+  varying float vStress; // chaos + contact + hunger — drives skin mutation
   varying vec3 vNormalV;
   varying vec3 vViewDir;
   varying vec3 vWorldP;
   ${TERRAIN_DEFORMATION_GLSL}
 
-  // Local radial falloff — tight, not lawn-wide (CONTACT_RADIUS² injected from TS).
   float localContact(vec2 base, float cx, float cz, float strength, float phase, float stiff, float react) {
     if (strength < 0.001) return 0.0;
     vec2 d = base - vec2(cx, cz);
@@ -188,65 +191,98 @@ const flora_vert = /* glsl */ `
     return strength * fall * personal * react * wobble;
   }
 
+  // Rotate around Y then lean on X/Z — multi-axis without unrooting.
+  vec3 multiAxisMorph(vec3 p, float up, float rootPin, float phase, float freq, float twistAmt, float leanX, float leanZ) {
+    // Spin (twist) accumulates up the stalk.
+    float ang = twistAmt * up * up;
+    float ca = cos(ang);
+    float sa = sin(ang);
+    vec3 q = vec3(ca * p.x + sa * p.z, p.y, -sa * p.x + ca * p.z);
+    // Counter-axis lean (degrees-dynamic but root-pinned).
+    q.x += leanX * rootPin * up * up;
+    q.z += leanZ * rootPin * up * up;
+    // Subtle secondary axis precession (4D-ish phase coupling).
+    float pre = 0.15 * sin(uTime * freq * 0.37 + phase * 1.7) * rootPin * up;
+    q.x += pre * cos(phase);
+    q.z += pre * sin(phase * 1.3);
+    return q;
+  }
+
   void main() {
     vColor = aColor;
     vGlow = aParams.z;
     vRarity = aMeta.x;
     vSecHue = aMeta.z;
-    // up = 0 at/below soil collar; 1 at tip. Negative root verts stay at 0.
     float up = clamp(position.y / max(aParams.w, 0.001), 0.0, 1.0);
     vUp = up;
-    // rootPin: 0 at buried base, 1 above collar — HARD pin so roots never thrash out of ground.
+    // HARD root pin — collar never leaves soil.
     float rootPin = smoothstep(0.0, 0.22, up);
     vRoot = 1.0 - rootPin;
 
     float phase = aParams.x;
     float freq = aParams.y;
-    float stiff = clamp(aMeta.y, 0.08, 1.4);
+    float stiff = clamp(aMeta.y, 0.12, 1.5);
     float react = clamp(aMeta.w, 0.2, 2.2);
     float rarity = aMeta.x;
 
-    float soft = 1.0 / stiff;
-    // Tip-weighted sway only (rootPin kills base motion → no ground bleed / lifted roots).
-    float bend = rootPin * rootPin * (uWind + uChaos * 0.75) * soft * (0.85 + rarity * 0.5);
-    float turb = rootPin * rootPin * uChaos * 0.55 * soft;
+    vec2 bmBase = (instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xz;
+    vec4 field = texture2D(uBiomass, (bmBase + 0.5 * uGridExtent) / uGridExtent);
+    float biomass = field.r;
+    float density = field.g; // local crowding — purpose: brace, reduce crossover
+    vBiomass = biomass;
+    vDensity = density;
+
+    // ADAPTIVE: dense groves stiffen (less mutual swing-through); sparse plants freer.
+    float brace = mix(1.0, 0.38, density); // high density → lower motion amp
+    float soft = (1.0 / stiff) * brace;
+    // REACTIVE health: hungry plants droop/degrade; full plants expand.
+    float health = clamp(biomass, 0.0, 1.0);
+    float hunger = 1.0 - health;
+
+    // PURPOSEFUL multi-axis amplitudes (capped so neighbors don't spearing-cross).
+    float maxLat = 1.15 * brace; // hard anti-crossover lateral budget
+    float bend = rootPin * rootPin * (uWind * 0.55 + uChaos * 0.45) * soft * (0.7 + rarity * 0.35);
+    float turb = rootPin * rootPin * uChaos * 0.35 * soft;
     vec3 p = position;
 
-    // Curved multi-harmonic thrash (not rigid lean).
-    p.x += sin(uTime * freq + phase) * bend * 2.4
-         + sin(uTime * freq * 3.7 + phase * 2.1) * turb * 1.1
-         + sin(uTime * freq * 6.3 + phase * 0.6) * turb * 0.4 * rarity;
-    p.z += cos(uTime * freq * 0.8 + phase * 1.3) * bend * 2.0
-         + cos(uTime * freq * 2.9 + phase * 1.7) * turb * 0.95
-         + cos(uTime * freq * 5.1 + phase * 1.1) * turb * 0.35 * rarity;
-    p.y += sin(uTime * freq * 0.5 + phase) * rootPin * 0.16 * (uWind + uChaos)
-         + sin(uTime * freq * 4.3 + phase) * rootPin * 0.05 * uChaos;
+    // ── TWIST / SPIN / LEAN (multi-axis vectorized) ──
+    float twist = (0.55 + rarity * 0.9 + uChaos * 0.4) * sin(uTime * freq * 0.45 + phase)
+                + (0.25 + hunger * 0.3) * sin(uTime * freq * 1.1 + phase * 2.0);
+    float leanX = sin(uTime * freq + phase) * bend * 1.35
+                + sin(uTime * freq * 2.7 + phase * 1.4) * turb * 0.55;
+    float leanZ = cos(uTime * freq * 0.85 + phase * 1.2) * bend * 1.2
+                + cos(uTime * freq * 2.3 + phase * 1.6) * turb * 0.5;
+    // Cap lean to anti-crossover budget.
+    leanX = clamp(leanX, -maxLat, maxLat);
+    leanZ = clamp(leanZ, -maxLat, maxLat);
+    p = multiAxisMorph(p, up, rootPin, phase, freq, twist, leanX, leanZ);
 
-    // Soft organic breath above the collar only.
-    float morph = rootPin * (0.04 + 0.12 * rarity) * (0.55 + 0.45 * sin(uTime * (1.05 + freq * 0.35) + phase));
-    p.x *= 1.0 + morph;
-    p.z *= 1.0 + morph;
-    p.y *= 1.0 + morph * 0.4 * rootPin;
+    // ── UP / DOWN + EXPAND / CONTRACT + DEGRADE ──
+    // Vertical heave (tip only); degrade (hunger) compresses height; expand (health pulse) swells mid.
+    float heave = sin(uTime * freq * 0.6 + phase) * rootPin * (0.08 + 0.1 * health) * (0.5 + uWind);
+    float pulse = 0.5 + 0.5 * sin(uTime * (0.9 + freq * 0.25) + phase + rarity);
+    float expand = rootPin * (0.03 + 0.08 * health) * pulse
+                 - rootPin * hunger * 0.12; // contract when eaten down
+    p.y += heave * up;
+    p.x *= 1.0 + expand * (0.6 + 0.4 * up);
+    p.z *= 1.0 + expand * (0.6 + 0.4 * up);
+    // Height degrade under hunger (still rooted).
+    p.y *= mix(1.0, 0.72 + 0.28 * health, rootPin * 0.85);
 
-    // USER ecology: biomass shrinks ABOVE ground; roots stay buried (no floating stubs).
-    vec2 bmBase = (instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xz;
-    float biomass = texture2D(uBiomass, (bmBase + 0.5 * uGridExtent) / uGridExtent).r;
-    float grow = 0.12 + 0.88 * biomass;
-    float neighbor = biomass;
+    // Biomass graze scale (above collar only).
+    float grow = 0.12 + 0.88 * health;
     if (uScorchRadius > 0.0) {
       float scorchD = length(bmBase - uScorchCenter);
       grow *= smoothstep(uScorchRadius * 0.82, uScorchRadius, scorchD);
     }
     float gBody = mix(1.0, grow, rootPin);
-    // Buried roots keep nearly full scale so they don't pull out of the soil when grazed.
     float gRoot = mix(0.92 + 0.08 * grow, grow, rootPin);
     p.x *= gRoot;
     p.z *= gRoot;
     p.y = position.y < 0.0 ? p.y * (0.9 + 0.1 * grow) : p.y * gBody;
-    vGlow *= 0.3 + 0.7 * biomass;
+    vGlow *= 0.25 + 0.75 * health;
 
     vec4 worldPosition = instanceMatrix * vec4(p, 1.0);
-    // Shared living-ground displacement: roots ride the terrain identically to the ground mesh.
     worldPosition.y += cqmTerrainDisplacement(
       vec3(bmBase.x, 0.0, bmBase.y),
       uTime,
@@ -255,13 +291,14 @@ const flora_vert = /* glsl */ `
       uTerrainWind
     );
 
-    // MULTI-POINT LOCAL RAGDOLL — tip only (rootPin / tip weights).
+    // ── CONTACT PHYSICS (multi-point, tip-weighted, anti-crossover capped) ──
     float c0 = localContact(bmBase, uContactX.x, uContactZ.x, uContactS.x, phase, stiff, react);
     float c1 = localContact(bmBase, uContactX.y, uContactZ.y, uContactS.y, phase + 1.7, stiff, react);
     float c2 = localContact(bmBase, uContactX.z, uContactZ.z, uContactS.z, phase + 3.1, stiff, react);
     float c3 = localContact(bmBase, uContactX.w, uContactZ.w, uContactS.w, phase + 4.9, stiff, react);
     float cSum = c0 + c1 + c2 + c3;
     vContactLive = clamp(cSum, 0.0, 2.5);
+    vStress = clamp(uChaos * 0.45 + cSum * 0.55 + hunger * 0.35, 0.0, 1.5);
 
     vec2 push = vec2(0.0);
     float wsum = 0.001;
@@ -289,14 +326,26 @@ const flora_vert = /* glsl */ `
 
     float tip = rootPin * rootPin * rootPin;
     float mid = rootPin * rootPin * (1.0 - up) * 4.0;
-    float amp = (3.0 + uChaos * 3.5 + rarity * 1.8) * soft;
-    float grovePull = neighbor * cSum * 0.45 * mid;
-    worldPosition.xz += push * (cSum * tip * amp + grovePull);
+    // Contact amp reduced + brace — purpose: flee touch without spearing neighbors.
+    float amp = (1.55 + uChaos * 1.4 + rarity * 0.9) * soft * brace;
+    float contactLat = cSum * tip * amp;
+    contactLat = min(contactLat, maxLat * 1.4);
+    worldPosition.xz += push * (contactLat + density * cSum * mid * 0.2);
+    // Orthogonal whip + counter-spin on contact (vectorized reaction).
     vec2 ortho = vec2(-push.y, push.x);
-    worldPosition.xz += ortho * sin(uTime * (4.5 + stiff * 2.8) + phase) * cSum * mid * amp * 0.5;
-    // Never lift the root collar off the ground — tip only.
-    worldPosition.y += cSum * tip * (0.9 + uChaos * 1.3 + rarity * 0.9);
-    worldPosition.y += sin(cSum * 8.0 + uTime * 2.5 + phase) * cSum * tip * (0.7 + uChaos * 1.1);
+    worldPosition.xz += ortho * sin(uTime * (5.5 + stiff * 3.0) + phase) * cSum * mid * amp * 0.35;
+    // Contact twist impulse (degrees-dynamic spin under brush).
+    float cTwist = cSum * tip * (0.8 + react * 0.5) * sin(uTime * 3.1 + phase);
+    float cca = cos(cTwist * 0.35);
+    float csa = sin(cTwist * 0.35);
+    vec2 rel = worldPosition.xz - bmBase;
+    worldPosition.xz = bmBase + vec2(cca * rel.x - csa * rel.y, csa * rel.x + cca * rel.y);
+
+    // Vertical flee + tip invert under heavy contact (fold over, root stays).
+    worldPosition.y += cSum * tip * (0.55 + uChaos * 0.7 + rarity * 0.4);
+    float invert = smoothstep(0.45, 1.2, cSum + uChaos * 0.5) * tip * (0.35 + rarity * 0.25);
+    worldPosition.y -= invert * (0.4 + up * 0.9); // tip dips / folds under pressure
+    worldPosition.xz += push * invert * 0.55;
 
     vWorldP = worldPosition.xyz;
     vec4 mvPosition = modelViewMatrix * worldPosition;
@@ -316,6 +365,9 @@ const flora_frag = /* glsl */ `
   varying float vSecHue;
   varying float vContactLive;
   varying float vRoot;
+  varying float vBiomass;
+  varying float vDensity;
+  varying float vStress;
   varying vec3 vNormalV;
   varying vec3 vViewDir;
   varying vec3 vWorldP;
@@ -334,7 +386,7 @@ const flora_frag = /* glsl */ `
     return rgb + (l - 0.5 * c);
   }
 
-  // Soft domain-warped field (4D-ish: xyz + time) — no hard stripe banding.
+  // Soft domain-warped field (4D-ish: xyz + time) — living skin, not stripe paint.
   float field4(vec3 p, float t) {
     vec3 q = p * 0.11;
     q.x += 0.35 * sin(q.y * 1.7 + t * 0.31);
@@ -352,35 +404,57 @@ const flora_frag = /* glsl */ `
     float fres = pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 2.0);
 
     float f = field4(vWorldP, uTime);
-    float f2 = field4(vWorldP.yzx * 1.3 + 2.1, uTime * 0.7);
-    // Soft organic mottling (SEM/mineral), not 1980s candy stripes.
-    float tex = 0.62 + 0.28 * f + 0.12 * f2;
+    float f2 = field4(vWorldP.yzx * 1.3 + 2.1, uTime * 0.7 + vStress);
+    float tex = 0.58 + 0.28 * f + 0.14 * f2;
 
-    // Oil-slick / holographic spectrum — wild but smooth.
-    float viewHue = fract(vSecHue + fres * 0.28 + vUp * 0.1 + f * 0.08 + uTime * 0.04 + vRarity * 0.05);
-    vec3 iri = hsl2rgb(viewHue, 0.72 + vRarity * 0.25, 0.5 + fres * 0.16);
-    vec3 iri2 = hsl2rgb(fract(viewHue + 0.22 + f * 0.05), 0.8, 0.55);
-    vec3 spectrum = mix(iri, iri2, 0.3 + fres * 0.4 + vRarity * 0.2);
+    // DYNAMIC SKIN: hue migrates with health, stress, contact, and time (mutating, purposeful).
+    float health = clamp(vBiomass, 0.0, 1.0);
+    float hunger = 1.0 - health;
+    float contactFlash = clamp(vContactLive, 0.0, 1.5);
+    // Healthy → cool-lush spectrum; hungry → warm/ash; stressed/contact → hot iridescent alarm.
+    float hueDrift = vSecHue
+      + fres * 0.22
+      + vUp * 0.08
+      + f * 0.07
+      + uTime * (0.03 + vRarity * 0.02)
+      + hunger * 0.12
+      + vStress * 0.18
+      + contactFlash * 0.1;
+    float viewHue = fract(hueDrift);
+    float sat = clamp(0.55 + vRarity * 0.25 + health * 0.2 - hunger * 0.15 + contactFlash * 0.15, 0.25, 0.98);
+    float lit = clamp(0.38 + fres * 0.15 + health * 0.18 - hunger * 0.12 + contactFlash * 0.1, 0.15, 0.78);
+    vec3 iri = hsl2rgb(viewHue, sat, lit);
+    vec3 iri2 = hsl2rgb(fract(viewHue + 0.18 + f * 0.04 + vDensity * 0.05), sat * 0.95, lit + 0.05);
+    vec3 spectrum = mix(iri, iri2, 0.28 + fres * 0.35 + vRarity * 0.2 + vStress * 0.15);
 
     float key = 0.38 + 0.72 * clamp(dot(n, normalize(vec3(0.35, 0.8, 0.45))), 0.0, 1.0);
-    vec3 body = mix(vColor * tex, spectrum, 0.32 + vRarity * 0.4 + fres * 0.2) * key;
+    // Base species color mutates toward living spectrum with stress/health.
+    float skinMix = 0.28 + vRarity * 0.35 + fres * 0.18 + vStress * 0.2 + (1.0 - health) * 0.12;
+    vec3 body = mix(vColor * tex, spectrum, clamp(skinMix, 0.0, 0.92)) * key;
 
-    // Buried root zone: darker mycelial soil tone (grounds the plant visually).
-    vec3 rootCol = mix(vColor * 0.35, hsl2rgb(fract(vSecHue + 0.08), 0.45, 0.22), 0.5);
-    body = mix(body, rootCol, vRoot * 0.85);
+    // Degraded (low biomass) skin desaturates + browns — food state, not paint.
+    vec3 degrade = mix(body, hsl2rgb(fract(vSecHue + 0.05), 0.25, 0.28), hunger * 0.55 * (1.0 - vRoot));
+    body = mix(body, degrade, hunger * 0.65);
 
-    float pulse = 0.5 + 0.5 * sin(uTime * 1.9 + vUp * 5.5 + f * 2.0 + vRarity * 1.5);
-    float contactFlash = clamp(vContactLive, 0.0, 1.5) * (0.3 + vRarity * 0.4);
-    float glow = vGlow * (0.2 + 0.85 * vUp) * pulse * (0.55 + 0.9 * uChaos + contactFlash) * (1.0 - vRoot * 0.7);
-    vec3 glowCol = mix(vColor * vec3(1.3, 1.55, 2.0), spectrum * 1.35, 0.45 + vRarity * 0.4);
+    // Buried root: dark mycelial mat.
+    vec3 rootCol = mix(vColor * 0.32, hsl2rgb(fract(vSecHue + 0.08), 0.4, 0.2), 0.55);
+    body = mix(body, rootCol, vRoot * 0.88);
 
-    vec3 rim = spectrum * fres * (0.7 + vRarity * 1.0 + contactFlash * 0.55) * (1.0 - vRoot * 0.5);
-    // Soft spore shimmer (not hard pores).
-    float spore = pow(max(0.0, 0.5 + 0.5 * f2), 3.0) * (0.2 + vRarity * 0.7) * pulse * vUp;
-    vec3 sporeCol = hsl2rgb(fract(vSecHue + 0.15 + uTime * 0.03), 0.9, 0.62) * spore;
+    float pulse = 0.45 + 0.55 * sin(uTime * 2.0 + vUp * 5.5 + f * 2.0 + vRarity * 1.5 + vStress);
+    float glow = vGlow * (0.18 + 0.88 * vUp) * pulse
+               * (0.5 + 0.85 * uChaos + contactFlash * 0.5 + health * 0.25)
+               * (1.0 - vRoot * 0.75);
+    vec3 glowCol = mix(vColor * vec3(1.25, 1.5, 2.0), spectrum * 1.4, 0.5 + vRarity * 0.35 + vStress * 0.2);
 
+    vec3 rim = spectrum * fres * (0.65 + vRarity * 0.95 + contactFlash * 0.6 + vStress * 0.25) * (1.0 - vRoot * 0.55);
+    float spore = pow(max(0.0, 0.5 + 0.5 * f2), 2.8) * (0.18 + vRarity * 0.65 + health * 0.2) * pulse * vUp;
+    vec3 sporeCol = hsl2rgb(fract(viewHue + 0.12), 0.88, 0.6) * spore;
+
+    // Contact alarm flash + density brace tint (crowded cells go cooler).
     vec3 col = body + glowCol * glow + rim + sporeCol;
-    col += spectrum * contactFlash * 0.22 * vUp;
+    col += spectrum * contactFlash * 0.28 * vUp;
+    col = mix(col, col * vec3(0.85, 1.05, 1.15), vDensity * 0.2);
+
     gl_FragColor = vec4(col, 1.0);
   }
 `;
@@ -571,8 +645,10 @@ export class AlienFlora {
       }
     }
     const texData = new Uint8Array(this.gridN * this.gridN * 4);
+    const densScale = this.maxDensity > 0 ? 1 / this.maxDensity : 0;
     for (let i = 0; i < this.biomass.length; i++) {
-      texData[i * 4] = Math.round((this.biomass[i] ?? 0) * 255);
+      texData[i * 4] = Math.round((this.biomass[i] ?? 0) * 255); // R = food/health biomass
+      texData[i * 4 + 1] = Math.round((this.density[i] ?? 0) * densScale * 255); // G = crowd brace
     }
     this.biomassTex = new THREE.DataTexture(texData, this.gridN, this.gridN, THREE.RGBAFormat);
     this.biomassTex.minFilter = THREE.LinearFilter;
@@ -989,7 +1065,11 @@ export class AlienFlora {
         this.biomassDirty = false;
         const data = this.biomassTex.image.data as Uint8Array;
         const bm = this.biomass;
-        for (let i = 0; i < bm.length; i++) data[i * 4] = Math.round((bm[i] ?? 0) * 255);
+        const densScale = this.maxDensity > 0 ? 1 / this.maxDensity : 0;
+        for (let i = 0; i < bm.length; i++) {
+          data[i * 4] = Math.round((bm[i] ?? 0) * 255);
+          data[i * 4 + 1] = Math.round((this.density[i] ?? 0) * densScale * 255);
+        }
         this.biomassTex.needsUpdate = true;
       }
     }
