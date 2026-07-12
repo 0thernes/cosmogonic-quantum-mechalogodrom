@@ -89,6 +89,9 @@ const FORESIGHT_K = 6;
 /** Total learnable params the foresight head adds when lit — same 18→h→1 shape. */
 export const SUPER_FORESIGHT_PARAMS =
   SENSE * FORESIGHT_HID + FORESIGHT_HID + (FORESIGHT_HID * 1 + 1);
+const CROWD_HID = 6; // spacing (crowding-anticipation) head hidden width
+/** Total learnable params the spacing head adds when lit — same 18→h→1 shape. */
+export const SUPER_CROWD_PARAMS = SENSE * CROWD_HID + CROWD_HID + (CROWD_HID * 1 + 1);
 
 /** Max living twins the Super Creature may sire (the brief's "twin/offspring creation up to 3"). */
 export const SUPER_MAX_OFFSPRING = 3;
@@ -151,7 +154,9 @@ export interface SuperSnapshot {
   menace: number; // learned predicted rival approach biasing posture/deception (0 when frozen)
   learnedForesightErr: number; // EMA of the foresight head's K-step energy forecast error (0 when frozen)
   foresightUrgency: number; // learned predicted FUTURE energy drop biasing proactive foraging (0 when frozen)
-  liveParamCount: number; // cortex+actor (frozen) + world-model + value + dread + social + foresight when lit
+  learnedCrowdErr: number; // EMA of the spacing head's next-crowding forecast error (0 when frozen)
+  spacing: number; // learned anticipated crowding driving dispersal (0 when frozen)
+  liveParamCount: number; // cortex+actor + world-model + value + dread + social + foresight + spacing when lit
   offspring: number; // living twins sired (≤ SUPER_MAX_OFFSPRING)
   plan: SuperPlan;
   intent: {
@@ -269,6 +274,16 @@ export class SuperCreature {
   private foresightUrgency = 0; // clamp(energy − forecast_{t+K}): a predicted FUTURE drop → forage early
   private learnedForesightErr = 0; // EMA of |K-step forecast − actual energy| — FALLS as the head learns
 
+  // ── ONLINE SPACING HEAD — learned crowding anticipation: a sixth 18→6→1 MLP forecasts next-beat crowding.
+  // A predicted congestion becomes `spacing`, a continuous overlay that AMPLIFIES the creature's movement
+  // (disperse ahead of the crush) and damps aimless exploration. Continuous ⇒ robust; `spacing:false` seam. ─
+  private crowdModel: Mlp | null = null; // null until enableLearning(); off ⇒ spacing 0 ⇒ byte-identical
+  private crowdBias = true; // the seam: false learns the model but does not steer movement
+  private readonly crowdTarget = new Float64Array(1); // scratch target (this beat's actual crowding)
+  private crowdForecast = 0; // the spacing head's forecast (made last beat) for THIS beat's crowding
+  private spacing = 0; // clamp((forecast − 0.3)·k): anticipated congestion → disperse
+  private learnedCrowdErr = 0; // EMA of |crowding forecast − actual crowding| — FALLS as the head learns
+
   /**
    * Birth the Super Creature. With no preset weights it rolls a fresh deep mind from `rng` (the
    * prime); twins pass mutated weight arrays + an incremented generation (see {@link maybeSpawn}).
@@ -308,7 +323,8 @@ export class SuperCreature {
           SUPER_VALUE_PARAMS +
           SUPER_THREAT_PARAMS +
           SUPER_SOCIAL_PARAMS +
-          SUPER_FORESIGHT_PARAMS
+          SUPER_FORESIGHT_PARAMS +
+          SUPER_CROWD_PARAMS
         : 0)
     );
   }
@@ -336,6 +352,10 @@ export class SuperCreature {
   get learnedForesightError(): number {
     return this.learnedForesightErr;
   }
+  /** EMA of the spacing head's next-crowding forecast error — falls as crowding anticipation is learned. */
+  get learnedCrowdError(): number {
+    return this.learnedCrowdErr;
+  }
 
   /**
    * Ignite ONLINE learning: the apex world-model (a real {@link SUPER_WORLDMODEL_PARAMS}-param 18→8→1
@@ -350,6 +370,7 @@ export class SuperCreature {
     seed?: number;
     social?: boolean;
     foresight?: boolean;
+    spacing?: boolean;
   }): void {
     if (opts?.lr !== undefined) this.wmLr = opts.lr;
     if (this.worldModel) {
@@ -379,6 +400,9 @@ export class SuperCreature {
     this.foresightBias = opts?.foresight !== false;
     this.senseRing = new Float64Array(FORESIGHT_K * SENSE);
     this.foreBeat = 0;
+    // the spacing head rides a sixth decorrelated substream (crowding axis). `spacing:false` = ablation control.
+    this.crowdModel = createMlp(SENSE, CROWD_HID, 1, mulberry32((seed ^ 0x5aac1a60) >>> 0 || 1));
+    this.crowdBias = opts?.spacing !== false;
     this.learn = true;
     this.prevValid = false;
     this.learnedPredErr = 0;
@@ -393,6 +417,9 @@ export class SuperCreature {
     this.rivalForecast = 0;
     this.learnedForesightErr = 0;
     this.foresightUrgency = 0;
+    this.learnedCrowdErr = 0;
+    this.spacing = 0;
+    this.crowdForecast = 0;
   }
 
   /**
@@ -496,6 +523,23 @@ export class SuperCreature {
       this.rivalForecast = rivalNext;
     }
 
+    // ── SPACING HEAD: learned crowding anticipation — forecast next-beat crowding (s[2]), derive spacing. A
+    // continuous overlay (like the social readiness): a predicted congestion amplifies movement (disperse)
+    // and damps aimless exploration. `spacing:false` (or learning off) ⇒ spacing 0 ⇒ byte-identical.
+    if (this.learn && this.crowdModel) {
+      if (this.prevValid) {
+        this.learnedCrowdErr +=
+          WM_TAU * (Math.abs(this.crowdForecast - (s[2] ?? 0)) - this.learnedCrowdErr);
+        if (this.wmLr > 0) {
+          this.crowdTarget[0] = s[2] ?? 0;
+          mlpTrainStep(this.crowdModel, this.prevSense, this.crowdTarget, this.wmLr);
+        }
+      }
+      const crowdNext = clamp01(mlpPredict(this.crowdModel, s)[0] ?? 0);
+      this.spacing = clamp01((crowdNext - 0.3) * 1.4); // anticipated congestion → disperse
+      this.crowdForecast = crowdNext;
+    }
+
     // ── FORESIGHT HEAD: learned PLANNING HORIZON — forecast energy FORESIGHT_K beats ahead, derive proactive
     // urgency. Unlike the value head (1 beat), it trains on the DELAYED pair (percept_{t−K} → energy_t) held
     // in a K-deep ring, so it learns the longer arc. A predicted FUTURE drop → forage/conserve EARLY. OFF by
@@ -577,6 +621,10 @@ export class SuperCreature {
       drives.REST += fu * 0.3 * (1 - (s[1] ?? 0)); // or bank energy while it is still safe
       drives.EXPLORE *= 1 - 0.35 * fu; // less aimless wandering when a drop looms
     }
+    // SPACING-AWARE PLANNING: anticipated congestion damps aimless exploration (don't wander into the crush);
+    // the primary dispersal effect is the continuous MOVE-magnitude overlay in the returned intent below.
+    const sp = this.crowdBias ? this.spacing : 0;
+    if (sp > 0) drives.EXPLORE *= 1 - 0.3 * sp;
     // DREAD-AWARE PLANNING: a LEARNED predicted threat RISE pre-emptively raises fleeing/deceiving and
     // suppresses committing to a hunt or a wander BEFORE the danger fully lands — anticipatory defense.
     // Only this pathway touches FLEE/DECEIVE, so its effect on plan choice is cleanly attributable to the
@@ -625,8 +673,11 @@ export class SuperCreature {
     // + projected dominance) every beat it fires — a continuous, always-consumed effect. 0 unless learning
     // AND the social bias is on ⇒ the frozen baseline and the `social:false` control are byte-identical.
     const guard = this.socialBias ? this.menace : 0;
+    // SPACING OVERLAY: anticipated congestion AMPLIFIES movement (disperse ahead of the crush) — a
+    // continuous, always-consumed effect. 0 unless learning AND spacing bias on ⇒ byte-identical baseline.
+    const disperse = sp > 0 ? 1 + sp * 0.6 : 1;
     return {
-      move: { x: mx, y: my, z: mz },
+      move: { x: mx * disperse, y: my * disperse, z: mz * disperse },
       aggression: guard > 0 ? clamp01(aggression + guard * 0.5) : aggression,
       deception,
       dominance: guard > 0 ? clamp01(domProject + guard * 0.4) : domProject,
@@ -706,6 +757,8 @@ export class SuperCreature {
       menace: this.menace,
       learnedForesightErr: this.learnedForesightErr,
       foresightUrgency: this.foresightUrgency,
+      learnedCrowdErr: this.learnedCrowdErr,
+      spacing: this.spacing,
       liveParamCount: this.liveParamCount,
       offspring: this.offspring,
       plan: this.plan,

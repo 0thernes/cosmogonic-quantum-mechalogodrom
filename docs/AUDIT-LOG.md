@@ -11,6 +11,31 @@ changed and why.
 
 ---
 
+## 2026-07-11 — batch 36: Super Creature grows SPACING — a sixth head disperses ahead of the crush (pass 7/10)
+
+Pass 7 of the 10-pass "make them smarter" goal. Beyond salience, energy (1-step + 6-step), threat and rival,
+the apex creature gains a new behavioral DOMAIN — anticipatory spatial dispersal.
+
+- **`src/sim/super-creature.ts` — a learned SPACING head (18→6→1, `SUPER_CROWD_PARAMS`=121).** Trained by
+  exact Eshkol-AD backprop to forecast the creature's OWN next-beat CROWDING. Anticipated congestion becomes
+  `spacing`, a continuous overlay that AMPLIFIES the motor intent (`move` vector ×`1 + spacing·0.6`) to
+  disperse ahead of the crush and damps aimless EXPLORE drive. Sixth decorrelated substream
+  (`seed ^ 0x5aac1a60`); a `spacing:false` seam is the ablation control for the dispersal overlay.
+- **CONTINUOUS overlay, per the pass-5 lesson.** The effect scales the always-consumed move vector rather
+  than depending on a spacing plan out-competing hunting/exploring — so it is robust across seeds (a peripheral
+  plan flip would be a dead hook). Probed clean before wiring: 4× ablation, mean |Δ|move|| ≈0.20 on-vs-off.
+- **GATE (`tests/super-creature-spacing.test.ts`, 6 cases).** LEARNS: crowding-forecast error to **<0.1**
+  (~0.072 EMA). ABLATION: trained **<0.5×** a frozen-lr0 control (≈4× — load-bearing; frozen stays >0.15).
+  OPERATIONAL (isolated): spacing-on vs spacing-off shifts mean move-magnitude by **>0.1** (≈0.20 across
+  seeds). Plus DETERMINISM, DEFAULT-OFF byte-identical, SCALE. All prior Super Creature gates + baseline +
+  pantheon-breeding stay green (the spacing head is a separate net; the other five axes unchanged).
+- **HONESTY (ADR 0014/0015, indicatorOnly).** NO consciousness / Butlin / A-Life score moved. Claim: the apex
+  creature now anticipates crowding (~4× below frozen, ablation-verified) and disperses proactively. Butlin +
+  Consciousness BYTE-IDENTICAL. SuperCreature now carries SIX learned heads (salience, energy 1-step, threat,
+  rival, energy 6-step, crowding).
+
+Receipts 2832→2838 (+6). Coupling invariant intact (SuperCreature is outside the receipt).
+
 ## 2026-07-11 — batch 35: Super Creature grows FORESIGHT — a fifth head plans on a longer horizon (pass 6/10)
 
 Pass 6 of the 10-pass "make them smarter" goal — a distinct KIND of upgrade (planning HORIZON, not just
