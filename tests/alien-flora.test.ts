@@ -79,6 +79,56 @@ describe('AlienFlora — the vegetal ground ecology', () => {
     f.dispose();
   });
 
+  test('each instance carries per-species color + aSkin program (50 unique recipes, not grey family wash)', () => {
+    const ctx = makeCtx();
+    const f = new AlienFlora(ctx);
+    const skins = new Set<number>();
+    const colorKeys = new Set<string>();
+    let hasSkin = false;
+    let hasColor = false;
+    let metalSpread = 0;
+    let patternSpread = 0;
+    let minMetal = 1;
+    let maxMetal = 0;
+    let minPat = 1;
+    let maxPat = 0;
+    ctx.scene.traverse((o) => {
+      if (!(o instanceof THREE.InstancedMesh)) return;
+      const skinAttr = o.geometry.getAttribute('aSkin');
+      const colorAttr = o.geometry.getAttribute('aColor');
+      expect(skinAttr).toBeTruthy();
+      expect(colorAttr).toBeTruthy();
+      hasSkin = true;
+      hasColor = true;
+      const n = o.count;
+      for (let i = 0; i < n; i++) {
+        const mode = Math.floor(skinAttr!.getX(i));
+        skins.add(mode);
+        minMetal = Math.min(minMetal, skinAttr!.getY(i));
+        maxMetal = Math.max(maxMetal, skinAttr!.getY(i));
+        minPat = Math.min(minPat, skinAttr!.getZ(i));
+        maxPat = Math.max(maxPat, skinAttr!.getZ(i));
+        // Quantize RGB so near-duplicates collapse; still expect many distinct species colors.
+        const r = Math.round(colorAttr!.getX(i) * 40);
+        const g = Math.round(colorAttr!.getY(i) * 40);
+        const b = Math.round(colorAttr!.getZ(i) * 40);
+        colorKeys.add(`${r},${g},${b}`);
+      }
+    });
+    metalSpread = maxMetal - minMetal;
+    patternSpread = maxPat - minPat;
+    expect(hasSkin).toBe(true);
+    expect(hasColor).toBe(true);
+    // All 8 skin programs appear across the field (plasma/crystal/velvet/shell/veins/ash/mercury/void).
+    expect(skins.size).toBe(8);
+    for (let m = 0; m < 8; m++) expect(skins.has(m)).toBe(true);
+    // Far more color buckets than families — species-locked identity, not 9 grey family tints.
+    expect(colorKeys.size).toBeGreaterThan(30);
+    expect(metalSpread).toBeGreaterThan(0.3);
+    expect(patternSpread).toBeGreaterThan(0.3);
+    f.dispose();
+  });
+
   test('every instance transform is finite (plants seated on the terrain, no NaN matrices)', () => {
     const ctx = makeCtx();
     const f = new AlienFlora(ctx);

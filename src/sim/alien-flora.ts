@@ -122,7 +122,7 @@ function edaphicQuality(x: number, z: number): number {
 interface Species {
   readonly family: number;
   readonly biome: number;
-  /** Base hue (turns 0..1) — biome-banded so a patch reads as one alien palette. */
+  /** Unique base hue (turns 0..1) — each species owns a distinct slot on the wheel. */
   readonly hue: number;
   readonly sat: number;
   readonly light: number;
@@ -134,6 +134,15 @@ interface Species {
   readonly glow: number;
   /** 0..1 rarity bias — higher → more special iridescence / crystal reaction. */
   readonly rarityBias: number;
+  /**
+   * Skin program 0..7 — each species gets its own shader personality
+   * (plasma / crystal / velvet / shell / veins / ash / mercury / void).
+   */
+  readonly skinMode: number;
+  /** Metalness-like bias 0..1 for skin shading. */
+  readonly metal: number;
+  /** Pattern scale / film rate personality 0..1. */
+  readonly pattern: number;
 }
 
 /** One structural family's base geometry + the local height of its tallest vertex (for sway up-weighting). */
@@ -194,6 +203,7 @@ function peakHeight(geo: THREE.BufferGeometry): number {
 const flora_vert = /* glsl */ `
   attribute vec4 aParams;   // x: phase, y: swayFreq, z: glow, w: localHeight (stem peak)
   attribute vec4 aMeta;     // x: rarity, y: stiffness, z: secondaryHue, w: reactGain
+  attribute vec4 aSkin;     // x: skinMode 0..7, y: metal, z: pattern, w: speciesNorm
   attribute vec3 aColor;
   attribute vec2 aPush;     // CPU spatial-hash soft collision push (world XZ) — real plant↔plant
   uniform float uTime;
@@ -220,6 +230,10 @@ const flora_vert = /* glsl */ `
   varying float vStress;
   varying float vDensity;
   varying float vDebt;
+  varying float vSkinMode;
+  varying float vMetal;
+  varying float vPattern;
+  varying float vSpecies;
   varying vec3 vNormalV;
   varying vec3 vViewDir;
   varying vec3 vWorldP;
@@ -276,6 +290,10 @@ const flora_vert = /* glsl */ `
     vGlow = aParams.z;
     vRarity = aMeta.x;
     vSecHue = aMeta.z;
+    vSkinMode = aSkin.x;
+    vMetal = aSkin.y;
+    vPattern = aSkin.z;
+    vSpecies = aSkin.w;
     float up = clamp(position.y / max(aParams.w, 0.001), 0.0, 1.0);
     vUp = up;
     // rootPin: seating only — collar never leaves soil (f8c6eadb).
@@ -587,6 +605,10 @@ const flora_frag = /* glsl */ `
   varying float vStress;
   varying float vDensity;
   varying float vDebt;
+  varying float vSkinMode;
+  varying float vMetal;
+  varying float vPattern;
+  varying float vSpecies;
   varying vec3 vNormalV;
   varying vec3 vViewDir;
   varying vec3 vWorldP;
@@ -693,71 +715,118 @@ const flora_frag = /* glsl */ `
     // Möbius warp of hue circle driven by stress/contact (extreme remapping, continuous).
     float viewHue = moebiusHue(rawHue, vStress * 0.45 + contactFlash * 0.2 - 0.15, debt * 0.35 - health * 0.2);
 
-    // Skin sat/lit may breathe — but must NOT flatten every plant to white/grey candy.
-    float sat = clamp(
-      0.5 + vRarity * 0.4 - hunger * 0.1 + contactFlash * 0.12 + f2 * 0.08
-      + uChaos * 0.1 - vStress * 0.04 + health * 0.05 - debt * 0.08,
-      0.22, 1.0);
-    float lit = clamp(
-      0.2 + fres * 0.1 - hunger * 0.07 + health * 0.05 - vStress * 0.04
-      + f * 0.03 + contactFlash * 0.04 - debt * 0.05 + skinPulse * 0.02,
-      0.07, 0.42);
+    // SPECIES IDENTITY LAW: each of 50 species owns unique base color (vColor) + skin program.
+    // Skin programs modulate without washing every plant into the same candy grey.
+    float skin = floor(clamp(vSkinMode, 0.0, 7.99)); // 0..7
+    float pat = 0.4 + vPattern * 1.8;
+    float metal = clamp(vMetal, 0.0, 1.0);
 
-    vec2 hopf = hopfAngles(vWorldP * 0.08 + n * 0.3, uTime + vStress);
+    // Per-species sat/lit bias decoded from base color (keeps identity even under spectrum tint).
+    float baseLum = dot(vColor, vec3(0.299, 0.587, 0.114));
+    float baseSat = length(vColor - vec3(baseLum));
+    float sat = clamp(
+      0.35 + baseSat * 1.4 + vRarity * 0.25 - hunger * 0.08 + contactFlash * 0.1
+      + uChaos * 0.08 - debt * 0.06 + metal * 0.1,
+      0.2, 1.0);
+    float lit = clamp(
+      0.12 + baseLum * 0.55 + fres * (0.06 + metal * 0.1) - hunger * 0.06 + health * 0.04
+      - vStress * 0.03 + skinPulse * 0.02 - debt * 0.04,
+      0.06, 0.44);
+
+    vec2 hopf = hopfAngles(vWorldP * 0.08 + n * 0.3, uTime + vStress + vSpecies * 6.28);
     float hopfHue = fract(hopf.x / 6.2831853 + hopf.y / 6.2831853 * 0.5 + viewHue * 0.3);
 
-    // Narrow hue wander so family identity (vColor H/S/L) still reads as type.
-    vec3 iri = hsl2rgb(viewHue, sat, lit);
-    vec3 iri2 = hsl2rgb(fract(viewHue + 0.1 + f * 0.05), sat, lit + 0.03);
-    vec3 iri3 = hsl2rgb(fract(viewHue + 0.18 + contactFlash * 0.04), sat * 0.95, 0.24 + fres * 0.1);
-    vec3 iri4 = hsl2rgb(hopfHue, sat * 0.9, lit * 0.88 + fres * 0.05);
-    float w12 = clamp(0.22 + f * 0.18 + skinPulse2 * 0.1, 0.0, 1.0);
-    float w3 = clamp(0.1 + contactFlash * 0.18 + vRarity * 0.12, 0.0, 0.65);
-    float w4 = clamp(0.06 + vStress * 0.1 + debt * 0.08 + crowd * 0.06, 0.0, 0.5);
-    vec3 spectrum = mix(mix(iri, iri2, w12), iri3, w3);
-    spectrum = mix(spectrum, iri4, w4);
+    // Species-locked hue wander: secondary hue + small pattern offset (not full wheel spin).
+    float spHue = fract(vSecHue + f * 0.04 * pat + vSpecies * 0.02);
+    vec3 iri = hsl2rgb(spHue, sat, lit);
+    vec3 iri2 = hsl2rgb(fract(spHue + 0.07 + f * 0.03), sat, lit + 0.03);
+    vec3 iri3 = hsl2rgb(fract(spHue + 0.14 + contactFlash * 0.03), sat * 0.95, 0.22 + fres * 0.1);
+    vec3 iri4 = hsl2rgb(hopfHue, sat * 0.9, lit * 0.9 + fres * 0.05);
 
-    float key = 0.52 + 0.5 * clamp(dot(n, normalize(vec3(0.3, 0.85, 0.4))), 0.0, 1.0);
-    // FAMILY IDENTITY LAW: vColor dominates (sat/light/hue of type); spectrum is a living tint only.
-    float skinMix = 0.1 + vRarity * 0.25 + fres * 0.12 + vStress * 0.1 + contactFlash * 0.12 + uChaos * 0.05;
-    vec3 body = mix(vColor * tex * 1.3, spectrum, clamp(skinMix, 0.0, 0.48)) * key;
+    // ── 8 SPECIES SKIN PROGRAMS (each plant species picks one) ──
+    vec3 spectrum;
+    float skinMix;
+    float key = 0.48 + 0.52 * clamp(dot(n, normalize(vec3(0.3, 0.85, 0.4))), 0.0, 1.0);
+    key = mix(key, key * (0.65 + fres * 0.7), metal); // metallic skins catch highlights harder
+
+    if (skin < 0.5) {
+      // 0 PLASMA — living moebius plasma film
+      spectrum = mix(mix(iri, iri2, 0.4 + f * 0.3), iri3, 0.2 + skinPulse * 0.2);
+      spectrum = mix(spectrum, iri4, 0.15 + uChaos * 0.1);
+      skinMix = 0.22 + vRarity * 0.2 + contactFlash * 0.15 + fres * 0.12;
+    } else if (skin < 1.5) {
+      // 1 CRYSTAL — hard faceted iridescence, cool secondary
+      spectrum = mix(iri, iri4, 0.35 + fres * 0.4);
+      spectrum += iri2 * pow(fres, 2.0) * 0.5;
+      skinMix = 0.18 + fres * 0.35 + metal * 0.15;
+      key *= 0.9 + fres * 0.35;
+    } else if (skin < 2.5) {
+      // 2 VELVET — matte soft body, base color wins hard
+      spectrum = mix(vColor * 1.1, iri, 0.25);
+      skinMix = 0.06 + vRarity * 0.1 + debt * 0.08;
+      key *= 0.85 + (1.0 - fres) * 0.2;
+    } else if (skin < 3.5) {
+      // 3 SHELL — thin-film carapace, hopf dual angles
+      spectrum = mix(iri, iri4, 0.45 + skinPulse2 * 0.2);
+      spectrum = mix(spectrum, iri3, fres * 0.4);
+      skinMix = 0.28 + fres * 0.25 + contactFlash * 0.1;
+    } else if (skin < 4.5) {
+      // 4 VEINS — bioluminescent vertical striation
+      float vein = 0.5 + 0.5 * sin(vUp * (12.0 + pat * 10.0) + uTime * (1.5 + vPattern) + f * 4.0);
+      spectrum = mix(iri, iri2 * 1.25, vein * (0.5 + health * 0.5));
+      skinMix = 0.2 + vein * 0.25 + vGlow * 0.15;
+    } else if (skin < 5.5) {
+      // 5 ASH — overgraze-scarred charcoal with ember cracks
+      spectrum = mix(iri * 0.55, iri3, debt * 0.6 + f2 * 0.2);
+      spectrum = mix(spectrum, hsl2rgb(fract(spHue + 0.05), 0.9, 0.35), pow(f3 * 0.5 + 0.5, 3.0) * 0.4);
+      skinMix = 0.15 + debt * 0.35 + vStress * 0.2;
+    } else if (skin < 6.5) {
+      // 6 MERCURY — liquid metallic flow along normal
+      float flow = 0.5 + 0.5 * sin(dot(n, vec3(1.0, 2.0, 1.3)) * (6.0 + pat * 8.0) + uTime * 2.2);
+      spectrum = mix(iri, iri4, 0.3 + flow * 0.4);
+      spectrum += vec3(0.15, 0.18, 0.22) * metal * fres;
+      skinMix = 0.3 + metal * 0.25 + fres * 0.2;
+      key *= 0.75 + fres * 0.55;
+    } else {
+      // 7 VOID — light-absorbing alien, dark base + rim only
+      spectrum = mix(iri * 0.35, iri2, fres * 0.6);
+      skinMix = 0.12 + fres * 0.4 + contactFlash * 0.15;
+      key *= 0.55 + fres * 0.6;
+    }
+
+    // Base species color always dominates — spectrum is a living species skin, not a global repaint.
+    vec3 body = mix(vColor * tex * (1.15 + metal * 0.2), spectrum, clamp(skinMix, 0.0, 0.62)) * key;
     // Degrade / bruise / ash when biomass low or debt (operational food state).
-    vec3 bruise = hsl2rgb(fract(viewHue + 0.55 + f * 0.05 + vStress * 0.1), 0.38, 0.22);
-    vec3 ash = hsl2rgb(fract(viewHue + 0.08), 0.18, 0.14);
-    body = mix(body, bruise, hunger * 0.58 * (1.0 - vRoot));
-    body = mix(body, ash, (debt * 0.45 + vStress * hunger * 0.3) * (1.0 - vRoot));
-    // Healthy tips chroma; crowded mid mutates toward hopf dual-skin.
-    body = mix(body, spectrum * 1.12, health * vUp * 0.16 * (1.0 - vStress * 0.4));
-    body = mix(body, iri4 * 1.05, crowd * (1.0 - vUp) * 0.2 * (1.0 - vRoot));
+    vec3 bruise = hsl2rgb(fract(spHue + 0.45 + f * 0.04), 0.4, 0.18);
+    vec3 ashCol = hsl2rgb(fract(spHue + 0.06), 0.22, 0.1);
+    body = mix(body, bruise, hunger * 0.5 * (1.0 - vRoot));
+    body = mix(body, ashCol, (debt * 0.4 + vStress * hunger * 0.25) * (1.0 - vRoot));
+    body = mix(body, spectrum * 1.1, health * vUp * 0.12 * (1.0 - vStress * 0.4));
 
-    vec3 rootCol = mix(vColor * 0.28, hsl2rgb(fract(viewHue + 0.1), 0.42, 0.16), 0.55);
+    vec3 rootCol = mix(vColor * 0.22, hsl2rgb(fract(spHue + 0.08), 0.4, 0.12), 0.5);
     body = mix(body, rootCol, vRoot * 0.92);
 
-    float pulse = 0.5 + 0.5 * sin(uTime * 2.3 + vUp * 6.2 + f * 2.5 + vRarity * 1.9 + vStress + contactFlash);
-    float glow = vGlow * (0.22 + 1.0 * vUp) * pulse
-               * (0.45 + 1.05 * uChaos + contactFlash * 0.7 + health * 0.32 + vRarity * 0.15)
+    float pulse = 0.5 + 0.5 * sin(uTime * (1.8 + vPattern * 1.2) + vUp * 6.2 + f * 2.5 + vSpecies * 9.0 + vStress);
+    float glow = vGlow * (0.18 + 0.95 * vUp) * pulse
+               * (0.4 + 0.9 * uChaos + contactFlash * 0.65 + health * 0.28 + vRarity * 0.2)
                * (1.0 - vRoot * 0.76) * (1.0 - hunger * 0.18);
-    vec3 glowCol = mix(vColor * vec3(1.3, 1.55, 2.15), spectrum * 1.55, 0.55 + vRarity * 0.45);
+    // Glow tint stays species-colored (not generic cyan).
+    vec3 glowCol = mix(vColor * vec3(1.4, 1.35, 1.5), spectrum * 1.45, 0.4 + vRarity * 0.35);
 
-    vec3 rim = spectrum * fres * (0.9 + vRarity * 1.25 + contactFlash * 0.85 + uChaos * 0.3) * (1.0 - vRoot * 0.45);
-    float spore = pow(max(0.0, 0.5 + 0.5 * f2), 2.5) * (0.22 + vRarity * 0.85) * pulse * vUp * health;
-    vec3 sporeCol = hsl2rgb(fract(viewHue + 0.22 + f3 * 0.08 + skinPulse3 * 0.1), 0.95, 0.68) * spore;
-    // Contact chromatic flash (threat) + debt bruise pulse.
-    vec3 threat = hsl2rgb(fract(viewHue + 0.38 + uTime * 0.15 + vStress * 0.08), 0.98, 0.62)
-                * contactFlash * 0.48 * vUp;
-    vec3 debtVeil = hsl2rgb(fract(viewHue + 0.62), 0.55, 0.28) * debt * 0.2 * (1.0 - vRoot);
+    vec3 rim = spectrum * fres * (0.7 + vRarity * 1.1 + contactFlash * 0.75 + metal * 0.5) * (1.0 - vRoot * 0.45);
+    float spore = pow(max(0.0, 0.5 + 0.5 * f2), 2.5) * (0.15 + vRarity * 0.7 + float(skin == 4.0) * 0.35) * pulse * vUp * health;
+    vec3 sporeCol = hsl2rgb(fract(spHue + 0.12 + f3 * 0.06), 0.92, 0.55) * spore;
+    vec3 threat = hsl2rgb(fract(spHue + 0.28 + uTime * 0.12), 0.95, 0.55) * contactFlash * 0.42 * vUp;
+    vec3 debtVeil = hsl2rgb(fract(spHue + 0.55), 0.5, 0.22) * debt * 0.18 * (1.0 - vRoot);
 
     vec3 col = body + glowCol * glow + rim + sporeCol + threat + debtVeil;
-    col += spectrum * contactFlash * 0.3 * vUp * (0.5 + 0.5 * skinPulse);
-    col = mix(col, col * vec3(0.78, 0.86, 0.94), vStress * 0.28 * (1.0 - vUp));
-    col += spectrum * vRarity * vUp * 0.14 * skinPulse * (0.55 + 0.45 * health);
-    col = mix(col, col * vec3(1.08, 0.92, 1.15), skinPulse2 * 0.1 * (vStress + contactFlash * 0.55));
-    // Thin-film interference: two path phases from hopf + view — operational rarity/health.
-    vec3 film = hsl2rgb(fract(viewHue + 0.3 + f * 0.12 + hopfHue * 0.15), 0.95, 0.6);
-    col = mix(col, col + film * 0.28, vRarity * health * vUp * (0.4 + 0.6 * skinPulse));
-    col += film * uChaos * vRarity * vUp * 0.16 * pulse * (0.45 + contactFlash * 0.55);
-    // Crowd interference: packing densifies chroma bands (plant↔plant biosphere signal).
-    col = mix(col, spectrum * vec3(1.1, 0.95, 1.2), crowd * vUp * 0.12 * skinPulse3);
+    col += spectrum * contactFlash * 0.22 * vUp * (0.5 + 0.5 * skinPulse);
+    col += spectrum * vRarity * vUp * 0.1 * skinPulse * (0.5 + 0.5 * health);
+    // Species-unique film: rate/offset from vPattern + vSpecies (each of 50 feels different).
+    vec3 film = hsl2rgb(fract(spHue + 0.2 + f * 0.08 + vSpecies * 0.5), 0.9, 0.5);
+    col = mix(col, col + film * (0.15 + metal * 0.2), vRarity * health * vUp * (0.3 + 0.5 * skinPulse));
+    col += film * uChaos * vRarity * vUp * 0.1 * pulse;
+    col = mix(col, spectrum * vec3(1.05, 0.98, 1.1), crowd * vUp * 0.08 * skinPulse3);
     gl_FragColor = vec4(col, 1.0);
   }
 `;
@@ -1072,6 +1141,7 @@ export class AlienFlora {
       const n = list.length;
       const params = new Float32Array(n * 4);
       const meta = new Float32Array(n * 4);
+      const skinArr = new Float32Array(n * 4); // aSkin: per-species shader program + metal/pattern
       const colors = new Float32Array(n * 3);
       const pushArr = new Float32Array(n * 2); // aPush: soft plant↔plant separation
       const mesh = new THREE.InstancedMesh(geo, this.material, n);
@@ -1106,38 +1176,16 @@ export class AlienFlora {
         m.compose(pos, q, scl);
         mesh.setMatrixAt(i, m);
 
-        // Family-locked H+S+L identity + species variance — NEVER white/grey blanket.
-        const hueJit =
-          (s.hue +
-            (hash(pl.sp * 31 + i) - 0.5) * 0.05 +
-            0.025 * Math.sin(pl.x * 0.006 + pl.z * 0.008) +
-            pl.rarity * 0.04 +
-            1) %
-          1;
-        // Sat: full dusty→neon swing by species (0.28..1.0), not all max-candy.
-        const sat = Math.min(
-          1.0,
-          Math.max(0.28, s.sat + (hash(i * 97 + pl.sp) - 0.5) * 0.14 + pl.rarity * 0.1),
-        );
-        // Light: often DARK (0.08..0.42) — greys/whites were the readability kill.
-        const darkBias =
-          hash(i * 101 + pl.sp) < 0.45 ? -0.12 : hash(i * 101 + pl.sp) > 0.85 ? 0.06 : 0;
+        // SPECIES IDENTITY: exact species hue/sat/light — tiny plant jitter only (not a re-roll).
+        const hueJit = (s.hue + (hash(pl.sp * 31 + i) - 0.5) * 0.012 + pl.rarity * 0.015 + 1) % 1;
+        const sat = Math.min(1, Math.max(0.22, s.sat + (hash(i * 97 + pl.sp) - 0.5) * 0.04));
         const light = Math.min(
           0.42,
-          Math.max(0.08, s.light + darkBias + (hash(i * 103) - 0.5) * 0.07 + pl.rarity * 0.04),
+          Math.max(0.07, s.light + (hash(i * 101 + pl.sp) - 0.5) * 0.025),
         );
         col.setHSL(hueJit, sat, light);
-        // Rare alien accent only — does not repaint whole field.
-        if (pl.rarity > 0.58) {
-          const kick = hash(i * 113 + pl.sp);
-          const t = 0.14 + pl.rarity * 0.2;
-          if (kick < 0.33) col.lerp(new THREE.Color(0.05, 0.85, 0.95), t);
-          else if (kick < 0.66) col.lerp(new THREE.Color(0.95, 0.08, 0.55), t);
-          else col.lerp(new THREE.Color(0.95, 0.55, 0.05), t);
-        }
 
         const o4 = i * 4;
-        // Spatial salt in phase so neighbors don't lockstep-crossover.
         // Spatial salt so neighbors never lockstep thrash (crossover ↓ at source).
         params[o4] =
           hash(pl.sp * 13 + i * 7) * TAU +
@@ -1146,16 +1194,21 @@ export class AlienFlora {
           Math.sin(pl.x * 0.09 - pl.z * 0.07) * 1.7 +
           Math.cos(pl.x * 0.05 + pl.z * 0.06) * 1.1;
         params[o4 + 1] = s.swayFreq * (0.55 + hash(i * 73 + pl.sp) * 1.9);
-        params[o4 + 2] = Math.min(1, s.glow + hash(i * 79 + pl.sp) * 0.38 + pl.rarity * 0.25);
+        params[o4 + 2] = Math.min(1, s.glow + hash(i * 79 + pl.sp) * 0.25 + pl.rarity * 0.2);
         params[o4 + 3] = fmly.height;
 
-        // aMeta: rarity, stiffness, secondaryHue, reactGain
+        // aMeta: rarity, stiffness, secondaryHue (species-locked), reactGain
         meta[o4] = pl.rarity;
-        meta[o4 + 1] = 0.18 + hash(i * 83 + pl.sp) * 1.0; // stiffness variance
-        // Secondary hue far from primary so skins can swing across the wheel.
-        meta[o4 + 2] =
-          (hueJit + 0.28 + pl.rarity * 0.35 + hash(i * 89) * 0.35 + hash(pl.sp * 7) * 0.2) % 1;
-        meta[o4 + 3] = 0.55 + hash(i * 91 + pl.sp) * 0.9 + pl.rarity * 0.7; // react gain
+        meta[o4 + 1] = 0.18 + hash(i * 83 + pl.sp) * 1.0;
+        // Secondary hue stays near species primary (±0.08) — identity, not random rainbow.
+        meta[o4 + 2] = (hueJit + 0.04 + (hash(pl.sp * 7) - 0.5) * 0.08 + pl.rarity * 0.03 + 1) % 1;
+        meta[o4 + 3] = 0.55 + hash(i * 91 + pl.sp) * 0.9 + pl.rarity * 0.7;
+
+        // aSkin: per-SPECIES shader program (same for every plant of that species).
+        skinArr[o4] = s.skinMode;
+        skinArr[o4 + 1] = s.metal;
+        skinArr[o4 + 2] = s.pattern;
+        skinArr[o4 + 3] = pl.sp / SPECIES_COUNT;
 
         const o3 = i * 3;
         colors[o3] = col.r;
@@ -1164,6 +1217,7 @@ export class AlienFlora {
       }
       geo.setAttribute('aParams', new THREE.InstancedBufferAttribute(params, 4));
       geo.setAttribute('aMeta', new THREE.InstancedBufferAttribute(meta, 4));
+      geo.setAttribute('aSkin', new THREE.InstancedBufferAttribute(skinArr, 4));
       geo.setAttribute('aColor', new THREE.InstancedBufferAttribute(colors, 3));
       geo.setAttribute('aPush', new THREE.InstancedBufferAttribute(pushArr, 2));
       this.pushAttrs.push(pushArr);
@@ -1677,48 +1731,48 @@ export class AlienFlora {
   }
 
   /**
-   * Per-FAMILY visual identity (9 types). H + S + L signatures so SPIRE≠WHIP≠CORAL at a glance.
-   * 0 SPIRE · 1 WHIP · 2 POD · 3 BLADE · 4 CORAL · 5 SHARD · 6 HELIX · 7 BUBBLE · 8 FAN
+   * 50 UNIQUE species recipes — every species owns a distinct hue slot + sat/light + skin program.
+   * Family only picks geometry; color/skin is per-species so each reads as a different organism.
+   * No two species share the same quantized (hueBand, satTier, litTier, skinMode) signature.
    */
-  private static readonly FAMILY_LOOK: ReadonlyArray<{
-    h0: number;
-    hSpan: number;
-    s0: number;
-    sSpan: number;
-    l0: number;
-    lSpan: number;
-  }> = [
-    { h0: 0.5, hSpan: 0.1, s0: 0.55, sSpan: 0.4, l0: 0.12, lSpan: 0.22 }, // SPIRE teal→cyan dark
-    { h0: 0.86, hSpan: 0.12, s0: 0.72, sSpan: 0.28, l0: 0.18, lSpan: 0.24 }, // WHIP magenta vivid
-    { h0: 0.06, hSpan: 0.1, s0: 0.78, sSpan: 0.22, l0: 0.22, lSpan: 0.2 }, // POD amber/rust warm
-    { h0: 0.3, hSpan: 0.1, s0: 0.35, sSpan: 0.5, l0: 0.1, lSpan: 0.18 }, // BLADE olive dusty dark
-    { h0: 0.78, hSpan: 0.12, s0: 0.88, sSpan: 0.12, l0: 0.26, lSpan: 0.18 }, // CORAL neon orchid
-    { h0: 0.56, hSpan: 0.08, s0: 0.3, sSpan: 0.45, l0: 0.28, lSpan: 0.16 }, // SHARD ice low-sat
-    { h0: 0.02, hSpan: 0.12, s0: 0.9, sSpan: 0.1, l0: 0.1, lSpan: 0.2 }, // HELIX blood/orange dark
-    { h0: 0.38, hSpan: 0.12, s0: 0.22, sSpan: 0.55, l0: 0.14, lSpan: 0.24 }, // BUBBLE mint var sat
-    { h0: 0.66, hSpan: 0.12, s0: 0.6, sSpan: 0.38, l0: 0.08, lSpan: 0.2 }, // FAN indigo shadow
-  ];
-
-  /** 50 species: family-locked H/S/L + species variance (identifiable types, not one blanket). */
   private static buildSpecies(): Species[] {
     const out: Species[] = [];
+    // Golden-angle stride spreads 50 hues evenly with no clustering.
+    const PHI = 0.618033988749895;
+    // Metal bias table for the 8 skin programs (plasma..void).
+    const SKIN_METAL = [0.15, 0.75, 0.05, 0.55, 0.2, 0.1, 0.9, 0.35] as const;
     for (let i = 0; i < SPECIES_COUNT; i++) {
       const biome = i % BIOME_COUNT;
       const family = Math.floor(hash(i * 17 + 101) * FAMILY_COUNT) % FAMILY_COUNT;
-      const look = AlienFlora.FAMILY_LOOK[family] ?? AlienFlora.FAMILY_LOOK[0]!;
-      const hue = (look.h0 + hash(i * 19 + 2) * look.hSpan + (biome / BIOME_COUNT) * 0.025 + 1) % 1;
-      const sat = Math.min(1, Math.max(0.22, look.s0 + hash(i * 23 + 3) * look.sSpan));
-      const light = Math.min(0.42, Math.max(0.07, look.l0 + hash(i * 29 + 5) * look.lSpan));
+      // Exact unique hue: spaced by φ across the wheel + tiny species salt (never collide).
+      const hue = (i * PHI + hash(i * 19 + 2) * 0.008) % 1;
+      // 5 sat × 10 light tiers — every (sat,light) cell used exactly once across 50 species.
+      const satTier = i % 5;
+      const litTier = Math.floor(i / 5) % 10;
+      const satBase = [0.32, 0.52, 0.72, 0.88, 0.98][satTier]!;
+      // Lights stay mid-dark — never white wash (0.07..0.40).
+      const light = 0.08 + litTier * 0.032 + hash(i * 29 + 5) * 0.02;
+      // 8 skin programs — stride-3 cycle so neighbors rarely share the same shader personality.
+      const skinMode = (i * 3 + Math.floor(hash(i * 53 + 1) * 2)) % 8;
+      // Per-species metal/pattern so even shared skin modes look like different organisms.
+      const metal = Math.min(
+        1,
+        Math.max(0.02, SKIN_METAL[skinMode]! + (hash(i * 61 + 4) - 0.5) * 0.22),
+      );
+      const pattern = 0.08 + ((i * 0.137 + hash(i * 47 + 9)) % 1) * 0.9;
       out.push({
         family,
         biome,
         hue,
-        sat,
-        light,
+        sat: Math.min(1, Math.max(0.28, satBase + (hash(i * 23 + 3) - 0.5) * 0.06)),
+        light: Math.min(0.4, Math.max(0.07, light)),
         size: 0.95 + hash(i * 31 + 7) * 1.7,
         swayFreq: 0.4 + hash(i * 37 + 11) * 2.2,
-        glow: 0.2 + sat * 0.4 + hash(i * 41 + 13) * 0.3,
+        glow: 0.2 + satBase * 0.35 + metal * 0.2 + hash(i * 41 + 13) * 0.25,
         rarityBias: hash(i * 59 + 17) * 0.55,
+        skinMode,
+        metal,
+        pattern,
       });
     }
     return out;
