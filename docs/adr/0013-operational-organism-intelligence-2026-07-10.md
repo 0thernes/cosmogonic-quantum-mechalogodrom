@@ -48,9 +48,12 @@ The upstream release audit also established two hard scientific boundaries:
   It is a Float64 runtime analogue pinned in provenance to Eshkol v1.3.2-evolve commit
   `8443ddaeecec579c60ac858348a23cf1912d7a78`, not native exact-rational or full-language parity.
 - The exploration source is a deterministic classical state-vector model adapted from Quantum RNG
-  v3.0.1 commit `a00ad483cbbef31ea7536f09ae99409d81c9a823`. It uses seeded simulation entropy only. Its RCT/APT-style
-  counters are bounded diagnostics, not SP 800-90B validation. A health failure must reduce or replace
-  exploration; CHSH never gates entropy, intelligence, or security.
+  v3.0.1 commit `a00ad483cbbef31ea7536f09ae99409d81c9a823`. It uses seeded simulation entropy only. Its
+  health block runs the genuine NIST SP 800-90B §4.4 Repetition Count and Adaptive Proportion Test
+  algorithm (`math/nist-sp800-90b.ts`) with the standard cutoff formulas over the retained output
+  window — a faithful conformance diagnostic, still NOT SP 800-90B entropy-source validation (which
+  needs a physical noise source, the estimator battery, and restart tests). A health failure must
+  reduce or replace exploration; CHSH never gates entropy, intelligence, or security.
 
 ### Living-system consumers
 

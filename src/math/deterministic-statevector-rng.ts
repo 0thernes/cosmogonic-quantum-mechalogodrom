@@ -10,8 +10,11 @@
  * direct port and does not claim native parity. Its entropy schedule is seeded by the project's
  * deterministic {@link Rng}, then retained in serialisable xoshiro state so a snapshot can resume
  * exactly. Consequently it is NOT a CSPRNG, NOT physical quantum entropy, and NOT evidence of Bell
- * nonlocality or quantum hardware. The RCT/APT-style values are bounded runtime diagnostics only;
- * they are not SP 800-90B validation or certification.
+ * nonlocality or quantum hardware. The health block runs the genuine NIST SP 800-90B §4.4 Repetition
+ * Count Test and Adaptive Proportion Test *algorithm* (see `nist-sp800-90b.ts`) over the retained
+ * output window, with the standard cutoff formulas. That is a faithful conformance diagnostic of the
+ * output stream — it is still NOT SP 800-90B entropy-source validation or certification, which would
+ * additionally require a physical noise source, the full estimator battery, and restart testing.
  *
  * The quantum mechanics represented here are nevertheless actual classical state-vector algebra:
  * H/X/Z/S/RY/RZ/CNOT/CZ are unitary transforms and full-register measurement samples Born
@@ -19,6 +22,13 @@
  */
 
 import type { Rng } from './rng';
+import {
+  SP80090B_APT_WINDOW_BINARY,
+  SP80090B_DEFAULT_ALPHA_EXPONENT,
+  adaptiveProportionCutoff,
+  adaptiveProportionOverBuffer,
+  repetitionCountCutoff,
+} from './nist-sp800-90b';
 
 const TWO_POW_32 = 0x1_0000_0000;
 const TWO_POW_53 = 9_007_199_254_740_992;
@@ -42,7 +52,12 @@ export interface DeterministicStatevectorRngOptions {
   evolutionRounds?: number;
   /** Number of recent output bits retained for bounded health diagnostics; integer in [64, 4096]. */
   healthWindowBits?: number;
-  /** Diagnostic-only run-length alert threshold; integer in [8, 128]. */
+  /**
+   * SP 800-90B §4.4.1 Repetition Count Test cutoff C (integer in [8, 128]). The RCT alarms when a
+   * single output bit value recurs C times consecutively. Defaults to the standard value for a
+   * full-entropy binary source at α = 2^-20: C = 1 + ⌈-log₂(α)/H⌉ = 21 (H = 1). A larger C is a more
+   * conservative test (equivalent to a smaller α); a caller may pass one to widen or tighten it.
+   */
   repetitionCutoff?: number;
 }
 
@@ -51,9 +66,9 @@ export interface DeterministicStatevectorRngOptions {
  * runtime alarm for an entropy-source assessment.
  */
 export interface StatevectorOutputHealth {
-  kind: 'bounded-rct-apt-style-output-diagnostics';
+  kind: 'sp800-90b-rct-apt-algorithm-bounded-window-diagnostic';
   standardsClaim: 'not-sp800-90b-validation-or-certification';
-  interpretation: 'heuristic-output-alerts-only';
+  interpretation: 'real-sp800-90b-test-algorithm-conformance-diagnostic';
   status: 'insufficient-data' | 'diagnostic-pass' | 'diagnostic-alert';
   sampleBits: number;
   windowCapacityBits: number;
@@ -61,9 +76,16 @@ export interface StatevectorOutputHealth {
   zeros: number;
   proportionOnes: number;
   longestRun: number;
+  /** SP 800-90B §4.4.1 Repetition Count Test cutoff C in force for this generator. */
   repetitionCutoff: number;
-  adaptiveProportionLowerBound: number;
-  adaptiveProportionUpperBound: number;
+  /** SP 800-90B §4.4.2 Adaptive Proportion Test window W (binary source: 1024). */
+  adaptiveProportionWindow: number;
+  /** SP 800-90B §4.4.2 APT cutoff C for W bits at H = 1, α = 2^-20. */
+  adaptiveProportionCutoff: number;
+  /** Largest reference-value count seen across the scanned non-overlapping APT windows. */
+  adaptiveProportionWorstCount: number;
+  /** Number of full APT windows the retained buffer covered (0 ⇒ APT could not run yet). */
+  adaptiveProportionWindowsScanned: number;
   repetitionAlert: boolean;
   adaptiveProportionAlert: boolean;
   alert: boolean;
@@ -115,8 +137,12 @@ export class DeterministicStatevectorRng {
   private readonly imag: Float64Array;
   private readonly entropyState = new Uint32Array(4);
   private readonly healthWindow: Uint8Array;
+  /** Reusable output-order copy of the ring buffer so the windowed APT scan needs no per-call alloc. */
+  private readonly orderedWindow: Uint8Array;
   private readonly evolutionRounds: number;
   private readonly repetitionCutoff: number;
+  private readonly adaptiveProportionWindowSize: number;
+  private readonly adaptiveProportionCutoffValue: number;
 
   private cursor = 0;
   private draws = 0;
@@ -143,14 +169,23 @@ export class DeterministicStatevectorRng {
     );
     this.repetitionCutoff = requireIntegerInRange(
       'repetitionCutoff',
-      options.repetitionCutoff ?? 32,
+      options.repetitionCutoff ?? repetitionCountCutoff(1, SP80090B_DEFAULT_ALPHA_EXPONENT),
       8,
       128,
+    );
+    // APT for a binary (1-bit) output source at the full-entropy null H=1, α=2^-20. Both are fixed by
+    // the standard, so the cutoff is a constant of the model and needs no snapshot field.
+    this.adaptiveProportionWindowSize = SP80090B_APT_WINDOW_BINARY;
+    this.adaptiveProportionCutoffValue = adaptiveProportionCutoff(
+      SP80090B_APT_WINDOW_BINARY,
+      1,
+      SP80090B_DEFAULT_ALPHA_EXPONENT,
     );
 
     this.real = new Float64Array(this.dimension);
     this.imag = new Float64Array(this.dimension);
     this.healthWindow = new Uint8Array(healthWindowBits);
+    this.orderedWindow = new Uint8Array(healthWindowBits);
     this.real[0] = 1;
 
     // The project's Rng supplies deterministic seed material. From this point onward, the complete
@@ -450,7 +485,11 @@ export class DeterministicStatevectorRng {
     return Number(this.nextU64() >> 11n) / TWO_POW_53;
   }
 
-  /** Bounded diagnostic scan of the retained output window; allocates no working arrays. */
+  /**
+   * Run the genuine SP 800-90B §4.4 RCT and APT algorithm over the retained output window. The scan
+   * fills a reusable output-order buffer (no per-call data allocation); the APT partitions that
+   * window into non-overlapping W-bit windows and needs a full window before it reports a verdict.
+   */
   health(): StatevectorOutputHealth {
     const n = this.healthCount;
     const start = n < this.healthWindow.length ? 0 : this.healthCursor;
@@ -460,6 +499,7 @@ export class DeterministicStatevectorRng {
     let previous = -1;
     for (let i = 0; i < n; i++) {
       const bit = this.healthWindow[(start + i) % this.healthWindow.length] ?? 0;
+      this.orderedWindow[i] = bit;
       ones += bit;
       if (bit === previous) currentRun++;
       else {
@@ -470,19 +510,20 @@ export class DeterministicStatevectorRng {
     }
 
     const proportionOnes = n > 0 ? ones / n : 0.5;
-    // Six-sigma binomial bounds are intentionally simple alarms, not SP 800-90B APT parameters.
-    const margin = n > 0 ? 6 * Math.sqrt(0.25 / n) : 0.5;
-    const lower = Math.max(0, 0.5 - margin);
-    const upper = Math.min(1, 0.5 + margin);
-    const repetitionAlert = longestRun > this.repetitionCutoff;
-    const enoughForProportion = n >= 64;
-    const adaptiveProportionAlert =
-      enoughForProportion && (proportionOnes < lower || proportionOnes > upper);
-    const alert = repetitionAlert || adaptiveProportionAlert;
+    // §4.4.1 RCT: the longest identical-bit run IS the repeat-count statistic for a binary source;
+    // the standard alarms once a value has recurred `C` times consecutively (run length ≥ C).
+    const repetitionAlert = n > 0 && longestRun >= this.repetitionCutoff;
+    // §4.4.2 APT over the retained window (real algorithm; W=1024, cutoff from the binomial at H=1).
+    const apt = adaptiveProportionOverBuffer(
+      this.orderedWindow.subarray(0, n),
+      this.adaptiveProportionWindowSize,
+      this.adaptiveProportionCutoffValue,
+    );
+    const alert = repetitionAlert || apt.alarm;
     return {
-      kind: 'bounded-rct-apt-style-output-diagnostics',
+      kind: 'sp800-90b-rct-apt-algorithm-bounded-window-diagnostic',
       standardsClaim: 'not-sp800-90b-validation-or-certification',
-      interpretation: 'heuristic-output-alerts-only',
+      interpretation: 'real-sp800-90b-test-algorithm-conformance-diagnostic',
       status: n < 64 ? 'insufficient-data' : alert ? 'diagnostic-alert' : 'diagnostic-pass',
       sampleBits: n,
       windowCapacityBits: this.healthWindow.length,
@@ -491,10 +532,12 @@ export class DeterministicStatevectorRng {
       proportionOnes,
       longestRun,
       repetitionCutoff: this.repetitionCutoff,
-      adaptiveProportionLowerBound: lower,
-      adaptiveProportionUpperBound: upper,
+      adaptiveProportionWindow: this.adaptiveProportionWindowSize,
+      adaptiveProportionCutoff: this.adaptiveProportionCutoffValue,
+      adaptiveProportionWorstCount: apt.worstCount,
+      adaptiveProportionWindowsScanned: apt.windowsScanned,
       repetitionAlert,
-      adaptiveProportionAlert,
+      adaptiveProportionAlert: apt.alarm,
       alert,
     };
   }

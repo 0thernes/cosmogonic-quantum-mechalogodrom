@@ -11,6 +11,23 @@ changed and why.
 
 ---
 
+## 2026-07-12 — batch 44: Quantum RNG v3.0.0 → genuine NIST SP 800-90B §4.4 RCT/APT health tests
+
+Continuation of the /goal after batch 43, acting on the newest Quantum RNG v3.0.0 drop. New leaf
+`src/math/nist-sp800-90b.ts` implements the **actual** NIST SP 800-90B §4.4 Repetition Count Test and
+Adaptive Proportion Test _algorithm_ with the standard cutoff formulas (RCT `C = 1 + ⌈-log₂(α)/H⌉` = 21
+for the binary-source null; APT cutoff = the binomial critical value, summed in log-space).
+`DeterministicStatevectorRng.health()` now runs the real RCT (run length ≥ C) and the real windowed
+APT over the retained output window, replacing the six-sigma proportion heuristic it honestly
+disclaimed. Falsifiable golden tests pin every cutoff and alarm threshold (`tests/nist-sp800-90b.test.ts`,
+11 tests). **Honest boundary preserved:** running the SP 800-90B test algorithm on a deterministic
+simulation stream is a conformance diagnostic, NOT entropy-source validation (no physical noise source,
+estimator battery, or restart tests). Healthy streams never trip C=21 within a 256-bit window, so the
+organism substrate's `diagnosticAlert` behaviour is unchanged in normal operation — alarms fire only on
+a genuinely degenerate stream (real substrate metacognition, not decoration). ADR-0013 updated to state
+the health block is the genuine algorithm. No metric axis moved. (The batch-44 VQE drive resolver landed
+separately in `5aa6663b`.)
+
 ## 2026-07-12 — batch 43: full Tsotchke corpus audit → custom-VJP AD nodes + EXACT quantum parameter-shift AD
 
 Continuation of the /goal after batch 42, closing the "check ALL his repos + start a big lane" gaps. **Full

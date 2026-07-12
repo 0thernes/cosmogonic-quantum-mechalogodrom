@@ -67,8 +67,16 @@ describe('DeterministicStatevectorRng', () => {
     expect(Number.isFinite(health.proportionOnes)).toBe(true);
     expect(health.proportionOnes).toBeGreaterThanOrEqual(0);
     expect(health.proportionOnes).toBeLessThanOrEqual(1);
-    expect(health.adaptiveProportionLowerBound).toBeGreaterThanOrEqual(0);
-    expect(health.adaptiveProportionUpperBound).toBeLessThanOrEqual(1);
+    expect(health.kind).toBe('sp800-90b-rct-apt-algorithm-bounded-window-diagnostic');
+    // Real SP 800-90B §4.4.1 RCT cutoff: default C = 1 + ⌈-log₂(2^-20)/1⌉ = 21.
+    expect(health.repetitionCutoff).toBe(21);
+    // Real §4.4.2 APT: W=1024 for a binary source; cutoff is the binomial critical value at H=1.
+    expect(health.adaptiveProportionWindow).toBe(1024);
+    expect(health.adaptiveProportionCutoff).toBeGreaterThan(512);
+    expect(health.adaptiveProportionCutoff).toBeLessThanOrEqual(1024);
+    // 256 retained bits cannot fill a 1024-bit APT window yet, so the APT abstains (no false alarm).
+    expect(health.adaptiveProportionWindowsScanned).toBe(0);
+    expect(health.adaptiveProportionAlert).toBe(false);
     expect(health.longestRun).toBeGreaterThanOrEqual(1);
     expect(health.standardsClaim).toBe('not-sp800-90b-validation-or-certification');
     expect(['diagnostic-pass', 'diagnostic-alert']).toContain(health.status);
