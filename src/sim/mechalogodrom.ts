@@ -690,8 +690,14 @@ export class Mechalogodrom {
       v.mesh.position.set(lerp(v.ax, cx, k), lerp(v.ay, cy, k), lerp(v.az, cz, k));
       // Manic pole → swells + brightens; depressive pole → shrinks + dims (the "bipolar variant").
       const manic = 0.5 + 0.5 * bip;
+      // ENLIVEN (owner: "wireframing and dead … keeps going to the centre"): even a depressive / workspace-
+      // LOSING shell must read ALIVE, never a dead wire. A slow per-shell breath — independent of the bipolar
+      // swing, deterministic from st + the shell's fixed phase (no rng, no clock) — keeps a living pulse under
+      // the raised brightness/opacity FLOOR below, so no migrating shell ever flatlines into a husk.
+      const breathe = 0.5 + 0.5 * Math.sin(st * 0.45 + v.phase);
       // V-MECHA-MIND: this shell's Global-Workspace blaze — 1 when its sub-brain won the fusion mind's
-      // workspace this beat. The winning thought's PHYSICAL shell swells + ignites; losers stay dim.
+      // workspace this beat. The winning thought's PHYSICAL shell swells + ignites; losers now dim only to
+      // the LIVING floor (not out), so the dominant coalition still reads brightest.
       const blaze = this.variantBlaze[i] ?? 0;
       const baseScale = lerp(10 + (i % 5) * 3, 4 + (i % 3) * 2, k); // shells shrink as they fuse in
       v.mesh.scale.setScalar(baseScale * (0.6 + 0.8 * manic) * (1 + 0.35 * blaze));
@@ -699,12 +705,16 @@ export class Mechalogodrom {
       v.mesh.rotation.y = st * (0.2 + 0.07 * i);
       // Hue swings between the two poles; opacity flares with the manic phase and fades as it melts in.
       const hue = lerp(v.hueA, v.hueB, manic);
-      // USER #14: keep the lightness low so the additive shell never blows out.
-      // Each shell drives its OWN material, so all 10 read as distinct, defined colours (was: only
-      // variant 0's hue reached the shared material and every shell looked identical). The dominant
-      // shell's blaze lifts its lightness + opacity (capped) so the mind's active coalition is legible.
-      v.mat.color.setHSL(hue, 0.9, 0.28 + 0.1 * manic + 0.16 * blaze);
-      v.mat.opacity = Math.min(0.6, (0.18 + 0.22 * manic * (1 - 0.5 * k)) * (1 + 1.1 * blaze));
+      // USER #14: keep the lightness low so the additive shell never blows out. ENLIVEN: lift the FLOOR
+      // 0.28 → 0.40 (+ a faint breath) so a depressive/losing shell glows alive; blaze still adds the
+      // winner's legible edge. Each shell drives its OWN material, so all 10 read as distinct colours.
+      v.mat.color.setHSL(hue, 0.9, 0.4 + 0.07 * manic + 0.05 * breathe + 0.14 * blaze);
+      // ENLIVEN: opacity FLOOR 0.18 → 0.35 with a breathing shimmer, so even a fused-in losing shell is a
+      // LIVING wire, never a dead one; manic + blaze still lift the winner (cap raised 0.6 → 0.64).
+      v.mat.opacity = Math.min(
+        0.64,
+        (0.35 + 0.12 * manic * (1 - 0.4 * k) + 0.06 * breathe) * (1 + 0.9 * blaze),
+      );
     }
   }
 
