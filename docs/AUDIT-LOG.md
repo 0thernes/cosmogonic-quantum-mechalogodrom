@@ -11,6 +11,33 @@ changed and why.
 
 ---
 
+## 2026-07-11 — batch 35: Super Creature grows FORESIGHT — a fifth head plans on a longer horizon (pass 6/10)
+
+Pass 6 of the 10-pass "make them smarter" goal — a distinct KIND of upgrade (planning HORIZON, not just
+another percept axis). The value head (Pass 2) forecasts energy ONE beat ahead → reactive feeding; this
+forecasts it FORESIGHT_K=6 beats ahead → proactive foraging.
+
+- **`src/sim/super-creature.ts` — a learned FORESIGHT head (18→6→1, `SUPER_FORESIGHT_PARAMS`=121).** Trained
+  by exact Eshkol-AD backprop on the DELAYED pair (percept_{t−6} → energy_t), held in a 6-deep percept ring,
+  so it learns the longer arc rather than the next step. A predicted FUTURE drop becomes `foresightUrgency`,
+  which pulls toward feeding/banking energy BEFORE hunger arrives. Fifth decorrelated substream
+  (`seed ^ 0x0f0e51a7`); a `foresight:false` seam is the ablation control for the plan bias.
+- **Pre-verified learnability.** Probed the raw K-step forecast first (ad-mlp on the delayed pairs): trained
+  vs frozen-lr0 separates ~19× at K=6 (and still ~17× at K=10) — the circadian inputs give enough phase to
+  extrapolate. Only then wired it in. (Contrast the reverted apex/social-plan attempts — probe the HOOK, not
+  just the head.)
+- **GATE (`tests/super-creature-foresight.test.ts`, 6 cases).** LEARNS: K-step error to **<0.12**. ABLATION:
+  trained EMA **~0.065** vs a frozen-lr0 control **~1.06** (~13× — load-bearing). OPERATIONAL (isolated):
+  foresight-on HUNTs more than foresight-off (proactive foraging) with **>15** (≈23–36 across seeds) plan-
+  sequence changes. Plus DETERMINISM, DEFAULT-OFF byte-identical, SCALE. All prior Super Creature gates +
+  baseline + pantheon-breeding stay green (the foresight head is a separate net; the other axes unchanged).
+- **HONESTY (ADR 0014/0015, indicatorOnly).** NO consciousness / Butlin / A-Life score moved. Claim: the apex
+  creature now plans on a 6-beat horizon (~13× below frozen, ablation-verified) and forages proactively.
+  Butlin + Consciousness BYTE-IDENTICAL. SuperCreature now carries FIVE learned heads (salience, energy 1-step,
+  threat, rival, energy 6-step).
+
+Receipts 2825→2831 (+6). Coupling invariant intact (SuperCreature is outside the receipt).
+
 ## 2026-07-11 — batch 34: Super Creature grows SOCIAL cognition — a fourth head anticipates rivals (pass 5/10)
 
 Pass 5 of the 10-pass "make them smarter" goal. Beyond the world-model (salience), value head (energy) and

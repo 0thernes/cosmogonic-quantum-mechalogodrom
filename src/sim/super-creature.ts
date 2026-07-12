@@ -83,6 +83,12 @@ export const SUPER_THREAT_PARAMS = SENSE * THREAT_HID + THREAT_HID + (THREAT_HID
 const SOCIAL_HID = 6; // social (rival-anticipation) head hidden width
 /** Total learnable params the social head adds when lit — same 18→h→1 shape. */
 export const SUPER_SOCIAL_PARAMS = SENSE * SOCIAL_HID + SOCIAL_HID + (SOCIAL_HID * 1 + 1);
+const FORESIGHT_HID = 6; // foresight-head hidden width
+/** Planning HORIZON of the foresight head: it forecasts energy this many beats ahead (vs the value head's 1). */
+const FORESIGHT_K = 6;
+/** Total learnable params the foresight head adds when lit — same 18→h→1 shape. */
+export const SUPER_FORESIGHT_PARAMS =
+  SENSE * FORESIGHT_HID + FORESIGHT_HID + (FORESIGHT_HID * 1 + 1);
 
 /** Max living twins the Super Creature may sire (the brief's "twin/offspring creation up to 3"). */
 export const SUPER_MAX_OFFSPRING = 3;
@@ -143,7 +149,9 @@ export interface SuperSnapshot {
   dread: number; // learned predicted threat rise biasing the planner toward defense (0 when frozen)
   learnedSocialErr: number; // EMA of the social head's next-rival forecast error (0 when frozen)
   menace: number; // learned predicted rival approach biasing posture/deception (0 when frozen)
-  liveParamCount: number; // cortex+actor (frozen) + world-model + value + dread + social params when lit
+  learnedForesightErr: number; // EMA of the foresight head's K-step energy forecast error (0 when frozen)
+  foresightUrgency: number; // learned predicted FUTURE energy drop biasing proactive foraging (0 when frozen)
+  liveParamCount: number; // cortex+actor (frozen) + world-model + value + dread + social + foresight when lit
   offspring: number; // living twins sired (≤ SUPER_MAX_OFFSPRING)
   plan: SuperPlan;
   intent: {
@@ -249,6 +257,18 @@ export class SuperCreature {
   private menace = 0; // clamp(forecastNext − rival): a predicted rival APPROACH → posture / feint
   private learnedSocialErr = 0; // EMA of |rival forecast − actual rival| — FALLS as the head learns
 
+  // ── ONLINE FORESIGHT HEAD — learned PLANNING HORIZON: a fifth 18→6→1 MLP forecasts energy FORESIGHT_K
+  // beats ahead (vs the value head's 1). A predicted FUTURE drop becomes `foresightUrgency`, which drives
+  // PROACTIVE foraging — the creature feeds/conserves BEFORE hunger arrives, not just when already low. A
+  // K-deep ring of past percepts supplies the delayed (percept_{t−K} → energy_t) training pair. ──────────
+  private foresightModel: Mlp | null = null; // null until enableLearning(); off ⇒ foresightUrgency 0
+  private foresightBias = true; // the seam: false learns the model but does not steer the plan
+  private senseRing: Float64Array | null = null; // FORESIGHT_K past SENSE-vectors (flat), for delayed training
+  private foreBeat = 0; // beats seen since learning lit — indexes the ring
+  private readonly foreTarget = new Float64Array(1); // scratch target (this beat's actual energy)
+  private foresightUrgency = 0; // clamp(energy − forecast_{t+K}): a predicted FUTURE drop → forage early
+  private learnedForesightErr = 0; // EMA of |K-step forecast − actual energy| — FALLS as the head learns
+
   /**
    * Birth the Super Creature. With no preset weights it rolls a fresh deep mind from `rng` (the
    * prime); twins pass mutated weight arrays + an incremented generation (see {@link maybeSpawn}).
@@ -284,7 +304,11 @@ export class SuperCreature {
     return (
       this.paramCount +
       (this.worldModel
-        ? SUPER_WORLDMODEL_PARAMS + SUPER_VALUE_PARAMS + SUPER_THREAT_PARAMS + SUPER_SOCIAL_PARAMS
+        ? SUPER_WORLDMODEL_PARAMS +
+          SUPER_VALUE_PARAMS +
+          SUPER_THREAT_PARAMS +
+          SUPER_SOCIAL_PARAMS +
+          SUPER_FORESIGHT_PARAMS
         : 0)
     );
   }
@@ -308,6 +332,10 @@ export class SuperCreature {
   get learnedSocialError(): number {
     return this.learnedSocialErr;
   }
+  /** EMA of the foresight head's K-step energy forecast error — falls as farsighted planning is learned. */
+  get learnedForesightError(): number {
+    return this.learnedForesightErr;
+  }
 
   /**
    * Ignite ONLINE learning: the apex world-model (a real {@link SUPER_WORLDMODEL_PARAMS}-param 18→8→1
@@ -317,7 +345,12 @@ export class SuperCreature {
    * — so lighting learning cannot perturb the world's main draw order. Idempotent. `lr = 0` freezes the
    * net (the ablation control): it still forecasts but never updates, so its error cannot fall.
    */
-  enableLearning(opts?: { lr?: number; seed?: number; social?: boolean }): void {
+  enableLearning(opts?: {
+    lr?: number;
+    seed?: number;
+    social?: boolean;
+    foresight?: boolean;
+  }): void {
     if (opts?.lr !== undefined) this.wmLr = opts.lr;
     if (this.worldModel) {
       this.learn = true;
@@ -335,6 +368,17 @@ export class SuperCreature {
     // model (so it learns and its error is measurable) but suppresses the plan bias — the ablation control.
     this.socialModel = createMlp(SENSE, SOCIAL_HID, 1, mulberry32((seed ^ 0x1c0ffee5) >>> 0 || 1));
     this.socialBias = opts?.social !== false;
+    // the foresight head rides a fifth decorrelated substream (K-step energy horizon). Its ring holds the
+    // last FORESIGHT_K percepts so it can train on the delayed (percept_{t−K} → energy_t) pair.
+    this.foresightModel = createMlp(
+      SENSE,
+      FORESIGHT_HID,
+      1,
+      mulberry32((seed ^ 0x0f0e51a7) >>> 0 || 1),
+    );
+    this.foresightBias = opts?.foresight !== false;
+    this.senseRing = new Float64Array(FORESIGHT_K * SENSE);
+    this.foreBeat = 0;
     this.learn = true;
     this.prevValid = false;
     this.learnedPredErr = 0;
@@ -347,6 +391,8 @@ export class SuperCreature {
     this.learnedSocialErr = 0;
     this.menace = 0;
     this.rivalForecast = 0;
+    this.learnedForesightErr = 0;
+    this.foresightUrgency = 0;
   }
 
   /**
@@ -450,6 +496,29 @@ export class SuperCreature {
       this.rivalForecast = rivalNext;
     }
 
+    // ── FORESIGHT HEAD: learned PLANNING HORIZON — forecast energy FORESIGHT_K beats ahead, derive proactive
+    // urgency. Unlike the value head (1 beat), it trains on the DELAYED pair (percept_{t−K} → energy_t) held
+    // in a K-deep ring, so it learns the longer arc. A predicted FUTURE drop → forage/conserve EARLY. OFF by
+    // default (and under `foresight:false`) ⇒ foresightUrgency 0 ⇒ the planner is byte-identical.
+    if (this.learn && this.foresightModel && this.senseRing) {
+      const off = (this.foreBeat % FORESIGHT_K) * SENSE;
+      if (this.foreBeat >= FORESIGHT_K) {
+        const past = this.senseRing.subarray(off, off + SENSE); // percept from FORESIGHT_K beats ago
+        this.learnedForesightErr +=
+          WM_TAU *
+          (Math.abs((mlpPredict(this.foresightModel, past)[0] ?? 0) - (s[0] ?? 0)) -
+            this.learnedForesightErr);
+        if (this.wmLr > 0) {
+          this.foreTarget[0] = s[0] ?? 0; // train the K-ago percept toward THIS beat's realized energy
+          mlpTrainStep(this.foresightModel, past, this.foreTarget, this.wmLr);
+        }
+      }
+      for (let i = 0; i < SENSE; i++) this.senseRing[off + i] = s[i] ?? 0; // record this percept for t+K
+      const energyAhead = clamp01(mlpPredict(this.foresightModel, s)[0] ?? 0);
+      this.foresightUrgency = clamp01((s[0] ?? 0) - energyAhead); // a predicted FUTURE energy drop
+      this.foreBeat++;
+    }
+
     // ── PREDICTION LOOP: compare last beat's forecast to this beat's actual salience → surprise ────
     const salience = clamp01(0.5 * s[1] + 0.3 * s[2] + 0.2 * moveMag); // how eventful "now" is
     this.surprise = clamp01(Math.abs(this.predictedSalience - salience));
@@ -498,6 +567,15 @@ export class SuperCreature {
       drives.REST += su * 0.25 * (1 - (s[1] ?? 0)); // if safe, conserve
       drives.EXPLORE *= 1 - 0.5 * su; // don't wander when starving
       drives.DOMINATE *= 1 - 0.3 * su; // survival over dominance games
+    }
+    // FORESIGHT-AWARE PLANNING: a LEARNED predicted FUTURE (K-beat-ahead) energy drop pulls toward feeding /
+    // banking energy BEFORE hunger arrives — proactive, not reactive. foresightUrgency is 0 unless learning
+    // AND the foresight bias is on ⇒ the baseline (and the `foresight:false` control) are byte-identical.
+    const fu = this.foresightBias ? this.foresightUrgency : 0;
+    if (fu > 0) {
+      drives.HUNT += fu * 0.6 * (0.4 + 0.6 * (s[5] ?? 0)); // forage ahead of the coming trough
+      drives.REST += fu * 0.3 * (1 - (s[1] ?? 0)); // or bank energy while it is still safe
+      drives.EXPLORE *= 1 - 0.35 * fu; // less aimless wandering when a drop looms
     }
     // DREAD-AWARE PLANNING: a LEARNED predicted threat RISE pre-emptively raises fleeing/deceiving and
     // suppresses committing to a hunt or a wander BEFORE the danger fully lands — anticipatory defense.
@@ -626,6 +704,8 @@ export class SuperCreature {
       dread: this.dread,
       learnedSocialErr: this.learnedSocialErr,
       menace: this.menace,
+      learnedForesightErr: this.learnedForesightErr,
+      foresightUrgency: this.foresightUrgency,
       liveParamCount: this.liveParamCount,
       offspring: this.offspring,
       plan: this.plan,

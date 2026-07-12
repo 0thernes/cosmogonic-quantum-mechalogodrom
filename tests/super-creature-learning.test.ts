@@ -25,6 +25,7 @@ import {
   SUPER_VALUE_PARAMS,
   SUPER_THREAT_PARAMS,
   SUPER_SOCIAL_PARAMS,
+  SUPER_FORESIGHT_PARAMS,
   type SuperPercept,
 } from '../src/sim/super-creature';
 
@@ -150,7 +151,8 @@ describe('SuperCreature online world-model', () => {
         SUPER_WORLDMODEL_PARAMS +
         SUPER_VALUE_PARAMS +
         SUPER_THREAT_PARAMS +
-        SUPER_SOCIAL_PARAMS,
+        SUPER_SOCIAL_PARAMS +
+        SUPER_FORESIGHT_PARAMS,
     );
   });
 
@@ -166,7 +168,8 @@ describe('SuperCreature online world-model', () => {
         SUPER_WORLDMODEL_PARAMS +
         SUPER_VALUE_PARAMS +
         SUPER_THREAT_PARAMS +
-        SUPER_SOCIAL_PARAMS,
+        SUPER_SOCIAL_PARAMS +
+        SUPER_FORESIGHT_PARAMS,
     );
   });
 });
