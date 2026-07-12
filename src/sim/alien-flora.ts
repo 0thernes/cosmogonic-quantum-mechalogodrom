@@ -129,18 +129,16 @@ interface Family {
  * Must clear the ground-triangle chord (habitat seal: origin ≤ rendered mesh) so roots never float.
  * Collar is local y=0; root bulbs are negative-Y.
  *
- * Living attach (GPU) — load-bearing, not decorative phasing:
- * 1. Sample the same `cqmTerrainDisplacement` field as the ground mesh.
- * 2. Neighborhood CREST max under the plant footprint (adjacent waves can sit ~6u above a
- *    base-only collar — that was the "nearby ground swallows plants" failure mode).
- * 3. Per-vertex lift never below local surface OR footprint crest.
- * 4. SURFACE_RIDE keeps the collar kissing the top of that crest.
+ * Living attach (GPU) — RIGID crest ride (one Y lift for the whole plant):
+ * Neighborhood CREST max under the footprint, applied as a single translation after
+ * instanceMatrix. Per-vertex height deltas were tried and REJECTED — they sheared meshes
+ * into stretch/thin horizontal ribbons. Land coupling must never non-uniformly scale stems.
  */
 export const FLORA_ROOT_SINK = 0.5;
 const ROOT_SINK = FLORA_ROOT_SINK;
-/** GPU lift after crest+local attach — collar rides the wave top. */
+/** GPU rigid lift after crest sample — collar rides the wave top. */
 const SURFACE_RIDE = 0.3;
-/** Footprint guard radius (world units) for neighborhood crest max — catches adjacent wave peaks. */
+/** Footprint guard radius (world units) for neighborhood crest max. */
 const CREST_GUARD = 3.5;
 
 /** Dispose extras after merge, keep the final geometry. */
@@ -234,8 +232,8 @@ const flora_vert = /* glsl */ `
     // Lateral thrash (tip) + counter-lateral (mid) — vectorized, not planar lockstep.
     q.x += leanX * u2 + leanZ * mid * 0.55;
     q.z += leanZ * u2 - leanX * mid * 0.55;
-    // Radial surface warp (mutate silhouette; height untouched).
-    float warp = 1.0 + u2 * 0.12 * sin(atan(q.z, q.x) * 3.0 + yaw * 2.0 + q.y * 1.4);
+    // Mild radial breath only — never large warp (read as stretch/thin).
+    float warp = 1.0 + u2 * 0.06 * sin(atan(q.z, q.x) * 3.0 + yaw * 2.0 + q.y * 1.4);
     q.x *= warp;
     q.z *= warp;
     return q;
@@ -287,8 +285,7 @@ const flora_vert = /* glsl */ `
     float turb = rootPin * rootPin * uChaos * 0.75 * soft;
     vec3 p = position;
 
-    // ── Living-ground field (same GLSL as the ground mesh) — real plant↔land coupling. ──
-    // Sample center + cardinal rings: grade for lean, CREST max so adjacent waves can't bury us.
+    // ── Living-ground crest — ONE rigid Y for whole plant (no per-vertex shear). ──
     float gEps = 1.35;
     float gR = ${CREST_GUARD.toFixed(2)};
     float gC = cqmTerrainDisplacement(vec3(bmBase.x, 0.0, bmBase.y), uTime, uChaos, uTerrainEntropy, uTerrainWind);
@@ -300,85 +297,67 @@ const flora_vert = /* glsl */ `
     float gW2 = cqmTerrainDisplacement(vec3(bmBase.x - gR, 0.0, bmBase.y), uTime, uChaos, uTerrainEntropy, uTerrainWind);
     float gN2 = cqmTerrainDisplacement(vec3(bmBase.x, 0.0, bmBase.y + gR), uTime, uChaos, uTerrainEntropy, uTerrainWind);
     float gS2 = cqmTerrainDisplacement(vec3(bmBase.x, 0.0, bmBase.y - gR), uTime, uChaos, uTerrainEntropy, uTerrainWind);
-    // Diagonals at guard radius — catches crest peaks between cardinals.
     float gNE = cqmTerrainDisplacement(vec3(bmBase.x + gR * 0.71, 0.0, bmBase.y + gR * 0.71), uTime, uChaos, uTerrainEntropy, uTerrainWind);
     float gNW = cqmTerrainDisplacement(vec3(bmBase.x - gR * 0.71, 0.0, bmBase.y + gR * 0.71), uTime, uChaos, uTerrainEntropy, uTerrainWind);
     float gSE = cqmTerrainDisplacement(vec3(bmBase.x + gR * 0.71, 0.0, bmBase.y - gR * 0.71), uTime, uChaos, uTerrainEntropy, uTerrainWind);
     float gSW = cqmTerrainDisplacement(vec3(bmBase.x - gR * 0.71, 0.0, bmBase.y - gR * 0.71), uTime, uChaos, uTerrainEntropy, uTerrainWind);
-    // Footprint crest: highest living ground under/near the plant — ride ABOVE this, not under it.
     float liftMax = gC;
     liftMax = max(liftMax, max(gE, max(gW, max(gN, gS))));
     liftMax = max(liftMax, max(gE2, max(gW2, max(gN2, gS2))));
     liftMax = max(liftMax, max(gNE, max(gNW, max(gSE, gSW))));
-    vec2 grade = vec2((gE - gW) / (2.0 * gEps), (gN - gS) / (2.0 * gEps));
-    // Mild slope lean only — steep decorative waves must NOT lay stems horizontal.
-    float gLen = length(grade);
-    if (gLen > 0.32) grade *= 0.32 / gLen;
-    // Crest heave: when footprint crest exceeds center, whole plant rises with the land (DAR).
+    float gLen = length(vec2((gE - gW) / (2.0 * gEps), (gN - gS) / (2.0 * gEps)));
     float crestHeave = max(0.0, liftMax - gC);
+    // Rigid ride: same on every vertex — crest max + mild slope safety (no shear).
+    float rigidRide = liftMax + min(gLen, 0.4) * (1.6 + uChaos * 0.8) + crestHeave * 0.35;
 
-    // Continuous Y-spin (purpose: living response to climate) — free, height-preserving.
-    float yaw = (uTime * (0.75 + freq * 0.95 + rarity * 0.6 + uChaos * 0.35) * soft
+    // Y-spin only (height-preserving).
+    float yaw = (uTime * (0.7 + freq * 0.85 + rarity * 0.55 + uChaos * 0.3) * soft
               + (1.0 + rarity) * sin(uTime * freq * 0.38 + phase)
-              + sin(uTime * freq * 1.7 + phase * 2.4) * 0.55 * turb)
+              + sin(uTime * freq * 1.7 + phase * 2.4) * 0.45 * turb)
               * yawBias;
-    // Lateral thrash + mild slope-follow (not faceplant). Crest does NOT force horizontal lean.
-    float leanX = (sin(uTime * freq + phase) * bend * 2.6
-                + sin(uTime * freq * 3.5 + phase * 2.1) * turb * 1.25
-                + sin(uTime * freq * 6.0 + phase * 0.6) * turb * 0.5 * rarity
-                + sin(uTime * 0.7 + phase) * uWind * rootPin * rootPin * 0.55
-                - grade.x * (0.55 + uChaos * 0.35) * soft)
-                * leanBias;
-    float leanZ = (cos(uTime * freq * 0.82 + phase * 1.37) * bend * 2.3
-                + cos(uTime * freq * 2.9 + phase * 1.7) * turb * 1.1
-                + cos(uTime * freq * 5.1 + phase * 1.1) * turb * 0.45 * rarity
-                + cos(uTime * 0.65 + phase * 1.2) * uWind * rootPin * rootPin * 0.5
-                - grade.y * (0.55 + uChaos * 0.35) * soft)
-                * leanBias;
+    // Lateral thrash capped — no grade lean (that laid stems flat / into ribbons).
+    float leanAmp = 1.55;
+    float leanX = clamp(
+      (sin(uTime * freq + phase) * bend * 2.0
+      + sin(uTime * freq * 3.5 + phase * 2.1) * turb * 0.9
+      + sin(uTime * 0.7 + phase) * uWind * rootPin * rootPin * 0.4)
+      * leanBias,
+      -leanAmp, leanAmp);
+    float leanZ = clamp(
+      (cos(uTime * freq * 0.82 + phase * 1.37) * bend * 1.8
+      + cos(uTime * freq * 2.9 + phase * 1.7) * turb * 0.85
+      + cos(uTime * 0.65 + phase * 1.2) * uWind * rootPin * rootPin * 0.35)
+      * leanBias,
+      -leanAmp, leanAmp);
     p = tipMorph(p, up, rootPin, yaw, leanX, leanZ);
 
-    // Up/down heave — crestHeave is load-bearing land→plant coupling (not decorative wobble).
-    float heave = sin(uTime * freq * 0.55 + phase) * rootPin * 0.18 * (uWind + uChaos + 0.5)
-                + sin(uTime * freq * 4.2 + phase) * rootPin * 0.06 * uChaos
-                + 0.03 * rootPin * health
-                + crestHeave * 0.15 * rootPin; // breathe with local land crest
+    // Heave + isotropic radial breath (never XZ-only thin-out).
+    float heave = sin(uTime * freq * 0.55 + phase) * rootPin * 0.14 * (uWind + uChaos + 0.5)
+                + sin(uTime * freq * 4.2 + phase) * rootPin * 0.05 * uChaos
+                + 0.03 * rootPin * health;
     float pulse = 0.5 + 0.5 * sin(uTime * (1.15 + freq * 0.32) + phase + rarity);
-    float pulse2 = 0.5 + 0.5 * cos(uTime * (0.72 + freq * 0.48) - phase * 1.3);
-    // Expand healthy / contract hungry or overgrazed (operational food readout).
-    float expand = rootPin * (0.05 + 0.11 * health) * pulse
-                 - rootPin * hunger * 0.07
-                 - rootPin * overgraze * 0.04
-                 + rootPin * rarity * 0.035 * pulse2;
+    float expand = rootPin * (0.04 + 0.08 * health) * pulse
+                 - rootPin * hunger * 0.05
+                 - rootPin * overgraze * 0.03;
     p.y += heave * up;
-    // Anisotropic X/Z morph (mutating cross-section) — height scaled separately, never crushed.
-    p.x *= 1.0 + expand * (0.9 + 0.35 * up) * (0.85 + 0.3 * pulse2);
-    p.z *= 1.0 + expand * (0.9 + 0.35 * up) * (0.85 + 0.3 * (1.0 - pulse2));
-    // Soft organic breath — f8c6eadb: morph can SLIGHTLY lift height, never squash.
-    float morph = rootPin * (0.04 + 0.12 * rarity) * (0.55 + 0.45 * sin(uTime * (1.05 + freq * 0.35) + phase));
-    p.x *= 1.0 + morph;
-    p.z *= 1.0 + morph;
-    p.y *= 1.0 + morph * 0.35 * rootPin * health;
-
-    // Surface artifact (lateral only — operational stress texture, not fold).
-    float art = rootPin * up * (0.03 + 0.08 * rarity + 0.05 * uChaos)
-              * sin(p.y * 4.2 + phase + uTime * (1.3 + freq * 0.2))
-              * cos(atan(p.z, p.x + 1e-4) * 2.0 + uTime * 0.6 + phase);
-    p.x += art * cos(phase);
-    p.z += art * sin(phase * 1.3);
+    float morph = rootPin * (0.03 + 0.08 * rarity) * (0.55 + 0.45 * sin(uTime * (1.05 + freq * 0.35) + phase));
+    float radScale = 1.0 + expand * 0.85 + morph;
+    p.x *= radScale;
+    p.z *= radScale;
+    p.y *= 1.0 + morph * 0.25 * rootPin * health;
 
     float grow = 0.12 + 0.88 * biomass;
     if (uScorchRadius > 0.0) {
       float scorchD = length(bmBase - uScorchCenter);
       grow *= smoothstep(uScorchRadius * 0.82, uScorchRadius, scorchD);
     }
-    // Grazing shrinks ABOVE ground; roots stay buried (f8c6eadb).
     float gRoot = mix(0.92 + 0.08 * grow, grow, rootPin);
     p.x *= gRoot;
     p.z *= gRoot;
     p.y = position.y < 0.0 ? p.y * (0.9 + 0.1 * grow) : p.y * mix(1.0, grow, rootPin);
     vGlow *= 0.3 + 0.7 * biomass;
 
-    // Density-gradient separation — peel crowns toward open space (crossover ↓, not a thrash cap).
+    // Modest density peel (crossover ↓ without wire-stretch).
     float eps = 6.0;
     float dE = texture2D(uBiomass, (bmBase + vec2(eps, 0.0) + 0.5 * uGridExtent) / uGridExtent).g;
     float dW = texture2D(uBiomass, (bmBase + vec2(-eps, 0.0) + 0.5 * uGridExtent) / uGridExtent).g;
@@ -387,37 +366,15 @@ const flora_vert = /* glsl */ `
     vec2 avoid = vec2(dW - dE, dS - dN);
     float al = length(avoid);
     if (al > 1e-5) avoid /= al;
-    // Density peel — stronger toward open space so thrashing crowns don't merge into one mass.
-    float sep = density * rootPin * up * up * (1.15 + 0.55 * rarity + 0.35 * uChaos);
+    float sep = density * rootPin * up * up * (0.55 + 0.25 * rarity);
     p.x += avoid.x * sep;
     p.z += avoid.y * sep;
-    // Orthogonal peel + personal phase so neighbors don't share the same swing arc.
-    float peel = sep * (0.55 + 0.25 * idHash);
-    p.x += -avoid.y * peel * sin(phase * 2.3 + idHash * 6.28);
-    p.z += avoid.x * peel * cos(phase * 1.9 + idHash * 4.1);
-    // Micro-orbit desync (still upright): tips circle slightly off each other.
-    float orbit = rootPin * up * up * (0.12 + 0.18 * rarity) * (0.5 + 0.5 * density);
-    p.x += cos(uTime * (0.9 + freq * 0.4) + phase) * orbit;
-    p.z += sin(uTime * (1.1 + freq * 0.35) - phase * 1.4) * orbit;
+    p.x += -avoid.y * sep * 0.3 * sin(phase * 2.3 + idHash * 6.28);
+    p.z += avoid.x * sep * 0.3 * cos(phase * 1.9 + idHash * 4.1);
 
     vec4 worldPosition = instanceMatrix * vec4(p, 1.0);
-    // HARD plant↔land attach (same field as ground mesh — not invisible phasing):
-    // • liftHere  = surface under THIS vertex (per-vertex parity with terrain)
-    // • liftMax   = neighborhood crest under footprint (adjacent waves can't bury the plant)
-    // • ride      = max of both → plant always sits on/above local living ground top
-    float liftHere = cqmTerrainDisplacement(
-      vec3(worldPosition.x, 0.0, worldPosition.z),
-      uTime,
-      uChaos,
-      uTerrainEntropy,
-      uTerrainWind
-    );
-    float ride = max(liftMax, liftHere);
-    // Extra: when land is cresting hard next to the base, lift the whole body with it (DAR).
-    ride = max(ride, gC + crestHeave);
-    // Steep decorative faces: lift further so a horizontal plant silhouette never sits inside a wall.
-    ride += min(gLen, 0.45) * (2.4 + uChaos * 1.2);
-    worldPosition.y += ride + ${SURFACE_RIDE.toFixed(3)};
+    // RIGID land attach — identical Y on every vertex (fixes stretch/thin shear).
+    worldPosition.y += rigidRide + ${SURFACE_RIDE.toFixed(3)};
 
     // MULTI-POINT CONTACT — tip thrash lateral + up flee + Y-spin; root stays planted.
     float c0 = localContact(bmBase, uContactX.x, uContactZ.x, uContactS.x, phase, stiff, react);

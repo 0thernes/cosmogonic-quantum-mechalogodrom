@@ -247,13 +247,11 @@ describe('AlienFlora — the vegetal ground ecology', () => {
     // Upright multi-axis morph (Y-spin + lateral thrash) — never pitch/roll into dirt.
     expect(mat.vertexShader).toContain('tipMorph');
     expect(mat.vertexShader).toContain('counter-rotate');
-    // Plant↔land coupling: same displacement field + neighborhood crest max + per-vertex floor
-    // (base-only / phasing left adjacent waves burying collars — the "swallowed" bug).
+    // Plant↔land: rigid crest ride (one Y for whole plant — per-vertex lift sheared stems thin).
     expect(mat.vertexShader).toContain('cqmTerrainDisplacement');
-    expect(mat.vertexShader).toContain('liftHere');
     expect(mat.vertexShader).toContain('liftMax');
-    expect(mat.vertexShader).toContain('crestHeave');
-    expect(mat.vertexShader).toContain('grade');
+    expect(mat.vertexShader).toContain('rigidRide');
+    expect(mat.vertexShader).not.toContain('liftHere');
     expect(mat.fragmentShader).toContain('field4');
     f.dispose();
   });
