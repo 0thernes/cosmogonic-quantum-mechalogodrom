@@ -268,6 +268,9 @@ describe('AlienFlora — the vegetal ground ecology', () => {
     expect(mat.fragmentShader).toContain('field4');
     // Operational skins (food/stress/contact), not decorative paint.
     expect(mat.fragmentShader).toContain('Mutating operational skins');
+    expect(mat.fragmentShader).toContain('moebiusHue');
+    expect(mat.fragmentShader).toContain('hopfAngles');
+    expect(mat.fragmentShader).toContain('Quasiperiodic');
     f.dispose();
   });
 

@@ -218,6 +218,8 @@ const flora_vert = /* glsl */ `
   varying float vRoot;
   varying float vBiomass;
   varying float vStress;
+  varying float vDensity;
+  varying float vDebt;
   varying vec3 vNormalV;
   varying vec3 vViewDir;
   varying vec3 vWorldP;
@@ -242,23 +244,27 @@ const flora_vert = /* glsl */ `
   // UPRIGHT multi-axis morph — HARD LAW (do not break again):
   // • Y-spin + lateral thrash + heave only. NEVER pitch/roll (faceplant).
   // • NEVER per-vertex land Y deltas (stretch/thin shear).
-  // Bizarro but falsifiable: Berry-ish dual counter-spin, chiral mid/tip thrash,
-  // banded isotropic warp (mid≠tip scale) — still upright, never ribbon-shear.
+  // Bizarro but falsifiable: Berry dual counter-spin, chiral thrash, quasiperiodic
+  // radial warp (golden-angle lobes) — upright only, never ribbon-shear / faceplant.
   vec3 tipMorph(vec3 p, float up, float rootPin, float yaw, float leanX, float leanZ, float twist2, float band) {
-    float u2 = up * up * rootPin;          // tip weight
-    float mid = rootPin * up * (1.0 - up); // mid band (counter motion)
-    // Dual counter-spins + geometric twist2 around vertical only (local Y preserved).
-    float ang = yaw * u2 - yaw * 0.78 * mid + twist2 * u2 * 0.55 - twist2 * mid * 0.65
-              + band * mid * 0.35 - band * u2 * 0.2;
+    float u2 = up * up * rootPin;
+    float mid = rootPin * up * (1.0 - up);
+    // Dual counter-spins + geometric twist around vertical only (local Y preserved).
+    float ang = yaw * u2 - yaw * 0.82 * mid + twist2 * u2 * 0.6 - twist2 * mid * 0.7
+              + band * mid * 0.4 - band * u2 * 0.22;
     float ca = cos(ang);
     float sa = sin(ang);
     vec3 q = vec3(ca * p.x + sa * p.z, p.y, -sa * p.x + ca * p.z);
-    // Vectorized thrash: tip, mid counter, + small helix residual in lateral plane only.
-    q.x += leanX * u2 + leanZ * mid * 0.7 + leanX * mid * 0.22 - leanZ * u2 * 0.12;
-    q.z += leanZ * u2 - leanX * mid * 0.7 + leanZ * mid * 0.22 + leanX * u2 * 0.12;
-    // Banded isotropic radial (mid expand / tip contract under debt band) — same scale on X and Z.
-    float warp = 1.0 + u2 * 0.06 * sin(atan(q.z, q.x) * 2.5 + yaw * 1.8 + q.y * 1.2 + twist2)
-               + mid * band * 0.1 - u2 * band * 0.06;
+    // Vectorized thrash: tip / mid counter + helix residual (lateral only).
+    q.x += leanX * u2 + leanZ * mid * 0.72 + leanX * mid * 0.25 - leanZ * u2 * 0.14;
+    q.z += leanZ * u2 - leanX * mid * 0.72 + leanZ * mid * 0.25 + leanX * u2 * 0.14;
+    // Quasiperiodic isotropic warp (φ-ratio lobes) — same X/Z scale, never thin poles.
+    float phi = 2.3999632; // golden angle
+    float az = atan(q.z, q.x);
+    float warp = 1.0
+      + u2 * 0.07 * sin(az * 3.0 + yaw * 1.9 + q.y * 1.3 + twist2)
+      + mid * 0.08 * sin(az * phi + twist2 * 2.0 + band)
+      + mid * band * 0.11 - u2 * band * 0.07;
     q.x *= warp;
     q.z *= warp;
     return q;
@@ -303,9 +309,11 @@ const flora_vert = /* glsl */ `
     float density = field.g;
     float overgraze = field.b;
     vBiomass = biomass;
+    vDensity = density;
     float health = clamp(biomass, 0.0, 1.0);
     float hunger = 1.0 - health;
     float debt = clamp(overgraze, 0.0, 1.0); // overgraze debt → degrade morph + skin
+    vDebt = debt;
 
     float soft = 1.0 / stiff;
     // Environment-driven thrash (wind + chaos) — tip-weighted LATERAL only (upright, alive).
@@ -576,6 +584,8 @@ const flora_frag = /* glsl */ `
   varying float vRoot;
   varying float vBiomass;
   varying float vStress;
+  varying float vDensity;
+  varying float vDebt;
   varying vec3 vNormalV;
   varying vec3 vViewDir;
   varying vec3 vWorldP;
@@ -594,97 +604,158 @@ const flora_frag = /* glsl */ `
     return rgb + (l - 0.5 * c);
   }
 
-  // Soft domain-warped field (4D-ish) — operational skin; no candy stripes.
-  // Extra stress/contact domain warp = threat/food state, not paint.
+  // Biosphere-driven domain warp (not a free loop). Rates from stress/contact/density/debt.
   float field4(vec3 p, float t) {
-    vec3 q = p * 0.11;
-    q.x += 0.42 * sin(q.y * 1.7 + t * 0.31 + vStress * 0.4);
-    q.y += 0.42 * cos(q.z * 1.5 - t * 0.27 - vContactLive * 0.2);
-    q.z += 0.38 * sin(q.x * 1.9 + t * 0.23);
-    q.x += 0.22 * cos(q.z * 2.3 + t * 0.19 + vStress);
-    q.y += 0.15 * sin(length(q.xz) * 2.0 - t * 0.33 + vRarity);
-    float a = sin(q.x * 2.1 + t * 0.4) * cos(q.y * 1.8 - t * 0.33);
-    float b = sin(q.y * 2.4 + q.z * 1.3 + t * 0.21);
-    float c = cos(length(q.xy) * 3.1 - t * 0.29 + q.z);
-    float d = sin(length(q.yz) * 2.6 + t * 0.17 + q.x);
-    float e = cos(q.x * 1.4 - q.z * 1.6 + t * 0.5 + vContactLive);
-    return a * 0.34 + b * 0.28 + c * 0.16 + d * 0.12 + e * 0.1;
+    float bio = 0.15 + vStress * 0.55 + vContactLive * 0.35 + vDensity * 0.25 + vDebt * 0.2;
+    vec3 q = p * (0.09 + bio * 0.04);
+    q.x += 0.5 * sin(q.y * 1.9 + t * (0.28 + bio * 0.2) + vStress * 0.5);
+    q.y += 0.5 * cos(q.z * 1.7 - t * (0.24 + bio * 0.15) - vContactLive * 0.3);
+    q.z += 0.45 * sin(q.x * 2.1 + t * 0.21);
+    // Quasiperiodic second lattice (incommensurate — never exact period loop).
+    q.x += 0.28 * cos(q.z * 2.618 + t * 0.17 * 1.414 + vStress);
+    q.y += 0.22 * sin(length(q.xz) * 2.3 - t * 0.31 * 1.732 + vRarity);
+    q.z += 0.18 * cos(q.x * 1.618 - q.y * 2.236 + t * 0.11 + vDensity);
+    float a = sin(q.x * 2.3 + t * 0.4) * cos(q.y * 1.9 - t * 0.33);
+    float b = sin(q.y * 2.6 + q.z * 1.4 + t * 0.21);
+    float c = cos(length(q.xy) * 3.3 - t * 0.29 + q.z);
+    float d = sin(length(q.yz) * 2.8 + t * 0.17 + q.x);
+    float e = cos(q.x * 1.5 - q.z * 1.7 + t * 0.5 + vContactLive);
+    // Weierstrass-ish continuous nowhere-smooth feel (finite modes, still C0).
+    float w = 0.0;
+    float amp = 0.5;
+    float fr = 1.0;
+    for (int i = 0; i < 4; i++) {
+      w += amp * sin(fr * (q.x + q.y * 1.3) + t * (0.2 + float(i) * 0.07) + vStress * float(i));
+      amp *= 0.55;
+      fr *= 2.17;
+    }
+    return a * 0.28 + b * 0.22 + c * 0.14 + d * 0.12 + e * 0.1 + w * 0.14;
+  }
+
+  // Möbius map on the circle (hue) — extreme remapping, still continuous.
+  float moebiusHue(float h, float a, float b) {
+    // Map hue to complex unit circle, apply (z-a)/(1-conj(a)z) style shift.
+    float ang = h * 6.2831853;
+    float zx = cos(ang);
+    float zy = sin(ang);
+    float den = 1.0 - a * zx - b * zy;
+    den = max(abs(den), 0.15) * sign(den);
+    float nx = (zx - a) / den;
+    float ny = (zy - b) / den;
+    return fract(atan(ny, nx) / 6.2831853);
+  }
+
+  // Hopf-ish dual angle from 3D point (S3 projection lite) for dual-skin channels.
+  vec2 hopfAngles(vec3 p, float t) {
+    float r = length(p) + 1e-4;
+    float u = p.x / r;
+    float v = p.y / r;
+    float w = p.z / r;
+    float a1 = atan(v, u);
+    float a2 = atan(w, length(p.xy) + 1e-4) + t * 0.1;
+    return vec2(a1, a2);
   }
 
   void main() {
     vec3 n = normalize(vNormalV);
     vec3 v = normalize(vViewDir);
-    float fres = pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 2.0);
+    float fres = pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 1.7);
 
     float f = field4(vWorldP, uTime);
-    float f2 = field4(vWorldP.yzx * 1.35 + 2.1, uTime * 0.72 + vStress);
-    float f3 = field4(vWorldP.zxy * 0.9 - 1.4, uTime * 0.45 - vContactLive);
-    float tex = 0.55 + 0.25 * f + 0.12 * f2 + 0.08 * f3;
+    float f2 = field4(vWorldP.yzx * 1.41 + 2.1, uTime * 0.73 + vStress * 1.1);
+    float f3 = field4(vWorldP.zxy * 0.87 - 1.4, uTime * 0.47 - vContactLive * 0.9);
+    float f4 = field4(vWorldP.xzy * 1.17 + vDensity, uTime * 0.61 + vDebt * 2.0);
+    float tex = 0.48 + 0.22 * f + 0.14 * f2 + 0.1 * f3 + 0.08 * f4;
 
-    // Mutating operational skins: food / stress / contact / rarity (not paint stripes).
+    // Mutating operational skins: food / stress / contact / density / debt (biosphere, not paint).
     float health = clamp(vBiomass, 0.0, 1.0);
     float hunger = 1.0 - health;
-    float contactFlash = clamp(vContactLive, 0.0, 1.5);
-    float skinPulse = 0.5 + 0.5 * sin(uTime * (1.55 + vRarity * 0.9 + vStress * 0.5) + vUp * 4.2 + f * 3.2);
-    float skinPulse2 = 0.5 + 0.5 * cos(uTime * (0.9 + vStress * 0.7) - vUp * 2.5 + f2 * 2.0);
-    // Hue drifts with health (food), stress (threat), contact (impact), rarity (special).
-    float viewHue = fract(
-      vSecHue + fres * 0.34 + vUp * 0.14 + f * 0.12 + f3 * 0.07
-      + uTime * (0.06 + vRarity * 0.04 + vStress * 0.035 + contactFlash * 0.02)
-      + hunger * 0.14 + vStress * 0.2 + contactFlash * 0.16
-      + skinPulse * 0.05 * vRarity + skinPulse2 * 0.03 * vStress
+    float contactFlash = clamp(vContactLive, 0.0, 1.8);
+    float crowd = clamp(vDensity, 0.0, 1.0);
+    float debt = clamp(vDebt, 0.0, 1.0);
+    float skinPulse = 0.5 + 0.5 * sin(uTime * (1.7 + vRarity * 1.1 + vStress * 0.7 + crowd * 0.4) + vUp * 4.5 + f * 3.5);
+    float skinPulse2 = 0.5 + 0.5 * cos(uTime * (1.05 + vStress * 0.9 + contactFlash * 0.5) - vUp * 2.8 + f2 * 2.2);
+    float skinPulse3 = 0.5 + 0.5 * sin(uTime * (0.55 + debt * 1.2) + f3 * 4.0 + vRarity * 3.0);
+
+    // Quasiperiodic hue drive: incommensurate clocks (√2, √3, φ) × biosphere rates.
+    float bioRate = 0.04 + vRarity * 0.05 + vStress * 0.06 + contactFlash * 0.04 + health * 0.02 + uChaos * 0.03;
+    float rawHue = fract(
+      vSecHue
+      + fres * 0.38 + vUp * 0.16
+      + f * 0.14 + f3 * 0.09 + f4 * 0.07
+      + uTime * bioRate * 1.0
+      + uTime * bioRate * 1.41421356 * 0.55
+      + uTime * bioRate * 1.7320508 * 0.35
+      + hunger * 0.16 + vStress * 0.22 + contactFlash * 0.18 + debt * 0.12 + crowd * 0.08
+      + skinPulse * 0.06 * vRarity + skinPulse2 * 0.045 * vStress + skinPulse3 * 0.04 * debt
     );
+    // Möbius warp of hue circle driven by stress/contact (extreme remapping, continuous).
+    float viewHue = moebiusHue(rawHue, vStress * 0.45 + contactFlash * 0.2 - 0.15, debt * 0.35 - health * 0.2);
+
     float sat = clamp(
-      0.7 + vRarity * 0.3 - hunger * 0.28 + contactFlash * 0.14 + f2 * 0.09 - vStress * 0.08,
-      0.12, 1.0);
+      0.78 + vRarity * 0.35 - hunger * 0.25 + contactFlash * 0.18 + f2 * 0.12
+      + uChaos * 0.1 - vStress * 0.05 + health * 0.08 - debt * 0.12 + crowd * 0.06,
+      0.2, 1.0);
     float lit = clamp(
-      0.5 + fres * 0.2 - hunger * 0.14 + health * 0.1 - vStress * 0.08 + f * 0.06 + contactFlash * 0.05,
-      0.1, 0.82);
+      0.52 + fres * 0.22 - hunger * 0.12 + health * 0.12 - vStress * 0.07
+      + f * 0.07 + contactFlash * 0.08 - debt * 0.08 + skinPulse * 0.04,
+      0.12, 0.88);
+
+    vec2 hopf = hopfAngles(vWorldP * 0.08 + n * 0.3, uTime + vStress);
+    float hopfHue = fract(hopf.x / 6.2831853 + hopf.y / 6.2831853 * 0.5 + viewHue * 0.3);
+
     vec3 iri = hsl2rgb(viewHue, sat, lit);
-    vec3 iri2 = hsl2rgb(fract(viewHue + 0.2 + f * 0.08 + vStress * 0.06), sat * 1.08, lit + 0.07);
-    vec3 iri3 = hsl2rgb(fract(viewHue + 0.45 - f2 * 0.05 + contactFlash * 0.04), 0.78 + vRarity * 0.22, 0.44 + fres * 0.22);
-    // Counter-weird spectrum morph (triple skin, operational blend).
-    float sm = clamp(0.32 + fres * 0.25 + vRarity * 0.2 + vStress * 0.15 + contactFlash * 0.12 + skinPulse * 0.08, 0.0, 0.95);
-    vec3 spectrum = mix(mix(iri, iri2, 0.48 + f * 0.22 + skinPulse2 * 0.1), iri3, 0.22 + contactFlash * 0.18 + vRarity * 0.16);
+    vec3 iri2 = hsl2rgb(fract(viewHue + 0.22 + f * 0.1 + vStress * 0.08), sat * 1.1, lit + 0.08);
+    vec3 iri3 = hsl2rgb(fract(viewHue + 0.48 - f2 * 0.06 + contactFlash * 0.05), 0.82 + vRarity * 0.25, 0.46 + fres * 0.24);
+    vec3 iri4 = hsl2rgb(hopfHue, sat * 0.95, lit * 0.92 + fres * 0.1);
+    // Spectrum morph: biosphere-weighted blend of four skin manifolds.
+    float w12 = clamp(0.4 + f * 0.25 + skinPulse2 * 0.15 + health * 0.1, 0.0, 1.0);
+    float w3 = clamp(0.18 + contactFlash * 0.22 + vRarity * 0.18 + uChaos * 0.1, 0.0, 0.85);
+    float w4 = clamp(0.12 + vStress * 0.15 + debt * 0.12 + crowd * 0.1, 0.0, 0.7);
+    vec3 spectrum = mix(mix(iri, iri2, w12), iri3, w3);
+    spectrum = mix(spectrum, iri4, w4);
 
-    float key = 0.34 + 0.76 * clamp(dot(n, normalize(vec3(0.35, 0.8, 0.45))), 0.0, 1.0);
-    float skinMix = 0.32 + vRarity * 0.44 + fres * 0.24 + vStress * 0.2 + contactFlash * 0.12 + health * 0.06;
-    vec3 body = mix(vColor * tex, spectrum, clamp(skinMix, 0.0, 0.96)) * key;
-    // Degrade / bruise when biomass low or stressed (operational food state).
-    vec3 bruise = hsl2rgb(fract(vSecHue + 0.58 + f * 0.04 + vStress * 0.08), 0.32, 0.2);
-    body = mix(body, bruise, hunger * 0.55 * (1.0 - vRoot));
-    body = mix(body, hsl2rgb(fract(vSecHue + 0.1), 0.22, 0.16), vStress * (0.2 + hunger * 0.25) * (1.0 - vRoot));
-    // Healthy tips gain chroma (food-rich signal); mid degrades under stress.
-    body = mix(body, spectrum * 1.08, health * vUp * 0.12 * (1.0 - vStress * 0.5));
+    float key = 0.3 + 0.8 * clamp(dot(n, normalize(vec3(0.3, 0.85, 0.4))), 0.0, 1.0);
+    // Skin almost fully spectrum when rare/healthy/contacted — base color only as residual.
+    float skinMix = 0.4 + vRarity * 0.5 + fres * 0.28 + vStress * 0.22 + contactFlash * 0.16 + health * 0.1 + uChaos * 0.08;
+    vec3 body = mix(vColor * tex, spectrum, clamp(skinMix, 0.0, 0.98)) * key;
+    // Degrade / bruise / ash when biomass low or debt (operational food state).
+    vec3 bruise = hsl2rgb(fract(viewHue + 0.55 + f * 0.05 + vStress * 0.1), 0.38, 0.22);
+    vec3 ash = hsl2rgb(fract(viewHue + 0.08), 0.18, 0.14);
+    body = mix(body, bruise, hunger * 0.58 * (1.0 - vRoot));
+    body = mix(body, ash, (debt * 0.45 + vStress * hunger * 0.3) * (1.0 - vRoot));
+    // Healthy tips chroma; crowded mid mutates toward hopf dual-skin.
+    body = mix(body, spectrum * 1.12, health * vUp * 0.16 * (1.0 - vStress * 0.4));
+    body = mix(body, iri4 * 1.05, crowd * (1.0 - vUp) * 0.2 * (1.0 - vRoot));
 
-    vec3 rootCol = mix(vColor * 0.3, hsl2rgb(fract(vSecHue + 0.12), 0.4, 0.18), 0.55);
-    body = mix(body, rootCol, vRoot * 0.9);
+    vec3 rootCol = mix(vColor * 0.28, hsl2rgb(fract(viewHue + 0.1), 0.42, 0.16), 0.55);
+    body = mix(body, rootCol, vRoot * 0.92);
 
-    float pulse = 0.5 + 0.5 * sin(uTime * 2.15 + vUp * 6.0 + f * 2.3 + vRarity * 1.7 + vStress);
-    float glow = vGlow * (0.2 + 0.95 * vUp) * pulse
-               * (0.5 + 0.95 * uChaos + contactFlash * 0.6 + health * 0.28)
-               * (1.0 - vRoot * 0.74) * (1.0 - hunger * 0.2);
-    vec3 glowCol = mix(vColor * vec3(1.28, 1.52, 2.1), spectrum * 1.45, 0.52 + vRarity * 0.42);
+    float pulse = 0.5 + 0.5 * sin(uTime * 2.3 + vUp * 6.2 + f * 2.5 + vRarity * 1.9 + vStress + contactFlash);
+    float glow = vGlow * (0.22 + 1.0 * vUp) * pulse
+               * (0.45 + 1.05 * uChaos + contactFlash * 0.7 + health * 0.32 + vRarity * 0.15)
+               * (1.0 - vRoot * 0.76) * (1.0 - hunger * 0.18);
+    vec3 glowCol = mix(vColor * vec3(1.3, 1.55, 2.15), spectrum * 1.55, 0.55 + vRarity * 0.45);
 
-    vec3 rim = spectrum * fres * (0.8 + vRarity * 1.15 + contactFlash * 0.7) * (1.0 - vRoot * 0.5);
-    float spore = pow(max(0.0, 0.5 + 0.5 * f2), 2.7) * (0.2 + vRarity * 0.78) * pulse * vUp * health;
-    vec3 sporeCol = hsl2rgb(fract(viewHue + 0.2 + f3 * 0.06), 0.93, 0.66) * spore;
-    // Contact chromatic flash (threat signal — multi-hue, not flat white).
-    vec3 threat = hsl2rgb(fract(viewHue + 0.35 + uTime * 0.12 + vStress * 0.05), 0.96, 0.6)
-                * contactFlash * 0.4 * vUp;
+    vec3 rim = spectrum * fres * (0.9 + vRarity * 1.25 + contactFlash * 0.85 + uChaos * 0.3) * (1.0 - vRoot * 0.45);
+    float spore = pow(max(0.0, 0.5 + 0.5 * f2), 2.5) * (0.22 + vRarity * 0.85) * pulse * vUp * health;
+    vec3 sporeCol = hsl2rgb(fract(viewHue + 0.22 + f3 * 0.08 + skinPulse3 * 0.1), 0.95, 0.68) * spore;
+    // Contact chromatic flash (threat) + debt bruise pulse.
+    vec3 threat = hsl2rgb(fract(viewHue + 0.38 + uTime * 0.15 + vStress * 0.08), 0.98, 0.62)
+                * contactFlash * 0.48 * vUp;
+    vec3 debtVeil = hsl2rgb(fract(viewHue + 0.62), 0.55, 0.28) * debt * 0.2 * (1.0 - vRoot);
 
-    vec3 col = body + glowCol * glow + rim + sporeCol + threat;
-    col += spectrum * contactFlash * 0.24 * vUp * (0.55 + 0.45 * skinPulse);
-    // Shade dynamism: stress desaturates mid (degrade), rarity + health boost tip chroma.
-    col = mix(col, col * vec3(0.82, 0.88, 0.94), vStress * 0.24 * (1.0 - vUp));
-    col += spectrum * vRarity * vUp * 0.1 * skinPulse * (0.6 + 0.4 * health);
-    // Secondary skin morph band (counter-weird shade shift with stress/contact).
-    col = mix(col, col * vec3(1.05, 0.95, 1.12), skinPulse2 * 0.08 * (vStress + contactFlash * 0.5));
-    // Mythic "thin-film" dual-skin under rarity + health: operational special, not stripes.
-    vec3 film = hsl2rgb(fract(viewHue + 0.28 + f * 0.1), 0.9, 0.58);
-    col = mix(col, col + film * 0.22, vRarity * health * vUp * (0.35 + 0.65 * skinPulse));
-    // Chaos "aurora bleed" at tips when stressed rare plants — still food/threat readout.
-    col += film * uChaos * vRarity * vUp * 0.12 * pulse * (0.5 + contactFlash * 0.5);
+    vec3 col = body + glowCol * glow + rim + sporeCol + threat + debtVeil;
+    col += spectrum * contactFlash * 0.3 * vUp * (0.5 + 0.5 * skinPulse);
+    col = mix(col, col * vec3(0.78, 0.86, 0.94), vStress * 0.28 * (1.0 - vUp));
+    col += spectrum * vRarity * vUp * 0.14 * skinPulse * (0.55 + 0.45 * health);
+    col = mix(col, col * vec3(1.08, 0.92, 1.15), skinPulse2 * 0.1 * (vStress + contactFlash * 0.55));
+    // Thin-film interference: two path phases from hopf + view — operational rarity/health.
+    vec3 film = hsl2rgb(fract(viewHue + 0.3 + f * 0.12 + hopfHue * 0.15), 0.95, 0.6);
+    col = mix(col, col + film * 0.28, vRarity * health * vUp * (0.4 + 0.6 * skinPulse));
+    col += film * uChaos * vRarity * vUp * 0.16 * pulse * (0.45 + contactFlash * 0.55);
+    // Crowd interference: packing densifies chroma bands (plant↔plant biosphere signal).
+    col = mix(col, spectrum * vec3(1.1, 0.95, 1.2), crowd * vUp * 0.12 * skinPulse3);
     gl_FragColor = vec4(col, 1.0);
   }
 `;
@@ -1239,30 +1310,38 @@ export class AlienFlora {
   private static buildFamilies(): Family[] {
     const fams: Family[] = [];
 
-    // 0 SPIRE — bulbous mid-swell + off-axis crown lobe (not a thin needle)
+    // 0 SPIRE — multi-lobe alien tower (fat mid, off-axis crowns — not a thin needle)
     {
       const stem = lathe(
         [
-          [0.04, 0.0],
-          [0.42, 0.3],
-          [0.55, 0.9],
-          [0.48, 1.8],
-          [0.62, 2.8],
-          [0.38, 4.0],
-          [0.22, 5.0],
-          [0.08, 5.7],
+          [0.05, 0.0],
+          [0.48, 0.28],
+          [0.62, 0.85],
+          [0.52, 1.7],
+          [0.72, 2.7],
+          [0.42, 3.9],
+          [0.28, 5.0],
+          [0.1, 5.7],
         ],
         18,
       );
-      const crown = new THREE.SphereGeometry(0.48, 12, 10);
-      crown.scale(1.45, 0.65, 1.2);
-      crown.rotateZ(0.35);
-      crown.translate(0.18, 5.55, 0.05);
-      const lobe = new THREE.SphereGeometry(0.28, 10, 8);
-      lobe.scale(1.3, 0.7, 0.9);
-      lobe.rotateX(0.5);
-      lobe.translate(-0.35, 3.4, 0.2);
-      const geo = adoptMerged([stem, crown, lobe, rootBulb(0.48, 0.58)]);
+      const crown = new THREE.SphereGeometry(0.5, 12, 10);
+      crown.scale(1.5, 0.6, 1.25);
+      crown.rotateZ(0.4);
+      crown.translate(0.22, 5.5, 0.08);
+      const lobe = new THREE.SphereGeometry(0.32, 10, 8);
+      lobe.scale(1.4, 0.65, 1.0);
+      lobe.rotateX(0.55);
+      lobe.translate(-0.42, 3.3, 0.22);
+      const lobe2 = new THREE.SphereGeometry(0.26, 9, 7);
+      lobe2.scale(1.2, 0.7, 1.35);
+      lobe2.rotateY(0.9);
+      lobe2.translate(0.38, 4.2, -0.28);
+      const arm = new THREE.TorusKnotGeometry(0.22, 0.07, 40, 6, 2, 3);
+      arm.scale(0.9, 1.2, 0.9);
+      arm.rotateZ(0.6);
+      arm.translate(-0.15, 2.4, 0.35);
+      const geo = adoptMerged([stem, crown, lobe, lobe2, arm, rootBulb(0.5, 0.58)]);
       fams.push({ geo, height: peakHeight(geo) });
     }
 
@@ -1355,25 +1434,32 @@ export class AlienFlora {
       fams.push({ geo, height: peakHeight(geo) });
     }
 
-    // 4 CORAL — dual torus-knots + off-axis satellites (math alien, connected)
+    // 4 CORAL — triple torus-knot cluster + satellite limbs (math alien, still connected)
     {
       const core = new THREE.TorusKnotGeometry(0.52, 0.15, 72, 8, 2, 5);
-      core.scale(0.9, 1.75, 0.95);
-      core.rotateX(0.2);
-      core.translate(0, 2.45, 0);
-      const core2 = new THREE.TorusKnotGeometry(0.32, 0.1, 48, 7, 3, 2);
-      core2.scale(0.8, 1.3, 0.8);
-      core2.rotateZ(0.7);
-      core2.translate(0.25, 3.5, 0.1);
-      const s1 = new THREE.SphereGeometry(0.32, 10, 8);
-      s1.scale(1.2, 0.7, 1.1);
-      s1.translate(0.62, 1.45, 0.2);
-      const s2 = new THREE.SphereGeometry(0.26, 9, 7);
-      s2.translate(-0.5, 3.0, -0.25);
-      const s3 = new THREE.SphereGeometry(0.22, 9, 7);
-      s3.scale(1.3, 0.6, 1.1);
-      s3.translate(0.25, 4.35, 0.35);
-      const geo = adoptMerged([core, core2, s1, s2, s3, rootBulb(0.44, 0.54)]);
+      core.scale(0.95, 1.7, 1.0);
+      core.rotateX(0.25);
+      core.translate(0, 2.4, 0);
+      const core2 = new THREE.TorusKnotGeometry(0.34, 0.1, 48, 7, 3, 2);
+      core2.scale(0.85, 1.35, 0.85);
+      core2.rotateZ(0.75);
+      core2.translate(0.28, 3.45, 0.12);
+      const core3 = new THREE.TorusKnotGeometry(0.24, 0.08, 40, 6, 2, 5);
+      core3.scale(1.0, 1.1, 1.0);
+      core3.rotateY(1.1);
+      core3.translate(-0.35, 1.9, -0.2);
+      const s1 = new THREE.SphereGeometry(0.34, 10, 8);
+      s1.scale(1.25, 0.65, 1.15);
+      s1.translate(0.68, 1.4, 0.22);
+      const s2 = new THREE.SphereGeometry(0.28, 9, 7);
+      s2.translate(-0.55, 3.0, -0.28);
+      const s3 = new THREE.SphereGeometry(0.24, 9, 7);
+      s3.scale(1.35, 0.55, 1.15);
+      s3.translate(0.28, 4.3, 0.38);
+      const s4 = new THREE.SphereGeometry(0.2, 8, 6);
+      s4.scale(1.1, 0.8, 1.4);
+      s4.translate(-0.2, 4.0, 0.45);
+      const geo = adoptMerged([core, core2, core3, s1, s2, s3, s4, rootBulb(0.46, 0.54)]);
       fams.push({ geo, height: peakHeight(geo) });
     }
 
