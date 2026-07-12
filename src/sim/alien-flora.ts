@@ -208,21 +208,32 @@ const flora_vert = /* glsl */ `
     return strength * fall * personal * react * wobble;
   }
 
-  // Continuous spin + oscillating twist + multi-axis lean — root collar stays fixed.
-  vec3 multiAxisMorph(vec3 p, float up, float rootPin, float phase, float freq, float twistWave, float spinRate, float leanX, float leanZ) {
-    // LIVE spin: continuous yaw accumulates with time (tips spin; roots pin via rootPin/up).
-    float ang = (twistWave * up + spinRate * uTime * up * up + phase * 0.15) * rootPin;
+  // Full multi-axis morph: continuous spin + counter-spin + lean + roll. Root collar stays fixed.
+  vec3 multiAxisMorph(
+    vec3 p, float up, float rootPin, float phase, float freq,
+    float twistWave, float spinRate, float counterSpin, float leanX, float leanZ, float roll
+  ) {
+    float u2 = up * up * rootPin;
+    // Primary yaw spin (continuous) + oscillating twist + counter-axis spin (weird).
+    float ang = (twistWave * up + spinRate * uTime * u2 + counterSpin * uTime * up + phase * 0.2) * rootPin;
     float ca = cos(ang);
     float sa = sin(ang);
     vec3 q = vec3(ca * p.x + sa * p.z, p.y, -sa * p.x + ca * p.z);
-    // Multi-axis lean (tip-weighted).
-    q.x += leanX * rootPin * up * up;
-    q.z += leanZ * rootPin * up * up;
-    // Secondary precession — counter-weird vectorized motion.
-    float pre = 0.35 * sin(uTime * freq * 0.55 + phase * 1.7) * rootPin * up * up;
-    float pre2 = 0.22 * cos(uTime * freq * 0.31 + phase * 2.3) * rootPin * up;
-    q.x += pre * cos(phase) + pre2 * sin(phase * 0.7);
-    q.z += pre * sin(phase * 1.3) + pre2 * cos(phase * 1.1);
+    // Roll around lean axis (multi-axis vectorized).
+    float cr = cos(roll * u2);
+    float sr = sin(roll * u2);
+    float qy = q.y * cr - q.z * sr;
+    float qz = q.y * sr + q.z * cr;
+    q.y = qy;
+    q.z = qz;
+    // Tip lean + precession (no amplitude kill).
+    q.x += leanX * u2;
+    q.z += leanZ * u2;
+    float pre = 0.55 * sin(uTime * freq * 0.65 + phase * 1.7) * u2;
+    float pre2 = 0.4 * cos(uTime * freq * 0.41 + phase * 2.3) * rootPin * up;
+    float pre3 = 0.28 * sin(uTime * freq * 1.15 + phase * 0.5) * u2;
+    q.x += pre * cos(phase) + pre2 * sin(phase * 0.7) + pre3 * cos(phase * 2.1);
+    q.z += pre * sin(phase * 1.3) + pre2 * cos(phase * 1.1) + pre3 * sin(phase * 1.9);
     return q;
   }
 
@@ -233,18 +244,20 @@ const flora_vert = /* glsl */ `
     vSecHue = aMeta.z;
     float up = clamp(position.y / max(aParams.w, 0.001), 0.0, 1.0);
     vUp = up;
-    // HARD root pin — collar never leaves soil.
-    float rootPin = smoothstep(0.0, 0.22, up);
+    // HARD root pin — ONLY structural seating, not a thrash cap.
+    float rootPin = smoothstep(0.0, 0.2, up);
     vRoot = 1.0 - rootPin;
 
-    float phase = aParams.x;
-    float freq = aParams.y;
-    float stiff = clamp(aMeta.y, 0.12, 1.5);
-    float react = clamp(aMeta.w, 0.2, 2.2);
+    // Spatial desync: neighbors never phase-lock (purpose: reduce lockstep crossover without caps).
+    vec2 bmBase = (instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xz;
+    float spatialPhase = bmBase.x * 0.13 + bmBase.y * 0.17 + sin(bmBase.x * 0.07 - bmBase.y * 0.09) * 1.7;
+    float phase = aParams.x + spatialPhase;
+    float freq = aParams.y * (0.85 + 0.35 * fract(sin(bmBase.x * 12.9898 + bmBase.y * 78.233) * 43758.5453));
+    float stiff = clamp(aMeta.y, 0.1, 1.6);
+    float react = clamp(aMeta.w, 0.25, 2.4);
     float rarity = aMeta.x;
 
-    vec2 bmBase = (instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xz;
-    // R=biomass (food), G=density (brace), B=overgraze pressure (recovery debt) — operational fields.
+    // Operational fields: R=food, G=crowd density, B=overgraze debt.
     vec4 field = texture2D(uBiomass, (bmBase + 0.5 * uGridExtent) / uGridExtent);
     float biomass = field.r;
     float density = field.g;
@@ -252,50 +265,70 @@ const flora_vert = /* glsl */ `
     vBiomass = biomass;
     vDensity = density;
 
-    // No artificial motion caps — density is ecology (food/brace paint), NOT a thrash governor.
+    // Finite-difference density gradient — PURPOSEFUL separation (seek open canopy space).
+    // Not a motion cap: thrash stays full; we ADD a desync/avoidance bias from real crowding.
+    float eps = 6.0;
+    float dE = texture2D(uBiomass, (bmBase + vec2(eps, 0.0) + 0.5 * uGridExtent) / uGridExtent).g;
+    float dW = texture2D(uBiomass, (bmBase + vec2(-eps, 0.0) + 0.5 * uGridExtent) / uGridExtent).g;
+    float dN = texture2D(uBiomass, (bmBase + vec2(0.0, eps) + 0.5 * uGridExtent) / uGridExtent).g;
+    float dS = texture2D(uBiomass, (bmBase + vec2(0.0, -eps) + 0.5 * uGridExtent) / uGridExtent).g;
+    vec2 avoid = vec2(dW - dE, dS - dN); // toward lower density
+    float avoidLen = length(avoid);
+    if (avoidLen > 1e-5) avoid /= avoidLen;
+
     float soft = 1.0 / stiff;
     float health = clamp(biomass, 0.0, 1.0);
     float hunger = 1.0 - health;
+    // Food quality proxy for motion energy (rich/live plants thrash harder — operational).
+    float vigor = 0.55 + 0.65 * health + 0.35 * rarity - 0.25 * overgraze;
 
-    // Full multi-axis thrash (tip-weighted; roots pinned only so they stay in the ground).
-    float bend = rootPin * rootPin * (0.7 + uWind * 1.35 + uChaos * 1.2) * soft * (1.1 + rarity * 0.7);
-    float turb = rootPin * rootPin * (0.35 + uChaos * 0.95) * soft;
+    float bend = rootPin * rootPin * (0.85 + uWind * 1.55 + uChaos * 1.45) * soft * (1.2 + rarity * 0.85) * vigor;
+    float turb = rootPin * rootPin * (0.45 + uChaos * 1.15) * soft * vigor;
     vec3 p = position;
 
-    // ── TWIST / CONTINUOUS SPIN / LEAN — uncapped ──
-    float twistWave = (1.4 + rarity * 1.8 + uChaos * 1.0) * sin(uTime * freq * 0.85 + phase)
-                    + (0.75 + hunger * 0.55) * sin(uTime * freq * 1.9 + phase * 2.0);
-    float spinRate = (0.75 + freq * 1.1 + rarity * 1.2 + uChaos * 0.75 + health * 0.35) * soft;
-    float leanX = sin(uTime * freq + phase) * bend * 3.2
-                + sin(uTime * freq * 2.9 + phase * 1.4) * turb * 1.7
-                + sin(uTime * freq * 5.1 + phase * 0.5) * turb * 0.7;
-    float leanZ = cos(uTime * freq * 0.85 + phase * 1.2) * bend * 3.0
-                + cos(uTime * freq * 2.5 + phase * 1.6) * turb * 1.55
-                + cos(uTime * freq * 4.7 + phase * 0.9) * turb * 0.65;
-    p = multiAxisMorph(p, up, rootPin, phase, freq, twistWave, spinRate, leanX, leanZ);
+    // ── TWIST / SPIN / COUNTER-SPIN / LEAN — full power, spatially desynced ──
+    float twistWave = (1.7 + rarity * 2.1 + uChaos * 1.2) * sin(uTime * freq * 0.95 + phase)
+                    + (0.95 + hunger * 0.7) * sin(uTime * freq * 2.15 + phase * 2.0)
+                    + 0.55 * sin(uTime * freq * 3.4 + phase * 0.4);
+    float spinRate = (0.95 + freq * 1.35 + rarity * 1.5 + uChaos * 0.95 + health * 0.5) * soft * vigor;
+    float counterSpin = (0.35 + rarity * 0.55 + uChaos * 0.4) * soft
+                      * sin(uTime * 0.17 + phase) * (0.6 + density * 0.5);
+    float leanX = sin(uTime * freq + phase) * bend * 3.6
+                + sin(uTime * freq * 3.1 + phase * 1.4) * turb * 2.0
+                + sin(uTime * freq * 5.5 + phase * 0.5) * turb * 0.9
+                + avoid.x * density * rootPin * up * up * (1.2 + vigor); // canopy separation
+    float leanZ = cos(uTime * freq * 0.88 + phase * 1.2) * bend * 3.4
+                + cos(uTime * freq * 2.7 + phase * 1.6) * turb * 1.85
+                + cos(uTime * freq * 5.0 + phase * 0.9) * turb * 0.85
+                + avoid.y * density * rootPin * up * up * (1.2 + vigor);
+    float roll = (0.7 + rarity * 0.9) * sin(uTime * freq * 0.5 + phase * 1.5)
+               + (0.4 + uChaos * 0.5) * cos(uTime * freq * 1.3 + phase);
+    p = multiAxisMorph(p, up, rootPin, phase, freq, twistWave, spinRate, counterSpin, leanX, leanZ, roll);
 
-    // ── UP / DOWN + EXPAND / CONTRACT + DEGRADE ──
-    float heave = sin(uTime * freq * 0.75 + phase) * rootPin * (0.18 + 0.22 * health) * (0.65 + uWind + uChaos * 0.4);
-    float pulse = 0.5 + 0.5 * sin(uTime * (1.2 + freq * 0.35) + phase + rarity * 2.0);
-    float expand = rootPin * (0.06 + 0.16 * health) * pulse
-                 - rootPin * hunger * 0.14;
+    // ── UP/DOWN + EXPAND/CONTRACT + DEGRADE + MORPH ──
+    float heave = sin(uTime * freq * 0.9 + phase) * rootPin * (0.22 + 0.28 * health) * (0.7 + uWind + uChaos * 0.55);
+    float pulse = 0.5 + 0.5 * sin(uTime * (1.4 + freq * 0.4) + phase + rarity * 2.2);
+    float expand = rootPin * (0.08 + 0.2 * health) * pulse * vigor
+                 - rootPin * hunger * 0.16
+                 - rootPin * overgraze * 0.1;
+    // Mutating cross-section (elliptical morph) — unique skins of motion.
+    float squash = 1.0 + expand * (0.75 + 0.55 * up) + 0.12 * sin(uTime * freq * 0.6 + phase) * rootPin * up;
+    float stretch = 1.0 + expand * (0.55 + 0.45 * up) - 0.1 * sin(uTime * freq * 0.6 + phase + 1.1) * rootPin * up;
     p.y += heave * up;
-    p.x *= 1.0 + expand * (0.7 + 0.5 * up);
-    p.z *= 1.0 + expand * (0.7 + 0.5 * up);
-    // Hunger degrades height (still rooted) — load-bearing food state.
-    p.y *= mix(1.0, 0.78 + 0.22 * health, rootPin * 0.8);
+    p.x *= squash;
+    p.z *= stretch;
+    p.y *= mix(1.0, 0.76 + 0.24 * health, rootPin * 0.85);
 
-    // Biomass graze scale (above collar only).
+    // Biomass graze scale (above collar).
     float grow = 0.12 + 0.88 * health;
     if (uScorchRadius > 0.0) {
       float scorchD = length(bmBase - uScorchCenter);
       grow *= smoothstep(uScorchRadius * 0.82, uScorchRadius, scorchD);
     }
-    float gBody = mix(1.0, grow, rootPin);
     float gRoot = mix(0.92 + 0.08 * grow, grow, rootPin);
     p.x *= gRoot;
     p.z *= gRoot;
-    p.y = position.y < 0.0 ? p.y * (0.9 + 0.1 * grow) : p.y * gBody;
+    p.y = position.y < 0.0 ? p.y * (0.9 + 0.1 * grow) : p.y * mix(1.0, grow, rootPin);
     vGlow *= 0.25 + 0.75 * health;
 
     vec4 worldPosition = instanceMatrix * vec4(p, 1.0);
@@ -307,7 +340,7 @@ const flora_vert = /* glsl */ `
       uTerrainWind
     );
 
-    // ── CONTACT PHYSICS (multi-point, tip-weighted, anti-crossover capped) ──
+    // ── CONTACT PHYSICS (multi-point, tip-weighted, FULL reaction) ──
     float c0 = localContact(bmBase, uContactX.x, uContactZ.x, uContactS.x, phase, stiff, react);
     float c1 = localContact(bmBase, uContactX.y, uContactZ.y, uContactS.y, phase + 1.7, stiff, react);
     float c2 = localContact(bmBase, uContactX.z, uContactZ.z, uContactS.z, phase + 3.1, stiff, react);
@@ -339,27 +372,31 @@ const flora_vert = /* glsl */ `
       push += a * inv * c3; wsum += c3;
     }
     push /= wsum;
+    // Blend contact flee with canopy separation (both purposeful, neither is a thrash cap).
+    push = normalize(push * 1.2 + avoid * density * 0.55 + vec2(0.0001));
 
     float tip = rootPin * rootPin * rootPin;
     float mid = rootPin * rootPin * (1.0 - up) * 4.0;
-    // Contact physics — full reactive flee + turbo-spin. No lateral cap. Root collar only is pinned.
-    float amp = (3.4 + uChaos * 3.0 + rarity * 1.8 + react * 1.0) * soft;
+    float amp = (3.8 + uChaos * 3.4 + rarity * 2.0 + react * 1.2) * soft * vigor;
     float contactLat = cSum * tip * amp;
-    worldPosition.xz += push * (contactLat + density * cSum * mid * 0.25);
+    worldPosition.xz += push * (contactLat + density * cSum * mid * 0.35);
+    // Crowd-driven continuous tip bias toward open space (desyncs overlapping arcs).
+    worldPosition.xz += avoid * density * tip * (0.8 + vigor * 0.6) * (0.5 + 0.5 * sin(uTime * freq + phase));
     vec2 ortho = vec2(-push.y, push.x);
-    worldPosition.xz += ortho * sin(uTime * (7.0 + stiff * 4.0) + phase) * cSum * mid * amp * 0.75;
-    float cTwist = cSum * tip * (2.2 + react * 1.4) * (0.55 + 0.45 * sin(uTime * 4.8 + phase));
-    float cca = cos(cTwist);
-    float csa = sin(cTwist);
+    worldPosition.xz += ortho * sin(uTime * (7.5 + stiff * 4.2) + phase) * cSum * mid * amp * 0.9;
+    // Contact turbo-spin + counter-spin.
+    float cTwist = cSum * tip * (2.6 + react * 1.6) * (0.5 + 0.5 * sin(uTime * 5.2 + phase));
+    float cTwist2 = cSum * mid * 0.7 * cos(uTime * 3.1 + phase * 1.3);
+    float cca = cos(cTwist + cTwist2);
+    float csa = sin(cTwist + cTwist2);
     vec2 rel = worldPosition.xz - bmBase;
     worldPosition.xz = bmBase + vec2(cca * rel.x - csa * rel.y, csa * rel.x + cca * rel.y);
 
-    // Vertical flee + tip invert under contact (fold over; root stays in soil).
-    worldPosition.y += cSum * tip * (1.4 + uChaos * 1.6 + rarity * 1.0);
-    worldPosition.y += sin(cSum * 10.0 + uTime * 3.4 + phase) * cSum * tip * 1.15;
-    float invert = smoothstep(0.25, 1.0, cSum + uChaos * 0.5) * tip * (0.65 + rarity * 0.45);
-    worldPosition.y -= invert * (0.7 + up * 1.4);
-    worldPosition.xz += push * invert * 1.15;
+    worldPosition.y += cSum * tip * (1.6 + uChaos * 1.8 + rarity * 1.15);
+    worldPosition.y += sin(cSum * 11.0 + uTime * 3.8 + phase) * cSum * tip * 1.35;
+    float invert = smoothstep(0.2, 0.95, cSum + uChaos * 0.55) * tip * (0.75 + rarity * 0.5);
+    worldPosition.y -= invert * (0.85 + up * 1.6);
+    worldPosition.xz += push * invert * 1.35;
 
     vWorldP = worldPosition.xyz;
     vec4 mvPosition = modelViewMatrix * worldPosition;
@@ -426,14 +463,17 @@ const flora_frag = /* glsl */ `
     float hunger = 1.0 - health;
     float contactFlash = clamp(vContactLive, 0.0, 1.5);
     // Healthy → cool-lush spectrum; hungry → warm/ash; stressed/contact → hot iridescent alarm.
+    // Mutating skin — hue races with stress, contact, health, and continuous morph phase.
     float hueDrift = vSecHue
-      + fres * 0.22
-      + vUp * 0.08
-      + f * 0.07
-      + uTime * (0.03 + vRarity * 0.02)
-      + hunger * 0.12
-      + vStress * 0.18
-      + contactFlash * 0.1;
+      + fres * 0.28
+      + vUp * 0.12
+      + f * 0.1
+      + uTime * (0.055 + vRarity * 0.04 + vStress * 0.03 + contactFlash * 0.02)
+      + hunger * 0.14
+      + vStress * 0.22
+      + contactFlash * 0.14
+      + vDensity * 0.06
+      + sin(uTime * 1.3 + vWorldP.x * 0.05 + vWorldP.z * 0.04) * 0.05;
     float viewHue = fract(hueDrift);
     float sat = clamp(0.55 + vRarity * 0.25 + health * 0.2 - hunger * 0.15 + contactFlash * 0.15, 0.25, 0.98);
     float lit = clamp(0.38 + fres * 0.15 + health * 0.18 - hunger * 0.12 + contactFlash * 0.1, 0.15, 0.78);
@@ -757,16 +797,17 @@ export class AlienFlora {
         }
 
         const o4 = i * 4;
-        params[o4] = hash(pl.sp * 13 + i * 7) * TAU; // phase
-        params[o4 + 1] = s.swayFreq * (0.55 + hash(i * 73 + pl.sp) * 1.55);
-        params[o4 + 2] = Math.min(1, s.glow + hash(i * 79 + pl.sp) * 0.38 + pl.rarity * 0.25);
+        // Wide phase + spatial salt so neighbors never lockstep-thrash through each other.
+        params[o4] = hash(pl.sp * 13 + i * 7) * TAU + pl.x * 0.041 + pl.z * 0.037;
+        params[o4 + 1] = s.swayFreq * (0.7 + hash(i * 73 + pl.sp) * 2.1);
+        params[o4 + 2] = Math.min(1, s.glow + hash(i * 79 + pl.sp) * 0.4 + pl.rarity * 0.3);
         params[o4 + 3] = fmly.height;
 
         // aMeta: rarity, stiffness, secondaryHue, reactGain
         meta[o4] = pl.rarity;
-        meta[o4 + 1] = 0.18 + hash(i * 83 + pl.sp) * 1.0; // stiffness variance
-        meta[o4 + 2] = (hueJit + 0.18 + pl.rarity * 0.25 + hash(i * 89) * 0.2) % 1;
-        meta[o4 + 3] = 0.55 + hash(i * 91 + pl.sp) * 0.9 + pl.rarity * 0.7; // react gain
+        meta[o4 + 1] = 0.12 + hash(i * 83 + pl.sp) * 1.15; // stiffness — softer tips thrash more
+        meta[o4 + 2] = (hueJit + 0.18 + pl.rarity * 0.25 + hash(i * 89) * 0.25) % 1;
+        meta[o4 + 3] = 0.7 + hash(i * 91 + pl.sp) * 1.1 + pl.rarity * 0.85; // contact react
 
         const o3 = i * 3;
         colors[o3] = col.r;
