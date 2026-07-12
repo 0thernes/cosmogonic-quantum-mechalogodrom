@@ -244,8 +244,9 @@ describe('AlienFlora — the vegetal ground ecology', () => {
     expect(mat.vertexShader).toContain('smoothstep(256.0, 25.0, d2)');
     expect(mat.vertexShader).toContain('aMeta');
     expect(mat.vertexShader).toContain('rootPin');
-    // Multi-axis living morph (yaw/pitch/roll) — not planar sway-only.
+    // Upright multi-axis morph (Y-spin + lateral thrash) — never pitch/roll into dirt.
     expect(mat.vertexShader).toContain('tipMorph');
+    expect(mat.vertexShader).toContain('counter-rotate');
     expect(mat.fragmentShader).toContain('field4');
     f.dispose();
   });
