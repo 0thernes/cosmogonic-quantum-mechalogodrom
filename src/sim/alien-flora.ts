@@ -57,20 +57,25 @@ const TEMPLE_CLEAR = 104;
 /** Fixed layout seed — flora is the same world every replay (decor, not heritable state). */
 const FLORA_SEED = 0x5eedf10a;
 
-// ── USER ecology: plants offer FOOD, get grazed to nibbled stubs, and REGROW. All deterministic. ──
+// ── USER ecology: plants offer FOOD, get grazed to stubs, and REGROW. All deterministic. ──
 /** Biomass eaten per second by a full-pressure graze on one cell. */
 const GRAZE_RATE = 0.9;
 /** Energy (on the 0..100 creature scale) yielded per unit of biomass eaten. */
 const GRAZE_YIELD = 22;
-/** Logistic regrowth speed toward a cell's carrying capacity. */
-const REGROW_RATE = 0.22;
-/** Reseed floor so a fully-eaten (dead) cell slowly regenerates from nothing. */
-const REGROW_SEED = 0.015;
+/**
+ * Logistic regrowth toward capacity. Tuned so a fully eaten cell recovers to a living
+ * stand in ~5s under calm climate (owner: respawn ~5 seconds after graze-down).
+ */
+const REGROW_RATE = 1.05;
+/** Reseed floor so a dead cell leaves stub quickly (enables ~5s respawn from zero). */
+const REGROW_SEED = 0.11;
 /** Neighbor diffusion assist — dense live neighbors speed recovery of depleted cells. */
-const REGROW_NEIGHBOR = 0.08;
-/** Overgraze residual decay (1/s) — real recovery debt. */
-const PRESSURE_DECAY = 0.18;
+const REGROW_NEIGHBOR = 0.14;
+/** Overgraze residual decay (1/s) — debt clears so respawn is not blocked for long. */
+const PRESSURE_DECAY = 0.42;
 const PRESSURE_STAMP = 0.9;
+/** Continuous recovery time constant (s); exp form guarantees ~95% restore by ~5s. */
+const REGROW_TAU = 5 / 3;
 /** Max simultaneous local contact seeds (multi-point; kills the single giant-patch slide). */
 export const FLORA_CONTACT_SLOTS = 4;
 /** Local contact radius (world units). Old falloff was ~72u — that moved entire lawn slabs. */
@@ -357,24 +362,33 @@ const flora_vert = /* glsl */ `
 
     // Lateral thrash: multi-harmonic + orthogonal, hard-capped (never horizontal wires).
     float leanAmp = 1.9;
-    float leanX = clamp(
-      (sin(uTime * freq + phase) * bend * 2.35
+    float leanX = (
+      sin(uTime * freq + phase) * bend * 2.35
       + sin(uTime * freq * 3.7 + phase * 2.1) * turb * 1.15
       + sin(uTime * freq * 5.8 + phase * 0.7 + idHash2 * 4.0) * turb * 0.42 * rarity
       + sin(uTime * 0.8 + phase) * uWind * rootPin * rootPin * 0.65
       + cos(uTime * freq * 1.2 - phase * 1.8) * bend * 0.5 * twistBias
-      + avoid.x * density * rootPin * 0.35 * chirality)
-      * leanBias,
-      -leanAmp, leanAmp);
-    float leanZ = clamp(
-      (cos(uTime * freq * 0.77 + phase * 1.44) * bend * 2.1
+      + avoid.x * density * rootPin * 0.35 * chirality
+    ) * leanBias;
+    float leanZ = (
+      cos(uTime * freq * 0.77 + phase * 1.44) * bend * 2.1
       + cos(uTime * freq * 3.1 + phase * 1.7) * turb * 1.05
       + cos(uTime * freq * 5.2 + phase * 1.1 - idHash * 3.0) * turb * 0.38 * rarity
       + cos(uTime * 0.74 + phase * 1.25) * uWind * rootPin * rootPin * 0.6
       + sin(uTime * freq * 1.3 + phase * 2.2) * bend * 0.5 * twistBias
-      + avoid.y * density * rootPin * 0.35 * chirality)
-      * leanBias,
-      -leanAmp, leanAmp);
+      + avoid.y * density * rootPin * 0.35 * chirality
+    ) * leanBias;
+    // Kakeya needle (Besicovitch/Kakeya set intuition): fixed-length thrash segment rotates
+    // through ALL planar directions over time — geometric insanity that stays upright (length
+    // capped, Y never folded). Length is operational: wind + chaos + health, not free decoration.
+    float needleLen = clamp(0.55 + bend * 0.85 + turb * 0.4 + rarity * 0.25, 0.2, leanAmp);
+    float needleAng = uTime * (0.85 + freq * 0.55 + react * 0.2) + phase + berry + phaseSlip * 0.5;
+    // Dual needle (Besicovitch multi-direction cover) — second arm phase-locked π/2 out.
+    float n2 = needleAng + 1.5707963 + idHash2 * 0.7;
+    leanX = leanX * 0.5 + cos(needleAng) * needleLen * 0.55 + cos(n2) * needleLen * 0.28 * chirality;
+    leanZ = leanZ * 0.5 + sin(needleAng) * needleLen * 0.55 + sin(n2) * needleLen * 0.28 * chirality;
+    leanX = clamp(leanX, -leanAmp, leanAmp);
+    leanZ = clamp(leanZ, -leanAmp, leanAmp);
     p = tipMorph(p, up, rootPin, yaw, leanX, leanZ, twist2, band);
 
     // Vertical life (heave) + expand/contract/degrade — operational food+debt readout.
@@ -791,12 +805,18 @@ export class AlienFlora {
           : rRoll > 0.94
             ? 0.45 + hash(k * 43) * 0.35 // uncommon ~5%
             : s.rarityBias * (0.05 + hash(k * 47) * 0.25); // common low rarity
-      // Bigger presence, not nuclear poles — rare tall specimens stay proportional.
-      const giant = hash(k * 23 + 29) > 0.96 ? 1.55 + hash(k * 23 + 31) * 0.85 : 1;
-      const scale = s.size * (0.62 + hash(k * 5 + 11) * 1.28) * giant * (1 + rarity * 0.26);
+      // Size ladder: floor out tiny stubs; scatter real giants (not nuclear lawn poles).
+      const gRoll = hash(k * 23 + 29);
+      const giant =
+        gRoll > 0.988
+          ? 3.1 + hash(k * 23 + 31) * 1.4 // legendary mega ~1.2%
+          : gRoll > 0.94
+            ? 1.85 + hash(k * 23 + 31) * 0.95 // uncommon large ~4.8%
+            : 1;
+      const scale = s.size * (0.9 + hash(k * 5 + 11) * 1.15) * giant * (1 + rarity * 0.28);
       const yaw = hash(k * 5 + 13) * TAU;
       // Small intrinsic lean only — big random tilt levers roots out of the ground and looks broken.
-      const tilt = (hash(k * 5 + 17) - 0.5) * (0.08 + hash(k * 5 + 19) * 0.1);
+      const tilt = (hash(k * 5 + 17) - 0.5) * (0.06 + hash(k * 5 + 19) * 0.08);
       perFamily[s.family]!.push({ x, z, sp, scale, yaw, tilt, rarity });
       placed++;
 
@@ -878,9 +898,9 @@ export class AlienFlora {
           groundTiltZ + Math.cos(pl.yaw) * pl.tilt * 0.65,
         );
         q.setFromEuler(e);
-        // Taller than wide: bigger vertical presence without fat/wide blobs or thin poles.
+        // Taller than wide: bigger presence without fat slabs or spaghetti poles.
         const s0 = pl.scale;
-        scl.set(s0 * 0.92, s0 * 1.22, s0 * 0.92);
+        scl.set(s0 * 0.94, s0 * 1.28, s0 * 0.94);
         m.compose(pos, q, scl);
         mesh.setMatrixAt(i, m);
 
@@ -1227,9 +1247,9 @@ export class AlienFlora {
         hue,
         sat: 0.62 + hash(i * 23 + 3) * 0.36,
         light: 0.34 + hash(i * 29 + 5) * 0.3,
-        // Bigger / taller habitat presence — not nuclear giants, not lawn stubs.
-        size: 0.62 + hash(i * 31 + 7) * 1.85,
-        swayFreq: 0.35 + hash(i * 37 + 11) * 2.15,
+        // Bigger / taller — floor kills tiny invisibles; rare size via placement giants.
+        size: 0.95 + hash(i * 31 + 7) * 1.7,
+        swayFreq: 0.4 + hash(i * 37 + 11) * 2.2,
         glow: 0.35 + hash(i * 41 + 13) * 0.6,
         rarityBias: hash(i * 59 + 17) * 0.4,
       });
@@ -1450,10 +1470,11 @@ export class AlienFlora {
     const adaptiveGain = intelligence?.enabled
       ? 1 +
         Math.min(
-          0.35,
-          intelligence.resourcePressure * 0.2 +
-            intelligence.forecast * 0.1 +
-            intelligence.confidence * 0.05,
+          0.55,
+          intelligence.resourcePressure * 0.28 +
+            intelligence.forecast * 0.14 +
+            intelligence.confidence * 0.08 +
+            intelligence.plasticity * 0.05,
         )
       : 1;
     let climate =
@@ -1499,13 +1520,17 @@ export class AlienFlora {
       }
       const nMean = nc > 0 ? neigh / nc : 0;
       const room = Math.max(0, cap - b);
-      const pDebt = 1 - 0.55 * (this.pressure[i] ?? 0);
-      const raw =
+      const pDebt = 1 - 0.5 * (this.pressure[i] ?? 0);
+      // Dual recovery: logistic + exp approach. Calm climate ≈5s respawn; entropy/chaos stretch τ.
+      const logistic =
         (REGROW_SEED * cap + REGROW_RATE * b * room + REGROW_NEIGHBOR * nMean * room) *
         h *
         adaptiveGain *
         climate *
         pDebt;
+      const tau = REGROW_TAU / Math.max(0.22, climate * climate);
+      const expPull = room * (1 - Math.exp(-h / tau)) * adaptiveGain * pDebt;
+      const raw = Math.max(logistic, expPull * 0.75);
       const next = b + raw > cap ? cap : b + raw;
       bm[i] = next;
       this.biomassTotal += next - b;

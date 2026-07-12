@@ -252,6 +252,8 @@ describe('AlienFlora — the vegetal ground ecology', () => {
     expect(mat.vertexShader).toContain('berry');
     expect(mat.vertexShader).toContain('josephson');
     expect(mat.vertexShader).toContain('zeno');
+    expect(mat.vertexShader).toContain('Kakeya');
+    expect(mat.vertexShader).toContain('needleLen');
     // Plant↔land: rigid crest ride (one Y for whole plant — per-vertex lift sheared stems thin).
     expect(mat.vertexShader).toContain('cqmTerrainDisplacement');
     expect(mat.vertexShader).toContain('liftMax');
@@ -320,6 +322,32 @@ describe('AlienFlora — the vegetal ground ecology', () => {
     fast.dispose();
   });
 
+  test('fully grazed cells respawn to living biomass within ~5s under calm climate (falsifiable)', () => {
+    const ctx = makeCtx(true);
+    const f = new AlienFlora(ctx);
+    let gx = 0;
+    let gz = 0;
+    let found = false;
+    for (let a = 60; a < PLATFORM_HALF && !found; a += 30) {
+      for (let ang = 0; ang < 6.28 && !found; ang += 0.4) {
+        const c = f.comfortAt(Math.cos(ang) * a, Math.sin(ang) * a);
+        if (c.strength > 0.05) {
+          gx = c.x;
+          gz = c.z;
+          found = true;
+        }
+      }
+    }
+    expect(found).toBe(true);
+    // Graze to stub.
+    for (let i = 0; i < 120; i++) f.grazeAt(gx, gz, 1, 1 / 60);
+    expect(f.biomassAt(gx, gz)).toBeLessThan(0.15);
+    // Calm climate recovery for 5 seconds.
+    for (let i = 0; i < 300; i++) f.update(1 / 60, i / 60, 0.1, 0.05);
+    expect(f.biomassAt(gx, gz)).toBeGreaterThan(0.55);
+    f.dispose();
+  });
+
   test('grazing offers food + eats plants down to stubs, and biomass regrows (life-cycle)', () => {
     const ctx = makeCtx();
     const f = new AlienFlora(ctx);
@@ -373,11 +401,13 @@ describe('AlienFlora — the vegetal ground ecology', () => {
       baseline.grazeAt(gx, gz, 1, 1 / 60);
       adaptive.grazeAt(gx, gz, 1, 1 / 60);
     }
-    for (let i = 0; i < 600; i++) {
+    // Short recovery window — adaptive gain must outpace baseline on the grazed cell
+    // before both saturate (fast ~5s respawn makes long windows converge).
+    for (let i = 0; i < 90; i++) {
       baseline.update(1 / 60, 1, 0.3);
       adaptive.update(1 / 60, 1, 0.3);
     }
-    expect(adaptive.meanBiomass()).toBeGreaterThan(baseline.meanBiomass());
+    expect(adaptive.biomassAt(gx, gz)).toBeGreaterThan(baseline.biomassAt(gx, gz));
     const exactMean = (flora: AlienFlora): number => {
       const internals = flora as unknown as { biomass: Float32Array; density: Float32Array };
       let total = 0;

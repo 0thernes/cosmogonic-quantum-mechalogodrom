@@ -2527,27 +2527,27 @@ export class World {
 
   /**
    * Render-only plant contact: sample live organisms into ≤4 LOCAL activity seeds (min-separated),
-   * never one giant centroid that slides entire lawn slabs. Each seed only thrash plants nearby;
-   * the flora shader desyncs per-plant. O(min(n,96)); no rng, no sim feedback.
+   * never one giant centroid that slides entire lawn slabs. Each seed thrashs plants nearby;
+   * the flora shader desyncs per-plant (individual response, not cluster-only). O(min(n,160)); no rng.
    */
   private driveFloraContact(n: number): void {
     if (n <= 0) return;
     const list = this.entities.list;
-    const stride = Math.max(1, Math.floor(n / 96));
+    const stride = Math.max(1, Math.floor(n / 160));
     const start = this.state.frame % stride;
     // Up to 4 spatially-separated contact seeds (multi-point local ragdoll).
     const seeds: { x: number; z: number; strength: number }[] = [];
-    const minSep2 = 28 * 28; // keep seeds apart so each owns a local thrash pocket
+    const minSep2 = 18 * 18; // tighter pockets so individual beings own local thrash
     for (let i = start; i < n; i += stride) {
       const e = list[i];
       if (!e) continue;
       const u = e.userData;
       const v2 = u.vel.lengthSq();
-      const motion = v2 > 0 ? Math.min(1, Math.sqrt(v2) * 0.16) : 0;
-      const neural = Math.min(1, Math.abs(u.act) * 0.18);
-      const body = (u.belly > 0 ? 0.24 : 0) + (u.isNhi ? 0.45 : 0);
+      const motion = v2 > 0 ? Math.min(1, Math.sqrt(v2) * 0.22) : 0;
+      const neural = Math.min(1, Math.abs(u.act) * 0.22);
+      const body = (u.belly > 0 ? 0.32 : 0) + (u.isNhi ? 0.55 : 0) + 0.12; // presence always registers
       const w = motion + neural + body;
-      if (w <= 0.02) continue;
+      if (w <= 0.04) continue;
       const px = e.position.x;
       const pz = e.position.z;
       // Reinforce nearest existing seed if close; else open a new local pocket.
@@ -2613,8 +2613,8 @@ export class World {
       }
     }
     if (seeds.length === 0) return;
-    // Normalize strengths into 0..1 spring targets (local thrash, not lawn-wide).
-    for (const s of seeds) s.strength = Math.min(1, s.strength / 6);
+    // Normalize into 0..1 spring targets — hotter than before so single beings thrash local flora hard.
+    for (const s of seeds) s.strength = Math.min(1, s.strength / 3.5);
     this.alienFlora.setContacts(seeds);
   }
 
