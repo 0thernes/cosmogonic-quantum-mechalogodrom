@@ -143,6 +143,12 @@ interface Species {
   readonly metal: number;
   /** Pattern scale / film rate personality 0..1. */
   readonly pattern: number;
+  /** Energy multiplier when grazed (species nutrition). */
+  readonly foodValue: number;
+  /** Graze resistance — harder species deplete slower. */
+  readonly toughness: number;
+  /** 0..1 toxin fraction — cuts usable energy (xeno sludge). */
+  readonly toxin: number;
 }
 
 /** One structural family's base geometry + the local height of its tallest vertex (for sway up-weighting). */
@@ -868,6 +874,9 @@ export class AlienFlora {
   private readonly capacity: Float32Array;
   private readonly pressure: Float32Array;
   private readonly quality: Float32Array;
+  private readonly cellFood: Float32Array;
+  private readonly cellTough: Float32Array;
+  private readonly cellToxin: Float32Array;
   private readonly biomassTex: THREE.DataTexture;
   private biomassTotal = 0;
   private biomassCells = 0;
@@ -955,6 +964,9 @@ export class AlienFlora {
     this.gridN = Math.ceil((ALIEN_FLORA_FIELD_HALF * 2) / this.cell) + 2;
     this.gridHalf = (this.gridN * this.cell) / 2;
     this.density = new Float32Array(this.gridN * this.gridN);
+    const foodSum = new Float32Array(this.gridN * this.gridN);
+    const toughSum = new Float32Array(this.gridN * this.gridN);
+    const toxinSum = new Float32Array(this.gridN * this.gridN);
 
     // ── Placement: low-discrepancy candidates, thinned by paths / glades / density. ──
     interface Placed {
@@ -1039,6 +1051,9 @@ export class AlienFlora {
       if (gi >= 0) {
         const d = (this.density[gi]! += 1);
         if (d > maxD) maxD = d;
+        foodSum[gi]! += s.foodValue * (1 + rarity * 0.35);
+        toughSum[gi]! += s.toughness;
+        toxinSum[gi]! += s.toxin;
       }
     }
     this.instanceCount = placed;
@@ -1096,6 +1111,9 @@ export class AlienFlora {
     this.capacity = new Float32Array(cells);
     this.pressure = new Float32Array(cells);
     this.quality = new Float32Array(cells);
+    this.cellFood = new Float32Array(cells);
+    this.cellTough = new Float32Array(cells);
+    this.cellToxin = new Float32Array(cells);
     for (let i = 0; i < cells; i++) {
       if ((this.density[i] ?? 0) <= 0) continue;
       const ix = i % this.gridN;
@@ -1109,6 +1127,10 @@ export class AlienFlora {
       this.biomass[i] = cap;
       this.biomassTotal += cap;
       this.biomassCells++;
+      const nPlants = this.density[i]!;
+      this.cellFood[i] = (foodSum[i] ?? 0) / nPlants;
+      this.cellTough[i] = (toughSum[i] ?? 0) / nPlants;
+      this.cellToxin[i] = (toxinSum[i] ?? 0) / nPlants;
     }
     const texData = new Uint8Array(cells * 4);
     const densScale = this.maxDensity > 0 ? 1 / this.maxDensity : 0;
@@ -1760,6 +1782,32 @@ export class AlienFlora {
         Math.max(0.02, SKIN_METAL[skinMode]! + (hash(i * 61 + 4) - 0.5) * 0.22),
       );
       const pattern = 0.08 + ((i * 0.137 + hash(i * 47 + 9)) % 1) * 0.9;
+      // Nutrition only — does NOT touch morph/thrash (never again spaghetti via packing hacks).
+      const foodValue = Math.min(
+        2.15,
+        Math.max(
+          0.4,
+          [1.15, 0.55, 1.55, 0.75, 1.7, 0.9, 0.5, 0.65][skinMode]! +
+            (hash(i * 71 + 21) - 0.5) * 0.35 +
+            satBase * 0.2,
+        ),
+      );
+      const toughness = Math.min(
+        1.9,
+        Math.max(
+          0.5,
+          [0.75, 1.55, 0.55, 1.35, 0.65, 1.1, 1.7, 1.25][skinMode]! +
+            metal * 0.35 +
+            (hash(i * 73 + 23) - 0.5) * 0.2,
+        ),
+      );
+      const toxin = Math.min(
+        0.85,
+        Math.max(
+          0,
+          [0.08, 0.12, 0.05, 0.18, 0.22, 0.28, 0.15, 0.55][skinMode]! + hash(i * 79 + 27) * 0.15,
+        ),
+      );
       out.push({
         family,
         biome,
@@ -1773,6 +1821,9 @@ export class AlienFlora {
         skinMode,
         metal,
         pattern,
+        foodValue,
+        toughness,
+        toxin,
       });
     }
     return out;
@@ -1929,8 +1980,8 @@ export class AlienFlora {
   }
 
   /**
-   * Effective forage field: biomass × quality × (1 − overgraze). Chemotaxis climbs this.
-   * Falsifiable: foodAt ≤ biomassAt; richer edaphics rank higher at equal biomass.
+   * Effective forage field: biomass × quality × species foodValue × (1 − overgraze − toxin).
+   * Chemotaxis climbs this. Falsifiable: foodAt ≤ biomassAt * 2.2.
    */
   foodAt(x: number, z: number): number {
     if (!Number.isFinite(x) || !Number.isFinite(z)) return 0;
@@ -1948,7 +1999,9 @@ export class AlienFlora {
       if (b <= 0) return 0;
       const q = this.quality[i] ?? 0;
       const p = this.pressure[i] ?? 0;
-      return b * (0.55 + 0.45 * q) * (1 - 0.5 * p);
+      const food = Math.max(0.35, this.cellFood[i] ?? 1);
+      const tox = Math.min(1, Math.max(0, this.cellToxin[i] ?? 0));
+      return b * (0.55 + 0.45 * q) * food * (1 - 0.5 * p) * (1 - 0.4 * tox);
     };
     const f00 = sample(ix0, iz0);
     const f10 = sample(ix0 + 1, iz0);
@@ -1973,7 +2026,8 @@ export class AlienFlora {
   }
 
   /**
-   * Graze: biomass → food. Yield scales with edaphic quality; stamps overgraze debt.
+   * Graze: biomass → food. Yield scales with edaphic quality + species nutrition.
+   * Does NOT touch visual morph (nutrition is ecology-only).
    */
   grazeAt(x: number, z: number, pressure: number, dt: number): number {
     const gi = this.gridIndex(x, z);
@@ -1983,7 +2037,8 @@ export class AlienFlora {
     const p = Number.isFinite(pressure) ? (pressure < 0 ? 0 : pressure > 1 ? 1 : pressure) : 0;
     const h = Number.isFinite(dt) ? (dt > 0.05 ? 0.05 : dt > 0 ? dt : 0) : 0;
     if (p <= 0 || h <= 0) return 0;
-    const eaten = Math.min(have, p * GRAZE_RATE * h);
+    const tough = Math.max(0.45, this.cellTough[gi] ?? 1);
+    const eaten = Math.min(have, (p * GRAZE_RATE * h) / tough);
     this.biomass[gi] = have - eaten;
     const stored = this.biomass[gi] ?? 0;
     this.biomassTotal = Math.max(0, this.biomassTotal + stored - have);
@@ -1992,7 +2047,24 @@ export class AlienFlora {
     this.pressure[gi] = pr > 1 ? 1 : pr;
     this.biomassDirty = true;
     const q = this.quality[gi] ?? 0.5;
-    return eaten * GRAZE_YIELD * (0.65 + 0.55 * q);
+    const foodMul = Math.max(0.35, this.cellFood[gi] ?? 1);
+    const toxin = Math.min(1, Math.max(0, this.cellToxin[gi] ?? 0));
+    return eaten * GRAZE_YIELD * (0.65 + 0.55 * q) * foodMul * (1 - 0.5 * toxin);
+  }
+
+  nutritionAt(x: number, z: number): number {
+    const gi = this.gridIndex(x, z);
+    return gi < 0 ? 0 : (this.cellFood[gi] ?? 0);
+  }
+
+  toughnessAt(x: number, z: number): number {
+    const gi = this.gridIndex(x, z);
+    return gi < 0 ? 0 : (this.cellTough[gi] ?? 0);
+  }
+
+  toxinAt(x: number, z: number): number {
+    const gi = this.gridIndex(x, z);
+    return gi < 0 ? 0 : (this.cellToxin[gi] ?? 0);
   }
 
   /**

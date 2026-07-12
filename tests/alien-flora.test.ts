@@ -79,6 +79,57 @@ describe('AlienFlora — the vegetal ground ecology', () => {
     f.dispose();
   });
 
+  test('species nutrition fields vary across the field (food/toughness/toxin not uniform grey calories)', () => {
+    const ctx = makeCtx();
+    const f = new AlienFlora(ctx);
+    const foods = new Set<string>();
+    const toughs = new Set<string>();
+    let sawFood = false;
+    let sawTough = false;
+    for (let a = 60; a < PLATFORM_HALF; a += 40) {
+      for (let ang = 0; ang < 6.28; ang += 0.5) {
+        const x = Math.cos(ang) * a;
+        const z = Math.sin(ang) * a;
+        const nv = f.nutritionAt(x, z);
+        const tv = f.toughnessAt(x, z);
+        const xv = f.toxinAt(x, z);
+        if (nv > 0) {
+          sawFood = true;
+          foods.add(nv.toFixed(2));
+        }
+        if (tv > 0) {
+          sawTough = true;
+          toughs.add(tv.toFixed(2));
+        }
+        expect(xv).toBeGreaterThanOrEqual(0);
+        expect(xv).toBeLessThanOrEqual(1);
+      }
+    }
+    expect(sawFood).toBe(true);
+    expect(sawTough).toBe(true);
+    // Many distinct nutrition buckets — each of 50 species has different food metrics.
+    expect(foods.size).toBeGreaterThan(8);
+    expect(toughs.size).toBeGreaterThan(6);
+    // foodAt ranks by species calories too (not raw biomass alone).
+    let gx = 0;
+    let gz = 0;
+    let found = false;
+    for (let a = 60; a < PLATFORM_HALF && !found; a += 30) {
+      for (let ang = 0; ang < 6.28 && !found; ang += 0.4) {
+        const c = f.comfortAt(Math.cos(ang) * a, Math.sin(ang) * a);
+        if (c.strength > 0.05) {
+          gx = c.x;
+          gz = c.z;
+          found = true;
+        }
+      }
+    }
+    expect(found).toBe(true);
+    expect(f.foodAt(gx, gz)).toBeGreaterThan(0);
+    expect(f.foodAt(gx, gz)).toBeLessThanOrEqual(f.biomassAt(gx, gz) * 2.3 + 1e-6);
+    f.dispose();
+  });
+
   test('each instance carries per-species color + aSkin program (50 unique recipes, not grey family wash)', () => {
     const ctx = makeCtx();
     const f = new AlienFlora(ctx);
@@ -306,19 +357,21 @@ describe('AlienFlora — the vegetal ground ecology', () => {
     expect(mat.vertexShader).toContain('zeno');
     expect(mat.vertexShader).toContain('Kakeya');
     expect(mat.vertexShader).toContain('needleLen');
-    // Soft-body plant↔plant collision + hard contact thrash (not hollow decorative).
+    // Soft-body plant↔plant collision + hard contact thrash (restored good morph — no packing hacks).
     expect(mat.vertexShader).toContain('SOFT COLLISION');
     expect(mat.vertexShader).toContain('plantHit');
     expect(mat.vertexShader).toContain('hitSquash');
     expect(mat.vertexShader).toContain('selfFlee');
-    expect(mat.vertexShader).toContain('aPush'); // CPU spatial-hash pair forces
+    expect(mat.vertexShader).toContain('aPush');
+    // Upright laws that were known-good.
+    expect(mat.vertexShader).toContain('tipMorph');
+    expect(mat.vertexShader).toContain('NEVER pitch/roll');
     // Plant↔land: rigid crest ride (one Y for whole plant — per-vertex lift sheared stems thin).
     expect(mat.vertexShader).toContain('cqmTerrainDisplacement');
     expect(mat.vertexShader).toContain('liftMax');
     expect(mat.vertexShader).toContain('rigidRide');
     expect(mat.vertexShader).not.toContain('liftHere');
     expect(mat.fragmentShader).toContain('field4');
-    // Operational skins (food/stress/contact), not decorative paint.
     expect(mat.fragmentShader).toContain('Mutating operational skins');
     expect(mat.fragmentShader).toContain('moebiusHue');
     expect(mat.fragmentShader).toContain('hopfAngles');
