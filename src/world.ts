@@ -1312,9 +1312,13 @@ export class World {
       // GOAL: this Archon's OWN 100-robot wingman escort (its own rng sub-stream, seeded off its mindSeed so
       // the five swarms are distinct) + its OWN instanced renderer + its OWN evolution arc + evo rng. Every
       // apex is now escorted + levels up INDEPENDENTLY off its own dominance/novelty/assist — not just prime 0.
-      this.wingSwarms.push(
-        new WingmanSwarm(WINGMAN_COUNT, mulberry32((mindSeed ^ 0x77149abc) >>> 0 || 1)),
-      );
+      const swarm = new WingmanSwarm(WINGMAN_COUNT, mulberry32((mindSeed ^ 0x77149abc) >>> 0 || 1));
+      // ESCORT DEVELOPS: light this swarm's online flight coordinator — a real 6→6→1 Eshkol-AD net that learns
+      // to forecast its Archon's dominance and presses the escort harder when weakness is anticipated. Seeded
+      // from a SEPARATE substream ⇒ no perturbation of the frozen robot formation; the escort is a meta-layer
+      // outside the population golden. Default-off is byte-identical (see tests/super-wingmen.test.ts).
+      swarm.enableLearning({ seed: mindSeed });
+      this.wingSwarms.push(swarm);
       this.wingRenders.push(new WingmanRenderer(ctx.scene, WINGMAN_COUNT));
       this.superEvos.push(new SuperEvolution());
       this.evoRngs.push(mulberry32((mindSeed ^ 0x00e701ce) >>> 0 || 1));

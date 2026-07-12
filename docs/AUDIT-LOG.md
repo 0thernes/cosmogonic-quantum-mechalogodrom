@@ -11,6 +11,34 @@ changed and why.
 
 ---
 
+## 2026-07-11 — batch 41: the WINGMAN ESCORT develops — a learned flight coordinator per swarm (NN growth)
+
+Part 2 of the /goal ("continue with the neural networks that could use development"). The 500 wingman robot
+brains (100 × 5 Archons, 8→18→5 ≈257 params each) were 100% FROZEN — rolled once from seed, never learn. The
+biggest untapped neural network in the sim, and freshly relevant after batch-40 multiplied the escorts to five.
+
+- **`src/sim/super-wingmen.ts` — each swarm grows a learned FLIGHT COORDINATOR (6→6→1, `WINGMAN_COORD_PARAMS`
+  =49).** A real MLP trained by exact Eshkol-AD backprop that forecasts its creature's OWN next-beat DOMINANCE
+  from the swarm's aggregate state (dominance, reactive/adaptive quantum aspects, last assist, mean formation
+  spread, a coherence aspect). Anticipated WEAKNESS (forecast below a 0.55 floor) becomes an assist BOOST —
+  the escort presses HARDER exactly when its monster is about to falter (`assist = baseAssist·(1 + boost·1.5)`),
+  then relaxes as it recovers. The robot formation stays frozen; only this coordinator learns. Seeded from a
+  SEPARATE substream (`seed ^ 0x5f19c0de`) ⇒ zero perturbation of the robot rng. `coordinate:false` = the
+  operational-isolation seam; `lr:0` = the ablation control.
+- **Wired live in `world.ts`:** each of the 5 per-Archon swarms calls `enableLearning({seed: mindSeed})` at
+  construction — so every escort develops in-life, adapting its assist (which feeds its Archon's evolution
+  vitality). The escort + its assist are a META-layer OUTSIDE the deterministic population golden (own rng
+  substream), so the golden is intact. Level-based boost (not rate-based) per the SuperCreature-head lesson:
+  a first rate-based signal gave only ~0.012 assist-Δ; level-based gives a robust ~0.13.
+- **GATE (`tests/super-wingmen-learning.test.ts`, 6 cases).** LEARNS: dominance-forecast error to **<0.1**
+  (~0.028 EMA). ABLATION: trained **<0.3×** a frozen-lr0 control (≈10× — load-bearing; frozen stays >0.2).
+  OPERATIONAL (isolated via `coordinate:false`): the coordinator lifts mean assist by **>0.05** (≈0.13, stable
+  0.11–0.14 across seeds). Plus DETERMINISM (identical assist arc while learning), DEFAULT-OFF byte-identical
+  (the existing `super-wingmen.test.ts` frozen-escort tests stay green), SCALE (0 live-coord params when frozen,
+  49 when lit). indicatorOnly (ADR 0014/0015): NO consciousness / Butlin / A-Life score moved.
+
+Receipts 2869→2875 (+6). Determinism golden intact (the escort is a meta-layer outside it).
+
 ## 2026-07-12 ΓÇö comprehensive standing + xeno-A-life position report (docs + Downloads)
 
 Published combined standing synthesis:
