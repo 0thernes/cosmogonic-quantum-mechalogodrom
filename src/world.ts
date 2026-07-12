@@ -217,6 +217,8 @@ import type { MemoryStore } from './memory/store';
 import { WorkerPool, type WorkerPoolConfig } from './core/worker-pool';
 import { WildernessPopulation } from './sim/wilderness-population';
 import { WildernessRenderer } from './sim/wilderness-render';
+import { XenomimicPopulation } from './sim/xenomimics';
+import { XenomimicRenderer } from './sim/xenomimics-render';
 
 /** Cyclic element access into a non-empty readonly array. O(1). */
 function cyc<T>(arr: readonly T[], i: number): T {
@@ -365,6 +367,9 @@ export class World {
   /** Wilderness population - ambient entities on worker threads (ADR 0010) */
   private readonly wilderness: WildernessPopulation;
   private readonly wildernessRender: WildernessRenderer;
+  /** Xenomimics — deterministic ground-dwelling entangled-twin fauna (own rng substream; not in the EntityManager golden). */
+  private readonly xenomimics: XenomimicPopulation;
+  private readonly xenomimicsRender: XenomimicRenderer;
   private readonly entityBrains: EntityBrainField; // V42: per-organism 70-param neural controller
   /** ADR-0013: one O(22)-cadenced corpus field, consumed O(1) by every living-system controller. */
   private readonly organismIntelligence: TsotchkeOrganismIntelligence;
@@ -1005,6 +1010,11 @@ export class World {
     this.wilderness = new WildernessPopulation(this.workerPool, this.persisted.seed);
     this.wildernessRender = new WildernessRenderer(this.engine.scene);
 
+    // Xenomimics — first-class deterministic ground fauna. Own seeded substream (never touches ctx.rng),
+    // so it cannot perturb the EntityManager golden; reads flora food read-only for grazing.
+    this.xenomimics = new XenomimicPopulation(this.persisted.seed);
+    this.xenomimicsRender = new XenomimicRenderer(this.engine.scene);
+
     // Lore precedes the taxonomy: phyla are lore-named at mint (CONTRACTS V3.2).
     this.lore = new LoreEngine(this.persisted.seed);
     const geos = createGeometryCache();
@@ -1530,6 +1540,7 @@ export class World {
     // Dispose wilderness population
     this.wilderness.dispose();
     this.wildernessRender.dispose();
+    this.xenomimicsRender.dispose();
     // Free the GPU-resource-owning subsystems that expose a dispose(). The Engine's
     // forceContextLoss() reclaims the context's VRAM, but these JS-side geometry/material
     // dispose paths were skipped entirely — each HMR reload built a fresh World whose
@@ -1682,6 +1693,14 @@ export class World {
     const camZ = this.engine.camera.position.z;
     this.wilderness.update(camX, camZ, dt, this.organismIntelligence.signal);
     this.wildernessRender.sync(this.wilderness, t);
+
+    // Xenomimics live on the ground: graze the flora (read-only), think, breed, die, respawn. dt already
+    // carries the ⏸/▦ time-scale, so they pause and slow with the world.
+    this.xenomimics.step(dt, {
+      foodAt: (x, z) => this.alienFlora.foodAt(x, z),
+      intelligence: this.organismIntelligence.signal,
+    });
+    this.xenomimicsRender.sync(this.xenomimics, t);
 
     this.updateGrowthTarget(); // V66: ramp the live population target 500 → ceiling, then breathe
 
@@ -2341,6 +2360,7 @@ export class World {
     // decay, so the seeded golden is untouched while the axons stay alive for inspection.
     this.connectome.update(0, vt, false);
     this.wildernessRender.sync(this.wilderness, vt);
+    this.xenomimicsRender.sync(this.xenomimics, vt); // paused xenomimics keep shimmering in place
     this.artifacts.update(uiDt, vt);
     this.monolithTemple.setEnvironment({
       chaos: chaosN,

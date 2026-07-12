@@ -11,6 +11,27 @@ changed and why.
 
 ---
 
+## 2026-07-12 — batch 47: Xenomimics (Slice 1) — deterministic entangled-twin ground fauna
+
+Continuation of the /goal (ecology axis, "make every living thing smarter — operational, not
+decorative"). Introduced a NEW first-class ground-creature subsystem, the **Xenomimics**: weird
+tessellated cosmic-horror fauna that skitter/hop/ride the ground waves, graze the flora, breed, die and
+respawn so the population self-balances (starts at 2, slowly multiplies toward 1000). Every creature is
+one half of an **entangled twin pair** (mimic vs anti-mimic — a Joker/Batman tug-of-war) sharing one
+~100-parameter brain: a real 6→8→5 tanh MLP (`sim/ad-mlp`) coupled to a real 3-qubit statevector
+(`math/quantum` `QuantumRegister`) prepared into a SINGLET so the twins measure OPPOSITE bits (the
+physical root of the anti-mimicry), with Born-rule superposition driving shimmer + collapse-triggered
+teleportation. New files only: `sim/xenomimic-brain.ts`, `sim/xenomimics.ts`, `sim/xenomimics-render.ts`
+(10 per-species InstancedMeshes). Wired into `world.ts` (RUNNING step + SUSPENDED shimmer + dispose);
+affected by ⏸/▦ via the shared `dt`. The population draws ONLY from its own `mulberry32` substream and
+never touches `ctx.rng`, so it cannot perturb the EntityManager golden; it reads flora `foodAt`
+read-only (no biomass write) for grazing. GATE-XENOMIMIC (`tests/xenomimics.test.ts`, 13 tests): the
+~100-param brain, the quantum singlet anti-correlation, whole-population determinism (same seed →
+byte-identical), the 2→1000 growth + eat/breed/die/respawn/predation balance, ground-constraint,
+teleports, and a headless render smoke. **No metric axis moved** — the ecology-floor move waits until a
+later slice closes the loop bidirectionally (predation-by-entities + connectome coupling). Next slices:
+UI (XENOMIMIC view + XNO spawn + data panel + telemetry), audio, and the coupling that earns the floor.
+
 ## 2026-07-12 — batch 46: wilderness fauna avoid walls ANTICIPATORILY, not reactively
 
 Continuation of the /goal ("make every living thing smarter — operational, not decorative"), targeting
