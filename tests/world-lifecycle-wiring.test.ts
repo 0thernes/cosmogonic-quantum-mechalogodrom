@@ -11,9 +11,31 @@ describe('World lifecycle wiring', () => {
     const end = WORLD.indexOf('\n  /**', start + 1);
     const body = WORLD.slice(start, end);
     expect(body).toContain('n: number, dt: number');
-    expect(body).toContain('this.superEvo.tick(dt, vitality);');
+    // GOAL: every Archon self-evolves per-frame on the real dt (not a fixed 1/60) — the tick is now
+    // per-Archon (`evo` = superEvos[i]) inside the 5-Archon loop, not a single prime-only `superEvo`.
+    expect(body).toContain('evo.tick(dt, evoVitality);');
     expect(body).toMatch(/this\.superheroState\.tick\(\s*dt,/);
-    expect(body).not.toContain('this.superEvo.tick(1 / 60');
+    expect(body).not.toMatch(/\.tick\(1 \/ 60/); // no fixed-delta progression anywhere in driveSuper
+  });
+
+  test('ALL 5 Archons get their own wingman escort + evolution (parity, not prime-only)', () => {
+    // Per-Archon construction: one swarm + renderer + evolution + evo-rng pushed per Archon.
+    expect(WORLD).toContain('this.wingSwarms.push(');
+    expect(WORLD).toContain('this.wingRenders.push(');
+    expect(WORLD).toContain('this.superEvos.push(');
+    expect(WORLD).toContain('this.evoRngs.push(');
+    // The prime-only singletons are gone — no single wingSwarm/superEvo drive survives.
+    expect(WORLD).not.toContain('this.wingSwarm.update(');
+    expect(WORLD).not.toContain('this.superEvo.tick(');
+    // Each Archon's escort + evolution is driven inside a loop, indexed by the Archon.
+    expect(WORLD).toMatch(/this\.wingSwarms\[i\]/);
+    expect(WORLD).toMatch(/this\.superEvos\[i\]/);
+    // The FIRST Archon to summit raises the ONE monolith temple (idempotent ascend), reached via milestones.
+    const start = WORLD.indexOf('private driveSuper');
+    const end = WORLD.indexOf('\n  /**', start + 1);
+    const body = WORLD.slice(start, end);
+    expect(body).toContain('const evo = this.superEvos[i]!;');
+    expect(body).toContain('evo.takeMilestone()');
   });
 
   test('Genesis clears every delayed population respawn before creating one progenitor', () => {

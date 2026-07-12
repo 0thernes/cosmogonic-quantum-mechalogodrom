@@ -11,6 +11,35 @@ changed and why.
 
 ---
 
+## 2026-07-11 — batch 40: Archon parity — ALL 5 Super Creatures get 100 wingmen + level up separately (bug fix)
+
+Owner report: only ONE of the five Super Creatures (Archon 0, the "prime") had a 100-robot wingman escort and
+a leveling/evolution arc; the other four apexes had minds + bodies but no swarm and stayed frozen at BASE. The
+root cause was singleton wiring in `world.ts`: a single `wingSwarm` + single `superEvo` were both bound to
+`superBodies[0]` only (`superBody` is the `superBodies[0]` alias).
+
+- **`src/world.ts` — promoted the four singletons to per-Archon arrays** (`wingSwarms[]`, `wingRenders[]`,
+  `superEvos[]`, `evoRngs[]`), built one-per-Archon in the 5-Archon construction loop (each swarm on its own
+  `mindSeed`-derived rng, each evolution fresh at BASE). Now **every** apex carries a full 100-robot escort
+  (500 robots across the pantheon) and **self-evolves independently**: each Archon's evolution ticks on ITS
+  OWN live state — `0.5·dominance + 0.3·novelty + 0.2·(its escort's assist)`, amplified by its own petri
+  dish's growth — so all five level up + ascend **dynamically / reactively / adaptively / separately**, each
+  visibly growing through its body (size, hue, glow, spikes, ascension aura). The wingman-swarm update in
+  `update()` + the frozen-in-place path both loop all five swarms (each orbits its own body, reacting to that
+  Archon's dominance + quantum). The FIRST Archon to reach LV100 raises the ONE monolith temple (idempotent
+  `ascend()`); each Archon toasts its own godlike-power grant. The prime (Archon 0) still owns the detailed HUD
+  panel + feeds the Abomination's `ap.level`. Evolution is a META-layer OUTSIDE the deterministic population
+  golden (session-only, no persistence), and the swarms ride their own rng substreams ⇒ golden intact.
+- **GATE (`tests/super-archon-parity.test.ts`, 6 cases + `world-lifecycle-wiring.test.ts` +1 seal).** Five
+  INDEPENDENT wingman swarms (100 each = 500, ~250 params/robot, distinct formations, deterministic, NaN-free);
+  five INDEPENDENT evolutions ticked at distinct vitalities reach DISTINCT levels (all progress past BASE,
+  monotonic with vitality) — the bug left 4/5 frozen at level 1; a high-vitality Archon ASCENDS (LV100) while a
+  dormant peer does not (separate summits); per-Archon determinism. The world-lifecycle seal asserts the
+  per-Archon construction (`wingSwarms.push` / `superEvos.push` …), that the prime-only singletons are gone
+  (`this.wingSwarm.update(` / `this.superEvo.tick(` absent), and that the tick still consumes the real `dt`.
+
+Receipts 2861→2868 (+7). Determinism golden intact (wingmen + evolution are meta-layers outside it).
+
 ## 2026-07-11 — batch 39: Super Creature grows AMBITION — a ninth head breeds in rich windows (pass 10/10 — SUITE COMPLETE)
 
 Pass 10 (capstone) of the 10-pass "make them smarter" goal. The apex creature gains its last core-sense

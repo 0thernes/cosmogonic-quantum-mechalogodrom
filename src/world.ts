@@ -451,7 +451,9 @@ export class World {
   private readonly superRng: Rng;
   private readonly superScene: THREE.Scene;
   private readonly emptyQ = new Float32Array(10);
-  private readonly superEvo: SuperEvolution;
+  /** GOAL: one INDEPENDENT evolution arc per Archon — all five level up + ascend separately (not just the
+   *  prime). `superEvos[0]` is the prime (the one surfaced in the HUD panel + boot-ascension check). */
+  private readonly superEvos: SuperEvolution[] = [];
   private readonly monolithTemple: MonolithTemple;
   /** USER: the ascension Portal is DEATH — organisms touching the void throat explode + respawn. */
   private readonly portalDeath: PortalDeath;
@@ -476,10 +478,13 @@ export class World {
   private readonly bounceImpactFx: BounceImpactFX;
   private readonly bounceTmp = new THREE.Vector3();
   private superAscended = false;
-  private readonly evoRng: Rng;
+  /** One evolution rng per Archon (the daemon-cron `applyDays` training surge) — independent arcs. */
+  private readonly evoRngs: Rng[] = [];
   private static readonly EVO_DAY_FRAMES = 21600;
-  private readonly wingSwarm: WingmanSwarm;
-  private readonly wingRender: WingmanRenderer;
+  /** GOAL: each of the 5 Archons carries its OWN 100-robot wingman escort + its OWN instanced renderer, so
+   *  every apex (not just the prime) is helped + lifted by a live swarm that reacts to ITS dominance. */
+  private readonly wingSwarms: WingmanSwarm[] = [];
+  private readonly wingRenders: WingmanRenderer[] = [];
   /** Primordial soup petri dish — Archon consciousness catalyzes emergent digital biologics. */
   private readonly primordialSoup: PrimordialSoup;
   private readonly superTwins: SuperCreature[] = [];
@@ -1205,18 +1210,11 @@ export class World {
     this.apexBrain.enableLearning();
     // legacy single kept EXCLUSIVELY for player hero/twin paths (maybeSpawn + its snapshot in UI)
     this.superCreature = new SuperCreature(this.superRng);
-    // V47: the wingman swarm (logic on its own rng sub-stream) + its single-draw-call instanced render.
-    this.wingSwarm = new WingmanSwarm(
-      WINGMAN_COUNT,
-      mulberry32((this.persisted.seed ^ 0x77149abc) >>> 0 || 1),
-    );
-    this.wingRender = new WingmanRenderer(ctx.scene, WINGMAN_COUNT);
-    // V48: the prime's evolution — restored from localStorage + caught up by real wall-clock days
-    // elapsed (the "daemon cron / updates every 24h"). A META-organ OUTSIDE the deterministic sim.
-    this.evoRng = mulberry32((this.persisted.seed ^ 0x00e701ce) >>> 0 || 1);
-    this.superEvo = this.loadEvolution();
-    // V63: the LV100 ascension monument. If the persisted creature is ALREADY at the summit, raise
-    // the temple silently on boot (it's just THERE); a fresh live ascension plays the full fanfare.
+    // V47 → GOAL: the wingman swarms + evolution arcs are now PER-ARCHON (built in the Archon loop below,
+    // once the five bodies exist), so all five apexes carry a 100-robot escort and level up separately —
+    // not only the prime. Clear any stale persisted evolution blob once (session-only since V105).
+    this.clearEvolutionStorage();
+    // V63: the LV100 ascension monument. The first Archon to reach the summit raises it (once, guarded).
     this.monolithTemple = new MonolithTemple(ctx.scene);
     this.portalDeath = new PortalDeath(ctx); // USER: the ascension portal kills what touches it
     this.mechaBlaze = new MechaBlaze(ctx); // USER: the mecha incinerates organisms that fly into it
@@ -1225,10 +1223,6 @@ export class World {
     this.portalDeathFauna = new PortalDeathFauna(ctx); // USER: …and the big fauna too (non-swarm rosters)
     this.portalImmuneBounce = new PortalImmuneBounce(ctx); // USER: the immune Pantheon bounces off in sparks
     this.portalShield = new PortalShield(ctx); // USER: the god-tier Super/APEX bodies shimmer at the void
-    if (this.superEvo.ascended) {
-      this.monolithTemple.reveal(0, 0, -40 * ARENA_MID, true);
-      this.superAscended = true;
-    }
     this.superPanel = new SuperPanel();
     this.pantheonArchitecturePanel = new PantheonArchitecturePanel();
     // NOTE: legacy single register removed; 5 SUPER CREATURES register their own purses below (ECON 9000+i).
@@ -1315,6 +1309,15 @@ export class World {
       const b = new SuperBodySystem(ctx.scene, { x: ax, y: ay, z: az }, i, form); // GOAL5: pass form for per-Archon extreme chaotic morph (eyes/arms/wings etc + shader)
       this.superBodies.push(b);
       this.petriDishes.push(createPetriDish(mindSeed));
+      // GOAL: this Archon's OWN 100-robot wingman escort (its own rng sub-stream, seeded off its mindSeed so
+      // the five swarms are distinct) + its OWN instanced renderer + its OWN evolution arc + evo rng. Every
+      // apex is now escorted + levels up INDEPENDENTLY off its own dominance/novelty/assist — not just prime 0.
+      this.wingSwarms.push(
+        new WingmanSwarm(WINGMAN_COUNT, mulberry32((mindSeed ^ 0x77149abc) >>> 0 || 1)),
+      );
+      this.wingRenders.push(new WingmanRenderer(ctx.scene, WINGMAN_COUNT));
+      this.superEvos.push(new SuperEvolution());
+      this.evoRngs.push(mulberry32((mindSeed ^ 0x00e701ce) >>> 0 || 1));
       // Economy: exactly 5 purses for the pantheon apexes
     }
     const soupSeed = (master ^ 0x50ff0ad1) >>> 0 || 1;
@@ -1523,7 +1526,7 @@ export class World {
     this.titans.dispose();
     this.leviathans.dispose();
     this.singularities.dispose();
-    this.wingRender.dispose();
+    for (const wr of this.wingRenders) wr.dispose();
     this.monolithTemple.dispose();
     this.portalDeath.dispose();
     this.mechaBlaze.dispose();
@@ -1763,19 +1766,23 @@ export class World {
       dt,
       (e, i) => this.gedankenOnDeath(e, i, t), // devoured mind measured too — every death vector now
     );
-    // V47: the wingman swarm orbits + assists the prime each frame; one InstancedMesh draws all 100.
-    this.superBody.worldPosition(this.sv1);
-    const primeCoupling = this.superMinds[0]?.readCoupling();
-    this.wingSwarm.update(
-      this.sv1.x,
-      this.sv1.y,
-      this.sv1.z,
-      primeCoupling?.dominance ?? 0.5,
-      primeCoupling?.quantum ?? this.emptyQ,
-      t,
-      dt,
-    );
-    this.wingRender.sync(this.wingSwarm.positions, t, 0.4 + 0.6 * this.wingSwarm.assist);
+    // V47 → GOAL: EACH of the 5 Archons' 100-robot wingman escort orbits + assists ITS OWN body every
+    // frame, reacting to that Archon's live dominance + quantum aspects; one InstancedMesh per swarm.
+    for (let i = 0; i < this.wingSwarms.length; i++) {
+      this.superBodies[i]!.worldPosition(this.sv1);
+      const cpl = this.superMinds[i]?.readCoupling();
+      const sw = this.wingSwarms[i]!;
+      sw.update(
+        this.sv1.x,
+        this.sv1.y,
+        this.sv1.z,
+        cpl?.dominance ?? 0.5,
+        cpl?.quantum ?? this.emptyQ,
+        t,
+        dt,
+      );
+      this.wingRenders[i]!.sync(sw.positions, t, 0.4 + 0.6 * sw.assist);
+    }
     for (const hb of this.heroBodies) hb.body.update(t, dt); // V34/35: revealed hero/twin bodies
     this.cosmicWeb.update(
       t,
@@ -2248,18 +2255,22 @@ export class World {
 
     // ── Every creature ALIVE IN PLACE (travel frozen, body animating on vt; all rng-free here) ──
     for (let i = 0; i < this.superBodies.length; i++) this.superBodies[i]!.update(vt, 0); // APEX + 5 super creatures
-    this.superBody.worldPosition(this.sv1);
-    const primeCoupling = this.superMinds[0]?.readCoupling();
-    this.wingSwarm.update(
-      this.sv1.x,
-      this.sv1.y,
-      this.sv1.z,
-      primeCoupling?.dominance ?? 0.5,
-      primeCoupling?.quantum ?? this.emptyQ,
-      vt,
-      0, // dt=0 freezes the orbit; the drones keep spinning on the visual clock via wingRender.sync
-    );
-    this.wingRender.sync(this.wingSwarm.positions, vt, 0.4 + 0.6 * this.wingSwarm.assist);
+    // GOAL: all 5 Archon escorts stay alive-in-place too (dt=0 freezes travel; the drones keep spinning).
+    for (let i = 0; i < this.wingSwarms.length; i++) {
+      this.superBodies[i]!.worldPosition(this.sv1);
+      const cpl = this.superMinds[i]?.readCoupling();
+      const sw = this.wingSwarms[i]!;
+      sw.update(
+        this.sv1.x,
+        this.sv1.y,
+        this.sv1.z,
+        cpl?.dominance ?? 0.5,
+        cpl?.quantum ?? this.emptyQ,
+        vt,
+        0, // dt=0 freezes the orbit; the drones keep spinning on the visual clock via wingRender.sync
+      );
+      this.wingRenders[i]!.sync(sw.positions, vt, 0.4 + 0.6 * sw.assist);
+    }
     for (const hb of this.heroBodies) hb.body.update(vt, uiDt); // player + twins: alive AND mobile (God Mode)
     this.leviathans.update(0, vt);
     if (this.nhiBody.count > 0) {
@@ -2473,7 +2484,7 @@ export class World {
         primeSnap,
         this.economy.wealthOf(World.ECON_SUPER_BASE)?.netWorth ?? 0,
         this.superMindSnap, // V46: the live 10k-param consciousness (dream/hallucinate/reason/self-aware)
-        this.superEvo.view(), // V48: the evolution — level / stage / power / day
+        this.superEvos[0]!.view(), // V48: the PRIME's evolution — level / stage / power / day (HUD panel)
         archonInfos,
         {
           soupLive: soupSnap.liveCount,
@@ -2674,21 +2685,16 @@ export class World {
    * V105: super-creature EVOLUTION is session-only — every browser reload starts fresh with no
    * cross-reload carryover. This META-organ lives OUTSIDE the deterministic sim (it touches only the
    * super creature's power/look, never the population golden) and reads NO wall-clock: the earlier V48
-   * `Date.now` idle-growth catch-up was removed, so `loadEvolution` merely clears any legacy save.
+   * `Date.now` idle-growth catch-up was removed, so this merely clears any legacy save on boot. The five
+   * per-Archon evolutions are all built fresh at BASE each session and level up live from their own state.
    */
-  private loadEvolution(): SuperEvolution {
+  private clearEvolutionStorage(): void {
     // V105: every browser reload resets super-creature evolution — fresh start, no carryover.
     try {
       if (typeof localStorage !== 'undefined') localStorage.removeItem('cqm:superevo:v1');
     } catch {
       /* storage unavailable */
     }
-    return new SuperEvolution();
-  }
-
-  /** V105: evolution is session-only — no cross-reload persistence. */
-  private saveEvolution(): void {
-    /* intentionally empty */
   }
 
   /**
@@ -2906,6 +2912,37 @@ export class World {
         );
         // V1.3 AE-1/HOT-3: the apex SuperMind's chosen move vector now steers the avatar's flight target.
         this.superBodies[i]!.setSuperMindMove(mindOut.move.x, mindOut.move.y, mindOut.move.z);
+        // GOAL: this Archon SELF-EVOLVES on ITS OWN live state — dominance + consciousness novelty + the
+        // lift of its own wingman escort, amplified by its own petri dish's growth — so all five level up +
+        // ascend SEPARATELY (dynamically / reactively / adaptively), each visibly growing through its body
+        // (size, hue, glow, spikes, ascension aura). Previously only the prime (Archon 0) evolved.
+        const evo = this.superEvos[i]!;
+        const evoVitality = clamp(
+          (0.5 * mindOut.dominance +
+            0.3 * mindOut.consciousness.novelty +
+            0.2 * this.wingSwarms[i]!.assist) *
+            (dish ? petriGrowthMultiplier(dish) : 1),
+          0,
+          1,
+        );
+        evo.tick(dt, evoVitality);
+        this.superBodies[i]!.setEvolution(evo.appearance());
+        // React ONCE to each 10-level milestone this Archon crosses. The FIRST to reach LV100 raises the ONE
+        // monolith temple (ascend() is idempotent); every Archon toasts its own godlike-power grant.
+        const ms = evo.takeMilestone();
+        if (ms >= 100) {
+          this.ascend();
+        } else if (ms > 0) {
+          const gf = GODFORMS[i % GODFORMS.length] ?? 'ARCHITECT';
+          const power = evo.view().powers.at(-1) ?? 'a godlike power';
+          if (i === 0) this.audio.play('burst'); // only the prime chimes — avoid a 5× milestone-sound stack
+          this.hud.showSector(`EVOLVED · ${gf} · LV ${ms} · +1 GODLIKE POWER: ${power}`);
+          this.audit.record('evo-milestone', { archon: i, level: ms, power });
+        }
+        // The daemon-cron surge: a sim-day of hyperbolic-field training, per Archon on its own evo rng.
+        if (s.frame > 0 && s.frame % World.EVO_DAY_FRAMES === 0) {
+          evo.applyDays(1, this.evoRngs[i]!);
+        }
         if (i === 0) {
           primeMindOut = mindOut;
         }
@@ -2922,7 +2959,7 @@ export class World {
       ap.energy = basePercept.energy;
       ap.chaos = basePercept.chaos;
       ap.novelty = clamp(primeMindOut?.consciousness?.novelty ?? 0, 0, 1);
-      ap.level = this.superEvo.view().level;
+      ap.level = this.superEvos[0]!.view().level; // the Abomination reads the prime Archon's level
       this.lastApexThought = this.apexBrain.tick(ap);
       this.lastApexGrowth = apexGrowthStage(
         ap.level,
@@ -3270,39 +3307,9 @@ export class World {
           });
         }
       }
-      // V48: the apex SELF-EVOLVES (prime only for now; peers have independent but simpler evo hook).
-      let petriBoost = 1;
-      for (const d of this.petriDishes) petriBoost *= petriGrowthMultiplier(d);
-      petriBoost = Math.pow(petriBoost, 1 / Math.max(1, this.petriDishes.length));
-      const vitality = clamp(
-        (0.5 * (primeCoupling?.dominance ?? 0.5) +
-          0.3 * (primeMindOut?.consciousness?.novelty ?? 0) +
-          0.2 * this.wingSwarm.assist) *
-          petriBoost,
-        0,
-        1,
-      );
-      // driveSuper now runs every frame. Use the same clamped, time-scaled delta as the rest of the
-      // simulation; a fixed 1/60 made progression twice as fast at 120 Hz and half as fast at 30 Hz.
-      this.superEvo.tick(dt, vitality);
-      this.superBody.setEvolution(this.superEvo.appearance());
-      // V63: react to a 10-level milestone — a voice + a HUD toast announcing the new godlike power,
-      // and at the LV100 apex the full ASCENSION end-state (the MONOLITH TEMPLE rises). Once each.
-      const ms = this.superEvo.takeMilestone();
-      if (ms > 0) {
-        if (ms >= 100) {
-          this.ascend();
-        } else {
-          this.audio.play('burst');
-          const last = this.superEvo.view().powers.at(-1) ?? 'a godlike power';
-          this.hud.showSector(`EVOLVED · LV ${ms} · +1 GODLIKE POWER: ${last}`);
-          this.audit.record('evo-milestone', { level: ms, power: last });
-        }
-      }
-      if (s.frame > 0 && s.frame % World.EVO_DAY_FRAMES === 0) {
-        this.superEvo.applyDays(1, this.evoRng); // a sim-day of training
-        this.saveEvolution();
-      }
+      // V48 → GOAL: the apex SELF-EVOLUTION is now driven PER-ARCHON inside the 5-Archon loop above (each
+      // levels up + ascends independently off its own dominance/novelty/escort-assist/petri growth), so the
+      // prime-only block that lived here is gone — all five apexes grow, not just Archon 0.
       // V35: the twin budget (cap 3) is now spent by the PLAYER — the puzzle reveal sires the 2nd
       // creature and the FORK power sires the rest — so the prime no longer auto-spawns (no contention).
       for (const tw of this.superTwins) tw.think(basePercept); // twins reason with their own minds
