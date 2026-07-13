@@ -59,7 +59,15 @@
  *                            DISCRIMINATES a degenerate stream far lower under the same battery, is deterministic,
  *                            and surfaces with recompute fidelity (GATE-RNG-PROVENANCE). This retires the prior
  *                            "rng-stats.ts isolated" note — was 4.3
- *   consciousness-thy   3.5  integrated-information.ts:44-92 exact quantum Phi + global-workspace wired; causal-graph + predictive-coding NEVER instantiated — OVERCLAIMED (was 4.5)
+ *   consciousness-thy   3.5  integrated-information.ts exact quantum Phi + global-workspace wired. The earlier
+ *                            "causal-graph + predictive-coding NEVER instantiated" note is STALE: the real
+ *                            hierarchical predictive-coding.ts IS live (super-mind.ts:1198-1200 inferStep+freeEnergy
+ *                            feed cons.surprise) and causal-graph.ts is wired via the apex latent-substrate probe.
+ *                            HELD at 3.5 regardless (batch-57 audit) — every named consciousness theory the audit
+ *                            tracks (IIT / GWT / FEP / HOT / RPT / AST / causal / sensorimotor) is ALREADY
+ *                            code-grounded and counted, so no genuinely-new named theory remains to ground; moving
+ *                            this axis would re-label existing work, the exact overclaim this most-exposed dimension
+ *                            is deliberately held against. The 4.5 self-score stays unearned — OVERCLAIMED (was 4.5)
  *   visual scale        4.0  instanced-entities.ts pooling is the only desktop/ultra path; 50k tier unbenchmarked, pools cast no shadows — OVERCLAIMED (was 5.0)
  */
 import { mean, standardDeviation } from 'simple-statistics';
