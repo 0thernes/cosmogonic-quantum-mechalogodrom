@@ -8,7 +8,7 @@
  * user's "same brains, different perturbian curvature, spikey neurons, schizo two states / one world
  * psionics."
  *
- * The substrate is three real Tsotchke faculties, coupled (coupling > count):
+ * The substrate is four real coupled faculties (coupling > count):
  *  1. A genuine 6→8→5 tanh MLP ({@link ../sim/ad-mlp}) = 101 trainable parameters — the "100-param brain".
  *  2. A real 3-qubit statevector ({@link ../math/quantum} QuantumRegister) prepared into a SINGLET-like
  *     anti-correlated Bell pair on the two twin qubits plus a shared "bond" qubit. Measuring the twins
@@ -17,6 +17,12 @@
  *  3. Born-rule superposition ({@link ../math/quantum-coherence}) — the l1 coherence of the live
  *     statevector drives SHIMMER and SPIKY-NEURON perturbation, and a Born-rule collapse (measure) is
  *     what TELEPORTS a xenomimic: a superposed creature is "everywhere" until it is looked at.
+ *  4. A Free-Energy-Principle predictive-coding loop: each twin runs a generative model that PREDICTS
+ *     its own next senses, and the squared prediction error (a variational-free-energy proxy) drives
+ *     behaviour — a SURPRISED creature is aroused (flees/hops faster, grazes less), a creature whose
+ *     world is predictable settles, grazes, and acts with higher precision (the winning basin dominates
+ *     harder when its model is confident). Honest online predictive coding, NOT full policy-search
+ *     active inference — the agent modulates arousal/precision, it does not plan over future policies.
  *
  * Determinism: pure. The only stochasticity is the injected {@link Rng} passed to {@link beat} (the
  * population's dedicated substream) used by the Born-rule measurement; no Math.random / Date.now.
@@ -37,6 +43,11 @@ export const XENO_BRAIN_HIDDEN = 8;
 /** Motor-output width: [turn, speed, jump, eat, mate]. */
 export const XENO_BRAIN_OUTPUTS = 5;
 
+/** Predictive-coding learning rate: how fast a twin's generative model tracks its senses each beat. */
+const PRED_LR = 0.25;
+/** Surprise gain — scales mean-squared prediction error into a bounded [0,1] free-energy proxy. */
+const SURPRISE_GAIN = 3;
+
 /** One twin's resolved intent for a beat. All fields finite and bounded. */
 export interface XenomimicThought {
   /** Heading change in [-1,1] (× the creature's turn rate). */
@@ -53,6 +64,8 @@ export interface XenomimicThought {
   teleport: boolean;
   /** Shimmer phase in [0,1] driven by live quantum coherence — feeds the render sparkle. */
   shimmer: number;
+  /** Free-Energy-Principle surprise in [0,1]: this twin's squared prediction error this beat. */
+  surprise: number;
 }
 
 /** Both twins resolved from one shared entangled beat, plus the pair-level couplings. */
@@ -73,6 +86,12 @@ export interface XenomimicBeat {
    * bodies); 0 = independent. This is honest classical MI, NOT a rigorous IIT Φ or any sentience claim.
    */
   integration: number;
+  /**
+   * Free-Energy-Principle variational-free-energy proxy in [0,1]: the mean of the two twins' squared
+   * prediction errors this beat. High = the pair's world just violated its generative model (arousal);
+   * decays toward 0 as the model learns a stable environment. Honest predictive coding, not sentience.
+   */
+  freeEnergy: number;
 }
 
 const clamp01 = (v: number): number => (!Number.isFinite(v) || v <= 0 ? 0 : v >= 1 ? 1 : v);
@@ -93,11 +112,17 @@ export class XenomimicBrain {
   private mimicBasin = 0.5;
   /** This kind's innate behavioural bias — so the 10 species genuinely think/feel differently. */
   private readonly temperament: SpeciesTemperament;
+  /** Per-twin generative models: each twin's PREDICTED next sense vector (predictive coding). */
+  private readonly predMimic = new Float64Array(XENO_BRAIN_INPUTS);
+  private readonly predAnti = new Float64Array(XENO_BRAIN_INPUTS);
 
   constructor(seed: number, species = 0) {
     // Own weight-init substream, derived from the pair seed. Never touches the sim RNG.
     const initRng = mulberry32((hashSeed('xenomimic-brain') ^ (seed >>> 0)) >>> 0 || 1);
     this.net = createMlp(XENO_BRAIN_INPUTS, XENO_BRAIN_HIDDEN, XENO_BRAIN_OUTPUTS, initRng);
+    // Generative models start neutral (0.5) — a fresh twin is maximally surprised until it learns.
+    this.predMimic.fill(0.5);
+    this.predAnti.fill(0.5);
     this.temperament =
       SPECIES_TEMPERAMENT[
         ((species % SPECIES_TEMPERAMENT.length) + SPECIES_TEMPERAMENT.length) %
@@ -155,6 +180,14 @@ export class XenomimicBrain {
     const teleportMimic = mimicBit === 1 && coherence > 0.42;
     const teleportAnti = antiBit === 1 && coherence > 0.42;
 
+    // Free-Energy-Principle: each twin's surprise is the squared error of its generative model vs the
+    // senses it actually received. Capture it BEFORE the model learns, then slide each model toward its
+    // latest senses so a stable world drives surprise → 0 while a shifting one keeps the pair aroused.
+    const surpriseMimic = this.surpriseOf(this.predMimic, sensesMimic);
+    const surpriseAnti = this.surpriseOf(this.predAnti, sensesAnti);
+    this.learnPred(this.predMimic, sensesMimic);
+    this.learnPred(this.predAnti, sensesAnti);
+
     return {
       mimic: this.resolve(
         sensesMimic,
@@ -164,6 +197,7 @@ export class XenomimicBrain {
         teleportMimic,
         mimicBit,
         broadcast,
+        surpriseMimic,
       ),
       anti: this.resolve(
         sensesAnti,
@@ -173,12 +207,14 @@ export class XenomimicBrain {
         teleportAnti,
         antiBit,
         broadcast,
+        surpriseAnti,
       ),
       coherence,
       bondTension,
       mimicBit,
       antiBit,
       integration,
+      freeEnergy: clamp01((surpriseMimic + surpriseAnti) * 0.5),
     };
   }
 
@@ -197,21 +233,31 @@ export class XenomimicBrain {
     teleport: boolean,
     bit: number,
     broadcast: number,
+    surprise: number,
   ): XenomimicThought {
     const raw = mlpPredict(this.net, senses);
     const t = this.temperament;
     // Spiky-neuron perturbation: a sparse high-gain kick that grows with superposition + this beat's bit.
     const spike = coherence * (bit === 1 ? 1 : -1) * 0.5;
+    // Free-Energy-Principle precision: confidence = 1 − surprise. A predictable world sharpens action.
+    const precision = 1 - surprise;
     // GWT dominance: how much this twin's basin owns the shared decisiveness, AMPLIFIED by the broadcast
-    // (an integrated pair floods its workspace, so the winning basin dominates harder).
-    const dominance = 0.4 + basin * 0.6 * (0.5 + broadcast * 0.5);
+    // (an integrated pair floods its workspace) and PRECISION-WEIGHTED (a confident model acts harder).
+    const dominance = (0.4 + basin * 0.6 * (0.5 + broadcast * 0.5)) * (0.7 + 0.3 * precision);
     const turn = clampSigned(
       (Math.tanh(raw[0]! * curvature) + spike * curvature) * dominance * t.agility,
     );
     // The mimic seeks (tanh→speed); the anti is restless — it converts the same drive into evasive burst.
-    const speed = clamp01((curvature === 1 ? sig(raw[1]!) : 1 - sig(raw[1]!) * 0.7) * t.dash);
-    const jump = clamp01(sig(raw[2]! + spike) * t.dash);
-    const eat = clamp01(sig(raw[3]!) * (curvature === 1 ? 1 : 0.7) * t.graze);
+    // Active-inference arousal: surprise makes a creature FLEE the unpredictable, so it moves/hops faster.
+    const speed = clamp01(
+      (curvature === 1 ? sig(raw[1]!) : 1 - sig(raw[1]!) * 0.7) * t.dash * (1 + surprise * 0.6),
+    );
+    const jump = clamp01(sig(raw[2]! + spike) * t.dash * (1 + surprise * 0.4));
+    // Grazing is a settling behaviour: a creature eats when its model is CONFIDENT (low surprise), not
+    // when the world is violating its predictions — surprise suppresses appetite (precision-gated graze).
+    const eat = clamp01(
+      sig(raw[3]!) * (curvature === 1 ? 1 : 0.7) * t.graze * (0.4 + 0.6 * precision),
+    );
     const mate = clamp01(sig(raw[4]!) * (0.5 + basin * 0.5) * t.breed);
     return {
       turn,
@@ -221,7 +267,28 @@ export class XenomimicBrain {
       mate,
       teleport,
       shimmer: clamp01(coherence * (0.5 + basin * 0.5)),
+      surprise,
     };
+  }
+
+  /**
+   * Free-Energy-Principle surprise: the mean squared error between a twin's generative model (`pred`)
+   * and the senses it actually received, scaled into a bounded [0,1] variational-free-energy proxy.
+   */
+  private surpriseOf(pred: Float64Array, senses: readonly number[]): number {
+    let acc = 0;
+    for (let i = 0; i < XENO_BRAIN_INPUTS; i++) {
+      const e = clamp01(senses[i] ?? 0) - pred[i]!;
+      acc += e * e;
+    }
+    return clamp01((acc / XENO_BRAIN_INPUTS) * SURPRISE_GAIN);
+  }
+
+  /** Online predictive-coding update: slide a twin's generative model toward its latest senses. */
+  private learnPred(pred: Float64Array, senses: readonly number[]): void {
+    for (let i = 0; i < XENO_BRAIN_INPUTS; i++) {
+      pred[i]! += PRED_LR * (clamp01(senses[i] ?? 0) - pred[i]!);
+    }
   }
 }
 

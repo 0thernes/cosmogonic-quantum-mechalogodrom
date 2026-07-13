@@ -106,6 +106,9 @@ export interface XenomimicTelemetry {
   bondTension: number;
   /** Mean IIT-style integration (twin mutual information) across pairs in [0,1]. */
   integration: number;
+  /** Mean Free-Energy-Principle surprise across pairs in [0,1] — how much the swarm's world is
+   * violating its learned predictions (arousal). Falls as the population learns a stable environment. */
+  freeEnergy: number;
   speciesCounts: number[];
   dominantSpecies: number;
   growthTarget: number;
@@ -467,12 +470,14 @@ export class XenomimicPopulation {
     let coherenceSum = 0;
     let tensionSum = 0;
     let integrationSum = 0;
+    let freeEnergySum = 0;
     let beated = 0;
     for (const p of this.pairs) {
       if (p.beat) {
         coherenceSum += p.beat.coherence;
         tensionSum += p.beat.bondTension;
         integrationSum += p.beat.integration;
+        freeEnergySum += p.beat.freeEnergy;
         beated++;
       }
       for (const c of [p.mimic, p.anti]) {
@@ -497,6 +502,7 @@ export class XenomimicPopulation {
       coherence: beated > 0 ? coherenceSum / beated : 0,
       bondTension: beated > 0 ? tensionSum / beated : 0,
       integration: beated > 0 ? integrationSum / beated : 0,
+      freeEnergy: beated > 0 ? freeEnergySum / beated : 0,
       speciesCounts,
       dominantSpecies: dominant,
       growthTarget: this.growthTarget(),

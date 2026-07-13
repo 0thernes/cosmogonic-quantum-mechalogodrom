@@ -11,6 +11,26 @@ changed and why.
 
 ---
 
+## 2026-07-12 — batch 47c: Xenomimic brains gain a Free-Energy-Principle predictive-coding loop
+
+Substrate-lane depth (this session's fleet-assigned lane — brains/population/render only; UI / world-wiring
+/ coupling / audio / docs belong to the parallel session). Added the **fourth** coupled consciousness-theory
+mechanism to the ~100-parameter twin brain, on top of the MLP + quantum singlet + Born-rule superposition +
+IIT/GWT: a **Free-Energy-Principle predictive-coding loop**. Each twin now runs an online generative model
+that PREDICTS its own next sense vector; the squared prediction error is a bounded [0,1] variational-free-
+energy proxy (`surprise`). Surprise is genuinely coupled to behaviour, not decorative: (1) **arousal** — a
+surprised creature FLEES the unpredictable (speed ×(1+0.6·surprise), hops ×(1+0.4·surprise)); (2) **precision-
+weighted action** — a creature whose model is confident (low surprise) grazes more (appetite ×(0.4+0.6·
+precision)) and its winning basin dominates harder (dominance ×(0.7+0.3·precision)); (3) the models learn
+online (EMA, LR 0.25), so a stable world drives surprise → 0 while a shifting one keeps the pair aroused.
+`freeEnergy` (mean twin surprise) now flows into the population telemetry alongside coherence/integration.
+Fully deterministic (pure arithmetic model state, no RNG) and golden-safe (own substream, no EntityManager
+write). Honest: this is predictive coding / precision-weighted arousal, NOT full policy-search active inference
+and NOT a sentience claim — no consciousness/sentience matrix moved. GATE-XENOMIMIC 18 → 20: (a) surprise
+DECAYS under a stable world and SPIKES on a violated prediction; (b) a confound-free proof that surprise
+CAUSALLY raises speed and suppresses appetite (two identical-weight brains, byte-identical test-beat input +
+RNG, differing only in learned prediction state).
+
 ## 2026-07-12 — batch 47b: Xenomimic brains deepened (IIT integration + GWT + 10 temperaments)
 
 Substrate-lane enrichment on top of batch 47 (the substrate is this session's fleet-assigned lane; UI /

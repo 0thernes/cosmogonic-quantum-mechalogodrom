@@ -2,9 +2,12 @@
  * GATE-XENOMIMIC — the ground-dwelling cosmic-horror fauna is REAL, deterministic, and honest.
  *
  * Proves: the ~100-parameter twin brain; the quantum SINGLET anti-correlation that makes the bipolar
- * mimic/anti twins genuinely opposite; whole-population determinism (same seed → byte-identical); the
- * 2→1000 growth + eat/breed/die/respawn/predation balance; ground-constraint; Born-collapse teleports;
- * and a headless render smoke. Every claim the owner directive makes is pinned to a measurable behaviour.
+ * mimic/anti twins genuinely opposite; the IIT integration proxy; the Free-Energy-Principle predictive-
+ * coding loop (surprise decays under a stable world, spikes on a violated prediction, and CAUSALLY drives
+ * arousal — faster flight, suppressed appetite); whole-population determinism (same seed → byte-identical);
+ * the 2→1000 growth + eat/breed/die/respawn/predation balance; ground-constraint; weighted-ragdoll fulcrum
+ * lean; Born-collapse teleports; and a headless render smoke. Every owner-directive claim is pinned to a
+ * measurable behaviour.
  */
 import { describe, expect, test } from 'bun:test';
 import * as THREE from 'three';
@@ -109,6 +112,47 @@ describe('GATE-XENOMIMIC — twin brain', () => {
     expect(sum / N).toBeGreaterThan(0.98);
   });
 
+  test('FEP: surprise DECAYS under a stable world and SPIKES when a prediction is violated', () => {
+    const brain = new XenomimicBrain(808, 2);
+    const rng = mulberry32(11);
+    const stable = [0.3, 0.7, 0.2, 0.5, 0.6, 0.4];
+    // Feed a fixed world: the generative model learns it, so free-energy (mean squared surprise) → 0.
+    let converged = 1;
+    for (let i = 0; i < 60; i++) converged = brain.beat(stable, stable, rng).freeEnergy;
+    expect(converged).toBeGreaterThanOrEqual(0);
+    expect(converged).toBeLessThan(0.05); // the model has learned the stable environment
+    // Now violate every prediction at once — surprise must re-arouse the pair.
+    const shock = [0.9, 0.1, 0.95, 0.05, 0.9, 0.1];
+    const spike = brain.beat(shock, shock, rng).freeEnergy;
+    expect(spike).toBeLessThanOrEqual(1);
+    expect(spike).toBeGreaterThan(converged + 0.1);
+  });
+
+  test('FEP: surprise CAUSALLY raises speed + suppresses appetite (arousal), all else equal', () => {
+    // Two identical-weight brains (same seed + species). We prime them on OPPOSITE worlds so their
+    // generative models diverge, then present BOTH the same test senses with the same RNG state — the
+    // MLP input, statevector, and Born collapse are byte-identical, so ONLY the learned surprise differs.
+    const NPRIME = 50;
+    const low = new XenomimicBrain(321, 1); // primed on the test world → low surprise
+    const high = new XenomimicBrain(321, 1); // primed on the opposite world → high surprise
+    const rLow = mulberry32(3);
+    const rHigh = mulberry32(3);
+    const ones = [1, 1, 1, 1, 1, 1];
+    const zeros = [0, 0, 0, 0, 0, 0];
+    for (let i = 0; i < NPRIME; i++) {
+      low.beat(ones, ones, rLow); // learns the world it will be tested on
+      high.beat(zeros, zeros, rHigh); // learns the opposite world
+    }
+    const bLow = low.beat(ones, ones, rLow); // test beat: identical input + identical RNG state
+    const bHigh = high.beat(ones, ones, rHigh);
+    // The surprise gap is real and large…
+    expect(bHigh.mimic.surprise).toBeGreaterThan(bLow.mimic.surprise + 0.2);
+    // …and it CAUSALLY drives behaviour: the surprised twin flees faster and eats less (nothing else
+    // differs between the two brains at this beat).
+    expect(bHigh.mimic.speed).toBeGreaterThan(bLow.mimic.speed);
+    expect(bHigh.mimic.eat).toBeLessThan(bLow.mimic.eat);
+  });
+
   test('the 10 species have DISTINCT temperaments — same senses drive different behaviour', () => {
     const senses = [0.6, 0.3, 0.2, 0.5, 0.4, 0.7];
     // Cheetah (0, dash 1.4) vs snail (1, dash 0.5): the fast kind drives more speed from identical senses.
@@ -148,7 +192,7 @@ describe('GATE-XENOMIMIC — population lifecycle', () => {
     const pop = new XenomimicPopulation(13, { growthRamp: 40 });
     run(pop, 300, 1 / 30, () => 0.8);
     const t = pop.telemetry();
-    for (const v of [t.coherence, t.bondTension, t.integration, t.meanEnergy]) {
+    for (const v of [t.coherence, t.bondTension, t.integration, t.freeEnergy, t.meanEnergy]) {
       expect(v).toBeGreaterThanOrEqual(0);
       expect(v).toBeLessThanOrEqual(1);
     }
