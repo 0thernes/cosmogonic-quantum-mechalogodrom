@@ -2584,7 +2584,16 @@ export class World {
         },
       );
       // ◈ XENOMIMIC data window — same UI cadence. Pure read of the deterministic swarm's telemetry.
-      this.xenoPanel.update(this.xenomimics.telemetry());
+      const xtel = this.xenomimics.telemetry();
+      this.xenoPanel.update(xtel);
+      // Eerie tonality (owner: "ultra psychotic eerie WTF music tonality"): the swarm's density / free-
+      // energy arousal / mimic↔anti tug-of-war drive a dedicated horror bus. Forked audio rng only — never
+      // sim. Silent when the ground is empty (presence 0 → gain 0).
+      this.audio.setXenoTonality(
+        xtel.population / XENOMIMIC_MAX,
+        xtel.freeEnergy,
+        xtel.bondTension,
+      );
       // F-SUPER V35: feed the SUPERHERO HUD the player-creature's live vitals + mind + wallet.
       const hero = this.heroBodies[0];
       if (this.superheroState.active && hero) {

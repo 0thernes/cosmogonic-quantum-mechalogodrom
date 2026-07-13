@@ -11,6 +11,25 @@ changed and why.
 
 ---
 
+## 2026-07-12 — batch 51: Xenomimics slice 3a — the eerie entangled-twin tonality bus
+
+The audio half of slice 3 (owner: "very creepy weird unique ultra psychotic eerie fucking WTF music
+tonality and sound"). New dedicated **xeno tonality bus** in `audio/engine.ts`, modelled on the existing
+`_portalHorror` layer but with its own voice and fundamental (46 Hz vs the portal's 32 Hz, so the two
+horror buses never mask). Its psychosis is the ENTANGLED TWIN made audible: two saw oscillators (`twinA`
+the mimic / `twinB` the anti) share one fundamental and **beat apart** at a dissonance that WIDENS with the
+swarm's mimic↔anti tug-of-war (±6 → ±61 cents); a triangle `chitter` shriek + a shimmer-noise wash ride a
+resonant band-pass that brightens with free-energy arousal. `setXenoTonality(presence, agitation,
+dissonance)` — all clamped [0,1] — is driven each Observatory cadence by `world.ts` straight from
+`telemetry()`: `presence = population/MAX` → a capped (≤0.24) UNDERTONE gain that is **silent on an empty
+ground** (presence 0 → gain 0); `agitation = freeEnergy` → filter brightness + shriek; `dissonance =
+bondTension` → the twin detune spread. Built once at `init()`, torn down in `dispose()`. Forked audio rng /
+wall-clock only — provably cannot touch sim determinism. GATE-XENOMIMIC-AUDIO (+2): the twin-oscillator
+bus + clamped/​silent-at-rest driver are sealed, and world.ts is pinned to drive it from the swarm state.
+Presentation only — no sim, no metric axis.
+
+---
+
 ## 2026-07-12 — batch 50: Xenomimics slice 2c — predation (5s respawn) + entity-connectome neural linkage
 
 The operational coupling of slice 2 — makes the ground fauna genuinely eat and get eaten, and wires them

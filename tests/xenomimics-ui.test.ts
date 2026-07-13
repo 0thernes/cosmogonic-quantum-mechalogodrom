@@ -132,7 +132,8 @@ describe('GATE-XENOMIMIC-UI: the ◈ XENOMIMIC data window (slice 2b) reuses the
     const code = src('src/world.ts');
     expect(code).toContain("import { XenoPanel } from './ui/xeno-panel'");
     expect(code).toContain('new XenoPanel()');
-    expect(code).toContain('this.xenoPanel.update(this.xenomimics.telemetry())');
+    expect(code).toContain('const xtel = this.xenomimics.telemetry()');
+    expect(code).toContain('this.xenoPanel.update(xtel)');
     expect(code).toContain('this.xenoPanel.dispose()');
   });
 });
@@ -185,5 +186,30 @@ describe('GATE-XENOMIMIC-COUPLING: predation (5s respawn) + entity-connectome ne
     expect(code).toContain('runXenomimicPredation');
     expect(code).toContain('this.xenomimics.consume(c)');
     expect(code).toContain('this.grid.query(c.x, c.z, R)');
+  });
+});
+
+describe('GATE-XENOMIMIC-AUDIO: the eerie entangled-twin tonality bus (slice 3)', () => {
+  test('engine.ts builds a dedicated twin-oscillator xeno bus and a clamped setXenoTonality driver', () => {
+    const code = src('src/audio/engine.ts');
+    // A dedicated bus (silent at rest) with the two entangled-twin oscillators + shimmer wash.
+    expect(code).toContain('buildXenoBus');
+    expect(code).toContain('twinA');
+    expect(code).toContain('twinB');
+    expect(code).toContain('setXenoTonality');
+    // The driver clamps its inputs and drives the twin detune SPREAD from the tug-of-war dissonance.
+    expect(code).toMatch(/const d = Math\.max\(0, Math\.min\(1, dissonance\)\)/);
+    expect(code).toContain('b.twinA.detune.setTargetAtTime(-spread');
+    // It is silent when the ground is empty (presence 0 → gain 0).
+    expect(code).toContain('p > 0.02 ?');
+    // …and it is torn down with the other oscillators.
+    expect(code).toContain('xeno.twinA?.stop()');
+  });
+
+  test('world.ts drives the tonality from the swarm telemetry on the shared cadence', () => {
+    const code = src('src/world.ts');
+    expect(code).toMatch(
+      /this\.audio\.setXenoTonality\(\s*xtel\.population \/ XENOMIMIC_MAX,\s*xtel\.freeEnergy,\s*xtel\.bondTension/,
+    );
   });
 });
