@@ -207,6 +207,7 @@ import { SuperBodySystem } from './sim/super-body';
 import { SuperHunt } from './sim/super-hunt';
 import { DomeFeeding } from './sim/dome-feeding';
 import { SuperPanel } from './ui/super-panel';
+import { XenoPanel } from './ui/xeno-panel';
 import { SuperheroState, HERO_POWERS } from './ui/superhero-state';
 import { SuperheroHud } from './ui/superhero-hud';
 import { TelemetryPanel, bindPanelToggles } from './ui/panels';
@@ -457,6 +458,8 @@ export class World {
   private readonly petriDishes: PetriDishState[] = [];
   private petriRng!: Rng;
   private readonly superPanel: SuperPanel;
+  /** ◈ XENOMIMIC data window (slice 2b) — Archon-Godforms box template; world pushes telemetry each cadence. */
+  private readonly xenoPanel: XenoPanel;
   private readonly superBody: SuperBodySystem;
   /** USER: the apex super-creatures HUNT + EAT organisms (food/fuel); prey respawns 5s later elsewhere. */
   private readonly superHunt: SuperHunt;
@@ -1247,6 +1250,7 @@ export class World {
     this.portalImmuneBounce = new PortalImmuneBounce(ctx); // USER: the immune Pantheon bounces off in sparks
     this.portalShield = new PortalShield(ctx); // USER: the god-tier Super/APEX bodies shimmer at the void
     this.superPanel = new SuperPanel();
+    this.xenoPanel = new XenoPanel(); // ◈ XENOMIMIC data window (slice 2b)
     this.pantheonArchitecturePanel = new PantheonArchitecturePanel();
     // NOTE: legacy single register removed; 5 SUPER CREATURES register their own purses below (ECON 9000+i).
     // F-SUPER V32: the masterful many-eyed apex BODY (god-jewel shader) — additive, draws no rng.
@@ -1589,6 +1593,7 @@ export class World {
     this.superheroHud.dispose();
     this.pantheonArchitecturePanel.dispose();
     this.superPanel.dispose(); // frees SuperNeural's rAF loop + leaked 'cqm:brutal-style' window listener
+    this.xenoPanel.dispose(); // ◈ XENOMIMIC data window
     this.input.dispose();
   }
 
@@ -2556,6 +2561,8 @@ export class World {
           ulgResonance: ulgRes,
         },
       );
+      // ◈ XENOMIMIC data window — same UI cadence. Pure read of the deterministic swarm's telemetry.
+      this.xenoPanel.update(this.xenomimics.telemetry());
       // F-SUPER V35: feed the SUPERHERO HUD the player-creature's live vitals + mind + wallet.
       const hero = this.heroBodies[0];
       if (this.superheroState.active && hero) {

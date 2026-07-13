@@ -11,6 +11,26 @@ changed and why.
 
 ---
 
+## 2026-07-12 — batch 49: Xenomimics UI slice 2b — the ◈ XENOMIMIC data window (Archon-box template)
+
+Second UI slice over the parallel session's Xenomimic substrate. Adds the owner's requested **data-visual
+window** — "a new Window like with the Archon GodForms but for the Xenomimics … do NOT change the
+wireframing or ui/ux spacing/padding of the window box; just use that template." New `src/ui/xeno-panel.ts`
+clones the ⬢ ARCHITECT window box (`super-panel.ts`) **geometry-for-geometry** — identical fixed
+anchoring, header padding `7px 10px`, body flex, id-column padding, and the `72px 1fr 42px` meter grid —
+recoloured only (amber `#ffb347` + hot-pink `#ff6ab0` for the entangled twins). It reads the substrate's
+`telemetry()` each Observatory cadence and renders: the live population / growth target, twin-pair count,
+births / deaths / eaten / teleports, the four coupled consciousness-theory beats (quantum **coherence**,
+mimic↔anti **tug-of-war** tension, IIT **Φ integration**, FEP **surprise**) + mean vitality, and a
+10-chip **species distribution** whose colours + kind-names (VERTEX WRAITH … MÖBIUS COIL … KAKEYA
+SPLINTER) mirror the renderer's `SPECIES_HUE` + `speciesGeometry` 1:1, with the dominant species lit.
+Its `◈ XENOMIMIC` toggle registers as a center-HUD launcher slot, so it joins the horizontal dock strip
+and cycles like every other inspector (‹ › / tab). GATE-XENOMIMIC-UI grew 9 → 14 (box template reused
+verbatim, all 10 species + four beats surfaced, pure UI shell, launcher slot + world construct/feed/
+dispose sealed). Presentation only — no sim state, rng, or metric axis touched; every golden stays green.
+
+---
+
 ## 2026-07-12 — batch 48: Xenomimics UI slice 2a — XNO spawn + XENOMIMIC focus + telemetry row
 
 Fleet-split follow-up on top of the Xenomimic **substrate** (owned by a parallel session): per the

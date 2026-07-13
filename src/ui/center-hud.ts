@@ -36,6 +36,9 @@ const SLOTS: readonly Slot[] = [
     toggle: 'cqm-arch-toggle',
     open: 'open',
   },
+  // ◈ XENOMIMIC — the entangled ground-fauna data window (slice 2b). Same window-box template as
+  // ⬢ ARCHITECT; the launcher adopts its toggle into the horizontal dock strip like every other panel.
+  { name: 'XENOMIMIC', icon: '◈', panel: 'cqm-xno-panel', toggle: 'cqm-xno-toggle', open: 'open' },
 ];
 
 const PANEL_SEL = SLOTS.map((s) => '#' + s.panel).join(',');
@@ -141,6 +144,7 @@ ${SLOTS.map((s) => `#${s.panel} > *:first-child`).join(',')} { padding-right: va
 #cqm-dock > #cqm-mkt-toggle,
 #cqm-dock > #cqm-sup-toggle,
 #cqm-dock > #cqm-arch-toggle,
+#cqm-dock > #cqm-xno-toggle,
 #cqm-dock > #cqm-settings-toggle,
 #cqm-dock > #cqm-acc-toggle,
 #cqm-dock > a.cqm-dock-nav {

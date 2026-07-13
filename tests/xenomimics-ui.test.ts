@@ -87,3 +87,51 @@ describe('GATE-XENOMIMIC-UI: DOM → input → UiAction → world → panel chai
     expect(src('src/ui/panels.ts')).toContain('s.xenomimics');
   });
 });
+
+describe('GATE-XENOMIMIC-UI: the ◈ XENOMIMIC data window (slice 2b) reuses the Archon box template', () => {
+  test('xeno-panel.ts self-mounts a dock toggle + a fixed window box built on the shared panel shell', () => {
+    const code = src('src/ui/xeno-panel.ts');
+    // Same mounting contract as the ⬢ ARCHITECT panel: shared base CSS + the bottom-dock toggle.
+    expect(code).toContain("import { mountToggle } from './panel-dock'");
+    expect(code).toContain("import { injectPanelBaseCSS } from './panel-shell'");
+    expect(code).toContain("id = 'cqm-xno-toggle'");
+    expect(code).toContain('#cqm-xno-panel');
+    // The window-box geometry is cloned UNCHANGED from super-panel (owner: "do not change the wireframing
+    // or ui/ux spacing/padding of the window box") — pin the load-bearing paddings + the bar grid.
+    expect(code).toContain('padding:7px 10px'); // header padding, verbatim from the Archon box
+    expect(code).toContain('grid-template-columns:72px 1fr 42px'); // bar row grid, verbatim
+  });
+
+  test('the panel surfaces all 10 species and reads the four coupled consciousness-theory beats', () => {
+    const code = src('src/ui/xeno-panel.ts');
+    // Exactly ten SpeciesDef entries (one per renderer geometry / hue).
+    const hueCount = (code.match(/hue:\s*0\./g) ?? []).length;
+    expect(hueCount).toBe(10);
+    // The beats the substrate publishes: quantum coherence, tug-of-war, IIT Φ, FEP surprise.
+    expect(code).toContain('t.coherence');
+    expect(code).toContain('t.bondTension');
+    expect(code).toContain('t.integration');
+    expect(code).toContain('t.freeEnergy');
+  });
+
+  test('the panel is a pure UI shell — it imports the telemetry TYPE, never the population class', () => {
+    const code = src('src/ui/xeno-panel.ts');
+    expect(code).toContain('type { XenomimicTelemetry }');
+    expect(code).not.toContain('new XenomimicPopulation');
+  });
+
+  test('center-hud adds the XENOMIMIC launcher slot and hides its raw dock toggle', () => {
+    const code = src('src/ui/center-hud.ts');
+    expect(code).toContain("name: 'XENOMIMIC'");
+    expect(code).toContain("toggle: 'cqm-xno-toggle'");
+    expect(code).toContain('#cqm-dock > #cqm-xno-toggle');
+  });
+
+  test('world.ts constructs, feeds, and disposes the XenoPanel on the shared cadence', () => {
+    const code = src('src/world.ts');
+    expect(code).toContain("import { XenoPanel } from './ui/xeno-panel'");
+    expect(code).toContain('new XenoPanel()');
+    expect(code).toContain('this.xenoPanel.update(this.xenomimics.telemetry())');
+    expect(code).toContain('this.xenoPanel.dispose()');
+  });
+});
