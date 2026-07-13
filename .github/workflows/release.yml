@@ -67,11 +67,15 @@ jobs:
           if git show-ref --verify --quiet "refs/tags/$TAG"; then
             EXISTING_SHA="$(git rev-list -n 1 "$TAG")"
             if [ "$EXISTING_SHA" != "$HEAD_SHA" ]; then
-              echo "::error::Tag $TAG already exists at $EXISTING_SHA, not current HEAD $HEAD_SHA."
-              exit 1
+              if ! git merge-base --is-ancestor "$EXISTING_SHA" "$HEAD_SHA"; then
+                echo "::error::Tag $TAG exists at divergent commit $EXISTING_SHA, not current HEAD $HEAD_SHA."
+                exit 1
+              fi
+              echo "Tag $TAG is an immutable ancestor at $EXISTING_SHA; release job will publish that tag without moving it."
+            else
+              echo "Tag $TAG already exists at current HEAD; release job will publish it."
             fi
             echo "exists=true" >> "$GITHUB_OUTPUT"
-            echo "Tag $TAG already exists at current HEAD; release job will publish it."
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
             echo "Tag $TAG does not exist; creating it."
