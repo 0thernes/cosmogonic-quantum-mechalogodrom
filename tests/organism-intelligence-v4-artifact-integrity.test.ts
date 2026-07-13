@@ -7,6 +7,7 @@ import {
   verifyV4FrozenAuthority,
   V4_MANIFEST_COMMIT,
   V4_RESULT_PATHS,
+  V4_RESULT_WRITE_POLICY,
   type V4ForestRow,
   type V4RawResultRow,
 } from '../scripts/organism-intelligence-v4-benchmark';
@@ -17,6 +18,7 @@ import {
   V4_PROTOCOL_VERSION,
   type V4FamilyId,
 } from '../scripts/organism-intelligence-v4-protocol';
+import { ORDINARY_V4_CALIBRATION_SHA256 } from '../scripts/organism-intelligence-v4/ordinary';
 
 const ROOT = resolve(import.meta.dir, '..');
 const SHA256 = /^[0-9a-f]{64}$/;
@@ -273,6 +275,16 @@ function gitIsAncestor(ancestor: string, descendant: string): boolean {
   );
 }
 
+function gitFileSha256(commit: string, path: string): string {
+  const result = Bun.spawnSync(['git', 'show', `${commit}:${path}`], { cwd: ROOT });
+  if (result.exitCode !== 0) {
+    throw new Error(
+      `failed to read historical V4 source ${commit}:${path}: ${result.stderr.toString().trim()}`,
+    );
+  }
+  return sha256(result.stdout);
+}
+
 describe('V4 generated artifact integrity', () => {
   test('binds receipt content, frozen authority, source bytes, fixtures, raw bytes, and ancestry', async () => {
     const value = await receipt();
@@ -282,6 +294,7 @@ describe('V4 generated artifact integrity', () => {
     expect(value.protocolVersion).toBe(V4_PROTOCOL_VERSION);
     expect(value.provenance.manifestCommit).toBe(V4_MANIFEST_COMMIT);
     expect(gitIsAncestor(V4_MANIFEST_COMMIT, value.provenance.runtimeBaseCommit)).toBe(true);
+    expect(value.provenance.runtimeBaseCommit).toBe(V4_RESULT_WRITE_POLICY.runtimeBaseCommit);
     expect(gitIsAncestor(value.provenance.runtimeBaseCommit, 'HEAD')).toBe(true);
 
     const authority = await verifyV4FrozenAuthority();
@@ -289,7 +302,7 @@ describe('V4 generated artifact integrity', () => {
     expect(value.provenance.canonicalProtocolSha256).toBe(authority.protocolSha256);
     expect(value.provenance.pinnedDependencies).toEqual(authority.pinnedDependencies);
     for (const [path, expected] of Object.entries(value.provenance.resultAffectingSourceSha256)) {
-      expect(await fileSha256(path)).toBe(expected);
+      expect(gitFileSha256(value.provenance.runtimeBaseCommit, path)).toBe(expected);
     }
     expect(value.provenance.benchmarkScriptSha256).toBe(
       value.provenance.resultAffectingSourceSha256[
@@ -428,6 +441,9 @@ describe('V4 generated artifact integrity', () => {
     });
     expect(value.surrogateCalibrations.ordinaryActionDistribution.calibrationSha256).toMatch(
       SHA256,
+    );
+    expect(value.surrogateCalibrations.ordinaryActionDistribution.calibrationSha256).toBe(
+      ORDINARY_V4_CALIBRATION_SHA256,
     );
     expect(value.surrogateCalibrations.titanPooledPolicy.sourceMovesSha256).toMatch(SHA256);
     expect(value.surrogateCalibrations.titanPooledPolicy.contentHash).toMatch(SHA256);

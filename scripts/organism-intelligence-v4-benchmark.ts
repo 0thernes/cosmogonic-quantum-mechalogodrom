@@ -9,6 +9,8 @@ import { cpus, release, totalmem } from 'node:os';
 import { resolve } from 'node:path';
 import {
   evaluateOrdinaryV4,
+  ORDINARY_V4_CALIBRATION_IDENTITY_LAW,
+  ORDINARY_V4_CALIBRATION_IDENTITY_SHA256,
   type OrdinaryV4EvaluationResult,
 } from './organism-intelligence-v4/ordinary';
 import { runV4NumericalSafety } from './organism-intelligence-v4/numerical-safety';
@@ -49,6 +51,11 @@ import {
 export const V4_RESULT_SCHEMA_VERSION = 'organism-intelligence-causal-benchmark-v4' as const;
 export const V4_MANIFEST_COMMIT = '5b72a22fa9d0f87ccd29c3302a00e32eb77d237e' as const;
 export const V4_RESULT_DATE = '2026-07-11' as const;
+export const V4_RESULT_WRITE_POLICY = Object.freeze({
+  status: 'finalized-historical-artifact-read-only',
+  runtimeBaseCommit: '4a029969f0a1dc6057bcc0917982cc3b95daaa20',
+  futureWriteRequirement: 'new-result-id-schema-and-paths',
+} as const);
 export const V4_RESULT_PATHS = {
   receipt: 'docs/reports/assets/organism-intelligence-causal-benchmark-v4.json',
   rawCsv: 'docs/reports/assets/cross-being-neural-causality-v1.csv',
@@ -730,6 +737,8 @@ export function v4SurrogateCalibrationReceipt(
     !magnitudesValid ||
     ordinary.calibration.actionFrequency !== magnitudes.length / ordinary.actionVectorCount ||
     !SHA256_PATTERN.test(ordinary.calibrationSha256) ||
+    ordinary.calibrationIdentitySha256 !== ORDINARY_V4_CALIBRATION_IDENTITY_SHA256 ||
+    ordinary.calibrationIdentityLaw !== ORDINARY_V4_CALIBRATION_IDENTITY_LAW ||
     !SHA256_PATTERN.test(ordinary.replayFingerprint) ||
     ordinary.sourceReplayFingerprints.length !== V4_SURROGATE_CALIBRATION_SEEDS.length ||
     !ordinary.sourceReplayFingerprints.every((value) => SHA256_PATTERN.test(value)) ||
@@ -762,6 +771,8 @@ export function v4SurrogateCalibrationReceipt(
         maximum: magnitudes[magnitudes.length - 1]!,
       },
       calibrationSha256: ordinary.calibrationSha256,
+      calibrationIdentitySha256: ordinary.calibrationIdentitySha256,
+      calibrationIdentityLaw: ordinary.calibrationIdentityLaw,
       sourceReplayFingerprints: [...ordinary.sourceReplayFingerprints],
       replayFingerprint: ordinary.replayFingerprint,
     },
@@ -1331,7 +1342,10 @@ async function assertRuntimeEvidenceUnchanged(
   }
 }
 
-/** Generate and write the descendant result artifacts. Requires a clean committed harness checkout. */
+/**
+ * Historical writer retained for auditability. Current HEAD fails closed; a successor must use a new
+ * result ID, schema version, and output paths instead of overwriting the finalized V4 artifacts.
+ */
 export async function generateV4BenchmarkArtifacts(): Promise<{
   receiptPath: string;
   rawCsvPath: string;
@@ -1340,11 +1354,16 @@ export async function generateV4BenchmarkArtifacts(): Promise<{
   rawDataSha256: string;
   claims: Record<string, boolean>;
 }> {
+  const runtimeCommit = git(['rev-parse', 'HEAD']);
+  if (runtimeCommit !== V4_RESULT_WRITE_POLICY.runtimeBaseCommit) {
+    throw new Error(
+      'historical V4 artifacts are finalized and read-only; future generation requires a new result ID, schema version, and output paths',
+    );
+  }
   const status = git(['status', '--porcelain']);
   if (status !== '') {
     throw new Error('V4 result generation requires a clean committed harness worktree');
   }
-  const runtimeCommit = git(['rev-parse', 'HEAD']);
   git(['merge-base', '--is-ancestor', V4_MANIFEST_COMMIT, runtimeCommit]);
   const frozenProtocolBlob = git([
     'rev-parse',

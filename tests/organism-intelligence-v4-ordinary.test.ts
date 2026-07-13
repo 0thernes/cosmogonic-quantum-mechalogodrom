@@ -5,17 +5,56 @@ import {
   evaluateOrdinaryV4Arm,
   evaluateOrdinaryV4Seed,
   ORDINARY_V4_ARMS,
-  ORDINARY_V4_CALIBRATION_SHA256,
+  ORDINARY_V4_CALIBRATION_IDENTITY_LAW,
+  ORDINARY_V4_CALIBRATION_IDENTITY_SHA256,
 } from '../scripts/organism-intelligence-v4/ordinary';
 import {
+  familyMagnitudePass,
+  pairedDeltas,
+  summarizeV4FamilyContrasts,
   V4_EVALUATION_SEEDS,
   V4_FAMILY_FIXTURES,
+  v4OrdinarySurrogateStep,
   V4_SURROGATE_CALIBRATION,
   V4_SURROGATE_CALIBRATION_SEEDS,
 } from '../scripts/organism-intelligence-v4-protocol';
 
 const SEED = 3_957_713_710;
 const EMPTY_SHA256 = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
+
+function portableScientificProjection(value: unknown): unknown {
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value)) {
+      throw new RangeError('portable V4 projection rejects non-finite data');
+    }
+    if (Object.is(value, -0)) return 0;
+    if (Number.isSafeInteger(value)) return value;
+    const projected = Number(value.toFixed(ORDINARY_V4_CALIBRATION_IDENTITY_LAW.decimalPlaces));
+    return Object.is(projected, -0) ? 0 : projected;
+  }
+  if (Array.isArray(value)) return value.map(portableScientificProjection);
+  if (value !== null && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value)
+        .filter(
+          ([key]) =>
+            key === 'calibrationIdentitySha256' ||
+            (!key.endsWith('Sha256') &&
+              key !== 'replayFingerprint' &&
+              key !== 'sourceReplayFingerprints'),
+        )
+        .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
+        .map(([key, entry]) => [key, portableScientificProjection(entry)]),
+    );
+  }
+  return value;
+}
+
+function portableScientificSha256(value: unknown): string {
+  return new Bun.CryptoHasher('sha256')
+    .update(JSON.stringify(portableScientificProjection(value)))
+    .digest('hex');
+}
 
 describe('ordinary-organism V4 evaluator', () => {
   test('derives the exact 16-seed action-distribution surrogate deterministically', () => {
@@ -38,11 +77,18 @@ describe('ordinary-organism V4 evaluator', () => {
       ),
     ).toBe(true);
     expect(first.sourceReplayFingerprints).toHaveLength(V4_SURROGATE_CALIBRATION_SEEDS.length);
-    expect(first.calibrationSha256).toBe(ORDINARY_V4_CALIBRATION_SHA256);
-    expect(first.replayFingerprint).toBe(
-      '002f13466eeb06788d2ce327c93afc21c72b64b7b4ef4354ee149b85b26a88f2',
-    );
+    expect(first.calibrationIdentityLaw).toEqual(ORDINARY_V4_CALIBRATION_IDENTITY_LAW);
+    expect(first.calibrationIdentitySha256).toBe(ORDINARY_V4_CALIBRATION_IDENTITY_SHA256);
+    expect(first.calibrationSha256).toMatch(/^[0-9a-f]{64}$/);
+    expect(first.replayFingerprint).toMatch(/^[0-9a-f]{64}$/);
+    expect(
+      first.calibration.sortedNonZeroMagnitudes.some(
+        (value) =>
+          value !== Number(value.toFixed(ORDINARY_V4_CALIBRATION_IDENTITY_LAW.decimalPlaces)),
+      ),
+    ).toBe(true);
     expect(replay.calibrationSha256).toBe(first.calibrationSha256);
+    expect(replay.calibrationIdentitySha256).toBe(first.calibrationIdentitySha256);
     expect(replay.replayFingerprint).toBe(first.replayFingerprint);
   });
 
@@ -54,9 +100,7 @@ describe('ordinary-organism V4 evaluator', () => {
     expect(result.arms.map(({ arm }) => arm)).toEqual([
       ...V4_FAMILY_FIXTURES['ordinary-organisms'].arms,
     ]);
-    expect(result.replayFingerprint).toBe(
-      '1f308fdcef3968d8511f60f5c3d81d4686bd562fbc53f062f9e95d41328281d0',
-    );
+    expect(result.replayFingerprint).toMatch(/^[0-9a-f]{64}$/);
 
     const matched = result.arms[0]!.hashes;
     for (const arm of result.arms) {
@@ -79,6 +123,8 @@ describe('ordinary-organism V4 evaluator', () => {
       expect(arm.hashes.brainRngDrawCount).toBe(80);
       expect(arm.hashes.interventionSha256).toMatch(/^[0-9a-f]{64}$/);
       expect(arm.intervention.calibrationSha256).toBe(arm.hashes.calibrationSha256);
+      expect(arm.intervention.calibrationIdentitySha256).toBe(arm.hashes.calibrationIdentitySha256);
+      expect(arm.intervention.calibrationIdentityLawId).toBe(arm.hashes.calibrationIdentityLawId);
     }
 
     const surrogate = result.arms.find(
@@ -87,13 +133,19 @@ describe('ordinary-organism V4 evaluator', () => {
     expect(surrogate.hashes.surrogateRngSeed).not.toBeNull();
     expect(surrogate.hashes.surrogateRngDrawCount).toBe(480 * 3);
     expect(surrogate.hashes.surrogateRngTapeSha256).toMatch(/^[0-9a-f]{64}$/);
-    expect(surrogate.hashes.calibrationSha256).toBe(ORDINARY_V4_CALIBRATION_SHA256);
+    expect(surrogate.hashes.calibrationSha256).toBe(calibration.calibrationSha256);
+    expect(surrogate.hashes.calibrationIdentitySha256).toBe(
+      ORDINARY_V4_CALIBRATION_IDENTITY_SHA256,
+    );
+    expect(surrogate.hashes.calibrationIdentityLawId).toBe(ORDINARY_V4_CALIBRATION_IDENTITY_LAW.id);
     expect(surrogate.intervention.horizontalActionSource).toBe('frozen-calibrated-surrogate');
     for (const arm of result.arms.filter(({ arm }) => arm !== surrogate.arm)) {
       expect(arm.hashes.surrogateRngSeed).toBeNull();
       expect(arm.hashes.surrogateRngDrawCount).toBe(0);
       expect(arm.hashes.surrogateRngTapeSha256).toBe(EMPTY_SHA256);
       expect(arm.hashes.calibrationSha256).toBeNull();
+      expect(arm.hashes.calibrationIdentitySha256).toBeNull();
+      expect(arm.hashes.calibrationIdentityLawId).toBeNull();
       expect(arm.intervention.horizontalActionSource).toBe('live-neural');
     }
   });
@@ -183,11 +235,63 @@ describe('ordinary-organism V4 evaluator', () => {
     ).toEqual([0, null, 0]);
   });
 
-  test('replays byte-identically and rejects undeclared or unmatched invocations', () => {
+  test('replays byte-identically on one platform and rejects undeclared or unmatched invocations', () => {
     const calibration = calibrateOrdinaryV4Surrogate();
     const first = evaluateOrdinaryV4Arm(SEED, 'full-semantic-recurrent');
     const replay = evaluateOrdinaryV4Arm(SEED, 'full-semantic-recurrent');
     expect(replay).toEqual(first);
+
+    const magnitudes = [...calibration.calibration.sortedNonZeroMagnitudes];
+    const perturbationIndex = magnitudes.findIndex((value, index, values) => {
+      const perturbed = value + 1e-15;
+      return (
+        perturbed <= (values[index + 1] ?? V4_SURROGATE_CALIBRATION.motorBound) &&
+        Number(perturbed.toFixed(ORDINARY_V4_CALIBRATION_IDENTITY_LAW.decimalPlaces)) ===
+          Number(value.toFixed(ORDINARY_V4_CALIBRATION_IDENTITY_LAW.decimalPlaces))
+      );
+    });
+    expect(perturbationIndex).toBeGreaterThanOrEqual(0);
+    magnitudes[perturbationIndex] = magnitudes[perturbationIndex]! + 1e-15;
+    const baselineSurrogate = evaluateOrdinaryV4Arm(
+      SEED,
+      'action-distribution-matched-surrogate',
+      calibration.calibration,
+    );
+    const equivalentSurrogate = evaluateOrdinaryV4Arm(
+      SEED,
+      'action-distribution-matched-surrogate',
+      { ...calibration.calibration, sortedNonZeroMagnitudes: magnitudes },
+    );
+    expect(equivalentSurrogate.hashes.calibrationIdentitySha256).toBe(
+      baselineSurrogate.hashes.calibrationIdentitySha256,
+    );
+    expect(equivalentSurrogate.hashes.calibrationSha256).not.toBe(
+      baselineSurrogate.hashes.calibrationSha256,
+    );
+    const draws = [0, (perturbationIndex + 0.25) / magnitudes.length, 0];
+    const rawBaselineStep = v4OrdinarySurrogateStep(calibration.calibration, () => draws.shift()!);
+    const perturbedDraws = [0, (perturbationIndex + 0.25) / magnitudes.length, 0];
+    const rawPerturbedStep = v4OrdinarySurrogateStep(
+      { ...calibration.calibration, sortedNonZeroMagnitudes: magnitudes },
+      () => perturbedDraws.shift()!,
+    );
+    expect(rawPerturbedStep).not.toEqual(rawBaselineStep);
+
+    const outsideMagnitudes = [...calibration.calibration.sortedNonZeroMagnitudes];
+    const outsideIndex = outsideMagnitudes.findIndex(
+      (value, index, values) =>
+        (values[index + 1] ?? V4_SURROGATE_CALIBRATION.motorBound) - value >
+        ORDINARY_V4_CALIBRATION_IDENTITY_LAW.absoluteQuantum * 4,
+    );
+    expect(outsideIndex).toBeGreaterThanOrEqual(0);
+    outsideMagnitudes[outsideIndex] =
+      outsideMagnitudes[outsideIndex]! + ORDINARY_V4_CALIBRATION_IDENTITY_LAW.absoluteQuantum * 2;
+    expect(() =>
+      evaluateOrdinaryV4Arm(SEED, 'action-distribution-matched-surrogate', {
+        ...calibration.calibration,
+        sortedNonZeroMagnitudes: outsideMagnitudes,
+      }),
+    ).toThrow('outside the bounded portable 16-seed equivalence');
 
     expect(() => evaluateOrdinaryV4Arm(SEED, 'not-an-arm' as never)).toThrow(
       'unknown ordinary V4 arm',
@@ -203,7 +307,32 @@ describe('ordinary-organism V4 evaluator', () => {
     expect(() =>
       evaluateOrdinaryV4([V4_SURROGATE_CALIBRATION_SEEDS[0], ...V4_EVALUATION_SEEDS.slice(1)]),
     ).toThrow('may not overlap surrogate calibration seeds');
-    expect(evaluateOrdinaryV4().seeds).toEqual([...V4_EVALUATION_SEEDS]);
+    const complete = evaluateOrdinaryV4();
+    expect(complete.seeds).toEqual([...V4_EVALUATION_SEEDS]);
+    expect(portableScientificSha256(complete)).toBe(
+      'fc77fc74a65722c7c3a1128d392c2f4383674c3cff4cd2e9a84f57e44f8346bb',
+    );
+    const outcomes = (arm: (typeof ORDINARY_V4_ARMS)[number]) =>
+      complete.results.map(
+        (seed) => seed.arms.find((candidate) => candidate.arm === arm)!.primaryOutcome,
+      );
+    const fullOutcomes = outcomes('full-semantic-recurrent');
+    const gateDeltas = (
+      [
+        'recurrence-disabled-current-input',
+        'semantic-channel-cyclic-permutation',
+        'goal-preserved-shared-field-disabled',
+        'action-distribution-matched-surrogate',
+      ] as const
+    ).map((arm) => pairedDeltas(fullOutcomes, outcomes(arm)));
+    const gateSummaries = summarizeV4FamilyContrasts('ordinary-organisms', gateDeltas);
+    expect(gateSummaries.map(({ inferencePass }) => inferencePass)).toEqual([
+      true,
+      true,
+      true,
+      true,
+    ]);
+    expect(gateDeltas.map(familyMagnitudePass)).toEqual([false, false, false, true]);
     expect(() =>
       evaluateOrdinaryV4Arm(SEED, 'full-semantic-recurrent', calibration.calibration),
     ).toThrow('only valid for the surrogate arm');
@@ -212,7 +341,7 @@ describe('ordinary-organism V4 evaluator', () => {
         actionFrequency: 0,
         sortedNonZeroMagnitudes: [],
       }),
-    ).toThrow('does not match the frozen 16-seed identity');
+    ).toThrow('outside the bounded portable 16-seed equivalence');
     expect(() =>
       evaluateOrdinaryV4Seed(SEED, {
         actionFrequency: 2,

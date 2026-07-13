@@ -1,17 +1,25 @@
 import { describe, expect, test } from 'bun:test';
+import { resolve } from 'node:path';
 import {
   annotateV4RawFailureReasons,
   assertV4RawMatrix,
   buildV4ForestSvg,
   buildV4RawCsv,
   evaluateV4PerformanceAcceptance,
+  generateV4BenchmarkArtifacts,
   verifyV4FrozenAuthority,
   v4FamilyClaimReleaseGate,
   v4SurrogateCalibrationReceipt,
+  V4_RESULT_PATHS,
+  V4_RESULT_WRITE_POLICY,
   type V4ForestRow,
   type V4RawResultRow,
 } from '../scripts/organism-intelligence-v4-benchmark';
-import { calibrateOrdinaryV4Surrogate } from '../scripts/organism-intelligence-v4/ordinary';
+import {
+  calibrateOrdinaryV4Surrogate,
+  ORDINARY_V4_CALIBRATION_IDENTITY_LAW,
+  ORDINARY_V4_CALIBRATION_IDENTITY_SHA256,
+} from '../scripts/organism-intelligence-v4/ordinary';
 import {
   V4_PERFORMANCE_CONFIG,
   V4_PERFORMANCE_POINT_ORDERS,
@@ -26,6 +34,12 @@ import {
 } from '../scripts/organism-intelligence-v4-protocol';
 
 const SHA = 'a'.repeat(64);
+const ROOT = resolve(import.meta.dir, '..');
+
+async function fileSha256(path: string): Promise<string> {
+  const bytes = new Uint8Array(await Bun.file(resolve(ROOT, path)).arrayBuffer());
+  return new Bun.CryptoHasher('sha256').update(bytes).digest('hex');
+}
 
 function rawRow(overrides: Partial<V4RawResultRow> = {}): V4RawResultRow {
   return {
@@ -394,6 +408,8 @@ describe('V4 benchmark artifact builders', () => {
     expect(ordinary.nonZeroMagnitudeSummary.median).toBeLessThanOrEqual(
       ordinary.nonZeroMagnitudeSummary.maximum,
     );
+    expect(ordinary.calibrationIdentitySha256).toBe(ORDINARY_V4_CALIBRATION_IDENTITY_SHA256);
+    expect(ordinary.calibrationIdentityLaw).toEqual(ORDINARY_V4_CALIBRATION_IDENTITY_LAW);
     expect(receipt.titanPooledPolicy.sourceMoveCount).toBe(16 * 2 * 15 * 2);
     expect(receipt.titanPooledPolicy.cooperationRate).toBe(0.2125);
     expect(receipt.titanPooledPolicy.sourceMoveOrder).toBe(
@@ -467,5 +483,28 @@ describe('V4 benchmark artifact builders', () => {
       sha256: '87c880ed2b7f1e97c37f0c04cbdeb2d9e74a555a7fce22200ceaa756b7b6bcb0',
       verified: true,
     });
+  });
+
+  test('keeps finalized historical V4 output paths read-only after the portability amendment', async () => {
+    const paths = [V4_RESULT_PATHS.receipt, V4_RESULT_PATHS.rawCsv, V4_RESULT_PATHS.forestSvg];
+    const before = await Promise.all(paths.map(fileSha256));
+    let directError = '';
+    try {
+      await generateV4BenchmarkArtifacts();
+    } catch (error) {
+      directError = error instanceof Error ? error.message : String(error);
+    }
+    expect(directError).toContain('historical V4 artifacts are finalized and read-only');
+
+    const cli = Bun.spawnSync(
+      [process.execPath, 'scripts/organism-intelligence-v4-benchmark.ts', '--write'],
+      { cwd: ROOT },
+    );
+    expect(cli.exitCode).not.toBe(0);
+    expect(`${cli.stdout.toString()}${cli.stderr.toString()}`).toContain(
+      'historical V4 artifacts are finalized and read-only',
+    );
+    expect(await Promise.all(paths.map(fileSha256))).toEqual(before);
+    expect(V4_RESULT_WRITE_POLICY.futureWriteRequirement).toBe('new-result-id-schema-and-paths');
   });
 });

@@ -32,6 +32,26 @@ import {
 export const ORDINARY_V4_FAMILY_ID = 'ordinary-organisms' as const;
 export const ORDINARY_V4_ARMS = V4_FAMILY_FIXTURES[ORDINARY_V4_FAMILY_ID].arms;
 
+/**
+ * Platform-canonical identity for the frozen surrogate calibration only.
+ *
+ * The simulation, returned calibration payload, actions, outcomes, and exact trace replays remain raw
+ * IEEE-754 binary64. This law does not claim cross-platform byte identity for those values. It only
+ * prevents last-bit/one-ULP-scale `Math.hypot` residue from changing which bounded-equivalent 16-seed
+ * calibration the surrogate guard accepts. Values in one fixed-decimal bin are intentionally equivalent
+ * for acceptance; their separate raw digest still records the exact payload used for behavior.
+ */
+export const ORDINARY_V4_CALIBRATION_IDENTITY_LAW = Object.freeze({
+  id: 'ordinary-v4-calibration-identity-fixed-decimal-1e-12-v1',
+  decimalPlaces: 12,
+  absoluteQuantum: 1e-12,
+  rawComputation: 'ieee-754-binary64',
+  boundary: 'portable-calibration-identity-digest-input-only-after-raw-calibration',
+  rawCalibrationReturned: true,
+  rawCalibrationUsedForBehavior: true,
+  crossPlatformTraceByteIdentityClaimed: false,
+} as const);
+
 export type OrdinaryV4Arm = (typeof ORDINARY_V4_ARMS)[number];
 
 /** Exact post-construction intervention applied after the matched pre-intervention state is hashed. */
@@ -42,7 +62,12 @@ export interface OrdinaryV4InterventionEvidence {
   readonly semanticRecurrenceEnabled: boolean;
   readonly semanticRecurrenceActive: boolean;
   readonly horizontalActionSource: 'live-neural' | 'frozen-calibrated-surrogate';
+  /** Exact raw-binary64 calibration payload hash; platform-specific by design. */
   readonly calibrationSha256: string | null;
+  /** Portable bounded-equivalence identity used by the calibration acceptance guard. */
+  readonly calibrationIdentitySha256: string | null;
+  /** Self-decoding identity-projection law; null outside the surrogate arm. */
+  readonly calibrationIdentityLawId: typeof ORDINARY_V4_CALIBRATION_IDENTITY_LAW.id | null;
 }
 
 export interface OrdinaryV4HashBundle {
@@ -65,8 +90,11 @@ export interface OrdinaryV4HashBundle {
   readonly surrogateRngDrawCount: number;
   /** Exact declared arm intervention, separate from the matched pre-intervention state hash. */
   readonly interventionSha256: string;
-  /** Null outside the surrogate arm; exact frozen calibration identity inside it. */
+  /** Null outside the surrogate arm; exact raw-binary64 calibration payload hash inside it. */
   readonly calibrationSha256: string | null;
+  /** Null outside the surrogate arm; bounded-equivalence calibration identity inside it. */
+  readonly calibrationIdentitySha256: string | null;
+  readonly calibrationIdentityLawId: typeof ORDINARY_V4_CALIBRATION_IDENTITY_LAW.id | null;
 }
 
 export interface OrdinaryV4SecondaryOutcomes {
@@ -118,7 +146,7 @@ export interface OrdinaryV4ArmResult {
   readonly secondaryOutcomes: OrdinaryV4SecondaryOutcomes;
   readonly intervention: OrdinaryV4InterventionEvidence;
   readonly hashes: OrdinaryV4HashBundle;
-  /** SHA-256 over metadata plus the exact big-endian per-step Float64 trace. */
+  /** SHA-256 over metadata plus the exact big-endian per-step Float64 trace on this platform. */
   readonly replayFingerprint: string;
 }
 
@@ -128,8 +156,12 @@ export interface OrdinaryV4SurrogateCalibrationResult {
   readonly sourceArm: 'full-semantic-recurrent';
   readonly sourceSeeds: readonly number[];
   readonly actionVectorCount: number;
+  readonly calibrationIdentityLaw: typeof ORDINARY_V4_CALIBRATION_IDENTITY_LAW;
   readonly calibration: V4OrdinarySurrogateCalibration;
+  /** Exact raw-binary64 calibration payload hash; not cross-platform portable. */
   readonly calibrationSha256: string;
+  /** Platform-canonical identity used by the calibration acceptance guard. */
+  readonly calibrationIdentitySha256: string;
   readonly sourceReplayFingerprints: readonly string[];
   readonly replayFingerprint: string;
 }
@@ -176,9 +208,12 @@ interface InternalArmRun {
 const ORDINARY_FIXTURE = V4_FAMILY_FIXTURES[ORDINARY_V4_FAMILY_ID];
 const ORDINARY_CANONICAL_EVALUATION_SEEDS = Object.freeze([...V4_EVALUATION_SEEDS]);
 const ORDINARY_CANONICAL_CALIBRATION_SEEDS = Object.freeze([...V4_SURROGATE_CALIBRATION_SEEDS]);
-/** Frozen after the preregistered 16-seed calibration was first executed in the result phase. */
+/** Historical raw Windows/Bun calibration hash from the preregistered V4 result artifact. */
 export const ORDINARY_V4_CALIBRATION_SHA256 =
   'ca74e6d7cab350eb199b5674c6675085105d5abe869ed70c2081912f58fc58bb' as const;
+/** Portable bounded-equivalence identity under `ORDINARY_V4_CALIBRATION_IDENTITY_LAW`. */
+export const ORDINARY_V4_CALIBRATION_IDENTITY_SHA256 =
+  '001298f6b1231be1d766cc2e1498f7fbe3d19828170348faceb2aad9ef0724bf' as const;
 const EMPTY_UINT32_SHA256 = sha256Uint32([]);
 const ORDINARY_STEPS = buildStepSchedule();
 const ORDINARY_REVERSALS = buildReversalSchedule();
@@ -327,6 +362,16 @@ function traceFingerprint(metadata: unknown, trace: readonly number[]): string {
   return hasher.digest('hex');
 }
 
+function calibrationIdentityNumber(value: number): number {
+  if (!Number.isFinite(value)) {
+    throw new RangeError('ordinary V4 calibration identity rejects non-finite numbers');
+  }
+  if (Object.is(value, -0)) return 0;
+  if (Number.isSafeInteger(value)) return value;
+  const projected = Number(value.toFixed(ORDINARY_V4_CALIBRATION_IDENTITY_LAW.decimalPlaces));
+  return Object.is(projected, -0) ? 0 : projected;
+}
+
 function recordedMulberry32(seed: number): RecordedRng {
   const source = mulberry32(seed);
   const tape: number[] = [];
@@ -380,16 +425,47 @@ function calibrationSha256For(calibration: V4OrdinarySurrogateCalibration): stri
   );
 }
 
-function assertCanonicalCalibration(calibration: V4OrdinarySurrogateCalibration): string {
+function calibrationIdentitySha256For(calibration: V4OrdinarySurrogateCalibration): string {
+  return traceFingerprint(
+    {
+      calibrationIdentityLaw: ORDINARY_V4_CALIBRATION_IDENTITY_LAW,
+      protocolVersion: V4_PROTOCOL_VERSION,
+      family: ORDINARY_V4_FAMILY_ID,
+      sourceArm: 'full-semantic-recurrent',
+      sourceSeeds: ORDINARY_CANONICAL_CALIBRATION_SEEDS,
+      actionVectorCount: ORDINARY_CANONICAL_CALIBRATION_SEEDS.length * ORDINARY_FIXTURE.totalSteps,
+      actionFrequency: calibrationIdentityNumber(calibration.actionFrequency),
+    },
+    calibration.sortedNonZeroMagnitudes.map(calibrationIdentityNumber),
+  );
+}
+
+interface OrdinaryV4CalibrationHashes {
+  readonly calibrationSha256: string;
+  readonly calibrationIdentitySha256: string;
+}
+
+function calibrationHashesFor(
+  calibration: V4OrdinarySurrogateCalibration,
+): OrdinaryV4CalibrationHashes {
+  return {
+    calibrationSha256: calibrationSha256For(calibration),
+    calibrationIdentitySha256: calibrationIdentitySha256For(calibration),
+  };
+}
+
+function assertAcceptedCalibration(
+  calibration: V4OrdinarySurrogateCalibration,
+): OrdinaryV4CalibrationHashes {
   // The protocol primitive performs every numeric bound/order check while consuming three inert draws.
   v4OrdinarySurrogateStep(calibration, () => 0);
-  const calibrationSha256 = calibrationSha256For(calibration);
-  if (calibrationSha256 !== ORDINARY_V4_CALIBRATION_SHA256) {
+  const hashes = calibrationHashesFor(calibration);
+  if (hashes.calibrationIdentitySha256 !== ORDINARY_V4_CALIBRATION_IDENTITY_SHA256) {
     throw new RangeError(
-      'ordinary surrogate calibration does not match the frozen 16-seed identity',
+      `ordinary surrogate calibration falls outside the bounded portable 16-seed equivalence (expected ${ORDINARY_V4_CALIBRATION_IDENTITY_SHA256}, received ${hashes.calibrationIdentitySha256})`,
     );
   }
-  return calibrationSha256;
+  return hashes;
 }
 
 function assertCanonicalEvaluationSeeds(seeds: readonly number[]): void {
@@ -412,7 +488,7 @@ function assertCanonicalEvaluationSeeds(seeds: readonly number[]): void {
 
 function interventionEvidence(
   arm: OrdinaryV4Arm,
-  calibrationSha256: string | null,
+  calibrationHashes: OrdinaryV4CalibrationHashes | null,
 ): OrdinaryV4InterventionEvidence {
   switch (arm) {
     case 'full-semantic-recurrent':
@@ -423,6 +499,8 @@ function interventionEvidence(
         semanticRecurrenceActive: true,
         horizontalActionSource: 'live-neural',
         calibrationSha256: null,
+        calibrationIdentitySha256: null,
+        calibrationIdentityLawId: null,
       };
     case 'recurrence-disabled-current-input':
       return {
@@ -432,6 +510,8 @@ function interventionEvidence(
         semanticRecurrenceActive: false,
         horizontalActionSource: 'live-neural',
         calibrationSha256: null,
+        calibrationIdentitySha256: null,
+        calibrationIdentityLawId: null,
       };
     case 'semantic-channel-cyclic-permutation':
       return {
@@ -441,6 +521,8 @@ function interventionEvidence(
         semanticRecurrenceActive: true,
         horizontalActionSource: 'live-neural',
         calibrationSha256: null,
+        calibrationIdentitySha256: null,
+        calibrationIdentityLawId: null,
       };
     case 'goal-preserved-shared-field-disabled':
       return {
@@ -450,6 +532,8 @@ function interventionEvidence(
         semanticRecurrenceActive: false,
         horizontalActionSource: 'live-neural',
         calibrationSha256: null,
+        calibrationIdentitySha256: null,
+        calibrationIdentityLawId: null,
       };
     case 'exact-legacy':
       return {
@@ -459,9 +543,11 @@ function interventionEvidence(
         semanticRecurrenceActive: false,
         horizontalActionSource: 'live-neural',
         calibrationSha256: null,
+        calibrationIdentitySha256: null,
+        calibrationIdentityLawId: null,
       };
     case 'action-distribution-matched-surrogate':
-      if (calibrationSha256 === null) {
+      if (calibrationHashes === null) {
         throw new TypeError('ordinary surrogate intervention requires its calibration identity');
       }
       return {
@@ -470,7 +556,8 @@ function interventionEvidence(
         semanticRecurrenceEnabled: true,
         semanticRecurrenceActive: true,
         horizontalActionSource: 'frozen-calibrated-surrogate',
-        calibrationSha256,
+        ...calibrationHashes,
+        calibrationIdentityLawId: ORDINARY_V4_CALIBRATION_IDENTITY_LAW.id,
       };
   }
 }
@@ -528,8 +615,8 @@ function runOrdinaryArm(
   if (!surrogate && calibration !== null) {
     throw new TypeError('ordinary calibration is only valid for the surrogate arm');
   }
-  const calibrationSha256 = surrogate ? assertCanonicalCalibration(calibration!) : null;
-  const intervention = interventionEvidence(arm, calibrationSha256);
+  const calibrationHashes = surrogate ? assertAcceptedCalibration(calibration!) : null;
+  const intervention = interventionEvidence(arm, calibrationHashes);
   const interventionSha256 = sha256Canonical(intervention);
   // Arm intervention happens only after the matched pre-intervention state above has been sealed.
   if (arm === 'recurrence-disabled-current-input') brain.setSemanticRecurrenceEnabled(false);
@@ -664,7 +751,9 @@ function runOrdinaryArm(
     surrogateRngTapeSha256: sha256Uint32(surrogateTape),
     surrogateRngDrawCount: surrogateTape.length,
     interventionSha256,
-    calibrationSha256,
+    calibrationSha256: calibrationHashes?.calibrationSha256 ?? null,
+    calibrationIdentitySha256: calibrationHashes?.calibrationIdentitySha256 ?? null,
+    calibrationIdentityLawId: calibrationHashes ? ORDINARY_V4_CALIBRATION_IDENTITY_LAW.id : null,
   };
   const secondaryOutcomes: OrdinaryV4SecondaryOutcomes = {
     totalSteps: allScores.length,
@@ -755,11 +844,15 @@ export function calibrateOrdinaryV4Surrogate(): OrdinaryV4SurrogateCalibrationRe
     sourceReplayFingerprints.push(run.result.replayFingerprint);
   }
   const calibration = v4CalibrateOrdinarySurrogate(actions);
-  const calibrationSha256 = calibrationSha256For(calibration);
-  if (calibrationSha256 !== ORDINARY_V4_CALIBRATION_SHA256) {
-    throw new Error('ordinary 16-seed calibration drifted from its frozen identity');
+  const { calibrationSha256, calibrationIdentitySha256 } = calibrationHashesFor(calibration);
+  if (calibrationIdentitySha256 !== ORDINARY_V4_CALIBRATION_IDENTITY_SHA256) {
+    throw new Error(
+      `ordinary 16-seed calibration falls outside its bounded portable equivalence (expected ${ORDINARY_V4_CALIBRATION_IDENTITY_SHA256}, received ${calibrationIdentitySha256})`,
+    );
   }
   const replayFingerprint = sha256Canonical({
+    calibrationIdentityLaw: ORDINARY_V4_CALIBRATION_IDENTITY_LAW,
+    calibrationIdentitySha256,
     calibrationSha256,
     sourceReplayFingerprints,
   });
@@ -769,8 +862,10 @@ export function calibrateOrdinaryV4Surrogate(): OrdinaryV4SurrogateCalibrationRe
     sourceArm: 'full-semantic-recurrent',
     sourceSeeds: [...ORDINARY_CANONICAL_CALIBRATION_SEEDS],
     actionVectorCount: actions.length,
+    calibrationIdentityLaw: ORDINARY_V4_CALIBRATION_IDENTITY_LAW,
     calibration,
     calibrationSha256,
+    calibrationIdentitySha256,
     sourceReplayFingerprints,
     replayFingerprint,
   };
@@ -782,7 +877,7 @@ export function evaluateOrdinaryV4Seed(
   calibration: V4OrdinarySurrogateCalibration,
 ): OrdinaryV4SeedResult {
   v4DerivedSeed(seed, 'ordinaryBrain');
-  assertCanonicalCalibration(calibration);
+  assertAcceptedCalibration(calibration);
   const arms = ORDINARY_V4_ARMS.map(
     (arm) =>
       runOrdinaryArm(

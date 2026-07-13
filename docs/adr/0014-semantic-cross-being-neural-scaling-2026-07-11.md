@@ -226,7 +226,7 @@ failed behavioral control.
 | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Preregistration      | Protocol, 64-seed evaluation manifest, outcomes, exclusions, and thresholds exist at a commit earlier than the result commit; seeds are disjoint from V1–V3 and all tuning fixtures.                                                                                                                                                                                                                     |
 | Matched arms         | Before intervention, state, percept, goal, population, motor-bound, update-schedule, and environment-RNG-tape hashes are identical. Any declared surrogate stream is isolated and hash-recorded. Only the declared controller arm differs.                                                                                                                                                               |
-| Replay and identity  | Same arm replays byte-identically; compaction preserves all four context states with brain identity; removal/newborn reuse cannot inherit retired context; snapshot/restore resumes exactly.                                                                                                                                                                                                             |
+| Replay and identity  | Same arm replays byte-identically within one platform/toolchain; cross-platform raw-binary64 byte identity is not claimed. Compaction preserves all four context states with brain identity; removal/newborn reuse cannot inherit retired context; snapshot/restore resumes exactly.                                                                                                                     |
 | Semantic specificity | For every declared full-vs-cyclic contrast, paired mean is > 0, the unadjusted paired-bootstrap 95% lower bound is > 0, and the within-family Holm-adjusted one-sided paired sign-flip `p < 0.05`.                                                                                                                                                                                                       |
 | Recurrent context    | Full recurrence beats recurrence-disabled control with median paired gain `>= 0.05` absolute normalized outcome points, minimum seed delta `>= -0.20` points, and the same bootstrap/sign-flip inference rule. A context-state difference without outcome lift does not pass.                                                                                                                            |
 | Adaptive prediction  | Every arm is scored on the same true labels; only the shuffled control's training feedback is permuted. Mean Brier is first computed per seed, then averaged across all 64 seeds. Against frozen and shuffled-training controls, `(controlMeanBrier - adaptiveMeanBrier) / controlMeanBrier >= 0.05`; denominator `<= 1e-12` fails as undefined. Per-seed true-label quality deltas also pass inference. |
@@ -238,6 +238,45 @@ failed behavioral control.
 | Receipt integrity    | V4 records source commit, protocol-source and fixture SHA-256 values, benchmark and preregistration SHA-256, raw-data SHA-256, machine/toolchain data, every seed row, effect sizes, intervals, adjusted sign-flip p-values, failures, and a content hash. Public pages pin that hash.                                                                                                                   |
 | Generated visual     | Rebuilding the forest from the canonical receipt is byte-identical; labels, intervals, zero line, failed rows, ineligible rows, and receipt SHA are regression-tested.                                                                                                                                                                                                                                   |
 | Claim law            | `indicatorOnly` remains true. `consciousnessUpliftAllowed` and `sentienceUpliftAllowed` remain false regardless of V4 task performance unless a separate preregistered consciousness/sentience experiment establishes those claims.                                                                                                                                                                      |
+
+### Post-result calibration identity portability amendment
+
+The historical V4 result remains unchanged and sealed to the exact source bytes at its recorded
+`runtimeBaseCommit`; integrity verification reads those historical blobs with `git show` instead of
+requiring the live evaluator to remain forever byte-identical to an old result harness.
+
+A Windows x64 versus Ubuntu/WSL x64 audit on Bun `1.3.14` found that both ordinary calibration runs had
+action frequency `1`, exactly 7,680 non-zero magnitudes, and the same scientific ordering, while 1,265
+raw magnitude leaves differed. The maximum absolute difference was
+`1.3877787807814457e-17`. Fixed-decimal projections still had one differing value at 13 and 14 decimal
+places and six at 15; 12 decimal places was therefore the tightest tested zero-difference boundary. Its
+`1e-12` bin width is about 72,000 times the observed residue but 50 billion times finer than the smallest
+non-zero V4 behavioral gate (`0.05`).
+
+Current code now reports two distinct seals instead of relabeling the historical raw seal:
+
+- `calibrationSha256` remains the exact platform-local binary64 payload hash: Windows
+  `ca74e6d7cab350eb199b5674c6675085105d5abe869ed70c2081912f58fc58bb`; Ubuntu
+  `40b1f01db3a224e7f1e88ac6a000c54b29f2c611a92b1be756ee577cf2103615`;
+- `calibrationIdentitySha256` is the portable bounded-equivalence identity
+  `001298f6b1231be1d766cc2e1498f7fbe3d19828170348faceb2aad9ef0724bf`, bound to
+  `ordinary-v4-calibration-identity-fixed-decimal-1e-12-v1` and used only by the acceptance guard.
+
+The projection does not feed behavior. Returned calibration magnitudes, surrogate actions, outcomes,
+secondary payloads, and trace replays remain raw binary64. Values in the same 12-decimal bin are
+intentionally equivalent for guard acceptance while their exact raw hashes remain distinct. This is not
+a claim of full V4 cross-platform byte portability: the audit observed differences in 10/16 source replay
+fingerprints, 196/384 arm replay fingerprints, 185/384 secondary payloads, and 2/384 surrogate primary
+outcomes; the largest primary difference was at most `1.1102230246251565e-16`. Despite that residue,
+Windows and Ubuntu produced the same ordinary inference pass vector `[PASS, PASS, PASS, PASS]`, magnitude
+pass vector `[FAIL, FAIL, FAIL, PASS]`, magnitude failure, and family failure. A non-gating Cohen's `dz`
+value still differed in its last bit, so no full-statistic byte identity is claimed. No V4 gate, verdict,
+or authorized claim changed.
+
+The live portable scientific projection across all 64 ordinary seeds is separately pinned at
+`fc77fc74a65722c7c3a1128d392c2f4383674c3cff4cd2e9a84f57e44f8346bb`; it excludes raw platform-local
+digests while retaining the bounded scientific payload, so deterministic live-evaluator drift cannot hide
+behind SHA-shape checks alone.
 
 V4 authorizes only bounded Titan game-policy semantic causality. It does not authorize ordinary recurrent
 context benefit, adaptive ecological prediction, Petri ecological causality, neural-capacity response, or a

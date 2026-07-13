@@ -8,6 +8,15 @@ external preregistration or an independent replication. The post-write integrity
 receipt hash, source and fixture hashes, exact 1,152-row CSV, Git ancestry, forbidden claims, and forest
 SVG bytes. Failed rows and gates are retained.
 
+**Portability erratum:** the live ordinary evaluator and result generator now contain a post-result,
+calibration-identity-only portability amendment. The published V4 assets were not regenerated and remain
+bound to runtime commit `4a029969f0a1dc6057bcc0917982cc3b95daaa20`; links below to live source files
+do not represent those historical source bytes. Integrity checks recover and hash the recorded commit's
+blobs directly. The live writer fails closed on these finalized paths; any successor result requires a
+new result ID, schema version, and output paths. A 12-decimal projected scientific seal across all 64
+ordinary seeds (`fc77fc74a65722c7c3a1128d392c2f4383674c3cff4cd2e9a84f57e44f8346bb`) retains live
+regression strength without pretending the raw binary64 trace digests are cross-platform portable.
+
 - [Canonical JSON receipt](./assets/organism-intelligence-causal-benchmark-v4.json)
 - [Complete raw 1,152-row CSV](./assets/cross-being-neural-causality-v1.csv)
 - [Accessible byte-stable forest SVG](./assets/organism-intelligence-v4-cross-being-forest.svg)
@@ -60,7 +69,7 @@ For predictor magnitude, the preregistered aggregate relative true-label Brier r
   rows. No seed, arm, negative effect, or failed gate was filtered.
 - Matched initial-state, percept, task-schedule, and environment-RNG identities—and arm-specific
   intervention, calibration, and replay identities—are hashed per row. Every row replayed
-  byte-identically.
+  byte-identically within the recorded Windows platform/toolchain.
 - Ordinary secondary evidence includes three explicit goal-reversal recovery windows with zero-lag and
   right-censoring semantics.
 - Predictor feedback is exactly one cadence delayed; shuffled labels train only the shuffled control,
