@@ -63,6 +63,7 @@ export class TelemetryPanel {
   private readonly snt: HTMLElement;
   /** V13: NHI super-mind tally row. */
   private readonly nhic: HTMLElement;
+  private readonly xno: HTMLElement;
   /** V13: bottom-right View / Speed / Render readout box. */
   private readonly hudView: HTMLElement;
   private readonly hudSpeed: HTMLElement;
@@ -107,6 +108,7 @@ export class TelemetryPanel {
     this.etn = mustGet('etn');
     this.snt = mustGet('snt');
     this.nhic = mustGet('nhic');
+    this.xno = mustGet('xno');
     this.hudView = mustGet('hud-view');
     this.hudSpeed = mustGet('hud-speed');
     this.hudRender = mustGet('hud-render');
@@ -158,6 +160,7 @@ export class TelemetryPanel {
     this.ep.textContent = String(s.puppeteers);
     this.etn.textContent = String(s.titans); // V3+: titan colossi roster
     this.nhic.textContent = String(s.nhi); // V13: launched NHI super-minds
+    this.xno.textContent = String(s.xenomimics); // XENOMIMIC: live ground-fauna tally (below Entities)
     // V4 aliveness as a %, plus its named tier (F-SENTIENCE-VAR: DORMANT…TRANSCENDENT).
     this.snt.textContent = `${Math.round(s.sentience * 100)}% ${sentienceTier(s.sentience)}`;
     // V13: bottom-right View / Speed / Render box (uppercased name + ×-suffixed speed).

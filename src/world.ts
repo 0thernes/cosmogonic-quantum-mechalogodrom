@@ -217,7 +217,7 @@ import type { MemoryStore } from './memory/store';
 import { WorkerPool, type WorkerPoolConfig } from './core/worker-pool';
 import { WildernessPopulation } from './sim/wilderness-population';
 import { WildernessRenderer } from './sim/wilderness-render';
-import { XenomimicPopulation } from './sim/xenomimics';
+import { XenomimicPopulation, XENOMIMIC_MAX } from './sim/xenomimics';
 import { XenomimicRenderer } from './sim/xenomimics-render';
 
 /** Cyclic element access into a non-empty readonly array. O(1). */
@@ -1455,6 +1455,7 @@ export class World {
       bioCoherence: 0,
       bioMomentum: 0,
       nhi: 0,
+      xenomimics: 0,
       godPower: 0,
       viewName: cyc(VIEW_MODES, this.state.viewIdx),
       timeScale: this.state.timeScale,
@@ -3621,6 +3622,59 @@ export class World {
     this.hud.showSector('◎ GOD-COLOSSUS');
   }
 
+  /**
+   * ◈ XENOMIMIC — snap the FREE camera to a 3/4 vantage framing the xenomimic ground-fauna swarm. The
+   * fauna roam a small radius low on the habitat floor near the world origin, so they are easy to miss;
+   * this frames their LIVE centroid. Switches to FREE so the auto-cams don't re-drive the shot, then the
+   * player can roam. Presentation-only: reads live creature positions, writes only the camera + view index.
+   */
+  private focusXenomimics(): void {
+    const freeIdx = VIEW_MODES.indexOf('free');
+    if (freeIdx >= 0) {
+      this.state.viewIdx = freeIdx;
+      this.persisted.viewIdx = freeIdx;
+    }
+    let cx = 0;
+    let cy = 0;
+    let cz = 0;
+    let n = 0;
+    this.xenomimics.forEach((c) => {
+      cx += c.x;
+      cy += c.y;
+      cz += c.z;
+      n++;
+    });
+    if (n > 0) {
+      cx /= n;
+      cy /= n;
+      cz /= n;
+    }
+    const r = 220;
+    const cam = this.engine.camera;
+    cam.up.set(0, 1, 0);
+    cam.position.set(cx + r * 0.5, cy + r * 0.8, cz + r * 1.1);
+    cam.lookAt(cx, cy, cz);
+    this.hud.showSector('◈ XENOMIMICS');
+  }
+
+  /**
+   * ◈ XNO — spawn one entangled xenomimic twin-pair on the ground near the camera (owner's XNO button,
+   * modelled on NHI). Returns the creatures added (2, or 0 at the cap). Presentation feedback + audit
+   * only; the deterministic {@link XenomimicPopulation} owns the actual population and its rng substream.
+   */
+  private launchXenoBeing(): number {
+    const cam = this.engine.camera;
+    const added = this.xenomimics.spawnAt(cam.position.x, cam.position.z);
+    if (added > 0) {
+      this.audio.play('crystallize');
+      this.hud.showSector(`◈ XNO +${added} · ${this.xenomimics.population()} LIVE`);
+      this.audit.record('xeno-spawn', { added, population: this.xenomimics.population() });
+    } else {
+      this.hud.showSector(`XNO CAP · ${XENOMIMIC_MAX} LIVE`);
+    }
+    return added;
+  }
+
   /** Legacy chaos multiplier cMul(): min(chaos/2, 3). */
   private chaosMul(): number {
     return Math.min(this.state.chaos / 2, 3);
@@ -3956,6 +4010,7 @@ export class World {
     const s = this.state;
     const sn = this.snap;
     sn.entities = this.entities.list.length;
+    sn.xenomimics = this.xenomimics.population();
     sn.chaos = s.chaos;
     sn.mutations = s.mutations;
     sn.energy = this.energy;
@@ -5244,6 +5299,7 @@ export class World {
       toggleChaosMode: () => this.toggleChaosMode(), // V62: the Lorenz quantum storm
       toggleBrutalism: () => this.toggleBrutalism(), // BRUTALISM: god-jewel ↔ concrete monolith
       focusColossus: () => this.focusColossus(), // ◎ GOD: fly the free cam to frame the fractal deity
+      focusXenomimics: () => this.focusXenomimics(), // ◈ XENOMIMIC: fly the free cam to the ground-fauna swarm
       entropyBoost: () => {
         this.unlock();
         // F-CHAOS-ENTROPY: raise ENTROPY one step (the bipolar opposite of chaos — order/heat-death).
@@ -5257,6 +5313,10 @@ export class World {
       launchNhi: () => {
         this.unlock();
         return this.launchNhiBeing();
+      },
+      launchXeno: () => {
+        this.unlock();
+        return this.launchXenoBeing();
       },
       summonSingularity: () => {
         this.unlock();

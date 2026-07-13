@@ -478,6 +478,8 @@ export interface TelemetrySnapshot {
   bioMomentum: number;
   /** Live count of registered NHI super-minds (telemetry tally). */
   nhi: number;
+  /** Live count of xenomimic ground fauna (telemetry tally, below Entities). */
+  xenomimics: number;
   /** Mean brutal-god power across petri archons (0..1) — NHSI pantheon telemetry. */
   godPower?: number;
   /** Current camera view-mode name (HUD View/Speed/Render box). */
@@ -526,6 +528,8 @@ export interface UiActions {
   entropyBoost(): number;
   /** Launch a user-controlled NHI being into the world (F-NHI); returns 1 on success, 0 if at the cap. */
   launchNhi(): number;
+  /** Spawn an entangled xenomimic twin-pair of ground fauna near the camera; returns creatures added (0/2). */
+  launchXeno(): number;
   /** Summon the next cosmological singularity (CONTRACTS V7.4); returns its name. */
   summonSingularity(): string;
   apocalypse(): void;
@@ -550,6 +554,8 @@ export interface UiActions {
   cycleView(): ViewMode;
   /** Snap the free camera to frame the God-Colossus fractal deity at the back of the dome. */
   focusColossus(): void;
+  /** Snap the free camera to frame the xenomimic ground-fauna swarm. */
+  focusXenomimics(): void;
   cycleAlgo(): string;
   /** Cycle master scene exposure darker ↔ brighter; returns the new value. */
   cycleExposure(): number;

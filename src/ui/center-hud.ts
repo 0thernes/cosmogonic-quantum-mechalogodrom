@@ -913,6 +913,12 @@ function buildPersistentNav(doc: Document): void {
       'Fly the camera to the God-Colossus fractal deity',
       'cqm-persist-sim',
     ],
+    [
+      'focusXenomimics',
+      '◈ XENOMIMIC',
+      'Fly the camera to the xenomimic ground-fauna swarm',
+      'cqm-persist-sim',
+    ],
   ] as const) {
     rowSim.appendChild(mkAct(label, title, action, extra));
   }

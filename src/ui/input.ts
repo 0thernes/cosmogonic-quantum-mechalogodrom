@@ -122,6 +122,8 @@ const TOOLBAR_MAP: Readonly<Record<string, keyof UiActions>> = {
   exposure: 'cycleExposure', // V116: master scene brightness
   neuralweb: 'toggleConnectomeWeb', // entity connectome axon web (proximity neural links)
   focusColossus: 'focusColossus', // ◎ GOD: fly the camera to frame the God-Colossus fractal deity
+  xno: 'launchXeno', // ◈ XNO: spawn an entangled xenomimic ground-fauna twin-pair
+  focusXenomimics: 'focusXenomimics', // ◈ XENOMIMIC: fly the camera to the ground-fauna swarm
 };
 
 /**

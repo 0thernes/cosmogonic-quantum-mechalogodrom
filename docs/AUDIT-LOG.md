@@ -11,6 +11,25 @@ changed and why.
 
 ---
 
+## 2026-07-12 — batch 48: Xenomimics UI slice 2a — XNO spawn + XENOMIMIC focus + telemetry row
+
+Fleet-split follow-up on top of the Xenomimic **substrate** (owned by a parallel session): per the
+owner's division this session owns the **UI / coupling / audio / docs** layers over their
+`XenomimicPopulation`. This is the first, most visible slice — the controls the owner named directly.
+(1) **XNO dock button** (`index.html data-action="xno"` → `input.ts` TOOLBAR_MAP `launchXeno` →
+`world.launchXenoBeing()`) spawns an entangled twin-pair at the camera XZ via the substrate's
+`spawnAt(x,z)` and reports the new LIVE tally. (2) **◈ XENOMIMIC focus button** (center-hud `rowSim`,
+modelled on ◎ GOD's `focusColossus`) flies the FREE camera to a ¾ vantage framing the swarm's live
+centroid. (3) **"Xenomimics" telemetry row** directly below Entities: `TelemetrySnapshot.xenomimics`
+→ `#xno` span, refreshed every frame from `population()`. GATE-XENOMIMIC-UI
+(`tests/xenomimics-ui.test.ts`, 9 tests) pins `spawnAt` (adds exactly one pair, deterministic, places
+at the requested point, respects the 1000 cap) and seals the whole DOM → input → UiAction → world →
+panel chain at source level so any unhooked link reds the gate. Presentation + one thin substrate entry
+point only — the deterministic sim and its rng substream are untouched; every golden and the substrate
+GATE-XENOMIMIC stay green. No metric axis moved.
+
+---
+
 ## 2026-07-12 — batch 47c: Xenomimic brains gain a Free-Energy-Principle predictive-coding loop
 
 Substrate-lane depth (this session's fleet-assigned lane — brains/population/render only; UI / world-wiring
