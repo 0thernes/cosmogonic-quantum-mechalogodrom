@@ -4,10 +4,10 @@
   "nSystems": 113,
   "nPeers": 112,
   "cosmogonic": {
-    "breadthMean": 3.81,
+    "breadthMean": 3.82,
     "breadthRank": 1,
-    "zScorePopulation": 3.04,
-    "zScoreVsPeers": 3.19,
+    "zScorePopulation": 3.06,
+    "zScoreVsPeers": 3.21,
     "percentile": 100,
     "peerMaturity": 1.5
   },
@@ -119,10 +119,10 @@
     {
       "axis": "Substrate pluralism",
       "mean": 1.11,
-      "std": 0.45,
-      "max": 4.5,
-      "cosmo": 4.5,
-      "cosmoZ": 7.57,
+      "std": 0.46,
+      "max": 4.6,
+      "cosmo": 4.6,
+      "cosmoZ": 7.67,
       "leaders": [
         "COSMOGONIC"
       ]
@@ -185,52 +185,52 @@
     {
       "name": "ALIEN",
       "full": "ALIEN",
-      "d": 4.55
+      "d": 4.58
     },
     {
       "name": "Creatures",
       "full": "Creatures",
-      "d": 4.87
+      "d": 4.92
     },
     {
       "name": "Framsticks",
       "full": "Framsticks",
-      "d": 5.41
+      "d": 5.46
     },
     {
       "name": "Division Blocks",
       "full": "Division Blocks",
-      "d": 5.47
+      "d": 5.54
     },
     {
       "name": "biosim4",
       "full": "biosim4",
-      "d": 5.56
+      "d": 5.62
     },
     {
       "name": "The Bibites",
       "full": "The Bibites",
-      "d": 5.62
+      "d": 5.68
     },
     {
       "name": "Karl Sims VC",
       "full": "Karl Sims Evolved Virtual Creatures",
-      "d": 5.74
+      "d": 5.8
     },
     {
       "name": "DERL (Deep Evolutionary Reinforcement Learning)",
       "full": "DERL (Deep Evolutionary Reinforcement Learning)",
-      "d": 5.74
+      "d": 5.8
     },
     {
       "name": "Neural Graph Evolution (NGE)",
       "full": "Neural Graph Evolution (NGE)",
-      "d": 5.76
+      "d": 5.82
     },
     {
       "name": "Polyworld",
       "full": "Polyworld",
-      "d": 5.78
+      "d": 5.83
     }
   ]
 }

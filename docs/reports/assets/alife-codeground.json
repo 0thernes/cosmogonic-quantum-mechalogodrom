@@ -77,20 +77,20 @@
       3.3,
       3.8,
       4.5,
-      4.5,
+      4.6,
       4.3,
       3.5,
       4
     ],
-    "breadth": 3.811,
+    "breadth": 3.822,
     "rank": 1,
     "total": 113,
     "percentile": 100,
-    "zPopulation": 3.044,
-    "zVsPeers": 3.193,
-    "mahalanobis": 10.243,
+    "zPopulation": 3.062,
+    "zVsPeers": 3.213,
+    "mahalanobis": 10.354,
     "dominatedBy9d": 0,
-    "leadOverNearestPeerBreadth": 0.311,
+    "leadOverNearestPeerBreadth": 0.322,
     "perAxisZ": [
       {
         "axis": "Reproduction",
@@ -119,8 +119,8 @@
       },
       {
         "axis": "Substrate pluralism",
-        "score": 4.5,
-        "z": 7.57
+        "score": 4.6,
+        "z": 7.67
       },
       {
         "axis": "Instrumentation",
@@ -215,20 +215,20 @@
       3.3,
       3.8,
       4.5,
-      4.5,
+      4.6,
       4.3,
       3.5,
       4
     ],
-    "breadth": 3.811,
+    "breadth": 3.822,
     "rank": 1,
     "total": 113,
     "percentile": 100,
-    "zPopulation": 3.044,
-    "zVsPeers": 3.193,
-    "mahalanobis": 10.243,
+    "zPopulation": 3.062,
+    "zVsPeers": 3.213,
+    "mahalanobis": 10.354,
     "dominatedBy9d": 0,
-    "leadOverNearestPeerBreadth": 0.311,
+    "leadOverNearestPeerBreadth": 0.322,
     "perAxisZ": [
       {
         "axis": "Reproduction",
@@ -257,8 +257,8 @@
       },
       {
         "axis": "Substrate pluralism",
-        "score": 4.5,
-        "z": 7.57
+        "score": 4.6,
+        "z": 7.67
       },
       {
         "axis": "Instrumentation",
@@ -279,8 +279,8 @@
   },
   "deltas": {
     "basis": "canonical-minus-historical",
-    "breadth": -0.633,
-    "zPopulation": -0.975,
-    "mahalanobis": -2.412
+    "breadth": -0.622,
+    "zPopulation": -0.957,
+    "mahalanobis": -2.301
   }
 }

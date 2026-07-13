@@ -39,7 +39,18 @@
  *                            trajectory and gates decisiveness by its validated remainder (GATE-PREDICTIVE-
  *                            METACOG, predictive-metacognition.ts). Six accumulated gate-backed mechanisms
  *                            now substantiate the original self-scored ceiling — was 3.8
- *   substrate pluralism 4.5  qcircuit.ts real 5-qubit statevector wired + tsotchke-deep-wire real irrep/SVD; schrodinger/causal-graph/predictive-coding isolated — mild (was 5.0)
+ *   substrate pluralism 4.6  qcircuit.ts real 5-qubit statevector wired + tsotchke-deep-wire real irrep/SVD PLUS
+ *                            a genuinely NEW second, independent live consumer of the raw Crank–Nicolson
+ *                            wavefunction (math/schrodinger.ts) now drives the Xenomimic ground fauna: each beat
+ *                            evolves a Gaussian wavepacket by the EXACT unitary CN scheme under a sense-shaped
+ *                            potential and reads its positional spread as an exploration cue widening the
+ *                            creature's turn, ablation-verified (GATE-XENO-SCHRODINGER, xenomimic-brain.ts
+ *                            schrodingerSpread). A distinct substrate CLASS — a continuous position-space PDE —
+ *                            feeding a wholly separate population. The prior "schrodinger/causal-graph/
+ *                            predictive-coding isolated" note was stale: schrodinger is also consumed by the apex
+ *                            latent-substrate probe (sim/latent-substrates.ts) and causal-graph/predictive-coding
+ *                            remain wired only there (not independently gated), so the axis is still short of the
+ *                            5.0 self-score — was 4.5
  *   instrumentation     4.3  analytics.ts:57-215 wired regression+audit; rng-stats.ts isolated — DEFENSIBLE (was 4.5)
  *   consciousness-thy   3.5  integrated-information.ts:44-92 exact quantum Phi + global-workspace wired; causal-graph + predictive-coding NEVER instantiated — OVERCLAIMED (was 4.5)
  *   visual scale        4.0  instanced-entities.ts pooling is the only desktop/ultra path; 50k tier unbenchmarked, pools cast no shadows — OVERCLAIMED (was 5.0)
@@ -93,7 +104,18 @@ const HISTORICAL_SELF_SCORED = [4.0, 3.5, 5.0, 4.0, 4.5, 5.0, 4.5, 4.5, 5.0];
 //              flux SCALES with predation intensity — both ablation-verified. A new coupled adaptive/reactive
 //              ecological mechanism atop the soup-selection + titan-economy grounding; classical model, no claim
 //              of real-world ecological fidelity)
-export const CODE_GROUNDED = [4.0, 2.4, 3.3, 3.8, 4.5, 4.5, 4.3, 3.5, 4.0];
+//   batch-55:  substrate pluralism 4.5 -> 4.6 (GATE-XENO-SCHRODINGER: the raw Crank–Nicolson wavefunction
+//              substrate math/schrodinger.ts gains a genuinely NEW, second, INDEPENDENT live consumer in the
+//              Xenomimic brain — each beat evolves a Gaussian wavepacket by the EXACT unitary CN scheme under a
+//              sense-shaped potential (food well / threat barrier / crowding drift) and reads its positional
+//              spread √(⟨x²⟩−⟨x⟩²) as an exploration cue that widens the creature's turn. Ablation-verified: the
+//              spread is bounded, deterministic and drive-responsive, and the coupling measurably changes the
+//              swarm's steering versus an ablated control. A distinct substrate CLASS — a continuous
+//              position-space PDE — feeding a wholly separate population from the apex mind's existing
+//              latent-substrate probe (sim/latent-substrates.ts); classical numerical Schrödinger, not a QPU.
+//              Corrects the now-stale "schrodinger isolated" grounding — causal-graph/predictive-coding remain
+//              wired only via that single apex probe, so the axis stays below its 5.0 self-score)
+export const CODE_GROUNDED = [4.0, 2.4, 3.3, 3.8, 4.5, 4.6, 4.3, 3.5, 4.0];
 const EXPECTED_CANONICAL_CODE_GROUNDED = CODE_GROUNDED;
 
 interface Row {
