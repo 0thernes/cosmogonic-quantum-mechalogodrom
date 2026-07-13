@@ -95,6 +95,8 @@ export interface XenomimicTelemetry {
   coherence: number;
   /** Mean tug-of-war tension between mimic/anti basins in [0,1]. */
   bondTension: number;
+  /** Mean IIT-style integration (twin mutual information) across pairs in [0,1]. */
+  integration: number;
   speciesCounts: number[];
   dominantSpecies: number;
   growthTarget: number;
@@ -164,6 +166,15 @@ export class XenomimicPopulation {
     return this.pairs.length;
   }
 
+  /**
+   * Spawn one fresh twin pair at a world point — the "XNO" one-by-one spawn button (mirrors NHI launch).
+   * Returns the number of creatures added (2, or 0 if the pair cap is reached).
+   */
+  spawnAt(x: number, z: number): number {
+    const pair = this.spawnPair(this.rng() * XENOMIMIC_SPECIES, x, z);
+    return pair ? 2 : 0;
+  }
+
   private makeCreature(
     pairId: number,
     role: 0 | 1,
@@ -198,7 +209,7 @@ export class XenomimicPopulation {
     if (this.pairs.length >= XENOMIMIC_MAX / 2) return null;
     const id = this.nextPairId++;
     const species = Math.min(XENOMIMIC_SPECIES - 1, Math.max(0, Math.floor(speciesFloat)));
-    const brain = new XenomimicBrain((id * 0x9e3779b1) ^ hashSeed(`xeno-pair-${species}`));
+    const brain = new XenomimicBrain((id * 0x9e3779b1) ^ hashSeed(`xeno-pair-${species}`), species);
     // Twins are born adjacent — a bonded pair sharing one point in the world.
     const a = this.rng() * TWO_PI;
     const r = 2 + this.rng() * 3;
@@ -422,11 +433,13 @@ export class XenomimicPopulation {
     let n = 0;
     let coherenceSum = 0;
     let tensionSum = 0;
+    let integrationSum = 0;
     let beated = 0;
     for (const p of this.pairs) {
       if (p.beat) {
         coherenceSum += p.beat.coherence;
         tensionSum += p.beat.bondTension;
+        integrationSum += p.beat.integration;
         beated++;
       }
       for (const c of [p.mimic, p.anti]) {
@@ -450,6 +463,7 @@ export class XenomimicPopulation {
       meanEnergy: n > 0 ? energySum / n : 0,
       coherence: beated > 0 ? coherenceSum / beated : 0,
       bondTension: beated > 0 ? tensionSum / beated : 0,
+      integration: beated > 0 ? integrationSum / beated : 0,
       speciesCounts,
       dominantSpecies: dominant,
       growthTarget: this.growthTarget(),

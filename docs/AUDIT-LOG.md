@@ -11,6 +11,23 @@ changed and why.
 
 ---
 
+## 2026-07-12 — batch 47b: Xenomimic brains deepened (IIT integration + GWT + 10 temperaments)
+
+Substrate-lane enrichment on top of batch 47 (the substrate is this session's fleet-assigned lane; UI /
+coupling / audio / docs belong to a parallel session). Wired more of the 10 consciousness theories into
+the ~100-parameter twin brain, additively (backward-compatible defaults, so the parallel session's
+substrate adoption is unaffected): (1) an **IIT-style integration Φ-proxy** = the classical mutual
+information I(mimic;anti) between the two entangled twin qubits — 1 for the perfect singlet (one
+indivisible psyche in two bodies), 0 for a product state; (2) a **Global-Workspace broadcast** =
+bondTension × integration, so an integrated pair floods its shared workspace and the winning basin
+dominates BOTH twins harder; (3) **10 distinct species temperaments** (cheetah-sprint … snail-crawl,
+glutton … ascetic, prolific … sparse) so the kinds genuinely operate/think/feel differently, not just
+look different. `integration` now flows into the population telemetry, and `spawnAt(x,z)` was added
+(substrate API for the parallel session's XNO spawn button). GATE-XENOMIMIC grew 13 → 17 (singlet MI ≈ 1,
+distinct temperaments drive different behaviour, spawnAt adds a pair, telemetry integration bounded).
+Honest: classical MI is NOT rigorous IIT Φ and NOT a sentience claim — no consciousness/sentience matrix
+moved.
+
 ## 2026-07-12 — batch 47: Xenomimics (Slice 1) — deterministic entangled-twin ground fauna
 
 Continuation of the /goal (ecology axis, "make every living thing smarter — operational, not

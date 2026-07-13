@@ -67,6 +67,12 @@ export interface XenomimicBeat {
   mimicBit: number;
   /** Collapsed psionic bit of the anti twin (0|1). */
   antiBit: number;
+  /**
+   * IIT-style INTEGRATION Φ-proxy in [0,1]: the classical mutual information I(mimic;anti) between the
+   * two entangled twin qubits. 1 = maximally integrated (the singlet — one indivisible psyche in two
+   * bodies); 0 = independent. This is honest classical MI, NOT a rigorous IIT Φ or any sentience claim.
+   */
+  integration: number;
 }
 
 const clamp01 = (v: number): number => (!Number.isFinite(v) || v <= 0 ? 0 : v >= 1 ? 1 : v);
@@ -85,11 +91,18 @@ export class XenomimicBrain {
   private readonly im = new Float64Array(8);
   /** Latest Born-rule tilt toward the mimic basin in [0,1] (from the last prepared statevector). */
   private mimicBasin = 0.5;
+  /** This kind's innate behavioural bias — so the 10 species genuinely think/feel differently. */
+  private readonly temperament: SpeciesTemperament;
 
-  constructor(seed: number) {
+  constructor(seed: number, species = 0) {
     // Own weight-init substream, derived from the pair seed. Never touches the sim RNG.
     const initRng = mulberry32((hashSeed('xenomimic-brain') ^ (seed >>> 0)) >>> 0 || 1);
     this.net = createMlp(XENO_BRAIN_INPUTS, XENO_BRAIN_HIDDEN, XENO_BRAIN_OUTPUTS, initRng);
+    this.temperament =
+      SPECIES_TEMPERAMENT[
+        ((species % SPECIES_TEMPERAMENT.length) + SPECIES_TEMPERAMENT.length) %
+          SPECIES_TEMPERAMENT.length
+      ]!;
   }
 
   /** Total trainable parameters (≈100). Exposed for the gate that pins the "100-param brain" claim. */
@@ -127,6 +140,10 @@ export class XenomimicBrain {
     for (let s = 0; s < probs.length; s++) if (s & 1) pMimic += probs[s]!;
     this.mimicBasin = clamp01(pMimic);
     const bondTension = clamp01(Math.abs(this.mimicBasin - 0.5) * 2);
+    // IIT integration proxy (mutual information of the twin bits) + GWT broadcast (how strongly the
+    // winning basin floods the shared workspace) = bondTension gated by how integrated the pair is.
+    const integration = twinMutualInfo(probs);
+    const broadcast = clamp01(bondTension * integration);
 
     // ONE Born-rule collapse resolves the shared psionic state; the twin bits are anti-correlated.
     const outcome = reg.measure(rng);
@@ -139,12 +156,29 @@ export class XenomimicBrain {
     const teleportAnti = antiBit === 1 && coherence > 0.42;
 
     return {
-      mimic: this.resolve(sensesMimic, +1, coherence, this.mimicBasin, teleportMimic, mimicBit),
-      anti: this.resolve(sensesAnti, -1, coherence, 1 - this.mimicBasin, teleportAnti, antiBit),
+      mimic: this.resolve(
+        sensesMimic,
+        +1,
+        coherence,
+        this.mimicBasin,
+        teleportMimic,
+        mimicBit,
+        broadcast,
+      ),
+      anti: this.resolve(
+        sensesAnti,
+        -1,
+        coherence,
+        1 - this.mimicBasin,
+        teleportAnti,
+        antiBit,
+        broadcast,
+      ),
       coherence,
       bondTension,
       mimicBit,
       antiBit,
+      integration,
     };
   }
 
@@ -162,18 +196,23 @@ export class XenomimicBrain {
     basin: number,
     teleport: boolean,
     bit: number,
+    broadcast: number,
   ): XenomimicThought {
     const raw = mlpPredict(this.net, senses);
+    const t = this.temperament;
     // Spiky-neuron perturbation: a sparse high-gain kick that grows with superposition + this beat's bit.
     const spike = coherence * (bit === 1 ? 1 : -1) * 0.5;
+    // GWT dominance: how much this twin's basin owns the shared decisiveness, AMPLIFIED by the broadcast
+    // (an integrated pair floods its workspace, so the winning basin dominates harder).
+    const dominance = 0.4 + basin * 0.6 * (0.5 + broadcast * 0.5);
     const turn = clampSigned(
-      (Math.tanh(raw[0]! * curvature) + spike * curvature) * (0.4 + basin * 0.6),
+      (Math.tanh(raw[0]! * curvature) + spike * curvature) * dominance * t.agility,
     );
     // The mimic seeks (tanh→speed); the anti is restless — it converts the same drive into evasive burst.
-    const speed = clamp01(curvature === 1 ? sig(raw[1]!) : 1 - sig(raw[1]!) * 0.7);
-    const jump = clamp01(sig(raw[2]! + spike));
-    const eat = clamp01(sig(raw[3]!) * (curvature === 1 ? 1 : 0.7));
-    const mate = clamp01(sig(raw[4]!) * (0.5 + basin * 0.5));
+    const speed = clamp01((curvature === 1 ? sig(raw[1]!) : 1 - sig(raw[1]!) * 0.7) * t.dash);
+    const jump = clamp01(sig(raw[2]! + spike) * t.dash);
+    const eat = clamp01(sig(raw[3]!) * (curvature === 1 ? 1 : 0.7) * t.graze);
+    const mate = clamp01(sig(raw[4]!) * (0.5 + basin * 0.5) * t.breed);
     return {
       turn,
       speed,
@@ -186,6 +225,35 @@ export class XenomimicBrain {
   }
 }
 
+/** One kind's innate temperament — multiplicative biases that make the 10 species behave distinctly. */
+interface SpeciesTemperament {
+  /** Turn responsiveness (jittery vs steady). */
+  agility: number;
+  /** Locomotor drive (cheetah-sprint vs snail-crawl). */
+  dash: number;
+  /** Appetite for flora. */
+  graze: number;
+  /** Reproductive eagerness. */
+  breed: number;
+}
+
+/**
+ * Ten distinct temperaments — the owner's "10 different kinds that operate and think and feel"
+ * differently. Deliberately varied across the sprint/crawl, glutton/ascetic, and prolific/sparse axes.
+ */
+const SPECIES_TEMPERAMENT: readonly SpeciesTemperament[] = [
+  { agility: 1.3, dash: 1.4, graze: 0.8, breed: 0.9 }, // 0 cheetah — fast, restless, lean
+  { agility: 0.6, dash: 0.5, graze: 1.3, breed: 1.1 }, // 1 snail — slow, grazing, fecund
+  { agility: 1.1, dash: 1.0, graze: 1.0, breed: 1.0 }, // 2 generalist
+  { agility: 1.5, dash: 0.9, graze: 0.7, breed: 0.8 }, // 3 skittish darter
+  { agility: 0.8, dash: 0.7, graze: 1.4, breed: 1.3 }, // 4 glutton breeder
+  { agility: 1.0, dash: 1.3, graze: 0.9, breed: 0.7 }, // 5 sprinter ascetic
+  { agility: 0.7, dash: 0.6, graze: 1.1, breed: 1.4 }, // 6 prolific crawler
+  { agility: 1.4, dash: 1.1, graze: 0.8, breed: 0.9 }, // 7 agile forager
+  { agility: 0.9, dash: 0.8, graze: 1.2, breed: 1.0 }, // 8 steady grazer
+  { agility: 1.2, dash: 1.2, graze: 1.0, breed: 1.2 }, // 9 vigorous omnivore
+];
+
 /** Logistic squash to (0,1). */
 function sig(x: number): number {
   return 1 / (1 + Math.exp(-clampSigned(x) * 3));
@@ -196,4 +264,33 @@ function meanDrive(senses: readonly number[]): number {
   let s = 0;
   for (let i = 0; i < senses.length; i++) s += clamp01(senses[i] ?? 0);
   return senses.length > 0 ? s / senses.length : 0;
+}
+
+/** Binary Shannon entropy H(p) in bits. */
+function binaryEntropy(p: number): number {
+  if (p <= 0 || p >= 1) return 0;
+  return -p * Math.log2(p) - (1 - p) * Math.log2(1 - p);
+}
+
+/**
+ * Classical mutual information I(q0;q1) in [0,1] between the two twin qubits, from the 8-state Born
+ * distribution: I = H(q0) + H(q1) − H(q0,q1). The perfectly anti-correlated singlet gives I = 1 (one
+ * indivisible psyche); a product state gives I = 0. An honest, bounded IIT-style integration proxy.
+ */
+function twinMutualInfo(probs: Float64Array | ArrayLike<number>): number {
+  let p0 = 0; // P(q0 = 1)
+  let p1 = 0; // P(q1 = 1)
+  const joint = [0, 0, 0, 0]; // P(q0,q1) indexed by (q0 | q1<<1)
+  for (let s = 0; s < probs.length; s++) {
+    const pr = probs[s] ?? 0;
+    const b0 = s & 1;
+    const b1 = (s >> 1) & 1;
+    if (b0) p0 += pr;
+    if (b1) p1 += pr;
+    joint[b0 | (b1 << 1)]! += pr;
+  }
+  let hJoint = 0;
+  for (const pj of joint) if (pj > 0) hJoint -= pj * Math.log2(pj);
+  const mi = binaryEntropy(p0) + binaryEntropy(p1) - hJoint;
+  return mi <= 0 ? 0 : mi >= 1 ? 1 : mi;
 }

@@ -90,6 +90,38 @@ describe('GATE-XENOMIMIC — twin brain', () => {
       }
     }
   });
+
+  test('IIT integration proxy: the singlet is MAXIMALLY integrated (mutual information ≈ 1)', () => {
+    const brain = new XenomimicBrain(3);
+    const rng = mulberry32(1);
+    const neutral = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5];
+    let sum = 0;
+    const N = 40;
+    for (let i = 0; i < N; i++) {
+      const beat = brain.beat(neutral, neutral, rng);
+      expect(beat.integration).toBeGreaterThanOrEqual(0);
+      expect(beat.integration).toBeLessThanOrEqual(1);
+      sum += beat.integration;
+    }
+    // At θ=0 the twin qubits are a perfect singlet → I(mimic;anti) = 1 bit on every beat.
+    expect(sum / N).toBeGreaterThan(0.98);
+  });
+
+  test('the 10 species have DISTINCT temperaments — same senses drive different behaviour', () => {
+    const senses = [0.6, 0.3, 0.2, 0.5, 0.4, 0.7];
+    // Cheetah (0, dash 1.4) vs snail (1, dash 0.5): the fast kind drives more speed from identical senses.
+    const cheetah = new XenomimicBrain(500, 0);
+    const snail = new XenomimicBrain(500, 1);
+    const rc = mulberry32(9);
+    const rs = mulberry32(9);
+    let cheetahSpeed = 0;
+    let snailSpeed = 0;
+    for (let i = 0; i < 30; i++) {
+      cheetahSpeed += cheetah.beat(senses, senses, rc).mimic.speed;
+      snailSpeed += snail.beat(senses, senses, rs).mimic.speed;
+    }
+    expect(cheetahSpeed).toBeGreaterThan(snailSpeed);
+  });
 });
 
 describe('GATE-XENOMIMIC — population lifecycle', () => {
@@ -100,6 +132,24 @@ describe('GATE-XENOMIMIC — population lifecycle', () => {
     run(pop, 4000, 1 / 30, () => 0.95); // abundant food, long run
     expect(pop.population()).toBeLessThanOrEqual(XENOMIMIC_MAX);
     expect(pop.telemetry().pairs).toBeLessThanOrEqual(XENOMIMIC_MAX / 2);
+  });
+
+  test('spawnAt (the XNO one-by-one spawn) adds a live pair at a point', () => {
+    const pop = new XenomimicPopulation(31, { growthRamp: 999 });
+    const before = pop.population();
+    const added = pop.spawnAt(40, -20);
+    expect(added).toBe(2);
+    expect(pop.population()).toBe(before + 2);
+  });
+
+  test('telemetry exposes bounded integration/coherence for the data panel', () => {
+    const pop = new XenomimicPopulation(13, { growthRamp: 40 });
+    run(pop, 300, 1 / 30, () => 0.8);
+    const t = pop.telemetry();
+    for (const v of [t.coherence, t.bondTension, t.integration, t.meanEnergy]) {
+      expect(v).toBeGreaterThanOrEqual(0);
+      expect(v).toBeLessThanOrEqual(1);
+    }
   });
 
   test('whole-population determinism — same seed → byte-identical after many steps', () => {
