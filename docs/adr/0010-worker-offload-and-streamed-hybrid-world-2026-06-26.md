@@ -2,9 +2,19 @@
 
 # ADR 0010 — Worker offload + streamed "Hybrid world" for scaling
 
-- Status: Accepted
+- Status: Accepted design; live POWER runtime disabled pending delivered-frame proof
 - Date: 2026-06-20
 - Governs: Scaling stages 3–5 ([BENCHMARKS-2026-06-26.md](../BENCHMARKS-2026-06-26.md) § Scaling Stages)
+
+## Operational override — 2026-07-12
+
+The architecture remains documented, but the live browser runtime now constructs
+`WildernessPopulation(null, seed)` and keeps `World.workerPool` null. Nominal FPS remained plausible
+while delivered frames stalled for multiple seconds during the worker-enabled path; therefore the
+worker lane is dormant in POWER mode until a production-shaped benchmark proves improved delivered
+frame cadence, not merely a higher FPS counter. Wilderness remains synchronous and lower-fidelity
+streaming may not be reintroduced as a hidden fallback. The deterministic core, cognition, visual
+quality, Xenomimics, and other living systems remain enabled.
 
 ## Context
 
@@ -70,9 +80,9 @@ path; they run the wilderness, which is explicitly outside the golden.
 
 ## Consequences
 
-**Positive**
+**Projected positive (worker lane currently dormant)**
 
-- Uses the idle ~23 cores (wilderness on workers) → smooth at scale; the path toward 100k.
+- Could use idle cores for wilderness only if delivered-frame benchmarks clear the operational gate.
 - The determinism superpower is **preserved for the core** — the receipts/science identity intact.
 - The world can grow arbitrarily (wilderness chunks) without re-baselining the core golden.
 - Graceful degradation: no Workers / no SAB ⇒ everything runs sync on main (smaller, correct).

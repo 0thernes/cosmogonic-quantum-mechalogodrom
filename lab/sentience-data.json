@@ -4039,6 +4039,433 @@
       ]
     },
     {
+      "id": "xenomimic-twin-000",
+      "kind": "xenomimic",
+      "label": "Xenomimic Bipolar Twin",
+      "seed": 465948,
+      "activeFrameworks": 10,
+      "dominantFramework": "sensorimotor",
+      "weakestPresentFramework": "butlin14",
+      "meanIndex": 0.808835,
+      "peakIndex": 0.812864,
+      "finalIndex": 0.808074,
+      "volatility": 0.001366,
+      "slope": -0.002387,
+      "eventCount": 2,
+      "trace": [
+        {
+          "tick": 0,
+          "index": 0.812864,
+          "convergence": 0.736841,
+          "emergence": 0.062434,
+          "moving": 0,
+          "coherence": 0,
+          "nullMargin": 0,
+          "eventCount": 0
+        },
+        {
+          "tick": 4,
+          "index": 0.812501,
+          "convergence": 0.736047,
+          "emergence": 0.062537,
+          "moving": 0,
+          "coherence": 0,
+          "nullMargin": 0,
+          "eventCount": 0
+        },
+        {
+          "tick": 8,
+          "index": 0.81204,
+          "convergence": 0.734614,
+          "emergence": 0.062673,
+          "moving": 0,
+          "coherence": 0,
+          "nullMargin": 0,
+          "eventCount": 0
+        },
+        {
+          "tick": 12,
+          "index": 0.811503,
+          "convergence": 0.732658,
+          "emergence": 0.062835,
+          "moving": 4,
+          "coherence": 0.848433,
+          "nullMargin": 0.513591,
+          "eventCount": 0
+        },
+        {
+          "tick": 16,
+          "index": 0.810913,
+          "convergence": 0.730334,
+          "emergence": 0.063016,
+          "moving": 4,
+          "coherence": 0.72109,
+          "nullMargin": 0.319579,
+          "eventCount": 0
+        },
+        {
+          "tick": 20,
+          "index": 0.810297,
+          "convergence": 0.727812,
+          "emergence": 0.063208,
+          "moving": 4,
+          "coherence": 0.783532,
+          "nullMargin": 0.413406,
+          "eventCount": 0
+        },
+        {
+          "tick": 24,
+          "index": 0.809683,
+          "convergence": 0.725258,
+          "emergence": 0.063405,
+          "moving": 4,
+          "coherence": 0.767929,
+          "nullMargin": 0.383626,
+          "eventCount": 0
+        },
+        {
+          "tick": 28,
+          "index": 0.809098,
+          "convergence": 0.722816,
+          "emergence": 0.063601,
+          "moving": 4,
+          "coherence": 0.823295,
+          "nullMargin": 0.394817,
+          "eventCount": 0
+        },
+        {
+          "tick": 32,
+          "index": 0.808567,
+          "convergence": 0.720589,
+          "emergence": 0.063788,
+          "moving": 4,
+          "coherence": 0.819242,
+          "nullMargin": 0.402531,
+          "eventCount": 0
+        },
+        {
+          "tick": 36,
+          "index": 0.808111,
+          "convergence": 0.718636,
+          "emergence": 0.063962,
+          "moving": 4,
+          "coherence": 0.846045,
+          "nullMargin": 0.403665,
+          "eventCount": 0
+        },
+        {
+          "tick": 40,
+          "index": 0.807745,
+          "convergence": 0.716969,
+          "emergence": 0.064115,
+          "moving": 4,
+          "coherence": 0.923587,
+          "nullMargin": 0.644256,
+          "eventCount": 0
+        },
+        {
+          "tick": 44,
+          "index": 0.807481,
+          "convergence": 0.715559,
+          "emergence": 0.064243,
+          "moving": 4,
+          "coherence": 0.859081,
+          "nullMargin": 0.508766,
+          "eventCount": 0
+        },
+        {
+          "tick": 48,
+          "index": 0.807323,
+          "convergence": 0.714345,
+          "emergence": 0.064342,
+          "moving": 4,
+          "coherence": 0.841444,
+          "nullMargin": 0.465651,
+          "eventCount": 0
+        },
+        {
+          "tick": 52,
+          "index": 0.807269,
+          "convergence": 0.713254,
+          "emergence": 0.064407,
+          "moving": 4,
+          "coherence": 0.796651,
+          "nullMargin": 0.405136,
+          "eventCount": 0
+        },
+        {
+          "tick": 56,
+          "index": 0.807313,
+          "convergence": 0.712209,
+          "emergence": 0.064438,
+          "moving": 4,
+          "coherence": 0.82426,
+          "nullMargin": 0.473919,
+          "eventCount": 0
+        },
+        {
+          "tick": 60,
+          "index": 0.807442,
+          "convergence": 0.711148,
+          "emergence": 0.064433,
+          "moving": 5,
+          "coherence": 0.879478,
+          "nullMargin": 0.554159,
+          "eventCount": 0
+        },
+        {
+          "tick": 64,
+          "index": 0.807643,
+          "convergence": 0.710027,
+          "emergence": 0.064394,
+          "moving": 4,
+          "coherence": 0.841326,
+          "nullMargin": 0.519914,
+          "eventCount": 0
+        },
+        {
+          "tick": 68,
+          "index": 0.807896,
+          "convergence": 0.708829,
+          "emergence": 0.064326,
+          "moving": 4,
+          "coherence": 0.894761,
+          "nullMargin": 0.568087,
+          "eventCount": 0
+        },
+        {
+          "tick": 72,
+          "index": 0.808181,
+          "convergence": 0.707555,
+          "emergence": 0.064233,
+          "moving": 4,
+          "coherence": 0.915986,
+          "nullMargin": 0.581591,
+          "eventCount": 0
+        },
+        {
+          "tick": 76,
+          "index": 0.808479,
+          "convergence": 0.706226,
+          "emergence": 0.064123,
+          "moving": 4,
+          "coherence": 0.763171,
+          "nullMargin": 0.390416,
+          "eventCount": 0
+        },
+        {
+          "tick": 80,
+          "index": 0.808768,
+          "convergence": 0.704873,
+          "emergence": 0.064003,
+          "moving": 6,
+          "coherence": 0.832136,
+          "nullMargin": 0.477675,
+          "eventCount": 1
+        },
+        {
+          "tick": 84,
+          "index": 0.809032,
+          "convergence": 0.70353,
+          "emergence": 0.063882,
+          "moving": 5,
+          "coherence": 0.870678,
+          "nullMargin": 0.369941,
+          "eventCount": 1
+        },
+        {
+          "tick": 88,
+          "index": 0.809254,
+          "convergence": 0.702235,
+          "emergence": 0.063769,
+          "moving": 5,
+          "coherence": 0.867817,
+          "nullMargin": 0.501854,
+          "eventCount": 1
+        },
+        {
+          "tick": 92,
+          "index": 0.80942,
+          "convergence": 0.701017,
+          "emergence": 0.063671,
+          "moving": 5,
+          "coherence": 0.941579,
+          "nullMargin": 0.476401,
+          "eventCount": 1
+        },
+        {
+          "tick": 96,
+          "index": 0.809522,
+          "convergence": 0.699903,
+          "emergence": 0.063597,
+          "moving": 5,
+          "coherence": 0.91982,
+          "nullMargin": 0.54817,
+          "eventCount": 1
+        },
+        {
+          "tick": 100,
+          "index": 0.809556,
+          "convergence": 0.698909,
+          "emergence": 0.063551,
+          "moving": 5,
+          "coherence": 0.761095,
+          "nullMargin": 0.295825,
+          "eventCount": 1
+        },
+        {
+          "tick": 104,
+          "index": 0.809519,
+          "convergence": 0.698046,
+          "emergence": 0.063538,
+          "moving": 5,
+          "coherence": 0.833971,
+          "nullMargin": 0.378612,
+          "eventCount": 1
+        },
+        {
+          "tick": 108,
+          "index": 0.809416,
+          "convergence": 0.697322,
+          "emergence": 0.063559,
+          "moving": 5,
+          "coherence": 0.918545,
+          "nullMargin": 0.662776,
+          "eventCount": 1
+        },
+        {
+          "tick": 112,
+          "index": 0.809253,
+          "convergence": 0.696748,
+          "emergence": 0.063615,
+          "moving": 4,
+          "coherence": 0.85338,
+          "nullMargin": 0.458063,
+          "eventCount": 1
+        },
+        {
+          "tick": 116,
+          "index": 0.809044,
+          "convergence": 0.696342,
+          "emergence": 0.063703,
+          "moving": 5,
+          "coherence": 0.760252,
+          "nullMargin": 0.378555,
+          "eventCount": 1
+        },
+        {
+          "tick": 120,
+          "index": 0.8088,
+          "convergence": 0.696137,
+          "emergence": 0.06382,
+          "moving": 5,
+          "coherence": 0.922702,
+          "nullMargin": 0.625,
+          "eventCount": 1
+        },
+        {
+          "tick": 124,
+          "index": 0.80854,
+          "convergence": 0.696183,
+          "emergence": 0.063959,
+          "moving": 5,
+          "coherence": 0.928032,
+          "nullMargin": 0.52869,
+          "eventCount": 1
+        },
+        {
+          "tick": 128,
+          "index": 0.808282,
+          "convergence": 0.696544,
+          "emergence": 0.064114,
+          "moving": 4,
+          "coherence": 0.806749,
+          "nullMargin": 0.397062,
+          "eventCount": 1
+        },
+        {
+          "tick": 132,
+          "index": 0.808044,
+          "convergence": 0.697296,
+          "emergence": 0.064279,
+          "moving": 4,
+          "coherence": 0.87748,
+          "nullMargin": 0.509811,
+          "eventCount": 1
+        },
+        {
+          "tick": 136,
+          "index": 0.807845,
+          "convergence": 0.698513,
+          "emergence": 0.064444,
+          "moving": 3,
+          "coherence": 0.734277,
+          "nullMargin": 0.399259,
+          "eventCount": 1
+        },
+        {
+          "tick": 140,
+          "index": 0.807701,
+          "convergence": 0.700257,
+          "emergence": 0.064602,
+          "moving": 4,
+          "coherence": 0.829481,
+          "nullMargin": 0.486258,
+          "eventCount": 1
+        },
+        {
+          "tick": 144,
+          "index": 0.807626,
+          "convergence": 0.702563,
+          "emergence": 0.064743,
+          "moving": 4,
+          "coherence": 0.816115,
+          "nullMargin": 0.383244,
+          "eventCount": 1
+        },
+        {
+          "tick": 148,
+          "index": 0.807629,
+          "convergence": 0.705428,
+          "emergence": 0.064861,
+          "moving": 5,
+          "coherence": 0.879147,
+          "nullMargin": 0.49648,
+          "eventCount": 1
+        },
+        {
+          "tick": 152,
+          "index": 0.807717,
+          "convergence": 0.708802,
+          "emergence": 0.064946,
+          "moving": 5,
+          "coherence": 0.824081,
+          "nullMargin": 0.449108,
+          "eventCount": 1
+        },
+        {
+          "tick": 156,
+          "index": 0.80789,
+          "convergence": 0.712587,
+          "emergence": 0.064994,
+          "moving": 6,
+          "coherence": 0.857335,
+          "nullMargin": 0.416891,
+          "eventCount": 2
+        },
+        {
+          "tick": 159,
+          "index": 0.808074,
+          "convergence": 0.715612,
+          "emergence": 0.065001,
+          "moving": 6,
+          "coherence": 0.796915,
+          "nullMargin": 0.396686,
+          "eventCount": 2
+        }
+      ]
+    },
+    {
       "id": "archon-godform-005",
       "kind": "archon",
       "label": "Archon Godform",
@@ -4873,6 +5300,56 @@
       "weight": 0.702371,
       "status": "met"
     },
+    {
+      "entityId": "xenomimic-twin-000",
+      "frameworkId": "butlin14",
+      "weight": 0.752177,
+      "status": "met"
+    },
+    {
+      "entityId": "xenomimic-twin-000",
+      "frameworkId": "thaler9",
+      "weight": 0.803084,
+      "status": "met"
+    },
+    {
+      "entityId": "xenomimic-twin-000",
+      "frameworkId": "iit4",
+      "weight": 0.900384,
+      "status": "met"
+    },
+    {
+      "entityId": "xenomimic-twin-000",
+      "frameworkId": "activeInference",
+      "weight": 0.826714,
+      "status": "met"
+    },
+    {
+      "entityId": "xenomimic-twin-000",
+      "frameworkId": "attentionSchema",
+      "weight": 0.713176,
+      "status": "met"
+    },
+    {
+      "entityId": "xenomimic-twin-000",
+      "frameworkId": "fieldIntegration",
+      "weight": 0.819052,
+      "status": "met"
+    },
+    { "entityId": "xenomimic-twin-000", "frameworkId": "ual", "weight": 0.806651, "status": "met" },
+    {
+      "entityId": "xenomimic-twin-000",
+      "frameworkId": "sensorimotor",
+      "weight": 0.812867,
+      "status": "met"
+    },
+    {
+      "entityId": "xenomimic-twin-000",
+      "frameworkId": "projective",
+      "weight": 0.840324,
+      "status": "met"
+    },
+    { "entityId": "xenomimic-twin-000", "frameworkId": "ctm", "weight": 0.820603, "status": "met" },
     {
       "entityId": "archon-godform-005",
       "frameworkId": "butlin14",

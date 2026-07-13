@@ -1,5 +1,5 @@
 /**
- * XENOMIMIC BRAIN — a bipolar entangled twin mind (real math, NOT sentient).
+ * XENOMIMIC BRAIN — a bipolar twin mind using exact classical statevector math (NOT sentient).
  *
  * Every xenomimic is born as one half of an ENTANGLED TWIN PAIR that shares a single ~100-parameter
  * brain yet thinks with OPPOSITE "directional thought curvature" — a Joker/Batman tug-of-war inside one
@@ -12,7 +12,7 @@
  *  1. A genuine 6→8→5 tanh MLP ({@link ../sim/ad-mlp}) = 101 trainable parameters — the "100-param brain".
  *  2. A real 3-qubit statevector ({@link ../math/quantum} QuantumRegister) prepared into a SINGLET-like
  *     anti-correlated Bell pair on the two twin qubits plus a shared "bond" qubit. Measuring the twins
- *     yields OPPOSITE bits — the physical root of the anti-mimicry — while sense-parameterised rotations
+ *     yields OPPOSITE bits — the simulated mechanism for anti-mimicry — while sense-parameterised rotations
  *     tilt which twin's basin the world currently favours.
  *  3. Born-rule superposition ({@link ../math/quantum-coherence}) — the l1 coherence of the live
  *     statevector drives SHIMMER and SPIKY-NEURON perturbation, and a Born-rule collapse (measure) is

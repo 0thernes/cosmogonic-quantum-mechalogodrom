@@ -118,7 +118,13 @@ describe('delivery gates fail closed', () => {
     const worldSource = await text('src/world.ts');
     const buildSource = await text('scripts/build.ts');
     const serverSource = await text('server.ts');
-    expect(worldSource).toContain("new URL('./workers/simulation-worker.js', import.meta.url)");
+    // POWER runtime override (2026-07-12): keep the distributable worker artifact available for
+    // controlled benchmarks, but never initialize it in World until delivered-frame proof clears
+    // the multi-second-stall regression. The live wilderness is deliberately synchronous.
+    expect(worldSource).not.toContain("new URL('./workers/simulation-worker.js', import.meta.url)");
+    expect(worldSource).toContain('this.workerPool = null');
+    expect(worldSource).toContain('new WildernessPopulation(null, this.persisted.seed)');
+    expect(worldSource).not.toContain('new WorkerPool(');
     expect(buildSource).toContain("'./src/workers/simulation-worker.ts'");
     expect(buildSource).toContain("outdir: './dist/workers'");
     expect(buildSource).toContain("'./dist/workers/simulation-worker.js'");

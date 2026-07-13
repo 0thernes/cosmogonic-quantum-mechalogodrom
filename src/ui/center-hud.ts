@@ -1,6 +1,6 @@
 /**
- * CENTER HUD (V56) — unifies the six inspector panels (✦ AI · ❓ HELP · 🗒 AUDIT · ⊞ NEURAL · ⊙ MARKET ·
- * ⬢ ARCHITECT) into ONE same-size, fit-to-window pop-up CENTERED on screen that you CYCLE through (the
+ * CENTER HUD (V56) — unifies the inspector panels (AI · HELP · AUDIT · NEURAL · MARKET · ARCHITECT ·
+ * PANTHEONS · XENOMIMIC) into ONE same-size, fit-to-window pop-up CENTERED on screen that you CYCLE through (the
  * ‹ › arrows or the tab strip) instead of tap-close-tap-open. A ◐ button fades it transparent so you can
  * see the simulation behind it; ✕ closes. It fits any aspect ratio + works on touch — the slot is a
  * tall readable centre column, not the old shallow strip. This also permanently fixes "NEURAL overlaps
@@ -36,9 +36,14 @@ const SLOTS: readonly Slot[] = [
     toggle: 'cqm-arch-toggle',
     open: 'open',
   },
-  // ◈ XENOMIMIC — the entangled ground-fauna data window (slice 2b). Same window-box template as
-  // ⬢ ARCHITECT; the launcher adopts its toggle into the horizontal dock strip like every other panel.
-  { name: 'XENOMIMIC', icon: '◈', panel: 'cqm-xno-panel', toggle: 'cqm-xno-toggle', open: 'open' },
+  // Canonical ground-fauna inspector; its internal wireframe stays owned by XenomimicPanel.
+  {
+    name: 'XENOMIMIC',
+    icon: '◈',
+    panel: 'cqm-xenomimic-panel',
+    toggle: 'cqm-xenomimic-toggle',
+    open: 'open',
+  },
 ];
 
 const PANEL_SEL = SLOTS.map((s) => '#' + s.panel).join(',');
@@ -144,7 +149,7 @@ ${SLOTS.map((s) => `#${s.panel} > *:first-child`).join(',')} { padding-right: va
 #cqm-dock > #cqm-mkt-toggle,
 #cqm-dock > #cqm-sup-toggle,
 #cqm-dock > #cqm-arch-toggle,
-#cqm-dock > #cqm-xno-toggle,
+#cqm-dock > #cqm-xenomimic-toggle,
 #cqm-dock > #cqm-settings-toggle,
 #cqm-dock > #cqm-acc-toggle,
 #cqm-dock > a.cqm-dock-nav {
@@ -936,6 +941,7 @@ function buildPersistentNav(doc: Document): void {
     'MARKET',
     'ARCHON GODFORMS',
     'PANTHEONS',
+    'XENOMIMIC',
   ] as const;
   for (let i = 0; i < SLOTS.length; i++) {
     const s = SLOTS[i];

@@ -11,57 +11,77 @@ changed and why.
 
 ---
 
+## 2026-07-12 — batch 55: canonical Xenomimic consolidation
+
+Consolidated the published no-hyphen `XenomimicPopulation` into one canonical runtime. Added the
+read-only `src/ui/xenomimic-panel.ts` inspector with `SuperPanel` outer placement/wireframe, exact
+101-parameter shared twin-brain reporting, and explicit classical indicator-only language. World now
+owns construction, full-rate rendering, bounded connectome/audio, real terrain and flora mutation,
+sampled bidirectional Entity coupling/predation, Telemetry/Observatory feeds, pause/speed behavior,
+disposal, exact-one XNO/Y spawn, and mimic View tracking. Ten indexed morph batches and all UI/docs/lab
+surfaces read this same population; no second hidden Xenomimic system was introduced. Browser workers
+remain dormant in the POWER path because the previously observed multi-second delivered-frame stalls
+were not represented by the nominal FPS label.
+
+> **Supersession notice:** batch 55 replaces the current-runtime claims in batches 48–54 while retaining
+> batch 53's Observatory/changelog additions and batch 54's trophic ablation evidence. The earlier entries
+> remain historical records of the parallel slices, but the shipped runtime now uses
+> exact-one `launchXenomimic`, `#xenomimic-count`, `src/ui/xenomimic-panel.ts`, bounded sampled-Entity
+> `consumeNearest()` predation with predator energy credit, and one fixed 15-node
+> `XenomimicAudioBus`. The deleted `xeno-panel.ts`, all-creature `runXenomimicPredation()` scan, and
+> embedded `_xenoBus`/`setXenoTonality()` path are not current architecture.
+
+---
+
 ## 2026-07-12 — batch 54: ecology floor 3.2 → 3.3 (GATE-XENO-TROPHIC) — the four-axis goal's ecology axis
 
 The honest 9-axis **ecology** floor moves 3.2 → 3.3 — the first axis of the standing four-axis goal — grounded
 1:1 in a new ablation-verified gate, per the pipeline law (a floor rises only with a green gate; never
-inflate). The mechanism is the now-complete **Xenomimic trophic layer** (substrate batches 47–47c + the
-parallel session's slice-2 UI/coupling): the ground fauna are a genuine new consumer that GRAZES the flora
-and a new PREY the base entities eat (`world.ts` `runXenomimicPredation`, one-way, ≤3%/tick, 5-second
-respawn), with the entity connectome firing fed back into the swarm as agitation. GATE-XENO-TROPHIC (+2, new
-`tests/xenomimics-ecology.test.ts`) proves genuine predator-prey **REGULATION** — predation holds the swarm to
-a stable equilibrium well below its unpredated carrying capacity (≈604 vs the 1000 cap) WITHOUT collapsing it
-(the 5 s respawn + logistic growth keep it alive), ablation-verified against a predation-free control — and
-that the trophic **energy flux SCALES with predation intensity** (4× ≫ 1× cumulative energy to predators). A
-new coupled adaptive/reactive ecological mechanism atop the soup-selection + titan-economy grounding. Edited
+inflate). The mechanism is the now-complete **Xenomimic trophic layer**: the ground fauna are a genuine new
+consumer that mutates real flora through the injected grazing boundary and new prey that base Entities eat
+through bounded nearest-body `consumeNearest()` queries with 5-second post-predation respawn. Sampled Entity
+activation enters the twin brain and one bounded connectome links the populations. GATE-XENO-TROPHIC (+2,
+new `tests/xenomimics-ecology.test.ts`) proves predator-prey **REGULATION** — deterministic predation holds the
+swarm meaningfully below its unpredated carrying capacity without collapsing it, ablation-verified against a
+predation-free control — and that trophic **energy flux SCALES with predation intensity** (the heavy-pressure
+arm clears the preregistered `>1.5×` cumulative-transfer threshold over the light arm). This is a new coupled
+adaptive/reactive ecological mechanism atop the soup-selection + titan-economy grounding. Edited
 in lockstep: `alife-codeground-sensitivity.ts` `CODE_GROUNDED[2]`, the comparison-matrix CSV row + basis,
 `public-intelligence-receipts.test.ts` `CANONICAL_AXES`; regenerated `alife-stats`/`codeground` JSON + SVGs;
 synced the code-grounded breadth (3.80 → 3.81), z-population (+3.04), z-peers (+3.19), Mahalanobis (10.24) and
 the 9-axis vector across README / docs.html / specs.html / NHSI / VERIFICATION. Honest boundary: a classical
 ecology model, NOT real-world ecological fidelity; Consciousness/Sentience/Butlin matrices BYTE-IDENTICAL.
 
+---
+
 ## 2026-07-12 — batch 53: Xenomimics slice 1a — Observatory readout + CHANGELOG (thorough-pass gaps)
 
 First tranche of the owner's slice-1 "go through it again, very thorough" pass — closing the doc/surface
-gaps deferred from slices 2/3. (1) **Observatory**: the swarm now appears in the Observatory's live
-accessible summary — `ObservatorySnapshot` gains an optional `xenomimics` field and the screen-reader
-`liveEl` line reads "… xenomimics N". No new feed needed: `world.snapshot()` already sets
-`sn.xenomimics = xenomimics.population()` (slice 2a) and pushes that same object to `observatory.push()`,
-so it is a genuine surfaced readout, not a decorative dead field. (A fuller visible chart in the 16-canvas
-draw grid is a future enhancement — deliberately not rushed, to avoid a half-baked dead series.)
-(2) **CHANGELOG** `[Unreleased]` (the GitHub version surface) gains a full Xenomimics entry covering the
-substrate, player surfaces, world couplings and audio. **View subject-cycle**: already satisfied — the
-◈ XENOMIMIC focus button (center-hud `rowSim`) cycles the camera to the swarm alongside ◎ GOD et al. The
-repo's GitHub "About" description is outward-facing metadata (a `gh repo edit` op) — flagged for the owner
-rather than changed unprompted. GATE-XENOMIMIC-DOCS grew to include the Observatory readout + CHANGELOG
-(+1, file now 22). Presentation only — no sim, rng, or metric axis touched.
+gaps deferred from slices 2/3. (1) **Observatory**: the slice first added the swarm to the live accessible
+summary. Batch 54 then completed the same real feed as a visible four-lane ecology chart for population/cap,
+classical-statevector coherence, the twin integration proxy and bond tension. `world.snapshot()` publishes
+the canonical population telemetry and pushes that same snapshot to `observatory.push()`, so it is a
+genuine surfaced readout rather than a decorative dead field.
+(2) **CHANGELOG** `[Unreleased]` (the GitHub version surface) gained a full Xenomimics entry covering the
+substrate, player surfaces, world couplings and audio; that content is now retained in the v0.22.0 release.
+**View subject-cycle**: already satisfied — the ◈ XENOMIMIC focus button (center-hud `rowSim`) cycles the
+camera to the swarm alongside ◎ GOD et al. The repo's GitHub "About" description is outward-facing
+metadata and is updated as part of the authorized v0.22.0 publication. The consolidated source seals retain
+the Observatory and CHANGELOG coverage. This slice was presentation-only; the later consolidation changed
+runtime ownership and wiring without turning any indicator into a consciousness or physical-quantum claim.
 
 ---
 
-## 2026-07-12 — batch 52: Xenomimics slice 3b — documented across the player-facing surfaces
+## 2026-07-12 — batch 52: Xenomimics slice 3b — documented across player-facing surfaces
 
-The docs half of slice 3 — the swarm now appears where a reader/player looks (owner: "be in … SPEC and
-Documentation and ReadMe … HELP ME NOW and part of the LLM Copilot information … and in other docs").
-(1) **README** gains a front-door **Xenomimics** feature bullet (10 tessellated species, entangled twins,
-3-qubit singlet, 1000 cap, connectome coupling, 5s respawn, XNO/XENOMIMIC UI). (2) **❓ HELP ME NOW**
-(`ui/help-knowledge.ts`) gains a full `xenomimics` knowledge entry with keyword synonyms (xno, diamonds,
-twins, mimic/anti-mimic, shimmer, cosmic horror) — which the **✦ Copilot** also indexes, so the in-app AI
-can answer about them. (3) The **technical specification** architecture section gains a Xenomimics
-subsystem paragraph + two new entries in the feedback-web example (connectome→agitation, beings→predation).
-(4) The public **SPEC page** (`specs.html`) roster table gains a Xenomimics row (2 → 1,000). All prose is
-accurate to the shipped code; no measured metric or number was hand-edited. GATE-XENOMIMIC-DOCS (+1) seals
-the swarm's presence across README + Help + tech spec + SPEC so a future doc rewrite can't silently drop it.
-Remaining doc surfaces (Observatory interactive readout, About/GitHub) fold into the slice-1 pass.
+The docs half of slice 3 made the swarm visible wherever a reader/player looks. README gained a
+front-door feature bullet covering ten tessellated species, bipolar twins, the classical three-qubit
+singlet-like statevector, 1,000 cap, connectome coupling, five-second respawn, and XNO/XENOMIMIC UI.
+**❓ HELP ME NOW** gained a full `xenomimics` knowledge entry with xno, diamonds, twins,
+mimic/anti-mimic, shimmer, and cosmic-horror synonyms; the **✦ Copilot** indexes that same entry. The
+technical specification gained a Xenomimic subsystem paragraph plus connectome→agitation and
+beings→predation feedback edges, and the public SPEC roster gained a 2→1,000 Xenomimic row.
+GATE-XENOMIMIC-DOCS seals the swarm across README, Help, technical spec, and SPEC.
 
 ---
 
@@ -202,9 +222,9 @@ decorative"). Introduced a NEW first-class ground-creature subsystem, the **Xeno
 tessellated cosmic-horror fauna that skitter/hop/ride the ground waves, graze the flora, breed, die and
 respawn so the population self-balances (starts at 2, slowly multiplies toward 1000). Every creature is
 one half of an **entangled twin pair** (mimic vs anti-mimic — a Joker/Batman tug-of-war) sharing one
-~100-parameter brain: a real 6→8→5 tanh MLP (`sim/ad-mlp`) coupled to a real 3-qubit statevector
-(`math/quantum` `QuantumRegister`) prepared into a SINGLET so the twins measure OPPOSITE bits (the
-physical root of the anti-mimicry), with Born-rule superposition driving shimmer + collapse-triggered
+~100-parameter brain: a real 6→8→5 tanh MLP (`sim/ad-mlp`) coupled to an exact classically simulated
+3-qubit statevector (`math/quantum` `QuantumRegister`) prepared into a SINGLET so the twins measure
+OPPOSITE bits (the simulated mechanism for anti-mimicry), with Born-rule superposition driving shimmer + collapse-triggered
 teleportation. New files only: `sim/xenomimic-brain.ts`, `sim/xenomimics.ts`, `sim/xenomimics-render.ts`
 (10 per-species InstancedMeshes). Wired into `world.ts` (RUNNING step + SUSPENDED shimmer + dispose);
 affected by ⏸/▦ via the shared `dt`. The population draws ONLY from its own `mulberry32` substream and

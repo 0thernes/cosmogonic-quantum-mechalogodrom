@@ -2,7 +2,8 @@
  * GATE-XENO-TROPHIC — the Xenomimics are a REAL new ECOLOGICAL layer, not decoration.
  *
  * The substrate (GATE-XENOMIMIC) proves the creatures live/think/breed; the world coupling
- * (GATE-XENOMIMIC-COUPLING) proves `consume()` + the `chaos` sense are wired. This gate proves the
+ * (GATE-XENOMIMIC-COUPLING) proves real grazing, sampled-Entity brain input, and bounded nearest-body
+ * predation are wired. This gate proves the
  * ECOLOGY the owner asked for — that adding this ground-fauna layer produces genuine predator–prey
  * DYNAMICS, ablation-verified against a predation-free control:
  *
@@ -23,8 +24,8 @@ import { XenomimicPopulation } from '../src/sim/xenomimics';
 /**
  * Advance a population `steps` at `dt`. For the first `establish` steps the swarm grows undisturbed
  * (so it reaches an ecologically meaningful standing stock); thereafter, a predation pressure grazes a
- * bounded `fraction` of the live swarm on a ~5 Hz cadence — mirroring world.ts `runXenomimicPredation`
- * (throttled, ≤`fraction` of live per tick, one creature consumed per predation event). Returns the
+ * bounded `fraction` of the live swarm on a ~5 Hz cadence — an isolated population-level pressure used
+ * to measure the trophic mechanism independently of World scheduling. Returns the
  * cumulative energy yielded to predators through the trophic link.
  */
 function runWithPredation(

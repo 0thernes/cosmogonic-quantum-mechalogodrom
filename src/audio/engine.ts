@@ -34,6 +34,11 @@
 import type { Rng } from '../math/rng';
 import type { SfxType, SimState } from '../types';
 import {
+  XenomimicAudioBus,
+  type XenomimicAudioEventKind,
+  type XenomimicAudioMetrics,
+} from './xenomimic-audio';
+import {
   SFX_CUE_BAND,
   SFX_EXTRA_BANDS,
   SFX_FAMILY_BANDS,
@@ -100,6 +105,20 @@ export class AudioEngine {
   private musicGain: GainNode | null = null;
   private sfxGain: GainNode | null = null;
   private masterGain: GainNode | null = null;
+  /** Fixed-node Xenomimic field; created with the lazy AudioContext and never per creature. */
+  private xenomimicBus: XenomimicAudioBus | null = null;
+  private readonly xenomimicMetrics: XenomimicAudioMetrics = {
+    population: 0,
+    maxPopulation: 1000,
+    activity: 0,
+    predictionError: 0,
+    twinTension: 0,
+    weather: 0,
+    entropy: 0,
+    proximity: 0,
+    polarityBalance: 0,
+    strictSilence: true,
+  };
   /** V112 cinematic reverb (music bus only): a long cathedral tail turning the oscillator voices
    *  into Horner/Annihilation space. Parallel send to masterGain so mute/sleep govern it; dry intact. */
   private reverb: ConvolverNode | null = null;
@@ -110,23 +129,6 @@ export class AudioEngine {
   private _portalHorror: {
     drone: OscillatorNode | null;
     scream: OscillatorNode | null;
-    noise: AudioBufferSourceNode | null;
-    filter: BiquadFilterNode | null;
-    gain: GainNode | null;
-    level: number;
-  } | null = null;
-  /**
-   * XENOMIMIC tonality bus (owner: "very creepy weird unique ultra psychotic eerie WTF music tonality").
-   * A dedicated always-running-when-built layer, SILENT at rest, that the world drives from the swarm's
-   * live telemetry. Its psychotic character is the ENTANGLED TWIN made audible: two oscillators (`twinA`
-   * the mimic, `twinB` the anti) beat against each other at a dissonance that WIDENS with the swarm's
-   * mimic↔anti tug-of-war (bondTension); a high `chitter` shriek and a shimmer-noise wash ride on top,
-   * brightened by the swarm's free-energy arousal. Forked audio rng / wall-clock only — never touches sim.
-   */
-  private _xenoBus: {
-    twinA: OscillatorNode | null;
-    twinB: OscillatorNode | null;
-    chitter: OscillatorNode | null;
     noise: AudioBufferSourceNode | null;
     filter: BiquadFilterNode | null;
     gain: GainNode | null;
@@ -205,40 +207,6 @@ export class AudioEngine {
   }
 
   /**
-   * Drive the XENOMIMIC tonality from the swarm's live state (world.ts pushes it each Observatory cadence).
-   * SILENT at rest (presence 0 → gain 0), so an empty ground makes no sound.
-   * @param presence  swarm density 0..1 (population / cap) → master gain, capped low so it stays an eerie
-   *   UNDERTONE, never a wall.
-   * @param agitation swarm free-energy / arousal 0..1 → filter brightness + high-shriek level (jittery,
-   *   "WTF" the more the swarm is surprised).
-   * @param dissonance mimic↔anti tug-of-war 0..1 → the twin oscillators' detune SPREAD: high tension makes
-   *   the entangled pair beat wider and more grating (the psychosis you can hear).
-   */
-  setXenoTonality(presence: number = 0, agitation: number = 0, dissonance: number = 0): void {
-    const b = this._xenoBus;
-    if (!b || !this.ctx) return;
-    const p = Math.max(0, Math.min(1, presence));
-    const a = Math.max(0, Math.min(1, agitation));
-    const d = Math.max(0, Math.min(1, dissonance));
-    b.level = p;
-    const now = this.ctx.currentTime;
-    // Undertone gain — cap 0.24 (portal horror caps 0.92); a whisper of dread, not a siren.
-    const g = p > 0.02 ? Math.min(0.24, 0.02 + p * 0.22) : 0;
-    if (b.gain) b.gain.gain.setTargetAtTime(g, now, 0.35);
-    // The entangled twins: a common ~46 Hz fundamental, split apart by the tug-of-war. A perfect unison at
-    // d=0 (bonded singlet), sliding toward a grating tritone-ish beat (+/- up to ~55 cents) as tension climbs.
-    const spread = 6 + d * 55;
-    if (b.twinA) b.twinA.detune.setTargetAtTime(-spread, now, 0.3);
-    if (b.twinB) b.twinB.detune.setTargetAtTime(spread, now, 0.3);
-    // High chitter shriek rises + brightens with arousal; near-silent when the swarm is placid.
-    if (b.chitter) b.chitter.frequency.setTargetAtTime(520 + a * 900, now, 0.25);
-    if (b.filter) {
-      b.filter.frequency.setTargetAtTime(360 + a * 2600 + p * 400, now, 0.3);
-      b.filter.Q.setTargetAtTime(3 + d * 4, now, 0.3); // tighter, more ringing as the twins fight
-    }
-  }
-
-  /**
    * Layered portal horror bus (item 18) — the "1M dying slowly" demonic nightmare. A low detuned-saw
    * DRONE bed + a high square-wave SCREAM + a putrid noise wash, all shaped by a resonant band-pass into
    * an ontologically-shocking hell timbre, summed into a MASTER GAIN that STARTS AT SILENCE and is routed
@@ -296,65 +264,6 @@ export class AudioEngine {
     scream.start();
     noise.start();
     this._portalHorror = { drone, scream, noise, filter, gain, level: 0 };
-  }
-
-  /**
-   * XENOMIMIC tonality bus — the entangled-twin psychosis as a persistent, world-driven layer. Built once
-   * at {@link init}; oscillators run for the ctx's life (SILENT until {@link setXenoTonality} raises the
-   * gain), stopped in {@link dispose}. Two saw voices (`twinA` mimic / `twinB` anti) share a ~46 Hz
-   * fundamental and beat apart under the tug-of-war; a triangle `chitter` shriek + a shimmer-noise wash
-   * ride a resonant band-pass into a sick, alien timbre. Routed through {@link masterGain} so mute/sleep
-   * govern it. Distinct fundamental (46 vs the portal's 32 Hz) so the two horror buses never mask.
-   */
-  private buildXenoBus(): void {
-    const ctx = this.ctx;
-    if (!ctx || this._xenoBus) return;
-    const gain = ctx.createGain();
-    gain.gain.value = 0; // silent at rest
-    gain.connect(this.masterGain ?? ctx.destination);
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'bandpass';
-    filter.frequency.value = 360;
-    filter.Q.value = 3;
-    filter.connect(gain);
-    // The entangled twins — a detuned saw pair beating a psychotic dissonance (spread driven by tension).
-    const twinA = ctx.createOscillator();
-    twinA.type = 'sawtooth';
-    twinA.frequency.value = 46;
-    twinA.detune.value = -6;
-    const twinAGain = ctx.createGain();
-    twinAGain.gain.value = 0.5;
-    twinA.connect(twinAGain);
-    twinAGain.connect(filter);
-    const twinB = ctx.createOscillator();
-    twinB.type = 'sawtooth';
-    twinB.frequency.value = 46;
-    twinB.detune.value = 6;
-    const twinBGain = ctx.createGain();
-    twinBGain.gain.value = 0.5;
-    twinB.connect(twinBGain);
-    twinBGain.connect(filter);
-    // High chitter shriek — a triangle sweep, brightened by arousal.
-    const chitter = ctx.createOscillator();
-    chitter.type = 'triangle';
-    chitter.frequency.value = 520;
-    const chitterGain = ctx.createGain();
-    chitterGain.gain.value = 0.16;
-    chitter.connect(chitterGain);
-    chitterGain.connect(filter);
-    // Shimmer-noise wash (shared deterministic buffer).
-    const noise = ctx.createBufferSource();
-    noise.buffer = this.noiseBuffer(ctx);
-    noise.loop = true;
-    const noiseGain = ctx.createGain();
-    noiseGain.gain.value = 0.1;
-    noise.connect(noiseGain);
-    noiseGain.connect(filter);
-    twinA.start();
-    twinB.start();
-    chitter.start();
-    noise.start();
-    this._xenoBus = { twinA, twinB, chitter, noise, filter, gain, level: 0 };
   }
 
   /** Music enabled? Read-only outside; flip via {@link toggleMusic} or {@link setMusicOn}. */
@@ -431,8 +340,8 @@ export class AudioEngine {
     this.sfxGain = this.ctx.createGain();
     this.sfxGain.gain.value = 0;
     this.sfxGain.connect(this.masterGain);
+    this.xenomimicBus = new XenomimicAudioBus(this.ctx, this.sfxGain, this.rng);
     this.buildPortalHorrorBus();
-    this.buildXenoBus(); // XENOMIMIC tonality layer — silent until the swarm drives it
     // Ambient auto-SFX (legacy 548): only ticks while SFX are on AND the tab is visible.
     this.ambientInterval = setInterval(
       () => {
@@ -503,18 +412,8 @@ export class AudioEngine {
       }
       this._portalHorror = null;
     }
-    const xeno = this._xenoBus;
-    if (xeno) {
-      try {
-        xeno.twinA?.stop();
-        xeno.twinB?.stop();
-        xeno.chitter?.stop();
-        xeno.noise?.stop();
-      } catch {
-        /* already stopped */
-      }
-      this._xenoBus = null;
-    }
+    this.xenomimicBus?.dispose();
+    this.xenomimicBus = null;
     const ctx = this.ctx;
     this.ctx = null;
     this.musicGain = null;
@@ -726,6 +625,29 @@ export class AudioEngine {
   /** USER #7a: NHI death/despawn — low sub-boom as the alien body collapses. */
   playNhiDeath(): void {
     this.playExtra('subboom');
+  }
+
+  /** Drive the allocation-stable Xenomimic field from live aggregate state. */
+  setXenomimicField(metrics: XenomimicAudioMetrics): void {
+    const stable = this.xenomimicMetrics;
+    stable.population = metrics.population;
+    stable.maxPopulation = metrics.maxPopulation;
+    stable.activity = metrics.activity;
+    stable.predictionError = metrics.predictionError;
+    stable.twinTension = metrics.twinTension;
+    stable.weather = metrics.weather;
+    stable.entropy = metrics.entropy;
+    stable.proximity = metrics.proximity;
+    stable.polarityBalance = metrics.polarityBalance;
+    stable.strictSilence = metrics.strictSilence === true || !this._sfxOn || this._muted;
+    this.xenomimicBus?.update(stable);
+  }
+
+  /** Voice one bounded semantic Xenomimic event when SFX are actually enabled. */
+  playXenomimicEvent(species: number, kind: XenomimicAudioEventKind, intensity = 1): boolean {
+    return this._sfxOn && !this._muted
+      ? (this.xenomimicBus?.event(species, kind, intensity) ?? false)
+      : false;
   }
 
   /**

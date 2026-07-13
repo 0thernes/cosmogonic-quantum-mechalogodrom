@@ -23,6 +23,7 @@ describe('help knowledge', () => {
     expect(findHelp('what is the super creature')[0]?.id).toBe('super-creature');
     expect(findHelp('how does the economy and money work')[0]?.id).toBe('economy');
     expect(findHelp('what are all these creatures')[0]?.id).toBe('entities');
+    expect(findHelp('what are the entangled twin xenomimics')[0]?.id).toBe('xenomimics');
     expect(findHelp('what is the center monster mechalogodrom')[0]?.id).toBe('mechalogodrom');
     expect(findHelp('what are the 100 alphabet creatures in the dome')[0]?.id).toBe(
       'alphabet-dome',

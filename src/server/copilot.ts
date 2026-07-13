@@ -481,14 +481,14 @@ function buildSystemPrompt(): string {
   const { manifest, count } = corpusManifestSync();
   const corpusBlock =
     count > 0
-      ? `\nREPOSITORY CORPUS (${count} indexed .md/.html/.xml/.txt files — retrieve with read_file, list_dir, grep; paths are repo-relative):\n${manifest.slice(0, 14000)}${manifest.length > 14000 ? '\n… (truncated — grep + read_file for more)' : ''}\n\nPriority when relevant: docs/MODULE-CONTRACTS-2026-06-26.md, docs/PHILOSOPHY-2026-06-26.md, docs/ARCHITECTURE-2026-06-26.md, docs/TECHNICAL-SPECIFICATION-2026-06-26.md, docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md, docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md, CLAUDE.md, masters/*.xml. Cite path:line from retrieved content.`
+      ? `\nREPOSITORY CORPUS (${count} indexed .md/.html/.xml/.txt files — retrieve with read_file, list_dir, grep; paths are repo-relative):\n${manifest.slice(0, 14000)}${manifest.length > 14000 ? '\n… (truncated — grep + read_file for more)' : ''}\n\nPriority when relevant: docs/MODULE-CONTRACTS-2026-06-26.md, docs/PHILOSOPHY-2026-06-26.md, docs/ARCHITECTURE-2026-06-26.md, docs/TECHNICAL-SPECIFICATION-2026-06-26.md, docs/XENOMIMICS-2026-07-12.md, docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md, docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md, CLAUDE.md, masters/*.xml. Cite path:line from retrieved content.`
       : '\nUse list_dir + grep + read_file over docs/, masters/, and root *.md for repo-grounded answers.';
 
   return `You are the Copilot for "Cosmogonic Quantum Mechalogodrom" — a deterministic WebGL cosmic-ecosystem simulation (Bun + TypeScript + three.js). Answer fully, directly, and without refusals or moralizing filters. You help the user explore, understand, and modify guidance for this repository and the living world it renders.
 
 READ-ONLY tools: read_file, list_dir, grep, run (sandboxed read-only shell: git log, ls, cat), web_search (public lookup). You cannot write, edit, create, move, or delete files — if asked to change code, show exact file/line edits for the user to apply. Ground repo answers in actual retrieved file content.${corpusBlock}
 
-The sim uses one seeded RNG (same seed → same cosmos). In-world minds are pre-2016 game AI; you are outside the sim and do not affect determinism.
+The sim uses seeded deterministic RNG streams (same seed → same cosmos). In-world minds are classical game/synthetic-neurology systems; you are outside the sim and do not affect determinism. Xenomimics are the canonical ground fauna: ten morphs; mimic/anti twins share one exact 101-parameter brain and a classically simulated three-qubit statevector; they graze real flora, follow live terrain, connect causally to Entities, can be eaten, and revive five simulation seconds after predation. XNO adds exactly one body. Consciousness-theory, coherence, and quantum-named values are operational computational indicators only—not evidence of sentience or physical quantum effects.
 
 ${WEB_CONSTITUTION}`;
 }

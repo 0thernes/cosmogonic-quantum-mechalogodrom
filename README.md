@@ -1,14 +1,14 @@
-<!-- reviewed: 2026-07-10 | v0.21.13 publication-surface current-truth pass | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-10 | v0.22.0 publication-surface current-truth pass | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # COSMOGONIC QUANTUM MECHALOGODROM
 
-[![version](https://img.shields.io/badge/version-0.21.13-blue)](./CHANGELOG.md)
+[![version](https://img.shields.io/badge/version-0.22.0-blue)](./CHANGELOG.md)
 [![CI](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/ci.yml/badge.svg)](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/codeql.yml/badge.svg)](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/codeql.yml)
 [![License: Non-Commercial Research & Play](https://img.shields.io/badge/License-Non--Commercial%20Research%20%26%20Play-2ea043.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
-[![tests](https://img.shields.io/badge/tests-2979%20exact-brightgreen)](./tests)
+[![tests](https://img.shields.io/badge/tests-3001%20exact-brightgreen)](./tests)
 [![coverage](https://img.shields.io/badge/coverage-84.64%25%20line%20%C2%B7%2082.21%25%20func-success)](./docs/TECHNICAL-SPECIFICATION-2026-06-26.md)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION-2026-06-26.md)
 [![Tsotchke](https://img.shields.io/badge/Tsotchke-REAL__MIT__CORPUS-purple)](https://github.com/tsotchke)
@@ -22,13 +22,13 @@ diffusion, **and the Tsotchke corpus wired as the primordial substrate for digit
 
 **Current public truth (2026-07-12):**
 
-- Package/source version: **v0.21.13**.
-- Exact tracked-suite receipt: **2,979 tests / 0 fail**. Portable public coverage floor: **84.64% line / 82.21% func**.
+- Package/source version: **v0.22.0**.
+- Exact tracked-suite receipt: **3,001 tests / 0 fail**. Portable public coverage floor: **84.64% line / 82.21% func**.
 - **Standing & xeno-A-life position (readable synthesis):** [Comprehensive Standing Report (MD)](./docs/reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.md) ┬╖ [HTML](./docs/reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.html) ΓÇö engineering card, 113-system matrix, SuperCreature/SuperMind/Apex/Mechalogodrom deep dive, capital/ISAL path. Apex minds are **xeno multi-faculty scaffolds** (not OpenWorm bio-twins; not claimed sentience). Preserves V4/Phase-B failure-forward boundaries.
 
 <!-- cqm-sync:local-measurement:start -->
 
-- Latest Windows-local measurement in this checkout: **2,776 tests / 0 fail ┬╖ 3,556,484 `expect()` calls**; coverage measured `93.17%` line / `91.17%` func across 307 test files.
+- Latest Windows-local measurement in this checkout: **3,001 tests / 0 fail ┬╖ 3,539,785 `expect()` calls**; coverage measured `93.39%` line / `91.37%` func across 340 test files.
 
 <!-- cqm-sync:local-measurement:end -->
 
@@ -147,14 +147,17 @@ tests, or explicit model assumptions support them.
   GPU-instanced trophic-affordance field the fauna graze and read for cover. The habitat spans a
   2,400-unit ground edge, a ┬▒1,080 roaming platform (4├ù prior land area), and a 6..720 vertical column;
   non-plant population ceilings are unchanged.
-- **Xenomimics** ([xenomimics.ts](./src/sim/xenomimics.ts)) - the cosmic-horror ground fauna: 10
-  tessellated species (octahedra, tesseract cells, mobius coils, kakeya shards...) that ride the ground
-  waves, graze the flora, breed, die and respawn (5s when grazed by another being). They live as bipolar
-  ENTANGLED TWINS - each pair shares one ~100-parameter brain run with opposite thought-curvature (a mimic
-  and an anti-mimic in a real 3-qubit quantum singlet), so the two beat in a psychotic tug-of-war of
-  superposition, teleportation and entanglement. The swarm starts as a single pair and multiplies toward
-  a cap of 1000, is neurologically coupled to the Entities' connectome, and is inspectable via the XNO
-  spawn button, the XENOMIMIC focus + data window, and the telemetry row below Entities.
+- **Canonical Xenomimics** ([xenomimics.ts](./src/sim/xenomimics.ts)) — ten tessellated
+  cosmic-horror ground species (octahedra, tesseract cells, Möbius coils, Kakeya shards, and stranger
+  anti-designs) born as bipolar entangled twins sharing one exact 101-parameter classical-statevector
+  brain. Its three simulated qubits produce singlet-like correlations, superposition, teleportation-like
+  transitions, and opposite thought curvature for the mimic/anti-mimic tug-of-war; this is deterministic
+  classical computation, not physical quantum entanglement or a sentience claim. They ride the animated
+  terrain and plants, graze real flora, hop/scuttle/teleport, breed from one founding pair toward a 1,000
+  cap, die, and return five simulation seconds after predation. `XNO` adds exactly one live body; the next
+  singleton completes its shared-brain twin. Ten indexed instanced morph draws, one bounded Entity/twin
+  connectome draw, a fixed-node reactive audio field, `mimic` camera view, telemetry/Observatory feeds,
+  and the indicator-only `XENOMIMIC` inspector all borrow the same population—no duplicate sim loop.
 - **GOD / GodColossus** ([god-colossus.ts](./src/sim/god-colossus.ts)) ΓÇö a raymarched, breathing
   **Mandelbulb** deity (domain-warped, orbit-trap palette), the **ASCENSION monolith temple**, and
   **NHI** autonomous mini-AIs.
@@ -516,9 +519,9 @@ full gate with same-seed determinism preserved. The major arcs:
   ported primitive. The whole apex beat is now measured honestly: **~1.99 ms** per `SuperMind.think()`
   (range 1.41ΓÇô5.62 ms) and **~9.77 ms** for the staggered 5-mind batch (~58% of a 60 fps frame, which is
   why 5 minds run staggered against 20 light echoes); the older sub-millisecond / `<2%` GOAL5 claim is
-  superseded until re-proven. **2,979 exact tracked tests ┬╖ 0 fail (receipts enforced) ┬╖ 84.64% line / 82.21% func portable coverage floor.**
+  superseded until re-proven. **3,001 exact tracked tests ┬╖ 0 fail (receipts enforced) ┬╖ 84.64% line / 82.21% func portable coverage floor.**
   <!-- cqm-sync:local-measurement:start -->
-  **Latest Windows-local measurement: 2,776 tests / 0 fail / 3,556,484 assertions at `93.17%` line / `91.17%` func.**
+  **Latest Windows-local measurement: 3,001 tests / 0 fail / 3,539,785 assertions at `93.39%` line / `91.37%` func.**
   <!-- cqm-sync:local-measurement:end -->
 - **State-of-the-art report (2026-06-17)** ΓÇö a historical measured, frontier-comparison
   assessment of the whole repository + the apex Super Creature, now summarized through

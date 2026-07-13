@@ -3,7 +3,7 @@
 # Cosmogonic Quantum Mechalogodrom — Comprehensive Standing & Xeno-A-Life Position
 
 **Report date:** 2026-07-12  
-**Package:** v0.21.13  
+**Package:** v0.22.0
 **Canonical receipts:** 2,861 tests · 84.64% line / 82.21% func portable floor (`scripts/canonical-receipts.ts`)  
 **License:** Non-commercial research & play (© 0thernes)  
 **Stance:** Honest, operational, multi-audience (art · science · capital · self)
@@ -57,7 +57,7 @@ These are **features** of the project’s scientific adulthood:
 
 | Fact               | Value                                                                            | Source             |
 | ------------------ | -------------------------------------------------------------------------------- | ------------------ |
-| Version            | 0.21.13                                                                          | package.json       |
+| Version            | 0.22.0                                                                           | package.json       |
 | Exact tests        | 2,861                                                                            | canonical-receipts |
 | Coverage floor     | 84.64% / 82.21%                                                                  | canonical-receipts |
 | Entity ceiling     | 50,000                                                                           | quality ladder     |

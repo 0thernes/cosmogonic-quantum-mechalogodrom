@@ -18,7 +18,12 @@ import {
   XENO_BRAIN_HIDDEN,
   XENO_BRAIN_OUTPUTS,
 } from '../src/sim/xenomimic-brain';
-import { XenomimicPopulation, XENOMIMIC_MAX, XENOMIMIC_SPECIES } from '../src/sim/xenomimics';
+import {
+  XenomimicPopulation,
+  XENOMIMIC_MAX,
+  XENOMIMIC_SPECIES,
+  type Xenomimic,
+} from '../src/sim/xenomimics';
 import { XenomimicRenderer } from '../src/sim/xenomimics-render';
 
 /** Drive a population forward N steps at a fixed dt with an optional food field. */
@@ -54,7 +59,7 @@ describe('GATE-XENOMIMIC — twin brain', () => {
     expect(brain.parameterCount).toBeLessThanOrEqual(120);
   });
 
-  test('the entangled twins are ANTI-CORRELATED — a real quantum singlet (opposite of mimicry)', () => {
+  test('the twins are ANTI-CORRELATED — a classically simulated singlet (opposite of mimicry)', () => {
     const brain = new XenomimicBrain(99);
     const rng = mulberry32(7);
     // Neutral senses (mean 0.5) → tilt θ=0 → pure |01⟩+|10⟩ singlet on the twin qubits, so every
@@ -182,12 +187,122 @@ describe('GATE-XENOMIMIC — population lifecycle', () => {
     expect(pop.telemetry().pairs).toBeLessThanOrEqual(XENOMIMIC_MAX / 2);
   });
 
-  test('spawnAt (the XNO one-by-one spawn) adds a live pair at a point', () => {
+  test('spawnAt (XNO) adds exactly one live body per call while consecutive bodies share one pair', () => {
     const pop = new XenomimicPopulation(31, { growthRamp: 999 });
+    const bodies = pop.bodyView();
     const before = pop.population();
-    const added = pop.spawnAt(40, -20);
-    expect(added).toBe(2);
+    const pairsBefore = pop.pairCount();
+    expect(pop.spawnAt(40, -20)).toBe(1);
+    expect(pop.population()).toBe(before + 1);
+    expect(bodies).toBe(pop.bodyView());
+    expect(bodies).toHaveLength(before + 1);
+    const first = bodies.at(-1)!;
+    expect(first.x).toBe(40);
+    expect(first.z).toBe(-20);
+    expect(pop.pairCount()).toBe(pairsBefore + 1);
+
+    expect(pop.spawnAt(45, -25)).toBe(1);
     expect(pop.population()).toBe(before + 2);
+    expect(bodies).toHaveLength(before + 2);
+    const second = bodies.at(-1)!;
+    expect(second.pairId).toBe(first.pairId);
+    expect(second.role).not.toBe(first.role);
+    expect(pop.pairCount()).toBe(pairsBefore + 1); // filled the reserved twin; no second brain
+  });
+
+  test('injected surface and real flora graze callbacks are load-bearing', () => {
+    const pop = new XenomimicPopulation(0x5face, { growthRamp: 999, lifetime: 999 });
+    const before = pop.telemetry().meanEnergy;
+    let surfaceCalls = 0;
+    let grazeCalls = 0;
+    pop.step(1 / 30, {
+      surfaceAt: () => {
+        surfaceCalls++;
+        return 37;
+      },
+      grazeAt: (_x, _z, appetite, dt) => {
+        grazeCalls++;
+        expect(appetite).toBeGreaterThanOrEqual(0);
+        expect(appetite).toBeLessThanOrEqual(1);
+        expect(dt).toBe(1 / 30);
+        return 0.2;
+      },
+    });
+    expect(surfaceCalls).toBe(pop.population());
+    expect(grazeCalls).toBe(pop.population());
+    for (const body of pop.bodyView()) {
+      if (body.alive) expect(body.y - body.hopY).toBeCloseTo(38.2, 10);
+    }
+    expect(pop.telemetry().meanEnergy).toBeGreaterThan(before);
+  });
+
+  test('nearestBody and consumeNearest deterministically expose predation without a population scan allocation', () => {
+    const pop = new XenomimicPopulation(0xc0115e, { growthRamp: 999 });
+    expect(pop.spawnAt(80, -70)).toBe(1);
+    const target = pop.nearestBody(80, -70, 0.01);
+    expect(target).not.toBeNull();
+    expect(target!.x).toBe(80);
+    expect(target!.z).toBe(-70);
+    const before = pop.population();
+    expect(pop.consumeNearest(80, -70, 0.01)).toBeGreaterThan(0);
+    expect(pop.population()).toBe(before - 1);
+    expect(pop.nearestBody(80, -70, 0.01)).toBeNull();
+    expect(pop.consumeNearest(Number.NaN, 0, 10)).toBe(0);
+  });
+
+  test('due respawns drain in deterministic bounded slices', () => {
+    const pop = new XenomimicPopulation(0xd0e, {
+      growthRamp: 999,
+      predationRespawn: 0.1,
+      respawnBudget: 1,
+    });
+    const spawned: Xenomimic[] = [];
+    for (let i = 0; i < 4; i++) {
+      pop.spawnAt(100 + i, -100);
+      spawned.push(pop.bodyView().at(-1)!);
+    }
+    const full = pop.population();
+    for (const body of spawned) expect(pop.consume(body)).toBeGreaterThan(0);
+    expect(pop.population()).toBe(full - spawned.length);
+
+    pop.step(0.2);
+    expect(pop.population()).toBe(full - spawned.length + 1);
+    pop.step(0.01);
+    expect(pop.population()).toBe(full - spawned.length + 2);
+    // An explicit large request is still clamped by the constructor budget.
+    expect(pop.drainDueRespawns(999)).toBe(1);
+    expect(pop.population()).toBe(full - spawned.length + 3);
+  });
+
+  test('lifecycle sink/event, telemetry, and body views reuse stable identities', () => {
+    const eventRefs: object[] = [];
+    const kinds: string[] = [];
+    const pop = new XenomimicPopulation(0xe7e, {
+      growthRamp: 999,
+      predationRespawn: 0.1,
+      lifecycleSink: (event) => {
+        eventRefs.push(event);
+        kinds.push(event.kind);
+      },
+    });
+    const bodies = pop.bodyView();
+    const founding = bodies[0];
+    const telemetry = pop.telemetryView();
+    const speciesCounts = telemetry.speciesCounts;
+    expect(pop.spawnAt(70, 70)).toBe(1);
+    expect(pop.consumeNearest(70, 70, 0.01)).toBeGreaterThan(0);
+    pop.step(0.2);
+
+    expect(eventRefs.length).toBeGreaterThanOrEqual(4);
+    expect(eventRefs.every((event) => event === eventRefs[0])).toBe(true);
+    expect(pop.lifecycleEventView() === eventRefs[0]).toBe(true);
+    expect(kinds).toContain('birth');
+    expect(kinds).toContain('eaten');
+    expect(kinds).toContain('respawn');
+    expect(pop.bodyView()).toBe(bodies);
+    expect(pop.bodyView()[0]).toBe(founding);
+    expect(pop.telemetryView()).toBe(telemetry);
+    expect(pop.telemetryView().speciesCounts).toBe(speciesCounts);
   });
 
   test('telemetry exposes bounded integration/coherence for the data panel', () => {

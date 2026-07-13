@@ -1,8 +1,8 @@
 {
   "name": "cosmogonic-quantum-mechalogodrom",
-  "version": "0.21.13",
+  "version": "0.22.0",
   "packageManager": "bun@1.3.14",
-  "description": "Tsotchke-powered deterministic A-Life petri cosmos with WebGL2 rendering, 113-system comparative reports, an exact 22-external-repository corpus ledger (8 deep, 7 wired, 2 harvest, 4 fenced, 1 meta; 17/21 non-meta integrated), bounded Eshkol-inspired Taylor forecasting, a deterministic classical state-vector adaptation, 26 BiologicForms, 25 Archons, 100 faculties, 25 ToM organs, 10 emergence angles, and proxy-only consciousness/sentience labs. The seeded core is not an LLM, CSPRNG, physical-quantum, consciousness, or sentience claim; an optional read-only Copilot shell may call external language-model providers but is fenced from simulation state.",
+  "description": "Tsotchke-powered deterministic A-Life petri cosmos with WebGL2 rendering, 113-system comparative reports, an exact 22-external-repository corpus ledger (8 deep, 7 wired, 2 harvest, 4 fenced, 1 meta; 17/21 non-meta integrated), bounded Eshkol-inspired Taylor forecasting, a deterministic classical state-vector adaptation, 26 BiologicForms, 25 Archons, 100 faculties, 25 ToM organs, 10 emergence angles, canonical Xenomimic ground fauna with bipolar shared brains and ten indexed morphs, and proxy-only consciousness/sentience labs. The seeded core is not an LLM, CSPRNG, physical-quantum, consciousness, or sentience claim; an optional read-only Copilot shell may call external language-model providers but is fenced from simulation state.",
   "license": "SEE LICENSE IN LICENSE",
   "author": "0thernes Corp <0_0@0thernes.art> (https://0thernes.art)",
   "homepage": "https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/",
@@ -24,6 +24,7 @@
     "quantum",
     "consciousness",
     "nhsi",
+    "xenomimics",
     "generative",
     "procedural"
   ],

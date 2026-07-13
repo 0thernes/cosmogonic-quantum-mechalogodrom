@@ -70,7 +70,7 @@ export const HELP_KB: readonly HelpEntry[] = [
       'population',
       'phyla',
     ],
-    body: 'The biomass is instantiated from hundreds of deterministic morphotypes (10 phyla). Above them sit named powers: SHOGGOTHS (eldritch devourers), PUPPET-MASTERS (unseen hands that reshape the world), TITANS (20 colossi that ally and war across C(20,2)=190 diplomacy pairs), NHIs (apex super-minds), LEVIATHANS, and the SUPER CREATURE. Each has its own biology, silhouette, material, motion and economic role — see the bestiary. Up to 50,000 are active at once on a capable machine (auto-selected for ≥16 cores + ≥8 GB; `?tier=mega` forces it), and each carries its own compact 70-parameter neural brain (V42) that perceives its state + the world and steers it — so every one moves with individual, reactive character.',
+    body: 'The biomass is instantiated from hundreds of deterministic morphotypes (10 phyla). Ground-bound Xenomimics form a separate fauna: ten species of paired mimic/anti-mimic bodies share a compact twin brain, read the flora, and ride deterministic terrain waves. Above them sit named powers: SHOGGOTHS, PUPPET-MASTERS, TITANS, NHIs, LEVIATHANS, and the SUPER CREATURE. Each has its own biology, silhouette, material, motion and economic role — see the bestiary. Up to 50,000 ordinary organisms are active at once on a capable machine, and each carries its own compact 70-parameter neural brain, so every one moves with individual, reactive character.',
     see: ['docs/ENTITY-SHEETS-2026-06-26.md'],
   },
   {
@@ -79,6 +79,7 @@ export const HELP_KB: readonly HelpEntry[] = [
     keywords: [
       'xenomimic',
       'xenomimics',
+      'xeno',
       'xno',
       'ground fauna',
       'ground dwellers',
@@ -91,9 +92,19 @@ export const HELP_KB: readonly HelpEntry[] = [
       'shimmer',
       'sparkle',
       'cosmic horror',
+      'teleport',
+      'indicator',
+      'worker',
     ],
-    body: 'Xenomimics are the cosmic-horror ground fauna — small tessellated horrors (octahedra, tesseract cells, möbius coils, kakeya shards…) that ride the ground waves, graze the flora, breed, die and respawn. There are 10 species, each with its own geometry, colour and temperament. They live as BIPOLAR ENTANGLED TWINS: every pair shares one ~100-parameter brain but runs it with opposite thought-curvature — a "mimic" and an "anti-mimic" locked in a quantum singlet, so the two beat against each other in a psychotic tug-of-war (superposition, teleportation, entanglement are real 3-qubit math, not decoration). The swarm starts as a single pair and slowly multiplies toward a cap of 1000. They are neurologically wired to the Entities: the connectome\'s live firing density feeds every twin brain, and any being that walks over one grazes it — it respawns 5 seconds later. Spawn a fresh pair with the ◈ XNO button, fly to them with ◈ XENOMIMIC (focus), watch their live vitals in the ◈ XENOMIMIC data window, and read the "Xenomimics" telemetry row below Entities. Pause and time-scale affect them; a dedicated eerie tonality bus voices their density, arousal and tug-of-war.',
-    see: ['docs/TECHNICAL-SPECIFICATION-2026-06-26.md', 'README.md'],
+    body: 'Xenomimics are deterministic cosmic-horror ground fauna — ten species of small tessellated horrors (octahedra, tesseract cells, möbius coils, kakeya shards…) with distinct geometry, colour and temperament. They ride the live terrain waves, consume real flora biomass, breed in 1–3-pair litters, die and respawn, and return five simulation seconds after predation. The swarm begins as one mimic/anti-mimic pair and grows toward a hard 1000-body ceiling. These BIPOLAR ENTANGLED TWINS share one 6→8→5 MLP with exactly 101 trainable values but apply opposite thought-curvature in a psychotic tug-of-war. A classically simulated three-qubit statevector produces anti-correlated twin bits and Born-rule teleport decisions; coherence, twin tension, integration and workspace broadcast are bounded computational indicators. The integration value is a mutual-information proxy rather than canonical IIT Phi, and none of these values is evidence of sentience or physical quantum effects. Sampled Entities exchange a causal neural signal with the pair brains and can consume Xenomimics as food. XNO or Y adds exactly one live body — the next singleton completes its shared-brain twin. View includes a mimic macro shot; XENOMIMIC opens the dedicated data inspector; the Xenomimics telemetry row sits below Entities. Pause and time-scale govern their lifecycle while paused bodies may keep presentation shimmer; their dedicated eerie audio field voices density, arousal, prediction error and twin tension. In POWER mode this ecology updates synchronously on the main thread and does not reactivate the dormant browser Web Worker path.',
+    see: [
+      'docs/XENOMIMICS-2026-07-12.md',
+      'docs/TECHNICAL-SPECIFICATION-2026-06-26.md',
+      'README.md',
+      'src/sim/xenomimics.ts',
+      'src/sim/xenomimic-brain.ts',
+      'src/ui/xenomimic-panel.ts',
+    ],
   },
   {
     id: 'mechalogodrom',

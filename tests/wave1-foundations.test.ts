@@ -38,23 +38,24 @@ describe('F-RENDER-DYN — render-mode dynamics table', () => {
 });
 
 describe('F-CAM5 — motion camera views', () => {
-  test('keeps the four legacy views first, then appends the motion + reliquary views', () => {
+  test('keeps the four legacy views first, then appends motion, reliquary, and Xenomimic views', () => {
     expect([...VIEW_MODES].slice(0, 4)).toEqual(['free', 'orbit', 'fly', 'top']);
-    expect(VIEW_MODES.length).toBe(10);
-    expect(new Set(VIEW_MODES).size).toBe(10);
+    expect(VIEW_MODES.length).toBe(11);
+    expect(new Set(VIEW_MODES).size).toBe(11);
     // F-RELIQUARY appends the macro specimen-plate view at the end (append-only: persisted viewIdx
     // must keep pointing at the same mode it always did).
-    expect(VIEW_MODES[VIEW_MODES.length - 1]).toBe('specimen');
+    expect(VIEW_MODES[VIEW_MODES.length - 2]).toBe('specimen');
+    expect(VIEW_MODES[VIEW_MODES.length - 1]).toBe('mimic');
     const views: readonly string[] = VIEW_MODES;
-    for (const m of ['follow', 'chase', 'cinematic', 'vortex', 'titan', 'specimen']) {
+    for (const m of ['follow', 'chase', 'cinematic', 'vortex', 'titan', 'specimen', 'mimic']) {
       expect(views).toContain(m);
     }
   });
 
   test('every tracking view is a real view mode', () => {
     for (const v of TRACKING_VIEWS) expect(VIEW_MODES).toContain(v);
-    // follow/chase/titan track a subject; orbit/fly/cinematic/vortex/top are parametric paths.
-    expect([...TRACKING_VIEWS].sort()).toEqual(['chase', 'follow', 'titan']);
+    // follow/chase/titan/mimic track a subject; the remaining automatic views use parametric paths.
+    expect([...TRACKING_VIEWS].sort()).toEqual(['chase', 'follow', 'mimic', 'titan']);
   });
 });
 

@@ -9,23 +9,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.0] — 2026-07-12
+
 - Xenomimics — the cosmic-horror ground fauna:
   - A self-contained ground-dwelling subsystem (`src/sim/xenomimics.ts`, `xenomimic-brain.ts`,
-    `xenomimics-render.ts`) on its own seeded rng substream. 10 tessellated species (octahedra,
-    tesseract cells, möbius coils, kakeya shards, ...) live as bipolar ENTANGLED TWINS — one
-    ~100-parameter brain per pair run at opposite thought-curvature over a real 3-qubit quantum singlet
-    (superposition / Born-rule teleport / entanglement), with IIT-integration, GWT-broadcast and a
-    Free-Energy-Principle predictive loop wired into the same brain. The swarm starts as a single pair,
-    multiplies toward a cap of 1,000, grazes the flora, breeds, dies and respawns (5 s when grazed by
-    another being); a weighted-ragdoll fulcrum body leans as it turns.
+    `xenomimics-render.ts`) on its own seeded RNG substream. Ten tessellated species live as bipolar
+    twins that share one 101-trainable-value recurrent brain and apply opposite thought curvature. A
+    simulated classical three-qubit statevector drives superposition-like indicators and Born-weighted
+    teleport gating; IIT-integration, GWT-broadcast and Free-Energy-Principle values are computational
+    proxies, not evidence of physical quantum effects or sentience. The swarm starts as a single pair,
+    multiplies toward a cap of 1,000, grazes real flora, breeds, dies and respawns (5 s after predation);
+    a weighted-ragdoll fulcrum body leans as it turns.
   - Player surfaces: a ◈ XNO one-by-one spawn button, a ◈ XENOMIMIC camera-focus button, a "Xenomimics"
     telemetry row below Entities, and a dedicated ◈ XENOMIMIC data window (the Archon-Godforms window
-    template) showing population/growth, twin-pair count, births/deaths/eaten/teleports, the four coupled
-    consciousness-theory beats, and a 10-species distribution.
-  - World couplings (golden-safe): the entity connectome's live firing density drives every twin brain's
-    `chaos` sense (neurological linkage), and the entity spatial grid drives bounded predation. A dedicated
-    eerie tonality bus voices the swarm's density, arousal and mimic/anti tug-of-war. Documented across
-    README, the in-app Help, the technical specification, and the SPEC page.
+    template) showing population/growth, twin-pair count, births/deaths/eaten/teleports, bounded neurology
+    indicators, and a 10-species distribution.
+  - World couplings: real terrain and flora feed each body, sampled Entity activity enters the brain,
+    nearest-body predation credits the predator, and one bounded connectome bridges the populations. One
+    fixed 15-node eerie audio field voices population, activity, prediction error, twin tension and the
+    environment with strict pause silence. Documented across README, Help, the technical specification,
+    SPEC, Observatory and the issue-reporting surface.
+- Consolidated Xenomimics into one canonical ground-fauna population: exact-one `XNO`, real
+  terrain/flora coupling, bounded predation/respawn, weighted fulcrum bodies, ten indexed shader
+  morphs, one bounded causal connectome, and fixed-node state-driven audio.
+- Added the `mimic` camera tour, telemetry row, four-lane Observatory feed, indicator-only inspector,
+  Help/Copilot grounding, and a dedicated GitHub issue form while preserving the published
+  101-parameter classical twin brain, IIT/GWT proxies, and explicit no-sentience boundary.
+- Kept Web Workers dormant in the live POWER path after observed multi-second compositor starvation;
+  deterministic wilderness remains packed on the main thread and GPU instancing stays enabled.
+
 - Operational organism intelligence and evidence:
   - Added the Phase-B NHI semantic expansion and exact JSON checkpoints, action-aware structured
     outcomes, per-mind fault isolation, transactional launch/body lifecycle, dedicated deterministic

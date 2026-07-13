@@ -450,6 +450,16 @@ export interface TelemetrySnapshot {
   morphTotal: number;
   /** Number of titans (V3 — telemetry row). */
   titans: number;
+  /** Living canonical Xenomimic ground fauna. */
+  xenomimics: number;
+  /** Configured Xenomimic population ceiling. */
+  xenomimicMax?: number;
+  /** Mean twin mutual-information integration proxy (0..1; not canonical IIT Phi). */
+  xenomimicIntegration?: number;
+  /** Mean classical-statevector coherence (0..1; not physical quantum coherence). */
+  xenomimicCoherence?: number;
+  /** Mean bipolar twin-bond tension (0..1). */
+  xenomimicBondTension?: number;
   /** Live population per phylum (V3.5). REUSED array — copy to retain. */
   phylumCounts: ArrayLike<number>;
   /** Titan economy rows (V3.5). REUSED array of REUSED rows — copy to retain. */
@@ -478,8 +488,6 @@ export interface TelemetrySnapshot {
   bioMomentum: number;
   /** Live count of registered NHI super-minds (telemetry tally). */
   nhi: number;
-  /** Live count of xenomimic ground fauna (telemetry tally, below Entities). */
-  xenomimics: number;
   /** Mean brutal-god power across petri archons (0..1) — NHSI pantheon telemetry. */
   godPower?: number;
   /** Current camera view-mode name (HUD View/Speed/Render box). */
@@ -528,8 +536,8 @@ export interface UiActions {
   entropyBoost(): number;
   /** Launch a user-controlled NHI being into the world (F-NHI); returns 1 on success, 0 if at the cap. */
   launchNhi(): number;
-  /** Spawn an entangled xenomimic twin-pair of ground fauna near the camera; returns creatures added (0/2). */
-  launchXeno(): number;
+  /** Add exactly one Xenomimic body near the camera; the next press completes its twin (0/1). */
+  launchXenomimic(): number;
   /** Summon the next cosmological singularity (CONTRACTS V7.4); returns its name. */
   summonSingularity(): string;
   apocalypse(): void;

@@ -207,8 +207,8 @@ export const BEHAVIORS = [
 export type Behavior = (typeof BEHAVIORS)[number];
 
 /**
- * Camera view modes. The first four are the legacy set (`vModes`, legacy line 174); the five
- * trailing modes are the 0.9 motion/cinematic additions (F-CAM5) — all automatic, flying, or
+ * Camera view modes. The first four are the legacy set (`vModes`, legacy line 174); the trailing
+ * modes are automatic, flying, or
  * subject-tracking shots that ignore manual input. `viewIdx` indexes this (wraps mod length), so
  * the order is append-only: never reorder or the persisted `viewIdx` would point at a new mode.
  */
@@ -223,16 +223,17 @@ export const VIEW_MODES = [
   'vortex', // descending spiral around the world axis
   'titan', // wide tracking shot of a roaming titan/large being
   'specimen', // F-RELIQUARY: macro "specimen plate" tour of live organisms on the fog-void
+  'mimic', // canonical Xenomimic ground-fauna macro tour
 ] as const;
 
-/** One of the camera view modes (4 legacy + 5 motion). */
+/** One of the camera view modes (4 legacy + append-only automatic/tracking views). */
 export type ViewMode = (typeof VIEW_MODES)[number];
 
 /**
  * The subject-tracking motion views (F-CAM5) — these pick a live subject to follow rather than
  * running a fixed parametric path. Used by the camera to decide when to resolve a subject.
  */
-export const TRACKING_VIEWS: ReadonlySet<ViewMode> = new Set(['follow', 'chase', 'titan']);
+export const TRACKING_VIEWS: ReadonlySet<ViewMode> = new Set(['follow', 'chase', 'titan', 'mimic']);
 
 /**
  * Time-dilation steps cycled by the TIME control (F-TIME). `0` is a true pause (frames still tick

@@ -207,7 +207,7 @@ import { SuperBodySystem } from './sim/super-body';
 import { SuperHunt } from './sim/super-hunt';
 import { DomeFeeding } from './sim/dome-feeding';
 import { SuperPanel } from './ui/super-panel';
-import { XenoPanel } from './ui/xeno-panel';
+import { XenomimicPanel, type XenomimicPanelTelemetry } from './ui/xenomimic-panel';
 import { SuperheroState, HERO_POWERS } from './ui/superhero-state';
 import { SuperheroHud } from './ui/superhero-hud';
 import { TelemetryPanel, bindPanelToggles } from './ui/panels';
@@ -215,11 +215,19 @@ import { InputSystem } from './ui/input';
 import type { AuditTrail } from './logging/audit';
 import { createLogger } from './logging/logger';
 import type { MemoryStore } from './memory/store';
-import { WorkerPool, type WorkerPoolConfig } from './core/worker-pool';
+import type { WorkerPool } from './core/worker-pool';
 import { WildernessPopulation } from './sim/wilderness-population';
 import { WildernessRenderer } from './sim/wilderness-render';
-import { XenomimicPopulation, XENOMIMIC_MAX } from './sim/xenomimics';
+import {
+  XENOMIMIC_MAX,
+  XenomimicPopulation,
+  type XenomimicCouplings,
+  type XenomimicLifecycleEvent,
+} from './sim/xenomimics';
 import { XenomimicRenderer } from './sim/xenomimics-render';
+import { XenomimicConnectome } from './sim/xenomimic-connectome';
+import { baseTerrainHeightAt } from './sim/terrain-profile';
+import { terrainDisplacementAt } from './sim/terrain-deformation';
 
 /** Cyclic element access into a non-empty readonly array. O(1). */
 function cyc<T>(arr: readonly T[], i: number): T {
@@ -362,18 +370,94 @@ export class World {
   private readonly disposeAbort = new AbortController();
   private readonly entities: EntityManager;
   /** Worker pool for offloading simulation to multiple CPU cores (ADR 0010) */
+  /** Compatibility/perf-stats sentinel; POWER runtime keeps browser workers intentionally dormant. */
   public workerPool: WorkerPool | null = null;
   /** Entity neural-net axon web (proximity links, activation propagation, GraphMind writer). */
   public readonly connectome: Connectome;
-  /** Wilderness population - ambient entities on worker threads (ADR 0010) */
+  /** Wilderness population — synchronous in POWER; ADR 0010's historical worker lane is dormant. */
   private readonly wilderness: WildernessPopulation;
   private readonly wildernessRender: WildernessRenderer;
   /** Xenomimics — deterministic ground-dwelling entangled-twin fauna (own rng substream; not in the EntityManager golden). */
   private readonly xenomimics: XenomimicPopulation;
   private readonly xenomimicsRender: XenomimicRenderer;
-  /** Predation cadence + last grazing pressure (beings eat ground fauna; fed back as swarm agitation). */
-  private xenoPredationClock = 0;
-  private xenoPredationPressure = 0;
+  private readonly xenomimicConnectome: XenomimicConnectome;
+  private readonly xenomimicEntitySample: Entity[] = [];
+  private xenomimicEntityActivation = 0;
+  private xenomimicProximity = 0;
+  private readonly xenomimicRenderEnvironment = {
+    chaos: 0,
+    entropy: 0,
+    weather: 0,
+    proximity: 0,
+    coherence: 0,
+    integration: 0,
+    twinTension: 0,
+  };
+  private readonly xenomimicAudioMetrics = {
+    population: 0,
+    maxPopulation: XENOMIMIC_MAX,
+    activity: 0,
+    predictionError: 0,
+    twinTension: 0,
+    weather: 0,
+    entropy: 0,
+    proximity: 0,
+    polarityBalance: 0,
+    strictSilence: true,
+  };
+  private readonly xenomimicPanelData: XenomimicPanelTelemetry = {
+    population: 0,
+    pairs: 0,
+    births: 0,
+    deaths: 0,
+    eaten: 0,
+    teleports: 0,
+    meanEnergy: 0,
+    coherence: 0,
+    bondTension: 0,
+    integration: 0,
+    freeEnergy: 0,
+    speciesCounts: Array.from({ length: 10 }, () => 0),
+    dominantSpecies: 0,
+    growthTarget: 2,
+    maxPopulation: XENOMIMIC_MAX,
+    activity: 0,
+    weather: 'CLEAR',
+    temperature: 20,
+    wind: 0,
+    links: 0,
+  };
+  private readonly xenomimicSurfaceAt = (x: number, z: number, time: number): number => {
+    const state = this.state;
+    return (
+      Math.max(PLATFORM_FLOOR, baseTerrainHeightAt(x, z)) +
+      terrainDisplacementAt(
+        x,
+        z,
+        time,
+        clamp(state.chaos / CHAOS_MAX, 0, 1),
+        clamp((state.entropy ?? 0) / ENTROPY_MAX, 0, 1),
+        state.wind.x,
+        state.wind.z,
+      )
+    );
+  };
+  private readonly xenomimicGrazeAt = (
+    x: number,
+    z: number,
+    appetite: number,
+    dt: number,
+  ): number => this.alienFlora.grazeAt(x, z, appetite, dt);
+  private readonly xenomimicFoodAt = (x: number, z: number): number => this.alienFlora.foodAt(x, z);
+  private readonly xenomimicCouplings: XenomimicCouplings = {
+    foodAt: this.xenomimicFoodAt,
+    grazeAt: this.xenomimicGrazeAt,
+    surfaceAt: this.xenomimicSurfaceAt,
+    intelligence: null,
+    entityActivation: 0,
+    chaos: 0,
+    temperature: 20,
+  };
   private readonly entityBrains: EntityBrainField; // V42: per-organism 70-param neural controller
   /** ADR-0013: one O(22)-cadenced corpus field, consumed O(1) by every living-system controller. */
   private readonly organismIntelligence: TsotchkeOrganismIntelligence;
@@ -396,6 +480,7 @@ export class World {
   private readonly wasteEcology: WasteEcology;
   private readonly hud: Hud;
   private readonly panel: TelemetryPanel;
+  private readonly xenomimicPanel: XenomimicPanel;
   private readonly input: InputSystem;
   private readonly pantheonArchitecturePanel: PantheonArchitecturePanel;
 
@@ -461,8 +546,6 @@ export class World {
   private readonly petriDishes: PetriDishState[] = [];
   private petriRng!: Rng;
   private readonly superPanel: SuperPanel;
-  /** ◈ XENOMIMIC data window (slice 2b) — Archon-Godforms box template; world pushes telemetry each cadence. */
-  private readonly xenoPanel: XenoPanel;
   private readonly superBody: SuperBodySystem;
   /** USER: the apex super-creatures HUNT + EAT organisms (food/fuel); prey respawns 5s later elsewhere. */
   private readonly superHunt: SuperHunt;
@@ -997,29 +1080,20 @@ export class World {
     // break same-seed reproducibility (audit finding, 0.2.1).
     this.audio = new AudioEngine(this.state, mulberry32((this.persisted.seed ^ 0xa0d10) >>> 0));
 
-    // Initialize worker pool for full CPU utilization (ADR 0010)
-    // Uses SharedArrayBuffer if available (COOP/COEP headers), else transferables
-    const useSharedArrayBuffer = typeof SharedArrayBuffer !== 'undefined';
-    const workerConfig: WorkerPoolConfig = {
-      maxWorkers: navigator.hardwareConcurrency || 4,
-      useSharedArrayBuffer,
-      qualityTier: this.quality.tier,
-    };
-    this.workerPool = new WorkerPool(workerConfig);
-    void this.initWorkerPoolAsync();
-    // Core simulation uses SYNC executor (deterministic, in golden)
-    // Future: wilderness population will use ASYNC executor (best-effort, NOT in golden)
-    // Currently unused but infrastructure is in place for full CPU utilization
-
-    // Initialize wilderness population (ADR 0010)
-    // Ambient entities that run on worker threads - NOT in the golden
-    this.wilderness = new WildernessPopulation(this.workerPool, this.persisted.seed);
+    // POWER mode: keep the freeze-inducing worker/Promise boundary dormant. Wilderness stays packed
+    // and deterministic on the main thread; renderer instancing still owns the large GPU win.
+    this.workerPool = null;
+    this.wilderness = new WildernessPopulation(null, this.persisted.seed);
     this.wildernessRender = new WildernessRenderer(this.engine.scene);
 
-    // Xenomimics — first-class deterministic ground fauna. Own seeded substream (never touches ctx.rng),
-    // so it cannot perturb the EntityManager golden; reads flora food read-only for grazing.
-    this.xenomimics = new XenomimicPopulation(this.persisted.seed);
+    // Xenomimics — one canonical population/brain loop. Lifecycle signals feed bounded audio/audit;
+    // rendering, connectome, panel and ecology all borrow this same population.
+    this.xenomimics = new XenomimicPopulation(this.persisted.seed, {
+      respawnBudget: 16,
+      lifecycleSink: (event) => this.onXenomimicLifecycle(event),
+    });
     this.xenomimicsRender = new XenomimicRenderer(this.engine.scene);
+    this.xenomimicConnectome = new XenomimicConnectome(this.engine.scene);
 
     // Lore precedes the taxonomy: phyla are lore-named at mint (CONTRACTS V3.2).
     this.lore = new LoreEngine(this.persisted.seed);
@@ -1218,6 +1292,7 @@ export class World {
 
     this.hud = new Hud();
     this.panel = new TelemetryPanel();
+    this.xenomimicPanel = new XenomimicPanel();
     this.observatory = new Observatory();
     this.nhiObs = new NhiObservatory();
     this.marketTicker = new MarketTicker();
@@ -1253,7 +1328,6 @@ export class World {
     this.portalImmuneBounce = new PortalImmuneBounce(ctx); // USER: the immune Pantheon bounces off in sparks
     this.portalShield = new PortalShield(ctx); // USER: the god-tier Super/APEX bodies shimmer at the void
     this.superPanel = new SuperPanel();
-    this.xenoPanel = new XenoPanel(); // ◈ XENOMIMIC data window (slice 2b)
     this.pantheonArchitecturePanel = new PantheonArchitecturePanel();
     // NOTE: legacy single register removed; 5 SUPER CREATURES register their own purses below (ECON 9000+i).
     // F-SUPER V32: the masterful many-eyed apex BODY (god-jewel shader) — additive, draws no rng.
@@ -1516,22 +1590,6 @@ export class World {
     return Math.max(120, Math.min(World.BOOT_POP, this.quality.targetEntities));
   }
 
-  /** Best-effort worker spawn for wilderness offload (ADR 0010 — NOT in golden). */
-  private async initWorkerPoolAsync(): Promise<void> {
-    const pool = this.workerPool;
-    if (!pool) return;
-    try {
-      // The worker ships as a PRE-BUNDLED sibling artifact (`workers/simulation-worker.js` —
-      // emitted by scripts/build.ts, served/bundled on demand by server.ts). Bun's HTML bundler
-      // does not follow `new Worker(new URL(...))` graphs, so the raw `.ts` path 404s in the
-      // browser and every worker lineage dies on startup, leaving sync fallback despite the cores.
-      const url = new URL('./workers/simulation-worker.js', import.meta.url);
-      await pool.initialize(url.href);
-    } catch {
-      // Wilderness falls back to main-thread sync when workers unavailable.
-    }
-  }
-
   /**
    * Lifecycle teardown for the dev HMR hook (`main.ts` calls `world.dispose?.()` before a hot-replace).
    * Drops the global hero-event listeners and tears the audio engine down (timers + context); without
@@ -1549,6 +1607,8 @@ export class World {
     this.wilderness.dispose();
     this.wildernessRender.dispose();
     this.xenomimicsRender.dispose();
+    this.xenomimicConnectome.dispose();
+    this.xenomimicPanel.dispose();
     // Free the GPU-resource-owning subsystems that expose a dispose(). The Engine's
     // forceContextLoss() reclaims the context's VRAM, but these JS-side geometry/material
     // dispose paths were skipped entirely — each HMR reload built a fresh World whose
@@ -1596,7 +1656,6 @@ export class World {
     this.superheroHud.dispose();
     this.pantheonArchitecturePanel.dispose();
     this.superPanel.dispose(); // frees SuperNeural's rAF loop + leaked 'cqm:brutal-style' window listener
-    this.xenoPanel.dispose(); // ◈ XENOMIMIC data window
     this.input.dispose();
   }
 
@@ -1703,27 +1762,25 @@ export class World {
     this.wilderness.update(camX, camZ, dt, this.organismIntelligence.signal);
     this.wildernessRender.sync(this.wilderness, t);
 
-    // Xenomimics live on the ground: graze the flora (read-only), think, breed, die, respawn. dt already
-    // carries the ⏸/▦ time-scale, so they pause and slow with the world.
-    //
-    // NEURAL LINKAGE (user: "they neurologically connect with the Entities in Connectomes"): the entity
-    // connectome's live firing DENSITY becomes the `chaos` sensor on every twin brain — the substrate
-    // threads it straight into the 6-input sense vector (xenomimics.ts senses()), so a denser, hotter
-    // entity web genuinely churns the entangled swarm harder. PREDATION FEEDBACK: last tick's grazing
-    // pressure adds to that agitation. `connectome.links`/`pairCount` reflect last frame (the web rebuilds
-    // at ~2043) — a deterministic one-frame lag, and the swarm has its own rng substream so no golden
-    // (all of which run isolated managers, never the World) can see this coupling.
+    // Xenomimics mutate live flora, ride the real terrain, share the Tsotchke field, and listen to BOTH
+    // neural bridges: the bounded sampled Entity activation used by their own connectome and the entity
+    // connectome's whole-field firing density. Last tick's genuine predation pressure feeds back as
+    // agitation. All bridges are deterministic one-frame-lagged reads; dt already carries pause/speed.
     const connectomeActivity = clamp(
       this.connectome.links / Math.max(1, this.connectome.pairCount * 8),
       0,
       1,
     );
-    this.xenomimics.step(dt, {
-      foodAt: (x, z) => this.alienFlora.foodAt(x, z),
-      intelligence: this.organismIntelligence.signal,
-      chaos: clamp(0.25 + connectomeActivity * 0.5 + this.xenoPredationPressure * 0.35, 0, 1),
-    });
-    this.xenomimicsRender.sync(this.xenomimics, t);
+    const xenomimicCouplings = this.xenomimicCouplings;
+    xenomimicCouplings.intelligence = this.organismIntelligence.signal;
+    xenomimicCouplings.entityActivation = Math.max(
+      this.xenomimicEntityActivation,
+      connectomeActivity,
+    );
+    xenomimicCouplings.chaos = clamp(Math.max(s.chaos / CHAOS_MAX, connectomeActivity), 0, 1);
+    xenomimicCouplings.temperature = s.temperature;
+    this.xenomimics.step(dt, xenomimicCouplings);
+    this.updateXenomimicPresentation(t, false);
 
     this.updateGrowthTarget(); // V66: ramp the live population target 500 → ceiling, then breathe
 
@@ -1809,11 +1866,6 @@ export class World {
         if (e) this.grid.insert(e);
       }
     }
-    // PREDATION (user: "consumed by the other living beings too as food and they respawn in 5 seconds"):
-    // the fresh entity grid drives it — a being overlapping a ground creature grazes it. One-way (the
-    // predator is never mutated → golden-safe, module-ownership-clean), bounded per tick so the swarm can
-    // still grow toward its cap; the substrate respawns each eaten creature in 5s (predationRespawn).
-    this.xenoPredationPressure = this.runXenomimicPredation(dt);
     this.shoggoths.update(dt, t);
     // Titans roam every frame; economy/diplomacy/strikes are internally cadenced
     // off s.frame (CONTRACTS V3.3) — after the grid so strikes can query it.
@@ -2305,6 +2357,8 @@ export class World {
     // TOP survey stays inside the BackSide dome, matching RUNNING/SUSPENDED. Position-only — no atmosphere
     // animation is advanced (no haze/dust/rebake/rng), so the frozen tableau stays byte-golden.
     this.atmosphere.setViewerPosition(this.engine.camera.position);
+    this.xenomimicAudioMetrics.strictSilence = true;
+    this.audio.setXenomimicField(this.xenomimicAudioMetrics);
     this.updateLens();
     this.engine.render();
   }
@@ -2388,7 +2442,7 @@ export class World {
     // decay, so the seeded golden is untouched while the axons stay alive for inspection.
     this.connectome.update(0, vt, false);
     this.wildernessRender.sync(this.wilderness, vt);
-    this.xenomimicsRender.sync(this.xenomimics, vt); // paused xenomimics keep shimmering in place
+    this.updateXenomimicPresentation(vt, true); // paused bodies shimmer; lifecycle/audio stay stopped
     this.artifacts.update(uiDt, vt);
     this.monolithTemple.setEnvironment({
       chaos: chaosN,
@@ -2484,6 +2538,7 @@ export class World {
     if (s.frame % 8 === 0) {
       this.analytics.push(n, this.energy, this.connectome.links);
       this.panel.update(this.snapshot());
+      this.xenomimicPanel.update(this.syncXenomimicPanelData());
       this.updateAlgoPicker(); // live progress on the active field's row
     }
     if (s.frame % 60 === 0) this.analytics.analyze(); // after push at coinciding frames
@@ -2583,17 +2638,6 @@ export class World {
           ulgResonance: ulgRes,
         },
       );
-      // ◈ XENOMIMIC data window — same UI cadence. Pure read of the deterministic swarm's telemetry.
-      const xtel = this.xenomimics.telemetry();
-      this.xenoPanel.update(xtel);
-      // Eerie tonality (owner: "ultra psychotic eerie WTF music tonality"): the swarm's density / free-
-      // energy arousal / mimic↔anti tug-of-war drive a dedicated horror bus. Forked audio rng only — never
-      // sim. Silent when the ground is empty (presence 0 → gain 0).
-      this.audio.setXenoTonality(
-        xtel.population / XENOMIMIC_MAX,
-        xtel.freeEnergy,
-        xtel.bondTension,
-      );
       // F-SUPER V35: feed the SUPERHERO HUD the player-creature's live vitals + mind + wallet.
       const hero = this.heroBodies[0];
       if (this.superheroState.active && hero) {
@@ -2632,6 +2676,35 @@ export class World {
         }),
       );
     }
+  }
+
+  /** Copy the population's reused telemetry into the panel's stable environment-aware adapter. */
+  private syncXenomimicPanelData(): XenomimicPanelTelemetry {
+    const source = this.xenomimics.telemetry();
+    const target = this.xenomimicPanelData;
+    target.population = source.population;
+    target.pairs = source.pairs;
+    target.births = source.births;
+    target.deaths = source.deaths;
+    target.eaten = source.eaten;
+    target.teleports = source.teleports;
+    target.meanEnergy = source.meanEnergy;
+    target.coherence = source.coherence;
+    target.bondTension = source.bondTension;
+    target.integration = source.integration;
+    target.freeEnergy = source.freeEnergy;
+    target.predictionError = source.freeEnergy;
+    for (let i = 0; i < target.speciesCounts.length; i++) {
+      (target.speciesCounts as number[])[i] = source.speciesCounts[i] ?? 0;
+    }
+    target.dominantSpecies = source.dominantSpecies;
+    target.growthTarget = source.growthTarget;
+    target.activity = this.xenomimicAudioMetrics.activity;
+    target.weather = cyc(WEATHERS, this.state.weatherIdx);
+    target.temperature = this.state.temperature;
+    target.wind = Math.hypot(this.state.wind.x, this.state.wind.z);
+    target.links = this.xenomimicConnectome.linkCount;
+    return target;
   }
 
   /**
@@ -3695,68 +3768,113 @@ export class World {
     this.hud.showSector('◈ XENOMIMICS');
   }
 
-  /**
-   * ◈ XNO — spawn one entangled xenomimic twin-pair on the ground near the camera (owner's XNO button,
-   * modelled on NHI). Returns the creatures added (2, or 0 at the cap). Presentation feedback + audit
-   * only; the deterministic {@link XenomimicPopulation} owns the actual population and its rng substream.
-   */
-  private launchXenoBeing(): number {
-    const cam = this.engine.camera;
-    const added = this.xenomimics.spawnAt(cam.position.x, cam.position.z);
+  /** XNO: add exactly one body ahead of the camera; the next singleton completes its shared-brain twin. */
+  private launchXenomimic(): number {
+    this.engine.camera.getWorldDirection(this.sv2);
+    this.sv1.copy(this.engine.camera.position).addScaledVector(this.sv2, 28);
+    const added = this.xenomimics.spawnAt(this.sv1.x, this.sv1.z);
+    const living = this.xenomimics.population();
     if (added > 0) {
-      this.audio.play('crystallize');
-      this.hud.showSector(`◈ XNO +${added} · ${this.xenomimics.population()} LIVE`);
-      this.audit.record('xeno-spawn', { added, population: this.xenomimics.population() });
+      this.audio.playXenomimicEvent(0, 'birth', 1);
+      this.hud.showSector(`◈ XNO +1 · ${living} LIVE`);
+      this.audit.record('xenomimic-spawn', { added: 1, living });
     } else {
       this.hud.showSector(`XNO CAP · ${XENOMIMIC_MAX} LIVE`);
+      this.audit.record('xenomimic-spawn-blocked', { living });
     }
     return added;
-  }
-
-  /**
-   * PREDATION — beings grazing the ground fauna. Throttled to ~5 Hz (clock-based, no rng → deterministic).
-   * Iterates live xenomimics, queries the fresh entity grid at each, and consumes a creature a being is
-   * genuinely on top of. Bounded per tick (≤3% of the live swarm) so grazing is a steady trickle, never a
-   * wipe — the population still climbs toward its cap and every eaten creature respawns in 5s. One-way:
-   * the predator is never mutated (module-ownership-clean + golden-safe; the swarm is not in any golden
-   * and the World is never constructed in tests). Returns the grazing pressure (fraction eaten, scaled)
-   * that {@link step}'s next xeno beat folds into the swarm's `chaos` sense — heavy predation agitates
-   * the survivors. `grid.query` returns a shared buffer valid only until the next query, so each result
-   * is consumed inside its own iteration before the next query overwrites it.
-   */
-  private runXenomimicPredation(dt: number): number {
-    if (!Number.isFinite(dt) || dt <= 0) return this.xenoPredationPressure;
-    this.xenoPredationClock += dt;
-    if (this.xenoPredationClock < 0.2) return this.xenoPredationPressure;
-    this.xenoPredationClock = 0;
-    const R = 2.6; // overlap radius: a being is standing on the ground creature
-    const R2 = R * R;
-    let alive = 0;
-    let eaten = 0;
-    // First count the live swarm so the per-tick cap tracks the true population.
-    this.xenomimics.forEach(() => alive++);
-    if (alive === 0) return 0;
-    const cap = Math.max(1, Math.floor(alive * 0.03));
-    this.xenomimics.forEach((c) => {
-      if (eaten >= cap) return;
-      const near = this.grid.query(c.x, c.z, R);
-      for (let i = 0; i < near.length; i++) {
-        const e = near[i]!;
-        const dx = e.position.x - c.x;
-        const dz = e.position.z - c.z;
-        if (dx * dx + dz * dz <= R2) {
-          this.xenomimics.consume(c);
-          eaten++;
-          break;
-        }
-      }
-    });
-    return clamp((eaten / alive) * 6, 0, 1);
   }
 
   /** Legacy chaos multiplier cMul(): min(chaos/2, 3). */
   private chaosMul(): number {
     return Math.min(this.state.chaos / 2, 3);
+  }
+
+  /** Lifecycle fan-out stays event-driven and bounded; the population reuses the event object. */
+  private onXenomimicLifecycle(event: Readonly<XenomimicLifecycleEvent>): void {
+    const audioKind =
+      event.kind === 'birth'
+        ? 'birth'
+        : event.kind === 'death'
+          ? 'natural-death'
+          : event.kind === 'eaten'
+            ? 'eaten'
+            : event.kind === 'respawn'
+              ? 'respawn'
+              : event.kind === 'teleport'
+                ? 'blink'
+                : null;
+    if (audioKind) this.audio.playXenomimicEvent(event.species, audioKind, event.energy);
+    if (event.kind !== 'none' && event.kind !== 'teleport') {
+      this.audit.record(`xenomimic-${event.kind}`, {
+        pairId: event.pairId,
+        role: event.role,
+        species: event.species,
+      });
+    }
+  }
+
+  /**
+   * Keep the visible Xenomimic layer full-rate while expensive cross-population topology is a fixed
+   * 10 Hz. No adaptive quality shedding: the same ten morph draws and cognition remain authoritative.
+   */
+  private updateXenomimicPresentation(time: number, strictSilence: boolean): void {
+    const state = this.state;
+    const telemetry = this.xenomimics.telemetry();
+    const environment = this.xenomimicRenderEnvironment;
+    environment.chaos = clamp(state.chaos / CHAOS_MAX, 0, 1);
+    environment.entropy = clamp((state.entropy ?? 0) / ENTROPY_MAX, 0, 1);
+    environment.weather = WEATHERS.length > 1 ? state.weatherIdx / (WEATHERS.length - 1) : 0;
+    environment.proximity = this.xenomimicProximity;
+    environment.coherence = telemetry.coherence;
+    environment.integration = telemetry.integration;
+    environment.twinTension = telemetry.bondTension;
+    this.xenomimicsRender.sync(this.xenomimics, time, environment);
+
+    if (!strictSilence && state.frame % 6 === 0) {
+      const sample = this.xenomimicEntitySample;
+      sample.length = 0;
+      const entities = this.entities.list;
+      const stride = Math.max(1, Math.ceil(entities.length / 48));
+      let activation = 0;
+      for (let i = state.frame % stride; i < entities.length && sample.length < 48; i += stride) {
+        const entity = entities[i];
+        if (!entity) continue;
+        sample.push(entity);
+        activation += clamp(entity.userData.act / 4, 0, 1);
+      }
+      this.xenomimicEntityActivation = sample.length > 0 ? activation / sample.length : 0;
+      this.xenomimicConnectome.sync(this.xenomimics, sample, time);
+      const camera = this.engine.camera.position;
+      const nearest = this.xenomimics.nearestBody(camera.x, camera.z, 120);
+      this.xenomimicProximity = nearest
+        ? clamp(1 - Math.hypot(nearest.x - camera.x, nearest.z - camera.z) / 120, 0, 1)
+        : 0;
+    }
+
+    if (!strictSilence && state.frame % 4 === 0) {
+      const entities = this.entities.list;
+      const entity = entities.length > 0 ? entities[state.frame % entities.length] : undefined;
+      if (entity) {
+        const food = this.xenomimics.consumeNearest(entity.position.x, entity.position.z, 6);
+        if (food > 0) entity.userData.energy = Math.min(100, entity.userData.energy + food * 20);
+      }
+    }
+
+    const audio = this.xenomimicAudioMetrics;
+    audio.population = telemetry.population;
+    audio.activity = clamp(
+      telemetry.meanEnergy * 0.25 + telemetry.coherence * 0.35 + telemetry.freeEnergy * 0.4,
+      0,
+      1,
+    );
+    audio.predictionError = telemetry.freeEnergy;
+    audio.twinTension = telemetry.bondTension;
+    audio.weather = environment.weather;
+    audio.entropy = environment.entropy;
+    audio.proximity = this.xenomimicProximity;
+    audio.strictSilence = strictSilence;
+    this.audio.setXenomimicField(audio);
   }
 
   /** Camera modes: world-scale paths follow the expanded habitat; subject shots keep object scale. */
@@ -3861,6 +3979,14 @@ export class World {
         cam.position.y += (sy + 5 * ARENA_Y - cam.position.y) * k;
         cam.position.z += (sz - (this.camSubVZ / vlen) * back - cam.position.z) * k;
         cam.lookAt(sx, sy, sz);
+      } else if (mode === 'mimic') {
+        const r = Math.max(3.2, this.camSubR * 3.4);
+        const angle = t * 0.38;
+        const k = Math.min(1, dt * 5);
+        cam.position.x += (sx + Math.cos(angle) * r - cam.position.x) * k;
+        cam.position.y += (sy + r * 0.42 - cam.position.y) * k;
+        cam.position.z += (sz + Math.sin(angle) * r - cam.position.z) * k;
+        cam.lookAt(sx, sy + this.camSubR * 0.2, sz);
       } else {
         // titan: a grand wide tracking shot from far back and high up.
         const r = 70 * ARENA_MID;
@@ -3954,6 +4080,23 @@ export class World {
    * reads sim state but writes none, so it can never perturb the deterministic hash.
    */
   private resolveSubject(t: number): boolean {
+    if (cyc(VIEW_MODES, this.state.viewIdx) === 'mimic') {
+      const bodies = this.xenomimics.bodyView();
+      if (bodies.length === 0) return false;
+      const start = Math.floor(t / 6) % bodies.length;
+      for (let offset = 0; offset < bodies.length; offset++) {
+        const body = bodies[(start + offset) % bodies.length];
+        if (!body?.alive) continue;
+        this.camSubX = body.x;
+        this.camSubY = body.y;
+        this.camSubZ = body.z;
+        this.camSubVX = body.vx;
+        this.camSubVZ = body.vz;
+        this.camSubR = 1.8;
+        return true;
+      }
+      return false;
+    }
     const list = this.entities.list;
     const len = list.length;
     if (len === 0) return false;
@@ -3984,6 +4127,7 @@ export class World {
     // F-NHI: tap N to launch an NHI being in front of the camera (throttled so a held key doesn't
     // flood the world). The action is also exposed for the bottom-panel button in the UI pass.
     if (k['n'] && s.frame % 30 === 0) this.launchNhiBeing();
+    if (k['y'] && s.frame % 30 === 0) this.launchXenomimic();
     // F-SPACE: tap H to dilate space (cycle the camera FOV). Throttled like the other taps.
     if (k['h'] && s.frame % 30 === 0) this.dilateSpace();
     // V62 CHAOS MODE: tap K to engage/disengage the Lorenz quantum storm. Throttled like the taps.
@@ -4089,7 +4233,6 @@ export class World {
     const s = this.state;
     const sn = this.snap;
     sn.entities = this.entities.list.length;
-    sn.xenomimics = this.xenomimics.population();
     sn.chaos = s.chaos;
     sn.mutations = s.mutations;
     sn.energy = this.energy;
@@ -4104,6 +4247,12 @@ export class World {
     sn.shoggoths = this.shoggoths.count;
     sn.puppeteers = this.puppets.count;
     sn.nhi = this.nhi.count;
+    const xenomimic = this.xenomimics.telemetry();
+    sn.xenomimics = xenomimic.population;
+    sn.xenomimicMax = XENOMIMIC_MAX;
+    sn.xenomimicIntegration = xenomimic.integration;
+    sn.xenomimicCoherence = xenomimic.coherence;
+    sn.xenomimicBondTension = xenomimic.bondTension;
     sn.viewName = cyc(VIEW_MODES, s.viewIdx);
     sn.timeScale = s.timeScale;
     sn.renderName = s.renderMode;
@@ -5393,9 +5542,9 @@ export class World {
         this.unlock();
         return this.launchNhiBeing();
       },
-      launchXeno: () => {
+      launchXenomimic: () => {
         this.unlock();
-        return this.launchXenoBeing();
+        return this.launchXenomimic();
       },
       summonSingularity: () => {
         this.unlock();
@@ -5561,6 +5710,7 @@ export class World {
         this.unlock();
         const on = !this.connectome.webVisible;
         this.connectome.setWebVisible(on);
+        this.xenomimicConnectome.setVisible(on);
         this.hud.showSector(on ? 'NEURAL WEB · ON' : 'NEURAL WEB · OFF');
         this.audit.record('connectome-web', { visible: on });
         return on;

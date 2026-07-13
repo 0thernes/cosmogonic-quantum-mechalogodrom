@@ -1,0 +1,52 @@
+name: Xenomimic report
+description: Report canonical Xenomimic ecology, twin-brain, rendering, inspector, or frame-delivery behavior.
+title: '[XENOMIMIC] '
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Xenomimics are deterministic ground fauna built from shared mimic/anti-mimic twin brains. For freezes, report delivered-frame stalls rather than relying only on the FPS label, and preserve the seed when possible.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Population / breeding / respawn
+        - Ground-wave movement / flora sampling
+        - Twin brain / classical statevector / indicator telemetry
+        - Rendering / shimmer / species geometry
+        - Inspector / telemetry / Observatory
+        - Performance / long delivered-frame stalls
+    validations:
+      required: true
+  - type: input
+    id: seed
+    attributes:
+      label: Seed and mode
+      placeholder: 'seed=12345, GENESIS/BREAK FREE, speed=1x, view=free'
+  - type: textarea
+    id: observed
+    attributes:
+      label: What happened?
+      description: Include the live population, pair count, growth target, and what the ground/flora were doing.
+    validations:
+      required: true
+  - type: textarea
+    id: timing
+    attributes:
+      label: Delivered-frame evidence
+      description: For freezes, include the longest visible stall, p95/p99 if available, browser/GPU, and whether dev hot reload or workers were active.
+      placeholder: 'FPS label said 12, but the page froze for 6.2s; browser..., GPU..., server mode...'
+  - type: textarea
+    id: console
+    attributes:
+      label: Console or audit evidence
+      description: Paste relevant browser errors or Xenomimic telemetry. Remove secrets.
+  - type: checkboxes
+    id: honesty
+    attributes:
+      label: Scientific boundary
+      options:
+        - label: I understand the statevector is classically simulated and the cognition lanes are computational indicators, not evidence of sentience or physical quantum effects.
+          required: true

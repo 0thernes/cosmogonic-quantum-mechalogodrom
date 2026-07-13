@@ -29,6 +29,7 @@ export type ConsciousnessEntityKind =
   | 'apex'
   | 'pantheon'
   | 'glyph'
+  | 'xenomimic'
   | 'archon';
 
 export const CONSCIOUSNESS_ENTITY_KINDS: readonly ConsciousnessEntityKind[] = Object.freeze([
@@ -40,6 +41,7 @@ export const CONSCIOUSNESS_ENTITY_KINDS: readonly ConsciousnessEntityKind[] = Ob
   'apex',
   'pantheon',
   'glyph',
+  'xenomimic',
   'archon',
 ]);
 
@@ -156,6 +158,9 @@ const SUPPORT: Readonly<Record<ConsciousnessEntityKind, readonly ConsciousnessFr
       'projective',
       'ctm',
     ),
+    // Canonical shared-twin controller exposes classical coherence, mutual-information integration,
+    // GWT broadcast and operational sensorimotor/active-inference lanes. Indicator only.
+    xenomimic: FRAMEWORK_IDS,
     archon: FRAMEWORK_IDS,
   });
 
@@ -360,6 +365,31 @@ export const DEFAULT_ENTITY_CONSCIOUSNESS_PROFILES: readonly EntityConsciousness
         plasticity: 0.68,
       },
       adapterReceipt: 'src/sim/consciousness-adapters.ts#glyph-adapter',
+    },
+    {
+      id: 'xenomimic-twin-000',
+      kind: 'xenomimic',
+      label: 'Xenomimic Bipolar Twin',
+      seed: 0x71c1c,
+      bandwidth: 8,
+      traits: {
+        vitality: 0.72,
+        sensorium: 0.76,
+        embodiment: 0.86,
+        activeInference: 0.78,
+        attention: 0.68,
+        selfModel: 0.58,
+        association: 0.72,
+        field: 0.74,
+        recurrence: 0.8,
+        integration: 0.76,
+        workspace: 0.66,
+        projective: 0.9,
+        perturbation: 0.84,
+        social: 0.82,
+        plasticity: 0.74,
+      },
+      adapterReceipt: 'src/sim/xenomimic-brain.ts#classical-statevector-iit-gwt',
     },
     {
       id: 'archon-godform-005',

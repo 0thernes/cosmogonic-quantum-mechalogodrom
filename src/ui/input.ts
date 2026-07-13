@@ -118,11 +118,11 @@ const TOOLBAR_MAP: Readonly<Record<string, keyof UiActions>> = {
   brutal: 'toggleBrutalism', // BRUTALISM: Super Creature god-jewel ↔ poured-concrete monolith (also: B key)
   entropy: 'entropyBoost', // F-CHAOS-ENTROPY: raise the order/heat-death axis
   nhi: 'launchNhi', // F-NHI: launch an NHI being in front of the camera
+  xno: 'launchXenomimic', // exact-one canonical Xenomimic body
   space: 'cycleSpace', // F-SPACE: dilate the camera field-of-view
   exposure: 'cycleExposure', // V116: master scene brightness
   neuralweb: 'toggleConnectomeWeb', // entity connectome axon web (proximity neural links)
   focusColossus: 'focusColossus', // ◎ GOD: fly the camera to frame the God-Colossus fractal deity
-  xno: 'launchXeno', // ◈ XNO: spawn an entangled xenomimic ground-fauna twin-pair
   focusXenomimics: 'focusXenomimics', // ◈ XENOMIMIC: fly the camera to the ground-fauna swarm
 };
 

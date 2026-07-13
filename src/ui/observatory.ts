@@ -65,6 +65,8 @@ export const OBS_ENV_SERIES = 3;
 export const WAR_CELLS = 400;
 /** Series on the page-1 variance chart: population, energy, links. */
 export const OBS_STAT_SERIES = 3;
+/** Canonical Xenomimic ecology lanes: population/cap, coherence, integration, and bond tension. */
+export const OBS_XENOMIMIC_SERIES = 4;
 /** Bins in the page-1 population histogram. */
 export const OBS_HIST_BINS = 16;
 /** Window (most-recent samples) used for the page-1 rolling mean±σ bands. */
@@ -112,10 +114,18 @@ export interface ObservatorySnapshot {
   energy?: number;
   /** Connectome link count for the page-1 variance band (V4.3). Missing → 0. */
   links?: number;
+  /** Living canonical Xenomimics. Optional until World supplies the inspector feed. */
+  xenomimics?: number;
+  /** Configured Xenomimic population ceiling. Missing → 1000. */
+  xenomimicMax?: number;
+  /** Mean classical-statevector coherence (0..1; not physical quantum coherence). */
+  xenomimicCoherence?: number;
+  /** Mean twin mutual-information integration proxy (0..1; not canonical IIT Phi). */
+  xenomimicIntegration?: number;
+  /** Mean bipolar twin-bond tension (0..1). */
+  xenomimicBondTension?: number;
   /** Biome sentience index 0..1 for the page-3 gauge (V4.3). Missing → 0. */
   sentience?: number;
-  /** Live xenomimic ground-fauna population for the accessible summary line. Missing → 0. */
-  xenomimics?: number;
   /** V71: the three measurable dimensions of {@link sentience} (0..1), drawn as sub-bars. */
   bioIntegration?: number;
   bioCoherence?: number;
@@ -547,6 +557,9 @@ export class Observatory {
   private readonly danger: string;
   /** Pre-resolved page-1 band palette [population, energy, links] (no per-draw array). */
   private readonly statColors: readonly string[];
+  /** Pre-resolved canonical Xenomimic ecology palette and labels. */
+  private readonly xenomimicColors: readonly string[];
+  private readonly xenomimicLabels: readonly string[] = ['pop', 'coh', 'iit*', 'twin'];
   /** Pre-resolved page-3 stacked palette [truce, war, alliance] (no per-draw array). */
   private readonly warStackColors: readonly string[];
 
@@ -600,6 +613,11 @@ export class Observatory {
   private readonly matterScratch = new Float32Array(OBS_SERIES);
   /** Latest per-titan energy (resource bars + matter-vs-energy phase portrait). */
   private readonly energyScratch = new Float32Array(OBS_SERIES);
+  /** Optional canonical Xenomimic ecology history; dormant until a caller supplies real values. */
+  private readonly xenomimicRing = new SeriesRing(OBS_XENOMIMIC_SERIES, OBS_RING_CAPACITY);
+  private readonly xenomimicScratch = new Float32Array(OBS_XENOMIMIC_SERIES);
+  private xenomimicLivingLatest = 0;
+  private haveXenomimicTelemetry = false;
 
   // ---- Page 3 rings/scratch (CONFLICT) -----------------------------------------------------
   /** War-intensity history (1 × 180: fraction of war cells in the matrix). */
@@ -682,6 +700,7 @@ export class Observatory {
     this.warAlphas = [0.22, 0.8, 0.95];
     this.names = Array.from({ length: OBS_SERIES }, () => '');
     this.statColors = [this.accent, this.warnColor, this.danger];
+    this.xenomimicColors = [this.warnColor, this.accent, colors[4] ?? '#98ff7a', this.danger];
     // NOTE: indexed by the stacked-ring SERIES/scratch order [truce, wars, allies] (NOT the raw
     // war-matrix value like warColors) — so war→red, ally→teal is correct here and must NOT be swapped.
     this.warStackColors = [DIM, this.danger, this.accent];
@@ -806,9 +825,34 @@ export class Observatory {
     this.fluxRing.pushColumn(this.fluxScratch);
     this.lastPopulation = population;
 
-    // Page 3: sentience gauge scalar + its three measurable dimensions (each clamped to 0..1).
+    // Optional canonical Xenomimic ecology. Do not replace the existing titan roster until a caller
+    // supplies real telemetry; an unwired World therefore keeps the published Observatory unchanged.
     const cl01 = (n: number | undefined): number =>
       typeof n === 'number' && Number.isFinite(n) ? (n < 0 ? 0 : n > 1 ? 1 : n) : 0;
+    const hasXenomimic =
+      snapshot.xenomimics !== undefined ||
+      snapshot.xenomimicCoherence !== undefined ||
+      snapshot.xenomimicIntegration !== undefined ||
+      snapshot.xenomimicBondTension !== undefined;
+    if (hasXenomimic) {
+      this.haveXenomimicTelemetry = true;
+      const living =
+        typeof snapshot.xenomimics === 'number' && Number.isFinite(snapshot.xenomimics)
+          ? Math.max(0, snapshot.xenomimics)
+          : 0;
+      const max =
+        typeof snapshot.xenomimicMax === 'number' && Number.isFinite(snapshot.xenomimicMax)
+          ? Math.max(1, snapshot.xenomimicMax)
+          : 1000;
+      this.xenomimicLivingLatest = living;
+      this.xenomimicScratch[0] = cl01(living / max);
+      this.xenomimicScratch[1] = cl01(snapshot.xenomimicCoherence);
+      this.xenomimicScratch[2] = cl01(snapshot.xenomimicIntegration);
+      this.xenomimicScratch[3] = cl01(snapshot.xenomimicBondTension);
+      this.xenomimicRing.pushColumn(this.xenomimicScratch);
+    }
+
+    // Page 3: sentience gauge scalar + its three measurable dimensions (each clamped to 0..1).
     this.sentienceLatest = cl01(snapshot.sentience);
     this.bioIntLatest = cl01(snapshot.bioIntegration);
     this.bioCohLatest = cl01(snapshot.bioCoherence);
@@ -831,8 +875,11 @@ export class Observatory {
         snapshot.entities !== undefined && Number.isFinite(snapshot.entities)
           ? snapshot.entities
           : this.lastPopulation;
+      const xenomimicSummary = hasXenomimic
+        ? `, ${Math.round(this.xenomimicLivingLatest)} Xenomimics`
+        : '';
       this.liveEl.textContent =
-        `${pageName}: ${Math.round(total)} entities. ` +
+        `${pageName}: ${Math.round(total)} entities${xenomimicSummary}. ` +
         `Energy ${(snapshot.energy ?? 0).toFixed(1)}, ` +
         `links ${snapshot.links ?? 0}, ` +
         `sentience ${((snapshot.sentience ?? 0) * 100).toFixed(0)}%, ` +
@@ -874,7 +921,8 @@ export class Observatory {
         this.drawPhylumMultiples();
         this.drawFlux();
         this.drawTitanMatterEnergyPhase();
-        this.drawEcologyLegend();
+        if (this.haveXenomimicTelemetry) this.drawXenomimicEcology();
+        else this.drawEcologyLegend();
         break;
       case 3:
         this.drawWarIntensity();
@@ -1998,6 +2046,55 @@ export class Observatory {
     x.textBaseline = 'alphabetic';
     x.globalAlpha = 1;
     this.title(x, 'titan roster', w);
+  }
+
+  /**
+   * `#obs-c11`: canonical Xenomimic ecology timeline. All four lanes use a fixed 0..1 scale.
+   * `iit*` is the bounded twin mutual-information proxy, not canonical Phi or sentience evidence.
+   */
+  private drawXenomimicEcology(): void {
+    const { c, x } = this.slot(3);
+    if (!c || !x || !this.prep(c, x)) return;
+    const w = this.pw;
+    const h = this.ph;
+    const ring = this.xenomimicRing;
+    const n = ring.count;
+    const pTop = TITLE_BAND + 2;
+    const baseY = h - 18;
+    const pH = Math.max(1, baseY - pTop);
+    x.strokeStyle = GRID;
+    x.lineWidth = 1;
+    x.beginPath();
+    for (let g = 1; g < 4; g++) {
+      const y = baseY - (g / 4) * pH;
+      x.moveTo(0, y);
+      x.lineTo(w, y);
+    }
+    x.stroke();
+    if (n >= 2) {
+      const stride = strideFor(n, Math.max(2, w >> 1));
+      const m = Math.floor((n - 1) / stride) + 1;
+      for (let s = 0; s < OBS_XENOMIMIC_SERIES; s++) {
+        const color = this.xenomimicColors[s] ?? ACCENT_FALLBACK;
+        x.globalAlpha = 1;
+        x.lineWidth = s === 0 ? 2.5 : 1.8;
+        x.strokeStyle = color;
+        this.glowOn(x, color, s === 0 ? 5 : 3);
+        x.beginPath();
+        for (let k = 0; k < m; k++) {
+          const i = k === m - 1 ? n - 1 : k * stride;
+          const px = m <= 1 ? 0 : (k / (m - 1)) * w;
+          const py = baseY - ring.at(s, i) * pH;
+          if (k === 0) x.moveTo(px, py);
+          else x.lineTo(px, py);
+        }
+        x.stroke();
+        this.glowOff(x);
+      }
+    }
+    this.title(x, 'xenomimic ecology · indicators only', w);
+    this.readout(x, `${Math.round(this.xenomimicLivingLatest)} live`, w);
+    this.legend(x, this.xenomimicLabels, this.xenomimicColors, OBS_XENOMIMIC_SERIES, w, h, null);
   }
 
   // ============================================================================================

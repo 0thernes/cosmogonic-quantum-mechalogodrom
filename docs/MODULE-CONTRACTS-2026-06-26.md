@@ -2,7 +2,7 @@
 
 # Module Contracts
 
-**TSOTCHKE MASTER WIRE ERA (v0.21.13):** 22 external repositories are represented as `8 deep`,
+**TSOTCHKE MASTER WIRE ERA (v0.22.0):** 22 external repositories are represented as `8 deep`,
 `7 wired`, `2 harvest`, `4 fenced`, and `1 meta` (`17/21` non-meta integrated); `OBLITERATUS` is one
 of the four fences and `classical-contrast` is an internal control. Direct ports, deterministic facades,
 harvests, and fences must remain distinct. See `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md` and
@@ -1576,7 +1576,7 @@ Copilot are constructed boot-stream-neutral and never write sim state, so the go
 
 ### V9 acceptance
 
-Full `bun run check` green: prettier → tsc strict → oxlint → 2979 tests (0 fail, 300-frame golden
+Full `bun run check` green: prettier → tsc strict → oxlint → 3001 tests (0 fail, 300-frame golden
 included) → build. The Copilot sandbox verified live (allow: `git log`, file reads; deny:
 path-escape, repository-root pathspecs, `git push`, `legacy/`, shell redirection).
 

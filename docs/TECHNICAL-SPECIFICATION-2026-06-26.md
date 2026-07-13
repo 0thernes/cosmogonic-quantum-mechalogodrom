@@ -18,8 +18,8 @@
 > estimated. **Live:** <https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/> ┬╖ **Spec page:**
 > `/spec` ┬╖ **Architecture docs:** `/docs`
 
-**Version:** v0.21.13 ┬╖ **Generated:** 2026-06-26 ┬╖ **License:** Non-commercial research & play (┬⌐ 0thernes; study / run / modify / share non-commercially, keep attribution, no for-profit use).
-**Gate:** 2,979 tests ┬╖ 84.64% line / 82.21% func (canonical synced via verify-receipts 2026-06-26, receipts law enforced).
+**Version:** v0.22.0 ┬╖ **Generated:** 2026-06-26 ┬╖ **License:** Non-commercial research & play (┬⌐ 0thernes; study / run / modify / share non-commercially, keep attribution, no for-profit use).
+**Gate:** 3,001 tests ┬╖ 84.64% line / 82.21% func (canonical synced via verify-receipts 2026-06-26, receipts law enforced).
 
 **Standing / xeno-A-life position (2026-07-12):** readable synthesis of engineering, comparative matrix, and apex-mind design (SuperCreature Γëê1.4k-param multi-faculty spine + online heads; SuperMind ~10k composite; Apex/Mechalogodrom designed scaling roadmaps)ΓÇö**xeno scaffolds, not OpenWorm competitors, not sentience claims.** See [COMPREHENSIVE-STANDING report](./reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.md) ┬╖ [HTML](./reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.html).
 **NHSI scorecard:** [NHSI-PROGRESS-DASHBOARD-2026-06-26.md](./NHSI-PROGRESS-DASHBOARD-2026-06-26.md) ┬╖ **Tsotchke depth:** [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md)
@@ -60,7 +60,7 @@ Snapshot: **2026-07-11**. (Coverage + passing-test counts ARE SSOT-synced ΓÇö
 | Tests (`tests/`)                        | 48,849 lines ┬╖ 307 files                                               |
 | Native C++ engine (`native/`, ADR-0007) | 1,835 lines ┬╖ 12 files                                                 |
 | Test : source ratio                     | 0.45 ΓåÆ **84.64% line / 82.21% func** coverage (`bun test --coverage`) |
-| Passing tests                           | **2,979** (exact tracked suite; 0 failing)                              |
+| Passing tests                           | **3,001** (exact tracked suite; 0 failing)                              |
 
 (Excludes the vendored `node_modules/`, generated `dist/` ┬╖ `coverage/` ┬╖ `native/build/`, and nested
 `.claude/worktrees/` checkouts.)
@@ -361,13 +361,13 @@ intelligence is engineered, not downloaded.**
 
 ## 8 ┬╖ Memory, performance & hardware footprint
 
-| Resource                        | Requirement                                                                                                                                                                                                                                                                                                                             |
-| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **GPU**                         | Any **WebGL2** device ΓÇö integrated Intel / Apple / Android included. Quality tiers auto-scale (DPR cap, shadows, entity cap, instancing) down to phones. No discrete/RTX GPU required.                                                                                                                                                |
-| **NPU / AI-accelerator / TOPS** | **Zero.** No transformer inference. All organism-brain forward passes Γëê 10,000 ├ù ~140 FLOP ├ù 60 fps Γëê **~0.08 GFLOP/s** ΓÇö negligible on one CPU core. (The optional copilot chat calls a **remote** free LLM; that model never runs on-device.)                                                                                 |
-| **CPU**                         | Any modern CPU. The main simulation loop is primarily single-threaded, with bounded Web Worker offload for wilderness physics; the CPU remains the measured 10k bottleneck. A `perf-budget.test.ts` enforces the per-frame budget.                                                                                                      |
-| **RAM**                         | Γëê **300ΓÇô600 MB** resident at full population (Three.js scene + typed-array entity state + instanced buffers + audit ring).                                                                                                                                                                                                          |
-| **Storage / download**          | `dist/` is 109 MB on disk (the full multi-page build), but the **app's initial payload is the ~960 KB entry chunk + Three.js** (single-digit MB; ~1ΓÇô1.5 MB gzipped). The bulk ΓÇö **ten 3.2 MB chunks (~32 MB) of Mermaid** ΓÇö loads only on `/docs`, plus ~12 MB of self-hosted-font CSS. Routes load only what they need, gzipped. |
+| Resource                        | Requirement                                                                                                                                                                                                                                                                                                                                                         |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **GPU**                         | Any **WebGL2** device ΓÇö integrated Intel / Apple / Android included. Quality tiers auto-scale (DPR cap, shadows, entity cap, instancing) down to phones. No discrete/RTX GPU required.                                                                                                                                                                            |
+| **NPU / AI-accelerator / TOPS** | **Zero.** No transformer inference. All organism-brain forward passes Γëê 10,000 ├ù ~140 FLOP ├ù 60 fps Γëê **~0.08 GFLOP/s** ΓÇö negligible on one CPU core. (The optional copilot chat calls a **remote** free LLM; that model never runs on-device.)                                                                                                             |
+| **CPU**                         | Any modern CPU. The live POWER runtime is intentionally single-threaded: the wilderness Web Worker lane is dormant after worker-enabled runs showed multi-second delivered-frame stalls that the nominal FPS label concealed. A `perf-budget.test.ts` enforces the CPU-step budget; worker re-entry additionally requires a production-shaped delivered-frame gate. |
+| **RAM**                         | Γëê **300ΓÇô600 MB** resident at full population (Three.js scene + typed-array entity state + instanced buffers + audit ring).                                                                                                                                                                                                                                      |
+| **Storage / download**          | `dist/` is 109 MB on disk (the full multi-page build), but the **app's initial payload is the ~960 KB entry chunk + Three.js** (single-digit MB; ~1ΓÇô1.5 MB gzipped). The bulk ΓÇö **ten 3.2 MB chunks (~32 MB) of Mermaid** ΓÇö loads only on `/docs`, plus ~12 MB of self-hosted-font CSS. Routes load only what they need, gzipped.                             |
 
 Complexity classes are catalogued in [COMPLEXITY-2026-06-26.md](COMPLEXITY-2026-06-26.md); hot-path benchmarks in
 [BENCHMARKS-2026-06-26.md](BENCHMARKS-2026-06-26.md) (run via `bun run bench`, mitata).
@@ -410,7 +410,7 @@ Complexity classes are catalogued in [COMPLEXITY-2026-06-26.md](COMPLEXITY-2026-
 
 The single gate ΓÇö `bun run check` ΓÇö must pass before every commit:
 
-`prettier --check` ΓåÆ `tsc --noEmit` (strict) ΓåÆ `oxlint` ΓåÆ `bun test` (**2,979 tests, 0 fail**) ΓåÆ
+`prettier --check` ΓåÆ `tsc --noEmit` (strict) ΓåÆ `oxlint` ΓåÆ `bun test` (**3,001 tests, 0 fail**) ΓåÆ
 `bun scripts/build.ts`. Receipt regression guard: coverage must stay within the `verify:receipts` tolerance from the canonical **84.64% line / 82.21% func** floor; local Windows receipt runs may measure higher.
 Three governing "master" personas (`masters/*.xml`) encode the discipline: **the Executor** (finish
 everything, full gates), **the Architect** (contracts before code, exclusive ownership), **the
@@ -451,7 +451,7 @@ tsotchke-ecology-predictor-v3 427` ┬╖
 
 This is a ~108.2k-line app-source (+ optional C++/Jolt native engine) browser-native simulation that
 renders **up to 50,000 agents** (10,000 at 60 fps on a laptop iGPU with zero AI accelerator), is
-**bit-reproducible from one seed**, ships through a **full CI/CD gate** (2,979 tests, 84.64% line / 82.21% func coverage),
+**bit-reproducible from one seed**, ships through a **full CI/CD gate** (3,001 tests, 84.64% line / 82.21% func coverage),
 and whose entire emergent intelligence weighs **Γëê 14 MB ΓÇö 1/50,000th of GPT-3** at the mega ceiling. It
 demonstrates that depth comes from **architecture,
 determinism, and engineering discipline**, not parameter count or hardware.
