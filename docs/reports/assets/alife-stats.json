@@ -4,10 +4,10 @@
   "nSystems": 113,
   "nPeers": 112,
   "cosmogonic": {
-    "breadthMean": 3.82,
+    "breadthMean": 3.83,
     "breadthRank": 1,
-    "zScorePopulation": 3.06,
-    "zScoreVsPeers": 3.21,
+    "zScorePopulation": 3.08,
+    "zScoreVsPeers": 3.23,
     "percentile": 100,
     "peerMaturity": 1.5
   },
@@ -18,7 +18,7 @@
     "breadthStdPeers": 0.54,
     "medianBreadth": 2.11,
     "medianPeerMaturity": 3.5,
-    "corrBreadthVsMaturity": -0.114
+    "corrBreadthVsMaturity": -0.115
   },
   "perAxis": [
     {
@@ -132,8 +132,8 @@
       "mean": 3.14,
       "std": 1.02,
       "max": 5,
-      "cosmo": 4.3,
-      "cosmoZ": 1.15,
+      "cosmo": 4.4,
+      "cosmoZ": 1.24,
       "leaders": [
         "Game of Life",
         "EvoGym",
@@ -185,52 +185,52 @@
     {
       "name": "ALIEN",
       "full": "ALIEN",
-      "d": 4.58
+      "d": 4.61
     },
     {
       "name": "Creatures",
       "full": "Creatures",
-      "d": 4.92
+      "d": 4.97
     },
     {
       "name": "Framsticks",
       "full": "Framsticks",
-      "d": 5.46
+      "d": 5.48
     },
     {
       "name": "Division Blocks",
       "full": "Division Blocks",
-      "d": 5.54
+      "d": 5.56
     },
     {
       "name": "biosim4",
       "full": "biosim4",
-      "d": 5.62
+      "d": 5.65
     },
     {
       "name": "The Bibites",
       "full": "The Bibites",
-      "d": 5.68
-    },
-    {
-      "name": "Karl Sims VC",
-      "full": "Karl Sims Evolved Virtual Creatures",
-      "d": 5.8
+      "d": 5.7
     },
     {
       "name": "DERL (Deep Evolutionary Reinforcement Learning)",
       "full": "DERL (Deep Evolutionary Reinforcement Learning)",
-      "d": 5.8
+      "d": 5.81
+    },
+    {
+      "name": "Karl Sims VC",
+      "full": "Karl Sims Evolved Virtual Creatures",
+      "d": 5.82
     },
     {
       "name": "Neural Graph Evolution (NGE)",
       "full": "Neural Graph Evolution (NGE)",
-      "d": 5.82
+      "d": 5.84
     },
     {
       "name": "Polyworld",
       "full": "Polyworld",
-      "d": 5.83
+      "d": 5.87
     }
   ]
 }

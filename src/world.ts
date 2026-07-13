@@ -417,6 +417,8 @@ export class World {
     bondTension: 0,
     integration: 0,
     freeEnergy: 0,
+    quantumSpread: 0,
+    rngQuality: 0,
     speciesCounts: Array.from({ length: 10 }, () => 0),
     dominantSpecies: 0,
     growthTarget: 2,
@@ -2694,6 +2696,8 @@ export class World {
     target.integration = source.integration;
     target.freeEnergy = source.freeEnergy;
     target.predictionError = source.freeEnergy;
+    target.quantumSpread = source.quantumSpread;
+    target.rngQuality = source.rngQuality;
     for (let i = 0; i < target.speciesCounts.length; i++) {
       (target.speciesCounts as number[])[i] = source.speciesCounts[i] ?? 0;
     }

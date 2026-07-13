@@ -8,7 +8,7 @@
 [![License: Non-Commercial Research & Play](https://img.shields.io/badge/License-Non--Commercial%20Research%20%26%20Play-2ea043.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
-[![tests](https://img.shields.io/badge/tests-3005%20exact-brightgreen)](./tests)
+[![tests](https://img.shields.io/badge/tests-3010%20exact-brightgreen)](./tests)
 [![coverage](https://img.shields.io/badge/coverage-84.64%25%20line%20%C2%B7%2082.21%25%20func-success)](./docs/TECHNICAL-SPECIFICATION-2026-06-26.md)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION-2026-06-26.md)
 [![Tsotchke](https://img.shields.io/badge/Tsotchke-REAL__MIT__CORPUS-purple)](https://github.com/tsotchke)
@@ -23,7 +23,7 @@ diffusion, **and the Tsotchke corpus wired as the primordial substrate for digit
 **Current public truth (2026-07-12):**
 
 - Package/source version: **v0.22.0**.
-- Exact tracked-suite receipt: **3,005 tests / 0 fail**. Portable public coverage floor: **84.64% line / 82.21% func**.
+- Exact tracked-suite receipt: **3,010 tests / 0 fail**. Portable public coverage floor: **84.64% line / 82.21% func**.
 - **Standing & xeno-A-life position (readable synthesis):** [Comprehensive Standing Report (MD)](./docs/reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.md) ┬╖ [HTML](./docs/reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.html) ΓÇö engineering card, 113-system matrix, SuperCreature/SuperMind/Apex/Mechalogodrom deep dive, capital/ISAL path. Apex minds are **xeno multi-faculty scaffolds** (not OpenWorm bio-twins; not claimed sentience). Preserves V4/Phase-B failure-forward boundaries.
 
 <!-- cqm-sync:local-measurement:start -->
@@ -519,7 +519,7 @@ full gate with same-seed determinism preserved. The major arcs:
   ported primitive. The whole apex beat is now measured honestly: **~1.99 ms** per `SuperMind.think()`
   (range 1.41ΓÇô5.62 ms) and **~9.77 ms** for the staggered 5-mind batch (~58% of a 60 fps frame, which is
   why 5 minds run staggered against 20 light echoes); the older sub-millisecond / `<2%` GOAL5 claim is
-  superseded until re-proven. **3,005 exact tracked tests ┬╖ 0 fail (receipts enforced) ┬╖ 84.64% line / 82.21% func portable coverage floor.**
+  superseded until re-proven. **3,010 exact tracked tests ┬╖ 0 fail (receipts enforced) ┬╖ 84.64% line / 82.21% func portable coverage floor.**
   <!-- cqm-sync:local-measurement:start -->
   **Latest Windows-local measurement: 3,001 tests / 0 fail / 3,539,785 assertions at `93.39%` line / `91.37%` func.**
   <!-- cqm-sync:local-measurement:end -->
@@ -730,18 +730,18 @@ Every figure is computed (never hand-typed) by three deterministic engines from 
 [`alife-codeground-sensitivity.ts`](./scripts/alife-codeground-sensitivity.ts).
 
 The 112 peers are literature judgments. Cosmogonic's current CSV row is the code-grounded vector
-`[4.0, 2.4, 3.3, 3.8, 4.5, 4.6, 4.3, 3.5, 4.0]`; the table retains the earlier self-score only as a
+`[4.0, 2.4, 3.3, 3.8, 4.5, 4.6, 4.4, 3.5, 4.0]`; the table retains the earlier self-score only as a
 historical sensitivity baseline:
 
 | Metric                         | Self-scored | Code-grounded (re-audited vs source) |
 | ------------------------------ | ----------: | -----------------------------------: |
-| Breadth (mean of 9 axes)       |    4.44 / 5 |                         **3.82 / 5** |
+| Breadth (mean of 9 axes)       |    4.44 / 5 |                         **3.83 / 5** |
 | Rank among 113 systems         |    #1 / 113 |                         **#1 / 113** |
-| z-score vs population          |     +4.02╧â |                          **+3.06╧â** |
-| z-score vs peers               |     +4.36╧â |                          **+3.21╧â** |
-| Mahalanobis vs peer centroid   |       12.65 |                            **10.35** |
+| z-score vs population          |     +4.02╧â |                          **+3.08╧â** |
+| z-score vs peers               |     +4.36╧â |                          **+3.23╧â** |
+| Mahalanobis vs peer centroid   |       12.65 |                            **10.36** |
 | Systems that dominate it (9-D) |           0 |                                **0** |
-| Breadth lead over nearest peer |       +0.94 |                            **+0.32** |
+| Breadth lead over nearest peer |       +0.94 |                            **+0.33** |
 
 <p align="center">
   <img src="./docs/reports/assets/alife-breadth-ranked.svg" alt="Ranked breadth of integrated mechanisms ΓÇö Cosmogonic ranks #1 of 113" width="49%">

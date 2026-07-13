@@ -78,19 +78,19 @@
       3.8,
       4.5,
       4.6,
-      4.3,
+      4.4,
       3.5,
       4
     ],
-    "breadth": 3.822,
+    "breadth": 3.833,
     "rank": 1,
     "total": 113,
     "percentile": 100,
-    "zPopulation": 3.062,
-    "zVsPeers": 3.213,
-    "mahalanobis": 10.354,
+    "zPopulation": 3.08,
+    "zVsPeers": 3.234,
+    "mahalanobis": 10.364,
     "dominatedBy9d": 0,
-    "leadOverNearestPeerBreadth": 0.322,
+    "leadOverNearestPeerBreadth": 0.333,
     "perAxisZ": [
       {
         "axis": "Reproduction",
@@ -124,8 +124,8 @@
       },
       {
         "axis": "Instrumentation",
-        "score": 4.3,
-        "z": 1.15
+        "score": 4.4,
+        "z": 1.24
       },
       {
         "axis": "Consciousness-theory",
@@ -216,19 +216,19 @@
       3.8,
       4.5,
       4.6,
-      4.3,
+      4.4,
       3.5,
       4
     ],
-    "breadth": 3.822,
+    "breadth": 3.833,
     "rank": 1,
     "total": 113,
     "percentile": 100,
-    "zPopulation": 3.062,
-    "zVsPeers": 3.213,
-    "mahalanobis": 10.354,
+    "zPopulation": 3.08,
+    "zVsPeers": 3.234,
+    "mahalanobis": 10.364,
     "dominatedBy9d": 0,
-    "leadOverNearestPeerBreadth": 0.322,
+    "leadOverNearestPeerBreadth": 0.333,
     "perAxisZ": [
       {
         "axis": "Reproduction",
@@ -262,8 +262,8 @@
       },
       {
         "axis": "Instrumentation",
-        "score": 4.3,
-        "z": 1.15
+        "score": 4.4,
+        "z": 1.24
       },
       {
         "axis": "Consciousness-theory",
@@ -279,8 +279,8 @@
   },
   "deltas": {
     "basis": "canonical-minus-historical",
-    "breadth": -0.622,
-    "zPopulation": -0.957,
-    "mahalanobis": -2.301
+    "breadth": -0.611,
+    "zPopulation": -0.939,
+    "mahalanobis": -2.291
   }
 }

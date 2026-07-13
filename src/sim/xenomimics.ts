@@ -21,6 +21,7 @@
  * plane-glide / helicopter-bob blended per species. Creatures never rise above the ground-wave crest.
  */
 import { mulberry32, hashSeed, type Rng } from '../math/rng';
+import { measureRngProvenance, type RngProvenance } from '../core/rng-provenance';
 import { XenomimicBrain, type XenomimicBeat, type XenomimicThought } from './xenomimic-brain';
 import type { OrganismIntelligenceSignal } from '../types';
 
@@ -156,6 +157,13 @@ export interface XenomimicTelemetry {
   /** Mean Free-Energy-Principle surprise across pairs in [0,1] — how much the swarm's world is
    * violating its learned predictions (arousal). Falls as the population learns a stable environment. */
   freeEnergy: number;
+  /** Mean live Schrödinger positional spread across beating pairs in [0,1] — the exploration cue's live
+   * value (0 when the substrate is ablated). Observability for GATE-XENO-SCHRODINGER's substrate. */
+  quantumSpread: number;
+  /** Measured statistical quality in [0,1] of the seeded `mulberry32` generator underpinning this
+   * population's determinism, from the real rng-stats battery ({@link measureRngProvenance}). A provenance
+   * RECEIPT for reproducibility — measured, not assumed (Dr. Manhattan). Constant for a given seed. */
+  rngQuality: number;
   speciesCounts: readonly number[];
   dominantSpecies: number;
   growthTarget: number;
@@ -189,6 +197,8 @@ export class XenomimicPopulation {
   private readonly beatInterval: number;
   private readonly respawnBudget: number;
   private readonly lifecycleSink: XenomimicLifecycleSink | undefined;
+  /** MEASURED provenance receipt for this population's own seeded generator (see {@link rngProvenanceReceipt}). */
+  private readonly rngProvenance: RngProvenance;
 
   /** Introduced bodies only. The array and body identities remain stable for renderer/UI/connectome. */
   private readonly bodyState: Xenomimic[] = [];
@@ -219,6 +229,8 @@ export class XenomimicPopulation {
     bondTension: 0,
     integration: 0,
     freeEnergy: 0,
+    quantumSpread: 0,
+    rngQuality: 0,
     speciesCounts: Array.from({ length: XENOMIMIC_SPECIES }, () => 0),
     dominantSpecies: 0,
     growthTarget: 2,
@@ -231,7 +243,11 @@ export class XenomimicPopulation {
   private teleports = 0;
 
   constructor(seed: number, options: XenomimicOptions = {}) {
-    this.rng = mulberry32((hashSeed('xenomimic-population') ^ (seed >>> 0)) >>> 0 || 1);
+    const rngSeed = (hashSeed('xenomimic-population') ^ (seed >>> 0)) >>> 0 || 1;
+    this.rng = mulberry32(rngSeed);
+    // Provenance receipt: MEASURE (don't assume) the quality of the exact generator this population runs on,
+    // from a dedicated sample so it never perturbs the live stream. Deterministic; constant for a given seed.
+    this.rngProvenance = measureRngProvenance(rngSeed);
     this.arenaRadius = options.arenaRadius ?? 180;
     this.lifetime = options.lifetime ?? 150;
     this.respawnDelay = options.respawnDelay ?? 120;
@@ -719,6 +735,15 @@ export class XenomimicPopulation {
     return this.lifecycleState;
   }
 
+  /**
+   * The MEASURED provenance receipt for this population's seeded generator — a reproducible statement about
+   * the `mulberry32` quality underpinning its determinism (Dr. Manhattan: measured, not assumed). The receipt
+   * carries its own seed, so a verifier can recompute {@link measureRngProvenance} and confirm fidelity.
+   */
+  rngProvenanceReceipt(): Readonly<RngProvenance> {
+    return this.rngProvenance;
+  }
+
   telemetry(): Readonly<XenomimicTelemetry> {
     const speciesCounts = this.telemetryState.speciesCounts;
     speciesCounts.fill(0);
@@ -728,6 +753,7 @@ export class XenomimicPopulation {
     let tensionSum = 0;
     let integrationSum = 0;
     let freeEnergySum = 0;
+    let spreadSum = 0;
     let beated = 0;
     for (const p of this.pairs) {
       if (p.beat) {
@@ -735,6 +761,7 @@ export class XenomimicPopulation {
         tensionSum += p.beat.bondTension;
         integrationSum += p.beat.integration;
         freeEnergySum += p.beat.freeEnergy;
+        spreadSum += (p.beat.mimic.quantumSpread + p.beat.anti.quantumSpread) / 2;
         beated++;
       }
       for (const c of [p.mimic, p.anti]) {
@@ -760,6 +787,8 @@ export class XenomimicPopulation {
     telemetry.bondTension = beated > 0 ? tensionSum / beated : 0;
     telemetry.integration = beated > 0 ? integrationSum / beated : 0;
     telemetry.freeEnergy = beated > 0 ? freeEnergySum / beated : 0;
+    telemetry.quantumSpread = beated > 0 ? spreadSum / beated : 0;
+    telemetry.rngQuality = this.rngProvenance.quality;
     telemetry.dominantSpecies = dominant;
     telemetry.growthTarget = this.growthTarget();
     return telemetry;

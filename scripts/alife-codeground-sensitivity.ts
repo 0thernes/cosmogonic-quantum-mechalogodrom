@@ -51,7 +51,14 @@
  *                            latent-substrate probe (sim/latent-substrates.ts) and causal-graph/predictive-coding
  *                            remain wired only there (not independently gated), so the axis is still short of the
  *                            5.0 self-score — was 4.5
- *   instrumentation     4.3  analytics.ts:57-215 wired regression+audit; rng-stats.ts isolated — DEFENSIBLE (was 4.5)
+ *   instrumentation     4.4  analytics.ts:57-215 wired regression+audit PLUS rng-stats.ts (the Tsotchke
+ *                            quantum_stats randomness battery) is now WIRED LIVE — core/rng-provenance.ts makes
+ *                            the Xenomimic population MEASURE a provenance receipt of the exact seeded mulberry32
+ *                            generator underpinning its determinism and surface it in telemetry (rngQuality) +
+ *                            the panel. The instrument is falsifiable: it scores the sim generator ~0.99 yet
+ *                            DISCRIMINATES a degenerate stream far lower under the same battery, is deterministic,
+ *                            and surfaces with recompute fidelity (GATE-RNG-PROVENANCE). This retires the prior
+ *                            "rng-stats.ts isolated" note — was 4.3
  *   consciousness-thy   3.5  integrated-information.ts:44-92 exact quantum Phi + global-workspace wired; causal-graph + predictive-coding NEVER instantiated — OVERCLAIMED (was 4.5)
  *   visual scale        4.0  instanced-entities.ts pooling is the only desktop/ultra path; 50k tier unbenchmarked, pools cast no shadows — OVERCLAIMED (was 5.0)
  */
@@ -115,7 +122,16 @@ const HISTORICAL_SELF_SCORED = [4.0, 3.5, 5.0, 4.0, 4.5, 5.0, 4.5, 4.5, 5.0];
 //              latent-substrate probe (sim/latent-substrates.ts); classical numerical Schrödinger, not a QPU.
 //              Corrects the now-stale "schrodinger isolated" grounding — causal-graph/predictive-coding remain
 //              wired only via that single apex probe, so the axis stays below its 5.0 self-score)
-export const CODE_GROUNDED = [4.0, 2.4, 3.3, 3.8, 4.5, 4.6, 4.3, 3.5, 4.0];
+//   batch-56:  instrumentation 4.3 -> 4.4 (GATE-RNG-PROVENANCE: the previously-ISOLATED randomness battery
+//              math/rng-stats.ts — a port of the Tsotchke quantum_rng quantum_stats.c suite — gets its first live
+//              consumer via core/rng-provenance.ts. The Xenomimic population MEASURES a provenance receipt of the
+//              exact seeded mulberry32 generator underpinning its determinism (from a dedicated sample, so it
+//              never perturbs the live stream) and surfaces it in telemetry (rngQuality) + the panel — measured,
+//              not assumed. The instrument is falsifiable: it scores the sim generator ~0.99 yet DISCRIMINATES a
+//              degenerate stream far lower under the SAME battery, is deterministic, and surfaces with recompute
+//              fidelity. A genuine new MEASURED-observability mechanism; classical statistics over a classical
+//              PRNG — a reproducibility receipt, not a physical-entropy or security claim)
+export const CODE_GROUNDED = [4.0, 2.4, 3.3, 3.8, 4.5, 4.6, 4.4, 3.5, 4.0];
 const EXPECTED_CANONICAL_CODE_GROUNDED = CODE_GROUNDED;
 
 interface Row {

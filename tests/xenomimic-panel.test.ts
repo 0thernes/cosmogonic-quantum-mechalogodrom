@@ -25,6 +25,8 @@ const TELEMETRY: XenomimicPanelTelemetry = {
   bondTension: 0.4,
   integration: 0.71,
   freeEnergy: 0.36,
+  quantumSpread: 0.31,
+  rngQuality: 0.99,
   speciesCounts: [5, 6, 4, 7, 5, 3, 4, 2, 3, 3],
   dominantSpecies: 3,
   growthTarget: 200,

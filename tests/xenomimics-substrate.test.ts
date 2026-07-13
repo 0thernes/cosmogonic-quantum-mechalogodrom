@@ -25,6 +25,7 @@
 import { describe, expect, test } from 'bun:test';
 import { mulberry32 } from '../src/math/rng';
 import { XenomimicBrain, schrodingerSpread } from '../src/sim/xenomimic-brain';
+import { XenomimicPopulation } from '../src/sim/xenomimics';
 
 // senses = [food, crowding, threat, chaos, twinDist, energy]; schrodingerSpread reads [food, crowding, threat].
 const S = (food: number, crowding: number, threat: number): number[] => [
@@ -110,5 +111,15 @@ describe('GATE-XENO-SCHRODINGER — a second, independent quantum substrate', ()
     // Both arms are deterministic — the whole coupled beat is pure given its seed.
     expect(runBrain(false).turnSum).toBe(wired.turnSum);
     expect(runBrain(true).turnSum).toBe(ablated.turnSum);
+  });
+
+  test('the substrate is OBSERVABLE — the population telemetry surfaces a live, bounded mean quantumSpread', () => {
+    const food = (): number => 0.85;
+    const pop = new XenomimicPopulation(4242, { growthRamp: 40 });
+    for (let i = 0; i < 300; i++) pop.step(1 / 30, { foodAt: food });
+    const t = pop.telemetry();
+    // The population-level mean Schrödinger spread is aggregated into telemetry, bounded, and live (>0 wired).
+    expect(t.quantumSpread).toBeGreaterThan(0);
+    expect(t.quantumSpread).toBeLessThanOrEqual(1);
   });
 });
