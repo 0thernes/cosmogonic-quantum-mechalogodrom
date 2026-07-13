@@ -31,7 +31,9 @@ function run(
 /** Snapshot the exact live-creature state for byte-identical determinism comparison. */
 function snapshot(pop: XenomimicPopulation): string {
   const rows: number[][] = [];
-  pop.forEach((c) => rows.push([c.x, c.y, c.z, c.vx, c.vz, c.heading, c.energy, c.age, c.species]));
+  pop.forEach((c) =>
+    rows.push([c.x, c.y, c.z, c.vx, c.vz, c.heading, c.energy, c.age, c.species, c.leanX, c.leanZ]),
+  );
   return JSON.stringify(rows);
 }
 
@@ -217,6 +219,24 @@ describe('GATE-XENOMIMIC — population lifecycle', () => {
     // Advance past the 5s predation-respawn window → it comes back.
     for (let i = 0; i < 200; i++) pop.step(1 / 30, { foodAt: () => 0.9 });
     expect(pop.population()).toBeGreaterThanOrEqual(before);
+  });
+
+  test('weighted-ragdoll fulcrum lean stays bounded + finite, and responds to motion', () => {
+    const pop = new XenomimicPopulation(44, { growthRamp: 40 });
+    let anyLean = false;
+    for (let i = 0; i < 1500; i++) {
+      pop.step(1 / 30, { foodAt: () => 0.85 });
+      pop.forEach((c) => {
+        // The damped pendulum must never blow up (bounded to ±0.7 rad, always finite).
+        expect(Number.isFinite(c.leanX)).toBe(true);
+        expect(Number.isFinite(c.leanZ)).toBe(true);
+        expect(Math.abs(c.leanX)).toBeLessThanOrEqual(0.7 + 1e-9);
+        expect(Math.abs(c.leanZ)).toBeLessThanOrEqual(0.7 + 1e-9);
+        if (Math.abs(c.leanX) > 1e-3 || Math.abs(c.leanZ) > 1e-3) anyLean = true;
+      });
+    }
+    // Moving creatures actually lean (the fulcrum is live, not a dead field).
+    expect(anyLean).toBe(true);
   });
 
   test('teleports actually fire (Born-rule collapse) over a long run', () => {

@@ -26,7 +26,11 @@ look different. `integration` now flows into the population telemetry, and `spaw
 (substrate API for the parallel session's XNO spawn button). GATE-XENOMIMIC grew 13 → 17 (singlet MI ≈ 1,
 distinct temperaments drive different behaviour, spawnAt adds a pair, telemetry integration bounded).
 Honest: classical MI is NOT rigorous IIT Φ and NOT a sentience claim — no consciousness/sentience matrix
-moved.
+moved. Also added the owner's **weighted-ragdoll FULCRUM body physics**: each creature's body is a
+damped-pendulum lean (pitch/roll) balanced on its ground-contact point — turning hard at speed rolls it,
+a hop pitches it, a spring restores upright (semi-implicit/symplectic Euler, so the underdamped
+oscillator stays bounded over long runs). Rendered via body tilt; deterministic (now in the golden
+snapshot). GATE-XENOMIMIC 17 → 18 (lean bounded/finite + live over a 1500-step run).
 
 ## 2026-07-12 — batch 47: Xenomimics (Slice 1) — deterministic entangled-twin ground fauna
 

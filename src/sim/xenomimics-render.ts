@@ -97,7 +97,8 @@ export class XenomimicRenderer {
       const breathe = 1 + 0.12 * Math.sin(t * 2 + c.gaitPhase);
       const scale = (1.4 + (c.energy - 0.5) * 0.6) * breathe;
       this.dummy.position.set(c.x, c.y, c.z);
-      this.dummy.rotation.set(c.gaitPhase, c.heading, c.swayPhase * 0.5);
+      // Fulcrum lean tilts the body (pitch/roll) so it leans into turns + wobbles on landings — weight.
+      this.dummy.rotation.set(c.gaitPhase + c.leanX, c.heading, c.swayPhase * 0.5 + c.leanZ);
       this.dummy.scale.setScalar(Math.max(0.4, scale));
       this.dummy.updateMatrix();
       mesh.setMatrixAt(i, this.dummy.matrix);

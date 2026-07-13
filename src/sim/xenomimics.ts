@@ -55,6 +55,15 @@ export interface Xenomimic {
   shimmer: number;
   /** Seconds until this creature may teleport again (Born-rule collapse cooldown). */
   teleportCd: number;
+  /**
+   * Weighted-ragdoll fulcrum lean — the body is a damped pendulum balanced on its ground-contact point.
+   * `leanX`/`leanZ` are pitch/roll angles (rad) with angular velocities `leanVX`/`leanVZ`; turning hard
+   * and landing hops push it, a spring restores upright. Gives the movement organic weight.
+   */
+  leanX: number;
+  leanZ: number;
+  leanVX: number;
+  leanVZ: number;
 }
 
 interface Pair {
@@ -104,6 +113,9 @@ export interface XenomimicTelemetry {
 
 const clamp01 = (v: number): number => (!Number.isFinite(v) || v <= 0 ? 0 : v >= 1 ? 1 : v);
 const TWO_PI = Math.PI * 2;
+/** Clamp a fulcrum-lean angle to a bounded, finite tilt (rad). */
+const clampLean = (v: number): number =>
+  !Number.isFinite(v) ? 0 : v < -0.7 ? -0.7 : v > 0.7 ? 0.7 : v;
 
 /** Gentle deterministic ground-wave height at a world point (creatures ride this; never above its crest). */
 export function xenoGroundHeight(x: number, z: number, t: number): number {
@@ -202,6 +214,10 @@ export class XenomimicPopulation {
       swayPhase: this.rng() * TWO_PI,
       shimmer: 0,
       teleportCd: 0,
+      leanX: 0,
+      leanZ: 0,
+      leanVX: 0,
+      leanVZ: 0,
     };
   }
 
@@ -340,6 +356,19 @@ export class XenomimicPopulation {
     c.hopV -= 22 * dt;
     c.hopY = Math.max(0, c.hopY + c.hopV * dt);
 
+    // Weighted-ragdoll FULCRUM: the body is a damped pendulum on its ground-contact point. Turning hard
+    // at speed rolls it (centripetal lean); a hop pitches it; a spring (K) restores upright, damped
+    // (DAMP). Semi-implicit (symplectic) Euler keeps the underdamped oscillator bounded over long runs.
+    const K = 42;
+    const DAMP = 7.5;
+    const normSpeed = speed / gaitFast; // [0, thought.speed]
+    const lateral = thought.turn * normSpeed * 6; // centripetal roll drive
+    c.leanVZ += (-K * c.leanZ - DAMP * c.leanVZ + lateral) * dt;
+    c.leanZ = clampLean(c.leanZ + c.leanVZ * dt);
+    const pitchTarget = -normSpeed * 0.14 - c.hopV * 0.015;
+    c.leanVX += (-K * (c.leanX - pitchTarget) - DAMP * c.leanVX) * dt;
+    c.leanX = clampLean(c.leanX + c.leanVX * dt);
+
     // Teleport: a Born-rule collapse relocates a still-superposed creature a short distance instantly.
     c.teleportCd = Math.max(0, c.teleportCd - dt);
     if (thought.teleport && c.teleportCd <= 0) {
@@ -398,6 +427,10 @@ export class XenomimicPopulation {
     c.vz = 0;
     c.hopY = 0;
     c.hopV = 0;
+    c.leanX = 0;
+    c.leanZ = 0;
+    c.leanVX = 0;
+    c.leanVZ = 0;
     c.energy = 0.5 + this.rng() * 0.3;
     c.age = 0;
     c.alive = true;
