@@ -213,3 +213,18 @@ describe('GATE-XENOMIMIC-AUDIO: the eerie entangled-twin tonality bus (slice 3)'
     );
   });
 });
+
+describe('GATE-XENOMIMIC-DOCS: the swarm is documented across the player-facing surfaces (slice 3b)', () => {
+  test('README, in-app Help, the technical spec, and the SPEC page all describe the Xenomimics', () => {
+    // README front-door feature bullet.
+    expect(src('README.md')).toMatch(/\*\*Xenomimics\*\*/);
+    // ❓ HELP ME NOW knowledge base entry (also indexed by the ✦ Copilot, which reads docs + KB).
+    const help = src('src/ui/help-knowledge.ts');
+    expect(help).toContain("id: 'xenomimics'");
+    expect(help).toContain('ENTANGLED TWINS');
+    // Technical specification architecture section.
+    expect(src('docs/TECHNICAL-SPECIFICATION-2026-06-26.md')).toContain('Xenomimics');
+    // Public SPEC page roster.
+    expect(src('specs.html')).toContain('Xenomimics');
+  });
+});

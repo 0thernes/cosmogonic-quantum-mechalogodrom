@@ -11,6 +11,23 @@ changed and why.
 
 ---
 
+## 2026-07-12 — batch 52: Xenomimics slice 3b — documented across the player-facing surfaces
+
+The docs half of slice 3 — the swarm now appears where a reader/player looks (owner: "be in … SPEC and
+Documentation and ReadMe … HELP ME NOW and part of the LLM Copilot information … and in other docs").
+(1) **README** gains a front-door **Xenomimics** feature bullet (10 tessellated species, entangled twins,
+3-qubit singlet, 1000 cap, connectome coupling, 5s respawn, XNO/XENOMIMIC UI). (2) **❓ HELP ME NOW**
+(`ui/help-knowledge.ts`) gains a full `xenomimics` knowledge entry with keyword synonyms (xno, diamonds,
+twins, mimic/anti-mimic, shimmer, cosmic horror) — which the **✦ Copilot** also indexes, so the in-app AI
+can answer about them. (3) The **technical specification** architecture section gains a Xenomimics
+subsystem paragraph + two new entries in the feedback-web example (connectome→agitation, beings→predation).
+(4) The public **SPEC page** (`specs.html`) roster table gains a Xenomimics row (2 → 1,000). All prose is
+accurate to the shipped code; no measured metric or number was hand-edited. GATE-XENOMIMIC-DOCS (+1) seals
+the swarm's presence across README + Help + tech spec + SPEC so a future doc rewrite can't silently drop it.
+Remaining doc surfaces (Observatory interactive readout, About/GitHub) fold into the slice-1 pass.
+
+---
+
 ## 2026-07-12 — batch 51: Xenomimics slice 3a — the eerie entangled-twin tonality bus
 
 The audio half of slice 3 (owner: "very creepy weird unique ultra psychotic eerie fucking WTF music

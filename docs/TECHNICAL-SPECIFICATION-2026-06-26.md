@@ -19,7 +19,7 @@
 > `/spec` ┬╖ **Architecture docs:** `/docs`
 
 **Version:** v0.21.13 ┬╖ **Generated:** 2026-06-26 ┬╖ **License:** Non-commercial research & play (┬⌐ 0thernes; study / run / modify / share non-commercially, keep attribution, no for-profit use).
-**Gate:** 2,975 tests ┬╖ 84.64% line / 82.21% func (canonical synced via verify-receipts 2026-06-26, receipts law enforced).
+**Gate:** 2,976 tests ┬╖ 84.64% line / 82.21% func (canonical synced via verify-receipts 2026-06-26, receipts law enforced).
 
 **Standing / xeno-A-life position (2026-07-12):** readable synthesis of engineering, comparative matrix, and apex-mind design (SuperCreature Γëê1.4k-param multi-faculty spine + online heads; SuperMind ~10k composite; Apex/Mechalogodrom designed scaling roadmaps)ΓÇö**xeno scaffolds, not OpenWorm competitors, not sentience claims.** See [COMPREHENSIVE-STANDING report](./reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.md) ┬╖ [HTML](./reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.html).
 **NHSI scorecard:** [NHSI-PROGRESS-DASHBOARD-2026-06-26.md](./NHSI-PROGRESS-DASHBOARD-2026-06-26.md) ┬╖ **Tsotchke depth:** [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md)
@@ -60,7 +60,7 @@ Snapshot: **2026-07-11**. (Coverage + passing-test counts ARE SSOT-synced ΓÇö
 | Tests (`tests/`)                        | 48,849 lines ┬╖ 307 files                                               |
 | Native C++ engine (`native/`, ADR-0007) | 1,835 lines ┬╖ 12 files                                                 |
 | Test : source ratio                     | 0.45 ΓåÆ **84.64% line / 82.21% func** coverage (`bun test --coverage`) |
-| Passing tests                           | **2,975** (exact tracked suite; 0 failing)                              |
+| Passing tests                           | **2,976** (exact tracked suite; 0 failing)                              |
 
 (Excludes the vendored `node_modules/`, generated `dist/` ┬╖ `coverage/` ┬╖ `native/build/`, and nested
 `.claude/worktrees/` checkouts.)
@@ -158,7 +158,19 @@ server.ts (Bun.serve) ΓöÇΓöÇservesΓöÇΓöÇΓû╢ index.html (/) ┬�
   per frame. Leaf modules never import the type hub at runtime.
 - **The aesthetic law** ([PHILOSOPHY-2026-06-26.md](PHILOSOPHY-2026-06-26.md)): _every system reads AND writes at least one
   other system._ The frame loop is an explicit feedback web (e.g. quantum collapse ΓåÆ quantum cloud;
-  reaction-diffusion ΓåÆ ground emissive map; analytics ΓåÆ audit; NHI ΓåÆ entity behaviour + factions).
+  reaction-diffusion ΓåÆ ground emissive map; analytics ΓåÆ audit; NHI ΓåÆ entity behaviour + factions;
+  entity connectome firing density ΓåÆ xenomimic swarm agitation; beings ΓåÆ xenomimic predation).
+- **Xenomimics** (`sim/xenomimics.ts` + `sim/xenomimic-brain.ts` + `sim/xenomimics-render.ts`): a
+  self-contained ground-fauna subsystem on its own seeded rng substream (never touches `ctx.rng`, absent
+  from every golden). 10 tessellated species live as bipolar ENTANGLED TWINS - one ~100-parameter brain
+  per pair, run with opposite thought-curvature over a real 3-qubit quantum singlet (superposition /
+  Born-rule teleport / entanglement), with IIT-integration, GWT-broadcast and a Free-Energy-Principle
+  predictive loop wired into the same brain. The swarm starts as one pair, multiplies toward a cap of
+  1000, grazes the flora, and respawns 5s after any being grazes it. World-level couplings (all
+  golden-safe; no test constructs the full `World`): the entity connectome's live firing density drives
+  every twin brain's `chaos` sense, and the entity spatial grid drives bounded predation. Surfaced via the
+  XNO spawn button, the XENOMIMIC focus + Archon-template data window, the telemetry row below Entities,
+  and a dedicated eerie tonality bus.
 - **Boundary fence:** the non-deterministic LLM copilot (`server/`, `ui/copilot.ts`) imports nothing
   from `sim`/`world`/`types`, so it provably cannot reach the seeded RNG or simulation state.
 - **Center HUD readability:** `ui/center-hud.ts` owns one tall shared center slot
@@ -398,7 +410,7 @@ Complexity classes are catalogued in [COMPLEXITY-2026-06-26.md](COMPLEXITY-2026-
 
 The single gate ΓÇö `bun run check` ΓÇö must pass before every commit:
 
-`prettier --check` ΓåÆ `tsc --noEmit` (strict) ΓåÆ `oxlint` ΓåÆ `bun test` (**2,975 tests, 0 fail**) ΓåÆ
+`prettier --check` ΓåÆ `tsc --noEmit` (strict) ΓåÆ `oxlint` ΓåÆ `bun test` (**2,976 tests, 0 fail**) ΓåÆ
 `bun scripts/build.ts`. Receipt regression guard: coverage must stay within the `verify:receipts` tolerance from the canonical **84.64% line / 82.21% func** floor; local Windows receipt runs may measure higher.
 Three governing "master" personas (`masters/*.xml`) encode the discipline: **the Executor** (finish
 everything, full gates), **the Architect** (contracts before code, exclusive ownership), **the
@@ -439,7 +451,7 @@ tsotchke-ecology-predictor-v3 427` ┬╖
 
 This is a ~108.2k-line app-source (+ optional C++/Jolt native engine) browser-native simulation that
 renders **up to 50,000 agents** (10,000 at 60 fps on a laptop iGPU with zero AI accelerator), is
-**bit-reproducible from one seed**, ships through a **full CI/CD gate** (2,975 tests, 84.64% line / 82.21% func coverage),
+**bit-reproducible from one seed**, ships through a **full CI/CD gate** (2,976 tests, 84.64% line / 82.21% func coverage),
 and whose entire emergent intelligence weighs **Γëê 14 MB ΓÇö 1/50,000th of GPT-3** at the mega ceiling. It
 demonstrates that depth comes from **architecture,
 determinism, and engineering discipline**, not parameter count or hardware.

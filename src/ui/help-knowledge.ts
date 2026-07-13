@@ -74,6 +74,28 @@ export const HELP_KB: readonly HelpEntry[] = [
     see: ['docs/ENTITY-SHEETS-2026-06-26.md'],
   },
   {
+    id: 'xenomimics',
+    title: 'What are the Xenomimics (the entangled ground fauna)?',
+    keywords: [
+      'xenomimic',
+      'xenomimics',
+      'xno',
+      'ground fauna',
+      'ground dwellers',
+      'diamonds',
+      'red diamonds',
+      'twins',
+      'entangled',
+      'mimic',
+      'anti-mimic',
+      'shimmer',
+      'sparkle',
+      'cosmic horror',
+    ],
+    body: 'Xenomimics are the cosmic-horror ground fauna — small tessellated horrors (octahedra, tesseract cells, möbius coils, kakeya shards…) that ride the ground waves, graze the flora, breed, die and respawn. There are 10 species, each with its own geometry, colour and temperament. They live as BIPOLAR ENTANGLED TWINS: every pair shares one ~100-parameter brain but runs it with opposite thought-curvature — a "mimic" and an "anti-mimic" locked in a quantum singlet, so the two beat against each other in a psychotic tug-of-war (superposition, teleportation, entanglement are real 3-qubit math, not decoration). The swarm starts as a single pair and slowly multiplies toward a cap of 1000. They are neurologically wired to the Entities: the connectome\'s live firing density feeds every twin brain, and any being that walks over one grazes it — it respawns 5 seconds later. Spawn a fresh pair with the ◈ XNO button, fly to them with ◈ XENOMIMIC (focus), watch their live vitals in the ◈ XENOMIMIC data window, and read the "Xenomimics" telemetry row below Entities. Pause and time-scale affect them; a dedicated eerie tonality bus voices their density, arousal and tug-of-war.',
+    see: ['docs/TECHNICAL-SPECIFICATION-2026-06-26.md', 'README.md'],
+  },
+  {
     id: 'mechalogodrom',
     title: 'What is the center Mechalogodrom?',
     keywords: [
