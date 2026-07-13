@@ -11,6 +11,32 @@ changed and why.
 
 ---
 
+## 2026-07-13 — Xenomimic overhaul: twin-pair XNO, live cockpit, weather/waste reactivity
+
+Owner directive: the inspector "looks like shit… stretched… low res… not lively or dynamic," the XNO
+button "only makes single… supposed to be twins," and the fauna should be "adaptive… to the weather
+and waste products." Three targeted changes on top of the batch-55 canonical runtime:
+
+- **Twin-pair XNO.** New `XenomimicPopulation.spawnTwinAt(x, z, sep=10)` births BOTH halves of one
+  shared-brain pair at a human-visible separation; `launchXenomimic` now calls it (HUD `◈ XNO +2 TWIN`).
+  This supersedes the exact-one BUTTON behavior; the exact-one `spawnAt` API is retained unchanged for
+  its callers and unit seals. Interactive-only — never in the seeded step loop, so goldens are untouched.
+- **Live cockpit.** `src/ui/xenomimic-panel.ts` rebuilt from static bars + one CSS-stretched 640×264
+  radar into a DPR-crisp animated cockpit: a hero swarm map (entanglement bond lines between mimic/anti,
+  filled-diamond mimics + hollow-ring antis, per-species hue, ground-wave field, radar sweep), an eased
+  indicator radar, a species spectrum, a population-vs-target sparkline, and lifecycle-flow gauges. The
+  SuperPanel outer window box, the ten-lane `projectXenomimicIndicators` projection, the honesty seals,
+  and the AbortController/`__cqmXenomimicPanelDispose` lifecycle are byte-preserved. Animation is
+  presentation-only (rAF timestamp; no `Date.now`/`Math.random`), so determinism is unaffected. World
+  streams a read-only ≤260-body sample to the panel only while it is open (no per-frame allocation).
+- **Weather + waste reactivity.** The swarm's `chaos` coupling now folds in per-weather agitation
+  (`XENO_WEATHER_AGITATION`, ordered like WEATHERS) and local metabolic pollution
+  (`wasteEcology.regrowBoost`), on top of the existing temperature/intelligence/Entity/connectome reads.
+
+Tests +10 (`tests/xenomimic-cockpit.test.ts`); canonical 3013 → 3023. All prior Xenomimic seals stay
+green — the one-panel / food-web / observatory / audio invariants and the `spawnAt` exact-one unit
+contract are unchanged. No second panel; no sentience overclaim (indicators remain classical only).
+
 ## 2026-07-12 — batch 55: canonical Xenomimic consolidation
 
 Consolidated the published no-hyphen `XenomimicPopulation` into one canonical runtime. Added the

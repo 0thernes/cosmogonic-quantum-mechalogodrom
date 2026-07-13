@@ -285,6 +285,11 @@ export class XenomimicPopulation {
     return this.pairs.length;
   }
 
+  /** Half-extent (world units) the swarm is clamped inside — used to project bodies onto the map. */
+  bounds(): number {
+    return this.arenaRadius;
+  }
+
   /**
    * Introduce exactly ONE live body at a world point — the "XNO" one-by-one spawn button. Consecutive
    * calls fill the two halves of one pair, so the bodies still share one entangled brain without a
@@ -305,6 +310,31 @@ export class XenomimicPopulation {
     }
     const pair = this.spawnPair(this.rng() * XENOMIMIC_SPECIES, x, z, 1);
     return pair ? 1 : 0;
+  }
+
+  /**
+   * XNO twin spawn: introduce BOTH halves of a fresh entangled pair at a human-visible separation,
+   * so ONE button press yields a clearly-paired mimic + anti sharing one brain (owner: "supposed to
+   * be twins"). Returns the number of live bodies added (2) or 0 at the hard cap. Interactive-only —
+   * never called inside the deterministic step loop, so the seeded golden stream is untouched.
+   */
+  spawnTwinAt(x: number, z: number, sep = 10): number {
+    if (!Number.isFinite(x) || !Number.isFinite(z) || this.bodyState.length + 2 > XENOMIMIC_MAX)
+      return 0;
+    const pair = this.spawnPair(this.rng() * XENOMIMIC_SPECIES, x, z, 2);
+    if (!pair) return 0;
+    // Widen the birth gap so the bonded twins read as two distinct bodies, not one blob.
+    const half = (Number.isFinite(sep) ? Math.max(4, sep) : 10) * 0.5;
+    const ang = pair.mimic.heading; // deterministic per-pair; consumes no extra rng draw
+    const ox = Math.cos(ang) * half;
+    const oz = Math.sin(ang) * half;
+    pair.mimic.x = x + ox;
+    pair.mimic.z = z + oz;
+    pair.mimic.y = xenoGroundHeight(pair.mimic.x, pair.mimic.z, this.clock) + 1.2;
+    pair.anti.x = x - ox;
+    pair.anti.z = z - oz;
+    pair.anti.y = xenoGroundHeight(pair.anti.x, pair.anti.z, this.clock) + 1.2;
+    return 2;
   }
 
   private makeCreature(

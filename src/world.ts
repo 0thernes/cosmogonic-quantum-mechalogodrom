@@ -208,7 +208,11 @@ import { SuperBodySystem } from './sim/super-body';
 import { SuperHunt } from './sim/super-hunt';
 import { DomeFeeding } from './sim/dome-feeding';
 import { SuperPanel } from './ui/super-panel';
-import { XenomimicPanel, type XenomimicPanelTelemetry } from './ui/xenomimic-panel';
+import {
+  XenomimicPanel,
+  type XenomimicBodySample,
+  type XenomimicPanelTelemetry,
+} from './ui/xenomimic-panel';
 import { SuperheroState, HERO_POWERS } from './ui/superhero-state';
 import { SuperheroHud } from './ui/superhero-hud';
 import { TelemetryPanel, bindPanelToggles } from './ui/panels';
@@ -430,6 +434,11 @@ export class World {
     wind: 0,
     links: 0,
   };
+  /** Reusable body-sample buffer for the panel swarm map — grown once, mutated in place (no per-frame alloc). */
+  private readonly xenomimicBodySamples: XenomimicBodySample[] = [];
+  private static readonly XENOMIMIC_SAMPLE_CAP = 260;
+  /** Per-weather agitation the swarm feels, ordered like WEATHERS (CLEAR·RAIN·STORM·AURORA·VOID·FOG). */
+  private static readonly XENO_WEATHER_AGITATION = [0.05, 0.22, 0.7, 0.32, 0.85, 0.16];
   private readonly xenomimicSurfaceAt = (x: number, z: number, time: number): number => {
     const state = this.state;
     return (
@@ -1780,7 +1789,21 @@ export class World {
       this.xenomimicEntityActivation,
       connectomeActivity,
     );
-    xenomimicCouplings.chaos = clamp(Math.max(s.chaos / CHAOS_MAX, connectomeActivity), 0, 1);
+    // The swarm feels the sky and the ground it wades through: storm/void weather stirs it, and local
+    // metabolic pollution (waste → fertilizer boost ≥ 1) raises agitation where beings have fed.
+    const weatherAgit =
+      World.XENO_WEATHER_AGITATION[s.weatherIdx % World.XENO_WEATHER_AGITATION.length] ?? 0.1;
+    const camPos = this.engine.camera.position;
+    const xenoWasteLoad = clamp(
+      (this.wasteEcology.regrowBoost(camPos.x, camPos.z) - 1) / 1.2,
+      0,
+      1,
+    );
+    xenomimicCouplings.chaos = clamp(
+      Math.max(s.chaos / CHAOS_MAX, connectomeActivity) + weatherAgit * 0.25 + xenoWasteLoad * 0.15,
+      0,
+      1,
+    );
     xenomimicCouplings.temperature = s.temperature;
     this.xenomimics.step(dt, xenomimicCouplings);
     this.updateXenomimicPresentation(t, false);
@@ -2709,6 +2732,34 @@ export class World {
     target.temperature = this.state.temperature;
     target.wind = Math.hypot(this.state.wind.x, this.state.wind.z);
     target.links = this.xenomimicConnectome.linkCount;
+    target.worldRadius = this.xenomimics.bounds();
+    // Stream a read-only body sample ONLY while the cockpit is live (the swarm map draws it).
+    if (this.xenomimicPanel.isOpen()) {
+      const bodies = this.xenomimics.bodyView();
+      const cap = Math.min(bodies.length, World.XENOMIMIC_SAMPLE_CAP);
+      const buf = this.xenomimicBodySamples;
+      let n = 0;
+      for (let i = 0; i < bodies.length && n < cap; i++) {
+        const b = bodies[i]!;
+        if (!b.alive) continue;
+        let slot = buf[n];
+        if (!slot) {
+          slot = { x: 0, z: 0, species: 0, role: 0, pairId: 0, energy: 0 };
+          buf[n] = slot;
+        }
+        slot.x = b.x;
+        slot.z = b.z;
+        slot.species = b.species;
+        slot.role = b.role;
+        slot.pairId = b.pairId;
+        slot.energy = b.energy;
+        n++;
+      }
+      target.bodies = buf;
+      target.bodyCount = n;
+    } else {
+      target.bodyCount = 0;
+    }
     return target;
   }
 
@@ -3773,16 +3824,16 @@ export class World {
     this.hud.showSector('◈ XENOMIMICS');
   }
 
-  /** XNO: add exactly one body ahead of the camera; the next singleton completes its shared-brain twin. */
+  /** XNO: birth a whole entangled TWIN PAIR ahead of the camera — mimic + anti, one shared brain. */
   private launchXenomimic(): number {
     this.engine.camera.getWorldDirection(this.sv2);
     this.sv1.copy(this.engine.camera.position).addScaledVector(this.sv2, 28);
-    const added = this.xenomimics.spawnAt(this.sv1.x, this.sv1.z);
+    const added = this.xenomimics.spawnTwinAt(this.sv1.x, this.sv1.z);
     const living = this.xenomimics.population();
     if (added > 0) {
       this.audio.playXenomimicEvent(0, 'birth', 1);
-      this.hud.showSector(`◈ XNO +1 · ${living} LIVE`);
-      this.audit.record('xenomimic-spawn', { added: 1, living });
+      this.hud.showSector(`◈ XNO +${added} TWIN · ${living} LIVE`);
+      this.audit.record('xenomimic-spawn', { added, living });
     } else {
       this.hud.showSector(`XNO CAP · ${XENOMIMIC_MAX} LIVE`);
       this.audit.record('xenomimic-spawn-blocked', { living });
