@@ -266,7 +266,12 @@ export class XenomimicBrain {
       eat,
       mate,
       teleport,
-      shimmer: clamp01(coherence * (0.5 + basin * 0.5)),
+      // Shimmer changes in cycles with NEUROLOGY (live quantum coherence), BODY (how much this twin's
+      // basin owns the shared psyche), and the ENVIRONMENT (FEP surprise flickers an aroused creature
+      // brighter — the owner's "shimmer/change in cycles based on the environment dynamics and their
+      // neurology and body"). Surprise adds an independent glow floor, so even a collapsed creature
+      // visibly flares when its world violates its predictions.
+      shimmer: clamp01(coherence * (0.5 + basin * 0.5) + surprise * 0.3),
       surprise,
     };
   }

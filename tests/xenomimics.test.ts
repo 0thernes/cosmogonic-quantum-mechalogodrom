@@ -147,10 +147,12 @@ describe('GATE-XENOMIMIC — twin brain', () => {
     const bHigh = high.beat(ones, ones, rHigh);
     // The surprise gap is real and large…
     expect(bHigh.mimic.surprise).toBeGreaterThan(bLow.mimic.surprise + 0.2);
-    // …and it CAUSALLY drives behaviour: the surprised twin flees faster and eats less (nothing else
-    // differs between the two brains at this beat).
+    // …and it CAUSALLY drives behaviour: the surprised twin flees faster, eats less, and shimmers
+    // brighter (arousal glow) — nothing else differs between the two brains at this beat, so the
+    // coherence/basin component of shimmer is identical and only the surprise term can move it.
     expect(bHigh.mimic.speed).toBeGreaterThan(bLow.mimic.speed);
     expect(bHigh.mimic.eat).toBeLessThan(bLow.mimic.eat);
+    expect(bHigh.mimic.shimmer).toBeGreaterThan(bLow.mimic.shimmer);
   });
 
   test('the 10 species have DISTINCT temperaments — same senses drive different behaviour', () => {

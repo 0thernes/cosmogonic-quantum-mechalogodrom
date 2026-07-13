@@ -24,9 +24,12 @@ weighted action** — a creature whose model is confident (low surprise) grazes 
 precision)) and its winning basin dominates harder (dominance ×(0.7+0.3·precision)); (3) the models learn
 online (EMA, LR 0.25), so a stable world drives surprise → 0 while a shifting one keeps the pair aroused.
 `freeEnergy` (mean twin surprise) now flows into the population telemetry alongside coherence/integration.
-Fully deterministic (pure arithmetic model state, no RNG) and golden-safe (own substream, no EntityManager
-write). Honest: this is predictive coding / precision-weighted arousal, NOT full policy-search active inference
-and NOT a sentience claim — no consciousness/sentience matrix moved. GATE-XENOMIMIC 18 → 20: (a) surprise
+Surprise also folds into the render **shimmer** (`coherence·body + 0.3·surprise`), so an aroused creature
+visibly flares even when collapsed — completing the owner's "shimmer/change in cycles based on the
+environment dynamics AND their neurology AND body" (it was neurology-only before). Fully deterministic (pure
+arithmetic model state, no RNG) and golden-safe (own substream, no EntityManager write). Honest: this is
+predictive coding / precision-weighted arousal, NOT full policy-search active inference and NOT a sentience
+claim — no consciousness/sentience matrix moved. GATE-XENOMIMIC 18 → 20: (a) surprise
 DECAYS under a stable world and SPIKES on a violated prediction; (b) a confound-free proof that surprise
 CAUSALLY raises speed and suppresses appetite (two identical-weight brains, byte-identical test-beat input +
 RNG, differing only in learned prediction state).
