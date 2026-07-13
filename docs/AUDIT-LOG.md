@@ -11,6 +11,34 @@ changed and why.
 
 ---
 
+## 2026-07-12 — batch 50: Xenomimics slice 2c — predation (5s respawn) + entity-connectome neural linkage
+
+The operational coupling of slice 2 — makes the ground fauna genuinely eat and get eaten, and wires them
+into the Entities' nervous system, entirely in `world.ts` (golden-safe: every determinism/organism golden
+runs an ISOLATED manager — the full `World` is never constructed in tests — and the swarm keeps its own
+rng substream, so nothing here is metric-visible). Two mechanisms:
+
+- **PREDATION** (owner: "consumed by the other living beings too as food and they respawn in 5 seconds").
+  `runXenomimicPredation()` runs ~5 Hz (clock-throttled, no rng → deterministic), queries the fresh entity
+  spatial grid at each live creature, and `consume()`s one a being is standing on (overlap radius 2.6).
+  It is **one-way** (the predator is never mutated — module-ownership-clean) and **bounded** to ≤3% of the
+  live swarm per tick, so grazing is a steady trickle, never a wipe: the population still climbs toward the
+  cap and the substrate respawns each eaten creature in 5 s (`predationRespawn`). Pauses/​slows with the
+  world (guards `dt<=0`).
+- **NEURAL LINKAGE** (owner: "they neurologically connect with the Entities in Connectomes"). The entity
+  connectome's live firing DENSITY (`links / (pairCount·8)`) — plus the grazing pressure fed back from the
+  predation pass — becomes the `chaos` input the substrate threads straight into every twin brain's 6-value
+  sense vector (`[food, crowding, threat, chaos, twinDist, energy]`). A denser, hotter entity web genuinely
+  churns the entangled swarm harder; it is a real brain INPUT, not a decorative pass-through. One-frame
+  deterministic lag (the web rebuilds later in the tick).
+
+GATE-XENOMIMIC-COUPLING (+4 → GATE-XENOMIMIC-UI file now 18): `consume()` drops the creature now / yields
+energy / ticks the eaten counter / is idempotent on a downed creature; the substrate SENSES `chaos`; and
+world.ts sources connectome activity into the swarm's `chaos` + grazes via the grid. No sim rng touched, no
+consciousness/Butlin/CSV axis moved — presentation-adjacent ecology only.
+
+---
+
 ## 2026-07-12 — batch 49: Xenomimics UI slice 2b — the ◈ XENOMIMIC data window (Archon-box template)
 
 Second UI slice over the parallel session's Xenomimic substrate. Adds the owner's requested **data-visual

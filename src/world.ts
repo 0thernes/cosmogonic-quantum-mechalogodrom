@@ -371,6 +371,9 @@ export class World {
   /** Xenomimics — deterministic ground-dwelling entangled-twin fauna (own rng substream; not in the EntityManager golden). */
   private readonly xenomimics: XenomimicPopulation;
   private readonly xenomimicsRender: XenomimicRenderer;
+  /** Predation cadence + last grazing pressure (beings eat ground fauna; fed back as swarm agitation). */
+  private xenoPredationClock = 0;
+  private xenoPredationPressure = 0;
   private readonly entityBrains: EntityBrainField; // V42: per-organism 70-param neural controller
   /** ADR-0013: one O(22)-cadenced corpus field, consumed O(1) by every living-system controller. */
   private readonly organismIntelligence: TsotchkeOrganismIntelligence;
@@ -1702,9 +1705,23 @@ export class World {
 
     // Xenomimics live on the ground: graze the flora (read-only), think, breed, die, respawn. dt already
     // carries the ⏸/▦ time-scale, so they pause and slow with the world.
+    //
+    // NEURAL LINKAGE (user: "they neurologically connect with the Entities in Connectomes"): the entity
+    // connectome's live firing DENSITY becomes the `chaos` sensor on every twin brain — the substrate
+    // threads it straight into the 6-input sense vector (xenomimics.ts senses()), so a denser, hotter
+    // entity web genuinely churns the entangled swarm harder. PREDATION FEEDBACK: last tick's grazing
+    // pressure adds to that agitation. `connectome.links`/`pairCount` reflect last frame (the web rebuilds
+    // at ~2043) — a deterministic one-frame lag, and the swarm has its own rng substream so no golden
+    // (all of which run isolated managers, never the World) can see this coupling.
+    const connectomeActivity = clamp(
+      this.connectome.links / Math.max(1, this.connectome.pairCount * 8),
+      0,
+      1,
+    );
     this.xenomimics.step(dt, {
       foodAt: (x, z) => this.alienFlora.foodAt(x, z),
       intelligence: this.organismIntelligence.signal,
+      chaos: clamp(0.25 + connectomeActivity * 0.5 + this.xenoPredationPressure * 0.35, 0, 1),
     });
     this.xenomimicsRender.sync(this.xenomimics, t);
 
@@ -1792,6 +1809,11 @@ export class World {
         if (e) this.grid.insert(e);
       }
     }
+    // PREDATION (user: "consumed by the other living beings too as food and they respawn in 5 seconds"):
+    // the fresh entity grid drives it — a being overlapping a ground creature grazes it. One-way (the
+    // predator is never mutated → golden-safe, module-ownership-clean), bounded per tick so the swarm can
+    // still grow toward its cap; the substrate respawns each eaten creature in 5s (predationRespawn).
+    this.xenoPredationPressure = this.runXenomimicPredation(dt);
     this.shoggoths.update(dt, t);
     // Titans roam every frame; economy/diplomacy/strikes are internally cadenced
     // off s.frame (CONTRACTS V3.3) — after the grid so strikes can query it.
@@ -3680,6 +3702,47 @@ export class World {
       this.hud.showSector(`XNO CAP · ${XENOMIMIC_MAX} LIVE`);
     }
     return added;
+  }
+
+  /**
+   * PREDATION — beings grazing the ground fauna. Throttled to ~5 Hz (clock-based, no rng → deterministic).
+   * Iterates live xenomimics, queries the fresh entity grid at each, and consumes a creature a being is
+   * genuinely on top of. Bounded per tick (≤3% of the live swarm) so grazing is a steady trickle, never a
+   * wipe — the population still climbs toward its cap and every eaten creature respawns in 5s. One-way:
+   * the predator is never mutated (module-ownership-clean + golden-safe; the swarm is not in any golden
+   * and the World is never constructed in tests). Returns the grazing pressure (fraction eaten, scaled)
+   * that {@link step}'s next xeno beat folds into the swarm's `chaos` sense — heavy predation agitates
+   * the survivors. `grid.query` returns a shared buffer valid only until the next query, so each result
+   * is consumed inside its own iteration before the next query overwrites it.
+   */
+  private runXenomimicPredation(dt: number): number {
+    if (!Number.isFinite(dt) || dt <= 0) return this.xenoPredationPressure;
+    this.xenoPredationClock += dt;
+    if (this.xenoPredationClock < 0.2) return this.xenoPredationPressure;
+    this.xenoPredationClock = 0;
+    const R = 2.6; // overlap radius: a being is standing on the ground creature
+    const R2 = R * R;
+    let alive = 0;
+    let eaten = 0;
+    // First count the live swarm so the per-tick cap tracks the true population.
+    this.xenomimics.forEach(() => alive++);
+    if (alive === 0) return 0;
+    const cap = Math.max(1, Math.floor(alive * 0.03));
+    this.xenomimics.forEach((c) => {
+      if (eaten >= cap) return;
+      const near = this.grid.query(c.x, c.z, R);
+      for (let i = 0; i < near.length; i++) {
+        const e = near[i]!;
+        const dx = e.position.x - c.x;
+        const dz = e.position.z - c.z;
+        if (dx * dx + dz * dz <= R2) {
+          this.xenomimics.consume(c);
+          eaten++;
+          break;
+        }
+      }
+    });
+    return clamp((eaten / alive) * 6, 0, 1);
   }
 
   /** Legacy chaos multiplier cMul(): min(chaos/2, 3). */

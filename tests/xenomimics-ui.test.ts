@@ -9,6 +9,7 @@ import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { XenomimicPopulation, XENOMIMIC_MAX } from '../src/sim/xenomimics';
+import type { Xenomimic } from '../src/sim/xenomimics';
 
 const root = resolve(import.meta.dir, '..');
 const src = (p: string): string => readFileSync(resolve(root, p), 'utf8');
@@ -133,5 +134,56 @@ describe('GATE-XENOMIMIC-UI: the ◈ XENOMIMIC data window (slice 2b) reuses the
     expect(code).toContain('new XenoPanel()');
     expect(code).toContain('this.xenoPanel.update(this.xenomimics.telemetry())');
     expect(code).toContain('this.xenoPanel.dispose()');
+  });
+});
+
+describe('GATE-XENOMIMIC-COUPLING: predation (5s respawn) + entity-connectome neural linkage (slice 2c)', () => {
+  test('consume() — a being grazing a ground creature drops it now and yields energy to graze', () => {
+    const pop = new XenomimicPopulation(2024);
+    // Grow a few pairs so there is a live creature to graze.
+    for (let i = 0; i < 5; i++) pop.spawnAt(i * 4, i * 4);
+    const before = pop.population();
+    let victim: Xenomimic | null = null;
+    pop.forEach((c) => {
+      if (!victim) victim = c;
+    });
+    expect(victim).not.toBeNull();
+    const yield_ = pop.consume(victim!);
+    expect(yield_).toBeGreaterThan(0); // grazing returns food energy
+    expect(pop.population()).toBe(before - 1); // the creature is down immediately
+    expect(pop.telemetry().eaten).toBeGreaterThanOrEqual(1); // and the counter ticks
+  });
+
+  test('consume() on an already-down creature is a no-op (idempotent, yields nothing)', () => {
+    const pop = new XenomimicPopulation(2025);
+    pop.spawnAt(0, 0);
+    let victim: Xenomimic | null = null;
+    pop.forEach((c) => {
+      if (!victim) victim = c;
+    });
+    pop.consume(victim!);
+    const afterFirst = pop.population();
+    expect(pop.consume(victim!)).toBe(0);
+    expect(pop.population()).toBe(afterFirst); // no double-kill
+  });
+
+  test('the substrate threads `chaos` into the twin brain sense vector (the link is a real input)', () => {
+    // The world drives `chaos` from the entity connectome's firing density; prove the substrate actually
+    // SENSES it (not a decorative pass-through) — chaos must reach the 6-input sense vector.
+    const code = src('src/sim/xenomimics.ts');
+    expect(code).toContain('chaos');
+    // senses() returns [food, crowding, threat, chaos, twinDist, energy] — chaos is a brain input.
+    expect(code).toMatch(/\[\s*food\s*,\s*crowding\s*,\s*threat\s*,\s*chaos/);
+  });
+
+  test('world.ts couples the entity connectome to the swarm and grazes it via the entity grid', () => {
+    const code = src('src/world.ts');
+    // Neural linkage: connectome firing density → the swarm's `chaos` sense.
+    expect(code).toContain('this.connectome.links / Math.max(1, this.connectome.pairCount * 8)');
+    expect(code).toMatch(/chaos:\s*clamp\(/);
+    // Predation: fresh entity grid → consume overlapping ground creatures, bounded per tick.
+    expect(code).toContain('runXenomimicPredation');
+    expect(code).toContain('this.xenomimics.consume(c)');
+    expect(code).toContain('this.grid.query(c.x, c.z, R)');
   });
 });
