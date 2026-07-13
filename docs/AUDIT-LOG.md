@@ -11,6 +11,25 @@ changed and why.
 
 ---
 
+## 2026-07-12 — batch 54: ecology floor 3.2 → 3.3 (GATE-XENO-TROPHIC) — the four-axis goal's ecology axis
+
+The honest 9-axis **ecology** floor moves 3.2 → 3.3 — the first axis of the standing four-axis goal — grounded
+1:1 in a new ablation-verified gate, per the pipeline law (a floor rises only with a green gate; never
+inflate). The mechanism is the now-complete **Xenomimic trophic layer** (substrate batches 47–47c + the
+parallel session's slice-2 UI/coupling): the ground fauna are a genuine new consumer that GRAZES the flora
+and a new PREY the base entities eat (`world.ts` `runXenomimicPredation`, one-way, ≤3%/tick, 5-second
+respawn), with the entity connectome firing fed back into the swarm as agitation. GATE-XENO-TROPHIC (+2, new
+`tests/xenomimics-ecology.test.ts`) proves genuine predator-prey **REGULATION** — predation holds the swarm to
+a stable equilibrium well below its unpredated carrying capacity (≈604 vs the 1000 cap) WITHOUT collapsing it
+(the 5 s respawn + logistic growth keep it alive), ablation-verified against a predation-free control — and
+that the trophic **energy flux SCALES with predation intensity** (4× ≫ 1× cumulative energy to predators). A
+new coupled adaptive/reactive ecological mechanism atop the soup-selection + titan-economy grounding. Edited
+in lockstep: `alife-codeground-sensitivity.ts` `CODE_GROUNDED[2]`, the comparison-matrix CSV row + basis,
+`public-intelligence-receipts.test.ts` `CANONICAL_AXES`; regenerated `alife-stats`/`codeground` JSON + SVGs;
+synced the code-grounded breadth (3.80 → 3.81), z-population (+3.04), z-peers (+3.19), Mahalanobis (10.24) and
+the 9-axis vector across README / docs.html / specs.html / NHSI / VERIFICATION. Honest boundary: a classical
+ecology model, NOT real-world ecological fidelity; Consciousness/Sentience/Butlin matrices BYTE-IDENTICAL.
+
 ## 2026-07-12 — batch 53: Xenomimics slice 1a — Observatory readout + CHANGELOG (thorough-pass gaps)
 
 First tranche of the owner's slice-1 "go through it again, very thorough" pass — closing the doc/surface

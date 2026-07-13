@@ -18,8 +18,14 @@
  *                            engine shows bounded active novelty versus a frozen control and the petri ring
  *                            selects differentially (GATE-OE-LIVE / GATE-PETRI-SURVIVE). This is not proof
  *                            of unbounded open-ended evolution — the cautious floor was 2.2.
- *   ecology             3.2  titans.ts real economyTick + soup SELECTION loop closed (world.ts:3085 spawns the
- *                            vitality-argmax; GATE-SOUP-SELECT: differential >0 vs a blind pick ~0) — was 3.0
+ *   ecology             3.3  titans.ts real economyTick + soup SELECTION loop closed (world.ts:3085 spawns the
+ *                            vitality-argmax; GATE-SOUP-SELECT: differential >0 vs a blind pick ~0) PLUS a new
+ *                            Xenomimic trophic layer — ground fauna GRAZE the flora and are PREYED on by the base
+ *                            entities (world.ts runXenomimicPredation, one-way, 5s respawn), with the entity
+ *                            connectome firing density fed back as swarm agitation. Predation REGULATES the swarm
+ *                            to a stable equilibrium below its unpredated carrying capacity without collapsing it,
+ *                            and the trophic energy flux scales with predation intensity, ablation-verified
+ *                            (GATE-XENO-TROPHIC). A classical ecology model, not real-world fidelity — was 3.2
  *   morphology/physics  3.8  reaction-diffusion.ts:87-290 live Gray-Scott PDE; schrodinger.ts dead code, super-body cosmetic — DEFENSIBLE (was 4.0)
  *   cognition/learning  4.5  super-creature.ts predict->surprise->GOAP + FIVE gate-backed non-apex loops:
  *                            AD-gradient forager beats a random walk p<0.01 (GATE-FORAGE); the digital-life
@@ -79,7 +85,15 @@ const HISTORICAL_SELF_SCORED = [4.0, 3.5, 5.0, 4.0, 4.5, 5.0, 4.5, 4.5, 5.0];
 //              remainder as a validated predictive-confidence that CAUSALLY damps the VQE resolver's commit
 //              when the world is volatile. A distinct metacognitive class; the 6th accumulated gate-backed
 //              cognitive mechanism now substantiates the original self-scored ceiling of 4.5. Indicator-only)
-export const CODE_GROUNDED = [4.0, 2.4, 3.2, 3.8, 4.5, 4.5, 4.3, 3.5, 4.0];
+//   batch-54:  ecology 3.2 -> 3.3 (GATE-XENO-TROPHIC: the batch-47 Xenomimic ground-fauna layer is a genuine new
+//              trophic mechanism — a consumer that grazes the flora and a prey the base entities eat (world.ts
+//              runXenomimicPredation, one-way, 5s respawn), with the entity connectome firing fed back as swarm
+//              agitation. It produces real predator-prey REGULATION: predation holds the swarm to a stable
+//              equilibrium BELOW its unpredated carrying capacity without collapsing it, and the trophic energy
+//              flux SCALES with predation intensity — both ablation-verified. A new coupled adaptive/reactive
+//              ecological mechanism atop the soup-selection + titan-economy grounding; classical model, no claim
+//              of real-world ecological fidelity)
+export const CODE_GROUNDED = [4.0, 2.4, 3.3, 3.8, 4.5, 4.5, 4.3, 3.5, 4.0];
 const EXPECTED_CANONICAL_CODE_GROUNDED = CODE_GROUNDED;
 
 interface Row {

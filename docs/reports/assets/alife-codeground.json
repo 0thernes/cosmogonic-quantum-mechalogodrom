@@ -74,7 +74,7 @@
     "axes": [
       4,
       2.4,
-      3.2,
+      3.3,
       3.8,
       4.5,
       4.5,
@@ -82,15 +82,15 @@
       3.5,
       4
     ],
-    "breadth": 3.8,
+    "breadth": 3.811,
     "rank": 1,
     "total": 113,
     "percentile": 100,
-    "zPopulation": 3.026,
-    "zVsPeers": 3.172,
-    "mahalanobis": 10.246,
+    "zPopulation": 3.044,
+    "zVsPeers": 3.193,
+    "mahalanobis": 10.243,
     "dominatedBy9d": 0,
-    "leadOverNearestPeerBreadth": 0.3,
+    "leadOverNearestPeerBreadth": 0.311,
     "perAxisZ": [
       {
         "axis": "Reproduction",
@@ -104,8 +104,8 @@
       },
       {
         "axis": "Ecology",
-        "score": 3.2,
-        "z": 0.73
+        "score": 3.3,
+        "z": 0.8
       },
       {
         "axis": "Morphology/Physics",
@@ -212,7 +212,7 @@
     "axes": [
       4,
       2.4,
-      3.2,
+      3.3,
       3.8,
       4.5,
       4.5,
@@ -220,15 +220,15 @@
       3.5,
       4
     ],
-    "breadth": 3.8,
+    "breadth": 3.811,
     "rank": 1,
     "total": 113,
     "percentile": 100,
-    "zPopulation": 3.026,
-    "zVsPeers": 3.172,
-    "mahalanobis": 10.246,
+    "zPopulation": 3.044,
+    "zVsPeers": 3.193,
+    "mahalanobis": 10.243,
     "dominatedBy9d": 0,
-    "leadOverNearestPeerBreadth": 0.3,
+    "leadOverNearestPeerBreadth": 0.311,
     "perAxisZ": [
       {
         "axis": "Reproduction",
@@ -242,8 +242,8 @@
       },
       {
         "axis": "Ecology",
-        "score": 3.2,
-        "z": 0.73
+        "score": 3.3,
+        "z": 0.8
       },
       {
         "axis": "Morphology/Physics",
@@ -279,8 +279,8 @@
   },
   "deltas": {
     "basis": "canonical-minus-historical",
-    "breadth": -0.644,
-    "zPopulation": -0.993,
-    "mahalanobis": -2.409
+    "breadth": -0.633,
+    "zPopulation": -0.975,
+    "mahalanobis": -2.412
   }
 }

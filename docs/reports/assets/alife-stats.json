@@ -4,10 +4,10 @@
   "nSystems": 113,
   "nPeers": 112,
   "cosmogonic": {
-    "breadthMean": 3.8,
+    "breadthMean": 3.81,
     "breadthRank": 1,
-    "zScorePopulation": 3.03,
-    "zScoreVsPeers": 3.17,
+    "zScorePopulation": 3.04,
+    "zScoreVsPeers": 3.19,
     "percentile": 100,
     "peerMaturity": 1.5
   },
@@ -18,7 +18,7 @@
     "breadthStdPeers": 0.54,
     "medianBreadth": 2.11,
     "medianPeerMaturity": 3.5,
-    "corrBreadthVsMaturity": -0.113
+    "corrBreadthVsMaturity": -0.114
   },
   "perAxis": [
     {
@@ -69,8 +69,8 @@
       "mean": 2.2,
       "std": 1.38,
       "max": 5,
-      "cosmo": 3.2,
-      "cosmoZ": 0.73,
+      "cosmo": 3.3,
+      "cosmoZ": 0.8,
       "leaders": [
         "Polyworld",
         "Sugarscape",
@@ -185,17 +185,17 @@
     {
       "name": "ALIEN",
       "full": "ALIEN",
-      "d": 4.56
+      "d": 4.55
     },
     {
       "name": "Creatures",
       "full": "Creatures",
-      "d": 4.89
+      "d": 4.87
     },
     {
       "name": "Framsticks",
       "full": "Framsticks",
-      "d": 5.4
+      "d": 5.41
     },
     {
       "name": "Division Blocks",
@@ -210,27 +210,27 @@
     {
       "name": "The Bibites",
       "full": "The Bibites",
-      "d": 5.63
-    },
-    {
-      "name": "DERL (Deep Evolutionary Reinforcement Learning)",
-      "full": "DERL (Deep Evolutionary Reinforcement Learning)",
-      "d": 5.7
+      "d": 5.62
     },
     {
       "name": "Karl Sims VC",
       "full": "Karl Sims Evolved Virtual Creatures",
-      "d": 5.72
+      "d": 5.74
+    },
+    {
+      "name": "DERL (Deep Evolutionary Reinforcement Learning)",
+      "full": "DERL (Deep Evolutionary Reinforcement Learning)",
+      "d": 5.74
     },
     {
       "name": "Neural Graph Evolution (NGE)",
       "full": "Neural Graph Evolution (NGE)",
-      "d": 5.72
+      "d": 5.76
     },
     {
-      "name": "UNIMAL (Universal Animal design space)",
-      "full": "UNIMAL (Universal Animal design space)",
-      "d": 5.79
+      "name": "Polyworld",
+      "full": "Polyworld",
+      "d": 5.78
     }
   ]
 }
