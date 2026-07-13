@@ -132,6 +132,8 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           ref: ${{ steps.ref.outputs.tag }}
+          # V3/V4 receipt-integrity tests resolve frozen authority/runtime commits during the gate.
+          fetch-depth: 0
           persist-credentials: false # don't leave the GITHUB_TOKEN in .git/config (supply-chain hardening)
 
       - name: Validate checked-out tag against package manifest
