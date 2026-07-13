@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Xenomimics — the cosmic-horror ground fauna:
+  - A self-contained ground-dwelling subsystem (`src/sim/xenomimics.ts`, `xenomimic-brain.ts`,
+    `xenomimics-render.ts`) on its own seeded rng substream. 10 tessellated species (octahedra,
+    tesseract cells, möbius coils, kakeya shards, ...) live as bipolar ENTANGLED TWINS — one
+    ~100-parameter brain per pair run at opposite thought-curvature over a real 3-qubit quantum singlet
+    (superposition / Born-rule teleport / entanglement), with IIT-integration, GWT-broadcast and a
+    Free-Energy-Principle predictive loop wired into the same brain. The swarm starts as a single pair,
+    multiplies toward a cap of 1,000, grazes the flora, breeds, dies and respawns (5 s when grazed by
+    another being); a weighted-ragdoll fulcrum body leans as it turns.
+  - Player surfaces: a ◈ XNO one-by-one spawn button, a ◈ XENOMIMIC camera-focus button, a "Xenomimics"
+    telemetry row below Entities, and a dedicated ◈ XENOMIMIC data window (the Archon-Godforms window
+    template) showing population/growth, twin-pair count, births/deaths/eaten/teleports, the four coupled
+    consciousness-theory beats, and a 10-species distribution.
+  - World couplings (golden-safe): the entity connectome's live firing density drives every twin brain's
+    `chaos` sense (neurological linkage), and the entity spatial grid drives bounded predation. A dedicated
+    eerie tonality bus voices the swarm's density, arousal and mimic/anti tug-of-war. Documented across
+    README, the in-app Help, the technical specification, and the SPEC page.
 - Operational organism intelligence and evidence:
   - Added the Phase-B NHI semantic expansion and exact JSON checkpoints, action-aware structured
     outcomes, per-mind fault isolation, transactional launch/body lifecycle, dedicated deterministic

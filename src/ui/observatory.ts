@@ -114,6 +114,8 @@ export interface ObservatorySnapshot {
   links?: number;
   /** Biome sentience index 0..1 for the page-3 gauge (V4.3). Missing → 0. */
   sentience?: number;
+  /** Live xenomimic ground-fauna population for the accessible summary line. Missing → 0. */
+  xenomimics?: number;
   /** V71: the three measurable dimensions of {@link sentience} (0..1), drawn as sub-bars. */
   bioIntegration?: number;
   bioCoherence?: number;
@@ -833,7 +835,8 @@ export class Observatory {
         `${pageName}: ${Math.round(total)} entities. ` +
         `Energy ${(snapshot.energy ?? 0).toFixed(1)}, ` +
         `links ${snapshot.links ?? 0}, ` +
-        `sentience ${((snapshot.sentience ?? 0) * 100).toFixed(0)}%.`;
+        `sentience ${((snapshot.sentience ?? 0) * 100).toFixed(0)}%, ` +
+        `xenomimics ${snapshot.xenomimics ?? 0}.`;
     }
   }
 

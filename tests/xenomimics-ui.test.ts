@@ -214,8 +214,8 @@ describe('GATE-XENOMIMIC-AUDIO: the eerie entangled-twin tonality bus (slice 3)'
   });
 });
 
-describe('GATE-XENOMIMIC-DOCS: the swarm is documented across the player-facing surfaces (slice 3b)', () => {
-  test('README, in-app Help, the technical spec, and the SPEC page all describe the Xenomimics', () => {
+describe('GATE-XENOMIMIC-DOCS: the swarm is documented across the player-facing surfaces (slice 3b/1)', () => {
+  test('README, in-app Help, the technical spec, the SPEC page and the CHANGELOG all describe the Xenomimics', () => {
     // README front-door feature bullet.
     expect(src('README.md')).toMatch(/\*\*Xenomimics\*\*/);
     // ❓ HELP ME NOW knowledge base entry (also indexed by the ✦ Copilot, which reads docs + KB).
@@ -226,5 +226,17 @@ describe('GATE-XENOMIMIC-DOCS: the swarm is documented across the player-facing 
     expect(src('docs/TECHNICAL-SPECIFICATION-2026-06-26.md')).toContain('Xenomimics');
     // Public SPEC page roster.
     expect(src('specs.html')).toContain('Xenomimics');
+    // CHANGELOG [Unreleased] — the version surface on GitHub.
+    expect(src('CHANGELOG.md')).toContain('Xenomimics');
+  });
+
+  test('the Observatory surfaces the live xenomimic tally in its accessible summary', () => {
+    const obs = src('src/ui/observatory.ts');
+    // The snapshot carries the field and the screen-reader summary line reads it.
+    expect(obs).toContain('xenomimics?: number');
+    expect(obs).toContain('xenomimics ${snapshot.xenomimics ?? 0}');
+    // world.snapshot() already populates it (slice 2a) and pushes the same object to the Observatory.
+    expect(src('src/world.ts')).toContain('sn.xenomimics = this.xenomimics.population()');
+    expect(src('src/world.ts')).toContain('this.observatory.push(this.snapshot())');
   });
 });

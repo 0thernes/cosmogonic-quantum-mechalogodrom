@@ -11,6 +11,24 @@ changed and why.
 
 ---
 
+## 2026-07-12 — batch 53: Xenomimics slice 1a — Observatory readout + CHANGELOG (thorough-pass gaps)
+
+First tranche of the owner's slice-1 "go through it again, very thorough" pass — closing the doc/surface
+gaps deferred from slices 2/3. (1) **Observatory**: the swarm now appears in the Observatory's live
+accessible summary — `ObservatorySnapshot` gains an optional `xenomimics` field and the screen-reader
+`liveEl` line reads "… xenomimics N". No new feed needed: `world.snapshot()` already sets
+`sn.xenomimics = xenomimics.population()` (slice 2a) and pushes that same object to `observatory.push()`,
+so it is a genuine surfaced readout, not a decorative dead field. (A fuller visible chart in the 16-canvas
+draw grid is a future enhancement — deliberately not rushed, to avoid a half-baked dead series.)
+(2) **CHANGELOG** `[Unreleased]` (the GitHub version surface) gains a full Xenomimics entry covering the
+substrate, player surfaces, world couplings and audio. **View subject-cycle**: already satisfied — the
+◈ XENOMIMIC focus button (center-hud `rowSim`) cycles the camera to the swarm alongside ◎ GOD et al. The
+repo's GitHub "About" description is outward-facing metadata (a `gh repo edit` op) — flagged for the owner
+rather than changed unprompted. GATE-XENOMIMIC-DOCS grew to include the Observatory readout + CHANGELOG
+(+1, file now 22). Presentation only — no sim, rng, or metric axis touched.
+
+---
+
 ## 2026-07-12 — batch 52: Xenomimics slice 3b — documented across the player-facing surfaces
 
 The docs half of slice 3 — the swarm now appears where a reader/player looks (owner: "be in … SPEC and
