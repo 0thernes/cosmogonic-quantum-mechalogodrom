@@ -13,7 +13,9 @@
 import * as THREE from 'three';
 import { TAU, lerp, clamp01 } from '../math/scalar';
 import {
+  CENTER_GRAVITY_K,
   ENTROPY_MAX,
+  LIVING_ZONE,
   PLATFORM_HALF,
   PLATFORM_CEIL,
   PLATFORM_FLOOR,
@@ -937,6 +939,20 @@ export class EntityManager {
       u.vel.x += (rng() - 0.5) * 0.003 * cm * jitterGain + windX;
       u.vel.y += (rng() - 0.5) * 0.0015 * cm * jitterGain;
       u.vel.z += (rng() - 0.5) * 0.003 * cm * jitterGain + windZ;
+      // Global centre-gravity (self-healing cohesion): PAST the central living-zone radius a gentle
+      // inward pull herds the body home to the social core, so the swarm re-gathers into chains &
+      // clusters after any scatter (Burst / Apocalypse / Chaos) instead of pinning dead at the rim.
+      // The pull grows with how far OUTSIDE the zone the body is → the interior (where colonies live)
+      // is force-free, leaving kin springs to shape the local geometry untouched; only escapees get
+      // drawn back. Pure position geometry, draws no rng — the seeded stream stays byte-identical.
+      {
+        const rz = Math.sqrt(e.position.x * e.position.x + e.position.z * e.position.z);
+        if (rz > LIVING_ZONE) {
+          const pull = ((rz - LIVING_ZONE) * CENTER_GRAVITY_K) / rz;
+          u.vel.x -= e.position.x * pull;
+          u.vel.z -= e.position.z * pull;
+        }
+      }
       u.vel.multiplyScalar(0.985);
       // dt * 60 is the legacy frame-rate normalizer; dyn.speed (F-RENDER-DYN, 1 in 'solid') scales
       // the per-frame displacement so the render style alters how fast the field travels.

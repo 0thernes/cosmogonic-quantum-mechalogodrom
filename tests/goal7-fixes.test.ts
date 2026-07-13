@@ -59,10 +59,12 @@ describe('V122 — static seals: NHI predation guards + owner spawn counts', () 
     expect(src('src/sim/shoggoths.ts')).toContain('e.userData.isNhi');
   });
 
-  test('burst defaults to +25 and apocalypse passes exactly 250 (USER #8)', () => {
+  test('burst defaults to +25 and apocalypse spawns exactly 250 at the core (USER #8)', () => {
     const world = src('src/world.ts');
     expect(world).toContain('private doBurst(count = 25): void');
-    expect(world).toContain('this.doBurst(250);');
+    // Apocalypse now GATHERS to the centre and seeds +250 there via the shared blob primitive
+    // (owner: "start clustered in the centre and just add additional") — still exactly 250 per press.
+    expect(world).toContain('this.doBurstAt(this.sv2.set(0, PLATFORM_FLOOR + 30, 0), 250, 90)');
     // The old tier-scaled flood (maxEntities/100 ≈ 500/press) must be gone.
     expect(world).not.toContain('Math.max(30, Math.floor(this.quality.maxEntities / 100))');
   });

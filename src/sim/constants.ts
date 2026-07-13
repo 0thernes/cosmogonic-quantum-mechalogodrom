@@ -54,6 +54,24 @@ export const PLATFORM_FLOOR = 6;
 export const PLATFORM_HEIGHT = PLATFORM_CEIL - PLATFORM_FLOOR;
 export const PLATFORM_MID_Y = PLATFORM_FLOOR + PLATFORM_HEIGHT * 0.5;
 
+// ── CENTRAL LIVING ZONE (self-healing social cohesion) ───────────────────────
+// The 2× habitat expansion (per-axis PLATFORM_HALF = 1,080) thinned organism contact
+// so the ant/bee chains and clusters the owner loved read as lonely scatter — and any
+// scatter EVENT (Burst / Apocalypse / Chaos) flung bodies to the rim where the hard box
+// pinned them with no way home. The living zone fixes both: INSIDE it the swarm is
+// force-free (kin springs alone shape clusters/chains — "clusters everywhere"), OUTSIDE
+// it a gentle centre-gravity draws escapees back to the social core. It never fires while
+// a population lives inside the zone, so it leaves the existing colony/dynamism envelopes
+// untouched and only self-heals the scatter case.
+
+/** Radius of the central living zone (fraction of PLATFORM_HALF). Inside: no centre-gravity. */
+export const LIVING_ZONE_FRAC = 0.45;
+/** Central living-zone radius in world units (≈486 of 1,080). */
+export const LIVING_ZONE = PLATFORM_HALF * LIVING_ZONE_FRAC;
+/** Proportional centre-gravity gain per world-unit a body sits OUTSIDE the living zone. Tuned so a
+ *  rim-flung body (~600u out) creeps home over ~4–5s — a visible gathering, not a snap collapse. */
+export const CENTER_GRAVITY_K = 0.0005;
+
 /** Expanded mid-field containment radius: leviathans and the quantum cloud. */
 export const MID_RADIUS = 60 * HABITAT_MID;
 

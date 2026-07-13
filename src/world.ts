@@ -38,6 +38,7 @@ import {
   HABITAT_MID,
   HABITAT_XZ_SCALE,
   HABITAT_Y,
+  LIVING_ZONE,
   PLATFORM_CEIL,
   PLATFORM_FLOOR,
   PLATFORM_HALF,
@@ -4968,18 +4969,37 @@ export class World {
     }
   }
 
-  /** V122 (USER #8): burst is a FIXED +25 per press (apocalypse passes 250) — the old tier-scaled
-   *  form spawned maxEntities/100 (≈500 at the 50k tier) per press and the triple-burst apocalypse
-   *  dumped ~1,500 at once, spiking CPU/GPU. Room-clamped so the ceiling is never breached. */
+  /** V122 (USER #8): burst is a FIXED +25 per press — the old tier-scaled form spawned maxEntities/100
+   *  (≈500 at the 50k tier) per press and the triple-burst apocalypse dumped ~1,500 at once, spiking
+   *  CPU/GPU. Room-clamped (via {@link doBurstAt}) so the ceiling is never breached. */
   private doBurst(count = 25): void {
+    // A burst is a NEW COLONY, not scatter (owner: "burst just makes them go everywhere" → cluster
+    // them). Drop a single TIGHT blob at one point somewhere in the central living zone, so the swarm
+    // gains a visible new cluster the social springs immediately knit into chains — "clusters everywhere".
+    const ang = this.uiRng() * Math.PI * 2;
+    const rad = Math.sqrt(this.uiRng()) * LIVING_ZONE * 0.7; // √ for a uniform-area disk, not a rim ring
+    this.sv2.set(
+      Math.cos(ang) * rad,
+      PLATFORM_FLOOR + this.uiRng() * 40 * ARENA_Y,
+      Math.sin(ang) * rad,
+    );
+    this.doBurstAt(this.sv2, count, 45);
+  }
+
+  /** Shared spawn primitive: `count` organisms (room-clamped) in a TIGHT blob of `radius` around a
+   *  world centre. A squared radial draw makes the core denser than the fringe so the blob reads as an
+   *  organic colony, not scattered dots. `center` (sv2) is held fixed while `sv1` is reused per spawn. */
+  private doBurstAt(center: THREE.Vector3, count: number, radius: number): void {
     this.audio.play('burst');
     const room = this.quality.maxEntities - this.entities.list.length;
     const n = Math.min(count, Math.max(0, room));
     for (let i = 0; i < n; i++) {
+      const ang = this.uiRng() * Math.PI * 2;
+      const r = this.uiRng() * this.uiRng() * radius; // dense core, sparse fringe
       this.sv1.set(
-        (this.uiRng() - 0.5) * 25 * ARENA_MID,
-        this.uiRng() * 14 * ARENA_Y,
-        (this.uiRng() - 0.5) * 25 * ARENA_MID,
+        center.x + Math.cos(ang) * r,
+        center.y + (this.uiRng() - 0.5) * 8 * ARENA_Y,
+        center.z + Math.sin(ang) * r,
       );
       this.entities.spawn(this.sv1, Math.floor(this.uiRng() * this.morphTotal), 0.5 + this.uiRng());
     }
@@ -4996,25 +5016,32 @@ export class World {
     }
   }
 
-  /** Legacy apoc: max chaos, scatter everything, triple burst. */
+  /** Apocalypse = GENESIS, not scatter (owner: "apocalypse is supposed to make them start clustered in
+   *  the centre and just add additional — like before"). Elevate chaos for the event's energy, GATHER
+   *  every living body into a dense central cluster with a soft inward drift, then seed +250 more at the
+   *  core. The global centre-gravity then holds the reunion together so it re-forms chains & clusters,
+   *  instead of the old vel-±3 fling that just flung the swarm outward with no way home. */
   private apocalypse(): void {
-    this.audio.play('burst');
     this.audio.play('warp');
     this.audio.play('resonance');
     this.state.chaos = CHAOS_MAX;
-    this.hud.showSector('MASS EXTINCTION EVENT');
+    this.hud.showSector('GENESIS — THE GATHERING');
     const list = this.entities.list;
     for (let i = 0; i < list.length; i++) {
       const e = list[i];
       if (!e) continue;
-      e.userData.vel.set(
-        (this.uiRng() - 0.5) * 3,
-        (this.uiRng() - 0.5) * 3,
-        (this.uiRng() - 0.5) * 3,
-      );
-      e.userData.belly = 120;
+      // Compress each body most of the way to the core (a visible in-rush) and settle it near the floor…
+      e.position.x *= 0.22;
+      e.position.z *= 0.22;
+      e.position.y = PLATFORM_FLOOR + (e.position.y - PLATFORM_FLOOR) * 0.5 + 4;
+      // …with a gentle inward drift so the gathering keeps converging after the snap (not a static pile).
+      const r = Math.hypot(e.position.x, e.position.z) + 1e-3;
+      const g = 0.1 / r;
+      e.userData.vel.set(-e.position.x * g, (this.uiRng() - 0.5) * 0.3, -e.position.z * g);
+      e.userData.belly = 120; // digestion glow — the whole swarm pulses with the rebirth
     }
-    this.doBurst(250); // V122 (USER #8): apocalypse adds exactly +250 per press (was ~3×500)
+    // +250 new organisms born at the core, as a tight blob (was doBurst → now a deliberate central cluster).
+    this.doBurstAt(this.sv2.set(0, PLATFORM_FLOOR + 30, 0), 250, 90);
     // The apocalypse brands the ground itself.
     for (let i = 0; i < 3; i++) this.rd.perturb(this.rng(), this.rng(), 9);
   }
