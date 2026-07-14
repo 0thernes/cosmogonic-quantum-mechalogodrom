@@ -25,8 +25,9 @@ all-or-nothing deterministic checks. Neither establishes cross-species learning,
 consciousness, or sentience. The fauna social matcher uses O(A) adapter reads followed by bounded numeric
 O(A²), with A ≤ 72, and food matrix changes upload one 16-float instance range each. Focused automated
 tests, the 3,275-test whole-repository receipt, a 117-artifact production build, and one atomic
-phone-plus-desktop natural-rAF/canvas-isolated smoke are green. Deployed GitHub Pages verification is
-reported only after the final commit is published and checked at the public URL.
+phone-plus-desktop natural-rAF/canvas-isolated smoke are green. Exact behavior commit `0ce2f7eb` also
+passed CI, CodeQL, post-build smoke, exact-SHA Pages deployment, and an independent public-URL browser
+probe with HTTP 200 main/worker assets, a booted canvas, and zero console/page/network failures.
 
 ## Reports
 

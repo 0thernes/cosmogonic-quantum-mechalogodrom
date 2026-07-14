@@ -3,22 +3,24 @@
 ## Verification posture
 
 This is a current-code verification report for the Xenomimic tether removal and Big Tree ecology
-work. It separates executable evidence from local browser evidence and from work that still requires a
-human or deployed-site check.
+work. It separates executable evidence, local browser evidence, deployed-browser evidence, and work that
+still requires a dedicated human or native-GPU check.
 
 Evidence labels used below:
 
 - **Automated** — asserted by focused Bun tests against the implementation.
 - **Local browser** — observed in a local headless Chromium run and captured in a JSON/PNG artifact.
+- **Deployed browser** — observed against the public GitHub Pages URL after its exact-SHA deployment.
 - **Inspected** — confirmed by direct source inspection, but not independently exercised as a live
   semantic scenario in this report.
-- **Pending** — not yet demonstrated by the required final run or deployed GitHub Pages site.
+- **Pending** — not yet demonstrated by the dedicated semantic/manual or native-GPU validation named below.
 
 The final merged-tree Windows coverage receipt is **3,275 pass, 0 fail**, with **3,551,817
 expectations across 365 files** and **93.58% line / 91.60% function coverage**. The portable
 published floors remain **84.64% / 82.21%**. The exact GitHub Pages artifact also passed one atomic,
-serial phone-plus-desktop Chromium run. The final post-report aggregate gate and deployed Pages
-verification remain pending as of this report revision.
+serial phone-plus-desktop Chromium run. The aggregate gate, CI, CodeQL, post-build smoke, Pages workflow,
+exact-SHA deployment, and public-URL browser probe are green for behavior commit
+[`0ce2f7eb`](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/commit/0ce2f7eb6fa083e1f9d70349e4c2add1a31a8d0c).
 
 ## Xenomimic tether: root cause and closure
 
@@ -416,14 +418,14 @@ camera framing, exercises a habitat-stress interval, and writes stage/failure ar
 | Viewport / DPR               | 390x844 / 2 | 1280x720 / 1 |
 | Drawing buffer               |    780x1688 |     1280x720 |
 | Flora instances              |      20,800 |       60,000 |
-| World frame at capture       |           6 |            4 |
-| Canvas-only average luma     |       70.86 |        49.22 |
-| Canvas-only colour buckets   |         451 |          272 |
+| World frame at capture       |           4 |            5 |
+| Canvas-only average luma     |       71.44 |        50.32 |
+| Canvas-only colour buckets   |         449 |          285 |
 | Console errors / page errors |       0 / 0 |        0 / 0 |
 | Failed responses / requests  |       0 / 0 |        0 / 0 |
-| Active tree visitors         |           9 |            9 |
-| Stress frames / duration     | 3 / 34.69 s |  2 / 55.22 s |
-| Reported stress rate         |   0.086 FPS |    0.036 FPS |
+| Active tree visitors         |           9 |            7 |
+| Stress frames / duration     | 3 / 34.23 s |  2 / 56.40 s |
+| Reported stress rate         |   0.088 FPS |    0.035 FPS |
 
 Both runs used Chromium's ANGLE **SwiftShader** software Vulkan renderer. Their explicit measurement class
 is `headless-browser-liveness-not-production-fps`; the very low rates must not be presented as a native-GPU
@@ -437,39 +439,58 @@ not claim operational worker offload.
 The status-bearing atomic summary records `status: passed`, requested/completed tiers
 `[phone, desktop]`, every successful lifecycle stage, zero console/page/network failures, fixed food
 census equality, sanctuary/visitor/neural diagnostics, worker-asset HTTP 200, and the four inspected PNG
-paths under `output/playwright/`. The deployed GitHub Pages version has not yet been verified.
+paths under `output/playwright/`.
+
+## Published GitHub Pages verification
+
+Behavior commit
+[`0ce2f7eb`](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/commit/0ce2f7eb6fa083e1f9d70349e4c2add1a31a8d0c)
+passed [CI run 29349401485](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/runs/29349401485),
+[CodeQL run 29349401462](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/runs/29349401462),
+and [post-build smoke run 29349401588](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/runs/29349401588).
+[Pages run 29350338267](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/runs/29350338267)
+built and deployed that exact SHA through successful deployment `5444314463` at
+2026-07-14T16:37:12Z.
+
+An independent Chromium probe then opened the
+[public site](https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/) and verified:
+
+- the main document returned HTTP 200 and contained the exact `0ce2f7eb` build cache key;
+- the 1280x720 canvas initialized and the boot overlay was removed;
+- the simulation worker asset returned HTTP 200 with a JavaScript content type;
+- console errors, page errors, HTTP error responses, and failed requests were all zero;
+- the localhost-only `__CQM_VISUAL_SMOKE__` hook was absent in production; and
+- the deployed screenshot was visually inspected as a nonblank world/UI render.
 
 ## Manual scenario accounting
 
 The following requested behaviors have strong automated equivalents but have not all been completed as a
 single human-observed live checklist:
 
-| Requested scenario family                                  | Current evidence                                                                  | Status                                                  |
-| ---------------------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| Xenomimic line absence and free movement                   | Scene/source tests; corner/separated-twin movement tests; broad local screenshots | Dedicated multi-angle/state manual follow still pending |
-| Multi-species hunger, travel, fruit/leaf eating            | Core + all five direct fauna-category adapter tests                               | Automated; live long-form observation pending           |
-| Exact 5.0-second reuse and two-eater race                  | Exact clock and transaction tests                                                 | Automated                                               |
-| Peaceful rest/social coexistence and hostile de-escalation | Zone, species, fauna, combat/hazard tests                                         | Automated; live hostile-arrival observation pending     |
-| Temporary visits, varied dwell, departure, cooldown        | Visit-state tests with bounded deadlines                                          | Automated                                               |
-| Friendly tree residents, peer teaching, and safe fallback  | Neural/controller, teaching, and Crystal integration tests                        | Automated; live behavior tour pending                   |
-| Crowding and blocked navigation                            | 72-capacity stress, multiple slots, stuck reroute/timeout tests                   | Automated                                               |
-| Repeated resource/visit cleanup                            | 64-cycle pool stress plus reset/despawn/dispose tests                             | Automated                                               |
-| Save/load/reset                                            | Primitive checkpoint, corruption, reset, lifecycle tests                          | Automated; application restart manual pass pending      |
-| Production build and deployed Pages                        | Local 117-artifact Pages build + atomic smoke passed                              | Deployed-site verification pending                      |
+| Requested scenario family                                  | Current evidence                                                                                    | Status                                                  |
+| ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Xenomimic line absence and free movement                   | Scene/source tests; corner/separated-twin movement tests; broad local screenshots                   | Dedicated multi-angle/state manual follow still pending |
+| Multi-species hunger, travel, fruit/leaf eating            | Core + all five direct fauna-category adapter tests                                                 | Automated; live long-form observation pending           |
+| Exact 5.0-second reuse and two-eater race                  | Exact clock and transaction tests                                                                   | Automated                                               |
+| Peaceful rest/social coexistence and hostile de-escalation | Zone, species, fauna, combat/hazard tests                                                           | Automated; live hostile-arrival observation pending     |
+| Temporary visits, varied dwell, departure, cooldown        | Visit-state tests with bounded deadlines                                                            | Automated                                               |
+| Friendly tree residents, peer teaching, and safe fallback  | Neural/controller, teaching, and Crystal integration tests                                          | Automated; live behavior tour pending                   |
+| Crowding and blocked navigation                            | 72-capacity stress, multiple slots, stuck reroute/timeout tests                                     | Automated                                               |
+| Repeated resource/visit cleanup                            | 64-cycle pool stress plus reset/despawn/dispose tests                                               | Automated                                               |
+| Save/load/reset                                            | Primitive checkpoint, corruption, reset, lifecycle tests                                            | Automated; application restart manual pass pending      |
+| Production build and deployed Pages                        | Local 117-artifact Pages build + atomic smoke; exact-SHA CI/Pages deployment + public-browser probe | Verified for `0ce2f7eb`                                 |
 
 ## Remaining limitations and final acceptance blockers
 
-1. Run the final repository-wide gate after all report/surface edits.
-2. Verify the deployed GitHub Pages commit, assets, boot, console, and screenshots.
-3. Perform and document the dedicated live semantic checklist, especially multi-angle Xenomimic states,
+1. Perform and document the dedicated live semantic checklist, especially multi-angle Xenomimic states,
    naturally arriving hostility, long-form visit diversity, and repeated application restart.
-4. Profile whole-world frame time and memory on representative native GPUs. Current SwiftShader evidence is
+2. Profile whole-world frame time and memory on representative native GPUs. Current SwiftShader evidence is
    liveness only and cannot validate 60–120 FPS.
-5. Decide whether `WildernessPopulation` should become a direct visitor. NHI and player hero/avatar
+3. Decide whether `WildernessPopulation` should become a direct visitor. NHI and player hero/avatar
    exclusions are intentional; wilderness absence is currently an unsupported category.
-6. Audit any future projectile, trap, area-effect, or delayed-damage subsystem against the shared
+4. Audit any future projectile, trap, area-effect, or delayed-damage subsystem against the shared
    sanctuary predicate before extending the safe-zone claim to it.
-7. Do not describe social animations as general learning. The verified transfers are the separate
+5. Do not describe social animations as general learning. The verified transfers are the separate
    one-shot ordinary-organism `1 -> 0` strategy imitation and bounded same-species resident neural-policy
    blend; neither authorizes a cross-species, general-intelligence, consciousness, or sentience claim.
 

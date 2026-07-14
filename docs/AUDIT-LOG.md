@@ -20,8 +20,8 @@ completed **211 tests / 0 fail / 10,764 expectations across 17 files**.
 
 One status-bearing atomic browser run completed both requested tiers against the exact 117-artifact
 Pages build. Phone (390x844 at DPR 2) and desktop (1280x720 at DPR 1) produced nonblank canvas-only
-receipts, nine active tree visitors each, worker-asset HTTP 200, and zero console errors, page errors,
-failed responses, or failed requests. Chromium used ANGLE SwiftShader, so its 0.086/0.036 functional
+receipts, nine and seven active tree visitors respectively, worker-asset HTTP 200, and zero console errors,
+page errors, failed responses, or failed requests. Chromium used ANGLE SwiftShader, so its 0.088/0.035 functional
 frame rates are liveness evidence only, not native-GPU 60–120 FPS evidence.
 
 The final implementation retires both the screenshot-confirmed Entity axon-web rendering and every
@@ -29,7 +29,11 @@ legacy Xenomimic line path while retaining live connectome/GraphMind topology. I
 generation-guarded canonical tree food with exactly-once nutrition and a 5.0-second scaled-simulation
 respawn; identity-aware sanctuary suppression; bounded temporary visits; reciprocal social cleanup;
 and the canonical fauna activity bridge. Final commit-gate, remote reconciliation, GitHub Actions,
-deployed Pages, and public-URL verification are the remaining publication steps at this point.
+deployed Pages, and public-URL verification completed for exact behavior commit `0ce2f7eb`: CI
+`29349401485`, CodeQL `29349401462`, post-build smoke `29349401588`, Pages `29350338267`, and deployment
+`5444314463` are green. The public main document and worker returned HTTP 200, its build cache key matched
+the commit, the canvas booted, the production debug hook was absent, and the deployed screenshot was
+nonblank with zero console, page, response, or request failures.
 
 ## 2026-07-14 — Fix-forward: fauna-architecture consolidation repaired + reverted fixes restored
 
