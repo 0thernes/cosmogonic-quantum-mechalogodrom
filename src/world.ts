@@ -1476,6 +1476,15 @@ export class World {
         // Restore before constructing any external visitor adapter. Active owners/reservations were
         // normalized out of the checkpoint, so the new cosmos always starts with clean actor state.
         this.crystalEcosystem.restoreFoodPersistence(opts.bigTreeEcology.food);
+        if (opts.bigTreeEcology.food.entries.some((entry) => entry.remainingRespawn === null)) {
+          // A null deadline is a discarded live claim. Rewrite its now-available, generation-bumped
+          // form immediately so the sparse store does not carry a harmless but noncanonical entry
+          // across every later reload. A failed write keeps the revision dirty for pagehide retry.
+          bigTreeCheckpointSynchronized = this.store.saveBigTreeEcology({
+            version: 1,
+            food: this.crystalEcosystem.snapshotFoodPersistence(),
+          });
+        }
       } catch (error) {
         // A rejected or interrupted restore must leave the live tree canonical, not half-rebuilt.
         this.crystalEcosystem.resetFood(this.state.elapsed);

@@ -159,7 +159,9 @@ tests, or explicit model assumptions support them.
   twin/Entity proximity topology counter, a fixed-node reactive audio field, `mimic` camera view,
   telemetry/Observatory feeds, and the indicator-only `XENOMIMIC` inspector all borrow the same
   population—no duplicate sim loop. The topology counter creates no line geometry or physical tether;
-  its fixed capture buffer releases despawned references on shrink and disposal.
+  its fixed capture buffer releases despawned references on shrink and disposal. A tested legacy purge
+  also detaches and disposes historic named Xenomimic line remnants without touching anatomy or the
+  separate Entity connectome.
 - **Dome ecology and the Crystal Big Tree**
   ([crystal-ecosystem.ts](./src/sim/crystal-ecosystem.ts)) — 10,000 fruits and 10,000 leaves are fixed,
   pooled members of the canonical `EdibleResourceRegistry`. Hungry supported fauna reserve reachable
@@ -168,11 +170,15 @@ tests, or explicit model assumptions support them.
   hysteresis and a shared 72-visitor scheduler so Entities, Xenomimics, Shoggoths, Titans, Leviathans,
   Puppeteers, and autonomous Apex bodies can make bounded food, rest, observation, and social visits
   without carrying hostile actions through the zone. Its 250 tree residents use real validated 6-6-4
-  controllers with a deterministic fallback; this is not online learning or a sentience claim. The only
-  social policy transfer is narrower: on first reciprocal pairing, an ordinary strategy-1 organism may
-  imitate an ordinary strategy-0 cooperator. Cross-species social animation does not imply learning.
-  Persistence is deliberately food-only: a sparse versioned checkpoint stores generations and remaining
-  respawn time, never actors, visit state, reservations, partners, or cooldowns.
+  controllers with deterministic fallback. Willing nearby same-species residents can form bounded social
+  episodes; when one has eaten at least two more meals, the learner's live 70-parameter policy blends 8%
+  toward that demonstrably better forager, subject to a 25-second per-learner simulation-time cooldown.
+  The update is deterministic, all-finite, all-or-nothing, and recorded in a real events-only ledger;
+  resident pairs are released on state changes. Separately, on first reciprocal pairing, an ordinary
+  strategy-1 organism may imitate an ordinary strategy-0 cooperator. Neither mechanism supports a
+  cross-species, general-intelligence, or sentience claim. Persistence remains food-only: normalized live
+  claims are rewritten immediately in canonical sparse form after restore, failed writes stay retryable,
+  and actors, visit state, reservations, partners, and cooldowns are never persisted.
 - **GOD / GodColossus** ([god-colossus.ts](./src/sim/god-colossus.ts)) — a raymarched, breathing
   **Mandelbulb** deity (domain-warped, orbit-trap palette), the **ASCENSION monolith temple**, and
   **NHI** autonomous mini-AIs.

@@ -64,7 +64,8 @@ research goals, not implementation claims.
 5. **Sparse ecology persistence.** `MemoryStore` has separate schemas and keys for user preferences
    and the Big Tree food checkpoint. The ecology boundary contains only stable food IDs,
    generations, and remaining respawn time. Actor, visitor, reservation, slot, partner, cooldown,
-   callback, and render state never cross it.
+   callback, and render state never cross it. Restored live claims are normalized and immediately
+   rewritten in canonical sparse form; failed writes remain dirty and retryable.
 
 ## Module graph
 
@@ -121,6 +122,8 @@ graph TD
     faunasource["big-tree-fauna-source.ts<br/>independent-fauna contract"]
     faunavisitors["big-tree-fauna-visitors.ts<br/>shared fauna adapter"]
     treebrain["tree-creature-brain.ts<br/>validated TinyMLP + fallback"]
+    treeteaching["tree-creature-teaching.ts<br/>bounded same-species policy blend"]
+    xenopurge["xenomimic-tether-purge.ts<br/>tested legacy line destruction"]
     xenotopology["xenomimic-connectome.ts<br/>topology counts only; no lines/tether"]
   end
 
@@ -212,11 +215,13 @@ graph TD
   world --> treezone
   world --> visitors
   world --> faunavisitors
+  world --> xenopurge
   world --> xenotopology
   main --> store
 
   crystal --> edible
   crystal --> treebrain
+  crystal --> treeteaching
   visitors --> treezone
   visitors --> edible
   faunavisitors --> faunasource
@@ -357,7 +362,8 @@ Notes:
   `instanceMatrix` range rather than invalidating all 10,000 matrices in its pool.
 - `XenomimicConnectome` retains only bounded topology counts. It never attaches line geometry to the
   scene or applies a movement constraint; shrinking populations clear the vacated capture tail and
-  disposal clears the full fixed capture buffer.
+  disposal clears the full fixed capture buffer. The composition root also invokes the tested legacy
+  purge, which removes and disposes only historically named Xenomimic line primitives.
 
 ## Frame pipeline
 
@@ -464,9 +470,15 @@ Consumption advances one owner/generation transaction and awards nourishment onl
 commit. The instance hides immediately and becomes available only after the same matrix has been
 restored at exactly five scaled simulation seconds. Ordinary social matching is a bounded queue pass;
 when two willing ordinary organisms first pair, a strategy-1 defector may copy a strategy-0 cooperator.
-That is the entire policy-transfer claim. Fauna matching reads every eligible active adapter once in
-O(A), caches only numeric lanes, then performs bounded O(A²) distance comparisons, where A ≤ 72; it
-does not repeat adapter reads inside the nested loop or search whole species populations.
+That one-shot `1 -> 0` imitation remains distinct from resident neural teaching. Nearby willing
+same-species residents in `SOCIAL` can form bounded reciprocal episodes; only a resident with at least
+two more completed meals can teach, and the learner blends its live 70-parameter policy 8% toward that
+better forager. The teaching path is deterministic, all-finite/all-or-nothing, gated by a 25-second
+per-learner simulation-time cooldown, recorded in an events-only ledger, and releases resident pairs on
+state change. It does not imply cross-species learning, general intelligence, or sentience. Fauna
+matching reads every eligible active adapter once in O(A), caches only numeric lanes, then performs
+bounded O(A²) distance comparisons, where A ≤ 72; it does not repeat adapter reads inside the nested
+loop or search whole species populations.
 
 **3. Audit loop (event-driven + polled).** User actions and puppet-master
 events call `AuditTrail.record(action, detail)`, which appends to a local
@@ -480,9 +492,11 @@ no client-side rendering code involved.
 `null` on corruption — it never throws). Separately, `loadBigTreeEcology()` validates the
 `cqm.big-tree-ecology.v1` checkpoint before `World` constructs visitor adapters. Only food generations
 and remaining respawn time are restored; an interrupted reservation/consumption is invalidated and
-restored as available. Visibility-hidden, page-exit, and world-disposal paths make a best-effort sparse
-food flush. Genesis resets food and clears the checkpoint. Actor, visit, slot, reservation, partner,
-cooldown, callback, and renderer state are reconstructed rather than persisted.
+restored as available. If restore normalizes any live claim, `World` immediately rewrites the canonical
+sparse checkpoint; a failed rewrite is not acknowledged and remains retryable on a later lifecycle
+flush. Visibility-hidden, page-exit, and world-disposal paths make a best-effort sparse food flush.
+Genesis resets food and clears the checkpoint. Actor, visit, slot, reservation, partner, cooldown,
+callback, and renderer state are reconstructed rather than persisted.
 
 **5. Feedback web (V2).** The Wildbeyond systems close loops between
 previously independent subsystems, all fanned out by `world.ts`:

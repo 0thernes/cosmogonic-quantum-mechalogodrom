@@ -231,9 +231,7 @@ See `src/sim/tsotchke-*.ts`, registry, README, reports for wiring matrix.
 ```ts
 export const WEATHERS = ['CLEAR', 'RAIN', 'STORM', 'AURORA', 'VOID', 'FOG'] as const;
 export type Weather = (typeof WEATHERS)[number];
-export const BEHAVIORS = [
-  /* the 26 names from legacy lines 277-279, same order */
-] as const;
+export const BEHAVIORS = [/* the 26 names from legacy lines 277-279, same order */] as const;
 export type Behavior = (typeof BEHAVIORS)[number];
 export const VIEW_MODES = ['free', 'orbit', 'fly', 'top'] as const;
 export type ViewMode = (typeof VIEW_MODES)[number];
@@ -602,18 +600,7 @@ File ownership is EXCLUSIVE — the named writer is the only agent touching a fi
 // Minimal statevector quantum register. Backend: pure TS (2^n complex amps as a
 // Float64Array pair, allocation-free gate application). n <= 8 enforced.
 export type GateName =
-  | 'h'
-  | 'x'
-  | 'y'
-  | 'z'
-  | 's'
-  | 't'
-  | 'rx'
-  | 'ry'
-  | 'rz'
-  | 'cx'
-  | 'cz'
-  | 'swap';
+  'h' | 'x' | 'y' | 'z' | 's' | 't' | 'rx' | 'ry' | 'rz' | 'cx' | 'cz' | 'swap';
 export class QuantumRegister {
   constructor(qubits: number); // throws if qubits < 1 or > 8
   readonly qubits: number;
@@ -1816,10 +1803,12 @@ containing only stable resource ID, generation, and remaining respawn time. Avai
 from the sparse entry list. Reserved or consuming items checkpoint as available with a generation bump,
 so an owner, lease, or half-finished transaction can never survive reload. Load validates capacity,
 duplicates, finite safe values, and a remaining duration in `[0, 5]`, then restores food before visitor
-adapters are constructed. A rejected checkpoint resets the live pool canonically. Visibility-hidden,
-page-exit, and disposal paths make a best-effort flush; Genesis resets food and clears the checkpoint.
-No actor, visit phase, slot, reservation owner, social partner, cooldown, callback, matrix, collider, or
-tree-resident controller is persisted.
+adapters are constructed. A rejected checkpoint resets the live pool canonically. When restore
+normalizes a live claim, `World` immediately rewrites the checkpoint in canonical sparse form; a failed
+rewrite does not advance the acknowledged revision and remains retryable on a later lifecycle flush.
+Visibility-hidden, page-exit, and disposal paths make a best-effort flush; Genesis resets food and clears
+the checkpoint. No actor, visit phase, slot, reservation owner, social partner, cooldown, callback,
+matrix, collider, or tree-resident controller is persisted.
 
 ## Tree-dwelling neural and social behavior
 
@@ -1834,8 +1823,9 @@ Model shape and every weight/input/output are validated for finite values. Inval
 or outputs select the deterministic resting fallback and are exposed through controller status.
 The fallback does not claim that a model drove the action. Tree residents are friendly by default,
 do not contest visitors, use the canonical edible registry, and return to ordinary tree activity
-after food or social activity. No sentience, online-learning, or physical-quantum claim follows from
-this controller.
+after food or social activity. The separate teaching component may update a resident's live policy only
+under the bounded contract below. No sentience, general-intelligence, cross-species-learning, or
+physical-quantum claim follows from this compact controller or its teaching path.
 
 Social visits use willing active partners, reciprocal reservations, reach checks, and expiring leases.
 Ordinary matching is one pass over the bounded active visitor set; a partner may hold only one pair.
@@ -1843,11 +1833,21 @@ Partner loss or excess distance releases both ends, and visit cleanup prevents p
 a newly reciprocal pair consists of two ordinary organisms with strategies `0` and `1`, the defector
 may imitate the cooperator by changing its canonical strategy to `0`; that strategy is subsequently
 used by the existing Nash behavior and inherited through its existing descendant path. The
-`policyTransfers` counter increments once at formation, and lease renewal cannot repeat it. This does
-not train a neural model or transfer policy between fauna categories, Xenomimics, tree residents, or
-species. The world callback maps valid social/observation activity into existing Entity
-activation/payoff and Xenomimic shimmer feedback. No broader teaching, memory, trait, skill, or
-knowledge-transfer result is claimed.
+`policyTransfers` counter increments once at formation, and lease renewal cannot repeat it.
+
+Resident teaching is separate. When no external visitor is present, a resident in `SOCIAL` may select
+the nearest willing same-species `SOCIAL` peer within the bounded 25-resident species block. The pair
+uses a bounded reciprocal episode and releases both ends when either resident changes state. A teacher
+must have completed at least two more meals than the learner. On success, every one of the learner's 70
+live policy parameters moves exactly 8% toward the teacher's corresponding parameter; the teacher is
+unchanged. The component validates both complete vectors before mutation, rejects non-finite or
+mismatched data all-or-nothing, applies a 25-second per-learner simulation-time cooldown, uses no RNG,
+and records only actual movement in its deterministic ledger. Reset clears cooldowns and ledger state.
+
+The world callback still maps valid social/observation activity into existing Entity activation/payoff
+and Xenomimic shimmer feedback. Neither ordinary imitation nor resident teaching transfers policy
+between species or fauna categories, and neither supports a general-intelligence, consciousness, or
+sentience claim. Social animation alone is not reported as learning.
 
 ## Bounded-query and performance contract
 
@@ -1873,8 +1873,9 @@ knowledge-transfer result is claimed.
 Automated contract coverage lives in `tests/edible-resource.test.ts`,
 `tests/big-tree-zone.test.ts`, `tests/big-tree-visitors.test.ts`,
 `tests/big-tree-fauna-visitors.test.ts`, `tests/big-tree-fauna-source-integration.test.ts`,
-`tests/tree-creature-brain.test.ts`, `tests/store.test.ts`, `tests/xenomimic-connectome.test.ts`, the
-Crystal ecosystem test family, `tests/super-hunt.test.ts`, and
+`tests/tree-creature-brain.test.ts`, `tests/tree-creature-teaching.test.ts`, `tests/store.test.ts`,
+`tests/xenomimic-connectome.test.ts`, `tests/xenomimic-cosmetics.test.ts`, the Crystal ecosystem test
+family, `tests/super-hunt.test.ts`, and
 `tests/big-tree-world-integration.test.ts`. `tests/browser-visual-smoke-harness.test.ts` statically seals
 natural-rAF advancement, bounded stage/failure receipts, the viewport plus canvas-isolated proof, and
 the intentional `dormant-main-thread` worker expectation. Harness coverage is not a live browser result:

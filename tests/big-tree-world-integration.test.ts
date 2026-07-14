@@ -159,6 +159,10 @@ describe('Big Tree production composition root', () => {
     expect(worldSource).toContain('resources.hasPendingRespawns');
     expect(worldSource).toContain('foodTime !== this.lastPersistedBigTreeFoodTime');
     expect(worldSource).toContain('if (saved) {');
+    expect(worldSource).toContain(
+      'opts.bigTreeEcology.food.entries.some((entry) => entry.remainingRespawn === null)',
+    );
+    expect(worldSource).toContain('food: this.crystalEcosystem.snapshotFoodPersistence()');
     expect(mainSource).toContain('const bigTreeEcology = store.loadBigTreeEcology();');
     expect(mainSource).toContain('bigTreeEcology,');
     expect(mainSource).toContain("document.visibilityState === 'visible'");

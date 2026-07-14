@@ -1,10 +1,5 @@
 # Dome Ecology Verification — 2026-07-14
 
-> **Pre-integration snapshot:** this report describes the clean worktree state based on commit
-> `41a2ea5466c665781c9a0e9044919c70106cb6c0` plus the local Dome ecology changes inspected on
-> 2026-07-14. `origin/main` advanced while the report was being written. Revalidate the claims, test
-> counts, benchmark numbers, and remaining limitations after rebasing onto that newer upstream state.
-
 ## Verification posture
 
 This is a current-code verification report for the Xenomimic tether removal and Big Tree ecology
@@ -48,9 +43,11 @@ percept accounting; rendering or physically constraining that relationship was t
   particle. Its constructor deliberately ignores the scene argument.
 - `visible` is permanently `false`; `setVisible()` is a no-op. `World` explicitly calls
   `setVisible(false)`, including around the independent Entity neural-web control.
-- `World.purgeOrphanXenomimicTethers()` removes only legacy line primitives whose names identify them as
-  Xenomimic/twin/connectome/tether objects, disposes their geometry/materials, and does not target tails,
-  limbs, tendrils, or the separate Entity connectome.
+- `World.purgeOrphanXenomimicTethers()` delegates to the tested
+  `purgeLegacyXenomimicTethers()` helper. It removes only legacy line primitives whose names identify
+  them as Xenomimic/twin/connectome/tether objects, disposes their geometry and single or array-backed
+  materials, and does not target tails, limbs, tendrils, live Xenomimic bodies, or the separate Entity
+  connectome.
 - Connectome synchronization uses fixed capture/index arrays, releases vacated creature references when
   the population shrinks, and clears every capture on idempotent disposal. Logical link counts remain
   available to telemetry without retaining dead bodies or recreating a renderer.
@@ -67,8 +64,10 @@ percept accounting; rendering or physically constraining that relationship was t
   invisibility, bounded logical links, allocation-free synchronization, and reference cleanup after
   shrink/disposal.
 - **Automated:** `tests/xenomimic-cosmetics.test.ts` traverses a real Three.js scene and finds no
-  Xenomimic `Line`, `LineLoop`, or `LineSegments`; it also seals the neural-web toggle against restoring
-  a Xenomimic visual.
+  Xenomimic `Line`, `LineLoop`, or `LineSegments`; it also plants historic named `Line`, `LineLoop`, and
+  `LineSegments` remnants, proves the purge removes all three, verifies geometry and material-array
+  disposal, confirms a second purge is idempotent, and seals the neural-web toggle against restoring a
+  Xenomimic visual.
 - **Automated:** `tests/xenomimics.test.ts` places bodies near square corners, widely separates twins,
   and proves neither radial projection nor partner-distance pulling occurs. Separate tests cover normal,
   travel, calm, teleport, predation/respawn, ground movement, lifecycle, and renderer disposal.
@@ -181,8 +180,10 @@ Cross-session persistence is intentionally narrower than the in-memory visit man
 
 Only currently respawning records and active claims needing normalization are emitted. Active reserved or
 consuming claims restore as available at the next generation, so discarded actors cannot leave an orphaned
-claim. A respawning record stores remaining **simulation** time; closing the application does not consume
-that time, and the remaining interval resumes after reload.
+claim. When restore performs that normalization, `World` immediately rewrites the canonical sparse
+checkpoint. A failed rewrite is not acknowledged, leaves synchronization dirty, and remains retryable on a
+later lifecycle flush. A respawning record stores remaining **simulation** time; closing the application
+does not consume that time, and the remaining interval resumes after reload.
 
 Boot validates the entire snapshot before applying it and restores food before constructing visitor
 adapters. Corrupt, wrong-version, wrong-capacity, duplicate-ID, or out-of-range data is rejected without
@@ -267,14 +268,25 @@ swarm, or trap a departing guest.
 Model loading validates the exact parameter count and finiteness. Invalid dimensions/weights or non-finite
 outputs invoke a deterministic friendly-rest fallback; a valid reload restores operation. Development
 telemetry exposes readiness, decisions, fallback count/reason, last activity, motor axes, social drive, and
-visitor inputs. No consciousness, sentience, physical-quantum, or general-learning claim follows from this
-compact deterministic controller.
+visitor inputs.
+
+Resident social learning is genuinely wired but deliberately narrow. With no external visitor present, a
+resident in `SOCIAL` can form a bounded reciprocal episode with the nearest willing same-species resident
+in `SOCIAL` within that species' 25-member block. A teacher must have completed at least two more meals.
+On success, all 70 parameters in the learner's live policy move exactly 8% toward the teacher's policy;
+the teacher is unchanged. The path validates both complete vectors before mutation, is all-finite and
+all-or-nothing, uses no RNG, observes a 25-second per-learner simulation-time cooldown, and records only
+actual movement in an events-only ledger. State changes release both resident partner references. No
+cross-species, general-intelligence, consciousness, sentience, or physical-quantum claim follows.
 
 **Automated evidence:** `tests/tree-creature-brain.test.ts` exercises every input/output channel, all four
 activities, deterministic inference, caller-owned buffers, invalid input/output, model-dimension failure,
-and reload. `tests/crystal-ecosystem.test.ts` proves outputs causally alter runtime movement, visitor
-presence changes the social input without following visitors, residents share food without contests or
-permanent reservations, and disposal is complete/idempotent.
+and reload. `tests/tree-creature-teaching.test.ts` proves the exact blend, unchanged teacher, subsequent
+behavior change, competence/cooldown/identity/shape gates, all-or-nothing non-finite rejection,
+determinism, reset, bounded pair formation, real Crystal integration, and pair release on state change.
+`tests/crystal-ecosystem.test.ts` proves outputs causally alter runtime movement, visitor presence changes
+the social input without following visitors, residents share food without contests or permanent
+reservations, and disposal is complete/idempotent.
 
 ## Social, teaching, learning, resting, and peaceful behavior
 
@@ -284,14 +296,19 @@ nearby willing partner; peaceful shared-space damping; ordinary neural-activatio
 Xenomimic shimmer feedback; fauna cross-species pairing; resident welcome-ring response; early completion;
 timeout; partner-loss cleanup; and return to the original ecosystem controller.
 
-The only implemented teaching/learning transfer is deliberately narrow and real: when a **new** willing
-ordinary-organism pair contains exactly one cooperator (`strategy=0`) and one defector (`strategy=1`), the
-defector copies the cooperative strategy once. The canonical Nash behavior reads that strategy after the
-visit and heredity can pass it to descendants. Lease renewal cannot repeat/inflate the event. Mixed-species
-pairs do not claim a transfer.
+Two implemented teaching/learning transfers are deliberately narrow and real:
 
-There is no broader cross-species skill, memory, trait, neural-weight, policy-model, or hidden knowledge
-transfer. Social animation alone is not reported as learning.
+1. When a **new** willing ordinary-organism pair contains exactly one cooperator (`strategy=0`) and one
+   defector (`strategy=1`), the defector copies the cooperative strategy once. The canonical Nash behavior
+   reads that strategy after the visit and heredity can pass it to descendants. Lease renewal cannot
+   repeat or inflate the event.
+2. The same-species resident teaching path described above updates the learner's live 70-parameter neural
+   policy only after the two-meal competence gate, finite-vector validation, and per-learner cooldown pass.
+   Its real ledger records event count, rejection count, last teacher, last learner, simulation time, and
+   moved weight distance.
+
+Mixed-species pairs do not claim a transfer. There is no broader cross-species skill, memory, trait,
+policy-model, or hidden knowledge transfer, and social animation alone is not reported as learning.
 
 Partner discovery is bounded by active capacity, not total population. Ordinary/Xenomimic matching is one
 linear active pass. Fauna matching caches each eligible adapter read once, then performs deterministic
@@ -302,9 +319,10 @@ released on distance, timeout, departure, despawn, reset, or error.
 ## Observability and debugging
 
 At a sparse 600-frame cadence, development audit telemetry reports visitor counts by category, meals,
-social pairs, cooperative-policy transfers, target losses, polls, cancellations, completed/timed-out
-visits, stuck recoveries, forced exits, partner timeouts, capacity/slot rejection, available slots, each
-food-state count, pending respawns, lifecycle errors, suppressed harm, and neural status.
+social pairs, cooperative-policy transfers, resident teaching events and latest teacher/learner/time/weight
+delta, target losses, polls, cancellations, completed/timed-out visits, stuck recoveries, forced exits,
+partner timeouts, capacity/slot rejection, available slots, each food-state count, pending respawns,
+lifecycle errors, suppressed harm, and neural status. The teaching status also exposes rejection count.
 
 Caller-owned visitor views expose reason/activity, target, selected slot, food ID/kind/state, owner,
 partner, energy, and cooldown/deadline state without production geometry. The local browser hook is
@@ -328,7 +346,8 @@ tests/xenomimic-connectome.test.ts
 ```
 
 Additional directly relevant suites include `tests/big-tree-zone.test.ts`,
-`tests/tree-creature-brain.test.ts`, `tests/xenomimic-cosmetics.test.ts`, and
+`tests/tree-creature-brain.test.ts`, `tests/tree-creature-teaching.test.ts`,
+`tests/xenomimic-cosmetics.test.ts`, and
 `tests/xenomimics.test.ts`; they are part of the full receipt above.
 
 The performance-invariant suite uses 10,000 ordinary organisms plus 2,000 Xenomimics, a 72-visitor
@@ -405,7 +424,7 @@ single human-observed live checklist:
 | Exact 5.0-second reuse and two-eater race                  | Exact clock and transaction tests                                                 | Automated                                               |
 | Peaceful rest/social coexistence and hostile de-escalation | Zone, species, fauna, combat/hazard tests                                         | Automated; live hostile-arrival observation pending     |
 | Temporary visits, varied dwell, departure, cooldown        | Visit-state tests with bounded deadlines                                          | Automated                                               |
-| Friendly tree residents and invalid-model fallback         | Neural/controller and Crystal integration tests                                   | Automated; live behavior tour pending                   |
+| Friendly tree residents, peer teaching, and safe fallback  | Neural/controller, teaching, and Crystal integration tests                        | Automated; live behavior tour pending                   |
 | Crowding and blocked navigation                            | 72-capacity stress, multiple slots, stuck reroute/timeout tests                   | Automated                                               |
 | Repeated resource/visit cleanup                            | 64-cycle pool stress plus reset/despawn/dispose tests                             | Automated                                               |
 | Save/load/reset                                            | Primitive checkpoint, corruption, reset, lifecycle tests                          | Automated; application restart manual pass pending      |
@@ -424,11 +443,13 @@ single human-observed live checklist:
    exclusions are intentional; wilderness absence is currently an unsupported category.
 7. Audit any future projectile, trap, area-effect, or delayed-damage subsystem against the shared
    sanctuary predicate before extending the safe-zone claim to it.
-8. Do not describe social animations as general learning. The only verified transfer is one-shot
-   ordinary-organism defector-to-cooperator strategy imitation.
+8. Do not describe social animations as general learning. The verified transfers are the separate
+   one-shot ordinary-organism `1 -> 0` strategy imitation and bounded same-species resident neural-policy
+   blend; neither authorizes a cross-species, general-intelligence, consciousness, or sentience claim.
 
 Subject to those explicit blockers, the current implementation is automated-test-backed for tether-free
 Xenomimic rendering/movement, canonical race-safe fruit and leaf consumption, exact five-second
 simulation-time respawn, bounded temporary visits, integrated sanctuary suppression, friendly neural tree
 residents, narrow real policy transfer, fixed-pool cleanup, sparse food-only persistence, and bounded query
-costs for the directly supported species.
+costs for the directly supported species. The policy-transfer evidence covers two distinct bounded
+mechanisms: ordinary strategy imitation and same-species resident teaching.

@@ -19,10 +19,13 @@ plus cancellation gaps in the read-only AI sandbox. These fixes preserve the cur
 A-Life vector and do not add organism-intelligence, consciousness, or sentience uplift.
 
 The current Dome ecology continuation implements a canonical pooled Big Tree food path, a real
-sanctuary/temporary-visit lifecycle, food-only sparse persistence, and topology-only Xenomimic
-connectome cleanup. Its only new learning-like behavior is ordinary strategy imitation at first
-reciprocal pairing; it does not establish neural training, tree-resident learning, or cross-species
-knowledge transfer. The fauna social matcher uses O(A) adapter reads followed by bounded numeric
+sanctuary/temporary-visit lifecycle, food-only sparse persistence with canonical post-restore rewrites,
+and topology-only Xenomimic connectome cleanup plus a tested legacy-line purge. It has two distinct,
+bounded learning mechanisms: ordinary first-pair `1 -> 0` strategy imitation, and same-species resident
+peer teaching that blends a learner's live 70-parameter policy 8% toward a forager with at least a
+two-meal competence lead, subject to a 25-second per-learner simulation-time cooldown and finite,
+all-or-nothing deterministic checks. Neither establishes cross-species learning, general intelligence,
+consciousness, or sentience. The fauna social matcher uses O(A) adapter reads followed by bounded numeric
 O(A²), with A ≤ 72, and food matrix changes upload one 16-float instance range each. Focused automated
 tests and a staged natural-rAF/canvas-isolated smoke harness exist, but this index does not claim a new
 whole-repository receipt or a current browser, production-build, or deployed GitHub Pages pass.
