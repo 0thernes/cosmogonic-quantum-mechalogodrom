@@ -329,6 +329,10 @@ export interface CrystalTreeNeuralStatus {
   readonly visitorCount: number;
   readonly visitorPresence: number;
   readonly visitorSocialActivity: number;
+  readonly teachingEvents: number;
+  readonly lastTeachingTeacher: number;
+  readonly lastTeachingLearner: number;
+  readonly lastTeachingWeightDelta: number;
 }
 
 export interface CrystalInteraction {
@@ -1063,6 +1067,8 @@ interface TreeCreature {
   neuralSteerZ: number;
   neuralSpeed: number;
   neuralActivity: TreeCreatureActivity;
+  socialPartner: number;
+  mealsEaten: number;
   interference: number;
 }
 
@@ -1208,6 +1214,10 @@ export class CrystalEcosystem {
   private visitorCount = 0;
   private visitorPresence = 0;
   private visitorSocialActivity = 0;
+  private teachingEvents = 0;
+  private lastTeachingTeacher = -1;
+  private lastTeachingLearner = -1;
+  private lastTeachingWeightDelta = 0;
   private readonly mainBranches: number;
   private readonly subBranches: number;
   private readonly drawCalls: number;
@@ -1567,6 +1577,8 @@ export class CrystalEcosystem {
           neuralSteerZ: 0,
           neuralSpeed: 0,
           neuralActivity: TREE_CREATURE_ACTIVITY.REST,
+          socialPartner: -1,
+          mealsEaten: 0,
           interference: 0,
         });
       }
@@ -2182,6 +2194,7 @@ export class CrystalEcosystem {
     scale: number,
   ): void {
     if (creature.targetFoodId >= 0) this.releaseCreatureFood(creature, 2);
+    creature.socialPartner = -1;
     creature.stateTimer = 3 + this.rng() * 7;
     const survivalHunger = creature.energy < 45;
     const neuralHunger =
@@ -2215,6 +2228,12 @@ export class CrystalEcosystem {
       creature.state = 'orbit';
       creature.radius += (55 * scale - creature.radius) * 0.2;
       creature.stateTimer = 2 + this.rng() * 4;
+      const partner = this.findResidentSocialPartner(creature, scale);
+      if (partner !== null) {
+        creature.socialPartner = partner.index;
+        partner.socialPartner = creature.index;
+        this.attemptResidentTeaching(creature, partner);
+      }
       return;
     }
     if (hasQuantum(creature.quantumMask, 'phaseShift') && Math.sin(creature.phase) > 0.3) {
@@ -2280,8 +2299,10 @@ export class CrystalEcosystem {
             this.simTime,
           )
         : 0;
-      if (nourishment > 0) creature.energy = Math.min(100, creature.energy + nourishment);
-      else this.edibleResources.cancel(resource.id, creature.targetFoodGeneration, ownerId);
+      if (nourishment > 0) {
+        creature.energy = Math.min(100, creature.energy + nourishment);
+        creature.mealsEaten = Math.min(0xffff, creature.mealsEaten + 1);
+      } else this.edibleResources.cancel(resource.id, creature.targetFoodGeneration, ownerId);
       creature.targetFoodId = -1;
       creature.targetFoodGeneration = 0;
       creature.foodCooldownUntil = this.simTime + 3 + this.rng() * 4;
@@ -2350,6 +2371,83 @@ export class CrystalEcosystem {
   }
 
   /** Low-cadence, development-facing proof that the neural path is loaded and executing. */
+  private findResidentSocialPartner(creature: TreeCreature, scale: number): TreeCreature | null {
+    if (creature.neuralActivity !== TREE_CREATURE_ACTIVITY.SOCIAL) return null;
+    let best: TreeCreature | null = null;
+    let bestDistance = Number.POSITIVE_INFINITY;
+    const reach = 12 * Math.max(0.25, scale);
+    const reachSquared = reach * reach;
+    for (const candidate of this.creatures) {
+      if (
+        candidate === creature ||
+        candidate.species !== creature.species ||
+        candidate.neuralActivity !== TREE_CREATURE_ACTIVITY.SOCIAL ||
+        candidate.socialPartner >= 0
+      ) {
+        continue;
+      }
+      const dx = candidate.x - creature.x;
+      const dy = candidate.y - creature.y;
+      const dz = candidate.z - creature.z;
+      const distance = dx * dx + dy * dy + dz * dz;
+      if (distance <= reachSquared && distance < bestDistance) {
+        best = candidate;
+        bestDistance = distance;
+      }
+    }
+    return best;
+  }
+
+  private attemptResidentTeaching(teacher: TreeCreature, learner: TreeCreature): number {
+    if (
+      teacher === learner ||
+      teacher.species !== learner.species ||
+      teacher.neuralActivity !== TREE_CREATURE_ACTIVITY.SOCIAL ||
+      learner.neuralActivity !== TREE_CREATURE_ACTIVITY.SOCIAL ||
+      teacher.mealsEaten <= learner.mealsEaten
+    ) {
+      return 0;
+    }
+    const teacherWeights = this.treeBrains[teacher.index]?.weightsView();
+    const learnerBrain = this.treeBrains[learner.index];
+    if (teacherWeights === undefined || learnerBrain === undefined) return 0;
+    const learnerWeights = learnerBrain.weightsView();
+    const before = Float32Array.from(learnerWeights);
+    const alpha = 0.2;
+    for (let i = 0; i < learnerWeights.length; i++) {
+      const current = learnerWeights[i] ?? 0;
+      learnerWeights[i] = current + ((teacherWeights[i] ?? 0) - current) * alpha;
+    }
+    learnerBrain.loadWeights(learnerWeights);
+    let movedSquared = 0;
+    for (let i = 0; i < learnerWeights.length; i++) {
+      const delta = learnerWeights[i]! - before[i]!;
+      movedSquared += delta * delta;
+    }
+    const moved = Math.sqrt(movedSquared);
+    if (moved > 0) {
+      this.teachingEvents++;
+      this.lastTeachingTeacher = teacher.index;
+      this.lastTeachingLearner = learner.index;
+      this.lastTeachingWeightDelta = moved;
+    }
+    return moved;
+  }
+
+  teachingStatus(): {
+    events: number;
+    teacher: number;
+    learner: number;
+    weightDelta: number;
+  } {
+    return {
+      events: this.teachingEvents,
+      teacher: this.lastTeachingTeacher,
+      learner: this.lastTeachingLearner,
+      weightDelta: this.lastTeachingWeightDelta,
+    };
+  }
+
   neuralStatus(): CrystalTreeNeuralStatus {
     return {
       controllerCount: this.treeBrains.length,
@@ -2369,6 +2467,10 @@ export class CrystalEcosystem {
       visitorCount: this.visitorCount,
       visitorPresence: this.visitorPresence,
       visitorSocialActivity: this.visitorSocialActivity,
+      teachingEvents: this.teachingEvents,
+      lastTeachingTeacher: this.lastTeachingTeacher,
+      lastTeachingLearner: this.lastTeachingLearner,
+      lastTeachingWeightDelta: this.lastTeachingWeightDelta,
     };
   }
 
@@ -2463,6 +2565,10 @@ export class CrystalEcosystem {
     this.neuralLastMotorX = 0;
     this.neuralLastMotorZ = 0;
     this.neuralLastSocialDrive = 0;
+    this.teachingEvents = 0;
+    this.lastTeachingTeacher = -1;
+    this.lastTeachingLearner = -1;
+    this.lastTeachingWeightDelta = 0;
     if (this.unreadyTreeBrains === 0) this.neuralLastFallbackReason = 'none';
     for (const creature of this.creatures) {
       creature.targetFoodId = -1;

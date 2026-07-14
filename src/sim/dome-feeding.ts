@@ -23,7 +23,9 @@ import type { Entity, SimContext } from '../types';
 /** A roaming body that grazes plants + eats organisms near it (titans / leviathans / puppeteers). */
 export interface DomeFeeder {
   /** Visit each LIVE member's world position (downed / hidden members are skipped). Allocation-free. */
-  eachFeederPos(cb: (x: number, y: number, z: number) => void): void;
+  eachFeederPos(cb: (x: number, y: number, z: number, memberIndex?: number) => void): void;
+  /** Optional native nourishment sink used by canonical dome-food consumers. */
+  nourishFromDomeFood?(member: number, nutrition: number): boolean;
 }
 
 /** Allocation-free policy gate for predator/prey interactions (for example, authored safe zones). */
@@ -68,6 +70,11 @@ export class DomeFeeding {
   private cursor = 0;
   /** Flat feeder positions collected each frame (x,y,z per slot). */
   private readonly feederXYZ = new Float32Array(MAX_FEEDERS * 3);
+  private readonly feederMember = new Int32Array(MAX_FEEDERS);
+  private readonly feederRefs: (DomeFeeder | null)[] = Array.from(
+    { length: MAX_FEEDERS },
+    () => null,
+  );
   private readonly respawns: { at: number; mi: number }[] = [];
   private respawnHead = 0;
   private readonly deathIndices: number[] = [];
@@ -153,7 +160,7 @@ export class DomeFeeding {
       let fc = 0;
       const xyz = this.feederXYZ;
       for (const f of feeders) {
-        f.eachFeederPos((x, y, z) => {
+        f.eachFeederPos((x, y, z, memberIndex) => {
           if (fc >= MAX_FEEDERS) return;
           // A denied attacker is neutral here: no competitive grazing and no attack origin is recorded.
           if (harmAllowed !== undefined && !harmAllowed(x, z, x, z)) return;
@@ -161,6 +168,8 @@ export class DomeFeeding {
           xyz[o] = x;
           xyz[o + 1] = y;
           xyz[o + 2] = z;
+          this.feederMember[fc] = memberIndex ?? -1;
+          this.feederRefs[fc] = f;
           fc++;
           graze(x, z, GRAZE_PRESSURE, dt);
         });
@@ -174,6 +183,7 @@ export class DomeFeeding {
           // NHI backing bodies are consumption-immune; explicit lethal hazards are handled elsewhere.
           if (!e || e.userData.isNhi) continue;
           const p = e.position;
+          let caughtFeeder = -1;
           for (let g = 0; g < fc; g++) {
             const o = g * 3;
             if (harmAllowed !== undefined && !harmAllowed(xyz[o]!, xyz[o + 2]!, p.x, p.z)) {
@@ -188,8 +198,16 @@ export class DomeFeeding {
               onKill?.(e, i); // measure the devoured mind BEFORE disposal (weights + senses still live)
               this.deathIndices.push(i);
               this.respawns.push({ at: t + RESPAWN_DELAY, mi });
+              caughtFeeder = g;
               this.eaten++;
               break; // this organism is gone — stop checking feeders
+            }
+          }
+          if (caughtFeeder >= 0) {
+            const feeder = this.feederRefs[caughtFeeder];
+            const member = this.feederMember[caughtFeeder] ?? -1;
+            if (feeder?.nourishFromDomeFood !== undefined && member >= 0) {
+              feeder.nourishFromDomeFood(member, 0.15);
             }
           }
         }

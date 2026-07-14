@@ -106,6 +106,7 @@ import {
   BIG_TREE_OWNER_ORDINARY,
   BIG_TREE_OWNER_XENOMIMIC,
   BigTreeSpeciesVisitors,
+  performBigTreeActivity,
   type BigTreeSpeciesVisitorView,
   type BigTreeVisitorActivityCallbacks,
   type BigTreeSpeciesVisitorStats,
@@ -287,7 +288,6 @@ import {
   XENOMIMIC_MAX,
   XenomimicVisitMode,
   XenomimicPopulation,
-  type Xenomimic,
   type XenomimicCouplings,
   type XenomimicLifecycleEvent,
 } from './sim/xenomimics';
@@ -652,23 +652,7 @@ export class World {
       dt,
       _now,
     ): void => {
-      if (ownerKind === BIG_TREE_OWNER_ORDINARY) {
-        const entity = body as Entity;
-        const data = entity.userData;
-        if (activity === BigTreeActivity.Socialize && partnerId >= 0) {
-          data.act = clamp(data.act + dt * 0.7, -4, 4);
-          data.payoff = Math.max(data.payoff, 0.08);
-        } else if (activity === BigTreeActivity.Observe) {
-          data.act = clamp(data.act + dt * 0.18, -4, 4);
-        }
-      } else {
-        const xenomimic = body as Xenomimic;
-        if (activity === BigTreeActivity.Socialize && partnerId >= 0) {
-          xenomimic.shimmer = Math.max(xenomimic.shimmer, 0.75);
-        } else if (activity === BigTreeActivity.Observe) {
-          xenomimic.shimmer = Math.max(xenomimic.shimmer, 0.25);
-        }
-      }
+      performBigTreeActivity(ownerKind, partnerId, body, activity, dt);
     },
   };
   /** Reused development telemetry; never exposed as production geometry or tether-like lines. */

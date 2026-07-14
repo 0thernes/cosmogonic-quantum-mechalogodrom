@@ -34,7 +34,7 @@ const NO_RESOURCE = -1;
 /** Structural subset implemented by `Entity`; lightweight tests need no Three.js dependency. */
 export interface BigTreeOrdinaryBody {
   readonly id: number;
-  readonly position: { x: number; y: number; z: number };
+  readonly position: { x: number; y?: number; z: number };
   readonly rotation?: { y: number };
   readonly userData: {
     /** Simulation-owned identity; unlike Object3D.id it is unaffected by unrelated render objects. */
@@ -47,7 +47,9 @@ export interface BigTreeOrdinaryBody {
     /** Launched NHIs have a dedicated adapter keyed by mind id; ordinary NHI minions remain false. */
     isNhi?: boolean;
     nhiMinion?: boolean;
-    vel: { x: number; y: number; z: number };
+    vel: { x: number; y?: number; z: number };
+    act?: number;
+    payoff?: number;
   };
 }
 
@@ -114,6 +116,37 @@ export interface BigTreeVisitorConfig {
 }
 
 export type BigTreeVisitorBody = BigTreeOrdinaryBody | BigTreeXenomimicBody;
+
+/** Canonical bridge for non-food tree activities; hunger and energy remain owned by their systems. */
+export function performBigTreeActivity(
+  ownerKind: number,
+  partnerId: number,
+  body: BigTreeVisitorBody,
+  activity: BigTreeActivity,
+  dt: number,
+): void {
+  if (!Number.isFinite(dt) || dt <= 0) return;
+  if (ownerKind === BIG_TREE_OWNER_ORDINARY) {
+    const data = (body as BigTreeOrdinaryBody).userData;
+    const act = data.act ?? 0;
+    const payoff = data.payoff ?? 0;
+    if (activity === BigTreeActivity.Socialize && partnerId >= 0) {
+      data.act = Math.max(-4, Math.min(4, act + dt * 0.7));
+      data.payoff = Math.max(-4, Math.min(4, Math.max(payoff, 0.08 * dt)));
+    } else if (activity === BigTreeActivity.Observe) {
+      data.act = Math.max(-4, Math.min(4, act + dt * 0.18));
+    }
+    return;
+  }
+  if (ownerKind === BIG_TREE_OWNER_XENOMIMIC) {
+    const xenomimic = body as BigTreeXenomimicBody;
+    if (activity === BigTreeActivity.Socialize && partnerId >= 0) {
+      xenomimic.shimmer = Math.max(0, Math.min(1, Math.max(xenomimic.shimmer, 0.75 * dt)));
+    } else if (activity === BigTreeActivity.Observe) {
+      xenomimic.shimmer = Math.max(0, Math.min(1, Math.max(xenomimic.shimmer, 0.25 * dt)));
+    }
+  }
+}
 
 /**
  * Optional bridge into the world's canonical animation, communication, knowledge, and social
@@ -1268,7 +1301,7 @@ export class BigTreeSpeciesVisitors {
     if (ownerKind === BIG_TREE_OWNER_ORDINARY) {
       const velocity = (body as BigTreeOrdinaryBody).userData.vel;
       velocity.x += (desiredX - velocity.x) * blend;
-      velocity.y += (desiredY - velocity.y) * blend;
+      velocity.y = (velocity.y ?? 0) + (desiredY - (velocity.y ?? 0)) * blend;
       velocity.z += (desiredZ - velocity.z) * blend;
     } else {
       const xenomimic = body as BigTreeXenomimicBody;
@@ -1284,7 +1317,7 @@ export class BigTreeSpeciesVisitors {
     if (ownerKind === BIG_TREE_OWNER_ORDINARY) {
       const velocity = (body as BigTreeOrdinaryBody).userData.vel;
       velocity.x *= damping;
-      velocity.y *= damping;
+      velocity.y = (velocity.y ?? 0) * damping;
       velocity.z *= damping;
     } else {
       const xenomimic = body as BigTreeXenomimicBody;
@@ -1335,7 +1368,9 @@ export class BigTreeSpeciesVisitors {
 
   /** Xenomimics are planar; zero is only a diagnostic target and never enters their steering. */
   private yOf(ownerKind: number, body: VisitorBody): number {
-    return ownerKind === BIG_TREE_OWNER_ORDINARY ? (body as BigTreeOrdinaryBody).position.y : 0;
+    return ownerKind === BIG_TREE_OWNER_ORDINARY
+      ? ((body as BigTreeOrdinaryBody).position.y ?? 0)
+      : 0;
   }
 
   private energyOf(ownerKind: number, body: VisitorBody): number {
