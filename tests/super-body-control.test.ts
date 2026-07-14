@@ -307,3 +307,49 @@ describe('SuperBodySystem flight + control (V41)', () => {
     expect(body.evolutionScale()).toBeCloseTo(4, 5);
   });
 });
+
+describe('SuperBodySystem — starvation has a real flight consequence (dome-ecology law)', () => {
+  /** Cumulative autopilot travel over a teleport-free window (teleClock starts at 9 s). */
+  function travel(body: SuperBodySystem, frames: number, fromFrame = 0): number {
+    const prev = body.worldPosition(new THREE.Vector3());
+    const cur = new THREE.Vector3();
+    let sum = 0;
+    for (let i = 0; i < frames; i++) {
+      body.update((fromFrame + i) / 60, 1 / 60);
+      body.worldPosition(cur);
+      sum += cur.distanceTo(prev);
+      prev.copy(cur);
+    }
+    return sum;
+  }
+
+  test('a starving apex cruises measurably slower than a fed twin; eating restores full pace', () => {
+    const fed = new SuperBodySystem(new THREE.Scene());
+    const starving = new SuperBodySystem(new THREE.Scene());
+    for (const body of [fed, starving]) body.setControl(0, 0, 0, 0, false); // autopilot
+    (fed as unknown as { nutrition: number }).nutrition = 1;
+    (starving as unknown as { nutrition: number }).nutrition = 0;
+
+    // Identical deterministic wander schedules (same seed walk) — only the nutrition gain differs.
+    const fedTravel = travel(fed, 300);
+    const starvedTravel = travel(starving, 300);
+    expect(fedTravel).toBeGreaterThan(10);
+    expect(starvedTravel).toBeGreaterThan(0);
+    expect(starvedTravel).toBeLessThan(fedTravel * 0.85); // 55% speed floor, well below full pace
+
+    // Three meals through the REAL hunt path (super-hunt calls eat()) restore the full cruise.
+    for (let meal = 0; meal < 3; meal++) starving.eat();
+    const recovered = travel(starving, 240, 300);
+    const fedReference = travel(fed, 240, 300);
+    expect(recovered).toBeGreaterThan(fedReference * 0.9);
+
+    // Player control is never throttled by hunger: identical manual travel fed vs starved.
+    const manualFed = new SuperBodySystem(new THREE.Scene());
+    const manualStarved = new SuperBodySystem(new THREE.Scene());
+    (manualFed as unknown as { nutrition: number }).nutrition = 1;
+    (manualStarved as unknown as { nutrition: number }).nutrition = 0;
+    manualFed.setControl(2, 1, 0, 0, true);
+    manualStarved.setControl(2, 1, 0, 0, true);
+    expect(travel(manualStarved, 120)).toBeCloseTo(travel(manualFed, 120), 3);
+  });
+});

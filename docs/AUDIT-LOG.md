@@ -47,10 +47,16 @@ minors) plus the items round 1 deferred honestly:
   recorded in BENCHMARKS) + a coverage-aware 20 ms median regression guard
   (`tests/crystal-ecosystem-perf.test.ts`).
 
-Deferred, honestly: apex nutrition still has no downstream read outside visit utility (the
-leviathan/puppeteer/titan lanes now all do); fauna capacity fairness (shared 72-slot pool) is
-telemetry-observable but has no per-kind quota yet; the fauna-source integration test file remains
-string-pin based (its companion behavioral suite covers the real transactions).
+Round-3 follow-through (same day): apex nutrition now has its real downstream read — a
+starving apex tapers autonomous flight toward 55% pace until it eats (tree food or a hunt), player
+control never throttled, behaviorally tested fed-vs-starved with eat() recovery; and the
+bigTreeControlled ownership flag is now behaviorally proven on the deadliest predator (a controlled
+shoggoth with due feed timer and prey in reach neither consumes, tugs, draws tendrils, nor drifts —
+and release restores ordinary predation cleanly). Still deferred, honestly: fauna capacity fairness
+(shared 72-slot pool) is telemetry-observable but has no per-kind quota (add if audit records show
+organism visits starving); the fauna-source integration test file remains string-pin based for
+titan/puppeteer/apex (the shoggoth arm is now behavioral; leviathan nutrition is behavioral in
+dome-feeding).
 
 ## 2026-07-14 — Dome ecology ship: Big Tree food/sanctuary/visits + xenomorph tether closure + spec audit fix-pass
 

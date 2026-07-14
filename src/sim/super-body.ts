@@ -1032,7 +1032,12 @@ export class SuperBodySystem implements BigTreeActorSource {
         this.aim.addScaledVector(this.ctrl, 1.6);
       }
       if (this.aim.lengthSq() > 1e-6) this.aim.normalize();
-      const speed = manual ? (this.ctrlActive ? 34 : 0) : 20 + 28 * this.arousal;
+      // Starvation has a real consequence (dome-ecology law: hunger is behavior, not a gauge): a
+      // depleted nutrition reserve tapers autonomous flight toward 55% pace until the apex eats
+      // again (tree food or a hunt). Healthy reserves (>= 0.45) fly at the full authored speed, so
+      // the normal showpiece feel is untouched; player control is never throttled.
+      const nutritionGain = Math.min(1, 0.55 + this.nutrition);
+      const speed = manual ? (this.ctrlActive ? 34 : 0) : (20 + 28 * this.arousal) * nutritionGain;
       this.vel.lerp(this.aim.multiplyScalar(speed), Math.min(1, dt * (manual ? 3 : 1.4)));
 
       // QUANTUM TELEPORT is suspended during a tree visit so entry cannot snap or bypass the route.

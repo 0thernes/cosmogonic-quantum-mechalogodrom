@@ -364,6 +364,64 @@ describe('ShoggothSystem — deterministic predators that never NaN the populati
     shog.dispose();
   });
 
+  test('a Big-Tree-controlled shoggoth is behaviorally inert and non-lethal; release restores predation', () => {
+    const { ctx, entities, shog } = makeWorld(0x51ee);
+    const horde = (
+      shog as unknown as {
+        shogs: {
+          group: THREE.Group;
+          vel: THREE.Vector3;
+          feedTimer: number;
+          feedInterval: number;
+          consumed: number;
+          tendrilGeo: THREE.BufferGeometry;
+        }[];
+      }
+    ).shogs;
+    const actor = horde[0]!;
+    const prey = entities.list[0]!;
+    // Park everything far away except one due-to-feed actor with prey in tendril+consume reach —
+    // the same lethal window the sanctuary test proves is deadly when unprotected.
+    for (let i = 0; i < entities.list.length; i++) {
+      const entity = entities.list[i]!;
+      entity.position.set(700 + (i % 5), 32, 700 + Math.floor(i / 5));
+      entity.userData.vel.set(0, 0, 0);
+    }
+    for (let i = 1; i < horde.length; i++) {
+      horde[i]!.group.position.set(600 + i, 32, 600);
+      horde[i]!.vel.set(0, 0, 0);
+    }
+    prey.position.set(1, 32, 0);
+    actor.group.position.set(0, 32, 0);
+    actor.vel.set(0, 0, 0);
+    actor.feedTimer = actor.feedInterval * 2;
+    const consumedBefore = actor.consumed;
+    rebuildEntityGrid(ctx, entities);
+
+    // Visit control (the fauna coordinator's ownership flag) — NOT the sanctuary predicate.
+    expect(shog.setBigTreeActorControlled(0, true)).toBe(true);
+    const parkedX = actor.group.position.x;
+    const parkedZ = actor.group.position.z;
+    for (let f = 0; f < 90; f++) shog.update(1 / 60, f / 60);
+    expect(entities.list).toContain(prey);
+    expect(actor.consumed).toBe(consumedBefore);
+    expect(prey.userData.vel.lengthSq()).toBe(0); // never tugged through the ownership boundary
+    expect(actor.tendrilGeo.drawRange.count).toBe(0); // no hostile line while owned
+    // Native lorenz drift is inert: the controller owns velocity (zero here), so the body stays put.
+    expect(
+      Math.hypot(actor.group.position.x - parkedX, actor.group.position.z - parkedZ),
+    ).toBeLessThan(0.5);
+
+    // Release restores the ordinary predator without stale state.
+    expect(shog.setBigTreeActorControlled(0, false)).toBe(true);
+    actor.feedTimer = 0;
+    rebuildEntityGrid(ctx, entities);
+    shog.update(1 / 60, 2);
+    expect(prey.userData.vel.lengthSq()).toBeGreaterThan(0); // tendril tug is back
+    expect(actor.tendrilGeo.drawRange.count).toBeGreaterThan(0);
+    shog.dispose();
+  });
+
   test('an outside shoggoth skips protected prey and consumes an exposed alternative', () => {
     const { ctx, entities, shog } = makeWorld(0x5aff);
     const horde = (
