@@ -50,16 +50,16 @@ seed**.
 These figures are **measured, not pinned** ΓÇö line counts move every commit, so they are a dated
 snapshot rather than a gate-enforced receipt. Refresh them with `bun run metrics`
 ([`scripts/codebase-metrics.ts`](../scripts/codebase-metrics.ts), deterministic over `git ls-files`).
-Snapshot: **2026-07-11**. (Coverage + passing-test counts ARE SSOT-synced ΓÇö see ┬º1's last two rows.)
+Snapshot: **2026-07-13**. (Coverage + passing-test counts ARE SSOT-synced ΓÇö see ┬º1's last two rows.)
 
 | Metric                                  | Value                                                                   |
 | --------------------------------------- | ----------------------------------------------------------------------- |
-| Total tracked authored files            | **850**                                                                 |
-| Total tracked authored lines            | **252,315**                                                             |
-| App source (`src/`)                     | 108,161 lines ┬╖ 305 files                                              |
-| Tests (`tests/`)                        | 48,849 lines ┬╖ 307 files                                               |
+| Total tracked authored files            | **900**                                                                 |
+| Total tracked authored lines            | **269,227**                                                             |
+| App source (`src/`)                     | 117,810 lines ┬╖ 314 files                                              |
+| Tests (`tests/`)                        | 54,717 lines ┬╖ 346 files                                               |
 | Native C++ engine (`native/`, ADR-0007) | 1,835 lines ┬╖ 12 files                                                 |
-| Test : source ratio                     | 0.45 ΓåÆ **84.64% line / 82.21% func** coverage (`bun test --coverage`) |
+| Test : source ratio                     | 0.46 ΓåÆ **84.64% line / 82.21% func** coverage (`bun test --coverage`) |
 | Passing tests                           | **3,027** (exact tracked suite; 0 failing)                              |
 
 (Excludes the vendored `node_modules/`, generated `dist/` ┬╖ `coverage/` ┬╖ `native/build/`, and nested
@@ -69,43 +69,43 @@ Snapshot: **2026-07-11**. (Coverage + passing-test counts ARE SSOT-synced ΓÇö
 
 | Type                 | Files |   Lines |   Share |
 | -------------------- | ----: | ------: | ------: |
-| TypeScript           |   676 | 179,172 | 71.01 % |
-| Markdown             |    76 |  22,856 |  9.06 % |
-| JSON                 |    19 |  16,129 |  6.39 % |
-| HTML                 |    10 |  14,861 |  5.89 % |
-| PNG (shots)          |     4 |   9,552 |  3.79 % |
-| CSS (Tailwind)       |     2 |   2,476 |  0.98 % |
-| CSV                  |     6 |   2,070 |  0.82 % |
-| YML                  |    10 |     958 |  0.38 % |
-| C/C++ headers + impl |     8 |   1,527 |  0.61 % |
-| XML                  |     4 |     707 |  0.28 % |
-| PowerShell           |     2 |     515 |  0.20 % |
-| Lockfile             |     1 |     454 |  0.18 % |
-| No extension         |     9 |     301 |  0.12 % |
+| TypeScript           |   724 | 194,971 | 72.42 % |
+| Markdown             |    76 |  22,562 |  8.38 % |
+| JSON                 |    19 |  16,797 |  6.24 % |
+| HTML                 |    11 |  15,561 |  5.78 % |
+| PNG (shots)          |     4 |   9,552 |  3.55 % |
+| CSS (Tailwind)       |     2 |   2,476 |  0.92 % |
+| CSV                  |     6 |   2,070 |  0.77 % |
+| YML                  |    11 |   1,016 |  0.38 % |
+| C/C++ headers + impl |     8 |   1,527 |  0.57 % |
+| XML                  |     4 |     707 |  0.26 % |
+| PowerShell           |     2 |     515 |  0.19 % |
+| Lockfile             |     1 |     454 |  0.17 % |
+| No extension         |     9 |     282 |  0.10 % |
 | Text                 |     5 |     238 |  0.09 % |
-| SVG                  |    14 |     335 |  0.13 % |
+| SVG                  |    14 |     335 |  0.12 % |
 | JavaScript           |     1 |      85 |  0.03 % |
-| DOCX                 |     1 |      64 |  0.03 % |
+| DOCX                 |     1 |      64 |  0.02 % |
 | YAML                 |     1 |       9 |  0.00 % |
 | TOML                 |     1 |       6 |  0.00 % |
 
-**Code (TS + C/C++ + HTML + CSS) = 198,036 lines = 78.49 %**; documentation + config + assets = 21.51 %.
+**Code (TS + C/C++ + HTML + CSS) = 214,535 lines = 79.69 %**; documentation + config + assets = 20.31 %.
 
 ### 1.2 Lines by area
 
 | Area                                  | Files |   Lines |
 | ------------------------------------- | ----: | ------: |
-| `src/` (application)                  |   305 | 108,161 |
-| `tests/`                              |   307 |  48,849 |
-| `docs/`                               |    92 |  30,456 |
-| `scripts/`                            |    50 |  22,986 |
-| `lab/` (self-contained artifact)      |     5 |  13,372 |
-| repo root (README, LICENSE, configs)  |    27 |  11,908 |
+| `src/` (application)                  |   314 | 117,810 |
+| `tests/`                              |   346 |  54,717 |
+| `docs/`                               |    93 |  30,670 |
+| `scripts/`                            |    50 |  23,268 |
+| `lab/` (self-contained artifact)      |     5 |  14,039 |
+| repo root (README, LICENSE, configs)  |    27 |  12,082 |
 | `output/` (tracked visual receipts)   |     3 |   9,551 |
 | `legacy/` (preserved origin)          |     6 |   2,072 |
 | `native/` (C++ engine, ADR-0007)      |    12 |   1,835 |
 | `bench/`                              |    16 |   1,260 |
-| `.github/`                            |    12 |   1,022 |
+| `.github/`                            |    13 |   1,080 |
 | `masters/` (3 governing XML personas) |     3 |     477 |
 | `.memory/`                            |     5 |     167 |
 | `.vscode/`                            |     3 |      94 |
@@ -422,21 +422,21 @@ Physicist** (determinism, measurement, frame budgets, provenance).
 
 A full per-file roster is generated, not hand-kept ΓÇö run `bun run metrics`
 ([`scripts/codebase-metrics.ts`](../scripts/codebase-metrics.ts)) for the current per-area / per-type
-breakdown, or `bun run filemap` for the file tree. Below is the **2026-07-11** measured snapshot of the
+breakdown, or `bun run filemap` for the file tree. Below is the **2026-07-13** measured snapshot of the
 heaviest files (where the weight sits); refresh it with the same commands when source lines move.
 
-### `src/` ΓÇö heaviest files (305 files ┬╖ 108,161 lines total; top of the list)
+### `src/` ΓÇö heaviest files (314 files ┬╖ 117,810 lines total; top of the list)
 
 | Lines | File                        | Lines | File                            |
 | ----: | --------------------------- | ----: | ------------------------------- |
-|  5285 | world.ts (composition root) |  1847 | ui/super-neural.ts              |
-|  2442 | styles/app.css              |  1659 | sim/titans.ts                   |
-|  2330 | ui/observatory.ts           |  1424 | sim/super-body.ts               |
-|  2136 | sim/apex-brain.ts           |  1395 | sim/creature-exterior-layers.ts |
+|  5866 | world.ts (composition root) |  1847 | ui/super-neural.ts              |
+|  2442 | styles/app.css              |  1661 | sim/titans.ts                   |
+|  2430 | ui/observatory.ts           |  1559 | sim/entities.ts                 |
+|  2249 | sim/apex-brain.ts           |  1424 | sim/super-body.ts               |
+|  2247 | sim/alien-flora.ts          |  1395 | sim/creature-exterior-layers.ts |
 |  2077 | sim/super-mind.ts           |  1324 | sim/nhi.ts                      |
-|  1280 | sim/entities.ts             |  1181 | ui/copilot.ts                   |
 
-### `tests/` ΓÇö heaviest files (307 files ┬╖ 48,849 lines total)
+### `tests/` ΓÇö heaviest files (346 files ┬╖ 54,717 lines total)
 
 `worker-pool 899 ┬╖ nhi 767 ┬╖ singularities 746 ┬╖ observatory 670 ┬╖
 operational-organism-intelligence 568 ┬╖ titans 511 ┬╖ phase-b-predictor-development 509 ┬╖
@@ -449,7 +449,7 @@ tsotchke-ecology-predictor-v3 427` ┬╖
 
 ## 13 ┬╖ Positioning
 
-This is a ~108.2k-line app-source (+ optional C++/Jolt native engine) browser-native simulation that
+This is a ~117.8k-line app-source (+ optional C++/Jolt native engine) browser-native simulation that
 renders **up to 50,000 agents** (10,000 at 60 fps on a laptop iGPU with zero AI accelerator), is
 **bit-reproducible from one seed**, ships through a **full CI/CD gate** (3,027 tests, 84.64% line / 82.21% func coverage),
 and whose entire emergent intelligence weighs **Γëê 14 MB ΓÇö 1/50,000th of GPT-3** at the mega ceiling. It
