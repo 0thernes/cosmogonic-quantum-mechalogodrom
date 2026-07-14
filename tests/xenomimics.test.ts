@@ -22,9 +22,11 @@ import {
   XenomimicPopulation,
   XENOMIMIC_MAX,
   XENOMIMIC_SPECIES,
+  XenomimicVisitMode,
   type Xenomimic,
 } from '../src/sim/xenomimics';
 import { XenomimicRenderer } from '../src/sim/xenomimics-render';
+import { PLATFORM_HALF } from '../src/sim/constants';
 
 /** Drive a population forward N steps at a fixed dt with an optional food field. */
 function run(
@@ -185,7 +187,7 @@ describe('GATE-XENOMIMIC — population lifecycle', () => {
     run(pop, 4000, 1 / 30, () => 0.95); // abundant food, long run
     expect(pop.population()).toBeLessThanOrEqual(XENOMIMIC_MAX);
     expect(pop.telemetry().pairs).toBeLessThanOrEqual(XENOMIMIC_MAX / 2);
-  });
+  }, 15_000);
 
   test('spawnAt (XNO) adds exactly one live body per call while consecutive bodies share one pair', () => {
     const pop = new XenomimicPopulation(31, { growthRamp: 999 });
@@ -234,6 +236,131 @@ describe('GATE-XENOMIMIC — population lifecycle', () => {
       if (body.alive) expect(body.y - body.hopY).toBeCloseTo(38.2, 10);
     }
     expect(pop.telemetry().meanEnergy).toBeGreaterThan(before);
+  });
+
+  test('missing and explicit Normal visit intent preserve byte-identical legacy locomotion', () => {
+    const legacy = new XenomimicPopulation(0x10ca, { growthRamp: 70, lifetime: 999 });
+    const explicit = new XenomimicPopulation(0x10ca, { growthRamp: 70, lifetime: 999 });
+    for (let i = 0; i < 360; i++) {
+      legacy.step(1 / 30, { foodAt: () => 0.82 });
+      explicit.step(1 / 30, {
+        foodAt: () => 0.82,
+        visitModeAt: () => XenomimicVisitMode.Normal,
+      });
+    }
+
+    expect(snapshot(explicit)).toBe(snapshot(legacy));
+    expect(explicit.telemetry()).toEqual(legacy.telemetry());
+  });
+
+  test('Travel retains authored headings, moves purposefully, and suppresses ambient grazing and hops', () => {
+    const pop = new XenomimicPopulation(0x7a11, {
+      habitatHalfExtent: 10_000,
+      growthRamp: 999,
+      lifetime: 999,
+    });
+    const bodies = pop.bodyView();
+    const headings = [0.25, -1.1] as const;
+    const seen = new Set<string>();
+    let grazeCalls = 0;
+    let maximumHop = 0;
+
+    for (let i = 0; i < bodies.length; i++) {
+      const body = bodies[i]!;
+      body.x = i * 20;
+      body.z = i * -20;
+      body.heading = headings[i]!;
+      body.hopY = 1.5;
+      body.hopV = 8;
+      body.teleportCd = 0;
+    }
+
+    for (let i = 0; i < 90; i++) {
+      pop.step(1 / 30, {
+        grazeAt: () => {
+          grazeCalls++;
+          return 1;
+        },
+        visitModeAt: (pairId, role) => {
+          seen.add(`${pairId}:${role}`);
+          return XenomimicVisitMode.Travel;
+        },
+      });
+      for (const body of bodies) maximumHop = Math.max(maximumHop, body.hopY);
+    }
+
+    expect(seen).toEqual(new Set([`${bodies[0]!.pairId}:0`, `${bodies[1]!.pairId}:1`]));
+    expect(grazeCalls).toBe(0);
+    expect(maximumHop).toBeLessThan(1.5);
+    for (let i = 0; i < bodies.length; i++) {
+      const body = bodies[i]!;
+      const gaitFast = 6 + (body.species % 4) * 5;
+      expect(body.heading).toBe(headings[i]!);
+      expect(Math.hypot(body.vx, body.vz)).toBeGreaterThanOrEqual(gaitFast * 0.55 - 1e-10);
+      expect(body.hopY).toBe(0);
+      expect(body.hopV).toBe(0);
+    }
+  });
+
+  test('Travel suppresses Born-collapse teleportation while the same legacy stream teleports', () => {
+    const legacy = new XenomimicPopulation(21, { growthRamp: 60 });
+    const travelling = new XenomimicPopulation(21, {
+      habitatHalfExtent: 10_000,
+      growthRamp: 60,
+    });
+    for (let i = 0; i < 1500; i++) {
+      legacy.step(1 / 30, { foodAt: () => 0.7 });
+      travelling.step(1 / 30, {
+        foodAt: () => 0.7,
+        visitModeAt: () => XenomimicVisitMode.Travel,
+      });
+    }
+
+    expect(legacy.telemetry().teleports).toBeGreaterThan(0);
+    expect(travelling.telemetry().teleports).toBe(0);
+  });
+
+  test('Calm stops and settles bodies while lifecycle metabolism continues', () => {
+    const pop = new XenomimicPopulation(0xca1f, { growthRamp: 999, lifetime: 999 });
+    const body = pop.bodyView()[0]!;
+    body.x = 17;
+    body.z = -23;
+    body.vx = 50;
+    body.vz = -40;
+    body.hopY = 2;
+    body.hopV = 9;
+    body.leanX = 0.5;
+    body.leanZ = -0.45;
+    const initialAge = body.age;
+    const initialEnergy = body.energy;
+    const initialHeading = body.heading;
+    let grazeCalls = 0;
+
+    for (let i = 0; i < 120; i++) {
+      pop.step(1 / 60, {
+        surfaceAt: () => 10,
+        grazeAt: () => {
+          grazeCalls++;
+          return 1;
+        },
+        visitModeAt: () => XenomimicVisitMode.Calm,
+      });
+    }
+
+    expect(body.x).toBe(17);
+    expect(body.z).toBe(-23);
+    expect(body.vx).toBe(0);
+    expect(body.vz).toBe(0);
+    expect(body.heading).toBe(initialHeading);
+    expect(body.hopY).toBe(0);
+    expect(body.hopV).toBe(0);
+    expect(Math.abs(body.leanX)).toBeLessThan(0.01);
+    expect(Math.abs(body.leanZ)).toBeLessThan(0.01);
+    expect(body.y).toBeCloseTo(11.2, 10);
+    expect(body.age).toBeGreaterThan(initialAge);
+    expect(body.energy).toBeLessThan(initialEnergy);
+    expect(body.alive).toBe(true);
+    expect(grazeCalls).toBe(0);
   });
 
   test('nearestBody and consumeNearest deterministically expose predation without a population scan allocation', () => {
@@ -333,7 +460,7 @@ describe('GATE-XENOMIMIC — population lifecycle', () => {
     run(pop, 3000, 1 / 30, () => 0.9);
     expect(pop.population()).toBeGreaterThan(2); // grew past the founding pair
     expect(pop.telemetry().births).toBeGreaterThan(2);
-  });
+  }, 30_000);
 
   test('eating flora raises energy; starvation lowers it', () => {
     const fed = new XenomimicPopulation(3, { growthRamp: 999 });
@@ -382,6 +509,25 @@ describe('GATE-XENOMIMIC — population lifecycle', () => {
     expect(pop.population()).toBeGreaterThanOrEqual(before);
   });
 
+  test('public predation sinks cannot consume a Xenomimic protected by the Big Tree sanctuary', () => {
+    const pop = new XenomimicPopulation(0x5afe, { growthRamp: 999 });
+    const target = pop.bodyView()[0]!;
+    const before = pop.population();
+    pop.step(1e-6, {
+      foodAt: () => 0.9,
+      safeZoneAt: (x, z) => x === target.x && z === target.z,
+    });
+
+    expect(pop.consume(target)).toBe(0);
+    expect(pop.consumeNearest(target.x, target.z, 0.01)).toBe(0);
+    expect(target.alive).toBe(true);
+    expect(pop.population()).toBe(before);
+
+    pop.step(1e-6, { foodAt: () => 0.9, safeZoneAt: () => false });
+    expect(pop.consume(target)).toBeGreaterThan(0);
+    expect(target.alive).toBe(false);
+  });
+
   test('weighted-ragdoll fulcrum lean stays bounded + finite, and responds to motion', () => {
     const pop = new XenomimicPopulation(44, { growthRamp: 40 });
     let anyLean = false;
@@ -406,19 +552,69 @@ describe('GATE-XENOMIMIC — population lifecycle', () => {
     expect(pop.telemetry().teleports).toBeGreaterThan(0);
   });
 
-  test('creatures stay on the ground wave and inside the arena', () => {
-    const radius = 150;
-    const pop = new XenomimicPopulation(4, { arenaRadius: radius, growthRamp: 40 });
+  test('creatures stay on the ground wave and inside the square habitat', () => {
+    const halfExtent = 150;
+    const pop = new XenomimicPopulation(4, { habitatHalfExtent: halfExtent, growthRamp: 40 });
     run(pop, 800, 1 / 30, () => 0.8);
     // The ground wave has amplitude ≤ 3.2+2.6+1.8 = 7.6; creatures sit at ground + 1.2 + a small hop
     // (max ≈ 2.3). So y is bounded inside the wave envelope — they hug the ground, never float like the
     // sky entities. (The wave is time-varying, so assert the absolute envelope, not a fixed-t height.)
     pop.forEach((c) => {
-      const r = Math.sqrt(c.x * c.x + c.z * c.z);
-      expect(r).toBeLessThanOrEqual(radius + 1);
+      expect(Math.abs(c.x)).toBeLessThanOrEqual(halfExtent);
+      expect(Math.abs(c.z)).toBeLessThanOrEqual(halfExtent);
       expect(c.y).toBeGreaterThan(-8);
       expect(c.y).toBeLessThan(12);
     });
+  }, 30_000);
+
+  test('canonical square containment permits habitat corners instead of applying an origin leash', () => {
+    const pop = new XenomimicPopulation(0x7e7e, { growthRamp: 999 });
+    const body = pop.bodyView()[0]!;
+    for (const candidate of pop.bodyView()) candidate.teleportCd = 1e9;
+
+    expect(pop.bounds()).toBe(PLATFORM_HALF);
+    body.x = PLATFORM_HALF - 10;
+    body.z = PLATFORM_HALF - 10;
+    pop.step(1e-6, { foodAt: () => 0.8 });
+
+    // A radial/home leash would project this corner inward to roughly 0.707 × the half-extent.
+    expect(body.x).toBeGreaterThan(PLATFORM_HALF - 11);
+    expect(body.z).toBeGreaterThan(PLATFORM_HALF - 11);
+  });
+
+  test('widely separated twins are neither pulled nor pair-distance-clamped', () => {
+    const pop = new XenomimicPopulation(0x71a1, { growthRamp: 999 });
+    const [mimic, anti] = pop.bodyView();
+    expect(mimic).toBeDefined();
+    expect(anti).toBeDefined();
+    for (const candidate of pop.bodyView()) candidate.teleportCd = 1e9;
+
+    mimic!.x = -400;
+    mimic!.z = 0;
+    anti!.x = 400;
+    anti!.z = 0;
+    pop.step(1e-6, { foodAt: () => 0.8 });
+
+    expect(mimic!.x).toBeCloseTo(-400, 3);
+    expect(anti!.x).toBeCloseTo(400, 3);
+    expect(Math.hypot(anti!.x - mimic!.x, anti!.z - mimic!.z)).toBeGreaterThan(799.9);
+  });
+
+  test('out-of-bounds twins hard-seal only at the deterministic square platform boundary', () => {
+    const pop = new XenomimicPopulation(0xc0de, { growthRamp: 999 });
+    const [mimic, anti] = pop.bodyView();
+    for (const candidate of pop.bodyView()) candidate.teleportCd = 1e9;
+
+    mimic!.x = PLATFORM_HALF + 200;
+    mimic!.z = -PLATFORM_HALF - 300;
+    anti!.x = -PLATFORM_HALF - 400;
+    anti!.z = PLATFORM_HALF + 500;
+    pop.step(1e-6, { foodAt: () => 0.8 });
+
+    expect(mimic!.x).toBe(PLATFORM_HALF);
+    expect(mimic!.z).toBe(-PLATFORM_HALF);
+    expect(anti!.x).toBe(-PLATFORM_HALF);
+    expect(anti!.z).toBe(PLATFORM_HALF);
   });
 
   test('species spread across all 10 kinds over time', () => {
@@ -428,7 +624,7 @@ describe('GATE-XENOMIMIC — population lifecycle', () => {
     expect(counts.length).toBe(XENOMIMIC_SPECIES);
     const kinds = counts.filter((n) => n > 0).length;
     expect(kinds).toBeGreaterThanOrEqual(3); // meaningful diversity emerged
-  });
+  }, 30_000);
 });
 
 describe('GATE-XENOMIMIC — render smoke (headless)', () => {

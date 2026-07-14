@@ -17,6 +17,10 @@ import { EntityManager } from '../src/sim/entities';
 import { PuppetMasterSystem } from '../src/sim/puppet-masters';
 import { PLATFORM_CEIL, PLATFORM_FLOOR, PLATFORM_HALF } from '../src/sim/constants';
 import { getQuantizationConfig } from '../src/math/quantization';
+import {
+  BigTreeFaunaIntentMode,
+  type BigTreeFaunaVisitorSample,
+} from '../src/sim/big-tree-fauna-visitors';
 import type { AuditTrail } from '../src/logging/audit';
 import type {
   Entity,
@@ -111,6 +115,7 @@ function makeWorld(
   organismIntelligence?: OrganismIntelligenceSignal,
 ): {
   ctx: SimContext;
+  entities: EntityManager;
   pm: PuppetMasterSystem;
   events: PuppetEvent[];
 } {
@@ -121,7 +126,7 @@ function makeWorld(
   const events: PuppetEvent[] = [];
   // EVENT is a reused module scratch object — copy it on receipt to retain a history.
   const pm = new PuppetMasterSystem(ctx, entities, (e) => events.push({ ...e }));
-  return { ctx, pm, events };
+  return { ctx, entities, pm, events };
 }
 
 /** Pre-intervention state used to prove both matched arms start from the same class state. */
@@ -301,5 +306,150 @@ describe('PuppetMasterSystem — deterministic schemers that perturb the world w
       }
       expect(Number.isFinite(p.u.uTime.value)).toBe(true);
     }
+  });
+});
+
+interface PuppetSanctuaryView {
+  mesh: THREE.Mesh;
+  ti: number;
+  satiation: number;
+  u: {
+    uAgitation: { value: number };
+    uHunt: { value: number };
+  };
+}
+
+interface PuppetSanctuaryHarness {
+  pms: PuppetSanctuaryView[];
+  act(puppet: PuppetSanctuaryView): void;
+}
+
+describe('PuppetMasterSystem — sanctuary suppression and deterministic target filtering', () => {
+  test('protected puppets freeze their meddle cadence and resume normally on exit', () => {
+    const { ctx, pm, events } = makeWorld(0x5afe);
+    const harness = pm as unknown as PuppetSanctuaryHarness;
+    for (const puppet of harness.pms) puppet.ti = 1_000_000;
+    const timersBefore = harness.pms.map((puppet) => puppet.ti);
+    const satiationBefore = harness.pms.map((puppet) => puppet.satiation);
+    const stateBefore = {
+      chaos: ctx.state.chaos,
+      weather: ctx.state.weatherIdx,
+      mutations: ctx.state.mutations,
+    };
+    let rngDraws = 0;
+    ctx.rng = () => {
+      rngDraws++;
+      return 0.25;
+    };
+
+    pm.attachSanctuary(() => true);
+    pm.update(1 / 60, 0);
+    expect(events).toHaveLength(0);
+    expect(rngDraws).toBe(0);
+    expect(harness.pms.map((puppet) => puppet.ti)).toEqual(timersBefore);
+    expect(harness.pms.map((puppet) => puppet.satiation)).toEqual(satiationBefore);
+    expect({
+      chaos: ctx.state.chaos,
+      weather: ctx.state.weatherIdx,
+      mutations: ctx.state.mutations,
+    }).toEqual(stateBefore);
+    for (const puppet of harness.pms) {
+      expect(puppet.u.uAgitation.value).toBe(0);
+      expect(puppet.u.uHunt.value).toBe(0);
+    }
+
+    pm.attachSanctuary(null);
+    pm.update(1 / 60, 1 / 60);
+    expect(events.length).toBeGreaterThan(0);
+    expect(rngDraws).toBeGreaterThan(0);
+    pm.dispose();
+  });
+
+  test('mutate skips protected targets but consumes the same two RNG draws per attempt', () => {
+    const run = (
+      protectTargets: boolean,
+    ): { draws: number; remorphs: number; mutations: number } => {
+      const { ctx, entities, pm } = makeWorld(0xc0ffee);
+      const harness = pm as unknown as PuppetSanctuaryHarness;
+      const mutator = harness.pms[2]!;
+      // Keep the acting puppet outside the test sanctuary while every organism lies inside it.
+      mutator.mesh.position.set(10_000, 10_000, 10_000);
+      pm.attachSanctuary(protectTargets ? (x, z) => x !== 10_000 || z !== 10_000 : () => false);
+      let draws = 0;
+      ctx.rng = () => {
+        draws++;
+        return 0;
+      };
+      const remorph = spyOn(entities, 'remorph');
+      harness.act(mutator);
+      const result = {
+        draws,
+        remorphs: remorph.mock.calls.length,
+        mutations: ctx.state.mutations,
+      };
+      remorph.mockRestore();
+      pm.dispose();
+      return result;
+    };
+
+    const protectedRun = run(true);
+    const normalRun = run(false);
+    expect(protectedRun).toEqual({ draws: 120, remorphs: 0, mutations: 0 });
+    expect(normalRun).toEqual({ draws: 120, remorphs: 30, mutations: 30 });
+  });
+});
+
+describe('PuppetMasterSystem — public Big Tree fauna hooks', () => {
+  test('sanctuary self checks carry stable puppeteer IDs', () => {
+    const { pm } = makeWorld(0x71d);
+    const seen = new Set<number>();
+    pm.attachSanctuary((_x, _z, ownerId) => {
+      if (ownerId !== undefined) seen.add(ownerId);
+      return false;
+    });
+    const sample = {} as BigTreeFaunaVisitorSample;
+    pm.readBigTreeVisitor(0, sample);
+    pm.setBigTreeVisitorIntent(0, BigTreeFaunaIntentMode.Travel, sample.x, sample.y, sample.z);
+    pm.update(0, 0);
+    expect(seen.has(0)).toBe(true);
+    expect(seen.has(pm.count - 1)).toBe(true);
+    pm.dispose();
+  });
+
+  test('stable IDs expose satiation hunger, travel is authoritative, calm holds, and food nourishes', () => {
+    const { pm } = makeWorld(0x7ee);
+    const sample = {} as BigTreeFaunaVisitorSample;
+    pm.update(0, 0);
+    expect(pm.bigTreeVisitorSlotCount).toBe(pm.count);
+    expect(pm.readBigTreeVisitor(0, sample)).toBe(true);
+    expect(sample.ownerId).toBe(0);
+    const hungerBefore = sample.hunger;
+    const targetX = sample.x + 100;
+    const targetZ = sample.z;
+    expect(
+      pm.setBigTreeVisitorIntent(0, BigTreeFaunaIntentMode.Travel, targetX, sample.y, targetZ),
+    ).toBe(true);
+    pm.update(1, 1);
+    pm.readBigTreeVisitor(0, sample);
+    expect(sample.x).toBeCloseTo(targetX - 45, 8); // authored travel speed is 55 units/s
+
+    expect(
+      pm.setBigTreeVisitorIntent(0, BigTreeFaunaIntentMode.Calm, sample.x, sample.y, sample.z),
+    ).toBe(true);
+    const calmX = sample.x;
+    const calmZ = sample.z;
+    pm.update(1, 2);
+    pm.readBigTreeVisitor(0, sample);
+    expect(sample.x).toBe(calmX);
+    expect(sample.z).toBe(calmZ);
+
+    expect(pm.nourishBigTreeVisitor(0, 28)).toBe(true);
+    pm.readBigTreeVisitor(0, sample);
+    expect(sample.hunger).toBeLessThan(hungerBefore);
+    expect(pm.clearBigTreeVisitorIntent(0)).toBe(true);
+    pm.update(1, 3);
+    pm.readBigTreeVisitor(0, sample);
+    expect(sample.x).not.toBe(calmX); // native orbit resumes after the visit
+    pm.dispose();
   });
 });

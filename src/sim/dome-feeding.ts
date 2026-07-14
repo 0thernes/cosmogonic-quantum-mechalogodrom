@@ -26,6 +26,14 @@ export interface DomeFeeder {
   eachFeederPos(cb: (x: number, y: number, z: number) => void): void;
 }
 
+/** Allocation-free policy gate for predator/prey interactions (for example, authored safe zones). */
+export type DomeFeedingHarmAllowed = (
+  attackerX: number,
+  attackerZ: number,
+  targetX: number,
+  targetZ: number,
+) => boolean;
+
 /** How close an organism must be for a feeder to swallow it. */
 const EAT_R = 8 * ARENA_MID; // 20
 const EAT_R2 = EAT_R * EAT_R;
@@ -129,6 +137,7 @@ export class DomeFeeding {
    * `graze` is flora.grazeAt (world XZ → nibble). Frozen dt=0 ⇒ no feeding (puffs hold). O(feeders·n + POOL).
    * `onKill(e,i)` fires while the devoured organism's brain + senses are STILL LIVE (before disposal) — the
    * world runs Thaler's gedanken neural-death on it, same as the portal / super-hunt / mecha-blaze vectors.
+   * `harmAllowed`, when supplied, gates predation; protected feeders also skip competitive grazing.
    */
   update(
     feeders: readonly DomeFeeder[],
@@ -137,6 +146,7 @@ export class DomeFeeding {
     t: number,
     dt: number,
     onKill?: (e: Entity, index: number) => void,
+    harmAllowed?: DomeFeedingHarmAllowed,
   ): void {
     if (dt > 0) {
       // (1) collect feeder positions + graze the flora at each footprint.
@@ -145,6 +155,8 @@ export class DomeFeeding {
       for (const f of feeders) {
         f.eachFeederPos((x, y, z) => {
           if (fc >= MAX_FEEDERS) return;
+          // A denied attacker is neutral here: no competitive grazing and no attack origin is recorded.
+          if (harmAllowed !== undefined && !harmAllowed(x, z, x, z)) return;
           const o = fc * 3;
           xyz[o] = x;
           xyz[o + 1] = y;
@@ -164,6 +176,9 @@ export class DomeFeeding {
           const p = e.position;
           for (let g = 0; g < fc; g++) {
             const o = g * 3;
+            if (harmAllowed !== undefined && !harmAllowed(xyz[o]!, xyz[o + 2]!, p.x, p.z)) {
+              continue;
+            }
             const dx = p.x - xyz[o]!;
             const dy = p.y - xyz[o + 1]!;
             const dz = p.z - xyz[o + 2]!;

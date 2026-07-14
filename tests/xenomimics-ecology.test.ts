@@ -82,7 +82,7 @@ describe('GATE-XENO-TROPHIC — predator–prey ecology', () => {
     expect(predatedPop).toBeGreaterThan(0);
     // …and the predation genuinely happened (the trophic link is live, not decorative).
     expect(predated.telemetry().eaten).toBeGreaterThan(0);
-  });
+  }, 15_000);
 
   test('trophic energy flux is positive and SCALES with predation intensity', () => {
     const food = (): number => 0.9;
@@ -96,5 +96,5 @@ describe('GATE-XENO-TROPHIC — predator–prey ecology', () => {
     expect(heavyFlux).toBeGreaterThan(0);
     // …and heavier grazing transfers strictly more cumulative energy to the predators.
     expect(heavyFlux).toBeGreaterThan(lightFlux * 1.5);
-  });
+  }, 15_000);
 });

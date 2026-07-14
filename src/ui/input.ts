@@ -124,6 +124,7 @@ const TOOLBAR_MAP: Readonly<Record<string, keyof UiActions>> = {
   neuralweb: 'toggleConnectomeWeb', // entity connectome axon web (proximity neural links)
   focusColossus: 'focusColossus', // ◎ GOD: fly the camera to frame the God-Colossus fractal deity
   focusXenomimics: 'focusXenomimics', // ◈ XENOMIMIC: fly the camera to the ground-fauna swarm
+  focusEcosystem: 'focusEcosystem', // ♧ LIFE TREE: frame the complete Big Tree habitat
 };
 
 /**

@@ -8,7 +8,7 @@
  * - dispose() frees the rig without throwing.
  */
 import { describe, expect, test } from 'bun:test';
-import { existsSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
 import * as THREE from 'three';
 import { AlphabetPantheonRender } from '../src/sim/alphabet-pantheon-render';
@@ -66,6 +66,9 @@ describe('AlphabetPantheonRender — 100 archetypes alive in the dome', () => {
     const atlas = resolve(root, 'public/textures/pantheon_equirect_refs_atlas.png');
     expect(existsSync(atlas)).toBe(true);
     expect(statSync(atlas).size).toBeGreaterThan(500_000);
+    const source = readFileSync(resolve(root, 'src/sim/alphabet-pantheon-render.ts'), 'utf8');
+    expect(source).toContain("const PANTHEON_REF_ATLAS_URL = './textures/");
+    expect(source).not.toContain("PANTHEON_REF_ATLAS_URL = '/textures/");
 
     const scene = new THREE.Scene();
     const r = new AlphabetPantheonRender(scene);

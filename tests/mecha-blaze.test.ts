@@ -135,6 +135,29 @@ describe('MechaBlaze', () => {
     mb.dispose();
   });
 
+  test('a sanctuary-protected high-flyer is neither burned nor queued for a delayed respawn', () => {
+    const ctx = makeCtx(41, 50);
+    const entities = new EntityManager(ctx);
+    const mb = new MechaBlaze(ctx);
+    const protectedEntity = entities.spawn(MECHA.clone(), 0);
+    let deathCallbacks = 0;
+    let protectionChecks = 0;
+    const isProtected = (x: number, z: number): boolean => {
+      protectionChecks++;
+      return x === MECHA.x && z === MECHA.z;
+    };
+
+    mb.update(entities, 1, DT, () => deathCallbacks++, isProtected);
+    mb.update(entities, 7, DT, () => deathCallbacks++, isProtected);
+
+    expect(protectionChecks).toBeGreaterThan(0);
+    expect(entities.list).toEqual([protectedEntity as Entity]);
+    expect(deathCallbacks).toBe(0);
+    expect(mb.kills).toBe(0);
+    expect(mb.stats().pending).toBe(0);
+    mb.dispose();
+  });
+
   test('deterministic: two identical runs incinerate + respawn identically', () => {
     const run = (): { kills: number; count: number; xs: number[] } => {
       const ctx = makeCtx(7, 64);

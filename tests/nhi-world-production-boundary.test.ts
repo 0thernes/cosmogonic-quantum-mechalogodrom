@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import type { Entity } from '../src/types';
 import { NhiAction, type NhiIntent } from '../src/sim/nhi';
 import { NHI_SYSTEM_MIND_CAP, type NhiActionOutcome } from '../src/sim/nhi-system';
+import { NhiBigTreeSource } from '../src/sim/nhi-big-tree-source';
 import { World } from '../src/world';
 
 interface AuditEntry {
@@ -40,6 +41,7 @@ interface Harness {
   readonly minds: Set<number>;
   readonly targets: Map<number, Entity>;
   readonly gridInsertions: Entity[];
+  readonly treeSource: NhiBigTreeSource;
 }
 
 interface HarnessOptions {
@@ -96,6 +98,7 @@ function makeHarness(options: HarnessOptions = {}): Harness {
   const minds = new Set<number>();
   const targets = new Map<number, Entity>();
   const gridInsertions: Entity[] = [];
+  const treeSource = new NhiBigTreeSource(NHI_SYSTEM_MIND_CAP, () => true);
   const entities: FakeEntities = {
     list: [],
     morphLive: [0, 0, 0, 0],
@@ -181,11 +184,20 @@ function makeHarness(options: HarnessOptions = {}): Harness {
       has: (id: number) => bodyIds.has(id),
     },
     nhiEffectRng: options.effectRng ?? (() => 0.25),
+    bigTreeNhiSource: treeSource,
+    bigTreeFaunaVisitors: {
+      cancel: () => true,
+    },
     nhiEntities: forward,
     nhiIdsByEntity: reverse,
     nhiLiveScratch: [],
     nhiNextId: options.startId ?? 0,
     nhiTargets: targets,
+    nhiLastSwarmFrame: new Map<number, number>(),
+    nhiLaunchGrace: new Map<number, number>(),
+    nhiSwarmlingsThisFrame: 0,
+    nhiLastGlobalSwarmFrame: -1e9,
+    state: { frame: 0 },
     sv1: new THREE.Vector3(),
     sv2: new THREE.Vector3(),
   });
@@ -201,6 +213,7 @@ function makeHarness(options: HarnessOptions = {}): Harness {
     minds,
     targets,
     gridInsertions,
+    treeSource,
   };
 }
 
@@ -246,6 +259,7 @@ describe('World NHI production boundaries', () => {
     expect(harness.forward.size).toBe(0);
     expect(harness.reverse.size).toBe(0);
     expect(harness.targets.size).toBe(0);
+    expect(harness.treeSource.registeredCount).toBe(0);
     expect(harness.economyIds.size).toBe(0);
     expect(harness.bodyIds.size).toBe(0);
     expect(harness.entities.list).toHaveLength(0);
@@ -268,6 +282,9 @@ describe('World NHI production boundaries', () => {
         forwardMapAbsent: true,
         reverseMapAbsent: true,
         targetAbsent: true,
+        launchGraceAbsent: true,
+        treeSourceAbsent: true,
+        treeIntentAbsent: true,
         economyAbsent: true,
         bodyAbsent: true,
         entityAbsent: true,
@@ -342,16 +359,15 @@ describe('World NHI production boundaries', () => {
     }
   });
 
-  test('a later SPAWN_SWARM failure retains and acknowledges an earlier child', () => {
+  test('SPAWN_SWARM materializes at most one child even when intent asks for more', () => {
     const harness = makeHarness();
     const parent = makeEntity(0, new THREE.Vector3(4, 5, 6));
     harness.forward.set(3, parent);
-    harness.entities.failSpawnAt = 2;
     const intent: NhiIntent = {
       action: NhiAction.SPAWN_SWARM,
       target: -1,
       magnitude: 1,
-      spawn: 2,
+      spawn: 6,
       utterance: [],
       ownMove: 0,
     };
@@ -365,11 +381,37 @@ describe('World NHI production boundaries', () => {
       energyTransferred: 0,
     });
     expect(harness.entities.list).toHaveLength(1);
-    expect(harness.entities.morphLive.reduce((sum, count) => sum + count, 0)).toBe(1);
+    expect(harness.entities.spawnCalls).toBe(1);
     expect(harness.gridInsertions).toEqual(harness.entities.list);
+    expect(harness.entities.list[0]?.userData.nhiMinion).toBe(true);
+  });
+
+  test('SPAWN_SWARM spawn failure acknowledges no child', () => {
+    const harness = makeHarness();
+    const parent = makeEntity(0, new THREE.Vector3(4, 5, 6));
+    harness.forward.set(3, parent);
+    harness.entities.failSpawnAt = 1;
+    const intent: NhiIntent = {
+      action: NhiAction.SPAWN_SWARM,
+      target: -1,
+      magnitude: 1,
+      spawn: 1,
+      utterance: [],
+      ownMove: 0,
+    };
+
+    const outcome = coordinator(harness.world).nhiApply(3, intent, 'unused');
+
+    expect(outcome).toEqual({
+      effectApplied: false,
+      factSupported: false,
+      affected: 0,
+      energyTransferred: 0,
+    });
+    expect(harness.entities.list).toHaveLength(0);
     expect(harness.audits).toContainEqual({
       action: 'nhi-swarm-spawn-failed',
-      detail: { id: 3, attempt: 1, error: 'injected entity spawn failure 2' },
+      detail: { id: 3, attempt: 0, error: 'injected entity spawn failure 1' },
     });
   });
 

@@ -34,7 +34,7 @@ export const XENOMIMIC_INDICATOR_CHANNELS = [
   'PORT',
 ] as const;
 
-/** Per-species base hue (0..1). Shared by the swarm map, the species spectrum, and the bond lines. */
+/** Per-species base hue (0..1). Shared by the swarm map and the species spectrum. */
 const SPECIES_HUE = [0.02, 0.09, 0.15, 0.33, 0.46, 0.53, 0.61, 0.72, 0.83, 0.94] as const;
 
 /** One read-only body position for the live swarm map. World fills a reusable buffer; no allocation. */
@@ -342,7 +342,7 @@ export class XenomimicPanel {
     map.setAttribute('role', 'img');
     map.setAttribute(
       'aria-label',
-      'Live top-down map of the entangled twin swarm; mimic and anti bodies of each pair are joined by a bond line',
+      'Live top-down map of the entangled twin swarm; mimic bodies are filled diamonds and anti bodies are hollow rings',
     );
     mapWrap.appendChild(map);
     mapWrap.appendChild(el(this.doc, 'span', 'celllab', 'ENTANGLED SWARM'));
@@ -517,7 +517,7 @@ export class XenomimicPanel {
     }
   }
 
-  /** Live top-down swarm map: ground-wave field, twin bond lines, mimic/anti glyphs, radar sweep. */
+  /** Live top-down swarm map: ground-wave field, independent mimic/anti glyphs, radar sweep. */
   private drawSwarm(t: number, telemetry: XenomimicPanelTelemetry): void {
     const canvas = this.map;
     const ctx = canvas?.getContext('2d');
@@ -553,33 +553,9 @@ export class XenomimicPanel {
 
     const bodies = telemetry.bodies;
     const count = Math.min(telemetry.bodyCount ?? 0, bodies?.length ?? 0);
-    const coherence = finite01(telemetry.coherence);
     if (bodies && count > 0) {
-      // Pair the bodies by id so mimic↔anti bond lines can be drawn. Reused map, ≤count entries.
-      const byPair = new Map<number, { x: number; y: number }>();
-      for (let i = 0; i < count; i++) {
-        const b = bodies[i]!;
-        const px = cx + b.x * scale;
-        const py = cy + b.z * scale;
-        const existing = byPair.get(b.pairId);
-        if (existing) {
-          const hue = SPECIES_HUE[b.species % XENOMIMIC_SPECIES] ?? 0.05;
-          const grad = ctx.createLinearGradient(existing.x, existing.y, px, py);
-          grad.addColorStop(0, hsla(hue, 0.9, 0.6, 0.15 + coherence * 0.5));
-          grad.addColorStop(0.5, hsla(hue + 0.5, 0.9, 0.72, 0.1 + coherence * 0.55));
-          grad.addColorStop(1, hsla(hue, 0.9, 0.6, 0.15 + coherence * 0.5));
-          ctx.strokeStyle = grad;
-          ctx.lineWidth = 1 + coherence * 1.6;
-          ctx.beginPath();
-          ctx.moveTo(existing.x, existing.y);
-          ctx.lineTo(px, py);
-          ctx.stroke();
-          byPair.delete(b.pairId);
-        } else {
-          byPair.set(b.pairId, { x: px, y: py });
-        }
-      }
-      // Glyphs: mimic (role 0) = filled diamond, anti (role 1) = hollow ring.
+      // Pair identity remains in the read-only sample for inspection, but the cockpit never draws a
+      // body-to-body connection: mimic (role 0) = filled diamond, anti (role 1) = hollow ring.
       for (let i = 0; i < count; i++) {
         const b = bodies[i]!;
         const px = cx + b.x * scale;

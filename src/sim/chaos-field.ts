@@ -51,6 +51,8 @@ const MAX_PAIRS = 40;
  */
 export class ChaosField {
   private readonly rng: Rng;
+  /** Optional authored sanctuary. Protected bodies are omitted from every direct quantum mutation. */
+  private sanctuary: ((x: number, z: number) => boolean) | null = null;
   private _active = false;
   /** Lorenz state — a non-trivial point already on the attractor (not a fixed point). */
   private lx = 0.9;
@@ -74,6 +76,11 @@ export class ChaosField {
   constructor(seed: number) {
     // Unique golden-ratio-style magic so this stream is independent of rng/econRng/superRng/etc.
     this.rng = mulberry32((seed ^ 0x3c6ef372) >>> 0 || 1);
+  }
+
+  /** Attach the composition-root sanctuary predicate; null restores the unrestricted storm. */
+  attachSanctuary(predicate: ((x: number, z: number) => boolean) | null): void {
+    this.sanctuary = predicate;
   }
 
   /** Whether the storm is engaged. */
@@ -177,21 +184,30 @@ export class ChaosField {
       const e = list[i];
       if (!e) continue;
       const u = e.userData;
+      const protectedHere = this.sanctuary?.(e.position.x, e.position.z) === true;
       // SUPERPOSITION: advance the quantum phase, smear the path with a perpendicular wobble.
-      u.qP += 0.25 + I * 0.6;
-      u.vel.x += Math.sin(u.qP) * wob;
-      u.vel.y += Math.sin(u.qP * 0.7) * wob * 0.5;
-      u.vel.z += Math.cos(u.qP * 1.3) * wob;
+      // Sanctuary suppresses the whole direct body mutation, including the otherwise-hidden qP state.
+      if (!protectedHere) {
+        u.qP += 0.25 + I * 0.6;
+        u.vel.x += Math.sin(u.qP) * wob;
+        u.vel.y += Math.sin(u.qP * 0.7) * wob * 0.5;
+        u.vel.z += Math.cos(u.qP * 1.3) * wob;
+      }
       // TUNNELLING: a rare discrete spatial jump (position discontinuity through a barrier).
-      if (rng() < pTunnel) {
+      // Draw the complete event first even for a protected body. This keeps the dedicated storm stream
+      // bit-aligned with an unrestricted run while suppressing only the material effect.
+      const tunnels = rng() < pTunnel;
+      if (tunnels) {
         const r = 8 + rng() * 24;
         const a = rng() * TAU;
         const ct = rng() * 2 - 1; // uniform cosθ → isotropic direction
-        const st = Math.sqrt(1 - ct * ct);
-        e.position.x += Math.cos(a) * st * r;
-        e.position.y += ct * r * 0.6;
-        e.position.z += Math.sin(a) * st * r;
-        this._tunnels++;
+        if (!protectedHere) {
+          const st = Math.sqrt(1 - ct * ct);
+          e.position.x += Math.cos(a) * st * r;
+          e.position.y += ct * r * 0.6;
+          e.position.z += Math.sin(a) * st * r;
+          this._tunnels++;
+        }
       }
     }
     this.applyEntanglement(dt, list, I);
@@ -217,6 +233,15 @@ export class ChaosField {
       // momentum/colour with a survivor for the remaining 3–7 second repick interval.
       if (ea.userData.alive === false || eb.userData.alive === false) continue;
       this.pairs[livePairs++] = pr;
+      // A pair that crosses either sanctuary boundary is suspended in place. Retaining the pair (while
+      // applying no force/colour write) avoids an early re-pick and therefore preserves the storm's
+      // fixed RNG cadence; normal quantum coupling may resume only after both endpoints are outside.
+      if (
+        this.sanctuary?.(ea.position.x, ea.position.z) === true ||
+        this.sanctuary?.(eb.position.x, eb.position.z) === true
+      ) {
+        continue;
+      }
       const ua = ea.userData.vel;
       const ub = eb.userData.vel;
       // Shared (mean) momentum — both partners are drawn toward it, so their dances mirror.

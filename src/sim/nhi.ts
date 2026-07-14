@@ -988,9 +988,10 @@ export class NhiMind {
     s[NhiAction.DOMINATE] =
       baseGain * (this.aggression + energy * 0.8 - threat * 0.5) +
       (g[NhiAction.DOMINATE] ?? 0) * geneGain;
+    // SPAWN is GOAP-useful but material births are CPU-expensive — bias it down vs hunt/broadcast.
     s[NhiAction.SPAWN_SWARM] =
-      baseGain * (energy * 1.3 - crowding * 0.9 + this.narcissism * 0.6) +
-      (g[NhiAction.SPAWN_SWARM] ?? 0) * geneGain;
+      baseGain * (energy * 0.7 - crowding * 1.2 + this.narcissism * 0.35 - 0.35) +
+      (g[NhiAction.SPAWN_SWARM] ?? 0) * geneGain * 0.65;
     s[NhiAction.BROADCAST] =
       baseGain * (this.hallucination + this.narcissism * 0.7 + chaos * 0.5) +
       (g[NhiAction.BROADCAST] ?? 0) * geneGain;
@@ -1009,7 +1010,7 @@ export class NhiMind {
     // (safety in numbers); ISOLATED → it turns inward and schemes/hunts alone. Deterministic utility
     // nudges (no rng), so nearby minds shape each other's choices — the social layer is WIRED, not audio-only.
     const isolation = 1 - kinPresence;
-    s[NhiAction.SPAWN_SWARM] = (s[NhiAction.SPAWN_SWARM] ?? 0) + baseGain * kinPresence * 0.5;
+    s[NhiAction.SPAWN_SWARM] = (s[NhiAction.SPAWN_SWARM] ?? 0) + baseGain * kinPresence * 0.18;
     s[NhiAction.BROADCAST] = (s[NhiAction.BROADCAST] ?? 0) + baseGain * kinPresence * 0.4;
     s[NhiAction.RETREAT] = (s[NhiAction.RETREAT] ?? 0) - baseGain * kinPresence * 0.4;
     s[NhiAction.MANIPULATE] = (s[NhiAction.MANIPULATE] ?? 0) + baseGain * isolation * 0.3;
@@ -1082,9 +1083,13 @@ export class NhiMind {
     }
 
     const magnitude = clamp(0.3 + this.aggression * 0.4 + chaos * 0.3 + this.mood * 0.2, 0, 1);
+    // One child per intent — World also cooldowns + hard-caps material births.
     const spawn =
       action === NhiAction.SPAWN_SWARM
-        ? Math.max(1, Math.round((1 + this.narcissism * 5 + energy * 4) * magnitude))
+        ? Math.max(
+            1,
+            Math.min(1, Math.round((0.5 + this.narcissism * 0.8 + energy * 0.5) * magnitude)),
+          )
         : 0;
 
     return {

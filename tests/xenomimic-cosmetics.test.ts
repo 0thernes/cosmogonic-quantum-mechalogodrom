@@ -15,12 +15,33 @@ describe('xenomimic twin bond is psionic (no tether lines)', () => {
     expect(xc.visible).toBe(false);
     xc.setVisible(true);
     expect(xc.visible).toBe(false);
-    const lines = scene.children.filter((c) => c instanceof THREE.LineSegments);
-    expect(lines.length).toBe(0);
     const sys = new XenomimicPopulation(1);
     xc.sync(sys, [], 0);
     expect(xc.linkCount).toBeGreaterThanOrEqual(0);
+    const lines: THREE.Object3D[] = [];
+    scene.traverse((object) => {
+      if (
+        object instanceof THREE.LineSegments ||
+        object instanceof THREE.LineLoop ||
+        object instanceof THREE.Line
+      ) {
+        lines.push(object);
+      }
+    });
+    expect(lines).toHaveLength(0);
+    expect(scene.getObjectByName('XenomimicCausalConnectome')).toBeUndefined();
     xc.dispose();
+  });
+
+  test('source and cockpit contain no Xenomimic line-renderer construction path', () => {
+    const connectome = readFileSync('src/sim/xenomimic-connectome.ts', 'utf8');
+    const panel = readFileSync('src/ui/xenomimic-panel.ts', 'utf8');
+    expect(connectome).not.toContain('new THREE.LineSegments');
+    expect(connectome).not.toContain('LineBasicMaterial');
+    expect(connectome).not.toContain('scene.add(');
+    expect(panel).not.toContain('joined by a bond line');
+    expect(panel).not.toContain('const byPair = new Map');
+    expect(panel).not.toContain('ctx.moveTo(existing.x, existing.y)');
   });
 });
 

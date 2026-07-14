@@ -188,6 +188,97 @@ describe('SingularitySystem', () => {
     expect(sys.bodyForce(CENTER.x + 10, CENTER.y, CENTER.z, 0.016, out)).toBe(false);
   });
 
+  test('sanctuary suppression clears a previously populated body-force output and is reversible', () => {
+    const ctx = makeCtx(71, 500);
+    const ent = new EntityManager(ctx);
+    const sys = new SingularitySystem(ctx, ent);
+    const out = new THREE.Vector3(9, 8, 7);
+    const px = CENTER.x + 10;
+    const pz = CENTER.z;
+    sys.summon('blackhole', CENTER.clone());
+    sys.attachSanctuary((x, z) => x === px && z === pz);
+
+    expect(sys.bodyForce(px, CENTER.y, pz, 0.016, out)).toBe(false);
+    expect(out.lengthSq()).toBe(0); // no stale pull survives the protected transition
+
+    sys.attachSanctuary(null);
+    expect(sys.bodyForce(px, CENTER.y, pz, 0.016, out)).toBe(true);
+    expect(out.x).toBeLessThan(0);
+    sys.dispose();
+  });
+
+  test('a sanctuary-protected horizon crosser is neither pulled nor consumed across repeated frames', () => {
+    const ctx = makeCtx(72, 500);
+    const ent = new EntityManager(ctx);
+    const protectedEntity = ent.spawn(new THREE.Vector3(CENTER.x + 5, CENTER.y, CENTER.z), 0)!;
+    const exposedEntity = ent.spawn(new THREE.Vector3(CENTER.x - 5, CENTER.y, CENTER.z), 1)!;
+    const protectedVelocity = protectedEntity.userData.vel.clone();
+    const protectedColor = protectedEntity.material.color.clone();
+    const sys = new SingularitySystem(ctx, ent);
+    sys.attachSanctuary((x) => x > CENTER.x);
+    sys.summon('blackhole', CENTER.clone());
+
+    for (let frame = 0; frame < 2; frame++) {
+      rebuildGrid(ctx, ent);
+      sys.update(1 / 60, frame / 60);
+    }
+
+    expect(ent.list).toContain(protectedEntity);
+    expect(ent.list).not.toContain(exposedEntity);
+    expect(protectedEntity.userData.vel.equals(protectedVelocity)).toBe(true);
+    expect(protectedEntity.material.color.equals(protectedColor)).toBe(true);
+    expect(sys.consumed).toBe(1);
+    sys.dispose();
+  });
+
+  test('a sanctuary-protected body is not converted by a strange star', () => {
+    const ctx = makeCtx(73, 500);
+    const ent = new EntityManager(ctx);
+    const protectedEntity = ent.spawn(new THREE.Vector3(CENTER.x + 10, CENTER.y, CENTER.z), 0)!;
+    const exposedEntity = ent.spawn(new THREE.Vector3(CENTER.x - 10, CENTER.y, CENTER.z), 1)!;
+    const protectedColor = protectedEntity.material.color.clone();
+    const protectedEmissive = protectedEntity.material.emissive.clone();
+    const protectedIntensity = protectedEntity.material.emissiveIntensity;
+    const sys = new SingularitySystem(ctx, ent);
+    sys.attachSanctuary((x) => x > CENTER.x);
+    sys.summon('strangestar', CENTER.clone());
+    rebuildGrid(ctx, ent);
+
+    sys.update(1 / 60, 0);
+
+    expect(protectedEntity.material.color.equals(protectedColor)).toBe(true);
+    expect(protectedEntity.material.emissive.equals(protectedEmissive)).toBe(true);
+    expect(protectedEntity.material.emissiveIntensity).toBe(protectedIntensity);
+    expect(exposedEntity.material.color.r).toBeCloseTo(0.18, 6);
+    expect(exposedEntity.material.color.g).toBeCloseTo(0.34, 6);
+    expect(exposedEntity.material.color.b).toBeCloseTo(0.12, 6);
+    expect(exposedEntity.material.emissiveIntensity).toBeGreaterThanOrEqual(2.4);
+    sys.dispose();
+  });
+
+  test('entropy preserves a protected body while still affecting an exposed stride peer', () => {
+    const ctx = makeCtx(74, 500);
+    const ent = new EntityManager(ctx);
+    ent.reset(4);
+    const protectedEntity = ent.list[0]!;
+    const exposedEntity = ent.list[2]!; // entropy deliberately visits even indices only
+    protectedEntity.position.set(CENTER.x + 10, CENTER.y, CENTER.z);
+    exposedEntity.position.set(CENTER.x - 10, CENTER.y, CENTER.z);
+    const protectedVelocity = protectedEntity.userData.vel.clone();
+    const protectedColor = protectedEntity.material.color.clone();
+    const exposedVelocity = exposedEntity.userData.vel.clone();
+    const sys = new SingularitySystem(ctx, ent);
+    sys.attachSanctuary((x) => x > CENTER.x);
+    sys.summon('entropy', CENTER.clone());
+
+    sys.update(1 / 60, 0);
+
+    expect(protectedEntity.userData.vel.equals(protectedVelocity)).toBe(true);
+    expect(protectedEntity.material.color.equals(protectedColor)).toBe(true);
+    expect(exposedEntity.userData.vel.equals(exposedVelocity)).toBe(false);
+    sys.dispose();
+  });
+
   test('F-NHI: an isNhi being is immune to black-hole consumption; a normal twin at the same spot is eaten', () => {
     const ctx = makeCtx(11, 500);
     const ent = new EntityManager(ctx);

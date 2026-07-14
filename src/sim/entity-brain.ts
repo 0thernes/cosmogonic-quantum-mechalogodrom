@@ -372,8 +372,16 @@ export class EntityBrainField {
 
   /**
    * Explicit full-quality alias: every entity gets the full 70-param brain every evaluation.
+   * An optional sanctuary predicate calms only threat/aggression inputs and steering for protected
+   * organisms; cognition, resource/social/exploration context, learning, excitation, and bounded
+   * non-hostile motor output remain active. `null` preserves the original controller exactly.
    */
-  thinkAll(list: ReadonlyArray<Entity | undefined>, chaos: number, t: number): number {
+  thinkAll(
+    list: ReadonlyArray<Entity | undefined>,
+    chaos: number,
+    t: number,
+    sanctuaryAt: ((x: number, z: number, ecologyId?: number) => boolean) | null = null,
+  ): number {
     this.prepareThinkTime(t);
     this.prepareControllerContext(t);
     const chaosN = clamp01(chaos / 10);
@@ -381,12 +389,21 @@ export class EntityBrainField {
     let thought = 0;
     for (let i = 0; i < n; i++) {
       const e = list[i];
-      if (e && this.thinkSlot(e, i, chaosN, t)) thought++;
+      if (!e) continue;
+      const protectedHere =
+        sanctuaryAt?.(e.position.x, e.position.z, e.userData.ecologyId) === true;
+      if (this.thinkSlot(e, i, chaosN, t, protectedHere)) thought++;
     }
     return thought;
   }
 
-  private thinkSlot(e: Entity, slot: number, chaosN: number, t: number): boolean {
+  private thinkSlot(
+    e: Entity,
+    slot: number,
+    chaosN: number,
+    t: number,
+    protectedHere = false,
+  ): boolean {
     const ud = e.userData;
     if (ud.isNhi) return false; // launched NHIs fly their own mind
     const brainSlot = this.slotToBrain[slot]!;
@@ -398,7 +415,11 @@ export class EntityBrainField {
     const sp = Math.hypot(ud.vel.x, ud.vel.y, ud.vel.z);
     s[2] = clamp01(sp / 6); // own speed
     const signal = this.activeSignal;
-    s[3] = signal ? clamp01(chaosN * 0.7 + signal.threatResponse * 0.3) : chaosN; // world disorder + shared threat forecast
+    s[3] = protectedHere
+      ? 0
+      : signal
+        ? clamp01(chaosN * 0.7 + signal.threatResponse * 0.3)
+        : chaosN; // sanctuary presents a calm threat lane; otherwise world disorder + shared threat forecast
     const fp32 = this.fp32Genomes;
     const curiosity = fp32
       ? (fp32[base + TRAIT.curiosity] ?? 0)
@@ -418,7 +439,9 @@ export class EntityBrainField {
     let actionY = o[2] ?? 0;
     if (this.controllerActive) {
       const metabolic = clamp01(ud.energy / 100);
-      const payoff = Number.isFinite(ud.payoff) ? Math.tanh(ud.payoff * 0.1) : 0;
+      // Nash payoff is a threat/aggression reward. A sanctuary visit suspends that term without
+      // freezing metabolic learning or discarding the actor/value state used after a peaceful exit.
+      const payoff = !protectedHere && Number.isFinite(ud.payoff) ? Math.tanh(ud.payoff * 0.1) : 0;
       const learningRate = this.adaptiveLearningRate;
       if (this.onlineLearningEnabled && (this.adaptiveReady[brainSlot] ?? 0) !== 0) {
         // Temporal-difference reward: food/wealth gain dominates; payoff supplies a smaller social term.
@@ -483,7 +506,9 @@ export class EntityBrainField {
         );
         // Inputs and trait multipliers are already bounded [0,1], so these products cannot escape it.
         const resourceTarget = this.semanticResourceInput * (0.65 + metabolismTrait * 0.35);
-        const threatTarget = this.semanticThreatInput * (0.65 + (1 - aggressionTrait) * 0.35);
+        const threatTarget = protectedHere
+          ? 0
+          : this.semanticThreatInput * (0.65 + (1 - aggressionTrait) * 0.35);
         const explorationTarget = this.semanticExplorationInput * (0.65 + curiosityN * 0.35);
         const socialTarget = this.semanticSocialInput * (0.65 + socialTrait * 0.35);
         if (this.semanticRecurrenceEnabled) {
@@ -506,6 +531,9 @@ export class EntityBrainField {
             semanticExploration += rate * (explorationTarget - semanticExploration);
             semanticSocial += rate * (socialTarget - semanticSocial);
           }
+          // Entry de-escalates immediately instead of retaining a stale hostile context. Only the
+          // threat lane is cleared; the three calm ecology/social memory lanes remain continuous.
+          if (protectedHere) semanticThreat = 0;
           context[semanticBase] = semanticResource;
           context[semanticBase + 1] = semanticThreat;
           context[semanticBase + 2] = semanticExploration;
@@ -547,7 +575,7 @@ export class EntityBrainField {
           this.corpusAngleCos[slot] = ca;
           this.corpusAngleSin[slot] = sa;
         }
-        const threatNudge = semanticThreat * 0.055 * this.signalConfidence;
+        const threatNudge = protectedHere ? 0 : semanticThreat * 0.055 * this.signalConfidence;
         threatX = ca * threatNudge;
         threatZ = sa * threatNudge;
         // Angle-addition reuses the corpus sin/cos pair; two extra transcendental calls per organism
@@ -575,7 +603,10 @@ export class EntityBrainField {
           -1.25,
           Math.min(
             1.25,
-            actionY + this.verticalThreatNudge + semanticThreat * 0.03 * this.signalConfidence,
+            actionY +
+              (protectedHere
+                ? 0
+                : this.verticalThreatNudge + semanticThreat * 0.03 * this.signalConfidence),
           ),
         );
       }

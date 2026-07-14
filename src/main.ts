@@ -40,6 +40,8 @@ import { ALPHABET_PANTHEON_SIZE } from './sim/alphabet-pantheon';
 THREE.ColorManagement.enabled = false;
 
 const log = createLogger('main');
+const developmentDiagnostics =
+  location.hostname === 'localhost' || location.hostname === '127.0.0.1';
 
 /** Shell layout before WebGL boot — panels must paint in final positions on first frame. */
 function initAppShell(): void {
@@ -327,7 +329,14 @@ async function boot(): Promise<void> {
   const tWorld = performance.now();
   const activeEngine = engine;
   if (!activeEngine) return;
-  world = new World({ engine: activeEngine, quality, persisted, store, audit });
+  world = new World({
+    engine: activeEngine,
+    quality,
+    persisted,
+    store,
+    audit,
+    developmentDiagnostics,
+  });
   if (!continueMainLifecycle()) return;
   bootStage('world', `${Math.round(performance.now() - tWorld)} ms`);
   bootStage('entities', `grows → ${quality.targetEntities.toLocaleString()}`);
@@ -359,21 +368,6 @@ async function boot(): Promise<void> {
   // V-toolbar: enable arrow-key / Home / End navigation inside the bottom toolbar.
   initToolbarKeyboard();
 
-  // Dev-only inspection hook (localhost / 127.0.0.1 ONLY — never on the deployed static site). Exposes
-  // the live world/engine so the preview + automation harness can DRIVE frames and introspect a
-  // backgrounded tab (where rAF throttles to ~0 Hz). `step()` advances + renders one frame on demand.
-  if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-    (window as unknown as { __CQM__: unknown }).__CQM__ = {
-      world,
-      engine,
-      renderer: engine.renderer,
-      scene: engine.scene,
-      camera: engine.camera,
-      THREE,
-      step: (dt = 1 / 60): void => world?.step(dt),
-    };
-  }
-
   // V-GOV: render-side frame monitor. It reports FPS/quality to the HUD but never drops DPR,
   // post-FX, shadows, color, detail or sim cadence. Performance fixes must preserve fidelity.
   const governor = new RenderGovernor(quality.shadows);
@@ -383,12 +377,18 @@ async function boot(): Promise<void> {
   const perfMonitor = new PerformanceMonitor(120, 1000);
   let fpsEma = 60;
   let perfFrame = 0;
+  let automaticFramesEnabled = true;
   // rAF-timestamp delta; world.step clamps to 50ms so tab-switch gaps are safe. dt floored at 0.
   let last = performance.now();
   let firstLight = false;
-  function frame(now: number): void {
-    if (!mainLifecycleActive()) return;
+  function requestAutomaticFrame(): void {
+    if (!mainLifecycleActive() || !automaticFramesEnabled || rafId !== 0) return;
     rafId = requestAnimationFrame(frame);
+  }
+  function frame(now: number): void {
+    rafId = 0;
+    if (!mainLifecycleActive() || !automaticFramesEnabled) return;
+    requestAutomaticFrame();
     const dt = Math.max(0, now - last) / 1000;
     last = now;
     governor.observe(dt);
@@ -433,8 +433,41 @@ async function boot(): Promise<void> {
       });
     }
   }
+  // Dev-only inspection hook (localhost / 127.0.0.1 ONLY — never on the deployed static site). Exposes
+  // the live world/engine so preview and automation can drive deterministic frames. Capture tooling may
+  // quiesce only the automatic rAF loop while retaining `step()`; this gives the compositor a bounded
+  // quiet window under software WebGL without changing simulation state, quality, or deployed behavior.
+  if (developmentDiagnostics) {
+    (window as unknown as { __CQM__: unknown }).__CQM__ = {
+      world,
+      engine,
+      renderer: engine.renderer,
+      scene: engine.scene,
+      camera: engine.camera,
+      THREE,
+      step: (dt = 1 / 60): void => world?.step(dt),
+      bigTreeEcology: {
+        snapshot: (query?: { ownerKind?: number; ownerId?: number; foodId?: number }): unknown =>
+          world?.getBigTreeEcologySnapshot(query) ?? null,
+      },
+      pauseAutoFrames: (): void => {
+        automaticFramesEnabled = false;
+        if (rafId !== 0) cancelAnimationFrame(rafId);
+        rafId = 0;
+      },
+      resumeAutoFrames: (): void => {
+        if (!mainLifecycleActive() || automaticFramesEnabled) return;
+        automaticFramesEnabled = true;
+        last = performance.now();
+        requestAutomaticFrame();
+      },
+      get autoFramesActive(): boolean {
+        return automaticFramesEnabled;
+      },
+    };
+  }
   if (!continueMainLifecycle()) return;
-  rafId = requestAnimationFrame(frame);
+  requestAutomaticFrame();
   // ROBUSTNESS: the deferred click-to-open panels (⛓ ACCESS / ◈ STAGE II / 🗒 AUDIT toggles, copilot,
   // settings, …) load at FIRST LIGHT above — but first light rides requestAnimationFrame, which the
   // browser PAUSES ENTIRELY for a hidden/background tab (and can stall on a very slow boot). Without a

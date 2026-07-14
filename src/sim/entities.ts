@@ -273,11 +273,13 @@ export class EntityManager {
    * entity's world x/z exactly once per disposal routed through `disposeAt()` — which
    * covers BOTH the age-death branch of `update()` and external consumers like shoggoth
    * consumption. NOT fired by `reset()`: mass disposal is a genesis event, not a death.
-   * The composition root wires this to ReactionDiffusionSystem.perturb; null disables.
+   * The composition root wires this to ReactionDiffusionSystem.perturb and visitor cleanup; null disables.
    * Mutable public field by design (audit fix A). Allocation-free to invoke.
    */
-  onDeath: ((x: number, z: number) => void) | null = null;
+  onDeath: ((x: number, z: number, entity: Entity) => void) | null = null;
   private readonly ctx: SimContext;
+  /** Simulation identity stream for ordinary organisms; deliberately independent of render-object ids/RNG. */
+  private nextEcologyId = 1;
   /** BRUTALISM (phone tier): per-material captured TRUE colour, so {@link applyBrutalism} lerps FROM
    *  it and never compounds; keyed by the per-entity material (GC'd with it on disposal). */
   private readonly brutalBase = new WeakMap<THREE.MeshStandardMaterial, number>();
@@ -297,6 +299,9 @@ export class EntityManager {
    *  climb the biomass gradient toward the RICHEST patch (chemotaxis), not just drift to nearest cover.
    *  Null (the default, e.g. tests) detaches it so the seeded golden is byte-identical. */
   private floraGradient: ((x: number, z: number) => number) | null = null;
+  /** Optional authored sanctuary. Protected organisms keep friendly flocking but suppress threat/faction
+   * aggression and the global home pull that could drag a visitor out of a neutral gathering zone. */
+  private sanctuary: ((x: number, z: number, ecologyId?: number) => boolean) | null = null;
   /** Reserved material-organism births THIS frame, reset by {@link update}. Auto-split, behavior
    *  mitosis, sparse recovery, and post-update NHI swarms share it at the ultra tier. */
   private spawnsThisFrame = 0;
@@ -315,6 +320,8 @@ export class EntityManager {
     this.env = {
       ctx,
       spawn: (pos, mi, scale) => this.spawnWithinFrameBudget(pos, mi, scale),
+      sanctuaryAt: null,
+      actorProtected: false,
       dt: 0,
       t: 0,
       cm: 0,
@@ -370,6 +377,12 @@ export class EntityManager {
    *  gradient toward the richest patch (gradient-ascent chemotaxis). Deterministic; null detaches it. */
   attachFloraGradient(sampler: ((x: number, z: number) => number) | null): void {
     this.floraGradient = sampler;
+  }
+
+  /** Wire a shared neutral-zone predicate into ordinary-organism behavior; null detaches it. */
+  attachSanctuary(predicate: ((x: number, z: number, ecologyId?: number) => boolean) | null): void {
+    this.sanctuary = predicate;
+    this.env.sanctuaryAt = predicate;
   }
 
   /** Whether another material organism may use this frame's ultra-tier birth budget. */
@@ -484,6 +497,7 @@ export class EntityManager {
     const gr = ctx.genomeRng;
     const bred = gr ? this.breedTraits(gr, parent) : null;
     mesh.userData = {
+      ecologyId: this.nextEcologyId++,
       mi: mi % morphCount,
       vel: new THREE.Vector3((rng() - 0.5) * 0.1, (rng() - 0.5) * 0.05, (rng() - 0.5) * 0.1),
       age: 0,
@@ -703,7 +717,7 @@ export class EntityManager {
     this.clearOrganismGoal(list.length);
     this.brainSlots?.clearEntitySlot(list.length);
     const onDeath = this.onDeath;
-    if (notifyDeath && onDeath) onDeath(e.position.x, e.position.z);
+    if (notifyDeath && onDeath) onDeath(e.position.x, e.position.z, e);
   }
 
   /**
@@ -761,7 +775,7 @@ export class EntityManager {
     if (onDeath) {
       for (let i = 0; i < deaths.length; i++) {
         const entity = deaths[i]!;
-        onDeath(entity.position.x, entity.position.z);
+        onDeath(entity.position.x, entity.position.z, entity);
       }
     }
     return count;
@@ -787,6 +801,7 @@ export class EntityManager {
     this.organismGoals.revision.fill(0);
     this.brainSlots?.resetEntitySlots();
     this.meanMetabolicEnergy = 0.5;
+    this.nextEcologyId = 1;
     const rng = this.ctx.rng;
     const morphCount = Math.max(1, this.ctx.morphs.length);
     for (let i = 0; i < count; i++) this.spawn(null, Math.floor(rng() * morphCount));
@@ -933,12 +948,15 @@ export class EntityManager {
         }
       }
 
-      // Chaos jitter + wind physics, damping, integration (legacy lines 771-776).
+      // Chaos jitter + wind physics, damping, integration (legacy lines 771-776). Sanctuary
+      // visitors still consume the exact same three draws, but the injected agitation/wind is
+      // multiplied by zero so ordinary damping can settle them without disabling friendly forces.
       // `jitterGain` is applied to the jitter term ONLY, after the rng() draw — at N(1)
       // (gain = 1, an exact ×1.0) every byte is identical; at N(2) the swarm writhes (×3).
-      u.vel.x += (rng() - 0.5) * 0.003 * cm * jitterGain + windX;
-      u.vel.y += (rng() - 0.5) * 0.0015 * cm * jitterGain;
-      u.vel.z += (rng() - 0.5) * 0.003 * cm * jitterGain + windZ;
+      const agitation = env.actorProtected ? 0 : 1;
+      u.vel.x += ((rng() - 0.5) * 0.003 * cm * jitterGain + windX) * agitation;
+      u.vel.y += (rng() - 0.5) * 0.0015 * cm * jitterGain * agitation;
+      u.vel.z += ((rng() - 0.5) * 0.003 * cm * jitterGain + windZ) * agitation;
       // Global centre-gravity (self-healing cohesion): PAST the central living-zone radius a gentle
       // inward pull herds the body home to the social core, so the swarm re-gathers into chains &
       // clusters after any scatter (Burst / Apocalypse / Chaos) instead of pinning dead at the rim.
@@ -947,13 +965,20 @@ export class EntityManager {
       // drawn back. Pure position geometry, draws no rng — the seeded stream stays byte-identical.
       {
         const rz = Math.sqrt(e.position.x * e.position.x + e.position.z * e.position.z);
-        if (rz > LIVING_ZONE) {
+        if (
+          rz > LIVING_ZONE &&
+          this.sanctuary?.(e.position.x, e.position.z, e.userData.ecologyId) !== true
+        ) {
           const pull = ((rz - LIVING_ZONE) * CENTER_GRAVITY_K) / rz;
           u.vel.x -= e.position.x * pull;
           u.vel.z -= e.position.z * pull;
         }
       }
-      u.vel.multiplyScalar(0.985);
+      // NHI launch toss: near-coast damp so camera-forward fan-out stays readable.
+      const toss = u.nhiTossFrames ?? 0;
+      const damp = u.isNhi && toss > 0 ? 0.999 : 0.985;
+      if (u.isNhi && toss > 0) u.nhiTossFrames = toss - 1;
+      u.vel.multiplyScalar(damp);
       // dt * 60 is the legacy frame-rate normalizer; dyn.speed (F-RENDER-DYN, 1 in 'solid') scales
       // the per-frame displacement so the render style alters how fast the field travels.
       // GLOBAL_MOTION_SCALE: owner still finds 0.5×/1× too fast — ~7× slower travel (morph goldens intact).
@@ -961,9 +986,9 @@ export class EntityManager {
       MOVE.copy(u.vel).multiplyScalar(dt * 60 * dyn.speed * GLOBAL_MOTION_SCALE);
       e.position.add(MOVE);
       // F-NHI: launched beings get "Matrix" buoyancy — a gentle anti-gravity lift so they fly and
-      // float through the upper world (the y-ceiling further down still catches them). No rng, and
-      // the branch is never taken until you launch one, so the default world is byte-identical.
-      if (u.isNhi) u.vel.y += 0.006;
+      // float through the upper world (the y-ceiling further down still catches them). Suppressed
+      // during launch toss so the throw direction isn't overwritten by a constant +Y bias.
+      if (u.isNhi && (u.nhiTossFrames ?? 0) <= 0) u.vel.y += 0.006;
       e.rotation.x += sinWF * 0.006 * sp2 * 0.4;
       e.rotation.y += cosWF * 0.005 * sp2 * 0.35;
       e.rotation.z += Math.sin(wfph + 1) * 0.0035 * sp2;
@@ -1039,7 +1064,14 @@ export class EntityManager {
       // At target === maxEntities (≤5,000) the short-circuited `rng()` is drawn on exactly the
       // legacy frames, so the seeded stream is byte-identical.
       u.sT -= dt * 30 * cm;
-      if (u.sT <= 0 && list.length < target && this.hasFrameSpawnCapacity() && rng() < 0.06) {
+      // NHI swarmlings never auto-split — mitosis storm was the CPU melt.
+      if (
+        !u.nhiMinion &&
+        u.sT <= 0 &&
+        list.length < target &&
+        this.hasFrameSpawnCapacity() &&
+        rng() < 0.06
+      ) {
         u.sT = 300 + rng() * 500;
         SPAWN_AT.set(
           e.position.x + (rng() - 0.5) * 2,
@@ -1350,6 +1382,8 @@ export class EntityManager {
     const px = e.position.x;
     const py = e.position.y;
     const pz = e.position.z;
+    const sanctuary = this.sanctuary;
+    const protectedHere = sanctuary?.(px, pz, u.ecologyId) === true;
     const myGroup = u.setGroup;
     const myType = u.typeId;
     const myEnergy = typeof u.energy === 'number' ? u.energy : 50;
@@ -1395,7 +1429,11 @@ export class EntityManager {
         typeMinD2 = d3;
         typeNear = ne;
       }
-      if (ne.userData.strategy === 1 || ne.userData.setGroup !== myGroup) {
+      if (
+        !protectedHere &&
+        sanctuary?.(ne.position.x, ne.position.z, ne.userData.ecologyId) !== true &&
+        (ne.userData.strategy === 1 || ne.userData.setGroup !== myGroup)
+      ) {
         if (dd < r2 * 0.25) {
           nearThreatX += dx;
           nearThreatZ += dz;
@@ -1494,12 +1532,15 @@ export class EntityManager {
       resource: clamp01(myEnergy / 100),
       novelty: clamp01((frame % 97) / 97),
     };
-    const frng = mulberry32(((index * 0x9e3779b9) ^ (frame * 0x85ebca6b) ^ (myGroup * 17)) >>> 0);
-    const { intent } = decideFaction(myGroup % FACTION_COUNT, percept, frng);
-    const steer = intentSteerXZ(intent, toCrowdX, toCrowdZ, toKinX, toKinZ, awayX, awayZ);
-    // Faction intent is a bias on the filament — never stronger than the chain spring.
-    u.vel.x += steer.x * SOCIAL_GRAVITY_GAIN * 0.55 * sp2;
-    u.vel.z += steer.z * SOCIAL_GRAVITY_GAIN * 0.55 * sp2;
+    if (!protectedHere) {
+      const frng = mulberry32(((index * 0x9e3779b9) ^ (frame * 0x85ebca6b) ^ (myGroup * 17)) >>> 0);
+      const { intent } = decideFaction(myGroup % FACTION_COUNT, percept, frng);
+      const steer = intentSteerXZ(intent, toCrowdX, toCrowdZ, toKinX, toKinZ, awayX, awayZ);
+      // Faction intent is a bias on the filament — never stronger than the chain spring. Inside the
+      // sanctuary the same organisms retain friendly springs/trails but do not run a hostile intent.
+      u.vel.x += steer.x * SOCIAL_GRAVITY_GAIN * 0.55 * sp2;
+      u.vel.z += steer.z * SOCIAL_GRAVITY_GAIN * 0.55 * sp2;
+    }
   }
 
   /**

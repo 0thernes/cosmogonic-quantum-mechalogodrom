@@ -49,9 +49,10 @@ evidence of sentience, phenomenal experience, or physical quantum effects.
 
 ## Connectome, sound, and inspection
 
-- `src/sim/xenomimic-connectome.ts` renders reciprocal twin edges and at most 48 nearest Entity
-  bridges in one bounded `LineSegments` draw. Entity activation also changes the brain input, so the
-  bridge is not decorative-only.
+- `src/sim/xenomimic-connectome.ts` counts reciprocal twin and at most 48 nearest-Entity proximity
+  links for bounded telemetry only. It owns no scene object, geometry, material, or visible line.
+  Sampled Entity activation still changes the brain input, so the logical coupling remains live
+  without creating a visual or physical tether.
 - `src/audio/xenomimic-audio.ts` maps aggregate population, pair tension, environment, and proximity
   into a fixed 15-node eerie sound field. Lifecycle stings are capped at four accepted events per
   second and six transient voices; mute and pause hard-silence it.
@@ -71,6 +72,49 @@ form all use this same canonical terminology.
 
 The focused test family covers deterministic replay, opposite twins, exact-one XNO semantics,
 population/lifecycle bounds, five-second predation revival, real grazing callbacks, terrain
-clamping, weighted fulcrum motion, ten indexed render batches, bounded connectome and audio graphs,
+clamping, weighted fulcrum motion, ten indexed render batches, bounded non-rendering connectome and
+audio graphs,
 panel honesty language, Observatory/Telemetry wiring, and the UI controls. Whole-repository
 typecheck, tests, evidence checks, and browser verification remain the release gate.
+
+## Tether-removal contract (2026-07-13)
+
+The tether defect had two independent failure modes and both are prohibited:
+
+1. A legacy Xenomimic connectome could leave named `THREE.Line`, `THREE.LineLoop`, or
+   `THREE.LineSegments` twin/connectome objects in a long-lived scene after a partial hot reload or
+   cached older build. That was the visible cord.
+2. `XenomimicPopulation` used an origin-centred circular `arenaRadius` projection and reversed a
+   body's heading at that radius. Although it did not connect one twin to the other, the artificial
+   home-radius restriction behaved like an invisible navigation leash.
+
+The canonical implementation now enforces the following:
+
+- `src/sim/xenomimic-connectome.ts` is topology accounting only. It owns no scene object, geometry,
+  material, shader, trail, joint, or line renderer; `visible` is always false and `setVisible` is a
+  compatibility no-op. Logical twin and nearest-Entity counts remain available for telemetry and
+  neural input without producing a render object.
+- `src/sim/xenomimics-render.ts` represents the psionic twin relationship through per-body shimmer
+  only. It creates no bond geometry.
+- `src/world.ts` never enables a Xenomimic connectome visual, including when the Entity neural-web
+  control changes. Its narrowly named legacy-object sweep removes only Xenomimic/twin/connectome
+  line objects and disposes their geometry and materials, covering stale HMR scenes without
+  deleting unrelated anatomy or world lines.
+- `src/sim/xenomimics.ts` contains bodies only at the authored square platform boundary,
+  `-PLATFORM_HALF..+PLATFORM_HALF` on each X/Z axis. It clamps and reflects the crossed velocity
+  component at that world edge; it has no origin radius, home force, partner-distance clamp,
+  positional spring, joint, or twin constraint. The deprecated `arenaRadius` option is only a
+  compatibility alias for the square `habitatHalfExtent`.
+- `twinSenseRange` affects one bounded neural percept only. It never writes position, velocity, or
+  heading. Twins can therefore separate beyond that sensory range and independently occupy square
+  habitat corners. The damped lean spring remains an intentional local posture/animation system,
+  not a tether.
+- Spawn, explicit placement, teleport containment, and revival all use the same square habitat
+  contract. Disposal has no Xenomimic line resource to orphan, and the stale-object sweep handles
+  line resources inherited from an older runtime.
+
+Focused tests in `tests/xenomimics.test.ts` and `tests/xenomimic-cosmetics.test.ts` seal square-corner
+movement, far-separated twins, absence of tether renderer construction, permanently disabled
+visibility, lifecycle cleanup, and the absence of Xenomimic line objects after world wiring. These
+are automated contract targets; this document does not claim a deployed-build or manual browser
+validation result.

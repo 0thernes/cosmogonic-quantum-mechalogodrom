@@ -25,6 +25,12 @@ import {
   portalReappearSpot,
   type PortalCullable,
 } from './portal-death-fauna';
+import {
+  BigTreeFaunaIntentMode,
+  type BigTreeFaunaIntentMode as FaunaVisitMode,
+  type BigTreeFaunaSource,
+  type BigTreeFaunaVisitorSample,
+} from './big-tree-fauna-visitors';
 
 /** Tendril line segments per shoggoth (legacy `tc`). */
 const TENDRIL_COUNT = 8;
@@ -185,16 +191,23 @@ interface Shoggoth {
  * tendril LineSegments fed by spatial-grid queries, and a consumption cycle that eats the
  * nearest organism and respawns two corrupted children.
  */
-export class ShoggothSystem implements PortalCullable {
+export class ShoggothSystem implements PortalCullable, BigTreeFaunaSource {
   private readonly ctx: SimContext;
   /** PORTAL DEATH (USER): shoggoths blasted by the portal, awaiting their 5 s respawn ELSEWHERE. */
   private readonly portalDowned: { sg: Shoggoth; at: number }[] = [];
   private portalCullSeq = 0;
   private readonly entities: EntityManager;
   private readonly shogs: Shoggoth[] = [];
+  /** Optional Big Tree locomotion policy, indexed by the stable shoggoth birth slot. */
+  private readonly bigTreeModes: Uint8Array;
+  private readonly bigTreeTargetXs: Float64Array;
+  private readonly bigTreeTargetYs: Float64Array;
+  private readonly bigTreeTargetZs: Float64Array;
   /** F-HOLES: the singularity system, attached by the composition root after construction; the
    *  active hole tugs the shoggoths too. null ⇒ no coupling (the legacy/test behaviour). */
   private singularity: SingularitySystem | null = null;
+  /** Shared sanctuary policy. Protected positions suppress threat, tendrils, pursuit, and feeding. */
+  private sanctuary: ((x: number, z: number, ownerId?: number) => boolean) | null = null;
   /** F-ECON-CREATURES V17: economic net-worth provider by shoggoth index (null ⇒ no coupling). */
   private econWealth: ((shoggothIndex: number) => number) | null = null;
   /** F-CREATURE-TRADE V29: conservation-exact worth transfer between two shoggoths (by index); returns
@@ -225,11 +238,90 @@ export class ShoggothSystem implements PortalCullable {
       const y = PLATFORM_FLOOR + rng() * (PLATFORM_CEIL - PLATFORM_FLOOR);
       this.spawnShoggoth(root, x, y, z, i < LIT_SHOGGOTHS);
     }
+    this.bigTreeModes = new Uint8Array(count);
+    this.bigTreeTargetXs = new Float64Array(count);
+    this.bigTreeTargetYs = new Float64Array(count);
+    this.bigTreeTargetZs = new Float64Array(count);
   }
 
   /** Number of active shoggoths (100 on desktop, 16 on mobile — feeds the telemetry `shoggoths` field). */
   get count(): number {
     return this.shogs.length;
+  }
+
+  /** Stable fixed slots exposed to the generic Big Tree fauna scheduler. */
+  get bigTreeVisitorSlotCount(): number {
+    return this.shogs.length;
+  }
+
+  readBigTreeVisitor(slot: number, out: BigTreeFaunaVisitorSample): boolean {
+    if (!Number.isInteger(slot) || slot < 0) return false;
+    const shoggoth = this.shogs[slot];
+    if (!shoggoth) return false;
+    const p = shoggoth.group.position;
+    out.ownerId = slot;
+    out.alive = shoggoth.group.visible;
+    out.x = p.x;
+    out.y = p.y;
+    out.z = p.z;
+    out.hunger = 1 - clamp(shoggoth.satiation, 0, 1);
+    out.fatigue = out.hunger * 0.35;
+    out.healthDeficit = 0;
+    out.stress = 0;
+    out.socialNeed = 0.2 + ((slot * 17) % 31) / 100;
+    out.curiosity = 0.18 + ((slot * 23) % 37) / 100;
+    return true;
+  }
+
+  setBigTreeVisitorIntent(
+    ownerId: number,
+    mode: FaunaVisitMode,
+    targetX: number,
+    targetY: number,
+    targetZ: number,
+  ): boolean {
+    const shoggoth = this.shogs[ownerId];
+    if (
+      !shoggoth ||
+      !shoggoth.group.visible ||
+      (mode !== BigTreeFaunaIntentMode.Normal &&
+        mode !== BigTreeFaunaIntentMode.Travel &&
+        mode !== BigTreeFaunaIntentMode.Calm &&
+        mode !== BigTreeFaunaIntentMode.Social) ||
+      !Number.isFinite(targetX) ||
+      !Number.isFinite(targetY) ||
+      !Number.isFinite(targetZ)
+    ) {
+      return false;
+    }
+    this.bigTreeModes[ownerId] = mode;
+    this.bigTreeTargetXs[ownerId] = targetX;
+    this.bigTreeTargetYs[ownerId] = targetY;
+    this.bigTreeTargetZs[ownerId] = targetZ;
+    return true;
+  }
+
+  nourishBigTreeVisitor(ownerId: number, nourishment: number): boolean {
+    const shoggoth = this.shogs[ownerId];
+    if (!shoggoth?.group.visible || !Number.isFinite(nourishment) || nourishment <= 0) return false;
+    shoggoth.satiation = clamp(shoggoth.satiation + nourishment / 50, 0, 1);
+    shoggoth.feedTimer = 0;
+    return true;
+  }
+
+  clearBigTreeVisitorIntent(ownerId: number): boolean {
+    if (!Number.isInteger(ownerId) || ownerId < 0 || ownerId >= this.bigTreeModes.length)
+      return false;
+    this.bigTreeModes[ownerId] = BigTreeFaunaIntentMode.Normal;
+    this.bigTreeTargetXs[ownerId] = 0;
+    this.bigTreeTargetYs[ownerId] = 0;
+    this.bigTreeTargetZs[ownerId] = 0;
+    return true;
+  }
+
+  /** Attach the composition-root sanctuary predicate; null restores legacy predation. */
+  attachSanctuary(predicate: ((x: number, z: number, ownerId?: number) => boolean) | null): void {
+    this.sanctuary = predicate;
   }
 
   /**
@@ -250,6 +342,7 @@ export class ShoggothSystem implements PortalCullable {
     r2: number,
     t: number,
     onDeath: (x: number, y: number, z: number) => void,
+    protectedAt?: (x: number, z: number) => boolean,
   ): void {
     for (let k = this.portalDowned.length - 1; k >= 0; k--) {
       const d = this.portalDowned[k]!;
@@ -265,8 +358,9 @@ export class ShoggothSystem implements PortalCullable {
       const p = sg.group.position;
       const dx = p.x - ax;
       const dz = p.z - az;
-      if (dx * dx + dz * dz <= r2) {
+      if (dx * dx + dz * dz <= r2 && protectedAt?.(p.x, p.z) !== true) {
         onDeath(p.x, p.y, p.z);
+        this.clearBigTreeVisitorIntent(i);
         sg.group.visible = false;
         this.portalDowned.push({ sg, at: t + PORTAL_RESPAWN_DELAY });
       }
@@ -481,6 +575,13 @@ export class ShoggothSystem implements PortalCullable {
       if (!sg.group.visible) continue; // portal-downed: dead (invisible) until respawn — don't hunt/consume/spawn
       const g = sg.group;
       const p = g.position;
+      const visitMode = (this.bigTreeModes[si] ?? BigTreeFaunaIntentMode.Normal) as FaunaVisitMode;
+      // Always sample true identity membership, even while a visit intent is active, so the shared
+      // registry observes inner entry, annulus retention, and outer exit throughout travel/activity.
+      // A visit additionally suppresses this actor's own aggression outside the boundary; it does not
+      // make endpoint hazard queries treat the travelling body as a sanctuary member.
+      const memberProtected = this.sanctuary?.(p.x, p.z, si) === true;
+      const protectedHere = visitMode !== BigTreeFaunaIntentMode.Normal || memberProtected;
 
       // F-ECON-CREATURES V17: this shoggoth's WEALTH sets its boldness — rich = bolder (hunts harder,
       // glows bigger + brighter), broke = timid. Reads the deterministic economy; boldness stays 1
@@ -497,7 +598,13 @@ export class ShoggothSystem implements PortalCullable {
       for (let ni = 0; ni < nearby.length; ni++) {
         const en = nearby[ni];
         const ep0 = en?.position;
-        if (ep0 && dist2(p.x, p.y, p.z, ep0.x, ep0.y, ep0.z) < TENDRIL_REACH2) preyCount++;
+        if (
+          !protectedHere &&
+          ep0 &&
+          this.sanctuary?.(ep0.x, ep0.z) !== true &&
+          dist2(p.x, p.y, p.z, ep0.x, ep0.y, ep0.z) < TENDRIL_REACH2
+        )
+          preyCount++;
       }
       let crowd = 0;
       let nearJ = -1; // F-CREATURE-TRADE V29: nearest dealable neighbour within TRADE_R2 (a partner)
@@ -521,11 +628,12 @@ export class ShoggothSystem implements PortalCullable {
           nearJ = sj;
         }
       }
-      const singActive = this.singularity
-        ? this.singularity.bodyForce(p.x, p.y, p.z, dt, HOLE_F)
-        : false;
-      const threat = clamp(crowd / THREAT_CAP + (singActive ? 0.5 : 0), 0, 1);
-      const prey = clamp(preyCount / PREY_CAP, 0, 1);
+      const singActive =
+        !protectedHere && this.singularity
+          ? this.singularity.bodyForce(p.x, p.y, p.z, dt, HOLE_F)
+          : false;
+      const threat = protectedHere ? 0 : clamp(crowd / THREAT_CAP + (singActive ? 0.5 : 0), 0, 1);
+      const prey = protectedHere ? 0 : clamp(preyCount / PREY_CAP, 0, 1);
       sg.satiation = clamp(sg.satiation - SATIATION_DECAY * dt, 0, 1);
       // F-CREATURE-TRADE V29: the nearest shoggoth is a potential PARTNER. How wealth-comparable it is
       // (peer) decides whether we BARGAIN with it (the unlike) or ALLY with it (an equal). boldness is
@@ -533,11 +641,15 @@ export class ShoggothSystem implements PortalCullable {
       let partner = 0;
       let peer = 0;
       let nearBold = 1;
+      let partnerProtected = false;
       if (nearJ >= 0) {
         partner = clamp(1 - nearDD / TRADE_R2, 0, 1);
         if (this.econWealth)
           nearBold = clamp(this.econWealth(nearJ) / meanWorth, BOLD_MIN, BOLD_MAX);
         peer = clamp(1 - Math.abs(boldness - nearBold) / PEER_SPAN, 0, 1);
+        const nearShog = this.shogs[nearJ];
+        const nearPos = nearShog?.group.position;
+        partnerProtected = nearPos ? this.sanctuary?.(nearPos.x, nearPos.z, nearJ) === true : false;
       }
       const intelligence = ctx.organismIntelligence;
       const intelligent = intelligence?.enabled === true;
@@ -569,7 +681,13 @@ export class ShoggothSystem implements PortalCullable {
       // frame. BARGAIN moves worth toward the BOLDER party (power ∝ wealth → widens the spread); ALLY
       // moves it toward the POORER peer (solidarity → narrows it). Conservation-exact via the provider;
       // the change shows up next tick through the existing wealth→boldness→glow coupling (no new state).
-      if (this.econTrade && nearJ >= 0 && (this.frame + si) % TRADE_EVERY === 0) {
+      if (
+        this.econTrade &&
+        nearJ >= 0 &&
+        !protectedHere &&
+        !partnerProtected &&
+        (this.frame + si) % TRADE_EVERY === 0
+      ) {
         if (drive.trade >= drive.ally && drive.trade > 0.05) {
           const amt = drive.trade * TRADE_FRACTION * meanWorth;
           if (boldness >= nearBold)
@@ -595,26 +713,52 @@ export class ShoggothSystem implements PortalCullable {
       // attractor), with a gentle weave, a continuous height-restoring pull, and a soft square leash;
       // the hard clamp below is the guarantee. Pure trig of (t, index, spawn-phase) — draws no rng, so
       // the seeded stream is untouched (a determinism-neutral swap of one rng-free field for another).
-      const wph = si * 1.7 + sg.ph;
-      const wrad = PLATFORM_HALF * (5 / 18 + (si % 5) * (19 / 108));
-      const wtx = Math.cos(t * 0.17 + wph) * wrad;
-      const wtz = Math.sin(t * 0.21 + wph * 1.3) * wrad;
-      const wty = PLATFORM_MID_Y + Math.sin(t * 0.29 + wph) * PLATFORM_HEIGHT * (50 / 117);
-      const wdx = wtx - p.x;
-      const wdy = wty - p.y;
-      const wdz = wtz - p.z;
-      // USER: faster, more kinetic roaming — seek accel 0.04→0.11, weave amps ~2.3× (+ damping 0.985→0.97).
-      const roamGain = intelligent ? 0.88 + intelligence.exploration * 0.24 : 1;
-      const wInv = (0.11 * roamGain) / (Math.sqrt(wdx * wdx + wdy * wdy + wdz * wdz) + 1e-6);
-      sg.vel.x += wdx * wInv + Math.sin(t * 0.7 + si * 1.3) * 0.07;
-      sg.vel.y += wdy * wInv + Math.sin(t * 0.53 + si * 2.1) * 0.05;
-      sg.vel.z += wdz * wInv + Math.cos(t * 0.61 + si * 0.7) * 0.07;
-      sg.vel.y += (PLATFORM_MID_Y - p.y) * 0.003; // height restore — no sky-float/floor-crawl
-      if (p.x > PLATFORM_HALF) sg.vel.x -= 0.1;
-      else if (p.x < -PLATFORM_HALF) sg.vel.x += 0.1;
-      if (p.z > PLATFORM_HALF) sg.vel.z -= 0.1;
-      else if (p.z < -PLATFORM_HALF) sg.vel.z += 0.1;
-      sg.vel.multiplyScalar(0.97);
+      if (visitMode === BigTreeFaunaIntentMode.Normal) {
+        const wph = si * 1.7 + sg.ph;
+        const wrad = PLATFORM_HALF * (5 / 18 + (si % 5) * (19 / 108));
+        const wtx = Math.cos(t * 0.17 + wph) * wrad;
+        const wtz = Math.sin(t * 0.21 + wph * 1.3) * wrad;
+        const wty = PLATFORM_MID_Y + Math.sin(t * 0.29 + wph) * PLATFORM_HEIGHT * (50 / 117);
+        const wdx = wtx - p.x;
+        const wdy = wty - p.y;
+        const wdz = wtz - p.z;
+        // USER: faster, more kinetic roaming — seek accel 0.04→0.11, weave amps ~2.3× (+ damping 0.985→0.97).
+        const roamGain = intelligent ? 0.88 + intelligence.exploration * 0.24 : 1;
+        const wInv = (0.11 * roamGain) / (Math.sqrt(wdx * wdx + wdy * wdy + wdz * wdz) + 1e-6);
+        sg.vel.x += wdx * wInv + Math.sin(t * 0.7 + si * 1.3) * 0.07;
+        sg.vel.y += wdy * wInv + Math.sin(t * 0.53 + si * 2.1) * 0.05;
+        sg.vel.z += wdz * wInv + Math.cos(t * 0.61 + si * 0.7) * 0.07;
+        sg.vel.y += (PLATFORM_MID_Y - p.y) * 0.003; // height restore — no sky-float/floor-crawl
+        if (p.x > PLATFORM_HALF) sg.vel.x -= 0.1;
+        else if (p.x < -PLATFORM_HALF) sg.vel.x += 0.1;
+        if (p.z > PLATFORM_HALF) sg.vel.z -= 0.1;
+        else if (p.z < -PLATFORM_HALF) sg.vel.z += 0.1;
+        sg.vel.multiplyScalar(0.97);
+      } else if (visitMode === BigTreeFaunaIntentMode.Travel) {
+        const dx = (this.bigTreeTargetXs[si] ?? p.x) - p.x;
+        const dy = (this.bigTreeTargetYs[si] ?? p.y) - p.y;
+        const dz = (this.bigTreeTargetZs[si] ?? p.z) - p.z;
+        const inv = 0.42 / (Math.sqrt(dx * dx + dy * dy + dz * dz) + 1e-6);
+        sg.vel.x += dx * inv;
+        sg.vel.y += dy * inv;
+        sg.vel.z += dz * inv;
+        sg.vel.multiplyScalar(0.9);
+      } else {
+        // Active rest/social/observe: settle momentum without anchoring or teleporting the body.
+        sg.vel.multiplyScalar(Math.max(0, 1 - dt * 5));
+        if (visitMode === BigTreeFaunaIntentMode.Social) {
+          const socialDx = (this.bigTreeTargetXs[si] ?? p.x) - p.x;
+          const socialDz = (this.bigTreeTargetZs[si] ?? p.z) - p.z;
+          if (socialDx * socialDx + socialDz * socialDz > 1e-6) {
+            const targetHeading = Math.atan2(socialDx, socialDz);
+            const turn = Math.atan2(
+              Math.sin(targetHeading - g.rotation.y),
+              Math.cos(targetHeading - g.rotation.y),
+            );
+            g.rotation.y += turn * Math.min(1, dt * 3);
+          }
+        }
+      }
       // F-HOLES: an active singularity drags the shoggoth toward/away from its centre (force already
       // computed once in the perception step above; reused here so we never query the hole twice).
       if (singActive) sg.vel.add(HOLE_F);
@@ -647,6 +791,12 @@ export class ShoggothSystem implements PortalCullable {
         p.y = PLATFORM_CEIL;
         if (sg.vel.y > 0) sg.vel.y = 0;
       }
+      // Re-evaluate after integration: an outside shoggoth can cross the sanctuary boundary during
+      // this very frame. All subsequent interaction writes must use its live position, not the stale
+      // pre-move membership sampled for perception.
+      const memberProtectedAfterMove = this.sanctuary?.(p.x, p.z, si) === true;
+      const protectedAfterMove =
+        visitMode !== BigTreeFaunaIntentMode.Normal || memberProtectedAfterMove;
 
       // Roiling rotation + pulsing core glow (legacy 527-530).
       g.rotation.x += Math.sin(t * 0.4 + sg.ph) * 0.008;
@@ -685,8 +835,9 @@ export class ShoggothSystem implements PortalCullable {
       let ti = 0;
       for (let ni = 0; ni < nearby.length && ti < TENDRIL_COUNT; ni++) {
         const en = nearby[ni];
-        if (!en) continue; // noUncheckedIndexedAccess: ni < length
+        if (!en || protectedAfterMove) continue; // sanctuary keeps the appendages calm and non-harmful
         const ep = en.position;
+        if (this.sanctuary?.(ep.x, ep.z) === true) continue;
         if (dist2(p.x, p.y, p.z, ep.x, ep.y, ep.z) < TENDRIL_REACH2) {
           const o = ti * 6;
           tp[o] = 0;
@@ -716,6 +867,7 @@ export class ShoggothSystem implements PortalCullable {
       // Effective hunger combines WEALTH (V17 boldness) with the V24 HUNT drive: a rich, prey-rich,
       // unthreatened, hungry shoggoth feeds sooner; a fleeing/threatened/sated one waits far longer.
       if (
+        !protectedAfterMove &&
         sg.feedTimer >= sg.feedInterval / (boldness * (0.6 + 0.5 * drive.hunt)) &&
         list.length > 50
       ) {
@@ -738,7 +890,13 @@ export class ShoggothSystem implements PortalCullable {
           const e = consumeCandidates[ci];
           // V122: NHI MATRIX beings are not prey; a mesh a sibling shoggoth already devoured this tick
           // (alive=false, out of `list`) is not prey either.
-          if (!e || e.userData.isNhi || e.userData.alive === false) continue;
+          if (
+            !e ||
+            e.userData.isNhi ||
+            e.userData.alive === false ||
+            this.sanctuary?.(e.position.x, e.position.z) === true
+          )
+            continue;
           const ep = e.position;
           const sd = dist2(p.x, p.y, p.z, ep.x, ep.y, ep.z);
           if (sd >= CONSUME_REACH2) continue;
@@ -753,7 +911,13 @@ export class ShoggothSystem implements PortalCullable {
         if (anyReach) {
           for (let ci = 0; ci < consumeCandidates.length; ci++) {
             const e = consumeCandidates[ci];
-            if (!e || e.userData.isNhi || e.userData.alive === false) continue;
+            if (
+              !e ||
+              e.userData.isNhi ||
+              e.userData.alive === false ||
+              this.sanctuary?.(e.position.x, e.position.z) === true
+            )
+              continue;
             const ep = e.position;
             const sd = dist2(p.x, p.y, p.z, ep.x, ep.y, ep.z);
             if (sd !== bestD) continue;

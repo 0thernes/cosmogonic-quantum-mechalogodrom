@@ -230,8 +230,10 @@ describe('NhiMind', () => {
     const noGene = run({ neuralGeneOutput: false });
     expect(noGene.output).toEqual(full.output);
     for (let action = 0; action < full.output.length; action++) {
+      // SPAWN gene gain is intentionally reduced (×0.65) so multi-NHI frames don't CPU-melt.
+      const geneScale = action === NhiAction.SPAWN_SWARM ? 0.5 * 0.65 : 0.5;
       expect((full.scores[action] ?? 0) - (noGene.scores[action] ?? 0)).toBeCloseTo(
-        (full.output[action] ?? 0) * 0.5,
+        (full.output[action] ?? 0) * geneScale,
         5,
       );
     }

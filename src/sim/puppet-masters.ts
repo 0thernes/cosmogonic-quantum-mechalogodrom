@@ -22,6 +22,12 @@ import type { PuppetEvent, SimContext } from '../types';
 import type { EntityManager } from './entities';
 import { PORTAL_RESPAWN_DELAY, type PortalCullable } from './portal-death-fauna';
 import type { DomeFeeder } from './dome-feeding';
+import {
+  BigTreeFaunaIntentMode,
+  type BigTreeFaunaIntentMode as FaunaVisitMode,
+  type BigTreeFaunaSource,
+  type BigTreeFaunaVisitorSample,
+} from './big-tree-fauna-visitors';
 
 type PuppetAction = 'chaos' | 'weather' | 'mutate';
 
@@ -213,15 +219,22 @@ interface Puppet {
  * meddling. Interventions are surfaced to the HUD via the injected `onEvent` callback
  * (legacy `showNM` toast).
  */
-export class PuppetMasterSystem implements PortalCullable, DomeFeeder {
+export class PuppetMasterSystem implements PortalCullable, DomeFeeder, BigTreeFaunaSource {
   private readonly ctx: SimContext;
   private readonly entities: EntityManager;
   private readonly onEvent: (e: PuppetEvent) => void;
   private readonly pms: Puppet[] = [];
+  /** Optional Big Tree locomotion policy, indexed by stable puppeteer birth slot. */
+  private readonly bigTreeModes: Uint8Array;
+  private readonly bigTreeTargetXs: Float64Array;
+  private readonly bigTreeTargetYs: Float64Array;
+  private readonly bigTreeTargetZs: Float64Array;
   /** PORTAL DEATH (USER): puppeteers blasted by the portal, awaiting their 5 s respawn ELSEWHERE. */
   private readonly portalDowned: { pm: Puppet; at: number }[] = [];
   /** F-ECON-CREATURES V19: economic net-worth provider by puppeteer index (null ⇒ no coupling). */
   private econWealth: ((puppetIndex: number) => number) | null = null;
+  /** Shared neutral-zone policy. World may retain stable-ID hysteresis history between live samples. */
+  private sanctuary: ((x: number, z: number, ownerId?: number) => boolean) | null = null;
 
   /**
    * Builds the puppeteer cabal (CONTRACTS V14: 100 on desktop+, 14 on phone). The 3 named heroes
@@ -237,6 +250,10 @@ export class PuppetMasterSystem implements PortalCullable, DomeFeeder {
       const cfg = i < CONFIGS.length ? CONFIGS[i]! : lesserConfig(i - CONFIGS.length);
       this.addPuppet(cfg, i < LIT_PUPPETS);
     }
+    this.bigTreeModes = new Uint8Array(count);
+    this.bigTreeTargetXs = new Float64Array(count);
+    this.bigTreeTargetYs = new Float64Array(count);
+    this.bigTreeTargetZs = new Float64Array(count);
   }
 
   /**
@@ -247,6 +264,11 @@ export class PuppetMasterSystem implements PortalCullable, DomeFeeder {
    */
   attachEconomy(wealthByIndex: ((puppetIndex: number) => number) | null): void {
     this.econWealth = wealthByIndex;
+  }
+
+  /** Attach the composition-root sanctuary predicate; null restores legacy meddling. */
+  attachSanctuary(predicate: ((x: number, z: number, ownerId?: number) => boolean) | null): void {
+    this.sanctuary = predicate;
   }
 
   /** Build one puppeteer (tetra core + torus ring; a point light only on the first LIT_PUPPETS). */
@@ -300,6 +322,76 @@ export class PuppetMasterSystem implements PortalCullable, DomeFeeder {
     return this.pms.length;
   }
 
+  /** Stable fixed slots exposed to the generic Big Tree fauna scheduler. */
+  get bigTreeVisitorSlotCount(): number {
+    return this.pms.length;
+  }
+
+  readBigTreeVisitor(slot: number, out: BigTreeFaunaVisitorSample): boolean {
+    if (!Number.isInteger(slot) || slot < 0) return false;
+    const puppet = this.pms[slot];
+    if (!puppet) return false;
+    const p = puppet.mesh.position;
+    out.ownerId = slot;
+    out.alive = puppet.mesh.visible;
+    out.x = p.x;
+    out.y = p.y;
+    out.z = p.z;
+    out.hunger = 1 - clamp(puppet.satiation, 0, 1);
+    out.fatigue = out.hunger * 0.2;
+    out.healthDeficit = 0;
+    out.stress = 0;
+    out.socialNeed = 0.22 + ((slot * 13) % 29) / 100;
+    out.curiosity = 0.2 + ((slot * 31) % 43) / 100;
+    return true;
+  }
+
+  setBigTreeVisitorIntent(
+    ownerId: number,
+    mode: FaunaVisitMode,
+    targetX: number,
+    targetY: number,
+    targetZ: number,
+  ): boolean {
+    const puppet = this.pms[ownerId];
+    if (
+      !puppet ||
+      !puppet.mesh.visible ||
+      (mode !== BigTreeFaunaIntentMode.Normal &&
+        mode !== BigTreeFaunaIntentMode.Travel &&
+        mode !== BigTreeFaunaIntentMode.Calm &&
+        mode !== BigTreeFaunaIntentMode.Social) ||
+      !Number.isFinite(targetX) ||
+      !Number.isFinite(targetY) ||
+      !Number.isFinite(targetZ)
+    ) {
+      return false;
+    }
+    this.bigTreeModes[ownerId] = mode;
+    this.bigTreeTargetXs[ownerId] = targetX;
+    this.bigTreeTargetYs[ownerId] = targetY;
+    this.bigTreeTargetZs[ownerId] = targetZ;
+    return true;
+  }
+
+  nourishBigTreeVisitor(ownerId: number, nourishment: number): boolean {
+    const puppet = this.pms[ownerId];
+    if (!puppet?.mesh.visible || !Number.isFinite(nourishment) || nourishment <= 0) return false;
+    puppet.satiation = clamp(puppet.satiation + nourishment / 50, 0, 1);
+    puppet.ti = 0;
+    return true;
+  }
+
+  clearBigTreeVisitorIntent(ownerId: number): boolean {
+    if (!Number.isInteger(ownerId) || ownerId < 0 || ownerId >= this.bigTreeModes.length)
+      return false;
+    this.bigTreeModes[ownerId] = BigTreeFaunaIntentMode.Normal;
+    this.bigTreeTargetXs[ownerId] = 0;
+    this.bigTreeTargetYs[ownerId] = 0;
+    this.bigTreeTargetZs[ownerId] = 0;
+    return true;
+  }
+
   /**
    * Free every puppeteer's GPU resources on World teardown / HMR so VRAM never leaks across dev reloads.
    * Each puppet owns a per-instance body (Tetrahedron geometry + MeshStandardMaterial) and ring (Torus
@@ -318,6 +410,7 @@ export class PuppetMasterSystem implements PortalCullable, DomeFeeder {
     r2: number,
     t: number,
     onDeath: (x: number, y: number, z: number) => void,
+    protectedAt?: (x: number, z: number) => boolean,
   ): void {
     for (let k = this.portalDowned.length - 1; k >= 0; k--) {
       const d = this.portalDowned[k]!;
@@ -331,8 +424,9 @@ export class PuppetMasterSystem implements PortalCullable, DomeFeeder {
       const p = pm.mesh.position;
       const dx = p.x - ax;
       const dz = p.z - az;
-      if (dx * dx + dz * dz <= r2) {
+      if (dx * dx + dz * dz <= r2 && protectedAt?.(p.x, p.z) !== true) {
         onDeath(p.x, p.y, p.z);
+        this.clearBigTreeVisitorIntent(i);
         pm.mesh.visible = false;
         this.portalDowned.push({ pm, at: t + PORTAL_RESPAWN_DELAY });
       }
@@ -389,20 +483,48 @@ export class PuppetMasterSystem implements PortalCullable, DomeFeeder {
       // Pure trig of (t, i, hue) — draws no rng, so the seeded stream is untouched.
       const pph = i * 1.7 + cfg.hue * 6.2831853;
       const prad = PLATFORM_HALF * (8 / 27 + ((i + Math.floor(cfg.hue * 5)) % 5) * (1 / 6));
-      pm.mesh.position.set(
-        Math.cos(t * 0.17 + pph) * prad,
-        PLATFORM_MID_Y + Math.sin(t * 0.29 + pph) * PLATFORM_HEIGHT * (35 / 78),
-        Math.sin(t * 0.21 + pph * 1.3) * prad,
-      );
+      const visitMode = (this.bigTreeModes[i] ?? BigTreeFaunaIntentMode.Normal) as FaunaVisitMode;
+      const naturalY = PLATFORM_MID_Y + Math.sin(t * 0.29 + pph) * PLATFORM_HEIGHT * (35 / 78);
+      if (visitMode === BigTreeFaunaIntentMode.Normal) {
+        pm.mesh.position.set(
+          Math.cos(t * 0.17 + pph) * prad,
+          naturalY,
+          Math.sin(t * 0.21 + pph * 1.3) * prad,
+        );
+      } else if (visitMode === BigTreeFaunaIntentMode.Travel) {
+        const position = pm.mesh.position;
+        const dx = (this.bigTreeTargetXs[i] ?? position.x) - position.x;
+        const dy = (this.bigTreeTargetYs[i] ?? position.y) - position.y;
+        const dz = (this.bigTreeTargetZs[i] ?? position.z) - position.z;
+        const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+        const fraction = distance > 1e-6 ? Math.min(1, (55 * dt) / distance) : 0;
+        position.x += dx * fraction;
+        position.y += dy * fraction;
+        position.z += dz * fraction;
+      } else if (visitMode === BigTreeFaunaIntentMode.Social) {
+        const position = pm.mesh.position;
+        const socialDx = (this.bigTreeTargetXs[i] ?? position.x) - position.x;
+        const socialDz = (this.bigTreeTargetZs[i] ?? position.z) - position.z;
+        if (socialDx * socialDx + socialDz * socialDz > 1e-6) {
+          const targetHeading = Math.atan2(socialDx, socialDz);
+          const turn = Math.atan2(
+            Math.sin(targetHeading - pm.mesh.rotation.y),
+            Math.cos(targetHeading - pm.mesh.rotation.y),
+          );
+          pm.mesh.rotation.y += turn * Math.min(1, dt * 3.2);
+        }
+      }
       // F-COGNITION V25: PERCEIVE the disorder in this hand's sector (entity density below) + REMEMBER
       // recent meddling → a scheming opportunism. threat=0 (disembodied; never flees); the HUNT drive
       // is the meddle urge, AGITATION the restless glow/spin. Reuses the shared creatureDrive kernel.
       const here = pm.mesh.position;
-      const localOpportunity = clamp(
-        this.ctx.grid.query(here.x, here.z, PUP_OPP_R).length / PUP_OPP_CAP,
-        0,
-        1,
-      );
+      // Keep stable-ID boundary history current throughout Travel/Calm/Social. The visit-mode branch
+      // only de-escalates this puppeteer's own meddling; endpoint protection remains position-based.
+      const memberProtected = this.isProtectedAt(here.x, here.z, i);
+      const protectedHere = visitMode !== BigTreeFaunaIntentMode.Normal || memberProtected;
+      const localOpportunity = protectedHere
+        ? 0
+        : clamp(this.ctx.grid.query(here.x, here.z, PUP_OPP_R).length / PUP_OPP_CAP, 0, 1);
       const intelligence = this.ctx.organismIntelligence;
       const opportunity = intelligence?.enabled
         ? clamp(
@@ -413,15 +535,17 @@ export class PuppetMasterSystem implements PortalCullable, DomeFeeder {
             1,
           )
         : localOpportunity;
-      pm.satiation = clamp(pm.satiation - PUP_SAT_DECAY * dt, 0, 1);
+      if (!protectedHere) pm.satiation = clamp(pm.satiation - PUP_SAT_DECAY * dt, 0, 1);
       const drive = creatureDrive({
         threat: 0,
         prey: opportunity,
         satiation: pm.satiation,
         boldness,
       });
+      const agitation = protectedHere ? 0 : drive.agitation;
+      const hunt = protectedHere ? 0 : drive.hunt;
       pm.mesh.rotation.x += dt * 0.5;
-      pm.mesh.rotation.y += dt * (0.7 + drive.agitation * 0.5); // restless when there's chaos to exploit
+      pm.mesh.rotation.y += dt * (0.7 + agitation * 0.5); // sanctuary removes the scheming restlessness
       // Wealth shows on the body: a rich hand looms larger (the visible purse).
       pm.mesh.scale.setScalar(0.8 + 0.25 * boldness);
       pm.ring.rotation.z = t * 2;
@@ -431,7 +555,7 @@ export class PuppetMasterSystem implements PortalCullable, DomeFeeder {
       pm.mat.emissiveIntensity =
         (1.5 + Math.sin(t * 2 + cfg.hue * 15) * 0.8) *
         (0.65 + 0.4 * boldness) *
-        (0.8 + 0.4 * drive.agitation);
+        (0.8 + 0.4 * agitation);
       // Drive the manipulator shader from the REAL per-puppet signals (each clamped to [0,1] so every
       // named effect is a bounded, falsifiable readout): feeding memory, wealth-boldness, scheming
       // agitation, and the hunt drive. A spent/poor/idle hand goes quiet; a gorged/rich/scheming one blazes.
@@ -439,26 +563,29 @@ export class PuppetMasterSystem implements PortalCullable, DomeFeeder {
       pu.uTime.value = t;
       pu.uSatiation.value = pm.satiation;
       pu.uBoldness.value = clamp(boldness, 0, 1);
-      pu.uAgitation.value = clamp(drive.agitation, 0, 1);
-      pu.uHunt.value = clamp(drive.hunt, 0, 1);
-      pm.ti += dt * 30;
+      pu.uAgitation.value = clamp(agitation, 0, 1);
+      pu.uHunt.value = clamp(hunt, 0, 1);
+      if (!protectedHere) pm.ti += dt * 30;
       // Meddle cadence: WEALTH (V19 boldness) × the V25 opportunism HUNT drive — a rich hand over a
       // disordered, target-rich sector that hasn't acted lately strikes soonest; a spent one waits.
       const planningGain = intelligence?.enabled
         ? 0.9 + intelligence.confidence * 0.06 + intelligence.exploration * 0.08
         : 1;
-      if (pm.ti >= cfg.iv / (boldness * (0.6 + 0.5 * drive.hunt) * planningGain)) {
+      if (!protectedHere && pm.ti >= cfg.iv / (boldness * (0.6 + 0.5 * hunt) * planningGain)) {
         pm.ti = 0;
         pm.satiation = clamp(pm.satiation + PUP_SAT_BUMP, 0, 1); // remember the meddle
-        this.act(cfg);
+        this.act(pm, i);
       }
     }
   }
 
   /** Perform one interval action (legacy 498-501). */
-  private act(cfg: PuppetConfig): void {
+  private act(pm: Puppet, ownerId?: number): void {
     const ctx = this.ctx;
     const rng = ctx.rng;
+    const pp = pm.mesh.position;
+    if (this.isProtectedAt(pp.x, pp.z, ownerId)) return;
+    const cfg = pm.cfg;
     switch (cfg.act) {
       case 'chaos': {
         ctx.state.chaos = clamp(ctx.state.chaos + 0.5 + rng() * 2, CHAOS_MIN, CHAOS_MAX * 0.7);
@@ -476,15 +603,28 @@ export class PuppetMasterSystem implements PortalCullable, DomeFeeder {
       case 'mutate': {
         const list = this.entities.list;
         const mc = Math.min(30, list.length);
+        let mutated = 0;
         for (let mi = 0; mi < mc; mi++) {
           const target = list[Math.floor(rng() * list.length)];
-          // Remorph rolls over the LIVE morph table (250 in phylum mode).
-          if (target) this.entities.remorph(target, Math.floor(rng() * ctx.morphs.length));
+          // Draw the morph unconditionally so protected-target filtering cannot drift the seeded
+          // decision stream. EntityManager.list is dense, making this identical to the legacy path
+          // when no sanctuary is attached.
+          const morph = Math.floor(rng() * ctx.morphs.length);
+          if (!target) continue;
+          if (this.isProtectedAt(target.position.x, target.position.z)) {
+            // EntityManager.remorph consumes two draws for wf/wa. Mirror them when sanctuary blocks
+            // the write so later actors see the same seeded stream without touching the protected body.
+            rng();
+            rng();
+            continue;
+          }
+          this.entities.remorph(target, morph);
+          mutated++;
         }
         // Known Bug 14: the counter is now read by telemetry (#v8), so keep it accurate.
-        ctx.state.mutations += mc;
-        // Invariant: mc ∈ [0, 30] and RESHAPE_MESSAGES has 31 entries.
-        this.emit(cfg.name, RESHAPE_MESSAGES[mc]!);
+        ctx.state.mutations += mutated;
+        // Invariant: mutated ∈ [0, 30] and RESHAPE_MESSAGES has 31 entries.
+        this.emit(cfg.name, RESHAPE_MESSAGES[mutated]!);
         ctx.sfx('mutate');
         break;
       }
@@ -496,5 +636,9 @@ export class PuppetMasterSystem implements PortalCullable, DomeFeeder {
     EVENT.name = name;
     EVENT.action = action;
     this.onEvent(EVENT);
+  }
+
+  private isProtectedAt(x: number, z: number, ownerId?: number): boolean {
+    return this.sanctuary?.(x, z, ownerId) === true;
   }
 }

@@ -74,7 +74,7 @@ const DOME_R = ARENA_RADIUS * 0.72;
 const ARENA_HALF = PLATFORM_HALF;
 const ARENA_CEIL = PLATFORM_CEIL;
 const ARENA_FLOOR = PLATFORM_FLOOR;
-const PANTHEON_REF_ATLAS_URL = '/textures/pantheon_equirect_refs_atlas.png';
+const PANTHEON_REF_ATLAS_URL = './textures/pantheon_equirect_refs_atlas.png';
 
 function createPantheonFallbackAtlas(): THREE.DataTexture {
   // Deterministic tiny fallback for Bun/headless tests; browser swaps in the generated atlas.

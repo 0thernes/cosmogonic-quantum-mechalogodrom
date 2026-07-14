@@ -35,6 +35,10 @@ import {
   type TitanRd,
 } from '../src/sim/titans';
 import { getQuantizationConfig } from '../src/math/quantization';
+import {
+  BigTreeFaunaIntentMode,
+  type BigTreeFaunaVisitorSample,
+} from '../src/sim/big-tree-fauna-visitors';
 import type { AuditTrail } from '../src/logging/audit';
 import type { Entity, OrganismIntelligenceSignal, SimContext } from '../src/types';
 
@@ -516,5 +520,245 @@ describe('TitanSystem — roam stays in home territory (anti-clustering regressi
       return arr.flatMap((t) => [t.group.position.x, t.group.position.z]);
     };
     expect(drive(0x42)).toEqual(drive(0x42));
+  });
+});
+
+interface TitanSanctuaryView {
+  group: THREE.Group;
+  energy: number;
+  matter: number;
+  entropy: number;
+  warCount: number;
+  tu: {
+    uMenace: { value: number };
+    uWar: { value: number };
+  };
+}
+
+interface TitanSanctuaryHarness {
+  titans: TitanSanctuaryView[];
+  histories: Array<{ rounds: number }>;
+  diplomacy(pairIndex: number): void;
+  strikeCheck(pairIndex: number): void;
+}
+
+describe('TitanSystem — sanctuary is transient, neutral, and non-harmful', () => {
+  test('protected pairs do not initiate diplomacy and calm presentation without rewriting war state', () => {
+    const ctx = makeCtx(0x5afe);
+    const entities = new EntityManager(ctx);
+    const titans = new TitanSystem(ctx, entities, LORE, { perturb: () => undefined });
+    const harness = titans as unknown as TitanSanctuaryHarness;
+    const a = harness.titans[0]!;
+    const b = harness.titans[1]!;
+    titans.setStrategy(0, 3);
+    titans.setStrategy(1, 3);
+
+    let rngDraws = 0;
+    ctx.rng = () => {
+      rngDraws++;
+      return 0.9;
+    };
+    const energyBefore = [a.energy, b.energy];
+    titans.attachSanctuary(() => true);
+    for (let round = 0; round < 3; round++) harness.diplomacy(0);
+    expect(rngDraws).toBe(0);
+    expect(harness.histories[0]?.rounds).toBe(0);
+    expect([a.energy, b.energy]).toEqual(energyBefore);
+    expect(titans.warMatrix[1]).toBe(0);
+
+    // Leaving resumes the exact existing diplomacy path; three always-defect rounds establish war.
+    titans.attachSanctuary(null);
+    for (let round = 0; round < 3; round++) harness.diplomacy(0);
+    expect(rngDraws).toBe(6);
+    expect(titans.warMatrix[1]).toBe(REL_WAR);
+    expect(a.warCount).toBe(1);
+    expect(b.warCount).toBe(1);
+
+    // Protection masks the battle drive only in presentation; the matrix and ledger remain factual.
+    a.entropy = 100;
+    titans.attachSanctuary(() => true);
+    ctx.state.frame = 1;
+    titans.update(0, 1);
+    expect(a.tu.uMenace.value).toBe(0);
+    expect(a.tu.uWar.value).toBe(0);
+    expect(titans.ledger[0]?.war).toBe(1);
+    expect(titans.warMatrix[1]).toBe(REL_WAR);
+
+    titans.attachSanctuary(null);
+    ctx.state.frame = 2;
+    titans.update(0, 2);
+    expect(a.tu.uMenace.value).toBeGreaterThan(0);
+    expect(a.tu.uWar.value).toBeGreaterThan(0);
+    expect(titans.ledger[0]?.war).toBe(1);
+    expect(titans.warMatrix[1]).toBe(REL_WAR);
+    titans.dispose();
+  });
+
+  test('protected titan participants cannot raid and normal strikes resume after exit', () => {
+    const ctx = makeCtx(0x57a1ce);
+    const entities = new EntityManager(ctx);
+    const titans = new TitanSystem(ctx, entities, LORE, { perturb: () => undefined });
+    const harness = titans as unknown as TitanSanctuaryHarness;
+    const a = harness.titans[0]!;
+    const b = harness.titans[1]!;
+    titans.warMatrix[1] = REL_WAR;
+    titans.warMatrix[20] = REL_WAR;
+    a.energy = 200;
+    b.energy = 100;
+    const before = { aEnergy: a.energy, bEnergy: b.energy, matter: a.matter };
+
+    titans.attachSanctuary(() => true);
+    harness.strikeCheck(0);
+    expect({ aEnergy: a.energy, bEnergy: b.energy, matter: a.matter }).toEqual(before);
+    expect(entities.list).toHaveLength(0);
+
+    titans.attachSanctuary(null);
+    harness.strikeCheck(0);
+    expect(a.energy).toBeLessThan(before.aEnergy);
+    expect(b.energy).toBeLessThan(before.bEnergy);
+    expect(a.matter).toBeGreaterThan(before.matter);
+    expect(entities.list.length).toBeGreaterThan(0);
+    titans.dispose();
+  });
+
+  test('an outside strike skips a protected organism target without changing broader combat', () => {
+    const ctx = makeCtx(0x7a26e7);
+    const entities = new EntityManager(ctx);
+    const titans = new TitanSystem(ctx, entities, LORE, { perturb: () => undefined });
+    const harness = titans as unknown as TitanSanctuaryHarness;
+    const a = harness.titans[0]!;
+    const b = harness.titans[1]!;
+    titans.warMatrix[1] = REL_WAR;
+    titans.warMatrix[20] = REL_WAR;
+    a.energy = 250;
+    b.energy = 100;
+
+    const bp = b.group.position;
+    const target = entities.spawn(new THREE.Vector3(bp.x + 0.25, bp.y, bp.z), 0) as Entity;
+    ctx.grid.insert(target);
+    const velocityBefore = target.userData.vel.clone();
+    const targetX = target.position.x;
+    const targetZ = target.position.z;
+    const remorph = spyOn(entities, 'remorph');
+    titans.attachSanctuary((x, z) => Math.abs(x - targetX) < 0.01 && Math.abs(z - targetZ) < 0.01);
+
+    harness.strikeCheck(0);
+    expect(a.energy).toBeLessThan(250); // the outside-vs-outside raid itself still occurred
+    expect(target.userData.vel.equals(velocityBefore)).toBe(true);
+    expect(remorph.mock.calls.some(([entity]) => entity === target)).toBe(false);
+
+    // The same reachable target becomes eligible again immediately after leaving protection.
+    titans.attachSanctuary(null);
+    a.energy = 250;
+    b.energy = 100;
+    harness.strikeCheck(0);
+    expect(target.userData.vel.equals(velocityBefore)).toBe(false);
+    expect(remorph.mock.calls.some(([entity]) => entity === target)).toBe(true);
+    remorph.mockRestore();
+    titans.dispose();
+  });
+
+  test('an outside strike cannot seed hostile burst bodies through the sanctuary boundary', () => {
+    const ctx = makeCtx(0xb0a4d4);
+    const entities = new EntityManager(ctx);
+    const titans = new TitanSystem(ctx, entities, LORE, { perturb: () => undefined });
+    const harness = titans as unknown as TitanSanctuaryHarness;
+    const a = harness.titans[0]!;
+    const b = harness.titans[1]!;
+    titans.warMatrix[1] = REL_WAR;
+    titans.warMatrix[20] = REL_WAR;
+    a.energy = 250;
+    b.energy = 100;
+    const dp = b.group.position;
+
+    // Every burst candidate is dp + (4, 2, 4); neither titan occupies that protected point.
+    ctx.rng = () => 1;
+    titans.attachSanctuary(
+      (x, z) => Math.abs(x - (dp.x + 4)) < 0.01 && Math.abs(z - (dp.z + 4)) < 0.01,
+    );
+    harness.strikeCheck(0);
+    expect(a.energy).toBeLessThan(250); // outside combat still resolves
+    expect(entities.list).toHaveLength(0); // protected burst destination stays empty
+
+    titans.attachSanctuary(null);
+    a.energy = 250;
+    b.energy = 100;
+    harness.strikeCheck(0);
+    expect(entities.list.length).toBeGreaterThan(0);
+    titans.dispose();
+  });
+});
+
+describe('TitanSystem — public Big Tree fauna hooks', () => {
+  test('sanctuary self checks carry stable titan IDs', () => {
+    const ctx = makeCtx(0x71d);
+    const entities = new EntityManager(ctx);
+    const titans = new TitanSystem(ctx, entities, LORE, { perturb: () => undefined });
+    const seen = new Set<number>();
+    titans.attachSanctuary((_x, _z, ownerId) => {
+      if (ownerId !== undefined) seen.add(ownerId);
+      return false;
+    });
+    const sample = {} as BigTreeFaunaVisitorSample;
+    titans.readBigTreeVisitor(0, sample);
+    titans.setBigTreeVisitorIntent(0, BigTreeFaunaIntentMode.Travel, sample.x, sample.y, sample.z);
+    titans.update(0, 0);
+    expect(seen.has(0)).toBe(true);
+    expect(seen.has(titans.count - 1)).toBe(true);
+    titans.dispose();
+  });
+
+  test('stable IDs expose economy hunger, travel converges, calm settles, and nutrition is exact', () => {
+    const ctx = makeCtx(0x7ee);
+    const entities = new EntityManager(ctx);
+    const titans = new TitanSystem(ctx, entities, LORE, { perturb: () => undefined });
+    const sample = {} as BigTreeFaunaVisitorSample;
+    expect(titans.bigTreeVisitorSlotCount).toBe(20);
+    expect(titans.readBigTreeVisitor(0, sample)).toBe(true);
+    expect(sample.ownerId).toBe(0);
+    const hungerBefore = sample.hunger;
+    const targetX = sample.x + (sample.x > 0 ? -120 : 120);
+    const targetZ = sample.z + (sample.z > 0 ? -80 : 80);
+    const distanceBefore = Math.hypot(targetX - sample.x, targetZ - sample.z);
+    expect(
+      titans.setBigTreeVisitorIntent(0, BigTreeFaunaIntentMode.Travel, targetX, sample.y, targetZ),
+    ).toBe(true);
+    for (let frame = 1; frame <= 20; frame++) {
+      ctx.state.frame = frame;
+      titans.update(0.1, frame * 0.1);
+    }
+    titans.readBigTreeVisitor(0, sample);
+    expect(Math.hypot(targetX - sample.x, targetZ - sample.z)).toBeLessThan(distanceBefore);
+
+    expect(
+      titans.setBigTreeVisitorIntent(0, BigTreeFaunaIntentMode.Calm, sample.x, sample.y, sample.z),
+    ).toBe(true);
+    for (let frame = 21; frame <= 50; frame++) {
+      ctx.state.frame = frame;
+      titans.update(0.1, frame * 0.1);
+    }
+    titans.readBigTreeVisitor(0, sample);
+    const settledX = sample.x;
+    const settledZ = sample.z;
+    for (let frame = 51; frame <= 60; frame++) {
+      ctx.state.frame = frame;
+      titans.update(0.1, frame * 0.1);
+    }
+    titans.readBigTreeVisitor(0, sample);
+    expect(Math.hypot(sample.x - settledX, sample.z - settledZ)).toBeLessThan(0.05);
+
+    const energyBefore = (1 - sample.hunger) * RESOURCE_CAP;
+    expect(titans.nourishBigTreeVisitor(0, 28)).toBe(true);
+    titans.readBigTreeVisitor(0, sample);
+    expect((1 - sample.hunger) * RESOURCE_CAP).toBeCloseTo(energyBefore + 28, 10);
+    expect(sample.hunger).toBeLessThan(hungerBefore);
+
+    const harness = titans as unknown as TitanSanctuaryHarness;
+    harness.titans[0]!.entropy = 40;
+    expect(titans.restBigTreeVisitor(0, 2.5)).toBe(true);
+    expect(harness.titans[0]!.entropy).toBe(30);
+    expect(titans.restBigTreeVisitor(0, Number.NaN)).toBe(false);
+    expect(titans.clearBigTreeVisitorIntent(0)).toBe(true);
+    titans.dispose();
   });
 });

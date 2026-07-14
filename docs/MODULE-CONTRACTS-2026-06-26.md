@@ -1697,3 +1697,220 @@ If a symbol (getArchonForm, ArchonForm) is referenced, it MUST be present in the
 Receipts + ownership supersede handoff prose where drift. Full gate required to re-green.
 
 End of GOAL5 amendments.
+
+---
+
+# CONTRACT AMENDMENT — DOME ECOLOGY AND BIG TREE
+
+This amendment records the implemented ownership and lifecycle boundaries for the Crystal Big Tree
+ecology. It does not replace the general determinism, allocation, rendering, or honesty contracts
+above.
+
+## Canonical module ownership
+
+| Module                               | Exclusive responsibility                                                                                                                                                                                            |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/sim/edible-resource.ts`         | Fixed-capacity fruit/leaf identity, reservation, consumption, nourishment, lease expiry, and respawn transactions                                                                                                   |
+| `src/sim/crystal-ecosystem.ts`       | Authored tree food pools and matrices, reachable interaction points, tree-dwelling creatures, and the scaled ecology clock                                                                                          |
+| `src/sim/big-tree-zone.ts`           | Sanctuary geometry, hysteresis, activity-slot ownership, bounded visit state, partner reservations, deadlines, typed transition causes/timestamps, snapshots, and recovery                                          |
+| `src/sim/big-tree-sanctuary.ts`      | Fixed-capacity identity membership for entry/exit hysteresis plus conservative stateless protection for hostile endpoints                                                                                           |
+| `src/sim/big-tree-visitors.ts`       | Direct adapters for canonical Entities and Xenomimics: contextual selection, steering, food transactions, nourishment, rest, social matching, and cleanup                                                           |
+| `src/sim/big-tree-fauna-visitors.ts` | Bounded canonical adapter for Shoggoths, Titans, Puppeteers, and launched NHIs using real hunger/energy, 3D locomotion, nutrition, and visit intent hooks                                                           |
+| `src/sim/nhi-big-tree-source.ts`     | Fixed-capacity launched-NHI binding over the one canonical backing Entity, including real energy hunger, social signals, nourishment, locomotion intent, and cleanup                                                |
+| `src/sim/tree-creature-brain.ts`     | One deterministic fixed-size neural controller per tree-dwelling creature, with validated model loading and a safe fallback                                                                                         |
+| `src/world.ts`                       | Composition only: construct the shared zone/visit/visitor systems, supply canonical living populations and clocks, attach sanctuary predicates, bridge peaceful activity feedback, and assemble gated pull receipts |
+| `src/main.ts`                        | Derive the localhost diagnostics gate, pass it into `World` construction, and install the local-only `window.__CQM__.bigTreeEcology.snapshot(query?)` hook                                                          |
+
+Tree food is not a parallel exception. `CrystalEcosystem.edibleResources` is the shared
+`EdibleResourceRegistry`, and both the external visitor adapter and the tree-dweller ecology use its
+same reserve/begin/complete/cancel operations.
+
+## Fruit and leaf transaction contract
+
+Production authors 10,000 fruits and 10,000 leaves as a fixed pool. Every slot has a stable resource
+ID, kind, world position, reachable ground interaction point, nourishment value, owner, lease,
+respawn deadline, and generation. Its state machine is:
+
+```text
+available -> reserved -> consuming -> respawning -> available
+                    \-> available (cancel or expired lease)
+```
+
+- `reserveAny` selects a deterministic free fruit/leaf in O(1); `reserveById` addresses a known item
+  without scanning. Exactly one owner and generation can advance a reservation.
+- `beginConsumption` accepts only the matching reserved owner/generation. `completeConsumption` is
+  the sole nourishment commit: it accepts only that matching `consuming` transaction, returns the
+  nourishment once, clears ownership, and inserts one respawn deadline. Duplicate, stale,
+  wrong-owner, or expired attempts return no nourishment.
+- `EDIBLE_RESOURCE_RESPAWN_SECONDS` is exactly `5`. A successful commit records
+  `respawnAt = now + 5` on `CrystalEcosystem`'s scaled simulation clock. Pause/visual-only frames do
+  not advance that clock; simulation-speed changes advance it by the same scaled `dt` used by the
+  ecology. Locomotion may cap its integration slice, but food deadlines receive the full scaled
+  delta.
+- Tree-resident behavior advances through stable at-most-100-ms substeps covering the same full
+  scaled delta as leases and respawns. Supported 3x/5x speed therefore cannot advance food deadlines
+  faster than resident travel, metabolism, or decisions.
+- Consumption hides the existing instance immediately. At the deadline, the authored instance
+  matrix is restored before the registry publishes the item as `available`. A failed visual restore
+  remains unavailable and is retried deterministically; it cannot expose invisible edible food.
+- Indexed fixed-capacity heaps permit each resource to hold at most one lease and one respawn
+  deadline. Generation bumps invalidate stale handles. Reset clears deadlines and reservations,
+  restores hidden matrices before availability, and resets every tree-creature target handle.
+  The existing visual instance is reused; the registry creates no per-meal render or collision
+  object.
+- A visitor that loses a resource cancels its exact generation, waits 0.4 simulation seconds, and
+  selects another item. Four seconds without food ends that activity cleanly. Death, despawn,
+  cancellation, leaving, and reset release food, slots, and social partners.
+
+## Safe-zone and temporary-visit contract
+
+`BigTreeZone` uses the canonical Crystal Tree X/Z center `(220, 620)`. Initial entry uses radius
+`240`; an existing member remains inside until radius `270`. The separate thresholds are the
+boundary hysteresis. For stateless combat and hazard queries, `World` deliberately uses the
+conservative outer radius so an outside actor cannot attack a protected target through the
+boundary.
+
+`BigTreeSanctuaryMembershipRegistry` keys ordinary organisms by stable `ecologyId`, Xenomimics by
+stable `(pairId, role)`, and fixed fauna by stable system slot/ID in separate Shoggoth, Titan, and
+Puppeteer namespaces. First arrival requires the inner radius; each recorded identity retains its own
+protection through the annulus until crossing the outer radius. Missing/invalid identities and a full
+registry fall back to the conservative endpoint predicate rather than creating untracked membership.
+Death/eaten cleanup is event-driven. An Entity-population Genesis reset removes discarded ordinary
+and launched-NHI records, preserving live Xenomimic and fixed-fauna boundary history. It does not
+reset Crystal food or the shared scheduler.
+The composition root attaches sanctuary protection to Entity behaviors and brains, Xenomimic
+threat/predation, and the applicable predator, combat, control, singularity, and chaos systems. A
+protected actor receives calm threat inputs and harmful pursuit, consumption, mutation, or strike
+effects are suppressed. Normal collision separation and calm locomotion remain allowed. Leaving the
+zone resumes live canonical faction/relationship/economy state; stale hostile targets are not
+automatically reinstated.
+
+Portal-death culling is also sanctuary-gated. `World` passes the conservative outer-boundary
+predicate through `PortalDeathFauna` to the Shoggoth, Puppeteer, Titan, and Leviathan rosters. A body
+inside the portal cylinder is killed/hidden and queued for respawn only when that endpoint is not
+protected; an actual Shoggoth, Puppeteer, or Titan cull also clears its tree-visit intent before the
+body is hidden. Leviathan endpoint protection here does not make Leviathans tree visitors or invent
+hunger/nutrition state for them.
+
+Visits are contextual and deterministic-randomized from hunger, fatigue, stress, social need,
+curiosity, danger, distance, route availability, available food, recent-visit pressure, personality,
+occupancy, and simulation load. The runtime lifecycle is:
+
+```text
+Outside -> Travelling -> Active -> Leaving -> Cooldown -> Outside
+```
+
+One shared production scheduler covers ordinary Entities (including NHI minions), Xenomimics,
+Shoggoths, Titans, Puppeteers, and launched NHIs. It has at most 72 concurrent
+travelling/active/leaving visitors and 104
+distributed destinations: 32 eating slots at radius 78, 24 resting at 132, 24 social at 178, 16
+observation at 218, and 8 general slots at 205. Active dwell is 7-24 simulation seconds; revisit
+cooldown is 35-95 seconds. Travel and exit hard limits are 90 and 50 seconds. Activity slots have a
+12-second renewable lease. Lack of progress for 8 seconds triggers a different-slot recovery, with
+at most two recoveries before a safe exit/cooldown. All transitions release food, slot, and partner
+reservations on completion, timeout, target loss, death, despawn, error, or reset.
+
+The same staggered candidate polls adopt a valid, untracked body already inside the entry boundary
+when its optional contextual draw declines. That incidental entrant receives a canonical
+`Safety`/`Observe` record, bounded dwell, departure, and revisit cooldown instead of protection with
+an unbounded camp. If a leave deadline expires while the body is still inside the outer boundary,
+the adapter retains calm deterministic radial egress authority through cooldown until a real boundary
+exit; it neither teleports the body nor reacquires activity/food reservations.
+
+Fixed-fauna candidates are bridged through public, stable-index hooks on their canonical systems.
+Their real satiation or Titan energy supplies hunger, 3D body position supplies reachability, and
+successful canonical food completion writes nourishment back once. Travel/calm intent suppresses
+native Shoggoth predation/tendrils/trade, Titan harvesting/diplomacy/strikes/aura aggression, and
+Puppeteer meddling without rewriting the underlying relationship or economy state. XYZ reach checks
+prevent an airborne body from eating at a ground interaction point.
+
+Launched NHIs are excluded from the ordinary adapter and bound by stable monotonic mind ID to their
+existing backing Entity; the visual `NhiBodySystem` follower is never registered as another being.
+Hunger is `1 - energy / 100`. Fatigue and health deficit remain zero because no such canonical NHI
+state exists. Local kin, mood, and live social/exploration/threat signals drive visit context.
+Travel/calm/social intent has final locomotion authority over ambient roaming, while HUNT, MIMIC,
+and RETREAT cannot overwrite an active visit. Successful canonical food completion replenishes the
+backing Entity energy once. Death, Genesis, failed launch, and teardown release the visit, food,
+partner, intent, and body reference.
+
+Visit state and slot/partner ownership have validated manager-local versioned snapshots in
+`BigTreeVisitManager`. A manager snapshot is not a standalone `World` checkpoint: it omits the
+Crystal clock/food generations, adapter body bindings, sanctuary history, and configuration
+identity. Reset/reconstruction always creates a valid clean ecology state. Browser reload starts a
+fresh cosmos under the existing preferences-only persistence model; this contract does not claim
+application-level simulation persistence.
+
+Development observability is a pull-only, local-preview API. `main.ts` enables
+`WorldOptions.developmentDiagnostics` only for `localhost` or `127.0.0.1`, passes that construction
+gate to `World`, and then installs
+`window.__CQM__.bigTreeEcology.snapshot(query?)`. A `World` built without the gate returns `null`, and
+non-local static hosts install no `window.__CQM__` debug hook.
+
+An unfiltered pull returns aggregate simulation time/frame, zone geometry, visit-manager occupancy,
+core/fixed-fauna adapter counters, sanctuary-index health, the complete food-state census, and real
+tree-neural status. Optional `(ownerKind, ownerId)` and `foodId` fields add one actor and/or one food
+receipt by direct indexed lookup. The actor receipt includes adapter, visit reason/activity/state,
+destination, selected food and reservation generation, social lease, safe-zone/protection state,
+deadlines, cooldown, stuck recovery, and the last typed transition cause plus scaled-simulation
+timestamp. The food receipt includes canonical state, kind, nutrition, authored and interaction
+positions, owner/generation, lease, respawn deadline, and remaining time.
+
+Transition cause names are stable receipts: `visit-requested`, `arrived`, `stuck-recovery`,
+`travel-timeout`, `slot-lost`, `activity-finished`, `dwell-complete`, `left-zone`, `leave-timeout`,
+`cooldown-complete`, and `stuck-timeout` (or `none` before a transition). Cause and timestamp are
+recorded together and round-trip through manager-local snapshot/restore.
+
+Snapshot construction may allocate only when explicitly pulled and does not enumerate the living
+population or the 20,000 pooled food records. Production rendering creates no diagnostic renderer,
+line, beam, helper geometry, or tether object. Development mode retains its existing sparse
+aggregate audit receipt every 600 frames; that audit is bounded and does not perform actor/food full
+scans. The snapshot exposes the last transition, not an unbounded event history.
+
+## Tree-dwelling neural and social behavior
+
+The production tree contains 10 species with 25 residents each: 250 exclusive controllers.
+`TreeCreatureBrain` is a real 6-input, 6-hidden, 4-output `TinyMLP` with 70 parameters per creature
+(17,500 total). Energy, food direction/proximity, social density, threat, safe-zone calm, phase, and
+stable personality are compacted into the six neural lanes. The four outputs directly contribute
+two motor axes and two activity axes; those outputs steer movement and select eat, rest, socialize,
+or roam. Visitor presence and social activity are live inputs, not decorative labels.
+
+Model shape and every weight/input/output are validated for finite values. Invalid weights, inputs,
+or outputs select the deterministic resting fallback and are exposed through controller status.
+The fallback does not claim that a model drove the action. Tree residents are friendly by default,
+do not contest visitors, use the canonical edible registry, and return to ordinary tree activity
+after food or social activity. No sentience, online-learning, or physical-quantum claim follows from
+this controller.
+
+Social visits use willing active partners, reciprocal reservations, reach checks, and expiring
+leases. Matching is one pass over each bounded adapter-local active visitor set; a partner may hold
+only one pair. Ordinary Entities and Xenomimics share one pool, while fixed fauna and launched NHIs
+share another. Cross-pool targeting and direct visitor-to-tree-resident pairing are not claimed.
+Partner loss or excess distance releases both ends, and visit cleanup prevents permanent pairing.
+The world callback maps valid social/observation activity into existing Entity activation/payoff and
+Xenomimic shimmer feedback. No teaching or knowledge-transfer result is recorded unless a canonical
+underlying system performs one.
+
+## Bounded-query and performance contract
+
+- Candidate discovery is round-robin and capped at 64 ordinary/Xenomimic candidates every 0.1
+  simulation seconds plus 24 fixed-fauna candidates every 0.15 seconds, not a full-population scan
+  every frame.
+- Active work is bounded by the 72-visitor capacity. O(1) identity maps locate active ordinary and
+  Xenomimic visitors; the visit manager steps a dense scheduled-record set rather than every actor
+  record, and social matching is a single bounded pass rather than all pairs.
+- The 20,000 food objects are fixed and pooled. Deterministic per-kind free lists make free-resource
+  selection O(1); fixed indexed heaps make lease/respawn deadline changes O(log capacity) without
+  per-cycle object growth.
+- Visitor and scheduler arrays are allocated once at construction, reusable read/stat views avoid
+  steady-frame object creation, and development observability remains data-only. It must never add a
+  tether-like debug line.
+
+Automated contract coverage lives in `tests/edible-resource.test.ts`,
+`tests/big-tree-zone.test.ts`, `tests/big-tree-visitors.test.ts`,
+`tests/big-tree-sanctuary.test.ts`, `tests/big-tree-fauna-visitors.test.ts`,
+`tests/tree-creature-brain.test.ts`, `tests/big-tree-observability.test.ts`,
+`tests/portal-death.test.ts`, the Crystal ecosystem test family, and
+`tests/big-tree-world-integration.test.ts`, with species-hook coverage in the Shoggoth, Titan, and
+Puppet test families. This amendment records implemented code and automated
+targets only; it does not claim GitHub Pages deployment or manual browser verification.

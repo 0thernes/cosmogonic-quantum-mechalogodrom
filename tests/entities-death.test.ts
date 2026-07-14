@@ -74,6 +74,35 @@ function makeCtx(seed: number, maxEntities: number): SimContext {
 }
 
 describe('EntityManager.onDeath', () => {
+  test('ecology identity is simulation-owned, monotonic, and deterministically rebased by reset', () => {
+    const ctx = makeCtx(23, 50);
+    const entities = new EntityManager(ctx);
+    const first = entities.spawn(new THREE.Vector3(1, 2, 3), 0);
+    const second = entities.spawn(new THREE.Vector3(4, 5, 6), 1);
+    expect(first?.userData.ecologyId).toBe(1);
+    expect(second?.userData.ecologyId).toBe(2);
+
+    entities.disposeAt(0);
+    const third = entities.spawn(new THREE.Vector3(7, 8, 9), 2);
+    expect(third?.userData.ecologyId).toBe(3);
+
+    entities.reset(3);
+    expect(entities.list.map((entity) => entity.userData.ecologyId)).toEqual([1, 2, 3]);
+    const resetFirst = entities.list[0]!;
+    expect(resetFirst.id).not.toBe(first?.id);
+    expect(resetFirst.userData.ecologyId).toBe(first?.userData.ecologyId);
+    const afterReset = entities.spawn(new THREE.Vector3(10, 11, 12), 3);
+    expect(afterReset?.userData.ecologyId).toBe(4);
+
+    const deaths: Entity[] = [];
+    entities.onDeath = (_x, _z, entity) => {
+      deaths.push(entity);
+    };
+    entities.disposeAt(0);
+    expect(deaths).toEqual([resetFirst]);
+    expect(deaths[0]?.userData.ecologyId).toBe(1);
+  });
+
   test('a failing optional creature SFX sink cannot turn a completed spawn into a half-transaction', () => {
     const ctx = makeCtx(29, 50);
     ctx.creatureSfx = () => {
