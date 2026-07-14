@@ -409,7 +409,7 @@ function renderDashboard(doc: Document, list: unknown[]): void {
               ? ` · ⇌${gedankenDevours} imprint ${dreamTransfer.toFixed(2)}`
               : '')
           : '',
-      // Thaler "prove it his way" verdict: how many of his 8 constitutive sentience markers a population of
+      // Thaler "prove it his way" verdict: how many of his 9 constitutive sentience markers a population of
       // mini Creativity Machines reproduces (robust = held in ≥80% of the ensemble). His criteria, not IIT.
       sub2:
         thalerTotal > 0
