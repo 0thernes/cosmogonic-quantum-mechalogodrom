@@ -29,8 +29,16 @@
  * meshes, so one displacement pass updates both with no per-frame allocation.
  *
  * COMPLEXITY: O(V) per frame for the warp (V = 642 icosa-detail-3 verts) + O(1) transforms for the
- * shells/rings/spikes — a fixed, population-independent cost (≈ a few thousand float writes), so it
- * never scales with the entity count. Allocation-free hot path (module + instance scratch only).
+ * rings/spikes + O(S) for the variant-shell morphs (S ≤ 5 shells × 560 segments round-robin per
+ * frame, each shell refreshed at ≥30 Hz) — a fixed, population-independent cost, so it never scales
+ * with the entity count. Allocation-free hot path (module + instance scratch only).
+ *
+ * VARIANT SHELLS (2026-07-14, owner directive): the ten shells are NAMED mathematical constructions
+ * (Möbius–Escher · Poincaré · Mercator loxodrome · Kakeya · Collatz · Hopf · Clifford torus ·
+ * Enneper · Aizawa · Weierstrass — see mechalogodrom-variant-geometry.ts), each morphed by its OWN
+ * variant sub-brain's live activity/STDP-gain/blaze via {@link setVariantDrives}, and each feeding
+ * its live measured invariant BACK to the fusion brain via {@link variantGeometrySignals} as that
+ * sub-brain's ninth, embodied sense — a real, falsifiable, bidirectional mind⇄body loop.
  */
 import * as THREE from 'three';
 import { TAU, clamp, lerp } from '../math/scalar';
@@ -41,6 +49,12 @@ import {
   updateDarkStarUniforms,
 } from './mechalogodrom-dark-star';
 import { MechalogodromSatellites } from './mechalogodrom-satellites';
+import {
+  createVariantShellGeometries,
+  VARIANT_SHELL_FLOATS,
+  type VariantShellDrive,
+  type VariantShellGeometry,
+} from './mechalogodrom-variant-geometry';
 import type { TsotchkeQuantumPulse } from './tsotchke-facade';
 
 /** The ten bipolar variant shells that converge and fuse. Fixed — the corona is sized for 10. */
@@ -88,12 +102,22 @@ export interface MechalogodromSnapshot {
   readonly fused: boolean;
 }
 
-/** One bipolar variant shell: a wireframe polyhedron that migrates inward and oscillates manic↔depressive. */
+/** One bipolar variant shell: a NAMED mathematical construction that migrates inward and morphs
+ *  under its own sub-brain's live drive (owner 2026-07-14: "real math … hard wired into the neural
+ *  network", never a decorative platonic wireframe). */
 interface Variant {
   readonly mesh: THREE.LineSegments;
   /** USER #14: each shell owns its OWN line material so all 10 render in their OWN distinct colour
    * (a shared material could only ever show one hue — "multi-color defined lines for readability"). */
   readonly mat: THREE.LineBasicMaterial;
+  /** The shell's mathematical generator (Möbius/Poincaré/loxodrome/Kakeya/Collatz/Hopf/Clifford/
+   *  Enneper/Aizawa/Weierstrass — see mechalogodrom-variant-geometry.ts). */
+  readonly geo: VariantShellGeometry;
+  /** Caller-owned morph buffer the generator writes segment endpoints into (also the GPU attribute array). */
+  readonly buf: Float32Array;
+  readonly posAttr: THREE.BufferAttribute;
+  /** Reused drive scratch handed to the generator each morph (no per-frame allocation). */
+  readonly drive: VariantShellDrive;
   /** Spawn anchor on the ring (golden-angle placement). */
   readonly ax: number;
   readonly ay: number;
@@ -158,6 +182,13 @@ export class Mechalogodrom {
   /** Per-shell workspace blaze (0..1), eased toward 1 for the dominant sub-brain's physical shell so the
    *  winner glides between shells as the mind's dominant coalition switches, instead of hard-flickering. */
   private readonly variantBlaze = new Float32Array(VARIANT_COUNT);
+  /** Per-variant sub-brain drive (normalized activity + STDP gain) — set by setVariantDrives. */
+  private readonly variantActivity = new Float32Array(VARIANT_COUNT).fill(0.5);
+  private readonly variantGains = new Float32Array(VARIANT_COUNT).fill(1);
+  /** Per-variant live measured mathematical invariant — the shells' embodied sense vector. */
+  private readonly variantInvariants = new Float32Array(VARIANT_COUNT);
+  /** Round-robin cursor: half the shells morph each frame (fixed cost, all stay live at ≥30 Hz). */
+  private variantMorphCursor = 0;
   /** Combined chaos+apex arousal, recomputed each update; with no apex feed it equals `chaos`. */
   private drive = 0;
   private localT = 0;
@@ -295,7 +326,12 @@ export class Mechalogodrom {
     this.exoCage = new THREE.LineSegments(exoWire, this.exoMat);
     this.group.add(this.exoCage);
 
-    // ── The ten bipolar variant shells (golden-angle ring placement; varied platonic solids). ───
+    // ── The ten bipolar variant shells (golden-angle ring placement) — each a NAMED mathematical
+    //    construction (Möbius–Escher · Poincaré hyperbolic · Mercator loxodrome · Kakeya sweep ·
+    //    Collatz orbits · Hopf fibration · Clifford torus · Enneper minimal · Aizawa attractor ·
+    //    Weierstrass roughness) that MORPHS under its own sub-brain's live drive and feeds its
+    //    measured invariant BACK as that sub-brain's embodied sense. Owner 2026-07-14: real math,
+    //    hard-wired into the neural network, falsifiable — never decorative platonic wire. ───────
     this.shellMat = new THREE.LineBasicMaterial({
       // USER #14: no pure white additive lines; dark violet shell with per-instance hue drift below.
       color: 0x4a00a0,
@@ -305,22 +341,25 @@ export class Mechalogodrom {
       depthWrite: false,
     });
     const golden = Math.PI * (3 - Math.sqrt(5));
+    const shellGeometries = createVariantShellGeometries();
     for (let i = 0; i < VARIANT_COUNT; i++) {
-      const base =
-        i % 4 === 0
-          ? new THREE.OctahedronGeometry(1)
-          : i % 4 === 1
-            ? new THREE.IcosahedronGeometry(1)
-            : i % 4 === 2
-              ? new THREE.TetrahedronGeometry(1.3)
-              : new THREE.DodecahedronGeometry(1);
-      const wire = this.buildCurvedWireGeo(base, 0.22 + (i % 5) * 0.04);
-      base.dispose();
+      const shellGeo = shellGeometries[i]!;
+      const buf = new Float32Array(VARIANT_SHELL_FLOATS);
+      const drive: VariantShellDrive = { activity: 0.5, gain: 1, blaze: 0, bipolar: 0 };
+      const used = shellGeo.write(buf, 0, drive);
+      const posAttr = new THREE.BufferAttribute(buf, 3);
+      posAttr.setUsage(THREE.DynamicDrawUsage);
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', posAttr);
+      geo.setDrawRange(0, used / 3);
+      this.variantInvariants[i] = shellGeo.invariant(0, drive);
       // USER #14: clone the shared template into a PER-shell material so each of the 10 renders its
       // own bipolar hue (the shared material could only ever show one colour — the corona read as
       // monochrome). shellMat stays the template + is disposed with the rest.
       const mat = this.shellMat.clone();
-      const seg = new THREE.LineSegments(wire, mat);
+      const seg = new THREE.LineSegments(geo, mat);
+      // The generators rewrite vertices every morph; a stale bounding sphere would cull them mid-flight.
+      seg.frustumCulled = false;
       const th = golden * i;
       const ylift = (1 - (i / (VARIANT_COUNT - 1)) * 2) * 70;
       const ax = Math.cos(th) * RING_R;
@@ -331,6 +370,10 @@ export class Mechalogodrom {
       this.variants.push({
         mesh: seg,
         mat,
+        geo: shellGeo,
+        buf,
+        posAttr,
+        drive,
         ax,
         ay: ylift,
         az,
@@ -343,45 +386,6 @@ export class Mechalogodrom {
 
     this.mechaExterior = new MechaExteriorAbomination(this.group, CORE_R);
     scene.add(this.group);
-  }
-
-  /** Curved wire segments from a polyhedron — USER #14: less blocky 1980s straight edges. */
-  private buildCurvedWireGeo(
-    source: THREE.BufferGeometry,
-    bendScale: number,
-  ): THREE.BufferGeometry {
-    const wire = new THREE.WireframeGeometry(source);
-    const pos = wire.getAttribute('position') as THREE.BufferAttribute;
-    const arr: number[] = [];
-    const a = new THREE.Vector3();
-    const b = new THREE.Vector3();
-    const mid = new THREE.Vector3();
-    const bend = new THREE.Vector3();
-    for (let i = 0; i < pos.count; i += 2) {
-      a.fromBufferAttribute(pos, i);
-      b.fromBufferAttribute(pos, i + 1);
-      mid.copy(a).add(b).multiplyScalar(0.5);
-      bend
-        .set(b.y - a.y, a.z - b.z, a.x - b.x)
-        .normalize()
-        .multiplyScalar(bendScale);
-      const curve = new THREE.CatmullRomCurve3([
-        a.clone(),
-        a.clone().lerp(mid, 0.5).add(bend),
-        b.clone().lerp(mid, 0.5).addScaledVector(bend, 0.65),
-        b.clone(),
-      ]);
-      const pts = curve.getPoints(6);
-      for (let j = 0; j < pts.length - 1; j++) {
-        const p0 = pts[j]!;
-        const p1 = pts[j + 1]!;
-        arr.push(p0.x, p0.y, p0.z, p1.x, p1.y, p1.z);
-      }
-    }
-    wire.dispose();
-    const g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(arr), 3));
-    return g;
   }
 
   /** A fixed radial burst of curved spike segments (Catmull-Rom splines), reused; scaled live by power. */
@@ -456,6 +460,34 @@ export class Mechalogodrom {
     this.mindDominant = d < 0 ? 0 : d > VARIANT_COUNT - 1 ? VARIANT_COUNT - 1 : d;
     this.mindConscious = clamp(consciousnessProxy, 0, 1);
     this.mindStrangeness = clamp(strangeness, 0, 1);
+  }
+
+  /**
+   * MECHALOGODROM-BRAIN → SHELL MORPH (per-variant, honest wiring). Feed each variant sub-brain's
+   * live normalized activity (0..1) and STDP-learned fusion gain (0.25..2.5) so ITS mathematical
+   * shell morphs under ITS OWN cognition — Möbius stair count, hyperbolic chord skip, loxodrome
+   * bearing, Kakeya sector count, Collatz seed window, Hopf base circle, Clifford rotor rates,
+   * Enneper bloom radius, Aizawa parameter, Weierstrass octaves. READ-only, one-way, clamped;
+   * draws no rng — determinism (ADR 0004) preserved.
+   */
+  setVariantDrives(activity: ArrayLike<number>, gains: ArrayLike<number>): void {
+    for (let i = 0; i < VARIANT_COUNT; i++) {
+      this.variantActivity[i] = clamp(activity[i] ?? 0.5, 0, 1);
+      this.variantGains[i] = clamp(gains[i] ?? 1, 0.25, 2.5);
+    }
+  }
+
+  /**
+   * SHELL GEOMETRY → BRAIN (the reverse arc that makes the loop honest). Per-variant live measured
+   * invariant of each shell's CURRENT morphed mathematics — discrete torsion (Möbius), Gauss–Bonnet
+   * defect (Poincaré), measured rhumb bearing (Mercator), swept-area efficiency (Kakeya), mean
+   * stopping time (Collatz), fiber dispersion (Hopf), projected inflation (Clifford), bloom depth
+   * (Enneper), orbit RMS radius (Aizawa), total variation (Weierstrass) — refreshed on the same
+   * staggered cadence as the morphs. The fusion brain consumes this vector as each sub-brain's
+   * ninth, EMBODIED sense: the ten sub-brains genuinely perceive different worlds (their own bodies).
+   */
+  variantGeometrySignals(): Float32Array {
+    return this.variantInvariants;
   }
 
   /** Tsotchke corpus pulse — exterior hue + quantum rim intensity. */
@@ -672,13 +704,33 @@ export class Mechalogodrom {
     this.mechaExterior.update(t, ease, this.drive, this.tsotchkePulse);
   }
 
-  /** Migrate + bipolar-oscillate the ten variant shells; melt them into the corona as fusion completes. */
+  /** Migrate + bipolar-oscillate the ten variant shells; melt them into the corona as fusion
+   *  completes. Each shell also MORPHS through its own mathematical generator under its sub-brain's
+   *  live drive, and its measured invariant is refreshed for the brain's embodied-sense vector —
+   *  staggered round-robin (5 shells/frame) so the cost is fixed while every shell stays live. */
   private driveVariants(t: number, ease: number): void {
     const st = t * MECHA_EXTERIOR_TIME_SCALE;
+    const half = Math.ceil(this.variants.length / 2);
+    const morphStart = this.variantMorphCursor;
+    this.variantMorphCursor = (this.variantMorphCursor + half) % Math.max(1, this.variants.length);
     for (let i = 0; i < this.variants.length; i++) {
       const v = this.variants[i];
       if (!v) continue;
       const bip = Math.sin(st * v.freq + v.phase);
+      // ── Sub-brain → shell morph (this variant's OWN cognition sculpts its OWN mathematics). ──
+      const inWindow =
+        (i - morphStart + this.variants.length) % Math.max(1, this.variants.length) < half;
+      if (inWindow) {
+        v.drive.activity = this.variantActivity[i] ?? 0.5;
+        v.drive.gain = this.variantGains[i] ?? 1;
+        v.drive.blaze = this.variantBlaze[i] ?? 0;
+        v.drive.bipolar = bip;
+        const used = v.geo.write(v.buf, st, v.drive);
+        v.mesh.geometry.setDrawRange(0, used / 3);
+        v.posAttr.needsUpdate = true;
+        // Shell → brain: refresh this shell's measured invariant on the same cadence.
+        this.variantInvariants[i] = v.geo.invariant(st, v.drive);
+      }
       // Migration: from the spawn anchor toward a tight corona orbit at the centre.
       const orbitR = CORE_R * (1.15 + 0.12 * i);
       const oth = v.phase + st * (0.15 + 0.03 * i);

@@ -11,6 +11,42 @@ changed and why.
 
 ---
 
+## 2026-07-14 — Mechalogodrom variant shells: ten NAMED mathematical constructions, hard-wired brain⇄body
+
+Owner (5 reference images): the wireframe shells that migrate to the Mechalogodrom "should be
+cooler with wild crazy insane curvatures and geometricality … Each is its own math unique … but
+not just decorative bullshit. Real Math real functional operational capable stuff that's hard
+wired into the neural network and has a purpose and meaning. Honest True Factual Real defensible
+falsifiable."
+
+Shipped `src/sim/mechalogodrom-variant-geometry.ts`: the ten platonic wireframes are replaced by
+ten named constructions computed from their defining equations — Möbius–Escher band, Poincaré
+hyperbolic geodesic web, Mercator loxodrome shell, Kakeya/Besicovitch needle sweep, Collatz orbit
+cathedral, Hopf fibration chandelier, Clifford torus rotor, Enneper minimal bloom, Aizawa strange
+attractor, Weierstrass roughness bloom. Hard wiring is bidirectional and honest: each shell MORPHS
+under its own variant sub-brain's live signals (normalized activity, STDP-learned gain, workspace
+blaze, bipolar swing → stair count, chord skip, bearing, sector count, seed window, base circle,
+rotor rates, bloom radius, attractor parameter, octave count), and each shell's live MEASURED
+invariant (discrete torsion, Gauss–Bonnet defect, measured rhumb bearing, swept-area efficiency,
+mean stopping time, fiber dispersion, projected inflation, bloom depth, orbit RMS radius, total
+variation) feeds back as that sub-brain's ninth EMBODIED sense (`PERCEPT_DIM` 8→9) — previously
+all ten sub-brains received identical percepts; now each perceives its own body. The theorems are
+pinned falsifiably in `tests/mechalogodrom-variant-geometry.test.ts` (holonomy dot ≈ −1; angle sum
+< π + isometry invariance to 1e-10; constant measured bearing; needle length exactly 1 with
+Besicovitch area shrinkage; stopping time 27→111 with peak 9232; linking number ≈ ±1 with fiber
+disjointness; |p| = 1 on S³ to 1e-9 under any rotor; numerical mean curvature < 1e-3; 1000×
+trajectory divergence bounded on-attractor; strictly monotone octave total-variation growth), plus
+generator contracts (unique names, fixed segment budget, purity/determinism, drive-reactivity of
+every vertex stream AND every invariant — no decorative constants) and behavioral coupling both
+ways (zeroed-vs-distinct geometry vector changes the per-variant activity pattern; omitted vector
+byte-matches the neutral fill for legacy ticks). Determinism (ADR 0004) preserved: pure functions
+of (t, drive), zero rng, allocation-free hot path (module/closure scratch), morphs staggered 5
+shells/frame (~150 µs measured for the round-robin write+invariant pass). Live in-browser proof on
+the booted world: 10 distinct geometry signals, 10 distinct per-variant activities, all shells
+morphing with finite buffers and zero console errors. Also fix-forward: the two GATE-XENO-TROPHIC
+correctness gates' 15 s per-test timeouts measured ~16 s under coverage instrumentation (chronic
+gate flake) — raised to 60 s.
+
 ## 2026-07-14 — Dome ecology final merged-tree verification and publication handoff
 
 The converged ecology tree now has a final Windows coverage receipt of **3,275 tests / 0 fail /

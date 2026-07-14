@@ -82,7 +82,9 @@ describe('GATE-XENO-TROPHIC — predator–prey ecology', () => {
     expect(predatedPop).toBeGreaterThan(0);
     // …and the predation genuinely happened (the trophic link is live, not decorative).
     expect(predated.telemetry().eaten).toBeGreaterThan(0);
-  }, 15_000);
+    // 60s: a CORRECTNESS gate, not a perf gate — under coverage instrumentation + machine contention
+    // the 2×2400-step run measures ~16s, so the old 15s timeout was a chronic gate flake.
+  }, 60_000);
 
   test('trophic energy flux is positive and SCALES with predation intensity', () => {
     const food = (): number => 0.9;
@@ -96,5 +98,6 @@ describe('GATE-XENO-TROPHIC — predator–prey ecology', () => {
     expect(heavyFlux).toBeGreaterThan(0);
     // …and heavier grazing transfers strictly more cumulative energy to the predators.
     expect(heavyFlux).toBeGreaterThan(lightFlux * 1.5);
-  }, 15_000);
+    // 60s: correctness gate; see the regulation test above for the coverage-timeout rationale.
+  }, 60_000);
 });

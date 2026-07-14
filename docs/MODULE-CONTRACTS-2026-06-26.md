@@ -1576,7 +1576,7 @@ Copilot are constructed boot-stream-neutral and never write sim state, so the go
 
 ### V9 acceptance
 
-Full `bun run check` green: prettier → tsc strict → oxlint → 3275 tests (0 fail, 300-frame golden
+Full `bun run check` green: prettier → tsc strict → oxlint → 3293 tests (0 fail, 300-frame golden
 included) → build. The Copilot sandbox verified live (allow: `git log`, file reads; deny:
 path-escape, repository-root pathspecs, `git push`, `legacy/`, shell redirection).
 
@@ -1890,3 +1890,29 @@ Automated contract coverage lives in `tests/edible-resource.test.ts`,
 natural-rAF advancement, bounded stage/failure receipts, the viewport plus canvas-isolated proof, and
 the intentional `dormant-main-thread` worker expectation. Current live-browser and deployment evidence
 is recorded separately in the dated Dome Ecology verification report.
+
+## Mechalogodrom variant-shell mathematics contract (2026-07-14)
+
+Owner directive: the ten migrating variant shells are real mathematics wired into the fusion mind,
+never decoration.
+
+| Module                                      | Exclusive responsibility                                                                                                                                                                        |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/sim/mechalogodrom-variant-geometry.ts` | The ten NAMED shell generators (Möbius–Escher · Poincaré · Mercator loxodrome · Kakeya · Collatz · Hopf · Clifford torus · Enneper · Aizawa · Weierstrass): morph writers + measured invariants |
+| `src/sim/mechalogodrom.ts`                  | Owns the shell meshes/buffers, staggers the morph round-robin, exposes `setVariantDrives` (brain→body) and `variantGeometrySignals` (body→brain)                                                |
+| `src/sim/mechalogodrom-brain.ts`            | Consumes the geometry vector as each variant sub-brain's ninth EMBODIED sense (`PERCEPT_DIM = 9`); publishes per-variant activity + STDP gains in the snapshot                                  |
+| `src/world.ts`                              | Composition only: threads `variantGeometrySignals()` into `mechalogodromBrain.tick` and the snapshot's drive vectors into `setVariantDrives`                                                    |
+
+- Every generator is a pure function of `(t, drive)` — zero rng, no clocks, allocation-free steady
+  state (module/closure scratch only), fixed segment budget (`VARIANT_SHELL_MAX_SEGMENTS`).
+- Every invariant is a real measured quantity of the CURRENT morphed geometry, in [0,1], and must
+  be drive-reactive — a constant invariant is a contract violation (decorative).
+- The named theorem behind each shell is pinned falsifiably in
+  `tests/mechalogodrom-variant-geometry.test.ts` (holonomy flip, Gauss–Bonnet defect + isometry
+  invariance, rhumb-bearing constancy, Besicovitch shrinkage at unit needle length, exact Collatz
+  stopping times, Hopf linking ≈ ±1 + disjointness, |p| = 1 on S³, numerical minimality,
+  sensitive dependence bounded on-attractor, monotone octave roughness growth), alongside the
+  brain⇄body coupling arms (geometry vector individuates the sub-brains; omitted vector
+  byte-matches the neutral fill; world/mecha/brain source seals).
+- Determinism (ADR 0004) unchanged: the mechalogodrom still draws zero rng; the brain's percept
+  gains one clamped dimension fed only by the shells' own mathematics.

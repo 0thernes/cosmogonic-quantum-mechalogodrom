@@ -2520,6 +2520,10 @@ export class World {
       apexVitality: apex?.vitality ?? 0,
       apexTranscendence: apex?.transcendence ?? 0,
       apexAgony: apex?.agony ?? 0,
+      // BODY → BRAIN: each variant sub-brain's 9th sense is ITS OWN shell's live measured
+      // mathematical invariant (Möbius torsion … Weierstrass variation) — the ten sub-brains
+      // perceive genuinely different worlds (their own bodies).
+      variantGeometry: this.mechalogodrom.variantGeometrySignals(),
     });
     const mechaBrainSnap = this.lastMechaBrainSnap;
     // Frame-invariant Tsotchke pulses — computed once, then reused every frame (see field decl).
@@ -2536,6 +2540,13 @@ export class World {
       mechaBrainSnap.dominantVariant,
       mechaBrainSnap.consciousnessProxy,
       mechaBrainSnap.strangeness,
+    );
+    // BRAIN → BODY (per-variant): each sub-brain's live activity + STDP-learned trust gain morphs
+    // its OWN mathematical shell (stair count, chord skip, bearing, sectors, seed window, rotor
+    // rates, bloom radius, octaves…) — the reverse arc of the variantGeometry sense above.
+    this.mechalogodrom.setVariantDrives(
+      mechaBrainSnap.variantActivity,
+      mechaBrainSnap.variantGains,
     );
     this.mechalogodrom.setTsotchkePulse(this.cachedMechaPulse);
     this.mechalogodrom.update(t, dt);

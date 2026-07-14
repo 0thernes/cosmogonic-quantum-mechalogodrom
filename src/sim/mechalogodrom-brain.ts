@@ -5,6 +5,15 @@
  * DESIGNED parameter budget: {@link MECHALOGODROM_BRAIN_DESIGNED_PARAMS} (5M roadmap — same as APEX).
  * LIVE allocation is tractable in JS (~120k floats); the gap is reported honestly.
  *
+ * EMBODIMENT (2026-07-14, owner directive): each variant sub-brain's 9th sense is the live measured
+ * mathematical invariant of ITS OWN physical shell (Möbius torsion, Gauss–Bonnet defect, rhumb
+ * bearing, Kakeya efficiency, Collatz stopping time, Hopf dispersion, Clifford inflation, Enneper
+ * bloom, Aizawa radius, Weierstrass variation — see mechalogodrom-variant-geometry.ts). The ten
+ * sub-brains therefore perceive genuinely DIFFERENT worlds — their own bodies — closing a real
+ * bidirectional loop: brain drives shell morph (Mechalogodrom.setVariantDrives), shell geometry
+ * feeds brain sense (variantGeometry percept). Falsifiable: zero the vector and the sub-brains
+ * collapse back to identical percepts (pinned in tests/mechalogodrom-variant-geometry.test.ts).
+ *
  * Visual + telemetry only today — does NOT write sim RNG, economy, or entity physics.
  * Carries real internal plasticity: pair-based STDP (Bi–Poo window) on the variant→fusion gains, so the
  * cortex learns which variant sub-brains to trust from spike-timing — still deterministic + side-effect-free.
@@ -17,9 +26,12 @@ import { mulberry32, type Rng } from '../math/rng';
 import { MECHALOGODROM_BRAIN_DESIGNED_PARAMS } from './apex-brain';
 
 const VARIANT_COUNT = 10;
-const PERCEPT_DIM = 8;
+/** 8 shared world senses + 1 per-variant EMBODIED sense (the shell's live measured invariant). */
+const PERCEPT_DIM = 9;
 const LATENT_DIM = 48;
 const FUSION_DIM = 64;
+/** Neutral embodied sense when no geometry vector is supplied (keeps legacy ticks deterministic). */
+const GEOMETRY_SENSE_NEUTRAL = 0.5;
 
 function clamp01(v: number): number {
   return v < 0 ? 0 : v > 1 ? 1 : v;
@@ -101,6 +113,10 @@ export interface MechalogodromBrainPercept {
   apexVitality: number;
   apexTranscendence: number;
   apexAgony: number;
+  /** Per-variant embodied sense: each shell's live measured mathematical invariant (0..1, index =
+   *  variant). Sub-brain v receives value v as its 9th sense — the ONLY percept that differs across
+   *  the ten, so it is what individuates them. Omitted ⇒ every sub-brain gets the neutral 0.5. */
+  variantGeometry?: ArrayLike<number>;
 }
 
 export interface MechalogodromBrainSnapshot {
@@ -116,6 +132,10 @@ export interface MechalogodromBrainSnapshot {
   consciousnessProxy: number;
   /** Which variant sub-brain is dominant this beat (0..9). */
   dominantVariant: number;
+  /** Per-variant normalized live activity (0..1, index = variant) — drives that shell's morph. */
+  variantActivity: Float32Array;
+  /** Per-variant STDP-learned variant→fusion trust gain (0.25..2.5) — a second morph drive. */
+  variantGains: Float32Array;
   /** 0..1 STDP plasticity — mean |gain−1| across the variant→fusion synapses (0 = unlearned). */
   plasticity: number;
   latent: Float32Array;
@@ -172,6 +192,13 @@ export class MechalogodromBrain {
     this.variantOuts = Array.from({ length: VARIANT_COUNT }, () => new Float32Array(LATENT_DIM));
   }
 
+  /** Per-variant activity normalized to 0..1 (sum of |tanh| outputs / LATENT_DIM). Snapshot-cadence copy. */
+  private variantActivityNorm(): Float32Array {
+    const out = new Float32Array(VARIANT_COUNT);
+    for (let v = 0; v < VARIANT_COUNT; v++) out[v] = clamp01(this.variantAct[v]! / LATENT_DIM);
+    return out;
+  }
+
   tick(p: MechalogodromBrainPercept): MechalogodromBrainSnapshot {
     this.beat++;
     this.senses[0] = p.fusion;
@@ -186,7 +213,12 @@ export class MechalogodromBrain {
     let dom = 0;
     let domAct = -1;
     let actMean = 0;
+    const geometry = p.variantGeometry;
     for (let v = 0; v < VARIANT_COUNT; v++) {
+      // EMBODIED sense: sub-brain v perceives ITS OWN shell's live mathematical invariant — the one
+      // percept that differs across the ten (all others are shared world scalars).
+      const embodied = geometry ? geometry[v] : GEOMETRY_SENSE_NEUTRAL;
+      this.senses[8] = clamp01(embodied ?? GEOMETRY_SENSE_NEUTRAL);
       const out = this.variantOuts[v]!;
       forward(this.variants[v]!, this.senses, this.scratch, out);
       let act = 0;
@@ -337,6 +369,8 @@ export class MechalogodromBrain {
       strangeness,
       consciousnessProxy,
       dominantVariant: dom,
+      variantActivity: this.variantActivityNorm(),
+      variantGains: this.gain.slice(),
       plasticity: this.plasticity,
       latent: this.latent.slice(),
       roadmapParams: this.designedParams,
