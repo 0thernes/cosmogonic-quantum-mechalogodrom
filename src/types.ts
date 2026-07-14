@@ -307,14 +307,7 @@ export interface SimState {
 }
 
 export type SfxType =
-  | 'split'
-  | 'burst'
-  | 'mutate'
-  | 'ambient'
-  | 'warp'
-  | 'crystallize'
-  | 'decay'
-  | 'resonance';
+  'split' | 'burst' | 'mutate' | 'ambient' | 'warp' | 'crystallize' | 'decay' | 'resonance';
 
 export interface Song {
   name: string;

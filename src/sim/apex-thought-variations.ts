@@ -9,13 +9,7 @@
  * @see docs/ARCHITECTURE-2026-06-26.md
  */
 export type ThoughtFamily =
-  | 'psychology'
-  | 'neuroscience'
-  | 'quantum'
-  | 'neuromorphic'
-  | 'wet'
-  | 'alife'
-  | 'empowerment';
+  'psychology' | 'neuroscience' | 'quantum' | 'neuromorphic' | 'wet' | 'alife' | 'empowerment';
 
 export type ApexOrganRef =
   | 'loom'

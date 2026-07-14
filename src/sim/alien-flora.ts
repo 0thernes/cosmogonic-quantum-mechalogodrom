@@ -1378,8 +1378,7 @@ export class AlienFlora {
     }
     for (const mesh of this.meshes) {
       const attr = mesh.geometry.getAttribute('aPush') as
-        | THREE.InstancedBufferAttribute
-        | undefined;
+        THREE.InstancedBufferAttribute | undefined;
       if (attr) attr.needsUpdate = true;
     }
   }

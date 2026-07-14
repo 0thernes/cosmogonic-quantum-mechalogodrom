@@ -39,14 +39,7 @@ export type Intent = (typeof INTENTS)[number];
 
 /** The classical-AI technique a faction's mind is built on. */
 export type FactionTechnique =
-  | 'fsm'
-  | 'behaviortree'
-  | 'utility'
-  | 'goap'
-  | 'rule'
-  | 'boids'
-  | 'markov'
-  | 'mlp';
+  'fsm' | 'behaviortree' | 'utility' | 'goap' | 'rule' | 'boids' | 'markov' | 'mlp';
 
 /** A faction's economy posture in the social web (extends the titan {energy,matter,entropy}). */
 export type EconomyRole = 'producer' | 'consumer' | 'predator' | 'broker' | 'catalyst';

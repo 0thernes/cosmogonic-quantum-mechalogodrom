@@ -1021,9 +1021,7 @@ export interface NhiClosedLoopActionSemanticContrast {
   readonly role: NhiClosedLoopDevelopmentRole;
   readonly requestedAction: NhiClosedLoopServiceAction;
   readonly supportedNeuralSemanticLane:
-    | 'resource-to-hunt'
-    | 'social-to-spawn'
-    | 'unsupported-diagnostic-only';
+    'resource-to-hunt' | 'social-to-spawn' | 'unsupported-diagnostic-only';
   /** False for MANIPULATE/DOMINATE: their corpus cues do not target those neural output lanes. */
   readonly neuralSemanticInterpretationAllowed: boolean;
   readonly retainedRowsPerArm: number;

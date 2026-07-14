@@ -554,9 +554,7 @@ function validateNhiState(snapshot: unknown): ValidatedNhiState {
     previousId = id;
     const strategy = stateInteger(entry.strategy, `cognition.rivals[${i}].strategy`, 0, 4);
     const lastOpp = stateInteger(entry.lastOpp, `cognition.rivals[${i}].lastOpp`, -1, 1) as
-      | -1
-      | 0
-      | 1;
+      -1 | 0 | 1;
     rivals.push({
       id,
       strategy,

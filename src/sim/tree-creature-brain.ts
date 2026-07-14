@@ -48,10 +48,7 @@ export type TreeCreatureActivity =
   (typeof TREE_CREATURE_ACTIVITY)[keyof typeof TREE_CREATURE_ACTIVITY];
 
 export type TreeCreatureFallbackReason =
-  | 'none'
-  | 'invalid-weights'
-  | 'invalid-input'
-  | 'invalid-output';
+  'none' | 'invalid-weights' | 'invalid-input' | 'invalid-output';
 
 /** Raw, world-authored percepts. Finite out-of-range values are clamped; non-finite values use fallback. */
 export interface TreeCreaturePercept {

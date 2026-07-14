@@ -53,11 +53,7 @@ export const SHARD_FLOATS = 1 << 20; // 1,048,576
 
 /** The five substrate tiers a designed parameter can live in. */
 export type ParamTier =
-  | 'procedural'
-  | 'quantum-effective'
-  | 'resident-field'
-  | 'resident-dense'
-  | 'native-declared';
+  'procedural' | 'quantum-effective' | 'resident-field' | 'resident-dense' | 'native-declared';
 
 /** A device's memory/compute envelope — bounds what the manifold materialises as *resident*. */
 export interface DeviceProfile {
