@@ -28,7 +28,7 @@ diffusion, **and the Tsotchke corpus wired as the primordial substrate for digit
 
 <!-- cqm-sync:local-measurement:start -->
 
-- Latest Windows-local measurement in this checkout: **3,275 tests / 0 fail · 3,551,817 `expect()` calls**; coverage measured `93.59%` line / `91.60%` func across 365 test files.
+- Latest Windows-local measurement in this checkout: **3,275 tests / 0 fail · 3,551,817 `expect()` calls**; coverage measured `93.58%` line / `91.60%` func across 365 test files.
 
 <!-- cqm-sync:local-measurement:end -->
 
@@ -542,7 +542,7 @@ full gate with same-seed determinism preserved. The major arcs:
   why 5 minds run staggered against 20 light echoes); the older sub-millisecond / `<2%` GOAL5 claim is
   superseded until re-proven. **3,275 exact tracked tests · 0 fail (receipts enforced) · 84.64% line / 82.21% func portable coverage floor.**
   <!-- cqm-sync:local-measurement:start -->
-  **Latest Windows-local measurement: 3,275 tests / 0 fail / 3,551,817 assertions at `93.59%` line / `91.60%` func.**
+  **Latest Windows-local measurement: 3,275 tests / 0 fail / 3,551,817 assertions at `93.58%` line / `91.60%` func.**
   <!-- cqm-sync:local-measurement:end -->
 - **State-of-the-art report (2026-06-17)** — a historical measured, frontier-comparison
   assessment of the whole repository + the apex Super Creature, now summarized through

@@ -15,7 +15,7 @@ Evidence labels used below:
 - **Pending** — not yet demonstrated by the required final run or deployed GitHub Pages site.
 
 The final merged-tree Windows coverage receipt is **3,275 pass, 0 fail**, with **3,551,817
-expectations across 365 files** and **93.59% line / 91.60% function coverage**. The portable
+expectations across 365 files** and **93.58% line / 91.60% function coverage**. The portable
 published floors remain **84.64% / 82.21%**. The exact GitHub Pages artifact also passed one atomic,
 serial phone-plus-desktop Chromium run. The final post-report aggregate gate and deployed Pages
 verification remain pending as of this report revision.
