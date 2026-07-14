@@ -11,6 +11,39 @@ changed and why.
 
 ---
 
+## 2026-07-13 — Total code-health pass: perf, Tsotchke refresh, dead-code + doc-fork consolidation
+
+Owner directive: comprehensive sweep — toolstack/Tsotchke upgrades, doc/MD consolidation, code audit,
+performance maxxing, **zero degradation to visuals/intelligences**, invisible improvements. Five parallel
+audit agents scoped it; the safe, high-value slices shipped, each gated and (where it touches the sim)
+byte-identical:
+
+- **Perf (`aae2cfa4`).** Eliminated ~250k allocations/frame at the 50k tier in the hottest loop
+  (`applyAmbientSocial`): the per-entity chain-spring closure → module `applySpring`; the per-entity
+  `mulberry32` generator closure → one reseedable module-local RNG (draw body copied verbatim; the
+  V4-pinned `math/rng.ts` left byte-frozen); the `FactionPercept` literal → a module scratch;
+  `intentSteerXZ`'s fresh `{x,z}` → a shared readout. Full 3027-suite byte-identical (determinism goldens
+  hold); perf-budget green.
+- **Tsotchke corpus refresh (`3898e325`).** The committed Eshkol census was stale (`1365 .esk / 2507
+files`); the local mirror had advanced to `1648 / 3008` (the owner's "new stuff in his repos"). Re-ran
+  the offline `harvest:tsotchke`; the enriched `eskCount` toolchain-vitality signal is live-consumed by
+  the substrate. Verified an invisible upgrade — full suite green, visible world (own world-RNG) untouched.
+- **Dead-code removal (`fcf7dff5`).** Removed 3 unwired, 0-reference `src/core/` modules (`object-pool`,
+  `cache-warm`, `benchmark` — 422 lines; the pooling infra is superseded by the direct alloc-elimination
+  above). Count-neutral; coverage can only rise.
+- **Doc-fork consolidation (this pass).** Per the living-docs law + the BRAIN doc's own Part II
+  audit-of-audits (which already folded their unique content), deleted the three
+  `MEGA-MASTER-…ASSESSMENT-PASS-1/2/3` fork drafts — the single canonical
+  `BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md` is now the sole owner. Repointed
+  the NHSI dashboard references, marked the BRAIN consolidation directives DONE, cleaned 16 stale
+  `.prettierignore` entries (all for forks deleted in prior passes) and the now-dead `MEGA-MASTER-`
+  exclusion in `verify-canonical-facts.ts`. Git history preserves all originals.
+
+Verified clean, no action: dependency stack fully current (only a build-time-only dompurify patch, reverted);
+Butlin honesty intact on every living surface (8/14 met + 6/14 partial, never 14/14); lab `../../docs/` links
+correct for the deployed nesting; `PEER-REVIEW-META-ANALYSIS.md` honestly labelled a living scaffold.
+Consciousness/Sentience/Butlin score matrices BYTE-IDENTICAL throughout.
+
 ## 2026-07-13 — Xenomimic overhaul: twin-pair XNO, live cockpit, weather/waste reactivity
 
 Owner directive: the inspector "looks like shit… stretched… low res… not lively or dynamic," the XNO

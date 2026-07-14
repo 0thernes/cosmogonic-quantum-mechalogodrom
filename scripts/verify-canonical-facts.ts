@@ -105,7 +105,7 @@ const FACTS: Fact[] = [
 ];
 
 const EXCLUDE =
-  /^(legacy|node_modules|dist|coverage)\/|^\.claude\/worktrees\/|^CHANGELOG\.md$|^docs\/(AUDIT-LOG\.md|ln\/|DAILY_RUNS\/|reports\/20|MEGA-MASTER-)/;
+  /^(legacy|node_modules|dist|coverage)\/|^\.claude\/worktrees\/|^CHANGELOG\.md$|^docs\/(AUDIT-LOG\.md|ln\/|DAILY_RUNS\/|reports\/20)/;
 
 const FALLBACK_SKIP_DIRS = new Set([
   '.agents',

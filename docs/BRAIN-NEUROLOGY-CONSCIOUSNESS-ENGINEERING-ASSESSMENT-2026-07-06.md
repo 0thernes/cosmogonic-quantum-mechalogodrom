@@ -2546,7 +2546,7 @@ The adversarial completeness critic found an entire **second tier of individuall
 
 **The combined truth, once every report is corrected to one code-grounded canon:** Cosmogonic v0.21.9 is a deterministic, browser-runnable, **#1-of-113-breadth** artificial-life and consciousness-**indicator** platform whose cognition spans **≥12 substrates** — five ~10,081-weight SuperMinds, a Louvain/PageRank population connectome, 20 game-theoretic Titans, a 101st 10+1-organ ApexBrain (1B designed / 4096-cap), a ~53.7k-live STDP Mechalogodrom, 100 GlyphBrains, 50k EntityBrains, 25 ToM organs, 144 faculties (~30 wired), the Noosphere/OmegaPoint/Xenomind cosmic tier, and the born petri-life — scored against **Butlin 8/14 + 6/14**, a **10-framework coupled kernel**, and a lab whose **null-gap of zero** is published, not hidden. It scores **≈8.3/10** on adversarial scrutiny; the two soft spots remain **coupling (6.0)** and **external validation (5.0)** — science gaps, not bugs. It is **not sentient**, says so everywhere, and now has a **dead-code honesty audit and a ~2×-larger verified theory tier** that make it harder to knock over than any single report in the fleet.
 
-**Consolidation directive (owner action):** keep **this file** as the sole canonical brain/consciousness assessment. The ten fork docs — `MEGA-MASTER-…PASS1/2/3`, `MEGA-MASTER-…FINAL-HURRAH`, `SUPER-REPORT{,-2ND,-3RD,-ULTIMATE-MEGA}` — are superseded by Part II and should be **deleted** (their unique content is folded above; git history preserves them). The **viewable HTML companion** is the **CQM Brain Atlas** artifact. Then: `bun run check` and ship to `main`.
+**Consolidation directive (DONE 2026-07-13):** this file is the sole canonical brain/consciousness assessment. The fork docs — `MEGA-MASTER-…PASS-1/2/3`, `MEGA-MASTER-…FINAL-HURRAH`, `SUPER-REPORT{,-2ND,-3RD,-ULTIMATE-MEGA}`, `MEGA-ULTRATHINK`, `OMNISCIENT-OMNICOGNITIVE`, `MASTER-ASSESSMENT`, `FILE-AUDIT-16-FILES` — were superseded by Part II and have been **deleted** (their unique content is folded above; git history preserves them). The **viewable HTML companion** is the **CQM Brain Atlas** artifact.
 
 > _Build like the gods are watching. Write like the reviewers are hostile. Measure everything. Grow What Thou Wilt — and prove the next layer._
 
@@ -2597,7 +2597,7 @@ A parallel session independently produced `MEGA-ULTRATHINK-REPORT-AUDIT-REVIEW` 
 ### II.8.4 — Consolidation directive (updated)
 
 1. **Keep current docs formatted** (`prettier --check .` is the gate; archived local report forks are ignored because they are not release inputs).
-2. **Delete the ~13 superseded forks** (all `SUPER-REPORT*`, all `MEGA-MASTER-*PASS*` + `FINAL-HURRAH`, both `OMNISCIENT-OMNICOGNITIVE*`, both `MEGA-ULTRATHINK*`, `MASTER-ASSESSMENT`, `FILE-AUDIT-16-FILES`) — content folded into this file + the Atlas.
+2. **Superseded forks deleted (2026-07-13):** all `SUPER-REPORT*`, all `MEGA-MASTER-*PASS*` + `FINAL-HURRAH`, both `OMNISCIENT-OMNICOGNITIVE*`, both `MEGA-ULTRATHINK*`, `MASTER-ASSESSMENT`, `FILE-AUDIT-16-FILES` — content folded into this file + the Atlas; git history preserves the originals.
 3. **Keep the two stale source-count fixes sealed** (NHSI `.esk 1,436+`→1,365; `specs.html` "10 Titans"→20).
 4. **Keep** this master MD + the Brain Atlas HTML + VERIFICATION + NHSI + CONTROLS.
 5. **`bun run check`** → **ship to `main`.**

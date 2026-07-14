@@ -28,9 +28,9 @@ BRUTALIST MANIFEST: Valkorion domination, Broly infinite rage, Knull/Azathoth vo
 
 **Standing / xeno framing (2026-07-12):** Apex SuperCreature / SuperMind / Apex / Mechalogodrom fusion minds are **compact multi-faculty xeno scaffolds** (seeded + online AD heads + Tsotchke-class substrates)ΓÇö**not** OpenWorm-class bio-twins and **not** claimed phenomenal minds. Full synthesis: [Comprehensive Standing Report](./reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.md) ┬╖ [HTML](./reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.html).
 
-**Brain/neuro/consciousness assessment:** [`MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-3-2026-07-06.md`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-3-2026-07-06.md) is **Pass 3 of 3 (complete)** ΓÇö omniscient living-world census (shoggoths, puppets, titans, leviathans, NHI, flora/fauna/wildlife, 25 Archon godforms, GOD/temple decorative split, apex abomination stack), full [`brain-evidence-matrix.json`](./reports/assets/brain-evidence-matrix.json), [`sim-modules-census-pass3.csv`](./reports/assets/sim-modules-census-pass3.csv), gap audit vs six agent uploads. Prior passes: [`PASS-1`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-1-2026-07-06.md) ┬╖ [`PASS-2`](./MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-2-2026-07-06.md). Detail layer: [`BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md`](./BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md). All explicitly `indicatorOnly` ΓÇö no phenomenal sentience claims.
+**Brain/neuro/consciousness assessment:** [`BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md`](./BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md) is the **single canonical assessment**. Its Part II (audit-of-audits) folds the prior three `MEGA-MASTER-...PASS-1/2/3` fork audits and grades every source with receipts: source reconciliation (Pass 1), the evidence-hardening benchmark cards (Pass 2), and the omniscient living-world census (Pass 3) ΓÇö shoggoths, puppets, titans, leviathans, NHI, flora/fauna/wildlife, 25 Archon godforms, GOD/temple decorative split, apex abomination stack. Backing data: [`brain-evidence-matrix.json`](./reports/assets/brain-evidence-matrix.json), [`sim-modules-census-pass3.csv`](./reports/assets/sim-modules-census-pass3.csv). The three fork drafts were consolidated into this file and deleted 2026-07-13 (git history preserves them). All explicitly `indicatorOnly` ΓÇö no phenomenal sentience claims.
 
-**Local archive drafts:** `MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS1-2026-07-06.md`, `MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS2-2026-07-06.md`, `MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-PASS3-2026-07-06.md`, and `MEGA-MASTER-BRAIN-NEUROLOGY-CONSCIOUSNESS-SENTIENCE-FINAL-HURRAH-2026-07-07.md` are preserved as local research drafts, not public release targets. Their Pass-1 source reconciliation, Pass-2 evidence hardening, Pass-3 world-neurology gap closure, and Final Hurrah capstone material are folded into the current tracked audit/master pair below.
+**Fork drafts consolidated (2026-07-13):** every prior brain-assessment fork ΓÇö the `MEGA-MASTER-...PASS-1/2/3` trio and the earlier `FINAL-HURRAH` / `SUPER-REPORT` / `MEGA-ULTRATHINK` lineage ΓÇö has been folded into the single canonical assessment above (Pass-1 source reconciliation, Pass-2 evidence hardening + benchmark cards, Pass-3 world-neurology census, capstone material) and removed from the tree. Git history preserves them; no dated fork copies remain per the living-docs law.
 
 **Publication-facing coverage retained:** the current tracked synthesis preserves the world-neurology closure list from the local drafts: Shoggoths, Puppet Masters, Titans, Entities, SuperCreatures, Apex Abomination, Pantheons, 25 Archon Godforms, GOD/God-Colossus, Temple, Plants, Flora, Fauna, Wildlife, Wilderness, PortalDeathFauna, Leviathans, and Digital Biologics. It treats them as computational/ecological neurology analogues with code paths, tests, and falsifiers, not as proof of sentience.
 
@@ -219,30 +219,28 @@ Full trail: [`SUPER-CREATURE-RESEARCH-2026-06-26.md`](./SUPER-CREATURE-RESEARCH-
 
 ## VI ┬╖ Where this dashboard is mirrored (Local = GitHub)
 
-| Surface                             | Path                                                                             |
-| ----------------------------------- | -------------------------------------------------------------------------------- |
-| **This dashboard**                  | `docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md`                                     |
-| README                              | root                                                                             |
-| Architecture                        | `docs/ARCHITECTURE-2026-06-26.md`                                                |
-| ERD / ERM / ERP                     | `docs/ENTITY-SCHEMA-AND-MAPPINGS-2026-06-26.md`                                  |
-| KANBAN                              | `docs/KANBAN-2026-06-26.md`                                                      |
-| MODULE-CONTRACTS                    | `docs/MODULE-CONTRACTS-2026-06-26.md`                                            |
-| PHILOSOPHY                          | `docs/PHILOSOPHY-2026-06-26.md`                                                  |
-| `/docs` page                        | `docs.html`                                                                      |
-| `/spec` page                        | `specs.html`                                                                     |
-| `/lab`                              | `lab/`                                                                           |
-| Technical spec                      | `docs/TECHNICAL-SPECIFICATION-2026-06-26.md`                                     |
-| Tsotchke ledger                     | `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`                                    |
-| Mega assessment Pass 3/3 (complete) | `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-3-2026-07-06.md` |
-| Mega assessment Pass 2/3            | `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-2-2026-07-06.md` |
-| Mega assessment Pass 1/3            | `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-1-2026-07-06.md` |
-| Brain evidence matrix (JSON)        | `docs/reports/assets/brain-evidence-matrix.json`                                 |
-| Sim module census (CSV)             | `docs/reports/assets/sim-modules-census-pass3.csv`                               |
-| Brain evidence matrix (preview)     | `docs/reports/assets/brain-evidence-matrix-pass2.json`                           |
-| Historical reports                  | `docs/reports/README.md`                                                         |
-| Super research                      | `docs/SUPER-CREATURE-RESEARCH-2026-06-26.md`                                     |
-| Master XMLs                         | `masters/` (Broly ┬╖ Starkiller ┬╖ Manhattan)                                    |
-| Agent steering                      | `CLAUDE.md`, `.github/copilot-instructions.md`                                   |
+| Surface                         | Path                                                                      |
+| ------------------------------- | ------------------------------------------------------------------------- |
+| **This dashboard**              | `docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md`                              |
+| README                          | root                                                                      |
+| Architecture                    | `docs/ARCHITECTURE-2026-06-26.md`                                         |
+| ERD / ERM / ERP                 | `docs/ENTITY-SCHEMA-AND-MAPPINGS-2026-06-26.md`                           |
+| KANBAN                          | `docs/KANBAN-2026-06-26.md`                                               |
+| MODULE-CONTRACTS                | `docs/MODULE-CONTRACTS-2026-06-26.md`                                     |
+| PHILOSOPHY                      | `docs/PHILOSOPHY-2026-06-26.md`                                           |
+| `/docs` page                    | `docs.html`                                                               |
+| `/spec` page                    | `specs.html`                                                              |
+| `/lab`                          | `lab/`                                                                    |
+| Technical spec                  | `docs/TECHNICAL-SPECIFICATION-2026-06-26.md`                              |
+| Tsotchke ledger                 | `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`                             |
+| Brain/consciousness assessment  | `docs/BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md` |
+| Brain evidence matrix (JSON)    | `docs/reports/assets/brain-evidence-matrix.json`                          |
+| Sim module census (CSV)         | `docs/reports/assets/sim-modules-census-pass3.csv`                        |
+| Brain evidence matrix (preview) | `docs/reports/assets/brain-evidence-matrix-pass2.json`                    |
+| Historical reports              | `docs/reports/README.md`                                                  |
+| Super research                  | `docs/SUPER-CREATURE-RESEARCH-2026-06-26.md`                              |
+| Master XMLs                     | `masters/` (Broly ┬╖ Starkiller ┬╖ Manhattan)                             |
+| Agent steering                  | `CLAUDE.md`, `.github/copilot-instructions.md`                            |
 
 ---
 
