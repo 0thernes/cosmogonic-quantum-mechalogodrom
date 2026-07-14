@@ -1576,7 +1576,7 @@ Copilot are constructed boot-stream-neutral and never write sim state, so the go
 
 ### V9 acceptance
 
-Full `bun run check` green: prettier → tsc strict → oxlint → 3224 tests (0 fail, 300-frame golden
+Full `bun run check` green: prettier → tsc strict → oxlint → 3271 tests (0 fail, 300-frame golden
 included) → build. The Copilot sandbox verified live (allow: `git log`, file reads; deny:
 path-escape, repository-root pathspecs, `git push`, `legacy/`, shell redirection).
 
@@ -1713,15 +1713,18 @@ above.
 | `src/sim/edible-resource.ts`         | Fixed-capacity fruit/leaf identity, reservation, consumption, nourishment, lease expiry, and respawn transactions                                                                            |
 | `src/sim/crystal-ecosystem.ts`       | Authored tree food pools and matrices, reachable interaction points, tree-dwelling creatures, and the scaled ecology clock                                                                   |
 | `src/sim/big-tree-zone.ts`           | Sanctuary geometry, hysteresis, activity-slot ownership, bounded visit state, partner reservations, deadlines, snapshots, and recovery                                                       |
+| `src/sim/big-tree-sanctuary.ts`      | Fixed-capacity identity membership for entry/exit hysteresis plus conservative stateless protection for hostile endpoints                                                                    |
 | `src/sim/big-tree-visitors.ts`       | Direct adapters for canonical Entities and Xenomimics: contextual selection, steering, food transactions, nourishment, rest, social matching, and cleanup                                    |
 | `src/sim/big-tree-fauna-source.ts`   | Allocation-free ownership contract for Shoggoths, Titans, Leviathans, Puppeteers, and autonomous Apex bodies: stable identity, native energy, movement ownership, nourishment, and lifecycle |
-| `src/sim/big-tree-fauna-visitors.ts` | Bounded shared adapter for those five fauna categories: contextual visits, ground/flight steering, canonical food transactions, rest, cross-species social pairing, departure, and cleanup   |
+| `src/sim/big-tree-fauna-visitors.ts` | Bounded shared adapter for fixed fauna and launched NHIs: contextual visits, 3D locomotion, canonical food transactions, rest, cross-species social pairing, departure, and cleanup          |
+| `src/sim/nhi-big-tree-source.ts`     | Fixed-capacity launched-NHI binding over the canonical backing Entity, including real energy hunger, social signals, nourishment, locomotion intent, and cleanup                             |
 | `src/sim/tree-creature-brain.ts`     | One deterministic fixed-size neural controller per tree-dwelling creature, with validated model loading and a safe fallback                                                                  |
 | `src/sim/tree-creature-teaching.ts`  | Bounded resident-to-resident policy transfer: competence-gap and cooldown gates, all-or-nothing finite weight blending, and the honest events-only ledger                                    |
 | `src/sim/xenomimic-tether-purge.ts`  | The tether law's enforcement sweep: legacy-name predicate plus detach-and-dispose destruction of orphan xenomimic line primitives                                                            |
 | `src/sim/xenomimic-connectome.ts`    | Bounded twin/Entity proximity topology counts only: no renderer, scene attachment, tether geometry, joint, spring, leash, force, or movement ownership                                       |
 | `src/memory/store.ts`                | Separate validation and `localStorage` keys for preferences and the sparse food-only Big Tree checkpoint; no actor or visit persistence                                                      |
-| `src/world.ts`                       | Composition only: construct the shared zone/visit/visitor systems, supply canonical living populations and clocks, attach sanctuary predicates, and bridge peaceful activity feedback        |
+| `src/world.ts`                       | Composition only: construct the shared systems, supply canonical populations and clocks, attach sanctuary predicates, bridge peaceful feedback, persist food only, and assemble receipts     |
+| `src/main.ts`                        | Gate local diagnostics and restore/flush the food-only checkpoint at application lifecycle boundaries                                                                                        |
 
 Tree food is not a parallel exception. `CrystalEcosystem.edibleResources` is the shared
 `EdibleResourceRegistry`, and both the external visitor adapter and the tree-dweller ecology use its
@@ -1780,6 +1783,12 @@ or strike effects are suppressed. Normal collision separation and calm locomotio
 Leaving the zone resumes live canonical faction/relationship/economy state; stale hostile targets
 are not automatically reinstated.
 
+Identity-aware membership is held separately for each living category so two species with the same
+numeric index cannot share hysteresis history. An untracked body discovered inside the entry radius is
+adopted into a bounded safety/observation visit rather than allowed to camp forever. Launched NHIs bind
+by stable mind ID to their one existing backing Entity; the follower visual is never registered as a
+second being. Death, despawn, reset, failed launch, and teardown release membership and visit state.
+
 Visits are contextual and deterministic-randomized from hunger, fatigue, stress, social need,
 curiosity, danger, distance, route availability, available food, recent-visit pressure, personality,
 occupancy, and simulation load. The runtime lifecycle is:
@@ -1789,9 +1798,9 @@ Outside -> Travelling -> Active -> Leaving -> Cooldown -> Outside
 ```
 
 The production scheduler has at most 72 concurrent travelling/active/leaving visitors shared by
-Entities, Xenomimics, Shoggoths, Titans, Leviathans, Puppeteers, and autonomous Apex bodies, plus 104
-distributed destinations: 32 eating slots at radius 78, 24 resting at 132, 24 social at 178, 16
-observation at 218, and 8 general slots at 205. Active dwell is 7-24 simulation seconds; revisit
+Entities, Xenomimics, Shoggoths, Titans, Leviathans, Puppeteers, autonomous Apex bodies, and launched
+NHIs, plus 104 distributed destinations: 32 eating slots at radius 78, 24 resting at 132, 24 social at
+178, 16 observation at 218, and 8 general slots at 205. Active dwell is 7-24 simulation seconds; revisit
 cooldown is 35-95 seconds. Travel and exit hard limits are 90 and 50 seconds. Activity slots have a
 12-second renewable lease. Lack of progress for 8 seconds triggers a different-slot recovery, with
 at most two recoveries before a safe exit/cooldown. All transitions release food, slot, and partner
@@ -1872,12 +1881,12 @@ sentience claim. Social animation alone is not reported as learning.
 
 Automated contract coverage lives in `tests/edible-resource.test.ts`,
 `tests/big-tree-zone.test.ts`, `tests/big-tree-visitors.test.ts`,
-`tests/big-tree-fauna-visitors.test.ts`, `tests/big-tree-fauna-source-integration.test.ts`,
+`tests/big-tree-sanctuary.test.ts`, `tests/big-tree-fauna-visitors.test.ts`,
+`tests/big-tree-fauna-source-integration.test.ts`, `tests/big-tree-observability.test.ts`,
 `tests/tree-creature-brain.test.ts`, `tests/tree-creature-teaching.test.ts`, `tests/store.test.ts`,
-`tests/xenomimic-connectome.test.ts`, `tests/xenomimic-cosmetics.test.ts`, the Crystal ecosystem test
-family, `tests/super-hunt.test.ts`, and
+`tests/xenomimic-connectome.test.ts`, the Crystal ecosystem test family, `tests/super-hunt.test.ts`,
+`tests/portal-death.test.ts`, and
 `tests/big-tree-world-integration.test.ts`. `tests/browser-visual-smoke-harness.test.ts` statically seals
 natural-rAF advancement, bounded stage/failure receipts, the viewport plus canvas-isolated proof, and
-the intentional `dormant-main-thread` worker expectation. Harness coverage is not a live browser result:
-this amendment does not claim a current production build, GitHub Pages deployment, or manual browser
-verification.
+the intentional `dormant-main-thread` worker expectation. Current live-browser and deployment evidence
+is recorded separately in the dated Dome Ecology verification report.

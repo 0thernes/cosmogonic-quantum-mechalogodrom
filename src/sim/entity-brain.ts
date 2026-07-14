@@ -380,7 +380,7 @@ export class EntityBrainField {
     list: ReadonlyArray<Entity | undefined>,
     chaos: number,
     t: number,
-    sanctuaryAt: ((x: number, z: number) => boolean) | null = null,
+    sanctuaryAt: ((x: number, z: number, ecologyId?: number) => boolean) | null = null,
   ): number {
     this.prepareThinkTime(t);
     this.prepareControllerContext(t);
@@ -390,7 +390,8 @@ export class EntityBrainField {
     for (let i = 0; i < n; i++) {
       const e = list[i];
       if (!e) continue;
-      const protectedHere = sanctuaryAt?.(e.position.x, e.position.z) === true;
+      const protectedHere =
+        sanctuaryAt?.(e.position.x, e.position.z, e.userData.ecologyId) === true;
       if (this.thinkSlot(e, i, chaosN, t, protectedHere)) thought++;
     }
     return thought;

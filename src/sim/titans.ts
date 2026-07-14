@@ -107,6 +107,7 @@ const ENTROPY_PER_HARVEST = 1.5;
 const ENTROPY_RELIEF = 8;
 const ENTROPY_WASTE_THRESHOLD = 60;
 const ENTROPY_WASTE_RETAIN = 0.35;
+const BIG_TREE_REST_ENTROPY_RELIEF_PER_SECOND = 4;
 const WASTE_SCAR_RADIUS = 6;
 /** Energy granted per witnessed quantum collapse (PRODUCE). */
 const WITNESS_ENERGY = 2.5;
@@ -670,7 +671,7 @@ export class TitanSystem implements DomeFeeder, BigTreeActorSource {
   /** F-DIPLO-ECON V16: economic net-worth provider by titan index (null ⇒ no economy coupling). */
   private econWealth: ((titanIndex: number) => number) | null = null;
   /** Shared neutral-zone policy. Protection is evaluated from live positions and never persisted. */
-  private sanctuary: ((x: number, z: number) => boolean) | null = null;
+  private sanctuary: ((x: number, z: number, ownerId?: number) => boolean) | null = null;
   private readonly rd: TitanRd;
   private readonly titans: Titan[] = [];
   /** PORTAL DEATH (USER): titans blasted by the portal, awaiting their 5 s respawn ELSEWHERE. */
@@ -770,6 +771,13 @@ export class TitanSystem implements DomeFeeder, BigTreeActorSource {
     return true;
   }
 
+  restBigTreeActor(index: number, dt: number): boolean {
+    const ti = this.titans[index];
+    if (!ti || !ti.group.visible || !Number.isFinite(dt) || dt < 0) return false;
+    ti.entropy = clamp(ti.entropy - BIG_TREE_REST_ENTROPY_RELIEF_PER_SECOND * dt, 0, RESOURCE_CAP);
+    return true;
+  }
+
   setBigTreeActorControlled(index: number, controlled: boolean): boolean {
     const ti = this.titans[index];
     if (!ti) return false;
@@ -795,6 +803,7 @@ export class TitanSystem implements DomeFeeder, BigTreeActorSource {
     r2: number,
     t: number,
     onDeath: (x: number, y: number, z: number) => void,
+    protectedAt?: (x: number, z: number) => boolean,
   ): void {
     for (let k = this.portalDowned.length - 1; k >= 0; k--) {
       const d = this.portalDowned[k]!;
@@ -812,7 +821,7 @@ export class TitanSystem implements DomeFeeder, BigTreeActorSource {
       const p = ti.group.position;
       const dx = p.x - ax;
       const dz = p.z - az;
-      if (dx * dx + dz * dz <= r2) {
+      if (dx * dx + dz * dz <= r2 && protectedAt?.(p.x, p.z) !== true) {
         onDeath(p.x, p.y, p.z);
         ti.bigTreeControlled = false;
         ti.group.visible = false;
@@ -853,7 +862,7 @@ export class TitanSystem implements DomeFeeder, BigTreeActorSource {
   }
 
   /** Attach the composition-root sanctuary predicate; null restores legacy diplomacy and combat. */
-  attachSanctuary(predicate: ((x: number, z: number) => boolean) | null): void {
+  attachSanctuary(predicate: ((x: number, z: number, ownerId?: number) => boolean) | null): void {
     this.sanctuary = predicate;
   }
 
@@ -1381,8 +1390,7 @@ export class TitanSystem implements DomeFeeder, BigTreeActorSource {
       const ti = this.titans[i];
       if (!ti) continue; // invariant: dense array
       const flick = Math.sin(t * 2.1 + ti.ph);
-      const p = ti.group.position;
-      const protectedHere = this.isProtectedAt(p.x, p.z);
+      const protectedHere = this.isProtectedTitan(ti);
       const warHot = !protectedHere && ti.warCount > 0;
       ti.rig.position.y = Math.sin(t * ti.bobF + ti.ph) * ti.bobA;
       ti.light.intensity =
@@ -1765,11 +1773,13 @@ export class TitanSystem implements DomeFeeder, BigTreeActorSource {
 
   private isProtectedTitan(titan: Titan): boolean {
     const p = titan.group.position;
-    return titan.bigTreeControlled || this.isProtectedAt(p.x, p.z);
+    // Always refresh identity membership before applying the visit-control peace override.
+    const memberProtected = this.isProtectedAt(p.x, p.z, titan.bigTreeOwnerId);
+    return titan.bigTreeControlled || memberProtected;
   }
 
-  private isProtectedAt(x: number, z: number): boolean {
-    return this.sanctuary?.(x, z) === true;
+  private isProtectedAt(x: number, z: number, ownerId?: number): boolean {
+    return this.sanctuary?.(x, z, ownerId) === true;
   }
 
   /** Refresh the REUSED ledger rows from titan state. O(TITAN_COUNT) field writes, allocation-free. */

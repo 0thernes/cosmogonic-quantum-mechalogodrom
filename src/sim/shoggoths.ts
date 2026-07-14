@@ -205,7 +205,7 @@ export class ShoggothSystem implements PortalCullable, BigTreeActorSource {
    *  active hole tugs the shoggoths too. null ⇒ no coupling (the legacy/test behaviour). */
   private singularity: SingularitySystem | null = null;
   /** Shared sanctuary policy. Protected positions suppress threat, tendrils, pursuit, and feeding. */
-  private sanctuary: ((x: number, z: number) => boolean) | null = null;
+  private sanctuary: ((x: number, z: number, ownerId?: number) => boolean) | null = null;
   /** F-ECON-CREATURES V17: economic net-worth provider by shoggoth index (null ⇒ no coupling). */
   private econWealth: ((shoggothIndex: number) => number) | null = null;
   /** F-CREATURE-TRADE V29: conservation-exact worth transfer between two shoggoths (by index); returns
@@ -272,7 +272,8 @@ export class ShoggothSystem implements PortalCullable, BigTreeActorSource {
     out.danger = intelligence?.enabled ? clamp(intelligence.threatResponse, 0, 1) : 0;
     out.criticalNeed = sg.satiation <= 0.08;
     out.moveSpeed = 22;
-    out.aggressionSuppressed = sg.bigTreeControlled || this.sanctuary?.(p.x, p.z) === true;
+    out.aggressionSuppressed =
+      sg.bigTreeControlled || this.sanctuary?.(p.x, p.z, sg.bigTreeOwnerId) === true;
     return true;
   }
 
@@ -301,7 +302,7 @@ export class ShoggothSystem implements PortalCullable, BigTreeActorSource {
   }
 
   /** Attach the composition-root sanctuary predicate; null restores legacy predation. */
-  attachSanctuary(predicate: ((x: number, z: number) => boolean) | null): void {
+  attachSanctuary(predicate: ((x: number, z: number, ownerId?: number) => boolean) | null): void {
     this.sanctuary = predicate;
   }
 
@@ -323,6 +324,7 @@ export class ShoggothSystem implements PortalCullable, BigTreeActorSource {
     r2: number,
     t: number,
     onDeath: (x: number, y: number, z: number) => void,
+    protectedAt?: (x: number, z: number) => boolean,
   ): void {
     for (let k = this.portalDowned.length - 1; k >= 0; k--) {
       const d = this.portalDowned[k]!;
@@ -339,7 +341,7 @@ export class ShoggothSystem implements PortalCullable, BigTreeActorSource {
       const p = sg.group.position;
       const dx = p.x - ax;
       const dz = p.z - az;
-      if (dx * dx + dz * dz <= r2) {
+      if (dx * dx + dz * dz <= r2 && protectedAt?.(p.x, p.z) !== true) {
         onDeath(p.x, p.y, p.z);
         sg.bigTreeControlled = false;
         sg.group.visible = false;
@@ -558,7 +560,8 @@ export class ShoggothSystem implements PortalCullable, BigTreeActorSource {
       if (!sg.group.visible) continue; // portal-downed: dead (invisible) until respawn — don't hunt/consume/spawn
       const g = sg.group;
       const p = g.position;
-      const protectedHere = sg.bigTreeControlled || this.sanctuary?.(p.x, p.z) === true;
+      const protectedHere =
+        sg.bigTreeControlled || this.sanctuary?.(p.x, p.z, sg.bigTreeOwnerId) === true;
 
       // F-ECON-CREATURES V17: this shoggoth's WEALTH sets its boldness — rich = bolder (hunts harder,
       // glows bigger + brighter), broke = timid. Reads the deterministic economy; boldness stays 1
@@ -628,7 +631,9 @@ export class ShoggothSystem implements PortalCullable, BigTreeActorSource {
         const nearPos = nearShog?.group.position;
         partnerProtected =
           nearShog?.bigTreeControlled === true ||
-          (nearPos ? this.sanctuary?.(nearPos.x, nearPos.z) === true : false);
+          (nearPos
+            ? this.sanctuary?.(nearPos.x, nearPos.z, nearShog?.bigTreeOwnerId) === true
+            : false);
       }
       const intelligence = ctx.organismIntelligence;
       const intelligent = intelligence?.enabled === true;
@@ -749,7 +754,8 @@ export class ShoggothSystem implements PortalCullable, BigTreeActorSource {
       // Re-evaluate after integration: an outside shoggoth can cross the sanctuary boundary during
       // this very frame. All subsequent interaction writes must use its live position, not the stale
       // pre-move membership sampled for perception.
-      const protectedAfterMove = sg.bigTreeControlled || this.sanctuary?.(p.x, p.z) === true;
+      const protectedAfterMove =
+        sg.bigTreeControlled || this.sanctuary?.(p.x, p.z, sg.bigTreeOwnerId) === true;
       if (protectedAfterMove) su.uHunt.value = 0;
 
       // Roiling rotation + pulsing core glow (legacy 527-530).

@@ -539,6 +539,25 @@ interface TitanSanctuaryHarness {
 }
 
 describe('TitanSystem — sanctuary is transient, neutral, and non-harmful', () => {
+  test('a bounded tree rest activity relieves entropy without granting energy or matter', () => {
+    const ctx = makeCtx(0x7e57);
+    const entities = new EntityManager(ctx);
+    const titans = new TitanSystem(ctx, entities, LORE, { perturb: () => undefined });
+    const harness = titans as unknown as TitanSanctuaryHarness;
+    const titan = harness.titans[0]!;
+    titan.entropy = 20;
+    const energyBefore = titan.energy;
+    const matterBefore = titan.matter;
+
+    expect(titans.restBigTreeActor(0, 2)).toBe(true);
+    expect(titan.entropy).toBe(12);
+    expect(titan.energy).toBe(energyBefore);
+    expect(titan.matter).toBe(matterBefore);
+    expect(titans.restBigTreeActor(0, Number.NaN)).toBe(false);
+    expect(titans.restBigTreeActor(-1, 1)).toBe(false);
+    titans.dispose();
+  });
+
   test('protected pairs do not initiate diplomacy and calm presentation without rewriting war state', () => {
     const ctx = makeCtx(0x5afe);
     const entities = new EntityManager(ctx);

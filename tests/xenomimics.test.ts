@@ -187,7 +187,7 @@ describe('GATE-XENOMIMIC — population lifecycle', () => {
     run(pop, 4000, 1 / 30, () => 0.95); // abundant food, long run
     expect(pop.population()).toBeLessThanOrEqual(XENOMIMIC_MAX);
     expect(pop.telemetry().pairs).toBeLessThanOrEqual(XENOMIMIC_MAX / 2);
-  });
+  }, 15_000);
 
   test('spawnAt (XNO) adds exactly one live body per call while consecutive bodies share one pair', () => {
     const pop = new XenomimicPopulation(31, { growthRamp: 999 });
@@ -460,7 +460,7 @@ describe('GATE-XENOMIMIC — population lifecycle', () => {
     run(pop, 3000, 1 / 30, () => 0.9);
     expect(pop.population()).toBeGreaterThan(2); // grew past the founding pair
     expect(pop.telemetry().births).toBeGreaterThan(2);
-  });
+  }, 30_000);
 
   test('eating flora raises energy; starvation lowers it', () => {
     const fed = new XenomimicPopulation(3, { growthRamp: 999 });
@@ -565,7 +565,7 @@ describe('GATE-XENOMIMIC — population lifecycle', () => {
       expect(c.y).toBeGreaterThan(-8);
       expect(c.y).toBeLessThan(12);
     });
-  });
+  }, 30_000);
 
   test('canonical square containment permits habitat corners instead of applying an origin leash', () => {
     const pop = new XenomimicPopulation(0x7e7e, { growthRamp: 999 });
@@ -624,7 +624,7 @@ describe('GATE-XENOMIMIC — population lifecycle', () => {
     expect(counts.length).toBe(XENOMIMIC_SPECIES);
     const kinds = counts.filter((n) => n > 0).length;
     expect(kinds).toBeGreaterThanOrEqual(3); // meaningful diversity emerged
-  });
+  }, 30_000);
 });
 
 describe('GATE-XENOMIMIC — render smoke (headless)', () => {

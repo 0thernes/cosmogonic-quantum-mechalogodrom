@@ -36,9 +36,11 @@ describe('Big Tree production fauna sources', () => {
     expect(shoggoths).toContain('if (!sg.bigTreeControlled)');
     expect(shoggoths).toContain('sg.bigTreeControlled || this.sanctuary?.');
     expect(titans).toContain('if (!ti.bigTreeControlled)');
-    expect(titans).toContain('return titan.bigTreeControlled || this.isProtectedAt');
+    expect(titans).toContain('const memberProtected = this.isProtectedAt');
+    expect(titans).toContain('return titan.bigTreeControlled || memberProtected');
     expect(puppets).toContain('if (pm.bigTreeControlled)');
-    expect(puppets).toContain('return pm.bigTreeControlled || this.isProtectedAt');
+    expect(puppets).toContain('const memberProtected = this.isProtectedAt');
+    expect(puppets).toContain('return pm.bigTreeControlled || memberProtected');
     expect(leviathans).toContain('if (!lv.bigTreeControlled)');
     expect(apex).toContain('if (this.bigTreeControlled)');
     expect(apex).toContain('if (this.disposed || this.bigTreeControlled) return;');

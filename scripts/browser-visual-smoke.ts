@@ -19,6 +19,8 @@ const RUNNER_DIR = join(OUT_DIR, 'npm-runner');
 const BROWSERS_DIR = join(RUNNER_DIR, 'ms-playwright');
 const NODE_EXECUTABLE = process.platform === 'win32' ? 'node.exe' : 'node';
 const PORT = Number(process.env.CQM_VISUAL_SMOKE_PORT ?? 3107);
+const PROJECT = process.env.CQM_VISUAL_SMOKE_PROJECT ?? 'cosmogonic-quantum-mechalogodrom';
+const SITE_DIR = join(ROOT, 'site');
 const VALID_TIERS = new Set(['phone', 'tablet', 'laptop', 'desktop', 'ultra', 'mega']);
 const TIERS = (process.env.CQM_VISUAL_SMOKE_TIERS ?? 'phone,desktop')
   .split(',')
@@ -52,11 +54,17 @@ function killProcess(pid: number | undefined): void {
   process.kill(pid, 'SIGKILL');
 }
 
-function runChecked(label: string, exe: string, args: string[], cwd: string): void {
+function runChecked(
+  label: string,
+  exe: string,
+  args: string[],
+  cwd: string,
+  extraEnv: Record<string, string> = {},
+): void {
   console.log(`visual-smoke: ${label}`);
   const result = spawnSync(exe, args, {
     cwd,
-    env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: BROWSERS_DIR },
+    env: { ...process.env, ...extraEnv, PLAYWRIGHT_BROWSERS_PATH: BROWSERS_DIR },
     stdio: 'inherit',
   });
   if (result.error) fail(`${label} failed to launch: ${result.error.message}`);
@@ -87,10 +95,10 @@ function ensurePlaywright(): void {
 async function waitForHealth(stderr: () => string): Promise<void> {
   for (let i = 0; i < 80; i++) {
     try {
-      const res = await fetch(`http://127.0.0.1:${PORT}/api/health`, {
+      const res = await fetch(`http://127.0.0.1:${PORT}/${PROJECT}/`, {
         signal: AbortSignal.timeout(500),
       });
-      if (res.ok) return;
+      if (res.ok && (await res.text()).includes('data-cqm-static-host="true"')) return;
     } catch {
       /* retry */
     }
@@ -149,6 +157,7 @@ const stressDurationMs = Number(process.env.CQM_VISUAL_SMOKE_STRESS_MS ?? 15000)
 const teardownTimeoutMs = Number(process.env.CQM_VISUAL_SMOKE_TEARDOWN_TIMEOUT_MS ?? 10000);
 
 if (!baseUrl || !outDir) throw new Error('missing CQM_VISUAL_SMOKE_URL or CQM_VISUAL_SMOKE_OUT');
+const baseOrigin = new URL(baseUrl).origin;
 
 await mkdir(outDir, { recursive: true });
 const summaryPath = join(outDir, 'visual-smoke-summary.json');
@@ -381,12 +390,16 @@ function samplePng(buffer) {
 
 async function readCanvasMetadata(page) {
   return await page.evaluate(() => {
+    const api = window.__CQM__;
+    if (!api?.world) throw new Error('window.__CQM__.world missing');
     const canvas = document.getElementById('c');
     if (!(canvas instanceof HTMLCanvasElement)) throw new Error('#c canvas missing');
     const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
     if (!gl) throw new Error('WebGL context missing');
     const rect = canvas.getBoundingClientRect();
     const world = window.__CQM__?.world;
+    const bigTreeEcology = api.bigTreeEcology?.snapshot?.({ foodId: 0 });
+    if (!bigTreeEcology) throw new Error('window.__CQM__.bigTreeEcology.snapshot missing');
     return {
       canvasWidth: canvas.width,
       canvasHeight: canvas.height,
@@ -394,10 +407,12 @@ async function readCanvasMetadata(page) {
       cssHeight: rect.height,
       drawingBufferWidth: gl.drawingBufferWidth,
       drawingBufferHeight: gl.drawingBufferHeight,
+      pixelReadback: false,
       frame: world?.state?.frame ?? null,
       elapsed: world?.state?.elapsed ?? null,
       qualityTier: world?.quality?.tier ?? null,
       entityCount: world?.entities?.list?.length ?? null,
+      bigTreeEcology,
     };
   });
 }
@@ -408,6 +423,10 @@ async function waitForNaturalFrames(page, frameCount) {
     if (!gate) throw new Error('visual-smoke rAF gate missing');
     return gate.pauseAfterWorldFrames(frames);
   }, frameCount);
+  return await waitForArmedNaturalFrames(page, armed);
+}
+
+async function waitForArmedNaturalFrames(page, armed) {
   await page.waitForFunction(
     ({ targetFrame }) => {
       const currentFrame = window.__CQM__?.world?.state?.frame;
@@ -421,6 +440,25 @@ async function waitForNaturalFrames(page, frameCount) {
     { polling: 250, timeout: frameAdvanceTimeoutMs },
   );
   return await readCanvasMetadata(page);
+}
+
+async function waitForWorldHookAndQuiesce(page) {
+  const armedHandle = await page.waitForFunction(
+    () => {
+      const world = window.__CQM__?.world;
+      const gate = window.__CQM_VISUAL_SMOKE_RAF_GATE__;
+      if (!world || !gate) return false;
+      return gate.pauseAfterWorldFrames(1);
+    },
+    null,
+    { polling: 50, timeout: 120000 },
+  );
+  const armed = await armedHandle.jsonValue();
+  await armedHandle.dispose();
+  if (!armed || !Number.isFinite(armed.targetFrame)) {
+    throw new Error('visual-smoke could not arm the initial natural-frame gate');
+  }
+  return await waitForArmedNaturalFrames(page, armed);
 }
 
 async function resumeNaturalFrames(page) {
@@ -658,12 +696,15 @@ async function finishHabitatStressProbe(page) {
       }
     }
 
+    // Resolve the built worker against document.baseURI so the proof is valid at the Pages project
+    // subpath as well as on the local Pages-only server.
+    const workerUrl = new URL('./workers/simulation-worker.js', document.baseURI).href;
     const controller = new AbortController();
     const workerTimer = setTimeout(() => controller.abort(), workerTimeoutMs);
     let workerResponse;
     let workerBody;
     try {
-      workerResponse = await fetch('/workers/simulation-worker.js', {
+      workerResponse = await fetch(workerUrl, {
         cache: 'no-store',
         signal: controller.signal,
       });
@@ -677,6 +718,12 @@ async function finishHabitatStressProbe(page) {
         ? canvas.getContext('webgl2') || canvas.getContext('webgl')
         : null;
     const debugRenderer = gl?.getExtension('WEBGL_debug_renderer_info') ?? null;
+    const rendererVendor = gl
+      ? String(gl.getParameter(debugRenderer?.UNMASKED_VENDOR_WEBGL ?? gl.VENDOR))
+      : 'unavailable';
+    const rendererName = gl
+      ? String(gl.getParameter(debugRenderer?.UNMASKED_RENDERER_WEBGL ?? gl.RENDERER))
+      : 'unavailable';
     const result = {
       tier: world.quality.tier,
       measurementClass: 'headless-browser-liveness-not-production-fps',
@@ -706,6 +753,7 @@ async function finishHabitatStressProbe(page) {
         maxActiveObserved: probe.maxWorkerActive,
         perfSnapshot: world.getPerfSnapshot(),
         asset: {
+          url: workerUrl,
           ok: workerResponse.ok,
           status: workerResponse.status,
           contentType: workerResponse.headers.get('content-type'),
@@ -713,12 +761,9 @@ async function finishHabitatStressProbe(page) {
         },
       },
       renderer: {
-        vendor: gl
-          ? gl.getParameter(debugRenderer?.UNMASKED_VENDOR_WEBGL ?? gl.VENDOR)
-          : 'unavailable',
-        name: gl
-          ? gl.getParameter(debugRenderer?.UNMASKED_RENDERER_WEBGL ?? gl.RENDERER)
-          : 'unavailable',
+        vendor: rendererVendor,
+        name: rendererName,
+        software: /swiftshader|llvmpipe|software rasterizer/i.test(rendererName),
         render: { ...api.renderer.info.render },
         memory: { ...api.renderer.info.memory },
       },
@@ -752,12 +797,16 @@ try {
     let page = null;
     const consoleErrors = [];
     const pageErrors = [];
+    const badResponses = [];
+    const requestFailures = [];
     const report = {
       tier,
       status: 'running',
       url: tierUrl(tier),
       consoleErrors,
       pageErrors,
+      badResponses,
+      requestFailures,
     };
     const lifecycle = {
       tier,
@@ -797,6 +846,23 @@ try {
         if (msg.type() === 'error') consoleErrors.push(msg.text());
       });
       page.on('pageerror', (err) => pageErrors.push(err.message));
+      page.on('response', (response) => {
+        if (
+          badResponses.length < 20 &&
+          response.status() >= 400 &&
+          response.url().startsWith(baseOrigin + '/')
+        ) {
+          badResponses.push({ status: response.status(), url: response.url() });
+        }
+      });
+      page.on('requestfailed', (request) => {
+        if (requestFailures.length < 20 && request.url().startsWith(baseOrigin + '/')) {
+          requestFailures.push({
+            error: request.failure()?.errorText ?? 'unknown',
+            url: request.url(),
+          });
+        }
+      });
       page.on('crash', () => {
         lifecycle.pageCrashed = true;
       });
@@ -806,12 +872,19 @@ try {
       );
       report.url = page.url();
       await runStage(lifecycle, 'canvas-ready', 65000, () =>
-        page.waitForSelector('#c', { state: 'attached', timeout: 60000 }),
+        page.waitForFunction(
+          () => {
+            const canvas = document.getElementById('c');
+            return canvas instanceof HTMLCanvasElement && canvas.isConnected;
+          },
+          null,
+          { timeout: 60000 },
+        ),
       );
       await runStage(lifecycle, 'world-hook-ready', 125000, () =>
-        page.waitForFunction(() => Boolean(window.__CQM__?.world), null, { timeout: 120000 }),
+        waitForWorldHookAndQuiesce(page),
       );
-      console.log('visual-smoke: hook ready ' + tier);
+      console.log('visual-smoke: hook ready and initially quiesced ' + tier);
       await runStage(lifecycle, 'overlay-dismiss', operationTimeoutMs, async () => {
         await page.keyboard.press('Escape').catch(() => undefined);
         await page.waitForTimeout(50);
@@ -824,6 +897,9 @@ try {
       );
       Object.assign(report, { bootState, onboardingState });
       console.log('visual-smoke: boot overlay gone ' + tier);
+      await runStage(lifecycle, 'initial-frame-resume', operationTimeoutMs, () =>
+        resumeNaturalFrames(page),
+      );
 
       let metrics = null;
       let screenshot = null;
@@ -981,6 +1057,12 @@ try {
         if (consoleErrors.length > 0) {
           throw new Error(tier + ': console errors: ' + consoleErrors.join(' | '));
         }
+        if (badResponses.length > 0) {
+          throw new Error(tier + ': failed static responses: ' + JSON.stringify(badResponses));
+        }
+        if (requestFailures.length > 0) {
+          throw new Error(tier + ': failed static requests: ' + JSON.stringify(requestFailures));
+        }
         if (bootStateAfterScreenshot.visible) {
           throw new Error(
             tier +
@@ -1012,6 +1094,38 @@ try {
         }
         if (metrics.frame === null || metrics.frame < 1) {
           throw new Error(tier + ': world frames did not advance');
+        }
+        const ecology = metrics.bigTreeEcology;
+        if (
+          ecology.version !== 1 ||
+          ecology.zone.entryRadius !== 240 ||
+          ecology.zone.exitRadius !== 270 ||
+          ecology.visits.capacity !== 72 ||
+          ecology.food.capacity !== 20_000 ||
+          ecology.neuralController.controllerCount !== 250 ||
+          ecology.neuralController.modelReady !== true ||
+          ecology.foodItem?.id !== 0 ||
+          ecology.foodItem.kind !== 'fruit' ||
+          ecology.foodItem.nourishment !== 28 ||
+          !Number.isInteger(ecology.foodItem.generation) ||
+          ecology.foodItem.generation < 1 ||
+          !Number.isFinite(ecology.foodItem.position.x) ||
+          !Number.isFinite(ecology.foodItem.position.y) ||
+          !Number.isFinite(ecology.foodItem.position.z) ||
+          !Number.isFinite(ecology.foodItem.interactionPoint.x) ||
+          !Number.isFinite(ecology.foodItem.interactionPoint.y) ||
+          !Number.isFinite(ecology.foodItem.interactionPoint.z)
+        ) {
+          throw new Error(tier + ': Big Tree ecology diagnostic contract is invalid');
+        }
+        if (
+          ecology.food.available +
+            ecology.food.reserved +
+            ecology.food.consuming +
+            ecology.food.respawning !==
+          ecology.food.capacity
+        ) {
+          throw new Error(tier + ': Big Tree food-state census does not equal fixed capacity');
         }
         const expectedFlora = tier === 'phone' ? 20800 : 60000;
         if (habitatStress.flora.instances !== expectedFlora) {
@@ -1087,6 +1201,11 @@ try {
           ' worldBuckets=' +
           (worldScreenshotMetrics ? worldScreenshotMetrics.uniqueBuckets : 'n/a'),
       );
+      if (habitatStress.renderer.software) {
+        console.log(
+          'visual-smoke: ' + tier + ' used a software renderer; FPS is functional evidence only',
+        );
+      }
     } catch (error) {
       try {
         await writeFailureArtifact(report, lifecycle, error);
@@ -1146,23 +1265,34 @@ if (TIERS.length === 0) fail('no tiers selected');
 for (const tier of TIERS) {
   if (!VALID_TIERS.has(tier)) fail(`invalid tier "${tier}"`);
 }
-if (!existsSync(join(ROOT, 'index.html'))) fail('index.html missing');
 mkdirSync(OUT_DIR, { recursive: true });
+runChecked('building exact GitHub Pages artifact', 'bun', ['run', 'pages'], ROOT, {
+  GITHUB_REPOSITORY: process.env.GITHUB_REPOSITORY ?? `local/${PROJECT}`,
+  GITHUB_SHA: process.env.GITHUB_SHA ?? 'visual-smoke',
+});
+if (!existsSync(join(SITE_DIR, 'index.html'))) fail('assembled site/index.html missing');
 ensurePlaywright();
 const runnerPath = join(RUNNER_DIR, 'browser-visual-smoke-runner.mjs');
 writeFileSync(runnerPath, playwrightRunnerSource(), 'utf8');
 
-console.log(`visual-smoke: starting server on :${PORT}`);
-const server = spawn('bun', ['server.ts'], {
+console.log(`visual-smoke: starting Pages-only server on :${PORT}/${PROJECT}/`);
+const server = spawn('bun', [join(ROOT, 'scripts', 'pages-smoke-server.ts')], {
   cwd: ROOT,
-  env: { ...process.env, PORT: String(PORT) },
+  env: {
+    ...process.env,
+    PORT: String(PORT),
+    CQM_PAGES_ROOT: SITE_DIR,
+    CQM_PAGES_PROJECT: PROJECT,
+  },
   stdio: ['ignore', 'pipe', 'pipe'],
 });
 
 let stderr = '';
 let exited = false;
-server.on('exit', () => {
+let serverExitDetail = 'still running';
+server.on('exit', (code, signal) => {
   exited = true;
+  serverExitDetail = code === null ? `signal ${signal ?? 'unknown'}` : `code ${code}`;
 });
 server.stderr?.on('data', (chunk: Buffer) => {
   stderr += chunk.toString();
@@ -1176,12 +1306,18 @@ process.on('exit', () => {
 
 try {
   await waitForHealth(() => stderr);
+  if (exited) {
+    fail(
+      `Pages server exited during readiness with ${serverExitDetail}` +
+        (stderr ? `\nPages server stderr:\n${stderr}` : ''),
+    );
+  }
   console.log('visual-smoke: server healthy');
   const child = spawn(NODE_EXECUTABLE, [runnerPath], {
     cwd: RUNNER_DIR,
     env: {
       ...process.env,
-      CQM_VISUAL_SMOKE_URL: `http://127.0.0.1:${PORT}/`,
+      CQM_VISUAL_SMOKE_URL: `http://127.0.0.1:${PORT}/${PROJECT}/`,
       CQM_VISUAL_SMOKE_OUT: OUT_DIR,
       CQM_VISUAL_SMOKE_TIERS: TIERS.join(','),
       PLAYWRIGHT_BROWSERS_PATH: BROWSERS_DIR,
@@ -1194,7 +1330,18 @@ try {
   const code = await waitForProcess(child, timeoutMs);
   if (code === -1) fail(`Playwright visual smoke timed out after ${timeoutMs}ms`);
   if (code === -2) fail('Playwright visual smoke failed to launch');
-  if (code !== 0) fail(`Playwright visual smoke exited with ${code}`);
+  if (code !== 0) {
+    fail(
+      `Playwright visual smoke exited with ${code}; Pages server ${serverExitDetail}` +
+        (stderr ? `\nPages server stderr:\n${stderr}` : ''),
+    );
+  }
+  if (exited) {
+    fail(
+      `Pages server exited before smoke completion with ${serverExitDetail}` +
+        (stderr ? `\nPages server stderr:\n${stderr}` : ''),
+    );
+  }
   console.log(`visual-smoke: artifacts written to ${OUT_DIR}`);
 } finally {
   if (!exited) stopProcessTree(server.pid);

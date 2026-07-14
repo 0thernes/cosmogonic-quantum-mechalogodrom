@@ -253,7 +253,7 @@ export class PuppetMasterSystem implements PortalCullable, DomeFeeder, BigTreeAc
   /** F-ECON-CREATURES V19: economic net-worth provider by puppeteer index (null ⇒ no coupling). */
   private econWealth: ((puppetIndex: number) => number) | null = null;
   /** Shared neutral-zone policy. Protection is derived from live positions, never persisted. */
-  private sanctuary: ((x: number, z: number) => boolean) | null = null;
+  private sanctuary: ((x: number, z: number, ownerId?: number) => boolean) | null = null;
 
   /**
    * Builds the puppeteer cabal (CONTRACTS V14: 100 on desktop+, 14 on phone). The 3 named heroes
@@ -282,7 +282,7 @@ export class PuppetMasterSystem implements PortalCullable, DomeFeeder, BigTreeAc
   }
 
   /** Attach the composition-root sanctuary predicate; null restores legacy meddling. */
-  attachSanctuary(predicate: ((x: number, z: number) => boolean) | null): void {
+  attachSanctuary(predicate: ((x: number, z: number, ownerId?: number) => boolean) | null): void {
     this.sanctuary = predicate;
   }
 
@@ -433,6 +433,7 @@ export class PuppetMasterSystem implements PortalCullable, DomeFeeder, BigTreeAc
     r2: number,
     t: number,
     onDeath: (x: number, y: number, z: number) => void,
+    protectedAt?: (x: number, z: number) => boolean,
   ): void {
     for (let k = this.portalDowned.length - 1; k >= 0; k--) {
       const d = this.portalDowned[k]!;
@@ -449,7 +450,7 @@ export class PuppetMasterSystem implements PortalCullable, DomeFeeder, BigTreeAc
       const p = pm.mesh.position;
       const dx = p.x - ax;
       const dz = p.z - az;
-      if (dx * dx + dz * dz <= r2) {
+      if (dx * dx + dz * dz <= r2 && protectedAt?.(p.x, p.z) !== true) {
         onDeath(p.x, p.y, p.z);
         pm.bigTreeControlled = false;
         pm.velocity.set(0, 0, 0);
@@ -664,12 +665,13 @@ export class PuppetMasterSystem implements PortalCullable, DomeFeeder, BigTreeAc
     this.onEvent(EVENT);
   }
 
-  private isProtectedAt(x: number, z: number): boolean {
-    return this.sanctuary?.(x, z) === true;
+  private isProtectedAt(x: number, z: number, ownerId?: number): boolean {
+    return this.sanctuary?.(x, z, ownerId) === true;
   }
 
   private isProtectedPuppet(pm: Puppet): boolean {
     const p = pm.mesh.position;
-    return pm.bigTreeControlled || this.isProtectedAt(p.x, p.z);
+    const memberProtected = this.isProtectedAt(p.x, p.z, pm.bigTreeOwnerId);
+    return pm.bigTreeControlled || memberProtected;
   }
 }

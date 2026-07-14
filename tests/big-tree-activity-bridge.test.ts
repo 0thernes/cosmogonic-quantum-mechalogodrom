@@ -19,7 +19,7 @@ import {
 function makeOrdinary(act = 0, payoff = 0): BigTreeOrdinaryBody {
   return {
     id: 7,
-    position: { x: 0, z: 0 },
+    position: { x: 0, y: 0, z: 0 },
     userData: {
       ecologyId: 7,
       energy: 50,
@@ -29,7 +29,7 @@ function makeOrdinary(act = 0, payoff = 0): BigTreeOrdinaryBody {
       alive: true,
       act,
       payoff,
-      vel: { x: 0, z: 0 },
+      vel: { x: 0, y: 0, z: 0 },
     },
   };
 }

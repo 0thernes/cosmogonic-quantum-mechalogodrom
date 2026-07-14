@@ -234,6 +234,20 @@ function driveDeathCycle(sys: PortalCullable): {
   return { first, afterHidden, afterRespawn: deaths };
 }
 
+/** A protected endpoint remains visible/alive even when the geometric portal cylinder covers it. */
+function driveProtectedCull(sys: PortalCullable): number {
+  let deaths = 0;
+  sys.portalCull(
+    0,
+    0,
+    1e12,
+    1,
+    () => deaths++,
+    () => true,
+  );
+  return deaths;
+}
+
 describe('portalReappearSpot', () => {
   test('deterministic, +z away from the portal, inside the platform, preserving y', () => {
     const a = new THREE.Vector3(7, 42, 7);
@@ -285,6 +299,22 @@ describe('PortalDeathFauna companion', () => {
     fauna.dispose();
   });
 
+  test('forwards the sanctuary endpoint gate to every roster', () => {
+    const ctx = makeCtx(3, 8);
+    const fauna = new PortalDeathFauna(ctx);
+    let sawProtection = false;
+    const roster: PortalCullable = {
+      portalCull: (_ax, _az, _r2, _t, onDeath, protectedAt): void => {
+        sawProtection = protectedAt?.(0, PORTAL_Z) === true;
+        if (!sawProtection) onDeath(0, 60, PORTAL_Z);
+      },
+    };
+    fauna.update(true, 1, DT, [roster], () => true);
+    expect(sawProtection).toBe(true);
+    expect(fauna.kills).toBe(0);
+    fauna.dispose();
+  });
+
   test('deterministic: two identical companion runs count kills identically', () => {
     const run = (): number => {
       const ctx = makeCtx(5, 8);
@@ -310,6 +340,7 @@ describe('PortalDeathFauna companion', () => {
 describe('every big-fauna roster DIES at the portal and re-enters 5 s later', () => {
   test('leviathans', () => {
     const sys = new LeviathanSystem(makeCtx(11, 8));
+    expect(driveProtectedCull(sys)).toBe(0);
     const r = driveDeathCycle(sys);
     expect(r.first).toBeGreaterThan(0); // at least one leviathan died
     expect(r.afterHidden).toBe(r.first); // hidden members are not re-culled
@@ -319,6 +350,7 @@ describe('every big-fauna roster DIES at the portal and re-enters 5 s later', ()
   test('shoggoths', () => {
     const ctx = makeCtx(12, 8);
     const sys = new ShoggothSystem(ctx, new EntityManager(ctx));
+    expect(driveProtectedCull(sys)).toBe(0);
     const r = driveDeathCycle(sys);
     expect(r.first).toBeGreaterThan(0);
     expect(r.afterHidden).toBe(r.first);
@@ -330,6 +362,7 @@ describe('every big-fauna roster DIES at the portal and re-enters 5 s later', ()
     const sys = new TitanSystem(ctx, new EntityManager(ctx), new LoreEngine(13), {
       perturb: () => undefined,
     });
+    expect(driveProtectedCull(sys)).toBe(0);
     const r = driveDeathCycle(sys);
     expect(r.first).toBeGreaterThan(0);
     expect(r.afterHidden).toBe(r.first);
@@ -339,6 +372,7 @@ describe('every big-fauna roster DIES at the portal and re-enters 5 s later', ()
   test('puppeteers', () => {
     const ctx = makeCtx(14, 8);
     const sys = new PuppetMasterSystem(ctx, new EntityManager(ctx), () => undefined);
+    expect(driveProtectedCull(sys)).toBe(0);
     const r = driveDeathCycle(sys);
     expect(r.first).toBeGreaterThan(0);
     expect(r.afterHidden).toBe(r.first);

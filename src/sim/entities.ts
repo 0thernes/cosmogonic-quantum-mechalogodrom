@@ -360,7 +360,7 @@ export class EntityManager {
   private floraGradient: ((x: number, z: number) => number) | null = null;
   /** Optional authored sanctuary. Protected organisms keep friendly flocking but suppress threat/faction
    * aggression and the global home pull that could drag a visitor out of a neutral gathering zone. */
-  private sanctuary: ((x: number, z: number) => boolean) | null = null;
+  private sanctuary: ((x: number, z: number, ecologyId?: number) => boolean) | null = null;
   /** Reserved material-organism births THIS frame, reset by {@link update}. Auto-split, behavior
    *  mitosis, sparse recovery, and post-update NHI swarms share it at the ultra tier. */
   private spawnsThisFrame = 0;
@@ -439,7 +439,7 @@ export class EntityManager {
   }
 
   /** Wire a shared neutral-zone predicate into ordinary-organism behavior; null detaches it. */
-  attachSanctuary(predicate: ((x: number, z: number) => boolean) | null): void {
+  attachSanctuary(predicate: ((x: number, z: number, ecologyId?: number) => boolean) | null): void {
     this.sanctuary = predicate;
     this.env.sanctuaryAt = predicate;
   }
@@ -1029,7 +1029,7 @@ export class EntityManager {
         if (
           rz > LIVING_ZONE &&
           u.treeVisit !== true &&
-          this.sanctuary?.(e.position.x, e.position.z) !== true
+          this.sanctuary?.(e.position.x, e.position.z, e.userData.ecologyId) !== true
         ) {
           const pull = ((rz - LIVING_ZONE) * CENTER_GRAVITY_K) / rz;
           u.vel.x -= e.position.x * pull;
@@ -1445,7 +1445,7 @@ export class EntityManager {
     const py = e.position.y;
     const pz = e.position.z;
     const sanctuary = this.sanctuary;
-    const protectedHere = sanctuary?.(px, pz) === true;
+    const protectedHere = sanctuary?.(px, pz, u.ecologyId) === true;
     const myGroup = u.setGroup;
     const myType = u.typeId;
     const myEnergy = typeof u.energy === 'number' ? u.energy : 50;
@@ -1493,7 +1493,7 @@ export class EntityManager {
       }
       if (
         !protectedHere &&
-        sanctuary?.(ne.position.x, ne.position.z) !== true &&
+        sanctuary?.(ne.position.x, ne.position.z, ne.userData.ecologyId) !== true &&
         (ne.userData.strategy === 1 || ne.userData.setGroup !== myGroup)
       ) {
         if (dd < r2 * 0.25) {

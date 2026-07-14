@@ -71,6 +71,9 @@ export interface BigTreeFaunaSource {
   /** Apply one normalized, exactly-once edible grant through the species' canonical energy state. */
   nourishBigTreeActor(index: number, normalizedNutrition: number): boolean;
 
+  /** Optional species-native recovery while a bounded Rest visit is active. */
+  restBigTreeActor?(index: number, dt: number): boolean;
+
   /** Yield or restore autonomous steering without teleporting or resetting animation state. */
   setBigTreeActorControlled(index: number, controlled: boolean): boolean;
 }

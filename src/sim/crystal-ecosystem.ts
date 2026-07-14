@@ -20,7 +20,12 @@
  */
 import * as THREE from 'three';
 import { mulberry32, type Rng } from '../math/rng';
-import { ARENA_RADIUS, CRYSTAL_TREE_ORIGIN_X, CRYSTAL_TREE_ORIGIN_Z } from './constants';
+import {
+  ARENA_RADIUS,
+  CRYSTAL_TREE_ORIGIN_X,
+  CRYSTAL_TREE_ORIGIN_Z,
+  PLATFORM_FLOOR,
+} from './constants';
 import {
   EdibleResourceRegistry,
   type EdibleReservation,
@@ -1016,7 +1021,8 @@ function makeEdibleDefinitions(
         },
         interactionPoint: {
           x: origin.x + Math.cos(angle) * interactionRadius,
-          y: origin.y,
+          // Living actors navigate on the canonical platform even where authored terrain dips.
+          y: PLATFORM_FLOOR,
           z: origin.z + Math.sin(angle) * interactionRadius,
         },
         nourishment: kind === 'fruit' ? 28 : 14,
@@ -1354,7 +1360,9 @@ export class CrystalEcosystem {
       makeEdibleDefinitions(this.fruits, this.leaves, this.config, origin),
       {
         onUnavailable: (resource): void => {
-          this.writeEdibleMatrix(resource, false);
+          // The canonical transaction is already committed. Publish logical unavailability before
+          // attempting the renderer write so a graphics failure cannot leave consumed food in the
+          // discovery census.
           if (resource.kind === 'fruit') {
             this.availableFruit--;
             this.consumedFruit++;
@@ -1362,6 +1370,7 @@ export class CrystalEcosystem {
             this.availableLeaves--;
             this.consumedLeaves++;
           }
+          this.writeEdibleMatrix(resource, false);
         },
         // Restore the authored matrix before the registry publishes the slot as available.
         onRestore: (resource): void => {
@@ -1880,10 +1889,9 @@ export class CrystalEcosystem {
     const visualDt = Number.isFinite(frame.visualDt)
       ? Math.max(0, Math.min(0.1, frame.visualDt))
       : 0;
-    // Food leases/respawns follow the full scaled simulation delta. Creature locomotion remains
-    // bounded to one stable 100 ms integration step so a speed change or hitch cannot cause a jump.
+    // Food deadlines and resident behavior share the full scaled delta. Integrate residents in
+    // stable <=100 ms slices so accelerated simulation cannot expire food while under-stepping them.
     const simulationDt = frame.visualOnly || !Number.isFinite(frame.dt) ? 0 : Math.max(0, frame.dt);
-    const dt = Math.min(0.1, simulationDt);
     const time = Number.isFinite(frame.time) ? frame.time : this.simTime;
     const chaos = clamp01(Number.isFinite(frame.chaos) ? frame.chaos : 0);
     const entropy = clamp01(Number.isFinite(frame.entropy) ? frame.entropy : 0);
@@ -1896,9 +1904,15 @@ export class CrystalEcosystem {
     this.motesUniform.value = time;
     this.wingVisualTime += visualDt;
     if (simulationDt > 0) {
-      this.simTime += simulationDt;
-      this.edibleResources.update(this.simTime);
-      if (dt > 0) this.stepCreatures(dt, chaos, entropy);
+      const frameStart = this.simTime;
+      const creatureSteps = Math.max(1, Math.ceil(simulationDt / 0.1));
+      const creatureDt = simulationDt / creatureSteps;
+      for (let step = 1; step <= creatureSteps; step++) {
+        this.simTime =
+          step === creatureSteps ? frameStart + simulationDt : frameStart + creatureDt * step;
+        this.edibleResources.update(this.simTime);
+        this.stepCreatures(creatureDt, chaos, entropy);
+      }
     }
 
     this.shakeTime = Math.max(0, this.shakeTime - visualDt);
@@ -2572,8 +2586,8 @@ export class CrystalEcosystem {
     if (!Number.isFinite(now) || now < 0) throw new RangeError('now must be a finite number >= 0');
     this.simTime = now;
     this.edibleResources.reset(now);
-    this.availableFruit = this.config.fruits;
-    this.availableLeaves = this.config.leaves;
+    // Availability is advanced by lifecycle callbacks. A failed visual restore stays respawning
+    // and must not be advertised as food until the authored matrix is actually visible again.
     this.consumedFruit = 0;
     this.consumedLeaves = 0;
     this.visitorCount = 0;

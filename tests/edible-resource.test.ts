@@ -223,6 +223,39 @@ describe('EdibleResourceRegistry', () => {
     expect(registry.stats().pendingRespawns).toBe(0);
   });
 
+  test('one failed visual restore does not block other due resources', () => {
+    let failFirstFruit = true;
+    const restored: number[] = [];
+    const registry = makeRegistry({
+      onRestore: (resource) => {
+        if (resource.id === 10 && failFirstFruit) throw new Error('fruit renderer not ready');
+        restored.push(resource.id);
+      },
+    });
+    consume(registry, 10, 1, 0);
+    consume(registry, 20, 2, 0);
+
+    expect(registry.update(5)).toBe(1);
+    expect(restored).toEqual([20]);
+    expect(registry.get(10)?.state).toBe('respawning');
+    expect(registry.get(20)?.state).toBe('available');
+    expect(registry.stats()).toMatchObject({
+      available: 2,
+      respawning: 1,
+      pendingRespawns: 1,
+      lifecycleErrors: 1,
+    });
+
+    failFirstFruit = false;
+    expect(registry.update(5)).toBe(1);
+    expect(restored).toEqual([20, 10]);
+    expect(registry.stats()).toMatchObject({
+      available: 3,
+      respawning: 0,
+      pendingRespawns: 0,
+    });
+  });
+
   test('repeated consume/respawn cycles reuse the same records without timer accumulation', () => {
     const registry = makeRegistry();
     const pool = registry.all;

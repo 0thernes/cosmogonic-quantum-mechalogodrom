@@ -5,7 +5,7 @@
 Technical reports and audits for Cosmogonic Quantum Mechalogodrom. Dated filenames (`2026-*`) are
 **historical worldline snapshots** when present — they preserve evidence from their authoring pass.
 **Current published** gate receipts: [VERIFICATION-ANALYTICAL-DATA.md](../VERIFICATION-ANALYTICAL-DATA.md) §1 ·
-`scripts/canonical-receipts.ts` (v0.22.0 · **3,224-test floor** · **84.64 % / 82.21 %** coverage).
+`scripts/canonical-receipts.ts` (v0.22.0 · **3,271-test floor** · **84.64 % / 82.21 %** coverage).
 Latest final-tree Windows receipt: **3,224 completed cases, zero failures, 3,545,827 expect() calls,
 93.61% line coverage, and 91.61% function coverage across 361 test files**. The lower portable floor
 remains the cross-platform public guarantee; `scripts/canonical-receipts.ts` is the live authority.

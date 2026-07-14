@@ -155,7 +155,7 @@ function ordinaryPopulation(count: number, energy: number): BigTreeOrdinaryBody[
   for (let id = 0; id < count; id++) {
     population.push({
       id,
-      position: { x: 0, z: 0 },
+      position: { x: 0, y: 0, z: 0 },
       userData: {
         ecologyId: id,
         energy,
@@ -163,7 +163,7 @@ function ordinaryPopulation(count: number, energy: number): BigTreeOrdinaryBody[
         age: 0,
         life: 100,
         alive: true,
-        vel: { x: 0, z: 0 },
+        vel: { x: 0, y: 0, z: 0 },
       },
     });
   }

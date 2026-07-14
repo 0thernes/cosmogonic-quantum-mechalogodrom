@@ -34,6 +34,7 @@ export interface PortalCullable {
     r2: number,
     t: number,
     onDeath: (x: number, y: number, z: number) => void,
+    protectedAt?: (x: number, z: number) => boolean,
   ): void;
 }
 
@@ -141,13 +142,19 @@ export class PortalDeathFauna {
    * (which kills + self-respawns its own members), then advance + fade the shared burst. Frozen dt=0 ⇒
    * no kills (particles hold). O(Σ members + POOL).
    */
-  update(active: boolean, t: number, dt: number, rosters: readonly PortalCullable[]): void {
+  update(
+    active: boolean,
+    t: number,
+    dt: number,
+    rosters: readonly PortalCullable[],
+    protectedAt?: (x: number, z: number) => boolean,
+  ): void {
     if (active && dt > 0) {
       const emit = (x: number, y: number, z: number): void => {
         this.burst(x, y, z);
         this.kills++;
       };
-      for (const r of rosters) r.portalCull(PORTAL_X, PORTAL_Z, CULL_R2, t, emit);
+      for (const r of rosters) r.portalCull(PORTAL_X, PORTAL_Z, CULL_R2, t, emit, protectedAt);
     }
     let anyAlive = false;
     for (let i = 0; i < POOL; i++) {

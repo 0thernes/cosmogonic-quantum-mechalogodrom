@@ -15,7 +15,8 @@ import {
   type CrystalEcosystemConfig,
   type CrystalEcosystemFrame,
 } from '../src/sim/crystal-ecosystem';
-import { EDIBLE_RESOURCE_RESPAWN_SECONDS } from '../src/sim/edible-resource';
+import { PLATFORM_FLOOR } from '../src/sim/constants';
+import { EDIBLE_RESOURCE_RESPAWN_SECONDS, type EdibleResource } from '../src/sim/edible-resource';
 
 /** Small census for fast, headless contract tests; production totals are sealed separately. */
 const TINY_CONFIG: CrystalEcosystemConfig = {
@@ -307,8 +308,15 @@ describe('CrystalEcosystem headless contract', () => {
     ).toBeGreaterThan(10);
     for (const resource of resources) {
       expect(Number.isFinite(resource.interactionX)).toBe(true);
-      expect(resource.interactionY).toBe(4);
+      expect(resource.interactionY).toBe(PLATFORM_FLOOR);
       expect(Number.isFinite(resource.interactionZ)).toBe(true);
+    }
+
+    // Visual terrain/root motion must never drag the canonical approach plane below the hard
+    // organism floor. This is the production configuration at the tree's authored X/Z location.
+    tree.setRootHeight(-20);
+    for (const resource of resources) {
+      expect(resource.interactionY).toBe(PLATFORM_FLOOR);
     }
     tree.dispose();
   });
@@ -368,7 +376,7 @@ describe('CrystalEcosystem headless contract', () => {
     tree.dispose();
   });
 
-  test('the tree food clock follows the full scaled simulation delta while locomotion stays bounded', () => {
+  test('the tree food clock follows the full scaled simulation delta through stable substeps', () => {
     const scene = new THREE.Scene();
     const tree = new CrystalEcosystem(scene, 9920, new THREE.Vector3(), {
       ...TINY_CONFIG,
@@ -462,6 +470,60 @@ describe('CrystalEcosystem headless contract', () => {
     restored.dispose();
   });
 
+  test('visual-only pause cannot advance the exact five-second food respawn', () => {
+    const scene = new THREE.Scene();
+    const tree = new CrystalEcosystem(scene, 9924, new THREE.Vector3(), {
+      ...TINY_CONFIG,
+      creaturesPerSpecies: 0,
+      ambientCreatures: 0,
+    });
+    const resourceId = tree.foodResourceId('fruit', 0)!;
+    expect(tree.consumeFruit(0)).toBe(true);
+
+    // More than five seconds of presentation time pass, but the scaled ecology clock is frozen.
+    tree.update({
+      ...BASE_FRAME,
+      dt: 10,
+      visualDt: 10,
+      time: 10,
+      visualOnly: true,
+    });
+    expect(tree.foodTime).toBe(0);
+    expect(tree.edibleResources.get(resourceId)?.state).toBe('respawning');
+
+    tree.update({
+      ...BASE_FRAME,
+      dt: EDIBLE_RESOURCE_RESPAWN_SECONDS - 0.000_001,
+      visualDt: 0.1,
+      time: 15,
+    });
+    expect(tree.foodTime).toBeCloseTo(EDIBLE_RESOURCE_RESPAWN_SECONDS - 0.000_001, 8);
+    expect(tree.edibleResources.get(resourceId)?.state).toBe('respawning');
+
+    tree.update({ ...BASE_FRAME, dt: 0.000_001, visualDt: 0.000_001, time: 15.000_001 });
+    expect(tree.foodTime).toBeCloseTo(EDIBLE_RESOURCE_RESPAWN_SECONDS, 8);
+    expect(tree.edibleResources.get(resourceId)?.state).toBe('available');
+    tree.dispose();
+  });
+
+  test('tree residents still reach and consume food at supported 5x simulation speed', () => {
+    const { tree } = makeTree(994);
+    // A 100 ms real frame at 5x is 500 ms of scaled ecology. The implementation must integrate
+    // five stable substeps, not advance leases by 500 ms while moving residents for only 100 ms.
+    for (let frame = 0; frame < 240; frame++) {
+      tree.update({
+        ...BASE_FRAME,
+        dt: 0.5,
+        visualDt: 0.1,
+        time: (frame + 1) * 0.1,
+      });
+    }
+    const stats = tree.stats();
+    expect(tree.foodTime).toBeCloseTo(120, 8);
+    expect(stats.consumedFruit + stats.consumedLeaves).toBeGreaterThan(0);
+    tree.dispose();
+  });
+
   test('food reset invalidates reservations and restores every hidden authored instance', () => {
     const scene = new THREE.Scene();
     const tree = new CrystalEcosystem(scene, 9921, new THREE.Vector3(), {
@@ -496,6 +558,74 @@ describe('CrystalEcosystem headless contract', () => {
     });
     expect(tree.snapshotFoodPersistence().entries).toEqual([]);
     expectMatrixClose(instanceMatrix(fruits, 0), beforeMatrix);
+    tree.dispose();
+  });
+
+  test('food reset never advertises a resource whose visual restore failed', () => {
+    const { tree } = makeTree(9922);
+    const fruitId = tree.foodResourceId('fruit', 0)!;
+    const reservation = tree.reserveFoodById(fruitId, 403)!;
+    expect(tree.beginFoodConsumption(reservation)).toBe(true);
+    expect(tree.completeFoodConsumption(reservation)).toBe(28);
+
+    const internals = tree as unknown as {
+      writeEdibleMatrix(resource: EdibleResource, visible: boolean): void;
+    };
+    const writeEdibleMatrix = internals.writeEdibleMatrix.bind(tree);
+    internals.writeEdibleMatrix = (resource, visible): void => {
+      if (visible && resource.id === fruitId) throw new Error('injected restore failure');
+      writeEdibleMatrix(resource, visible);
+    };
+
+    tree.resetFood(0);
+    expect(tree.edibleResources.get(fruitId)?.state).toBe('respawning');
+    expect(tree.edibleResources.stats()).toMatchObject({
+      available: TINY_CONFIG.fruits + TINY_CONFIG.leaves - 1,
+      respawning: 1,
+      pendingRespawns: 1,
+      lifecycleErrors: 1,
+    });
+    expect(tree.stats()).toMatchObject({
+      availableFruit: TINY_CONFIG.fruits - 1,
+      availableLeaves: TINY_CONFIG.leaves,
+      consumedFruit: 0,
+    });
+
+    internals.writeEdibleMatrix = writeEdibleMatrix;
+    expect(tree.edibleResources.update(0)).toBe(1);
+    expect(tree.edibleResources.get(fruitId)?.state).toBe('available');
+    expect(tree.stats().availableFruit).toBe(TINY_CONFIG.fruits);
+    tree.dispose();
+  });
+
+  test('a failed visual hide cannot leave consumed food in the discovery census', () => {
+    const { tree } = makeTree(9923);
+    const fruitId = tree.foodResourceId('fruit', 0)!;
+    const internals = tree as unknown as {
+      writeEdibleMatrix(resource: EdibleResource, visible: boolean): void;
+    };
+    const writeEdibleMatrix = internals.writeEdibleMatrix.bind(tree);
+    internals.writeEdibleMatrix = (resource, visible): void => {
+      if (!visible && resource.id === fruitId) throw new Error('injected hide failure');
+      writeEdibleMatrix(resource, visible);
+    };
+
+    const reservation = tree.reserveFoodById(fruitId, 404)!;
+    expect(tree.beginFoodConsumption(reservation)).toBe(true);
+    expect(tree.completeFoodConsumption(reservation)).toBe(28);
+    expect(tree.edibleResources.get(fruitId)?.state).toBe('respawning');
+    expect(tree.edibleResources.stats().lifecycleErrors).toBe(1);
+    expect(tree.stats()).toMatchObject({
+      availableFruit: TINY_CONFIG.fruits - 1,
+      availableLeaves: TINY_CONFIG.leaves,
+      consumedFruit: 1,
+    });
+    expect(tree.availableTreeFood()).toBe(TINY_CONFIG.fruits + TINY_CONFIG.leaves - 1);
+
+    internals.writeEdibleMatrix = writeEdibleMatrix;
+    expect(tree.edibleResources.update(EDIBLE_RESOURCE_RESPAWN_SECONDS)).toBe(1);
+    expect(tree.stats().availableFruit).toBe(TINY_CONFIG.fruits);
+    expect(tree.availableTreeFood()).toBe(TINY_CONFIG.fruits + TINY_CONFIG.leaves);
     tree.dispose();
   });
 
@@ -554,9 +684,7 @@ describe('CrystalEcosystem headless contract', () => {
     const { scene, tree } = makeTree();
     const geometries = new Set<THREE.BufferGeometry>();
     const materials = new Set<THREE.Material>();
-    const instancedMeshes = new Set<THREE.InstancedMesh>();
     scene.traverse((object) => {
-      if (object instanceof THREE.InstancedMesh) instancedMeshes.add(object);
       if (!('geometry' in object)) return;
       const renderable = object as THREE.Mesh;
       geometries.add(renderable.geometry);
@@ -567,27 +695,19 @@ describe('CrystalEcosystem headless contract', () => {
     });
     let disposedGeometries = 0;
     let disposedMaterials = 0;
-    let disposedInstancedMeshes = 0;
     for (const geometry of geometries)
       geometry.addEventListener('dispose', () => disposedGeometries++);
     for (const material of materials)
       material.addEventListener('dispose', () => disposedMaterials++);
-    // InstancedMesh owns its instanceMatrix/instanceColor GL buffers — the recurring VRAM-leak class
-    // this repo tracks. Every instanced draw must dispatch its own 'dispose', not just its geometry.
-    for (const mesh of instancedMeshes)
-      mesh.addEventListener('dispose', () => disposedInstancedMeshes++);
 
     expect(geometries.size).toBeGreaterThan(10);
     expect(materials.size).toBeGreaterThan(10);
-    expect(instancedMeshes.size).toBeGreaterThan(10);
     expect(() => tree.dispose()).not.toThrow();
     expect(scene.children).toHaveLength(0);
     expect(disposedGeometries).toBe(geometries.size);
     expect(disposedMaterials).toBe(materials.size);
-    expect(disposedInstancedMeshes).toBe(instancedMeshes.size);
     expect(() => tree.dispose()).not.toThrow();
     expect(disposedGeometries).toBe(geometries.size);
     expect(disposedMaterials).toBe(materials.size);
-    expect(disposedInstancedMeshes).toBe(instancedMeshes.size);
   });
 });

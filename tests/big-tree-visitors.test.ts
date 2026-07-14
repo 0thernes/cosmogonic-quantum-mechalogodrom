@@ -19,7 +19,9 @@ import {
 import {
   BigTreeActivity,
   BigTreeSlotKind,
+  BigTreeTransitionCause,
   BigTreeVisitManager,
+  BigTreeVisitReason,
   BigTreeVisitState,
   BigTreeZone,
 } from '../src/sim/big-tree-zone';
@@ -52,6 +54,7 @@ class FakeTree implements BigTreeFoodSource {
   readonly edibleResources: EdibleResourceRegistry;
   now = 0;
   completeCalls = 0;
+  releaseOwnerCalls = 0;
 
   constructor(definitions: readonly EdibleResourceDefinition[] = FOODS) {
     this.edibleResources = new EdibleResourceRegistry(definitions);
@@ -104,6 +107,7 @@ class FakeTree implements BigTreeFoodSource {
   }
 
   releaseFoodOwner(ownerId: number): number {
+    this.releaseOwnerCalls++;
     return this.edibleResources.releaseOwner(ownerId);
   }
 }
@@ -156,10 +160,10 @@ function adapter(
   );
 }
 
-function ordinary(id: number, x: number, energy = 0): BigTreeOrdinaryBody {
+function ordinary(id: number, x: number, energy = 0, y = 0): BigTreeOrdinaryBody {
   return {
     id,
-    position: { x, z: 0 },
+    position: { x, y, z: 0 },
     rotation: { y: 0 },
     userData: {
       energy,
@@ -168,7 +172,7 @@ function ordinary(id: number, x: number, energy = 0): BigTreeOrdinaryBody {
       life: 100,
       alive: true,
       strategy: 0,
-      vel: { x: 0, z: 0 },
+      vel: { x: 0, y: 0, z: 0 },
     },
   };
 }
@@ -215,11 +219,14 @@ function emptyVisitorView(): BigTreeSpeciesVisitorView {
     foodKind: null,
     foodState: null,
     targetX: 0,
+    targetY: 0,
     targetZ: 0,
     energy: 0,
     eating: false,
     partnerKind: -1,
     partnerId: -1,
+    lastTransitionCause: BigTreeTransitionCause.None,
+    lastTransitionAt: 0,
   };
 }
 
@@ -251,6 +258,103 @@ function emptyStats(): BigTreeSpeciesVisitorStats {
 }
 
 describe('BigTreeSpeciesVisitors', () => {
+  test('low-need ordinary and Xenomimic entrants are adopted as bounded Safety observers', () => {
+    const tree = new FakeTree();
+    const visits = manager(2);
+    visits.addSlot(BigTreeSlotKind.Observe, -5, 0);
+    visits.addSlot(BigTreeSlotKind.Observe, 5, 0);
+    const visitors = adapter(tree, visits);
+    // These stable identities have low deterministic social/curiosity scores; neither has hunger,
+    // fatigue, danger, or stress, so only physical sanctuary entry justifies the visit.
+    const entity = ordinary(1, -5, 100);
+    const xeno = xenomimic(0, 0, 5, 1);
+    const quiet: BigTreeVisitorEnvironment = {
+      danger: 0,
+      stress: 0,
+      socialNeed: 0,
+      curiosity: 0,
+      simulationLoad: 1,
+      foodAvailable: false,
+    };
+
+    tick(tree, visitors, 0, 0, [entity], [xeno], quiet);
+
+    const ordinaryView = emptyVisitorView();
+    expect(visitors.readVisitor(BIG_TREE_OWNER_ORDINARY, entity.id, 0, ordinaryView)).toBe(true);
+    expect(ordinaryView.reason).toBe(BigTreeVisitReason.Safety);
+    expect(ordinaryView.activity).toBe(BigTreeActivity.Observe);
+    const xenoView = emptyVisitorView();
+    expect(visitors.readVisitor(BIG_TREE_OWNER_XENOMIMIC, 0, 0, xenoView)).toBe(true);
+    expect(xenoView.reason).toBe(BigTreeVisitReason.Safety);
+    expect(xenoView.activity).toBe(BigTreeActivity.Observe);
+    expect(visitors.activeVisitors).toBe(2);
+  });
+
+  test('leave timeout retains calm radial egress through cooldown until a real outer exit', () => {
+    const tree = new FakeTree();
+    const visits = manager(1);
+    visits.addSlot(BigTreeSlotKind.Observe, 5, 0);
+    const visitors = adapter(tree, visits);
+    const entity = ordinary(1, 5, 100);
+    const quiet: BigTreeVisitorEnvironment = {
+      danger: 0,
+      stress: 0,
+      socialNeed: 0,
+      curiosity: 0,
+      simulationLoad: 1,
+      foodAvailable: false,
+    };
+
+    tick(tree, visitors, 0, 0, [entity], [], quiet);
+    tick(tree, visitors, 0.1, 0.1, [entity], [], quiet);
+    expect(visits.stateOf(BIG_TREE_OWNER_ORDINARY, entity.id)).toBe(BigTreeVisitState.Active);
+
+    // The one-second dwell and then the three-second leave deadline both expire while the fake body
+    // remains blocked at x=5. Cooldown bounds the lifecycle but must not drop egress authority.
+    tick(tree, visitors, 1.11, 0, [entity], [], quiet);
+    expect(visits.stateOf(BIG_TREE_OWNER_ORDINARY, entity.id)).toBe(BigTreeVisitState.Leaving);
+    tick(tree, visitors, 4.12, 0.1, [entity], [], quiet);
+    expect(visits.stateOf(BIG_TREE_OWNER_ORDINARY, entity.id)).toBe(BigTreeVisitState.Cooldown);
+    expect(visitors.activeVisitors).toBe(1);
+    const cooldownView = emptyVisitorView();
+    expect(visitors.readVisitor(BIG_TREE_OWNER_ORDINARY, entity.id, 4.12, cooldownView)).toBe(true);
+    expect(cooldownView.targetX).toBeGreaterThan(visits.zone.exitRadius);
+    expect(cooldownView.targetZ).toBeCloseTo(0);
+    expect(entity.userData.vel.x).toBeGreaterThan(0);
+
+    // Only a real outer-boundary crossing releases adapter control. Re-entering before the cooldown
+    // ends does not create another visit or reservation.
+    entity.position.x = 36;
+    tick(tree, visitors, 4.2, 0, [entity], [], quiet);
+    expect(visitors.activeVisitors).toBe(0);
+    expect(visits.stateOf(BIG_TREE_OWNER_ORDINARY, entity.id)).toBe(BigTreeVisitState.Cooldown);
+    entity.position.x = 5;
+    tick(tree, visitors, 4.3, 0, [entity], [], quiet);
+    expect(visitors.activeVisitors).toBe(0);
+    expect(visits.stateOf(BIG_TREE_OWNER_ORDINARY, entity.id)).toBe(BigTreeVisitState.Cooldown);
+    const out = emptyStats();
+    visitors.readStats(out);
+    expect(out.acceptedVisits).toBe(1);
+  });
+
+  test('launched NHIs use their dedicated binding while ordinary NHI minions remain eligible', () => {
+    const tree = new FakeTree();
+    const visits = manager(2);
+    visits.addSlot(BigTreeSlotKind.Eat, -10, 0);
+    visits.addSlot(BigTreeSlotKind.Eat, 10, 0);
+    const visitors = adapter(tree, visits);
+    const launched = ordinary(101, -10, 0);
+    launched.userData.isNhi = true;
+    const minion = ordinary(102, 10, 0);
+    minion.userData.nhiMinion = true;
+
+    tick(tree, visitors, 0, 0.1, [launched, minion], []);
+
+    expect(visitors.isEntityVisitorActive(101)).toBe(false);
+    expect(visits.stateOf(BIG_TREE_OWNER_ORDINARY, 101)).toBe(BigTreeVisitState.Outside);
+    expect(visitors.isEntityVisitorActive(102)).toBe(true);
+  });
+
   test('ordinary organisms and Xenomimics discover, travel to, and eat fruit and leaves once', () => {
     const tree = new FakeTree();
     const visits = manager(2);
@@ -287,6 +391,43 @@ describe('BigTreeSpeciesVisitors', () => {
     expect(entity.userData.energy).toBe(28);
     expect(xeno.energy).toBeCloseTo(0.14, 8);
     expect(tree.completeCalls).toBe(2);
+  });
+
+  test('ordinary organisms must reach the food interaction Y before nutrition is awarded', () => {
+    const tree = new FakeTree([
+      {
+        id: 30,
+        kind: 'fruit',
+        position: { x: -10, y: 18, z: 0 },
+        interactionPoint: { x: -10, y: 6, z: 0 },
+        nourishment: 28,
+      },
+    ]);
+    const visits = manager(1);
+    visits.addSlot(BigTreeSlotKind.Eat, -10, 0);
+    const visitors = adapter(tree, visits);
+    const entity = ordinary(1, -10, 0, 30);
+
+    tick(tree, visitors, 0, 0, [entity], []);
+    tick(tree, visitors, 0.1, 0.1, [entity], []);
+
+    // X/Z already match exactly, but a dome organism 24 units above the authored approach point
+    // cannot consume through the canopy. Steering carries the real interaction Y downward.
+    expect(entity.userData.energy).toBe(0);
+    expect(entity.userData.vel.y).toBeLessThan(0);
+    expect(tree.completeCalls).toBe(0);
+    expect(tree.edibleResources.get(30)?.state).toBe('reserved');
+    const view = emptyVisitorView();
+    expect(visitors.readVisitor(BIG_TREE_OWNER_ORDINARY, entity.id, 0.1, view)).toBe(true);
+    expect(view.targetY).toBe(6);
+    expect(view.lastTransitionCause).toBe(BigTreeTransitionCause.Arrived);
+    expect(view.lastTransitionAt).toBe(0.1);
+
+    entity.position.y = 6;
+    tick(tree, visitors, 0.2, 0.1, [entity], []);
+    expect(entity.userData.energy).toBe(28);
+    expect(tree.completeCalls).toBe(1);
+    expect(tree.edibleResources.get(30)?.state).toBe('respawning');
   });
 
   test('ordinary identity prefers the simulation ecology id over render-object construction order', () => {
@@ -431,6 +572,28 @@ describe('BigTreeSpeciesVisitors', () => {
     tick(tree, visitors, 0.2, 0.1, [first, second], [], social);
     expect(visitors.readVisitor(BIG_TREE_OWNER_ORDINARY, first.id, 0.2, view)).toBe(true);
     expect(view.partnerId).toBe(second.id);
+  });
+
+  test('social reach is three-dimensional and never pairs vertically distant bodies', () => {
+    const tree = new FakeTree();
+    const visits = manager(2);
+    visits.addSlot(BigTreeSlotKind.Socialize, -3, 0);
+    visits.addSlot(BigTreeSlotKind.Socialize, 3, 0);
+    const visitors = adapter(tree, visits, 8, null, { socialReachRadius: 10 });
+    const low = ordinary(72, -3, 100, 0);
+    const high = ordinary(73, 3, 100, 40);
+    const social: BigTreeVisitorEnvironment = { socialNeed: 1, curiosity: 0 };
+    const view = emptyVisitorView();
+
+    tick(tree, visitors, 0, 0, [low, high], [], social);
+    tick(tree, visitors, 0.1, 0.1, [low, high], [], social);
+    expect(visitors.readVisitor(BIG_TREE_OWNER_ORDINARY, low.id, 0.1, view)).toBe(true);
+    expect(view.partnerId).toBe(-1);
+
+    high.position.y = 5;
+    tick(tree, visitors, 0.2, 0.1, [low, high], [], social);
+    expect(visitors.readVisitor(BIG_TREE_OWNER_ORDINARY, low.id, 0.2, view)).toBe(true);
+    expect(view.partnerId).toBe(high.id);
   });
 
   test('Xenomimic locomotion intent travels to activities, calms while social, then travels out', () => {
@@ -620,17 +783,21 @@ describe('BigTreeSpeciesVisitors', () => {
     visits.addSlot(BigTreeSlotKind.Rest, -5, 0);
     visits.addSlot(BigTreeSlotKind.Rest, 5, 0);
     const visitors = adapter(tree, visits);
-    const entity = ordinary(20, -5, 80);
+    const entity = ordinary(20, -5, 80, 17);
     entity.userData.age = entity.userData.life;
     const xeno = xenomimic(9, 0, 5, 0.8);
     xeno.age = 300;
 
     tick(tree, visitors, 0, 0, [entity], [xeno]);
+    const view = emptyVisitorView();
+    expect(visitors.readVisitor(BIG_TREE_OWNER_ORDINARY, entity.id, 0, view)).toBe(true);
+    expect(view.targetY).toBe(17);
     tick(tree, visitors, 0.1, 0.5, [entity], [xeno]);
     expect(entity.userData.energy).toBe(82);
     expect(xeno.energy).toBeCloseTo(0.82, 8);
     expect(entity.userData.energy).toBeLessThanOrEqual(100);
     expect(xeno.energy).toBeLessThanOrEqual(1);
+    expect(entity.userData.vel.y).toBe(0);
     expect(tree.completeCalls).toBe(0);
   });
 
@@ -657,6 +824,48 @@ describe('BigTreeSpeciesVisitors', () => {
     visitors.readStats(stats);
     expect(stats).toMatchObject({ activeVisitors: 0, acceptedVisits: 0, cancellations: 0 });
     expect(tree.edibleResources.get(10)?.state).toBe('available');
+  });
+
+  test('an unrelated ordinary death does not scan the complete tree food registry', () => {
+    const tree = new FakeTree();
+    const visits = manager(1);
+    visits.addSlot(BigTreeSlotKind.Eat, -10, 0);
+    const visitors = adapter(tree, visits);
+
+    expect(visitors.cancelOrdinary(999_999)).toBe(false);
+    expect(tree.releaseOwnerCalls).toBe(0);
+  });
+
+  test('ordinary-only and adapter-local resets preserve foreign shared-manager visitors', () => {
+    const tree = new FakeTree();
+    const visits = manager(3);
+    visits.addRadialSlots(BigTreeSlotKind.Eat, 3, 10);
+    const visitors = adapter(tree, visits);
+    const entity = ordinary(71, -10);
+    const xeno = xenomimic(72, 0, 10);
+    const foreignKind = 99;
+    const foreignId = 73;
+
+    expect(visits.requestVisit(foreignKind, foreignId, BigTreeVisitReason.Food, 0, 0, 20)).not.toBe(
+      -1,
+    );
+    tick(tree, visitors, 0, 0, [entity], [xeno]);
+    expect(visitors.activeVisitors).toBe(2);
+
+    visitors.resetOrdinary();
+    expect(visits.stateOf(BIG_TREE_OWNER_ORDINARY, entity.id)).toBe(BigTreeVisitState.Outside);
+    expect(visits.stateOf(BIG_TREE_OWNER_XENOMIMIC, xeno.pairId * 2 + xeno.role)).toBe(
+      BigTreeVisitState.Travelling,
+    );
+    expect(visits.stateOf(foreignKind, foreignId)).toBe(BigTreeVisitState.Travelling);
+    expect(visitors.activeVisitors).toBe(1);
+
+    visitors.reset();
+    expect(visits.stateOf(BIG_TREE_OWNER_XENOMIMIC, xeno.pairId * 2 + xeno.role)).toBe(
+      BigTreeVisitState.Outside,
+    );
+    expect(visits.stateOf(foreignKind, foreignId)).toBe(BigTreeVisitState.Travelling);
+    expect(visits.trackedActors).toBe(1);
   });
 
   test('event-driven disposal reclaims cooldown records for fresh organism identities', () => {
