@@ -14,8 +14,8 @@ Evidence labels used below:
   semantic scenario in this report.
 - **Pending** — not yet demonstrated by the required final run or deployed GitHub Pages site.
 
-The final merged-tree Windows coverage receipt is **3,271 pass, 0 fail**, with **3,551,782
-expectations across 365 files** and **93.57% line / 91.56% function coverage**. The portable
+The final merged-tree Windows coverage receipt is **3,275 pass, 0 fail**, with **3,551,817
+expectations across 365 files** and **93.59% line / 91.60% function coverage**. The portable
 published floors remain **84.64% / 82.21%**. The exact GitHub Pages artifact also passed one atomic,
 serial phone-plus-desktop Chromium run. The final post-report aggregate gate and deployed Pages
 verification remain pending as of this report revision.
@@ -346,11 +346,11 @@ restricted to localhost/127.0.0.1. No Big Tree or Xenomimic debug line is enable
 
 ## Automated test receipt
 
-The final merged-tree cross-system ecology/tether run completed **207 pass, 0 fail** with **10,729
+The final merged-tree cross-system ecology/tether run completed **211 pass, 0 fail** with **10,764
 expectations across 17 files**. It covered the production activity bridge, canonical and fauna visitors,
 zone/world composition, food registry and Crystal lifecycle, dome feeding, Shoggoth/Titan/Puppet/Apex
 suppression, Entity and Xenomimic connectomes, GraphMind, and Xenomimic cosmetics. The repository-wide
-coverage run then completed **3,271 pass, 0 fail** with **3,551,782 expectations across 365 files**.
+coverage run then completed **3,275 pass, 0 fail** with **3,551,817 expectations across 365 files**.
 
 ```text
 tests/big-tree-activity-bridge.test.ts

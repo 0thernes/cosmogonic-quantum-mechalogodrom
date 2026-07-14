@@ -57,10 +57,11 @@ import type { SingularitySystem } from './singularities';
 import { PORTAL_RESPAWN_DELAY, portalReappearSpot } from './portal-death-fauna';
 import type { DomeFeeder } from './dome-feeding';
 import {
-  BIG_TREE_FAUNA_VELOCITY_SCALE,
-  type BigTreeActorAdapter,
-  type BigTreeActorSource,
-} from './big-tree-fauna-source';
+  BigTreeFaunaIntentMode,
+  type BigTreeFaunaIntentMode as FaunaVisitMode,
+  type BigTreeFaunaSource,
+  type BigTreeFaunaVisitorSample,
+} from './big-tree-fauna-visitors';
 
 /** Number of titans: 10 territorial colossi + 10 central social/procreative colossi. */
 const TITAN_COUNT = 20;
@@ -107,8 +108,9 @@ const ENTROPY_PER_HARVEST = 1.5;
 const ENTROPY_RELIEF = 8;
 const ENTROPY_WASTE_THRESHOLD = 60;
 const ENTROPY_WASTE_RETAIN = 0.35;
-const BIG_TREE_REST_ENTROPY_RELIEF_PER_SECOND = 4;
 const WASTE_SCAR_RADIUS = 6;
+/** Native entropy recovery while a bounded Big Tree Rest activity is active. */
+const BIG_TREE_REST_ENTROPY_RELIEF_PER_SECOND = 4;
 /** Energy granted per witnessed quantum collapse (PRODUCE). */
 const WITNESS_ENERGY = 2.5;
 
@@ -565,10 +567,8 @@ export interface PerturbRequest {
 
 /** Internal per-titan record (boot-time allocation only). */
 interface Titan {
-  /** Stable shared-ecology identity. */
-  bigTreeOwnerId: number;
-  /** True while the canonical Big Tree visitor controller owns locomotion. */
-  bigTreeControlled: boolean;
+  /** Stable simulation identity, independent of render-object IDs. */
+  id: number;
   group: THREE.Group;
   /** Sub-group holding the silhouette meshes — bobbed vertically each frame. */
   rig: THREE.Group;
@@ -651,7 +651,7 @@ function intelligenceDiplomacyMove(
  * EntityManager; call `update(dt, t)` every frame AFTER `ctx.state.frame` is incremented
  * (all cadences key off it), and `drainPerturb()` once per frame after the RD step.
  */
-export class TitanSystem implements DomeFeeder, BigTreeActorSource {
+export class TitanSystem implements DomeFeeder, BigTreeFaunaSource {
   /**
    * Latest waste-scar request (REUSED record). The integrator drains it to the rd facade via
    * {@link drainPerturb}; if two waste events land between drains the LATEST wins (scars are
@@ -670,10 +670,15 @@ export class TitanSystem implements DomeFeeder, BigTreeActorSource {
   private singularity: SingularitySystem | null = null;
   /** F-DIPLO-ECON V16: economic net-worth provider by titan index (null ⇒ no economy coupling). */
   private econWealth: ((titanIndex: number) => number) | null = null;
-  /** Shared neutral-zone policy. Protection is evaluated from live positions and never persisted. */
+  /** Shared neutral-zone policy. World may retain stable-ID hysteresis history between live samples. */
   private sanctuary: ((x: number, z: number, ownerId?: number) => boolean) | null = null;
   private readonly rd: TitanRd;
   private readonly titans: Titan[] = [];
+  /** Optional Big Tree locomotion policy, indexed by stable titan ID. */
+  private readonly bigTreeModes: Uint8Array;
+  private readonly bigTreeTargetXs: Float64Array;
+  private readonly bigTreeTargetYs: Float64Array;
+  private readonly bigTreeTargetZs: Float64Array;
   /** PORTAL DEATH (USER): titans blasted by the portal, awaiting their 5 s respawn ELSEWHERE. */
   private readonly portalDowned: { ti: Titan; at: number }[] = [];
   private portalCullSeq = 0;
@@ -712,6 +717,10 @@ export class TitanSystem implements DomeFeeder, BigTreeActorSource {
       });
     }
     for (let p = 0; p < PAIR_COUNT; p++) this.histories.push(createHistory());
+    this.bigTreeModes = new Uint8Array(TITAN_COUNT);
+    this.bigTreeTargetXs = new Float64Array(TITAN_COUNT);
+    this.bigTreeTargetYs = new Float64Array(TITAN_COUNT);
+    this.bigTreeTargetZs = new Float64Array(TITAN_COUNT);
   }
 
   /** Number of titans (constant TITAN_COUNT — telemetry). */
@@ -719,69 +728,93 @@ export class TitanSystem implements DomeFeeder, BigTreeActorSource {
     return this.titans.length;
   }
 
-  /** Allocation-free population surface for the canonical Big Tree visitor controller. */
-  get bigTreeActorCount(): number {
+  /** Stable fixed slots exposed to the generic Big Tree fauna scheduler. */
+  get bigTreeVisitorSlotCount(): number {
     return this.titans.length;
   }
 
-  readBigTreeActor(index: number, out: BigTreeActorAdapter): boolean {
-    const ti = this.titans[index];
-    if (!ti) return false;
-    const p = ti.group.position;
-    const intelligence = this.ctx.organismIntelligence;
-    out.ownerId = ti.bigTreeOwnerId;
-    out.category = 'titan';
-    out.locomotion = 'flight';
+  readBigTreeVisitor(slot: number, out: BigTreeFaunaVisitorSample): boolean {
+    if (!Number.isInteger(slot) || slot < 0) return false;
+    const titan = this.titans[slot];
+    if (!titan) return false;
+    const p = titan.group.position;
+    out.ownerId = titan.id;
+    out.alive = titan.group.visible;
     out.x = p.x;
     out.y = p.y;
     out.z = p.z;
-    out.vx = ti.vel.x * BIG_TREE_FAUNA_VELOCITY_SCALE;
-    out.vy = ti.vel.y * BIG_TREE_FAUNA_VELOCITY_SCALE;
-    out.vz = ti.vel.z * BIG_TREE_FAUNA_VELOCITY_SCALE;
-    out.energy = ti.energy;
-    out.maxEnergy = RESOURCE_CAP;
-    out.alive = ti.group.visible;
-    out.fatigue = clamp(ti.entropy / RESOURCE_CAP, 0, 1);
-    out.socialDrive = intelligence?.enabled ? intelligence01(intelligence.socialDrive) : 0.35;
-    out.health = ti.energy;
-    out.maxHealth = RESOURCE_CAP;
-    out.danger = intelligence?.enabled
-      ? intelligence01(intelligence.threatResponse)
-      : clamp(ti.warCount / WAR_RAGE_CAP, 0, 1);
-    out.criticalNeed = ti.energy <= RESOURCE_CAP * 0.08;
-    out.moveSpeed = 24;
-    out.aggressionSuppressed = this.isProtectedTitan(ti);
+    out.hunger = 1 - clamp(titan.energy / RESOURCE_CAP, 0, 1);
+    out.fatigue = clamp(titan.entropy / ENTROPY_WASTE_THRESHOLD, 0, 1) * 0.5;
+    out.healthDeficit = 0;
+    out.stress = clamp(titan.warCount / 4, 0, 1);
+    out.socialNeed = titan.breeder ? 0.55 : 0.18;
+    out.curiosity = 0.15 + ((titan.id * 19) % 41) / 100;
     return true;
   }
 
-  writeBigTreeActor(index: number, actor: Readonly<BigTreeActorAdapter>): boolean {
-    const ti = this.titans[index];
-    if (!ti || actor.ownerId !== ti.bigTreeOwnerId || actor.category !== 'titan') return false;
-    ti.vel.x = actor.vx / BIG_TREE_FAUNA_VELOCITY_SCALE;
-    ti.vel.y = actor.vy / BIG_TREE_FAUNA_VELOCITY_SCALE;
-    ti.vel.z = actor.vz / BIG_TREE_FAUNA_VELOCITY_SCALE;
-    ti.energy = clamp(actor.energy, 0, RESOURCE_CAP);
+  setBigTreeVisitorIntent(
+    ownerId: number,
+    mode: FaunaVisitMode,
+    targetX: number,
+    targetY: number,
+    targetZ: number,
+  ): boolean {
+    const titan = this.titans[ownerId];
+    if (
+      !titan ||
+      !titan.group.visible ||
+      titan.id !== ownerId ||
+      (mode !== BigTreeFaunaIntentMode.Normal &&
+        mode !== BigTreeFaunaIntentMode.Travel &&
+        mode !== BigTreeFaunaIntentMode.Calm &&
+        mode !== BigTreeFaunaIntentMode.Social) ||
+      !Number.isFinite(targetX) ||
+      !Number.isFinite(targetY) ||
+      !Number.isFinite(targetZ)
+    ) {
+      return false;
+    }
+    this.bigTreeModes[ownerId] = mode;
+    this.bigTreeTargetXs[ownerId] = targetX;
+    this.bigTreeTargetYs[ownerId] = targetY;
+    this.bigTreeTargetZs[ownerId] = targetZ;
     return true;
   }
 
-  nourishBigTreeActor(index: number, normalizedNutrition: number): boolean {
-    const ti = this.titans[index];
-    if (!ti || !Number.isFinite(normalizedNutrition) || normalizedNutrition <= 0) return false;
-    ti.energy = clamp(ti.energy + normalizedNutrition * RESOURCE_CAP, 0, RESOURCE_CAP);
+  nourishBigTreeVisitor(ownerId: number, nourishment: number): boolean {
+    const titan = this.titans[ownerId];
+    if (
+      !titan?.group.visible ||
+      titan.id !== ownerId ||
+      !Number.isFinite(nourishment) ||
+      nourishment <= 0
+    ) {
+      return false;
+    }
+    titan.energy = clamp(titan.energy + nourishment, 0, RESOURCE_CAP);
     return true;
   }
 
-  restBigTreeActor(index: number, dt: number): boolean {
-    const ti = this.titans[index];
-    if (!ti || !ti.group.visible || !Number.isFinite(dt) || dt < 0) return false;
-    ti.entropy = clamp(ti.entropy - BIG_TREE_REST_ENTROPY_RELIEF_PER_SECOND * dt, 0, RESOURCE_CAP);
+  restBigTreeVisitor(ownerId: number, dt: number): boolean {
+    const titan = this.titans[ownerId];
+    if (!titan?.group.visible || titan.id !== ownerId || !Number.isFinite(dt) || dt < 0) {
+      return false;
+    }
+    titan.entropy = clamp(
+      titan.entropy - BIG_TREE_REST_ENTROPY_RELIEF_PER_SECOND * dt,
+      0,
+      RESOURCE_CAP,
+    );
     return true;
   }
 
-  setBigTreeActorControlled(index: number, controlled: boolean): boolean {
-    const ti = this.titans[index];
-    if (!ti) return false;
-    ti.bigTreeControlled = controlled;
+  clearBigTreeVisitorIntent(ownerId: number): boolean {
+    if (!Number.isInteger(ownerId) || ownerId < 0 || ownerId >= this.bigTreeModes.length)
+      return false;
+    this.bigTreeModes[ownerId] = BigTreeFaunaIntentMode.Normal;
+    this.bigTreeTargetXs[ownerId] = 0;
+    this.bigTreeTargetYs[ownerId] = 0;
+    this.bigTreeTargetZs[ownerId] = 0;
     return true;
   }
 
@@ -810,7 +843,6 @@ export class TitanSystem implements DomeFeeder, BigTreeActorSource {
       if (t < d.at) continue;
       portalReappearSpot(this.portalCullSeq++, d.ti.group.position);
       d.ti.vel.set(0, 0, 0);
-      d.ti.bigTreeControlled = false;
       d.ti.group.visible = true;
       d.ti.light.visible = true;
       this.portalDowned.splice(k, 1);
@@ -823,7 +855,7 @@ export class TitanSystem implements DomeFeeder, BigTreeActorSource {
       const dz = p.z - az;
       if (dx * dx + dz * dz <= r2 && protectedAt?.(p.x, p.z) !== true) {
         onDeath(p.x, p.y, p.z);
-        ti.bigTreeControlled = false;
+        this.clearBigTreeVisitorIntent(ti.id);
         ti.group.visible = false;
         ti.light.visible = false;
         this.portalDowned.push({ ti, at: t + PORTAL_RESPAWN_DELAY });
@@ -835,7 +867,7 @@ export class TitanSystem implements DomeFeeder, BigTreeActorSource {
    *  eats organisms there). Skips ones downed by the portal. See {@link DomeFeeder}. O(titans). */
   eachFeederPos(cb: (x: number, y: number, z: number) => void): void {
     for (const ti of this.titans) {
-      if (!ti || !ti.group.visible || ti.bigTreeControlled) continue;
+      if (!ti || !ti.group.visible) continue;
       const p = ti.group.position;
       cb(p.x, p.y, p.z);
     }
@@ -1121,8 +1153,7 @@ export class TitanSystem implements DomeFeeder, BigTreeActorSource {
 
     const name = lore.name('tribe', 50 + i);
     return {
-      bigTreeOwnerId: i,
-      bigTreeControlled: false,
+      id: i,
       group,
       rig,
       limbSpin,
@@ -1264,6 +1295,7 @@ export class TitanSystem implements DomeFeeder, BigTreeActorSource {
     const p = g.position;
     const vel = ti.vel;
     const protectedBeforeMove = this.isProtectedTitan(ti);
+    const visitMode = (this.bigTreeModes[ti.id] ?? BigTreeFaunaIntentMode.Normal) as FaunaVisitMode;
 
     // MULTI-ALTITUDE ROAM (like Super Creatures, not a single mid-plane shelf).
     // Bug: every titan shared PLATFORM_MID_Y + a strong height restore ⇒ all stuck on one level.
@@ -1276,32 +1308,59 @@ export class TitanSystem implements DomeFeeder, BigTreeActorSource {
     const trad = PLATFORM_HALF * (0.18 + (ti.mi % 5) * 0.05);
     // Dual-frequency vertical path: primary + slow secondary (Super-Creature style full column use).
     const yAmp = PLATFORM_HEIGHT * (0.2 + (ti.mi % 4) * 0.055);
-    const targetY =
-      homeY + Math.sin(t * 0.11 + tph) * yAmp + Math.sin(t * 0.037 + tph * 1.7) * yAmp * 0.45;
-    const tdx = Math.cos(t * 0.11 + tph) * trad - p.x;
-    const tdy = targetY - p.y;
-    const tdz = Math.sin(t * 0.13 + tph * 1.3) * trad - p.z;
-    const intelligence = this.ctx.organismIntelligence;
-    const intelligenceEvidence = intelligence?.enabled
-      ? Math.max(
-          intelligence01(intelligence.resourcePressure),
-          intelligence01(intelligence.threatResponse),
-          intelligence01(intelligence.exploration),
-          intelligence01(intelligence.socialDrive),
-          intelligence01(intelligence.corpusDrive),
-        )
-      : 0;
-    const intentGain = protectedBeforeMove
-      ? 0.45
-      : intelligence?.enabled && intelligenceEvidence > 0
-        ? 1 +
-          intelligence01(intelligence.confidence) *
-            (intelligence01(intelligence.exploration) - 0.5) *
-            0.24
-        : 1;
-    const tInv = (0.055 * intentGain) / (Math.sqrt(tdx * tdx + tdy * tdy + tdz * tdz) + 1e-6); // USER: faster (0.02→0.055) — visibly roams
-    const wanderGain = protectedBeforeMove ? 0.25 : 1;
-    if (!ti.bigTreeControlled) {
+    if (visitMode === BigTreeFaunaIntentMode.Travel) {
+      const dx = (this.bigTreeTargetXs[ti.id] ?? p.x) - p.x;
+      const dy = (this.bigTreeTargetYs[ti.id] ?? p.y) - p.y;
+      const dz = (this.bigTreeTargetZs[ti.id] ?? p.z) - p.z;
+      const inv = 0.5 / (Math.sqrt(dx * dx + dy * dy + dz * dz) + 1e-6);
+      vel.x += dx * inv;
+      vel.y += dy * inv;
+      vel.z += dz * inv;
+      vel.multiplyScalar(0.9);
+    } else if (
+      visitMode === BigTreeFaunaIntentMode.Calm ||
+      visitMode === BigTreeFaunaIntentMode.Social
+    ) {
+      // Preserve position continuity while actively settling all inherited travel momentum.
+      vel.multiplyScalar(Math.max(0, 1 - dt * 4));
+      if (visitMode === BigTreeFaunaIntentMode.Social) {
+        const socialDx = (this.bigTreeTargetXs[ti.id] ?? p.x) - p.x;
+        const socialDz = (this.bigTreeTargetZs[ti.id] ?? p.z) - p.z;
+        if (socialDx * socialDx + socialDz * socialDz > 1e-6) {
+          const targetHeading = Math.atan2(socialDx, socialDz);
+          const turn = Math.atan2(
+            Math.sin(targetHeading - g.rotation.y),
+            Math.cos(targetHeading - g.rotation.y),
+          );
+          g.rotation.y += turn * Math.min(1, dt * 2.4);
+        }
+      }
+    } else {
+      const targetY =
+        homeY + Math.sin(t * 0.11 + tph) * yAmp + Math.sin(t * 0.037 + tph * 1.7) * yAmp * 0.45;
+      const tdx = Math.cos(t * 0.11 + tph) * trad - p.x;
+      const tdy = targetY - p.y;
+      const tdz = Math.sin(t * 0.13 + tph * 1.3) * trad - p.z;
+      const intelligence = this.ctx.organismIntelligence;
+      const intelligenceEvidence = intelligence?.enabled
+        ? Math.max(
+            intelligence01(intelligence.resourcePressure),
+            intelligence01(intelligence.threatResponse),
+            intelligence01(intelligence.exploration),
+            intelligence01(intelligence.socialDrive),
+            intelligence01(intelligence.corpusDrive),
+          )
+        : 0;
+      const intentGain = protectedBeforeMove
+        ? 0.45
+        : intelligence?.enabled && intelligenceEvidence > 0
+          ? 1 +
+            intelligence01(intelligence.confidence) *
+              (intelligence01(intelligence.exploration) - 0.5) *
+              0.24
+          : 1;
+      const tInv = (0.055 * intentGain) / (Math.sqrt(tdx * tdx + tdy * tdy + tdz * tdz) + 1e-6); // USER: faster (0.02→0.055) — visibly roams
+      const wanderGain = protectedBeforeMove ? 0.25 : 1;
       vel.x += tdx * tInv + Math.sin(t * 0.5 + ti.mi * 1.3) * 0.012 * wanderGain;
       vel.y += tdy * tInv + Math.sin(t * 0.37 + ti.mi * 2.1) * 0.008 * wanderGain;
       vel.z += tdz * tInv + Math.cos(t * 0.43 + ti.mi * 0.7) * 0.012 * wanderGain;
@@ -1331,8 +1390,9 @@ export class TitanSystem implements DomeFeeder, BigTreeActorSource {
       p.z = -PLATFORM_HALF;
       if (vel.z < 0) vel.z = 0;
     }
-    if (p.y < 12) {
-      p.y = 12;
+    const minimumY = visitMode === BigTreeFaunaIntentMode.Normal ? 12 : PLATFORM_FLOOR;
+    if (p.y < minimumY) {
+      p.y = minimumY;
       if (vel.y < 0) vel.y = 0;
     } else if (p.y > PLATFORM_CEIL) {
       p.y = PLATFORM_CEIL;
@@ -1773,9 +1833,14 @@ export class TitanSystem implements DomeFeeder, BigTreeActorSource {
 
   private isProtectedTitan(titan: Titan): boolean {
     const p = titan.group.position;
-    // Always refresh identity membership before applying the visit-control peace override.
-    const memberProtected = this.isProtectedAt(p.x, p.z, titan.bigTreeOwnerId);
-    return titan.bigTreeControlled || memberProtected;
+    // Evaluate membership before the visit-mode peace override. Short-circuiting here would leave
+    // the composition-root registry stale during Travel/Calm/Social and break boundary hysteresis.
+    const memberProtected = this.isProtectedAt(p.x, p.z, titan.id);
+    return (
+      memberProtected ||
+      (this.bigTreeModes[titan.id] ?? BigTreeFaunaIntentMode.Normal) !==
+        BigTreeFaunaIntentMode.Normal
+    );
   }
 
   private isProtectedAt(x: number, z: number, ownerId?: number): boolean {

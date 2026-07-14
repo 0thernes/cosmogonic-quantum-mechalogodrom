@@ -17,6 +17,10 @@ import { EntityManager } from '../src/sim/entities';
 import { ShoggothSystem } from '../src/sim/shoggoths';
 import { PLATFORM_CEIL, PLATFORM_FLOOR, PLATFORM_HALF } from '../src/sim/constants';
 import { getQuantizationConfig } from '../src/math/quantization';
+import {
+  BigTreeFaunaIntentMode,
+  type BigTreeFaunaVisitorSample,
+} from '../src/sim/big-tree-fauna-visitors';
 import type { AuditTrail } from '../src/logging/audit';
 import type { Entity, OrganismIntelligenceSignal, SimContext, SimState } from '../src/types';
 
@@ -398,10 +402,18 @@ describe('ShoggothSystem — deterministic predators that never NaN the populati
     const consumedBefore = actor.consumed;
     rebuildEntityGrid(ctx, entities);
 
-    // Visit control (the fauna coordinator's ownership flag) — NOT the sanctuary predicate.
-    expect(shog.setBigTreeActorControlled(0, true)).toBe(true);
     const parkedX = actor.group.position.x;
     const parkedZ = actor.group.position.z;
+    // Visit control (the fauna coordinator's explicit Calm intent) — NOT the sanctuary predicate.
+    expect(
+      shog.setBigTreeVisitorIntent(
+        0,
+        BigTreeFaunaIntentMode.Calm,
+        parkedX,
+        actor.group.position.y,
+        parkedZ,
+      ),
+    ).toBe(true);
     for (let f = 0; f < 90; f++) shog.update(1 / 60, f / 60);
     expect(entities.list).toContain(prey);
     expect(actor.consumed).toBe(consumedBefore);
@@ -413,7 +425,7 @@ describe('ShoggothSystem — deterministic predators that never NaN the populati
     ).toBeLessThan(0.5);
 
     // Release restores the ordinary predator without stale state.
-    expect(shog.setBigTreeActorControlled(0, false)).toBe(true);
+    expect(shog.clearBigTreeVisitorIntent(0)).toBe(true);
     actor.feedTimer = 0;
     rebuildEntityGrid(ctx, entities);
     shog.update(1 / 60, 2);
@@ -546,5 +558,60 @@ describe('ShoggothSystem — deterministic predators that never NaN the populati
     expect(run(false, false)).toBeGreaterThan(0); // the cadence and drive are genuinely armed
     expect(run(true, false)).toBe(0);
     expect(run(false, true)).toBe(0);
+  });
+});
+
+describe('ShoggothSystem — public Big Tree fauna hooks', () => {
+  test('sanctuary self checks carry stable shoggoth IDs', () => {
+    const { shog } = makeWorld(0x71d);
+    const seen = new Set<number>();
+    shog.attachSanctuary((_x, _z, ownerId) => {
+      if (ownerId !== undefined) seen.add(ownerId);
+      return false;
+    });
+    const sample = {} as BigTreeFaunaVisitorSample;
+    shog.readBigTreeVisitor(0, sample);
+    shog.setBigTreeVisitorIntent(0, BigTreeFaunaIntentMode.Travel, sample.x, sample.y, sample.z);
+    shog.update(0, 0);
+    expect(seen.has(0)).toBe(true);
+    expect(seen.has(shog.count - 1)).toBe(true);
+    shog.dispose();
+  });
+
+  test('stable IDs expose hunger, travel converges, calm settles, and food changes native satiation', () => {
+    const { shog } = makeWorld(0x7ee);
+    const sample = {} as BigTreeFaunaVisitorSample;
+    expect(shog.bigTreeVisitorSlotCount).toBe(shog.count);
+    expect(shog.readBigTreeVisitor(0, sample)).toBe(true);
+    expect(sample.ownerId).toBe(0);
+    expect(sample.alive).toBe(true);
+    const hungerBefore = sample.hunger;
+    const targetX = sample.x + (sample.x > 0 ? -120 : 120);
+    const targetZ = sample.z + (sample.z > 0 ? -80 : 80);
+    const distanceBefore = Math.hypot(targetX - sample.x, targetZ - sample.z);
+    expect(
+      shog.setBigTreeVisitorIntent(0, BigTreeFaunaIntentMode.Travel, targetX, sample.y, targetZ),
+    ).toBe(true);
+    for (let frame = 0; frame < 20; frame++) shog.update(0.1, frame * 0.1);
+    expect(shog.readBigTreeVisitor(0, sample)).toBe(true);
+    expect(Math.hypot(targetX - sample.x, targetZ - sample.z)).toBeLessThan(distanceBefore);
+
+    expect(
+      shog.setBigTreeVisitorIntent(0, BigTreeFaunaIntentMode.Calm, sample.x, sample.y, sample.z),
+    ).toBe(true);
+    for (let frame = 20; frame < 50; frame++) shog.update(0.1, frame * 0.1);
+    shog.readBigTreeVisitor(0, sample);
+    const settledX = sample.x;
+    const settledZ = sample.z;
+    for (let frame = 50; frame < 60; frame++) shog.update(0.1, frame * 0.1);
+    shog.readBigTreeVisitor(0, sample);
+    expect(Math.hypot(sample.x - settledX, sample.z - settledZ)).toBeLessThan(0.05);
+
+    expect(shog.nourishBigTreeVisitor(0, 28)).toBe(true);
+    shog.readBigTreeVisitor(0, sample);
+    expect(sample.hunger).toBeLessThan(hungerBefore);
+    expect(shog.clearBigTreeVisitorIntent(0)).toBe(true);
+    expect(shog.setBigTreeVisitorIntent(-1, BigTreeFaunaIntentMode.Travel, 0, 0, 0)).toBe(false);
+    shog.dispose();
   });
 });

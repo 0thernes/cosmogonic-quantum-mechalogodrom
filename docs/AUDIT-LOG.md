@@ -13,10 +13,10 @@ changed and why.
 
 ## 2026-07-14 — Dome ecology final merged-tree verification and publication handoff
 
-The converged ecology tree now has a final Windows coverage receipt of **3,271 tests / 0 fail /
-3,551,782 expectations across 365 files**, measuring **93.57% line / 91.56% function coverage**; the
+The converged ecology tree now has a final Windows coverage receipt of **3,275 tests / 0 fail /
+3,551,817 expectations across 365 files**, measuring **93.59% line / 91.60% function coverage**; the
 portable published floors remain **84.64% / 82.21%**. A focused cross-system ecology/tether suite also
-completed **207 tests / 0 fail / 10,729 expectations across 17 files**.
+completed **211 tests / 0 fail / 10,764 expectations across 17 files**.
 
 One status-bearing atomic browser run completed both requested tiers against the exact 117-artifact
 Pages build. Phone (390x844 at DPR 2) and desktop (1280x720 at DPR 1) produced nonblank canvas-only

@@ -1933,10 +1933,10 @@ export class World {
     // These composition-time adapters expose all five fixed categories plus launched NHI to the
     // same bounded visit/food/social scheduler. Player-owned heroBodies are intentionally absent.
     const bigTreeFaunaBindings: BigTreeFaunaBinding[] = [
-      bindBigTreeActorSource(BIG_TREE_OWNER_SHOGGOTH, 'shoggoth', this.shoggoths),
-      bindBigTreeActorSource(BIG_TREE_OWNER_TITAN, 'titan', this.titans),
+      bindBigTreeFauna(BIG_TREE_OWNER_SHOGGOTH, this.shoggoths),
+      bindBigTreeFauna(BIG_TREE_OWNER_TITAN, this.titans),
       bindBigTreeActorSource(BIG_TREE_OWNER_LEVIATHAN, 'leviathan', this.leviathans),
-      bindBigTreeActorSource(BIG_TREE_OWNER_PUPPET, 'puppet', this.puppets),
+      bindBigTreeFauna(BIG_TREE_OWNER_PUPPET, this.puppets),
       bindBigTreeActorSource(BIG_TREE_OWNER_APEX, 'apex', this.superBodies),
       bindBigTreeFauna(BIG_TREE_OWNER_NHI, this.bigTreeNhiSource),
     ];

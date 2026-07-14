@@ -5,9 +5,9 @@
 Technical reports and audits for Cosmogonic Quantum Mechalogodrom. Dated filenames (`2026-*`) are
 **historical worldline snapshots** when present — they preserve evidence from their authoring pass.
 **Current published** gate receipts: [VERIFICATION-ANALYTICAL-DATA.md](../VERIFICATION-ANALYTICAL-DATA.md) §1 ·
-`scripts/canonical-receipts.ts` (v0.22.0 · **3,271-test floor** · **84.64 % / 82.21 %** coverage).
-Latest final-tree Windows receipt: **3,271 completed cases, zero failures, 3,551,782 expect() calls,
-93.57% line coverage, and 91.56% function coverage across 365 test files**. The lower portable floor
+`scripts/canonical-receipts.ts` (v0.22.0 · **3,275-test floor** · **84.64 % / 82.21 %** coverage).
+Latest final-tree Windows receipt: **3,275 completed cases, zero failures, 3,551,817 expect() calls,
+93.59% line coverage, and 91.60% function coverage across 365 test files**. The lower portable floor
 remains the cross-platform public guarantee; `scripts/canonical-receipts.ts` is the live authority.
 
 The batch-26 adversarial repair pass made the flora sampler bilinear and sealed chemotaxis against
@@ -24,7 +24,7 @@ two-meal competence lead, subject to a 25-second per-learner simulation-time coo
 all-or-nothing deterministic checks. Neither establishes cross-species learning, general intelligence,
 consciousness, or sentience. The fauna social matcher uses O(A) adapter reads followed by bounded numeric
 O(A²), with A ≤ 72, and food matrix changes upload one 16-float instance range each. Focused automated
-tests, the 3,271-test whole-repository receipt, a 117-artifact production build, and one atomic
+tests, the 3,275-test whole-repository receipt, a 117-artifact production build, and one atomic
 phone-plus-desktop natural-rAF/canvas-isolated smoke are green. Deployed GitHub Pages verification is
 reported only after the final commit is published and checked at the public URL.
 

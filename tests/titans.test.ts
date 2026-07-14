@@ -35,6 +35,10 @@ import {
   type TitanRd,
 } from '../src/sim/titans';
 import { getQuantizationConfig } from '../src/math/quantization';
+import {
+  BigTreeFaunaIntentMode,
+  type BigTreeFaunaVisitorSample,
+} from '../src/sim/big-tree-fauna-visitors';
 import type { AuditTrail } from '../src/logging/audit';
 import type { Entity, OrganismIntelligenceSignal, SimContext } from '../src/types';
 
@@ -549,12 +553,12 @@ describe('TitanSystem — sanctuary is transient, neutral, and non-harmful', () 
     const energyBefore = titan.energy;
     const matterBefore = titan.matter;
 
-    expect(titans.restBigTreeActor(0, 2)).toBe(true);
+    expect(titans.restBigTreeVisitor(0, 2)).toBe(true);
     expect(titan.entropy).toBe(12);
     expect(titan.energy).toBe(energyBefore);
     expect(titan.matter).toBe(matterBefore);
-    expect(titans.restBigTreeActor(0, Number.NaN)).toBe(false);
-    expect(titans.restBigTreeActor(-1, 1)).toBe(false);
+    expect(titans.restBigTreeVisitor(0, Number.NaN)).toBe(false);
+    expect(titans.restBigTreeVisitor(-1, 1)).toBe(false);
     titans.dispose();
   });
 
@@ -703,6 +707,80 @@ describe('TitanSystem — sanctuary is transient, neutral, and non-harmful', () 
     b.energy = 100;
     harness.strikeCheck(0);
     expect(entities.list.length).toBeGreaterThan(0);
+    titans.dispose();
+  });
+});
+
+describe('TitanSystem — public Big Tree fauna hooks', () => {
+  test('sanctuary self checks carry stable titan IDs', () => {
+    const ctx = makeCtx(0x71d);
+    const entities = new EntityManager(ctx);
+    const titans = new TitanSystem(ctx, entities, LORE, { perturb: () => undefined });
+    const seen = new Set<number>();
+    titans.attachSanctuary((_x, _z, ownerId) => {
+      if (ownerId !== undefined) seen.add(ownerId);
+      return false;
+    });
+    const sample = {} as BigTreeFaunaVisitorSample;
+    titans.readBigTreeVisitor(0, sample);
+    titans.setBigTreeVisitorIntent(0, BigTreeFaunaIntentMode.Travel, sample.x, sample.y, sample.z);
+    titans.update(0, 0);
+    expect(seen.has(0)).toBe(true);
+    expect(seen.has(titans.count - 1)).toBe(true);
+    titans.dispose();
+  });
+
+  test('stable IDs expose economy hunger, travel converges, calm settles, and nutrition is exact', () => {
+    const ctx = makeCtx(0x7ee);
+    const entities = new EntityManager(ctx);
+    const titans = new TitanSystem(ctx, entities, LORE, { perturb: () => undefined });
+    const sample = {} as BigTreeFaunaVisitorSample;
+    expect(titans.bigTreeVisitorSlotCount).toBe(20);
+    expect(titans.readBigTreeVisitor(0, sample)).toBe(true);
+    expect(sample.ownerId).toBe(0);
+    const hungerBefore = sample.hunger;
+    const targetX = sample.x + (sample.x > 0 ? -120 : 120);
+    const targetZ = sample.z + (sample.z > 0 ? -80 : 80);
+    const distanceBefore = Math.hypot(targetX - sample.x, targetZ - sample.z);
+    expect(
+      titans.setBigTreeVisitorIntent(0, BigTreeFaunaIntentMode.Travel, targetX, sample.y, targetZ),
+    ).toBe(true);
+    for (let frame = 1; frame <= 20; frame++) {
+      ctx.state.frame = frame;
+      titans.update(0.1, frame * 0.1);
+    }
+    titans.readBigTreeVisitor(0, sample);
+    expect(Math.hypot(targetX - sample.x, targetZ - sample.z)).toBeLessThan(distanceBefore);
+
+    expect(
+      titans.setBigTreeVisitorIntent(0, BigTreeFaunaIntentMode.Calm, sample.x, sample.y, sample.z),
+    ).toBe(true);
+    for (let frame = 21; frame <= 50; frame++) {
+      ctx.state.frame = frame;
+      titans.update(0.1, frame * 0.1);
+    }
+    titans.readBigTreeVisitor(0, sample);
+    const settledX = sample.x;
+    const settledZ = sample.z;
+    for (let frame = 51; frame <= 60; frame++) {
+      ctx.state.frame = frame;
+      titans.update(0.1, frame * 0.1);
+    }
+    titans.readBigTreeVisitor(0, sample);
+    expect(Math.hypot(sample.x - settledX, sample.z - settledZ)).toBeLessThan(0.05);
+
+    const energyBefore = (1 - sample.hunger) * RESOURCE_CAP;
+    expect(titans.nourishBigTreeVisitor(0, 28)).toBe(true);
+    titans.readBigTreeVisitor(0, sample);
+    expect((1 - sample.hunger) * RESOURCE_CAP).toBeCloseTo(energyBefore + 28, 10);
+    expect(sample.hunger).toBeLessThan(hungerBefore);
+
+    const harness = titans as unknown as TitanSanctuaryHarness;
+    harness.titans[0]!.entropy = 40;
+    expect(titans.restBigTreeVisitor(0, 2.5)).toBe(true);
+    expect(harness.titans[0]!.entropy).toBe(30);
+    expect(titans.restBigTreeVisitor(0, Number.NaN)).toBe(false);
+    expect(titans.clearBigTreeVisitorIntent(0)).toBe(true);
     titans.dispose();
   });
 });
