@@ -285,8 +285,15 @@ export function decideFaction(
   }
 }
 
+/** Shared readout for {@link intentSteerXZ} — the caller must consume `.x`/`.z` before the next call
+ *  (it does, synchronously). Reusing it keeps the hot per-entity faction step allocation-free. */
+const STEER_SCRATCH = { x: 0, z: 0 };
+
 /**
- * Map a faction Intent to planar steering impulse. Pure + allocation-free (ADR 0016).
+ * Map a faction Intent to planar steering impulse. Pure in its inputs and allocation-free (ADR 0016):
+ * writes into (and returns) the shared {@link STEER_SCRATCH} readout rather than a fresh literal, so
+ * the sole hot caller (`EntityManager.applyAmbientSocial`, once per entity per frame) pays no GC. The
+ * returned values are byte-identical to the old per-case literals — same operands, same order.
  */
 export function intentSteerXZ(
   intent: Intent,
@@ -297,23 +304,44 @@ export function intentSteerXZ(
   awayX: number,
   awayZ: number,
 ): { x: number; z: number } {
+  let x: number;
+  let z: number;
   switch (intent) {
     case 'socialize':
-      return { x: toKinX * 0.75 + toCrowdX * 0.45, z: toKinZ * 0.75 + toCrowdZ * 0.45 };
+      x = toKinX * 0.75 + toCrowdX * 0.45;
+      z = toKinZ * 0.75 + toCrowdZ * 0.45;
+      break;
     case 'seek':
-      return { x: toCrowdX * 0.9 + toKinX * 0.25, z: toCrowdZ * 0.9 + toKinZ * 0.25 };
+      x = toCrowdX * 0.9 + toKinX * 0.25;
+      z = toCrowdZ * 0.9 + toKinZ * 0.25;
+      break;
     case 'hunt':
-      return { x: toCrowdX * 1.05, z: toCrowdZ * 1.05 };
+      x = toCrowdX * 1.05;
+      z = toCrowdZ * 1.05;
+      break;
     case 'gather':
-      return { x: toCrowdX * 0.55 + toKinX * 0.2, z: toCrowdZ * 0.55 + toKinZ * 0.2 };
+      x = toCrowdX * 0.55 + toKinX * 0.2;
+      z = toCrowdZ * 0.55 + toKinZ * 0.2;
+      break;
     case 'guard':
-      return { x: toKinX * 0.5 - awayX * 0.15, z: toKinZ * 0.5 - awayZ * 0.15 };
+      x = toKinX * 0.5 - awayX * 0.15;
+      z = toKinZ * 0.5 - awayZ * 0.15;
+      break;
     case 'flee':
-      return { x: awayX * 1.1, z: awayZ * 1.1 };
+      x = awayX * 1.1;
+      z = awayZ * 1.1;
+      break;
     case 'rest':
-      return { x: toKinX * 0.15, z: toKinZ * 0.15 };
+      x = toKinX * 0.15;
+      z = toKinZ * 0.15;
+      break;
     case 'wander':
     default:
-      return { x: toCrowdX * 0.2, z: toCrowdZ * 0.2 };
+      x = toCrowdX * 0.2;
+      z = toCrowdZ * 0.2;
+      break;
   }
+  STEER_SCRATCH.x = x;
+  STEER_SCRATCH.z = z;
+  return STEER_SCRATCH;
 }
