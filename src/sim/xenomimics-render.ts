@@ -11,12 +11,230 @@
  */
 import * as THREE from 'three';
 import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
+import type { RenderMode } from './constants';
 import {
   XENOMIMIC_MAX,
   XENOMIMIC_SPECIES,
   type Xenomimic,
   type XenomimicPopulation,
 } from './xenomimics';
+
+/**
+ * Xenomimic-exclusive BRUTAL skins — deliberately NOT Archon godform styles and NOT entity freakshow.
+ * Rare alien grammar: psionic void metal, ichor glass, rift carapace, neural mirror, antimatter hull.
+ */
+export const XENOMIMIC_BRUTAL_STYLES = [
+  {
+    name: 'PSIONIC-VOID',
+    glyph: '◉',
+    title: 'black-hole flesh with violet event-rim',
+    metalness: 0.95,
+    roughness: 0.08,
+    emissive: [0.08, 0.02, 0.22] as const,
+    emissiveIntensity: 2.4,
+    hueBias: 0.72,
+    deform: 1.55,
+    sat: 0.85,
+    light: 0.18,
+    motion: 0.55,
+  },
+  {
+    name: 'ICHOR-GLASS',
+    glyph: '◈',
+    title: 'translucent bile-crystal with inner veins',
+    metalness: 0.15,
+    roughness: 0.05,
+    emissive: [0.12, 0.55, 0.08] as const,
+    emissiveIntensity: 3.1,
+    hueBias: 0.32,
+    deform: 1.25,
+    sat: 0.92,
+    light: 0.42,
+    motion: 1.35,
+    transparent: true,
+    opacity: 0.78,
+  },
+  {
+    name: 'RIFT-CARAPACE',
+    glyph: '▣',
+    title: 'fractured shell plates that crawl against themselves',
+    metalness: 0.55,
+    roughness: 0.72,
+    emissive: [0.55, 0.08, 0.02] as const,
+    emissiveIntensity: 1.6,
+    hueBias: 0.04,
+    deform: 1.9,
+    sat: 0.78,
+    light: 0.24,
+    motion: 1.8,
+  },
+  {
+    name: 'NEURAL-MIRROR',
+    glyph: '◎',
+    title: 'chrome thought-membrane with pulse seams',
+    metalness: 1,
+    roughness: 0.02,
+    emissive: [0.02, 0.35, 0.55] as const,
+    emissiveIntensity: 2.8,
+    hueBias: 0.55,
+    deform: 0.85,
+    sat: 0.55,
+    light: 0.55,
+    motion: 0.9,
+  },
+  {
+    name: 'ANTIMATTER-HULL',
+    glyph: '✦',
+    title: 'inverted luminosity — dark cores, white rims',
+    metalness: 0.4,
+    roughness: 0.35,
+    emissive: [0.9, 0.95, 1.0] as const,
+    emissiveIntensity: 1.9,
+    hueBias: 0.88,
+    deform: 2.2,
+    sat: 0.35,
+    light: 0.12,
+    motion: 2.1,
+  },
+] as const;
+
+/** RENDER-mode skins unique to Xenomimics (grammar ≠ entity RENDER_MODE_FX). */
+const XENOMIMIC_RENDER_SKINS: Record<
+  RenderMode,
+  {
+    metalness: number;
+    roughness: number;
+    emissiveBoost: number;
+    hueBias: number;
+    sat: number;
+    light: number;
+    motion: number;
+    wireframe: boolean;
+    opacity: number;
+    transparent: boolean;
+  }
+> = {
+  solid: {
+    metalness: 0.68,
+    roughness: 0.2,
+    emissiveBoost: 1.15,
+    hueBias: 0,
+    sat: 0.68,
+    light: 0.28,
+    motion: 1,
+    wireframe: false,
+    opacity: 1,
+    transparent: false,
+  },
+  wire: {
+    metalness: 0.05,
+    roughness: 0.75,
+    emissiveBoost: 4.8,
+    hueBias: 0.12,
+    sat: 1,
+    light: 0.48,
+    motion: 1.85,
+    wireframe: true,
+    opacity: 1,
+    transparent: false,
+  },
+  ghost: {
+    metalness: 0.02,
+    roughness: 0.95,
+    emissiveBoost: 2.6,
+    hueBias: 0.68,
+    sat: 0.55,
+    light: 0.58,
+    motion: 0.55,
+    wireframe: false,
+    opacity: 0.32,
+    transparent: true,
+  },
+  neon: {
+    metalness: 0.08,
+    roughness: 0.28,
+    emissiveBoost: 6.5,
+    hueBias: 0.22,
+    sat: 1,
+    light: 0.55,
+    motion: 1.45,
+    wireframe: false,
+    opacity: 1,
+    transparent: false,
+  },
+  chrome: {
+    metalness: 1,
+    roughness: 0.04,
+    emissiveBoost: 0.7,
+    hueBias: 0.48,
+    sat: 0.25,
+    light: 0.55,
+    motion: 0.8,
+    wireframe: false,
+    opacity: 1,
+    transparent: false,
+  },
+  hologram: {
+    metalness: 0.12,
+    roughness: 0.2,
+    emissiveBoost: 3.2,
+    hueBias: 0.58,
+    sat: 0.7,
+    light: 0.5,
+    motion: 1.15,
+    wireframe: false,
+    opacity: 0.48,
+    transparent: true,
+  },
+  iridescent: {
+    metalness: 0.75,
+    roughness: 0.18,
+    emissiveBoost: 2.4,
+    hueBias: 0.42,
+    sat: 0.88,
+    light: 0.45,
+    motion: 1.3,
+    wireframe: false,
+    opacity: 1,
+    transparent: false,
+  },
+  plasma: {
+    metalness: 0.2,
+    roughness: 0.4,
+    emissiveBoost: 5.2,
+    hueBias: 0.85,
+    sat: 0.95,
+    light: 0.5,
+    motion: 1.7,
+    wireframe: false,
+    opacity: 0.92,
+    transparent: true,
+  },
+  obsidian: {
+    metalness: 0.9,
+    roughness: 0.12,
+    emissiveBoost: 1.1,
+    hueBias: 0.78,
+    sat: 0.25,
+    light: 0.12,
+    motion: 0.7,
+    wireframe: false,
+    opacity: 1,
+    transparent: false,
+  },
+  prismatic: {
+    metalness: 0.55,
+    roughness: 0.22,
+    emissiveBoost: 3.6,
+    hueBias: 0.15,
+    sat: 0.95,
+    light: 0.48,
+    motion: 1.55,
+    wireframe: false,
+    opacity: 1,
+    transparent: false,
+  },
+};
 
 export const XENOMIMIC_CORE_DRAW_CALLS = XENOMIMIC_SPECIES;
 export const XENOMIMIC_FX_DRAW_CALLS = 0;
@@ -421,6 +639,15 @@ export class XenomimicRenderer {
   private environmentCoherence = 0;
   private environmentIntegration = 0;
   private environmentTwinTension = 0;
+  private renderMode: RenderMode = 'solid';
+  /** -1 = off; 0..4 = {@link XENOMIMIC_BRUTAL_STYLES}. */
+  private brutalStyleIdx = -1;
+  private morphWave = 0;
+  private morphSeed = 0;
+  private hueBias = 0;
+  private satMul = 0.68;
+  private lightBase = 0.28;
+  private motionMul = 1;
   private disposed = false;
 
   /** Stable callback: XenomimicPopulation.forEach invokes this without creating a per-frame closure. */
@@ -453,15 +680,25 @@ export class XenomimicRenderer {
     const teleportFlash = clamp01((finite(creature.teleportCd) - 2.05) / 0.45);
     const shimmer = clamp01(creature.shimmer);
     const verticalDynamics = Math.max(-1, Math.min(1, hopV * 0.12));
-    const scale = XENOMIMIC_BODY_SCALE * (0.82 + energy * 0.24 + activity * 0.08 + shimmer * 0.06);
+    const motion = this.motionMul;
+    const scale =
+      XENOMIMIC_BODY_SCALE *
+      (0.82 + energy * 0.24 + activity * 0.08 + shimmer * 0.06) *
+      (1 + this.morphWave * 0.06 * Math.sin(this.morphSeed * 0.7 + creature.pairId));
 
     POSITION.set(finite(creature.x), finite(creature.y), finite(creature.z));
-    EULER.set(pitch, heading + shimmer * 0.12 * polarity, roll, 'YXZ');
+    // Psionic twin bond — no visual tether; body thrills with shimmer only.
+    EULER.set(
+      pitch * (0.85 + motion * 0.15),
+      heading + shimmer * 0.12 * polarity * motion,
+      roll * (0.85 + motion * 0.15),
+      'YXZ',
+    );
     QUATERNION.setFromEuler(EULER);
     // Preserve positive weighted-ragdoll scaling: InstancedMesh does not support negative scale.
     SCALE.set(
       scale * (polarity < 0 ? 0.9 : 1.1),
-      scale * (0.9 + contact * 0.08 - flex * 0.05),
+      scale * (0.9 + contact * 0.08 - flex * 0.05 * motion),
       scale * (polarity < 0 ? 1.1 : 0.9),
     );
     MATRIX.compose(POSITION, QUATERNION, SCALE);
@@ -475,8 +712,8 @@ export class XenomimicRenderer {
     lanes.life[offset + 3] = polarity;
     lanes.body[offset] = pitch;
     lanes.body[offset + 1] = roll;
-    lanes.body[offset + 2] = flex;
-    lanes.body[offset + 3] = verticalDynamics;
+    lanes.body[offset + 2] = flex * motion;
+    lanes.body[offset + 3] = verticalDynamics * motion;
     lanes.mind[offset] = shimmer;
     lanes.mind[offset + 1] = this.environmentIntegration;
     lanes.mind[offset + 2] = Math.max(shimmer, this.environmentCoherence);
@@ -488,9 +725,20 @@ export class XenomimicRenderer {
       this.environmentDrive + angularEnergy * 0.16 + flex * 0.08,
     );
 
-    const hue =
-      (SPECIES_HUES[species]! + (polarity < 0 ? 0.49 : 0) + shimmer * 0.06 + activity * 0.025) % 1;
-    COLOR.setHSL(hue, 0.68 + activity * 0.24, 0.28 + energy * 0.13 + teleportFlash * 0.09);
+    let hue =
+      (SPECIES_HUES[species]! +
+        this.hueBias +
+        (polarity < 0 ? 0.49 : 0) +
+        shimmer * 0.06 +
+        activity * 0.025 +
+        this.morphWave * 0.08) %
+      1;
+    if (hue < 0) hue += 1;
+    COLOR.setHSL(
+      hue,
+      clamp01(this.satMul + activity * 0.24),
+      clamp01(this.lightBase + energy * 0.13 + teleportFlash * 0.09 + this.morphWave * 0.12),
+    );
     COLOR.toArray(this.colorArrays[species]!, slot * COLOR_COMPONENTS);
   };
 
@@ -554,6 +802,36 @@ export class XenomimicRenderer {
     }
   }
 
+  /** RENDER button — unique xenomimic grammar (not entity FX, not Archon jewel). */
+  setRenderMode(mode: RenderMode): void {
+    if (this.disposed) return;
+    this.renderMode = mode;
+    this.applyCompositeSkin();
+  }
+
+  /**
+   * BRUTAL button — {@link XENOMIMIC_BRUTAL_STYLES} (or off). Not Archon godform, not entity freakshow.
+   * @param styleIdx -1 off, else 0..length-1
+   */
+  setBrutalStyle(styleIdx: number): void {
+    if (this.disposed) return;
+    if (!Number.isFinite(styleIdx) || styleIdx < 0) this.brutalStyleIdx = -1;
+    else this.brutalStyleIdx = Math.min(XENOMIMIC_BRUTAL_STYLES.length - 1, Math.floor(styleIdx));
+    this.applyCompositeSkin();
+  }
+
+  /** Alien shudder envelope on BRUTAL press. */
+  setMorphWave(wave: number, seed = 0): void {
+    if (this.disposed) return;
+    this.morphWave = clamp01(wave);
+    this.morphSeed = seed | 0;
+  }
+
+  get brutalStyleName(): string {
+    if (this.brutalStyleIdx < 0) return 'off';
+    return XENOMIMIC_BRUTAL_STYLES[this.brutalStyleIdx]?.name ?? 'off';
+  }
+
   /** Allocation-free mirror of the published object population into fixed GPU buffers. */
   sync(
     population: XenomimicPopulation,
@@ -563,6 +841,7 @@ export class XenomimicRenderer {
     if (this.disposed) return;
     this.counts.fill(0);
     this.timeUniform.value = finite(time);
+    if (this.morphWave > 0) this.morphWave = Math.max(0, this.morphWave - 0.008);
     const chaos = clamp01(environment.chaos);
     const entropy = clamp01(environment.entropy);
     const weather = clamp01(environment.weather);
@@ -615,5 +894,46 @@ export class XenomimicRenderer {
     attribute.clearUpdateRanges();
     attribute.addUpdateRange(0, count);
     attribute.needsUpdate = true;
+  }
+
+  private applyCompositeSkin(): void {
+    const render = XENOMIMIC_RENDER_SKINS[this.renderMode] ?? XENOMIMIC_RENDER_SKINS.solid;
+    const brutal = this.brutalStyleIdx >= 0 ? XENOMIMIC_BRUTAL_STYLES[this.brutalStyleIdx] : null;
+
+    if (brutal) {
+      this.material.metalness = brutal.metalness;
+      this.material.roughness = brutal.roughness;
+      this.material.color.setHSL(
+        brutal.hueBias,
+        Math.min(1, brutal.sat + 0.15),
+        brutal.light + 0.08,
+      );
+      this.material.emissive.setRGB(brutal.emissive[0], brutal.emissive[1], brutal.emissive[2]);
+      this.material.emissiveIntensity = brutal.emissiveIntensity * 1.35;
+      this.material.wireframe = false;
+      const transparent = 'transparent' in brutal && brutal.transparent === true;
+      this.material.transparent = transparent;
+      this.material.opacity = transparent && 'opacity' in brutal ? (brutal.opacity as number) : 1;
+      this.material.depthWrite = !transparent;
+      this.hueBias = brutal.hueBias;
+      this.satMul = brutal.sat;
+      this.lightBase = brutal.light;
+      this.motionMul = brutal.motion * 1.2;
+    } else {
+      this.material.metalness = render.metalness;
+      this.material.roughness = render.roughness;
+      this.material.color.setHSL(render.hueBias || 0.02, render.sat, render.light);
+      this.material.emissive.setRGB(0.11, 0.025, 0.018);
+      this.material.emissiveIntensity = render.emissiveBoost;
+      this.material.wireframe = render.wireframe;
+      this.material.transparent = render.transparent;
+      this.material.opacity = render.opacity;
+      this.material.depthWrite = !render.transparent;
+      this.hueBias = render.hueBias;
+      this.satMul = render.sat;
+      this.lightBase = render.light;
+      this.motionMul = render.motion;
+    }
+    this.material.needsUpdate = true;
   }
 }

@@ -1105,7 +1105,11 @@ export class World {
       lifecycleSink: (event) => this.onXenomimicLifecycle(event),
     });
     this.xenomimicsRender = new XenomimicRenderer(this.engine.scene);
+    this.xenomimicsRender.setRenderMode(this.state.renderMode);
     this.xenomimicConnectome = new XenomimicConnectome(this.engine.scene);
+    this.xenomimicConnectome.setVisible(false); // psionic twins — no physical tether cosmetics
+    // HMR / stale dist: kill leftover LineSegments named as xenomimic tethers from older builds.
+    this.purgeOrphanXenomimicTethers();
 
     // Lore precedes the taxonomy: phyla are lore-named at mint (CONTRACTS V3.2).
     this.lore = new LoreEngine(this.persisted.seed);
@@ -3643,8 +3647,9 @@ export class World {
     this.persisted.renderIdx = RENDER_MODES.indexOf(mode);
     this.save();
     this.entities.setRenderMode(mode);
+    this.xenomimicsRender.setRenderMode(mode);
     this.alphabetPantheon.setWireHalosVisible(mode === 'wire');
-    this.hud.showSector('VISION · ' + mode.toUpperCase());
+    this.hud.showSector('VISION · ' + mode.toUpperCase() + ' · XENO UNIQUE');
   }
 
   /** V41: CAMERA — cycle orbit → 3rd-person → 1st-person (the follow rigs in {@link updateHeroCamera}). */
@@ -3900,7 +3905,10 @@ export class World {
         activation += clamp(entity.userData.act / 4, 0, 1);
       }
       this.xenomimicEntityActivation = sample.length > 0 ? activation / sample.length : 0;
+      this.xenomimicConnectome.setVisible(false);
       this.xenomimicConnectome.sync(this.xenomimics, sample, time);
+      // Sticky HMR: re-sweep orphan twin cords for the first ~4s, then rare.
+      if (state.frame < 240 || state.frame % 300 === 0) this.purgeOrphanXenomimicTethers();
       const camera = this.engine.camera.position;
       const nearest = this.xenomimics.nearestBody(camera.x, camera.z, 120);
       this.xenomimicProximity = nearest
@@ -5536,6 +5544,9 @@ export class World {
     this.brutalMorphWave = 1;
     this.brutalMorphSeed++;
     this.brutalMorphCursor = 0;
+    // Xenomimics: rare alien BRUTAL skins (PSIONIC-VOID / ICHOR-GLASS / …) — NOT concrete, NOT Archon.
+    this.xenomimicsRender.setBrutalStyle(this.brutalStyleIdx);
+    this.xenomimicsRender.setMorphWave(1, this.brutalMorphSeed);
     this.entityBrains.perturbBrains(this.genomeRng);
     for (let i = 0; i < this.superCreatures.length; i++) {
       this.superCreatures[i]!.perturbMind(this.uiRng);
@@ -5551,15 +5562,16 @@ export class World {
         /* CustomEvent unsupported (headless) — the tint is cosmetic, so skipping is fine */
       }
     }
+    const xenoSkin = this.xenomimicsRender.brutalStyleName;
     if (on) {
       const style = BRUTAL_STYLES[this.brutalStyleIdx]!;
       this.syncBrutalButton(style.glyph, style.name, style.title);
-      this.hud.showSector(`${style.name} ${style.glyph} · ${style.title.toUpperCase()}`);
-      this.audit.record('brutalism', { on, style: style.name });
+      this.hud.showSector(`${style.name} ${style.glyph} · ARCHON · XENO ${xenoSkin}`);
+      this.audit.record('brutalism', { on, style: style.name, xeno: xenoSkin });
     } else {
       this.syncBrutalButton('▦', 'BRUTAL', 'cycle super-creature rendering');
-      this.hud.showSector('GOD-JEWEL ✦ · DEFAULT SKIN');
-      this.audit.record('brutalism', { on, style: 'off' });
+      this.hud.showSector('GOD-JEWEL ✦ · DEFAULT · XENO OFF');
+      this.audit.record('brutalism', { on, style: 'off', xeno: 'off' });
     }
     return on;
   }
@@ -5570,6 +5582,54 @@ export class World {
       btn.textContent = `${glyph} ${name}`;
       btn.title = `${name} — ${title} (also: B key)`;
       btn.setAttribute('aria-label', `Cycle brutal super-creature rendering: ${name}`);
+    }
+  }
+
+  /**
+   * Kill leftover twin-tether LineSegments from older builds / partial HMR.
+   * Xenomimic bipolar bonds are psionic only — never re-create cosmetic cords.
+   */
+  private purgeOrphanXenomimicTethers(): void {
+    const scene = this.engine.scene;
+    const doomed: THREE.Object3D[] = [];
+    scene.traverse((obj) => {
+      const name = (obj.name || '').toLowerCase();
+      if (!name) return;
+      const looksXeno =
+        name.includes('xeno') || name.includes('mimic') || name.includes('xenomimic');
+      const looksTether =
+        name.includes('connectome') ||
+        name.includes('tether') ||
+        name.includes('causal') ||
+        name.includes('twin') ||
+        name.includes('cord') ||
+        name.includes('bond') ||
+        name.includes('link');
+      const legacyExact =
+        name === 'xenomimiccausalconnectome' ||
+        name === 'xeno-mimic-causal-connectome' ||
+        name === 'xenomimic-connectome' ||
+        name === 'xenoconnectome';
+      if (!(legacyExact || (looksXeno && looksTether))) return;
+      if (
+        obj instanceof THREE.LineSegments ||
+        obj instanceof THREE.Line ||
+        obj instanceof THREE.LineLoop
+      ) {
+        doomed.push(obj);
+      }
+    });
+    for (let i = 0; i < doomed.length; i++) {
+      const obj = doomed[i]!;
+      obj.removeFromParent();
+      const line = obj as THREE.LineSegments;
+      line.geometry?.dispose();
+      const mat = line.material;
+      if (Array.isArray(mat)) {
+        for (let m = 0; m < mat.length; m++) mat[m]?.dispose();
+      } else {
+        mat?.dispose();
+      }
     }
   }
 
@@ -5751,9 +5811,11 @@ export class World {
         this.persisted.renderIdx = RENDER_MODES.indexOf(mode);
         this.save();
         this.entities.setRenderMode(mode);
+        // Xenomimics get their own RENDER skins (wire/ghost/neon/… grammar ≠ entity FX).
+        this.xenomimicsRender.setRenderMode(mode);
         this.alphabetPantheon.setWireHalosVisible(mode === 'wire');
-        this.hud.showSector('RENDER: ' + mode.toUpperCase());
-        this.audit.record('render-mode', { mode });
+        this.hud.showSector('RENDER: ' + mode.toUpperCase() + ' · XENO UNIQUE');
+        this.audit.record('render-mode', { mode, xeno: true });
         return mode;
       },
       cycleView: () => {
@@ -5791,8 +5853,10 @@ export class World {
       toggleConnectomeWeb: (): boolean => {
         this.unlock();
         const on = !this.connectome.webVisible;
+        // Entity axon web only. Xenomimic bipolar bonds stay psionic — never re-enable cosmetic tethers.
         this.connectome.setWebVisible(on);
-        this.xenomimicConnectome.setVisible(on);
+        this.xenomimicConnectome.setVisible(false);
+        this.purgeOrphanXenomimicTethers();
         this.hud.showSector(on ? 'NEURAL WEB · ON' : 'NEURAL WEB · OFF');
         this.audit.record('connectome-web', { visible: on });
         return on;
