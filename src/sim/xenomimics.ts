@@ -223,7 +223,8 @@ export class XenomimicPopulation {
   private readonly lifecycleSink: XenomimicLifecycleSink | undefined;
   /** Latest composition-root sanctuary query; also hardens public predation sinks. */
   private safeZoneAt:
-    ((x: number, z: number, pairId?: number, role?: 0 | 1) => boolean) | undefined;
+    | ((x: number, z: number, pairId?: number, role?: 0 | 1) => boolean)
+    | undefined;
   /** MEASURED provenance receipt for this population's own seeded generator (see {@link rngProvenanceReceipt}). */
   private readonly rngProvenance: RngProvenance;
 

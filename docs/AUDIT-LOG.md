@@ -600,7 +600,7 @@ across and puts it to work — a genuinely SMARTER learner, not a bigger one.
 - **`src/sim/ad-mlp.ts` — `mlpTrainStepCurvature`: exact Gauss-Newton-DIAGONAL preconditioned step** with
   Levenberg–Marquardt damping. Curvature Hᵍⁿᵢᵢ = 2·Σₖ(∂fₖ/∂θᵢ)² is the PSD part of the MSE Hessian, computed
   exactly by one extra reverse pass seeded at the network output (the output-Jacobian). `mlpTrainStep` is
-  UNTOUCHED — apex-brain, faculties-pantheon, super-* keep their byte-identical first-order trajectories.
+  UNTOUCHED — apex-brain, faculties-pantheon, super-\* keep their byte-identical first-order trajectories.
 - **`src/sim/digital-biologics.ts` — the LIVE petri self-model now learns by curvature.** `stepBiologic`'s
   `learn=true` path (driven live in `petri-dish.ts:542`) swaps SGD → `mlpTrainStepCurvature`. Still purely
   observational (feeds only `selfModelErr`, never adFitness/consciousness/selection ⇒ every petri golden and the
@@ -785,7 +785,7 @@ another percept axis). The value head (Pass 2) forecasts energy ONE beat ahead �
 forecasts it FORESIGHT_K=6 beats ahead → proactive foraging.
 
 - **`src/sim/super-creature.ts` — a learned FORESIGHT head (18→6→1, `SUPER_FORESIGHT_PARAMS`=121).** Trained
-  by exact Eshkol-AD backprop on the DELAYED pair (percept_{t−6} → energy_t), held in a 6-deep percept ring,
+  by exact Eshkol-AD backprop on the DELAYED pair (percept\_{t−6} → energy_t), held in a 6-deep percept ring,
   so it learns the longer arc rather than the next step. A predicted FUTURE drop becomes `foresightUrgency`,
   which pulls toward feeding/banking energy BEFORE hunger arrives. Fifth decorrelated substream
   (`seed ^ 0x0f0e51a7`); a `foresight:false` seam is the ablation control for the plan bias.

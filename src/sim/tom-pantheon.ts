@@ -60,7 +60,12 @@ export type TomOrgan = (typeof TOM_ORGANS)[number];
 
 /** The six distinct belief-update mechanism families. */
 export type TomKind =
-  'additive' | 'bayesian' | 'recursive' | 'temporal' | 'deception' | 'coalition';
+  | 'additive'
+  | 'bayesian'
+  | 'recursive'
+  | 'temporal'
+  | 'deception'
+  | 'coalition';
 
 /** Maps each organ NAME to its mechanism family — the names are matched by distinct algorithms, not decor. */
 const ORGAN_KIND: Record<TomOrgan, TomKind> = {

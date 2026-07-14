@@ -33,3 +33,8 @@ mcps/**
 # copies (.memory/decisions.md …) alongside the tracked dated snapshots; without this they trip
 # `prettier --check .` and red the LOCAL gate (CI runs on a clean checkout and is unaffected).
 .memory
+
+# Frozen V4 evidence authority. These source bytes are sealed by the committed
+# preregistration and artifact manifests; reformatting would invalidate those hashes.
+scripts/organism-intelligence-v4-protocol.ts
+scripts/organism-intelligence-v4/ordinary.ts

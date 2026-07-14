@@ -62,7 +62,11 @@ export type DepthKind =
 
 /** How an external repository is represented without conflating a facade with copied source. */
 export type TsotchkeIntegrationMode =
-  'direct-port' | 'deterministic-facade' | 'harvest' | 'fenced' | 'meta';
+  | 'direct-port'
+  | 'deterministic-facade'
+  | 'harvest'
+  | 'fenced'
+  | 'meta';
 
 /**
  * Explicit semantic destination for a represented repository's brain contribution. The order is a

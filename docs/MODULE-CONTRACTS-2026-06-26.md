@@ -231,7 +231,9 @@ See `src/sim/tsotchke-*.ts`, registry, README, reports for wiring matrix.
 ```ts
 export const WEATHERS = ['CLEAR', 'RAIN', 'STORM', 'AURORA', 'VOID', 'FOG'] as const;
 export type Weather = (typeof WEATHERS)[number];
-export const BEHAVIORS = [/* the 26 names from legacy lines 277-279, same order */] as const;
+export const BEHAVIORS = [
+  /* the 26 names from legacy lines 277-279, same order */
+] as const;
 export type Behavior = (typeof BEHAVIORS)[number];
 export const VIEW_MODES = ['free', 'orbit', 'fly', 'top'] as const;
 export type ViewMode = (typeof VIEW_MODES)[number];
@@ -600,7 +602,18 @@ File ownership is EXCLUSIVE — the named writer is the only agent touching a fi
 // Minimal statevector quantum register. Backend: pure TS (2^n complex amps as a
 // Float64Array pair, allocation-free gate application). n <= 8 enforced.
 export type GateName =
-  'h' | 'x' | 'y' | 'z' | 's' | 't' | 'rx' | 'ry' | 'rz' | 'cx' | 'cz' | 'swap';
+  | 'h'
+  | 'x'
+  | 'y'
+  | 'z'
+  | 's'
+  | 't'
+  | 'rx'
+  | 'ry'
+  | 'rz'
+  | 'cx'
+  | 'cz'
+  | 'swap';
 export class QuantumRegister {
   constructor(qubits: number); // throws if qubits < 1 or > 8
   readonly qubits: number;

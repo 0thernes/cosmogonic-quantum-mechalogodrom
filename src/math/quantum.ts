@@ -17,7 +17,18 @@ import type { Rng } from './rng';
 export type Complex = { re: number; im: number };
 
 export type GateName =
-  'h' | 'x' | 'y' | 'z' | 's' | 't' | 'rx' | 'ry' | 'rz' | 'cx' | 'cz' | 'swap';
+  | 'h'
+  | 'x'
+  | 'y'
+  | 'z'
+  | 's'
+  | 't'
+  | 'rx'
+  | 'ry'
+  | 'rz'
+  | 'cx'
+  | 'cz'
+  | 'swap';
 
 /** Hard cap on register width — 2^8 = 256 amplitudes keeps every op trivially in frame budget. */
 const MAX_QUBITS = 8;
