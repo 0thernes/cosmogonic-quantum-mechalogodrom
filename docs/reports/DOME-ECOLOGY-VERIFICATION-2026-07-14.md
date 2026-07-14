@@ -14,21 +14,26 @@ Evidence labels used below:
   semantic scenario in this report.
 - **Pending** — not yet demonstrated by the required final run or deployed GitHub Pages site.
 
-The final-tree Windows coverage receipt is **3,224 pass, 0 fail**, with **3,545,827 expectations across
-361 files** and **93.61% line / 91.61% function coverage**. The portable published floors remain
-**84.64% / 82.21%**. The aggregate repository gate, one atomic phone-plus-desktop browser run, and
-deployed Pages verification remain pending as of this report revision.
+The final merged-tree Windows coverage receipt is **3,271 pass, 0 fail**, with **3,551,782
+expectations across 365 files** and **93.57% line / 91.56% function coverage**. The portable
+published floors remain **84.64% / 82.21%**. The exact GitHub Pages artifact also passed one atomic,
+serial phone-plus-desktop Chromium run. The final post-report aggregate gate and deployed Pages
+verification remain pending as of this report revision.
 
 ## Xenomimic tether: root cause and closure
 
 ### Root cause
 
-The defect had two independent causes:
+The current owner screenshot and the historical Xenomimic implementation exposed three related but
+distinct causes:
 
-1. A legacy Xenomimic connectome rendered the logical twin/connectome relationship as Three.js line
-   geometry. Named `Line`, `LineLoop`, or `LineSegments` objects could also survive a partial hot reload
-   in a long-lived scene.
-2. Xenomimic movement previously used an origin-centred radial projection and reversed heading at that
+1. The visible cross-ground line in the current scene was the default-visible Entity connectome axon
+   web in `src/sim/connectome.ts`, not the Xenomimic logical twin bond. Because its endpoints followed
+   organisms, it visually presented as a creature tether.
+2. A historical Xenomimic connectome path could render the logical twin/connectome relationship as
+   Three.js line geometry, and named `Line`, `LineLoop`, or `LineSegments` remnants could survive a
+   partial hot reload in a long-lived scene.
+3. Xenomimic movement previously used an origin-centred radial projection and reversed heading at that
    radius. Even without a visible line, that home-radius restriction behaved like an invisible
    navigation leash.
 
@@ -42,6 +47,10 @@ percept accounting; rendering or physically constraining that relationship was t
   particle. Its constructor deliberately ignores the scene argument.
 - `visible` is permanently `false`; `setVisible()` is a no-op. `World` explicitly calls
   `setVisible(false)`, including around the independent Entity neural-web control.
+- `src/sim/connectome.ts` now permanently retires the Entity axon-web renderer too. Its
+  `LineSegments` stays invisible with draw range zero, and `setWebVisible()` is a forced-invisible
+  compatibility no-op. Link construction, topology pairs, activation propagation, GraphMind
+  communities, tribes, and telemetry continue to operate without geometry or colour-buffer writes.
 - `World.purgeOrphanXenomimicTethers()` delegates to the tested
   `purgeLegacyXenomimicTethers()` helper. It removes only legacy line primitives whose names identify
   them as Xenomimic/twin/connectome/tether objects, disposes their geometry and single or array-backed
@@ -62,6 +71,9 @@ percept accounting; rendering or physically constraining that relationship was t
 - **Automated:** `tests/xenomimic-connectome.test.ts` proves no line-renderer construction, permanent
   invisibility, bounded logical links, allocation-free synchronization, and reference cleanup after
   shrink/disposal.
+- **Automated:** `tests/connectome.test.ts` proves the scene-level axon web is invisible from
+  construction, cannot be re-enabled, writes no geometry, and still computes nonzero links and topology
+  pairs. `tests/graph-mind.test.ts` proves the retained graph still drives communities and activation.
 - **Automated:** `tests/xenomimic-cosmetics.test.ts` traverses a real Three.js scene and finds no
   Xenomimic `Line`, `LineLoop`, or `LineSegments`; it also plants historic named `Line`, `LineLoop`, and
   `LineSegments` remnants, proves the purge removes all three, verifies geometry and material-array
@@ -334,25 +346,34 @@ restricted to localhost/127.0.0.1. No Big Tree or Xenomimic debug line is enable
 
 ## Automated test receipt
 
-The focused ecology/tether/persistence/harness run completed **111 pass, 0 fail** with **4,248
-expectations across 10 files**:
+The final merged-tree cross-system ecology/tether run completed **207 pass, 0 fail** with **10,729
+expectations across 17 files**. It covered the production activity bridge, canonical and fauna visitors,
+zone/world composition, food registry and Crystal lifecycle, dome feeding, Shoggoth/Titan/Puppet/Apex
+suppression, Entity and Xenomimic connectomes, GraphMind, and Xenomimic cosmetics. The repository-wide
+coverage run then completed **3,271 pass, 0 fail** with **3,551,782 expectations across 365 files**.
 
 ```text
-tests/browser-visual-smoke-harness.test.ts
-tests/edible-resource.test.ts
-tests/store.test.ts
-tests/crystal-ecosystem.test.ts
-tests/tree-creature-teaching.test.ts
-tests/big-tree-world-integration.test.ts
+tests/big-tree-activity-bridge.test.ts
+tests/big-tree-fauna-source-integration.test.ts
 tests/big-tree-fauna-visitors.test.ts
 tests/big-tree-visitors.test.ts
-tests/big-tree-performance.test.ts
+tests/big-tree-world-integration.test.ts
+tests/big-tree-zone.test.ts
+tests/connectome.test.ts
+tests/crystal-ecosystem.test.ts
+tests/dome-feeding.test.ts
+tests/edible-resource.test.ts
+tests/graph-mind.test.ts
+tests/puppet-masters.test.ts
+tests/shoggoths.test.ts
+tests/super-hunt.test.ts
+tests/titans.test.ts
 tests/xenomimic-connectome.test.ts
+tests/xenomimic-cosmetics.test.ts
 ```
 
-Additional directly relevant suites include `tests/big-tree-zone.test.ts`,
-`tests/tree-creature-brain.test.ts`, `tests/xenomimic-cosmetics.test.ts`, and
-`tests/xenomimics.test.ts`; they are part of the full receipt above.
+Additional directly relevant suites, including performance, observability, persistence, tree-resident
+brain/teaching, NHI, lifecycle wiring, Pages server, and free-movement tests, are part of the full receipt.
 
 The performance-invariant suite uses 10,000 ordinary organisms plus 2,000 Xenomimics, a 72-visitor
 capacity, fixed 64-candidate polling, 72 concurrent mixed-species social visitors, and 64 full
@@ -363,21 +384,21 @@ deadline scans, and linear active-identity lookup.
 
 Fresh local microbenchmark on 2026-07-14:
 
-- CPU: Intel Core Ultra 9 275HX, observed clock about 3.53 GHz;
+- CPU: Intel Core Ultra 9 275HX, observed clock about 3.64 GHz;
 - runtime: Bun 1.3.14, x64 Windows;
 - command: `bun bench/big-tree-ecology.bench.ts`.
 
-| Scenario                                          |   Average |   Minimum |       p75 |       p99 |
-| ------------------------------------------------- | --------: | --------: | --------: | --------: |
-| 20,000 food records, no deadline due              |   1.87 ns |   1.25 ns |   1.88 ns |   6.20 ns |
-| Renew 72 live food reservations                   |   1.54 us |   1.10 us |   1.69 us |   1.80 us |
-| Snapshot a clean sparse 20,000-slot pool          |  64.14 us |  38.30 us |  67.90 us | 190.80 us |
-| Stringify the clean sparse snapshot               |  81.49 ns |  56.59 ns |  86.99 ns | 140.48 ns |
-| Step 72 active visit records                      | 230.30 ns | 176.86 ns | 240.45 ns | 282.03 ns |
-| Match/update 59 unmatched fauna social candidates |  43.95 us |  28.70 us |  45.60 us |  86.10 us |
+| Scenario                                          |  Average |  Minimum |      p75 |       p99 |
+| ------------------------------------------------- | -------: | -------: | -------: | --------: |
+| 20,000 food records, no deadline due              |  1.81 ns |  1.22 ns |  1.83 ns |   5.64 ns |
+| Renew 72 live food reservations                   |  1.73 us |  1.22 us |  1.79 us |   1.95 us |
+| Snapshot a clean sparse 20,000-slot pool          | 75.77 us | 33.40 us | 80.30 us | 347.90 us |
+| Stringify the clean sparse snapshot               | 81.49 ns | 56.30 ns | 87.01 ns | 133.40 ns |
+| Step 72 active visit records                      |  4.50 ns |  2.10 ns |  4.79 ns |   7.89 ns |
+| Match/update 50 unmatched fauna social candidates | 82.51 us | 52.40 us | 85.20 us | 142.90 us |
 
-The 59-candidate fauna fixture performs 118 adapter reads per update (two linear passes) rather than a
-nested adapter-read scan. Food selection uses deterministic free lists; deadlines use indexed heaps;
+The 50-candidate fauna fixture performs one source read per active candidate rather than a nested
+adapter-read scan. Food selection uses deterministic free lists; deadlines use indexed heaps;
 active visit work is capacity-bounded; food hide/restore uses a single instance-matrix update range.
 
 These microbenchmarks verify bounded component costs on this machine. They do **not** establish whole-world
@@ -385,7 +406,7 @@ These microbenchmarks verify bounded component costs on this machine. They do **
 
 ## Local browser validation
 
-Separate local natural-`requestAnimationFrame` smoke runs passed for phone and desktop. The harness does
+One atomic, serial local natural-`requestAnimationFrame` smoke passed for phone and desktop. The harness does
 not call the localhost `step()` hook or `gl.readPixels`; it gates bounded native rAF batches, captures an
 unmodified full UI screenshot plus a separately masked canvas-only screenshot, samples PNG output, checks
 camera framing, exercises a habitat-stress interval, and writes stage/failure artifacts.
@@ -395,12 +416,14 @@ camera framing, exercises a habitat-stress interval, and writes stage/failure ar
 | Viewport / DPR               | 390x844 / 2 | 1280x720 / 1 |
 | Drawing buffer               |    780x1688 |     1280x720 |
 | Flora instances              |      20,800 |       60,000 |
-| World frame at capture       |          11 |            5 |
-| Canvas-only average luma     |       70.43 |        49.29 |
-| Canvas-only colour buckets   |         445 |          275 |
+| World frame at capture       |           6 |            4 |
+| Canvas-only average luma     |       70.86 |        49.22 |
+| Canvas-only colour buckets   |         451 |          272 |
 | Console errors / page errors |       0 / 0 |        0 / 0 |
-| Stress frames / duration     | 3 / 26.61 s |  2 / 43.24 s |
-| Reported stress rate         |   0.113 FPS |    0.046 FPS |
+| Failed responses / requests  |       0 / 0 |        0 / 0 |
+| Active tree visitors         |           9 |            9 |
+| Stress frames / duration     | 3 / 34.69 s |  2 / 55.22 s |
+| Reported stress rate         |   0.086 FPS |    0.036 FPS |
 
 Both runs used Chromium's ANGLE **SwiftShader** software Vulkan renderer. Their explicit measurement class
 is `headless-browser-liveness-not-production-fps`; the very low rates must not be presented as a native-GPU
@@ -411,10 +434,10 @@ Worker status was intentionally `dormant-main-thread`, matching the accepted run
 wilderness worker asset was built and served successfully, but no worker pool was active. This report does
 not claim operational worker offload.
 
-The two passing tier artifacts came from **separate** runs. The patched harness now writes a status-bearing
-atomic summary (`running`, `failed`, or `passed`) with requested/completed tiers, but one final default
-phone-plus-desktop run has not yet produced that combined receipt. The deployed GitHub Pages version has
-also not yet been verified.
+The status-bearing atomic summary records `status: passed`, requested/completed tiers
+`[phone, desktop]`, every successful lifecycle stage, zero console/page/network failures, fixed food
+census equality, sanctuary/visitor/neural diagnostics, worker-asset HTTP 200, and the four inspected PNG
+paths under `output/playwright/`. The deployed GitHub Pages version has not yet been verified.
 
 ## Manual scenario accounting
 
@@ -432,22 +455,21 @@ single human-observed live checklist:
 | Crowding and blocked navigation                            | 72-capacity stress, multiple slots, stuck reroute/timeout tests                   | Automated                                               |
 | Repeated resource/visit cleanup                            | 64-cycle pool stress plus reset/despawn/dispose tests                             | Automated                                               |
 | Save/load/reset                                            | Primitive checkpoint, corruption, reset, lifecycle tests                          | Automated; application restart manual pass pending      |
-| Production build and deployed Pages                        | Not yet run for the final tree                                                    | Pending                                                 |
+| Production build and deployed Pages                        | Local 117-artifact Pages build + atomic smoke passed                              | Deployed-site verification pending                      |
 
 ## Remaining limitations and final acceptance blockers
 
 1. Run the final repository-wide gate after all report/surface edits.
-2. Run one default atomic phone-plus-desktop browser smoke and retain the new status-bearing summary.
-3. Verify the production build and deployed GitHub Pages commit, assets, boot, console, and screenshots.
-4. Perform and document the dedicated live semantic checklist, especially multi-angle Xenomimic states,
+2. Verify the deployed GitHub Pages commit, assets, boot, console, and screenshots.
+3. Perform and document the dedicated live semantic checklist, especially multi-angle Xenomimic states,
    naturally arriving hostility, long-form visit diversity, and repeated application restart.
-5. Profile whole-world frame time and memory on representative native GPUs. Current SwiftShader evidence is
+4. Profile whole-world frame time and memory on representative native GPUs. Current SwiftShader evidence is
    liveness only and cannot validate 60–120 FPS.
-6. Decide whether `WildernessPopulation` should become a direct visitor. NHI and player hero/avatar
+5. Decide whether `WildernessPopulation` should become a direct visitor. NHI and player hero/avatar
    exclusions are intentional; wilderness absence is currently an unsupported category.
-7. Audit any future projectile, trap, area-effect, or delayed-damage subsystem against the shared
+6. Audit any future projectile, trap, area-effect, or delayed-damage subsystem against the shared
    sanctuary predicate before extending the safe-zone claim to it.
-8. Do not describe social animations as general learning. The verified transfers are the separate
+7. Do not describe social animations as general learning. The verified transfers are the separate
    one-shot ordinary-organism `1 -> 0` strategy imitation and bounded same-species resident neural-policy
    blend; neither authorizes a cross-species, general-intelligence, consciousness, or sentience claim.
 

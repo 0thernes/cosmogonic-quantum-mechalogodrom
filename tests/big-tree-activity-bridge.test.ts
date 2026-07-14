@@ -100,6 +100,8 @@ describe('big-tree production activity bridge', () => {
     performBigTreeActivity(BIG_TREE_OWNER_ORDINARY, 42, body, BigTreeActivity.Eat, 1);
     performBigTreeActivity(BIG_TREE_OWNER_ORDINARY, 42, body, BigTreeActivity.Rest, 1);
     performBigTreeActivity(BIG_TREE_OWNER_ORDINARY, 42, body, BigTreeActivity.None, 1);
+    performBigTreeActivity(BIG_TREE_OWNER_ORDINARY, 42, body, BigTreeActivity.Socialize, -1);
+    performBigTreeActivity(BIG_TREE_OWNER_ORDINARY, 42, body, BigTreeActivity.Observe, Number.NaN);
     expect(body.userData.act).toBe(1);
     expect(body.userData.payoff).toBe(0.3);
   });

@@ -2599,6 +2599,7 @@ export class CrystalEcosystem {
     this.neuralLastMotorX = 0;
     this.neuralLastMotorZ = 0;
     this.neuralLastSocialDrive = 0;
+    this.treeTeaching.reset();
     if (this.unreadyTreeBrains === 0) this.neuralLastFallbackReason = 'none';
     this.resetResidentFoodHandles(now);
   }

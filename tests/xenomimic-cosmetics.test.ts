@@ -144,10 +144,14 @@ describe('xenomimic RENDER + BRUTAL skins are unique APIs', () => {
     // cannot catch a toggle-local regression drawing xenomimic lines through another object.
     const toggleStart = src.indexOf('toggleConnectomeWeb');
     expect(toggleStart).toBeGreaterThan(0);
-    const toggleBody = src.slice(toggleStart, src.indexOf('return on;', toggleStart));
+    const toggleBody = src.slice(toggleStart, src.indexOf('return false;', toggleStart));
     expect(toggleBody).toContain('this.xenomimicConnectome.setVisible(false)');
     expect(toggleBody).toContain('this.purgeOrphanXenomimicTethers()');
     expect(toggleBody).not.toContain('new THREE.Line');
     expect(toggleBody).not.toContain('LineSegments');
+    // Owner 2026-07-14: the ENTITY axon-web lines are retired too — the key can only re-assert
+    // invisibility, never draw connection lines of any kind again.
+    expect(toggleBody).toContain('this.connectome.setWebVisible(false)');
+    expect(toggleBody).not.toContain('setWebVisible(on)');
   });
 });

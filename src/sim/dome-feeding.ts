@@ -76,10 +76,11 @@ export class DomeFeeding {
   /** Flat feeder positions collected each frame (x,y,z per slot). */
   private readonly feederXYZ = new Float32Array(MAX_FEEDERS * 3);
   /** Which system + member occupies each feeder slot this frame (meal write-back routing). */
-  private readonly feederRefs: (DomeFeeder | null)[] = new Array<DomeFeeder | null>(
-    MAX_FEEDERS,
-  ).fill(null);
-  private readonly feederMembers = new Int32Array(MAX_FEEDERS).fill(-1);
+  private readonly feederMember = new Int32Array(MAX_FEEDERS);
+  private readonly feederRefs: (DomeFeeder | null)[] = Array.from(
+    { length: MAX_FEEDERS },
+    () => null,
+  );
   private readonly respawns: { at: number; mi: number }[] = [];
   private respawnHead = 0;
   private readonly deathIndices: number[] = [];
@@ -175,8 +176,8 @@ export class DomeFeeding {
           xyz[o + 2] = z;
           // Remember WHO occupies this slot so a successful meal can replenish that member's
           // nutrition lane (leviathans decay without it; titans/puppeteers simply have no hook).
+          this.feederMember[fc] = memberIndex ?? -1;
           this.feederRefs[fc] = f;
-          this.feederMembers[fc] = memberIndex ?? -1;
           fc++;
           graze(x, z, GRAZE_PRESSURE, dt);
         });
@@ -190,6 +191,7 @@ export class DomeFeeding {
           // NHI backing bodies are consumption-immune; explicit lethal hazards are handled elsewhere.
           if (!e || e.userData.isNhi) continue;
           const p = e.position;
+          let caughtFeeder = -1;
           for (let g = 0; g < fc; g++) {
             const o = g * 3;
             if (harmAllowed !== undefined && !harmAllowed(xyz[o]!, xyz[o + 2]!, p.x, p.z)) {
@@ -204,13 +206,18 @@ export class DomeFeeding {
               onKill?.(e, i); // measure the devoured mind BEFORE disposal (weights + senses still live)
               this.deathIndices.push(i);
               this.respawns.push({ at: t + RESPAWN_DELAY, mi });
+              caughtFeeder = g;
               this.eaten++;
-              // Credit the meal to the member that caught it (closes the leviathan nutrition loop:
-              // decay is real, so its replenishment must be too).
-              const member = this.feederMembers[g] ?? -1;
-              if (member >= 0)
-                this.feederRefs[g]?.nourishFromDomeFood?.(member, DOME_FOOD_NUTRITION);
               break; // this organism is gone — stop checking feeders
+            }
+          }
+          // Credit exactly one meal to the member that caught it (closes the leviathan nutrition
+          // loop: decay is real, so its replenishment must be too).
+          if (caughtFeeder >= 0) {
+            const feeder = this.feederRefs[caughtFeeder];
+            const member = this.feederMember[caughtFeeder] ?? -1;
+            if (feeder?.nourishFromDomeFood !== undefined && member >= 0) {
+              feeder.nourishFromDomeFood(member, DOME_FOOD_NUTRITION);
             }
           }
         }

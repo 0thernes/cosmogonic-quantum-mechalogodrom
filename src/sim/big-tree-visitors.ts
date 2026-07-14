@@ -34,7 +34,7 @@ const NO_RESOURCE = -1;
 /** Structural subset implemented by `Entity`; lightweight tests need no Three.js dependency. */
 export interface BigTreeOrdinaryBody {
   readonly id: number;
-  readonly position: { x: number; y: number; z: number };
+  readonly position: { x: number; y?: number; z: number };
   readonly rotation?: { y: number };
   readonly userData: {
     /** Simulation-owned identity; unlike Object3D.id it is unaffected by unrelated render objects. */
@@ -55,7 +55,7 @@ export interface BigTreeOrdinaryBody {
     /** Heritable Prisoner's-Dilemma policy consumed by ordinary behavior outside the sanctuary. */
     strategy?: 0 | 1;
     nhiMinion?: boolean;
-    vel: { x: number; y: number; z: number };
+    vel: { x: number; y?: number; z: number };
   };
 }
 
@@ -154,6 +154,7 @@ export function performBigTreeActivity(
   activity: BigTreeActivity,
   dt: number,
 ): void {
+  if (!Number.isFinite(dt) || dt <= 0) return;
   if (ownerKind === BIG_TREE_OWNER_ORDINARY) {
     const data = (body as BigTreeOrdinaryBody).userData;
     if (activity === BigTreeActivity.Socialize && partnerId >= 0) {
@@ -1367,7 +1368,7 @@ export class BigTreeSpeciesVisitors {
     if (ownerKind === BIG_TREE_OWNER_ORDINARY) {
       const velocity = (body as BigTreeOrdinaryBody).userData.vel;
       velocity.x += (desiredX - velocity.x) * blend;
-      velocity.y += (desiredY - velocity.y) * blend;
+      velocity.y = (velocity.y ?? 0) + (desiredY - (velocity.y ?? 0)) * blend;
       velocity.z += (desiredZ - velocity.z) * blend;
     } else {
       const xenomimic = body as BigTreeXenomimicBody;
@@ -1383,7 +1384,7 @@ export class BigTreeSpeciesVisitors {
     if (ownerKind === BIG_TREE_OWNER_ORDINARY) {
       const velocity = (body as BigTreeOrdinaryBody).userData.vel;
       velocity.x *= damping;
-      velocity.y *= damping;
+      velocity.y = (velocity.y ?? 0) * damping;
       velocity.z *= damping;
     } else {
       const xenomimic = body as BigTreeXenomimicBody;
@@ -1434,7 +1435,9 @@ export class BigTreeSpeciesVisitors {
 
   /** Xenomimics are planar; zero is only a diagnostic target and never enters their steering. */
   private yOf(ownerKind: number, body: VisitorBody): number {
-    return ownerKind === BIG_TREE_OWNER_ORDINARY ? (body as BigTreeOrdinaryBody).position.y : 0;
+    return ownerKind === BIG_TREE_OWNER_ORDINARY
+      ? ((body as BigTreeOrdinaryBody).position.y ?? 0)
+      : 0;
   }
 
   private energyOf(ownerKind: number, body: VisitorBody): number {

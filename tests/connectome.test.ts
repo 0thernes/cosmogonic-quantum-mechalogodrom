@@ -133,13 +133,25 @@ describe('Connectome — bounded link graph + finite activation, deterministic r
     expect(actTrace(b.entities)).toEqual(actTrace(a.entities));
   });
 
-  test('axon web renders by default and setWebVisible toggles the layer', () => {
-    const { conn } = makeWorld(0x4400aa);
-    expect(conn.webVisible).toBe(true);
-    conn.setWebVisible(false);
+  test('connection lines are RETIRED: never visible, never drawable, while the graph keeps computing', () => {
+    // Owner 2026-07-14 (screenshot receipt): the cross-ground line webbing between creatures must
+    // be graphically invisible ALWAYS. Mirrors the xenomimic psionic-bond ruling.
+    const { ctx, conn, entities } = makeWorld(0x4400aa);
+    expect(conn.webVisible).toBe(false); // invisible from construction
+    conn.setWebVisible(true); // the setter is a deliberate no-op
     expect(conn.webVisible).toBe(false);
-    conn.setWebVisible(true);
-    expect(conn.webVisible).toBe(true);
+
+    arrangeDenseClique(entities); // guarantee in-reach neighbors so the graph provably advances
+    rebuildGrid(ctx, entities);
+    for (let f = 0; f < 30; f++) conn.update(1 / 60, f / 60);
+    // The GRAPH is fully live underneath: links + topology pairs advance for GraphMind/tribes.
+    expect(conn.links).toBeGreaterThan(0);
+    expect(conn.pairCount).toBeGreaterThan(0);
+    // But no line geometry is ever written or drawn — zero draw range, zero geometry floats.
+    const lines = connectomeLines(ctx)[0]!;
+    expect(lines.visible).toBe(false);
+    expect(lines.geometry.drawRange.count).toBe(0);
+    expect(conn.geometryFloatsWritten).toBe(0);
   });
 
   test('mega startup allocation follows the live population instead of the 600k-link ceiling', () => {

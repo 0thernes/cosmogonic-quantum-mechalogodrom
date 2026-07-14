@@ -284,8 +284,6 @@ export class EdibleResourceRegistry {
   private readonly indexById: ReadonlyMap<number, number>;
   /** ownerId → indices of live reserved/consuming claims; keeps releaseOwner O(claims held). */
   private readonly ownerClaims = new Map<number, Set<number>>();
-  /** Reused scratch for restore failures deferred within one update() drain. */
-  private readonly restoreDeferred: number[] = [];
   private readonly lifecycle: EdibleResourceVisualLifecycle;
   private readonly freePrevious: Int32Array;
   private readonly freeNext: Int32Array;
@@ -295,6 +293,8 @@ export class EdibleResourceRegistry {
   private readonly counts = new Int32Array(4);
   private readonly leaseHeap: IndexedMinHeap;
   private readonly respawnHeap: IndexedMinHeap;
+  /** Caller-update-local restore failures, preallocated so one bad visual cannot block later items. */
+  private readonly restoreRetryIndexes: Int32Array;
   private lifecycleErrorCount = 0;
   /** Monotonic dirty signal; representation-neutral transitions such as reserved -> consuming skip it. */
   private persistenceRevisionValue = 0;
@@ -312,6 +312,8 @@ export class EdibleResourceRegistry {
     this.freeNext = new Int32Array(definitions.length);
     this.freeNext.fill(-1);
     this.freeListed = new Uint8Array(definitions.length);
+    this.restoreRetryIndexes = new Int32Array(definitions.length);
+    this.restoreRetryIndexes.fill(-1);
     this.freeHead.fill(-1);
     this.freeTail.fill(-1);
 
@@ -537,6 +539,7 @@ export class EdibleResourceRegistry {
     assertFiniteAtLeast('now', now, 0);
     this.expireLeases(now);
     let restored = 0;
+    let retryCount = 0;
     for (;;) {
       const index = this.respawnHeap.peek();
       if (index < 0) break;
@@ -546,18 +549,20 @@ export class EdibleResourceRegistry {
       if (resource.state !== 'respawning') continue;
 
       if (!this.notify('restore', resource)) {
-        // The visual/collision resource is not ready, so it must not become edible yet. Defer it
-        // locally and keep draining — one failed restore must never head-of-line block other due
-        // items (including the other kind's pool bridged through the same callback pair).
-        this.restoreDeferred.push(index);
+        // Defer reinsertion until every other due record has had one chance this call; otherwise the
+        // same earliest failing ID would remain the heap head and starve later restorations.
+        this.restoreRetryIndexes[retryCount++] = index;
         continue;
       }
       this.makeAvailable(index);
       restored++;
     }
-    if (this.restoreDeferred.length > 0) {
-      for (const index of this.restoreDeferred) this.respawnHeap.insert(index);
-      this.restoreDeferred.length = 0;
+    for (let retry = 0; retry < retryCount; retry++) {
+      const index = this.restoreRetryIndexes[retry]!;
+      this.restoreRetryIndexes[retry] = -1;
+      if (!this.respawnHeap.insert(index)) {
+        throw new Error(`resource ${this.items[index]!.id} already has a respawn deadline`);
+      }
     }
     return restored;
   }
@@ -571,7 +576,7 @@ export class EdibleResourceRegistry {
     this.leaseHeap.clear();
     this.respawnHeap.clear();
     this.ownerClaims.clear();
-    this.restoreDeferred.length = 0;
+    this.restoreRetryIndexes.fill(-1);
     this.freePrevious.fill(-1);
     this.freeNext.fill(-1);
     this.freeListed.fill(0);

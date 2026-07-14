@@ -88,7 +88,7 @@ function makeCtx(seed: number, maxEntities: number): SimContext {
   };
 }
 
-/** Minimal apex stand-in exposing exactly the four methods SuperHunt uses. */
+/** Minimal apex stand-in exposing exactly the methods SuperHunt uses. */
 function mockApex(x: number, y: number, z: number) {
   const pos = new THREE.Vector3(x, y, z);
   return {

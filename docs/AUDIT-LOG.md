@@ -11,6 +11,65 @@ changed and why.
 
 ---
 
+## 2026-07-14 — Dome ecology final merged-tree verification and publication handoff
+
+The converged ecology tree now has a final Windows coverage receipt of **3,271 tests / 0 fail /
+3,551,782 expectations across 365 files**, measuring **93.57% line / 91.56% function coverage**; the
+portable published floors remain **84.64% / 82.21%**. A focused cross-system ecology/tether suite also
+completed **207 tests / 0 fail / 10,729 expectations across 17 files**.
+
+One status-bearing atomic browser run completed both requested tiers against the exact 117-artifact
+Pages build. Phone (390x844 at DPR 2) and desktop (1280x720 at DPR 1) produced nonblank canvas-only
+receipts, nine active tree visitors each, worker-asset HTTP 200, and zero console errors, page errors,
+failed responses, or failed requests. Chromium used ANGLE SwiftShader, so its 0.086/0.036 functional
+frame rates are liveness evidence only, not native-GPU 60–120 FPS evidence.
+
+The final implementation retires both the screenshot-confirmed Entity axon-web rendering and every
+legacy Xenomimic line path while retaining live connectome/GraphMind topology. It preserves pooled,
+generation-guarded canonical tree food with exactly-once nutrition and a 5.0-second scaled-simulation
+respawn; identity-aware sanctuary suppression; bounded temporary visits; reciprocal social cleanup;
+and the canonical fauna activity bridge. Final commit-gate, remote reconciliation, GitHub Actions,
+deployed Pages, and public-URL verification are the remaining publication steps at this point.
+
+## 2026-07-14 — Fix-forward: fauna-architecture consolidation repaired + reverted fixes restored
+
+The parallel session's fauna-architecture consolidation
+(`4da0b98a` + `50b7b935`, which migrated shoggoths/titans/puppeteers to the narrow
+`BigTreeFaunaSource` intent-mode bridge and identity-aware sanctuary hysteresis) landed with 5
+failing tests and had silently reverted four audited fixes. Restored surgically against the NEW
+architecture: the doMutate remorph draw-mirror, the titan diplomacy draw-then-skip (+ test
+re-pinned), the edible-registry owner-claims index (releaseOwner back to O(claims) on the global
+death hook), and the CrystalEcosystem InstancedMesh dispose (VRAM-leak class). Repaired the 5 red
+tests to seal the CURRENT contracts (SuperHunt fakes gained the controlled probe; the fauna-source
+seal now covers both architecture halves: BigTreeActorSource for leviathan/apex,
+BigTreeFaunaSource + intent-mode release for the migrated three). Their commits also
+re-implemented my head-of-line respawn fix in their own idiom (restoreRetryIndexes) and replaced my
+shoggoth behavioral control test with equivalent intent-mode coverage — both accepted as canonical.
+Watch item: the identity-aware sanctuary registry protects zone MEMBERS; whether travelling
+ordinary visitors still fight centre-gravity in the corridor needs a live-telemetry check
+(previously handled by the reverted treeVisit exemption).
+
+## 2026-07-14 — Connection lines RETIRED: the entity axon web is graphically invisible always
+
+Owner (screenshot receipt): white line webbing strung across the ground fauna "clutters and
+dirties the visual and experience with a mess … the connection should be invisible graphically
+always." The culprit was NOT a xenomimic tether (that system is line-free and multiply pinned) but
+the default-visible ENTITY axon-web (`src/sim/connectome.ts`), whose additive whitish links anchor
+at organism positions mingled with the ground fauna.
+
+Ruling now mirrors the xenomimic psionic bond: the LINE VISUAL is permanently retired — default
+invisible, `setWebVisible()` a documented forced-invisible no-op, the NEURAL WEB key re-asserts the
+psionic state (and re-purges legacy lines) instead of toggling a visual — while the GRAPH stays
+fully live (links, topology pairs, activation propagation for GraphMind, tribes, telemetry; the
+`!drawWeb` gate already skipped only geometry work, so retiring the render also saves the per-link
+HSL/wave CPU every frame). Live in-browser proof on the booted world: 202 links computed and
+feeding GraphMind at frame 5 with draw range 0 and zero geometry floats written; a scene sweep
+shows the only remaining ground-level line object is the intentional dark navy GridHelper
+(opacity 0.22) — no creature-anchored webbing of any kind. Tests: the connectome retirement
+contract (invisible from construction, no-op setter, graph-still-computes, zero floats), the
+tribe-palette math kept covered via an explicit test-only visibility override, and the NEURAL WEB
+toggle seal extended (`setWebVisible(false)` present, `setWebVisible(on)` forbidden).
+
 ## 2026-07-14 — Dome ecology round 2: real peer teaching, resident social, fauna-commit audit fixes, measured perf receipts
 
 Continuation of the dome-ecology directive after the parallel lane landed `7eafdd48` (all-fauna

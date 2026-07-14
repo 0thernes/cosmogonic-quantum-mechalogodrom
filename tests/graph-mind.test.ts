@@ -214,6 +214,10 @@ describe('Connectome.setCommunityOf (V2 amendment)', () => {
     const conn = new Connectome(ctx, makeEntityManager(list));
     for (const e of list) ctx.grid.insert(e);
     const seg = at(ctx.scene.children, 0) as THREE.LineSegments;
+    // The line VISUAL is owner-retired (2026-07-14, invisible always in production) and colour
+    // writes are gated on visibility — flip the raw object flag to exercise the dormant palette
+    // math directly. Production has no path to this (setWebVisible is a forced-invisible no-op).
+    seg.visible = true;
     const colors = seg.geometry.getAttribute('color');
 
     // V109 recolours each link (additive glow + firing/retracting brightness + per-vertex saturation),
