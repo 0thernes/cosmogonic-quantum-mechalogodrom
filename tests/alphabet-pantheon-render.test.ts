@@ -11,7 +11,10 @@ import { describe, expect, test } from 'bun:test';
 import { existsSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
 import * as THREE from 'three';
-import { AlphabetPantheonRender } from '../src/sim/alphabet-pantheon-render';
+import {
+  AlphabetPantheonRender,
+  PANTHEON_REF_ATLAS_URL,
+} from '../src/sim/alphabet-pantheon-render';
 import { ALPHABET_PANTHEON_SIZE } from '../src/sim/alphabet-pantheon';
 import { ARENA_RADIUS, PLATFORM_CEIL, PLATFORM_FLOOR, PLATFORM_HALF } from '../src/sim/constants';
 
@@ -66,6 +69,8 @@ describe('AlphabetPantheonRender — 100 archetypes alive in the dome', () => {
     const atlas = resolve(root, 'public/textures/pantheon_equirect_refs_atlas.png');
     expect(existsSync(atlas)).toBe(true);
     expect(statSync(atlas).size).toBeGreaterThan(500_000);
+    expect(PANTHEON_REF_ATLAS_URL).toBe('./textures/pantheon_equirect_refs_atlas.png');
+    expect(PANTHEON_REF_ATLAS_URL.startsWith('/')).toBe(false);
 
     const scene = new THREE.Scene();
     const r = new AlphabetPantheonRender(scene);
