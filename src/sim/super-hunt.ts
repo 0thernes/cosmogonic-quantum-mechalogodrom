@@ -171,6 +171,7 @@ export class SuperHunt {
         const p = e.position;
         let consumed = false;
         for (let b = 0; b < nb; b++) {
+          if (bodies[b]!.isBigTreeActorControlled()) continue;
           const bp = this.bodyPos[b]!;
           if (harmAllowed !== undefined && !harmAllowed(bp.x, bp.z, p.x, p.z)) continue;
           const dx = p.x - bp.x;
@@ -200,6 +201,10 @@ export class SuperHunt {
       entities.disposeManyDescending(this.deathIndices);
       // Steer: pursue the nearest sensed prey, else resume the idle wander.
       for (let b = 0; b < nb; b++) {
+        if (bodies[b]!.isBigTreeActorControlled()) {
+          bodies[b]!.clearHunt();
+          continue;
+        }
         if (this.hasNear[b]) {
           const np = this.nearPos[b]!;
           bodies[b]!.setHuntTarget(np.x, np.y, np.z);

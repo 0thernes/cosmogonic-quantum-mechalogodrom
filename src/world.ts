@@ -85,6 +85,15 @@ import {
   type BigTreeSpeciesVisitorStats,
   type BigTreeVisitorEnvironment,
 } from './sim/big-tree-visitors';
+import { BigTreeFaunaVisitors, type BigTreeFaunaVisitorStats } from './sim/big-tree-fauna-visitors';
+import {
+  BIG_TREE_OWNER_APEX,
+  BIG_TREE_OWNER_LEVIATHAN,
+  BIG_TREE_OWNER_PUPPET,
+  BIG_TREE_OWNER_SHOGGOTH,
+  BIG_TREE_OWNER_TITAN,
+  type BigTreeFaunaSourceBinding,
+} from './sim/big-tree-fauna-source';
 import { writeNhiRoamTarget } from './sim/habitat-roaming';
 import { QuantumCircuitSystem } from './sim/qcircuit';
 import { ReactionDiffusionSystem } from './sim/reaction-diffusion';
@@ -483,6 +492,8 @@ export class World {
   private readonly bigTreeVisits: BigTreeVisitManager;
   /** Species adapter over the canonical Entity, Xenomimic, and Crystal food systems. */
   private readonly bigTreeVisitors: BigTreeSpeciesVisitors;
+  /** Fauna adapter over the same visit manager, food registry, sanctuary, and simulation clock. */
+  private readonly bigTreeFaunaVisitors: BigTreeFaunaVisitors;
   /** Reused contextual inputs; rewritten before each visitor tick. */
   private readonly bigTreeVisitorEnvironment: BigTreeVisitorEnvironment = {
     danger: 0,
@@ -531,6 +542,24 @@ export class World {
     rejectedForCapacity: 0,
     rejectedForNoSlot: 0,
     availableSlots: 0,
+  };
+  /** Reused fauna telemetry; populated without allocating or scanning inactive food resources. */
+  private readonly bigTreeFaunaVisitorStats: BigTreeFaunaVisitorStats = {
+    activeVisitors: 0,
+    activeShoggoths: 0,
+    activeTitans: 0,
+    activeLeviathans: 0,
+    activePuppets: 0,
+    activeApex: 0,
+    lastPollCount: 0,
+    totalPolls: 0,
+    acceptedVisits: 0,
+    completedMeals: 0,
+    consumedFruit: 0,
+    consumedLeaves: 0,
+    targetLosses: 0,
+    cancellations: 0,
+    socialPairs: 0,
   };
   /** Monotonic count of hostile-act opportunities vetoed by the sanctuary (dev/audit telemetry). */
   private bigTreeSuppressedHarm = 0;
@@ -1437,7 +1466,14 @@ export class World {
     // One shared, bounded visit scheduler for ordinary organisms and Xenomimics. Distinct radial
     // rings prevent the entire dome from converging on a single point while keeping every authored
     // destination inside the sanctuary's entry boundary.
-    const bigTreeActorCapacity = this.quality.maxEntities + XENOMIMIC_MAX;
+    const bigTreeActorCapacity =
+      this.quality.maxEntities +
+      XENOMIMIC_MAX +
+      this.shoggoths.count +
+      this.puppets.count +
+      this.titans.count +
+      this.leviathans.count +
+      APEX_INDIVIDUATED;
     this.bigTreeVisits = new BigTreeVisitManager(this.bigTreeZone, {
       maxActors: bigTreeActorCapacity,
       capacity: Math.min(72, bigTreeActorCapacity),
@@ -1632,6 +1668,44 @@ export class World {
       this.evoRngs.push(mulberry32((mindSeed ^ 0x00e701ce) >>> 0 || 1));
       // Economy: exactly 5 purses for the pantheon apexes
     }
+    // Every non-Entity living-fauna category joins the SAME canonical food/visit/sanctuary system.
+    // Hero/avatar bodies are intentionally excluded: player locomotion and agency remain authoritative.
+    const bigTreeFaunaBindings: BigTreeFaunaSourceBinding[] = [
+      {
+        ownerKind: BIG_TREE_OWNER_SHOGGOTH,
+        category: 'shoggoth',
+        source: this.shoggoths,
+      },
+      { ownerKind: BIG_TREE_OWNER_TITAN, category: 'titan', source: this.titans },
+      {
+        ownerKind: BIG_TREE_OWNER_LEVIATHAN,
+        category: 'leviathan',
+        source: this.leviathans,
+      },
+      { ownerKind: BIG_TREE_OWNER_PUPPET, category: 'puppet', source: this.puppets },
+    ];
+    for (const source of this.superBodies) {
+      bigTreeFaunaBindings.push({ ownerKind: BIG_TREE_OWNER_APEX, category: 'apex', source });
+    }
+    this.bigTreeFaunaVisitors = new BigTreeFaunaVisitors(
+      this.crystalEcosystem,
+      this.bigTreeVisits,
+      bigTreeFaunaBindings,
+      {
+        pollBudget: 32,
+        pollIntervalSeconds: 0.1,
+        foodLeaseSeconds: 8,
+        foodRetrySeconds: 0.4,
+        foodSearchTimeoutSeconds: 8,
+        foodReachRadius: 8,
+        steeringGain: 5,
+        restPerSecond: 0.035,
+        restTarget: 0.86,
+        socialLeaseSeconds: 4,
+        socialReachRadius: 40,
+        flightVisitY: 24,
+      },
+    );
     const soupSeed = (master ^ 0x50ff0ad1) >>> 0 || 1;
     this.petriRng = mulberry32((master ^ 0x50ff0ad2) >>> 0 || 1);
     this.primordialSoup = new PrimordialSoup(soupSeed);
@@ -1807,6 +1881,9 @@ export class World {
     // Terminate worker pool threads (ADR 0010)
     this.workerPool?.dispose();
     this.workerPool = null;
+    // Release shared food/slot/partner ownership while every borrowed species body is still alive.
+    this.bigTreeFaunaVisitors.reset();
+    this.bigTreeVisitors.reset();
     // Dispose wilderness population
     this.wilderness.dispose();
     this.wildernessRender.dispose();
@@ -1839,7 +1916,6 @@ export class World {
     this.mechalogodrom.dispose(); // V-MECHA: free the fusion abomination's geometries + materials
     this.floatingMonoliths.dispose(); // free the 16 drifting megaliths' geometries + materials
     this.godColossus.dispose(); // free the colossal god monument
-    this.bigTreeVisitors.reset(); // release food, slots, partners, and retained living-body references
     this.crystalEcosystem.dispose(); // free the complete tree-home ecology and owned GPU resources
     this.alienFlora.dispose(); // free the 60k-plant instanced alien-flora field
     this.wasteEcology.dispose(); // free sludge constructs + waste/gas grids
@@ -4257,6 +4333,7 @@ export class World {
     // One clock for the whole ecology: visit/eating deadlines and food leases both read the
     // ecosystem's accumulated sim clock, so a future reset/timescale change cannot desync them.
     void time;
+    this.bigTreeFaunaVisitors.update(this.crystalEcosystem.foodTime, dt, environment);
     this.bigTreeVisitors.update(
       this.crystalEcosystem.foodTime,
       dt,
@@ -4268,10 +4345,14 @@ export class World {
     // Feed real visitor/social state into the residents' neural percept. The stats pass is bounded
     // by fixed visit capacity and authored slots; it never scans the full population or 20k foods.
     const stats = this.bigTreeVisitorStats;
+    const faunaStats = this.bigTreeFaunaVisitorStats;
     this.bigTreeVisitors.readStats(stats);
+    this.bigTreeFaunaVisitors.readStats(faunaStats);
+    const activeVisitors = stats.activeVisitors + faunaStats.activeVisitors;
+    const socialPairs = stats.socialPairs + faunaStats.socialPairs;
     this.crystalEcosystem.setVisitorPresence(
-      stats.activeVisitors,
-      (2 * stats.socialPairs) / Math.max(1, stats.activeVisitors),
+      activeVisitors,
+      (2 * socialPairs) / Math.max(1, activeVisitors),
     );
 
     // Development/audit visibility at a deliberately sparse cadence; no production debug geometry.
@@ -4281,12 +4362,21 @@ export class World {
       const food = this.crystalEcosystem.edibleResources.stats();
       const neural = this.crystalEcosystem.neuralStatus();
       this.audit.record('big-tree-ecology', {
-        activeVisitors: stats.activeVisitors,
+        activeVisitors,
+        coreVisitors: stats.activeVisitors,
         ordinaryVisitors: stats.activeOrdinary,
         xenomimicVisitors: stats.activeXenomimics,
-        meals: stats.completedMeals,
-        socialPairs: stats.socialPairs,
-        targetLosses: stats.targetLosses,
+        faunaVisitors: faunaStats.activeVisitors,
+        shoggothVisitors: faunaStats.activeShoggoths,
+        titanVisitors: faunaStats.activeTitans,
+        leviathanVisitors: faunaStats.activeLeviathans,
+        puppetVisitors: faunaStats.activePuppets,
+        apexVisitors: faunaStats.activeApex,
+        meals: stats.completedMeals + faunaStats.completedMeals,
+        socialPairs,
+        targetLosses: stats.targetLosses + faunaStats.targetLosses,
+        faunaPolls: faunaStats.totalPolls,
+        faunaCancellations: faunaStats.cancellations,
         completedVisits: stats.completedVisits,
         timedOutVisits: stats.timedOutVisits,
         stuckRecoveries: stats.stuckRecoveries,
@@ -5685,6 +5775,7 @@ export class World {
     this.mechaBlaze.clearPendingRespawns();
     this.portalDeath.clearPendingRespawns();
     this.superHunt.clearPendingRespawns();
+    this.bigTreeFaunaVisitors.reset();
     this.bigTreeVisitors.reset();
     this.crystalEcosystem.resetFood(this.state.elapsed);
     this.clearNhiPopulation();

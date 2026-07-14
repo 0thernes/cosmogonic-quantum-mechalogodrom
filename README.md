@@ -8,7 +8,7 @@
 [![License: Non-Commercial Research & Play](https://img.shields.io/badge/License-Non--Commercial%20Research%20%26%20Play-2ea043.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
-[![tests](https://img.shields.io/badge/tests-3168%20exact-brightgreen)](./tests)
+[![tests](https://img.shields.io/badge/tests-3188%20exact-brightgreen)](./tests)
 [![coverage](https://img.shields.io/badge/coverage-84.64%25%20line%20%C2%B7%2082.21%25%20func-success)](./docs/TECHNICAL-SPECIFICATION-2026-06-26.md)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION-2026-06-26.md)
 [![Tsotchke](https://img.shields.io/badge/Tsotchke-REAL__MIT__CORPUS-purple)](https://github.com/tsotchke)
@@ -23,12 +23,12 @@ diffusion, **and the Tsotchke corpus wired as the primordial substrate for digit
 **Current public truth (2026-07-12):**
 
 - Package/source version: **v0.22.0**.
-- Exact tracked-suite receipt: **3,168 tests / 0 fail**. Portable public coverage floor: **84.64% line / 82.21% func**.
+- Exact tracked-suite receipt: **3,188 tests / 0 fail**. Portable public coverage floor: **84.64% line / 82.21% func**.
 - **Standing & xeno-A-life position (readable synthesis):** [Comprehensive Standing Report (MD)](./docs/reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.md) · [HTML](./docs/reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.html) — engineering card, 113-system matrix, SuperCreature/SuperMind/Apex/Mechalogodrom deep dive, capital/ISAL path. Apex minds are **xeno multi-faculty scaffolds** (not OpenWorm bio-twins; not claimed sentience). Preserves V4/Phase-B failure-forward boundaries.
 
 <!-- cqm-sync:local-measurement:start -->
 
-- Latest Windows-local measurement in this checkout: **3,001 tests / 0 fail · 3,539,785 `expect()` calls**; coverage measured `93.39%` line / `91.37%` func across 340 test files.
+- Latest Windows-local measurement in this checkout: **3,188 tests / 0 fail · 3,545,435 `expect()` calls**; coverage measured `93.55%` line / `91.55%` func across 358 test files.
 
 <!-- cqm-sync:local-measurement:end -->
 
@@ -519,9 +519,9 @@ full gate with same-seed determinism preserved. The major arcs:
   ported primitive. The whole apex beat is now measured honestly: **~1.99 ms** per `SuperMind.think()`
   (range 1.41–5.62 ms) and **~9.77 ms** for the staggered 5-mind batch (~58% of a 60 fps frame, which is
   why 5 minds run staggered against 20 light echoes); the older sub-millisecond / `<2%` GOAL5 claim is
-  superseded until re-proven. **3,168 exact tracked tests · 0 fail (receipts enforced) · 84.64% line / 82.21% func portable coverage floor.**
+  superseded until re-proven. **3,188 exact tracked tests · 0 fail (receipts enforced) · 84.64% line / 82.21% func portable coverage floor.**
   <!-- cqm-sync:local-measurement:start -->
-  **Latest Windows-local measurement: 3,001 tests / 0 fail / 3,539,785 assertions at `93.39%` line / `91.37%` func.**
+  **Latest Windows-local measurement: 3,188 tests / 0 fail / 3,545,435 assertions at `93.55%` line / `91.55%` func.**
   <!-- cqm-sync:local-measurement:end -->
 - **State-of-the-art report (2026-06-17)** — a historical measured, frontier-comparison
   assessment of the whole repository + the apex Super Creature, now summarized through

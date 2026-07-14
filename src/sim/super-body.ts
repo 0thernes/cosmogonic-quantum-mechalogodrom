@@ -35,6 +35,7 @@
  */
 import * as THREE from 'three';
 import { PLATFORM_CEIL, PLATFORM_FLOOR, PLATFORM_HALF } from './constants';
+import type { BigTreeActorAdapter, BigTreeActorSource } from './big-tree-fauna-source';
 import type { SuperSnapshot, SuperPlan } from './super-creature';
 import type { EvoAppearance } from './super-evolution';
 import type { ArchonForm } from './godform';
@@ -417,7 +418,7 @@ function patchIrisJewel(mat: THREE.MeshStandardMaterial, u: Record<string, THREE
 }
 
 /** Owns the singular apex body. Construct ONCE (world.ts); {@link setMind} on cadence, {@link update} per frame. */
-export class SuperBodySystem {
+export class SuperBodySystem implements BigTreeActorSource {
   private readonly root = new THREE.Group();
   private readonly core: THREE.Mesh;
   private readonly cage: THREE.LineSegments;
@@ -505,6 +506,11 @@ export class SuperBodySystem {
   // its heading and quantum-teleports. All deterministic (a monotonic seed, the sim clock; no rng).
   private readonly pos = new THREE.Vector3(0, 12, 0); // live world position
   private readonly vel = new THREE.Vector3(); // flight velocity
+  /** Stable shared-ecology identity for this autonomous apex body. */
+  private readonly bigTreeOwnerId: number;
+  private bigTreeControlled = false;
+  private nutrition = 0.65;
+  private disposed = false;
   private readonly wander = new THREE.Vector3(0, 16, 0); // current place it's flying toward
   private readonly aim = new THREE.Vector3(); // scratch (desired heading / lookAt target)
   // USER V127 (C): the apex HUNTS — when SuperHunt spots prey nearby it feeds a live target here and the
@@ -542,6 +548,7 @@ export class SuperBodySystem {
     form?: ArchonForm,
   ) {
     this.variant = Math.max(0, Math.min(4, Math.floor(variant)));
+    this.bigTreeOwnerId = this.variant;
     this._form = form || null;
     if (this._form) {
       /* GOAL5: per-Archon extreme counts/pulses/combin (eyes/arms/wings etc) wired via world spawn */
@@ -852,6 +859,7 @@ export class SuperBodySystem {
   /** USER V127 (C): lock the flight aim onto prey at `(x,y,z)` — the apex pursues it this frame (the
    *  wander is overridden while hunting). Cleared by {@link clearHunt} when no prey is in range. O(1). */
   setHuntTarget(x: number, y: number, z: number): void {
+    if (this.disposed || this.bigTreeControlled) return;
     this.huntTarget.set(x, y, z);
     this.hunting = true;
   }
@@ -863,7 +871,76 @@ export class SuperBodySystem {
 
   /** USER V127 (C): the apex consumed one organism — bank the food/fuel. O(1). */
   eat(): void {
+    if (this.disposed) return;
     this.fuel++;
+    this.nutrition = clampf(this.nutrition + 0.18, 0, 1);
+  }
+
+  get bigTreeActorCount(): number {
+    return this.disposed ? 0 : 1;
+  }
+
+  readBigTreeActor(index: number, out: BigTreeActorAdapter): boolean {
+    if (index !== 0 || this.disposed) return false;
+    out.ownerId = this.bigTreeOwnerId;
+    out.category = 'apex';
+    out.locomotion = 'flight';
+    out.x = this.pos.x;
+    out.y = this.pos.y;
+    out.z = this.pos.z;
+    out.vx = this.vel.x;
+    out.vy = this.vel.y;
+    out.vz = this.vel.z;
+    out.energy = this.nutrition;
+    out.maxEnergy = 1;
+    out.alive = true;
+    out.fatigue = 1 - this.nutrition;
+    out.socialDrive = clampf(1 - this.aggression * 0.6, 0, 1);
+    out.health = 1;
+    out.maxHealth = 1;
+    out.danger = clampf(this.aggression, 0, 1);
+    out.criticalNeed = this.nutrition <= 0.08;
+    out.moveSpeed = 28;
+    out.aggressionSuppressed = this.bigTreeControlled;
+    return true;
+  }
+
+  writeBigTreeActor(index: number, actor: Readonly<BigTreeActorAdapter>): boolean {
+    if (
+      index !== 0 ||
+      this.disposed ||
+      actor.ownerId !== this.bigTreeOwnerId ||
+      actor.category !== 'apex'
+    ) {
+      return false;
+    }
+    this.vel.set(actor.vx, actor.vy, actor.vz).clampLength(0, 64);
+    this.nutrition = clampf(actor.energy, 0, 1);
+    return true;
+  }
+
+  nourishBigTreeActor(index: number, normalizedNutrition: number): boolean {
+    if (
+      index !== 0 ||
+      this.disposed ||
+      !Number.isFinite(normalizedNutrition) ||
+      normalizedNutrition <= 0
+    ) {
+      return false;
+    }
+    this.nutrition = clampf(this.nutrition + normalizedNutrition, 0, 1);
+    return true;
+  }
+
+  setBigTreeActorControlled(index: number, controlled: boolean): boolean {
+    if (index !== 0 || this.disposed) return false;
+    this.bigTreeControlled = controlled;
+    if (controlled) this.clearHunt();
+    return true;
+  }
+
+  isBigTreeActorControlled(): boolean {
+    return !this.disposed && this.bigTreeControlled;
   }
 
   /** Animate every frame from the sim clock + the stored mind targets. Allocation-free. O(1).
@@ -874,6 +951,8 @@ export class SuperBodySystem {
    * All deterministic t + state. No alloc, no geom create.
    */
   update(t: number, dt: number): void {
+    if (this.disposed) return;
+    if (dt > 0) this.nutrition = Math.max(0, this.nutrition - dt / 600);
     this.u.uTime.value = t;
 
     // ── V120 MORPH-FX ENVELOPE: advance on the VISUAL clock delta (t keeps flowing in SUSPENDED
@@ -909,65 +988,68 @@ export class SuperBodySystem {
     const ARENA_R = PLATFORM_HALF;
     const FLOOR = PLATFORM_FLOOR;
     const CEIL = PLATFORM_CEIL;
-    const vph = this.variant * 1.2566; // per-apex sector offset (2π/5)
-    this.wanderClock -= dt;
-    if (this.wanderClock <= 0) {
-      this.seed++;
-      const a = this.seed * 2.399963 + vph; // golden-angle walk → visits every sector over time
-      const rr = (0.25 + 0.72 * frac(this.seed * 0.61803)) * ARENA_R; // 25%..97% across the platform
-      this.wander.set(
-        Math.cos(a) * rr,
-        FLOOR + (CEIL - FLOOR) * frac(this.seed * 0.317),
-        Math.sin(a) * rr,
-      );
-      this.wanderClock = 2.5 + 3 * frac(this.seed * 0.123); // USER: retarget ~2× more often — livelier roam
-    }
-    // Desired heading = seek the wander locus + the mind's own will; veer inward near the rim.
-    this.aim.copy(this.wander).sub(this.pos);
-    if (this.aim.lengthSq() > 1e-4) this.aim.normalize();
-    this.aim.addScaledVector(this.move, 0.7); // the SUPER BRAIN steers itself too
-    if (Math.hypot(this.pos.x, this.pos.z) > ARENA_R * 0.82)
-      this.aim.addScaledVector(this.pos, -0.006);
-    if (this.aim.lengthSq() > 1e-6) this.aim.normalize();
-    // USER V127 (C): HUNT — when SuperHunt has locked prey, bend the flight aim HARD toward it (a
-    // predator's pursuit), overriding the idle wander. Player control still wins (checked just below),
-    // so a manually-flown apex never lurches at prey. Deterministic (no rng); target set externally.
-    if (this.hunting) {
-      this._huntDir.copy(this.huntTarget).sub(this.pos);
-      if (this._huntDir.lengthSq() > 1e-4) {
-        this._huntDir.normalize();
-        this.aim.lerp(this._huntDir, 0.82);
-        if (this.aim.lengthSq() > 1e-6) this.aim.normalize();
-      }
-    }
-    // ── V41 PLAYER CONTROL: MANUAL → the player's input IS the heading (no autonomous wander or
-    //    teleport); ASSIST → it nudges the autonomous heading; AUTOPILOT (default) → the V39 roam. ──
-    const manual = this.ctrlMode === 2;
-    if (manual) {
-      if (this.ctrlActive) this.aim.copy(this.ctrl);
-      else this.aim.set(0, 0, 0); // coast to a hover when no input is held
-    } else if (this.ctrlMode === 1 && this.ctrlActive) {
-      this.aim.addScaledVector(this.ctrl, 1.6); // ASSIST nudge toward the player's will
-    }
-    if (this.aim.lengthSq() > 1e-6) this.aim.normalize();
-    const speed = manual ? (this.ctrlActive ? 34 : 0) : 20 + 28 * this.arousal; // USER: faster (was 7+16) — the apex glides, not crawls
-    this.vel.lerp(this.aim.multiplyScalar(speed), Math.min(1, dt * (manual ? 3 : 1.4)));
-
-    // QUANTUM TELEPORT: phase to a new locus on a timer (faster under surprise) — the "weird shit".
-    // Disabled under MANUAL (the player would hate random blinks while flying it).
-    this.teleClock -= dt * (1 + 1.5 * this.surprise);
-    if (!manual && this.teleClock <= 0) {
-      this.seed++;
-      const a = this.seed * 1.99977 + vph;
-      const rr = (0.25 + 0.7 * frac(this.seed * 0.409)) * ARENA_R;
-      this.pos.set(
-        Math.cos(a) * rr,
-        FLOOR + (CEIL - FLOOR) * frac(this.seed * 0.733),
-        Math.sin(a) * rr,
-      );
-      this.teleClock = 11 + 7 * frac(this.seed * 0.271);
-    } else {
+    if (this.bigTreeControlled) {
+      // The canonical visit controller owns velocity while travelling, interacting, and departing.
+      // Keep the ordinary renderer/animation pipeline below alive; only autonomous intent is yielded.
+      this.hunting = false;
       this.pos.addScaledVector(this.vel, dt);
+    } else {
+      const vph = this.variant * 1.2566; // per-apex sector offset (2π/5)
+      this.wanderClock -= dt;
+      if (this.wanderClock <= 0) {
+        this.seed++;
+        const a = this.seed * 2.399963 + vph; // golden-angle walk → visits every sector over time
+        const rr = (0.25 + 0.72 * frac(this.seed * 0.61803)) * ARENA_R; // 25%..97% across the platform
+        this.wander.set(
+          Math.cos(a) * rr,
+          FLOOR + (CEIL - FLOOR) * frac(this.seed * 0.317),
+          Math.sin(a) * rr,
+        );
+        this.wanderClock = 2.5 + 3 * frac(this.seed * 0.123); // USER: retarget ~2× more often — livelier roam
+      }
+      // Desired heading = seek the wander locus + the mind's own will; veer inward near the rim.
+      this.aim.copy(this.wander).sub(this.pos);
+      if (this.aim.lengthSq() > 1e-4) this.aim.normalize();
+      this.aim.addScaledVector(this.move, 0.7); // the SUPER BRAIN steers itself too
+      if (Math.hypot(this.pos.x, this.pos.z) > ARENA_R * 0.82)
+        this.aim.addScaledVector(this.pos, -0.006);
+      if (this.aim.lengthSq() > 1e-6) this.aim.normalize();
+      // USER V127 (C): HUNT — when SuperHunt has locked prey, bend the flight aim HARD toward it.
+      if (this.hunting) {
+        this._huntDir.copy(this.huntTarget).sub(this.pos);
+        if (this._huntDir.lengthSq() > 1e-4) {
+          this._huntDir.normalize();
+          this.aim.lerp(this._huntDir, 0.82);
+          if (this.aim.lengthSq() > 1e-6) this.aim.normalize();
+        }
+      }
+      // ── V41 PLAYER CONTROL ──
+      const manual = this.ctrlMode === 2;
+      if (manual) {
+        if (this.ctrlActive) this.aim.copy(this.ctrl);
+        else this.aim.set(0, 0, 0);
+      } else if (this.ctrlMode === 1 && this.ctrlActive) {
+        this.aim.addScaledVector(this.ctrl, 1.6);
+      }
+      if (this.aim.lengthSq() > 1e-6) this.aim.normalize();
+      const speed = manual ? (this.ctrlActive ? 34 : 0) : 20 + 28 * this.arousal;
+      this.vel.lerp(this.aim.multiplyScalar(speed), Math.min(1, dt * (manual ? 3 : 1.4)));
+
+      // QUANTUM TELEPORT is suspended during a tree visit so entry cannot snap or bypass the route.
+      this.teleClock -= dt * (1 + 1.5 * this.surprise);
+      if (!manual && this.teleClock <= 0) {
+        this.seed++;
+        const a = this.seed * 1.99977 + vph;
+        const rr = (0.25 + 0.7 * frac(this.seed * 0.409)) * ARENA_R;
+        this.pos.set(
+          Math.cos(a) * rr,
+          FLOOR + (CEIL - FLOOR) * frac(this.seed * 0.733),
+          Math.sin(a) * rr,
+        );
+        this.teleClock = 11 + 7 * frac(this.seed * 0.271);
+      } else {
+        this.pos.addScaledVector(this.vel, dt);
+      }
     }
     this.pos.y = clampf(this.pos.y, FLOOR, CEIL);
     // Hard square containment (owner law: never off the platform) — mirrors steerNhiBeings.
@@ -1405,6 +1487,10 @@ export class SuperBodySystem {
 
   /** Free GPU resources (world reset). */
   dispose(): void {
+    if (this.disposed) return;
+    this.disposed = true;
+    this.bigTreeControlled = false;
+    this.hunting = false;
     this.root.traverse((o) => {
       const m = o as THREE.Mesh;
       if (m.geometry) m.geometry.dispose();
@@ -1420,5 +1506,6 @@ export class SuperBodySystem {
     this.scleraMat.dispose();
     this.armMat.dispose();
     this.cageMat.dispose();
+    this.root.removeFromParent();
   }
 }

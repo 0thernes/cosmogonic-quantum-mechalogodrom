@@ -25,6 +25,11 @@ import {
   type PortalCullable,
 } from './portal-death-fauna';
 import type { DomeFeeder } from './dome-feeding';
+import {
+  BIG_TREE_FAUNA_VELOCITY_SCALE,
+  type BigTreeActorAdapter,
+  type BigTreeActorSource,
+} from './big-tree-fauna-source';
 
 /** How many leviathans sail the world (fixed — telemetry-friendly, cheap). */
 const COUNT = 4;
@@ -36,6 +41,8 @@ const ROAM_R = 48 * HABITAT_MID;
 const HUES = [0.55, 0.62, 0.48, 0.7] as const;
 /** V1.3 ECOLOGY: a leviathan stirs the RD substrate every STIR_EVERY frames (slow, deterministic, rng-free). */
 const STIR_EVERY = 45;
+/** Slow canonical hunger lane: a full reserve lasts about four simulated minutes without food. */
+const LEVIATHAN_NUTRITION_DECAY_PER_SECOND = 0.004;
 
 /** Module scratch — `update()` never allocates per frame. */
 const HOLE_F = new THREE.Vector3();
@@ -138,6 +145,12 @@ function patchLeviathanBody(mat: THREE.MeshStandardMaterial, u: LeviathanUniform
 }
 
 interface Leviathan {
+  /** Stable ecology identity; never derived from a mutable array object. */
+  bigTreeOwnerId: number;
+  /** True while the shared tree visit controller owns locomotion. */
+  bigTreeControlled: boolean;
+  /** Canonical normalized nutrition used by tree and ordinary dome food. */
+  nutrition: number;
   group: THREE.Group;
   body: THREE.Mesh;
   mat: THREE.MeshStandardMaterial;
@@ -155,7 +168,7 @@ interface Leviathan {
  * every frame. `attachSingularity` opts the colossi into the F-HOLES force field (no-op until
  * attached). `count` feeds optional telemetry.
  */
-export class LeviathanSystem implements PortalCullable, DomeFeeder {
+export class LeviathanSystem implements PortalCullable, DomeFeeder, BigTreeActorSource {
   private readonly levs: Leviathan[] = [];
   private readonly intelligence: OrganismIntelligenceSignal | null;
   /** PORTAL DEATH (USER): leviathans blasted by the portal, awaiting their 5 s respawn ELSEWHERE. */
@@ -208,6 +221,9 @@ export class LeviathanSystem implements PortalCullable, DomeFeeder {
       group.add(aura);
       root.add(group);
       this.levs.push({
+        bigTreeOwnerId: i,
+        bigTreeControlled: false,
+        nutrition: 0.65,
         group,
         body,
         mat,
@@ -223,6 +239,68 @@ export class LeviathanSystem implements PortalCullable, DomeFeeder {
   /** Number of leviathans (constant — telemetry). */
   get count(): number {
     return this.levs.length;
+  }
+
+  get bigTreeActorCount(): number {
+    return this.levs.length;
+  }
+
+  readBigTreeActor(index: number, out: BigTreeActorAdapter): boolean {
+    const lv = this.levs[index];
+    if (!lv) return false;
+    const p = lv.group.position;
+    const intelligence = this.intelligence;
+    out.ownerId = lv.bigTreeOwnerId;
+    out.category = 'leviathan';
+    out.locomotion = 'flight';
+    out.x = p.x;
+    out.y = p.y;
+    out.z = p.z;
+    out.vx = lv.vel.x * BIG_TREE_FAUNA_VELOCITY_SCALE;
+    out.vy = lv.vel.y * BIG_TREE_FAUNA_VELOCITY_SCALE;
+    out.vz = lv.vel.z * BIG_TREE_FAUNA_VELOCITY_SCALE;
+    out.energy = lv.nutrition;
+    out.maxEnergy = 1;
+    out.alive = lv.group.visible;
+    out.fatigue = 1 - lv.nutrition;
+    out.socialDrive = intelligence?.enabled ? intelligence.socialDrive : 0.35;
+    out.health = 1;
+    out.maxHealth = 1;
+    out.danger = intelligence?.enabled ? intelligence.threatResponse : 0;
+    out.criticalNeed = lv.nutrition <= 0.08;
+    out.moveSpeed = 24;
+    out.aggressionSuppressed = lv.bigTreeControlled;
+    return true;
+  }
+
+  writeBigTreeActor(index: number, actor: Readonly<BigTreeActorAdapter>): boolean {
+    const lv = this.levs[index];
+    if (!lv || actor.ownerId !== lv.bigTreeOwnerId || actor.category !== 'leviathan') return false;
+    lv.vel.set(
+      actor.vx / BIG_TREE_FAUNA_VELOCITY_SCALE,
+      actor.vy / BIG_TREE_FAUNA_VELOCITY_SCALE,
+      actor.vz / BIG_TREE_FAUNA_VELOCITY_SCALE,
+    );
+    lv.nutrition = THREE.MathUtils.clamp(actor.energy, 0, 1);
+    return true;
+  }
+
+  nourishBigTreeActor(index: number, normalizedNutrition: number): boolean {
+    const lv = this.levs[index];
+    if (!lv || !Number.isFinite(normalizedNutrition) || normalizedNutrition <= 0) return false;
+    lv.nutrition = THREE.MathUtils.clamp(lv.nutrition + normalizedNutrition, 0, 1);
+    return true;
+  }
+
+  nourishFromDomeFood(index: number, normalizedNutrition: number): boolean {
+    return this.nourishBigTreeActor(index, normalizedNutrition);
+  }
+
+  setBigTreeActorControlled(index: number, controlled: boolean): boolean {
+    const lv = this.levs[index];
+    if (!lv) return false;
+    lv.bigTreeControlled = controlled;
+    return true;
   }
 
   /**
@@ -247,6 +325,7 @@ export class LeviathanSystem implements PortalCullable, DomeFeeder {
       if (t < d.at) continue;
       portalReappearSpot(this.portalCullSeq++, d.lv.group.position);
       d.lv.vel.set(0, 0, 0);
+      d.lv.bigTreeControlled = false;
       d.lv.group.visible = true;
       this.portalDowned.splice(k, 1);
     }
@@ -258,6 +337,7 @@ export class LeviathanSystem implements PortalCullable, DomeFeeder {
       const dz = p.z - az;
       if (dx * dx + dz * dz <= r2) {
         onDeath(p.x, p.y, p.z);
+        lv.bigTreeControlled = false;
         lv.group.visible = false;
         this.portalDowned.push({ lv, at: t + PORTAL_RESPAWN_DELAY });
       }
@@ -266,11 +346,12 @@ export class LeviathanSystem implements PortalCullable, DomeFeeder {
 
   /** USER V127 (D): dome-wide feeding — visit each LIVE leviathan's position (DomeFeeding grazes plants
    *  + eats organisms there). Skips ones downed by the portal. See {@link DomeFeeder}. O(4). */
-  eachFeederPos(cb: (x: number, y: number, z: number) => void): void {
-    for (const lv of this.levs) {
-      if (!lv || !lv.group.visible) continue;
+  eachFeederPos(cb: (x: number, y: number, z: number, memberIndex?: number) => void): void {
+    for (let i = 0; i < this.levs.length; i++) {
+      const lv = this.levs[i];
+      if (!lv || !lv.group.visible || lv.bigTreeControlled) continue;
       const p = lv.group.position;
-      cb(p.x, p.y, p.z);
+      cb(p.x, p.y, p.z, i);
     }
   }
 
@@ -311,6 +392,9 @@ export class LeviathanSystem implements PortalCullable, DomeFeeder {
       if (!lv) continue; // noUncheckedIndexedAccess: i < length
       const g = lv.group;
       const p = g.position;
+      if (dt > 0) {
+        lv.nutrition = Math.max(0, lv.nutrition - LEVIATHAN_NUTRITION_DECAY_PER_SECOND * dt);
+      }
 
       // Sinusoidal sail: a wide lazy orbit whose radius and height breathe over time.
       const orbit = t * 0.04 + lv.ph;
@@ -319,23 +403,26 @@ export class LeviathanSystem implements PortalCullable, DomeFeeder {
       const navigationGain = intelligence?.enabled
         ? 0.88 + intelligence.forecast * 0.12 + intelligence.confidence * 0.1
         : 1;
-      lv.vel.x += (Math.cos(orbit) * r - p.x) * 0.0006 * navigationGain * dt * 60;
-      lv.vel.z += (Math.sin(orbit) * r - p.z) * 0.0006 * navigationGain * dt * 60;
-      lv.vel.y +=
-        (18 * HABITAT_Y_SCALE + Math.sin(t * 0.07 + lv.ph) * 12 * HABITAT_Y_SCALE - p.y) *
-        0.0005 *
-        dt *
-        60;
-      lv.vel.multiplyScalar(0.96);
+      if (!lv.bigTreeControlled) {
+        lv.vel.x += (Math.cos(orbit) * r - p.x) * 0.0006 * navigationGain * dt * 60;
+        lv.vel.z += (Math.sin(orbit) * r - p.z) * 0.0006 * navigationGain * dt * 60;
+        lv.vel.y +=
+          (18 * HABITAT_Y_SCALE + Math.sin(t * 0.07 + lv.ph) * 12 * HABITAT_Y_SCALE - p.y) *
+          0.0005 *
+          dt *
+          60;
+        lv.vel.multiplyScalar(0.96);
 
-      // F-HOLES: an active singularity drags the colossus too (no-op when unattached/inactive).
-      if (this.singularity && this.singularity.bodyForce(p.x, p.y, p.z, dt, HOLE_F)) {
-        lv.vel.add(HOLE_F);
-      }
-      // Mid-field containment so a hole can never fling one off to infinity.
-      if (p.lengthSq() > MID_RADIUS2) {
-        V1.copy(p).normalize().multiplyScalar(-0.02);
-        lv.vel.add(V1);
+        // F-HOLES: an active singularity drags the colossus too (no-op when unattached/inactive).
+        if (this.singularity && this.singularity.bodyForce(p.x, p.y, p.z, dt, HOLE_F)) {
+          lv.vel.add(HOLE_F);
+        }
+        // Mid-field containment applies to autonomous roaming only; the tree route is authored inside
+        // the platform and must not be pulled back toward an unrelated home orbit.
+        if (p.lengthSq() > MID_RADIUS2) {
+          V1.copy(p).normalize().multiplyScalar(-0.02);
+          lv.vel.add(V1);
+        }
       }
 
       V1.copy(lv.vel).multiplyScalar(dt * 60 * 0.14);
@@ -353,8 +440,9 @@ export class LeviathanSystem implements PortalCullable, DomeFeeder {
       // Inner glow + aura now read the colossus's REAL speed (was a clock-driven sin pulse): a
       // diving/accelerating leviathan blazes, a gliding one dims. Falsifiable, deterministic.
       const surge = leviathanSurge(lv.vel.length());
-      lv.mat.emissiveIntensity = 1.2 * (0.6 + 0.8 * surge);
-      lv.aura.intensity = (1.6 + 2.0 * surge) * POINT_LIGHT_GAIN;
+      const vitality = 0.7 + lv.nutrition * 0.3;
+      lv.mat.emissiveIntensity = 1.2 * (0.6 + 0.8 * surge) * vitality;
+      lv.aura.intensity = (1.6 + 2.0 * surge) * POINT_LIGHT_GAIN * vitality;
       // V-LEVIATHAN-EXPANDED: feed the real signals to the named-effect suite (surge = speed, depth = height).
       lv.u.uTime.value = t;
       lv.u.uSurge.value = surge;

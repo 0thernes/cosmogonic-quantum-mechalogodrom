@@ -1,14 +1,14 @@
 /**
  * CANONICAL RECEIPTS -- the single source of truth for the repo's measured gate figures.
  *
- * Count remeasured 2026-07-14 (Bun 1.3.14, tracked-only discovery; dome-ecology suite +140 tests);
- * coverage remains the clean Ubuntu floor because the expanded suite measured 93.56% line / 91.60%
+ * Count remeasured 2026-07-13 (Bun 1.3.14, tracked-only discovery; all-fauna closure +20 tests);
+ * coverage remains the clean Ubuntu floor because the expanded suite measured 93.55% line / 91.55%
  * function on Windows. Propagated to every public surface and
  * policed by `tests/docs-receipts-law.test.ts`. Dr. Manhattan's law: if it is not measured, it is not real.
  *
  * To update after adding/removing tests: `bun scripts/verify-receipts.ts --print`, paste here, re-sync.
  */
-export const CANONICAL_TEST_COUNT = 3168;
+export const CANONICAL_TEST_COUNT = 3188;
 export const CANONICAL_LINE_COV = '84.64';
 export const CANONICAL_FUNC_COV = '82.21';
 

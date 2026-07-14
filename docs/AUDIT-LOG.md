@@ -41,6 +41,16 @@ required-tests coverage map) plus the fix-pass below.
   dwell/leave deadlines, revisit cooldowns, stuck re-slotting, death/despawn reservation release —
   ordinary organisms and xenomimics both discover, travel, eat (energy/belly through their canonical
   fields, exactly once), rest, socialize with partner leases, and LEAVE.
+- **All autonomous fauna on the same lifecycle** (`src/sim/big-tree-fauna-source.ts`,
+  `src/sim/big-tree-fauna-visitors.ts`): Shoggoths, Titans, Leviathans, Puppeteers, and the five
+  autonomous Apex bodies now use that same visit manager, Crystal edible registry, sanctuary, slots,
+  and scaled simulation clock. Their adapters project stable identity, native position/velocity, and
+  real species energy into an allocation-free shared contract; nourishment commits to the owning
+  system exactly once. Native hunting, war, meddling, feeding, teleport, and autonomous steering yield
+  while a visit owns locomotion, then resume without restoring stale hostile targets. Ground and flight
+  steering, food-kind fallback, bounded cross-species social pairing, departure/cooldown, portal/death
+  cleanup, reset, and a 20k-candidate poll-budget stress case are pinned. Player-owned hero bodies are
+  deliberately excluded so a probabilistic ecology decision cannot take away player agency.
 
 **Audit fix-pass (this session, on top of the assembled lane):**
 
@@ -77,14 +87,33 @@ required-tests coverage map) plus the fix-pass below.
   gone) — NEURAL WEB toggle now has a scoped no-line/purge seal in addition to the whole-file pins.
 
 **Deferred, honestly:** dweller↔dweller partnered socialization (resident social currently expresses
-toward visitors via the welcome ring); a measured ms/frame budget test + bench entry for the new hot
-paths (structural bounds + GPU budgets are pinned; runtime is deadline-scheduled/budget-bounded by
-construction); teach/learn as a distinct knowledge-transfer mechanism (Socialize/Observe transfer
-real activation/payoff/shimmer state — nothing more is claimed anywhere).
+toward visitors via the welcome ring); a measured browser ms/frame bench entry for the new hot paths
+(structural bounds, a 20k-candidate stress test, and GPU budgets are pinned; runtime is
+deadline-scheduled/budget-bounded by construction); teach/learn as a distinct knowledge-transfer
+mechanism (Socialize/Observe transfer real activation/payoff/shimmer state — nothing more is claimed
+anywhere).
 
-Suite: 3,168 tests / 0 fail after fix-pass (baseline main was 3,024/0 + 3 coverage-gated). A parallel
-session continues evolving fauna visit adapters (`big-tree-fauna-visitors`, sanctuary extraction) in
-its own lane; this entry is the audited green base it lands on.
+The converged suite count and production-browser result are recorded after the final repository gate
+below; this entry no longer relies on the earlier parallel-lane status.
+
+**Converged verification (all-fauna closure):** `bun run check` is green with 3,188 tests / 0 fail,
+3,545,435 expectations, 93.55% Windows line coverage / 91.55% function coverage (the canonical
+clean-Ubuntu floors remain 84.64/82.21), 320 mapped modules, and 117 production build artifacts. A
+real Chromium session captured Xenomimics from two camera angles and the Big Tree at phone + desktop
+quality with both the Entity web and Xenomimic connectome explicitly off; no Xenomimic tether was
+visible and the browser console reported 0 errors / 0 warnings. Live ecology evidence included all
+five autonomous fauna categories visiting simultaneously (Shoggoth/Titan/Leviathan/Puppeteer/Apex),
+canonical food leases + respawn timers, peaceful social pairs, 250 ready neural controllers with
+zero fallbacks, harm suppression, and concurrent travelling/active/leaving/cooldown records. One live
+fruit transaction awarded 28 nourishment once, rejected the duplicate with 0, remained respawning at
+4.999 s, and became available at exactly 5.000 s with zero lifecycle errors.
+
+**Remaining performance limitation:** the default phone+desktop visual-smoke workload exceeded its
+360 s headless-Chromium budget during deterministic full-world stepping. Targeted canvas captures and
+runtime inspection succeeded, but the live HUD measured roughly 12-17 FPS (58-99 ms p95 after boot),
+not the 60-120 FPS objective. This machine/browser result is recorded as a real open performance gap,
+not called a pass. GitHub Pages deployment is also not claimed by this local verification entry; it
+must be established from the post-merge workflow and the public URL.
 
 ## 2026-07-13 — Total code-health pass: perf, Tsotchke refresh, dead-code + doc-fork consolidation
 

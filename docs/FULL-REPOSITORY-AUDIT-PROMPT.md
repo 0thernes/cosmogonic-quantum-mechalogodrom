@@ -170,7 +170,7 @@ Modernize the repository’s supported toolchain and libraries carefully.
 10. Run the appropriate dependency and security audits and remediate actionable findings.
 11. Do not silence audit findings without documenting a valid technical reason.
 
-Pay special attention to repositories, packages, modules, submodules, copied code, APIs, or documentation associated with “Tsotchke”:
+Pay special attention to repositories, packages, modules, submodules, copied code, APIs, or documentation associated with "Tsotchke":
 
 - Locate every reference to Tsotchke across code, dependencies, documentation, remotes, submodules, and configuration.
 - Identify the authoritative upstream repositories.
@@ -866,7 +866,7 @@ Before committing:
 Commit strategy:
 
 - Create logical, reviewable commits with descriptive messages.
-- Do not combine unrelated changes into a meaningless “update everything” commit.
+- Do not combine unrelated changes into a meaningless "update everything" commit.
 - Do not rewrite existing shared history.
 - Do not force-push.
 - Include dependency and lockfile changes in the appropriate upgrade commit.

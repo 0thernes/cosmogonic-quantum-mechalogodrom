@@ -1576,7 +1576,7 @@ Copilot are constructed boot-stream-neutral and never write sim state, so the go
 
 ### V9 acceptance
 
-Full `bun run check` green: prettier → tsc strict → oxlint → 3168 tests (0 fail, 300-frame golden
+Full `bun run check` green: prettier → tsc strict → oxlint → 3188 tests (0 fail, 300-frame golden
 included) → build. The Copilot sandbox verified live (allow: `git log`, file reads; deny:
 path-escape, repository-root pathspecs, `git push`, `legacy/`, shell redirection).
 
@@ -1708,14 +1708,16 @@ above.
 
 ## Canonical module ownership
 
-| Module                           | Exclusive responsibility                                                                                                                                                              |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/sim/edible-resource.ts`     | Fixed-capacity fruit/leaf identity, reservation, consumption, nourishment, lease expiry, and respawn transactions                                                                     |
-| `src/sim/crystal-ecosystem.ts`   | Authored tree food pools and matrices, reachable interaction points, tree-dwelling creatures, and the scaled ecology clock                                                            |
-| `src/sim/big-tree-zone.ts`       | Sanctuary geometry, hysteresis, activity-slot ownership, bounded visit state, partner reservations, deadlines, snapshots, and recovery                                                |
-| `src/sim/big-tree-visitors.ts`   | Direct adapters for canonical Entities and Xenomimics: contextual selection, steering, food transactions, nourishment, rest, social matching, and cleanup                             |
-| `src/sim/tree-creature-brain.ts` | One deterministic fixed-size neural controller per tree-dwelling creature, with validated model loading and a safe fallback                                                           |
-| `src/world.ts`                   | Composition only: construct the shared zone/visit/visitor systems, supply canonical living populations and clocks, attach sanctuary predicates, and bridge peaceful activity feedback |
+| Module                               | Exclusive responsibility                                                                                                                                                                     |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/sim/edible-resource.ts`         | Fixed-capacity fruit/leaf identity, reservation, consumption, nourishment, lease expiry, and respawn transactions                                                                            |
+| `src/sim/crystal-ecosystem.ts`       | Authored tree food pools and matrices, reachable interaction points, tree-dwelling creatures, and the scaled ecology clock                                                                   |
+| `src/sim/big-tree-zone.ts`           | Sanctuary geometry, hysteresis, activity-slot ownership, bounded visit state, partner reservations, deadlines, snapshots, and recovery                                                       |
+| `src/sim/big-tree-visitors.ts`       | Direct adapters for canonical Entities and Xenomimics: contextual selection, steering, food transactions, nourishment, rest, social matching, and cleanup                                    |
+| `src/sim/big-tree-fauna-source.ts`   | Allocation-free ownership contract for Shoggoths, Titans, Leviathans, Puppeteers, and autonomous Apex bodies: stable identity, native energy, movement ownership, nourishment, and lifecycle |
+| `src/sim/big-tree-fauna-visitors.ts` | Bounded shared adapter for those five fauna categories: contextual visits, ground/flight steering, canonical food transactions, rest, cross-species social pairing, departure, and cleanup   |
+| `src/sim/tree-creature-brain.ts`     | One deterministic fixed-size neural controller per tree-dwelling creature, with validated model loading and a safe fallback                                                                  |
+| `src/world.ts`                       | Composition only: construct the shared zone/visit/visitor systems, supply canonical living populations and clocks, attach sanctuary predicates, and bridge peaceful activity feedback        |
 
 Tree food is not a parallel exception. `CrystalEcosystem.edibleResources` is the shared
 `EdibleResourceRegistry`, and both the external visitor adapter and the tree-dweller ecology use its
@@ -1778,7 +1780,8 @@ occupancy, and simulation load. The runtime lifecycle is:
 Outside -> Travelling -> Active -> Leaving -> Cooldown -> Outside
 ```
 
-The production scheduler has at most 72 concurrent travelling/active/leaving visitors and 104
+The production scheduler has at most 72 concurrent travelling/active/leaving visitors shared by
+Entities, Xenomimics, Shoggoths, Titans, Leviathans, Puppeteers, and autonomous Apex bodies, plus 104
 distributed destinations: 32 eating slots at radius 78, 24 resting at 132, 24 social at 178, 16
 observation at 218, and 8 general slots at 205. Active dwell is 7-24 simulation seconds; revisit
 cooldown is 35-95 seconds. Travel and exit hard limits are 90 and 50 seconds. Activity slots have a
@@ -1816,11 +1819,12 @@ underlying system performs one.
 
 ## Bounded-query and performance contract
 
-- Candidate discovery is round-robin and capped at 64 ordinary/Xenomimic candidates every 0.1
-  simulation seconds, not a full-population scan every frame.
+- Candidate discovery is round-robin and capped at 64 ordinary/Xenomimic plus 32 independently-owned
+  fauna candidates every 0.1 simulation seconds, not a full-population scan every frame.
 - Active work is bounded by the 72-visitor capacity. O(1) identity maps locate active ordinary and
-  Xenomimic visitors; the visit manager steps a dense scheduled-record set rather than every actor
-  record, and social matching is a single bounded pass rather than all pairs.
+  Xenomimic/fauna visitors; the visit manager steps a dense scheduled-record set rather than every
+  actor record. Ordinary matching is a single bounded pass; fauna partner matching is bounded solely
+  by the same 72 active records and never searches the full species populations.
 - The 20,000 food objects are fixed and pooled. Deterministic per-kind free lists make free-resource
   selection O(1); fixed indexed heaps make lease/respawn deadline changes O(log capacity) without
   per-cycle object growth.
@@ -1830,6 +1834,7 @@ underlying system performs one.
 
 Automated contract coverage lives in `tests/edible-resource.test.ts`,
 `tests/big-tree-zone.test.ts`, `tests/big-tree-visitors.test.ts`,
-`tests/tree-creature-brain.test.ts`, the Crystal ecosystem test family, and
+`tests/big-tree-fauna-visitors.test.ts`, `tests/big-tree-fauna-source-integration.test.ts`,
+`tests/tree-creature-brain.test.ts`, the Crystal ecosystem test family, `tests/super-hunt.test.ts`, and
 `tests/big-tree-world-integration.test.ts`. This amendment records implemented code and automated
 targets only; it does not claim GitHub Pages deployment or manual browser verification.
