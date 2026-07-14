@@ -195,6 +195,8 @@ export class ShoggothSystem implements PortalCullable {
   /** F-HOLES: the singularity system, attached by the composition root after construction; the
    *  active hole tugs the shoggoths too. null ⇒ no coupling (the legacy/test behaviour). */
   private singularity: SingularitySystem | null = null;
+  /** Shared sanctuary policy. Protected positions suppress threat, tendrils, pursuit, and feeding. */
+  private sanctuary: ((x: number, z: number) => boolean) | null = null;
   /** F-ECON-CREATURES V17: economic net-worth provider by shoggoth index (null ⇒ no coupling). */
   private econWealth: ((shoggothIndex: number) => number) | null = null;
   /** F-CREATURE-TRADE V29: conservation-exact worth transfer between two shoggoths (by index); returns
@@ -230,6 +232,11 @@ export class ShoggothSystem implements PortalCullable {
   /** Number of active shoggoths (100 on desktop, 16 on mobile — feeds the telemetry `shoggoths` field). */
   get count(): number {
     return this.shogs.length;
+  }
+
+  /** Attach the composition-root sanctuary predicate; null restores legacy predation. */
+  attachSanctuary(predicate: ((x: number, z: number) => boolean) | null): void {
+    this.sanctuary = predicate;
   }
 
   /**
@@ -481,6 +488,7 @@ export class ShoggothSystem implements PortalCullable {
       if (!sg.group.visible) continue; // portal-downed: dead (invisible) until respawn — don't hunt/consume/spawn
       const g = sg.group;
       const p = g.position;
+      const protectedHere = this.sanctuary?.(p.x, p.z) === true;
 
       // F-ECON-CREATURES V17: this shoggoth's WEALTH sets its boldness — rich = bolder (hunts harder,
       // glows bigger + brighter), broke = timid. Reads the deterministic economy; boldness stays 1
@@ -497,7 +505,13 @@ export class ShoggothSystem implements PortalCullable {
       for (let ni = 0; ni < nearby.length; ni++) {
         const en = nearby[ni];
         const ep0 = en?.position;
-        if (ep0 && dist2(p.x, p.y, p.z, ep0.x, ep0.y, ep0.z) < TENDRIL_REACH2) preyCount++;
+        if (
+          !protectedHere &&
+          ep0 &&
+          this.sanctuary?.(ep0.x, ep0.z) !== true &&
+          dist2(p.x, p.y, p.z, ep0.x, ep0.y, ep0.z) < TENDRIL_REACH2
+        )
+          preyCount++;
       }
       let crowd = 0;
       let nearJ = -1; // F-CREATURE-TRADE V29: nearest dealable neighbour within TRADE_R2 (a partner)
@@ -521,11 +535,12 @@ export class ShoggothSystem implements PortalCullable {
           nearJ = sj;
         }
       }
-      const singActive = this.singularity
-        ? this.singularity.bodyForce(p.x, p.y, p.z, dt, HOLE_F)
-        : false;
-      const threat = clamp(crowd / THREAT_CAP + (singActive ? 0.5 : 0), 0, 1);
-      const prey = clamp(preyCount / PREY_CAP, 0, 1);
+      const singActive =
+        !protectedHere && this.singularity
+          ? this.singularity.bodyForce(p.x, p.y, p.z, dt, HOLE_F)
+          : false;
+      const threat = protectedHere ? 0 : clamp(crowd / THREAT_CAP + (singActive ? 0.5 : 0), 0, 1);
+      const prey = protectedHere ? 0 : clamp(preyCount / PREY_CAP, 0, 1);
       sg.satiation = clamp(sg.satiation - SATIATION_DECAY * dt, 0, 1);
       // F-CREATURE-TRADE V29: the nearest shoggoth is a potential PARTNER. How wealth-comparable it is
       // (peer) decides whether we BARGAIN with it (the unlike) or ALLY with it (an equal). boldness is
@@ -533,11 +548,15 @@ export class ShoggothSystem implements PortalCullable {
       let partner = 0;
       let peer = 0;
       let nearBold = 1;
+      let partnerProtected = false;
       if (nearJ >= 0) {
         partner = clamp(1 - nearDD / TRADE_R2, 0, 1);
         if (this.econWealth)
           nearBold = clamp(this.econWealth(nearJ) / meanWorth, BOLD_MIN, BOLD_MAX);
         peer = clamp(1 - Math.abs(boldness - nearBold) / PEER_SPAN, 0, 1);
+        const nearShog = this.shogs[nearJ];
+        const nearPos = nearShog?.group.position;
+        partnerProtected = nearPos ? this.sanctuary?.(nearPos.x, nearPos.z) === true : false;
       }
       const intelligence = ctx.organismIntelligence;
       const intelligent = intelligence?.enabled === true;
@@ -569,7 +588,13 @@ export class ShoggothSystem implements PortalCullable {
       // frame. BARGAIN moves worth toward the BOLDER party (power ∝ wealth → widens the spread); ALLY
       // moves it toward the POORER peer (solidarity → narrows it). Conservation-exact via the provider;
       // the change shows up next tick through the existing wealth→boldness→glow coupling (no new state).
-      if (this.econTrade && nearJ >= 0 && (this.frame + si) % TRADE_EVERY === 0) {
+      if (
+        this.econTrade &&
+        nearJ >= 0 &&
+        !protectedHere &&
+        !partnerProtected &&
+        (this.frame + si) % TRADE_EVERY === 0
+      ) {
         if (drive.trade >= drive.ally && drive.trade > 0.05) {
           const amt = drive.trade * TRADE_FRACTION * meanWorth;
           if (boldness >= nearBold)
@@ -647,6 +672,10 @@ export class ShoggothSystem implements PortalCullable {
         p.y = PLATFORM_CEIL;
         if (sg.vel.y > 0) sg.vel.y = 0;
       }
+      // Re-evaluate after integration: an outside shoggoth can cross the sanctuary boundary during
+      // this very frame. All subsequent interaction writes must use its live position, not the stale
+      // pre-move membership sampled for perception.
+      const protectedAfterMove = this.sanctuary?.(p.x, p.z) === true;
 
       // Roiling rotation + pulsing core glow (legacy 527-530).
       g.rotation.x += Math.sin(t * 0.4 + sg.ph) * 0.008;
@@ -685,8 +714,9 @@ export class ShoggothSystem implements PortalCullable {
       let ti = 0;
       for (let ni = 0; ni < nearby.length && ti < TENDRIL_COUNT; ni++) {
         const en = nearby[ni];
-        if (!en) continue; // noUncheckedIndexedAccess: ni < length
+        if (!en || protectedAfterMove) continue; // sanctuary keeps the appendages calm and non-harmful
         const ep = en.position;
+        if (this.sanctuary?.(ep.x, ep.z) === true) continue;
         if (dist2(p.x, p.y, p.z, ep.x, ep.y, ep.z) < TENDRIL_REACH2) {
           const o = ti * 6;
           tp[o] = 0;
@@ -716,6 +746,7 @@ export class ShoggothSystem implements PortalCullable {
       // Effective hunger combines WEALTH (V17 boldness) with the V24 HUNT drive: a rich, prey-rich,
       // unthreatened, hungry shoggoth feeds sooner; a fleeing/threatened/sated one waits far longer.
       if (
+        !protectedAfterMove &&
         sg.feedTimer >= sg.feedInterval / (boldness * (0.6 + 0.5 * drive.hunt)) &&
         list.length > 50
       ) {
@@ -738,7 +769,13 @@ export class ShoggothSystem implements PortalCullable {
           const e = consumeCandidates[ci];
           // V122: NHI MATRIX beings are not prey; a mesh a sibling shoggoth already devoured this tick
           // (alive=false, out of `list`) is not prey either.
-          if (!e || e.userData.isNhi || e.userData.alive === false) continue;
+          if (
+            !e ||
+            e.userData.isNhi ||
+            e.userData.alive === false ||
+            this.sanctuary?.(e.position.x, e.position.z) === true
+          )
+            continue;
           const ep = e.position;
           const sd = dist2(p.x, p.y, p.z, ep.x, ep.y, ep.z);
           if (sd >= CONSUME_REACH2) continue;
@@ -753,7 +790,13 @@ export class ShoggothSystem implements PortalCullable {
         if (anyReach) {
           for (let ci = 0; ci < consumeCandidates.length; ci++) {
             const e = consumeCandidates[ci];
-            if (!e || e.userData.isNhi || e.userData.alive === false) continue;
+            if (
+              !e ||
+              e.userData.isNhi ||
+              e.userData.alive === false ||
+              this.sanctuary?.(e.position.x, e.position.z) === true
+            )
+              continue;
             const ep = e.position;
             const sd = dist2(p.x, p.y, p.z, ep.x, ep.y, ep.z);
             if (sd !== bestD) continue;
@@ -768,7 +811,12 @@ export class ShoggothSystem implements PortalCullable {
             V3.set((rng() - 0.5) * 4, rng() * 2 - 1, (rng() - 0.5) * 4);
             V2.copy(p).add(V3);
             // Corrupted child draws over the LIVE morph table (250 in phylum mode).
-            const child = this.entities.spawn(V2, Math.floor(rng() * ctx.morphs.length), 0.6);
+            const childMorph = Math.floor(rng() * ctx.morphs.length);
+            // A kill just outside the refuge must not materialize corrupted spawn INSIDE it —
+            // mirrors the titan strike-burst guard. The draws above stay consumed either way so
+            // the seeded stream keeps its schedule.
+            if (this.sanctuary?.(V2.x, V2.z) === true) continue;
+            const child = this.entities.spawn(V2, childMorph, 0.6);
             if (child) {
               child.material.color.setHSL(rng() * 0.1 + 0.7, 0.5, 0.08);
               child.material.emissive.set(0x110022);

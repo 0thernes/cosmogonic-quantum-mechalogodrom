@@ -166,6 +166,30 @@ describe('PortalDeath', () => {
     pd.dispose();
   });
 
+  test('a sanctuary-protected organism is neither killed nor queued for a delayed respawn', () => {
+    const ctx = makeCtx(41, 50);
+    const entities = new EntityManager(ctx);
+    const pd = new PortalDeath(ctx);
+    pd.setActive(true);
+    const protectedEntity = entities.spawn(PORTAL.clone(), 0);
+    let deathCallbacks = 0;
+    let protectionChecks = 0;
+    const isProtected = (x: number, z: number): boolean => {
+      protectionChecks++;
+      return x === PORTAL.x && z === PORTAL.z;
+    };
+
+    pd.update(entities, 1, DT, () => deathCallbacks++, isProtected);
+    pd.update(entities, 7, DT, () => deathCallbacks++, isProtected);
+
+    expect(protectionChecks).toBeGreaterThan(0);
+    expect(entities.list).toEqual([protectedEntity as Entity]);
+    expect(deathCallbacks).toBe(0);
+    expect(pd.kills).toBe(0);
+    expect(pd.stats().pending).toBe(0);
+    pd.dispose();
+  });
+
   test('deterministic: two identical runs kill + respawn identically', () => {
     const run = (): { kills: number; count: number; xs: number[] } => {
       const ctx = makeCtx(7, 64);

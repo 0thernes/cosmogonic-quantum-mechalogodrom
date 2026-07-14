@@ -42,6 +42,14 @@ export interface SuperHuntStats {
   pending: number;
 }
 
+/** Allocation-free policy gate for predator/prey interactions (for example, authored safe zones). */
+export type SuperHuntHarmAllowed = (
+  attackerX: number,
+  attackerZ: number,
+  targetX: number,
+  targetZ: number,
+) => boolean;
+
 export class SuperHunt {
   private readonly ctx: SimContext;
   private readonly geo = new THREE.BufferGeometry();
@@ -135,6 +143,7 @@ export class SuperHunt {
   /**
    * Per-frame: while advancing, each apex hunts + eats the organisms; then fire due respawns ELSEWHERE
    * and advance + fade the feed-puffs. Frozen dt=0 ⇒ no hunting (puffs hold). O(apexes · n + POOL).
+   * `harmAllowed`, when supplied, gates both pursuit and consumption without allocating interaction state.
    */
   update(
     bodies: readonly SuperBodySystem[],
@@ -142,6 +151,7 @@ export class SuperHunt {
     t: number,
     dt: number,
     onEat?: (e: Entity, index: number) => void,
+    harmAllowed?: SuperHuntHarmAllowed,
   ): void {
     const nb = bodies.length;
     if (dt > 0 && nb > 0) {
@@ -162,6 +172,7 @@ export class SuperHunt {
         let consumed = false;
         for (let b = 0; b < nb; b++) {
           const bp = this.bodyPos[b]!;
+          if (harmAllowed !== undefined && !harmAllowed(bp.x, bp.z, p.x, p.z)) continue;
           const dx = p.x - bp.x;
           const dy = p.y - bp.y;
           const dz = p.z - bp.z;

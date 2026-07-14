@@ -111,6 +111,7 @@ function makeWorld(
   organismIntelligence?: OrganismIntelligenceSignal,
 ): {
   ctx: SimContext;
+  entities: EntityManager;
   pm: PuppetMasterSystem;
   events: PuppetEvent[];
 } {
@@ -121,7 +122,7 @@ function makeWorld(
   const events: PuppetEvent[] = [];
   // EVENT is a reused module scratch object — copy it on receipt to retain a history.
   const pm = new PuppetMasterSystem(ctx, entities, (e) => events.push({ ...e }));
-  return { ctx, pm, events };
+  return { ctx, entities, pm, events };
 }
 
 /** Pre-intervention state used to prove both matched arms start from the same class state. */
@@ -301,5 +302,95 @@ describe('PuppetMasterSystem — deterministic schemers that perturb the world w
       }
       expect(Number.isFinite(p.u.uTime.value)).toBe(true);
     }
+  });
+});
+
+interface PuppetSanctuaryView {
+  mesh: THREE.Mesh;
+  ti: number;
+  satiation: number;
+  u: {
+    uAgitation: { value: number };
+    uHunt: { value: number };
+  };
+}
+
+interface PuppetSanctuaryHarness {
+  pms: PuppetSanctuaryView[];
+  act(puppet: PuppetSanctuaryView): void;
+}
+
+describe('PuppetMasterSystem — sanctuary suppression and deterministic target filtering', () => {
+  test('protected puppets freeze their meddle cadence and resume normally on exit', () => {
+    const { ctx, pm, events } = makeWorld(0x5afe);
+    const harness = pm as unknown as PuppetSanctuaryHarness;
+    for (const puppet of harness.pms) puppet.ti = 1_000_000;
+    const timersBefore = harness.pms.map((puppet) => puppet.ti);
+    const satiationBefore = harness.pms.map((puppet) => puppet.satiation);
+    const stateBefore = {
+      chaos: ctx.state.chaos,
+      weather: ctx.state.weatherIdx,
+      mutations: ctx.state.mutations,
+    };
+    let rngDraws = 0;
+    ctx.rng = () => {
+      rngDraws++;
+      return 0.25;
+    };
+
+    pm.attachSanctuary(() => true);
+    pm.update(1 / 60, 0);
+    expect(events).toHaveLength(0);
+    expect(rngDraws).toBe(0);
+    expect(harness.pms.map((puppet) => puppet.ti)).toEqual(timersBefore);
+    expect(harness.pms.map((puppet) => puppet.satiation)).toEqual(satiationBefore);
+    expect({
+      chaos: ctx.state.chaos,
+      weather: ctx.state.weatherIdx,
+      mutations: ctx.state.mutations,
+    }).toEqual(stateBefore);
+    for (const puppet of harness.pms) {
+      expect(puppet.u.uAgitation.value).toBe(0);
+      expect(puppet.u.uHunt.value).toBe(0);
+    }
+
+    pm.attachSanctuary(null);
+    pm.update(1 / 60, 1 / 60);
+    expect(events.length).toBeGreaterThan(0);
+    expect(rngDraws).toBeGreaterThan(0);
+    pm.dispose();
+  });
+
+  test('mutate skips protected targets but consumes the same two RNG draws per attempt', () => {
+    const run = (
+      protectTargets: boolean,
+    ): { draws: number; remorphs: number; mutations: number } => {
+      const { ctx, entities, pm } = makeWorld(0xc0ffee);
+      const harness = pm as unknown as PuppetSanctuaryHarness;
+      const mutator = harness.pms[2]!;
+      // Keep the acting puppet outside the test sanctuary while every organism lies inside it.
+      mutator.mesh.position.set(10_000, 10_000, 10_000);
+      pm.attachSanctuary(protectTargets ? (x, z) => x !== 10_000 || z !== 10_000 : () => false);
+      let draws = 0;
+      ctx.rng = () => {
+        draws++;
+        return 0;
+      };
+      const remorph = spyOn(entities, 'remorph');
+      harness.act(mutator);
+      const result = {
+        draws,
+        remorphs: remorph.mock.calls.length,
+        mutations: ctx.state.mutations,
+      };
+      remorph.mockRestore();
+      pm.dispose();
+      return result;
+    };
+
+    const protectedRun = run(true);
+    const normalRun = run(false);
+    expect(protectedRun).toEqual({ draws: 120, remorphs: 0, mutations: 0 });
+    expect(normalRun).toEqual({ draws: 120, remorphs: 30, mutations: 30 });
   });
 });

@@ -222,6 +222,8 @@ export class PuppetMasterSystem implements PortalCullable, DomeFeeder {
   private readonly portalDowned: { pm: Puppet; at: number }[] = [];
   /** F-ECON-CREATURES V19: economic net-worth provider by puppeteer index (null ⇒ no coupling). */
   private econWealth: ((puppetIndex: number) => number) | null = null;
+  /** Shared neutral-zone policy. Protection is derived from live positions, never persisted. */
+  private sanctuary: ((x: number, z: number) => boolean) | null = null;
 
   /**
    * Builds the puppeteer cabal (CONTRACTS V14: 100 on desktop+, 14 on phone). The 3 named heroes
@@ -247,6 +249,11 @@ export class PuppetMasterSystem implements PortalCullable, DomeFeeder {
    */
   attachEconomy(wealthByIndex: ((puppetIndex: number) => number) | null): void {
     this.econWealth = wealthByIndex;
+  }
+
+  /** Attach the composition-root sanctuary predicate; null restores legacy meddling. */
+  attachSanctuary(predicate: ((x: number, z: number) => boolean) | null): void {
+    this.sanctuary = predicate;
   }
 
   /** Build one puppeteer (tetra core + torus ring; a point light only on the first LIT_PUPPETS). */
@@ -398,11 +405,10 @@ export class PuppetMasterSystem implements PortalCullable, DomeFeeder {
       // recent meddling → a scheming opportunism. threat=0 (disembodied; never flees); the HUNT drive
       // is the meddle urge, AGITATION the restless glow/spin. Reuses the shared creatureDrive kernel.
       const here = pm.mesh.position;
-      const localOpportunity = clamp(
-        this.ctx.grid.query(here.x, here.z, PUP_OPP_R).length / PUP_OPP_CAP,
-        0,
-        1,
-      );
+      const protectedHere = this.isProtectedAt(here.x, here.z);
+      const localOpportunity = protectedHere
+        ? 0
+        : clamp(this.ctx.grid.query(here.x, here.z, PUP_OPP_R).length / PUP_OPP_CAP, 0, 1);
       const intelligence = this.ctx.organismIntelligence;
       const opportunity = intelligence?.enabled
         ? clamp(
@@ -413,15 +419,17 @@ export class PuppetMasterSystem implements PortalCullable, DomeFeeder {
             1,
           )
         : localOpportunity;
-      pm.satiation = clamp(pm.satiation - PUP_SAT_DECAY * dt, 0, 1);
+      if (!protectedHere) pm.satiation = clamp(pm.satiation - PUP_SAT_DECAY * dt, 0, 1);
       const drive = creatureDrive({
         threat: 0,
         prey: opportunity,
         satiation: pm.satiation,
         boldness,
       });
+      const agitation = protectedHere ? 0 : drive.agitation;
+      const hunt = protectedHere ? 0 : drive.hunt;
       pm.mesh.rotation.x += dt * 0.5;
-      pm.mesh.rotation.y += dt * (0.7 + drive.agitation * 0.5); // restless when there's chaos to exploit
+      pm.mesh.rotation.y += dt * (0.7 + agitation * 0.5); // sanctuary removes the scheming restlessness
       // Wealth shows on the body: a rich hand looms larger (the visible purse).
       pm.mesh.scale.setScalar(0.8 + 0.25 * boldness);
       pm.ring.rotation.z = t * 2;
@@ -431,7 +439,7 @@ export class PuppetMasterSystem implements PortalCullable, DomeFeeder {
       pm.mat.emissiveIntensity =
         (1.5 + Math.sin(t * 2 + cfg.hue * 15) * 0.8) *
         (0.65 + 0.4 * boldness) *
-        (0.8 + 0.4 * drive.agitation);
+        (0.8 + 0.4 * agitation);
       // Drive the manipulator shader from the REAL per-puppet signals (each clamped to [0,1] so every
       // named effect is a bounded, falsifiable readout): feeding memory, wealth-boldness, scheming
       // agitation, and the hunt drive. A spent/poor/idle hand goes quiet; a gorged/rich/scheming one blazes.
@@ -439,26 +447,32 @@ export class PuppetMasterSystem implements PortalCullable, DomeFeeder {
       pu.uTime.value = t;
       pu.uSatiation.value = pm.satiation;
       pu.uBoldness.value = clamp(boldness, 0, 1);
-      pu.uAgitation.value = clamp(drive.agitation, 0, 1);
-      pu.uHunt.value = clamp(drive.hunt, 0, 1);
-      pm.ti += dt * 30;
+      pu.uAgitation.value = clamp(agitation, 0, 1);
+      pu.uHunt.value = clamp(hunt, 0, 1);
+      if (!protectedHere) pm.ti += dt * 30;
       // Meddle cadence: WEALTH (V19 boldness) × the V25 opportunism HUNT drive — a rich hand over a
       // disordered, target-rich sector that hasn't acted lately strikes soonest; a spent one waits.
       const planningGain = intelligence?.enabled
         ? 0.9 + intelligence.confidence * 0.06 + intelligence.exploration * 0.08
         : 1;
-      if (pm.ti >= cfg.iv / (boldness * (0.6 + 0.5 * drive.hunt) * planningGain)) {
+      if (!protectedHere && pm.ti >= cfg.iv / (boldness * (0.6 + 0.5 * hunt) * planningGain)) {
         pm.ti = 0;
         pm.satiation = clamp(pm.satiation + PUP_SAT_BUMP, 0, 1); // remember the meddle
-        this.act(cfg);
+        this.act(pm);
       }
     }
   }
 
   /** Perform one interval action (legacy 498-501). */
-  private act(cfg: PuppetConfig): void {
+  private act(pm: Puppet): void {
     const ctx = this.ctx;
     const rng = ctx.rng;
+    const pp = pm.mesh.position;
+    // Defense-in-depth only: update() already freezes the meddle timer for a protected hand
+    // (`if (!protectedHere) pm.ti += ...`), so this return is unreachable from the production
+    // cadence and therefore never drops the act's seeded draws mid-schedule.
+    if (this.isProtectedAt(pp.x, pp.z)) return;
+    const cfg = pm.cfg;
     switch (cfg.act) {
       case 'chaos': {
         ctx.state.chaos = clamp(ctx.state.chaos + 0.5 + rng() * 2, CHAOS_MIN, CHAOS_MAX * 0.7);
@@ -476,15 +490,28 @@ export class PuppetMasterSystem implements PortalCullable, DomeFeeder {
       case 'mutate': {
         const list = this.entities.list;
         const mc = Math.min(30, list.length);
+        let mutated = 0;
         for (let mi = 0; mi < mc; mi++) {
           const target = list[Math.floor(rng() * list.length)];
-          // Remorph rolls over the LIVE morph table (250 in phylum mode).
-          if (target) this.entities.remorph(target, Math.floor(rng() * ctx.morphs.length));
+          // Draw the morph unconditionally so protected-target filtering cannot drift the seeded
+          // decision stream. EntityManager.list is dense, making this identical to the legacy path
+          // when no sanctuary is attached.
+          const morph = Math.floor(rng() * ctx.morphs.length);
+          if (!target) continue;
+          if (this.isProtectedAt(target.position.x, target.position.z)) {
+            // EntityManager.remorph consumes two draws for wf/wa. Mirror them when sanctuary blocks
+            // the write so later actors see the same seeded stream without touching the protected body.
+            rng();
+            rng();
+            continue;
+          }
+          this.entities.remorph(target, morph);
+          mutated++;
         }
         // Known Bug 14: the counter is now read by telemetry (#v8), so keep it accurate.
-        ctx.state.mutations += mc;
-        // Invariant: mc ∈ [0, 30] and RESHAPE_MESSAGES has 31 entries.
-        this.emit(cfg.name, RESHAPE_MESSAGES[mc]!);
+        ctx.state.mutations += mutated;
+        // Invariant: mutated ∈ [0, 30] and RESHAPE_MESSAGES has 31 entries.
+        this.emit(cfg.name, RESHAPE_MESSAGES[mutated]!);
         ctx.sfx('mutate');
         break;
       }
@@ -496,5 +523,9 @@ export class PuppetMasterSystem implements PortalCullable, DomeFeeder {
     EVENT.name = name;
     EVENT.action = action;
     this.onEvent(EVENT);
+  }
+
+  private isProtectedAt(x: number, z: number): boolean {
+    return this.sanctuary?.(x, z) === true;
   }
 }

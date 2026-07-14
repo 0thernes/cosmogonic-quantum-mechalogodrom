@@ -150,6 +150,107 @@ describe('ChaosField (V62 CHAOS MODE)', () => {
     expect(internals.pairs).toHaveLength(0);
     expect(f.entangledCount).toBe(0);
   });
+
+  test('sanctuary suppresses phase, momentum, and tunnelling writes without freezing exposed peers', () => {
+    const f = new ChaosField(0x5afe);
+    const protectedEntity = mkEntity(20, 3, -7);
+    const exposedEntity = mkEntity(-20, 3, 7);
+    const list = [protectedEntity, exposedEntity, ...mkList(4)];
+    const state = mkState();
+    const before = {
+      x: protectedEntity.position.x,
+      y: protectedEntity.position.y,
+      z: protectedEntity.position.z,
+      qP: protectedEntity.userData.qP,
+      vx: protectedEntity.userData.vel.x,
+      vy: protectedEntity.userData.vel.y,
+      vz: protectedEntity.userData.vel.z,
+    };
+    const exposedBefore = signature([exposedEntity]);
+    f.attachSanctuary((x, z) => x === before.x && z === before.z);
+    f.toggle();
+
+    for (let frame = 0; frame < 600; frame++) {
+      f.update(1 / 60, list, state);
+      state.frame++;
+    }
+
+    expect({
+      x: protectedEntity.position.x,
+      y: protectedEntity.position.y,
+      z: protectedEntity.position.z,
+      qP: protectedEntity.userData.qP,
+      vx: protectedEntity.userData.vel.x,
+      vy: protectedEntity.userData.vel.y,
+      vz: protectedEntity.userData.vel.z,
+    }).toEqual(before);
+    expect(signature([exposedEntity])).not.toBe(exposedBefore);
+  });
+
+  test('sanctuary filtering preserves the dedicated storm RNG cadence', () => {
+    const filtered = new ChaosField(0xcade);
+    const control = new ChaosField(0xcade);
+    const filteredList = mkList(6);
+    const controlList = mkList(6);
+    const filteredState = mkState();
+    const controlState = mkState();
+    const protectedEntity = filteredList[0]!;
+    filtered.attachSanctuary(
+      (x, z) => x === protectedEntity.position.x && z === protectedEntity.position.z,
+    );
+    filtered.toggle();
+    control.toggle();
+
+    for (let frame = 0; frame < 180; frame++) {
+      filtered.update(1 / 60, filteredList, filteredState);
+      control.update(1 / 60, controlList, controlState);
+      filteredState.frame++;
+      controlState.frame++;
+    }
+    filtered.attachSanctuary(null);
+
+    const filteredTunnels: number[] = [];
+    const controlTunnels: number[] = [];
+    for (let frame = 0; frame < 600; frame++) {
+      filtered.update(1 / 60, filteredList, filteredState);
+      control.update(1 / 60, controlList, controlState);
+      filteredTunnels.push(filtered.tunnels);
+      controlTunnels.push(control.tunnels);
+      filteredState.frame++;
+      controlState.frame++;
+    }
+    expect(filteredTunnels).toEqual(controlTunnels);
+    expect(filtered.intensity).toBe(control.intensity);
+    expect(filteredState.chaos).toBe(controlState.chaos);
+  });
+
+  test('entanglement is suspended across the sanctuary boundary and resumes only after exit', () => {
+    const f = new ChaosField(0x51de);
+    const protectedEntity = mkEntity(0, 0, 0);
+    const exposedEntity = mkEntity(1, 0, 0);
+    protectedEntity.userData.vel.x = 10;
+    exposedEntity.userData.vel.x = -2;
+    const internals = f as unknown as {
+      pairs: [Entity, Entity][];
+      pairTimer: number;
+      applyEntanglement(dt: number, list: readonly Entity[], intensity: number): void;
+    };
+    internals.pairs.push([protectedEntity, exposedEntity]);
+    internals.pairTimer = 1;
+    f.attachSanctuary((x, z) => x === 0 && z === 0);
+
+    internals.applyEntanglement(1 / 60, [protectedEntity, exposedEntity], 1);
+    expect(protectedEntity.userData.vel.x).toBe(10);
+    expect(exposedEntity.userData.vel.x).toBe(-2);
+    expect(internals.pairs).toHaveLength(1); // suspended, not re-picked on a different RNG cadence
+    expect(f.entangledCount).toBe(0);
+
+    f.attachSanctuary(null);
+    internals.applyEntanglement(1 / 60, [protectedEntity, exposedEntity], 1);
+    expect(protectedEntity.userData.vel.x).toBeLessThan(10);
+    expect(exposedEntity.userData.vel.x).toBeGreaterThan(-2);
+    expect(f.entangledCount).toBe(2);
+  });
 });
 
 /** Median of a numeric array (does not mutate the input). */

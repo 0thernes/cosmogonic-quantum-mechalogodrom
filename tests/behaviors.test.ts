@@ -79,6 +79,8 @@ function makeEnv(ctx: SimContext): BehaviorEnv {
   return {
     ctx,
     spawn: () => null, // 'split' reaches the cap → null, exactly like a full world
+    sanctuaryAt: null,
+    actorProtected: false,
     dt: 1 / 60,
     t,
     cm: 3, // max chaos multiplier — the hostile regime
@@ -164,5 +166,129 @@ describe('behaviors — all 26 handlers stay finite and bounded', () => {
       return [e.position.x, e.position.y, e.position.z, v.x, v.y, v.z];
     };
     expect(run()).toEqual(run());
+  });
+});
+
+function twoEntityFixture(seed: number): {
+  ctx: SimContext;
+  ents: EntityManager;
+  actor: Entity;
+  target: Entity;
+  env: BehaviorEnv;
+} {
+  const ctx = makeCtx(seed);
+  const ents = new EntityManager(ctx);
+  ents.reset(2);
+  const actor = ents.list[0];
+  const target = ents.list[1];
+  if (!actor || !target) throw new Error('two-entity fixture failed to spawn');
+  actor.position.set(0, 0, 0);
+  target.position.set(2, 0, 0);
+  ctx.grid.clear();
+  ctx.grid.insert(actor);
+  ctx.grid.insert(target);
+  return { ctx, ents, actor, target, env: makeEnv(ctx) };
+}
+
+describe('behaviors — Big Tree sanctuary boundary', () => {
+  const crossBodyBehaviors: Array<'nash' | 'market' | 'typemorph' | 'setunion'> = [
+    'nash',
+    'market',
+    'typemorph',
+    'setunion',
+  ];
+
+  test.each(crossBodyBehaviors)(
+    '%s cannot affect bodies when the actor is protected',
+    (behavior) => {
+      const { ctx, actor, target, env } = twoEntityFixture(0x5afe0001);
+      Object.defineProperty(ctx, 'rng', { value: () => 0.5 });
+      actor.userData.beh = behavior;
+      actor.userData.vel.set(0, 0, 0);
+      actor.userData.energy = 20;
+      actor.userData.payoff = 0;
+      actor.userData.strategy = 0;
+      actor.userData.typeId = 0;
+      actor.userData.setGroup = 0;
+      target.userData.energy = 90;
+      target.userData.strategy = 1;
+      target.userData.typeId = 4;
+      target.userData.setGroup = 3;
+      env.sanctuaryAt = (x) => x === 0;
+
+      applyBehavior(actor, env);
+
+      expect(actor.userData.vel.toArray()).toEqual([0, 0, 0]);
+      expect(actor.userData.energy).toBe(20);
+      expect(actor.userData.payoff).toBe(0);
+      expect(actor.userData.strategy).toBe(0);
+      expect(target.userData.energy).toBe(90);
+    },
+  );
+
+  test.each(crossBodyBehaviors)(
+    '%s cannot affect a protected target across the boundary',
+    (behavior) => {
+      const { ctx, actor, target, env } = twoEntityFixture(0x5afe0002);
+      Object.defineProperty(ctx, 'rng', { value: () => 0.5 });
+      actor.userData.beh = behavior;
+      actor.userData.vel.set(0, 0, 0);
+      actor.userData.energy = 20;
+      actor.userData.payoff = 3;
+      actor.userData.strategy = 0;
+      actor.userData.typeId = 0;
+      actor.userData.setGroup = 0;
+      target.userData.energy = 90;
+      target.userData.strategy = 1;
+      target.userData.typeId = 4;
+      target.userData.setGroup = 3;
+      env.sanctuaryAt = (x) => x === 2;
+
+      applyBehavior(actor, env);
+
+      expect(actor.userData.vel.toArray()).toEqual([0, 0, 0]);
+      expect(actor.userData.energy).toBe(20);
+      expect(actor.userData.payoff).toBe(3);
+      expect(actor.userData.strategy).toBe(0);
+      expect(target.userData.energy).toBe(90);
+    },
+  );
+
+  test('friendly flocking remains active between protected organisms', () => {
+    const { actor, env } = twoEntityFixture(0x5afe0003);
+    actor.userData.beh = 'flock';
+    actor.userData.vel.set(0, 0, 0);
+    env.sanctuaryAt = () => true;
+
+    applyBehavior(actor, env);
+
+    expect(actor.userData.vel.x).toBeGreaterThan(0);
+    expect(actor.userData.vel.y).toBe(0);
+    expect(actor.userData.vel.z).toBe(0);
+  });
+
+  test('sanctuary removes chaos and wind force, preserves damping, and consumes the same RNG draws', () => {
+    const run = (protectedHere: boolean): { velocity: number[]; nextDraw: number } => {
+      const ctx = makeCtx(0x5afe0004);
+      const ents = new EntityManager(ctx);
+      ents.reset(1);
+      const actor = firstEntity(ents);
+      actor.position.set(0, 0, 0);
+      actor.userData.beh = 'pulse';
+      actor.userData.vel.set(0.1, 0.2, -0.3);
+      ents.attachSanctuary(protectedHere ? () => true : () => false);
+
+      ents.update(1 / 60, 1);
+
+      return { velocity: actor.userData.vel.toArray(), nextDraw: ctx.rng() };
+    };
+
+    const calm = run(true);
+    const exposed = run(false);
+    expect(calm.velocity[0]).toBeCloseTo(0.1 * 0.985, 12);
+    expect(calm.velocity[1]).toBeCloseTo(0.2 * 0.985, 12);
+    expect(calm.velocity[2]).toBeCloseTo(-0.3 * 0.985, 12);
+    expect(exposed.velocity).not.toEqual(calm.velocity);
+    expect(calm.nextDraw).toBe(exposed.nextDraw);
   });
 });

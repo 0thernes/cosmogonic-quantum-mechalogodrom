@@ -64,6 +64,17 @@ export interface BehaviorEnv {
   readonly ctx: SimContext;
   /** Spawn hook for the 'split' behavior — EntityManager.spawn (returns null at the cap). */
   readonly spawn: (pos: THREE.Vector3, mi: number, scale: number) => Entity | null;
+  /**
+   * Authored neutral-zone query shared with the rest of the dome. `null` preserves the legacy
+   * behavior exactly. The predicate is stateless and uses the zone's conservative outer boundary,
+   * so an outside actor cannot affect a protected body through the edge.
+   */
+  sanctuaryAt: ((x: number, z: number) => boolean) | null;
+  /**
+   * Membership of the actor currently being dispatched. {@link applyBehavior} rewrites this before
+   * every handler call so handlers and the post-behavior integrator use one predicate result.
+   */
+  actorProtected: boolean;
   /** Frame delta in seconds (already timeScaled by the composition root). */
   dt: number;
   /** Sim elapsed time in seconds. */
@@ -298,21 +309,28 @@ function quantum(_e: Entity, u: EntityData, env: BehaviorEnv): void {
  * strategy (legacy lines 735-739). O(k).
  */
 function nash(e: Entity, u: EntityData, env: BehaviorEnv): void {
-  const nb = env.ctx.grid.query(e.position.x, e.position.z, SOCIAL_NASH_R);
-  for (let i = 0; i < nb.length; i++) {
-    const ne = nb[i];
-    if (!ne || ne === e) continue;
-    if (dist2XZ(e.position.x, e.position.z, ne.position.x, ne.position.z) < NASH_R2) {
-      const them = ne.userData.strategy;
-      u.payoff = u.strategy === 0 ? (them === 0 ? 3 : 0) : them === 0 ? 5 : 1;
-      V1.copy(ne.position)
-        .sub(e.position)
-        .normalize()
-        .multiplyScalar(them === 0 ? 0.0012 * env.sp2 : -0.0009 * env.sp2);
-      u.vel.add(V1);
+  if (!env.actorProtected) {
+    const nb = env.ctx.grid.query(e.position.x, e.position.z, SOCIAL_NASH_R);
+    for (let i = 0; i < nb.length; i++) {
+      const ne = nb[i];
+      if (!ne || ne === e || env.sanctuaryAt?.(ne.position.x, ne.position.z) === true) continue;
+      if (dist2XZ(e.position.x, e.position.z, ne.position.x, ne.position.z) < NASH_R2) {
+        const them = ne.userData.strategy;
+        u.payoff = u.strategy === 0 ? (them === 0 ? 3 : 0) : them === 0 ? 5 : 1;
+        V1.copy(ne.position)
+          .sub(e.position)
+          .normalize()
+          .multiplyScalar(them === 0 ? 0.0012 * env.sp2 : -0.0009 * env.sp2);
+        u.vel.add(V1);
+      }
     }
   }
-  if (u.payoff < 1.5 && env.ctx.rng() < 0.01 * env.cm) u.strategy = u.strategy === 0 ? 1 : 0;
+  // Keep the legacy conditional draw for an already-low payoff, but a protected actor may not
+  // mutate strategy while the Nash game is suspended. Outside a sanctuary this is byte-identical.
+  if (u.payoff < 1.5) {
+    const shouldFlip = env.ctx.rng() < 0.01 * env.cm;
+    if (!env.actorProtected && shouldFlip) u.strategy = u.strategy === 0 ? 1 : 0;
+  }
 }
 
 /**
@@ -324,10 +342,12 @@ function market(e: Entity, u: EntityData, env: BehaviorEnv): void {
   u.energy += (rng() - 0.5) * env.cm * 0.5;
   u.energy = clamp(u.energy, 0, 100);
   e.scale.setScalar(u.sc * (0.5 + u.energy / 100));
+  // Personal income/metabolism remains live at the tree; only cross-body trade and steering pause.
+  if (env.actorProtected) return;
   const nb = env.ctx.grid.query(e.position.x, e.position.z, SOCIAL_MARKET_R);
   for (let i = 0; i < nb.length; i++) {
     const ne = nb[i];
-    if (!ne || ne === e) continue;
+    if (!ne || ne === e || env.sanctuaryAt?.(ne.position.x, ne.position.z) === true) continue;
     if (dist2XZ(e.position.x, e.position.z, ne.position.x, ne.position.z) < MARKET_R2) {
       const diff = ne.userData.energy - u.energy;
       if (Math.abs(diff) > 20) {
@@ -348,10 +368,11 @@ function market(e: Entity, u: EntityData, env: BehaviorEnv): void {
  * (legacy lines 745-748). O(k).
  */
 function typemorph(e: Entity, u: EntityData, env: BehaviorEnv): void {
+  if (env.actorProtected) return;
   const nb = env.ctx.grid.query(e.position.x, e.position.z, SOCIAL_TYPEMORPH_R);
   for (let i = 0; i < nb.length; i++) {
     const ne = nb[i];
-    if (!ne || ne === e) continue;
+    if (!ne || ne === e || env.sanctuaryAt?.(ne.position.x, ne.position.z) === true) continue;
     if (dist2XZ(e.position.x, e.position.z, ne.position.x, ne.position.z) < TYPEMORPH_R2) {
       const same = u.typeId === ne.userData.typeId;
       const sub = Math.abs(u.typeId - ne.userData.typeId) === 1;
@@ -372,6 +393,7 @@ function typemorph(e: Entity, u: EntityData, env: BehaviorEnv): void {
  * O(k).
  */
 function setunion(e: Entity, u: EntityData, env: BehaviorEnv): void {
+  if (env.actorProtected) return;
   const nb = env.ctx.grid.query(e.position.x, e.position.z, SOCIAL_SETUNION_R);
   V2.set(0, 0, 0);
   let cnt = 0;
@@ -379,7 +401,7 @@ function setunion(e: Entity, u: EntityData, env: BehaviorEnv): void {
   let kinE: Entity | null = null;
   for (let i = 0; i < nb.length; i++) {
     const ne = nb[i];
-    if (!ne || ne === e) continue;
+    if (!ne || ne === e || env.sanctuaryAt?.(ne.position.x, ne.position.z) === true) continue;
     const dd = dist2XZ(e.position.x, e.position.z, ne.position.x, ne.position.z);
     if (ne.userData.setGroup === u.setGroup && dd < SETUNION_SAME_R2) {
       V2.add(ne.position);
@@ -533,6 +555,7 @@ const HANDLERS: Readonly<Record<Behavior, Handler>> = {
  */
 export function applyBehavior(e: Entity, env: BehaviorEnv): void {
   const u = e.userData;
+  env.actorProtected = env.sanctuaryAt?.(e.position.x, e.position.z) === true;
   if (!env.doTheory && THEORY.has(u.beh)) return;
   if (!env.doFlock && u.beh === 'flock') return;
   HANDLERS[u.beh](e, u, env);

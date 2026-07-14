@@ -375,6 +375,8 @@ export class SingularitySystem {
   private readonly ctx: SimContext;
   private readonly entities: EntityManager;
   private readonly scene: THREE.Scene;
+  /** Shared sanctuary policy; protected positions keep visual lensing but receive no harmful force. */
+  private sanctuary: ((x: number, z: number) => boolean) | null = null;
 
   private _kind: SingularityKind | null = null;
   private life = 0;
@@ -404,6 +406,11 @@ export class SingularitySystem {
   /** Organisms consumed by the current/last black hole (read after a summon for audits). */
   get consumed(): number {
     return this._consumed;
+  }
+
+  /** Attach the composition-root sanctuary predicate; null restores legacy singularity effects. */
+  attachSanctuary(predicate: ((x: number, z: number) => boolean) | null): void {
+    this.sanctuary = predicate;
   }
 
   /**
@@ -436,7 +443,7 @@ export class SingularitySystem {
    */
   bodyForce(px: number, py: number, pz: number, dt: number, out: THREE.Vector3): boolean {
     const kind = this._kind;
-    if (kind === null) {
+    if (kind === null || this.sanctuary?.(px, pz) === true) {
       out.set(0, 0, 0);
       return false;
     }
@@ -557,9 +564,14 @@ export class SingularitySystem {
       const e = list[i];
       if (!e) continue;
       const u = e.userData;
-      u.vel.x += (rng() - 0.5) * mag;
-      u.vel.y += (rng() - 0.5) * mag * 0.6;
-      u.vel.z += (rng() - 0.5) * mag;
+      // Preserve the seeded draw schedule even when the sanctuary suppresses the physical result.
+      const dx = (rng() - 0.5) * mag;
+      const dy = (rng() - 0.5) * mag * 0.6;
+      const dz = (rng() - 0.5) * mag;
+      if (this.sanctuary?.(e.position.x, e.position.z) === true) continue;
+      u.vel.x += dx;
+      u.vel.y += dy;
+      u.vel.z += dz;
       // Fade emissive toward a uniform heat-death grey (colour persists; update() manages emI).
       e.material.color.lerp(GREY, 0.01);
     }
@@ -593,6 +605,7 @@ export class SingularitySystem {
     CONSUME.length = 0;
     for (let qi = 0; qi < near.length; qi++) {
       const e = near[qi]!; // invariant: query buffer is a dense array of live grid entries
+      if (this.sanctuary?.(e.position.x, e.position.z) === true) continue;
       V.copy(c).sub(e.position); // points toward the centre
       const r2 = V.lengthSq();
       if (r2 > REACH2 || r2 < 1e-6) continue; // outside the true 3D sphere (or dead-centre)
@@ -672,6 +685,7 @@ export class SingularitySystem {
     const near = this.ctx.grid.query(c.x, c.z, CONV_R);
     for (let qi = 0; qi < near.length; qi++) {
       const e = near[qi]!; // invariant: query buffer is a dense array of live grid entries
+      if (this.sanctuary?.(e.position.x, e.position.z) === true) continue;
       if (V.copy(c).sub(e.position).lengthSq() > CONV_R2) continue;
       // Strange-matter stain: a sickly quark-green body with a violet glow. Colour persists
       // after the star expires (update() only re-targets emissiveIntensity, not the hues),

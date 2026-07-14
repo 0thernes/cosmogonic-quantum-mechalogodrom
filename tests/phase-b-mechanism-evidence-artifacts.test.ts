@@ -152,8 +152,8 @@ describe('Phase-B mechanism evidence artifacts', () => {
       configurationAndDeclaredLawsSha256:
         'bfff6581b8e3e032c596a114ef3bfc86c7d5067537efe24043d5d731a09e0f0c',
       scheduleSha256: '8acb60a51bbef06bbf238f8b365f8b9f2d61314850909ff109cbbf70514f617f',
-      rowsSha256: '43f26e8b224449db588dd56ba5dd16c7f37c579e396a5689421e5545ee35db06',
-      faultProbesSha256: '2ba8bb51fa2c5d212cc51afd58883b4a8ecc0a62c0ad1f784ebd85b83c61670c',
+      rowsSha256: 'd3d364fc2cba7ae4eb2ebfefb2819ceaa55dbe1b5edb201163a5aa08b8cdb3e0',
+      faultProbesSha256: 'e08e5609aaadd14186794a56f0bf027a788fa96f6ce3400bf3118c835a59e8ad',
     });
     expect(nhi.rows).toEqual({ configured: 41_472, retained: 41_472, dropped: 0 });
     expect(nhi.validationArmSummaries).toHaveLength(9);
@@ -191,10 +191,10 @@ describe('Phase-B mechanism evidence artifacts', () => {
         ),
       ),
     ).toEqual({
-      SPAWN: 0.017038,
-      DOMINATE: 0.007298,
-      HUNT: 0.018743,
-      MANIPULATE: -0.001696,
+      SPAWN: 0.002754,
+      DOMINATE: 0.008847,
+      HUNT: 0.008008,
+      MANIPULATE: 0.012289,
     });
     for (const comparison of nhi.validationPairedComparisons) {
       const { sourceComparisonSha256, artifactComparisonMaterialSha256, ...displayedMaterial } =
@@ -250,7 +250,7 @@ describe('Phase-B mechanism evidence artifacts', () => {
       expect(built.files.svg).toContain(label);
     }
     expect(built.files.svg).toContain('NHI paired surface-conflict response · not adaptation');
-    expect(built.files.svg).toContain('DECLINE -0.0133');
+    expect(built.files.svg).toContain('DECLINE -7.69e-4');
     expect((built.files.svg.match(/data-lane-support="supported-diagnostic"/g) ?? []).length).toBe(
       2,
     );
@@ -263,13 +263,13 @@ describe('Phase-B mechanism evidence artifacts', () => {
 
   test('pins canonical artifact byte hashes and excludes ambient provenance APIs', async () => {
     expect(fileSha256(built.files.json)).toBe(
-      'a509e241d9393bc807312fe994815f1fe988590112fc31736854992ede93ec83',
+      '609d47367c7b2731f62c70f769f2daeb496657698a342c3a736088c1354ea333',
     );
     expect(fileSha256(built.files.csv)).toBe(
-      'eafef6d180c350b103f7a4fd33f57325a4acdb650ccd7aaea6490f33dd7f476c',
+      '58cc6de6b5a542edb5a1c02093eaef99b89b8cbccb66d3fcfa63e4d51fa950ef',
     );
     expect(fileSha256(built.files.svg)).toBe(
-      'bf7bb362d472aee5e848c2ef9d13b44c56a44c6af86e27e1568943a07f84af47',
+      'cf4c81b10e53ee2be5f76194c2914406a345f0073a3c6825a7df1ad3508ba4b9',
     );
     const source = await Bun.file(
       'scripts/organism-intelligence-phase-b/mechanism-evidence-artifacts.ts',

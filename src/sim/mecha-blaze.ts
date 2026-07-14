@@ -161,6 +161,7 @@ export class MechaBlaze {
     t: number,
     dt: number,
     onKill?: (e: Entity, index: number) => void,
+    isProtected?: (x: number, z: number) => boolean,
   ): void {
     const list = entities.list;
     if (this.active && dt > 0) {
@@ -169,6 +170,7 @@ export class MechaBlaze {
         const e = list[i];
         if (!e) continue;
         const p = e.position;
+        if (isProtected?.(p.x, p.z)) continue;
         if (p.y < BLAZE_FLOOR || p.y > BLAZE_CEIL) continue; // outside the fiery column's vertical reach
         const dx = p.x - MECHA_X;
         const dz = p.z - MECHA_Z;

@@ -22,6 +22,20 @@ import type { Entity, SimContext, SimState } from '../src/types';
 
 const DT = 1 / 60;
 const noGraze = (): void => undefined;
+const SAFE_R2 = 25;
+
+/** Test safe-zone policy: neither protected attackers nor protected targets may form a harmful pair. */
+function harmAllowedOutsideSafeZone(
+  attackerX: number,
+  attackerZ: number,
+  targetX: number,
+  targetZ: number,
+): boolean {
+  return (
+    attackerX * attackerX + attackerZ * attackerZ > SAFE_R2 &&
+    targetX * targetX + targetZ * targetZ > SAFE_R2
+  );
+}
 
 function makeState(): SimState {
   return {
@@ -132,6 +146,74 @@ describe('DomeFeeding', () => {
     expect(killed).toBe(0);
     expect(entities.list).toEqual([nhi]);
     expect(feeding.stats().pending).toBe(0);
+    feeding.dispose();
+  });
+
+  test('safe-zone policy denies predation and grazing by a protected feeder', () => {
+    const ctx = makeCtx(21, 50);
+    const entities = new EntityManager(ctx);
+    const feeding = new DomeFeeding(ctx);
+    const target = entities.spawn(new THREE.Vector3(0, 10, 10), 0) as Entity;
+    let killed = 0;
+    let grazed = 0;
+    feeding.update(
+      [mockFeeder([0, 10, 0])],
+      entities,
+      () => grazed++,
+      1,
+      DT,
+      () => killed++,
+      harmAllowedOutsideSafeZone,
+    );
+    expect(entities.list).toEqual([target]);
+    expect(feeding.eaten).toBe(0);
+    expect(feeding.stats().pending).toBe(0);
+    expect(killed).toBe(0);
+    expect(grazed).toBe(0);
+    feeding.dispose();
+  });
+
+  test('safe-zone policy denies predation of a protected target by an outside feeder', () => {
+    const ctx = makeCtx(22, 50);
+    const entities = new EntityManager(ctx);
+    const feeding = new DomeFeeding(ctx);
+    const target = entities.spawn(new THREE.Vector3(0, 10, 0), 0) as Entity;
+    let killed = 0;
+    feeding.update(
+      [mockFeeder([0, 10, 10])],
+      entities,
+      noGraze,
+      1,
+      DT,
+      () => killed++,
+      harmAllowedOutsideSafeZone,
+    );
+    expect(entities.list).toEqual([target]);
+    expect(feeding.eaten).toBe(0);
+    expect(feeding.stats().pending).toBe(0);
+    expect(killed).toBe(0);
+    feeding.dispose();
+  });
+
+  test('safe-zone policy preserves normal predation outside the zone', () => {
+    const ctx = makeCtx(23, 50);
+    const entities = new EntityManager(ctx);
+    const feeding = new DomeFeeding(ctx);
+    entities.spawn(new THREE.Vector3(0, 10, 20), 0); // both outside; within EAT_R
+    let killed = 0;
+    feeding.update(
+      [mockFeeder([0, 10, 10])],
+      entities,
+      noGraze,
+      1,
+      DT,
+      () => killed++,
+      harmAllowedOutsideSafeZone,
+    );
+    expect(entities.list.length).toBe(0);
+    expect(feeding.eaten).toBe(1);
+    expect(feeding.stats().pending).toBe(1);
+    expect(killed).toBe(1);
     feeding.dispose();
   });
 

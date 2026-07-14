@@ -8,66 +8,66 @@ temporal,advancement-gate,holm-adjusted-p,1,0.01,<,fail,development-gate-failed-
 temporal,advancement-gate,bootstrap-99-lower,-0.010691,0,>,fail,development-gate-failed-no-advancement
 temporal,advancement-gate,worst-model-gain,-0.017918,-0.01,>=,fail,development-gate-failed-no-advancement
 temporal,retention,retained-rows,46080,46080,=,pass,all rows retained
-nhi,validation-arm:full,mean-service-score,0.060771,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:full,success-rate,0.211589,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:full,pre-conflict-service-score,0.067424,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:full,post-conflict-service-score,0.054118,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:full,conflict-minus-aligned-service-score,-0.013306,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:neural-semantic-ablated,mean-service-score,0.050425,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:neural-semantic-ablated,success-rate,0.191406,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:neural-semantic-ablated,pre-conflict-service-score,0.054155,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:neural-semantic-ablated,post-conflict-service-score,0.046695,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:neural-semantic-ablated,conflict-minus-aligned-service-score,-0.007461,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:semantic-utility-ablated,mean-service-score,0.051612,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:semantic-utility-ablated,success-rate,0.197917,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:semantic-utility-ablated,pre-conflict-service-score,0.059004,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:semantic-utility-ablated,post-conflict-service-score,0.044221,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:semantic-utility-ablated,conflict-minus-aligned-service-score,-0.014783,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:neural-output-ablated,mean-service-score,0.057401,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:neural-output-ablated,success-rate,0.205078,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:neural-output-ablated,pre-conflict-service-score,0.067971,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:neural-output-ablated,post-conflict-service-score,0.04683,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:neural-output-ablated,conflict-minus-aligned-service-score,-0.02114,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:base-utility-ablated,mean-service-score,0.045853,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:base-utility-ablated,success-rate,0.183594,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:base-utility-ablated,pre-conflict-service-score,0.045767,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:base-utility-ablated,post-conflict-service-score,0.045939,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:base-utility-ablated,conflict-minus-aligned-service-score,0.000172,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:goap-bias-ablated,mean-service-score,0.04169,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:goap-bias-ablated,success-rate,0.177734,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:goap-bias-ablated,pre-conflict-service-score,0.042415,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:goap-bias-ablated,post-conflict-service-score,0.040965,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:goap-bias-ablated,conflict-minus-aligned-service-score,-0.00145,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:all-semantic-ablated,mean-service-score,0.043434,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:all-semantic-ablated,success-rate,0.181641,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:all-semantic-ablated,pre-conflict-service-score,0.049237,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:all-semantic-ablated,post-conflict-service-score,0.037631,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:all-semantic-ablated,conflict-minus-aligned-service-score,-0.011606,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:semantic-cue-shuffled,mean-service-score,0.040603,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:semantic-cue-shuffled,success-rate,0.179036,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:semantic-cue-shuffled,pre-conflict-service-score,0.043318,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:semantic-cue-shuffled,post-conflict-service-score,0.037887,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:semantic-cue-shuffled,conflict-minus-aligned-service-score,-0.005431,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:yoked-action-shift,mean-service-score,0.022862,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:yoked-action-shift,success-rate,0.146484,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:yoked-action-shift,pre-conflict-service-score,0.014429,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:yoked-action-shift,post-conflict-service-score,0.031294,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-arm:yoked-action-shift,conflict-minus-aligned-service-score,0.016865,,,diagnostic,paired conflict response; not adaptation
-nhi,validation-action:SPAWN,full-minus-neural-semantic-ablated,0.017038,,,supported-diagnostic-lane,social-to-spawn
-nhi,validation-action:SPAWN,full-minus-semantic-utility-ablated,0.00874,,,supported-diagnostic-lane,social-to-spawn
-nhi,validation-action:SPAWN,full-minus-all-semantic-ablated,0.023998,,,supported-diagnostic-lane,social-to-spawn
-nhi,validation-action:SPAWN,full-minus-semantic-cue-shuffled,0.023379,,,supported-diagnostic-lane,social-to-spawn
-nhi,validation-action:DOMINATE,full-minus-neural-semantic-ablated,0.007298,,,unsupported-do-not-interpret,no direct neural semantic lane
-nhi,validation-action:DOMINATE,full-minus-semantic-utility-ablated,0.002295,,,unsupported-do-not-interpret,no direct neural semantic lane
-nhi,validation-action:DOMINATE,full-minus-all-semantic-ablated,0.005388,,,unsupported-do-not-interpret,no direct neural semantic lane
-nhi,validation-action:DOMINATE,full-minus-semantic-cue-shuffled,0.009564,,,unsupported-do-not-interpret,no direct neural semantic lane
-nhi,validation-action:HUNT,full-minus-neural-semantic-ablated,0.018743,,,supported-diagnostic-lane,resource-to-hunt
-nhi,validation-action:HUNT,full-minus-semantic-utility-ablated,0.025179,,,supported-diagnostic-lane,resource-to-hunt
-nhi,validation-action:HUNT,full-minus-all-semantic-ablated,0.041548,,,supported-diagnostic-lane,resource-to-hunt
-nhi,validation-action:HUNT,full-minus-semantic-cue-shuffled,0.037586,,,supported-diagnostic-lane,resource-to-hunt
-nhi,validation-action:MANIPULATE,full-minus-neural-semantic-ablated,-0.001696,,,unsupported-do-not-interpret,no direct neural semantic lane
-nhi,validation-action:MANIPULATE,full-minus-semantic-utility-ablated,0.00042,,,unsupported-do-not-interpret,no direct neural semantic lane
-nhi,validation-action:MANIPULATE,full-minus-all-semantic-ablated,-0.001589,,,unsupported-do-not-interpret,no direct neural semantic lane
-nhi,validation-action:MANIPULATE,full-minus-semantic-cue-shuffled,0.010143,,,unsupported-do-not-interpret,no direct neural semantic lane
+nhi,validation-arm:full,mean-service-score,0.03489,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:full,success-rate,0.17513,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:full,pre-conflict-service-score,0.035274,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:full,post-conflict-service-score,0.034505,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:full,conflict-minus-aligned-service-score,-0.000769,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:neural-semantic-ablated,mean-service-score,0.026915,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:neural-semantic-ablated,success-rate,0.160156,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:neural-semantic-ablated,pre-conflict-service-score,0.027665,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:neural-semantic-ablated,post-conflict-service-score,0.026165,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:neural-semantic-ablated,conflict-minus-aligned-service-score,-0.0015,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:semantic-utility-ablated,mean-service-score,0.031079,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:semantic-utility-ablated,success-rate,0.166016,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:semantic-utility-ablated,pre-conflict-service-score,0.031574,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:semantic-utility-ablated,post-conflict-service-score,0.030583,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:semantic-utility-ablated,conflict-minus-aligned-service-score,-0.000992,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:neural-output-ablated,mean-service-score,0.036568,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:neural-output-ablated,success-rate,0.17513,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:neural-output-ablated,pre-conflict-service-score,0.037815,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:neural-output-ablated,post-conflict-service-score,0.035322,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:neural-output-ablated,conflict-minus-aligned-service-score,-0.002493,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:base-utility-ablated,mean-service-score,0.024507,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:base-utility-ablated,success-rate,0.167318,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:base-utility-ablated,pre-conflict-service-score,0.024214,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:base-utility-ablated,post-conflict-service-score,0.024801,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:base-utility-ablated,conflict-minus-aligned-service-score,0.000587,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:goap-bias-ablated,mean-service-score,0.021388,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:goap-bias-ablated,success-rate,0.141927,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:goap-bias-ablated,pre-conflict-service-score,0.025035,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:goap-bias-ablated,post-conflict-service-score,0.017742,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:goap-bias-ablated,conflict-minus-aligned-service-score,-0.007293,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:all-semantic-ablated,mean-service-score,0.02177,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:all-semantic-ablated,success-rate,0.147786,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:all-semantic-ablated,pre-conflict-service-score,0.021371,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:all-semantic-ablated,post-conflict-service-score,0.022169,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:all-semantic-ablated,conflict-minus-aligned-service-score,0.000798,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:semantic-cue-shuffled,mean-service-score,0.026311,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:semantic-cue-shuffled,success-rate,0.152344,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:semantic-cue-shuffled,pre-conflict-service-score,0.027798,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:semantic-cue-shuffled,post-conflict-service-score,0.024824,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:semantic-cue-shuffled,conflict-minus-aligned-service-score,-0.002974,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:yoked-action-shift,mean-service-score,0.014689,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:yoked-action-shift,success-rate,0.13737,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:yoked-action-shift,pre-conflict-service-score,0.007523,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:yoked-action-shift,post-conflict-service-score,0.021856,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-arm:yoked-action-shift,conflict-minus-aligned-service-score,0.014333,,,diagnostic,paired conflict response; not adaptation
+nhi,validation-action:SPAWN,full-minus-neural-semantic-ablated,0.002754,,,supported-diagnostic-lane,social-to-spawn
+nhi,validation-action:SPAWN,full-minus-semantic-utility-ablated,0.004196,,,supported-diagnostic-lane,social-to-spawn
+nhi,validation-action:SPAWN,full-minus-all-semantic-ablated,0.007756,,,supported-diagnostic-lane,social-to-spawn
+nhi,validation-action:SPAWN,full-minus-semantic-cue-shuffled,0.006344,,,supported-diagnostic-lane,social-to-spawn
+nhi,validation-action:DOMINATE,full-minus-neural-semantic-ablated,0.008847,,,unsupported-do-not-interpret,no direct neural semantic lane
+nhi,validation-action:DOMINATE,full-minus-semantic-utility-ablated,0.002416,,,unsupported-do-not-interpret,no direct neural semantic lane
+nhi,validation-action:DOMINATE,full-minus-all-semantic-ablated,0.015644,,,unsupported-do-not-interpret,no direct neural semantic lane
+nhi,validation-action:DOMINATE,full-minus-semantic-cue-shuffled,0.011889,,,unsupported-do-not-interpret,no direct neural semantic lane
+nhi,validation-action:HUNT,full-minus-neural-semantic-ablated,0.008008,,,supported-diagnostic-lane,resource-to-hunt
+nhi,validation-action:HUNT,full-minus-semantic-utility-ablated,0.009575,,,supported-diagnostic-lane,resource-to-hunt
+nhi,validation-action:HUNT,full-minus-all-semantic-ablated,0.023996,,,supported-diagnostic-lane,resource-to-hunt
+nhi,validation-action:HUNT,full-minus-semantic-cue-shuffled,0.019227,,,supported-diagnostic-lane,resource-to-hunt
+nhi,validation-action:MANIPULATE,full-minus-neural-semantic-ablated,0.012289,,,unsupported-do-not-interpret,no direct neural semantic lane
+nhi,validation-action:MANIPULATE,full-minus-semantic-utility-ablated,-0.000943,,,unsupported-do-not-interpret,no direct neural semantic lane
+nhi,validation-action:MANIPULATE,full-minus-all-semantic-ablated,0.005082,,,unsupported-do-not-interpret,no direct neural semantic lane
+nhi,validation-action:MANIPULATE,full-minus-semantic-cue-shuffled,-0.003147,,,unsupported-do-not-interpret,no direct neural semantic lane
 nhi,control-integrity,semantic-shuffle-fixed-points,0,0,=,pass,balanced fixed-point-free derangement
 nhi,control-integrity,invalid-yoke-targets,0,0,=,pass,MANIPULATE targets rebound to current rival

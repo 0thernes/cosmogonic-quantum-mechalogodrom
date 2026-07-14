@@ -65,40 +65,40 @@
   <text x="44" y="596" class="body">Same exogenous base trials; environment, cognition, and policy RNG reset at the phase boundary.</text>
   <g transform="translate(44 620)">
     <text x="0" y="18" class="body">Aligned pre-conflict</text>
-    <rect x="170" y="2" width="269.70" height="22" rx="5" fill="#56d6b3"/>
-    <text x="453.70" y="18" class="mono">0.0674</text>
+    <rect x="170" y="2" width="141.10" height="22" rx="5" fill="#56d6b3"/>
+    <text x="325.10" y="18" class="mono">0.0353</text>
     <text x="0" y="62" class="body">Post-conflict</text>
-    <rect x="170" y="46" width="216.47" height="22" rx="5" fill="#ffb454"/>
-    <text x="400.47" y="62" class="mono">0.0541</text>
-    <text x="650" y="40" class="fail">DECLINE -0.0133</text>
+    <rect x="170" y="46" width="138.02" height="22" rx="5" fill="#ffb454"/>
+    <text x="322.02" y="62" class="mono">0.0345</text>
+    <text x="650" y="40" class="fail">DECLINE -7.69e-4</text>
   </g>
   <text x="44" y="758" class="section">Neural semantic action lanes · diagnostic scope only</text>
   <g transform="translate(44 790)" data-lane-support="supported-diagnostic">
     <rect width="266" height="112" rx="12" fill="#123b36" stroke="#56d6b3" stroke-width="2"/>
     <text x="16" y="28" class="lane-title">HUNT</text>
     <text x="16" y="53" class="supported">resource → HUNT</text>
-    <text x="16" y="81" class="mono">Δ neural = 0.0187</text>
+    <text x="16" y="81" class="mono">Δ neural = 0.0080</text>
     <text x="16" y="102" class="small">SUPPORTED DIAGNOSTIC LANE</text>
   </g>
   <g transform="translate(326 790)" data-lane-support="supported-diagnostic">
     <rect width="266" height="112" rx="12" fill="#123b36" stroke="#56d6b3" stroke-width="2"/>
     <text x="16" y="28" class="lane-title">SPAWN</text>
     <text x="16" y="53" class="supported">social → SPAWN</text>
-    <text x="16" y="81" class="mono">Δ neural = 0.0170</text>
+    <text x="16" y="81" class="mono">Δ neural = 0.0028</text>
     <text x="16" y="102" class="small">SUPPORTED DIAGNOSTIC LANE</text>
   </g>
   <g transform="translate(608 790)" data-lane-support="unsupported">
     <rect width="266" height="112" rx="12" fill="#252a32" stroke="#7d8592" stroke-width="2"/>
     <text x="16" y="28" class="lane-title">MANIPULATE</text>
     <text x="16" y="53" class="muted">no direct target lane</text>
-    <text x="16" y="81" class="mono">Δ neural = -0.0017</text>
+    <text x="16" y="81" class="mono">Δ neural = 0.0123</text>
     <text x="16" y="102" class="small">UNSUPPORTED · DO NOT INTERPRET</text>
   </g>
   <g transform="translate(890 790)" data-lane-support="unsupported">
     <rect width="266" height="112" rx="12" fill="#252a32" stroke="#7d8592" stroke-width="2"/>
     <text x="16" y="28" class="lane-title">DOMINATE</text>
     <text x="16" y="53" class="muted">no direct target lane</text>
-    <text x="16" y="81" class="mono">Δ neural = 0.0073</text>
+    <text x="16" y="81" class="mono">Δ neural = 0.0088</text>
     <text x="16" y="102" class="small">UNSUPPORTED · DO NOT INTERPRET</text>
   </g>
   <g transform="translate(44 932)">

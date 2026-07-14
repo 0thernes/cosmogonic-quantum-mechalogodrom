@@ -22,6 +22,20 @@ import type { AuditTrail } from '../src/logging/audit';
 import type { Entity, SimContext, SimState } from '../src/types';
 
 const DT = 1 / 60;
+const SAFE_R2 = 25;
+
+/** Test safe-zone policy: neither protected attackers nor protected targets may form a harmful pair. */
+function harmAllowedOutsideSafeZone(
+  attackerX: number,
+  attackerZ: number,
+  targetX: number,
+  targetZ: number,
+): boolean {
+  return (
+    attackerX * attackerX + attackerZ * attackerZ > SAFE_R2 &&
+    targetX * targetX + targetZ * targetZ > SAFE_R2
+  );
+}
 
 function makeState(): SimState {
   return {
@@ -143,6 +157,79 @@ describe('SuperHunt', () => {
     expect(apex.hunt).toBeNull();
     expect(entities.list).toEqual([nhi]);
     expect(hunt.stats().pending).toBe(0);
+    hunt.dispose();
+  });
+
+  test('safe-zone policy denies a protected attacker without pursuit, consumption, or nutrition', () => {
+    const ctx = makeCtx(21, 50);
+    const entities = new EntityManager(ctx);
+    const hunt = new SuperHunt(ctx);
+    const apex = mockApex(0, 10, 0); // protected; target at z=10 is outside the protected radius
+    const target = entities.spawn(new THREE.Vector3(0, 10, 10), 0) as Entity;
+    let callbacks = 0;
+    hunt.update(
+      [apex] as unknown as SuperBodySystem[],
+      entities,
+      1,
+      DT,
+      () => callbacks++,
+      harmAllowedOutsideSafeZone,
+    );
+    expect(entities.list).toEqual([target]);
+    expect(hunt.eaten).toBe(0);
+    expect(hunt.stats().pending).toBe(0);
+    expect(apex.ate).toBe(0);
+    expect(apex.hunt).toBeNull();
+    expect(apex.cleared).toBeGreaterThan(0);
+    expect(callbacks).toBe(0);
+    hunt.dispose();
+  });
+
+  test('safe-zone policy denies a protected target to an outside attacker', () => {
+    const ctx = makeCtx(22, 50);
+    const entities = new EntityManager(ctx);
+    const hunt = new SuperHunt(ctx);
+    const apex = mockApex(0, 10, 10); // outside; target at the origin is protected
+    const target = entities.spawn(new THREE.Vector3(0, 10, 0), 0) as Entity;
+    let callbacks = 0;
+    hunt.update(
+      [apex] as unknown as SuperBodySystem[],
+      entities,
+      1,
+      DT,
+      () => callbacks++,
+      harmAllowedOutsideSafeZone,
+    );
+    expect(entities.list).toEqual([target]);
+    expect(hunt.eaten).toBe(0);
+    expect(hunt.stats().pending).toBe(0);
+    expect(apex.ate).toBe(0);
+    expect(apex.hunt).toBeNull();
+    expect(apex.cleared).toBeGreaterThan(0);
+    expect(callbacks).toBe(0);
+    hunt.dispose();
+  });
+
+  test('safe-zone policy preserves normal consumption outside the zone', () => {
+    const ctx = makeCtx(23, 50);
+    const entities = new EntityManager(ctx);
+    const hunt = new SuperHunt(ctx);
+    const apex = mockApex(0, 10, 10);
+    entities.spawn(new THREE.Vector3(0, 10, 20), 0); // both outside; within EAT_R
+    let callbacks = 0;
+    hunt.update(
+      [apex] as unknown as SuperBodySystem[],
+      entities,
+      1,
+      DT,
+      () => callbacks++,
+      harmAllowedOutsideSafeZone,
+    );
+    expect(entities.list.length).toBe(0);
+    expect(hunt.eaten).toBe(1);
+    expect(hunt.stats().pending).toBe(1);
+    expect(apex.ate).toBe(1);
+    expect(callbacks).toBe(1);
     hunt.dispose();
   });
 

@@ -77,6 +77,14 @@ import { QuantumCloud } from './sim/quantum';
 import { Connectome } from './sim/connectome';
 import { EnvironmentSystem } from './sim/environment';
 import { AlienFlora } from './sim/alien-flora';
+import { BigTreeSlotKind, BigTreeVisitManager, BigTreeZone } from './sim/big-tree-zone';
+import {
+  BigTreeSpeciesVisitors,
+  performBigTreeActivity,
+  type BigTreeVisitorActivityCallbacks,
+  type BigTreeSpeciesVisitorStats,
+  type BigTreeVisitorEnvironment,
+} from './sim/big-tree-visitors';
 import { writeNhiRoamTarget } from './sim/habitat-roaming';
 import { QuantumCircuitSystem } from './sim/qcircuit';
 import { ReactionDiffusionSystem } from './sim/reaction-diffusion';
@@ -106,10 +114,17 @@ import {
   type NhiEffectBody,
 } from './sim/nhi-target-effects';
 import { NhiBodySystem } from './sim/nhi-body';
+import { nhiLaunchVelocityFromLook, nhiMinionKickVelocity } from './sim/nhi-launch';
 import { CosmicWeb } from './sim/cosmic-web';
 import { GoldLattice } from './sim/gold-lattice';
 import { FloatingMonoliths } from './sim/floating-monoliths';
 import { GodColossus } from './sim/god-colossus';
+import {
+  CrystalEcosystem,
+  CRYSTAL_TREE_ORIGIN_X,
+  CRYSTAL_TREE_ORIGIN_Z,
+  type CrystalEcosystemFrame,
+} from './sim/crystal-ecosystem';
 import { QuantumLattice } from './sim/quantum-lattice';
 import { AbominationArchitecture } from './sim/abomination-architecture';
 import { Mechalogodrom } from './sim/mechalogodrom';
@@ -225,6 +240,7 @@ import { WildernessPopulation } from './sim/wilderness-population';
 import { WildernessRenderer } from './sim/wilderness-render';
 import {
   XENOMIMIC_MAX,
+  XenomimicVisitMode,
   XenomimicPopulation,
   type XenomimicCouplings,
   type XenomimicLifecycleEvent,
@@ -461,10 +477,80 @@ export class World {
     dt: number,
   ): number => this.alienFlora.grazeAt(x, z, appetite, dt);
   private readonly xenomimicFoodAt = (x: number, z: number): number => this.alienFlora.foodAt(x, z);
+  /** One authored sanctuary boundary shared by combat, hazard, and visitor adapters. */
+  private readonly bigTreeZone = new BigTreeZone();
+  /** Capacity/slot owner for temporary nourishment, rest, safety, and social visits. */
+  private readonly bigTreeVisits: BigTreeVisitManager;
+  /** Species adapter over the canonical Entity, Xenomimic, and Crystal food systems. */
+  private readonly bigTreeVisitors: BigTreeSpeciesVisitors;
+  /** Reused contextual inputs; rewritten before each visitor tick. */
+  private readonly bigTreeVisitorEnvironment: BigTreeVisitorEnvironment = {
+    danger: 0,
+    stress: 0,
+    socialNeed: 0,
+    curiosity: 0,
+    simulationLoad: 0,
+    foodAvailable: true,
+  };
+  /** Bridge peaceful activities into the existing neural/animation state of each living body.
+   *  Delegates to the exported canonical transfer so tests drive the exact shipped behavior. */
+  private readonly bigTreeActivityCallbacks: BigTreeVisitorActivityCallbacks = {
+    performActivity: (
+      ownerKind,
+      _ownerId,
+      _partnerKind,
+      partnerId,
+      body,
+      activity,
+      dt,
+      _now,
+    ): void => {
+      performBigTreeActivity(ownerKind, partnerId, body, activity, dt);
+    },
+  };
+  /** Reused development telemetry; never exposed as production geometry or tether-like lines. */
+  private readonly bigTreeVisitorStats: BigTreeSpeciesVisitorStats = {
+    activeVisitors: 0,
+    activeOrdinary: 0,
+    activeXenomimics: 0,
+    lastPollCount: 0,
+    totalPolls: 0,
+    acceptedVisits: 0,
+    completedMeals: 0,
+    consumedFruit: 0,
+    consumedLeaves: 0,
+    targetLosses: 0,
+    cancellations: 0,
+    zoneCapacity: 0,
+    socialPairs: 0,
+    completedVisits: 0,
+    timedOutVisits: 0,
+    stuckRecoveries: 0,
+    forcedExits: 0,
+    partnerTimeouts: 0,
+    rejectedForCapacity: 0,
+    rejectedForNoSlot: 0,
+    availableSlots: 0,
+  };
+  /** Monotonic count of hostile-act opportunities vetoed by the sanctuary (dev/audit telemetry). */
+  private bigTreeSuppressedHarm = 0;
+  /** Conservative protection uses the outer hysteresis boundary for stateless harm queries. */
+  private readonly bigTreeProtectedAt = (x: number, z: number): boolean =>
+    this.isBigTreeProtected(x, z);
+  /** Neither an outside attacker nor an outside target may attack through the sanctuary boundary. */
+  private readonly bigTreeHarmAllowed = (
+    attackerX: number,
+    attackerZ: number,
+    targetX: number,
+    targetZ: number,
+  ): boolean => this.isBigTreeHarmAllowed(attackerX, attackerZ, targetX, targetZ);
   private readonly xenomimicCouplings: XenomimicCouplings = {
     foodAt: this.xenomimicFoodAt,
     grazeAt: this.xenomimicGrazeAt,
     surfaceAt: this.xenomimicSurfaceAt,
+    safeZoneAt: this.bigTreeProtectedAt,
+    visitModeAt: (pairId, role) =>
+      this.bigTreeVisitors?.xenomimicLocomotionMode(pairId, role) ?? XenomimicVisitMode.Normal,
     intelligence: null,
     entityActivation: 0,
     chaos: 0,
@@ -656,6 +742,26 @@ export class World {
   private readonly artifacts: ArtifactField;
   private readonly leviathans: LeviathanSystem;
 
+  /**
+   * Per-NHI last sim frame that materialised a SPAWN_SWARM (cooldown gate).
+   * Prevents every mind firing minions every beat → population/CPU storm.
+   */
+  private readonly nhiLastSwarmFrame = new Map<number, number>();
+  /** Frames of launch-toss grace remaining (camera-forward kick before roam seek owns the body). */
+  private readonly nhiLaunchGrace = new Map<number, number>();
+  /** Material minions created this frame by all NHI swarms combined (hard CPU fuse). */
+  private nhiSwarmlingsThisFrame = 0;
+  /** Min frames between SPAWN_SWARM materializations per NHI (~7.5 s at 60 Hz). */
+  private static readonly NHI_SWARM_COOLDOWN_FRAMES = 450;
+  private static readonly NHI_SWARM_MAX_PER_ACTION = 1;
+  private static readonly NHI_SWARM_MAX_PER_FRAME = 1;
+  private static readonly NHI_SWARM_GLOBAL_GAP_FRAMES = 90;
+  private static readonly NHI_MINION_LIVE_CAP = 40;
+  private static readonly NHI_LAUNCH_GRACE_FRAMES = 180;
+  private static readonly NHI_MINION_LIFE_MIN = 27000;
+  private static readonly NHI_MINION_LIFE_SPAN = 27000;
+  private nhiLastGlobalSwarmFrame = -1e9;
+
   // ── F-NHI V10: apex super-minds (src/sim/nhi.ts) that READ the world and WRITE to it ─────────
   /** Drives each launched NHI's deterministic mind → real effects (spawn swarms, dominate, broadcast). */
   private readonly nhi = new NhiSystem();
@@ -720,6 +826,10 @@ export class World {
   private readonly floatingMonoliths: FloatingMonoliths;
   /** V110: the ONE colossal god-tier monument looming over the skyline (item 18). */
   private readonly godColossus: GodColossus;
+  /** Tree-local home ecology: canopy resources, fauna, motes, relics, and artifacts. */
+  private readonly crystalEcosystem: CrystalEcosystem;
+  /** Static terrain profile under the tree; animated displacement is added each presentation tick. */
+  private readonly crystalTerrainBase: number;
   /**
    * REAL-TIME wall clock for the God-Colossus ONLY (USER: "animated as it is ALWAYS — even on render speed
    * and Pausing it stays constant"). Advanced by the true, unscaled frame delta (`uiDt`) every single frame
@@ -885,6 +995,18 @@ export class World {
   private resetCount = 0;
   /** Reused per-frame scalar block handed to the instanced renderer (alloc-free). */
   private readonly instFrame: InstanceFrame = { t: 0, chaos: 0, bass: 0, nightmare: 0 };
+  /** Reused adapter handed to the tree ecology; avoids a frame-rate allocation. */
+  private readonly crystalFrame: CrystalEcosystemFrame = {
+    dt: 0,
+    visualDt: 0,
+    time: 0,
+    chaos: 0,
+    entropy: 0,
+    windX: 0,
+    windZ: 0,
+    weather: 0,
+    visualOnly: false,
+  };
   private readonly audioAnalysis: AudioAnalysis;
   private readonly analytics: AnalyticsSystem;
   /** Reused adapter mapping `titanLedger`→`ledger` for Viz3DSnapshot; fields
@@ -1180,9 +1302,11 @@ export class World {
     // overgraze penalty) — not raw biomass alone — so richer, less-stressed patches outrank bare stubs.
     // Deterministic; only wired here so tests stay golden-clean.
     this.entities.attachFloraGradient((x, z) => this.alienFlora.foodAt(x, z));
+    this.entities.attachSanctuary(this.bigTreeProtectedAt);
     this.instanced = this.quality.instanced ? new InstancedEntityRenderer(ctx) : null;
     this.entities.reset(this.bootPopulation());
     this.shoggoths = new ShoggothSystem(ctx, this.entities);
+    this.shoggoths.attachSanctuary(this.bigTreeProtectedAt);
     // F-ECON-CREATURES V17: enrol the shoggoth horde as economic agents (modest purses) and let each
     // one's wealth drive its boldness. Draws only from econRng, so the main stream is untouched.
     for (let i = 0; i < this.shoggoths.count; i++) {
@@ -1210,6 +1334,7 @@ export class World {
       this.qc.onPuppetEvent(e);
       this.hud.showToast(`${e.name} ${this.lore.epithet('puppet', e.name)}`, e.action);
     });
+    this.puppets.attachSanctuary(this.bigTreeProtectedAt);
     // F-ECON-CREATURES V19: enrol the puppeteer cabal as economic agents (varied golden-angle purses,
     // no rng) and let wealth drive how often each meddles. econRng only → main stream untouched.
     for (let i = 0; i < this.puppets.count; i++) {
@@ -1236,7 +1361,10 @@ export class World {
     // Death→ground feedback: every disposal (age-death AND shoggoth
     // consumption, single-fire inside disposeAt) scars the living ground at
     // the corpse's UV — the mortality loop the contract headlines — AND drops a scar relic.
-    this.entities.onDeath = (x, z) => {
+    this.entities.onDeath = (x, z, entity) => {
+      // Release food, visit, cooldown, and social ownership before a replacement can reuse space.
+      // Optional chaining covers the narrow constructor interval before the visitor adapter exists.
+      this.bigTreeVisitors?.cancelOrdinary(entity);
       this.rd.perturb(0.5 + x / GROUND_EXTENT, 0.5 - z / GROUND_EXTENT, 2);
       this.artifacts.placeGround(x, z, 'scar', this.state.elapsed); // visual-only, seeded-time stamp
     };
@@ -1245,6 +1373,7 @@ export class World {
     for (let i = 0; i < 4; i++) this.rd.perturb(this.rng(), this.rng());
     // ── PANTHEON V3.3+: the titan colossi and their economy/war layer ──
     this.titans = new TitanSystem(ctx, this.entities, this.lore, this.rd);
+    this.titans.attachSanctuary(this.bigTreeProtectedAt);
     // F-ECONOMY V13: enrol the current TitanSystem roster as economic agents with titan-sized purses (their
     // stature = a base weight + a per-titan bump). Draws only from `econRng`, so this never shifts
     // the main rng order — the world after this point is byte-identical to before the economy.
@@ -1273,10 +1402,12 @@ export class World {
     // Cosmological chaos (V7.4): draws no rng and builds nothing at construction (lazy on
     // summon), so it is boot-stream-neutral like viz3d.
     this.singularities = new SingularitySystem(ctx, this.entities);
+    this.singularities.attachSanctuary(this.bigTreeProtectedAt);
     // V62: CHAOS MODE on its OWN seeded sub-stream (the golden-ratio mix is applied inside, like
     // econRng/superRng) so the storm's quantum dice never perturb the main entity draw order — off ⇒
     // the sim is byte-identical.
     this.chaosField = new ChaosField(this.persisted.seed);
+    this.chaosField.attachSanctuary(this.bigTreeProtectedAt);
     // F-HOLES: let an active singularity tug the big roaming beings too, not just the organisms.
     this.shoggoths.attachSingularity(this.singularities);
     this.titans.attachSingularity(this.singularities);
@@ -1292,6 +1423,63 @@ export class World {
     this.goldLattice = new GoldLattice(ctx.scene);
     this.floatingMonoliths = new FloatingMonoliths(ctx.scene); // 16 drifting greebled megaliths
     this.godColossus = new GodColossus(ctx.scene); // V110: the colossal god-tier monument (item 18)
+    // Seat the tree-home on the shared terrain without consuming the population RNG stream.
+    const crystalBase = baseTerrainHeightAt(CRYSTAL_TREE_ORIGIN_X, CRYSTAL_TREE_ORIGIN_Z);
+    this.crystalTerrainBase = crystalBase;
+    const godTop = this.godColossus.center.y + this.godColossus.viewRadius;
+    const crystalHeight = Math.max(1, (godTop - crystalBase) / 1.02);
+    this.crystalEcosystem = new CrystalEcosystem(
+      ctx.scene,
+      this.persisted.seed,
+      new THREE.Vector3(CRYSTAL_TREE_ORIGIN_X, crystalBase, CRYSTAL_TREE_ORIGIN_Z),
+      { height: crystalHeight },
+    );
+    // One shared, bounded visit scheduler for ordinary organisms and Xenomimics. Distinct radial
+    // rings prevent the entire dome from converging on a single point while keeping every authored
+    // destination inside the sanctuary's entry boundary.
+    const bigTreeActorCapacity = this.quality.maxEntities + XENOMIMIC_MAX;
+    this.bigTreeVisits = new BigTreeVisitManager(this.bigTreeZone, {
+      maxActors: bigTreeActorCapacity,
+      capacity: Math.min(72, bigTreeActorCapacity),
+      maxSlots: 104,
+      arriveRadius: 8,
+      minDwellSeconds: 7,
+      maxDwellSeconds: 24,
+      minCooldownSeconds: 35,
+      maxCooldownSeconds: 95,
+      travelTimeoutSeconds: 90,
+      leaveTimeoutSeconds: 50,
+      slotLeaseSeconds: 12,
+      stuckAfterSeconds: 8,
+      progressEpsilon: 1.5,
+      maxStuckRecoveries: 2,
+    });
+    this.bigTreeVisits.addRadialSlots(BigTreeSlotKind.Eat, 32, 78, Math.PI / 32);
+    this.bigTreeVisits.addRadialSlots(BigTreeSlotKind.Rest, 24, 132, Math.PI / 24);
+    this.bigTreeVisits.addRadialSlots(BigTreeSlotKind.Socialize, 24, 178, Math.PI / 48);
+    this.bigTreeVisits.addRadialSlots(BigTreeSlotKind.Observe, 16, 218, Math.PI / 16);
+    this.bigTreeVisits.addRadialSlots(BigTreeSlotKind.Any, 8, 205, Math.PI / 8);
+    this.bigTreeVisitors = new BigTreeSpeciesVisitors(
+      this.crystalEcosystem,
+      this.bigTreeVisits,
+      {
+        pollBudget: 64,
+        pollIntervalSeconds: 0.1,
+        foodLeaseSeconds: 8,
+        foodRetrySeconds: 0.4,
+        foodSearchTimeoutSeconds: 4,
+        foodReachRadius: 4,
+        ordinarySpeed: 3.5,
+        xenomimicSpeed: 18,
+        steeringGain: 4,
+        ordinaryRestPerSecond: 4,
+        xenomimicRestPerSecond: 0.04,
+        socialLeaseSeconds: 3,
+        socialReachRadius: 68,
+        eatingFeedbackSeconds: 0.9,
+      },
+      this.bigTreeActivityCallbacks,
+    );
     // V11: floating neon sacred-geometry quantum lattice (additive; draws no rng).
     this.quantumLattice = new QuantumLattice(ctx.scene);
     this.abominationArchitecture = new AbominationArchitecture(ctx.scene);
@@ -1651,6 +1839,8 @@ export class World {
     this.mechalogodrom.dispose(); // V-MECHA: free the fusion abomination's geometries + materials
     this.floatingMonoliths.dispose(); // free the 16 drifting megaliths' geometries + materials
     this.godColossus.dispose(); // free the colossal god monument
+    this.bigTreeVisitors.reset(); // release food, slots, partners, and retained living-body references
+    this.crystalEcosystem.dispose(); // free the complete tree-home ecology and owned GPU resources
     this.alienFlora.dispose(); // free the 60k-plant instanced alien-flora field
     this.wasteEcology.dispose(); // free sludge constructs + waste/gas grids
     this.alphabetPantheon.dispose(); // V-ABC: free the 100-archetype instanced pools
@@ -1916,8 +2106,13 @@ export class World {
     // USER stage C: the apex Super Creatures hunt + eat organisms. V127: each eaten mind undergoes the
     // real gedanken neural-death (Thaler confabulation, measured) before disposal — the same experiment
     // the portal maw runs, now on predation too.
-    this.superHunt.update(this.superBodies, this.entities, t, dt, (e, i) =>
-      this.gedankenOnDeath(e, i, t),
+    this.superHunt.update(
+      this.superBodies,
+      this.entities,
+      t,
+      dt,
+      (e, i) => this.gedankenOnDeath(e, i, t),
+      this.bigTreeHarmAllowed,
     );
     // USER V127 (D): DOME-WIDE FEEDING — the titans / leviathans / puppeteers graze the flora under them
     // and EAT any organism that wanders within reach (prey bursts + re-enters ELSEWHERE 5s later). The
@@ -1930,6 +2125,7 @@ export class World {
       t,
       dt,
       (e, i) => this.gedankenOnDeath(e, i, t), // devoured mind measured too — every death vector now
+      this.bigTreeHarmAllowed,
     );
     // V47 → GOAL: EACH of the 5 Archons' 100-robot wingman escort orbits + assists ITS OWN body every
     // frame, reacting to that Archon's live dominance + quantum aspects; one InstancedMesh per swarm.
@@ -2093,7 +2289,7 @@ export class World {
 
     // F-BRAIN V42: all organism brains perceive + steer BEFORE the integrator folds velocity
     // into position — full 70-param evaluation every frame (quality contract: no neural LOD).
-    this.entityBrains.thinkAll(this.entities.list, this.state.chaos, t);
+    this.entityBrains.thinkAll(this.entities.list, this.state.chaos, t, this.bigTreeProtectedAt);
 
     const stats = this.entities.update(dt, t);
     this.energy = stats.energy; // stats object is reused — copy immediately
@@ -2138,6 +2334,7 @@ export class World {
 
     // F-NHI V10: drive launched super-minds every frame at full cadence against the current grid.
     if (this.nhi.count > 0) {
+      this.nhiSwarmlingsThisFrame = 0;
       this.nhi.tick(this.nhiPolicyRng, this.nhiWorld, this.onNhiTickFailure);
     }
     // NHI SPAWN_SWARM can add ordinary minions above. Capture population only after that material
@@ -2212,6 +2409,8 @@ export class World {
       this.state.wind.x,
       this.state.wind.z,
     );
+    this.updateCrystalEcosystem(dt, uiDt, t, false);
+    this.updateBigTreeVisitors(dt, t);
     // Crossfade the rest of the cosmos — apex bodies, instanced/per-mesh organisms, ground + light rig
     // (AFTER environment.update, so it rides this frame's animated rig).
     const brutalStyle = this.brutalStyleIdx < 0 ? 0 : this.brutalStyleIdx;
@@ -2249,15 +2448,17 @@ export class World {
       const list = this.entities.list;
       const slice = Math.max(4, Math.ceil(list.length / 150));
       const end = Math.min(list.length, this.brutalMorphCursor + slice);
+      let changed = 0;
       for (let i = this.brutalMorphCursor; i < end; i++) {
         const e = list[i];
         if (!e || e.userData.isNhi) continue; // NHI bodies keep their form
-        this.entities.remorph(
-          e,
-          (e.userData.mi + 1 + Math.floor(this.uiRng() * 7)) % this.morphTotal,
-        );
+        const offset = 1 + Math.floor(this.uiRng() * 7);
+        // Keep the gesture RNG cadence, but the morph wave may not transform a protected visitor.
+        if (this.isBigTreeProtected(e.position.x, e.position.z)) continue;
+        this.entities.remorph(e, (e.userData.mi + offset) % this.morphTotal);
+        changed++;
       }
-      this.state.mutations += end - this.brutalMorphCursor;
+      this.state.mutations += changed;
       this.brutalMorphCursor = end >= list.length ? -1 : end;
     }
     this.artifacts.update(dt, t); // F-ARTIFACTS (V9): animate + fade the relic pool (visual-only)
@@ -2272,12 +2473,24 @@ export class World {
     // ELSEWHERE 5s later. Super Creature / APEX / Mechalogodrom live outside `entities`, so they are
     // immune by construction (this only scans the population). Armed only once the temple is revealed.
     this.portalDeath.setActive(this.monolithTemple.revealed);
-    this.portalDeath.update(this.entities, t, dt, (e, i) => this.gedankenOnDeath(e, i, t));
+    this.portalDeath.update(
+      this.entities,
+      t,
+      dt,
+      (e, i) => this.gedankenOnDeath(e, i, t),
+      this.bigTreeProtectedAt,
+    );
     // USER V127: the Mechalogodrom is DEATH too — organisms that rise into its high kill sphere are
     // INCINERATED in a fiery blaze + re-enter ELSEWHERE 5s later. Scans only `entities`, so Super
     // Creature / APEX / Pantheon (separate bodies) are immune to the fire, same as the portal. The
     // burning mind is MEASURED (Thaler gedanken-death) before it's disposed, like the portal + hunt.
-    this.mechaBlaze.update(this.entities, t, dt, (e, i) => this.gedankenOnDeath(e, i, t));
+    this.mechaBlaze.update(
+      this.entities,
+      t,
+      dt,
+      (e, i) => this.gedankenOnDeath(e, i, t),
+      this.bigTreeProtectedAt,
+    );
     // V128: drive the VISIBLE fire-column (matches the blaze's burn cone) from the god's agitation, so
     // the death zone reads as a roaring hazard between kills, not just an invisible sphere.
     this.mechaFirePillar.setIntensity(0.3 + 0.6 * (this.state.chaos / CHAOS_MAX));
@@ -2482,6 +2695,7 @@ export class World {
     });
     this.monolithTemple.update(0, vt);
     this.alienFlora.update(0, vt, chaosN, entropyN, s.wind.x, s.wind.z);
+    this.updateCrystalEcosystem(0, uiDt, vt, true);
     this.viz3d.update(this.viz3dSnap);
 
     // ── BRUTALISM stays live so the BRUTAL button reskins the super creatures + cosmos DURING pause ──
@@ -3829,6 +4043,22 @@ export class World {
     this.hud.showSector('◈ XENOMIMICS');
   }
 
+  /** Frame the complete Big Tree canopy, sanctuary glade, and local fauna. */
+  private focusEcosystem(): void {
+    const freeIdx = VIEW_MODES.indexOf('free');
+    if (freeIdx >= 0) {
+      this.state.viewIdx = freeIdx;
+      this.persisted.viewIdx = freeIdx;
+    }
+    const cam = this.engine.camera;
+    const c = this.crystalEcosystem.focusPoint;
+    const r = this.crystalEcosystem.viewRadius;
+    cam.up.set(0, 1, 0);
+    cam.position.set(c.x + r * 0.78, c.y + r * 0.38, c.z - r * 1.38);
+    cam.lookAt(c.x, c.y, c.z);
+    this.hud.showSector('♧ BIG TREE · FOOD · REST · PEACE');
+  }
+
   /** XNO: birth a whole entangled TWIN PAIR ahead of the camera — mimic + anti, one shared brain. */
   private launchXenomimic(): number {
     this.engine.camera.getWorldDirection(this.sv2);
@@ -3851,8 +4081,31 @@ export class World {
     return Math.min(this.state.chaos / 2, 3);
   }
 
+  /** Prototype seam used by production callbacks and lightweight Object.create test harnesses. */
+  private isBigTreeProtected(x: number, z: number): boolean {
+    return this.bigTreeZone?.protects(x, z, true) ?? false;
+  }
+
+  /** Hostile actions are legal only when neither endpoint is inside the neutral sanctuary. */
+  private isBigTreeHarmAllowed(
+    attackerX: number,
+    attackerZ: number,
+    targetX: number,
+    targetZ: number,
+  ): boolean {
+    const allowed =
+      !this.isBigTreeProtected(attackerX, attackerZ) && !this.isBigTreeProtected(targetX, targetZ);
+    if (!allowed) this.bigTreeSuppressedHarm++;
+    return allowed;
+  }
+
   /** Lifecycle fan-out stays event-driven and bounded; the population reuses the event object. */
   private onXenomimicLifecycle(event: Readonly<XenomimicLifecycleEvent>): void {
+    if (event.kind === 'death' || event.kind === 'eaten') {
+      // Stable pair/role identity releases food, activity slots, and social partners immediately.
+      // The population emits its boot births before this adapter is constructed.
+      this.bigTreeVisitors?.cancelXenomimic(event.pairId * 2 + event.role);
+    }
     const audioKind =
       event.kind === 'birth'
         ? 'birth'
@@ -3920,8 +4173,14 @@ export class World {
       const entities = this.entities.list;
       const entity = entities.length > 0 ? entities[state.frame % entities.length] : undefined;
       if (entity) {
-        const food = this.xenomimics.consumeNearest(entity.position.x, entity.position.z, 6);
-        if (food > 0) entity.userData.energy = Math.min(100, entity.userData.energy + food * 20);
+        const victim = this.xenomimics.nearestBody(entity.position.x, entity.position.z, 6);
+        if (
+          victim &&
+          this.isBigTreeHarmAllowed(entity.position.x, entity.position.z, victim.x, victim.z)
+        ) {
+          const food = this.xenomimics.consumeNearest(entity.position.x, entity.position.z, 6);
+          if (food > 0) entity.userData.energy = Math.min(100, entity.userData.energy + food * 20);
+        }
       }
     }
 
@@ -3939,6 +4198,115 @@ export class World {
     audio.proximity = this.xenomimicProximity;
     audio.strictSilence = strictSilence;
     this.audio.setXenomimicField(audio);
+  }
+
+  /** Keep the Big Tree rooted in the same analytic living ground as its neighboring flora. */
+  private updateCrystalEcosystem(
+    dt: number,
+    visualDt: number,
+    time: number,
+    visualOnly: boolean,
+  ): void {
+    const s = this.state;
+    const chaos = clamp(s.chaos / CHAOS_MAX, 0, 1);
+    const entropy = clamp((s.entropy ?? 0) / ENTROPY_MAX, 0, 1);
+    this.crystalEcosystem.setRootHeight(
+      this.crystalTerrainBase +
+        terrainDisplacementAt(
+          CRYSTAL_TREE_ORIGIN_X,
+          CRYSTAL_TREE_ORIGIN_Z,
+          time,
+          chaos,
+          entropy,
+          s.wind.x,
+          s.wind.z,
+        ),
+    );
+    const frame = this.crystalFrame;
+    frame.dt = dt;
+    frame.visualDt = visualDt;
+    frame.time = time;
+    frame.chaos = chaos;
+    frame.entropy = entropy;
+    frame.windX = s.wind.x;
+    frame.windZ = s.wind.z;
+    frame.weather = s.weatherIdx / Math.max(1, WEATHERS.length - 1);
+    frame.visualOnly = visualOnly;
+    this.crystalEcosystem.update(frame);
+  }
+
+  /**
+   * Advance temporary Big Tree visits after the canonical Crystal food clock and both living
+   * populations have advanced. Steering therefore persists into the next integrator tick, while
+   * consumption, leases, dwell time, and cooldowns share the scaled simulation clock exactly.
+   */
+  private updateBigTreeVisitors(dt: number, time: number): void {
+    const signal = this.organismIntelligence.signal;
+    const environment = this.bigTreeVisitorEnvironment;
+    const chaos = clamp(this.state.chaos / CHAOS_MAX, 0, 1);
+    environment.danger = Math.max(chaos * 0.7, signal.threatResponse);
+    environment.stress = clamp(chaos * 0.55 + signal.threatResponse * 0.35, 0, 1);
+    environment.socialNeed = signal.socialDrive;
+    environment.curiosity = signal.exploration;
+    environment.simulationLoad = clamp(
+      this.entities.list.length / Math.max(1, this.quality.maxEntities),
+      0,
+      1,
+    );
+    environment.foodAvailable = this.crystalEcosystem.availableTreeFood() > 0;
+    // One clock for the whole ecology: visit/eating deadlines and food leases both read the
+    // ecosystem's accumulated sim clock, so a future reset/timescale change cannot desync them.
+    void time;
+    this.bigTreeVisitors.update(
+      this.crystalEcosystem.foodTime,
+      dt,
+      this.entities.list,
+      this.xenomimics.bodyView(),
+      environment,
+    );
+
+    // Feed real visitor/social state into the residents' neural percept. The stats pass is bounded
+    // by fixed visit capacity and authored slots; it never scans the full population or 20k foods.
+    const stats = this.bigTreeVisitorStats;
+    this.bigTreeVisitors.readStats(stats);
+    this.crystalEcosystem.setVisitorPresence(
+      stats.activeVisitors,
+      (2 * stats.socialPairs) / Math.max(1, stats.activeVisitors),
+    );
+
+    // Development/audit visibility at a deliberately sparse cadence; no production debug geometry.
+    // Surfaces the full spec'd observability set: visit lifecycle, slot/food reservation state,
+    // respawn timers, stuck recovery, aggression suppression, and neural-controller status.
+    if (this.state.frame % 600 === 0) {
+      const food = this.crystalEcosystem.edibleResources.stats();
+      const neural = this.crystalEcosystem.neuralStatus();
+      this.audit.record('big-tree-ecology', {
+        activeVisitors: stats.activeVisitors,
+        ordinaryVisitors: stats.activeOrdinary,
+        xenomimicVisitors: stats.activeXenomimics,
+        meals: stats.completedMeals,
+        socialPairs: stats.socialPairs,
+        targetLosses: stats.targetLosses,
+        completedVisits: stats.completedVisits,
+        timedOutVisits: stats.timedOutVisits,
+        stuckRecoveries: stats.stuckRecoveries,
+        forcedExits: stats.forcedExits,
+        partnerTimeouts: stats.partnerTimeouts,
+        rejectedForCapacity: stats.rejectedForCapacity,
+        rejectedForNoSlot: stats.rejectedForNoSlot,
+        availableSlots: stats.availableSlots,
+        foodAvailable: food.available,
+        foodReserved: food.reserved,
+        foodConsuming: food.consuming,
+        foodRespawning: food.respawning,
+        foodPendingRespawns: food.pendingRespawns,
+        foodLifecycleErrors: food.lifecycleErrors,
+        suppressedHarm: this.bigTreeSuppressedHarm,
+        neuralReady: neural.modelReady,
+        neuralDecisions: neural.decisions,
+        neuralFallbacks: neural.fallbackCount,
+      });
+    }
   }
 
   /** Camera modes: world-scale paths follow the expanded habitat; subject shots keep object scale. */
@@ -4016,6 +4384,24 @@ export class World {
         (5 + Math.sin(ft * 0.5) * 12) * HABITAT_Y,
         Math.cos(ft * 0.3) * 12 * HABITAT_MID,
       );
+    } else if (mode === 'tree') {
+      const c = this.crystalEcosystem.focusPoint;
+      const r = this.crystalEcosystem.viewRadius;
+      const angle = t * 0.07;
+      const tx = c.x + Math.cos(angle) * r * 1.55;
+      const ty = c.y + r * (0.28 + Math.sin(t * 0.045) * 0.08);
+      const tz = c.z + Math.sin(angle) * r * 1.55;
+      const far = Math.hypot(cam.position.x - tx, cam.position.y - ty, cam.position.z - tz) > r * 3;
+      if (far) {
+        cam.position.set(tx, ty, tz);
+      } else {
+        const k = Math.min(1, dt * 1.6);
+        cam.position.x += (tx - cam.position.x) * k;
+        cam.position.y += (ty - cam.position.y) * k;
+        cam.position.z += (tz - cam.position.z) * k;
+      }
+      cam.up.set(0, 1, 0);
+      cam.lookAt(c.x, c.y, c.z);
     } else if (TRACKING_VIEWS.has(mode)) {
       // F-CAM5 subject-tracking shots: frame a live organism resolved by stable index.
       const found = this.resolveSubject(t);
@@ -4264,6 +4650,14 @@ export class World {
       const ea = list[a0];
       const eb = list[a1];
       if (!ea || !eb) continue;
+      // Sorting is a global field with a physical nudge. Do not swap state or push through the
+      // boundary when either endpoint is protected; algorithm cadence still advances unchanged.
+      if (
+        this.isBigTreeProtected(ea.position.x, ea.position.z) ||
+        this.isBigTreeProtected(eb.position.x, eb.position.z)
+      ) {
+        continue;
+      }
       const tv = ea.userData.sortVal;
       ea.userData.sortVal = eb.userData.sortVal;
       eb.userData.sortVal = tv;
@@ -4452,7 +4846,23 @@ export class World {
       } else {
         const cam = this.engine.camera;
         cam.getWorldDirection(this.sv2);
-        this.sv1.copy(cam.position).addScaledVector(this.sv2, 45);
+        // Birth ahead of view + lateral scatter so multi-launches don't stack on one ray.
+        this.sv1.copy(cam.position).addScaledVector(this.sv2, 38 + this.nhiEffectRng() * 18);
+        let rx = -this.sv2.z;
+        let rz = this.sv2.x;
+        const rLen = Math.hypot(rx, rz);
+        if (rLen < 1e-8) {
+          rx = 1;
+          rz = 0;
+        } else {
+          rx /= rLen;
+          rz /= rLen;
+        }
+        const side = (this.nhiEffectRng() - 0.5) * 28;
+        const lift = (this.nhiEffectRng() - 0.35) * 14;
+        this.sv1.x += rx * side;
+        this.sv1.y += lift;
+        this.sv1.z += rz * side;
       }
       mi = Math.floor(this.nhiEffectRng() * this.morphTotal);
       e = this.entities.spawn(this.sv1, mi, 2.2);
@@ -4475,12 +4885,23 @@ export class World {
       u.isNhi = true;
       u.beh = 'helix'; // ethereal, weaving motion (now OMNIDIRECTIONAL + contained — see steerNhiBeings)
       u.spd *= 2.2; // quick
-      // V57: launch in a RANDOM direction (was a fixed +y, which made every NHI climb to the sky).
-      u.vel.set(
-        (this.nhiEffectRng() - 0.5) * 0.4,
-        (this.nhiEffectRng() - 0.5) * 0.4,
-        (this.nhiEffectRng() - 0.5) * 0.4,
-      );
+      // Camera-forward + wide cone fan-out (pure leaf).
+      {
+        const cam = this.engine.camera;
+        cam.getWorldDirection(this.sv2);
+        const toss = nhiLaunchVelocityFromLook(
+          this.sv2.x,
+          this.sv2.y,
+          this.sv2.z,
+          this.nhiEffectRng(),
+          this.nhiEffectRng(),
+          this.nhiEffectRng(),
+          this.nhiEffectRng(),
+        );
+        u.vel.set(toss.x, toss.y, toss.z);
+      }
+      this.nhiLaunchGrace.set(nid, World.NHI_LAUNCH_GRACE_FRAMES);
+      u.nhiTossFrames = World.NHI_LAUNCH_GRACE_FRAMES;
       e.material.emissive.setRGB(0.25, 0.95, 1.0); // unmistakable cyan NHI glow
       e.material.emissiveIntensity = 3.2;
       // V10: birth a deterministic super-mind for this NHI and register it so it ACTS on the world
@@ -4632,6 +5053,7 @@ export class World {
     let rivalLastMove = -1;
     const previousTarget = this.nhiTargets.get(id);
     let nearestTarget: Entity | null = null;
+    const protectedHere = e ? this.isBigTreeProtected(e.position.x, e.position.z) : false;
     if (e) {
       const p = e.position;
       // Nearest organism via the frame's spatial grid (O(k)) with an EXACT-fallback contract
@@ -4650,6 +5072,20 @@ export class World {
           previousTarget ?? null,
         ).target;
       }
+    }
+    if (
+      nearestTarget &&
+      e &&
+      !this.isBigTreeHarmAllowed(
+        e.position.x,
+        e.position.z,
+        nearestTarget.position.x,
+        nearestTarget.position.z,
+      )
+    ) {
+      // Crossing either sanctuary boundary releases the retained hostile target. We deliberately do
+      // not restore it on exit; the next cognition beat must perceive and choose a fresh valid target.
+      nearestTarget = null;
     }
     if (nearestTarget) {
       // Retain the exact object that supplied rivalFaction/lastMove. HUNT and MIMIC therefore act on
@@ -4688,7 +5124,7 @@ export class World {
       energy: u ? c01(u.energy / 100) : 0.5,
       crowding: c01(this.entities.list.length / Math.max(1, this.quality.maxEntities)),
       chaos,
-      threat: c01(chaos * 0.5),
+      threat: protectedHere ? 0 : c01(chaos * 0.5),
       rivalFaction,
       rivalLastMove,
       kinPresence: c01(kinN / 4), // 4+ nearby kin ⇒ full social field
@@ -4727,16 +5163,41 @@ export class World {
     let affected = 0;
     let energyTransferred = 0;
     if (intent.action === NhiAction.SPAWN_SWARM) {
-      const n = Math.min(intent.spawn, 6);
+      const frame = this.state?.frame ?? 0;
+      const last = this.nhiLastSwarmFrame.get(id) ?? -1e9;
+      const lastGlobal = this.nhiLastGlobalSwarmFrame ?? -1e9;
+      const cooled =
+        frame - last >= World.NHI_SWARM_COOLDOWN_FRAMES &&
+        frame - lastGlobal >= World.NHI_SWARM_GLOBAL_GAP_FRAMES;
+      const roomFrame = World.NHI_SWARM_MAX_PER_FRAME - this.nhiSwarmlingsThisFrame;
+      let liveMinions = 0;
+      if (cooled && roomFrame > 0) {
+        const pool = this.entities.list;
+        for (let mi = 0; mi < pool.length; mi++) {
+          if (pool[mi]?.userData.nhiMinion) {
+            liveMinions++;
+            if (liveMinions >= World.NHI_MINION_LIVE_CAP) break;
+          }
+        }
+      }
+      const roomLive = World.NHI_MINION_LIVE_CAP - liveMinions;
+      const n = cooled
+        ? Math.min(
+            intent.spawn,
+            World.NHI_SWARM_MAX_PER_ACTION,
+            Math.max(0, roomFrame),
+            Math.max(0, roomLive),
+          )
+        : 0;
       for (let i = 0; i < n; i++) {
         try {
           // Keep the declared NHI attempt schedule stable: sample the dedicated effect stream before
           // asking EntityManager for the shared frame slot. A rejected slot never touches the ordinary
           // entity physics/genome streams because spawnWithinFrameBudget returns before spawn().
           this.sv1.set(
-            p.x + (this.nhiEffectRng() - 0.5) * 12,
-            p.y + (this.nhiEffectRng() - 0.5) * 12,
-            p.z + (this.nhiEffectRng() - 0.5) * 12,
+            p.x + (this.nhiEffectRng() - 0.5) * 18,
+            p.y + (this.nhiEffectRng() - 0.5) * 14,
+            p.z + (this.nhiEffectRng() - 0.5) * 18,
           );
           const child = this.entities.spawnWithinFrameBudget(
             this.sv1,
@@ -4749,6 +5210,19 @@ export class World {
             effectApplied = true;
             factSupported = true;
             affected++;
+            this.nhiSwarmlingsThisFrame++;
+            child.userData.nhiMinion = true;
+            child.userData.life =
+              World.NHI_MINION_LIFE_MIN + this.nhiEffectRng() * World.NHI_MINION_LIFE_SPAN;
+            child.userData.sT = 1e9;
+            {
+              const kick = nhiMinionKickVelocity(
+                this.nhiEffectRng(),
+                this.nhiEffectRng(),
+                this.nhiEffectRng(),
+              );
+              child.userData.vel.set(kick.x, kick.y, kick.z);
+            }
             this.nhiGuard('spawn-swarmling-appearance', () => {
               child.material.emissive.setRGB(0.6, 0.2, 0.85);
             });
@@ -4767,6 +5241,8 @@ export class World {
         }
       }
       if (effectApplied) {
+        this.nhiLastSwarmFrame.set(id, frame);
+        this.nhiLastGlobalSwarmFrame = frame;
         this.nhiGuard('spawn-swarmling-audio-primary', () => this.audio.play('warp'));
         this.nhiGuard('spawn-swarmling-audio-extra', () => this.audio.playExtra('chitter'));
       }
@@ -4775,6 +5251,11 @@ export class World {
       // cooperating one gathers them IN. MANIPULATE targets only the exact perceived rival faction
       // named by the intent and bends that faction's strategy toward the NHI's own move.
       const hostile = intent.ownMove === 1;
+      if (this.isBigTreeProtected(p.x, p.z)) {
+        // Sanctuary entry de-escalates field control; no stale faction/target mutation is replayed on
+        // exit because this decision simply produces no material effect or supporting fact.
+        return { effectApplied: false, factSupported: false, affected: 0, energyTransferred: 0 };
+      }
       const gain = (hostile ? -0.09 : 0.06) * intent.magnitude;
       const flip: 0 | 1 = hostile ? 1 : 0;
       const r2 = 36 * 36;
@@ -4785,7 +5266,15 @@ export class World {
       const near = this.grid.query(p.x, p.z, SOCIAL_NHI_ACTION_R);
       for (let i = 0; i < near.length; i++) {
         const o = near[i];
-        if (!o || o === e || o.userData.alive === false || o.userData.isNhi) continue;
+        if (
+          !o ||
+          o === e ||
+          o.userData.alive === false ||
+          o.userData.isNhi ||
+          this.isBigTreeProtected(o.position.x, o.position.z)
+        ) {
+          continue;
+        }
         if (
           intent.action === NhiAction.MANIPULATE &&
           !isNhiManipulationTarget(o.userData, intent.target)
@@ -4836,9 +5325,13 @@ export class World {
       }
     } else if (intent.action === NhiAction.HUNT) {
       const target = this.nhiTargets.get(id) ?? null;
+      if (!target || !this.isBigTreeHarmAllowed(p.x, p.z, target.position.x, target.position.z)) {
+        this.nhiTargets.delete(id);
+        return { effectApplied: false, factSupported: false, affected: 0, energyTransferred: 0 };
+      }
       const effect = resolveNhiHuntEffect(
         this.nhiEffectBody(e),
-        target ? this.nhiEffectBody(target) : null,
+        this.nhiEffectBody(target),
         intent.magnitude,
       );
       if (effect.applied) {
@@ -4923,6 +5416,7 @@ export class World {
     // intelligence (cognition + game theory + the world actions it takes each beat) lives in its mind;
     // this is just its body, now agile and leashed. Pure t/id trig — deterministic, allocation-free.
     // USER: NHI beings roam the FULL expanded square platform + the 3×-taller column.
+    // Launch grace: first ~3s after spawn keep the camera-forward toss (weak seek only).
     const HOME_Y = PLATFORM_MID_Y;
     const HALF = PLATFORM_HALF;
     const Y_LO = PLATFORM_FLOOR;
@@ -4930,6 +5424,14 @@ export class World {
     for (const [id, e] of this.nhiEntities) {
       const v = e.userData.vel;
       const p = e.position;
+      let grace = this.nhiLaunchGrace.get(id) ?? 0;
+      if (grace > 0) {
+        grace -= 1;
+        if (grace <= 0) this.nhiLaunchGrace.delete(id);
+        else this.nhiLaunchGrace.set(id, grace);
+      }
+      const graceFrac = grace / World.NHI_LAUNCH_GRACE_FRAMES;
+      const seekGain = 0.12 * (1 - graceFrac * 0.98);
       // Personal orbiting waypoint — a Lissajous path on all three axes (true omnidirectional roam,
       // each NHI on its own phase/radius so a swarm spreads through the volume instead of clumping).
       const target = writeNhiRoamTarget(this.sv2, id, t);
@@ -4938,23 +5440,23 @@ export class World {
       const dy = target.y - p.y;
       const dz = target.z - p.z;
       const d = Math.sqrt(dx * dx + dy * dy + dz * dz) + 1e-6;
-      // USER: faster individual motion — seek accel 0.05→0.12 (+ damping 0.985→0.97 below) ≈ 2.5× terminal speed.
-      v.x += (dx / d) * 0.12;
-      v.y += (dy / d) * 0.12;
-      v.z += (dz / d) * 0.12;
-      // Gentle weave on top so the motion never reads as a straight line.
-      v.x += Math.sin(t * 0.7 + id * 1.3) * 0.04;
-      v.y += Math.sin(t * 0.53 + id * 2.1) * 0.03;
-      v.z += Math.cos(t * 0.61 + id * 0.7) * 0.04;
-      // Continuous height restoring force — THIS is the real sky-float fix: an NHI is always pulled
-      // back toward home height, so upward drift can never accumulate into a climb to the ceiling.
-      v.y += (HOME_Y - p.y) * 0.004;
+      v.x += (dx / d) * seekGain;
+      v.y += (dy / d) * seekGain;
+      v.z += (dz / d) * seekGain;
+      // Gentle weave on top so the motion never reads as a straight line (muted during toss).
+      const weave = 1 - graceFrac * 0.92;
+      v.x += Math.sin(t * 0.7 + id * 1.3) * 0.04 * weave;
+      v.y += Math.sin(t * 0.53 + id * 2.1) * 0.03 * weave;
+      v.z += Math.cos(t * 0.61 + id * 0.7) * 0.04 * weave;
+      // Continuous height restoring force — softer during launch grace so the toss stays readable.
+      v.y += (HOME_Y - p.y) * (0.004 * (1 - graceFrac * 0.9));
       // Square leash — soft inward pull only past the platform edge (per-axis, not radial).
       if (p.x > HALF) v.x -= 0.12;
       else if (p.x < -HALF) v.x += 0.12;
       if (p.z > HALF) v.z -= 0.12;
       else if (p.z < -HALF) v.z += 0.12;
-      v.multiplyScalar(0.97); // damp so a roamer never accelerates away (0.985→0.97: livelier)
+      // During grace: almost no extra damp (entities owns toss damp). After: normal body drag.
+      v.multiplyScalar(0.9995 * graceFrac + 0.97 * (1 - graceFrac));
       // Hard containment guarantee — snap back inside the SQUARE platform + [floor,ceil] this frame.
       if (p.y > Y_HI) {
         p.y = Y_HI;
@@ -5068,11 +5570,24 @@ export class World {
   private doMutate(): void {
     this.audio.play('mutate');
     const list = this.entities.list;
-    this.state.mutations += list.length;
+    let changed = 0;
     for (let i = 0; i < list.length; i++) {
       const e = list[i];
-      if (e) this.entities.remorph(e, Math.floor(this.uiRng() * this.morphTotal));
+      if (!e) continue;
+      const nextMorph = Math.floor(this.uiRng() * this.morphTotal);
+      // Preserve the UI RNG cadence, but never force a protected visitor through a hostile global
+      // transformation while it is eating, resting, or socializing in the sanctuary. Mirror the two
+      // internal remorph draws (puppet-masters.ts convention) so later actors see the same seeded
+      // core stream whether or not anyone stood in the zone.
+      if (this.isBigTreeProtected(e.position.x, e.position.z)) {
+        this.rng();
+        this.rng();
+        continue;
+      }
+      this.entities.remorph(e, nextMorph);
+      changed++;
     }
+    this.state.mutations += changed;
   }
 
   /** Apocalypse = GENESIS, not scatter (owner: "apocalypse is supposed to make them start clustered in
@@ -5089,6 +5604,10 @@ export class World {
     for (let i = 0; i < list.length; i++) {
       const e = list[i];
       if (!e) continue;
+      const verticalImpulse = (this.uiRng() - 0.5) * 0.3;
+      // The gathering is intentionally dramatic outside, but sanctuary membership never teleports
+      // or snaps an active visitor. Draw the same RNG sample so the isolated UI stream stays stable.
+      if (this.isBigTreeProtected(e.position.x, e.position.z)) continue;
       // Compress each body most of the way to the core (a visible in-rush) and settle it near the floor…
       e.position.x *= 0.22;
       e.position.z *= 0.22;
@@ -5096,7 +5615,7 @@ export class World {
       // …with a gentle inward drift so the gathering keeps converging after the snap (not a static pile).
       const r = Math.hypot(e.position.x, e.position.z) + 1e-3;
       const g = 0.1 / r;
-      e.userData.vel.set(-e.position.x * g, (this.uiRng() - 0.5) * 0.3, -e.position.z * g);
+      e.userData.vel.set(-e.position.x * g, verticalImpulse, -e.position.z * g);
       e.userData.belly = 120; // digestion glow — the whole swarm pulses with the rebirth
     }
     // +250 new organisms born at the core, as a tight blob (was doBurst → now a deliberate central cluster).
@@ -5166,6 +5685,8 @@ export class World {
     this.mechaBlaze.clearPendingRespawns();
     this.portalDeath.clearPendingRespawns();
     this.superHunt.clearPendingRespawns();
+    this.bigTreeVisitors.reset();
+    this.crystalEcosystem.resetFood(this.state.elapsed);
     this.clearNhiPopulation();
     this.entities.reset(1); // USER: reset → ONE entity, never a 500-strong instant repopulation
     // V121: re-anchor the growth ramp at THIS moment with a base of 1, so the target climbs slowly
@@ -5670,6 +6191,7 @@ export class World {
       toggleBrutalism: () => this.toggleBrutalism(), // BRUTALISM: god-jewel ↔ concrete monolith
       focusColossus: () => this.focusColossus(), // ◎ GOD: fly the free cam to frame the fractal deity
       focusXenomimics: () => this.focusXenomimics(), // ◈ XENOMIMIC: fly the free cam to the ground-fauna swarm
+      focusEcosystem: () => this.focusEcosystem(), // ♧ LIFE TREE: frame the complete sanctuary ecology
       entropyBoost: () => {
         this.unlock();
         // F-CHAOS-ENTROPY: raise ENTROPY one step (the bipolar opposite of chaos — order/heat-death).

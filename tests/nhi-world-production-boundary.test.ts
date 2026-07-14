@@ -186,6 +186,11 @@ function makeHarness(options: HarnessOptions = {}): Harness {
     nhiLiveScratch: [],
     nhiNextId: options.startId ?? 0,
     nhiTargets: targets,
+    nhiLastSwarmFrame: new Map<number, number>(),
+    nhiLaunchGrace: new Map<number, number>(),
+    nhiSwarmlingsThisFrame: 0,
+    nhiLastGlobalSwarmFrame: -1e9,
+    state: { frame: 0 },
     sv1: new THREE.Vector3(),
     sv2: new THREE.Vector3(),
   });
@@ -342,16 +347,15 @@ describe('World NHI production boundaries', () => {
     }
   });
 
-  test('a later SPAWN_SWARM failure retains and acknowledges an earlier child', () => {
+  test('SPAWN_SWARM materializes at most one child even when intent asks for more', () => {
     const harness = makeHarness();
     const parent = makeEntity(0, new THREE.Vector3(4, 5, 6));
     harness.forward.set(3, parent);
-    harness.entities.failSpawnAt = 2;
     const intent: NhiIntent = {
       action: NhiAction.SPAWN_SWARM,
       target: -1,
       magnitude: 1,
-      spawn: 2,
+      spawn: 6,
       utterance: [],
       ownMove: 0,
     };
@@ -365,11 +369,37 @@ describe('World NHI production boundaries', () => {
       energyTransferred: 0,
     });
     expect(harness.entities.list).toHaveLength(1);
-    expect(harness.entities.morphLive.reduce((sum, count) => sum + count, 0)).toBe(1);
+    expect(harness.entities.spawnCalls).toBe(1);
     expect(harness.gridInsertions).toEqual(harness.entities.list);
+    expect(harness.entities.list[0]?.userData.nhiMinion).toBe(true);
+  });
+
+  test('SPAWN_SWARM spawn failure acknowledges no child', () => {
+    const harness = makeHarness();
+    const parent = makeEntity(0, new THREE.Vector3(4, 5, 6));
+    harness.forward.set(3, parent);
+    harness.entities.failSpawnAt = 1;
+    const intent: NhiIntent = {
+      action: NhiAction.SPAWN_SWARM,
+      target: -1,
+      magnitude: 1,
+      spawn: 1,
+      utterance: [],
+      ownMove: 0,
+    };
+
+    const outcome = coordinator(harness.world).nhiApply(3, intent, 'unused');
+
+    expect(outcome).toEqual({
+      effectApplied: false,
+      factSupported: false,
+      affected: 0,
+      energyTransferred: 0,
+    });
+    expect(harness.entities.list).toHaveLength(0);
     expect(harness.audits).toContainEqual({
       action: 'nhi-swarm-spawn-failed',
-      detail: { id: 3, attempt: 1, error: 'injected entity spawn failure 2' },
+      detail: { id: 3, attempt: 0, error: 'injected entity spawn failure 1' },
     });
   });
 

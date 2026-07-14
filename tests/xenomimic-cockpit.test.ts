@@ -86,6 +86,26 @@ describe('GATE-XENOMIMIC-COCKPIT: the inspector is a live data cockpit', () => {
     expect(source).toContain('worldRadius?: number');
   });
 
+  test('preserves twin identity without drawing a mimic-to-anti tether in the cockpit', () => {
+    const drawSwarm = source.slice(
+      source.indexOf('private drawSwarm('),
+      source.indexOf('private drawSpecies('),
+    );
+    expect(source).toContain('pairId: number;');
+    expect(drawSwarm).not.toContain('new Map');
+    expect(drawSwarm).not.toContain('.pairId');
+    expect(drawSwarm).not.toContain('createLinearGradient');
+    expect(drawSwarm).not.toContain('joined by a bond line');
+    expect(drawSwarm).not.toContain('twin bond lines');
+  });
+
+  test('the canonical contract describes topology as telemetry-only, never rendered lines', () => {
+    const contract = src('docs/XENOMIMICS-2026-07-12.md');
+    expect(contract).toContain('links for bounded telemetry only');
+    expect(contract).toContain('owns no scene object, geometry, material, or visible line');
+    expect(contract).not.toContain('renders reciprocal twin edges');
+  });
+
   test('headless update accepts the enriched telemetry and stays bounded', () => {
     const bodies: XenomimicBodySample[] = [
       { x: 10, z: 5, species: 0, role: 0, pairId: 1, energy: 0.7 },

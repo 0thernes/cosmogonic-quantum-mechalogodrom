@@ -23,12 +23,22 @@
 import { mulberry32, hashSeed, type Rng } from '../math/rng';
 import { measureRngProvenance, type RngProvenance } from '../core/rng-provenance';
 import { XenomimicBrain, type XenomimicBeat, type XenomimicThought } from './xenomimic-brain';
+import { PLATFORM_HALF } from './constants';
 import type { OrganismIntelligenceSignal } from '../types';
 
 /** Number of visually + behaviourally distinct xenomimic species. */
 export const XENOMIMIC_SPECIES = 10;
 /** Hard cap on live creatures (owner: "population grows to 1000 total"). */
 export const XENOMIMIC_MAX = 1000;
+
+/** Stable composition-root intent values for temporary Big Tree visits. */
+export const XenomimicVisitMode = {
+  Normal: 0,
+  Travel: 1,
+  Calm: 2,
+} as const;
+
+export type XenomimicVisitMode = (typeof XenomimicVisitMode)[keyof typeof XenomimicVisitMode];
 
 /** One xenomimic. Position rides the ground; `y` is derived (ground wave + hop), never free-floating. */
 export interface Xenomimic {
@@ -107,7 +117,12 @@ export interface XenomimicLifecycleEvent {
 export type XenomimicLifecycleSink = (event: Readonly<XenomimicLifecycleEvent>) => void;
 
 export interface XenomimicOptions {
-  /** Radius of the circular arena the fauna roam (world units). */
+  /** Per-axis half-extent of the canonical square habitat (world units). */
+  habitatHalfExtent?: number;
+  /**
+   * @deprecated Compatibility alias for {@link habitatHalfExtent}. Despite the legacy name, this now
+   * configures a square platform half-extent; it never creates an origin-centred radial leash.
+   */
   arenaRadius?: number;
   /** Seconds a creature lives before old-age death (owner: "die after a few minutes"). */
   lifetime?: number;
@@ -132,6 +147,13 @@ export interface XenomimicCouplings {
   grazeAt?: XenomimicGrazeAt;
   /** Real terrain/surface height under each body. */
   surfaceAt?: XenomimicSurfaceAt;
+  /** Big Tree sanctuary membership; protected bodies perceive no hostile pressure. */
+  safeZoneAt?: (x: number, z: number) => boolean;
+  /**
+   * Optional temporary-visit locomotion intent. Travel preserves an externally authored heading while
+   * moving purposefully; Calm settles in place. Missing/Normal preserves the legacy neural locomotion.
+   */
+  visitModeAt?: (pairId: number, role: 0 | 1) => XenomimicVisitMode;
   intelligence?: OrganismIntelligenceSignal | null;
   /** Mean nearby Entity neural activation, supplied by the canonical Xenomimic connectome sample. */
   entityActivation?: number;
@@ -189,7 +211,9 @@ export class XenomimicPopulation {
   private readonly pairs: Pair[] = [];
   private nextPairId = 0;
   private clock = 0;
-  private readonly arenaRadius: number;
+  private readonly habitatHalfExtent: number;
+  /** Perceptual range only; never a positional constraint or force between twins. */
+  private readonly twinSenseRange: number;
   private readonly lifetime: number;
   private readonly respawnDelay: number;
   private readonly predationRespawn: number;
@@ -197,6 +221,8 @@ export class XenomimicPopulation {
   private readonly beatInterval: number;
   private readonly respawnBudget: number;
   private readonly lifecycleSink: XenomimicLifecycleSink | undefined;
+  /** Latest composition-root sanctuary query; also hardens public predation sinks. */
+  private safeZoneAt: ((x: number, z: number) => boolean) | undefined;
   /** MEASURED provenance receipt for this population's own seeded generator (see {@link rngProvenanceReceipt}). */
   private readonly rngProvenance: RngProvenance;
 
@@ -248,7 +274,13 @@ export class XenomimicPopulation {
     // Provenance receipt: MEASURE (don't assume) the quality of the exact generator this population runs on,
     // from a dedicated sample so it never perturbs the live stream. Deterministic; constant for a given seed.
     this.rngProvenance = measureRngProvenance(rngSeed);
-    this.arenaRadius = options.arenaRadius ?? 180;
+    const requestedHalfExtent = options.habitatHalfExtent ?? options.arenaRadius ?? PLATFORM_HALF;
+    this.habitatHalfExtent =
+      Number.isFinite(requestedHalfExtent) && requestedHalfExtent > 0
+        ? requestedHalfExtent
+        : PLATFORM_HALF;
+    // Preserve the former default 90-unit perceptual scale without coupling it to world containment.
+    this.twinSenseRange = Math.min(90, this.habitatHalfExtent * 0.5);
     this.lifetime = options.lifetime ?? 150;
     this.respawnDelay = options.respawnDelay ?? 120;
     this.predationRespawn = options.predationRespawn ?? 5;
@@ -287,7 +319,7 @@ export class XenomimicPopulation {
 
   /** Half-extent (world units) the swarm is clamped inside — used to project bodies onto the map. */
   bounds(): number {
-    return this.arenaRadius;
+    return this.habitatHalfExtent;
   }
 
   /**
@@ -328,11 +360,11 @@ export class XenomimicPopulation {
     const ang = pair.mimic.heading; // deterministic per-pair; consumes no extra rng draw
     const ox = Math.cos(ang) * half;
     const oz = Math.sin(ang) * half;
-    pair.mimic.x = x + ox;
-    pair.mimic.z = z + oz;
+    pair.mimic.x = this.clampHabitatCoordinate(x + ox);
+    pair.mimic.z = this.clampHabitatCoordinate(z + oz);
     pair.mimic.y = xenoGroundHeight(pair.mimic.x, pair.mimic.z, this.clock) + 1.2;
-    pair.anti.x = x - ox;
-    pair.anti.z = z - oz;
+    pair.anti.x = this.clampHabitatCoordinate(x - ox);
+    pair.anti.z = this.clampHabitatCoordinate(z - oz);
     pair.anti.y = xenoGroundHeight(pair.anti.x, pair.anti.z, this.clock) + 1.2;
     return 2;
   }
@@ -344,13 +376,15 @@ export class XenomimicPopulation {
     x: number,
     z: number,
   ): Xenomimic {
+    const boundedX = this.clampHabitatCoordinate(x);
+    const boundedZ = this.clampHabitatCoordinate(z);
     return {
       pairId,
       role,
       species,
-      x,
-      y: xenoGroundHeight(x, z, this.clock),
-      z,
+      x: boundedX,
+      y: xenoGroundHeight(boundedX, boundedZ, this.clock),
+      z: boundedZ,
       vx: 0,
       vz: 0,
       heading: this.rng() * TWO_PI,
@@ -414,9 +448,9 @@ export class XenomimicPopulation {
   private introduce(pair: Pair, creature: Xenomimic, mask: 1 | 2, x?: number, z?: number): void {
     if ((pair.introducedMask & mask) !== 0) return;
     if (x !== undefined && z !== undefined) {
-      creature.x = x;
-      creature.z = z;
-      creature.y = xenoGroundHeight(x, z, this.clock) + 1.2;
+      creature.x = this.clampHabitatCoordinate(x);
+      creature.z = this.clampHabitatCoordinate(z);
+      creature.y = xenoGroundHeight(creature.x, creature.z, this.clock) + 1.2;
     }
     creature.alive = true;
     creature.respawnAt = 0;
@@ -448,6 +482,7 @@ export class XenomimicPopulation {
    */
   step(dt: number, couplings: XenomimicCouplings = {}): void {
     if (!Number.isFinite(dt) || dt <= 0) return;
+    this.safeZoneAt = couplings.safeZoneAt;
     this.clock += dt;
     const chaos = clamp01(couplings.chaos ?? 0.3);
     const sharedThreat = couplings.intelligence?.enabled
@@ -468,11 +503,18 @@ export class XenomimicPopulation {
           pair.mimic,
           pair.anti,
           couplings.foodAt,
-          threat,
+          couplings.safeZoneAt?.(pair.mimic.x, pair.mimic.z) === true ? 0 : threat,
           resource,
           chaos,
         );
-        const sAnti = this.senses(pair.anti, pair.mimic, couplings.foodAt, threat, resource, chaos);
+        const sAnti = this.senses(
+          pair.anti,
+          pair.mimic,
+          couplings.foodAt,
+          couplings.safeZoneAt?.(pair.anti.x, pair.anti.z) === true ? 0 : threat,
+          resource,
+          chaos,
+        );
         pair.beat = pair.brain.beat(sMimic, sAnti, this.rng);
         pair.beatClock = this.clock;
       }
@@ -485,6 +527,7 @@ export class XenomimicPopulation {
           couplings.foodAt,
           couplings.grazeAt,
           couplings.surfaceAt,
+          couplings.visitModeAt?.(pair.id, 0) ?? XenomimicVisitMode.Normal,
         );
         this.integrate(
           pair.anti,
@@ -493,6 +536,7 @@ export class XenomimicPopulation {
           couplings.foodAt,
           couplings.grazeAt,
           couplings.surfaceAt,
+          couplings.visitModeAt?.(pair.id, 1) ?? XenomimicVisitMode.Normal,
         );
       }
       this.lifecycle(pair.mimic, dt);
@@ -541,7 +585,7 @@ export class XenomimicPopulation {
     const food = foodAt ? clamp01(foodAt(self.x, self.z)) : 0.4;
     const dx = twin.x - self.x;
     const dz = twin.z - self.z;
-    const twinDist = clamp01(1 - Math.sqrt(dx * dx + dz * dz) / (this.arenaRadius * 0.5));
+    const twinDist = clamp01(1 - Math.sqrt(dx * dx + dz * dz) / this.twinSenseRange);
     const crowding = clamp01((resource + threat) * 0.5);
     return [food, crowding, threat, chaos, twinDist, clamp01(self.energy)];
   }
@@ -554,23 +598,35 @@ export class XenomimicPopulation {
     foodAt: ((x: number, z: number) => number) | undefined,
     grazeAt: XenomimicGrazeAt | undefined,
     surfaceAt: XenomimicSurfaceAt | undefined,
+    visitMode: XenomimicVisitMode,
   ): void {
     if (!c.alive) return;
     // Species set a locomotion personality: sprinters (cheetah) vs crawlers (snail).
     const gaitFast = 6 + (c.species % 4) * 5;
-    c.gaitPhase = (c.gaitPhase + dt * (2 + thought.speed * 6)) % TWO_PI;
+    const calm = visitMode === XenomimicVisitMode.Calm;
+    const travel = visitMode === XenomimicVisitMode.Travel;
+    if (!calm) c.gaitPhase = (c.gaitPhase + dt * (2 + thought.speed * 6)) % TWO_PI;
     c.swayPhase = (c.swayPhase + dt * 3) % TWO_PI;
-    c.heading += thought.turn * dt * 2.5 + Math.sin(c.swayPhase) * dt * 0.6; // wave/curve locomotion
-    const speed = thought.speed * gaitFast * (0.6 + 0.4 * Math.abs(Math.sin(c.gaitPhase))); // gait pulse
-    c.vx = Math.cos(c.heading) * speed;
-    c.vz = Math.sin(c.heading) * speed;
+    if (!travel && !calm) {
+      c.heading += thought.turn * dt * 2.5 + Math.sin(c.swayPhase) * dt * 0.6; // wave/curve locomotion
+    }
+    const neuralSpeed = thought.speed * gaitFast * (0.6 + 0.4 * Math.abs(Math.sin(c.gaitPhase))); // gait pulse
+    const speed = calm ? 0 : travel ? Math.max(neuralSpeed, gaitFast * 0.55) : neuralSpeed;
+    c.vx = calm ? 0 : Math.cos(c.heading) * speed;
+    c.vz = calm ? 0 : Math.sin(c.heading) * speed;
     c.x += c.vx * dt;
     c.z += c.vz * dt;
 
     // Hop (parabolic, gravity-restored) — they jump/leap but never clear the ground-wave crest by much.
-    if (thought.jump > 0.6 && c.hopY <= 0.01) c.hopV = 4 + thought.jump * 6;
+    if (!travel && !calm && thought.jump > 0.6 && c.hopY <= 0.01) {
+      c.hopV = 4 + thought.jump * 6;
+    } else if (travel || calm) {
+      // A visit intent may arrive mid-hop. Cancel upward impulse, then let gravity settle without a snap.
+      c.hopV = Math.min(0, c.hopV);
+    }
     c.hopV -= 22 * dt;
     c.hopY = Math.max(0, c.hopY + c.hopV * dt);
+    if ((travel || calm) && c.hopY === 0) c.hopV = 0;
 
     // Weighted-ragdoll FULCRUM: the body is a damped pendulum on its ground-contact point. Turning hard
     // at speed rolls it (centripetal lean); a hop pitches it; a spring (K) restores upright, damped
@@ -587,7 +643,7 @@ export class XenomimicPopulation {
 
     // Teleport: a Born-rule collapse relocates a still-superposed creature a short distance instantly.
     c.teleportCd = Math.max(0, c.teleportCd - dt);
-    if (thought.teleport && c.teleportCd <= 0) {
+    if (!travel && !calm && thought.teleport && c.teleportCd <= 0) {
       const a = this.rng() * TWO_PI;
       const jump = 10 + this.rng() * 25;
       c.x += Math.cos(a) * jump;
@@ -597,24 +653,20 @@ export class XenomimicPopulation {
       this.emitLifecycle('teleport', c);
     }
 
-    // Keep them inside the arena and glued to the ground wave.
-    const rr = Math.sqrt(c.x * c.x + c.z * c.z);
-    if (rr > this.arenaRadius) {
-      const s = this.arenaRadius / rr;
-      c.x *= s;
-      c.z *= s;
-      c.heading += Math.PI; // turn back inward
-    }
+    // Canonical habitat containment: the dome's ground is a square ±PLATFORM_HALF platform. Clamp only
+    // at that authored boundary and reflect the relevant heading component so a body walks back in on its
+    // next step. There is deliberately no origin radius, partner-distance clamp, spring, or home force.
+    this.containInHabitat(c);
     c.y = this.surfaceHeight(c.x, c.z, surfaceAt) + c.hopY + 1.2;
     c.shimmer = thought.shimmer;
 
     // Eat through the real flora mutation boundary when present. Legacy read-only food sampling stays
     // as a compatibility fallback for deterministic fixtures and detached/headless operation.
-    if (grazeAt) {
+    if (!travel && !calm && grazeAt) {
       const appetite = clamp01(0.35 + thought.eat * 0.65);
       const consumed = clamp01(grazeAt(c.x, c.z, appetite, dt));
       c.energy = clamp01(c.energy + consumed);
-    } else if (foodAt) {
+    } else if (!travel && !calm && foodAt) {
       const food = clamp01(foodAt(c.x, c.z));
       const graze = (0.35 + thought.eat * 0.65) * food;
       c.energy = clamp01(c.energy + graze * dt * 0.5);
@@ -626,6 +678,39 @@ export class XenomimicPopulation {
     return injected !== undefined && Number.isFinite(injected)
       ? injected
       : xenoGroundHeight(x, z, this.clock);
+  }
+
+  private clampHabitatCoordinate(value: number): number {
+    return Math.max(-this.habitatHalfExtent, Math.min(this.habitatHalfExtent, value));
+  }
+
+  /** Allocation-free square-platform containment; never references the creature's twin. */
+  private containInHabitat(c: Xenomimic): void {
+    const half = this.habitatHalfExtent;
+    let reflectX = false;
+    let reflectZ = false;
+    if (c.x > half) {
+      c.x = half;
+      reflectX = c.vx > 0;
+    } else if (c.x < -half) {
+      c.x = -half;
+      reflectX = c.vx < 0;
+    }
+    if (c.z > half) {
+      c.z = half;
+      reflectZ = c.vz > 0;
+    } else if (c.z < -half) {
+      c.z = -half;
+      reflectZ = c.vz < 0;
+    }
+    if (reflectX) {
+      c.vx = -c.vx;
+      c.heading = Math.PI - c.heading;
+    }
+    if (reflectZ) {
+      c.vz = -c.vz;
+      c.heading = -c.heading;
+    }
   }
 
   /** Age, metabolic drain, natural death, and timed respawn. */
@@ -675,10 +760,10 @@ export class XenomimicPopulation {
 
   /** Bring a downed creature back near its arena, fresh. Balances the population. */
   private revive(c: Xenomimic, surfaceAt?: XenomimicSurfaceAt): void {
-    const a = this.rng() * TWO_PI;
-    const r = this.rng() * this.arenaRadius * 0.8;
-    c.x = Math.cos(a) * r;
-    c.z = Math.sin(a) * r;
+    // Two draws, as before, but across the canonical square habitat instead of an origin-centred circle.
+    const spawnHalf = this.habitatHalfExtent * 0.8;
+    c.x = (this.rng() * 2 - 1) * spawnHalf;
+    c.z = (this.rng() * 2 - 1) * spawnHalf;
     c.y = this.surfaceHeight(c.x, c.z, surfaceAt) + 1.2;
     c.vx = 0;
     c.vz = 0;
@@ -702,7 +787,7 @@ export class XenomimicPopulation {
    */
   consume(c: Readonly<Xenomimic>): number {
     const creature = c as Xenomimic;
-    if (!creature.alive) return 0;
+    if (!creature.alive || this.safeZoneAt?.(creature.x, creature.z) === true) return 0;
     const yield_ = 0.3 + creature.energy * 0.5;
     creature.alive = false;
     creature.respawnAt = this.clock + this.predationRespawn;

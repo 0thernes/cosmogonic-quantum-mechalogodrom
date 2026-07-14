@@ -27,7 +27,14 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { OrganismIntelligenceSignal, SimContext } from '../types';
-import { ARENA_MID, HABITAT_XZ_SCALE, PLATFORM_HALF } from './constants';
+import {
+  ARENA_MID,
+  CRYSTAL_TREE_FLORA_CLEAR_RADIUS,
+  CRYSTAL_TREE_ORIGIN_X,
+  CRYSTAL_TREE_ORIGIN_Z,
+  HABITAT_XZ_SCALE,
+  PLATFORM_HALF,
+} from './constants';
 import { baseTerrainHeightAt } from './terrain-profile';
 import { TERRAIN_DEFORMATION_GLSL } from './terrain-deformation';
 
@@ -990,6 +997,11 @@ export class AlienFlora {
       if (Math.abs(x) > ALIEN_FLORA_FIELD_HALF || Math.abs(z) > ALIEN_FLORA_FIELD_HALF) continue;
       if (Math.hypot(x, z) < CENTER_CLEAR) continue;
       if (Math.hypot(x, z - TEMPLE_Z) < TEMPLE_CLEAR) continue;
+      if (
+        Math.hypot(x - CRYSTAL_TREE_ORIGIN_X, z - CRYSTAL_TREE_ORIGIN_Z) <
+        CRYSTAL_TREE_FLORA_CLEAR_RADIUS
+      )
+        continue;
 
       const trail = Math.abs(
         Math.sin(x * 0.009 + z * 0.005 + 1.3 * Math.sin(z * 0.004)) +

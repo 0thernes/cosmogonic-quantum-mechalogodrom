@@ -78,6 +78,11 @@ export interface QualityProfile {
 
 /** Per-entity simulation state stored on the mesh (`userData`). */
 export interface EntityData {
+  /**
+   * Simulation-owned organism identity used by ecology systems. Monotonic between genesis resets;
+   * independent of Three.js Object3D ids and optional on lightweight test/external mocks.
+   */
+  ecologyId?: number;
   /** Morphotype index `0..morphTotal-1` (100 legacy / 250 in phylum mode); spawn/respawn use `mi % morphs.length`. */
   mi: number;
   vel: THREE.Vector3;
@@ -131,6 +136,21 @@ export interface EntityData {
    * sets it. Read as `userData.isNhi === true`.
    */
   isNhi?: boolean;
+  /**
+   * Frames remaining of NHI camera-launch toss (lighter velocity damp). World sets on launch;
+   * EntityManager decrements. Ordinary organisms leave it undefined.
+   */
+  nhiTossFrames?: number;
+  /**
+   * Ordinary minion birthed by NHI SPAWN_SWARM. Long-lived; does not auto-split.
+   */
+  nhiMinion?: boolean;
+  /**
+   * True while this organism holds an active Big Tree visit (set/cleared by the visit adapter).
+   * Exempts the traveller from living-zone centre-gravity so the corridor between LIVING_ZONE and
+   * the sanctuary boundary is walkable. Absent (⇒ falsy) on every non-visiting organism.
+   */
+  treeVisit?: boolean;
 }
 
 export interface Entity extends THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial> {
@@ -564,6 +584,8 @@ export interface UiActions {
   focusColossus(): void;
   /** Snap the free camera to frame the xenomimic ground-fauna swarm. */
   focusXenomimics(): void;
+  /** Snap the free camera to frame the complete Big Tree habitat. */
+  focusEcosystem(): void;
   cycleAlgo(): string;
   /** Cycle master scene exposure darker ↔ brighter; returns the new value. */
   cycleExposure(): number;

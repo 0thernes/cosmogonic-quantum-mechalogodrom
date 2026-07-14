@@ -149,6 +149,7 @@ export class PortalDeath {
     t: number,
     dt: number,
     onKill?: (e: Entity, index: number) => void,
+    isProtected?: (x: number, z: number) => boolean,
   ): void {
     const list = entities.list;
     if (this.active && dt > 0) {
@@ -157,6 +158,7 @@ export class PortalDeath {
         const e = list[i];
         if (!e) continue;
         const p = e.position;
+        if (isProtected?.(p.x, p.z)) continue;
         const dx = p.x - PORTAL_X;
         const dy = p.y - PORTAL_Y;
         const dz = p.z - PORTAL_Z;

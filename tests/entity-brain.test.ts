@@ -9,7 +9,7 @@ import { mulberry32 } from '../src/math/rng';
 import { getQuantizationConfig } from '../src/math/quantization';
 import { EntityBrainField } from '../src/sim/entity-brain';
 import { GENOME_LEN, TRAIT_GENES } from '../src/sim/genome';
-import type { Entity, EntityData } from '../src/types';
+import type { Entity, EntityData, OrganismIntelligenceSignal } from '../src/types';
 
 /** A minimal fake organism carrying only the fields the brain reads. */
 function fakeEntity(i: number, isNhi = false): Entity {
@@ -19,13 +19,36 @@ function fakeEntity(i: number, isNhi = false): Entity {
     life: 600,
     ph: i * 0.137,
     energy: 30 + (i % 40),
+    payoff: 0,
+    act: 0,
     isNhi,
   } as unknown as EntityData;
-  return { userData: ud } as unknown as Entity;
+  return { position: new THREE.Vector3(i, 0, 0), userData: ud } as unknown as Entity;
 }
 
 function fakeList(n: number, nhiEvery = 0): Entity[] {
   return Array.from({ length: n }, (_, i) => fakeEntity(i, nhiEvery > 0 && i % nhiEvery === 0));
+}
+
+function threatSignal(threat: number): OrganismIntelligenceSignal {
+  return {
+    enabled: true,
+    indicatorOnly: true,
+    revision: 1,
+    resourcePressure: 0.7,
+    threatResponse: threat,
+    exploration: 0.6,
+    socialDrive: 0.8,
+    plasticity: 0.5,
+    forecast: 0.55,
+    confidence: 1,
+    corpusDrive: 0.6,
+    ecologyRisk: threat,
+    ecologySurprise: 0.2,
+    channels: Float32Array.from([0.7, threat, 0.6, 0.8]),
+    integratedRepoCount: 17,
+    diagnosticAlert: false,
+  };
 }
 
 describe('EntityBrainField (V42)', () => {
@@ -143,6 +166,70 @@ describe('EntityBrainField (V42)', () => {
     expect(list[0]!.userData.vel.lengthSq()).toBe(0);
     expect(list[2]!.userData.vel.lengthSq()).toBe(0);
     expect(list[3]!.userData.vel.lengthSq()).toBeGreaterThan(0);
+  });
+
+  test('protected organisms run the full brain but threat level cannot steer them', () => {
+    const highThreat = new EntityBrainField(1, mulberry32(0x5afe_b001));
+    const lowThreat = new EntityBrainField(1, mulberry32(0x5afe_b001));
+    highThreat.attachAdaptiveField(threatSignal(1), null);
+    lowThreat.attachAdaptiveField(threatSignal(0), null);
+    const high = fakeEntity(0);
+    const low = fakeEntity(0);
+    high.userData.payoff = 10;
+    low.userData.payoff = -10;
+    const sanctuaryAt = () => true;
+
+    expect(highThreat.thinkAll([high], 9, 1.25, sanctuaryAt)).toBe(1);
+    expect(lowThreat.thinkAll([low], 9, 1.25, sanctuaryAt)).toBe(1);
+    expect(high.userData.vel.toArray()).toEqual(low.userData.vel.toArray());
+    high.userData.vel.set(0, 0, 0);
+    low.userData.vel.set(0, 0, 0);
+    expect(highThreat.thinkAll([high], 9, 1.25 + 1 / 60, sanctuaryAt)).toBe(1);
+    expect(lowThreat.thinkAll([low], 9, 1.25 + 1 / 60, sanctuaryAt)).toBe(1);
+    expect(high.userData.vel.toArray()).toEqual(low.userData.vel.toArray());
+    expect(high.userData.vel.lengthSq()).toBeGreaterThan(0);
+    expect(high.userData.act).toBeGreaterThan(0);
+    const semantic = highThreat.semanticStateAt(0);
+    expect(semantic.threat).toBe(0);
+    expect(semantic.resource).toBeGreaterThan(0);
+    expect(semantic.social).toBeGreaterThan(0);
+    expect(semantic.exploration).toBeGreaterThan(0);
+  });
+
+  test('the optional predicate is local, reversible, and does not consume RNG during thinking', () => {
+    let draws = 0;
+    const seeded = mulberry32(0x5afe_b002);
+    const countedRng = (): number => {
+      draws++;
+      return seeded();
+    };
+    const protectedField = new EntityBrainField(2, countedRng);
+    const exposedField = new EntityBrainField(2, mulberry32(0x5afe_b002));
+    protectedField.attachAdaptiveField(threatSignal(1), null);
+    exposedField.attachAdaptiveField(threatSignal(1), null);
+    const protectedList = fakeList(2);
+    const exposedList = fakeList(2);
+    const afterConstruction = draws;
+
+    protectedField.thinkAll(protectedList, 9, 1.25, (x) => x === 0);
+    exposedField.thinkAll(exposedList, 9, 1.25);
+
+    expect(draws).toBe(afterConstruction);
+    expect(protectedList[0]!.userData.vel.toArray()).not.toEqual(
+      exposedList[0]!.userData.vel.toArray(),
+    );
+    expect(protectedList[1]!.userData.vel.toArray()).toEqual(
+      exposedList[1]!.userData.vel.toArray(),
+    );
+
+    protectedField.resetEntitySlots();
+    exposedField.resetEntitySlots();
+    for (const entity of [...protectedList, ...exposedList]) entity.userData.vel.set(0, 0, 0);
+    protectedField.thinkAll(protectedList, 9, 1.5, null);
+    exposedField.thinkAll(exposedList, 9, 1.5);
+    expect(protectedList[0]!.userData.vel.toArray()).toEqual(
+      exposedList[0]!.userData.vel.toArray(),
+    );
   });
 
   test('velocities stay finite under sustained thinking (no NaN)', () => {

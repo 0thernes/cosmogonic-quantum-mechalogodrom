@@ -106,13 +106,18 @@ function makeWorld(
   seed: number,
   isMobile = true,
   organismIntelligence?: OrganismIntelligenceSignal,
-): { entities: EntityManager; shog: ShoggothSystem } {
+): { ctx: SimContext; entities: EntityManager; shog: ShoggothSystem } {
   const ctx = makeCtx(seed, isMobile, organismIntelligence);
   const entities = new EntityManager(ctx);
   entities.reset(80);
   for (const e of entities.list) if (e) ctx.grid.insert(e);
   const shog = new ShoggothSystem(ctx, entities);
-  return { entities, shog };
+  return { ctx, entities, shog };
+}
+
+function rebuildEntityGrid(ctx: SimContext, entities: EntityManager): void {
+  ctx.grid.clear();
+  for (const entity of entities.list) if (entity) ctx.grid.insert(entity);
 }
 
 /** Per-member behavioral/action trace: locomotion, spin, and cognition-driven hunt/agitation. */
@@ -293,5 +298,195 @@ describe('ShoggothSystem — deterministic predators that never NaN the populati
         expect(ch).toBeLessThanOrEqual(1);
       }
     }
+  });
+
+  test('a protected shoggoth clears active tendrils, cannot tug or consume, and resumes cleanly after exit', () => {
+    const { ctx, entities, shog } = makeWorld(0x5afe);
+    const horde = (
+      shog as unknown as {
+        shogs: {
+          group: THREE.Group;
+          vel: THREE.Vector3;
+          feedTimer: number;
+          feedInterval: number;
+          consumed: number;
+          tendrilGeo: THREE.BufferGeometry;
+        }[];
+      }
+    ).shogs;
+    const actor = horde[0]!;
+    const prey = entities.list[0]!;
+
+    for (let i = 0; i < entities.list.length; i++) {
+      const entity = entities.list[i]!;
+      entity.position.set(700 + (i % 5), 32, 700 + Math.floor(i / 5));
+      entity.userData.vel.set(0, 0, 0);
+    }
+    for (let i = 1; i < horde.length; i++) {
+      horde[i]!.group.position.set(600 + i, 32, 600);
+      horde[i]!.vel.set(0, 0, 0);
+    }
+    prey.position.set(1, 32, 0);
+    actor.group.position.set(0, 32, 0);
+    actor.vel.set(0, 0, 0);
+    actor.feedTimer = 0;
+    rebuildEntityGrid(ctx, entities);
+
+    shog.attachSanctuary(null);
+    shog.update(1 / 60, 0);
+    expect(prey.userData.vel.lengthSq()).toBeGreaterThan(0);
+    expect(actor.tendrilGeo.drawRange.count).toBeGreaterThan(0);
+
+    prey.userData.vel.set(0, 0, 0);
+    actor.group.position.set(0, 32, 0);
+    actor.vel.set(0, 0, 0);
+    actor.feedTimer = actor.feedInterval * 2;
+    const consumedBefore = actor.consumed;
+    // Membership is evaluated again after locomotion; use an authored area rather than a zero-width
+    // point so the actor remains inside after its normal calm drift this frame.
+    shog.attachSanctuary((x, z) => Math.abs(x) < 0.5 && Math.abs(z) < 0.5);
+    rebuildEntityGrid(ctx, entities);
+    shog.update(1 / 60, 1 / 60);
+    expect(entities.list).toContain(prey);
+    expect(prey.userData.vel.lengthSq()).toBe(0);
+    expect(actor.tendrilGeo.drawRange.count).toBe(0); // the prior hostile line is not left stale
+    expect(actor.consumed).toBe(consumedBefore);
+
+    prey.userData.vel.set(0, 0, 0);
+    actor.group.position.set(0, 32, 0);
+    actor.vel.set(0, 0, 0);
+    actor.feedTimer = 0;
+    shog.attachSanctuary(null);
+    rebuildEntityGrid(ctx, entities);
+    shog.update(1 / 60, 2 / 60);
+    expect(prey.userData.vel.lengthSq()).toBeGreaterThan(0);
+    expect(actor.tendrilGeo.drawRange.count).toBeGreaterThan(0);
+    shog.dispose();
+  });
+
+  test('an outside shoggoth skips protected prey and consumes an exposed alternative', () => {
+    const { ctx, entities, shog } = makeWorld(0x5aff);
+    const horde = (
+      shog as unknown as {
+        shogs: {
+          group: THREE.Group;
+          vel: THREE.Vector3;
+          feedTimer: number;
+          feedInterval: number;
+          consumed: number;
+        }[];
+      }
+    ).shogs;
+    const actor = horde[0]!;
+    const protectedPrey = entities.list[0]!;
+    const exposedPrey = entities.list[1]!;
+
+    for (let i = 0; i < entities.list.length; i++) {
+      const entity = entities.list[i]!;
+      entity.position.set(700 + (i % 5), 32, 700 + Math.floor(i / 5));
+      entity.userData.vel.set(0, 0, 0);
+    }
+    for (let i = 1; i < horde.length; i++) {
+      horde[i]!.group.position.set(600 + i, 32, 600);
+      horde[i]!.vel.set(0, 0, 0);
+    }
+    actor.group.position.set(-10, 32, 0);
+    actor.vel.set(0, 0, 0);
+    actor.feedTimer = actor.feedInterval * 2;
+    protectedPrey.position.set(-9.75, 32, 0); // nearest candidate, but inside sanctuary
+    exposedPrey.position.set(-11, 32, 0);
+    const protectedVelocity = protectedPrey.userData.vel.clone();
+    const consumedBefore = actor.consumed;
+    shog.attachSanctuary(
+      (x, z) => Math.abs(x - protectedPrey.position.x) < 0.01 && Math.abs(z) < 0.01,
+    );
+    rebuildEntityGrid(ctx, entities);
+
+    shog.update(1 / 60, 0);
+
+    expect(entities.list).toContain(protectedPrey);
+    expect(entities.list).not.toContain(exposedPrey);
+    expect(protectedPrey.userData.vel.equals(protectedVelocity)).toBe(true);
+    expect(actor.consumed).toBe(consumedBefore + 1);
+    shog.dispose();
+  });
+
+  test('a shoggoth crossing into sanctuary this frame cannot tug or consume across the boundary', () => {
+    const { ctx, entities, shog } = makeWorld(0x5b00);
+    const horde = (
+      shog as unknown as {
+        shogs: {
+          group: THREE.Group;
+          vel: THREE.Vector3;
+          feedTimer: number;
+          feedInterval: number;
+          consumed: number;
+          tendrilGeo: THREE.BufferGeometry;
+        }[];
+      }
+    ).shogs;
+    const actor = horde[0]!;
+    const prey = entities.list[0]!;
+
+    for (let i = 0; i < entities.list.length; i++) {
+      const entity = entities.list[i]!;
+      entity.position.set(700 + (i % 5), 32, 700 + Math.floor(i / 5));
+      entity.userData.vel.set(0, 0, 0);
+    }
+    for (let i = 1; i < horde.length; i++) {
+      horde[i]!.group.position.set(600 + i, 32, 600);
+      horde[i]!.vel.set(0, 0, 0);
+    }
+    actor.group.position.set(-0.01, 32, 0);
+    actor.vel.set(10, 0, 0); // outside at perception time; crosses x=0 during integration
+    actor.feedTimer = actor.feedInterval * 2;
+    prey.position.set(-0.1, 32, 0); // remains outside and would be reachable across the boundary
+    const preyVelocity = prey.userData.vel.clone();
+    const consumedBefore = actor.consumed;
+    shog.attachSanctuary((x) => x >= 0);
+    rebuildEntityGrid(ctx, entities);
+
+    shog.update(1 / 60, 0);
+
+    expect(actor.group.position.x).toBeGreaterThanOrEqual(0);
+    expect(entities.list).toContain(prey);
+    expect(prey.userData.vel.equals(preyVelocity)).toBe(true);
+    expect(actor.tendrilGeo.drawRange.count).toBe(0);
+    expect(actor.consumed).toBe(consumedBefore);
+    shog.dispose();
+  });
+
+  test('bargaining never transfers wealth when either shoggoth is protected', () => {
+    const run = (protectActor: boolean, protectPartner: boolean): number => {
+      const { shog } = makeWorld(0x5b01);
+      const harness = shog as unknown as {
+        frame: number;
+        shogs: { group: THREE.Group; vel: THREE.Vector3 }[];
+      };
+      const wealth = new Float64Array(shog.count).fill(100);
+      wealth[0] = 400;
+      wealth[1] = 1;
+      for (let i = 0; i < harness.shogs.length; i++) {
+        harness.shogs[i]!.group.position.set(600 + i, 32, 600);
+        harness.shogs[i]!.vel.set(0, 0, 0);
+      }
+      harness.shogs[0]!.group.position.set(-1, 32, 0);
+      harness.shogs[1]!.group.position.set(1, 32, 0);
+      harness.frame = 23; // update increments first; actor 0 then owns the frame-24 trade slot
+      let transfers = 0;
+      shog.attachEconomy((index) => wealth[index] ?? 0);
+      shog.attachTrade((_from, _to, amount) => {
+        transfers++;
+        return amount;
+      });
+      shog.attachSanctuary((x) => (protectActor && x === -1) || (protectPartner && x === 1));
+      shog.update(1 / 60, 0);
+      shog.dispose();
+      return transfers;
+    };
+
+    expect(run(false, false)).toBeGreaterThan(0); // the cadence and drive are genuinely armed
+    expect(run(true, false)).toBe(0);
+    expect(run(false, true)).toBe(0);
   });
 });

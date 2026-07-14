@@ -72,6 +72,12 @@ export const LIVING_ZONE = PLATFORM_HALF * LIVING_ZONE_FRAC;
  *  rim-flung body (~600u out) creeps home over ~4–5s — a visible gathering, not a snap collapse. */
 export const CENTER_GRAVITY_K = 0.0005;
 
+/** Authored home of the giant Crystal Life Tree. Shared by rendering, ecology, and safe-zone policy. */
+export const CRYSTAL_TREE_ORIGIN_X = 220;
+export const CRYSTAL_TREE_ORIGIN_Z = 620;
+/** Root theatre kept clear of unrelated flora so interaction and approach points remain navigable. */
+export const CRYSTAL_TREE_FLORA_CLEAR_RADIUS = 300;
+
 /** Expanded mid-field containment radius: leviathans and the quantum cloud. */
 export const MID_RADIUS = 60 * HABITAT_MID;
 
@@ -242,6 +248,7 @@ export const VIEW_MODES = [
   'titan', // wide tracking shot of a roaming titan/large being
   'specimen', // F-RELIQUARY: macro "specimen plate" tour of live organisms on the fog-void
   'mimic', // canonical Xenomimic ground-fauna macro tour
+  'tree', // Big Tree home: canopy resources, peaceful fauna, visitors, relics, and motes
 ] as const;
 
 /** One of the camera view modes (4 legacy + append-only automatic/tracking views). */

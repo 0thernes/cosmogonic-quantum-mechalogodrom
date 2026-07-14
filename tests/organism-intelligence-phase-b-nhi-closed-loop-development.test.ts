@@ -224,10 +224,10 @@ describe('Phase-B NHI closed-loop development harness', () => {
       '1e822f58c5e136e98e31df0519336ea1a0a4a1d6dd213eb4ed17a0fe3e653a89',
     );
     expect(first.rowsSha256).toBe(
-      '83737d0abc817b1ad96a2b314a60c3e05c74c27edd16f7ba59f9c9c43e3b327f',
+      '26e0395e589042f942f953d19a6fa1d120e1d73b9b85a9a5f19a96b029bec281',
     );
     expect(first.faultProbesSha256).toBe(
-      'f987b8bde9231a9aa462a0188447d43bbc9be6d5da2f58c5e585d777bfd95939',
+      '644a12cc583d61f40608fc70a7ff70fee0cae1a59c9b277fc76a22f4176c3e63',
     );
     expect(first.selectedSeedFamiliesSha256).toBe(
       '84e4c7fa143d6372bca4235977b6280e10ca26be67e3b37d659730f505763fa5',
@@ -411,27 +411,27 @@ describe('Phase-B NHI closed-loop development harness', () => {
         '8acb60a51bbef06bbf238f8b365f8b9f2d61314850909ff109cbbf70514f617f',
       );
       expect(result.rowsSha256).toBe(
-        '43f26e8b224449db588dd56ba5dd16c7f37c579e396a5689421e5545ee35db06',
+        'd3d364fc2cba7ae4eb2ebfefb2819ceaa55dbe1b5edb201163a5aa08b8cdb3e0',
       );
       expect(result.faultProbesSha256).toBe(
-        '2ba8bb51fa2c5d212cc51afd58883b4a8ecc0a62c0ad1f784ebd85b83c61670c',
+        'e08e5609aaadd14186794a56f0bf027a788fa96f6ce3400bf3118c835a59e8ad',
       );
       const validationFull = result.armSummaries.find(
         (summary) => summary.role === 'validation' && summary.arm === 'full',
       )!;
-      expect(validationFull.meanServiceScore).toBe(0.060770689608528806);
-      expect(validationFull.successRate).toBe(0.21158854166666666);
-      expect(validationFull.conflictMinusAlignedMeanServiceScore).toBe(-0.013306302297047767);
+      expect(validationFull.meanServiceScore).toBe(0.03488955949643256);
+      expect(validationFull.successRate).toBe(0.17513020833333334);
+      expect(validationFull.conflictMinusAlignedMeanServiceScore).toBe(-0.0007688510705468471);
       expect(validationFull.conflictMinusAlignedMeanServiceScore).toBeLessThan(0);
       const shuffled = result.pairedComparisons.find(
         (item) => item.role === 'validation' && item.controlArm === 'semantic-cue-shuffled',
       )!;
-      expect(shuffled.fullMinusControlMeanServiceScore).toBe(0.020167955760604026);
+      expect(shuffled.fullMinusControlMeanServiceScore).toBe(0.008578541425294225);
       expect(shuffled.fullMinusControlMeanServiceScore).toBeGreaterThan(0);
       const hunt = result.actionSemanticContrasts.find(
         (item) => item.role === 'validation' && item.requestedAction === NhiAction.HUNT,
       )!;
-      expect(hunt.fullMinusNeuralSemanticAblated).toBe(0.018742616897973855);
+      expect(hunt.fullMinusNeuralSemanticAblated).toBe(0.008007500389880724);
       expect(hunt.neuralSemanticInterpretationAllowed).toBe(true);
     },
     // The exact 41,472-row matrix is intentionally retained; instrumented CI needs extra headroom.

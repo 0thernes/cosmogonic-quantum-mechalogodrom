@@ -11,6 +11,81 @@ changed and why.
 
 ---
 
+## 2026-07-14 — Dome ecology ship: Big Tree food/sanctuary/visits + xenomorph tether closure + spec audit fix-pass
+
+Owner directive (FULL-REPOSITORY-AUDIT-PROMPT «DOME ECOLOGY, XENOMORPH, AND BIG TREE BEHAVIOR»):
+remove the xenomimic tether completely (visible AND invisible), make the Big Tree a real shared food
+source (exact 5.0 s respawn, race-safe reservations), a genuine safe/neutral/social zone wired into
+every predator's decision path, bounded organic visits, and honestly NN-driven friendly tree
+dwellers. This entry ships the converged multi-session implementation after an 8-dimension
+spec audit (tether · food · safe zone · visits · dwellers · determinism/perf · observability ·
+required-tests coverage map) plus the fix-pass below.
+
+**What shipped (assembled + audited + gap-fixed):**
+
+- **Crystal/Big Tree ecosystem** (`src/sim/crystal-ecosystem.ts`): the tree at
+  `CRYSTAL_TREE_ORIGIN (220, 620)` with 10k pooled fruits + 10k leaves as first-class edible
+  resources (`src/sim/edible-resource.ts`: available→reserved→consuming→respawning, generation-guarded
+  handles, exactly-once nourishment grants, sim-time `EDIBLE_RESOURCE_RESPAWN_SECONDS = 5`, pinned at
+  the 4.999 s boundary), 250 tree dwellers on REAL per-creature 6→6→4 TinyMLP brains (70 params each,
+  seeded init, outputs drive locomotion + activity; invalid input/output/dims → deterministic friendly
+  REST fallback, all tested) + 99 ambient fauna, within authored draw-call/triangle budgets.
+- **Sanctuary** (`src/sim/big-tree-zone.ts`): entry 240 / exit 270 hysteresis; both-endpoint harm rule
+  (no attacking through the boundary, either direction) threaded through EVERY kill vector:
+  super-hunt, dome-feeding, shoggoths (threat/tendrils/consumption/flee), singularities, titans
+  (strikes + diplomacy), mecha-blaze, portal-death, puppet-masters, the entity-eats-XNO hook, entity
+  faction intent, chaos-field entanglement, and NHI HUNT/MANIPULATE — each suppression stateless or
+  cleanly restored on exit (no faction/war/relationship corruption; per-system tests).
+- **Bounded visits** (`src/sim/big-tree-visitors.ts`): utility-weighted seeded decisions
+  (hunger/fatigue/social/curiosity/danger/distance/personality/load), capacity + slot leases, travel/
+  dwell/leave deadlines, revisit cooldowns, stuck re-slotting, death/despawn reservation release —
+  ordinary organisms and xenomimics both discover, travel, eat (energy/belly through their canonical
+  fields, exactly once), rest, socialize with partner leases, and LEAVE.
+
+**Audit fix-pass (this session, on top of the assembled lane):**
+
+- _VRAM-leak class:_ `CrystalEcosystem.dispose()` now disposes every `InstancedMesh` (instanceMatrix/
+  instanceColor are mesh-owned GL buffers geometry.dispose() never frees); dispose test extended to
+  count InstancedMesh dispose events (>10 meshes).
+- _O(20k)-per-death scan:_ `EdibleResourceRegistry.releaseOwner` is O(claims) via an ownerId→indices
+  claims index — it sat on the global entity-death hook, scanning the full pool for every non-visitor
+  death. Also: a failed visual restore no longer head-of-line blocks the respawn drain (deferred
+  re-insert after the loop).
+- _Draw-order law:_ titan `diplomacy()` now draws its two unconditional PD samples BEFORE the
+  sanctuary skip (test re-pinned to the draw-then-skip contract); world `doMutate` mirrors remorph's
+  two draws when skipping a protected visitor (puppet-masters convention); shoggoth corrupted-children
+  spawns are sanctuary-gated at the SPAWN POINT with draws preserved (titan strike-burst convention).
+- _Controller conflicts:_ launched NHI beings are excluded from ordinary-visitor polling (their own
+  steering policy owns them); active visitors get a living-zone centre-gravity exemption
+  (`userData.treeVisit`) so the corridor between LIVING_ZONE (~486) and the tree (~658) is walkable.
+- _Feasibility:_ Food/Rest visits are rejected when the traveller cannot reach the tree inside the
+  authored travel deadline (routeAvailable gate) instead of timing out mid-corridor.
+- _Honesty + observability:_ the Socialize/Observe bridge is an exported canonical function
+  (`performBigTreeActivity` — activation/payoff/shimmer, clamped, partner-gated) with behavioral tests
+  - a world delegation seal; its docstring no longer overclaims "knowledge" transfer; the sparse
+    `big-tree-ecology` audit record now carries the full spec'd set (visit lifecycle, slot/food states,
+    respawn/lease counters, stuck recoveries, `suppressedHarm` monotonic counter, neural status);
+    dweller threat input documented as sanctuary-constant-zero (not a decorative signal); one shared
+    ecology clock (`crystalEcosystem.foodTime`) for food leases AND visit deadlines.
+- _Phase-B re-pins:_ the NHI-launch dynamics legitimately shifted the deterministic Phase-B
+  development artifacts — regenerated `docs/reports/assets/phase-b-mechanism-development-v3.*` and
+  re-pinned rows/fault-probe hashes + exact scalars in both pin suites. Every honesty constraint holds
+  under the new numbers: temporal gate still 8/8 FAIL, service conflict response still a DECLINE
+  (−7.69e-4), claims still all disallowed.
+- _Tether closure:_ substrate verified tether-free on both axes (twin datum is a scalar perceptual
+  sense only; square-platform containment never references the partner; the old radial origin-leash is
+  gone) — NEURAL WEB toggle now has a scoped no-line/purge seal in addition to the whole-file pins.
+
+**Deferred, honestly:** dweller↔dweller partnered socialization (resident social currently expresses
+toward visitors via the welcome ring); a measured ms/frame budget test + bench entry for the new hot
+paths (structural bounds + GPU budgets are pinned; runtime is deadline-scheduled/budget-bounded by
+construction); teach/learn as a distinct knowledge-transfer mechanism (Socialize/Observe transfer
+real activation/payoff/shimmer state — nothing more is claimed anywhere).
+
+Suite: 3,167 tests / 0 fail after fix-pass (baseline main was 3,024/0 + 3 coverage-gated). A parallel
+session continues evolving fauna visit adapters (`big-tree-fauna-visitors`, sanctuary extraction) in
+its own lane; this entry is the audited green base it lands on.
+
 ## 2026-07-13 — Total code-health pass: perf, Tsotchke refresh, dead-code + doc-fork consolidation
 
 Owner directive: comprehensive sweep — toolstack/Tsotchke upgrades, doc/MD consolidation, code audit,

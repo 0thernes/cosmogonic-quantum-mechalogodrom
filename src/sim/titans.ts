@@ -660,6 +660,8 @@ export class TitanSystem implements DomeFeeder {
   private singularity: SingularitySystem | null = null;
   /** F-DIPLO-ECON V16: economic net-worth provider by titan index (null ⇒ no economy coupling). */
   private econWealth: ((titanIndex: number) => number) | null = null;
+  /** Shared neutral-zone policy. Protection is evaluated from live positions and never persisted. */
+  private sanctuary: ((x: number, z: number) => boolean) | null = null;
   private readonly rd: TitanRd;
   private readonly titans: Titan[] = [];
   /** PORTAL DEATH (USER): titans blasted by the portal, awaiting their 5 s respawn ELSEWHERE. */
@@ -780,6 +782,11 @@ export class TitanSystem implements DomeFeeder {
     this.singularity = singularity;
   }
 
+  /** Attach the composition-root sanctuary predicate; null restores legacy diplomacy and combat. */
+  attachSanctuary(predicate: ((x: number, z: number) => boolean) | null): void {
+    this.sanctuary = predicate;
+  }
+
   /**
    * F-DIPLO-ECON V16: wire in the AURUM/UMBRA economy so wealth disparity drives diplomacy — a titan
    * economically far richer than its rival is emboldened to defect (a wealth-funded raid), tilting the
@@ -870,7 +877,7 @@ export class TitanSystem implements DomeFeeder {
       this.roamAndAnimate(ti, dt, t);
       // F-HOLES: an active singularity tugs the colossi too. No-op when unattached/inactive (so
       // the determinism tests, which summon nothing, stay byte-identical); draws no rng.
-      if (this.singularity) {
+      if (this.singularity && !this.isProtectedTitan(ti)) {
         const p = ti.group.position;
         if (this.singularity.bodyForce(p.x, p.y, p.z, dt, HOLE_F)) ti.vel.add(HOLE_F);
       }
@@ -1175,6 +1182,7 @@ export class TitanSystem implements DomeFeeder {
     const g = ti.group;
     const p = g.position;
     const vel = ti.vel;
+    const protectedBeforeMove = this.isProtectedAt(p.x, p.z);
 
     // MULTI-ALTITUDE ROAM (like Super Creatures, not a single mid-plane shelf).
     // Bug: every titan shared PLATFORM_MID_Y + a strong height restore ⇒ all stuck on one level.
@@ -1202,24 +1210,26 @@ export class TitanSystem implements DomeFeeder {
           intelligence01(intelligence.corpusDrive),
         )
       : 0;
-    const intentGain =
-      intelligence?.enabled && intelligenceEvidence > 0
+    const intentGain = protectedBeforeMove
+      ? 0.45
+      : intelligence?.enabled && intelligenceEvidence > 0
         ? 1 +
           intelligence01(intelligence.confidence) *
             (intelligence01(intelligence.exploration) - 0.5) *
             0.24
         : 1;
     const tInv = (0.055 * intentGain) / (Math.sqrt(tdx * tdx + tdy * tdy + tdz * tdz) + 1e-6); // USER: faster (0.02→0.055) — visibly roams
-    vel.x += tdx * tInv + Math.sin(t * 0.5 + ti.mi * 1.3) * 0.012;
-    vel.y += tdy * tInv + Math.sin(t * 0.37 + ti.mi * 2.1) * 0.008;
-    vel.z += tdz * tInv + Math.cos(t * 0.43 + ti.mi * 0.7) * 0.012;
+    const wanderGain = protectedBeforeMove ? 0.25 : 1;
+    vel.x += tdx * tInv + Math.sin(t * 0.5 + ti.mi * 1.3) * 0.012 * wanderGain;
+    vel.y += tdy * tInv + Math.sin(t * 0.37 + ti.mi * 2.1) * 0.008 * wanderGain;
+    vel.z += tdz * tInv + Math.cos(t * 0.43 + ti.mi * 0.7) * 0.012 * wanderGain;
     // Weak restore to OWN stratum only — never yank every titan to PLATFORM_MID_Y.
     vel.y += (homeY - p.y) * 0.00055;
     if (p.x > PLATFORM_HALF) vel.x -= 0.06;
     else if (p.x < -PLATFORM_HALF) vel.x += 0.06;
     if (p.z > PLATFORM_HALF) vel.z -= 0.06;
     else if (p.z < -PLATFORM_HALF) vel.z += 0.06;
-    vel.multiplyScalar(0.97); // USER: livelier (0.985→0.97)
+    vel.multiplyScalar(protectedBeforeMove ? 0.9 : 0.97); // sanctuary settles rather than anchors
     VA.copy(vel).multiplyScalar(dt * 60 * 0.14);
     p.add(VA);
     // USER: square platform + up to the mechalogodrom (was a ROAM_RADIUS 300 circle capped at y90).
@@ -1251,32 +1261,36 @@ export class TitanSystem implements DomeFeeder {
       vel.set(0, 0, 0);
     }
 
-    g.rotation.y += ti.spin * dt;
-    ti.limbSpin.rotation.y -= ti.spin * 2.3 * dt;
+    const protectedHere = this.isProtectedAt(p.x, p.z);
+    const animationGain = protectedHere ? 0.25 : 1;
+    g.rotation.y += ti.spin * dt * animationGain;
+    ti.limbSpin.rotation.y -= ti.spin * 2.3 * dt * animationGain;
     ti.rig.position.y = Math.sin(t * ti.bobF + ti.ph) * ti.bobA;
     const flick = Math.sin(t * 2.1 + ti.ph);
-    const warHot = ti.warCount > 0;
+    const warHot = !protectedHere && ti.warCount > 0;
     ti.light.intensity =
       TITAN_LIGHT_GAIN * (0.55 + 0.45 * (ti.energy / RESOURCE_CAP)) * (1 + 0.12 * flick);
     ti.light.color.setHSL(warHot ? 0.015 : ti.hue, 0.7, 0.5);
     ti.bodyMat.emissive.setHSL(warHot ? 0.015 : ti.hue, 0.75, 0.09 + 0.04 * flick);
     const entropyN = ti.entropy / ENTROPY_WASTE_THRESHOLD;
-    ti.bodyMat.emissiveIntensity = 0.7 + 1.1 * (entropyN > 1 ? 1 : entropyN);
+    ti.bodyMat.emissiveIntensity = protectedHere ? 0.65 : 0.7 + 1.1 * (entropyN > 1 ? 1 : entropyN);
     // V67: drive the freak-geometry shaders — uTime advances the 4D writhe / tesseract cage / aura,
     // and uMenace (war + clash-heat entropy) makes warring + colliding titans writhe + blaze hardest.
     ti.tu.uTime.value = t;
     ti.tu.uColor.value.setHSL(warHot ? 0.015 : ti.hue, 0.85, 0.5);
-    ti.tu.uMenace.value = Math.min(1, 0.18 * ti.warCount + 0.7 * (entropyN > 1 ? 1 : entropyN));
+    ti.tu.uMenace.value = protectedHere
+      ? 0
+      : Math.min(1, 0.18 * ti.warCount + 0.7 * (entropyN > 1 ? 1 : entropyN));
     // V-TITAN-VITALS: distinct REAL economy lanes — energy → stellar-core forge, entropy → waste-rot
     // fissures — so a fed titan blazes a star-core and a wasteful one cracks/rots (granular, not just
     // the blended menace). Pure f(state), no rng.
     const tvl = titanVitalLanes(ti.energy, ti.entropy);
     ti.tu.uEnergy.value = tvl.energyN;
-    ti.tu.uEntropy.value = tvl.entropyN;
+    ti.tu.uEntropy.value = protectedHere ? 0 : tvl.entropyN;
     // V-TITAN-COMBAT: matter → accretion mass-hoard veins, warCount → battle-scar rage plasma.
     const tcl = titanCombatLanes(ti.matter, ti.warCount);
     ti.tu.uMatter.value = tcl.matterN;
-    ti.tu.uWar.value = tcl.warN;
+    ti.tu.uWar.value = protectedHere ? 0 : tcl.warN;
   }
 
   /**
@@ -1293,23 +1307,29 @@ export class TitanSystem implements DomeFeeder {
       const ti = this.titans[i];
       if (!ti) continue; // invariant: dense array
       const flick = Math.sin(t * 2.1 + ti.ph);
-      const warHot = ti.warCount > 0;
+      const p = ti.group.position;
+      const protectedHere = this.isProtectedAt(p.x, p.z);
+      const warHot = !protectedHere && ti.warCount > 0;
       ti.rig.position.y = Math.sin(t * ti.bobF + ti.ph) * ti.bobA;
       ti.light.intensity =
         TITAN_LIGHT_GAIN * (0.55 + 0.45 * (ti.energy / RESOURCE_CAP)) * (1 + 0.12 * flick);
       ti.light.color.setHSL(warHot ? 0.015 : ti.hue, 0.7, 0.5);
       ti.bodyMat.emissive.setHSL(warHot ? 0.015 : ti.hue, 0.75, 0.09 + 0.04 * flick);
       const entropyN = ti.entropy / ENTROPY_WASTE_THRESHOLD;
-      ti.bodyMat.emissiveIntensity = 0.7 + 1.1 * (entropyN > 1 ? 1 : entropyN);
+      ti.bodyMat.emissiveIntensity = protectedHere
+        ? 0.65
+        : 0.7 + 1.1 * (entropyN > 1 ? 1 : entropyN);
       ti.tu.uTime.value = t;
       ti.tu.uColor.value.setHSL(warHot ? 0.015 : ti.hue, 0.85, 0.5);
-      ti.tu.uMenace.value = Math.min(1, 0.18 * ti.warCount + 0.7 * (entropyN > 1 ? 1 : entropyN));
+      ti.tu.uMenace.value = protectedHere
+        ? 0
+        : Math.min(1, 0.18 * ti.warCount + 0.7 * (entropyN > 1 ? 1 : entropyN));
       const tvl = titanVitalLanes(ti.energy, ti.entropy);
       ti.tu.uEnergy.value = tvl.energyN;
-      ti.tu.uEntropy.value = tvl.entropyN;
+      ti.tu.uEntropy.value = protectedHere ? 0 : tvl.entropyN;
       const tcl = titanCombatLanes(ti.matter, ti.warCount);
       ti.tu.uMatter.value = tcl.matterN;
-      ti.tu.uWar.value = tcl.warN;
+      ti.tu.uWar.value = protectedHere ? 0 : tcl.warN;
     }
   }
 
@@ -1329,12 +1349,14 @@ export class TitanSystem implements DomeFeeder {
       const e = list[idx];
       if (!e) continue;
       const ep = e.position;
+      if (this.isProtectedAt(ep.x, ep.z)) continue;
       const v = e.userData.vel;
       for (let k = 0; k < titans.length; k++) {
         const tk = titans[k];
         if (!tk) continue;
         if (!tk.group.visible) continue; // portal-downed: dead (invisible) — casts no aura
         const tp = tk.group.position;
+        if (this.isProtectedAt(tp.x, tp.z)) continue;
         const dx = tp.x - ep.x;
         const dy = tp.y - ep.y;
         const dz = tp.z - ep.z;
@@ -1376,6 +1398,7 @@ export class TitanSystem implements DomeFeeder {
       if (!a.group.visible || !b.group.visible) continue; // portal-downed: dead (invisible) — no clash
       const ap = a.group.position;
       const bp = b.group.position;
+      const protectedPair = this.isProtectedAt(ap.x, ap.z) || this.isProtectedAt(bp.x, bp.z);
       const dx = ap.x - bp.x;
       const dy = ap.y - bp.y;
       const dz = ap.z - bp.z;
@@ -1389,6 +1412,8 @@ export class TitanSystem implements DomeFeeder {
       a.vel.z += dz * inv;
       b.vel.x -= dx * inv;
       b.vel.z -= dz * inv;
+      // Keep crowd separation, but sanctuary contact has no clash heat, fracture, or aggression audit.
+      if (protectedPair) continue;
       const heat = TITAN_CLASH_HEAT * overlap;
       a.entropy = Math.min(RESOURCE_CAP, a.entropy + heat);
       b.entropy = Math.min(RESOURCE_CAP, b.entropy + heat);
@@ -1407,7 +1432,15 @@ export class TitanSystem implements DomeFeeder {
     // scalar — which ripples through weather, the economy and entity jitter (all chaos-coupled). Pure
     // math (no rng); bounded + clamped, and the integrator decays chaos, so calm titans leave it be.
     let wars = 0;
-    for (let i = 0; i < titans.length; i++) wars += titans[i]?.warCount ?? 0;
+    for (let pi = 0; pi < PAIR_COUNT; pi++) {
+      const ai = PAIR_A[pi] ?? 0;
+      const bi = PAIR_B[pi] ?? 0;
+      if ((this.warMatrix[ai * TITAN_COUNT + bi] ?? REL_TRUCE) !== REL_WAR) continue;
+      const a = titans[ai];
+      const b = titans[bi];
+      if (!a || !b || this.isProtectedTitan(a) || this.isProtectedTitan(b)) continue;
+      wars += 2; // legacy warCount sum counts each active pair once on each participant
+    }
     const warp = fracture * CLASH_CHAOS + wars * WAR_CHAOS;
     const s = this.ctx.state;
     if (warp > 0 && s.chaos < TITAN_CHAOS_CEIL) {
@@ -1429,6 +1462,8 @@ export class TitanSystem implements DomeFeeder {
     if (!ti.group.visible) return; // portal-downed: dead (invisible) — don't harvest organisms
     const list = this.entities.list;
     const p = ti.group.position;
+    // A sanctuary visit pauses predation and economy mutation; the live ledger resumes on exit.
+    if (this.isProtectedAt(p.x, p.z)) return;
 
     let harvested = 0;
     if (list.length > HARVEST_MIN_POPULATION) {
@@ -1443,6 +1478,7 @@ export class TitanSystem implements DomeFeeder {
         // design, but a titan harvest silently disposed a launched NHI's body seconds after launch —
         // unregistering its mind and blanking the NHI observatory (FIRING/MEMORY "show nothing").
         if (e.userData.isNhi) continue;
+        if (this.isProtectedAt(e.position.x, e.position.z)) continue;
         if (dist2XZ(p.x, p.z, e.position.x, e.position.z) < HARVEST_REACH2) {
           ti.matter += MATTER_PER_ENTITY * e.userData.sc;
           this.entities.disposeAt(i);
@@ -1533,6 +1569,9 @@ export class TitanSystem implements DomeFeeder {
     // the legacy strategy round, retained so enabled and counterfactual runs consume equal streams.
     const sampleA = rng();
     const sampleB = rng();
+    // Sanctuary suspends the PD round AFTER the unconditional draws (draw-then-skip), so a titan
+    // resting at the Big Tree never shifts the core seeded stream for every downstream consumer.
+    if (this.isProtectedTitan(a) || this.isProtectedTitan(b)) return;
     const round = playRound(PRISONERS_DILEMMA, sa.move, sb.move, h, sampleA, sampleB);
     const intelligence = this.ctx.organismIntelligence;
     if (intelligence?.enabled) {
@@ -1605,6 +1644,7 @@ export class TitanSystem implements DomeFeeder {
     const a = this.titans[i];
     const b = this.titans[j];
     if (!a || !b) return; // invariant: tables sized for PAIR_COUNT
+    if (this.isProtectedTitan(a) || this.isProtectedTitan(b)) return;
     const agg = a.energy >= b.energy ? a : b;
     const def = agg === a ? b : a;
     if (agg.energy < STRIKE_COST * 2) return;
@@ -1622,6 +1662,7 @@ export class TitanSystem implements DomeFeeder {
       const en = nearby[ni];
       if (!en) continue; // noUncheckedIndexedAccess: ni < length
       const ep = en.position;
+      if (this.isProtectedAt(ep.x, ep.z)) continue;
       if (dist2XZ(dp.x, dp.z, ep.x, ep.z) >= STRIKE_REACH2) continue;
       VA.copy(ep).sub(dp);
       VA.y += 0.5;
@@ -1635,6 +1676,9 @@ export class TitanSystem implements DomeFeeder {
     }
     for (let s = 0; s < BURST_COUNT; s++) {
       VB.set(dp.x + (rng() - 0.5) * 8, dp.y + (rng() - 0.5) * 4, dp.z + (rng() - 0.5) * 8);
+      // A strike centred just outside the sanctuary must not seed hostile champion bodies through
+      // the boundary. RNG is still consumed above, preserving the deterministic combat stream.
+      if (this.isProtectedAt(VB.x, VB.z)) continue;
       this.entities.spawn(VB, (agg.mi + s) % ctx.morphs.length, 0.7);
     }
     ctx.audit.record('titan-strike', {
@@ -1643,6 +1687,15 @@ export class TitanSystem implements DomeFeeder {
       omen: agg.epithet,
       conscripted,
     });
+  }
+
+  private isProtectedTitan(titan: Titan): boolean {
+    const p = titan.group.position;
+    return this.isProtectedAt(p.x, p.z);
+  }
+
+  private isProtectedAt(x: number, z: number): boolean {
+    return this.sanctuary?.(x, z) === true;
   }
 
   /** Refresh the REUSED ledger rows from titan state. O(TITAN_COUNT) field writes, allocation-free. */

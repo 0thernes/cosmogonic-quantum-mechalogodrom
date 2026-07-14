@@ -928,6 +928,12 @@ function buildPersistentNav(doc: Document): void {
       'Fly the camera to the xenomimic ground-fauna swarm',
       'cqm-persist-sim',
     ],
+    [
+      'focusEcosystem',
+      '♧ LIFE TREE',
+      'Fly the camera to the complete Big Tree ecology and sanctuary',
+      'cqm-persist-sim',
+    ],
   ] as const) {
     rowSim.appendChild(mkAct(label, title, action, extra));
   }
