@@ -18,7 +18,9 @@ describe('Big Tree production fauna sources', () => {
   test.each(ACTOR_SOURCE_FILES)(
     '%s exposes the canonical lifecycle and nutrition contract',
     async (file, name, kind) => {
-      const source = await Bun.file(new URL(`../src/sim/${file}`, import.meta.url)).text();
+      const raw = await Bun.file(new URL(`../src/sim/${file}`, import.meta.url)).text();
+      // Whitespace-normalized so prettier wrapping of the implements clause cannot break the seal.
+      const source = raw.replace(/\s+/g, ' ');
       expect(source).toMatch(new RegExp(`class ${name} implements [^{]*BigTreeActorSource`));
       expect(source).toContain('get bigTreeActorCount()');
       expect(source).toContain('readBigTreeActor(');
@@ -34,7 +36,8 @@ describe('Big Tree production fauna sources', () => {
   test.each(FAUNA_SOURCE_FILES)(
     '%s exposes the narrow visitor bridge contract',
     async (file, name) => {
-      const source = await Bun.file(new URL(`../src/sim/${file}`, import.meta.url)).text();
+      const raw = await Bun.file(new URL(`../src/sim/${file}`, import.meta.url)).text();
+      const source = raw.replace(/\s+/g, ' ');
       expect(source).toMatch(new RegExp(`class ${name} implements [^{]*BigTreeFaunaSource`));
       expect(source).toContain('bigTreeVisitorSlotCount');
       expect(source).toContain('readBigTreeVisitor(');

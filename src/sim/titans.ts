@@ -62,7 +62,6 @@ import {
   type BigTreeFaunaSource,
   type BigTreeFaunaVisitorSample,
 } from './big-tree-fauna-visitors';
-import type { BigTreeActorSource } from './big-tree-fauna-source';
 
 /** Number of titans: 10 territorial colossi + 10 central social/procreative colossi. */
 const TITAN_COUNT = 20;
@@ -652,8 +651,7 @@ function intelligenceDiplomacyMove(
  * EntityManager; call `update(dt, t)` every frame AFTER `ctx.state.frame` is incremented
  * (all cadences key off it), and `drainPerturb()` once per frame after the RD step.
  */
-export class TitanSystem implements DomeFeeder, BigTreeFaunaSource, BigTreeActorSource {
-  // Canonical migration surface: get bigTreeActorCount(), readBigTreeActor(), writeBigTreeActor(), nourishBigTreeActor(), setBigTreeActorControlled(); out.category = 'titan'; out.moveSpeed = 0; bigTreeControlled = false; if (!ti.bigTreeControlled); return titan.bigTreeControlled || this.isProtectedAt
+export class TitanSystem implements DomeFeeder, BigTreeFaunaSource {
   /**
    * Latest waste-scar request (REUSED record). The integrator drains it to the rd facade via
    * {@link drainPerturb}; if two waste events land between drains the LATEST wins (scars are
