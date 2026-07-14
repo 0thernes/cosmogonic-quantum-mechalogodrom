@@ -77,24 +77,57 @@ import { QuantumCloud } from './sim/quantum';
 import { Connectome } from './sim/connectome';
 import { EnvironmentSystem } from './sim/environment';
 import { AlienFlora } from './sim/alien-flora';
-import { BigTreeSlotKind, BigTreeVisitManager, BigTreeZone } from './sim/big-tree-zone';
-import { purgeLegacyXenomimicTethers } from './sim/xenomimic-tether-purge';
 import {
+  BigTreeActivity,
+  BigTreeSlotKind,
+  BigTreeTransitionCause,
+  BigTreeVisitManager,
+  BigTreeVisitReason,
+  BigTreeVisitState,
+  BigTreeZone,
+  bigTreeActivityName,
+  bigTreeTransitionCauseName,
+  bigTreeVisitReasonName,
+  bigTreeVisitStateName,
+  type BigTreeVisitView,
+  type BigTreeZoneStats,
+} from './sim/big-tree-zone';
+import {
+  BIG_TREE_SANCTUARY_ORDINARY,
+  BIG_TREE_SANCTUARY_PUPPET,
+  BIG_TREE_SANCTUARY_SHOGGOTH,
+  BIG_TREE_SANCTUARY_TITAN,
+  BIG_TREE_SANCTUARY_XENOMIMIC,
+  BigTreeSanctuaryMembershipRegistry,
+  type BigTreeSanctuaryIndexStats,
+  type BigTreeSanctuaryMembershipView,
+} from './sim/big-tree-sanctuary';
+import {
+  BIG_TREE_OWNER_ORDINARY,
+  BIG_TREE_OWNER_XENOMIMIC,
   BigTreeSpeciesVisitors,
-  performBigTreeActivity,
+  type BigTreeSpeciesVisitorView,
   type BigTreeVisitorActivityCallbacks,
   type BigTreeSpeciesVisitorStats,
   type BigTreeVisitorEnvironment,
 } from './sim/big-tree-visitors';
-import { BigTreeFaunaVisitors, type BigTreeFaunaVisitorStats } from './sim/big-tree-fauna-visitors';
 import {
-  BIG_TREE_OWNER_APEX,
-  BIG_TREE_OWNER_LEVIATHAN,
-  BIG_TREE_OWNER_PUPPET,
+  BIG_TREE_OWNER_NHI,
+  BIG_TREE_OWNER_PUPPET_MASTER,
   BIG_TREE_OWNER_SHOGGOTH,
   BIG_TREE_OWNER_TITAN,
-  type BigTreeFaunaSourceBinding,
-} from './sim/big-tree-fauna-source';
+  BigTreeFaunaIntentMode,
+  BigTreeFaunaVisitors,
+  bindBigTreeFauna,
+  type BigTreeFaunaVisitorView,
+  type BigTreeFaunaVisitorStats,
+} from './sim/big-tree-fauna-visitors';
+import {
+  NhiBigTreeSource,
+  applyNhiBigTreeIntent,
+  type NhiBigTreeIntentView,
+  type NhiBigTreeSignals,
+} from './sim/nhi-big-tree-source';
 import { writeNhiRoamTarget } from './sim/habitat-roaming';
 import { QuantumCircuitSystem } from './sim/qcircuit';
 import { ReactionDiffusionSystem } from './sim/reaction-diffusion';
@@ -134,7 +167,9 @@ import {
   CRYSTAL_TREE_ORIGIN_X,
   CRYSTAL_TREE_ORIGIN_Z,
   type CrystalEcosystemFrame,
+  type CrystalTreeNeuralStatus,
 } from './sim/crystal-ecosystem';
+import type { EdibleResource, EdibleResourceStats } from './sim/edible-resource';
 import { QuantumLattice } from './sim/quantum-lattice';
 import { AbominationArchitecture } from './sim/abomination-architecture';
 import { Mechalogodrom } from './sim/mechalogodrom';
@@ -252,6 +287,7 @@ import {
   XENOMIMIC_MAX,
   XenomimicVisitMode,
   XenomimicPopulation,
+  type Xenomimic,
   type XenomimicCouplings,
   type XenomimicLifecycleEvent,
 } from './sim/xenomimics';
@@ -343,12 +379,107 @@ const BRUTAL_STYLES = [
   { name: 'REPRESSIONISM', glyph: '▣', title: 'suppressed monochrome pressure skin' },
 ] as const;
 
+/** Optional identity/resource selection for the pull-only localhost ecology inspector. */
+export interface BigTreeEcologyDiagnosticQuery {
+  ownerKind?: number;
+  ownerId?: number;
+  foodId?: number;
+}
+
+export interface BigTreeEcologyActorDiagnostic {
+  ownerKind: number;
+  ownerId: number;
+  adapter: 'core' | 'fauna' | null;
+  visit: {
+    recordId: number;
+    state: number;
+    stateName: string;
+    reason: number;
+    reasonName: string;
+    activity: number;
+    activityName: string;
+    slotId: number;
+    insideZone: boolean;
+    startedAt: number;
+    enteredAt: number | null;
+    stateDeadline: number | null;
+    remainingStateSeconds: number | null;
+    cooldownUntil: number | null;
+    remainingCooldownSeconds: number | null;
+    stuckRecoveries: number;
+    visitOrdinal: number;
+    partnerKind: number | null;
+    partnerId: number | null;
+    partnerLeaseExpiresAt: number | null;
+    lastTransitionCause: number;
+    lastTransitionCauseName: string;
+    lastTransitionAt: number | null;
+  } | null;
+  target: {
+    x: number;
+    y: number;
+    z: number;
+    foodId: number | null;
+    foodKind: string | null;
+    foodState: string | null;
+    foodReservationOwnerId: number | null;
+    foodGeneration: number | null;
+    foodLeaseExpiresAt: number | null;
+    eating: boolean | null;
+  } | null;
+  sanctuary: {
+    registered: boolean;
+    recordId: number | null;
+    protected: boolean | null;
+    aggressionSuppressed: boolean | null;
+    x: number | null;
+    z: number | null;
+  };
+}
+
+export interface BigTreeEcologyFoodDiagnostic {
+  id: number;
+  kind: string;
+  state: string;
+  ownerId: number | null;
+  generation: number;
+  nourishment: number;
+  position: { x: number; y: number; z: number };
+  interactionPoint: { x: number; y: number; z: number };
+  leaseUntil: number | null;
+  remainingLeaseSeconds: number | null;
+  respawnAt: number | null;
+  remainingRespawnSeconds: number | null;
+}
+
+export interface BigTreeEcologyDiagnosticSnapshot {
+  version: 1;
+  frame: number;
+  simulationTime: number;
+  zone: {
+    centerX: number;
+    centerZ: number;
+    entryRadius: number;
+    exitRadius: number;
+  };
+  visits: BigTreeZoneStats;
+  coreVisitors: BigTreeSpeciesVisitorStats;
+  faunaVisitors: BigTreeFaunaVisitorStats;
+  sanctuary: BigTreeSanctuaryIndexStats;
+  food: EdibleResourceStats;
+  neuralController: CrystalTreeNeuralStatus;
+  actor: BigTreeEcologyActorDiagnostic | null;
+  foodItem: BigTreeEcologyFoodDiagnostic | null;
+}
+
 export interface WorldOptions {
   engine: Engine;
   quality: QualityProfile;
   persisted: PersistedState;
   store: MemoryStore;
   audit: AuditTrail;
+  /** Enables pull-only debug receipts; main.ts sets this only for local preview hosts. */
+  developmentDiagnostics?: boolean;
 }
 
 export class World {
@@ -357,6 +488,7 @@ export class World {
   private readonly persisted: PersistedState;
   private readonly store: MemoryStore;
   private readonly audit: AuditTrail;
+  private readonly developmentDiagnostics: boolean;
   private readonly log = createLogger('world');
 
   private readonly rng: Rng;
@@ -489,12 +621,16 @@ export class World {
   private readonly xenomimicFoodAt = (x: number, z: number): number => this.alienFlora.foodAt(x, z);
   /** One authored sanctuary boundary shared by combat, hazard, and visitor adapters. */
   private readonly bigTreeZone = new BigTreeZone();
+  /** Stable identity-aware entry/exit history for living beings; endpoint hazards stay conservative. */
+  private readonly bigTreeSanctuary: BigTreeSanctuaryMembershipRegistry;
   /** Capacity/slot owner for temporary nourishment, rest, safety, and social visits. */
   private readonly bigTreeVisits: BigTreeVisitManager;
   /** Species adapter over the canonical Entity, Xenomimic, and Crystal food systems. */
   private readonly bigTreeVisitors: BigTreeSpeciesVisitors;
-  /** Fauna adapter over the same visit manager, food registry, sanctuary, and simulation clock. */
+  /** Same visit/food state machines bridged into fixed Shoggoth, Titan, and Puppeteer rosters. */
   private readonly bigTreeFaunaVisitors: BigTreeFaunaVisitors;
+  /** Dedicated launched-NHI binding over the canonical backing Entity, never its visual follower. */
+  private readonly bigTreeNhiSource: NhiBigTreeSource;
   /** Reused contextual inputs; rewritten before each visitor tick. */
   private readonly bigTreeVisitorEnvironment: BigTreeVisitorEnvironment = {
     danger: 0,
@@ -504,8 +640,7 @@ export class World {
     simulationLoad: 0,
     foodAvailable: true,
   };
-  /** Bridge peaceful activities into the existing neural/animation state of each living body.
-   *  Delegates to the exported canonical transfer so tests drive the exact shipped behavior. */
+  /** Bridge peaceful activities into the existing neural/animation state of each living body. */
   private readonly bigTreeActivityCallbacks: BigTreeVisitorActivityCallbacks = {
     performActivity: (
       ownerKind,
@@ -517,7 +652,23 @@ export class World {
       dt,
       _now,
     ): void => {
-      performBigTreeActivity(ownerKind, partnerId, body, activity, dt);
+      if (ownerKind === BIG_TREE_OWNER_ORDINARY) {
+        const entity = body as Entity;
+        const data = entity.userData;
+        if (activity === BigTreeActivity.Socialize && partnerId >= 0) {
+          data.act = clamp(data.act + dt * 0.7, -4, 4);
+          data.payoff = Math.max(data.payoff, 0.08);
+        } else if (activity === BigTreeActivity.Observe) {
+          data.act = clamp(data.act + dt * 0.18, -4, 4);
+        }
+      } else {
+        const xenomimic = body as Xenomimic;
+        if (activity === BigTreeActivity.Socialize && partnerId >= 0) {
+          xenomimic.shimmer = Math.max(xenomimic.shimmer, 0.75);
+        } else if (activity === BigTreeActivity.Observe) {
+          xenomimic.shimmer = Math.max(xenomimic.shimmer, 0.25);
+        }
+      }
     },
   };
   /** Reused development telemetry; never exposed as production geometry or tether-like lines. */
@@ -535,23 +686,10 @@ export class World {
     cancellations: 0,
     zoneCapacity: 0,
     socialPairs: 0,
-    completedVisits: 0,
-    timedOutVisits: 0,
-    stuckRecoveries: 0,
-    forcedExits: 0,
-    partnerTimeouts: 0,
-    rejectedForCapacity: 0,
-    rejectedForNoSlot: 0,
-    availableSlots: 0,
   };
-  /** Reused fauna telemetry; populated without allocating or scanning inactive food resources. */
   private readonly bigTreeFaunaVisitorStats: BigTreeFaunaVisitorStats = {
     activeVisitors: 0,
-    activeShoggoths: 0,
-    activeTitans: 0,
-    activeLeviathans: 0,
-    activePuppets: 0,
-    activeApex: 0,
+    trackedFauna: 0,
     lastPollCount: 0,
     totalPolls: 0,
     acceptedVisits: 0,
@@ -560,13 +698,77 @@ export class World {
     consumedLeaves: 0,
     targetLosses: 0,
     cancellations: 0,
-    socialPairs: 0,
   };
-  /** Monotonic count of hostile-act opportunities vetoed by the sanctuary (dev/audit telemetry). */
-  private bigTreeSuppressedHarm = 0;
+  /** Caller-owned NHI tree-steering view; reused for every launched mind. */
+  private readonly bigTreeNhiIntent: NhiBigTreeIntentView = {
+    mode: BigTreeFaunaIntentMode.Normal,
+    targetX: 0,
+    targetY: 0,
+    targetZ: 0,
+  };
+  /**
+   * Read real local NHI companionship plus the live shared intelligence signal. The spatial query is
+   * bounded and runs only on the fauna adapter's staggered poll, never as an O(NHI²) frame scan.
+   */
+  private readonly readBigTreeNhiSignals = (ownerId: number, out: NhiBigTreeSignals): boolean => {
+    const entity = this.nhiEntities.get(ownerId);
+    if (!entity || entity.userData.alive === false || entity.userData.isNhi !== true) return false;
+    const p = entity.position;
+    let kinCount = 0;
+    const kin = this.grid.query(p.x, p.z, SOCIAL_NHI_KIN_R);
+    const radiusSquared = SOCIAL_NHI_KIN_R * SOCIAL_NHI_KIN_R;
+    for (let index = 0; index < kin.length; index++) {
+      const other = kin[index];
+      if (
+        !other ||
+        other === entity ||
+        other.userData.isNhi !== true ||
+        other.userData.alive === false
+      ) {
+        continue;
+      }
+      const dx = p.x - other.position.x;
+      const dy = p.y - other.position.y;
+      const dz = p.z - other.position.z;
+      if (dx * dx + dy * dy + dz * dz < radiusSquared) kinCount++;
+    }
+    const signal = this.organismIntelligence.signal;
+    const kinPresence = clamp(kinCount / 4, 0, 1);
+    const mood = this.nhi.moodOf(ownerId) ?? 0;
+    out.socialNeed = Math.max(signal.socialDrive, (1 - kinPresence) * 0.65);
+    out.curiosity = signal.exploration;
+    out.stress = Math.max(signal.threatResponse, Math.max(0, -mood) * 0.5);
+    return true;
+  };
   /** Conservative protection uses the outer hysteresis boundary for stateless harm queries. */
   private readonly bigTreeProtectedAt = (x: number, z: number): boolean =>
     this.isBigTreeProtected(x, z);
+  /** Ordinary organisms use their stable ecology ID for true entry/exit hysteresis. */
+  private readonly bigTreeOrdinaryProtectedAt = (
+    x: number,
+    z: number,
+    ecologyId?: number,
+  ): boolean => this.isBigTreeMemberProtected(BIG_TREE_SANCTUARY_ORDINARY, ecologyId, x, z);
+  /** Xenomimic pair/role identity survives renderer and list changes. */
+  private readonly bigTreeXenomimicProtectedAt = (
+    x: number,
+    z: number,
+    pairId?: number,
+    role?: 0 | 1,
+  ): boolean =>
+    this.isBigTreeMemberProtected(
+      BIG_TREE_SANCTUARY_XENOMIMIC,
+      pairId === undefined || role === undefined ? undefined : pairId * 2 + role,
+      x,
+      z,
+    );
+  /** Fixed fauna use stable birth-slot IDs, each in a collision-free sanctuary namespace. */
+  private readonly bigTreeShoggothProtectedAt = (x: number, z: number, ownerId?: number): boolean =>
+    this.isBigTreeMemberProtected(BIG_TREE_SANCTUARY_SHOGGOTH, ownerId, x, z);
+  private readonly bigTreeTitanProtectedAt = (x: number, z: number, ownerId?: number): boolean =>
+    this.isBigTreeMemberProtected(BIG_TREE_SANCTUARY_TITAN, ownerId, x, z);
+  private readonly bigTreePuppetProtectedAt = (x: number, z: number, ownerId?: number): boolean =>
+    this.isBigTreeMemberProtected(BIG_TREE_SANCTUARY_PUPPET, ownerId, x, z);
   /** Neither an outside attacker nor an outside target may attack through the sanctuary boundary. */
   private readonly bigTreeHarmAllowed = (
     attackerX: number,
@@ -578,7 +780,7 @@ export class World {
     foodAt: this.xenomimicFoodAt,
     grazeAt: this.xenomimicGrazeAt,
     surfaceAt: this.xenomimicSurfaceAt,
-    safeZoneAt: this.bigTreeProtectedAt,
+    safeZoneAt: this.bigTreeXenomimicProtectedAt,
     visitModeAt: (pairId, role) =>
       this.bigTreeVisitors?.xenomimicLocomotionMode(pairId, role) ?? XenomimicVisitMode.Normal,
     intelligence: null,
@@ -1190,6 +1392,7 @@ export class World {
     this.persisted = opts.persisted;
     this.store = opts.store;
     this.audit = opts.audit;
+    this.developmentDiagnostics = opts.developmentDiagnostics === true;
 
     const streams = createIsolatedStreams(this.persisted.seed);
     this.rng = streams.physicsRng;
@@ -1322,6 +1525,12 @@ export class World {
     this.wasteEcology = new WasteEcology(ctx.scene);
     this.alienFlora.attachFertilizer((x, z) => this.wasteEcology.regrowBoost(x, z));
     this.entities = new EntityManager(ctx);
+    // Covers the largest authored organism tier plus every fixed fauna roster without growing or
+    // reallocating at runtime. Tree residents are born peaceful and never enter hostile targeting.
+    this.bigTreeSanctuary = new BigTreeSanctuaryMembershipRegistry(
+      this.bigTreeZone,
+      this.quality.maxEntities + XENOMIMIC_MAX + 512,
+    );
     this.entities.attachFloraComfort((x, z) => this.alienFlora.comfortAt(x, z));
     // USER ecology: hungry organisms EAT the plants (energy), and the flora depletes + regrows its own
     // biomass. Deterministic sink (the flora draws no rng); only wired here, so tests stay golden-clean.
@@ -1332,11 +1541,11 @@ export class World {
     // overgraze penalty) — not raw biomass alone — so richer, less-stressed patches outrank bare stubs.
     // Deterministic; only wired here so tests stay golden-clean.
     this.entities.attachFloraGradient((x, z) => this.alienFlora.foodAt(x, z));
-    this.entities.attachSanctuary(this.bigTreeProtectedAt);
+    this.entities.attachSanctuary(this.bigTreeOrdinaryProtectedAt);
     this.instanced = this.quality.instanced ? new InstancedEntityRenderer(ctx) : null;
     this.entities.reset(this.bootPopulation());
     this.shoggoths = new ShoggothSystem(ctx, this.entities);
-    this.shoggoths.attachSanctuary(this.bigTreeProtectedAt);
+    this.shoggoths.attachSanctuary(this.bigTreeShoggothProtectedAt);
     // F-ECON-CREATURES V17: enrol the shoggoth horde as economic agents (modest purses) and let each
     // one's wealth drive its boldness. Draws only from econRng, so the main stream is untouched.
     for (let i = 0; i < this.shoggoths.count; i++) {
@@ -1364,7 +1573,7 @@ export class World {
       this.qc.onPuppetEvent(e);
       this.hud.showToast(`${e.name} ${this.lore.epithet('puppet', e.name)}`, e.action);
     });
-    this.puppets.attachSanctuary(this.bigTreeProtectedAt);
+    this.puppets.attachSanctuary(this.bigTreePuppetProtectedAt);
     // F-ECON-CREATURES V19: enrol the puppeteer cabal as economic agents (varied golden-angle purses,
     // no rng) and let wealth drive how often each meddles. econRng only → main stream untouched.
     for (let i = 0; i < this.puppets.count; i++) {
@@ -1394,7 +1603,20 @@ export class World {
     this.entities.onDeath = (x, z, entity) => {
       // Release food, visit, cooldown, and social ownership before a replacement can reuse space.
       // Optional chaining covers the narrow constructor interval before the visitor adapter exists.
-      this.bigTreeVisitors?.cancelOrdinary(entity);
+      if (entity.userData.isNhi === true) {
+        const nhiId = this.nhiIdsByEntity.get(entity);
+        if (nhiId !== undefined) {
+          this.bigTreeFaunaVisitors?.cancel(BIG_TREE_OWNER_NHI, nhiId);
+          this.bigTreeNhiSource?.unregister(nhiId);
+        }
+      } else {
+        // `nhiMinion` remains an ordinary organism and intentionally uses this canonical path.
+        this.bigTreeVisitors?.cancelOrdinary(entity);
+      }
+      const ecologyId = entity.userData.ecologyId;
+      if (ecologyId !== undefined) {
+        this.bigTreeSanctuary.remove(BIG_TREE_SANCTUARY_ORDINARY, ecologyId);
+      }
       this.rd.perturb(0.5 + x / GROUND_EXTENT, 0.5 - z / GROUND_EXTENT, 2);
       this.artifacts.placeGround(x, z, 'scar', this.state.elapsed); // visual-only, seeded-time stamp
     };
@@ -1403,7 +1625,7 @@ export class World {
     for (let i = 0; i < 4; i++) this.rd.perturb(this.rng(), this.rng());
     // ── PANTHEON V3.3+: the titan colossi and their economy/war layer ──
     this.titans = new TitanSystem(ctx, this.entities, this.lore, this.rd);
-    this.titans.attachSanctuary(this.bigTreeProtectedAt);
+    this.titans.attachSanctuary(this.bigTreeTitanProtectedAt);
     // F-ECONOMY V13: enrol the current TitanSystem roster as economic agents with titan-sized purses (their
     // stature = a base weight + a per-titan bump). Draws only from `econRng`, so this never shifts
     // the main rng order — the world after this point is byte-identical to before the economy.
@@ -1467,14 +1689,8 @@ export class World {
     // One shared, bounded visit scheduler for ordinary organisms and Xenomimics. Distinct radial
     // rings prevent the entire dome from converging on a single point while keeping every authored
     // destination inside the sanctuary's entry boundary.
-    const bigTreeActorCapacity =
-      this.quality.maxEntities +
-      XENOMIMIC_MAX +
-      this.shoggoths.count +
-      this.puppets.count +
-      this.titans.count +
-      this.leviathans.count +
-      APEX_INDIVIDUATED;
+    const bigTreeFixedFaunaCount = this.shoggoths.count + this.titans.count + this.puppets.count;
+    const bigTreeActorCapacity = this.quality.maxEntities + XENOMIMIC_MAX + bigTreeFixedFaunaCount;
     this.bigTreeVisits = new BigTreeVisitManager(this.bigTreeZone, {
       maxActors: bigTreeActorCapacity,
       capacity: Math.min(72, bigTreeActorCapacity),
@@ -1490,9 +1706,6 @@ export class World {
       stuckAfterSeconds: 8,
       progressEpsilon: 1.5,
       maxStuckRecoveries: 2,
-      // Fold the cosmos seed into dwell/cooldown/threshold hashes: visit rhythms differ per seed
-      // while remaining fully deterministic within one cosmos.
-      hashSeed: (this.persisted.seed ^ 0x51b7ee13) >>> 0,
     });
     this.bigTreeVisits.addRadialSlots(BigTreeSlotKind.Eat, 32, 78, Math.PI / 32);
     this.bigTreeVisits.addRadialSlots(BigTreeSlotKind.Rest, 24, 132, Math.PI / 24);
@@ -1517,9 +1730,33 @@ export class World {
         socialLeaseSeconds: 3,
         socialReachRadius: 68,
         eatingFeedbackSeconds: 0.9,
-        hashSeed: (this.persisted.seed ^ 0x2e8c9f47) >>> 0,
       },
       this.bigTreeActivityCallbacks,
+    );
+    this.bigTreeNhiSource = new NhiBigTreeSource(
+      World.NHI_POPULATION_CAP,
+      this.readBigTreeNhiSignals,
+    );
+    this.bigTreeFaunaVisitors = new BigTreeFaunaVisitors(
+      this.crystalEcosystem,
+      this.bigTreeVisits,
+      [
+        bindBigTreeFauna(BIG_TREE_OWNER_SHOGGOTH, this.shoggoths),
+        bindBigTreeFauna(BIG_TREE_OWNER_TITAN, this.titans),
+        bindBigTreeFauna(BIG_TREE_OWNER_PUPPET_MASTER, this.puppets),
+        bindBigTreeFauna(BIG_TREE_OWNER_NHI, this.bigTreeNhiSource),
+      ],
+      {
+        pollBudget: 24,
+        pollIntervalSeconds: 0.15,
+        activeCapacity: Math.min(24, this.bigTreeVisits.capacity),
+        foodLeaseSeconds: 8,
+        foodRetrySeconds: 0.4,
+        foodSearchTimeoutSeconds: 4,
+        foodReachRadius: 7,
+        socialLeaseSeconds: 3,
+        socialReachRadius: 68,
+      },
     );
     // V11: floating neon sacred-geometry quantum lattice (additive; draws no rng).
     this.quantumLattice = new QuantumLattice(ctx.scene);
@@ -1673,44 +1910,6 @@ export class World {
       this.evoRngs.push(mulberry32((mindSeed ^ 0x00e701ce) >>> 0 || 1));
       // Economy: exactly 5 purses for the pantheon apexes
     }
-    // Every non-Entity living-fauna category joins the SAME canonical food/visit/sanctuary system.
-    // Hero/avatar bodies are intentionally excluded: player locomotion and agency remain authoritative.
-    const bigTreeFaunaBindings: BigTreeFaunaSourceBinding[] = [
-      {
-        ownerKind: BIG_TREE_OWNER_SHOGGOTH,
-        category: 'shoggoth',
-        source: this.shoggoths,
-      },
-      { ownerKind: BIG_TREE_OWNER_TITAN, category: 'titan', source: this.titans },
-      {
-        ownerKind: BIG_TREE_OWNER_LEVIATHAN,
-        category: 'leviathan',
-        source: this.leviathans,
-      },
-      { ownerKind: BIG_TREE_OWNER_PUPPET, category: 'puppet', source: this.puppets },
-    ];
-    for (const source of this.superBodies) {
-      bigTreeFaunaBindings.push({ ownerKind: BIG_TREE_OWNER_APEX, category: 'apex', source });
-    }
-    this.bigTreeFaunaVisitors = new BigTreeFaunaVisitors(
-      this.crystalEcosystem,
-      this.bigTreeVisits,
-      bigTreeFaunaBindings,
-      {
-        pollBudget: 32,
-        pollIntervalSeconds: 0.1,
-        foodLeaseSeconds: 8,
-        foodRetrySeconds: 0.4,
-        foodSearchTimeoutSeconds: 8,
-        foodReachRadius: 8,
-        steeringGain: 5,
-        restPerSecond: 0.035,
-        restTarget: 0.86,
-        socialLeaseSeconds: 4,
-        socialReachRadius: 40,
-        flightVisitY: 24,
-      },
-    );
     const soupSeed = (master ^ 0x50ff0ad1) >>> 0 || 1;
     this.petriRng = mulberry32((master ^ 0x50ff0ad2) >>> 0 || 1);
     this.primordialSoup = new PrimordialSoup(soupSeed);
@@ -1886,9 +2085,6 @@ export class World {
     // Terminate worker pool threads (ADR 0010)
     this.workerPool?.dispose();
     this.workerPool = null;
-    // Release shared food/slot/partner ownership while every borrowed species body is still alive.
-    this.bigTreeFaunaVisitors.reset();
-    this.bigTreeVisitors.reset();
     // Dispose wilderness population
     this.wilderness.dispose();
     this.wildernessRender.dispose();
@@ -1900,6 +2096,12 @@ export class World {
     // dispose paths were skipped entirely — each HMR reload built a fresh World whose
     // subsystems were never torn down. Only subsystems that actually have a dispose() are called.
     this.atmosphere.dispose(); // free the sky dome/wireframe/rain/dust/aurora/haze-ribbon geometries+materials
+    // Adapters own food/intent/body bindings; clear them before their source fauna systems dispose.
+    // The composition root alone owns the shared manager reset, so one adapter cannot erase another.
+    this.bigTreeFaunaVisitors.reset();
+    this.bigTreeNhiSource.reset();
+    this.bigTreeVisitors.reset();
+    this.bigTreeVisits.reset();
     // The four colossal-creature systems own per-instance geometries/materials/lights outside the shared
     // cache; without these the shoggoth/puppeteer/titan/leviathan bodies leaked ~hundreds of GPU objects
     // per dev hot-reload (each new World rebuilt them while the dead World's never freed).
@@ -1921,6 +2123,7 @@ export class World {
     this.mechalogodrom.dispose(); // V-MECHA: free the fusion abomination's geometries + materials
     this.floatingMonoliths.dispose(); // free the 16 drifting megaliths' geometries + materials
     this.godColossus.dispose(); // free the colossal god monument
+    this.bigTreeSanctuary.reset(); // release stable identity membership and boundary history
     this.crystalEcosystem.dispose(); // free the complete tree-home ecology and owned GPU resources
     this.alienFlora.dispose(); // free the 60k-plant instanced alien-flora field
     this.wasteEcology.dispose(); // free sludge constructs + waste/gas grids
@@ -2370,7 +2573,12 @@ export class World {
 
     // F-BRAIN V42: all organism brains perceive + steer BEFORE the integrator folds velocity
     // into position — full 70-param evaluation every frame (quality contract: no neural LOD).
-    this.entityBrains.thinkAll(this.entities.list, this.state.chaos, t, this.bigTreeProtectedAt);
+    this.entityBrains.thinkAll(
+      this.entities.list,
+      this.state.chaos,
+      t,
+      this.bigTreeOrdinaryProtectedAt,
+    );
 
     const stats = this.entities.update(dt, t);
     this.energy = stats.energy; // stats object is reused — copy immediately
@@ -2579,12 +2787,13 @@ export class World {
     // USER V126: the Portal also kills the big FAUNA — shoggoths/puppeteers/titans/leviathans (which live
     // outside `entities`). They explode + re-enter ELSEWHERE 5s later; the 100 Pantheon + Super Creature /
     // APEX / Mechalogodrom are IMMUNE (they never register here — their bounce is a separate pass).
-    this.portalDeathFauna.update(this.monolithTemple.revealed, t, dt, [
-      this.shoggoths,
-      this.puppets,
-      this.titans,
-      this.leviathans,
-    ]);
+    this.portalDeathFauna.update(
+      this.monolithTemple.revealed,
+      t,
+      dt,
+      [this.shoggoths, this.puppets, this.titans, this.leviathans],
+      this.bigTreeProtectedAt,
+    );
     // USER V126: the IMMUNE Pantheon (super creatures) do NOT die — they RICOCHET off the portal (bounce +
     // rim-vibrate) wreathed in a dazzling white spark shower that clears in ~2s. Immune ⇒ never in the
     // death rosters above; the god-tier Super Creature / Mechalogodrom sit far above the throat column.
@@ -4164,22 +4373,40 @@ export class World {
 
   /** Prototype seam used by production callbacks and lightweight Object.create test harnesses. */
   private isBigTreeProtected(x: number, z: number): boolean {
-    return this.bigTreeZone?.protects(x, z, true) ?? false;
+    return (
+      this.bigTreeSanctuary?.protectsEndpoint(x, z) ??
+      this.bigTreeZone?.protects(x, z, true) ??
+      false
+    );
   }
 
-  /** Hostile actions are legal only when neither endpoint is inside the neutral sanctuary. Routed
-   *  through the zone's own both-endpoint predicate (conservative outer hysteresis boundary on
-   *  both sides) so the policy lives in ONE place. */
+  /** Register/update a living identity through the authored hysteresis annulus. */
+  private isBigTreeMemberProtected(
+    ownerKind: number,
+    ownerId: number | undefined,
+    x: number,
+    z: number,
+  ): boolean {
+    const registry = this.bigTreeSanctuary;
+    if (!registry || ownerId === undefined || !Number.isInteger(ownerId) || ownerId < 0) {
+      return this.isBigTreeProtected(x, z);
+    }
+    if (registry.register(ownerKind, ownerId, x, z) < 0) {
+      return this.isBigTreeProtected(x, z);
+    }
+    return registry.protects(ownerKind, ownerId);
+  }
+
+  /** Hostile actions are legal only when neither endpoint is inside the neutral sanctuary. */
   private isBigTreeHarmAllowed(
     attackerX: number,
     attackerZ: number,
     targetX: number,
     targetZ: number,
   ): boolean {
-    const allowed =
-      this.bigTreeZone?.harmAllowedAt(attackerX, attackerZ, true, targetX, targetZ, true) ?? true;
-    if (!allowed) this.bigTreeSuppressedHarm++;
-    return allowed;
+    return (
+      !this.isBigTreeProtected(attackerX, attackerZ) && !this.isBigTreeProtected(targetX, targetZ)
+    );
   }
 
   /** Lifecycle fan-out stays event-driven and bounded; the population reuses the event object. */
@@ -4188,6 +4415,7 @@ export class World {
       // Stable pair/role identity releases food, activity slots, and social partners immediately.
       // The population emits its boot births before this adapter is constructed.
       this.bigTreeVisitors?.cancelXenomimic(event.pairId * 2 + event.role);
+      this.bigTreeSanctuary?.remove(BIG_TREE_SANCTUARY_XENOMIMIC, event.pairId * 2 + event.role);
     }
     const audioKind =
       event.kind === 'birth'
@@ -4337,73 +4565,38 @@ export class World {
       1,
     );
     environment.foodAvailable = this.crystalEcosystem.availableTreeFood() > 0;
-    // One clock for the whole ecology: visit/eating deadlines and food leases both read the
-    // ecosystem's accumulated sim clock, so a future reset/timescale change cannot desync them.
-    void time;
-    this.bigTreeFaunaVisitors.update(this.crystalEcosystem.foodTime, dt, environment);
     this.bigTreeVisitors.update(
-      this.crystalEcosystem.foodTime,
+      time,
       dt,
       this.entities.list,
       this.xenomimics.bodyView(),
       environment,
     );
+    this.bigTreeFaunaVisitors.update(time, dt, environment);
 
     // Feed real visitor/social state into the residents' neural percept. The stats pass is bounded
     // by fixed visit capacity and authored slots; it never scans the full population or 20k foods.
     const stats = this.bigTreeVisitorStats;
-    const faunaStats = this.bigTreeFaunaVisitorStats;
     this.bigTreeVisitors.readStats(stats);
+    const faunaStats = this.bigTreeFaunaVisitorStats;
     this.bigTreeFaunaVisitors.readStats(faunaStats);
-    const activeVisitors = stats.activeVisitors + faunaStats.activeVisitors;
-    const socialPairs = stats.socialPairs + faunaStats.socialPairs;
+    const totalVisitors = stats.activeVisitors + faunaStats.activeVisitors;
     this.crystalEcosystem.setVisitorPresence(
-      activeVisitors,
-      (2 * socialPairs) / Math.max(1, activeVisitors),
+      totalVisitors,
+      (2 * stats.socialPairs) / Math.max(1, totalVisitors),
     );
 
-    // Development/audit visibility at a deliberately sparse cadence; no production debug geometry.
-    // Surfaces the full spec'd observability set: visit lifecycle, slot/food reservation state,
-    // respawn timers, stuck recovery, aggression suppression, and neural-controller status.
-    if (this.state.frame % 600 === 0) {
-      const food = this.crystalEcosystem.edibleResources.stats();
-      const neural = this.crystalEcosystem.neuralStatus();
+    // Local development receipt at a deliberately sparse cadence; deployed builds retain neither
+    // debug geometry nor ecology-specific audit churn unless diagnostics were explicitly enabled.
+    if (this.developmentDiagnostics && this.state.frame % 600 === 0) {
       this.audit.record('big-tree-ecology', {
-        activeVisitors,
-        coreVisitors: stats.activeVisitors,
+        activeVisitors: stats.activeVisitors,
         ordinaryVisitors: stats.activeOrdinary,
         xenomimicVisitors: stats.activeXenomimics,
         faunaVisitors: faunaStats.activeVisitors,
-        shoggothVisitors: faunaStats.activeShoggoths,
-        titanVisitors: faunaStats.activeTitans,
-        leviathanVisitors: faunaStats.activeLeviathans,
-        puppetVisitors: faunaStats.activePuppets,
-        apexVisitors: faunaStats.activeApex,
         meals: stats.completedMeals + faunaStats.completedMeals,
-        socialPairs,
-        targetLosses: stats.targetLosses + faunaStats.targetLosses,
-        faunaPolls: faunaStats.totalPolls,
-        faunaCancellations: faunaStats.cancellations,
-        completedVisits: stats.completedVisits,
-        timedOutVisits: stats.timedOutVisits,
-        stuckRecoveries: stats.stuckRecoveries,
-        forcedExits: stats.forcedExits,
-        partnerTimeouts: stats.partnerTimeouts,
-        rejectedForCapacity: stats.rejectedForCapacity,
-        rejectedForNoSlot: stats.rejectedForNoSlot,
-        availableSlots: stats.availableSlots,
-        foodAvailable: food.available,
-        foodReserved: food.reserved,
-        foodConsuming: food.consuming,
-        foodRespawning: food.respawning,
-        foodPendingRespawns: food.pendingRespawns,
-        foodLifecycleErrors: food.lifecycleErrors,
-        suppressedHarm: this.bigTreeSuppressedHarm,
-        neuralReady: neural.modelReady,
-        neuralDecisions: neural.decisions,
-        neuralFallbacks: neural.fallbackCount,
-        teachingEvents: neural.teachingEvents,
-        lastTeachingWeightDelta: neural.lastTeachingWeightDelta,
+        socialPairs: stats.socialPairs,
+        targetLosses: stats.targetLosses,
       });
     }
   }
@@ -4849,6 +5042,289 @@ export class World {
   }
 
   /**
+   * Pull-only localhost receipt for Big Tree ecology. The production World keeps this method inert
+   * even though legacy builds expose `window.world`: callers receive null unless construction
+   * explicitly enabled development diagnostics. Optional identity/resource joins are direct indexed
+   * reads; this method never enumerates the population or the 20,000 pooled food records.
+   */
+  getBigTreeEcologySnapshot(
+    query: Readonly<BigTreeEcologyDiagnosticQuery> = {},
+  ): BigTreeEcologyDiagnosticSnapshot | null {
+    if (!this.developmentDiagnostics) return null;
+
+    const now = this.state.elapsed;
+    const finite = (value: number): number | null => (Number.isFinite(value) ? value : null);
+    const remaining = (deadline: number): number | null =>
+      Number.isFinite(deadline) ? Math.max(0, deadline - now) : null;
+
+    const visits: BigTreeZoneStats = {
+      trackedActors: 0,
+      activeVisitors: 0,
+      capacity: 0,
+      availableSlots: 0,
+      completedVisits: 0,
+      timedOutVisits: 0,
+      stuckRecoveryEvents: 0,
+      forcedExitEvents: 0,
+      partnerReservations: 0,
+      partnerTimeouts: 0,
+      rejectedForCapacity: 0,
+      rejectedForNoSlot: 0,
+    };
+    this.bigTreeVisits.readStats(visits);
+    this.bigTreeVisitors.readStats(this.bigTreeVisitorStats);
+    this.bigTreeFaunaVisitors.readStats(this.bigTreeFaunaVisitorStats);
+
+    const sanctuary: BigTreeSanctuaryIndexStats = {
+      tableCapacity: 0,
+      trackedMembers: 0,
+      protectedMembers: 0,
+      backshiftDeletions: 0,
+      relocatedKeys: 0,
+      maxLookupProbeLength: 0,
+      maxBackshiftProbeLength: 0,
+    };
+    this.bigTreeSanctuary.readIndexStats(sanctuary);
+
+    let actor: BigTreeEcologyActorDiagnostic | null = null;
+    const ownerKind = query.ownerKind;
+    const ownerId = query.ownerId;
+    if (
+      Number.isInteger(ownerKind) &&
+      (ownerKind ?? -1) >= 0 &&
+      Number.isInteger(ownerId) &&
+      (ownerId ?? -1) >= 0
+    ) {
+      const kind = ownerKind!;
+      const id = ownerId!;
+      const visitView: BigTreeVisitView = {
+        recordId: -1,
+        ownerKind: kind,
+        ownerId: id,
+        state: BigTreeVisitState.Outside,
+        reason: BigTreeVisitReason.Curiosity,
+        activity: BigTreeActivity.None,
+        slotId: -1,
+        startedAt: 0,
+        enteredAt: Number.POSITIVE_INFINITY,
+        stateDeadline: Number.POSITIVE_INFINITY,
+        cooldownUntil: Number.POSITIVE_INFINITY,
+        stuckRecoveries: 0,
+        visitOrdinal: 0,
+        partnerKind: -1,
+        partnerId: -1,
+        partnerLeaseExpiresAt: Number.POSITIVE_INFINITY,
+        insideZone: false,
+        lastTransitionCause: BigTreeTransitionCause.None,
+        lastTransitionAt: Number.POSITIVE_INFINITY,
+      };
+      const hasVisit = this.bigTreeVisits.readVisit(kind, id, visitView);
+
+      let adapter: 'core' | 'fauna' | null = null;
+      let target: BigTreeEcologyActorDiagnostic['target'] = null;
+      if (kind === BIG_TREE_OWNER_ORDINARY || kind === BIG_TREE_OWNER_XENOMIMIC) {
+        const visitor: BigTreeSpeciesVisitorView = {
+          ownerKind: kind,
+          ownerId: id,
+          foodOwnerId: -1,
+          state: BigTreeVisitState.Outside,
+          reason: BigTreeVisitReason.Curiosity,
+          activity: BigTreeActivity.None,
+          slotId: -1,
+          foodId: -1,
+          foodKind: null,
+          foodState: null,
+          targetX: 0,
+          targetY: 0,
+          targetZ: 0,
+          energy: 0,
+          eating: false,
+          partnerKind: -1,
+          partnerId: -1,
+          lastTransitionCause: BigTreeTransitionCause.None,
+          lastTransitionAt: Number.POSITIVE_INFINITY,
+        };
+        if (this.bigTreeVisitors.readVisitor(kind, id, now, visitor)) {
+          adapter = 'core';
+          const resource =
+            visitor.foodId >= 0
+              ? this.crystalEcosystem.edibleResources.get(visitor.foodId)
+              : undefined;
+          target = {
+            x: visitor.targetX,
+            y: visitor.targetY,
+            z: visitor.targetZ,
+            foodId: visitor.foodId >= 0 ? visitor.foodId : null,
+            foodKind: visitor.foodKind,
+            foodState: visitor.foodState,
+            foodReservationOwnerId: resource?.ownerId ?? null,
+            foodGeneration: resource?.generation ?? null,
+            foodLeaseExpiresAt:
+              resource?.ownerId === null || resource === undefined
+                ? null
+                : finite(resource.leaseUntil),
+            eating: visitor.eating,
+          };
+        }
+      } else {
+        const visitor: BigTreeFaunaVisitorView = {
+          ownerKind: kind,
+          ownerId: id,
+          state: BigTreeVisitState.Outside,
+          reason: BigTreeVisitReason.Curiosity,
+          activity: BigTreeActivity.None,
+          targetX: 0,
+          targetY: 0,
+          targetZ: 0,
+          foodId: -1,
+          foodKind: null,
+          foodState: null,
+          partnerKind: -1,
+          partnerId: -1,
+          lastTransitionCause: BigTreeTransitionCause.None,
+          lastTransitionAt: Number.POSITIVE_INFINITY,
+        };
+        if (this.bigTreeFaunaVisitors.readVisitor(kind, id, visitor)) {
+          adapter = 'fauna';
+          const resource =
+            visitor.foodId >= 0
+              ? this.crystalEcosystem.edibleResources.get(visitor.foodId)
+              : undefined;
+          target = {
+            x: visitor.targetX,
+            y: visitor.targetY,
+            z: visitor.targetZ,
+            foodId: visitor.foodId >= 0 ? visitor.foodId : null,
+            foodKind: visitor.foodKind,
+            foodState: visitor.foodState,
+            foodReservationOwnerId: resource?.ownerId ?? null,
+            foodGeneration: resource?.generation ?? null,
+            foodLeaseExpiresAt:
+              resource?.ownerId === null || resource === undefined
+                ? null
+                : finite(resource.leaseUntil),
+            eating: null,
+          };
+        }
+      }
+
+      const membershipView: BigTreeSanctuaryMembershipView = {
+        recordId: -1,
+        ownerKind: kind,
+        ownerId: id,
+        x: 0,
+        z: 0,
+        protected: false,
+      };
+      let sanctuaryKind =
+        kind >= BIG_TREE_SANCTUARY_ORDINARY && kind <= BIG_TREE_SANCTUARY_PUPPET ? kind : -1;
+      let sanctuaryOwnerId = id;
+      if (kind === BIG_TREE_OWNER_NHI) {
+        const ecologyId = this.nhiEntities.get(id)?.userData.ecologyId;
+        if (Number.isSafeInteger(ecologyId) && (ecologyId ?? -1) >= 0) {
+          sanctuaryKind = BIG_TREE_SANCTUARY_ORDINARY;
+          sanctuaryOwnerId = ecologyId!;
+        }
+      }
+      const registered =
+        sanctuaryKind >= 0 &&
+        this.bigTreeSanctuary.read(sanctuaryKind, sanctuaryOwnerId, membershipView);
+
+      actor = {
+        ownerKind: kind,
+        ownerId: id,
+        adapter,
+        visit: hasVisit
+          ? {
+              recordId: visitView.recordId,
+              state: visitView.state,
+              stateName: bigTreeVisitStateName(visitView.state),
+              reason: visitView.reason,
+              reasonName: bigTreeVisitReasonName(visitView.reason),
+              activity: visitView.activity,
+              activityName: bigTreeActivityName(visitView.activity),
+              slotId: visitView.slotId,
+              insideZone: visitView.insideZone,
+              startedAt: visitView.startedAt,
+              enteredAt: finite(visitView.enteredAt),
+              stateDeadline: finite(visitView.stateDeadline),
+              remainingStateSeconds: remaining(visitView.stateDeadline),
+              cooldownUntil: finite(visitView.cooldownUntil),
+              remainingCooldownSeconds: remaining(visitView.cooldownUntil),
+              stuckRecoveries: visitView.stuckRecoveries,
+              visitOrdinal: visitView.visitOrdinal,
+              partnerKind: visitView.partnerKind >= 0 ? visitView.partnerKind : null,
+              partnerId: visitView.partnerId >= 0 ? visitView.partnerId : null,
+              partnerLeaseExpiresAt: finite(visitView.partnerLeaseExpiresAt),
+              lastTransitionCause: visitView.lastTransitionCause,
+              lastTransitionCauseName: bigTreeTransitionCauseName(visitView.lastTransitionCause),
+              lastTransitionAt: finite(visitView.lastTransitionAt),
+            }
+          : null,
+        target,
+        sanctuary: {
+          registered,
+          recordId: registered ? membershipView.recordId : null,
+          protected: registered ? membershipView.protected : null,
+          aggressionSuppressed: registered ? membershipView.protected : null,
+          x: registered ? membershipView.x : null,
+          z: registered ? membershipView.z : null,
+        },
+      };
+    }
+
+    let foodItem: BigTreeEcologyFoodDiagnostic | null = null;
+    const foodId = query.foodId;
+    if (Number.isSafeInteger(foodId)) {
+      const resource: EdibleResource | undefined = this.crystalEcosystem.edibleResources.get(
+        foodId!,
+      );
+      if (resource) {
+        const leaseUntil = resource.ownerId === null ? null : finite(resource.leaseUntil);
+        const respawnAt = resource.state === 'respawning' ? finite(resource.respawnAt) : null;
+        foodItem = {
+          id: resource.id,
+          kind: resource.kind,
+          state: resource.state,
+          ownerId: resource.ownerId,
+          generation: resource.generation,
+          nourishment: resource.nourishment,
+          position: { x: resource.x, y: resource.y, z: resource.z },
+          interactionPoint: {
+            x: resource.interactionX,
+            y: resource.interactionY,
+            z: resource.interactionZ,
+          },
+          leaseUntil,
+          remainingLeaseSeconds: leaseUntil === null ? null : Math.max(0, leaseUntil - now),
+          respawnAt,
+          remainingRespawnSeconds: respawnAt === null ? null : Math.max(0, respawnAt - now),
+        };
+      }
+    }
+
+    return {
+      version: 1,
+      frame: this.state.frame,
+      simulationTime: now,
+      zone: {
+        centerX: this.bigTreeZone.centerX,
+        centerZ: this.bigTreeZone.centerZ,
+        entryRadius: this.bigTreeZone.enterRadius,
+        exitRadius: this.bigTreeZone.exitRadius,
+      },
+      visits,
+      coreVisitors: { ...this.bigTreeVisitorStats },
+      faunaVisitors: { ...this.bigTreeFaunaVisitorStats },
+      sanctuary,
+      food: { ...this.crystalEcosystem.edibleResources.stats() },
+      neuralController: { ...this.crystalEcosystem.neuralStatus() },
+      actor,
+      foodItem,
+    };
+  }
+
+  /**
    * Read-only perf telemetry for the render-layer HUD. Draws no rng; allocation-free.
    * Wilderness + worker pool stats are best-effort (ADR 0010 — not in the golden).
    */
@@ -5008,6 +5484,9 @@ export class World {
       this.nhi.register(nid, this.nhiBirthRng);
       this.nhiEntities.set(nid, e);
       this.nhiIdsByEntity.set(e, nid);
+      if (this.bigTreeNhiSource?.register(nid, e) === false) {
+        throw new Error('failed to bind launched NHI to the canonical Big Tree visitor source');
+      }
       // F-ECONOMY: an NHI super-mind enters the market with the cosmos's fattest purse (weight 14 vs
       // a titan's ~8). Its market enrollment remains on the isolated economy stream.
       this.economy.register(World.nhiEconomyId(nid), 'NHI super-mind', 14, this.econRng);
@@ -5017,12 +5496,18 @@ export class World {
       const rollback = (label: string, action: () => void): void => {
         if (!this.nhiGuard(label, action)) rollbackCallFailures.push(label);
       };
+      rollback(
+        'launch-rollback-tree-visit',
+        () => void this.bigTreeFaunaVisitors?.cancel(BIG_TREE_OWNER_NHI, nid),
+      );
+      rollback('launch-rollback-tree-source', () => void this.bigTreeNhiSource?.unregister(nid));
       rollback('launch-rollback-mind', () => void this.nhi.unregister(nid));
       rollback('launch-rollback-forward-map', () => void this.nhiEntities.delete(nid));
       if (e) {
         rollback('launch-rollback-reverse-map', () => void this.nhiIdsByEntity.delete(e!));
       }
       rollback('launch-rollback-target', () => void this.nhiTargets.delete(nid));
+      rollback('launch-rollback-grace', () => void this.nhiLaunchGrace.delete(nid));
       rollback(
         'launch-rollback-economy',
         () => void this.economy.unregister(World.nhiEconomyId(nid)),
@@ -5039,6 +5524,9 @@ export class World {
         forwardMapAbsent: !this.nhiEntities.has(nid),
         reverseMapAbsent: !e || !this.nhiIdsByEntity.has(e),
         targetAbsent: !this.nhiTargets.has(nid),
+        launchGraceAbsent: !this.nhiLaunchGrace.has(nid),
+        treeSourceAbsent: !this.bigTreeNhiSource?.has(nid),
+        treeIntentAbsent: !this.bigTreeNhiSource?.hasIntent(nid),
         economyAbsent: !this.economy.has(World.nhiEconomyId(nid)),
         bodyAbsent: !this.nhiBody.has(nid),
         entityAbsent: !e || !this.entities.list.includes(e),
@@ -5099,6 +5587,8 @@ export class World {
       if (e.userData.alive === true) {
         this.nhiLiveScratch.push(id);
       } else {
+        this.bigTreeFaunaVisitors?.cancel(BIG_TREE_OWNER_NHI, id);
+        this.bigTreeNhiSource?.unregister(id);
         this.nhiGuard(
           'retire-dead-economy',
           () => void this.economy.unregister(World.nhiEconomyId(id)),
@@ -5108,6 +5598,8 @@ export class World {
         this.nhiIdsByEntity.delete(e);
         this.nhiEntities.delete(id);
         this.nhiTargets.delete(id);
+        this.nhiLaunchGrace.delete(id);
+        this.nhiLastSwarmFrame.delete(id);
       }
     }
     // A target may die between NHI beats; never retain a disposed organism as a future action sink.
@@ -5126,6 +5618,8 @@ export class World {
    */
   private clearNhiPopulation(): void {
     for (const id of this.nhiEntities.keys()) {
+      this.bigTreeFaunaVisitors?.cancel(BIG_TREE_OWNER_NHI, id);
+      this.bigTreeNhiSource?.unregister(id);
       this.nhiGuard(
         'clear-population-economy',
         () => void this.economy.unregister(World.nhiEconomyId(id)),
@@ -5134,10 +5628,13 @@ export class World {
     this.nhiEntities.clear();
     this.nhiIdsByEntity.clear();
     this.nhiTargets.clear();
+    this.bigTreeNhiSource?.reset();
     this.nhi.clear();
     this.nhiGuard('clear-population-body', () => this.nhiBody.clear());
     this.nhiLiveScratch.length = 0;
     this.nhiSocialCooldown = 0;
+    this.nhiLaunchGrace.clear();
+    this.nhiLastSwarmFrame.clear();
   }
 
   /** The percept NHI `id` senses this beat, from its entity vitality + world crowding/chaos. */
@@ -5257,6 +5754,17 @@ export class World {
       return { effectApplied: false, factSupported: false, affected: 0, energyTransferred: 0 };
     }
     const p = e.position;
+    if (
+      this.bigTreeNhiSource?.hasIntent(id) === true &&
+      (intent.action === NhiAction.HUNT ||
+        intent.action === NhiAction.MIMIC ||
+        intent.action === NhiAction.RETREAT)
+    ) {
+      // The visit manager owns locomotion until its bounded visit/leave transition completes.
+      // Discard hostile pursuit instead of replaying a stale target after the peaceful visit.
+      if (intent.action === NhiAction.HUNT) this.nhiTargets.delete(id);
+      return { effectApplied: false, factSupported: false, affected: 0, energyTransferred: 0 };
+    }
     let effectApplied = false;
     let factSupported = false;
     let affected = 0;
@@ -5529,33 +6037,39 @@ export class World {
         if (grace <= 0) this.nhiLaunchGrace.delete(id);
         else this.nhiLaunchGrace.set(id, grace);
       }
-      const graceFrac = grace / World.NHI_LAUNCH_GRACE_FRAMES;
-      const seekGain = 0.12 * (1 - graceFrac * 0.98);
-      // Personal orbiting waypoint — a Lissajous path on all three axes (true omnidirectional roam,
-      // each NHI on its own phase/radius so a swarm spreads through the volume instead of clumping).
-      const target = writeNhiRoamTarget(this.sv2, id, t);
-      // Seek the waypoint with a capped, distance-independent accel (smooth intent-like pursuit).
-      const dx = target.x - p.x;
-      const dy = target.y - p.y;
-      const dz = target.z - p.z;
-      const d = Math.sqrt(dx * dx + dy * dy + dz * dz) + 1e-6;
-      v.x += (dx / d) * seekGain;
-      v.y += (dy / d) * seekGain;
-      v.z += (dz / d) * seekGain;
-      // Gentle weave on top so the motion never reads as a straight line (muted during toss).
-      const weave = 1 - graceFrac * 0.92;
-      v.x += Math.sin(t * 0.7 + id * 1.3) * 0.04 * weave;
-      v.y += Math.sin(t * 0.53 + id * 2.1) * 0.03 * weave;
-      v.z += Math.cos(t * 0.61 + id * 0.7) * 0.04 * weave;
-      // Continuous height restoring force — softer during launch grace so the toss stays readable.
-      v.y += (HOME_Y - p.y) * (0.004 * (1 - graceFrac * 0.9));
-      // Square leash — soft inward pull only past the platform edge (per-axis, not radial).
-      if (p.x > HALF) v.x -= 0.12;
-      else if (p.x < -HALF) v.x += 0.12;
-      if (p.z > HALF) v.z -= 0.12;
-      else if (p.z < -HALF) v.z += 0.12;
-      // During grace: almost no extra damp (entities owns toss damp). After: normal body drag.
-      v.multiplyScalar(0.9995 * graceFrac + 0.97 * (1 - graceFrac));
+      if (this.bigTreeNhiSource?.readIntent(id, this.bigTreeNhiIntent) === true) {
+        // Final locomotion authority for a bounded tree visit. EntityManager ambient behavior ran
+        // earlier this frame; this seek/calm write wins without teleporting the backing organism.
+        applyNhiBigTreeIntent(this.bigTreeNhiIntent, p, v);
+      } else {
+        const graceFrac = grace / World.NHI_LAUNCH_GRACE_FRAMES;
+        const seekGain = 0.12 * (1 - graceFrac * 0.98);
+        // Personal orbiting waypoint — a Lissajous path on all three axes (true omnidirectional roam,
+        // each NHI on its own phase/radius so a swarm spreads instead of clumping).
+        const target = writeNhiRoamTarget(this.sv2, id, t);
+        // Seek the waypoint with a capped, distance-independent accel (smooth intent-like pursuit).
+        const dx = target.x - p.x;
+        const dy = target.y - p.y;
+        const dz = target.z - p.z;
+        const d = Math.sqrt(dx * dx + dy * dy + dz * dz) + 1e-6;
+        v.x += (dx / d) * seekGain;
+        v.y += (dy / d) * seekGain;
+        v.z += (dz / d) * seekGain;
+        // Gentle weave on top so the motion never reads as a straight line (muted during toss).
+        const weave = 1 - graceFrac * 0.92;
+        v.x += Math.sin(t * 0.7 + id * 1.3) * 0.04 * weave;
+        v.y += Math.sin(t * 0.53 + id * 2.1) * 0.03 * weave;
+        v.z += Math.cos(t * 0.61 + id * 0.7) * 0.04 * weave;
+        // Continuous height restoring force — softer during launch grace so the toss stays readable.
+        v.y += (HOME_Y - p.y) * (0.004 * (1 - graceFrac * 0.9));
+        // Square leash — soft inward pull only past the platform edge (per-axis, not radial).
+        if (p.x > HALF) v.x -= 0.12;
+        else if (p.x < -HALF) v.x += 0.12;
+        if (p.z > HALF) v.z -= 0.12;
+        else if (p.z < -HALF) v.z += 0.12;
+        // During grace: almost no extra damp (entities owns toss damp). After: normal body drag.
+        v.multiplyScalar(0.9995 * graceFrac + 0.97 * (1 - graceFrac));
+      }
       // Hard containment guarantee — snap back inside the SQUARE platform + [floor,ceil] this frame.
       if (p.y > Y_HI) {
         p.y = Y_HI;
@@ -5675,14 +6189,8 @@ export class World {
       if (!e) continue;
       const nextMorph = Math.floor(this.uiRng() * this.morphTotal);
       // Preserve the UI RNG cadence, but never force a protected visitor through a hostile global
-      // transformation while it is eating, resting, or socializing in the sanctuary. Mirror the two
-      // internal remorph draws (puppet-masters.ts convention) so later actors see the same seeded
-      // core stream whether or not anyone stood in the zone.
-      if (this.isBigTreeProtected(e.position.x, e.position.z)) {
-        this.rng();
-        this.rng();
-        continue;
-      }
+      // transformation while it is eating, resting, or socializing in the sanctuary.
+      if (this.isBigTreeProtected(e.position.x, e.position.z)) continue;
       this.entities.remorph(e, nextMorph);
       changed++;
     }
@@ -5784,9 +6292,11 @@ export class World {
     this.mechaBlaze.clearPendingRespawns();
     this.portalDeath.clearPendingRespawns();
     this.superHunt.clearPendingRespawns();
-    this.bigTreeFaunaVisitors.reset();
-    this.bigTreeVisitors.reset();
-    this.crystalEcosystem.resetFood(this.state.elapsed);
+    this.bigTreeVisitors.resetOrdinary();
+    // Genesis replaces only the ordinary EntityManager population. Preserve Xenomimic boundary
+    // history (and any future fixed-fauna records) so a live member in the hysteresis annulus does
+    // not lose protection merely because unrelated organisms reset.
+    this.bigTreeSanctuary.removeKind(BIG_TREE_SANCTUARY_ORDINARY);
     this.clearNhiPopulation();
     this.entities.reset(1); // USER: reset → ONE entity, never a 500-strong instant repopulation
     // V121: re-anchor the growth ramp at THIS moment with a base of 1, so the target climbs slowly
@@ -6211,9 +6721,47 @@ export class World {
    * Xenomimic bipolar bonds are psionic only — never re-create cosmetic cords.
    */
   private purgeOrphanXenomimicTethers(): void {
-    // Delegates to the behaviorally-tested sweep (src/sim/xenomimic-tether-purge.ts) so the
-    // predicate + dispose path are proven against planted legacy lines, not just string-pinned.
-    purgeLegacyXenomimicTethers(this.engine.scene);
+    const scene = this.engine.scene;
+    const doomed: THREE.Object3D[] = [];
+    scene.traverse((obj) => {
+      const name = (obj.name || '').toLowerCase();
+      if (!name) return;
+      const looksXeno =
+        name.includes('xeno') || name.includes('mimic') || name.includes('xenomimic');
+      const looksTether =
+        name.includes('connectome') ||
+        name.includes('tether') ||
+        name.includes('causal') ||
+        name.includes('twin') ||
+        name.includes('cord') ||
+        name.includes('bond') ||
+        name.includes('link');
+      const legacyExact =
+        name === 'xenomimiccausalconnectome' ||
+        name === 'xeno-mimic-causal-connectome' ||
+        name === 'xenomimic-connectome' ||
+        name === 'xenoconnectome';
+      if (!(legacyExact || (looksXeno && looksTether))) return;
+      if (
+        obj instanceof THREE.LineSegments ||
+        obj instanceof THREE.Line ||
+        obj instanceof THREE.LineLoop
+      ) {
+        doomed.push(obj);
+      }
+    });
+    for (let i = 0; i < doomed.length; i++) {
+      const obj = doomed[i]!;
+      obj.removeFromParent();
+      const line = obj as THREE.LineSegments;
+      line.geometry?.dispose();
+      const mat = line.material;
+      if (Array.isArray(mat)) {
+        for (let m = 0; m < mat.length; m++) mat[m]?.dispose();
+      } else {
+        mat?.dispose();
+      }
+    }
   }
 
   private buildActions(): UiActions {

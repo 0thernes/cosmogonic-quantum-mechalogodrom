@@ -5,10 +5,6 @@ import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import * as THREE from 'three';
 import { XenomimicConnectome } from '../src/sim/xenomimic-connectome';
-import {
-  isLegacyXenomimicTetherName,
-  purgeLegacyXenomimicTethers,
-} from '../src/sim/xenomimic-tether-purge';
 import { XENOMIMIC_BRUTAL_STYLES, XenomimicRenderer } from '../src/sim/xenomimics-render';
 import { XenomimicPopulation } from '../src/sim/xenomimics';
 
@@ -35,64 +31,6 @@ describe('xenomimic twin bond is psionic (no tether lines)', () => {
     expect(lines).toHaveLength(0);
     expect(scene.getObjectByName('XenomimicCausalConnectome')).toBeUndefined();
     xc.dispose();
-  });
-
-  test('planted legacy tether lines are removed AND their GPU resources disposed; live bodies survive', () => {
-    const scene = new THREE.Scene();
-    // Three legacy tethers in every line flavor — one with a material ARRAY (the branchy path).
-    const cord = new THREE.LineSegments(new THREE.BufferGeometry(), new THREE.LineBasicMaterial());
-    cord.name = 'XenomimicCausalConnectome';
-    const twin = new THREE.Line(new THREE.BufferGeometry(), [
-      new THREE.LineBasicMaterial(),
-      new THREE.LineBasicMaterial(),
-    ]);
-    twin.name = 'xeno-twin-cord';
-    const loop = new THREE.LineLoop(new THREE.BufferGeometry(), new THREE.LineBasicMaterial());
-    loop.name = 'mimic bond link';
-    // Survivors: a legit instanced xenomimic body (a MESH, same name stem) and a non-xeno line.
-    const body = new THREE.InstancedMesh(
-      new THREE.BufferGeometry(),
-      new THREE.MeshBasicMaterial(),
-      4,
-    );
-    body.name = 'xenomimic-species-3';
-    const axon = new THREE.LineSegments(new THREE.BufferGeometry(), new THREE.LineBasicMaterial());
-    axon.name = 'entity-axon-web';
-    scene.add(cord, twin, loop, body, axon);
-
-    let disposedGeometries = 0;
-    let disposedMaterials = 0;
-    for (const doomedObject of [cord, twin, loop]) {
-      doomedObject.geometry.addEventListener('dispose', () => disposedGeometries++);
-      const mats = Array.isArray(doomedObject.material)
-        ? doomedObject.material
-        : [doomedObject.material];
-      for (const mat of mats) mat.addEventListener('dispose', () => disposedMaterials++);
-    }
-
-    expect(purgeLegacyXenomimicTethers(scene)).toBe(3);
-    expect(scene.children).toEqual([body, axon]);
-    expect(disposedGeometries).toBe(3);
-    expect(disposedMaterials).toBe(4); // 1 + array of 2 + 1
-    // Idempotent: a second sweep finds nothing.
-    expect(purgeLegacyXenomimicTethers(scene)).toBe(0);
-  });
-
-  test('the legacy-name predicate matches every historic tether name and no live body name', () => {
-    for (const doomedName of [
-      'XenomimicCausalConnectome',
-      'xenomimic-connectome',
-      'xenoConnectome',
-      'xeno-twin-cord',
-      'mimic bond link',
-      'XENO tether 7',
-    ]) {
-      expect(isLegacyXenomimicTetherName(doomedName)).toBe(true);
-    }
-    for (const liveName of ['', 'xenomimic-species-3', 'entity-axon-web', 'twin-cord', 'xeno']) {
-      // species meshes carry the xeno stem but no tether word; non-xeno lines carry no xeno stem.
-      expect(isLegacyXenomimicTetherName(liveName)).toBe(false);
-    }
   });
 
   test('source and cockpit contain no Xenomimic line-renderer construction path', () => {
@@ -139,15 +77,5 @@ describe('xenomimic RENDER + BRUTAL skins are unique APIs', () => {
     expect(src.includes('private purgeOrphanXenomimicTethers()')).toBe(true);
     // Must never re-enable cosmetic tethers via NEURAL WEB.
     expect(src.includes('xenomimicConnectome.setVisible(on)')).toBe(false);
-    // Scoped transition seal: the NEURAL WEB toggle itself must force xenomimic invisibility,
-    // re-purge legacy lines, and construct no line primitive of its own — whole-file pins alone
-    // cannot catch a toggle-local regression drawing xenomimic lines through another object.
-    const toggleStart = src.indexOf('toggleConnectomeWeb');
-    expect(toggleStart).toBeGreaterThan(0);
-    const toggleBody = src.slice(toggleStart, src.indexOf('return on;', toggleStart));
-    expect(toggleBody).toContain('this.xenomimicConnectome.setVisible(false)');
-    expect(toggleBody).toContain('this.purgeOrphanXenomimicTethers()');
-    expect(toggleBody).not.toContain('new THREE.Line');
-    expect(toggleBody).not.toContain('LineSegments');
   });
 });

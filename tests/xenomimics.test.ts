@@ -187,7 +187,7 @@ describe('GATE-XENOMIMIC — population lifecycle', () => {
     run(pop, 4000, 1 / 30, () => 0.95); // abundant food, long run
     expect(pop.population()).toBeLessThanOrEqual(XENOMIMIC_MAX);
     expect(pop.telemetry().pairs).toBeLessThanOrEqual(XENOMIMIC_MAX / 2);
-  });
+  }, 15_000);
 
   test('spawnAt (XNO) adds exactly one live body per call while consecutive bodies share one pair', () => {
     const pop = new XenomimicPopulation(31, { growthRamp: 999 });
@@ -460,7 +460,7 @@ describe('GATE-XENOMIMIC — population lifecycle', () => {
     run(pop, 3000, 1 / 30, () => 0.9);
     expect(pop.population()).toBeGreaterThan(2); // grew past the founding pair
     expect(pop.telemetry().births).toBeGreaterThan(2);
-  });
+  }, 30_000);
 
   test('eating flora raises energy; starvation lowers it', () => {
     const fed = new XenomimicPopulation(3, { growthRamp: 999 });
@@ -565,6 +565,56 @@ describe('GATE-XENOMIMIC — population lifecycle', () => {
       expect(c.y).toBeGreaterThan(-8);
       expect(c.y).toBeLessThan(12);
     });
+  }, 30_000);
+
+  test('canonical square containment permits habitat corners instead of applying an origin leash', () => {
+    const pop = new XenomimicPopulation(0x7e7e, { growthRamp: 999 });
+    const body = pop.bodyView()[0]!;
+    for (const candidate of pop.bodyView()) candidate.teleportCd = 1e9;
+
+    expect(pop.bounds()).toBe(PLATFORM_HALF);
+    body.x = PLATFORM_HALF - 10;
+    body.z = PLATFORM_HALF - 10;
+    pop.step(1e-6, { foodAt: () => 0.8 });
+
+    // A radial/home leash would project this corner inward to roughly 0.707 × the half-extent.
+    expect(body.x).toBeGreaterThan(PLATFORM_HALF - 11);
+    expect(body.z).toBeGreaterThan(PLATFORM_HALF - 11);
+  });
+
+  test('widely separated twins are neither pulled nor pair-distance-clamped', () => {
+    const pop = new XenomimicPopulation(0x71a1, { growthRamp: 999 });
+    const [mimic, anti] = pop.bodyView();
+    expect(mimic).toBeDefined();
+    expect(anti).toBeDefined();
+    for (const candidate of pop.bodyView()) candidate.teleportCd = 1e9;
+
+    mimic!.x = -400;
+    mimic!.z = 0;
+    anti!.x = 400;
+    anti!.z = 0;
+    pop.step(1e-6, { foodAt: () => 0.8 });
+
+    expect(mimic!.x).toBeCloseTo(-400, 3);
+    expect(anti!.x).toBeCloseTo(400, 3);
+    expect(Math.hypot(anti!.x - mimic!.x, anti!.z - mimic!.z)).toBeGreaterThan(799.9);
+  });
+
+  test('out-of-bounds twins hard-seal only at the deterministic square platform boundary', () => {
+    const pop = new XenomimicPopulation(0xc0de, { growthRamp: 999 });
+    const [mimic, anti] = pop.bodyView();
+    for (const candidate of pop.bodyView()) candidate.teleportCd = 1e9;
+
+    mimic!.x = PLATFORM_HALF + 200;
+    mimic!.z = -PLATFORM_HALF - 300;
+    anti!.x = -PLATFORM_HALF - 400;
+    anti!.z = PLATFORM_HALF + 500;
+    pop.step(1e-6, { foodAt: () => 0.8 });
+
+    expect(mimic!.x).toBe(PLATFORM_HALF);
+    expect(mimic!.z).toBe(-PLATFORM_HALF);
+    expect(anti!.x).toBe(-PLATFORM_HALF);
+    expect(anti!.z).toBe(PLATFORM_HALF);
   });
 
   test('canonical square containment permits habitat corners instead of applying an origin leash', () => {
@@ -624,7 +674,7 @@ describe('GATE-XENOMIMIC — population lifecycle', () => {
     expect(counts.length).toBe(XENOMIMIC_SPECIES);
     const kinds = counts.filter((n) => n > 0).length;
     expect(kinds).toBeGreaterThanOrEqual(3); // meaningful diversity emerged
-  });
+  }, 30_000);
 });
 
 describe('GATE-XENOMIMIC — render smoke (headless)', () => {

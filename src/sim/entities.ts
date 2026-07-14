@@ -32,6 +32,7 @@ import {
   SOCIAL_SPAWN_Y_FRAC,
 } from './constants';
 import { decideFaction, intentSteerXZ, FACTION_COUNT, type FactionPercept } from './factions';
+import { mulberry32 } from '../math/rng';
 import type { RenderMode } from './constants';
 import { PHYLUM_COUNT } from './phyla';
 import type { PhylumMorphType } from './phyla';
@@ -224,66 +225,6 @@ const MORPHS_SEEN = new Set<number>();
 /** Reused stats instance returned by `update()` — copy the fields if you need to retain them. */
 const STATS: UpdateStats = { energy: 0, morphCount: 0 };
 
-// ── Hot-path scratch for applyAmbientSocial (runs per entity per frame) ───────
-// These module-level singletons replace per-entity allocations in the single hottest function so the
-// 50k-agent tier stops churning ~250k short-lived objects/frame. Every one is written-then-read
-// synchronously within one entity's step, so the shared state never leaks across iterations, and the
-// numeric results are byte-identical to the old per-entity literals/closures (same operands + order) —
-// the determinism goldens are preserved.
-
-/** Reused percept passed to {@link decideFaction}; six fields overwritten per entity, read immediately. */
-const FACTION_PERCEPT: FactionPercept = {
-  threat: 0,
-  crowd: 0,
-  energy: 0,
-  kin: 0,
-  resource: 0,
-  novelty: 0,
-};
-// One reseedable mulberry32 reused across all entities: reseeding per entity yields the IDENTICAL
-// stream to a fresh `mulberry32(seed)` (the draw body below is copied verbatim from math/rng.ts), but
-// allocates no generator closure per entity per frame. Kept module-local — deliberately NOT exported
-// from the V4-pinned `math/rng.ts`, so that frozen scientific dependency stays byte-identical.
-let factionRngState = 1;
-/** Reset the faction RNG stream to `seed` — subsequent {@link factionRngNext} draws match `mulberry32(seed)`. */
-function factionRngReseed(seed: number): void {
-  factionRngState = seed >>> 0;
-}
-/** Draw the next uniform sample in [0,1); byte-identical to `mulberry32`. */
-const factionRngNext: Rng = () => {
-  factionRngState = (factionRngState + 0x6d2b79f5) | 0;
-  let t = factionRngState;
-  t = Math.imul(t ^ (t >>> 15), t | 1);
-  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-};
-
-/**
- * Kin/colony chain spring — pulls `u` toward `partner` to the ideal chain edge (`optD`), with a soft
- * separation floor below it. Hoisted to module scope (was a per-entity closure in applyAmbientSocial)
- * so it allocates nothing; the operand order is unchanged, so `u.vel` accumulates bit-identically.
- */
-function applySpring(
-  u: Entity['userData'],
-  px: number,
-  py: number,
-  pz: number,
-  sp2: number,
-  optD: number,
-  partner: Entity,
-  d2: number,
-  gain: number,
-): void {
-  const d = Math.sqrt(d2);
-  if (d < 1e-4) return;
-  const sepFloor = optD * SOCIAL_SEPARATION_FRAC;
-  const target = d < sepFloor ? sepFloor : optD;
-  const force = (d - target) * gain * sp2;
-  u.vel.x += ((partner.position.x - px) / d) * force;
-  u.vel.y += ((partner.position.y - py) / d) * force * 0.55;
-  u.vel.z += ((partner.position.z - pz) / d) * force;
-}
-
 /** Structural readout from AlienFlora.comfortAt; kept local to avoid a runtime module dependency. */
 interface FloraComfortReadout {
   readonly x: number;
@@ -360,7 +301,7 @@ export class EntityManager {
   private floraGradient: ((x: number, z: number) => number) | null = null;
   /** Optional authored sanctuary. Protected organisms keep friendly flocking but suppress threat/faction
    * aggression and the global home pull that could drag a visitor out of a neutral gathering zone. */
-  private sanctuary: ((x: number, z: number) => boolean) | null = null;
+  private sanctuary: ((x: number, z: number, ecologyId?: number) => boolean) | null = null;
   /** Reserved material-organism births THIS frame, reset by {@link update}. Auto-split, behavior
    *  mitosis, sparse recovery, and post-update NHI swarms share it at the ultra tier. */
   private spawnsThisFrame = 0;
@@ -439,7 +380,7 @@ export class EntityManager {
   }
 
   /** Wire a shared neutral-zone predicate into ordinary-organism behavior; null detaches it. */
-  attachSanctuary(predicate: ((x: number, z: number) => boolean) | null): void {
+  attachSanctuary(predicate: ((x: number, z: number, ecologyId?: number) => boolean) | null): void {
     this.sanctuary = predicate;
     this.env.sanctuaryAt = predicate;
   }
@@ -1024,12 +965,9 @@ export class EntityManager {
       // drawn back. Pure position geometry, draws no rng — the seeded stream stays byte-identical.
       {
         const rz = Math.sqrt(e.position.x * e.position.x + e.position.z * e.position.z);
-        // Active tree visitors are exempt too: the travel corridor between LIVING_ZONE and the
-        // sanctuary boundary would otherwise out-pull the visit steering and stall every trip.
         if (
           rz > LIVING_ZONE &&
-          u.treeVisit !== true &&
-          this.sanctuary?.(e.position.x, e.position.z) !== true
+          this.sanctuary?.(e.position.x, e.position.z, e.userData.ecologyId) !== true
         ) {
           const pull = ((rz - LIVING_ZONE) * CENTER_GRAVITY_K) / rz;
           u.vel.x -= e.position.x * pull;
@@ -1445,7 +1383,7 @@ export class EntityManager {
     const py = e.position.y;
     const pz = e.position.z;
     const sanctuary = this.sanctuary;
-    const protectedHere = sanctuary?.(px, pz) === true;
+    const protectedHere = sanctuary?.(px, pz, u.ecologyId) === true;
     const myGroup = u.setGroup;
     const myType = u.typeId;
     const myEnergy = typeof u.energy === 'number' ? u.energy : 50;
@@ -1493,7 +1431,7 @@ export class EntityManager {
       }
       if (
         !protectedHere &&
-        sanctuary?.(ne.position.x, ne.position.z) !== true &&
+        sanctuary?.(ne.position.x, ne.position.z, ne.userData.ecologyId) !== true &&
         (ne.userData.strategy === 1 || ne.userData.setGroup !== myGroup)
       ) {
         if (dd < r2 * 0.25) {
@@ -1504,24 +1442,34 @@ export class EntityManager {
       }
     }
 
-    // Ideal chain edge — classic graphseek length so connectome axons bridge every link. The chain
-    // spring itself is the module-level {@link applySpring} (hoisted out of this per-entity loop).
+    // Ideal chain edge — classic graphseek length so connectome axons bridge every link.
     const optD = 4 + (myType % 5);
+    const spring = (partner: Entity, d2: number, gain: number): void => {
+      const d = Math.sqrt(d2);
+      if (d < 1e-4) return;
+      // Soft separation below ideal edge × frac — keeps beads on a string, not a crowd pile.
+      const sepFloor = optD * SOCIAL_SEPARATION_FRAC;
+      const target = d < sepFloor ? sepFloor : optD;
+      const force = (d - target) * gain * sp2;
+      u.vel.x += ((partner.position.x - px) / d) * force;
+      u.vel.y += ((partner.position.y - py) / d) * force * 0.55;
+      u.vel.z += ((partner.position.z - pz) / d) * force;
+    };
 
     // Kin-first primary filament (tribal colony backbone).
     if (kinNear && Number.isFinite(kinMinD2)) {
-      applySpring(u, px, py, pz, sp2, optD, kinNear, kinMinD2, SOCIAL_KIN_GAIN * 22);
+      spring(kinNear, kinMinD2, SOCIAL_KIN_GAIN * 22);
     } else if (typeNear && Number.isFinite(typeMinD2)) {
-      applySpring(u, px, py, pz, sp2, optD, typeNear, typeMinD2, SOCIAL_GRAVITY_GAIN * 16);
+      spring(typeNear, typeMinD2, SOCIAL_GRAVITY_GAIN * 16);
     } else if (near && Number.isFinite(minD2)) {
-      applySpring(u, px, py, pz, sp2, optD, near, minD2, SOCIAL_GRAVITY_GAIN * 18);
+      spring(near, minD2, SOCIAL_GRAVITY_GAIN * 18);
     }
     // Secondary/tertiary geometry → longer chains / branch nets (not only isolated pairs).
     if (near && near !== kinNear && Number.isFinite(minD2)) {
-      applySpring(u, px, py, pz, sp2, optD, near, minD2, SOCIAL_GRAVITY_GAIN * 9);
+      spring(near, minD2, SOCIAL_GRAVITY_GAIN * 9);
     }
     if (near2 && near2 !== kinNear && near2 !== near && Number.isFinite(min2D2)) {
-      applySpring(u, px, py, pz, sp2, optD, near2, min2D2, SOCIAL_GRAVITY_GAIN * 6);
+      spring(near2, min2D2, SOCIAL_GRAVITY_GAIN * 6);
     }
     if (
       near3 &&
@@ -1530,7 +1478,7 @@ export class EntityManager {
       near3 !== near2 &&
       Number.isFinite(min3D2)
     ) {
-      applySpring(u, px, py, pz, sp2, optD, near3, min3D2, SOCIAL_GRAVITY_GAIN * 3.5);
+      spring(near3, min3D2, SOCIAL_GRAVITY_GAIN * 3.5);
     }
 
     // Feeding trail: hungry → step toward the richest nearby kin (colony food-sharing geometry).
@@ -1576,20 +1524,20 @@ export class EntityManager {
       awayX = px / md;
       awayZ = pz / md;
     }
-    FACTION_PERCEPT.threat = Math.min(1, threatN / 3);
-    FACTION_PERCEPT.crowd = Math.min(1, n / 8);
-    FACTION_PERCEPT.energy = clamp01(myEnergy / 100);
-    FACTION_PERCEPT.kin = Math.min(1, kn / 4);
-    FACTION_PERCEPT.resource = clamp01(myEnergy / 100);
-    FACTION_PERCEPT.novelty = clamp01((frame % 97) / 97);
+    const percept: FactionPercept = {
+      threat: Math.min(1, threatN / 3),
+      crowd: Math.min(1, n / 8),
+      energy: clamp01(myEnergy / 100),
+      kin: Math.min(1, kn / 4),
+      resource: clamp01(myEnergy / 100),
+      novelty: clamp01((frame % 97) / 97),
+    };
     if (!protectedHere) {
-      factionRngReseed(((index * 0x9e3779b9) ^ (frame * 0x85ebca6b) ^ (myGroup * 17)) >>> 0);
-      const { intent } = decideFaction(myGroup % FACTION_COUNT, FACTION_PERCEPT, factionRngNext);
+      const frng = mulberry32(((index * 0x9e3779b9) ^ (frame * 0x85ebca6b) ^ (myGroup * 17)) >>> 0);
+      const { intent } = decideFaction(myGroup % FACTION_COUNT, percept, frng);
       const steer = intentSteerXZ(intent, toCrowdX, toCrowdZ, toKinX, toKinZ, awayX, awayZ);
       // Faction intent is a bias on the filament — never stronger than the chain spring. Inside the
       // sanctuary the same organisms retain friendly springs/trails but do not run a hostile intent.
-      // The faction RNG is reseeded per entity, so skipping the draw for a protected organism cannot
-      // shift any other organism's stream.
       u.vel.x += steer.x * SOCIAL_GRAVITY_GAIN * 0.55 * sp2;
       u.vel.z += steer.z * SOCIAL_GRAVITY_GAIN * 0.55 * sp2;
     }

@@ -66,10 +66,10 @@ export interface BehaviorEnv {
   readonly spawn: (pos: THREE.Vector3, mi: number, scale: number) => Entity | null;
   /**
    * Authored neutral-zone query shared with the rest of the dome. `null` preserves the legacy
-   * behavior exactly. The predicate is stateless and uses the zone's conservative outer boundary,
-   * so an outside actor cannot affect a protected body through the edge.
+   * behavior exactly. A stable ecology ID lets the composition root apply entry/exit hysteresis;
+   * calls without one use its conservative endpoint policy.
    */
-  sanctuaryAt: ((x: number, z: number) => boolean) | null;
+  sanctuaryAt: ((x: number, z: number, ecologyId?: number) => boolean) | null;
   /**
    * Membership of the actor currently being dispatched. {@link applyBehavior} rewrites this before
    * every handler call so handlers and the post-behavior integrator use one predicate result.
@@ -313,7 +313,12 @@ function nash(e: Entity, u: EntityData, env: BehaviorEnv): void {
     const nb = env.ctx.grid.query(e.position.x, e.position.z, SOCIAL_NASH_R);
     for (let i = 0; i < nb.length; i++) {
       const ne = nb[i];
-      if (!ne || ne === e || env.sanctuaryAt?.(ne.position.x, ne.position.z) === true) continue;
+      if (
+        !ne ||
+        ne === e ||
+        env.sanctuaryAt?.(ne.position.x, ne.position.z, ne.userData.ecologyId) === true
+      )
+        continue;
       if (dist2XZ(e.position.x, e.position.z, ne.position.x, ne.position.z) < NASH_R2) {
         const them = ne.userData.strategy;
         u.payoff = u.strategy === 0 ? (them === 0 ? 3 : 0) : them === 0 ? 5 : 1;
@@ -347,7 +352,12 @@ function market(e: Entity, u: EntityData, env: BehaviorEnv): void {
   const nb = env.ctx.grid.query(e.position.x, e.position.z, SOCIAL_MARKET_R);
   for (let i = 0; i < nb.length; i++) {
     const ne = nb[i];
-    if (!ne || ne === e || env.sanctuaryAt?.(ne.position.x, ne.position.z) === true) continue;
+    if (
+      !ne ||
+      ne === e ||
+      env.sanctuaryAt?.(ne.position.x, ne.position.z, ne.userData.ecologyId) === true
+    )
+      continue;
     if (dist2XZ(e.position.x, e.position.z, ne.position.x, ne.position.z) < MARKET_R2) {
       const diff = ne.userData.energy - u.energy;
       if (Math.abs(diff) > 20) {
@@ -372,7 +382,12 @@ function typemorph(e: Entity, u: EntityData, env: BehaviorEnv): void {
   const nb = env.ctx.grid.query(e.position.x, e.position.z, SOCIAL_TYPEMORPH_R);
   for (let i = 0; i < nb.length; i++) {
     const ne = nb[i];
-    if (!ne || ne === e || env.sanctuaryAt?.(ne.position.x, ne.position.z) === true) continue;
+    if (
+      !ne ||
+      ne === e ||
+      env.sanctuaryAt?.(ne.position.x, ne.position.z, ne.userData.ecologyId) === true
+    )
+      continue;
     if (dist2XZ(e.position.x, e.position.z, ne.position.x, ne.position.z) < TYPEMORPH_R2) {
       const same = u.typeId === ne.userData.typeId;
       const sub = Math.abs(u.typeId - ne.userData.typeId) === 1;
@@ -401,7 +416,12 @@ function setunion(e: Entity, u: EntityData, env: BehaviorEnv): void {
   let kinE: Entity | null = null;
   for (let i = 0; i < nb.length; i++) {
     const ne = nb[i];
-    if (!ne || ne === e || env.sanctuaryAt?.(ne.position.x, ne.position.z) === true) continue;
+    if (
+      !ne ||
+      ne === e ||
+      env.sanctuaryAt?.(ne.position.x, ne.position.z, ne.userData.ecologyId) === true
+    )
+      continue;
     const dd = dist2XZ(e.position.x, e.position.z, ne.position.x, ne.position.z);
     if (ne.userData.setGroup === u.setGroup && dd < SETUNION_SAME_R2) {
       V2.add(ne.position);
@@ -555,7 +575,7 @@ const HANDLERS: Readonly<Record<Behavior, Handler>> = {
  */
 export function applyBehavior(e: Entity, env: BehaviorEnv): void {
   const u = e.userData;
-  env.actorProtected = env.sanctuaryAt?.(e.position.x, e.position.z) === true;
+  env.actorProtected = env.sanctuaryAt?.(e.position.x, e.position.z, e.userData.ecologyId) === true;
   if (!env.doTheory && THEORY.has(u.beh)) return;
   if (!env.doFlock && u.beh === 'flock') return;
   HANDLERS[u.beh](e, u, env);

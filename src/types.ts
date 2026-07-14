@@ -145,12 +145,6 @@ export interface EntityData {
    * Ordinary minion birthed by NHI SPAWN_SWARM. Long-lived; does not auto-split.
    */
   nhiMinion?: boolean;
-  /**
-   * True while this organism holds an active Big Tree visit (set/cleared by the visit adapter).
-   * Exempts the traveller from living-zone centre-gravity so the corridor between LIVING_ZONE and
-   * the sanctuary boundary is walkable. Absent (⇒ falsy) on every non-visiting organism.
-   */
-  treeVisit?: boolean;
 }
 
 export interface Entity extends THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial> {

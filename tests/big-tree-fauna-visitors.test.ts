@@ -1,65 +1,160 @@
 import { describe, expect, test } from 'bun:test';
 import {
+  BIG_TREE_OWNER_PUPPET_MASTER,
+  BIG_TREE_OWNER_SHOGGOTH,
+  BIG_TREE_OWNER_TITAN,
+  BigTreeFaunaIntentMode,
   BigTreeFaunaVisitors,
   bigTreeFaunaFoodOwnerId,
+  bindBigTreeFauna,
+  type BigTreeFaunaSource,
+  type BigTreeFaunaVisitorSample,
   type BigTreeFaunaVisitorStats,
   type BigTreeFaunaVisitorView,
 } from '../src/sim/big-tree-fauna-visitors';
-import {
-  BIG_TREE_OWNER_APEX,
-  BIG_TREE_OWNER_LEVIATHAN,
-  BIG_TREE_OWNER_PUPPET,
-  BIG_TREE_OWNER_SHOGGOTH,
-  BIG_TREE_OWNER_TITAN,
-  type BigTreeFaunaActor,
-  type BigTreeFaunaCategory,
-  type BigTreeFaunaOwnerKind,
-  type BigTreeFaunaSource,
-  type BigTreeFaunaSourceBinding,
-} from '../src/sim/big-tree-fauna-source';
+import { EdibleResourceRegistry, type EdibleReservation } from '../src/sim/edible-resource';
+import type { BigTreeFoodSource } from '../src/sim/big-tree-visitors';
 import {
   BigTreeActivity,
   BigTreeSlotKind,
+  BigTreeTransitionCause,
   BigTreeVisitManager,
   BigTreeVisitReason,
   BigTreeVisitState,
   BigTreeZone,
 } from '../src/sim/big-tree-zone';
-import type { BigTreeFoodSource, BigTreeVisitorEnvironment } from '../src/sim/big-tree-visitors';
-import {
-  EDIBLE_RESOURCE_RESPAWN_SECONDS,
-  EdibleResourceRegistry,
-  type EdibleReservation,
-  type EdibleResourceDefinition,
-  type EdibleResourceKind,
-} from '../src/sim/edible-resource';
 
-const OWNER_KINDS: readonly BigTreeFaunaOwnerKind[] = [
-  BIG_TREE_OWNER_SHOGGOTH,
-  BIG_TREE_OWNER_TITAN,
-  BIG_TREE_OWNER_LEVIATHAN,
-  BIG_TREE_OWNER_PUPPET,
-  BIG_TREE_OWNER_APEX,
-];
+interface FakeFaunaRecord {
+  id: number;
+  alive: boolean;
+  x: number;
+  y: number;
+  z: number;
+  hunger: number;
+  mode: number;
+  targetX: number;
+  targetY: number;
+  targetZ: number;
+  nourishment: number;
+  nourishmentCalls: number;
+  restSeconds: number;
+  clearCalls: number;
+}
 
-const CATEGORIES: readonly BigTreeFaunaCategory[] = [
-  'shoggoth',
-  'titan',
-  'leviathan',
-  'puppet',
-  'apex',
-];
+class FakeFaunaSource implements BigTreeFaunaSource {
+  readCalls = 0;
+  readonly records: FakeFaunaRecord[];
 
-class FakeTree implements BigTreeFoodSource {
-  readonly edibleResources: EdibleResourceRegistry;
-  now = 0;
-  completeCalls = 0;
-
-  constructor(definitions: readonly EdibleResourceDefinition[]) {
-    this.edibleResources = new EdibleResourceRegistry(definitions);
+  constructor(ids: readonly number[], startX = 30) {
+    this.records = ids.map((id, index) => ({
+      id,
+      alive: true,
+      x: startX + index,
+      y: 0,
+      z: 0,
+      hunger: 1,
+      mode: BigTreeFaunaIntentMode.Normal,
+      targetX: 0,
+      targetY: 0,
+      targetZ: 0,
+      nourishment: 0,
+      nourishmentCalls: 0,
+      restSeconds: 0,
+      clearCalls: 0,
+    }));
   }
 
-  tick(now: number): void {
+  get bigTreeVisitorSlotCount(): number {
+    return this.records.length;
+  }
+
+  readBigTreeVisitor(slot: number, out: BigTreeFaunaVisitorSample): boolean {
+    this.readCalls++;
+    const record = this.records[slot];
+    if (!record) return false;
+    out.ownerId = record.id;
+    out.alive = record.alive;
+    out.x = record.x;
+    out.y = record.y;
+    out.z = record.z;
+    out.hunger = record.hunger;
+    out.fatigue = 0;
+    out.healthDeficit = 0;
+    out.stress = 0;
+    out.socialNeed = 0;
+    out.curiosity = 0;
+    return true;
+  }
+
+  setBigTreeVisitorIntent(
+    ownerId: number,
+    mode: number,
+    targetX: number,
+    targetY: number,
+    targetZ: number,
+  ): boolean {
+    const record = this.records.find((candidate) => candidate.id === ownerId);
+    if (!record) return false;
+    record.mode = mode;
+    record.targetX = targetX;
+    record.targetY = targetY;
+    record.targetZ = targetZ;
+    return true;
+  }
+
+  nourishBigTreeVisitor(ownerId: number, nourishment: number): boolean {
+    const record = this.records.find((candidate) => candidate.id === ownerId);
+    if (!record) return false;
+    record.nourishment += nourishment;
+    record.nourishmentCalls++;
+    record.hunger = Math.max(0, record.hunger - nourishment / 50);
+    return true;
+  }
+
+  restBigTreeVisitor(ownerId: number, dt: number): boolean {
+    const record = this.records.find((candidate) => candidate.id === ownerId);
+    if (!record) return false;
+    record.restSeconds += dt;
+    return true;
+  }
+
+  clearBigTreeVisitorIntent(ownerId: number): boolean {
+    const record = this.records.find((candidate) => candidate.id === ownerId);
+    if (!record) return false;
+    record.mode = BigTreeFaunaIntentMode.Normal;
+    record.clearCalls++;
+    return true;
+  }
+
+  advance(dt: number, speed = 300): void {
+    for (const record of this.records) {
+      if (record.mode !== BigTreeFaunaIntentMode.Travel) continue;
+      const dx = record.targetX - record.x;
+      const dy = record.targetY - record.y;
+      const dz = record.targetZ - record.z;
+      const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+      if (distance <= 1e-9) continue;
+      const fraction = Math.min(1, (speed * dt) / distance);
+      record.x += dx * fraction;
+      record.y += dy * fraction;
+      record.z += dz * fraction;
+    }
+  }
+}
+
+class FakeTreeFood implements BigTreeFoodSource {
+  readonly edibleResources = new EdibleResourceRegistry([
+    {
+      id: 10,
+      kind: 'fruit',
+      position: { x: 0, y: 8, z: 0 },
+      interactionPoint: { x: 0, y: 0, z: 0 },
+      nourishment: 28,
+    },
+  ]);
+  now = 0;
+
+  setTime(now: number): void {
     this.now = now;
     this.edibleResources.update(now);
   }
@@ -67,7 +162,7 @@ class FakeTree implements BigTreeFoodSource {
   reserveFood(
     ownerId: number,
     leaseSeconds = 8,
-    kind?: EdibleResourceKind,
+    kind?: 'fruit' | 'leaf',
   ): EdibleReservation | null {
     return this.edibleResources.reserveAny(ownerId, this.now, leaseSeconds, kind);
   }
@@ -92,7 +187,6 @@ class FakeTree implements BigTreeFoodSource {
   }
 
   completeFoodConsumption(reservation: EdibleReservation): number {
-    this.completeCalls++;
     return this.edibleResources.completeConsumption(
       reservation.id,
       reservation.generation,
@@ -110,176 +204,32 @@ class FakeTree implements BigTreeFoodSource {
   }
 }
 
-class FakeFaunaSource implements BigTreeFaunaSource {
-  readonly actors: BigTreeFaunaActor[];
-  readCalls = 0;
-  writeCalls = 0;
-  nutritionAwards = 0;
-
-  constructor(actors: BigTreeFaunaActor[]) {
-    this.actors = actors;
-  }
-
-  get bigTreeActorCount(): number {
-    return this.actors.length;
-  }
-
-  readBigTreeActor(index: number, out: BigTreeFaunaActor): boolean {
-    this.readCalls++;
-    const actor = this.actors[index];
-    if (!actor) return false;
-    Object.assign(out, actor);
-    return true;
-  }
-
-  writeBigTreeActor(index: number, actor: Readonly<BigTreeFaunaActor>): boolean {
-    this.writeCalls++;
-    const target = this.actors[index];
-    if (!target || target.ownerId !== actor.ownerId || target.category !== actor.category)
-      return false;
-    target.vx = actor.vx;
-    target.vy = actor.vy;
-    target.vz = actor.vz;
-    target.energy = actor.energy;
-    target.aggressionSuppressed = actor.aggressionSuppressed;
-    return true;
-  }
-
-  nourishBigTreeActor(index: number, normalizedNutrition: number): boolean {
-    const actor = this.actors[index];
-    if (!actor || !Number.isFinite(normalizedNutrition) || normalizedNutrition <= 0) return false;
-    actor.energy = Math.min(actor.maxEnergy, actor.energy + normalizedNutrition * actor.maxEnergy);
-    this.nutritionAwards++;
-    return true;
-  }
-
-  setBigTreeActorControlled(index: number, controlled: boolean): boolean {
-    const actor = this.actors[index];
-    if (!actor) return false;
-    actor.aggressionSuppressed = controlled;
-    return true;
-  }
-
-  integrate(dt: number): void {
-    for (const actor of this.actors) {
-      actor.x += actor.vx * dt;
-      actor.y += actor.vy * dt;
-      actor.z += actor.vz * dt;
-    }
-  }
-}
-
-function actor(
-  ownerId: number,
-  category: BigTreeFaunaCategory,
-  x = 0,
-  y = 0,
-  energy = 0,
-): BigTreeFaunaActor {
-  return {
-    ownerId,
-    category,
-    locomotion: 'flight',
-    x,
-    y,
-    z: 0,
-    vx: 0,
-    vy: 0,
-    vz: 0,
-    energy,
-    maxEnergy: 1,
-    alive: true,
-    fatigue: 1 - energy,
-    socialDrive: 0.35,
-    health: 1,
-    maxHealth: 1,
-    danger: 0,
-    criticalNeed: energy <= 0.08,
-    moveSpeed: 20,
-    aggressionSuppressed: false,
-  };
-}
-
-function food(id: number, kind: EdibleResourceKind, x = 0, y = 0): EdibleResourceDefinition {
-  return {
-    id,
-    kind,
-    position: { x, y: y + 8, z: 0 },
-    interactionPoint: { x, y, z: 0 },
-    nourishment: kind === 'fruit' ? 28 : 14,
-  };
-}
-
-function manager(capacity: number, dwellSeconds = 2): BigTreeVisitManager {
-  return new BigTreeVisitManager(
-    new BigTreeZone({ centerX: 0, centerZ: 0, enterRadius: 30, exitRadius: 35 }),
-    {
-      maxActors: 256,
-      capacity,
-      maxSlots: 64,
-      arriveRadius: 1.5,
-      minDwellSeconds: dwellSeconds,
-      maxDwellSeconds: dwellSeconds,
-      minCooldownSeconds: 2,
-      maxCooldownSeconds: 2,
-      travelTimeoutSeconds: 8,
-      leaveTimeoutSeconds: 3,
-      slotLeaseSeconds: 4,
-      stuckAfterSeconds: 2,
-      maxStuckRecoveries: 1,
-    },
-  );
-}
-
-function binding(
-  ownerKind: BigTreeFaunaOwnerKind,
-  category: BigTreeFaunaCategory,
-  source: BigTreeFaunaSource,
-): BigTreeFaunaSourceBinding {
-  return { ownerKind, category, source };
-}
-
-function adapter(
-  tree: FakeTree,
-  visits: BigTreeVisitManager,
-  bindings: readonly BigTreeFaunaSourceBinding[],
-  pollBudget = 32,
-): BigTreeFaunaVisitors {
-  return new BigTreeFaunaVisitors(tree, visits, bindings, {
-    pollBudget,
-    pollIntervalSeconds: 0.1,
-    foodLeaseSeconds: 3,
-    foodRetrySeconds: 0.1,
-    foodSearchTimeoutSeconds: 0.4,
-    foodReachRadius: 12,
-    steeringGain: 8,
-    restPerSecond: 0.1,
-    restTarget: 0.8,
-    socialLeaseSeconds: 0.5,
-    socialReachRadius: 10,
-    flightVisitY: 0.01,
+function makeVisits(capacity = 4): BigTreeVisitManager {
+  const zone = new BigTreeZone({ centerX: 0, centerZ: 0, enterRadius: 20, exitRadius: 25 });
+  const visits = new BigTreeVisitManager(zone, {
+    maxActors: 64,
+    capacity,
+    maxSlots: 12,
+    arriveRadius: 3,
+    minDwellSeconds: 0.4,
+    maxDwellSeconds: 0.4,
+    minCooldownSeconds: 5,
+    maxCooldownSeconds: 5,
+    travelTimeoutSeconds: 10,
+    leaveTimeoutSeconds: 4,
+    stuckAfterSeconds: 2,
   });
-}
-
-function tick(
-  tree: FakeTree,
-  visitors: BigTreeFaunaVisitors,
-  now: number,
-  dt: number,
-  environment?: Readonly<BigTreeVisitorEnvironment>,
-): void {
-  tree.tick(now);
-  visitors.update(now, dt, environment);
+  visits.addRadialSlots(BigTreeSlotKind.Eat, 4, 2);
+  visits.addRadialSlots(BigTreeSlotKind.Rest, 2, 4);
+  visits.addRadialSlots(BigTreeSlotKind.Socialize, 2, 3);
+  visits.addRadialSlots(BigTreeSlotKind.Observe, 2, 6);
+  return visits;
 }
 
 function stats(): BigTreeFaunaVisitorStats {
   return {
     activeVisitors: 0,
-    activeShoggoths: 0,
-    activeTitans: 0,
-    activeLeviathans: 0,
-    activePuppets: 0,
-    activeApex: 0,
+    trackedFauna: 0,
     lastPollCount: 0,
     totalPolls: 0,
     acceptedVisits: 0,
@@ -288,314 +238,379 @@ function stats(): BigTreeFaunaVisitorStats {
     consumedLeaves: 0,
     targetLosses: 0,
     cancellations: 0,
-    socialPairs: 0,
   };
 }
 
 function visitorView(): BigTreeFaunaVisitorView {
   return {
-    ownerKind: BIG_TREE_OWNER_SHOGGOTH,
+    ownerKind: 0,
     ownerId: -1,
-    category: 'shoggoth',
-    sourceIndex: -1,
     state: BigTreeVisitState.Outside,
+    reason: 0 as never,
     activity: BigTreeActivity.None,
-    slotId: -1,
-    foodId: -1,
-    foodKind: null,
-    foodState: null,
     targetX: 0,
     targetY: 0,
     targetZ: 0,
-    normalizedEnergy: 0,
+    foodId: -1,
+    foodKind: null,
+    foodState: null,
     partnerKind: -1,
     partnerId: -1,
+    lastTransitionCause: BigTreeTransitionCause.None,
+    lastTransitionAt: 0,
   };
 }
 
-describe('BigTreeFaunaVisitors', () => {
-  test('uses collision-free food ownership for every fauna category', () => {
-    const owners = OWNER_KINDS.map((kind) => bigTreeFaunaFoodOwnerId(kind, 7));
-    expect(new Set(owners).size).toBe(OWNER_KINDS.length);
-    for (const owner of owners) expect(owner).toBeGreaterThanOrEqual(1_000_000_000);
-    expect(bigTreeFaunaFoodOwnerId(BIG_TREE_OWNER_SHOGGOTH, -1)).toBe(-1);
-  });
+function tick(
+  adapter: BigTreeFaunaVisitors,
+  tree: FakeTreeFood,
+  source: FakeFaunaSource,
+  now: number,
+  dt = 0.1,
+): void {
+  tree.setTime(now);
+  adapter.update(now, dt, { foodAvailable: true });
+  source.advance(dt);
+}
 
-  test('Shoggoths, Titans, Leviathans, Puppeteers, and autonomous Apex bodies all eat canonically', () => {
-    const definitions = [
-      food(1, 'leaf', -4),
-      food(2, 'fruit', -2),
-      food(3, 'leaf', 0),
-      food(4, 'fruit', 2),
-      food(5, 'leaf', 4),
-    ];
-    const tree = new FakeTree(definitions);
-    const visits = manager(5);
-    const sources: FakeFaunaSource[] = [];
-    const bindings: BigTreeFaunaSourceBinding[] = [];
-    for (let index = 0; index < OWNER_KINDS.length; index++) {
-      const x = -4 + index * 2;
-      visits.addSlot(BigTreeSlotKind.Eat, x, 0);
-      const source = new FakeFaunaSource([actor(0, CATEGORIES[index]!, x)]);
-      sources.push(source);
-      bindings.push(binding(OWNER_KINDS[index]!, CATEGORIES[index]!, source));
-    }
-    const visitors = adapter(tree, visits, bindings);
-
-    tick(tree, visitors, 0, 0);
-    const out = stats();
-    visitors.readStats(out);
-    expect(out).toMatchObject({
-      activeVisitors: 5,
-      activeShoggoths: 1,
-      activeTitans: 1,
-      activeLeviathans: 1,
-      activePuppets: 1,
-      activeApex: 1,
-    });
-
-    tick(tree, visitors, 0.1, 0.1);
-    visitors.readStats(out);
-    expect(out).toMatchObject({ completedMeals: 5, consumedFruit: 2, consumedLeaves: 3 });
-    expect(tree.completeCalls).toBe(5);
-    expect(sources.reduce((sum, source) => sum + source.nutritionAwards, 0)).toBe(5);
-    expect(sources.reduce((sum, source) => sum + source.actors[0]!.energy, 0)).toBeCloseTo(0.98, 8);
-    for (const source of sources) expect(source.actors[0]!.aggressionSuppressed).toBe(true);
-  });
-
-  test('a simultaneous food race has one reward, one respawn deadline, and exact 5-second reuse', () => {
-    const tree = new FakeTree([food(10, 'leaf')]);
-    const visits = manager(2);
-    visits.addSlot(BigTreeSlotKind.Eat, -1, 0);
-    visits.addSlot(BigTreeSlotKind.Eat, 1, 0);
-    const source = new FakeFaunaSource([actor(0, 'shoggoth', -1), actor(2, 'shoggoth', 1)]);
-    const visitors = adapter(
+describe('BigTreeFaunaVisitors — generic canonical-fauna binding', () => {
+  test('low-need incidental fauna keeps radial egress control through leave timeout and cooldown', () => {
+    const source = new FakeFaunaSource([77], 5);
+    source.records[0]!.hunger = 0;
+    const tree = new FakeTreeFood();
+    const visits = makeVisits(1);
+    const adapter = new BigTreeFaunaVisitors(
       tree,
       visits,
-      [binding(BIG_TREE_OWNER_SHOGGOTH, 'shoggoth', source)],
-      2,
+      [bindBigTreeFauna(BIG_TREE_OWNER_SHOGGOTH, source)],
+      { pollBudget: 1, pollIntervalSeconds: 0.01, activeCapacity: 1 },
     );
 
-    tick(tree, visitors, 0, 0);
-    tick(tree, visitors, 0.1, 0.1);
-    tick(tree, visitors, 0.2, 0.1);
+    tick(adapter, tree, source, 0, 0.1);
+    tick(adapter, tree, source, 0.1, 0.1);
+    const active = visitorView();
+    expect(adapter.readVisitor(BIG_TREE_OWNER_SHOGGOTH, 77, active)).toBe(true);
+    expect(active.reason).toBe(BigTreeVisitReason.Safety);
+    expect(active.activity).toBe(BigTreeActivity.Observe);
+    expect(active.state).toBe(BigTreeVisitState.Active);
 
-    expect(source.actors[0]!.energy + source.actors[1]!.energy).toBeCloseTo(0.14, 8);
-    expect(source.nutritionAwards).toBe(1);
-    expect(tree.completeCalls).toBe(1);
-    expect(tree.edibleResources.stats()).toMatchObject({ respawning: 1, pendingRespawns: 1 });
-    tree.tick(0.1 + EDIBLE_RESOURCE_RESPAWN_SECONDS - 0.001);
+    // Freeze the fake source after arrival. The dwell ends at 0.5 and leave timeout at 4.5, but the
+    // adapter must continue issuing a real Travel intent while the body is still inside radius 25.
+    tree.setTime(0.51);
+    adapter.update(0.51, 0.1, { foodAvailable: false });
+    expect(visits.stateOf(BIG_TREE_OWNER_SHOGGOTH, 77)).toBe(BigTreeVisitState.Leaving);
+    tree.setTime(4.52);
+    adapter.update(4.52, 0.1, { foodAvailable: false });
+    expect(visits.stateOf(BIG_TREE_OWNER_SHOGGOTH, 77)).toBe(BigTreeVisitState.Cooldown);
+    expect(source.records[0]?.mode).toBe(BigTreeFaunaIntentMode.Travel);
+    expect(source.records[0]?.targetX).toBeGreaterThan(visits.zone.exitRadius);
+    const duringCooldown = stats();
+    adapter.readStats(duringCooldown);
+    expect(duringCooldown.activeVisitors).toBe(1);
+
+    source.records[0]!.x = 26;
+    tree.setTime(4.6);
+    adapter.update(4.6, 0.1, { foodAvailable: false });
+    expect(source.records[0]?.mode).toBe(BigTreeFaunaIntentMode.Normal);
+    const afterExit = stats();
+    adapter.readStats(afterExit);
+    expect(afterExit.activeVisitors).toBe(0);
+    expect(visits.stateOf(BIG_TREE_OWNER_SHOGGOTH, 77)).toBe(BigTreeVisitState.Cooldown);
+
+    source.records[0]!.x = 5;
+    tree.setTime(4.7);
+    adapter.update(4.7, 0.1, { foodAvailable: false });
+    const reentered = stats();
+    adapter.readStats(reentered);
+    expect(reentered.activeVisitors).toBe(0);
+    expect(reentered.acceptedVisits).toBe(1);
+    expect(visits.stateOf(BIG_TREE_OWNER_SHOGGOTH, 77)).toBe(BigTreeVisitState.Cooldown);
+  });
+
+  test('uses stable species IDs and a collision-free food-owner namespace', () => {
+    const source = new FakeFaunaSource([777]);
+    const binding = bindBigTreeFauna(BIG_TREE_OWNER_SHOGGOTH, source);
+    const sample = {} as BigTreeFaunaVisitorSample;
+    expect(binding.source.readBigTreeVisitor(0, sample)).toBe(true);
+    expect(sample.ownerId).toBe(777);
+    expect(bigTreeFaunaFoodOwnerId(BIG_TREE_OWNER_SHOGGOTH, 777)).toBeLessThan(-1_000_000_000);
+    expect(bigTreeFaunaFoodOwnerId(BIG_TREE_OWNER_SHOGGOTH, 777)).not.toBe(
+      bigTreeFaunaFoodOwnerId(BIG_TREE_OWNER_PUPPET_MASTER, 777),
+    );
+  });
+
+  test('steers a hungry fauna visitor, consumes canonically once, then leaves into cooldown', () => {
+    const source = new FakeFaunaSource([777]);
+    const tree = new FakeTreeFood();
+    const visits = makeVisits();
+    const adapter = new BigTreeFaunaVisitors(
+      tree,
+      visits,
+      [bindBigTreeFauna(BIG_TREE_OWNER_SHOGGOTH, source)],
+      { pollBudget: 1, pollIntervalSeconds: 0.01, activeCapacity: 2 },
+    );
+
+    tick(adapter, tree, source, 0);
+    const travelling = visitorView();
+    expect(adapter.readVisitor(BIG_TREE_OWNER_SHOGGOTH, 777, travelling)).toBe(true);
+    expect(travelling.lastTransitionCause).toBe(BigTreeTransitionCause.VisitRequested);
+    expect(travelling.lastTransitionAt).toBe(0);
+    tick(adapter, tree, source, 0.1);
+    expect(source.records[0]?.mode).toBe(BigTreeFaunaIntentMode.Travel);
+    tick(adapter, tree, source, 0.2);
+    tick(adapter, tree, source, 0.3);
+
+    expect(source.records[0]?.nourishment).toBe(28);
+    expect(source.records[0]?.nourishmentCalls).toBe(1);
     expect(tree.edibleResources.get(10)?.state).toBe('respawning');
-    tree.tick(0.1 + EDIBLE_RESOURCE_RESPAWN_SECONDS);
+    const postMealState = visits.stateOf(BIG_TREE_OWNER_SHOGGOTH, 777);
+    expect(
+      postMealState === BigTreeVisitState.Leaving || postMealState === BigTreeVisitState.Cooldown,
+    ).toBe(true);
+
+    tick(adapter, tree, source, 0.4);
+    tick(adapter, tree, source, 0.5);
+    expect(source.records[0]?.nourishmentCalls).toBe(1);
+    expect(visits.stateOf(BIG_TREE_OWNER_SHOGGOTH, 777)).toBe(BigTreeVisitState.Cooldown);
+    expect(source.records[0]?.mode).toBe(BigTreeFaunaIntentMode.Normal);
+
+    source.records[0]!.hunger = 1;
+    tick(adapter, tree, source, 1);
+    const out = stats();
+    adapter.readStats(out);
+    expect(out.acceptedVisits).toBe(1); // revisit cooldown blocks immediate camping
+    expect(out.completedMeals).toBe(1);
+    expect(out.consumedFruit).toBe(1);
+  });
+
+  test('two hungry fauna cannot duplicate one nutrition award', () => {
+    const source = new FakeFaunaSource([10, 20]);
+    const tree = new FakeTreeFood();
+    const visits = makeVisits(2);
+    const adapter = new BigTreeFaunaVisitors(
+      tree,
+      visits,
+      [bindBigTreeFauna(BIG_TREE_OWNER_SHOGGOTH, source)],
+      { pollBudget: 2, pollIntervalSeconds: 0.01, activeCapacity: 2 },
+    );
+
+    for (let step = 0; step < 6; step++) tick(adapter, tree, source, step * 0.1);
+    const nourishmentCalls = source.records.reduce(
+      (sum, record) => sum + record.nourishmentCalls,
+      0,
+    );
+    const nourishment = source.records.reduce((sum, record) => sum + record.nourishment, 0);
+    expect(nourishmentCalls).toBe(1);
+    expect(nourishment).toBe(28);
+    expect(tree.edibleResources.get(10)?.state).toBe('respawning');
+  });
+
+  test('an airborne fauna body cannot consume until its XYZ interaction point is reachable', () => {
+    const source = new FakeFaunaSource([11], 0);
+    source.records[0]!.y = 100;
+    const tree = new FakeTreeFood();
+    const visits = makeVisits();
+    const adapter = new BigTreeFaunaVisitors(
+      tree,
+      visits,
+      [bindBigTreeFauna(BIG_TREE_OWNER_SHOGGOTH, source)],
+      { pollBudget: 1, pollIntervalSeconds: 0.01, foodReachRadius: 4 },
+    );
+
+    tick(adapter, tree, source, 0);
+    tick(adapter, tree, source, 0.1);
+    expect(source.records[0]?.nourishmentCalls).toBe(0);
+    expect(tree.edibleResources.get(10)?.state).toBe('reserved');
+    expect(source.records[0]?.targetY).toBe(0);
+
+    // Reaching the same canonical interaction point in all three axes permits exactly one meal.
+    source.records[0]!.y = 0;
+    tick(adapter, tree, source, 0.2, 0);
+    expect(source.records[0]?.nourishmentCalls).toBe(1);
+    expect(tree.edibleResources.get(10)?.state).toBe('respawning');
+  });
+
+  test('death cancels the exact reservation, clears intent, and removes the visit record', () => {
+    const source = new FakeFaunaSource([42], 100);
+    const tree = new FakeTreeFood();
+    const visits = makeVisits();
+    const adapter = new BigTreeFaunaVisitors(
+      tree,
+      visits,
+      [bindBigTreeFauna(BIG_TREE_OWNER_SHOGGOTH, source)],
+      { pollBudget: 1, pollIntervalSeconds: 0.01 },
+    );
+    tick(adapter, tree, source, 0, 0);
+    expect(tree.edibleResources.get(10)?.state).toBe('reserved');
+    source.records[0]!.alive = false;
+    tick(adapter, tree, source, 0.1, 0);
     expect(tree.edibleResources.get(10)?.state).toBe('available');
-    expect(tree.edibleResources.stats()).toMatchObject({ available: 1, pendingRespawns: 0 });
+    expect(visits.stateOf(BIG_TREE_OWNER_SHOGGOTH, 42)).toBe(BigTreeVisitState.Outside);
+    expect(source.records[0]?.mode).toBe(BigTreeFaunaIntentMode.Normal);
+    expect(source.records[0]?.clearCalls).toBeGreaterThan(0);
   });
 
-  test('a visitor falls back to the other edible kind when its deterministic preference is empty', () => {
-    const tree = new FakeTree([food(18, 'fruit')]);
-    const visits = manager(1);
-    visits.addSlot(BigTreeSlotKind.Eat, 0, 0);
-    // Shoggoth owner 0 prefers leaves; only fruit exists.
-    const source = new FakeFaunaSource([actor(0, 'shoggoth')]);
-    const visitors = adapter(
+  test('reset clears active and cooldown-only fauna without resetting shared authored slots', () => {
+    const source = new FakeFaunaSource([8]);
+    const tree = new FakeTreeFood();
+    const visits = makeVisits();
+    const slotCount = visits.slotCount;
+    const adapter = new BigTreeFaunaVisitors(
       tree,
       visits,
-      [binding(BIG_TREE_OWNER_SHOGGOTH, 'shoggoth', source)],
-      1,
+      [bindBigTreeFauna(BIG_TREE_OWNER_SHOGGOTH, source)],
+      { pollBudget: 1, pollIntervalSeconds: 0.01 },
     );
-
-    tick(tree, visitors, 0, 0);
-    tick(tree, visitors, 0.1, 0.1);
-
-    expect(source.nutritionAwards).toBe(1);
-    expect(source.actors[0]!.energy).toBeCloseTo(0.28, 8);
-    expect(tree.edibleResources.get(18)?.state).toBe('respawning');
+    for (let step = 0; step < 6; step++) tick(adapter, tree, source, step * 0.1);
+    expect(visits.stateOf(BIG_TREE_OWNER_SHOGGOTH, 8)).toBe(BigTreeVisitState.Cooldown);
+    adapter.reset();
+    expect(visits.stateOf(BIG_TREE_OWNER_SHOGGOTH, 8)).toBe(BigTreeVisitState.Outside);
+    expect(visits.slotCount).toBe(slotCount);
+    expect(tree.edibleResources.get(10)?.state).toBe('respawning'); // consumed food remains tree-owned
   });
 
-  test('food search timeout starts on arrival rather than expiring during a legitimate journey', () => {
-    const tree = new FakeTree([food(11, 'leaf')]);
-    const visits = manager(1);
-    visits.addSlot(BigTreeSlotKind.Eat, 0, 0);
-    const source = new FakeFaunaSource([actor(0, 'shoggoth', -40)]);
-    const visitors = adapter(
+  test('candidate discovery stays at the authored budget with 50,000 fauna slots', () => {
+    let reads = 0;
+    const huge: BigTreeFaunaSource = {
+      bigTreeVisitorSlotCount: 50_000,
+      readBigTreeVisitor(slot, out) {
+        reads++;
+        out.ownerId = slot;
+        out.alive = true;
+        out.x = 100;
+        out.y = 0;
+        out.z = 100;
+        out.hunger = 0;
+        out.fatigue = 0;
+        out.healthDeficit = 0;
+        out.stress = 0;
+        out.socialNeed = 0;
+        out.curiosity = 0;
+        return true;
+      },
+      setBigTreeVisitorIntent: () => true,
+      nourishBigTreeVisitor: () => true,
+      clearBigTreeVisitorIntent: () => true,
+    };
+    const tree = new FakeTreeFood();
+    const adapter = new BigTreeFaunaVisitors(
       tree,
-      visits,
-      [binding(BIG_TREE_OWNER_SHOGGOTH, 'shoggoth', source)],
-      1,
+      makeVisits(),
+      [bindBigTreeFauna(BIG_TREE_OWNER_SHOGGOTH, huge)],
+      { pollBudget: 7, pollIntervalSeconds: 1 },
     );
-
-    tick(tree, visitors, 0, 0);
-    expect(visits.stateOf(BIG_TREE_OWNER_SHOGGOTH, 0)).toBe(BigTreeVisitState.Travelling);
-    tick(tree, visitors, 1, 1);
-    expect(tree.completeCalls).toBe(0);
-    source.actors[0]!.x = 0;
-    source.actors[0]!.y = 0;
-    tick(tree, visitors, 1.1, 0.1);
-    expect(tree.completeCalls).toBe(1);
-    expect(source.actors[0]!.energy).toBeCloseTo(0.14, 8);
+    tree.setTime(0);
+    adapter.update(0, 0, { foodAvailable: true });
+    const out = stats();
+    adapter.readStats(out);
+    expect(reads).toBe(7);
+    expect(out.lastPollCount).toBe(7);
+    expect(out.activeVisitors).toBe(0);
   });
 
-  test('flight steering must reach the real interaction altitude before food can be consumed', () => {
-    const tree = new FakeTree([food(12, 'leaf', 0, 0)]);
-    const visits = manager(1, 5);
-    visits.addSlot(BigTreeSlotKind.Eat, 0, 0);
-    const source = new FakeFaunaSource([actor(0, 'leviathan', 0, 8)]);
-    const visitors = new BigTreeFaunaVisitors(
+  test('non-food contextual activity uses real calm intent and still has a hard dwell bound', () => {
+    const source = new FakeFaunaSource([19]);
+    source.records[0]!.hunger = 0;
+    const originalRead = source.readBigTreeVisitor.bind(source);
+    source.readBigTreeVisitor = (slot, out) => {
+      if (!originalRead(slot, out)) return false;
+      out.fatigue = 1;
+      return true;
+    };
+    const tree = new FakeTreeFood();
+    const visits = makeVisits();
+    const adapter = new BigTreeFaunaVisitors(
       tree,
       visits,
-      [binding(BIG_TREE_OWNER_LEVIATHAN, 'leviathan', source)],
+      [bindBigTreeFauna(BIG_TREE_OWNER_PUPPET_MASTER, source)],
+      { pollBudget: 1, pollIntervalSeconds: 0.01 },
+    );
+    for (let step = 0; step < 4; step++) tick(adapter, tree, source, step * 0.1);
+    expect(source.records[0]?.mode).toBe(BigTreeFaunaIntentMode.Calm);
+    expect(source.records[0]?.restSeconds).toBeGreaterThan(0);
+    expect(
+      visits.readVisit(BIG_TREE_OWNER_PUPPET_MASTER, 19, {
+        recordId: -1,
+        ownerKind: 0,
+        ownerId: 0,
+        state: BigTreeVisitState.Outside,
+        reason: 0 as never,
+        activity: BigTreeActivity.None,
+        slotId: -1,
+        startedAt: 0,
+        enteredAt: 0,
+        stateDeadline: 0,
+        cooldownUntil: 0,
+        stuckRecoveries: 0,
+        visitOrdinal: 0,
+        partnerKind: -1,
+        partnerId: -1,
+        partnerLeaseExpiresAt: 0,
+        insideZone: false,
+        lastTransitionCause: 0,
+        lastTransitionAt: 0,
+      }),
+    ).toBe(true);
+    tick(adapter, tree, source, 0.8);
+    tick(adapter, tree, source, 0.9);
+    expect(source.records[0]?.mode).toBe(BigTreeFaunaIntentMode.Normal);
+    expect(visits.stateOf(BIG_TREE_OWNER_PUPPET_MASTER, 19)).toBe(BigTreeVisitState.Cooldown);
+  });
+
+  test('different canonical fauna species form one reciprocal leased social pair and clean up', () => {
+    const shoggoths = new FakeFaunaSource([101], -3);
+    const titans = new FakeFaunaSource([202], 3);
+    for (const source of [shoggoths, titans]) {
+      source.records[0]!.hunger = 0;
+      const originalRead = source.readBigTreeVisitor.bind(source);
+      source.readBigTreeVisitor = (slot, out) => {
+        if (!originalRead(slot, out)) return false;
+        out.socialNeed = 1;
+        out.curiosity = 0;
+        return true;
+      };
+    }
+    const tree = new FakeTreeFood();
+    const visits = makeVisits(2);
+    const adapter = new BigTreeFaunaVisitors(
+      tree,
+      visits,
+      [
+        bindBigTreeFauna(BIG_TREE_OWNER_SHOGGOTH, shoggoths),
+        bindBigTreeFauna(BIG_TREE_OWNER_TITAN, titans),
+      ],
       {
-        pollBudget: 1,
-        pollIntervalSeconds: 0.05,
-        foodLeaseSeconds: 3,
-        foodRetrySeconds: 0.05,
-        foodSearchTimeoutSeconds: 4,
-        foodReachRadius: 0.5,
-        steeringGain: 8,
-        flightVisitY: 0.01,
+        pollBudget: 2,
+        pollIntervalSeconds: 0.01,
+        activeCapacity: 2,
+        socialLeaseSeconds: 0.4,
+        socialReachRadius: 10,
       },
     );
 
-    tick(tree, visitors, 0, 0);
-    tick(tree, visitors, 0.05, 0.05);
-    expect(tree.completeCalls).toBe(0);
-    expect(source.actors[0]!.vy).toBeLessThan(0);
-    for (let step = 2; step < 80 && tree.completeCalls === 0; step++) {
-      source.integrate(0.05);
-      tick(tree, visitors, step * 0.05, 0.05);
-    }
-    expect(tree.completeCalls).toBe(1);
-    expect(source.actors[0]!.y).toBeLessThanOrEqual(0.5);
-  });
+    tick(adapter, tree, shoggoths, 0, 0);
+    // The generic adapter owns both sources; advance neither fake because both already occupy their
+    // authored social slots. A second scheduler tick enters and pairs them.
+    tree.setTime(0.1);
+    adapter.update(0.1, 0.1, { foodAvailable: true });
+    const shoggothView = visitorView();
+    const titanView = visitorView();
+    expect(adapter.readVisitor(BIG_TREE_OWNER_SHOGGOTH, 101, shoggothView)).toBe(true);
+    expect(adapter.readVisitor(BIG_TREE_OWNER_TITAN, 202, titanView)).toBe(true);
+    expect(shoggothView.activity).toBe(BigTreeActivity.Socialize);
+    expect([shoggothView.partnerKind, shoggothView.partnerId]).toEqual([BIG_TREE_OWNER_TITAN, 202]);
+    expect([titanView.partnerKind, titanView.partnerId]).toEqual([BIG_TREE_OWNER_SHOGGOTH, 101]);
 
-  test('completed visitors leave, release control, and observe the shared revisit cooldown', () => {
-    const tree = new FakeTree([food(13, 'fruit')]);
-    const visits = manager(1);
-    visits.addSlot(BigTreeSlotKind.Eat, 0, 0);
-    const source = new FakeFaunaSource([actor(0, 'titan')]);
-    const visitors = adapter(tree, visits, [binding(BIG_TREE_OWNER_TITAN, 'titan', source)], 1);
+    tree.setTime(0.2);
+    adapter.update(0.2, 0.1, { foodAvailable: true });
+    expect(shoggoths.records[0]?.mode).toBe(BigTreeFaunaIntentMode.Social);
+    expect(titans.records[0]?.mode).toBe(BigTreeFaunaIntentMode.Social);
 
-    tick(tree, visitors, 0, 0);
-    tick(tree, visitors, 0.1, 0.1);
-    expect(visits.stateOf(BIG_TREE_OWNER_TITAN, 0)).toBe(BigTreeVisitState.Leaving);
-    expect(source.actors[0]!.aggressionSuppressed).toBe(true);
-    source.actors[0]!.x = 40;
-    tick(tree, visitors, 0.2, 0.1);
-    expect(visits.stateOf(BIG_TREE_OWNER_TITAN, 0)).toBe(BigTreeVisitState.Cooldown);
-    expect(visitors.activeVisitors).toBe(0);
-    expect(source.actors[0]!.aggressionSuppressed).toBe(false);
-    tick(tree, visitors, 2.19, 0);
-    expect(visits.stateOf(BIG_TREE_OWNER_TITAN, 0)).toBe(BigTreeVisitState.Cooldown);
-    tick(tree, visitors, 2.2, 0, { foodAvailable: false });
-    expect(visits.stateOf(BIG_TREE_OWNER_TITAN, 0)).toBe(BigTreeVisitState.Outside);
-  });
-
-  test('cross-species social partners pair, then partner loss releases both reservations safely', () => {
-    const tree = new FakeTree([food(14, 'fruit')]);
-    const visits = manager(2, 1);
-    visits.addSlot(BigTreeSlotKind.Socialize, -2, 0);
-    visits.addSlot(BigTreeSlotKind.Socialize, 2, 0);
-    const shoggoth = new FakeFaunaSource([actor(0, 'shoggoth', -2, 0, 1)]);
-    const puppet = new FakeFaunaSource([actor(0, 'puppet', 2, 0, 1)]);
-    shoggoth.actors[0]!.socialDrive = 1;
-    puppet.actors[0]!.socialDrive = 1;
-    const visitors = adapter(tree, visits, [
-      binding(BIG_TREE_OWNER_SHOGGOTH, 'shoggoth', shoggoth),
-      binding(BIG_TREE_OWNER_PUPPET, 'puppet', puppet),
-    ]);
-    const environment: BigTreeVisitorEnvironment = {
-      socialNeed: 1,
-      curiosity: 0,
-      foodAvailable: false,
-    };
-
-    tick(tree, visitors, 0, 0, environment);
-    tick(tree, visitors, 0.1, 0.1, environment);
-    const first = visitorView();
-    const second = visitorView();
-    expect(visitors.readVisitor(BIG_TREE_OWNER_SHOGGOTH, 0, first)).toBe(true);
-    expect(visitors.readVisitor(BIG_TREE_OWNER_PUPPET, 0, second)).toBe(true);
-    expect(first.activity).toBe(BigTreeActivity.Socialize);
-    expect(first.partnerKind).toBe(BIG_TREE_OWNER_PUPPET);
-    expect(second.partnerKind).toBe(BIG_TREE_OWNER_SHOGGOTH);
-
-    puppet.actors[0]!.alive = false;
-    tick(tree, visitors, 0.2, 0.1, environment);
-    expect(visitors.readVisitor(BIG_TREE_OWNER_PUPPET, 0, second)).toBe(false);
-    expect(visitors.readVisitor(BIG_TREE_OWNER_SHOGGOTH, 0, first)).toBe(true);
-    expect(first.partnerKind).toBe(-1);
-    visitors.reset();
-    expect(shoggoth.actors[0]!.aggressionSuppressed).toBe(false);
-    expect(visits.trackedActors).toBe(0);
-  });
-
-  test('reset releases active food, locomotion control, slots, and visit records', () => {
-    const tree = new FakeTree([food(15, 'leaf', 0, 0)]);
-    const visits = manager(1, 5);
-    visits.addSlot(BigTreeSlotKind.Eat, 0, 0);
-    const source = new FakeFaunaSource([actor(0, 'apex', 0, 20)]);
-    const visitors = adapter(tree, visits, [binding(BIG_TREE_OWNER_APEX, 'apex', source)], 1);
-
-    tick(tree, visitors, 0, 0);
-    tick(tree, visitors, 0.1, 0.1);
-    expect(tree.edibleResources.get(15)?.state).toBe('reserved');
-    expect(source.actors[0]!.aggressionSuppressed).toBe(true);
-    visitors.reset();
-
-    expect(tree.edibleResources.get(15)?.state).toBe('available');
-    expect(source.actors[0]!.aggressionSuppressed).toBe(false);
-    expect(visitors.activeVisitors).toBe(0);
-    expect(visits.trackedActors).toBe(0);
-  });
-
-  test('candidate discovery is bounded by poll budget under stress-level fauna counts', () => {
-    const tree = new FakeTree([food(16, 'leaf')]);
-    const visits = manager(8);
-    for (let index = 0; index < 8; index++) visits.addSlot(BigTreeSlotKind.Eat, index, 0);
-    const population = Array.from({ length: 20_000 }, (_, index) =>
-      actor(index, 'shoggoth', index % 20),
-    );
-    const source = new FakeFaunaSource(population);
-    const visitors = adapter(
-      tree,
-      visits,
-      [binding(BIG_TREE_OWNER_SHOGGOTH, 'shoggoth', source)],
-      32,
-    );
-    const out = stats();
-
-    tick(tree, visitors, 0, 0);
-    visitors.readStats(out);
-    expect(out.lastPollCount).toBe(32);
-    expect(out.totalPolls).toBe(32);
-    expect(source.readCalls).toBe(32);
-    expect(out.activeVisitors).toBeLessThanOrEqual(8);
-  });
-
-  test('view output exposes visit reason/activity and real reservation ownership', () => {
-    const tree = new FakeTree([food(17, 'fruit')]);
-    const visits = manager(1, 5);
-    visits.addSlot(BigTreeSlotKind.Eat, 0, 0);
-    const source = new FakeFaunaSource([actor(7, 'shoggoth', 0, 20)]);
-    const visitors = adapter(
-      tree,
-      visits,
-      [binding(BIG_TREE_OWNER_SHOGGOTH, 'shoggoth', source)],
-      1,
-    );
-    const view = visitorView();
-
-    tick(tree, visitors, 0, 0);
-    tick(tree, visitors, 0.1, 0.1);
-    expect(visitors.readVisitor(BIG_TREE_OWNER_SHOGGOTH, 7, view)).toBe(true);
-    expect(view).toMatchObject({
-      category: 'shoggoth',
-      activity: BigTreeActivity.Eat,
-      foodId: 17,
-      foodKind: 'fruit',
-      foodState: 'reserved',
-    });
-    expect(visits.stateOf(BIG_TREE_OWNER_SHOGGOTH, 7)).not.toBe(BigTreeVisitState.Outside);
-    expect(BigTreeVisitReason.Food).toBe(1);
+    expect(adapter.cancel(BIG_TREE_OWNER_SHOGGOTH, 101)).toBe(true);
+    expect(adapter.readVisitor(BIG_TREE_OWNER_TITAN, 202, titanView)).toBe(true);
+    expect(titanView.partnerId).toBe(-1);
+    tree.setTime(0.3);
+    adapter.update(0.3, 0.1, { foodAvailable: true });
+    expect(titans.records[0]?.mode).toBe(BigTreeFaunaIntentMode.Calm);
   });
 });

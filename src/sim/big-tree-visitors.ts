@@ -12,6 +12,7 @@ import { XenomimicVisitMode, type XenomimicVisitMode as XenoVisitMode } from './
 import {
   BigTreeActivity,
   BigTreeSlotKind,
+  BigTreeTransitionCause,
   BigTreeVisitManager,
   BigTreeVisitReason,
   BigTreeVisitState,
@@ -33,7 +34,7 @@ const NO_RESOURCE = -1;
 /** Structural subset implemented by `Entity`; lightweight tests need no Three.js dependency. */
 export interface BigTreeOrdinaryBody {
   readonly id: number;
-  readonly position: { x: number; z: number };
+  readonly position: { x: number; y: number; z: number };
   readonly rotation?: { y: number };
   readonly userData: {
     /** Simulation-owned identity; unlike Object3D.id it is unaffected by unrelated render objects. */
@@ -43,15 +44,10 @@ export interface BigTreeOrdinaryBody {
     age: number;
     life: number;
     alive?: boolean;
-    /** NHI matrix beings run their own steering policy and never become tree visitors. */
+    /** Launched NHIs have a dedicated adapter keyed by mind id; ordinary NHI minions remain false. */
     isNhi?: boolean;
-    /** True while this body holds an active tree visit; exempts it from centre-gravity herding. */
-    treeVisit?: boolean;
-    /** Neural activation lane (present on every real organism; optional for lightweight mocks). */
-    act?: number;
-    /** Game-theory payoff ledger (present on every real organism; optional for lightweight mocks). */
-    payoff?: number;
-    vel: { x: number; z: number };
+    nhiMinion?: boolean;
+    vel: { x: number; y: number; z: number };
   };
 }
 
@@ -115,19 +111,14 @@ export interface BigTreeVisitorConfig {
   socialLeaseSeconds?: number;
   socialReachRadius?: number;
   eatingFeedbackSeconds?: number;
-  /** World seed folded into the personality/social/curiosity hashes so dispositions vary per
-   *  cosmos. Default 0 preserves the seed-free legacy hash exactly. */
-  hashSeed?: number;
 }
 
 export type BigTreeVisitorBody = BigTreeOrdinaryBody | BigTreeXenomimicBody;
 
 /**
- * Optional bridge into existing per-body state during Socialize/Observe activities. The shipped
- * world implementation adjusts an ordinary organism's neural activation (`userData.act`) and
- * game-theory payoff ledger, and a xenomimic's shimmer animation state — nothing more is claimed.
- * Arguments are positional and bodies are existing references so the hot path creates no event
- * object. `partnerKind` and `partnerId` are both `-1` when no live reciprocal partner exists.
+ * Optional bridge into the world's canonical animation, communication, knowledge, and social
+ * systems. Arguments are positional and bodies are existing references so the hot path creates no
+ * event object. `partnerKind` and `partnerId` are both `-1` when no live reciprocal partner exists.
  */
 export interface BigTreeVisitorActivityCallbacks {
   performActivity(
@@ -142,38 +133,6 @@ export interface BigTreeVisitorActivityCallbacks {
   ): void;
 }
 
-/**
- * The CANONICAL production Socialize/Observe state transfer for tree visits: an ordinary organism's
- * neural activation (`userData.act`, clamped to the entity-brain lane bounds [-4,4]) and payoff
- * ledger rise while it socializes/observes; a xenomimic expresses the interaction through its
- * shimmer animation lane. The world's activity callback delegates here so behavioral tests can
- * drive the exact shipped transfer without constructing a World.
- */
-export function performBigTreeActivity(
-  ownerKind: number,
-  partnerId: number,
-  body: BigTreeVisitorBody,
-  activity: BigTreeActivity,
-  dt: number,
-): void {
-  if (ownerKind === BIG_TREE_OWNER_ORDINARY) {
-    const data = (body as BigTreeOrdinaryBody).userData;
-    if (activity === BigTreeActivity.Socialize && partnerId >= 0) {
-      data.act = Math.min(4, Math.max(-4, (data.act ?? 0) + dt * 0.7));
-      data.payoff = Math.max(data.payoff ?? 0, 0.08);
-    } else if (activity === BigTreeActivity.Observe) {
-      data.act = Math.min(4, Math.max(-4, (data.act ?? 0) + dt * 0.18));
-    }
-  } else {
-    const xenomimic = body as BigTreeXenomimicBody;
-    if (activity === BigTreeActivity.Socialize && partnerId >= 0) {
-      xenomimic.shimmer = Math.max(xenomimic.shimmer, 0.75);
-    } else if (activity === BigTreeActivity.Observe) {
-      xenomimic.shimmer = Math.max(xenomimic.shimmer, 0.25);
-    }
-  }
-}
-
 export interface BigTreeSpeciesVisitorView {
   ownerKind: number;
   ownerId: number;
@@ -186,11 +145,16 @@ export interface BigTreeSpeciesVisitorView {
   foodKind: EdibleResourceKind | null;
   foodState: string | null;
   targetX: number;
+  targetY: number;
   targetZ: number;
   energy: number;
   eating: boolean;
   partnerKind: number;
   partnerId: number;
+  /** Most recent canonical lifecycle edge, surfaced for development telemetry. */
+  lastTransitionCause: BigTreeTransitionCause;
+  /** Scaled simulation timestamp for `lastTransitionCause`. */
+  lastTransitionAt: number;
 }
 
 export interface BigTreeSpeciesVisitorStats {
@@ -207,14 +171,6 @@ export interface BigTreeSpeciesVisitorStats {
   cancellations: number;
   zoneCapacity: number;
   socialPairs: number;
-  completedVisits: number;
-  timedOutVisits: number;
-  stuckRecoveries: number;
-  forcedExits: number;
-  partnerTimeouts: number;
-  rejectedForCapacity: number;
-  rejectedForNoSlot: number;
-  availableSlots: number;
 }
 
 type VisitorBody = BigTreeVisitorBody;
@@ -259,7 +215,6 @@ export class BigTreeSpeciesVisitors {
   private readonly foodReachRadiusSquared: number;
   private readonly ordinarySpeed: number;
   private readonly xenomimicSpeed: number;
-  private readonly hashSeedValue: number;
   private readonly steeringGain: number;
   private readonly ordinaryRestPerSecond: number;
   private readonly xenomimicRestPerSecond: number;
@@ -279,6 +234,7 @@ export class BigTreeSpeciesVisitors {
   private readonly foodMissingSince: Float64Array;
   private readonly eatingUntil: Float64Array;
   private readonly targetXs: Float64Array;
+  private readonly targetYs: Float64Array;
   private readonly targetZs: Float64Array;
   /** Stable root-object identity to dense active-array index; maintained on swap removal. */
   private readonly ordinaryActiveIndices = new Map<number, number>();
@@ -331,6 +287,9 @@ export class BigTreeSpeciesVisitors {
     partnerKind: NO_OWNER,
     partnerId: NO_OWNER,
     partnerLeaseExpiresAt: 0,
+    insideZone: false,
+    lastTransitionCause: BigTreeTransitionCause.None,
+    lastTransitionAt: 0,
   };
   private readonly slotView: BigTreeSlotView = {
     slotId: NO_BIG_TREE_SLOT,
@@ -391,7 +350,6 @@ export class BigTreeSpeciesVisitors {
     this.foodReachRadiusSquared = foodReachRadius * foodReachRadius;
     this.ordinarySpeed = this.positive(config.ordinarySpeed, 24, 'ordinarySpeed');
     this.xenomimicSpeed = this.positive(config.xenomimicSpeed, 18, 'xenomimicSpeed');
-    this.hashSeedValue = Number.isFinite(config.hashSeed) ? config.hashSeed! >>> 0 : 0;
     this.steeringGain = this.positive(config.steeringGain, 4, 'steeringGain');
     this.ordinaryRestPerSecond = this.positive(
       config.ordinaryRestPerSecond,
@@ -436,6 +394,7 @@ export class BigTreeSpeciesVisitors {
     this.foodMissingSince = new Float64Array(capacity);
     this.eatingUntil = new Float64Array(capacity);
     this.targetXs = new Float64Array(capacity);
+    this.targetYs = new Float64Array(capacity);
     this.targetZs = new Float64Array(capacity);
     this.activeOwnerIds.fill(NO_OWNER);
     this.activeFoodOwnerIds.fill(NO_OWNER);
@@ -524,11 +483,20 @@ export class BigTreeSpeciesVisitors {
     return this.cancelOwner(BIG_TREE_OWNER_XENOMIMIC, ownerId);
   }
 
+  /** Cancel only the ordinary Entity namespace for an EntityManager-only Genesis reset. */
+  resetOrdinary(): void {
+    this.resetOwnerKind(BIG_TREE_OWNER_ORDINARY);
+    this.ordinaryCursor = 0;
+    this.pollOrdinaryNext = true;
+  }
+
+  /**
+   * Cancel both namespaces owned by this adapter. The shared manager itself belongs to World and is
+   * deliberately not reset here; fixed-fauna records must survive adapter-local cleanup.
+   */
   reset(): void {
-    while (this.activeCount > 0) this.removeActive(this.activeCount - 1, false);
-    this.ordinaryActiveIndices.clear();
-    this.xenomimicActiveIndices.clear();
-    this.visits.reset();
+    this.resetOwnerKind(BIG_TREE_OWNER_ORDINARY);
+    this.resetOwnerKind(BIG_TREE_OWNER_XENOMIMIC);
     this.ordinaryCursor = 0;
     this.xenomimicCursor = 0;
     this.pollOrdinaryNext = true;
@@ -568,11 +536,14 @@ export class BigTreeSpeciesVisitors {
     out.foodKind = resource?.kind ?? null;
     out.foodState = resource?.state ?? null;
     out.targetX = this.targetXs[index] ?? 0;
+    out.targetY = this.targetYs[index] ?? 0;
     out.targetZ = this.targetZs[index] ?? 0;
     out.energy = this.energyOf(ownerKind, body);
     out.eating = now < (this.eatingUntil[index] ?? 0);
     out.partnerKind = this.visitView.partnerKind;
     out.partnerId = this.visitView.partnerId;
+    out.lastTransitionCause = this.visitView.lastTransitionCause;
+    out.lastTransitionAt = this.visitView.lastTransitionAt;
     return true;
   }
 
@@ -595,14 +566,6 @@ export class BigTreeSpeciesVisitors {
     out.cancellations = this.cancellations;
     out.zoneCapacity = this.visits.capacity;
     out.socialPairs = this.zoneStats.partnerReservations;
-    out.completedVisits = this.zoneStats.completedVisits;
-    out.timedOutVisits = this.zoneStats.timedOutVisits;
-    out.stuckRecoveries = this.zoneStats.stuckRecoveryEvents;
-    out.forcedExits = this.zoneStats.forcedExitEvents;
-    out.partnerTimeouts = this.zoneStats.partnerTimeouts;
-    out.rejectedForCapacity = this.zoneStats.rejectedForCapacity;
-    out.rejectedForNoSlot = this.zoneStats.rejectedForNoSlot;
-    out.availableSlots = this.zoneStats.availableSlots;
   }
 
   private pollCandidates(
@@ -646,14 +609,22 @@ export class BigTreeSpeciesVisitors {
     environment: Readonly<BigTreeVisitorEnvironment> | undefined,
   ): void {
     const ownerId = ordinaryBigTreeOwnerId(body);
+    let visitState = this.visits.stateOf(BIG_TREE_OWNER_ORDINARY, ownerId);
+    if (visitState === BigTreeVisitState.Cooldown) {
+      visitState = this.visits.updatePosition(
+        BIG_TREE_OWNER_ORDINARY,
+        ownerId,
+        body.position.x,
+        body.position.z,
+        now,
+      );
+    }
     if (
       ownerId < 0 ||
       body.userData.alive === false ||
-      // Launched NHI beings are steered by their own policy (world.steerNhiBeings); making them
-      // visitors would put two controllers on one body and rubber-band it at the zone boundary.
       body.userData.isNhi === true ||
       this.findActive(BIG_TREE_OWNER_ORDINARY, ownerId) >= 0 ||
-      this.visits.stateOf(BIG_TREE_OWNER_ORDINARY, ownerId) !== BigTreeVisitState.Outside
+      visitState !== BigTreeVisitState.Outside
     ) {
       return;
     }
@@ -666,7 +637,11 @@ export class BigTreeSpeciesVisitors {
       body.userData.life > 0 ? this.clamp01(body.userData.age / body.userData.life) : 0,
       environment,
     );
-    const visitId = this.visits.requestContextualVisit(
+    // A being that arrived under its ordinary ecosystem controller is already a real sanctuary
+    // entrant even when its optional-visit utility is low. Adopt that incidental arrival into the
+    // canonical bounded lifecycle as a Safety/Observe visit instead of leaving it calm but
+    // untracked forever. Capacity and authored-slot admission remain owned by the visit manager.
+    let visitId = this.visits.requestContextualVisit(
       BIG_TREE_OWNER_ORDINARY,
       ownerId,
       this.pollOrdinal,
@@ -676,6 +651,19 @@ export class BigTreeSpeciesVisitors {
       body.position.x,
       body.position.z,
     );
+    if (
+      visitId === NO_BIG_TREE_VISIT &&
+      this.visits.zone.contains(body.position.x, body.position.z, false)
+    ) {
+      visitId = this.visits.requestVisit(
+        BIG_TREE_OWNER_ORDINARY,
+        ownerId,
+        BigTreeVisitReason.Safety,
+        now,
+        body.position.x,
+        body.position.z,
+      );
+    }
     if (visitId !== NO_BIG_TREE_VISIT) this.addActive(BIG_TREE_OWNER_ORDINARY, ownerId, body, now);
   }
 
@@ -685,11 +673,21 @@ export class BigTreeSpeciesVisitors {
     environment: Readonly<BigTreeVisitorEnvironment> | undefined,
   ): void {
     const ownerId = xenomimicBigTreeOwnerId(body);
+    let visitState = this.visits.stateOf(BIG_TREE_OWNER_XENOMIMIC, ownerId);
+    if (visitState === BigTreeVisitState.Cooldown) {
+      visitState = this.visits.updatePosition(
+        BIG_TREE_OWNER_XENOMIMIC,
+        ownerId,
+        body.x,
+        body.z,
+        now,
+      );
+    }
     if (
       ownerId < 0 ||
       !body.alive ||
       this.findActive(BIG_TREE_OWNER_XENOMIMIC, ownerId) >= 0 ||
-      this.visits.stateOf(BIG_TREE_OWNER_XENOMIMIC, ownerId) !== BigTreeVisitState.Outside
+      visitState !== BigTreeVisitState.Outside
     ) {
       return;
     }
@@ -702,7 +700,7 @@ export class BigTreeSpeciesVisitors {
       this.clamp01(body.age / 300),
       environment,
     );
-    const visitId = this.visits.requestContextualVisit(
+    let visitId = this.visits.requestContextualVisit(
       BIG_TREE_OWNER_XENOMIMIC,
       ownerId,
       this.pollOrdinal,
@@ -712,6 +710,16 @@ export class BigTreeSpeciesVisitors {
       body.x,
       body.z,
     );
+    if (visitId === NO_BIG_TREE_VISIT && this.visits.zone.contains(body.x, body.z, false)) {
+      visitId = this.visits.requestVisit(
+        BIG_TREE_OWNER_XENOMIMIC,
+        ownerId,
+        BigTreeVisitReason.Safety,
+        now,
+        body.x,
+        body.z,
+      );
+    }
     if (visitId !== NO_BIG_TREE_VISIT) {
       this.addActive(BIG_TREE_OWNER_XENOMIMIC, ownerId, body, now);
     }
@@ -730,8 +738,6 @@ export class BigTreeSpeciesVisitors {
     const dz = z - this.visits.zone.centerZ;
     this.context.hunger = hunger;
     this.context.fatigue = fatigue;
-    // Organisms carry no health scalar distinct from energy (hunger already encodes it), so the
-    // deficit input is honestly constant-zero rather than a fabricated signal.
     this.context.healthDeficit = 0;
     this.context.stress = this.clamp01(environment?.stress ?? 0);
     this.context.socialNeed = Math.max(
@@ -744,14 +750,8 @@ export class BigTreeSpeciesVisitors {
     );
     this.context.danger = this.clamp01(environment?.danger ?? 0);
     this.context.distance = Math.sqrt(dx * dx + dz * dz);
-    // Feasibility gate: a traveller that cannot cover the distance inside the authored travel
-    // deadline (with a 0.9 pacing margin for weave/obstacles) must not consume zone capacity only
-    // to time out mid-corridor. decideVisit rejects when the route is unavailable.
-    const speed = ownerKind === BIG_TREE_OWNER_ORDINARY ? this.ordinarySpeed : this.xenomimicSpeed;
-    this.context.routeAvailable = this.context.distance <= speed * this.visits.travelTimeout * 0.9;
+    this.context.routeAvailable = true;
     this.context.foodAvailable = environment?.foodAvailable !== false;
-    // Recency soft-weighting is superseded by the manager's HARD cooldown gate: a cooling-down
-    // actor never reaches this decision (stateOf !== Outside), so the input stays constant-zero.
     this.context.recentVisit = 0;
     this.context.personality = this.hashUnit(ownerKind, ownerId, 0x9e3779b9);
     this.context.simulationLoad = this.clamp01(environment?.simulationLoad ?? 0);
@@ -773,12 +773,8 @@ export class BigTreeSpeciesVisitors {
     this.foodMissingSince[index] = Number.POSITIVE_INFINITY;
     this.eatingUntil[index] = 0;
     this.targetXs[index] = this.visits.zone.centerX;
+    this.targetYs[index] = this.yOf(ownerKind, body);
     this.targetZs[index] = this.visits.zone.centerZ;
-    // Mark the body as an en-route visitor so the living-zone centre-gravity yields the travel
-    // corridor between LIVING_ZONE and the sanctuary boundary (cleared in removeActive).
-    if (ownerKind === BIG_TREE_OWNER_ORDINARY) {
-      (body as BigTreeOrdinaryBody).userData.treeVisit = true;
-    }
     this.acceptedVisits++;
     if (this.visits.readVisit(ownerKind, ownerId, this.visitView)) {
       if (this.visitView.reason === BigTreeVisitReason.Food) this.acquireFood(index, now);
@@ -798,9 +794,21 @@ export class BigTreeSpeciesVisitors {
     const x = this.xOf(ownerKind, body);
     const z = this.zOf(ownerKind, body);
     const state = this.visits.updatePosition(ownerKind, ownerId, x, z, now);
-    if (state === BigTreeVisitState.Cooldown || state === BigTreeVisitState.Outside) {
+    if (state === BigTreeVisitState.Outside) {
       this.removeActive(index, false);
       return true;
+    }
+    if (state === BigTreeVisitState.Cooldown) {
+      // A hard leave timeout bounds the visit state, but it must not also drop locomotion while the
+      // body is still protected. Keep calm deterministic egress authority until the body really
+      // crosses the outer hysteresis boundary; the manager's cooldown still blocks re-entry.
+      if (!this.visits.zone.contains(x, z, true)) {
+        this.removeActive(index, false);
+        return true;
+      }
+      this.steerToExit(index, ownerKind, ownerId, body, dt);
+      this.releaseFood(index);
+      return false;
     }
     if (!this.visits.readVisit(ownerKind, ownerId, this.visitView)) {
       this.removeActive(index, false);
@@ -816,19 +824,18 @@ export class BigTreeSpeciesVisitors {
         this.removeActive(index, false);
         return true;
       }
-      this.setTarget(index, this.slotView.x, this.slotView.z);
-      this.steer(ownerKind, body, this.slotView.x, this.slotView.z, dt);
+      // Authored visit slots are planar. Preserve the organism's current vertical plane for
+      // resting/social destinations; food activity replaces this with the edible's authored,
+      // reachable interaction Y. Xenomimics intentionally remain ground-planar.
+      const targetY = this.yOf(ownerKind, body);
+      this.setTarget(index, this.slotView.x, targetY, this.slotView.z);
+      this.steer(ownerKind, body, this.slotView.x, targetY, this.slotView.z, dt);
       if (this.visitView.reason === BigTreeVisitReason.Food) this.maintainFood(index, now, false);
       return false;
     }
 
     if (state === BigTreeVisitState.Leaving) {
-      const angle = this.hashUnit(ownerKind, ownerId, 0x7f4a7c15) * Math.PI * 2;
-      const distance = this.visits.zone.exitRadius + 24;
-      const targetX = this.visits.zone.centerX + Math.cos(angle) * distance;
-      const targetZ = this.visits.zone.centerZ + Math.sin(angle) * distance;
-      this.setTarget(index, targetX, targetZ);
-      this.steer(ownerKind, body, targetX, targetZ, dt);
+      this.steerToExit(index, ownerKind, ownerId, body, dt);
       this.releaseFood(index);
       return false;
     }
@@ -879,13 +886,25 @@ export class BigTreeSpeciesVisitors {
       this.loseFood(index, now);
       return;
     }
-    this.setTarget(index, resource.interactionX, resource.interactionZ);
+    this.setTarget(index, resource.interactionX, resource.interactionY, resource.interactionZ);
     const ownerKind = this.activeKinds[index] ?? 0;
     const body = this.activeBodies[index]!;
-    this.steer(ownerKind, body, resource.interactionX, resource.interactionZ, dt);
+    this.steer(
+      ownerKind,
+      body,
+      resource.interactionX,
+      resource.interactionY,
+      resource.interactionZ,
+      dt,
+    );
     const dx = this.xOf(ownerKind, body) - resource.interactionX;
     const dz = this.zOf(ownerKind, body) - resource.interactionZ;
-    if (dx * dx + dz * dz > this.foodReachRadiusSquared) return;
+    // Ordinary organisms inhabit the full dome volume, so sharing X/Z with food is insufficient:
+    // they must reach the canonical interaction point in 3D. Xenomimics are a planar ground
+    // population and deliberately retain the established X/Z reach model.
+    const dy =
+      ownerKind === BIG_TREE_OWNER_ORDINARY ? this.yOf(ownerKind, body) - resource.interactionY : 0;
+    if (dx * dx + dy * dy + dz * dz > this.foodReachRadiusSquared) return;
 
     if (!this.tree.beginFoodConsumption(reservation)) {
       this.loseFood(index, now);
@@ -1070,18 +1089,33 @@ export class BigTreeSpeciesVisitors {
       return true;
     }
     const cancelled = this.visits.cancelActor(ownerKind, ownerId);
-    this.tree.releaseFoodOwner(bigTreeFoodOwnerId(ownerKind, ownerId));
-    if (cancelled) this.cancellations++;
+    // Unknown ordinary deaths are common ecosystem churn. They cannot own adapter food, so avoid
+    // turning every unrelated death into a complete Crystal-tree registry scan. The owner-wide
+    // fallback is retained only for an inconsistent visit record missing from the dense active map.
+    if (cancelled) {
+      this.tree.releaseFoodOwner(bigTreeFoodOwnerId(ownerKind, ownerId));
+      this.cancellations++;
+    }
     return cancelled;
+  }
+
+  private resetOwnerKind(ownerKind: number): void {
+    let index = 0;
+    while (index < this.activeCount) {
+      if ((this.activeKinds[index] ?? NO_OWNER) !== ownerKind) {
+        index++;
+        continue;
+      }
+      this.removeActive(index, true);
+    }
+    this.visits.cancelOwnerKind(ownerKind);
+    if (ownerKind === BIG_TREE_OWNER_ORDINARY) this.ordinaryActiveIndices.clear();
+    else if (ownerKind === BIG_TREE_OWNER_XENOMIMIC) this.xenomimicActiveIndices.clear();
   }
 
   private removeActive(index: number, cancelVisit: boolean): void {
     const ownerKind = this.activeKinds[index] ?? 0;
     const ownerId = this.activeOwnerIds[index] ?? NO_OWNER;
-    const leavingBody = this.activeBodies[index];
-    if (ownerKind === BIG_TREE_OWNER_ORDINARY && leavingBody) {
-      (leavingBody as BigTreeOrdinaryBody).userData.treeVisit = false;
-    }
     this.releaseFood(index);
     if (cancelVisit) this.visits.cancelActor(ownerKind, ownerId);
     this.deleteActiveIndex(ownerKind, ownerId);
@@ -1096,6 +1130,7 @@ export class BigTreeSpeciesVisitors {
       this.foodMissingSince[index] = this.foodMissingSince[last] ?? Number.POSITIVE_INFINITY;
       this.eatingUntil[index] = this.eatingUntil[last] ?? 0;
       this.targetXs[index] = this.targetXs[last] ?? 0;
+      this.targetYs[index] = this.targetYs[last] ?? 0;
       this.targetZs[index] = this.targetZs[last] ?? 0;
       this.setActiveIndex(
         this.activeKinds[index] ?? 0,
@@ -1112,6 +1147,7 @@ export class BigTreeSpeciesVisitors {
     this.foodMissingSince[last] = Number.POSITIVE_INFINITY;
     this.eatingUntil[last] = 0;
     this.targetXs[last] = 0;
+    this.targetYs[last] = 0;
     this.targetZs[last] = 0;
   }
 
@@ -1136,9 +1172,40 @@ export class BigTreeSpeciesVisitors {
     else if (ownerKind === BIG_TREE_OWNER_XENOMIMIC) this.xenomimicActiveIndices.delete(ownerId);
   }
 
-  private setTarget(index: number, x: number, z: number): void {
+  private setTarget(index: number, x: number, y: number, z: number): void {
     this.targetXs[index] = x;
+    this.targetYs[index] = y;
     this.targetZs[index] = z;
+  }
+
+  /**
+   * Choose the shortest calm horizontal route through the outer boundary. The identity hash is used
+   * only at the exact centre, where no radial direction exists, so the fallback remains deterministic.
+   */
+  private steerToExit(
+    index: number,
+    ownerKind: number,
+    ownerId: number,
+    body: VisitorBody,
+    dt: number,
+  ): void {
+    const x = this.xOf(ownerKind, body);
+    const z = this.zOf(ownerKind, body);
+    let dx = x - this.visits.zone.centerX;
+    let dz = z - this.visits.zone.centerZ;
+    let length = Math.sqrt(dx * dx + dz * dz);
+    if (length <= 1e-6) {
+      const angle = this.hashUnit(ownerKind, ownerId, 0x7f4a7c15) * Math.PI * 2;
+      dx = Math.cos(angle);
+      dz = Math.sin(angle);
+      length = 1;
+    }
+    const radius = this.visits.zone.exitRadius + 24;
+    const targetX = this.visits.zone.centerX + (dx / length) * radius;
+    const targetZ = this.visits.zone.centerZ + (dz / length) * radius;
+    const targetY = this.yOf(ownerKind, body);
+    this.setTarget(index, targetX, targetY, targetZ);
+    this.steer(ownerKind, body, targetX, targetY, targetZ, dt);
   }
 
   private socialPairWithinReach(firstIndex: number, secondIndex: number): boolean {
@@ -1148,8 +1215,9 @@ export class BigTreeSpeciesVisitors {
     const second = this.activeBodies[secondIndex] ?? null;
     if (first === null || second === null) return false;
     const dx = this.xOf(firstKind, first) - this.xOf(secondKind, second);
+    const dy = this.yOf(firstKind, first) - this.yOf(secondKind, second);
     const dz = this.zOf(firstKind, first) - this.zOf(secondKind, second);
-    return dx * dx + dz * dz <= this.socialReachRadiusSquared;
+    return dx * dx + dy * dy + dz * dz <= this.socialReachRadiusSquared;
   }
 
   /** Orient willing partners without adding a second movement controller or a population scan. */
@@ -1177,25 +1245,30 @@ export class BigTreeSpeciesVisitors {
     ownerKind: number,
     body: VisitorBody,
     targetX: number,
+    targetY: number,
     targetZ: number,
     dt: number,
   ): void {
     const x = this.xOf(ownerKind, body);
+    const y = this.yOf(ownerKind, body);
     const z = this.zOf(ownerKind, body);
     const dx = targetX - x;
+    const dy = ownerKind === BIG_TREE_OWNER_ORDINARY ? targetY - y : 0;
     const dz = targetZ - z;
-    const distance = Math.sqrt(dx * dx + dz * dz);
+    const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
     if (distance <= 1e-6) {
       this.damp(ownerKind, body, dt);
       return;
     }
     const speed = ownerKind === BIG_TREE_OWNER_ORDINARY ? this.ordinarySpeed : this.xenomimicSpeed;
     const desiredX = (dx / distance) * speed;
+    const desiredY = (dy / distance) * speed;
     const desiredZ = (dz / distance) * speed;
     const blend = Math.min(1, this.steeringGain * dt);
     if (ownerKind === BIG_TREE_OWNER_ORDINARY) {
       const velocity = (body as BigTreeOrdinaryBody).userData.vel;
       velocity.x += (desiredX - velocity.x) * blend;
+      velocity.y += (desiredY - velocity.y) * blend;
       velocity.z += (desiredZ - velocity.z) * blend;
     } else {
       const xenomimic = body as BigTreeXenomimicBody;
@@ -1211,6 +1284,7 @@ export class BigTreeSpeciesVisitors {
     if (ownerKind === BIG_TREE_OWNER_ORDINARY) {
       const velocity = (body as BigTreeOrdinaryBody).userData.vel;
       velocity.x *= damping;
+      velocity.y *= damping;
       velocity.z *= damping;
     } else {
       const xenomimic = body as BigTreeXenomimicBody;
@@ -1259,6 +1333,11 @@ export class BigTreeSpeciesVisitors {
       : (body as BigTreeXenomimicBody).z;
   }
 
+  /** Xenomimics are planar; zero is only a diagnostic target and never enters their steering. */
+  private yOf(ownerKind: number, body: VisitorBody): number {
+    return ownerKind === BIG_TREE_OWNER_ORDINARY ? (body as BigTreeOrdinaryBody).position.y : 0;
+  }
+
   private energyOf(ownerKind: number, body: VisitorBody): number {
     return ownerKind === BIG_TREE_OWNER_ORDINARY
       ? (body as BigTreeOrdinaryBody).userData.energy
@@ -1266,7 +1345,7 @@ export class BigTreeSpeciesVisitors {
   }
 
   private hashUnit(ownerKind: number, ownerId: number, salt: number): number {
-    let hash = (salt ^ this.hashSeedValue ^ Math.imul(ownerKind + 1, 0x85ebca6b)) >>> 0;
+    let hash = (salt ^ Math.imul(ownerKind + 1, 0x85ebca6b)) >>> 0;
     hash = Math.imul(hash ^ ownerId, 0xc2b2ae35) >>> 0;
     hash ^= hash >>> 15;
     hash = Math.imul(hash, 0x2c1b3c6d) >>> 0;

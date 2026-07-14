@@ -148,7 +148,7 @@ export interface XenomimicCouplings {
   /** Real terrain/surface height under each body. */
   surfaceAt?: XenomimicSurfaceAt;
   /** Big Tree sanctuary membership; protected bodies perceive no hostile pressure. */
-  safeZoneAt?: (x: number, z: number) => boolean;
+  safeZoneAt?: (x: number, z: number, pairId?: number, role?: 0 | 1) => boolean;
   /**
    * Optional temporary-visit locomotion intent. Travel preserves an externally authored heading while
    * moving purposefully; Calm settles in place. Missing/Normal preserves the legacy neural locomotion.
@@ -222,7 +222,8 @@ export class XenomimicPopulation {
   private readonly respawnBudget: number;
   private readonly lifecycleSink: XenomimicLifecycleSink | undefined;
   /** Latest composition-root sanctuary query; also hardens public predation sinks. */
-  private safeZoneAt: ((x: number, z: number) => boolean) | undefined;
+  private safeZoneAt:
+    ((x: number, z: number, pairId?: number, role?: 0 | 1) => boolean) | undefined;
   /** MEASURED provenance receipt for this population's own seeded generator (see {@link rngProvenanceReceipt}). */
   private readonly rngProvenance: RngProvenance;
 
@@ -503,7 +504,7 @@ export class XenomimicPopulation {
           pair.mimic,
           pair.anti,
           couplings.foodAt,
-          couplings.safeZoneAt?.(pair.mimic.x, pair.mimic.z) === true ? 0 : threat,
+          couplings.safeZoneAt?.(pair.mimic.x, pair.mimic.z, pair.id, 0) === true ? 0 : threat,
           resource,
           chaos,
         );
@@ -511,7 +512,7 @@ export class XenomimicPopulation {
           pair.anti,
           pair.mimic,
           couplings.foodAt,
-          couplings.safeZoneAt?.(pair.anti.x, pair.anti.z) === true ? 0 : threat,
+          couplings.safeZoneAt?.(pair.anti.x, pair.anti.z, pair.id, 1) === true ? 0 : threat,
           resource,
           chaos,
         );
@@ -787,7 +788,11 @@ export class XenomimicPopulation {
    */
   consume(c: Readonly<Xenomimic>): number {
     const creature = c as Xenomimic;
-    if (!creature.alive || this.safeZoneAt?.(creature.x, creature.z) === true) return 0;
+    if (
+      !creature.alive ||
+      this.safeZoneAt?.(creature.x, creature.z, creature.pairId, creature.role) === true
+    )
+      return 0;
     const yield_ = 0.3 + creature.energy * 0.5;
     creature.alive = false;
     creature.respawnAt = this.clock + this.predationRespawn;

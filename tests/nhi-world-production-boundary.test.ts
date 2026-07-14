@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import type { Entity } from '../src/types';
 import { NhiAction, type NhiIntent } from '../src/sim/nhi';
 import { NHI_SYSTEM_MIND_CAP, type NhiActionOutcome } from '../src/sim/nhi-system';
+import { NhiBigTreeSource } from '../src/sim/nhi-big-tree-source';
 import { World } from '../src/world';
 
 interface AuditEntry {
@@ -40,6 +41,7 @@ interface Harness {
   readonly minds: Set<number>;
   readonly targets: Map<number, Entity>;
   readonly gridInsertions: Entity[];
+  readonly treeSource: NhiBigTreeSource;
 }
 
 interface HarnessOptions {
@@ -96,6 +98,7 @@ function makeHarness(options: HarnessOptions = {}): Harness {
   const minds = new Set<number>();
   const targets = new Map<number, Entity>();
   const gridInsertions: Entity[] = [];
+  const treeSource = new NhiBigTreeSource(NHI_SYSTEM_MIND_CAP, () => true);
   const entities: FakeEntities = {
     list: [],
     morphLive: [0, 0, 0, 0],
@@ -181,6 +184,10 @@ function makeHarness(options: HarnessOptions = {}): Harness {
       has: (id: number) => bodyIds.has(id),
     },
     nhiEffectRng: options.effectRng ?? (() => 0.25),
+    bigTreeNhiSource: treeSource,
+    bigTreeFaunaVisitors: {
+      cancel: () => true,
+    },
     nhiEntities: forward,
     nhiIdsByEntity: reverse,
     nhiLiveScratch: [],
@@ -206,6 +213,7 @@ function makeHarness(options: HarnessOptions = {}): Harness {
     minds,
     targets,
     gridInsertions,
+    treeSource,
   };
 }
 
@@ -251,6 +259,7 @@ describe('World NHI production boundaries', () => {
     expect(harness.forward.size).toBe(0);
     expect(harness.reverse.size).toBe(0);
     expect(harness.targets.size).toBe(0);
+    expect(harness.treeSource.registeredCount).toBe(0);
     expect(harness.economyIds.size).toBe(0);
     expect(harness.bodyIds.size).toBe(0);
     expect(harness.entities.list).toHaveLength(0);
@@ -273,6 +282,9 @@ describe('World NHI production boundaries', () => {
         forwardMapAbsent: true,
         reverseMapAbsent: true,
         targetAbsent: true,
+        launchGraceAbsent: true,
+        treeSourceAbsent: true,
+        treeIntentAbsent: true,
         economyAbsent: true,
         bodyAbsent: true,
         entityAbsent: true,

@@ -94,7 +94,6 @@ function mockApex(x: number, y: number, z: number) {
   return {
     ate: 0,
     cleared: 0,
-    controlled: false,
     hunt: null as [number, number, number] | null,
     worldPosition(out: THREE.Vector3): THREE.Vector3 {
       return out.copy(pos);
@@ -108,9 +107,6 @@ function mockApex(x: number, y: number, z: number) {
     },
     eat(): void {
       this.ate++;
-    },
-    isBigTreeActorControlled(): boolean {
-      return this.controlled;
     },
   };
 }
@@ -234,25 +230,6 @@ describe('SuperHunt', () => {
     expect(hunt.stats().pending).toBe(1);
     expect(apex.ate).toBe(1);
     expect(callbacks).toBe(1);
-    hunt.dispose();
-  });
-
-  test('a Big Tree visitor cannot pursue or consume while the shared visit controller owns it', () => {
-    const ctx = makeCtx(24, 50);
-    const entities = new EntityManager(ctx);
-    const hunt = new SuperHunt(ctx);
-    const apex = mockApex(0, 10, 10);
-    apex.controlled = true;
-    const target = entities.spawn(new THREE.Vector3(0, 10, 10), 0) as Entity;
-
-    hunt.update([apex] as unknown as SuperBodySystem[], entities, 1, DT);
-
-    expect(entities.list).toEqual([target]);
-    expect(hunt.eaten).toBe(0);
-    expect(hunt.stats().pending).toBe(0);
-    expect(apex.ate).toBe(0);
-    expect(apex.hunt).toBeNull();
-    expect(apex.cleared).toBeGreaterThan(0);
     hunt.dispose();
   });
 

@@ -319,6 +319,7 @@ export class LeviathanSystem implements PortalCullable, DomeFeeder, BigTreeActor
     r2: number,
     t: number,
     onDeath: (x: number, y: number, z: number) => void,
+    protectedAt?: (x: number, z: number) => boolean,
   ): void {
     for (let k = this.portalDowned.length - 1; k >= 0; k--) {
       const d = this.portalDowned[k]!;
@@ -335,7 +336,7 @@ export class LeviathanSystem implements PortalCullable, DomeFeeder, BigTreeActor
       const p = lv.group.position;
       const dx = p.x - ax;
       const dz = p.z - az;
-      if (dx * dx + dz * dz <= r2) {
+      if (dx * dx + dz * dz <= r2 && protectedAt?.(p.x, p.z) !== true) {
         onDeath(p.x, p.y, p.z);
         lv.bigTreeControlled = false;
         lv.group.visible = false;

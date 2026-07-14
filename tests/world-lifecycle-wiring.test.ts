@@ -61,6 +61,8 @@ describe('World lifecycle wiring', () => {
     const liveBody = WORLD.slice(liveStart, liveEnd);
     expect(liveBody).toContain('this.economy.unregister(World.nhiEconomyId(id))');
     expect(liveBody).toContain('this.nhiBody.remove(id)');
+    expect(liveBody).toContain('this.bigTreeFaunaVisitors?.cancel(BIG_TREE_OWNER_NHI, id)');
+    expect(liveBody).toContain('this.bigTreeNhiSource?.unregister(id)');
     expect(liveBody).toContain("'retire-dead-economy'");
     expect(liveBody).toContain("'retire-dead-body'");
 
@@ -71,6 +73,7 @@ describe('World lifecycle wiring', () => {
       'this.economy.unregister(World.nhiEconomyId(id))',
       'this.nhiEntities.clear()',
       'this.nhiTargets.clear()',
+      'this.bigTreeNhiSource?.reset()',
       'this.nhi.clear()',
       "'clear-population-body'",
     ]) {
@@ -99,6 +102,7 @@ describe('World lifecycle wiring', () => {
     expect(body).not.toContain('this.uiRng()');
     expect(body).not.toContain('this.nhi.register(nid, this.rng)');
     expect(body).toContain('this.nhiIdsByEntity.set(e, nid);');
+    expect(body).toContain('this.bigTreeNhiSource?.register(nid, e)');
     expect(body).toContain('const nid = this.nhiNextId++;');
     expect(body).toContain('this.entities.discardSpawnAt(entityIndex)');
     expect(body).not.toContain('this.entities.dispose(e)');
@@ -108,6 +112,10 @@ describe('World lifecycle wiring', () => {
     expect(body).toContain('logicalRollbackPostconditions');
     expect(body).toContain("resourceCleanupStatus: 'best-effort-unverified'");
     expect(body).toContain('bodyAbsent: !this.nhiBody.has(nid)');
+    expect(body).toContain("'launch-rollback-tree-visit'");
+    expect(body).toContain("rollback('launch-rollback-tree-source'");
+    expect(body).toContain('treeSourceAbsent: !this.bigTreeNhiSource?.has(nid)');
+    expect(body).toContain('treeIntentAbsent: !this.bigTreeNhiSource?.hasIntent(nid)');
     expect(WORLD).toContain('const kin = this.grid.query(p.x, p.z, SOCIAL_NHI_KIN_R);');
     expect(WORLD).toContain('const oid = this.nhiIdsByEntity.get(oe);');
   });

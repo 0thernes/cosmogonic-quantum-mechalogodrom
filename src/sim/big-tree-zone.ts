@@ -59,6 +59,101 @@ export const BigTreeVisitState = {
 
 export type BigTreeVisitState = (typeof BigTreeVisitState)[keyof typeof BigTreeVisitState];
 
+export function bigTreeVisitStateName(state: BigTreeVisitState): string {
+  switch (state) {
+    case BigTreeVisitState.Travelling:
+      return 'travelling';
+    case BigTreeVisitState.Active:
+      return 'active';
+    case BigTreeVisitState.Leaving:
+      return 'leaving';
+    case BigTreeVisitState.Cooldown:
+      return 'cooldown';
+    case BigTreeVisitState.Outside:
+      return 'outside';
+  }
+}
+
+export function bigTreeVisitReasonName(reason: BigTreeVisitReason | 0): string {
+  switch (reason) {
+    case BigTreeVisitReason.Food:
+      return 'food';
+    case BigTreeVisitReason.Rest:
+      return 'rest';
+    case BigTreeVisitReason.Social:
+      return 'social';
+    case BigTreeVisitReason.Safety:
+      return 'safety';
+    case BigTreeVisitReason.Curiosity:
+      return 'curiosity';
+    default:
+      return 'none';
+  }
+}
+
+export function bigTreeActivityName(activity: BigTreeActivity): string {
+  switch (activity) {
+    case BigTreeActivity.Eat:
+      return 'eat';
+    case BigTreeActivity.Rest:
+      return 'rest';
+    case BigTreeActivity.Socialize:
+      return 'socialize';
+    case BigTreeActivity.Observe:
+      return 'observe';
+    case BigTreeActivity.None:
+      return 'none';
+  }
+}
+
+/** Last lifecycle event, retained for pull-only development diagnostics and deterministic save/load. */
+export const BigTreeTransitionCause = {
+  None: 0,
+  VisitRequested: 1,
+  Arrived: 2,
+  StuckRecovery: 3,
+  TravelTimeout: 4,
+  SlotLost: 5,
+  ActivityFinished: 6,
+  DwellComplete: 7,
+  LeftZone: 8,
+  LeaveTimeout: 9,
+  CooldownComplete: 10,
+  StuckTimeout: 11,
+} as const;
+
+export type BigTreeTransitionCause =
+  (typeof BigTreeTransitionCause)[keyof typeof BigTreeTransitionCause];
+
+export function bigTreeTransitionCauseName(cause: BigTreeTransitionCause): string {
+  switch (cause) {
+    case BigTreeTransitionCause.VisitRequested:
+      return 'visit-requested';
+    case BigTreeTransitionCause.Arrived:
+      return 'arrived';
+    case BigTreeTransitionCause.StuckRecovery:
+      return 'stuck-recovery';
+    case BigTreeTransitionCause.TravelTimeout:
+      return 'travel-timeout';
+    case BigTreeTransitionCause.SlotLost:
+      return 'slot-lost';
+    case BigTreeTransitionCause.ActivityFinished:
+      return 'activity-finished';
+    case BigTreeTransitionCause.DwellComplete:
+      return 'dwell-complete';
+    case BigTreeTransitionCause.LeftZone:
+      return 'left-zone';
+    case BigTreeTransitionCause.LeaveTimeout:
+      return 'leave-timeout';
+    case BigTreeTransitionCause.CooldownComplete:
+      return 'cooldown-complete';
+    case BigTreeTransitionCause.StuckTimeout:
+      return 'stuck-timeout';
+    default:
+      return 'none';
+  }
+}
+
 export interface BigTreeZoneConfig {
   centerX?: number;
   centerZ?: number;
@@ -157,9 +252,6 @@ export interface BigTreeVisitConfig {
   stuckAfterSeconds?: number;
   progressEpsilon?: number;
   maxStuckRecoveries?: number;
-  /** World seed folded into the per-actor dwell/cooldown/threshold hashes so visit rhythms vary
-   *  per cosmos. Default 0 preserves the seed-free legacy hash exactly. */
-  hashSeed?: number;
 }
 
 export interface BigTreeVisitView {
@@ -179,6 +271,10 @@ export interface BigTreeVisitView {
   partnerKind: number;
   partnerId: number;
   partnerLeaseExpiresAt: number;
+  /** Last identity-specific physical membership sample, using the outer exit boundary. */
+  insideZone: boolean;
+  lastTransitionCause: BigTreeTransitionCause;
+  lastTransitionAt: number;
 }
 
 export interface BigTreeSlotView {
@@ -224,7 +320,9 @@ export interface BigTreeVisitDecision {
 export interface BigTreeZoneStats {
   trackedActors: number;
   activeVisitors: number;
+  /** Maximum simultaneous travelling, active, or leaving visitors. */
   capacity: number;
+  /** Unreserved authored interaction positions; this can exceed the visitor-capacity ceiling. */
   availableSlots: number;
   completedVisits: number;
   timedOutVisits: number;
@@ -236,7 +334,10 @@ export interface BigTreeZoneStats {
   rejectedForNoSlot: number;
 }
 
-/** JSON-safe primitive state. Null deadlines represent an inactive timer. */
+/**
+ * JSON-safe primitive state. Null deadlines represent an inactive timer. Transition diagnostics
+ * are optional additive v1 fields so checkpoints created before observability was added still load.
+ */
 export interface BigTreeVisitorState {
   ownerKind: number;
   ownerId: number;
@@ -256,6 +357,9 @@ export interface BigTreeVisitorState {
   partnerKind: number;
   partnerId: number;
   partnerLeaseExpiresAt: number | null;
+  insideZone: boolean;
+  lastTransitionCause?: BigTreeTransitionCause;
+  lastTransitionAt?: number | null;
 }
 
 export interface BigTreeVisitManagerSnapshot {
@@ -290,12 +394,6 @@ export class BigTreeVisitManager {
   private readonly maxCooldownSeconds: number;
   private readonly travelTimeoutSeconds: number;
   private readonly leaveTimeoutSeconds: number;
-  private readonly hashSeedValue: number;
-
-  /** Authored travel deadline; adapters use it to reject visits the traveller cannot reach in time. */
-  get travelTimeout(): number {
-    return this.travelTimeoutSeconds;
-  }
   private readonly slotLeaseSeconds: number;
   private readonly stuckAfterSeconds: number;
   private readonly progressEpsilon: number;
@@ -319,6 +417,9 @@ export class BigTreeVisitManager {
   private readonly actorPartnerKinds: Int32Array;
   private readonly actorPartnerIds: Int32Array;
   private readonly actorPartnerDeadlines: Float64Array;
+  private readonly actorInsideZone: Uint8Array;
+  private readonly actorLastTransitionCauses: Uint8Array;
+  private readonly actorLastTransitionAt: Float64Array;
   /** O(1) identity lookup without constraining the public 31-bit owner namespaces. */
   private readonly actorRecordsByKind = new Map<number, Map<number, number>>();
   /** Dense deadline set: only travelling/active/leaving/cooldown actors are stepped each frame. */
@@ -348,6 +449,9 @@ export class BigTreeVisitManager {
   partnerTimeouts = 0;
   rejectedForCapacity = 0;
   rejectedForNoSlot = 0;
+  /** Shared adapters call with the same canonical timestamp; process that deadline epoch once. */
+  private lastSteppedAt = Number.NaN;
+  private processedStepCount = 0;
 
   constructor(zone: BigTreeZone, config: BigTreeVisitConfig) {
     if (
@@ -382,7 +486,6 @@ export class BigTreeVisitManager {
       'maxCooldownSeconds',
     );
     this.travelTimeoutSeconds = this.positive(config.travelTimeoutSeconds, 45);
-    this.hashSeedValue = Number.isFinite(config.hashSeed) ? config.hashSeed! >>> 0 : 0;
     this.leaveTimeoutSeconds = this.positive(config.leaveTimeoutSeconds, 20);
     this.slotLeaseSeconds = this.positive(config.slotLeaseSeconds, 6);
     this.stuckAfterSeconds = this.positive(config.stuckAfterSeconds, 4);
@@ -412,6 +515,9 @@ export class BigTreeVisitManager {
     this.actorPartnerKinds = new Int32Array(n);
     this.actorPartnerIds = new Int32Array(n);
     this.actorPartnerDeadlines = new Float64Array(n);
+    this.actorInsideZone = new Uint8Array(n);
+    this.actorLastTransitionCauses = new Uint8Array(n);
+    this.actorLastTransitionAt = new Float64Array(n);
     this.scheduledRecordIds = new Int32Array(n);
     this.scheduledRecordPositions = new Int32Array(n);
     this.freeRecordIds = new Int32Array(n);
@@ -424,6 +530,7 @@ export class BigTreeVisitManager {
     this.actorPartnerKinds.fill(NO_OWNER);
     this.actorPartnerIds.fill(NO_OWNER);
     this.actorPartnerDeadlines.fill(NO_DEADLINE);
+    this.actorLastTransitionAt.fill(NO_DEADLINE);
     this.scheduledRecordIds.fill(NO_BIG_TREE_VISIT);
     this.scheduledRecordPositions.fill(NO_BIG_TREE_VISIT);
     for (let index = 0; index < n; index++) this.freeRecordIds[index] = n - 1 - index;
@@ -450,6 +557,11 @@ export class BigTreeVisitManager {
 
   get slotCount(): number {
     return this.definedSlots;
+  }
+
+  /** Development/performance receipt: unique simulation-time deadline epochs actually processed. */
+  get deadlineSteps(): number {
+    return this.processedStepCount;
   }
 
   /** Author one collision-free approach/activity point inside the entry boundary. */
@@ -536,27 +648,44 @@ export class BigTreeVisitManager {
     const recentVisit = this.clamp01(context.recentVisit);
     const simulationLoad = this.clamp01(context.simulationLoad);
 
-    let reason: BigTreeVisitReason = BigTreeVisitReason.Food;
-    let best = context.foodAvailable ? hunger * 1.35 + healthDeficit * 0.1 : -1;
+    const food = context.foodAvailable ? hunger * 1.35 + healthDeficit * 0.1 : 0;
     const rest = fatigue * 1.05 + healthDeficit * 0.5 + stress * 0.2;
-    if (rest > best) {
-      best = rest;
-      reason = BigTreeVisitReason.Rest;
-    }
     const social = socialNeed * 1.05 + stress * 0.12;
-    if (social > best) {
-      best = social;
-      reason = BigTreeVisitReason.Social;
-    }
     const safety = danger * 1.5 + stress * 0.45 + healthDeficit * 0.2;
-    if (safety > best) {
-      best = safety;
-      reason = BigTreeVisitReason.Safety;
-    }
     const explore = curiosity * 0.7 + personality * 0.12;
-    if (explore > best) {
-      best = explore;
-      reason = BigTreeVisitReason.Curiosity;
+    const best = Math.max(food, rest, social, safety, explore);
+
+    // Select an activity probabilistically without mutable RNG state. Squaring each positive score
+    // preserves a strong preference for the most urgent need while leaving lower, non-zero needs a
+    // real chance. The actor identity and polling ordinal decorrelate otherwise identical visitors.
+    // Overall visit utility remains based on the strongest need, so a high-priority safety visit is
+    // not rejected merely because that visitor deterministically samples a secondary activity.
+    const foodWeight = food * food;
+    const restWeight = rest * rest;
+    const socialWeight = social * social;
+    const safetyWeight = safety * safety;
+    const exploreWeight = explore * explore;
+    const totalWeight = foodWeight + restWeight + socialWeight + safetyWeight + exploreWeight;
+    let reason: BigTreeVisitReason = BigTreeVisitReason.Curiosity;
+    if (totalWeight > 0) {
+      const selection = this.sampleRange(
+        ownerKind,
+        ownerId,
+        decisionOrdinal,
+        0x6d2b79f5,
+        0,
+        totalWeight,
+      );
+      let boundary = foodWeight;
+      if (selection < boundary) {
+        reason = BigTreeVisitReason.Food;
+      } else if (selection < (boundary += restWeight)) {
+        reason = BigTreeVisitReason.Rest;
+      } else if (selection < (boundary += socialWeight)) {
+        reason = BigTreeVisitReason.Social;
+      } else if (selection < (boundary += safetyWeight)) {
+        reason = BigTreeVisitReason.Safety;
+      }
     }
 
     const distanceFactor = 1 / (1 + context.distance / 600);
@@ -631,8 +760,14 @@ export class BigTreeVisitManager {
     if (recordId !== NO_BIG_TREE_VISIT) {
       const state = this.actorStates[recordId];
       if (state === BigTreeVisitState.Cooldown) {
-        if (now < (this.actorCooldownUntil[recordId] ?? NO_DEADLINE)) return NO_BIG_TREE_VISIT;
+        if (
+          now < (this.actorCooldownUntil[recordId] ?? NO_DEADLINE) ||
+          this.actorInsideZone[recordId] !== 0
+        ) {
+          return NO_BIG_TREE_VISIT;
+        }
         this.actorStates[recordId] = BigTreeVisitState.Outside;
+        this.recordTransition(recordId, BigTreeTransitionCause.CooldownComplete, now);
         this.unscheduleRecord(recordId);
       } else if (state !== BigTreeVisitState.Outside) {
         return NO_BIG_TREE_VISIT;
@@ -669,6 +804,8 @@ export class BigTreeVisitManager {
     this.actorLastProgressAt[recordId] = now;
     this.actorLastDistance[recordId] = this.distanceToSlot(slotId, x, z);
     this.actorStuckRecoveries[recordId] = 0;
+    this.actorInsideZone[recordId] = this.zone.contains(x, z, true) ? 1 : 0;
+    this.recordTransition(recordId, BigTreeTransitionCause.VisitRequested, now);
     this.scheduleRecord(recordId);
     this.occupancy++;
     return recordId;
@@ -696,15 +833,16 @@ export class BigTreeVisitManager {
     }
 
     const state = this.actorStates[recordId] as BigTreeVisitState;
+    this.actorInsideZone[recordId] = this.zone.contains(x, z, true) ? 1 : 0;
     if (state === BigTreeVisitState.Travelling) {
       if (now >= (this.actorStateDeadlines[recordId] ?? NO_DEADLINE)) {
         this.timedOutVisits++;
-        this.toCooldown(recordId, now);
+        this.toCooldown(recordId, now, BigTreeTransitionCause.TravelTimeout);
         return BigTreeVisitState.Cooldown;
       }
       const slotId = this.actorSlots[recordId] ?? NO_BIG_TREE_SLOT;
       if (!this.slotOwnedBy(slotId, ownerKind, ownerId)) {
-        this.toCooldown(recordId, now);
+        this.toCooldown(recordId, now, BigTreeTransitionCause.SlotLost);
         return BigTreeVisitState.Cooldown;
       }
       this.slotLeaseDeadlines[slotId] = now + this.slotLeaseSeconds;
@@ -724,6 +862,7 @@ export class BigTreeVisitManager {
             this.minDwellSeconds,
             this.maxDwellSeconds,
           );
+        this.recordTransition(recordId, BigTreeTransitionCause.Arrived, now);
         return BigTreeVisitState.Active;
       }
 
@@ -735,7 +874,7 @@ export class BigTreeVisitManager {
       } else if (now - (this.actorLastProgressAt[recordId] ?? now) >= this.stuckAfterSeconds) {
         if (!this.recoverStuck(recordId, x, z, now)) {
           this.timedOutVisits++;
-          this.toCooldown(recordId, now);
+          this.toCooldown(recordId, now, BigTreeTransitionCause.StuckTimeout);
           return BigTreeVisitState.Cooldown;
         }
       }
@@ -745,17 +884,17 @@ export class BigTreeVisitManager {
     if (state === BigTreeVisitState.Active) {
       if (!this.zone.contains(x, z, true)) {
         this.completedVisits++;
-        this.toCooldown(recordId, now);
+        this.toCooldown(recordId, now, BigTreeTransitionCause.LeftZone);
         return BigTreeVisitState.Cooldown;
       }
       const slotId = this.actorSlots[recordId] ?? NO_BIG_TREE_SLOT;
       if (!this.slotOwnedBy(slotId, ownerKind, ownerId)) {
-        this.toLeaving(recordId, now);
+        this.toLeaving(recordId, now, BigTreeTransitionCause.SlotLost);
         return BigTreeVisitState.Leaving;
       }
       this.slotLeaseDeadlines[slotId] = now + this.slotLeaseSeconds;
       if (now >= (this.actorStateDeadlines[recordId] ?? NO_DEADLINE)) {
-        this.toLeaving(recordId, now);
+        this.toLeaving(recordId, now, BigTreeTransitionCause.DwellComplete);
         return BigTreeVisitState.Leaving;
       }
       return BigTreeVisitState.Active;
@@ -764,12 +903,12 @@ export class BigTreeVisitManager {
     if (state === BigTreeVisitState.Leaving) {
       if (!this.zone.contains(x, z, true)) {
         this.completedVisits++;
-        this.toCooldown(recordId, now);
+        this.toCooldown(recordId, now, BigTreeTransitionCause.LeftZone);
         return BigTreeVisitState.Cooldown;
       }
       if (now >= (this.actorStateDeadlines[recordId] ?? NO_DEADLINE)) {
         this.forcedExitEvents++;
-        this.toCooldown(recordId, now);
+        this.toCooldown(recordId, now, BigTreeTransitionCause.LeaveTimeout);
         return BigTreeVisitState.Cooldown;
       }
       return BigTreeVisitState.Leaving;
@@ -777,9 +916,11 @@ export class BigTreeVisitManager {
 
     if (
       state === BigTreeVisitState.Cooldown &&
-      now >= (this.actorCooldownUntil[recordId] ?? NO_DEADLINE)
+      now >= (this.actorCooldownUntil[recordId] ?? NO_DEADLINE) &&
+      this.actorInsideZone[recordId] === 0
     ) {
       this.actorStates[recordId] = BigTreeVisitState.Outside;
+      this.recordTransition(recordId, BigTreeTransitionCause.CooldownComplete, now);
       return BigTreeVisitState.Outside;
     }
     return state;
@@ -795,7 +936,7 @@ export class BigTreeVisitManager {
     ) {
       return false;
     }
-    this.toLeaving(recordId, now);
+    this.toLeaving(recordId, now, BigTreeTransitionCause.ActivityFinished);
     return true;
   }
 
@@ -880,11 +1021,30 @@ export class BigTreeVisitManager {
   }
 
   /**
+   * Release one adapter/species namespace without disturbing actors owned by another adapter.
+   * Reset/genesis paths may call this outside the hot loop; iteration is bounded by that kind's
+   * tracked records rather than the global actor ceiling.
+   */
+  cancelOwnerKind(ownerKind: number): number {
+    if (!Number.isInteger(ownerKind) || ownerKind < 0) return 0;
+    const records = this.actorRecordsByKind.get(ownerKind);
+    if (!records) return 0;
+    let cancelled = 0;
+    for (const ownerId of records.keys()) {
+      if (this.cancelActor(ownerKind, ownerId)) cancelled++;
+    }
+    return cancelled;
+  }
+
+  /**
    * Advance hard deadlines and lease expiry without actor objects or allocation. Paused simulation
    * passes the same `now`, so no dwell, lease, exit, or cooldown time elapses while paused.
    */
   step(now: number): void {
     if (!Number.isFinite(now)) return;
+    if (now === this.lastSteppedAt) return;
+    this.lastSteppedAt = now;
+    this.processedStepCount++;
     let scheduledIndex = 0;
     while (scheduledIndex < this.scheduledRecordCount) {
       const recordId = this.scheduledRecordIds[scheduledIndex] ?? NO_BIG_TREE_VISIT;
@@ -903,29 +1063,49 @@ export class BigTreeVisitManager {
       const state = this.actorStates[recordId] as BigTreeVisitState;
       const slotId = this.actorSlots[recordId] ?? NO_BIG_TREE_SLOT;
       if (state === BigTreeVisitState.Travelling) {
+        const lifecycleExpired = now >= (this.actorStateDeadlines[recordId] ?? NO_DEADLINE);
         const leaseExpired =
           slotId === NO_BIG_TREE_SLOT || now >= (this.slotLeaseDeadlines[slotId] ?? NO_DEADLINE);
-        if (leaseExpired || now >= (this.actorStateDeadlines[recordId] ?? NO_DEADLINE)) {
+        if (lifecycleExpired || leaseExpired) {
           this.timedOutVisits++;
-          this.toCooldown(recordId, now);
+          this.toCooldown(
+            recordId,
+            now,
+            lifecycleExpired
+              ? BigTreeTransitionCause.TravelTimeout
+              : BigTreeTransitionCause.SlotLost,
+          );
         }
       } else if (state === BigTreeVisitState.Active) {
+        const lifecycleExpired = now >= (this.actorStateDeadlines[recordId] ?? NO_DEADLINE);
         const leaseExpired =
           slotId === NO_BIG_TREE_SLOT || now >= (this.slotLeaseDeadlines[slotId] ?? NO_DEADLINE);
-        if (leaseExpired || now >= (this.actorStateDeadlines[recordId] ?? NO_DEADLINE)) {
-          this.toLeaving(recordId, now);
+        if (lifecycleExpired || leaseExpired) {
+          this.toLeaving(
+            recordId,
+            now,
+            lifecycleExpired
+              ? BigTreeTransitionCause.DwellComplete
+              : BigTreeTransitionCause.SlotLost,
+          );
         }
       } else if (
         state === BigTreeVisitState.Leaving &&
         now >= (this.actorStateDeadlines[recordId] ?? NO_DEADLINE)
       ) {
         this.forcedExitEvents++;
-        this.toCooldown(recordId, now);
+        this.toCooldown(recordId, now, BigTreeTransitionCause.LeaveTimeout);
       } else if (
         state === BigTreeVisitState.Cooldown &&
         now >= (this.actorCooldownUntil[recordId] ?? NO_DEADLINE)
       ) {
-        this.actorStates[recordId] = BigTreeVisitState.Outside;
+        // A cooldown is time-bounded, but optional revisits also require a real boundary exit.
+        // Stop scheduling the elapsed timer; the owning adapter's staggered candidate sample will
+        // call updatePosition and release this record only after the body crosses the exit radius.
+        if (this.actorInsideZone[recordId] === 0) {
+          this.actorStates[recordId] = BigTreeVisitState.Outside;
+          this.recordTransition(recordId, BigTreeTransitionCause.CooldownComplete, now);
+        }
         this.unscheduleRecord(recordId);
         continue;
       } else if (state === BigTreeVisitState.Outside) {
@@ -967,6 +1147,8 @@ export class BigTreeVisitManager {
     this.partnerTimeouts = 0;
     this.rejectedForCapacity = 0;
     this.rejectedForNoSlot = 0;
+    this.lastSteppedAt = Number.NaN;
+    this.processedStepCount = 0;
   }
 
   stateOf(ownerKind: number, ownerId: number): BigTreeVisitState {
@@ -1003,6 +1185,9 @@ export class BigTreeVisitManager {
     out.partnerKind = this.actorPartnerKinds[recordId] ?? NO_OWNER;
     out.partnerId = this.actorPartnerIds[recordId] ?? NO_OWNER;
     out.partnerLeaseExpiresAt = this.actorPartnerDeadlines[recordId] ?? NO_DEADLINE;
+    out.insideZone = this.actorInsideZone[recordId] !== 0;
+    out.lastTransitionCause = this.actorLastTransitionCauses[recordId] as BigTreeTransitionCause;
+    out.lastTransitionAt = this.actorLastTransitionAt[recordId] ?? NO_DEADLINE;
     return true;
   }
 
@@ -1039,7 +1224,11 @@ export class BigTreeVisitManager {
     return true;
   }
 
-  /** Capture JSON-safe state for save/load, deterministic reset tests, and replay checkpoints. */
+  /**
+   * Capture manager-local JSON-safe state for deterministic tests and coordinated replay checkpoints.
+   * This is not a standalone World save: callers must pair it with the same simulation clock, authored
+   * slot/config layout, food registry, adapter bindings, and sanctuary membership history.
+   */
   snapshot(): BigTreeVisitManagerSnapshot {
     const visitors: BigTreeVisitorState[] = [];
     for (let recordId = 0; recordId < this.maxActors; recordId++) {
@@ -1065,6 +1254,9 @@ export class BigTreeVisitManager {
         partnerKind: this.actorPartnerKinds[recordId] ?? NO_OWNER,
         partnerId: this.actorPartnerIds[recordId] ?? NO_OWNER,
         partnerLeaseExpiresAt: this.finiteDeadline(this.actorPartnerDeadlines[recordId]),
+        insideZone: this.actorInsideZone[recordId] !== 0,
+        lastTransitionCause: this.actorLastTransitionCauses[recordId] as BigTreeTransitionCause,
+        lastTransitionAt: this.finiteDeadline(this.actorLastTransitionAt[recordId]),
       });
     }
     return {
@@ -1119,6 +1311,12 @@ export class BigTreeVisitManager {
             partner.partnerId === visitor.ownerId &&
             partner.partnerLeaseExpiresAt === visitor.partnerLeaseExpiresAt
           ) {
+            if (
+              visitor.activity !== BigTreeActivity.Socialize &&
+              partner.activity !== BigTreeActivity.Socialize
+            ) {
+              throw new RangeError('Big Tree partner reservation requires a social visitor');
+            }
             reciprocal = true;
             if (
               visitor.ownerKind < partner.ownerKind ||
@@ -1155,6 +1353,10 @@ export class BigTreeVisitManager {
       this.actorPartnerKinds[recordId] = visitor.partnerKind;
       this.actorPartnerIds[recordId] = visitor.partnerId;
       this.actorPartnerDeadlines[recordId] = this.restoreDeadline(visitor.partnerLeaseExpiresAt);
+      this.actorInsideZone[recordId] = visitor.insideZone ? 1 : 0;
+      this.actorLastTransitionCauses[recordId] =
+        visitor.lastTransitionCause ?? BigTreeTransitionCause.None;
+      this.actorLastTransitionAt[recordId] = this.restoreDeadline(visitor.lastTransitionAt ?? null);
       if (visitor.state !== BigTreeVisitState.Outside) this.scheduleRecord(recordId);
       if (visitor.slotId !== NO_BIG_TREE_SLOT) {
         this.slotOwnerKinds[visitor.slotId] = visitor.ownerKind;
@@ -1189,17 +1391,19 @@ export class BigTreeVisitManager {
     this.actorLastProgressAt[recordId] = now;
     this.actorStuckRecoveries[recordId] = recoveries + 1;
     this.stuckRecoveryEvents++;
+    this.recordTransition(recordId, BigTreeTransitionCause.StuckRecovery, now);
     return true;
   }
 
-  private toLeaving(recordId: number, now: number): void {
+  private toLeaving(recordId: number, now: number, cause: BigTreeTransitionCause): void {
     this.releaseActorPartner(recordId);
     this.releaseActorSlot(recordId);
     this.actorStates[recordId] = BigTreeVisitState.Leaving;
     this.actorStateDeadlines[recordId] = now + this.leaveTimeoutSeconds;
+    this.recordTransition(recordId, cause, now);
   }
 
-  private toCooldown(recordId: number, now: number): void {
+  private toCooldown(recordId: number, now: number, cause: BigTreeTransitionCause): void {
     const previous = this.actorStates[recordId] as BigTreeVisitState;
     if (this.isOccupying(previous)) this.occupancy--;
     this.releaseActorPartner(recordId);
@@ -1218,6 +1422,12 @@ export class BigTreeVisitManager {
     this.scheduleRecord(recordId);
     this.actorCooldownUntil[recordId] = now + duration;
     this.actorStateDeadlines[recordId] = this.actorCooldownUntil[recordId] ?? NO_DEADLINE;
+    this.recordTransition(recordId, cause, now);
+  }
+
+  private recordTransition(recordId: number, cause: BigTreeTransitionCause, now: number): void {
+    this.actorLastTransitionCauses[recordId] = cause;
+    this.actorLastTransitionAt[recordId] = now;
   }
 
   private acquireActorRecord(ownerKind: number, ownerId: number): number {
@@ -1229,6 +1439,8 @@ export class BigTreeVisitManager {
     this.actorOwnerIds[recordId] = ownerId;
     this.actorStates[recordId] = BigTreeVisitState.Outside;
     this.actorVisitOrdinals[recordId] = 0;
+    this.actorLastTransitionCauses[recordId] = BigTreeTransitionCause.None;
+    this.actorLastTransitionAt[recordId] = NO_DEADLINE;
     let records = this.actorRecordsByKind.get(ownerKind);
     if (records === undefined) {
       records = new Map<number, number>();
@@ -1267,6 +1479,9 @@ export class BigTreeVisitManager {
     this.actorPartnerKinds[recordId] = NO_OWNER;
     this.actorPartnerIds[recordId] = NO_OWNER;
     this.actorPartnerDeadlines[recordId] = NO_DEADLINE;
+    this.actorInsideZone[recordId] = 0;
+    this.actorLastTransitionCauses[recordId] = BigTreeTransitionCause.None;
+    this.actorLastTransitionAt[recordId] = NO_DEADLINE;
     if (wasUsed) this.freeRecordIds[this.freeRecordCount++] = recordId;
   }
 
@@ -1452,7 +1667,7 @@ export class BigTreeVisitManager {
     maximum: number,
   ): number {
     if (maximum <= minimum) return minimum;
-    let hash = (salt ^ this.hashSeedValue ^ Math.imul(ownerKind + 1, 0x85ebca6b)) >>> 0;
+    let hash = (salt ^ Math.imul(ownerKind + 1, 0x85ebca6b)) >>> 0;
     hash = Math.imul(hash ^ ownerId, 0xc2b2ae35) >>> 0;
     hash = Math.imul(hash ^ ordinal, 0x27d4eb2d) >>> 0;
     hash ^= hash >>> 15;
@@ -1507,6 +1722,24 @@ export class BigTreeVisitManager {
     if (visitor.reason !== 0 && !this.validReason(visitor.reason)) {
       throw new RangeError('Big Tree snapshot contains an invalid visit reason');
     }
+    if (typeof visitor.insideZone !== 'boolean') {
+      throw new RangeError('Big Tree snapshot contains invalid boundary membership');
+    }
+    const transitionCause = visitor.lastTransitionCause ?? BigTreeTransitionCause.None;
+    const transitionAt = visitor.lastTransitionAt ?? null;
+    if (
+      !Number.isInteger(transitionCause) ||
+      transitionCause < BigTreeTransitionCause.None ||
+      transitionCause > BigTreeTransitionCause.StuckTimeout
+    ) {
+      throw new RangeError('Big Tree snapshot contains an invalid transition cause');
+    }
+    if (
+      (transitionCause === BigTreeTransitionCause.None && transitionAt !== null) ||
+      (transitionCause !== BigTreeTransitionCause.None && transitionAt === null)
+    ) {
+      throw new RangeError('Big Tree snapshot transition cause and timestamp must agree');
+    }
     const needsSlot =
       visitor.state === BigTreeVisitState.Travelling || visitor.state === BigTreeVisitState.Active;
     if (
@@ -1537,18 +1770,44 @@ export class BigTreeVisitManager {
     this.validateOptionalFinite(visitor.lastDistance, 'lastDistance');
     this.validateOptionalFinite(visitor.slotLeaseExpiresAt, 'slotLeaseExpiresAt');
     this.validateOptionalFinite(visitor.partnerLeaseExpiresAt, 'partnerLeaseExpiresAt');
+    this.validateOptionalFinite(transitionAt, 'lastTransitionAt');
     if (visitor.lastDistance !== null && visitor.lastDistance < 0) {
       throw new RangeError('Big Tree snapshot lastDistance must be non-negative');
     }
     if (needsSlot && visitor.slotLeaseExpiresAt === null) {
       throw new RangeError('Big Tree active slot must have a finite lease');
     }
+    if (
+      (visitor.state === BigTreeVisitState.Travelling ||
+        visitor.state === BigTreeVisitState.Active ||
+        visitor.state === BigTreeVisitState.Leaving) &&
+      visitor.stateDeadline === null
+    ) {
+      throw new RangeError('Big Tree active lifecycle state must have a finite deadline');
+    }
+    if (
+      visitor.state === BigTreeVisitState.Active &&
+      (visitor.enteredAt === null || visitor.enteredAt > visitor.stateDeadline!)
+    ) {
+      throw new RangeError('Big Tree active visit must have a valid entry time');
+    }
+    if (
+      visitor.state === BigTreeVisitState.Cooldown &&
+      (visitor.cooldownUntil === null ||
+        visitor.stateDeadline === null ||
+        visitor.cooldownUntil !== visitor.stateDeadline)
+    ) {
+      throw new RangeError('Big Tree cooldown must have one finite matching deadline');
+    }
     const hasPartner = visitor.partnerKind !== NO_OWNER || visitor.partnerId !== NO_OWNER;
     if (
       hasPartner &&
       (!this.validOwner(visitor.partnerKind, visitor.partnerId) ||
+        (visitor.partnerKind === visitor.ownerKind && visitor.partnerId === visitor.ownerId) ||
         visitor.partnerLeaseExpiresAt === null ||
-        visitor.state !== BigTreeVisitState.Active)
+        visitor.state !== BigTreeVisitState.Active ||
+        (visitor.activity !== BigTreeActivity.Socialize &&
+          visitor.activity !== BigTreeActivity.Observe))
     ) {
       throw new RangeError('Big Tree snapshot contains an invalid partner reservation');
     }

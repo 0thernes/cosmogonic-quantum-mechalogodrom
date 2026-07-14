@@ -253,10 +253,6 @@ function assertOwner(ownerId: number): void {
 export class EdibleResourceRegistry {
   private readonly items: MutableEdibleResource[];
   private readonly indexById: ReadonlyMap<number, number>;
-  /** ownerId → indices of live reserved/consuming claims; keeps releaseOwner O(claims held). */
-  private readonly ownerClaims = new Map<number, Set<number>>();
-  /** Reused scratch for restore failures deferred within one update() drain. */
-  private readonly restoreDeferred: number[] = [];
   private readonly lifecycle: EdibleResourceVisualLifecycle;
   private readonly freePrevious: Int32Array;
   private readonly freeNext: Int32Array;
@@ -266,6 +262,8 @@ export class EdibleResourceRegistry {
   private readonly counts = new Int32Array(4);
   private readonly leaseHeap: IndexedMinHeap;
   private readonly respawnHeap: IndexedMinHeap;
+  /** Caller-update-local restore failures, preallocated so one bad visual cannot block later items. */
+  private readonly restoreRetryIndexes: Int32Array;
   private lifecycleErrorCount = 0;
 
   constructor(
@@ -281,6 +279,8 @@ export class EdibleResourceRegistry {
     this.freeNext = new Int32Array(definitions.length);
     this.freeNext.fill(-1);
     this.freeListed = new Uint8Array(definitions.length);
+    this.restoreRetryIndexes = new Int32Array(definitions.length);
+    this.restoreRetryIndexes.fill(-1);
     this.freeHead.fill(-1);
     this.freeTail.fill(-1);
 
@@ -438,7 +438,6 @@ export class EdibleResourceRegistry {
     }
 
     this.leaseHeap.remove(index);
-    this.untrackClaim(resource.ownerId, index);
     resource.ownerId = null;
     resource.leaseUntil = 0;
     resource.respawnAt = now + EDIBLE_RESOURCE_RESPAWN_SECONDS;
@@ -464,17 +463,12 @@ export class EdibleResourceRegistry {
 
   /**
    * Releases every reservation owned by an entity. Call this for goal cancellation, death, or
-   * despawn. O(claims held) via the owner-claims index — safe on the global entity-death hook,
-   * which fires for owners that never reserved anything (the common case returns in O(1)).
+   * despawn. The bounded scan is intentionally off the per-frame path.
    */
   releaseOwner(ownerId: number): number {
     assertOwner(ownerId);
-    const claims = this.ownerClaims.get(ownerId);
-    if (claims === undefined || claims.size === 0) return 0;
     let released = 0;
-    // Iterating the live set is safe: JS Set iterators skip entries deleted mid-iteration, and
-    // makeAvailable→untrackClaim only deletes the entry currently being visited.
-    for (const index of claims) {
+    for (let index = 0; index < this.items.length; index++) {
       const resource = this.items[index]!;
       if (
         resource.ownerId === ownerId &&
@@ -495,6 +489,7 @@ export class EdibleResourceRegistry {
     assertFiniteAtLeast('now', now, 0);
     this.expireLeases(now);
     let restored = 0;
+    let retryCount = 0;
     for (;;) {
       const index = this.respawnHeap.peek();
       if (index < 0) break;
@@ -504,18 +499,21 @@ export class EdibleResourceRegistry {
       if (resource.state !== 'respawning') continue;
 
       if (!this.notify('restore', resource)) {
-        // The visual/collision resource is not ready, so it must not become edible yet. Defer it
-        // locally and keep draining — one failed restore must never head-of-line block other due
-        // items (including the other kind's pool bridged through the same callback pair).
-        this.restoreDeferred.push(index);
+        // The visual/collision resource is not ready, so it must not become edible yet.
+        // Defer reinsertion until every other due record has had one chance this call; otherwise the
+        // same earliest failing ID would remain the heap head and starve all later restorations.
+        this.restoreRetryIndexes[retryCount++] = index;
         continue;
       }
       this.makeAvailable(index);
       restored++;
     }
-    if (this.restoreDeferred.length > 0) {
-      for (const index of this.restoreDeferred) this.respawnHeap.insert(index);
-      this.restoreDeferred.length = 0;
+    for (let retry = 0; retry < retryCount; retry++) {
+      const index = this.restoreRetryIndexes[retry]!;
+      this.restoreRetryIndexes[retry] = -1;
+      if (!this.respawnHeap.insert(index)) {
+        throw new Error(`resource ${this.items[index]!.id} already has a respawn deadline`);
+      }
     }
     return restored;
   }
@@ -528,8 +526,6 @@ export class EdibleResourceRegistry {
     assertFiniteAtLeast('now', now, 0);
     this.leaseHeap.clear();
     this.respawnHeap.clear();
-    this.ownerClaims.clear();
-    this.restoreDeferred.length = 0;
     this.freePrevious.fill(-1);
     this.freeNext.fill(-1);
     this.freeListed.fill(0);
@@ -613,7 +609,6 @@ export class EdibleResourceRegistry {
     const resource = this.items[index]!;
     this.removeFree(index);
     resource.ownerId = ownerId;
-    this.trackClaim(ownerId, index);
     resource.leaseUntil = leaseUntil;
     resource.respawnAt = 0;
     this.transition(resource, 'reserved');
@@ -626,23 +621,6 @@ export class EdibleResourceRegistry {
       ownerId,
       leaseUntil,
     };
-  }
-
-  private trackClaim(ownerId: number, index: number): void {
-    let claims = this.ownerClaims.get(ownerId);
-    if (claims === undefined) {
-      claims = new Set();
-      this.ownerClaims.set(ownerId, claims);
-    }
-    claims.add(index);
-  }
-
-  private untrackClaim(ownerId: number | null, index: number): void {
-    if (ownerId === null) return;
-    const claims = this.ownerClaims.get(ownerId);
-    if (claims === undefined) return;
-    claims.delete(index);
-    if (claims.size === 0) this.ownerClaims.delete(ownerId);
   }
 
   private matchesOwnedActive(
@@ -684,7 +662,6 @@ export class EdibleResourceRegistry {
   private makeAvailable(index: number): void {
     const resource = this.items[index]!;
     this.transition(resource, 'available');
-    this.untrackClaim(resource.ownerId, index);
     resource.ownerId = null;
     resource.leaseUntil = 0;
     resource.respawnAt = 0;

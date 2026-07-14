@@ -4,12 +4,14 @@ import {
   BIG_TREE_ZONE_EXIT_RADIUS,
   BigTreeActivity,
   BigTreeSlotKind,
+  BigTreeTransitionCause,
   BigTreeVisitManager,
   BigTreeVisitReason,
   BigTreeVisitState,
   BigTreeZone,
   NO_BIG_TREE_SLOT,
   NO_BIG_TREE_VISIT,
+  bigTreeTransitionCauseName,
   type BigTreeSlotView,
   type BigTreeVisitContext,
   type BigTreeVisitDecision,
@@ -56,6 +58,9 @@ function emptyVisit(): BigTreeVisitView {
     partnerKind: -1,
     partnerId: -1,
     partnerLeaseExpiresAt: 0,
+    insideZone: false,
+    lastTransitionCause: BigTreeTransitionCause.None,
+    lastTransitionAt: 0,
   };
 }
 
@@ -137,6 +142,78 @@ describe('BigTreeVisitManager', () => {
     expect(visitId).not.toBe(NO_BIG_TREE_VISIT);
   });
 
+  test('samples varied visit reasons deterministically while high danger remains the dominant weight', () => {
+    const visits = createManager(2);
+    const context: BigTreeVisitContext = {
+      hunger: 0.7,
+      fatigue: 0.5,
+      healthDeficit: 0.2,
+      stress: 0.5,
+      socialNeed: 0.6,
+      curiosity: 0.7,
+      danger: 1,
+      distance: 80,
+      routeAvailable: true,
+      foodAvailable: true,
+      recentVisit: 0,
+      personality: 0.5,
+      simulationLoad: 0,
+    };
+    const first = [0, 0, 0, 0, 0, 0];
+    const repeat = [0, 0, 0, 0, 0, 0];
+    const decision = emptyDecision();
+
+    for (let ownerId = 0; ownerId < 2_048; ownerId++) {
+      expect(visits.decideVisit(3, ownerId, 11, context, decision)).toBe(true);
+      first[decision.reason] = (first[decision.reason] ?? 0) + 1;
+    }
+    for (let ownerId = 0; ownerId < 2_048; ownerId++) {
+      expect(visits.decideVisit(3, ownerId, 11, context, decision)).toBe(true);
+      repeat[decision.reason] = (repeat[decision.reason] ?? 0) + 1;
+    }
+
+    expect(repeat).toEqual(first);
+    expect(first[BigTreeVisitReason.Food] ?? 0).toBeGreaterThan(0);
+    expect(first[BigTreeVisitReason.Rest] ?? 0).toBeGreaterThan(0);
+    expect(first[BigTreeVisitReason.Social] ?? 0).toBeGreaterThan(0);
+    expect(first[BigTreeVisitReason.Curiosity] ?? 0).toBeGreaterThan(0);
+    expect(first[BigTreeVisitReason.Safety] ?? 0).toBeGreaterThan(
+      first[BigTreeVisitReason.Food] ?? 0,
+    );
+    expect(first[BigTreeVisitReason.Safety] ?? 0).toBeGreaterThan(
+      first[BigTreeVisitReason.Rest] ?? 0,
+    );
+    expect(first[BigTreeVisitReason.Safety] ?? 0).toBeGreaterThan(
+      first[BigTreeVisitReason.Social] ?? 0,
+    );
+    expect(first[BigTreeVisitReason.Safety] ?? 0).toBeGreaterThan(
+      first[BigTreeVisitReason.Curiosity] ?? 0,
+    );
+  });
+
+  test('changes the deterministic weighted reason across polling ordinals', () => {
+    const visits = createManager(2);
+    const context: BigTreeVisitContext = {
+      ...HUNGRY_CONTEXT,
+      hunger: 0.65,
+      fatigue: 0.65,
+      socialNeed: 0.65,
+      curiosity: 0.65,
+      danger: 0.65,
+    };
+    const decision = emptyDecision();
+    let firstReason = 0;
+    let changed = false;
+
+    for (let ordinal = 0; ordinal < 64; ordinal++) {
+      expect(visits.decideVisit(5, 19, ordinal, context, decision)).toBe(true);
+      if (ordinal === 0) firstReason = decision.reason;
+      else if (decision.reason !== firstReason) changed = true;
+    }
+
+    expect(changed).toBe(true);
+  });
+
   test('reserves compatible distinct slots and enforces zone capacity', () => {
     const visits = createManager(2);
     const eatA = visits.addSlot(BigTreeSlotKind.Eat, -4, 0);
@@ -161,6 +238,28 @@ describe('BigTreeVisitManager', () => {
     );
   });
 
+  test('namespace cleanup removes only the requested owner kind', () => {
+    const visits = createManager(4);
+    visits.addRadialSlots(BigTreeSlotKind.Eat, 4, 8);
+    expect(visits.requestVisit(1, 10, BigTreeVisitReason.Food, 0, -15, 0)).not.toBe(
+      NO_BIG_TREE_VISIT,
+    );
+    expect(visits.requestVisit(1, 11, BigTreeVisitReason.Food, 0, 15, 0)).not.toBe(
+      NO_BIG_TREE_VISIT,
+    );
+    expect(visits.requestVisit(2, 20, BigTreeVisitReason.Food, 0, 0, -15)).not.toBe(
+      NO_BIG_TREE_VISIT,
+    );
+
+    expect(visits.cancelOwnerKind(1)).toBe(2);
+    expect(visits.stateOf(1, 10)).toBe(BigTreeVisitState.Outside);
+    expect(visits.stateOf(1, 11)).toBe(BigTreeVisitState.Outside);
+    expect(visits.stateOf(2, 20)).toBe(BigTreeVisitState.Travelling);
+    expect(visits.trackedActors).toBe(1);
+    expect(visits.activeVisitors).toBe(1);
+    expect(visits.cancelOwnerKind(1)).toBe(0);
+  });
+
   test('runs a bounded travel, activity, leave, cooldown, and revisit lifecycle', () => {
     const visits = createManager(1);
     const slot = visits.addSlot(BigTreeSlotKind.Eat, 0, 0);
@@ -177,8 +276,14 @@ describe('BigTreeVisitManager', () => {
     expect(visits.stateOf(2, 7)).toBe(BigTreeVisitState.Active);
     visits.step(2);
     expect(visits.stateOf(2, 7)).toBe(BigTreeVisitState.Leaving);
+    expect(visits.readVisit(2, 7, view)).toBe(true);
+    expect(view.lastTransitionCause).toBe(BigTreeTransitionCause.DwellComplete);
+    expect(view.lastTransitionAt).toBe(2);
     expect(visits.selectedSlotOf(2, 7)).toBe(NO_BIG_TREE_SLOT);
     expect(visits.updatePosition(2, 7, 30, 0, 2.1)).toBe(BigTreeVisitState.Cooldown);
+    expect(visits.readVisit(2, 7, view)).toBe(true);
+    expect(view.lastTransitionCause).toBe(BigTreeTransitionCause.LeftZone);
+    expect(view.lastTransitionAt).toBe(2.1);
     expect(visits.activeVisitors).toBe(0);
     expect(visits.completedVisits).toBe(1);
 
@@ -189,7 +294,179 @@ describe('BigTreeVisitManager', () => {
     );
     visits.step(7.1);
     expect(visits.stateOf(2, 7)).toBe(BigTreeVisitState.Outside);
+    expect(visits.readVisit(2, 7, view)).toBe(true);
+    expect(view.lastTransitionCause).toBe(BigTreeTransitionCause.CooldownComplete);
+    expect(view.lastTransitionAt).toBe(7.1);
     expect(visits.requestVisit(2, 7, BigTreeVisitReason.Food, 7.1, 30, 0)).not.toBe(
+      NO_BIG_TREE_VISIT,
+    );
+  });
+
+  test('retains deterministic lifecycle transition causes through snapshot restore', () => {
+    const visits = createManager(1);
+    visits.addSlot(BigTreeSlotKind.Rest, 0, 0);
+    const view = emptyVisit();
+
+    expect(visits.requestVisit(9, 4, BigTreeVisitReason.Rest, 10, 5, 0)).not.toBe(
+      NO_BIG_TREE_VISIT,
+    );
+    expect(visits.readVisit(9, 4, view)).toBe(true);
+    expect(view.lastTransitionCause).toBe(BigTreeTransitionCause.VisitRequested);
+    expect(view.lastTransitionAt).toBe(10);
+
+    expect(visits.updatePosition(9, 4, 0, 0, 10.25)).toBe(BigTreeVisitState.Active);
+    expect(visits.readVisit(9, 4, view)).toBe(true);
+    expect(view.lastTransitionCause).toBe(BigTreeTransitionCause.Arrived);
+    expect(bigTreeTransitionCauseName(view.lastTransitionCause)).toBe('arrived');
+    expect(view.lastTransitionAt).toBe(10.25);
+
+    expect(visits.finishActivity(9, 4, 10.5)).toBe(true);
+    expect(visits.readVisit(9, 4, view)).toBe(true);
+    expect(view.lastTransitionCause).toBe(BigTreeTransitionCause.ActivityFinished);
+    expect(view.lastTransitionAt).toBe(10.5);
+
+    const restored = createManager(1);
+    restored.addSlot(BigTreeSlotKind.Rest, 0, 0);
+    restored.restore(visits.snapshot());
+    expect(restored.readVisit(9, 4, view)).toBe(true);
+    expect(view.lastTransitionCause).toBe(BigTreeTransitionCause.ActivityFinished);
+    expect(view.lastTransitionAt).toBe(10.5);
+
+    const legacy = visits.snapshot();
+    delete legacy.visitors[0]!.lastTransitionCause;
+    delete legacy.visitors[0]!.lastTransitionAt;
+    restored.restore(legacy);
+    expect(restored.readVisit(9, 4, view)).toBe(true);
+    expect(view.lastTransitionCause).toBe(BigTreeTransitionCause.None);
+    expect(view.lastTransitionAt).toBe(Number.POSITIVE_INFINITY);
+
+    const inconsistent = visits.snapshot();
+    inconsistent.visitors[0]!.lastTransitionCause = BigTreeTransitionCause.None;
+    expect(() => restored.restore(inconsistent)).toThrow(/cause and timestamp must agree/);
+  });
+
+  test('rejects restored lifecycle states that could live without a hard deadline', () => {
+    const source = createManager(1);
+    source.addSlot(BigTreeSlotKind.Rest, 0, 0);
+    expect(source.requestVisit(13, 1, BigTreeVisitReason.Rest, 0, 10, 0)).not.toBe(
+      NO_BIG_TREE_VISIT,
+    );
+
+    const restored = createManager(1);
+    restored.addSlot(BigTreeSlotKind.Rest, 0, 0);
+    const pristine = JSON.stringify(restored.snapshot());
+
+    const travelling = source.snapshot();
+    travelling.visitors[0]!.stateDeadline = null;
+    expect(() => restored.restore(travelling)).toThrow(/finite deadline/);
+
+    expect(source.updatePosition(13, 1, 0, 0, 0.1)).toBe(BigTreeVisitState.Active);
+    const active = source.snapshot();
+    active.visitors[0]!.stateDeadline = null;
+    expect(() => restored.restore(active)).toThrow(/finite deadline/);
+    const missingEntry = source.snapshot();
+    missingEntry.visitors[0]!.enteredAt = null;
+    expect(() => restored.restore(missingEntry)).toThrow(/valid entry time/);
+
+    expect(source.finishActivity(13, 1, 0.2)).toBe(true);
+    const leaving = source.snapshot();
+    leaving.visitors[0]!.stateDeadline = null;
+    expect(() => restored.restore(leaving)).toThrow(/finite deadline/);
+
+    expect(source.updatePosition(13, 1, 26, 0, 0.3)).toBe(BigTreeVisitState.Cooldown);
+    const cooldown = source.snapshot();
+    cooldown.visitors[0]!.cooldownUntil = null;
+    expect(() => restored.restore(cooldown)).toThrow(/cooldown.*finite matching deadline/i);
+    const mismatchedCooldown = source.snapshot();
+    mismatchedCooldown.visitors[0]!.stateDeadline! += 1;
+    expect(() => restored.restore(mismatchedCooldown)).toThrow(
+      /cooldown.*finite matching deadline/i,
+    );
+
+    expect(JSON.stringify(restored.snapshot())).toBe(pristine);
+  });
+
+  test('rejects self-partnered and non-social restored interactions', () => {
+    const source = createManager(2);
+    source.addSlot(BigTreeSlotKind.Socialize, -2, 0);
+    source.addSlot(BigTreeSlotKind.Rest, 2, 0);
+    expect(source.requestVisit(14, 1, BigTreeVisitReason.Social, 0, -2, 0)).not.toBe(
+      NO_BIG_TREE_VISIT,
+    );
+    expect(source.updatePosition(14, 1, -2, 0, 0)).toBe(BigTreeVisitState.Active);
+
+    const restored = createManager(2);
+    restored.addSlot(BigTreeSlotKind.Socialize, -2, 0);
+    restored.addSlot(BigTreeSlotKind.Rest, 2, 0);
+    const selfPartner = source.snapshot();
+    selfPartner.visitors[0]!.partnerKind = 14;
+    selfPartner.visitors[0]!.partnerId = 1;
+    selfPartner.visitors[0]!.partnerLeaseExpiresAt = 2;
+    expect(() => restored.restore(selfPartner)).toThrow(/invalid partner reservation/);
+
+    expect(source.requestVisit(14, 2, BigTreeVisitReason.Rest, 0, 2, 0)).not.toBe(
+      NO_BIG_TREE_VISIT,
+    );
+    expect(source.updatePosition(14, 2, 2, 0, 0)).toBe(BigTreeVisitState.Active);
+    const nonSocial = source.snapshot();
+    nonSocial.visitors[0]!.partnerKind = 14;
+    nonSocial.visitors[0]!.partnerId = 2;
+    nonSocial.visitors[0]!.partnerLeaseExpiresAt = 2;
+    nonSocial.visitors[1]!.partnerKind = 14;
+    nonSocial.visitors[1]!.partnerId = 1;
+    nonSocial.visitors[1]!.partnerLeaseExpiresAt = 2;
+    expect(() => restored.restore(nonSocial)).toThrow(/invalid partner reservation/);
+  });
+
+  test('uses lifecycle expiry as the deterministic tie-breaker for coincident deadlines', () => {
+    const zone = new BigTreeZone({ centerX: 0, centerZ: 0, enterRadius: 20, exitRadius: 25 });
+    const createTiedManager = () => {
+      const manager = new BigTreeVisitManager(zone, {
+        maxActors: 2,
+        capacity: 1,
+        maxSlots: 1,
+        travelTimeoutSeconds: 1,
+        slotLeaseSeconds: 1,
+      });
+      manager.addSlot(BigTreeSlotKind.Rest, 0, 0);
+      return manager;
+    };
+    const stepped = createTiedManager();
+    const positioned = createTiedManager();
+    const view = emptyVisit();
+    expect(stepped.requestVisit(12, 1, BigTreeVisitReason.Rest, 0, 10, 0)).not.toBe(
+      NO_BIG_TREE_VISIT,
+    );
+    expect(positioned.requestVisit(12, 1, BigTreeVisitReason.Rest, 0, 10, 0)).not.toBe(
+      NO_BIG_TREE_VISIT,
+    );
+
+    stepped.step(1);
+    expect(positioned.updatePosition(12, 1, 10, 0, 1)).toBe(BigTreeVisitState.Cooldown);
+    expect(stepped.readVisit(12, 1, view)).toBe(true);
+    expect(view.lastTransitionCause).toBe(BigTreeTransitionCause.TravelTimeout);
+    expect(positioned.readVisit(12, 1, view)).toBe(true);
+    expect(view.lastTransitionCause).toBe(BigTreeTransitionCause.TravelTimeout);
+  });
+
+  test('forced leave timeout cannot become an in-zone camping revisit after cooldown', () => {
+    const visits = createManager(1);
+    visits.addSlot(BigTreeSlotKind.Rest, 0, 0);
+    expect(visits.requestVisit(8, 12, BigTreeVisitReason.Rest, 0, 0, 0)).not.toBe(
+      NO_BIG_TREE_VISIT,
+    );
+    expect(visits.updatePosition(8, 12, 0, 0, 0)).toBe(BigTreeVisitState.Active);
+    visits.step(2);
+    expect(visits.stateOf(8, 12)).toBe(BigTreeVisitState.Leaving);
+    visits.step(5);
+    expect(visits.stateOf(8, 12)).toBe(BigTreeVisitState.Cooldown);
+    visits.step(10);
+    expect(visits.stateOf(8, 12)).toBe(BigTreeVisitState.Cooldown);
+    expect(visits.updatePosition(8, 12, 0, 0, 10)).toBe(BigTreeVisitState.Cooldown);
+    expect(visits.requestVisit(8, 12, BigTreeVisitReason.Rest, 10, 0, 0)).toBe(NO_BIG_TREE_VISIT);
+
+    expect(visits.updatePosition(8, 12, 26, 0, 10.1)).toBe(BigTreeVisitState.Outside);
+    expect(visits.requestVisit(8, 12, BigTreeVisitReason.Rest, 10.1, 26, 0)).not.toBe(
       NO_BIG_TREE_VISIT,
     );
   });
@@ -204,6 +481,10 @@ describe('BigTreeVisitManager', () => {
     expect(visits.stateOf(1, 1)).toBe(BigTreeVisitState.Travelling);
     visits.step(4);
     expect(visits.stateOf(1, 1)).toBe(BigTreeVisitState.Cooldown);
+    const view = emptyVisit();
+    expect(visits.readVisit(1, 1, view)).toBe(true);
+    expect(view.lastTransitionCause).toBe(BigTreeTransitionCause.SlotLost);
+    expect(view.lastTransitionAt).toBe(4);
     expect(visits.activeVisitors).toBe(0);
     expect(visits.timedOutVisits).toBe(1);
 
@@ -234,10 +515,17 @@ describe('BigTreeVisitManager', () => {
     expect(visits.updatePosition(3, 9, -10, 0, 0.5)).toBe(BigTreeVisitState.Travelling);
     expect(visits.updatePosition(3, 9, -10, 0, 1.1)).toBe(BigTreeVisitState.Travelling);
     const recoveredSlot = visits.selectedSlotOf(3, 9);
+    const view = emptyVisit();
+    expect(visits.readVisit(3, 9, view)).toBe(true);
+    expect(view.lastTransitionCause).toBe(BigTreeTransitionCause.StuckRecovery);
+    expect(view.lastTransitionAt).toBe(1.1);
     expect(recoveredSlot).not.toBe(firstSlot);
     expect(visits.stuckRecoveryEvents).toBe(1);
 
     expect(visits.updatePosition(3, 9, -10, 0, 2.2)).toBe(BigTreeVisitState.Cooldown);
+    expect(visits.readVisit(3, 9, view)).toBe(true);
+    expect(view.lastTransitionCause).toBe(BigTreeTransitionCause.StuckTimeout);
+    expect(view.lastTransitionAt).toBe(2.2);
     expect(visits.activeVisitors).toBe(0);
     expect(visits.selectedSlotOf(3, 9)).toBe(NO_BIG_TREE_SLOT);
     expect(visits.timedOutVisits).toBe(1);
@@ -366,6 +654,19 @@ describe('BigTreeVisitManager', () => {
     const body = source.slice(start, end);
     expect(body).toContain('scheduledRecordCount');
     expect(body).not.toContain('this.maxActors');
+  });
+
+  test('processes one shared deadline epoch once even when two adapters submit the same time', () => {
+    const visits = createManager(1);
+    visits.step(10);
+    visits.step(10);
+    expect(visits.deadlineSteps).toBe(1);
+    visits.step(10.1);
+    expect(visits.deadlineSteps).toBe(2);
+    visits.reset();
+    expect(visits.deadlineSteps).toBe(0);
+    visits.step(10.1);
+    expect(visits.deadlineSteps).toBe(1);
   });
 
   test('allocates actor records from a deterministic free list instead of a growing scan', async () => {

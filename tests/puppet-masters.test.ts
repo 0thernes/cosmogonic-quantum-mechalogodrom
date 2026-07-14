@@ -17,6 +17,10 @@ import { EntityManager } from '../src/sim/entities';
 import { PuppetMasterSystem } from '../src/sim/puppet-masters';
 import { PLATFORM_CEIL, PLATFORM_FLOOR, PLATFORM_HALF } from '../src/sim/constants';
 import { getQuantizationConfig } from '../src/math/quantization';
+import {
+  BigTreeFaunaIntentMode,
+  type BigTreeFaunaVisitorSample,
+} from '../src/sim/big-tree-fauna-visitors';
 import type { AuditTrail } from '../src/logging/audit';
 import type {
   Entity,
@@ -392,5 +396,60 @@ describe('PuppetMasterSystem — sanctuary suppression and deterministic target 
     const normalRun = run(false);
     expect(protectedRun).toEqual({ draws: 120, remorphs: 0, mutations: 0 });
     expect(normalRun).toEqual({ draws: 120, remorphs: 30, mutations: 30 });
+  });
+});
+
+describe('PuppetMasterSystem — public Big Tree fauna hooks', () => {
+  test('sanctuary self checks carry stable puppeteer IDs', () => {
+    const { pm } = makeWorld(0x71d);
+    const seen = new Set<number>();
+    pm.attachSanctuary((_x, _z, ownerId) => {
+      if (ownerId !== undefined) seen.add(ownerId);
+      return false;
+    });
+    const sample = {} as BigTreeFaunaVisitorSample;
+    pm.readBigTreeVisitor(0, sample);
+    pm.setBigTreeVisitorIntent(0, BigTreeFaunaIntentMode.Travel, sample.x, sample.y, sample.z);
+    pm.update(0, 0);
+    expect(seen.has(0)).toBe(true);
+    expect(seen.has(pm.count - 1)).toBe(true);
+    pm.dispose();
+  });
+
+  test('stable IDs expose satiation hunger, travel is authoritative, calm holds, and food nourishes', () => {
+    const { pm } = makeWorld(0x7ee);
+    const sample = {} as BigTreeFaunaVisitorSample;
+    pm.update(0, 0);
+    expect(pm.bigTreeVisitorSlotCount).toBe(pm.count);
+    expect(pm.readBigTreeVisitor(0, sample)).toBe(true);
+    expect(sample.ownerId).toBe(0);
+    const hungerBefore = sample.hunger;
+    const targetX = sample.x + 100;
+    const targetZ = sample.z;
+    expect(
+      pm.setBigTreeVisitorIntent(0, BigTreeFaunaIntentMode.Travel, targetX, sample.y, targetZ),
+    ).toBe(true);
+    pm.update(1, 1);
+    pm.readBigTreeVisitor(0, sample);
+    expect(sample.x).toBeCloseTo(targetX - 45, 8); // authored travel speed is 55 units/s
+
+    expect(
+      pm.setBigTreeVisitorIntent(0, BigTreeFaunaIntentMode.Calm, sample.x, sample.y, sample.z),
+    ).toBe(true);
+    const calmX = sample.x;
+    const calmZ = sample.z;
+    pm.update(1, 2);
+    pm.readBigTreeVisitor(0, sample);
+    expect(sample.x).toBe(calmX);
+    expect(sample.z).toBe(calmZ);
+
+    expect(pm.nourishBigTreeVisitor(0, 28)).toBe(true);
+    pm.readBigTreeVisitor(0, sample);
+    expect(sample.hunger).toBeLessThan(hungerBefore);
+    expect(pm.clearBigTreeVisitorIntent(0)).toBe(true);
+    pm.update(1, 3);
+    pm.readBigTreeVisitor(0, sample);
+    expect(sample.x).not.toBe(calmX); // native orbit resumes after the visit
+    pm.dispose();
   });
 });

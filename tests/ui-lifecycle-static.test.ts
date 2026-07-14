@@ -74,6 +74,44 @@ describe('UI lifecycle static contracts', () => {
     );
   });
 
+  test('localhost visual capture can quiesce and resume only the automatic frame loop', () => {
+    const main = src('src/main.ts');
+    const smoke = src('scripts/browser-visual-smoke.ts');
+    expect(main).toContain('let automaticFramesEnabled = true');
+    expect(main).toContain('pauseAutoFrames: (): void =>');
+    expect(main).toContain('resumeAutoFrames: (): void =>');
+    expect(main).toContain('if (rafId !== 0) cancelAnimationFrame(rafId)');
+    expect(main).toContain('last = performance.now()');
+    expect(main).toContain('requestAutomaticFrame()');
+    expect(smoke).toContain("throw new Error('window.__CQM__.pauseAutoFrames missing')");
+    expect(main).toContain('bigTreeEcology: {');
+    expect(main).toContain('world?.getBigTreeEcologySnapshot(query) ?? null');
+    expect(smoke).toContain("throw new Error('window.__CQM__.bigTreeEcology.snapshot missing')");
+    expect(smoke).toContain('api.bigTreeEcology?.snapshot?.({ foodId: 0 })');
+    expect(smoke).toContain("ecology.foodItem.kind !== 'fruit'");
+    expect(smoke).toContain("tier + ': Big Tree ecology diagnostic contract is invalid'");
+    expect(smoke).toContain('timeout: screenshotTimeoutMs');
+    expect(smoke).toContain('window.__CQM__?.resumeAutoFrames?.()');
+    expect(smoke).toContain('pixelReadback: false');
+    expect(smoke).not.toContain('gl.readPixels');
+    expect(smoke).toContain("'body>*:not(#c){visibility:hidden!important}'");
+    expect(smoke).toContain("mode: world.workerPool ? 'worker-pool' : 'main-thread-packed'");
+    expect(smoke).toContain("runChecked('building exact GitHub Pages artifact'");
+    expect(smoke).toContain("join(SITE_DIR, 'index.html')");
+    expect(smoke).toContain('CQM_PAGES_PROJECT: PROJECT');
+    expect(smoke).not.toContain("spawn('bun', ['server.ts'])");
+    expect(smoke).toContain("page.on('requestfailed'");
+    expect(smoke).toContain('data-cqm-static-host="true"');
+    expect(smoke).toContain('Pages server exited during readiness');
+    expect(smoke).toContain('Pages server exited before smoke completion');
+    expect(smoke.indexOf('api.pauseAutoFrames()')).toBeLessThan(
+      smoke.indexOf('screenshot = await page.screenshot'),
+    );
+    expect(smoke.indexOf('window.__CQM__?.resumeAutoFrames?.()')).toBeGreaterThan(
+      smoke.indexOf('screenshot = await page.screenshot'),
+    );
+  });
+
   test('brain slot visualizers are idempotent and accessible', () => {
     const code = src('src/ui/brain-slots.ts');
     expect(code).toContain('cqmBrainSlotsWired');

@@ -20,7 +20,12 @@
  */
 import * as THREE from 'three';
 import { mulberry32, type Rng } from '../math/rng';
-import { ARENA_RADIUS, CRYSTAL_TREE_ORIGIN_X, CRYSTAL_TREE_ORIGIN_Z } from './constants';
+import {
+  ARENA_RADIUS,
+  CRYSTAL_TREE_ORIGIN_X,
+  CRYSTAL_TREE_ORIGIN_Z,
+  PLATFORM_FLOOR,
+} from './constants';
 import {
   EdibleResourceRegistry,
   type EdibleReservation,
@@ -41,7 +46,6 @@ import {
   type TreeCreatureFallbackReason,
   type TreeCreaturePercept,
 } from './tree-creature-brain';
-import { TreeCreatureTeaching, type TreeTeachingStatus } from './tree-creature-teaching';
 export { CRYSTAL_TREE_ORIGIN_X, CRYSTAL_TREE_ORIGIN_Z } from './constants';
 
 // The source's highest bonsai tips reach 1.02× its nominal trunk height. At the platform floor this
@@ -325,12 +329,6 @@ export interface CrystalTreeNeuralStatus {
   readonly visitorCount: number;
   readonly visitorPresence: number;
   readonly visitorSocialActivity: number;
-  /** Peer policy transfers that actually moved learner weights (never counts no-op "lessons"). */
-  readonly teachingEvents: number;
-  readonly lastTeachingTeacher: number;
-  readonly lastTeachingLearner: number;
-  readonly lastTeachingAt: number;
-  readonly lastTeachingWeightDelta: number;
 }
 
 export interface CrystalInteraction {
@@ -1007,7 +1005,11 @@ function makeEdibleDefinitions(
         },
         interactionPoint: {
           x: origin.x + Math.cos(angle) * interactionRadius,
-          y: origin.y,
+          // Dome organisms are integrated against PLATFORM_FLOOR even where the visual terrain
+          // profile dips below it. Keep the approach ring on that canonical navigation plane so a
+          // rooted tree below the floor cannot publish food destinations that living beings can
+          // never physically reach. The fruit/leaf's visual Y remains authored independently.
+          y: PLATFORM_FLOOR,
           z: origin.z + Math.sin(angle) * interactionRadius,
         },
         nourishment: kind === 'fruit' ? 28 : 14,
@@ -1062,10 +1064,6 @@ interface TreeCreature {
   neuralSpeed: number;
   neuralActivity: TreeCreatureActivity;
   interference: number;
-  /** Completed tree-food meals — the measured foraging competence that gates peer teaching. */
-  mealsEaten: number;
-  /** Current resident social partner (creature index) or -1; cleared on every state change. */
-  socialPartner: number;
 }
 
 interface AmbientCreature {
@@ -1144,8 +1142,6 @@ export class CrystalEcosystem {
   private readonly routes: readonly Float32Array[];
   private readonly creatures: TreeCreature[] = [];
   private readonly treeBrains: TreeCreatureBrain[] = [];
-  /** Peer policy-transfer arbiter (constructed once the resident population size is known). */
-  private treeTeaching!: TreeCreatureTeaching;
   private readonly treeBrainActions: TreeCreatureAction[] = [];
   private readonly treeBrainReady: Uint8Array;
   private readonly brainPercept: TreeCreaturePercept = {
@@ -1345,7 +1341,9 @@ export class CrystalEcosystem {
       makeEdibleDefinitions(this.fruits, this.leaves, this.config, origin),
       {
         onUnavailable: (resource): void => {
-          this.writeEdibleMatrix(resource, false);
+          // Logical consumption is already committed when this callback runs. Publish the matching
+          // availability count first so a renderer failure cannot leave an unavailable record in
+          // the discovery census or make a later successful restore over-count the fixed pool.
           if (resource.kind === 'fruit') {
             this.availableFruit--;
             this.consumedFruit++;
@@ -1353,6 +1351,7 @@ export class CrystalEcosystem {
             this.availableLeaves--;
             this.consumedLeaves++;
           }
+          this.writeEdibleMatrix(resource, false);
         },
         // Restore the authored matrix before the registry publishes the slot as available.
         onRestore: (resource): void => {
@@ -1392,7 +1391,6 @@ export class CrystalEcosystem {
     this.own(flowerGeometry, flowerMaterial);
 
     this.buildCreatures(scale);
-    this.treeTeaching = new TreeCreatureTeaching(Math.max(1, this.creatures.length));
     this.eyeMesh = this.buildEyes();
     this.buildAmbient(scale);
     const moteTriangles = this.buildMotes(scale);
@@ -1570,8 +1568,6 @@ export class CrystalEcosystem {
           neuralSpeed: 0,
           neuralActivity: TREE_CREATURE_ACTIVITY.REST,
           interference: 0,
-          mealsEaten: 0,
-          socialPartner: -1,
         });
       }
     }
@@ -1871,10 +1867,10 @@ export class CrystalEcosystem {
     const visualDt = Number.isFinite(frame.visualDt)
       ? Math.max(0, Math.min(0.1, frame.visualDt))
       : 0;
-    // Food leases/respawns follow the full scaled simulation delta. Creature locomotion remains
-    // bounded to one stable 100 ms integration step so a speed change or hitch cannot cause a jump.
+    // Food leases/respawns and resident behavior share the full scaled simulation delta. Locomotion
+    // is integrated in stable <=100 ms substeps so 3x/5x speed cannot make reservations expire while
+    // residents receive only a fraction of the corresponding travel, metabolism, and state time.
     const simulationDt = frame.visualOnly || !Number.isFinite(frame.dt) ? 0 : Math.max(0, frame.dt);
-    const dt = Math.min(0.1, simulationDt);
     const time = Number.isFinite(frame.time) ? frame.time : this.simTime;
     const chaos = clamp01(Number.isFinite(frame.chaos) ? frame.chaos : 0);
     const entropy = clamp01(Number.isFinite(frame.entropy) ? frame.entropy : 0);
@@ -1887,9 +1883,15 @@ export class CrystalEcosystem {
     this.motesUniform.value = time;
     this.wingVisualTime += visualDt;
     if (simulationDt > 0) {
-      this.simTime += simulationDt;
-      this.edibleResources.update(this.simTime);
-      if (dt > 0) this.stepCreatures(dt, chaos, entropy);
+      const frameStart = this.simTime;
+      const creatureSteps = Math.max(1, Math.ceil(simulationDt / 0.1));
+      const creatureDt = simulationDt / creatureSteps;
+      for (let step = 1; step <= creatureSteps; step++) {
+        this.simTime =
+          step === creatureSteps ? frameStart + simulationDt : frameStart + creatureDt * step;
+        this.edibleResources.update(this.simTime);
+        this.stepCreatures(creatureDt, chaos, entropy);
+      }
     }
 
     this.shakeTime = Math.max(0, this.shakeTime - visualDt);
@@ -2143,9 +2145,6 @@ export class CrystalEcosystem {
     percept.socialDensity = clamp01(
       nearby / 8 + this.visitorPresence * (0.45 + this.visitorSocialActivity * 0.25),
     );
-    // Residents live entirely inside the sanctuary where hostile action is suppressed by design, so
-    // the threat channel is honestly constant-zero here — the input exists for detached/test
-    // harnesses and any future off-tree deployment, not as a decorative production signal.
     percept.threat = 0;
     percept.safeZoneCalm = clamp01(
       1 - chaos * 0.12 - entropy * 0.15 + this.visitorSocialActivity * 0.12,
@@ -2183,8 +2182,6 @@ export class CrystalEcosystem {
     scale: number,
   ): void {
     if (creature.targetFoodId >= 0) this.releaseCreatureFood(creature, 2);
-    // Every state change releases the social pairing — partners are per-episode, never permanent.
-    creature.socialPartner = -1;
     creature.stateTimer = 3 + this.rng() * 7;
     const survivalHunger = creature.energy < 45;
     const neuralHunger =
@@ -2214,29 +2211,11 @@ export class CrystalEcosystem {
       creature.stateTimer = 1.5 + this.rng() * 2.5;
       return;
     }
-    if (creature.neuralActivity === TREE_CREATURE_ACTIVITY.SOCIAL) {
-      if (this.visitorPresence > 0) {
-        // Visitors present: gather on the welcome ring (the outward-facing social behavior).
-        creature.state = 'orbit';
-        creature.radius += (55 * scale - creature.radius) * 0.2;
-        creature.stateTimer = 2 + this.rng() * 4;
-        return;
-      }
-      // No visitors: residents socialize WITH EACH OTHER — a willing same-species partner that is
-      // itself in the SOCIAL activity, within reach. The pair meets at its midpoint for one bounded
-      // episode, and the measurably better forager teaches (real bounded policy transfer).
-      const partner = this.findResidentSocialPartner(creature, scale);
-      if (partner) {
-        creature.state = 'swarm';
-        creature.targetX = (creature.x + partner.x) * 0.5;
-        creature.targetY = (creature.y + partner.y) * 0.5;
-        creature.targetZ = (creature.z + partner.z) * 0.5;
-        creature.stateTimer = 2 + this.rng() * 3;
-        creature.socialPartner = partner.index;
-        this.attemptResidentTeaching(creature, partner);
-        return;
-      }
-      // No willing partner right now — fall through to the species default and retry later.
+    if (creature.neuralActivity === TREE_CREATURE_ACTIVITY.SOCIAL && this.visitorPresence > 0) {
+      creature.state = 'orbit';
+      creature.radius += (55 * scale - creature.radius) * 0.2;
+      creature.stateTimer = 2 + this.rng() * 4;
+      return;
     }
     if (hasQuantum(creature.quantumMask, 'phaseShift') && Math.sin(creature.phase) > 0.3) {
       creature.state = species.behavior === 'climb' ? 'orbit' : 'climb';
@@ -2258,53 +2237,6 @@ export class CrystalEcosystem {
     creature.targetX = (this.rng() - 0.5) * 90 * scale;
     creature.targetY = (45 + this.rng() * 175) * scale;
     creature.targetZ = (this.rng() - 0.5) * 90 * scale;
-  }
-
-  /**
-   * Nearest willing same-species partner for a resident social episode: another creature currently
-   * in the SOCIAL neural activity within the resident social radius. Bounded to the species block
-   * (25 creatures), allocation-free, draws no randomness.
-   */
-  private findResidentSocialPartner(creature: TreeCreature, scale: number): TreeCreature | null {
-    const start = creature.species * this.config.creaturesPerSpecies;
-    const end = start + this.config.creaturesPerSpecies;
-    const reachSq = (26 * scale) ** 2;
-    let nearest: TreeCreature | null = null;
-    let nearestD2 = Infinity;
-    for (let index = start; index < end; index++) {
-      const other = this.creatures[index];
-      if (!other || other.index === creature.index) continue;
-      if (other.neuralActivity !== TREE_CREATURE_ACTIVITY.SOCIAL) continue;
-      const dx = other.x - creature.x;
-      const dy = other.y - creature.y;
-      const dz = other.z - creature.z;
-      const d2 = dx * dx + dy * dy + dz * dz;
-      if (d2 <= reachSq && d2 < nearestD2) {
-        nearest = other;
-        nearestD2 = d2;
-      }
-    }
-    return nearest;
-  }
-
-  /**
-   * One social episode may carry one lesson: the strictly more successful forager teaches, blending
-   * the learner's live policy toward its own through the validated brain weight surface. All gates
-   * (meal-competence gap, per-learner cooldown, finiteness) live in {@link TreeCreatureTeaching};
-   * the ledger records only transfers that actually moved weights.
-   */
-  private attemptResidentTeaching(a: TreeCreature, b: TreeCreature): number {
-    const teacher = a.mealsEaten >= b.mealsEaten ? a : b;
-    const learner = teacher === a ? b : a;
-    return this.treeTeaching.attempt(
-      teacher.index,
-      learner.index,
-      this.treeBrains[teacher.index]?.weightsView() ?? null,
-      this.treeBrains[learner.index]?.weightsView() ?? null,
-      teacher.mealsEaten,
-      learner.mealsEaten,
-      this.simTime,
-    );
   }
 
   private stepSeeking(creature: TreeCreature, dt: number, scale: number): void {
@@ -2348,12 +2280,8 @@ export class CrystalEcosystem {
             this.simTime,
           )
         : 0;
-      if (nourishment > 0) {
-        creature.energy = Math.min(100, creature.energy + nourishment);
-        // Foraging competence record — the meal count gates peer teaching (teacher must have a
-        // strictly better measured record, not a label).
-        creature.mealsEaten = Math.min(0xffff, creature.mealsEaten + 1);
-      } else this.edibleResources.cancel(resource.id, creature.targetFoodGeneration, ownerId);
+      if (nourishment > 0) creature.energy = Math.min(100, creature.energy + nourishment);
+      else this.edibleResources.cancel(resource.id, creature.targetFoodGeneration, ownerId);
       creature.targetFoodId = -1;
       creature.targetFoodGeneration = 0;
       creature.foodCooldownUntil = this.simTime + 3 + this.rng() * 4;
@@ -2423,7 +2351,6 @@ export class CrystalEcosystem {
 
   /** Low-cadence, development-facing proof that the neural path is loaded and executing. */
   neuralStatus(): CrystalTreeNeuralStatus {
-    const teaching = this.treeTeaching.status();
     return {
       controllerCount: this.treeBrains.length,
       inputCount: TREE_CREATURE_BRAIN_INPUTS,
@@ -2442,17 +2369,7 @@ export class CrystalEcosystem {
       visitorCount: this.visitorCount,
       visitorPresence: this.visitorPresence,
       visitorSocialActivity: this.visitorSocialActivity,
-      teachingEvents: teaching.events,
-      lastTeachingTeacher: teaching.lastTeacher,
-      lastTeachingLearner: teaching.lastLearner,
-      lastTeachingAt: teaching.lastAt,
-      lastTeachingWeightDelta: teaching.lastWeightDelta,
     };
-  }
-
-  /** Full peer-teaching ledger (development/audit surface). */
-  teachingStatus(): TreeTeachingStatus {
-    return this.treeTeaching.status();
   }
 
   /** Stable ID for an authored food instance, or null for an invalid index. */
@@ -2532,8 +2449,9 @@ export class CrystalEcosystem {
     if (!Number.isFinite(now) || now < 0) throw new RangeError('now must be a finite number >= 0');
     this.simTime = now;
     this.edibleResources.reset(now);
-    this.availableFruit = this.config.fruits;
-    this.availableLeaves = this.config.leaves;
+    // Availability is owned by the lifecycle callbacks above. In particular, a failed matrix/
+    // collider restore remains `respawning` and must not be advertised as edible merely because a
+    // reset was requested; the next successful registry update increments the matching counter.
     this.consumedFruit = 0;
     this.consumedLeaves = 0;
     this.visitorCount = 0;
@@ -2919,11 +2837,6 @@ export class CrystalEcosystem {
     this.resetFood(this.simTime);
     this.disposed = true;
     this.scene.remove(this.root);
-    // InstancedMesh owns its instanceMatrix/instanceColor GL buffers (mesh attributes, not geometry
-    // attributes), so geometry.dispose() alone leaks them — release every instanced draw explicitly.
-    this.root.traverse((object) => {
-      if (object instanceof THREE.InstancedMesh) object.dispose();
-    });
     for (const geometry of this.ownedGeometries) geometry.dispose();
     for (const material of this.ownedMaterials) material.dispose();
     this.ownedGeometries.length = 0;
