@@ -1073,7 +1073,7 @@ interface TreeCreature {
   interference: number;
   /** Completed tree-food meals — the measured foraging competence that gates peer teaching. */
   mealsEaten: number;
-  /** Current resident social partner (creature index) or -1; cleared on every state change. */
+  /** Reciprocal resident social reservation (creature index) or -1; released from either end. */
   socialPartner: number;
 }
 
@@ -2192,8 +2192,9 @@ export class CrystalEcosystem {
     scale: number,
   ): void {
     if (creature.targetFoodId >= 0) this.releaseCreatureFood(creature, 2);
-    // Every state change releases the social pairing — partners are per-episode, never permanent.
-    creature.socialPartner = -1;
+    // Every state change releases both ends of the social pairing — partners are per-episode,
+    // exclusive, and never permanent. A stale/missing peer is harmless.
+    this.releaseResidentSocialPair(creature);
     creature.stateTimer = 3 + this.rng() * 7;
     const survivalHunger = creature.energy < 45;
     const neuralHunger =
@@ -2235,13 +2236,21 @@ export class CrystalEcosystem {
       // itself in the SOCIAL activity, within reach. The pair meets at its midpoint for one bounded
       // episode, and the measurably better forager teaches (real bounded policy transfer).
       const partner = this.findResidentSocialPartner(creature, scale);
-      if (partner) {
+      if (partner && this.tryReserveResidentSocialPair(creature, partner)) {
+        const midpointX = (creature.x + partner.x) * 0.5;
+        const midpointY = (creature.y + partner.y) * 0.5;
+        const midpointZ = (creature.z + partner.z) * 0.5;
+        const episodeSeconds = 2 + this.rng() * 3;
         creature.state = 'swarm';
-        creature.targetX = (creature.x + partner.x) * 0.5;
-        creature.targetY = (creature.y + partner.y) * 0.5;
-        creature.targetZ = (creature.z + partner.z) * 0.5;
-        creature.stateTimer = 2 + this.rng() * 3;
-        creature.socialPartner = partner.index;
+        creature.targetX = midpointX;
+        creature.targetY = midpointY;
+        creature.targetZ = midpointZ;
+        creature.stateTimer = episodeSeconds;
+        partner.state = 'swarm';
+        partner.targetX = midpointX;
+        partner.targetY = midpointY;
+        partner.targetZ = midpointZ;
+        partner.stateTimer = episodeSeconds;
         this.attemptResidentTeaching(creature, partner);
         return;
       }
@@ -2271,8 +2280,9 @@ export class CrystalEcosystem {
 
   /**
    * Nearest willing same-species partner for a resident social episode: another creature currently
-   * in the SOCIAL neural activity within the resident social radius. Bounded to the species block
-   * (25 creatures), allocation-free, draws no randomness.
+   * in the SOCIAL neural activity within the resident social radius and not already reserved by a
+   * different episode. Bounded to the species block (25 creatures), allocation-free, draws no
+   * randomness.
    */
   private findResidentSocialPartner(creature: TreeCreature, scale: number): TreeCreature | null {
     const start = creature.species * this.config.creaturesPerSpecies;
@@ -2284,6 +2294,7 @@ export class CrystalEcosystem {
       const other = this.creatures[index];
       if (!other || other.index === creature.index) continue;
       if (other.neuralActivity !== TREE_CREATURE_ACTIVITY.SOCIAL) continue;
+      if (other.socialPartner >= 0) continue;
       const dx = other.x - creature.x;
       const dy = other.y - creature.y;
       const dz = other.z - creature.z;
@@ -2294,6 +2305,26 @@ export class CrystalEcosystem {
       }
     }
     return nearest;
+  }
+
+  /** Atomically reserve both ends of one resident social episode. */
+  private tryReserveResidentSocialPair(a: TreeCreature, b: TreeCreature): boolean {
+    if (a.index === b.index || a.socialPartner >= 0 || b.socialPartner >= 0) return false;
+    a.socialPartner = b.index;
+    b.socialPartner = a.index;
+    return true;
+  }
+
+  /**
+   * Idempotently release an episode from either end. Only a reciprocal peer reference is cleared,
+   * so a corrupt stale index cannot disturb an unrelated valid pair.
+   */
+  private releaseResidentSocialPair(creature: TreeCreature): void {
+    const partnerIndex = creature.socialPartner;
+    creature.socialPartner = -1;
+    if (!Number.isInteger(partnerIndex) || partnerIndex < 0) return;
+    const partner = this.creatures[partnerIndex];
+    if (partner?.socialPartner === creature.index) partner.socialPartner = -1;
   }
 
   /**
@@ -2596,6 +2627,7 @@ export class CrystalEcosystem {
       creature.neuralSteerZ = 0;
       creature.neuralSpeed = 0;
       creature.neuralActivity = TREE_CREATURE_ACTIVITY.REST;
+      creature.socialPartner = -1;
       if (creature.state === 'seek') {
         creature.state = CRYSTAL_SPECIES[creature.species]!.behavior;
         creature.stateTimer = 1 + (creature.index % 5) * 0.2;

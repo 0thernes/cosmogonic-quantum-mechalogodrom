@@ -14,11 +14,10 @@ Evidence labels used below:
   semantic scenario in this report.
 - **Pending** — not yet demonstrated by the required final run or deployed GitHub Pages site.
 
-The latest full pre-final receipt in this worktree was **3,208 pass, 0 fail**, with **3,545,659
-expectations across 359 files**. The Windows-local coverage observation was **93.57% lines / 91.57%
-functions**; the portable published floors remain **84.64% / 82.21%**. A final repository-wide gate,
-one atomic phone-plus-desktop browser run, and deployed Pages verification remain pending as of this
-report revision.
+The final-tree Windows coverage receipt is **3,224 pass, 0 fail**, with **3,545,827 expectations across
+361 files** and **93.61% line / 91.61% function coverage**. The portable published floors remain
+**84.64% / 82.21%**. The aggregate repository gate, one atomic phone-plus-desktop browser run, and
+deployed Pages verification remain pending as of this report revision.
 
 ## Xenomimic tether: root cause and closure
 
@@ -271,19 +270,24 @@ telemetry exposes readiness, decisions, fallback count/reason, last activity, mo
 visitor inputs.
 
 Resident social learning is genuinely wired but deliberately narrow. With no external visitor present, a
-resident in `SOCIAL` can form a bounded reciprocal episode with the nearest willing same-species resident
-in `SOCIAL` within that species' 25-member block. A teacher must have completed at least two more meals.
+resident in `SOCIAL` can form a bounded reciprocal episode with the nearest willing, unreserved
+same-species resident in `SOCIAL` within that species' 25-member block. Both references are committed
+atomically, both residents receive the same midpoint and bounded episode timer, and a third resident
+cannot select either participant. A teacher must have completed at least two more canonical meals.
 On success, all 70 parameters in the learner's live policy move exactly 8% toward the teacher's policy;
 the teacher is unchanged. The path validates both complete vectors before mutation, is all-finite and
 all-or-nothing, uses no RNG, observes a 25-second per-learner simulation-time cooldown, and records only
-actual movement in an events-only ledger. State changes release both resident partner references. No
+actual movement in an events-only ledger. A state change from either end releases both partner
+references; reset/disposal clears the full fixed population, and a stale peer index is harmless. No
 cross-species, general-intelligence, consciousness, sentience, or physical-quantum claim follows.
 
 **Automated evidence:** `tests/tree-creature-brain.test.ts` exercises every input/output channel, all four
 activities, deterministic inference, caller-owned buffers, invalid input/output, model-dimension failure,
 and reload. `tests/tree-creature-teaching.test.ts` proves the exact blend, unchanged teacher, subsequent
 behavior change, competence/cooldown/identity/shape gates, all-or-nothing non-finite rejection,
-determinism, reset, bounded pair formation, real Crystal integration, and pair release on state change.
+determinism, reset, one canonical meal producing exactly one competence increment, atomic reciprocal
+pair formation, third-party exclusion, stale-peer safety, real Crystal integration, and either-side
+pair release.
 `tests/crystal-ecosystem.test.ts` proves outputs causally alter runtime movement, visitor presence changes
 the social input without following visitors, residents share food without contests or permanent
 reservations, and disposal is complete/idempotent.
@@ -330,14 +334,15 @@ restricted to localhost/127.0.0.1. No Big Tree or Xenomimic debug line is enable
 
 ## Automated test receipt
 
-The focused ecology/tether/persistence/harness run completed **102 pass, 0 fail** with **4,110
-expectations across 9 files**:
+The focused ecology/tether/persistence/harness run completed **111 pass, 0 fail** with **4,248
+expectations across 10 files**:
 
 ```text
 tests/browser-visual-smoke-harness.test.ts
 tests/edible-resource.test.ts
 tests/store.test.ts
 tests/crystal-ecosystem.test.ts
+tests/tree-creature-teaching.test.ts
 tests/big-tree-world-integration.test.ts
 tests/big-tree-fauna-visitors.test.ts
 tests/big-tree-visitors.test.ts
@@ -346,8 +351,7 @@ tests/xenomimic-connectome.test.ts
 ```
 
 Additional directly relevant suites include `tests/big-tree-zone.test.ts`,
-`tests/tree-creature-brain.test.ts`, `tests/tree-creature-teaching.test.ts`,
-`tests/xenomimic-cosmetics.test.ts`, and
+`tests/tree-creature-brain.test.ts`, `tests/xenomimic-cosmetics.test.ts`, and
 `tests/xenomimics.test.ts`; they are part of the full receipt above.
 
 The performance-invariant suite uses 10,000 ordinary organisms plus 2,000 Xenomimics, a 72-visitor
@@ -365,12 +369,12 @@ Fresh local microbenchmark on 2026-07-14:
 
 | Scenario                                          |   Average |   Minimum |       p75 |       p99 |
 | ------------------------------------------------- | --------: | --------: | --------: | --------: |
-| 20,000 food records, no deadline due              |   1.67 ns |   1.25 ns |   1.76 ns |   5.42 ns |
-| Renew 72 live food reservations                   |   1.38 us |   1.02 us |   1.59 us |   2.02 us |
-| Snapshot a clean sparse 20,000-slot pool          |  38.29 us |  30.80 us |  39.20 us |  75.00 us |
-| Stringify the clean sparse snapshot               |  59.71 ns |  49.73 ns |  62.87 ns |  79.91 ns |
-| Step 72 active visit records                      | 191.06 ns | 156.67 ns | 206.32 ns | 266.50 ns |
-| Match/update 59 unmatched fauna social candidates |  34.46 us |  26.30 us |  37.10 us |  62.70 us |
+| 20,000 food records, no deadline due              |   1.87 ns |   1.25 ns |   1.88 ns |   6.20 ns |
+| Renew 72 live food reservations                   |   1.54 us |   1.10 us |   1.69 us |   1.80 us |
+| Snapshot a clean sparse 20,000-slot pool          |  64.14 us |  38.30 us |  67.90 us | 190.80 us |
+| Stringify the clean sparse snapshot               |  81.49 ns |  56.59 ns |  86.99 ns | 140.48 ns |
+| Step 72 active visit records                      | 230.30 ns | 176.86 ns | 240.45 ns | 282.03 ns |
+| Match/update 59 unmatched fauna social candidates |  43.95 us |  28.70 us |  45.60 us |  86.10 us |
 
 The 59-candidate fauna fixture performs 118 adapter reads per update (two linear passes) rather than a
 nested adapter-read scan. Food selection uses deterministic free lists; deadlines use indexed heaps;

@@ -75,13 +75,20 @@ earlier 2026-07-14 entry below. It does not rewrite that historical snapshot.
   exactly one canonical strategy-0 cooperator and one strategy-1 defector, the defector copies strategy
   0 once. Nash behavior and the existing descendant path consume that field, and
   `policyTransfers`/`cooperativePolicyTransfers` record the commit. Lease renewal cannot duplicate it.
-  This does not establish cross-species knowledge transfer, tree-resident training, or general neural
-  learning; those broader claims remain deferred.
+  This does not establish cross-species knowledge transfer or general neural learning. Same-species
+  tree-resident policy teaching is the separate, bounded 70-parameter mechanism documented in the
+  round-two entry below; the ordinary imitation counter does not stand in for that mechanism.
+- **Reciprocal resident social reservations:** resident episodes now reserve both willing same-species
+  creatures atomically, give both the same bounded midpoint/timer, exclude already-paired residents from
+  third-party selection, and release both references when either resident changes state. Reset/disposal
+  clear all handles; stale or missing partner indices are idempotently harmless. Behavioral tests cover
+  both-end reservation, third-party exclusion, either-side exit, stale-peer safety, reset cleanup, and a
+  foraging-competence increment produced exactly once by the canonical food transaction.
 - **Bounded hot paths:** each changed fruit/leaf adds only its own 16-float `instanceMatrix` update
   range. The fauna matcher reads each eligible active adapter once in O(A), caches numeric lanes, and
   performs deterministic bounded O(A²) distance comparisons with A <= 72. The current focused mitata
-  fixture measures a clean 20,000-slot snapshot at 54.97 µs average and 59 unmatched fauna candidates
-  at 50.10 µs average on this Windows/Intel Core Ultra 9 275HX run; these are CPU-only,
+  final-tree fixture measures a clean 20,000-slot snapshot at 64.14 µs average and 59 unmatched fauna
+  candidates at 43.95 µs average on this 3.53 GHz Windows/Intel Core Ultra 9 275HX run; these are CPU-only,
   machine/load-sensitive figures, not a browser FPS claim.
 - **Xenomimic lifecycle closure:** the connectome remains topology-only and creates no renderer,
   geometry, joint, leash, force, or movement owner. Sync now nulls vacated captured creature references
@@ -95,12 +102,12 @@ earlier 2026-07-14 entry below. It does not rewrite that historical snapshot.
   served; it does not claim active worker offload.
 
 Pre-final verification for this continuation: the focused ecology/persistence/browser set is green at
-102 tests / 0 fail / 4,110 expectations. The tracked full-suite measurement completed at 3,208 tests /
-0 fail / 3,545,659 expectations across 359 files, with 93.57% Windows line coverage and 91.57%
-function coverage; portable canonical floors remain 84.64% / 82.21%. Separate local SwiftShader runs
+111 tests / 0 fail / 4,248 expectations across 10 files. The final-tree coverage measurement completed
+at 3,224 tests / 0 fail / 3,545,827 expectations across 361 files, with 93.61% Windows line coverage and
+91.61% function coverage; portable canonical floors remain 84.64% / 82.21%. Separate local SwiftShader runs
 proved nonblank phone and desktop world canvases with zero page/console errors, but they are explicitly
 headless-browser liveness receipts (0.113 and 0.046 FPS), not 60-120 FPS evidence. One atomic two-tier
-run, the final whole-repository gate, production build, and deployed GitHub Pages verification remain
+run, the final aggregate repository gate, production build, and deployed GitHub Pages verification remain
 pending at this point in the audit sequence.
 
 ## 2026-07-14 — Dome ecology ship: Big Tree food/sanctuary/visits + xenomorph tether closure + spec audit fix-pass

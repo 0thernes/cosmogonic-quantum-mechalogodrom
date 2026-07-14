@@ -424,6 +424,19 @@ reported an approximately 2.29 GHz clock:
 | step 72 active visit records                | 288.48 ns | 289.14 ns | 648.93 ns |
 | match 59 unmatched fauna social candidates  |  50.10 µs |  50.10 µs | 105.10 µs |
 
+The final integrated-tree repeat at mitata's approximately 3.53 GHz observation measured the same
+bounded fixture as follows (the difference between runs is why these remain machine/load-sensitive
+receipts rather than universal budgets):
+
+| Benchmark                                   |  avg/iter |       p75 |       p99 |
+| ------------------------------------------- | --------: | --------: | --------: |
+| 20,000 resources, no respawn deadline due   |   1.87 ns |   1.88 ns |   6.20 ns |
+| renew 72 live food reservations             |   1.54 µs |   1.69 µs |   1.80 µs |
+| snapshot a clean 20,000-slot food pool      |  64.14 µs |  67.90 µs | 190.80 µs |
+| stringify the 43-byte clean sparse snapshot |  81.49 ns |  86.99 ns | 140.48 ns |
+| step 72 active visit records                | 230.30 ns | 240.45 ns | 282.03 ns |
+| match 59 unmatched fauna social candidates  |  43.95 µs |  45.60 µs |  86.10 µs |
+
 The no-deadline food update is an O(1) deadline-heap early exit; it does not scan all 20,000
 resources. A clean persistence checkpoint deliberately performs one O(capacity) pass to prove that
 no transient slot state needs recording, then emits `{version, capacity, entries: []}` (43 bytes).

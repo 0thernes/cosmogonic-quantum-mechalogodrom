@@ -5,7 +5,6 @@
  * never recorded, and the whole mechanism is deterministic (no randomness anywhere).
  */
 import { describe, expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
 import * as THREE from 'three';
 import {
   TREE_TEACHING_BLEND,
@@ -18,7 +17,11 @@ import {
   TreeCreatureBrain,
   type TreeCreaturePercept,
 } from '../src/sim/tree-creature-brain';
-import { CrystalEcosystem, type CrystalEcosystemConfig } from '../src/sim/crystal-ecosystem';
+import {
+  CRYSTAL_SPECIES,
+  CrystalEcosystem,
+  type CrystalEcosystemConfig,
+} from '../src/sim/crystal-ecosystem';
 
 const PERCEPT: TreeCreaturePercept = {
   energy: 0.4,
@@ -58,13 +61,25 @@ interface TeachingHarness {
     x: number;
     y: number;
     z: number;
+    targetX: number;
+    targetY: number;
+    targetZ: number;
+    state: string;
+    stateTimer: number;
+    energy: number;
+    targetFoodId: number;
+    targetFoodGeneration: number;
     mealsEaten: number;
     socialPartner: number;
     neuralActivity: string;
   }>;
+  fruits: { positions: Float32Array };
   treeBrains: TreeCreatureBrain[];
   findResidentSocialPartner(creature: unknown, scale: number): unknown;
   attemptResidentTeaching(a: unknown, b: unknown): number;
+  chooseCreatureState(creature: unknown, species: unknown, scale: number): void;
+  releaseResidentSocialPair(creature: unknown): void;
+  stepSeeking(creature: unknown, dt: number, scale: number): void;
 }
 
 describe('TreeCreatureTeaching — bounded peer policy transfer', () => {
@@ -291,16 +306,78 @@ describe('CrystalEcosystem — resident socialization carries real teaching', ()
     tree.dispose();
   });
 
-  test('state machine wires pairing + teaching and releases partners on every state change (seal)', () => {
-    const src = readFileSync('src/sim/crystal-ecosystem.ts', 'utf8');
-    const start = src.indexOf('private chooseCreatureState(');
-    expect(start).toBeGreaterThan(0);
-    const body = src.slice(start, src.indexOf('private setRandomWaypoint('));
-    expect(body).toContain('creature.socialPartner = -1;');
-    expect(body).toContain('this.findResidentSocialPartner(creature, scale)');
-    expect(body).toContain('this.attemptResidentTeaching(creature, partner)');
-    expect(body).toContain('creature.socialPartner = partner.index;');
-    // Meal competence is recorded at the real consumption site only.
-    expect(src).toContain('creature.mealsEaten = Math.min(0xffff, creature.mealsEaten + 1);');
+  test('foraging competence advances only through one successful canonical resident meal', () => {
+    const tree = new CrystalEcosystem(
+      new THREE.Scene(),
+      0xbeef,
+      new THREE.Vector3(0, 0, 0),
+      TINY_CONFIG,
+    );
+    const harness = tree as unknown as TeachingHarness;
+    const creature = harness.creatures[0]!;
+    const resourceId = tree.foodResourceId('fruit', 0)!;
+    const reservation = tree.reserveFoodById(resourceId, -1_000_000 - creature.index);
+    expect(reservation).not.toBeNull();
+    creature.targetFoodId = reservation!.id;
+    creature.targetFoodGeneration = reservation!.generation;
+    creature.x = harness.fruits.positions[0]!;
+    creature.y = harness.fruits.positions[1]!;
+    creature.z = harness.fruits.positions[2]!;
+    const mealsBefore = creature.mealsEaten;
+
+    harness.stepSeeking(creature, 0, 1);
+    expect(creature.mealsEaten).toBe(mealsBefore + 1);
+    expect(tree.edibleResources.get(resourceId)?.state).toBe('respawning');
+    // The consumed handle is cleared, so repeating the movement step cannot duplicate competence.
+    harness.stepSeeking(creature, 0, 1);
+    expect(creature.mealsEaten).toBe(mealsBefore + 1);
+    tree.dispose();
+  });
+
+  test('state transitions reserve both partners, exclude third parties, and release either end', () => {
+    const tree = new CrystalEcosystem(new THREE.Scene(), 0xbeef, new THREE.Vector3(0, 0, 0), {
+      ...TINY_CONFIG,
+      creaturesPerSpecies: 3,
+    });
+    const harness = tree as unknown as TeachingHarness;
+    const a = harness.creatures[0]!;
+    const b = harness.creatures[1]!;
+    const c = harness.creatures[2]!;
+    for (const [index, creature] of [a, b, c].entries()) {
+      creature.x = index * 2;
+      creature.y = 10;
+      creature.z = 0;
+      creature.energy = 100;
+      creature.neuralActivity = 'social';
+    }
+
+    harness.chooseCreatureState(a, CRYSTAL_SPECIES[a.species]!, 1);
+    expect(a.socialPartner).toBe(b.index);
+    expect(b.socialPartner).toBe(a.index);
+    expect(a.state).toBe('swarm');
+    expect(b.state).toBe('swarm');
+    expect([b.targetX, b.targetY, b.targetZ]).toEqual([a.targetX, a.targetY, a.targetZ]);
+    expect(b.stateTimer).toBe(a.stateTimer);
+    // Both reserved residents are unavailable to a third willing candidate.
+    expect(harness.findResidentSocialPartner(c, 1)).toBeNull();
+
+    // A state exit from either side releases the reciprocal reservation without immediately
+    // recreating it when that side no longer wants to socialize.
+    b.neuralActivity = 'rest';
+    harness.chooseCreatureState(b, CRYSTAL_SPECIES[b.species]!, 1);
+    expect(a.socialPartner).toBe(-1);
+    expect(b.socialPartner).toBe(-1);
+
+    // Corrupt/stale references are safe and cannot clear an unrelated pair.
+    a.socialPartner = 99_999;
+    expect(() => harness.releaseResidentSocialPair(a)).not.toThrow();
+    expect(a.socialPartner).toBe(-1);
+
+    b.neuralActivity = 'social';
+    harness.chooseCreatureState(a, CRYSTAL_SPECIES[a.species]!, 1);
+    expect(a.socialPartner).toBe(b.index);
+    tree.resetFood(5);
+    expect(harness.creatures.every((creature) => creature.socialPartner === -1)).toBe(true);
+    tree.dispose();
   });
 });
