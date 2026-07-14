@@ -1,4 +1,4 @@
-<!-- reviewed: 2026-07-10 | v0.22.0 publication-surface current-truth pass | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-14 | dome-ecology implementation-truth pass | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # COSMOGONIC QUANTUM MECHALOGODROM
 
@@ -28,7 +28,7 @@ diffusion, **and the Tsotchke corpus wired as the primordial substrate for digit
 
 <!-- cqm-sync:local-measurement:start -->
 
-- Latest Windows-local measurement in this checkout: **3,188 tests / 0 fail · 3,545,435 `expect()` calls**; coverage measured `93.55%` line / `91.55%` func across 358 test files.
+- Latest Windows-local measurement in this checkout: **3,208 tests / 0 fail · 3,545,659 `expect()` calls**; coverage measured `93.57%` line / `91.57%` func across 359 test files.
 
 <!-- cqm-sync:local-measurement:end -->
 
@@ -155,9 +155,24 @@ tests, or explicit model assumptions support them.
   classical computation, not physical quantum entanglement or a sentience claim. They ride the animated
   terrain and plants, graze real flora, hop/scuttle/teleport, breed from one founding pair toward a 1,000
   cap, die, and return five simulation seconds after predation. `XNO` adds exactly one live body; the next
-  singleton completes its shared-brain twin. Ten indexed instanced morph draws, one bounded Entity/twin
-  connectome draw, a fixed-node reactive audio field, `mimic` camera view, telemetry/Observatory feeds,
-  and the indicator-only `XENOMIMIC` inspector all borrow the same population—no duplicate sim loop.
+  singleton completes its shared-brain twin. Ten indexed instanced morph draws, a bounded non-rendering
+  twin/Entity proximity topology counter, a fixed-node reactive audio field, `mimic` camera view,
+  telemetry/Observatory feeds, and the indicator-only `XENOMIMIC` inspector all borrow the same
+  population—no duplicate sim loop. The topology counter creates no line geometry or physical tether;
+  its fixed capture buffer releases despawned references on shrink and disposal.
+- **Dome ecology and the Crystal Big Tree**
+  ([crystal-ecosystem.ts](./src/sim/crystal-ecosystem.ts)) — 10,000 fruits and 10,000 leaves are fixed,
+  pooled members of the canonical `EdibleResourceRegistry`. Hungry supported fauna reserve reachable
+  items, receive nourishment exactly once, and reactivate the same hidden instance exactly five scaled
+  simulation seconds after consumption. The `(220, 620)` sanctuary uses 240/270-unit entry/exit
+  hysteresis and a shared 72-visitor scheduler so Entities, Xenomimics, Shoggoths, Titans, Leviathans,
+  Puppeteers, and autonomous Apex bodies can make bounded food, rest, observation, and social visits
+  without carrying hostile actions through the zone. Its 250 tree residents use real validated 6-6-4
+  controllers with a deterministic fallback; this is not online learning or a sentience claim. The only
+  social policy transfer is narrower: on first reciprocal pairing, an ordinary strategy-1 organism may
+  imitate an ordinary strategy-0 cooperator. Cross-species social animation does not imply learning.
+  Persistence is deliberately food-only: a sparse versioned checkpoint stores generations and remaining
+  respawn time, never actors, visit state, reservations, partners, or cooldowns.
 - **GOD / GodColossus** ([god-colossus.ts](./src/sim/god-colossus.ts)) — a raymarched, breathing
   **Mandelbulb** deity (domain-warped, orbit-trap palette), the **ASCENSION monolith temple**, and
   **NHI** autonomous mini-AIs.
@@ -169,9 +184,9 @@ tests, or explicit model assumptions support them.
   audio assets, just oscillators.
 - **Deterministic seeded RNG** (`mulberry32`) injected everywhere; the global
   random number generator is banned in sim logic.
-- **HTMX-polled audit trail**, versioned `localStorage` persistence,
-  device-adaptive quality profile, glassmorphic Tailwind UI with canvas
-  sparklines.
+- **HTMX-polled audit trail**, versioned `localStorage` preferences plus an isolated sparse Big Tree
+  food checkpoint (not full-world or visitor persistence), device-adaptive quality profile,
+  glassmorphic Tailwind UI with canvas sparklines.
 
 ### Quantum Wildbeyond (0.2.0)
 
@@ -521,7 +536,7 @@ full gate with same-seed determinism preserved. The major arcs:
   why 5 minds run staggered against 20 light echoes); the older sub-millisecond / `<2%` GOAL5 claim is
   superseded until re-proven. **3,202 exact tracked tests · 0 fail (receipts enforced) · 84.64% line / 82.21% func portable coverage floor.**
   <!-- cqm-sync:local-measurement:start -->
-  **Latest Windows-local measurement: 3,188 tests / 0 fail / 3,545,435 assertions at `93.55%` line / `91.55%` func.**
+  **Latest Windows-local measurement: 3,208 tests / 0 fail / 3,545,659 assertions at `93.57%` line / `91.57%` func.**
   <!-- cqm-sync:local-measurement:end -->
 - **State-of-the-art report (2026-06-17)** — a historical measured, frontier-comparison
   assessment of the whole repository + the apex Super Creature, now summarized through
@@ -583,7 +598,13 @@ bun run check     # full gate: format + types + lint + tests + build
 | `bun run format:check` | `prettier --check .`                           | Formatting gate                         |
 | `bun test`             | `bun test`                                     | Unit tests                              |
 | `bun run bench`        | `bun bench/index.ts`                           | mitata benchmarks                       |
+| `bun run smoke:visual` | `bun scripts/browser-visual-smoke.ts`          | Staged natural-rAF browser/canvas proof |
 | `bun run check`        | format:check + typecheck + lint + test + build | The full CI gate                        |
+
+The visual-smoke harness records bounded stages and partial failure artifacts, captures the ordinary
+viewport plus a canvas-isolated world proof, and expects the intentional `dormant-main-thread` worker
+mode while still checking that the worker asset is built and served. This description is the harness
+contract, not a claim that the current browser, production build, or GitHub Pages run has passed.
 
 ## Architecture digest
 
@@ -597,7 +618,7 @@ graph TD
   world --> tsotchke["Tsotchke (22 external repositories; 8 deep, 7 wired, 2 harvest, 4 fenced, 1 meta; 17/21 integrated): Eshkol bridge/Taylor analogue, Moonlab tensor, irrep, QGT, spin, physics, morphogenesis, RNG controls"]
   world --> ui["src/ui — input, hud, panels,\ngraphs, observatory, Corpus Observatory"]
   world --> audio["src/audio — engine.ts, analysis.ts (bands)"]
-  world --> mem["src/memory/store.ts"]
+  world --> mem["src/memory/store.ts<br/>preferences + sparse food checkpoint"]
   world --> audit["src/logging/audit.ts"]
   sim --> math["src/math — scalar, rng, spatial-hash,\nquantum (statevector), games (PD), eshkol-ad, QGT, clifford, spin"]
   sim --> constants["src/sim/constants.ts"]
@@ -655,7 +676,7 @@ Full detail in docs/.
 │   ├── audio/           # songs.ts (data) · engine.ts (scheduler + SFX) · analysis.ts (bands)
 │   ├── ui/              # graphs.ts · hud.ts · panels.ts · input.ts · observatory.ts
 │   ├── logging/         # logger.ts (ring buffer) · audit.ts (AuditTrail)
-│   ├── memory/          # store.ts (versioned localStorage persistence)
+│   ├── memory/          # store.ts (preferences + sparse Big Tree food checkpoint)
 │   └── styles/app.css   # Tailwind 4 @theme tokens + glass panel rules
 ├── lab/                 # quantum-wildbeyond.html — seeded p5.js artifact (served at /lab)
 ├── masters/             # the three governing master files (Executor/Architect/Physicist)

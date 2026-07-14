@@ -407,6 +407,32 @@ regression guard (`tests/crystal-ecosystem-perf.test.ts`) holds a generous 20 ms
 
 Reproduce: `bun bench/crystal-ecosystem.bench.ts`.
 
+## Big Tree ecology fixed budgets (measured 2026-07-14)
+
+`bench/big-tree-ecology.bench.ts` isolates the bounded food, visit, persistence, and fauna-social
+paths introduced by the Dome ecology implementation. The fixture uses the production 20,000-slot
+fruit/leaf pool, 72 simultaneous reservation renewals, 72 active visits, and 59 unmatched fauna
+social candidates. This run used Bun 1.3.14 x64-win32 on the Intel Core Ultra 9 275HX while mitata
+reported an approximately 2.29 GHz clock:
+
+| Benchmark                                   |  avg/iter |       p75 |       p99 |
+| ------------------------------------------- | --------: | --------: | --------: |
+| 20,000 resources, no respawn deadline due   |  41.95 ns |  100.0 ns |  100.0 ns |
+| renew 72 live food reservations             |   2.19 µs |   2.30 µs |   5.50 µs |
+| snapshot a clean 20,000-slot food pool      |  54.97 µs |  53.30 µs | 148.70 µs |
+| stringify the 43-byte clean sparse snapshot |  86.78 ns |  86.52 ns | 165.65 ns |
+| step 72 active visit records                | 288.48 ns | 289.14 ns | 648.93 ns |
+| match 59 unmatched fauna social candidates  |  50.10 µs |  50.10 µs | 105.10 µs |
+
+The no-deadline food update is an O(1) deadline-heap early exit; it does not scan all 20,000
+resources. A clean persistence checkpoint deliberately performs one O(capacity) pass to prove that
+no transient slot state needs recording, then emits `{version, capacity, entries: []}` (43 bytes).
+Fauna polling reads each active adapter record once (O(A)); deterministic nearest-partner matching
+then performs bounded O(A²) numeric distance comparisons with the authored active cap `A <= 72`.
+None of these CPU microbenchmarks includes WebGL, navigation rendering, or GPU work, and the values
+are machine/load sensitive. Reproduce the exact fixture with
+`bun bench/big-tree-ecology.bench.ts`.
+
 ## Interpretation
 
 The entire deterministic core (grid rebuild + a frame's worth of neighbor

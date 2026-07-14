@@ -166,6 +166,12 @@ export class BigTreeFaunaVisitors {
   private readonly targetXs: Float64Array;
   private readonly targetYs: Float64Array;
   private readonly targetZs: Float64Array;
+  private readonly socialKinds: Int32Array;
+  private readonly socialOwnerIds: Int32Array;
+  private readonly socialActivities: Uint8Array;
+  private readonly socialXs: Float64Array;
+  private readonly socialZs: Float64Array;
+  private readonly socialMatched: Uint8Array;
   private readonly activeByKind = new Map<number, Map<number, number>>();
   private activeCount = 0;
 
@@ -183,7 +189,6 @@ export class BigTreeFaunaVisitors {
   private cancellations = 0;
 
   private readonly actor = actorScratch();
-  private readonly partner = actorScratch();
   private readonly context: BigTreeVisitContext = {
     hunger: 0,
     fatigue: 0,
@@ -224,7 +229,6 @@ export class BigTreeFaunaVisitors {
     partnerId: NO_OWNER,
     partnerLeaseExpiresAt: 0,
   };
-  private readonly otherVisitView: BigTreeVisitView = { ...this.visitView };
   private readonly slotView: BigTreeSlotView = {
     slotId: NO_BIG_TREE_SLOT,
     kind: BigTreeSlotKind.Any,
@@ -279,6 +283,12 @@ export class BigTreeFaunaVisitors {
     this.targetXs = new Float64Array(capacity);
     this.targetYs = new Float64Array(capacity);
     this.targetZs = new Float64Array(capacity);
+    this.socialKinds = new Int32Array(capacity);
+    this.socialOwnerIds = new Int32Array(capacity);
+    this.socialActivities = new Uint8Array(capacity);
+    this.socialXs = new Float64Array(capacity);
+    this.socialZs = new Float64Array(capacity);
+    this.socialMatched = new Uint8Array(capacity);
     this.activeSourceIndices.fill(-1);
     this.activeKinds.fill(NO_OWNER);
     this.activeOwnerIds.fill(NO_OWNER);
@@ -668,46 +678,57 @@ export class BigTreeFaunaVisitors {
   }
 
   private matchSocialPartners(now: number): void {
-    for (let first = 0; first < this.activeCount; first++) {
-      const firstKind = this.activeKinds[first]!;
-      const firstId = this.activeOwnerIds[first]!;
+    let candidateCount = 0;
+    // Source adapters may bridge GPU-backed or learned fauna systems, so read each eligible actor
+    // once. The remaining fixed-capacity numeric pair checks preserve active-order determinism
+    // without repeating adapter reads in the inner loop or allocating per frame.
+    for (let activeIndex = 0; activeIndex < this.activeCount; activeIndex++) {
+      const kind = this.activeKinds[activeIndex]!;
+      const ownerId = this.activeOwnerIds[activeIndex]!;
       if (
-        !this.visits.readVisit(firstKind, firstId, this.visitView) ||
+        !this.visits.readVisit(kind, ownerId, this.visitView) ||
         this.visitView.state !== BigTreeVisitState.Active ||
-        this.visitView.activity !== BigTreeActivity.Socialize ||
+        (this.visitView.activity !== BigTreeActivity.Socialize &&
+          this.visitView.activity !== BigTreeActivity.Observe) ||
         this.visitView.partnerKind >= 0
       ) {
         continue;
       }
-      const firstBinding = this.activeBindings[first];
+      const binding = this.activeBindings[activeIndex];
       if (
-        !firstBinding ||
-        !firstBinding.source.readBigTreeActor(this.activeSourceIndices[first]!, this.actor)
+        !binding ||
+        !binding.source.readBigTreeActor(this.activeSourceIndices[activeIndex]!, this.actor)
       ) {
         continue;
       }
-      for (let second = first + 1; second < this.activeCount; second++) {
-        const secondKind = this.activeKinds[second]!;
-        const secondId = this.activeOwnerIds[second]!;
-        if (
-          !this.visits.readVisit(secondKind, secondId, this.otherVisitView) ||
-          this.otherVisitView.state !== BigTreeVisitState.Active ||
-          (this.otherVisitView.activity !== BigTreeActivity.Socialize &&
-            this.otherVisitView.activity !== BigTreeActivity.Observe) ||
-          this.otherVisitView.partnerKind >= 0
-        ) {
-          continue;
-        }
-        const secondBinding = this.activeBindings[second];
-        if (
-          !secondBinding ||
-          !secondBinding.source.readBigTreeActor(this.activeSourceIndices[second]!, this.partner)
-        ) {
-          continue;
-        }
-        const dx = this.actor.x - this.partner.x;
-        const dz = this.actor.z - this.partner.z;
+
+      this.socialKinds[candidateCount] = kind;
+      this.socialOwnerIds[candidateCount] = ownerId;
+      this.socialActivities[candidateCount] = this.visitView.activity;
+      this.socialXs[candidateCount] = this.actor.x;
+      this.socialZs[candidateCount] = this.actor.z;
+      candidateCount++;
+    }
+
+    this.socialMatched.fill(0, 0, candidateCount);
+    for (let first = 0; first < candidateCount; first++) {
+      if (
+        this.socialMatched[first] !== 0 ||
+        this.socialActivities[first] !== BigTreeActivity.Socialize
+      ) {
+        continue;
+      }
+      const firstKind = this.socialKinds[first]!;
+      const firstId = this.socialOwnerIds[first]!;
+      const firstX = this.socialXs[first]!;
+      const firstZ = this.socialZs[first]!;
+      for (let second = first + 1; second < candidateCount; second++) {
+        if (this.socialMatched[second] !== 0) continue;
+        const dx = firstX - this.socialXs[second]!;
+        const dz = firstZ - this.socialZs[second]!;
         if (dx * dx + dz * dz > this.socialReachRadiusSquared) continue;
+        const secondKind = this.socialKinds[second]!;
+        const secondId = this.socialOwnerIds[second]!;
         if (
           this.visits.reservePartner(
             firstKind,
@@ -719,6 +740,8 @@ export class BigTreeFaunaVisitors {
             this.socialLeaseSeconds,
           )
         ) {
+          this.socialMatched[first] = 1;
+          this.socialMatched[second] = 1;
           break;
         }
       }

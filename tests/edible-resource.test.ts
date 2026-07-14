@@ -253,4 +253,192 @@ describe('EdibleResourceRegistry', () => {
       pendingRespawns: 0,
     });
   });
+
+  test('JSON round-trip preserves only the remaining simulation-time respawn deadline', () => {
+    const source = makeRegistry();
+    const { reservation } = consume(source, 10, 700, 4);
+    const encoded = JSON.stringify(source.persistenceSnapshot(6));
+    expect(encoded).not.toContain('ownerId');
+    expect(encoded).not.toContain('leaseUntil');
+
+    const restored = makeRegistry();
+    restored.restorePersistence(JSON.parse(encoded), 0);
+    const fruit = restored.get(10)!;
+    expect(fruit.state).toBe('respawning');
+    expect(fruit.generation).toBe(reservation.generation);
+    expect(fruit.respawnAt).toBe(3);
+    expect(restored.stats()).toMatchObject({
+      available: 2,
+      reserved: 0,
+      consuming: 0,
+      respawning: 1,
+      pendingLeases: 0,
+      pendingRespawns: 1,
+    });
+
+    expect(restored.update(2.999_999)).toBe(0);
+    expect(fruit.state).toBe('respawning');
+    expect(restored.update(3)).toBe(1);
+    expect(fruit.state).toBe('available');
+    expect(fruit.generation).toBe(reservation.generation + 1);
+  });
+
+  test('checkpoint stays sparse after historical consumption and exposes a precise dirty revision', () => {
+    const registry = makeRegistry();
+    expect(registry.persistenceRevision).toBe(0);
+    expect(registry.persistenceSnapshot(0).entries).toEqual([]);
+
+    const reservation = registry.reserveById(10, 750, 0, 20)!;
+    const reservedRevision = registry.persistenceRevision;
+    expect(reservedRevision).toBeGreaterThan(0);
+    expect(registry.persistenceSnapshot(0).entries).toEqual([
+      { id: 10, generation: reservation.generation + 1, remainingRespawn: null },
+    ]);
+    expect(registry.beginConsumption(10, reservation.generation, reservation.ownerId, 0)).toBe(
+      true,
+    );
+    // Reserved and consuming normalize to the same persisted representation.
+    expect(registry.persistenceRevision).toBe(reservedRevision);
+
+    expect(registry.completeConsumption(10, reservation.generation, reservation.ownerId, 0)).toBe(
+      25,
+    );
+    expect(registry.persistenceRevision).toBeGreaterThan(reservedRevision);
+    expect(registry.hasPendingRespawns).toBe(true);
+    expect(registry.persistenceSnapshot(2).entries).toEqual([
+      { id: 10, generation: reservation.generation, remainingRespawn: 3 },
+    ]);
+
+    const respawningRevision = registry.persistenceRevision;
+    expect(registry.update(5)).toBe(1);
+    expect(registry.persistenceRevision).toBeGreaterThan(respawningRevision);
+    expect(registry.hasPendingRespawns).toBe(false);
+    // Historical generations are irrelevant after an application restart and stay out of JSON.
+    expect(registry.persistenceSnapshot(5).entries).toEqual([]);
+
+    const beforeReset = registry.persistenceRevision;
+    registry.reset(10);
+    expect(registry.persistenceRevision).toBeGreaterThan(beforeReset);
+    expect(registry.persistenceSnapshot(10).entries).toEqual([]);
+  });
+
+  test('active reserved and consuming claims restore available with stale generations', () => {
+    const source = makeRegistry();
+    const reserved = source.reserveById(10, 801, 1, 20)!;
+    const consuming = source.reserveById(20, 802, 1, 20)!;
+    expect(source.beginConsumption(consuming.id, consuming.generation, consuming.ownerId, 1)).toBe(
+      true,
+    );
+
+    const restored = makeRegistry();
+    restored.restorePersistence(source.persistenceSnapshot(2), 0);
+    expect(restored.get(10)).toMatchObject({
+      state: 'available',
+      ownerId: null,
+      leaseUntil: 0,
+      generation: reserved.generation + 1,
+    });
+    expect(restored.get(20)).toMatchObject({
+      state: 'available',
+      ownerId: null,
+      leaseUntil: 0,
+      generation: consuming.generation + 1,
+    });
+    expect(restored.beginConsumption(10, reserved.generation, reserved.ownerId, 0)).toBe(false);
+    expect(restored.completeConsumption(20, consuming.generation, consuming.ownerId, 0)).toBe(0);
+    expect(restored.stats()).toMatchObject({
+      available: 3,
+      reserved: 0,
+      consuming: 0,
+      pendingLeases: 0,
+      pendingRespawns: 0,
+    });
+  });
+
+  test('rejects incompatible or corrupt checkpoints before mutating live registry state', () => {
+    const registry = makeRegistry();
+    const live = registry.reserveById(10, 901, 0, 20)!;
+    const before = registry.all.map((resource) => ({
+      id: resource.id,
+      state: resource.state,
+      ownerId: resource.ownerId,
+      generation: resource.generation,
+    }));
+    const corrupt = [
+      { version: 2, capacity: 3, entries: [] },
+      { version: 1, capacity: 99, entries: [] },
+      {
+        version: 1,
+        capacity: 3,
+        entries: [
+          { id: 10, generation: 2, remainingRespawn: null },
+          { id: 10, generation: 3, remainingRespawn: null },
+        ],
+      },
+      {
+        version: 1,
+        capacity: 3,
+        entries: [{ id: 999, generation: 2, remainingRespawn: null }],
+      },
+      {
+        version: 1,
+        capacity: 3,
+        entries: [{ id: 20, generation: 2, remainingRespawn: 5.001 }],
+      },
+    ];
+
+    for (const snapshot of corrupt) {
+      expect(() => registry.restorePersistence(snapshot as never, 0)).toThrow();
+      expect(
+        registry.all.map((resource) => ({
+          id: resource.id,
+          state: resource.state,
+          ownerId: resource.ownerId,
+          generation: resource.generation,
+        })),
+      ).toEqual(before);
+    }
+    expect(registry.beginConsumption(live.id, live.generation, live.ownerId, 0)).toBe(true);
+  });
+
+  test('restore rekeys a transient visual retry without corrupting heaps or free lists', () => {
+    let failRestore = false;
+    const registry = makeRegistry({
+      onRestore: () => {
+        if (failRestore) throw new Error('GPU upload deferred');
+      },
+    });
+    consume(registry, 10, 990, 0);
+    failRestore = true;
+
+    expect(() =>
+      registry.restorePersistence(
+        {
+          version: 1,
+          capacity: DEFINITIONS.length,
+          entries: [{ id: 10, generation: 1, remainingRespawn: 3 }],
+        },
+        0,
+      ),
+    ).not.toThrow();
+    expect(registry.get(10)).toMatchObject({
+      state: 'respawning',
+      ownerId: null,
+      respawnAt: 3,
+      generation: 1,
+    });
+    expect(registry.stats()).toMatchObject({
+      available: 2,
+      respawning: 1,
+      pendingLeases: 0,
+      pendingRespawns: 1,
+    });
+    expect(registry.reserveById(10, 991, 0, 1)).toBeNull();
+
+    failRestore = false;
+    expect(registry.update(2.999_999)).toBe(0);
+    expect(registry.update(3)).toBe(1);
+    expect(registry.stats()).toMatchObject({ available: 3, respawning: 0, pendingRespawns: 0 });
+    expect(registry.reserveById(10, 991, 3, 1)).toBeTruthy();
+  });
 });

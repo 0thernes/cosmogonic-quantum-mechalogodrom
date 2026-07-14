@@ -529,6 +529,61 @@ describe('BigTreeFaunaVisitors', () => {
     expect(visits.trackedActors).toBe(0);
   });
 
+  test('unmatched social crowds perform only O(active) fauna source reads per update', () => {
+    const crowdSize = 64;
+    const tree = new FakeTree([food(140, 'fruit')]);
+    const visits = manager(crowdSize, 5);
+    const actors = Array.from({ length: crowdSize }, (_, index) => {
+      const x = (index - (crowdSize - 1) / 2) * 0.02;
+      const member = actor(index, 'shoggoth', x, 0, 1);
+      member.socialDrive = 1;
+      visits.addSlot(BigTreeSlotKind.Socialize, x, 0);
+      return member;
+    });
+    const source = new FakeFaunaSource(actors);
+    const visitors = new BigTreeFaunaVisitors(
+      tree,
+      visits,
+      [binding(BIG_TREE_OWNER_SHOGGOTH, 'shoggoth', source)],
+      {
+        pollBudget: crowdSize,
+        pollIntervalSeconds: 0.1,
+        foodLeaseSeconds: 3,
+        foodRetrySeconds: 0.1,
+        foodSearchTimeoutSeconds: 0.4,
+        foodReachRadius: 12,
+        steeringGain: 8,
+        restPerSecond: 0.1,
+        restTarget: 0.8,
+        socialLeaseSeconds: 0.5,
+        socialReachRadius: 0.001,
+        flightVisitY: 0.01,
+      },
+    );
+    const environment: BigTreeVisitorEnvironment = {
+      socialNeed: 1,
+      stress: 1,
+      curiosity: 0,
+      foodAvailable: false,
+    };
+
+    tick(tree, visitors, 0, 0, environment);
+    const activeBeforeUpdate = visitors.activeVisitors;
+    expect(activeBeforeUpdate).toBeGreaterThanOrEqual(48);
+    expect(activeBeforeUpdate).toBeLessThanOrEqual(crowdSize);
+
+    source.readCalls = 0;
+    tick(tree, visitors, 0.05, 0.05, environment);
+
+    const out = stats();
+    visitors.readStats(out);
+    expect(visitors.activeVisitors).toBe(activeBeforeUpdate);
+    expect(out.socialPairs).toBe(0);
+    // One source read updates each active visitor and one caches each unmatched social candidate.
+    // A nested adapter-read matcher would exceed this exact linear bound for the same crowd.
+    expect(source.readCalls).toBe(activeBeforeUpdate * 2);
+  });
+
   test('reset releases active food, locomotion control, slots, and visit records', () => {
     const tree = new FakeTree([food(15, 'leaf', 0, 0)]);
     const visits = manager(1, 5);

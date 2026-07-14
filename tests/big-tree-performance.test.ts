@@ -205,6 +205,7 @@ function stats(): BigTreeSpeciesVisitorStats {
     cancellations: 0,
     zoneCapacity: 0,
     socialPairs: 0,
+    policyTransfers: 0,
     completedVisits: 0,
     timedOutVisits: 0,
     stuckRecoveries: 0,

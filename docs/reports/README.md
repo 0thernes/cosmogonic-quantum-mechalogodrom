@@ -1,21 +1,38 @@
-<!-- reviewed: 2026-07-11 | V4 failure-forward result + historical snapshot policy | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-14 | dome-ecology implementation-truth boundary | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # Reports
 
 Technical reports and audits for Cosmogonic Quantum Mechalogodrom. Dated filenames (`2026-*`) are
 **historical worldline snapshots** when present — they preserve evidence from their authoring pass.
-**Current** gate receipts: [VERIFICATION-ANALYTICAL-DATA.md](../VERIFICATION-ANALYTICAL-DATA.md) §1 ·
+**Current published** gate receipts: [VERIFICATION-ANALYTICAL-DATA.md](../VERIFICATION-ANALYTICAL-DATA.md) §1 ·
 `scripts/canonical-receipts.ts` (v0.22.0 · **3,202-test floor** · **84.64 % / 82.21 %** coverage).
-Latest Windows-local receipt observed by the current audit: **3,188 completed cases, zero failures,
+Latest Windows-local receipt preserved from the upstream round-three audit: **3,188 completed cases, zero failures,
 3,545,435 expect() calls, 93.55% line coverage, and 91.55% function coverage across 358 test files**.
+Treat that published floor as a historical release receipt, not a fresh merged receipt for the
+current continuation.
+`scripts/canonical-receipts.ts` remains the live authority once the in-flight continuation is merged
+and remeasured; this index does not predeclare that result.
 
 The batch-26 adversarial repair pass made the flora sampler bilinear and sealed chemotaxis against
 the real cell-quantized field, corrected forager final-position telemetry, and closed root-pathspec
 plus cancellation gaps in the read-only AI sandbox. These fixes preserve the current code-grounded
 A-Life vector and do not add organism-intelligence, consciousness, or sentience uplift.
 
+The current Dome ecology continuation implements a canonical pooled Big Tree food path, a real
+sanctuary/temporary-visit lifecycle, food-only sparse persistence, and topology-only Xenomimic
+connectome cleanup. Its only new learning-like behavior is ordinary strategy imitation at first
+reciprocal pairing; it does not establish neural training, tree-resident learning, or cross-species
+knowledge transfer. The fauna social matcher uses O(A) adapter reads followed by bounded numeric
+O(A²), with A ≤ 72, and food matrix changes upload one 16-float instance range each. Focused automated
+tests and a staged natural-rAF/canvas-isolated smoke harness exist, but this index does not claim a new
+whole-repository receipt or a current browser, production-build, or deployed GitHub Pages pass.
+
 ## Reports
 
+- [DOME-ECOLOGY-VERIFICATION-2026-07-14.md](./DOME-ECOLOGY-VERIFICATION-2026-07-14.md) — current
+  evidence-separated verification of Xenomimic tether removal, canonical Big Tree food, sanctuary,
+  temporary visits, tree residents, social behavior, persistence, performance, browser evidence, and
+  remaining deployment/manual-validation boundaries.
 - [2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.md](./2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.md)
   · [HTML](./2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.html) — combined standing
   synthesis (engineering · 113-system matrix · SuperCreature/Apex/Mechalogodrom · xeno-A-life thesis ·

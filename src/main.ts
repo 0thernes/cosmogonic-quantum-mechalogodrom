@@ -311,6 +311,8 @@ async function boot(): Promise<void> {
 
   const store = new MemoryStore();
   const loaded = store.load() ?? store.defaults();
+  // Food-only application checkpoint. Actor/visitor state deliberately starts clean every boot.
+  const bigTreeEcology = store.loadBigTreeEcology();
   // V95: every browser reload starts a fresh cosmos — new seed, new creatures, new economy.
   // Preferences (audio, view, render, etc.) are kept; only the deterministic seed is reset.
   const persisted = {
@@ -327,7 +329,14 @@ async function boot(): Promise<void> {
   const tWorld = performance.now();
   const activeEngine = engine;
   if (!activeEngine) return;
-  world = new World({ engine: activeEngine, quality, persisted, store, audit });
+  world = new World({
+    engine: activeEngine,
+    quality,
+    persisted,
+    store,
+    audit,
+    bigTreeEcology,
+  });
   if (!continueMainLifecycle()) return;
   bootStage('world', `${Math.round(performance.now() - tWorld)} ms`);
   bootStage('entities', `grows → ${quality.targetEntities.toLocaleString()}`);
@@ -445,10 +454,18 @@ async function boot(): Promise<void> {
   document.addEventListener(
     'visibilitychange',
     () => {
-      if (document.visibilityState === 'visible') loadDeferredUi();
+      if (document.visibilityState === 'visible') {
+        loadDeferredUi();
+      } else {
+        // Flush while the page is still fully scriptable; pagehide is the final best-effort fallback.
+        world?.persistBigTreeEcology();
+      }
     },
     { signal: mainLifecycle.signal },
   );
+  window.addEventListener('pagehide', () => world?.persistBigTreeEcology(), {
+    signal: mainLifecycle.signal,
+  });
 }
 
 // Only the `new Engine(...)` construction inside boot() has its own try/catch; the rest of boot

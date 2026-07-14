@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test } from 'bun:test';
-import { MemoryStore } from '../src/memory/store';
+import { MemoryStore, type BigTreeEcologyPersistenceSnapshotV1 } from '../src/memory/store';
 import type { PersistedState } from '../src/types';
 
 /** Map-backed localStorage shim for bun (no DOM). Installed only when absent. */
@@ -29,6 +29,7 @@ if (typeof localStorage === 'undefined') {
 }
 
 const KEY = 'test.cqm.state';
+const ECOLOGY_KEY = 'test.cqm.big-tree-ecology.v1';
 
 const sample: PersistedState = {
   version: 1,
@@ -42,9 +43,22 @@ const sample: PersistedState = {
   sim: 1,
 };
 
+const ecologySample: BigTreeEcologyPersistenceSnapshotV1 = {
+  version: 1,
+  food: {
+    version: 1,
+    capacity: 3,
+    entries: [
+      { id: 10, generation: 4, remainingRespawn: 2.75 },
+      { id: 20, generation: 2, remainingRespawn: null },
+    ],
+  },
+};
+
 describe('MemoryStore', () => {
   beforeEach(() => {
     localStorage.removeItem(KEY);
+    localStorage.removeItem(ECOLOGY_KEY);
   });
 
   test('defaults() is a valid version-1 state with a uint32 seed', () => {
@@ -70,6 +84,84 @@ describe('MemoryStore', () => {
   test('persists across instances sharing a key', () => {
     new MemoryStore(KEY).save(sample);
     expect(new MemoryStore(KEY).load()).toEqual(sample);
+  });
+
+  test('round-trips the isolated primitive Big Tree food checkpoint', () => {
+    const store = new MemoryStore(KEY, ECOLOGY_KEY);
+    expect(store.saveBigTreeEcology(ecologySample)).toBe(true);
+    expect(store.loadBigTreeEcology()).toEqual(ecologySample);
+    expect(localStorage.getItem(KEY)).toBeNull();
+    expect(JSON.parse(localStorage.getItem(ECOLOGY_KEY)!)).toEqual(ecologySample);
+
+    expect(store.clearBigTreeEcology()).toBe(true);
+    expect(store.loadBigTreeEcology()).toBeNull();
+  });
+
+  test('corrupt ecology data is isolated from valid preferences and rejected safely', () => {
+    const store = new MemoryStore(KEY, ECOLOGY_KEY);
+    store.save(sample);
+    const invalid = [
+      { ...ecologySample, version: 2 },
+      { version: 1, food: { ...ecologySample.food, version: 2 } },
+      {
+        version: 1,
+        food: {
+          version: 1,
+          capacity: 3,
+          entries: [
+            { id: 10, generation: 2, remainingRespawn: null },
+            { id: 10, generation: 3, remainingRespawn: null },
+          ],
+        },
+      },
+      {
+        version: 1,
+        food: {
+          version: 1,
+          capacity: 3,
+          entries: [{ id: 10, generation: 2, remainingRespawn: 5.001 }],
+        },
+      },
+    ];
+
+    for (const payload of invalid) {
+      localStorage.setItem(ECOLOGY_KEY, JSON.stringify(payload));
+      expect(store.loadBigTreeEcology()).toBeNull();
+      expect(store.load()).toEqual(sample);
+    }
+    localStorage.setItem(ECOLOGY_KEY, '{bad json');
+    expect(store.loadBigTreeEcology()).toBeNull();
+    expect(store.load()).toEqual(sample);
+  });
+
+  test('Genesis clear removes an older checkpoint even when replacement writes are rejected', () => {
+    const real = globalThis.localStorage;
+    let ecologyRaw: string | null = JSON.stringify(ecologySample);
+    const quotaLimited = {
+      getItem: (key: string): string | null => (key === ECOLOGY_KEY ? ecologyRaw : null),
+      setItem: (): void => {
+        throw new Error('quota');
+      },
+      removeItem: (key: string): void => {
+        if (key === ECOLOGY_KEY) ecologyRaw = null;
+      },
+    } as unknown as Storage;
+    (globalThis as { localStorage?: Storage }).localStorage = quotaLimited;
+    try {
+      const store = new MemoryStore(KEY, ECOLOGY_KEY);
+      expect(store.loadBigTreeEcology()).toEqual(ecologySample);
+      expect(
+        store.saveBigTreeEcology({
+          ...ecologySample,
+          food: { ...ecologySample.food, entries: [] },
+        }),
+      ).toBe(false);
+      expect(store.loadBigTreeEcology()).toEqual(ecologySample);
+      expect(store.clearBigTreeEcology()).toBe(true);
+      expect(store.loadBigTreeEcology()).toBeNull();
+    } finally {
+      (globalThis as { localStorage?: Storage }).localStorage = real;
+    }
   });
 
   test('load() returns null when nothing was saved', () => {
@@ -194,6 +286,9 @@ describe('MemoryStore', () => {
       const store = new MemoryStore(KEY);
       expect(store.load()).toBeNull();
       expect(() => store.save(sample)).not.toThrow();
+      expect(store.loadBigTreeEcology()).toBeNull();
+      expect(store.saveBigTreeEcology(ecologySample)).toBe(false);
+      expect(store.clearBigTreeEcology()).toBe(false);
     } finally {
       (globalThis as { localStorage?: Storage }).localStorage = real;
     }
@@ -206,6 +301,9 @@ describe('MemoryStore', () => {
       const store = new MemoryStore(KEY);
       expect(store.load()).toBeNull();
       expect(() => store.save(sample)).not.toThrow();
+      expect(store.loadBigTreeEcology()).toBeNull();
+      expect(store.saveBigTreeEcology(ecologySample)).toBe(false);
+      expect(store.clearBigTreeEcology()).toBe(false);
       expect(store.defaults().version).toBe(1);
     } finally {
       (globalThis as { localStorage?: Storage }).localStorage = real;

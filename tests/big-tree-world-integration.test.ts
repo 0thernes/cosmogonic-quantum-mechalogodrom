@@ -1,8 +1,64 @@
 import { describe, expect, test } from 'bun:test';
+import { World } from '../src/world';
 
 const WORLD_URL = new URL('../src/world.ts', import.meta.url);
+const MAIN_URL = new URL('../src/main.ts', import.meta.url);
 
 describe('Big Tree production composition root', () => {
+  test('food lifecycle flushing is dirty, retryable, and deduplicated without losing respawn time', () => {
+    const resources = { persistenceRevision: 0, hasPendingRespawns: false };
+    let foodTime = 0;
+    let snapshotCalls = 0;
+    let saveCalls = 0;
+    let allowSave = true;
+    const harness = {
+      disposeAbort: new AbortController(),
+      crystalEcosystem: {
+        edibleResources: resources,
+        get foodTime(): number {
+          return foodTime;
+        },
+        snapshotFoodPersistence: () => {
+          snapshotCalls++;
+          return { version: 1 as const, capacity: 0, entries: [] };
+        },
+      },
+      lastPersistedBigTreeFoodRevision: 0,
+      lastPersistedBigTreeFoodTime: 0,
+      store: {
+        saveBigTreeEcology: (): boolean => {
+          saveCalls++;
+          return allowSave;
+        },
+      },
+    };
+    const persist = World.prototype.persistBigTreeEcology as unknown as (
+      this: typeof harness,
+    ) => void;
+
+    persist.call(harness);
+    expect({ snapshotCalls, saveCalls }).toEqual({ snapshotCalls: 0, saveCalls: 0 });
+
+    resources.persistenceRevision = 1;
+    persist.call(harness);
+    persist.call(harness);
+    expect({ snapshotCalls, saveCalls }).toEqual({ snapshotCalls: 1, saveCalls: 1 });
+
+    resources.hasPendingRespawns = true;
+    foodTime = 2;
+    persist.call(harness);
+    persist.call(harness);
+    expect({ snapshotCalls, saveCalls }).toEqual({ snapshotCalls: 2, saveCalls: 2 });
+
+    allowSave = false;
+    resources.persistenceRevision = 2;
+    persist.call(harness);
+    persist.call(harness);
+    expect({ snapshotCalls, saveCalls }).toEqual({ snapshotCalls: 4, saveCalls: 4 });
+    expect(harness.lastPersistedBigTreeFoodRevision).toBe(1);
+    expect(harness.lastPersistedBigTreeFoodTime).toBe(2);
+  });
+
   test('uses one canonical Crystal food source and one bounded shared visit manager', async () => {
     const source = await Bun.file(WORLD_URL).text();
     expect(source).toContain('new BigTreeVisitManager(this.bigTreeZone');
@@ -72,5 +128,51 @@ describe('Big Tree production composition root', () => {
     expect(source).toContain('this.chaosField.attachSanctuary(this.bigTreeProtectedAt)');
     expect(source).toContain('safeZoneAt: this.bigTreeProtectedAt');
     expect(source).not.toMatch(/BigTree.*(?:Line|LineSegments|ArrowHelper)/);
+  });
+
+  test('restores and flushes only the food checkpoint across application lifecycle boundaries', async () => {
+    const [worldSource, mainSource] = await Promise.all([
+      Bun.file(WORLD_URL).text(),
+      Bun.file(MAIN_URL).text(),
+    ]);
+    const crystalConstruction = worldSource.indexOf(
+      'this.crystalEcosystem = new CrystalEcosystem(',
+    );
+    const foodRestore = worldSource.indexOf(
+      'this.crystalEcosystem.restoreFoodPersistence(opts.bigTreeEcology.food)',
+      crystalConstruction,
+    );
+    const visitorConstruction = worldSource.indexOf(
+      'this.bigTreeVisits = new BigTreeVisitManager(',
+      foodRestore,
+    );
+    expect(crystalConstruction).toBeGreaterThan(-1);
+    expect(foodRestore).toBeGreaterThan(crystalConstruction);
+    expect(visitorConstruction).toBeGreaterThan(foodRestore);
+
+    expect(worldSource).toContain('persistBigTreeEcology(): void');
+    expect(worldSource).toContain('food: this.crystalEcosystem.snapshotFoodPersistence()');
+    expect(worldSource).toMatch(
+      /this\.bigTreeFaunaVisitors\.reset\(\);[\s\S]*this\.bigTreeVisitors\.reset\(\);[\s\S]*this\.crystalEcosystem\.resetFood\(this\.state\.elapsed\);[\s\S]*this\.store\.clearBigTreeEcology\(\)/,
+    );
+    expect(worldSource).toContain('resources.persistenceRevision');
+    expect(worldSource).toContain('resources.hasPendingRespawns');
+    expect(worldSource).toContain('foodTime !== this.lastPersistedBigTreeFoodTime');
+    expect(worldSource).toContain('if (saved) {');
+    expect(mainSource).toContain('const bigTreeEcology = store.loadBigTreeEcology();');
+    expect(mainSource).toContain('bigTreeEcology,');
+    expect(mainSource).toContain("document.visibilityState === 'visible'");
+    expect(mainSource).toContain('world?.persistBigTreeEcology();');
+    expect(mainSource).toContain("window.addEventListener('pagehide'");
+
+    // The persisted schema remains deliberately bounded: no actor-lifecycle state can be replayed.
+    const persistenceMethod = worldSource.slice(
+      worldSource.indexOf('persistBigTreeEcology(): void'),
+      worldSource.indexOf(
+        '/** Legacy doSplit',
+        worldSource.indexOf('persistBigTreeEcology(): void'),
+      ),
+    );
+    expect(persistenceMethod).not.toMatch(/visit|slot|partner|cooldown|owner/i);
   });
 });

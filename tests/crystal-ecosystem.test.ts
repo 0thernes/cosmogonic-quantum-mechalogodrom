@@ -398,6 +398,70 @@ describe('CrystalEcosystem headless contract', () => {
     tree.dispose();
   });
 
+  test('food checkpoint restores remaining sim time and marks only the changed r185 instance range', () => {
+    const config = {
+      ...TINY_CONFIG,
+      creaturesPerSpecies: 0,
+      ambientCreatures: 0,
+    };
+    const sourceScene = new THREE.Scene();
+    const source = new CrystalEcosystem(sourceScene, 9922, new THREE.Vector3(), config);
+    const sourceFruits = sourceScene.getObjectByName('crystal-fruits') as THREE.InstancedMesh;
+    const index = 2;
+    const id = source.foodResourceId('fruit', index)!;
+    sourceFruits.instanceMatrix.clearUpdateRanges();
+    expect(source.consumeFruit(index)).toBe(true);
+    expect(sourceFruits.instanceMatrix.updateRanges).toEqual([{ start: index * 16, count: 16 }]);
+    sourceFruits.instanceMatrix.onUploadCallback();
+    expect(sourceFruits.instanceMatrix.updateRanges).toEqual([]);
+    source.update({ ...BASE_FRAME, dt: 2, visualDt: 0, time: 2 });
+
+    const encoded = JSON.stringify(source.snapshotFoodPersistence());
+    expect(encoded).not.toContain('Object3D');
+    expect(encoded).not.toContain('ownerId');
+    const snapshot = JSON.parse(encoded) as ReturnType<typeof source.snapshotFoodPersistence>;
+    expect(snapshot.entries).toContainEqual({
+      id,
+      generation: 1,
+      remainingRespawn: 3,
+    });
+
+    const restoredScene = new THREE.Scene();
+    const restored = new CrystalEcosystem(restoredScene, 9922, new THREE.Vector3(), config);
+    const restoredFruits = restoredScene.getObjectByName('crystal-fruits') as THREE.InstancedMesh;
+    const authoredMatrix = instanceMatrix(restoredFruits, index);
+    restoredFruits.instanceMatrix.clearUpdateRanges();
+    restored.restoreFoodPersistence(snapshot);
+
+    expect(restored.edibleResources.get(id)).toMatchObject({
+      state: 'respawning',
+      ownerId: null,
+      respawnAt: 3,
+    });
+    expect(restored.stats()).toMatchObject({
+      availableFruit: config.fruits - 1,
+      consumedFruit: 1,
+    });
+    expect(new THREE.Matrix4().fromArray(instanceMatrix(restoredFruits, index)).determinant()).toBe(
+      0,
+    );
+    expect(restoredFruits.instanceMatrix.updateRanges).toEqual([{ start: index * 16, count: 16 }]);
+    // r185's first createBuffer upload does not clear ranges itself; our upload callback must.
+    restoredFruits.instanceMatrix.onUploadCallback();
+    expect(restoredFruits.instanceMatrix.updateRanges).toEqual([]);
+
+    restored.update({ ...BASE_FRAME, dt: 2.999_999, visualDt: 0, time: 2.999_999 });
+    expect(restored.edibleResources.get(id)?.state).toBe('respawning');
+    expect(restoredFruits.instanceMatrix.updateRanges).toEqual([]);
+    restored.update({ ...BASE_FRAME, dt: 0.000_001, visualDt: 0, time: 3 });
+    expect(restored.edibleResources.get(id)?.state).toBe('available');
+    expectMatrixClose(instanceMatrix(restoredFruits, index), authoredMatrix);
+    expect(restoredFruits.instanceMatrix.updateRanges).toEqual([{ start: index * 16, count: 16 }]);
+
+    source.dispose();
+    restored.dispose();
+  });
+
   test('food reset invalidates reservations and restores every hidden authored instance', () => {
     const scene = new THREE.Scene();
     const tree = new CrystalEcosystem(scene, 9921, new THREE.Vector3(), {
@@ -430,6 +494,7 @@ describe('CrystalEcosystem headless contract', () => {
       consumedFruit: 0,
       consumedLeaves: 0,
     });
+    expect(tree.snapshotFoodPersistence().entries).toEqual([]);
     expectMatrixClose(instanceMatrix(fruits, 0), beforeMatrix);
     tree.dispose();
   });

@@ -7,9 +7,27 @@
  * under `bun test` without a localStorage shim, load/save become no-ops.
  */
 import type { PersistedState, PersistedStateV1 } from '../types';
+import type {
+  EdibleResourcePersistenceEntryV1,
+  EdibleResourcePersistenceSnapshotV1,
+} from '../sim/edible-resource';
 
 /** Default localStorage key for the persisted state blob. */
 const DEFAULT_KEY = 'cqm.state';
+const DEFAULT_BIG_TREE_ECOLOGY_KEY = 'cqm.big-tree-ecology.v1';
+const BIG_TREE_RESPAWN_MAX_SECONDS = 5;
+
+/**
+ * Deliberately narrow application checkpoint. The surrounding cosmos still starts fresh on reload;
+ * only pooled Big Tree food generations and remaining respawn time cross the boundary. Active actor,
+ * visit, slot, partner, and cooldown state is excluded.
+ */
+export interface BigTreeEcologyPersistenceSnapshotV1 {
+  readonly version: 1;
+  readonly food: EdibleResourcePersistenceSnapshotV1;
+}
+
+export type BigTreeEcologyPersistenceSnapshot = BigTreeEcologyPersistenceSnapshotV1;
 
 /**
  * Resolve localStorage at call time (test shims patch `globalThis` after
@@ -111,13 +129,58 @@ function migrate(parsed: unknown): PersistedState | null {
   return null;
 }
 
+/** Validate the isolated ecology key without importing simulation runtime code into this leaf. */
+function validateBigTreeEcology(parsed: unknown): BigTreeEcologyPersistenceSnapshotV1 | null {
+  if (!isRecord(parsed) || parsed.version !== 1 || !isRecord(parsed.food)) return null;
+  const food = parsed.food;
+  if (food.version !== 1 || !isIndexLike(food.capacity) || !Array.isArray(food.entries))
+    return null;
+  if (food.entries.length > food.capacity) return null;
+
+  const entries: EdibleResourcePersistenceEntryV1[] = [];
+  const ids = new Set<number>();
+  for (const candidate of food.entries) {
+    if (!isRecord(candidate)) return null;
+    const { id, generation, remainingRespawn } = candidate;
+    if (
+      typeof id !== 'number' ||
+      !Number.isSafeInteger(id) ||
+      typeof generation !== 'number' ||
+      !Number.isSafeInteger(generation) ||
+      generation < 1 ||
+      ids.has(id) ||
+      (remainingRespawn !== null &&
+        (!isFiniteNumber(remainingRespawn) ||
+          remainingRespawn < 0 ||
+          remainingRespawn > BIG_TREE_RESPAWN_MAX_SECONDS))
+    ) {
+      return null;
+    }
+    ids.add(id);
+    entries.push({
+      id,
+      generation,
+      remainingRespawn: remainingRespawn as number | null,
+    });
+  }
+  return {
+    version: 1,
+    food: { version: 1, capacity: food.capacity, entries },
+  };
+}
+
 /** Cross-session preference store. Construct once in the composition root. */
 export class MemoryStore {
   private readonly key: string;
+  private readonly bigTreeEcologyKey: string;
 
-  /** @param key localStorage key (default `'cqm.state'`). */
-  constructor(key: string = DEFAULT_KEY) {
+  /**
+   * @param key preference key (default `'cqm.state'`)
+   * @param bigTreeEcologyKey isolated food checkpoint key (default `'cqm.big-tree-ecology.v1'`)
+   */
+  constructor(key: string = DEFAULT_KEY, bigTreeEcologyKey: string = DEFAULT_BIG_TREE_ECOLOGY_KEY) {
     this.key = key;
+    this.bigTreeEcologyKey = bigTreeEcologyKey;
   }
 
   /**
@@ -158,6 +221,50 @@ export class MemoryStore {
       store.setItem(this.key, JSON.stringify(s));
     } catch {
       // Quota exceeded / private mode — preferences just won't survive reload.
+    }
+  }
+
+  /** Load the isolated Big Tree food checkpoint; corrupt/unknown payloads are ignored, never thrown. */
+  loadBigTreeEcology(): BigTreeEcologyPersistenceSnapshot | null {
+    const store = storageOrNull();
+    if (!store) return null;
+    let raw: string | null;
+    try {
+      raw = store.getItem(this.bigTreeEcologyKey);
+    } catch {
+      return null;
+    }
+    if (raw === null) return null;
+    try {
+      return validateBigTreeEcology(JSON.parse(raw));
+    } catch {
+      return null;
+    }
+  }
+
+  /** Persist only primitive food lifecycle state; false means a later lifecycle flush should retry. */
+  saveBigTreeEcology(snapshot: BigTreeEcologyPersistenceSnapshot): boolean {
+    const store = storageOrNull();
+    if (!store) return false;
+    try {
+      store.setItem(this.bigTreeEcologyKey, JSON.stringify(snapshot));
+      return true;
+    } catch {
+      // Quota exceeded / private mode — retain the dirty revision so a later flush can retry.
+      return false;
+    }
+  }
+
+  /** Genesis/reset boundary: prevent a pre-reset depletion checkpoint from returning on reload. */
+  clearBigTreeEcology(): boolean {
+    const store = storageOrNull();
+    if (!store) return false;
+    try {
+      store.removeItem(this.bigTreeEcologyKey);
+      return true;
+    } catch {
+      // Storage access is optional; a failed clear cannot break the running simulation.
+      return false;
     }
   }
 

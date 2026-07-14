@@ -72,10 +72,16 @@ export class XenomimicConnectome {
     _time: number,
   ): void {
     if (this.disposed) return;
+    const previouslyCaptured = this.captured;
     this.captured = 0;
     this.mimicByPair.fill(-1);
     this.antiByPair.fill(-1);
     population.forEach(this.captureCreature);
+    // Population views are dense but can shrink after death/reset. Release only the now-vacant
+    // tail so the fixed capture buffer cannot keep despawned creatures alive between syncs.
+    for (let index = this.captured; index < previouslyCaptured; index++) {
+      this.creatures[index] = null;
+    }
 
     let n = 0;
     for (let pair = 0; pair < PAIR_CAP && n < XENOMIMIC_CONNECTOME_MAX_LINKS; pair++) {
@@ -126,5 +132,6 @@ export class XenomimicConnectome {
     this.disposed = true;
     this.links = 0;
     this.captured = 0;
+    this.creatures.fill(null);
   }
 }

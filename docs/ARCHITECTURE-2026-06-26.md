@@ -1,4 +1,4 @@
-<!-- reviewed: 2026-07-11 | V4 Phase-A organism intelligence | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-14 | dome-ecology implementation-truth pass | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # Architecture
 
@@ -61,6 +61,10 @@ research goals, not implementation claims.
 4. **Determinism.** One `mulberry32` stream, seeded from `PersistedState.seed`,
    injected via `SimContext.rng`. No sim module touches the global random
    number generator.
+5. **Sparse ecology persistence.** `MemoryStore` has separate schemas and keys for user preferences
+   and the Big Tree food checkpoint. The ecology boundary contains only stable food IDs,
+   generations, and remaining respawn time. Actor, visitor, reservation, slot, partner, cooldown,
+   callback, and render state never cross it.
 
 ## Module graph
 
@@ -109,6 +113,17 @@ graph TD
     viz3d["viz3d.ts<br/>Viz3DSystem (holographic data sculptures)"]
   end
 
+  subgraph dome["src/sim — Dome ecology + Crystal Big Tree"]
+    edible["edible-resource.ts<br/>fixed food registry + transactions"]
+    crystal["crystal-ecosystem.ts<br/>tree food pools + resident ecology"]
+    treezone["big-tree-zone.ts<br/>sanctuary + bounded visits"]
+    visitors["big-tree-visitors.ts<br/>Entity + Xenomimic adapters"]
+    faunasource["big-tree-fauna-source.ts<br/>independent-fauna contract"]
+    faunavisitors["big-tree-fauna-visitors.ts<br/>shared fauna adapter"]
+    treebrain["tree-creature-brain.ts<br/>validated TinyMLP + fallback"]
+    xenotopology["xenomimic-connectome.ts<br/>topology counts only; no lines/tether"]
+  end
+
   subgraph tsotchke["Tsotchke Depth-Ledger Wiring (paramount, non-negotiable by class)"]
     registry["tsotchke-registry.ts<br/>22 external repos: 8 deep, 7 wired, 2 harvest, 4 fenced, 1 meta; 17/21 non-meta integrated"]
     facade["tsotchke-facade.ts<br/>Re-exports + bridges"]
@@ -150,7 +165,7 @@ graph TD
   subgraph persist["src/logging + src/memory"]
     logger["logging/logger.ts (leaf)"]
     audit["logging/audit.ts<br/>AuditTrail"]
-    store["memory/store.ts<br/>MemoryStore"]
+    store["memory/store.ts<br/>preferences + food-only checkpoint"]
   end
 
   subgraph serverl["Server"]
@@ -193,6 +208,21 @@ graph TD
   world --> atmosphere
   world --> viz3d
   world --> observatory
+  world --> crystal
+  world --> treezone
+  world --> visitors
+  world --> faunavisitors
+  world --> xenotopology
+  main --> store
+
+  crystal --> edible
+  crystal --> treebrain
+  visitors --> treezone
+  visitors --> edible
+  faunavisitors --> faunasource
+  faunavisitors --> treezone
+  faunavisitors --> edible
+  store -. "sparse generations + remaining respawn only" .-> crystal
 
   titans --> games
   morphotypes --> phyla
@@ -321,6 +351,13 @@ Notes:
   louvain + metrics inside `graph-mind.ts`, d3-delaunay inside
   `constellations.ts`, @noble/hashes inside `lore.ts`, simple-statistics inside
   `analytics.ts`. No other module imports them.
+- The Big Tree has one canonical `EdibleResourceRegistry`; tree residents, ordinary visitors, and
+  independently owned fauna all use the same reservation/consumption transactions. Hidden and restored
+  food instances remain the same pooled objects, and each changed instance adds one 16-float
+  `instanceMatrix` range rather than invalidating all 10,000 matrices in its pool.
+- `XenomimicConnectome` retains only bounded topology counts. It never attaches line geometry to the
+  scene or applies a movement constraint; shrinking populations clear the vacated capture tail and
+  disposal clears the full fixed capture buffer.
 
 ## Frame pipeline
 
@@ -361,31 +398,38 @@ The flowchart above is the **V1/V2 core**. The V10–V75 systems interleave on t
 [BOOK-2026-06-26.md §A](./BOOK-2026-06-26.md). Cadences — V1 rows from the legacy loop, V2 rows from MODULE-CONTRACTS-2026-06-26.md
 §Frame pipeline V2, V10+ rows verified against `world.ts`:
 
-| Step                         | Cadence                                                                                                                                  |
-| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Grid rebuild                 | Baseline every 2nd frame; one additional current-position rebuild every frame while any live NHI requires exact targeting                |
-| Connectome                   | Every frame (n ≤ 400), every 2nd (≤ 700), every 3rd (> 700)                                                                              |
-| Quantum colors               | Every 6th frame (positions upload every frame)                                                                                           |
-| Telemetry text               | Every 8th frame                                                                                                                          |
-| Sparkline redraw             | Every 18th frame                                                                                                                         |
-| Quantum circuit (V2)         | `update()` every 30th frame (ry drift + entropy); measures every 8th update (≈ 240f); gate events (puppet / sort swap) as they occur     |
-| Register bands → cloud (V2)  | Every 6th frame, aligned with the cloud's color pass                                                                                     |
-| Reaction-diffusion (V2)      | `step()` every 2nd frame, offset 1 from the grid rebuild (the two never share a frame)                                                   |
-| Louvain communities (V2)     | Every 240th frame                                                                                                                        |
-| PageRank (V2)                | Every 600th frame, offset 300 — never shares a frame with the 240f Louvain pass (offset 120 would, at frame 720 and every 1,200f)        |
-| Analytics (V2)               | `push()` every 8th frame (with telemetry); `analyze()` every 60th frame                                                                  |
-| Constellations (V2)          | Every frame — O(1) opacity/pulse only (Voronoi built once at construction)                                                               |
-| Audio band poll (V2)         | Every frame — O(128) analyser read, zeros until audio is initialized                                                                     |
-| Economy tick (V13)           | Every 30th frame, offset 15 — sanctions + clearing market on its own `econRng` sub-stream                                                |
-| Chaos-field (V62)            | Every frame when engaged (Lorenz + tunnel/entangle/superpose on a stride-3 slice); inert + rng-silent when off                           |
-| Singularity force (V7.4)     | Every frame while a hole is summoned — r⁻² force + time-dilation; raises `state.chaos` (V64)                                             |
-| NHI beat (V10)               | Every frame while present; hard cap 32, O(M) lifecycle, spatial local-kin sensing, and bounded O(M²/2) body-social visuals               |
-| Super-creature minds (GOAL5) | Every 4th frame — 5× (distinct seeds/archetypes): per-pos percept → think (Clifford reflex + AST/HOT scaffolds + memory) → bodies + roam |
-| Gravitational lens (V60)     | Every frame — full-screen post-FX pass; pixel-exact passthrough when no hole is active                                                   |
+| Step                         | Cadence                                                                                                                                                          |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Grid rebuild                 | Baseline every 2nd frame; one additional current-position rebuild every frame while any live NHI requires exact targeting                                        |
+| Connectome                   | Every frame (n ≤ 400), every 2nd (≤ 700), every 3rd (> 700)                                                                                                      |
+| Quantum colors               | Every 6th frame (positions upload every frame)                                                                                                                   |
+| Telemetry text               | Every 8th frame                                                                                                                                                  |
+| Sparkline redraw             | Every 18th frame                                                                                                                                                 |
+| Quantum circuit (V2)         | `update()` every 30th frame (ry drift + entropy); measures every 8th update (≈ 240f); gate events (puppet / sort swap) as they occur                             |
+| Register bands → cloud (V2)  | Every 6th frame, aligned with the cloud's color pass                                                                                                             |
+| Reaction-diffusion (V2)      | `step()` every 2nd frame, offset 1 from the grid rebuild (the two never share a frame)                                                                           |
+| Louvain communities (V2)     | Every 240th frame                                                                                                                                                |
+| PageRank (V2)                | Every 600th frame, offset 300 — never shares a frame with the 240f Louvain pass (offset 120 would, at frame 720 and every 1,200f)                                |
+| Analytics (V2)               | `push()` every 8th frame (with telemetry); `analyze()` every 60th frame                                                                                          |
+| Constellations (V2)          | Every frame — O(1) opacity/pulse only (Voronoi built once at construction)                                                                                       |
+| Audio band poll (V2)         | Every frame — O(128) analyser read, zeros until audio is initialized                                                                                             |
+| Economy tick (V13)           | Every 30th frame, offset 15 — sanctions + clearing market on its own `econRng` sub-stream                                                                        |
+| Chaos-field (V62)            | Every frame when engaged (Lorenz + tunnel/entangle/superpose on a stride-3 slice); inert + rng-silent when off                                                   |
+| Singularity force (V7.4)     | Every frame while a hole is summoned — r⁻² force + time-dilation; raises `state.chaos` (V64)                                                                     |
+| NHI beat (V10)               | Every frame while present; hard cap 32, O(M) lifecycle, spatial local-kin sensing, and bounded O(M²/2) body-social visuals                                       |
+| Super-creature minds (GOAL5) | Every 4th frame — 5× (distinct seeds/archetypes): per-pos percept → think (Clifford reflex + AST/HOT scaffolds + memory) → bodies + roam                         |
+| Gravitational lens (V60)     | Every frame — full-screen post-FX pass; pixel-exact passthrough when no hole is active                                                                           |
+| Big Tree ecology             | Active visits/tree residents step on scaled simulation time; candidate polls run every 0.1 s, food deadlines receive full scaled dt, and shared visits cap at 72 |
+
+The live POWER path intentionally remains `dormant-main-thread`: the worker asset is still built and
+served, but `World.workerPool` is `null` and no Worker/SAB lease is active. The visual-smoke harness
+checks that contract after natural `requestAnimationFrame` progress and captures both the ordinary
+viewport and a canvas-isolated world proof through bounded, failure-reporting stages. This architecture
+description does not claim that a current browser, production-build, or GitHub Pages run has passed.
 
 ## Data flow
 
-Three loops run concurrently:
+Five loops and lifecycle boundaries cooperate:
 
 **1. Simulation loop (per frame).** `InputSystem` exposes `keys`, `camVel`,
 and `touch` as read-only state; `world.ts` reads them in the camera step.
@@ -410,7 +454,21 @@ See README, docs/TSOTCHKE-\*, MODULE-CONTRACTS for contracts, reports for receip
 `TelemetrySnapshot` (including the once write-only `mutations` counter, Known
 Bug 14) and feeds `TelemetryPanel` every 8th frame.
 
-**2. Audit loop (event-driven + polled).** User actions and puppet-master
+**2. Big Tree ecology loop (scaled simulation time).** `CrystalEcosystem` owns the fixed 10,000-fruit
+and 10,000-leaf pools and publishes one shared registry. `BigTreeZone` supplies the `(220, 620)`
+sanctuary with 240-unit entry and 270-unit exit thresholds; its manager caps all travelling, active,
+and leaving visits at 72. Ordinary/Xenomimic and independent-fauna adapters steer their canonical
+actors but never clone them.
+
+Consumption advances one owner/generation transaction and awards nourishment only at the successful
+commit. The instance hides immediately and becomes available only after the same matrix has been
+restored at exactly five scaled simulation seconds. Ordinary social matching is a bounded queue pass;
+when two willing ordinary organisms first pair, a strategy-1 defector may copy a strategy-0 cooperator.
+That is the entire policy-transfer claim. Fauna matching reads every eligible active adapter once in
+O(A), caches only numeric lanes, then performs bounded O(A²) distance comparisons, where A ≤ 72; it
+does not repeat adapter reads inside the nested loop or search whole species populations.
+
+**3. Audit loop (event-driven + polled).** User actions and puppet-master
 events call `AuditTrail.record(action, detail)`, which appends to a local
 ring (mirrored to `localStorage` key `cqm.audit.v1`) and fire-and-forget
 POSTs JSON to `/api/audit`. The server keeps its own in-memory ring (cap
@@ -418,12 +476,15 @@ POSTs JSON to `/api/audit`. The server keeps its own in-memory ring (cap
 (`hx-trigger="load, every 5s"`) and swaps in the returned `<ol>` fragment —
 no client-side rendering code involved.
 
-**3. Persistence loop (boot/exit).** `MemoryStore.load()` returns a versioned
-`PersistedState` (or `null` on corruption — it never throws), from which
-`world.ts` seeds the RNG and restores song/algorithm/view/weather/SFX
-preferences; preference-changing actions call `save()`.
+**4. Persistence loop (boot/exit).** `MemoryStore.load()` returns versioned user preferences (or
+`null` on corruption — it never throws). Separately, `loadBigTreeEcology()` validates the
+`cqm.big-tree-ecology.v1` checkpoint before `World` constructs visitor adapters. Only food generations
+and remaining respawn time are restored; an interrupted reservation/consumption is invalidated and
+restored as available. Visibility-hidden, page-exit, and world-disposal paths make a best-effort sparse
+food flush. Genesis resets food and clears the checkpoint. Actor, visit, slot, reservation, partner,
+cooldown, callback, and renderer state are reconstructed rather than persisted.
 
-**4. Feedback web (V2).** The Wildbeyond systems close loops between
+**5. Feedback web (V2).** The Wildbeyond systems close loops between
 previously independent subsystems, all fanned out by `world.ts`:
 
 - Entity deaths fire `EntityManager.onDeath`, which `world.ts` wires to

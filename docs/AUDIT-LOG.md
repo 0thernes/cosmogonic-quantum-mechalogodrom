@@ -58,6 +58,51 @@ organism visits starving); the fauna-source integration test file remains string
 titan/puppeteer/apex (the shoggoth arm is now behavioral; leviathan nutrition is behavioral in
 dome-feeding).
 
+## 2026-07-14 — Dome ecology continuation: lifecycle persistence, real policy transfer, GPU-range and browser-proof hardening
+
+This continuation corrects and supersedes the corresponding implementation-status statements in the
+earlier 2026-07-14 entry below. It does not rewrite that historical snapshot.
+
+- **Food-only persistence boundary:** `MemoryStore` now owns a separate
+  `cqm.big-tree-ecology.v1` checkpoint. The validated sparse payload contains stable food IDs,
+  generations, and remaining scaled-simulation respawn time only. Available resources are omitted;
+  reserved/consuming resources restore available with a generation bump; no actor, visit phase, slot,
+  reservation owner, social partner, cooldown, callback, matrix, collider, or neural state crosses the
+  boundary. Hidden/pagehide/disposal make best-effort lifecycle flushes, failed writes remain retryable,
+  restore validates before mutation, and Genesis clears the key. A clean 20,000-slot pool serializes to
+  43 bytes rather than the former approximately 1.03 MB all-slot snapshot.
+- **Real but deliberately narrow social learning:** when a newly reciprocal ordinary-organism pair has
+  exactly one canonical strategy-0 cooperator and one strategy-1 defector, the defector copies strategy
+  0 once. Nash behavior and the existing descendant path consume that field, and
+  `policyTransfers`/`cooperativePolicyTransfers` record the commit. Lease renewal cannot duplicate it.
+  This does not establish cross-species knowledge transfer, tree-resident training, or general neural
+  learning; those broader claims remain deferred.
+- **Bounded hot paths:** each changed fruit/leaf adds only its own 16-float `instanceMatrix` update
+  range. The fauna matcher reads each eligible active adapter once in O(A), caches numeric lanes, and
+  performs deterministic bounded O(A²) distance comparisons with A <= 72. The current focused mitata
+  fixture measures a clean 20,000-slot snapshot at 54.97 µs average and 59 unmatched fauna candidates
+  at 50.10 µs average on this Windows/Intel Core Ultra 9 275HX run; these are CPU-only,
+  machine/load-sensitive figures, not a browser FPS claim.
+- **Xenomimic lifecycle closure:** the connectome remains topology-only and creates no renderer,
+  geometry, joint, leash, force, or movement owner. Sync now nulls vacated captured creature references
+  after population shrink and disposal nulls the complete fixed capture array, preventing despawned
+  references from surviving without recreating tether state.
+- **Natural-rAF browser harness:** the staged smoke path no longer calls a private simulation-step API
+  or reads raw GL pixels. It advances complete native animation-frame callback batches, bounds every
+  stage, classifies partial failures, captures the unmodified viewport plus a separately masked
+  canvas-only proof, and uses only the canvas receipt for liveness. It checks the intentional
+  `dormant-main-thread` worker contract while separately requiring the worker asset to be built and
+  served; it does not claim active worker offload.
+
+Pre-final verification for this continuation: the focused ecology/persistence/browser set is green at
+102 tests / 0 fail / 4,110 expectations. The tracked full-suite measurement completed at 3,208 tests /
+0 fail / 3,545,659 expectations across 359 files, with 93.57% Windows line coverage and 91.57%
+function coverage; portable canonical floors remain 84.64% / 82.21%. Separate local SwiftShader runs
+proved nonblank phone and desktop world canvases with zero page/console errors, but they are explicitly
+headless-browser liveness receipts (0.113 and 0.046 FPS), not 60-120 FPS evidence. One atomic two-tier
+run, the final whole-repository gate, production build, and deployed GitHub Pages verification remain
+pending at this point in the audit sequence.
+
 ## 2026-07-14 — Dome ecology ship: Big Tree food/sanctuary/visits + xenomorph tether closure + spec audit fix-pass
 
 Owner directive (FULL-REPOSITORY-AUDIT-PROMPT «DOME ECOLOGY, XENOMORPH, AND BIG TREE BEHAVIOR»):
@@ -561,7 +606,7 @@ across and puts it to work — a genuinely SMARTER learner, not a bigger one.
 - **`src/sim/ad-mlp.ts` — `mlpTrainStepCurvature`: exact Gauss-Newton-DIAGONAL preconditioned step** with
   Levenberg–Marquardt damping. Curvature Hᵍⁿᵢᵢ = 2·Σₖ(∂fₖ/∂θᵢ)² is the PSD part of the MSE Hessian, computed
   exactly by one extra reverse pass seeded at the network output (the output-Jacobian). `mlpTrainStep` is
-  UNTOUCHED — apex-brain, faculties-pantheon, super-* keep their byte-identical first-order trajectories.
+  UNTOUCHED — apex-brain, faculties-pantheon, super-\* keep their byte-identical first-order trajectories.
 - **`src/sim/digital-biologics.ts` — the LIVE petri self-model now learns by curvature.** `stepBiologic`'s
   `learn=true` path (driven live in `petri-dish.ts:542`) swaps SGD → `mlpTrainStepCurvature`. Still purely
   observational (feeds only `selfModelErr`, never adFitness/consciousness/selection ⇒ every petri golden and the
@@ -746,7 +791,7 @@ another percept axis). The value head (Pass 2) forecasts energy ONE beat ahead �
 forecasts it FORESIGHT_K=6 beats ahead → proactive foraging.
 
 - **`src/sim/super-creature.ts` — a learned FORESIGHT head (18→6→1, `SUPER_FORESIGHT_PARAMS`=121).** Trained
-  by exact Eshkol-AD backprop on the DELAYED pair (percept_{t−6} → energy_t), held in a 6-deep percept ring,
+  by exact Eshkol-AD backprop on the DELAYED pair (percept\_{t−6} → energy_t), held in a 6-deep percept ring,
   so it learns the longer arc rather than the next step. A predicted FUTURE drop becomes `foresightUrgency`,
   which pulls toward feeding/banking energy BEFORE hunger arrives. Fifth decorrelated substream
   (`seed ^ 0x0f0e51a7`); a `foresight:false` seam is the ablation control for the plan bias.

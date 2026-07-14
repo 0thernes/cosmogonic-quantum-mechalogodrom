@@ -2,15 +2,16 @@
 /**
  * Browser visual smoke for the main WebGL dome.
  *
- * Starts the local Bun server, opens Chromium through Playwright, drives a handful of deterministic
- * localhost-only `window.__CQM__.step()` frames, samples the main WebGL canvas, and writes artifacts to
- * output/playwright/. This is deliberately separate from `bun run check`: it may download/launch a
- * browser through npx, so callers opt into the visual proof when they need it.
+ * Starts the local Bun server, opens Chromium through Playwright, waits for bounded natural animation
+ * frames, samples a full-viewport PNG, and writes artifacts to output/playwright/. This is deliberately
+ * separate from `bun run check`: it installs/launches a browser, so callers opt into the visual proof
+ * when they need it.
  */
 import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { VISUAL_SMOKE_RAF_GATE_SOURCE } from './browser-visual-smoke-raf-gate';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT_DIR = join(ROOT, 'output', 'playwright');
@@ -120,29 +121,153 @@ async function waitForProcess(
 }
 
 function playwrightRunnerSource(): string {
+  const rafGateSource = JSON.stringify(VISUAL_SMOKE_RAF_GATE_SOURCE);
   return String.raw`
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { inflateSync } from 'node:zlib';
 import { chromium } from 'playwright';
 
 const baseUrl = process.env.CQM_VISUAL_SMOKE_URL;
 const outDir = process.env.CQM_VISUAL_SMOKE_OUT;
+const visualSmokeRafGateSource = ${rafGateSource};
 const tiers = (process.env.CQM_VISUAL_SMOKE_TIERS ?? 'phone,desktop')
   .split(',')
   .map((tier) => tier.trim())
   .filter(Boolean);
-const firstSampleSteps = Number(process.env.CQM_VISUAL_SMOKE_FIRST_STEPS ?? 18);
-const retrySampleSteps = Number(process.env.CQM_VISUAL_SMOKE_RETRY_STEPS ?? 6);
+// A single naturally presented frame proves foreground liveness without multiplying the full-world render
+// cost. Callers may request a longer settle through the existing env knobs; retries remain one real frame.
+const firstSampleSteps = Number(process.env.CQM_VISUAL_SMOKE_FIRST_STEPS ?? 1);
+const retrySampleSteps = Number(process.env.CQM_VISUAL_SMOKE_RETRY_STEPS ?? 1);
 const sampleAttempts = Number(process.env.CQM_VISUAL_SMOKE_ATTEMPTS ?? 4);
+const operationTimeoutMs = Number(process.env.CQM_VISUAL_SMOKE_OPERATION_TIMEOUT_MS ?? 30000);
+// Desktop's 60,000-flora full-fidelity frame can exceed 30s under Chromium SwiftShader even though
+// hardware WebGL is far faster. Keep the stage finite without making software rendering a false fail.
+const frameAdvanceTimeoutMs = Number(process.env.CQM_VISUAL_SMOKE_FRAME_TIMEOUT_MS ?? 90000);
+const screenshotTimeoutMs = Number(process.env.CQM_VISUAL_SMOKE_SCREENSHOT_TIMEOUT_MS ?? 30000);
+const stressDurationMs = Number(process.env.CQM_VISUAL_SMOKE_STRESS_MS ?? 15000);
+const teardownTimeoutMs = Number(process.env.CQM_VISUAL_SMOKE_TEARDOWN_TIMEOUT_MS ?? 10000);
 
 if (!baseUrl || !outDir) throw new Error('missing CQM_VISUAL_SMOKE_URL or CQM_VISUAL_SMOKE_OUT');
 
 await mkdir(outDir, { recursive: true });
+const summaryPath = join(outDir, 'visual-smoke-summary.json');
+const runStartedAt = new Date().toISOString();
+await rm(summaryPath, { force: true });
+await writeFile(
+  summaryPath,
+  JSON.stringify(
+    { status: 'running', requestedTiers: tiers, completedTiers: [], startedAt: runStartedAt, results: [] },
+    null,
+    2,
+  ),
+);
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function settleBounded(promise, timeoutMs) {
+  let timer;
+  const timeout = new Promise((resolve) => {
+    timer = setTimeout(resolve, timeoutMs);
+  });
+  try {
+    await Promise.race([promise, timeout]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+class StageTimeoutError extends Error {
+  constructor(stage, timeoutMs) {
+    super(stage + ' timed out after ' + timeoutMs + 'ms');
+    this.name = 'StageTimeoutError';
+    this.stage = stage;
+    this.timeoutMs = timeoutMs;
+  }
+}
+
+function errorText(error) {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function classifyFailure(error, lifecycle) {
+  const message = errorText(error);
+  if (lifecycle.pageCrashed || /target crashed|page crashed|renderer process crashed/i.test(message)) {
+    return 'page-crash';
+  }
+  if (error instanceof StageTimeoutError) return 'stage-timeout';
+  if (/timeout|timed out/i.test(message)) return 'playwright-timeout';
+  if (lifecycle.currentStage === 'assertions') return 'assertion';
+  return 'operation-error';
+}
+
+async function runStage(lifecycle, stage, timeoutMs, operation) {
+  const startedAt = Date.now();
+  lifecycle.currentStage = stage;
+  const record = { stage, status: 'running', startedAt, durationMs: 0 };
+  lifecycle.stages.push(record);
+  console.log('visual-smoke: stage ' + lifecycle.tier + ' ' + stage);
+
+  let timer;
+  const deadline = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      const timeout = new StageTimeoutError(stage, timeoutMs);
+      lifecycle.lastFailure = {
+        stage,
+        classification: 'stage-timeout',
+        message: timeout.message,
+      };
+      reject(timeout);
+      const page = lifecycle.page;
+      if (page && !page.isClosed()) {
+        void page.close({ runBeforeUnload: false }).catch(() => undefined);
+      }
+    }, timeoutMs);
+  });
+
+  try {
+    const value = await Promise.race([Promise.resolve().then(operation), deadline]);
+    record.status = 'ok';
+    return value;
+  } catch (error) {
+    const classification = classifyFailure(error, lifecycle);
+    record.status = 'failed';
+    record.classification = classification;
+    record.message = errorText(error);
+    lifecycle.lastFailure = { stage, classification, message: record.message };
+    throw error;
+  } finally {
+    clearTimeout(timer);
+    record.durationMs = Date.now() - startedAt;
+  }
+}
+
+async function writeFailureArtifact(report, lifecycle, error) {
+  const classification = classifyFailure(error, lifecycle);
+  report.status = 'failed';
+  report.failure = {
+    stage: lifecycle.lastFailure?.stage ?? lifecycle.currentStage,
+    classification,
+    message: errorText(error),
+    pageCrashed: lifecycle.pageCrashed,
+    browserDisconnected: lifecycle.browserDisconnected,
+  };
+  report.stages = lifecycle.stages;
+  const path = join(outDir, 'visual-smoke-' + lifecycle.tier + '-failure.json');
+  await writeFile(path, JSON.stringify(report, null, 2));
+}
+
+async function closeContextBounded(context) {
+  if (!context) return;
+  await settleBounded(context.close().catch(() => undefined), teardownTimeoutMs);
+}
 
 const browser = await chromium.launch({
   headless: true,
   args: ['--ignore-gpu-blocklist', '--enable-webgl', '--enable-webgl2'],
+  timeout: operationTimeoutMs,
 });
 console.log('visual-smoke: Chromium launched');
 
@@ -254,38 +379,13 @@ function samplePng(buffer) {
   };
 }
 
-async function sampleCanvas(page, stepCount) {
-  await page.evaluate((steps) => {
-    const api = window.__CQM__;
-    if (!api || typeof api.step !== 'function') throw new Error('window.__CQM__.step missing');
-    for (let i = 0; i < steps; i++) api.step(1 / 60);
-  }, stepCount);
-  await page.waitForTimeout(80);
+async function readCanvasMetadata(page) {
   return await page.evaluate(() => {
     const canvas = document.getElementById('c');
     if (!(canvas instanceof HTMLCanvasElement)) throw new Error('#c canvas missing');
     const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
     if (!gl) throw new Error('WebGL context missing');
     const rect = canvas.getBoundingClientRect();
-    const w = Math.max(1, Math.min(320, gl.drawingBufferWidth || canvas.width));
-    const h = Math.max(1, Math.min(180, gl.drawingBufferHeight || canvas.height));
-    const pixels = new Uint8Array(w * h * 4);
-    gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
-    let bright = 0;
-    let alpha = 0;
-    let lumaSum = 0;
-    const buckets = new Set();
-    for (let p = 0; p < pixels.length; p += 4) {
-      const r = pixels[p] ?? 0;
-      const g = pixels[p + 1] ?? 0;
-      const b = pixels[p + 2] ?? 0;
-      const a = pixels[p + 3] ?? 0;
-      const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-      lumaSum += luma;
-      if (a > 0) alpha++;
-      if (luma > 8) bright++;
-      if ((p / 4) % 64 === 0) buckets.add([r >> 4, g >> 4, b >> 4, a >> 6].join(','));
-    }
     const world = window.__CQM__?.world;
     return {
       canvasWidth: canvas.width,
@@ -294,15 +394,40 @@ async function sampleCanvas(page, stepCount) {
       cssHeight: rect.height,
       drawingBufferWidth: gl.drawingBufferWidth,
       drawingBufferHeight: gl.drawingBufferHeight,
-      brightRatio: bright / (w * h),
-      alphaRatio: alpha / (w * h),
-      avgLuma: lumaSum / (w * h),
-      uniqueBuckets: buckets.size,
       frame: world?.state?.frame ?? null,
       elapsed: world?.state?.elapsed ?? null,
       qualityTier: world?.quality?.tier ?? null,
       entityCount: world?.entities?.list?.length ?? null,
     };
+  });
+}
+
+async function waitForNaturalFrames(page, frameCount) {
+  const armed = await page.evaluate((frames) => {
+    const gate = window.__CQM_VISUAL_SMOKE_RAF_GATE__;
+    if (!gate) throw new Error('visual-smoke rAF gate missing');
+    return gate.pauseAfterWorldFrames(frames);
+  }, frameCount);
+  await page.waitForFunction(
+    ({ targetFrame }) => {
+      const currentFrame = window.__CQM__?.world?.state?.frame;
+      const gate = window.__CQM_VISUAL_SMOKE_RAF_GATE__;
+      return Number.isFinite(currentFrame) && currentFrame >= targetFrame && gate?.heldCount > 0;
+    },
+    armed,
+    // Poll on an interval rather than another rAF callback: the WORLD frame must still advance through its
+    // real rAF loop. The gate then holds the NEXT callback so screenshot/CDP work cannot starve behind
+    // continuous software rendering; resuming requeues every held callback without fabricating a frame.
+    { polling: 250, timeout: frameAdvanceTimeoutMs },
+  );
+  return await readCanvasMetadata(page);
+}
+
+async function resumeNaturalFrames(page) {
+  return await page.evaluate(() => {
+    const gate = window.__CQM_VISUAL_SMOKE_RAF_GATE__;
+    if (!gate) throw new Error('visual-smoke rAF gate missing');
+    return gate.resume();
   });
 }
 
@@ -462,19 +587,27 @@ async function waitForBootOverlayGone(page, tier) {
   return boot;
 }
 
-async function runHabitatStressProbe(page) {
-  return await page.evaluate(async () => {
+async function startHabitatStressProbe(page) {
+  return await page.evaluate(() => {
     const api = window.__CQM__;
     if (!api?.world) throw new Error('window.__CQM__.world missing');
     const world = api.world;
     const camera = api.camera;
-    const startFrame = world.state.frame;
-    const startedAt = performance.now();
-    let maxWorkerActive = 0;
+    const previous = window.__CQM_VISUAL_SMOKE_STRESS__;
+    if (previous?.rafId) cancelAnimationFrame(previous.rafId);
+    const probe = {
+      active: true,
+      startFrame: world.state.frame,
+      startedAt: performance.now(),
+      maxWorkerActive: 0,
+      rafId: 0,
+    };
+    window.__CQM_VISUAL_SMOKE_STRESS__ = probe;
 
-    // Keep the largest habitat, narrowest supported lens, and strongest dynamic scalars live for a
-    // sustained foreground sample. Real rAF remains in control; this does not fabricate frame steps.
-    do {
+    const observe = () => {
+      if (!probe.active) return;
+      // Keep the largest habitat, narrowest supported lens, and strongest dynamic scalars live for a
+      // sustained foreground sample. Real rAF remains in control; this observer never fabricates steps.
       world.state.viewIdx = 3;
       world.state.chaos = 10;
       world.state.entropy = 10;
@@ -482,11 +615,26 @@ async function runHabitatStressProbe(page) {
       camera.fov = 35;
       camera.updateProjectionMatrix();
       const stats = world.workerPool?.getStats();
-      maxWorkerActive = Math.max(maxWorkerActive, stats?.activeTasks ?? 0);
-      await new Promise((resolve) => requestAnimationFrame(resolve));
-    } while (performance.now() - startedAt < 15_000);
+      probe.maxWorkerActive = Math.max(probe.maxWorkerActive, stats?.activeTasks ?? 0);
+      probe.rafId = requestAnimationFrame(observe);
+    };
+    observe();
+    return { startFrame: probe.startFrame, startedAt: probe.startedAt };
+  });
+}
 
-    const durationMs = performance.now() - startedAt;
+async function finishHabitatStressProbe(page) {
+  return await page.evaluate(async (workerTimeoutMs) => {
+    const api = window.__CQM__;
+    if (!api?.world) throw new Error('window.__CQM__.world missing');
+    const world = api.world;
+    const camera = api.camera;
+    const probe = window.__CQM_VISUAL_SMOKE_STRESS__;
+    if (!probe) throw new Error('habitat stress probe was not started');
+    probe.active = false;
+    if (probe.rafId) cancelAnimationFrame(probe.rafId);
+
+    const durationMs = performance.now() - probe.startedAt;
     const endFrame = world.state.frame;
     const corners = [];
     for (const x of [-1080, 1080]) {
@@ -510,19 +658,31 @@ async function runHabitatStressProbe(page) {
       }
     }
 
-    const workerResponse = await fetch('/workers/simulation-worker.js', { cache: 'no-store' });
-    const workerBody = await workerResponse.text();
+    const controller = new AbortController();
+    const workerTimer = setTimeout(() => controller.abort(), workerTimeoutMs);
+    let workerResponse;
+    let workerBody;
+    try {
+      workerResponse = await fetch('/workers/simulation-worker.js', {
+        cache: 'no-store',
+        signal: controller.signal,
+      });
+      workerBody = await workerResponse.text();
+    } finally {
+      clearTimeout(workerTimer);
+    }
     const canvas = document.getElementById('c');
     const gl =
       canvas instanceof HTMLCanvasElement
         ? canvas.getContext('webgl2') || canvas.getContext('webgl')
         : null;
     const debugRenderer = gl?.getExtension('WEBGL_debug_renderer_info') ?? null;
-    return {
+    const result = {
       tier: world.quality.tier,
+      measurementClass: 'headless-browser-liveness-not-production-fps',
       durationMs,
-      framesAdvanced: endFrame - startFrame,
-      observedFps: durationMs > 0 ? ((endFrame - startFrame) * 1000) / durationMs : 0,
+      framesAdvanced: endFrame - probe.startFrame,
+      observedFps: durationMs > 0 ? ((endFrame - probe.startFrame) * 1000) / durationMs : 0,
       stress: {
         chaos: world.state.chaos,
         entropy: world.state.entropy,
@@ -541,8 +701,9 @@ async function runHabitatStressProbe(page) {
         meshDrawGroups: world.alienFlora?.meshes?.length ?? null,
       },
       workers: {
+        runtimeMode: world.workerPool ? 'worker-pool' : 'dormant-main-thread',
         current: world.workerPool?.getStats() ?? null,
-        maxActiveObserved: maxWorkerActive,
+        maxActiveObserved: probe.maxWorkerActive,
         perfSnapshot: world.getPerfSnapshot(),
         asset: {
           ok: workerResponse.ok,
@@ -563,170 +724,420 @@ async function runHabitatStressProbe(page) {
       },
       perfHud: document.querySelector('#perf-hud')?.textContent?.trim() ?? '',
     };
-  });
+    delete window.__CQM_VISUAL_SMOKE_STRESS__;
+    return result;
+  }, Math.min(operationTimeoutMs, 10000));
 }
+
+let activeLifecycle = null;
+browser.on('disconnected', () => {
+  if (activeLifecycle) activeLifecycle.browserDisconnected = true;
+});
 
 try {
   for (const tier of tiers) {
     console.log('visual-smoke: opening ' + tier);
-    const context = await browser.newContext({
-      viewport: tier === 'phone' ? { width: 390, height: 844 } : { width: 1280, height: 720 },
-      deviceScaleFactor: tier === 'phone' ? 2 : 1,
-      isMobile: tier === 'phone',
-      hasTouch: tier === 'phone',
-    });
-    await context.addInitScript(() => {
-      try {
-        localStorage.setItem('cqm.onboarding.dismissed', '1');
-      } catch {
-        /* localStorage may be unavailable in hardened browser contexts */
-      }
-    });
-    const page = await context.newPage();
+    const screenshotPath = join(outDir, 'visual-smoke-' + tier + '.png');
+    const worldScreenshotPath = join(outDir, 'visual-smoke-' + tier + '-world.png');
+    const resultPath = join(outDir, 'visual-smoke-' + tier + '.json');
+    const failurePath = join(outDir, 'visual-smoke-' + tier + '-failure.json');
+    await Promise.all([
+      rm(screenshotPath, { force: true }),
+      rm(worldScreenshotPath, { force: true }),
+      rm(resultPath, { force: true }),
+      rm(failurePath, { force: true }),
+    ]);
+
+    let context = null;
+    let page = null;
     const consoleErrors = [];
     const pageErrors = [];
-    page.on('console', (msg) => {
-      if (msg.type() === 'error') consoleErrors.push(msg.text());
-    });
-    page.on('pageerror', (err) => pageErrors.push(err.message));
-
-    await page.goto(tierUrl(tier), { waitUntil: 'domcontentloaded', timeout: 120000 });
-    await page.waitForSelector('#c', { state: 'attached', timeout: 60000 });
-    await page.waitForFunction(() => Boolean(window.__CQM__?.step), null, { timeout: 120000 });
-    console.log('visual-smoke: hook ready ' + tier);
-    await page.keyboard.press('Escape').catch(() => undefined);
-    await page.waitForTimeout(50);
-    const bootState = await waitForBootOverlayGone(page, tier);
-    const onboardingState = await ensureOnboardingHidden(page, tier);
-    console.log('visual-smoke: boot overlay gone ' + tier);
-
-    let metrics = null;
-    for (let attempt = 0; attempt < sampleAttempts; attempt++) {
-      console.log('visual-smoke: sample ' + tier + ' attempt=' + attempt);
-      metrics = await sampleCanvas(page, attempt === 0 ? firstSampleSteps : retrySampleSteps);
-      if (metrics.brightRatio > 0.01 && metrics.avgLuma > 1 && metrics.uniqueBuckets >= 6) break;
-    }
-
-    const screenshotPath = join(outDir, 'visual-smoke-' + tier + '.png');
-    const onboardingStateBeforeScreenshot = await ensureOnboardingHidden(page, tier);
-    const screenshot = await page.screenshot({ path: screenshotPath, fullPage: false });
-    const screenshotMetrics = samplePng(screenshot);
-    const bootStateAfterScreenshot = await readBootOverlay(page);
-    const onboardingStateAfterScreenshot = await readOnboardingOverlay(page);
-    console.log('visual-smoke: habitat stress probe ' + tier);
-    const habitatStress = await runHabitatStressProbe(page);
-    const result = {
+    const report = {
       tier,
-      url: page.url(),
-      screenshotPath,
-      screenshotBytes: screenshot.length,
-      metrics,
-      screenshotMetrics,
-      bootState,
-      bootStateAfterScreenshot,
-      onboardingState,
-      onboardingStateBeforeScreenshot,
-      onboardingStateAfterScreenshot,
-      habitatStress,
-      consoleErrors: consoleErrors.slice(0, 10),
+      status: 'running',
+      url: tierUrl(tier),
+      consoleErrors,
       pageErrors,
     };
-    await writeFile(join(outDir, 'visual-smoke-' + tier + '.json'), JSON.stringify(result, null, 2));
-    results.push(result);
-    await context.close();
+    const lifecycle = {
+      tier,
+      currentStage: 'setup',
+      stages: [],
+      page: null,
+      pageCrashed: false,
+      browserDisconnected: false,
+      lastFailure: null,
+    };
+    activeLifecycle = lifecycle;
 
-    if (pageErrors.length > 0) {
-      throw new Error(tier + ': page errors: ' + pageErrors.join(' | '));
-    }
-    if (consoleErrors.length > 0) {
-      throw new Error(tier + ': console errors: ' + consoleErrors.join(' | '));
-    }
-    if (bootStateAfterScreenshot.visible) {
-      throw new Error(
-        tier +
-          ': screenshot captured visible boot overlay: ' +
-          JSON.stringify(bootStateAfterScreenshot),
+    try {
+      context = await runStage(lifecycle, 'context-create', operationTimeoutMs, () =>
+        browser.newContext({
+          viewport: tier === 'phone' ? { width: 390, height: 844 } : { width: 1280, height: 720 },
+          deviceScaleFactor: tier === 'phone' ? 2 : 1,
+          isMobile: tier === 'phone',
+          hasTouch: tier === 'phone',
+        }),
       );
-    }
-    if (onboardingStateAfterScreenshot.visible) {
-      throw new Error(
-        tier +
-          ': screenshot captured visible onboarding overlay: ' +
-          JSON.stringify(onboardingStateAfterScreenshot),
+      context.setDefaultTimeout(operationTimeoutMs);
+      context.setDefaultNavigationTimeout(120000);
+      await runStage(lifecycle, 'init-script', operationTimeoutMs, async () => {
+        await context.addInitScript({ content: visualSmokeRafGateSource });
+        await context.addInitScript(() => {
+          try {
+            localStorage.setItem('cqm.onboarding.dismissed', '1');
+          } catch {
+            /* localStorage may be unavailable in hardened browser contexts */
+          }
+        });
+      });
+      page = await runStage(lifecycle, 'page-create', operationTimeoutMs, () => context.newPage());
+      lifecycle.page = page;
+      page.on('console', (msg) => {
+        if (msg.type() === 'error') consoleErrors.push(msg.text());
+      });
+      page.on('pageerror', (err) => pageErrors.push(err.message));
+      page.on('crash', () => {
+        lifecycle.pageCrashed = true;
+      });
+
+      await runStage(lifecycle, 'navigation', 125000, () =>
+        page.goto(tierUrl(tier), { waitUntil: 'domcontentloaded', timeout: 120000 }),
       );
-    }
-    if (!metrics || metrics.canvasWidth < 100 || metrics.canvasHeight < 100) {
-      throw new Error(tier + ': canvas has invalid dimensions');
-    }
-    const canvasLooksAlive =
-      metrics.brightRatio > 0.01 && metrics.avgLuma > 1 && metrics.uniqueBuckets >= 6;
-    const screenshotLooksAlive =
-      screenshotMetrics &&
-      screenshotMetrics.brightRatio > 0.01 &&
-      screenshotMetrics.avgLuma > 1 &&
-      screenshotMetrics.uniqueBuckets >= 6;
-    if (!canvasLooksAlive && !screenshotLooksAlive) {
-      throw new Error(
-        tier +
-          ': render appears blank or visually collapsed: ' +
-          JSON.stringify({ canvas: metrics, screenshot: screenshotMetrics }),
+      report.url = page.url();
+      await runStage(lifecycle, 'canvas-ready', 65000, () =>
+        page.waitForSelector('#c', { state: 'attached', timeout: 60000 }),
       );
-    }
-    if (metrics.frame === null || metrics.frame < 1) {
-      throw new Error(tier + ': world frames did not advance');
-    }
-    const expectedFlora = tier === 'phone' ? 20800 : 60000;
-    if (habitatStress.flora.instances !== expectedFlora) {
-      throw new Error(
-        tier +
-          ': flora census mismatch, expected ' +
-          expectedFlora +
-          ' but saw ' +
-          habitatStress.flora.instances,
+      await runStage(lifecycle, 'world-hook-ready', 125000, () =>
+        page.waitForFunction(() => Boolean(window.__CQM__?.world), null, { timeout: 120000 }),
       );
+      console.log('visual-smoke: hook ready ' + tier);
+      await runStage(lifecycle, 'overlay-dismiss', operationTimeoutMs, async () => {
+        await page.keyboard.press('Escape').catch(() => undefined);
+        await page.waitForTimeout(50);
+      });
+      const bootState = await runStage(lifecycle, 'boot-overlay', 125000, () =>
+        waitForBootOverlayGone(page, tier),
+      );
+      const onboardingState = await runStage(lifecycle, 'onboarding-overlay', operationTimeoutMs, () =>
+        ensureOnboardingHidden(page, tier),
+      );
+      Object.assign(report, { bootState, onboardingState });
+      console.log('visual-smoke: boot overlay gone ' + tier);
+
+      let metrics = null;
+      let screenshot = null;
+      let screenshotMetrics = null;
+      let worldScreenshot = null;
+      let worldScreenshotMetrics = null;
+      let onboardingStateBeforeScreenshot = onboardingState;
+      let samplingPaused = false;
+      for (let attempt = 0; attempt < sampleAttempts; attempt++) {
+        console.log('visual-smoke: sample ' + tier + ' attempt=' + attempt);
+        const frameCount = attempt === 0 ? firstSampleSteps : retrySampleSteps;
+        const metadata = await runStage(
+          lifecycle,
+          'natural-frames-' + attempt,
+          frameAdvanceTimeoutMs + 5000,
+          () => waitForNaturalFrames(page, frameCount),
+        );
+        samplingPaused = true;
+        onboardingStateBeforeScreenshot = await runStage(
+          lifecycle,
+          'pre-screenshot-overlay-' + attempt,
+          operationTimeoutMs,
+          async () => {
+            const state = await readOnboardingOverlay(page);
+            if (state.visible) {
+              throw new Error(
+                tier + ': onboarding overlay became visible before capture: ' + JSON.stringify(state),
+              );
+            }
+            return state;
+          },
+        );
+        screenshot = await runStage(
+          lifecycle,
+          'viewport-screenshot-' + attempt,
+          screenshotTimeoutMs + 5000,
+          () =>
+            page.screenshot({
+              path: screenshotPath,
+              fullPage: false,
+              animations: 'disabled',
+              timeout: screenshotTimeoutMs,
+            }),
+        );
+        screenshotMetrics = samplePng(screenshot);
+        await runStage(
+          lifecycle,
+          'world-proof-mask-' + attempt,
+          operationTimeoutMs,
+          () =>
+            page.evaluate(() => {
+              const canvas = document.getElementById('c');
+              if (!(canvas instanceof HTMLCanvasElement)) throw new Error('#c canvas missing');
+              let style = document.getElementById('cqm-visual-smoke-world-proof-style');
+              if (!style) {
+                style = document.createElement('style');
+                style.id = 'cqm-visual-smoke-world-proof-style';
+                style.textContent =
+                  'html.cqm-visual-smoke-world-proof body > *:not(#c) { visibility: hidden !important; }';
+                document.head.append(style);
+              }
+              document.documentElement.classList.add('cqm-visual-smoke-world-proof');
+            }),
+        );
+        worldScreenshot = await runStage(
+          lifecycle,
+          'world-proof-screenshot-' + attempt,
+          screenshotTimeoutMs + 5000,
+          () =>
+            page.screenshot({
+              path: worldScreenshotPath,
+              fullPage: false,
+              animations: 'disabled',
+              timeout: screenshotTimeoutMs,
+            }),
+        );
+        worldScreenshotMetrics = samplePng(worldScreenshot);
+        await runStage(lifecycle, 'world-proof-unmask-' + attempt, operationTimeoutMs, () =>
+          page.evaluate(() => {
+            document.documentElement.classList.remove('cqm-visual-smoke-world-proof');
+          }),
+        );
+        metrics = {
+          ...metadata,
+          sampleSource: 'viewport-world-png',
+          brightRatio: worldScreenshotMetrics?.brightRatio ?? 0,
+          alphaRatio: worldScreenshotMetrics?.alphaRatio ?? 0,
+          avgLuma: worldScreenshotMetrics?.avgLuma ?? 0,
+          uniqueBuckets: worldScreenshotMetrics?.uniqueBuckets ?? 0,
+        };
+        Object.assign(report, {
+          screenshotPath,
+          screenshotBytes: screenshot.length,
+          worldScreenshotPath,
+          worldScreenshotBytes: worldScreenshot.length,
+          worldProofMask: 'body-direct-children-except-canvas',
+          metrics,
+          screenshotMetrics,
+          worldScreenshotMetrics,
+          onboardingStateBeforeScreenshot,
+        });
+        if (metrics.brightRatio > 0.01 && metrics.avgLuma > 1 && metrics.uniqueBuckets >= 6) break;
+        await runStage(lifecycle, 'sampling-resume-' + attempt, operationTimeoutMs, () =>
+          resumeNaturalFrames(page),
+        );
+        samplingPaused = false;
+      }
+
+      const bootStateAfterScreenshot = await runStage(
+        lifecycle,
+        'post-screenshot-boot-overlay',
+        operationTimeoutMs,
+        () => readBootOverlay(page),
+      );
+      const onboardingStateAfterScreenshot = await runStage(
+        lifecycle,
+        'post-screenshot-onboarding-overlay',
+        operationTimeoutMs,
+        () => readOnboardingOverlay(page),
+      );
+      Object.assign(report, { bootStateAfterScreenshot, onboardingStateAfterScreenshot });
+
+      if (samplingPaused) {
+        await runStage(lifecycle, 'sampling-resume', operationTimeoutMs, () =>
+          resumeNaturalFrames(page),
+        );
+        samplingPaused = false;
+      }
+
+      console.log('visual-smoke: habitat stress probe ' + tier);
+      await runStage(lifecycle, 'habitat-stress-start', operationTimeoutMs, () =>
+        startHabitatStressProbe(page),
+      );
+      await runStage(lifecycle, 'habitat-stress-wait', stressDurationMs + 5000, () =>
+        sleep(stressDurationMs),
+      );
+      await runStage(
+        lifecycle,
+        'habitat-stress-quiesce',
+        frameAdvanceTimeoutMs + 5000,
+        () => waitForNaturalFrames(page, 1),
+      );
+      const habitatStress = await runStage(
+        lifecycle,
+        'habitat-stress-finalize',
+        operationTimeoutMs,
+        () => finishHabitatStressProbe(page),
+      );
+      Object.assign(report, { habitatStress });
+
+      await runStage(lifecycle, 'assertions', operationTimeoutMs, () => {
+        if (pageErrors.length > 0) {
+          throw new Error(tier + ': page errors: ' + pageErrors.join(' | '));
+        }
+        if (consoleErrors.length > 0) {
+          throw new Error(tier + ': console errors: ' + consoleErrors.join(' | '));
+        }
+        if (bootStateAfterScreenshot.visible) {
+          throw new Error(
+            tier +
+              ': screenshot captured visible boot overlay: ' +
+              JSON.stringify(bootStateAfterScreenshot),
+          );
+        }
+        if (onboardingStateAfterScreenshot.visible) {
+          throw new Error(
+            tier +
+              ': screenshot captured visible onboarding overlay: ' +
+              JSON.stringify(onboardingStateAfterScreenshot),
+          );
+        }
+        if (!metrics || metrics.canvasWidth < 100 || metrics.canvasHeight < 100) {
+          throw new Error(tier + ': canvas has invalid dimensions');
+        }
+        const worldScreenshotLooksAlive =
+          worldScreenshotMetrics &&
+          worldScreenshotMetrics.brightRatio > 0.01 &&
+          worldScreenshotMetrics.avgLuma > 1 &&
+          worldScreenshotMetrics.uniqueBuckets >= 6;
+        if (!worldScreenshotLooksAlive) {
+          throw new Error(
+            tier +
+              ': render appears blank or visually collapsed: ' +
+              JSON.stringify({ canvas: metrics, worldScreenshot: worldScreenshotMetrics }),
+          );
+        }
+        if (metrics.frame === null || metrics.frame < 1) {
+          throw new Error(tier + ': world frames did not advance');
+        }
+        const expectedFlora = tier === 'phone' ? 20800 : 60000;
+        if (habitatStress.flora.instances !== expectedFlora) {
+          throw new Error(
+            tier +
+              ': flora census mismatch, expected ' +
+              expectedFlora +
+              ' but saw ' +
+              habitatStress.flora.instances,
+          );
+        }
+        if (
+          typeof habitatStress.flora.meshDrawGroups !== 'number' ||
+          habitatStress.flora.meshDrawGroups < 1 ||
+          habitatStress.flora.meshDrawGroups > 9
+        ) {
+          throw new Error(
+            tier + ': invalid flora draw-group count: ' + habitatStress.flora.meshDrawGroups,
+          );
+        }
+        if (!habitatStress.camera.allEightCornersVisible) {
+          throw new Error(tier + ': TOP/FOV35 does not frame all eight habitat corners');
+        }
+        if (
+          habitatStress.workers.runtimeMode !== 'dormant-main-thread' ||
+          habitatStress.workers.current !== null ||
+          habitatStress.workers.perfSnapshot.workerTotal !== 0 ||
+          habitatStress.workers.perfSnapshot.workersReady !== false ||
+          !habitatStress.workers.asset.ok ||
+          habitatStress.workers.asset.bytes < 100 ||
+          !String(habitatStress.workers.asset.contentType).includes('javascript')
+        ) {
+          throw new Error(
+            tier + ': dormant worker override or built worker asset does not match ADR 0010',
+          );
+        }
+        if (
+          habitatStress.framesAdvanced < 1 ||
+          !Number.isFinite(habitatStress.observedFps) ||
+          habitatStress.observedFps <= 0
+        ) {
+          throw new Error(tier + ': sustained foreground performance sample did not advance');
+        }
+      });
+
+      report.status = 'passed';
+      report.stages = lifecycle.stages;
+      await runStage(lifecycle, 'success-artifact', operationTimeoutMs, () =>
+        writeFile(resultPath, JSON.stringify(report, null, 2)),
+      );
+      // The staged write serializes while its own stage is still running; rewrite once after the
+      // stage resolves so the durable receipt records the final ok status as well.
+      report.stages = lifecycle.stages;
+      await writeFile(resultPath, JSON.stringify(report, null, 2));
+      results.push(report);
+      console.log(
+        'visual-smoke: OK ' +
+          tier +
+          ' frame=' +
+          metrics.frame +
+          ' bright=' +
+          metrics.brightRatio.toFixed(3) +
+          ' luma=' +
+          metrics.avgLuma.toFixed(2) +
+          ' buckets=' +
+          metrics.uniqueBuckets +
+          ' screenshotLuma=' +
+          (screenshotMetrics ? screenshotMetrics.avgLuma.toFixed(2) : 'n/a') +
+          ' screenshotBuckets=' +
+          (screenshotMetrics ? screenshotMetrics.uniqueBuckets : 'n/a') +
+          ' worldLuma=' +
+          (worldScreenshotMetrics ? worldScreenshotMetrics.avgLuma.toFixed(2) : 'n/a') +
+          ' worldBuckets=' +
+          (worldScreenshotMetrics ? worldScreenshotMetrics.uniqueBuckets : 'n/a'),
+      );
+    } catch (error) {
+      try {
+        await writeFailureArtifact(report, lifecycle, error);
+      } catch (artifactError) {
+        console.error(
+          'visual-smoke: could not write failure artifact for ' +
+            tier +
+            ': ' +
+          errorText(artifactError),
+        );
+      }
+      await writeFile(
+        summaryPath,
+        JSON.stringify(
+          {
+            status: 'failed',
+            requestedTiers: tiers,
+            completedTiers: results.map((result) => result.tier),
+            failedTier: tier,
+            startedAt: runStartedAt,
+            completedAt: new Date().toISOString(),
+            failure: report.failure ?? lifecycle.lastFailure,
+            results,
+          },
+          null,
+          2,
+        ),
+      ).catch(() => undefined);
+      throw error;
+    } finally {
+      await closeContextBounded(context);
+      activeLifecycle = null;
     }
-    if (
-      typeof habitatStress.flora.meshDrawGroups !== 'number' ||
-      habitatStress.flora.meshDrawGroups < 1 ||
-      habitatStress.flora.meshDrawGroups > 9
-    ) {
-      throw new Error(tier + ': invalid flora draw-group count: ' + habitatStress.flora.meshDrawGroups);
-    }
-    if (!habitatStress.camera.allEightCornersVisible) {
-      throw new Error(tier + ': TOP/FOV35 does not frame all eight habitat corners');
-    }
-    if (
-      !habitatStress.workers.current ||
-      habitatStress.workers.current.totalWorkers < 1 ||
-      !habitatStress.workers.asset.ok ||
-      habitatStress.workers.asset.bytes < 100 ||
-      !String(habitatStress.workers.asset.contentType).includes('javascript')
-    ) {
-      throw new Error(tier + ': simulation worker is not built, served, and active');
-    }
-    if (habitatStress.framesAdvanced < 1 || !Number.isFinite(habitatStress.observedFps)) {
-      throw new Error(tier + ': sustained foreground performance sample did not advance');
-    }
-    console.log(
-      'visual-smoke: OK ' +
-        tier +
-        ' frame=' +
-        metrics.frame +
-        ' bright=' +
-        metrics.brightRatio.toFixed(3) +
-        ' luma=' +
-        metrics.avgLuma.toFixed(2) +
-        ' buckets=' +
-        metrics.uniqueBuckets +
-        ' screenshotLuma=' +
-        (screenshotMetrics ? screenshotMetrics.avgLuma.toFixed(2) : 'n/a') +
-        ' screenshotBuckets=' +
-        (screenshotMetrics ? screenshotMetrics.uniqueBuckets : 'n/a'),
-    );
   }
-  await writeFile(join(outDir, 'visual-smoke-summary.json'), JSON.stringify(results, null, 2));
+  await writeFile(
+    summaryPath,
+    JSON.stringify(
+      {
+        status: 'passed',
+        requestedTiers: tiers,
+        completedTiers: results.map((result) => result.tier),
+        startedAt: runStartedAt,
+        completedAt: new Date().toISOString(),
+        results,
+      },
+      null,
+      2,
+    ),
+  );
 } finally {
-  await browser.close();
+  await settleBounded(browser.close().catch(() => undefined), teardownTimeoutMs);
 }
 `;
 }
@@ -777,7 +1188,9 @@ try {
     },
     stdio: 'inherit',
   });
-  const timeoutMs = Number(process.env.CQM_VISUAL_SMOKE_TIMEOUT_MS ?? 360000);
+  // The default command validates phone + desktop serially. Their independent bounded stages can
+  // legitimately exceed six minutes in software WebGL, so the parent bound must cover both tiers.
+  const timeoutMs = Number(process.env.CQM_VISUAL_SMOKE_TIMEOUT_MS ?? 720000);
   const code = await waitForProcess(child, timeoutMs);
   if (code === -1) fail(`Playwright visual smoke timed out after ${timeoutMs}ms`);
   if (code === -2) fail('Playwright visual smoke failed to launch');

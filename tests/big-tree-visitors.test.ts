@@ -167,6 +167,7 @@ function ordinary(id: number, x: number, energy = 0): BigTreeOrdinaryBody {
       age: 0,
       life: 100,
       alive: true,
+      strategy: 0,
       vel: { x: 0, z: 0 },
     },
   };
@@ -237,6 +238,7 @@ function emptyStats(): BigTreeSpeciesVisitorStats {
     cancellations: 0,
     zoneCapacity: 0,
     socialPairs: 0,
+    policyTransfers: 0,
     completedVisits: 0,
     timedOutVisits: 0,
     stuckRecoveries: 0,
@@ -515,6 +517,55 @@ describe('BigTreeSpeciesVisitors', () => {
       partnerId: -1,
       activity: BigTreeActivity.Socialize,
     });
+  });
+
+  test('a new willing ordinary pair performs one real cooperative-policy transfer', () => {
+    const tree = new FakeTree();
+    const visits = manager(2);
+    visits.addSlot(BigTreeSlotKind.Socialize, -3, 0);
+    visits.addSlot(BigTreeSlotKind.Socialize, 3, 0);
+    const visitors = adapter(tree, visits);
+    const teacher = ordinary(35, -3, 100);
+    const learner = ordinary(36, 3, 100);
+    teacher.userData.strategy = 0;
+    learner.userData.strategy = 1;
+    const social: BigTreeVisitorEnvironment = { socialNeed: 1, curiosity: 0 };
+    const out = emptyStats();
+
+    tick(tree, visitors, 0, 0, [teacher, learner], [], social);
+    tick(tree, visitors, 0.1, 0.1, [teacher, learner], [], social);
+    visitors.readStats(out);
+    expect(Number(learner.userData.strategy)).toBe(0);
+    expect(out.policyTransfers).toBe(1);
+
+    // Lease renewals and activity callbacks are not additional teaching events.
+    tick(tree, visitors, 0.2, 0.1, [teacher, learner], [], social);
+    tick(tree, visitors, 0.3, 0.1, [teacher, learner], [], social);
+    visitors.readStats(out);
+    expect(out.policyTransfers).toBe(1);
+
+    // The canonical Nash policy is body-owned, so it remains changed after partner cleanup.
+    expect(visitors.cancelOrdinary(teacher)).toBe(true);
+    expect(Number(learner.userData.strategy)).toBe(0);
+  });
+
+  test('mixed-species social pairs do not claim unsupported policy transfer', () => {
+    const tree = new FakeTree();
+    const visits = manager(2);
+    visits.addSlot(BigTreeSlotKind.Socialize, -3, 0);
+    visits.addSlot(BigTreeSlotKind.Socialize, 3, 0);
+    const visitors = adapter(tree, visits);
+    const ordinaryVisitor = ordinary(37, -3, 100);
+    ordinaryVisitor.userData.strategy = 1;
+    const xeno = xenomimic(38, 0, 3, 1);
+    const social: BigTreeVisitorEnvironment = { socialNeed: 1, curiosity: 0 };
+    const out = emptyStats();
+
+    tick(tree, visitors, 0, 0, [ordinaryVisitor], [xeno], social);
+    tick(tree, visitors, 0.1, 0.1, [ordinaryVisitor], [xeno], social);
+    visitors.readStats(out);
+    expect(ordinaryVisitor.userData.strategy).toBe(1);
+    expect(out.policyTransfers).toBe(0);
   });
 
   test('activity callback stops when the bounded activity dwell time expires', () => {

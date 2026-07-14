@@ -43,8 +43,8 @@ Rewritten in place when the facts change (per the binding living-doc law in
 
 <!-- cqm-sync:local-measurement:start -->
 
-- `bun run verify:receipts` → **3,188 tests, zero failures** · **358 test files** · **3,545,435**
-  `expect()` calls · **93.55% line / 91.55% func** on this Windows checkout.
+- `bun run verify:receipts` → **3,208 tests, zero failures** · **359 test files** · **3,545,659**
+  `expect()` calls · **93.57% line / 91.57% func** on this Windows checkout.
 
 <!-- cqm-sync:local-measurement:end -->
 

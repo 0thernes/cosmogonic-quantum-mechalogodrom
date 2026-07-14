@@ -27,6 +27,8 @@ import {
   type EdibleResource,
   type EdibleResourceDefinition,
   type EdibleResourceKind,
+  type EdibleResourcePersistenceSnapshot,
+  type EdibleResourcePersistenceSnapshotV1,
 } from './edible-resource';
 import {
   createTreeCreatureAction,
@@ -916,6 +918,13 @@ function makeResourcePool(
   const mesh = new THREE.InstancedMesh(geometry, material, count);
   mesh.name = kind === 'leaf' ? 'crystal-leaves' : `crystal-${kind}s`;
   mesh.instanceMatrix.setUsage(kind === 'flower' ? THREE.StaticDrawUsage : THREE.DynamicDrawUsage);
+  if (kind !== 'flower') {
+    // WebGLAttributes.createBuffer() uploads the full array but, unlike its update path, r185 does
+    // not clear queued partial ranges. Clear after every upload so pre-first-render food restores do
+    // not survive as stale ranges and get redundantly sorted/re-uploaded on the next food mutation.
+    const instanceMatrix = mesh.instanceMatrix;
+    instanceMatrix.onUpload(() => instanceMatrix.clearUpdateRanges());
+  }
   const positions = new Float32Array(count * 3);
   const rotations = new Float32Array(count * 3);
   const scales = new Float32Array(count);
@@ -2546,6 +2555,39 @@ export class CrystalEcosystem {
     this.neuralLastMotorZ = 0;
     this.neuralLastSocialDrive = 0;
     if (this.unreadyTreeBrains === 0) this.neuralLastFallbackReason = 'none';
+    this.resetResidentFoodHandles(now);
+  }
+
+  /** Compact, JSON-safe food checkpoint; active visitors and resident actor objects are excluded. */
+  snapshotFoodPersistence(): EdibleResourcePersistenceSnapshotV1 {
+    return this.edibleResources.persistenceSnapshot(this.simTime);
+  }
+
+  /**
+   * Restore only pooled food lifecycle state. Live reservations were normalized by the registry when
+   * saved, so every resident target is cleared before the next controller tick and can be reacquired
+   * through the canonical reserve path. Authored matrices are hidden by the registry lifecycle bridge.
+   */
+  restoreFoodPersistence(snapshot: EdibleResourcePersistenceSnapshot): void {
+    if (this.disposed) throw new Error('cannot restore food on a disposed Crystal ecosystem');
+    this.edibleResources.restorePersistence(snapshot, this.simTime);
+    let availableFruit = 0;
+    let availableLeaves = 0;
+    for (const resource of this.edibleResources.all) {
+      if (resource.state !== 'available') continue;
+      if (resource.kind === 'fruit') availableFruit++;
+      else availableLeaves++;
+    }
+    this.availableFruit = availableFruit;
+    this.availableLeaves = availableLeaves;
+    // These are session telemetry counters, not durable nutrition ledgers. On reload they truthfully
+    // describe the currently depleted pool rather than claiming meals whose actor universe was reset.
+    this.consumedFruit = this.config.fruits - availableFruit;
+    this.consumedLeaves = this.config.leaves - availableLeaves;
+    this.resetResidentFoodHandles(this.simTime);
+  }
+
+  private resetResidentFoodHandles(now: number): void {
     for (const creature of this.creatures) {
       creature.targetFoodId = -1;
       creature.targetFoodGeneration = 0;
@@ -2608,6 +2650,9 @@ export class CrystalEcosystem {
     TMP_OBJECT.scale.setScalar(visible ? (pool.scales[index] ?? 1) : 0);
     TMP_OBJECT.updateMatrix();
     pool.mesh.setMatrixAt(index, TMP_OBJECT.matrix);
+    // Three r185 consumes component ranges and clears them after upload. One instance matrix occupies
+    // exactly 16 float components, so food hide/restore uploads one slot instead of all 10k matrices.
+    pool.mesh.instanceMatrix.addUpdateRange(index * 16, 16);
     pool.mesh.instanceMatrix.needsUpdate = true;
   }
 

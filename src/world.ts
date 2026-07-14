@@ -244,7 +244,7 @@ import { TelemetryPanel, bindPanelToggles } from './ui/panels';
 import { InputSystem } from './ui/input';
 import type { AuditTrail } from './logging/audit';
 import { createLogger } from './logging/logger';
-import type { MemoryStore } from './memory/store';
+import type { BigTreeEcologyPersistenceSnapshot, MemoryStore } from './memory/store';
 import type { WorkerPool } from './core/worker-pool';
 import { WildernessPopulation } from './sim/wilderness-population';
 import { WildernessRenderer } from './sim/wilderness-render';
@@ -349,6 +349,8 @@ export interface WorldOptions {
   persisted: PersistedState;
   store: MemoryStore;
   audit: AuditTrail;
+  /** Food-only application checkpoint; never contains actors, visits, slots, partners, or cooldowns. */
+  bigTreeEcology?: BigTreeEcologyPersistenceSnapshot | null;
 }
 
 export class World {
@@ -535,6 +537,7 @@ export class World {
     cancellations: 0,
     zoneCapacity: 0,
     socialPairs: 0,
+    policyTransfers: 0,
     completedVisits: 0,
     timedOutVisits: 0,
     stuckRecoveries: 0,
@@ -858,6 +861,9 @@ export class World {
   private readonly godColossus: GodColossus;
   /** Tree-local home ecology: canopy resources, fauna, motes, relics, and artifacts. */
   private readonly crystalEcosystem: CrystalEcosystem;
+  /** Last food checkpoint acknowledged by storage; duplicate lifecycle events skip serialization. */
+  private lastPersistedBigTreeFoodRevision = -1;
+  private lastPersistedBigTreeFoodTime = Number.NaN;
   /** Static terrain profile under the tree; animated displacement is added each presentation tick. */
   private readonly crystalTerrainBase: number;
   /**
@@ -1464,6 +1470,26 @@ export class World {
       new THREE.Vector3(CRYSTAL_TREE_ORIGIN_X, crystalBase, CRYSTAL_TREE_ORIGIN_Z),
       { height: crystalHeight },
     );
+    let bigTreeCheckpointSynchronized = true;
+    if (opts.bigTreeEcology !== null && opts.bigTreeEcology !== undefined) {
+      try {
+        // Restore before constructing any external visitor adapter. Active owners/reservations were
+        // normalized out of the checkpoint, so the new cosmos always starts with clean actor state.
+        this.crystalEcosystem.restoreFoodPersistence(opts.bigTreeEcology.food);
+      } catch (error) {
+        // A rejected or interrupted restore must leave the live tree canonical, not half-rebuilt.
+        this.crystalEcosystem.resetFood(this.state.elapsed);
+        bigTreeCheckpointSynchronized = this.store.clearBigTreeEcology();
+        this.audit.record('big-tree-food-restore-failed', {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+    if (bigTreeCheckpointSynchronized) {
+      this.lastPersistedBigTreeFoodRevision =
+        this.crystalEcosystem.edibleResources.persistenceRevision;
+      this.lastPersistedBigTreeFoodTime = this.crystalEcosystem.foodTime;
+    }
     // One shared, bounded visit scheduler for ordinary organisms and Xenomimics. Distinct radial
     // rings prevent the entire dome from converging on a single point while keeping every authored
     // destination inside the sanctuary's entry boundary.
@@ -1881,6 +1907,8 @@ export class World {
    */
   dispose(): void {
     if (this.disposeAbort.signal.aborted) return; // idempotent — abort() is the sentinel
+    // HMR/runtime teardown otherwise discards the last food lifecycle checkpoint before pagehide.
+    this.persistBigTreeEcology();
     this.disposeAbort.abort();
     this.audio.dispose();
     // Terminate worker pool threads (ADR 0010)
@@ -4381,6 +4409,7 @@ export class World {
         apexVisitors: faunaStats.activeApex,
         meals: stats.completedMeals + faunaStats.completedMeals,
         socialPairs,
+        cooperativePolicyTransfers: stats.policyTransfers,
         targetLosses: stats.targetLosses + faunaStats.targetLosses,
         faunaPolls: faunaStats.totalPolls,
         faunaCancellations: faunaStats.cancellations,
@@ -5604,6 +5633,29 @@ export class World {
     this.store.save(this.persisted);
   }
 
+  /**
+   * Persist only Big Tree pooled-food lifecycle state. The application intentionally starts a fresh
+   * actor universe on reload, so visits, slots, partners, reservations, and cooldowns never enter it.
+   */
+  persistBigTreeEcology(): void {
+    if (this.disposeAbort.signal.aborted) return;
+    const resources = this.crystalEcosystem.edibleResources;
+    const revision = resources.persistenceRevision;
+    const foodTime = this.crystalEcosystem.foodTime;
+    const remainingTimeChanged =
+      resources.hasPendingRespawns && foodTime !== this.lastPersistedBigTreeFoodTime;
+    if (revision === this.lastPersistedBigTreeFoodRevision && !remainingTimeChanged) return;
+
+    const saved = this.store.saveBigTreeEcology({
+      version: 1,
+      food: this.crystalEcosystem.snapshotFoodPersistence(),
+    });
+    if (saved) {
+      this.lastPersistedBigTreeFoodRevision = revision;
+      this.lastPersistedBigTreeFoodTime = foodTime;
+    }
+  }
+
   /** Legacy doSplit: up to 5 mature entities each bud 4 children. */
   private doSplit(): void {
     this.audio.play('split');
@@ -5787,6 +5839,16 @@ export class World {
     this.bigTreeFaunaVisitors.reset();
     this.bigTreeVisitors.reset();
     this.crystalEcosystem.resetFood(this.state.elapsed);
+    // Absence is the canonical clean checkpoint. Clearing cannot leave an older depleted snapshot
+    // behind after a quota-limited setItem; on failure, keep the revision dirty so pagehide retries.
+    if (this.store.clearBigTreeEcology()) {
+      this.lastPersistedBigTreeFoodRevision =
+        this.crystalEcosystem.edibleResources.persistenceRevision;
+      this.lastPersistedBigTreeFoodTime = this.crystalEcosystem.foodTime;
+    } else {
+      this.lastPersistedBigTreeFoodRevision = -1;
+      this.lastPersistedBigTreeFoodTime = Number.NaN;
+    }
     this.clearNhiPopulation();
     this.entities.reset(1); // USER: reset → ONE entity, never a 500-strong instant repopulation
     // V121: re-anchor the growth ramp at THIS moment with a base of 1, so the target climbs slowly

@@ -1,4 +1,4 @@
-<!-- reviewed: 2026-07-07 | publication-surface current-truth pass | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-14 | dome-ecology implementation-truth pass | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # Changelog
 
@@ -8,6 +8,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+- Integrated the Crystal Big Tree with the canonical edible-resource lifecycle: fixed pools of 10,000
+  fruits and 10,000 leaves, owner/generation-safe reservation and consumption, exactly-once
+  nourishment, and exact five-scaled-simulation-second reactivation of the same authored instance.
+- Added a separate, versioned `cqm.big-tree-ecology.v1` sparse checkpoint. It persists only food
+  generations and remaining respawn time; actors, visits, slots, owners, partners, cooldowns, callbacks,
+  and render state reconstruct cleanly and are never treated as save-game state. Genesis clears the
+  checkpoint, and visibility/page-exit disposal paths perform best-effort lifecycle flushes.
+- Wired the Big Tree sanctuary and bounded temporary-visit lifecycle across ordinary Entities,
+  Xenomimics, Shoggoths, Titans, Leviathans, Puppeteers, and autonomous Apex bodies. Tree residents use
+  validated 6-6-4 controllers with deterministic fallback. The only newly recorded learning-like result
+  is narrow ordinary-organism strategy imitation: a strategy-1 defector may copy a strategy-0 cooperator
+  on the first reciprocal social pairing; no general, neural, tree-resident, or cross-species learning is
+  claimed.
+- Kept ecology hot paths bounded: the fauna social matcher reads each eligible adapter once in O(A),
+  then compares cached numeric positions in bounded O(A²), with A limited by the shared 72-visitor
+  capacity. Food instance changes add one 16-float `instanceMatrix` update range per changed resource,
+  avoiding a full 10,000-matrix upload.
+- Made the Xenomimic connectome topology-only: it creates no renderer, line geometry, or physical
+  tether, and now clears stale captured creature references on population shrink and all captures on
+  disposal.
+- Hardened the visual-smoke harness around natural `requestAnimationFrame` advancement, bounded stages,
+  classified partial-failure artifacts, an ordinary full-viewport capture, and a canvas-isolated world
+  proof. The harness now asserts the intentional `dormant-main-thread` runtime while independently
+  checking that the worker asset is built and served; this entry does not claim a current browser,
+  production-build, or GitHub Pages pass.
 
 ## [0.22.0] — 2026-07-12
 

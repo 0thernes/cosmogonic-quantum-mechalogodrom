@@ -1,4 +1,4 @@
-<!-- reviewed: 2026-07-10 | corrected corpus and organism-intelligence contract | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-14 | dome-ecology implementation-truth pass | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # Module Contracts
 
@@ -231,7 +231,9 @@ See `src/sim/tsotchke-*.ts`, registry, README, reports for wiring matrix.
 ```ts
 export const WEATHERS = ['CLEAR', 'RAIN', 'STORM', 'AURORA', 'VOID', 'FOG'] as const;
 export type Weather = (typeof WEATHERS)[number];
-export const BEHAVIORS = [/* the 26 names from legacy lines 277-279, same order */] as const;
+export const BEHAVIORS = [
+  /* the 26 names from legacy lines 277-279, same order */
+] as const;
 export type Behavior = (typeof BEHAVIORS)[number];
 export const VIEW_MODES = ['free', 'orbit', 'fly', 'top'] as const;
 export type ViewMode = (typeof VIEW_MODES)[number];
@@ -600,7 +602,18 @@ File ownership is EXCLUSIVE — the named writer is the only agent touching a fi
 // Minimal statevector quantum register. Backend: pure TS (2^n complex amps as a
 // Float64Array pair, allocation-free gate application). n <= 8 enforced.
 export type GateName =
-  'h' | 'x' | 'y' | 'z' | 's' | 't' | 'rx' | 'ry' | 'rz' | 'cx' | 'cz' | 'swap';
+  | 'h'
+  | 'x'
+  | 'y'
+  | 'z'
+  | 's'
+  | 't'
+  | 'rx'
+  | 'ry'
+  | 'rz'
+  | 'cx'
+  | 'cz'
+  | 'swap';
 export class QuantumRegister {
   constructor(qubits: number); // throws if qubits < 1 or > 8
   readonly qubits: number;
@@ -1719,6 +1732,8 @@ above.
 | `src/sim/tree-creature-brain.ts`     | One deterministic fixed-size neural controller per tree-dwelling creature, with validated model loading and a safe fallback                                                                  |
 | `src/sim/tree-creature-teaching.ts`  | Bounded resident-to-resident policy transfer: competence-gap and cooldown gates, all-or-nothing finite weight blending, and the honest events-only ledger                                    |
 | `src/sim/xenomimic-tether-purge.ts`  | The tether law's enforcement sweep: legacy-name predicate plus detach-and-dispose destruction of orphan xenomimic line primitives                                                            |
+| `src/sim/xenomimic-connectome.ts`    | Bounded twin/Entity proximity topology counts only: no renderer, scene attachment, tether geometry, joint, spring, leash, force, or movement ownership                                       |
+| `src/memory/store.ts`                | Separate validation and `localStorage` keys for preferences and the sparse food-only Big Tree checkpoint; no actor or visit persistence                                                      |
 | `src/world.ts`                       | Composition only: construct the shared zone/visit/visitor systems, supply canonical living populations and clocks, attach sanctuary predicates, and bridge peaceful activity feedback        |
 
 Tree food is not a parallel exception. `CrystalEcosystem.edibleResources` is the shared
@@ -1750,6 +1765,10 @@ available -> reserved -> consuming -> respawning -> available
 - Consumption hides the existing instance immediately. At the deadline, the authored instance
   matrix is restored before the registry publishes the item as `available`. A failed visual restore
   remains unavailable and is retried deterministically; it cannot expose invisible edible food.
+- Every hide or restore writes the existing matrix slot and calls
+  `instanceMatrix.addUpdateRange(index * 16, 16)`. Multiple changed resources may contribute multiple
+  non-overlapping ranges, but no single food change invalidates or uploads its entire 10,000-instance
+  matrix pool.
 - Indexed fixed-capacity heaps permit each resource to hold at most one lease and one respawn
   deadline. Generation bumps invalidate stale handles. Reset clears deadlines and reservations,
   restores hidden matrices before availability, and resets every tree-creature target handle.
@@ -1791,10 +1810,16 @@ cooldown is 35-95 seconds. Travel and exit hard limits are 90 and 50 seconds. Ac
 at most two recoveries before a safe exit/cooldown. All transitions release food, slot, and partner
 reservations on completion, timeout, target loss, death, despawn, error, or reset.
 
-Visit state and slot/partner ownership have validated versioned snapshots in
-`BigTreeVisitManager`. Reset/reconstruction always creates a valid clean ecology state. This contract
-does not claim application-level save persistence where the surrounding simulation has no such
-facility.
+`BigTreeVisitManager` snapshots remain manager-local validation/recovery data; they do not cross the
+application persistence boundary. `MemoryStore` instead writes a separate version-1 food checkpoint
+containing only stable resource ID, generation, and remaining respawn time. Available items are omitted
+from the sparse entry list. Reserved or consuming items checkpoint as available with a generation bump,
+so an owner, lease, or half-finished transaction can never survive reload. Load validates capacity,
+duplicates, finite safe values, and a remaining duration in `[0, 5]`, then restores food before visitor
+adapters are constructed. A rejected checkpoint resets the live pool canonically. Visibility-hidden,
+page-exit, and disposal paths make a best-effort flush; Genesis resets food and clears the checkpoint.
+No actor, visit phase, slot, reservation owner, social partner, cooldown, callback, matrix, collider, or
+tree-resident controller is persisted.
 
 ## Tree-dwelling neural and social behavior
 
@@ -1812,12 +1837,17 @@ do not contest visitors, use the canonical edible registry, and return to ordina
 after food or social activity. No sentience, online-learning, or physical-quantum claim follows from
 this controller.
 
-Social visits use willing active partners, reciprocal reservations, reach checks, and expiring
-leases. Matching is one pass over the bounded active visitor set; a partner may hold only one pair.
-Partner loss or excess distance releases both ends, and visit cleanup prevents permanent pairing.
-The world callback maps valid social/observation activity into existing Entity activation/payoff and
-Xenomimic shimmer feedback. No teaching or knowledge-transfer result is recorded unless a canonical
-underlying system performs one.
+Social visits use willing active partners, reciprocal reservations, reach checks, and expiring leases.
+Ordinary matching is one pass over the bounded active visitor set; a partner may hold only one pair.
+Partner loss or excess distance releases both ends, and visit cleanup prevents permanent pairing. When
+a newly reciprocal pair consists of two ordinary organisms with strategies `0` and `1`, the defector
+may imitate the cooperator by changing its canonical strategy to `0`; that strategy is subsequently
+used by the existing Nash behavior and inherited through its existing descendant path. The
+`policyTransfers` counter increments once at formation, and lease renewal cannot repeat it. This does
+not train a neural model or transfer policy between fauna categories, Xenomimics, tree residents, or
+species. The world callback maps valid social/observation activity into existing Entity
+activation/payoff and Xenomimic shimmer feedback. No broader teaching, memory, trait, skill, or
+knowledge-transfer result is claimed.
 
 ## Bounded-query and performance contract
 
@@ -1825,18 +1855,28 @@ underlying system performs one.
   fauna candidates every 0.1 simulation seconds, not a full-population scan every frame.
 - Active work is bounded by the 72-visitor capacity. O(1) identity maps locate active ordinary and
   Xenomimic/fauna visitors; the visit manager steps a dense scheduled-record set rather than every
-  actor record. Ordinary matching is a single bounded pass; fauna partner matching is bounded solely
-  by the same 72 active records and never searches the full species populations.
+  actor record. Ordinary matching is a single bounded pass. Fauna matching reads each eligible active
+  source adapter exactly once into preallocated numeric arrays in O(A), then performs bounded O(A²)
+  numeric distance comparisons, where A ≤ 72. The nested loop contains no adapter reads and never
+  searches the full species populations.
 - The 20,000 food objects are fixed and pooled. Deterministic per-kind free lists make free-resource
   selection O(1); fixed indexed heaps make lease/respawn deadline changes O(log capacity) without
-  per-cycle object growth.
+  per-cycle object growth. Each hidden/restored item queues one 16-float GPU matrix range for its own
+  instance rather than a full-pool matrix upload.
 - Visitor and scheduler arrays are allocated once at construction, reusable read/stat views avoid
   steady-frame object creation, and development observability remains data-only. It must never add a
   tether-like debug line.
+- `XenomimicConnectome` owns one fixed capture array. A sync after population shrink nulls only the
+  vacated tail; idempotent disposal nulls the complete array. Topology can therefore remain available
+  to telemetry without retaining despawned creatures or recreating render/physics tether state.
 
 Automated contract coverage lives in `tests/edible-resource.test.ts`,
 `tests/big-tree-zone.test.ts`, `tests/big-tree-visitors.test.ts`,
 `tests/big-tree-fauna-visitors.test.ts`, `tests/big-tree-fauna-source-integration.test.ts`,
-`tests/tree-creature-brain.test.ts`, the Crystal ecosystem test family, `tests/super-hunt.test.ts`, and
-`tests/big-tree-world-integration.test.ts`. This amendment records implemented code and automated
-targets only; it does not claim GitHub Pages deployment or manual browser verification.
+`tests/tree-creature-brain.test.ts`, `tests/store.test.ts`, `tests/xenomimic-connectome.test.ts`, the
+Crystal ecosystem test family, `tests/super-hunt.test.ts`, and
+`tests/big-tree-world-integration.test.ts`. `tests/browser-visual-smoke-harness.test.ts` statically seals
+natural-rAF advancement, bounded stage/failure receipts, the viewport plus canvas-isolated proof, and
+the intentional `dormant-main-thread` worker expectation. Harness coverage is not a live browser result:
+this amendment does not claim a current production build, GitHub Pages deployment, or manual browser
+verification.

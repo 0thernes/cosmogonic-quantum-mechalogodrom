@@ -84,6 +84,31 @@ export interface EdibleResourceStats {
   readonly lifecycleErrors: number;
 }
 
+/**
+ * One non-default fixed-pool slot in the versioned application checkpoint.
+ *
+ * `remainingRespawn === null` means the slot restores as available. Active reservations and
+ * consumption are intentionally encoded that way with their generation advanced once: application
+ * reload does not preserve actor objects or reservation handles, so carrying an owner across the
+ * boundary would create an orphaned claim. A finite value keeps the item unavailable for exactly
+ * that much additional caller-supplied simulation time.
+ */
+export interface EdibleResourcePersistenceEntryV1 {
+  readonly id: number;
+  readonly generation: number;
+  readonly remainingRespawn: number | null;
+}
+
+/** JSON-safe, render-object-free food lifecycle checkpoint. */
+export interface EdibleResourcePersistenceSnapshotV1 {
+  readonly version: 1;
+  readonly capacity: number;
+  /** Only respawning slots and active claims normalized for the new actor universe are emitted. */
+  readonly entries: EdibleResourcePersistenceEntryV1[];
+}
+
+export type EdibleResourcePersistenceSnapshot = EdibleResourcePersistenceSnapshotV1;
+
 interface MutableEdibleResource {
   id: number;
   kind: EdibleResourceKind;
@@ -228,6 +253,10 @@ function stateSlot(state: EdibleResourceState): number {
   }
 }
 
+function nextGeneration(generation: number): number {
+  return generation >= Number.MAX_SAFE_INTEGER ? 1 : generation + 1;
+}
+
 function kindSlot(kind: EdibleResourceKind): number {
   return kind === 'fruit' ? 0 : 1;
 }
@@ -267,6 +296,8 @@ export class EdibleResourceRegistry {
   private readonly leaseHeap: IndexedMinHeap;
   private readonly respawnHeap: IndexedMinHeap;
   private lifecycleErrorCount = 0;
+  /** Monotonic dirty signal; representation-neutral transitions such as reserved -> consuming skip it. */
+  private persistenceRevisionValue = 0;
 
   constructor(
     definitions: readonly EdibleResourceDefinition[],
@@ -337,6 +368,16 @@ export class EdibleResourceRegistry {
   /** The same fixed backing array and resource objects are returned for the registry lifetime. */
   get all(): readonly EdibleResource[] {
     return this.items;
+  }
+
+  /** Changes whenever the JSON checkpoint representation may have changed. */
+  get persistenceRevision(): number {
+    return this.persistenceRevisionValue;
+  }
+
+  /** Deadline time changes matter to checkpoints only while at least one respawn is pending. */
+  get hasPendingRespawns(): boolean {
+    return this.respawnHeap.size > 0;
   }
 
   get(resourceId: number): EdibleResource | undefined {
@@ -447,6 +488,7 @@ export class EdibleResourceRegistry {
       throw new Error(`resource ${resource.id} already has a respawn deadline`);
     }
     this.notify('unavailable', resource);
+    this.markPersistenceChanged();
     return resource.nourishment;
   }
 
@@ -562,6 +604,7 @@ export class EdibleResourceRegistry {
       this.appendFree(index);
       this.notify('available', resource);
     }
+    this.markPersistenceChanged();
   }
 
   stats(): EdibleResourceStats {
@@ -575,6 +618,117 @@ export class EdibleResourceRegistry {
       pendingRespawns: this.respawnHeap.size,
       lifecycleErrors: this.lifecycleErrorCount,
     };
+  }
+
+  /**
+   * Capture a compact application checkpoint without serializing render objects or live owners.
+   *
+   * Deadlines are stored as remaining simulation time so a new registry whose clock starts at zero
+   * neither waits for an old absolute timestamp nor advances while the application is closed.
+   * Reserved/consuming resources restore available at the next generation; all in-memory handles
+   * from the discarded actor universe are therefore stale by construction.
+   */
+  persistenceSnapshot(now: number): EdibleResourcePersistenceSnapshotV1 {
+    assertFiniteAtLeast('now', now, 0);
+    const entries: EdibleResourcePersistenceEntryV1[] = [];
+    for (let index = 0; index < this.items.length; index++) {
+      const resource = this.items[index]!;
+      const activeClaim = resource.state === 'reserved' || resource.state === 'consuming';
+      if (!activeClaim && resource.state !== 'respawning') continue;
+      const generation = activeClaim ? nextGeneration(resource.generation) : resource.generation;
+      const remainingRespawn =
+        resource.state === 'respawning'
+          ? Math.max(0, Math.min(EDIBLE_RESOURCE_RESPAWN_SECONDS, resource.respawnAt - now))
+          : null;
+      entries.push({ id: resource.id, generation, remainingRespawn });
+    }
+    return { version: 1, capacity: this.items.length, entries };
+  }
+
+  /**
+   * Restore a validated checkpoint into the existing fixed pool.
+   *
+   * Validation completes before any mutation. Internal free lists, owner indices, and deadline heaps
+   * are rebuilt; a respawning slot is hidden through the lifecycle bridge before it can be published
+   * as available. No owner, lease, render object, callback, or actor reference crosses the boundary.
+   */
+  restorePersistence(snapshot: EdibleResourcePersistenceSnapshot, now = 0): void {
+    assertFiniteAtLeast('now', now, 0);
+    if (
+      snapshot === null ||
+      typeof snapshot !== 'object' ||
+      snapshot.version !== 1 ||
+      snapshot.capacity !== this.items.length ||
+      !Array.isArray(snapshot.entries)
+    ) {
+      throw new RangeError('Incompatible edible resource persistence snapshot');
+    }
+
+    const validated: { index: number; generation: number; remainingRespawn: number | null }[] = [];
+    const seen = new Set<number>();
+    for (const entry of snapshot.entries) {
+      if (
+        entry === null ||
+        typeof entry !== 'object' ||
+        !Number.isSafeInteger(entry.id) ||
+        !Number.isSafeInteger(entry.generation) ||
+        entry.generation < 1 ||
+        entry.generation > Number.MAX_SAFE_INTEGER ||
+        (entry.remainingRespawn !== null &&
+          (!Number.isFinite(entry.remainingRespawn) ||
+            entry.remainingRespawn < 0 ||
+            entry.remainingRespawn > EDIBLE_RESOURCE_RESPAWN_SECONDS))
+      ) {
+        throw new RangeError('Invalid edible resource persistence entry');
+      }
+      const index = this.indexById.get(entry.id);
+      if (index === undefined || seen.has(entry.id)) {
+        throw new RangeError('Edible resource persistence contains an unknown or duplicate id');
+      }
+      seen.add(entry.id);
+      validated.push({
+        index,
+        generation: entry.generation,
+        remainingRespawn: entry.remainingRespawn,
+      });
+    }
+
+    // Reset first so every live claim/deadline is retired and every authored visual is restored.
+    // Generations are then assigned from the validated checkpoint; omitted slots are canonical gen 1.
+    try {
+      this.reset(now);
+      for (const resource of this.items) resource.generation = 1;
+      for (const entry of validated) {
+        const resource = this.items[entry.index]!;
+        resource.generation = entry.generation;
+        if (entry.remainingRespawn === null) continue;
+
+        // A transient onRestore failure during reset deliberately leaves the slot respawning and off
+        // the free list. Re-key that existing deadline instead of assuming every slot became free.
+        if (resource.state === 'respawning') {
+          this.respawnHeap.remove(entry.index);
+        } else {
+          this.removeFree(entry.index);
+          this.transition(resource, 'respawning');
+        }
+        resource.ownerId = null;
+        resource.leaseUntil = 0;
+        resource.respawnAt = now + entry.remainingRespawn;
+        if (!this.respawnHeap.insert(entry.index)) {
+          throw new Error(`resource ${resource.id} already has a restored respawn deadline`);
+        }
+        this.notify('unavailable', resource);
+      }
+    } catch (error) {
+      // Do not leak a half-rebuilt free list/heap to the caller. Reset is itself visual-failure-safe:
+      // a callback that still cannot restore remains a known respawning retry, never edible.
+      try {
+        this.reset(now);
+      } catch {
+        // Preserve the original restore error; invariant failures are reported at their first cause.
+      }
+      throw error;
+    }
   }
 
   private validateDefinition(
@@ -620,6 +774,7 @@ export class EdibleResourceRegistry {
     if (!this.leaseHeap.insert(index)) {
       throw new Error(`resource ${resource.id} already has an active lease`);
     }
+    this.markPersistenceChanged();
     return {
       id: resource.id,
       generation: resource.generation,
@@ -691,6 +846,7 @@ export class EdibleResourceRegistry {
     this.bumpGeneration(resource);
     this.appendFree(index);
     this.notify('available', resource);
+    this.markPersistenceChanged();
   }
 
   private transition(resource: MutableEdibleResource, next: EdibleResourceState): void {
@@ -703,8 +859,11 @@ export class EdibleResourceRegistry {
   }
 
   private bumpGeneration(resource: MutableEdibleResource): void {
-    resource.generation =
-      resource.generation >= Number.MAX_SAFE_INTEGER ? 1 : resource.generation + 1;
+    resource.generation = nextGeneration(resource.generation);
+  }
+
+  private markPersistenceChanged(): void {
+    this.persistenceRevisionValue = nextGeneration(this.persistenceRevisionValue);
   }
 
   private nextAnyFree(): number {

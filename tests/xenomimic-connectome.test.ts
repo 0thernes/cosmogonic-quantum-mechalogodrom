@@ -6,6 +6,7 @@ import {
   XenomimicConnectome,
 } from '../src/sim/xenomimic-connectome';
 import { XenomimicPopulation } from '../src/sim/xenomimics';
+import type { Xenomimic } from '../src/sim/xenomimics';
 
 describe('XenomimicConnectome', () => {
   test('counts twin + entity topology but never draws physical tethers', () => {
@@ -54,5 +55,30 @@ describe('XenomimicConnectome', () => {
     expect(source.toLowerCase()).toContain('psionic');
     expect(source).not.toContain('new THREE.LineSegments');
     expect(source).not.toContain('LineBasicMaterial');
+  });
+
+  test('shrinking populations and disposal release every captured creature reference', () => {
+    const first = { pairId: 0, role: 0, x: 0, y: 0, z: 0 } as Xenomimic;
+    const second = { pairId: 0, role: 1, x: 1, y: 0, z: 0 } as Xenomimic;
+    const removedA = { pairId: 1, role: 0, x: 2, y: 0, z: 0 } as Xenomimic;
+    const removedB = { pairId: 1, role: 1, x: 3, y: 0, z: 0 } as Xenomimic;
+    let live: Xenomimic[] = [first, second, removedA, removedB];
+    const population = {
+      forEach(callback: (creature: Xenomimic) => void): void {
+        live.forEach(callback);
+      },
+    } as XenomimicPopulation;
+    const connectome = new XenomimicConnectome(null);
+    const captured = (connectome as unknown as { creatures: Array<Xenomimic | null> }).creatures;
+
+    connectome.sync(population, [], 0);
+    expect(captured.slice(0, 4)).toEqual(live);
+
+    live = [first, second];
+    connectome.sync(population, [], 1);
+    expect(captured.slice(0, 4)).toEqual([first, second, null, null]);
+
+    connectome.dispose();
+    expect(captured.every((creature) => creature === null)).toBe(true);
   });
 });

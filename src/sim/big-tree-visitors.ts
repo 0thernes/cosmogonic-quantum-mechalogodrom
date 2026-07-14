@@ -51,6 +51,8 @@ export interface BigTreeOrdinaryBody {
     act?: number;
     /** Game-theory payoff ledger (present on every real organism; optional for lightweight mocks). */
     payoff?: number;
+    /** Heritable Prisoner's-Dilemma policy consumed by ordinary behavior outside the sanctuary. */
+    strategy?: 0 | 1;
     vel: { x: number; z: number };
   };
 }
@@ -207,6 +209,8 @@ export interface BigTreeSpeciesVisitorStats {
   cancellations: number;
   zoneCapacity: number;
   socialPairs: number;
+  /** One-shot ordinary-organism cooperative-policy changes caused by a newly formed social pair. */
+  policyTransfers: number;
   completedVisits: number;
   timedOutVisits: number;
   stuckRecoveries: number;
@@ -364,6 +368,7 @@ export class BigTreeSpeciesVisitors {
   consumedLeaves = 0;
   targetLosses = 0;
   cancellations = 0;
+  policyTransfers = 0;
 
   constructor(
     tree: BigTreeFoodSource,
@@ -542,6 +547,7 @@ export class BigTreeSpeciesVisitors {
     this.consumedLeaves = 0;
     this.targetLosses = 0;
     this.cancellations = 0;
+    this.policyTransfers = 0;
   }
 
   /** Caller-owned development view; returns false for untracked/cooldown-only actors. */
@@ -595,6 +601,7 @@ export class BigTreeSpeciesVisitors {
     out.cancellations = this.cancellations;
     out.zoneCapacity = this.visits.capacity;
     out.socialPairs = this.zoneStats.partnerReservations;
+    out.policyTransfers = this.policyTransfers;
     out.completedVisits = this.zoneStats.completedVisits;
     out.timedOutVisits = this.zoneStats.timedOutVisits;
     out.stuckRecoveries = this.zoneStats.stuckRecoveryEvents;
@@ -1054,10 +1061,38 @@ export class BigTreeSpeciesVisitors {
           this.socialLeaseSeconds,
         )
       ) {
+        this.transferCooperativePolicy(waiting, index);
         waiting = -1;
       } else {
         waiting = index;
       }
+    }
+  }
+
+  /**
+   * A real, narrowly scoped knowledge transfer: when two willing ordinary organisms first pair,
+   * a defector may imitate its cooperative partner. `strategy` is not decorative metadata — the
+   * canonical Nash behavior reads it after the visit, and heredity can pass it to descendants.
+   * Existing leases take the branch above and therefore cannot repeat or inflate this event.
+   */
+  private transferCooperativePolicy(firstIndex: number, secondIndex: number): void {
+    if (
+      this.activeKinds[firstIndex] !== BIG_TREE_OWNER_ORDINARY ||
+      this.activeKinds[secondIndex] !== BIG_TREE_OWNER_ORDINARY
+    ) {
+      return;
+    }
+    const first = this.activeBodies[firstIndex] as BigTreeOrdinaryBody | null;
+    const second = this.activeBodies[secondIndex] as BigTreeOrdinaryBody | null;
+    if (first === null || second === null) return;
+    const firstStrategy = first.userData.strategy;
+    const secondStrategy = second.userData.strategy;
+    if (firstStrategy === 0 && secondStrategy === 1) {
+      second.userData.strategy = 0;
+      this.policyTransfers++;
+    } else if (firstStrategy === 1 && secondStrategy === 0) {
+      first.userData.strategy = 0;
+      this.policyTransfers++;
     }
   }
 
