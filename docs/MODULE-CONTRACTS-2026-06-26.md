@@ -2,10 +2,12 @@
 
 # Module Contracts
 
-**TSOTCHKE MASTER WIRE ERA (v0.22.0):** 22 external repositories are represented as `8 deep`,
-`7 wired`, `2 harvest`, `4 fenced`, and `1 meta` (`17/21` non-meta integrated); `OBLITERATUS` is one
-of the four fences and `classical-contrast` is an internal control. Direct ports, deterministic facades,
-harvests, and fences must remain distinct. See `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md` and
+**TSOTCHKE MASTER WIRE ERA (v0.23.0):** The public census contains 23 repositories. The
+causal/runtime ledger intentionally contains 22 entries represented as `8 deep`, `7 wired`, `2 harvest`,
+`4 fenced`, and `1 meta` (`17/21` non-meta integrated). `homebrew-moonlab` is census-only deployment
+metadata; `OBLITERATUS` is one of the four fences and `classical-contrast` is an internal control
+outside both denominators. Direct ports, deterministic facades, harvests, and fences must remain distinct.
+See `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md` and
 `docs/VERIFICATION-ANALYTICAL-DATA.md`.
 
 Binding spec for every module in this repo. Writer agents and humans MUST conform exactly —
@@ -38,15 +40,16 @@ Binding spec for every module in this repo. Writer agents and humans MUST confor
 
 ## Tsotchke wiring contracts (paramount)
 
-- `tsotchke-registry.ts`: exactly 22 external repositories mapped to explicit depth, integration-mode,
-  and source-boundary fields. The four fences are `gpt2-basic`, `llm-arbitrator`,
-  `SolanaQuantumFlux`, and `OBLITERATUS`; `.github` is metadata; `Quantum-RNG-API` is harvest/toolchain.
-  `classical-contrast` is separately ledgered as an internal operational control. Do not count it as an
-  external repository.
+- `tsotchke-registry.ts`: exactly 22 causal/runtime entries mapped to explicit depth, integration-mode,
+  and source-boundary fields. The public census contains 23 repositories; `homebrew-moonlab` is
+  census-only deployment metadata and must not enter the causal/runtime registry. The four fences are
+  `gpt2-basic`, `llm-arbitrator`, `SolanaQuantumFlux`, and `OBLITERATUS`; `.github` is metadata;
+  `Quantum-RNG-API` is harvest/toolchain. `classical-contrast` is separately ledgered as an internal
+  operational control and is outside both denominators.
 - `tsotchke-organism-intelligence.ts`: one bounded-cadence shared field with a reused signal object.
   Integrated repository channels may affect resource, threat, exploration, social, forecast, and
   plasticity terms; all four fences and metadata must remain exactly inert. Consumers may not allocate
-  per entity to recompute the shared O(22) field.
+  per entity to recompute the shared O(22-entry) field.
 - `primordial-soup.ts` + `petri-dish.ts`: Digital biologics birth engine. Eshkol AD for mutation on `eshkolProgram` genomes. Full corpus flux for catalysis. New strains emerge with substrate-specific forms.
 - `eshkol-bridge.ts`: Consciousness engine (AD, GWT, inference) from Eshkol corpus. Used for program eval + ignition in soup/mind.
 - Leaves such as moonlab-tensor, qge-\*, irrep-symmetry, PINN, PIMC, ULG, logo, and RNG must preserve
@@ -217,7 +220,7 @@ Extends Eshkol QRNG with Bell inequality verification (CHSH S parameter) and Sha
 
 ### Tsotchke modules (depth-ledger wired — paramount)
 
-- `tsotchke-registry.ts`: O(1) map of all repos to SubstrateKind + wiring + leaf. Drives soup, godform, Archons. Deterministic.
+- `tsotchke-registry.ts`: O(1) map of the 22 causal/runtime entries to SubstrateKind + wiring + leaf. The 23-repository public census additionally includes census-only `homebrew-moonlab`. Drives soup, godform, Archons. Deterministic.
 - `eshkol-bridge.ts`: Consciousness-proxy engine (Eshkol AD/GWT/inference/sentience markers). Prealloc. Used by soup, super-mind.
 - `primordial-soup.ts` + `petri-dish.ts`: Petri dish for digital biologics. Full Tsotchke catalysis, birth, mutation (AD-inspired, GWT). Allocation friendly.
 - `godform.ts`: Archon biases + .esk programs from corpus.
@@ -1576,7 +1579,7 @@ Copilot are constructed boot-stream-neutral and never write sim state, so the go
 
 ### V9 acceptance
 
-Full `bun run check` green: prettier → tsc strict → oxlint → 3293 tests (0 fail, 300-frame golden
+Full `bun run check` green: prettier → tsc strict → oxlint → 3297 tests (0 fail, 300-frame golden
 included) → build. The Copilot sandbox verified live (allow: `git log`, file reads; deny:
 path-escape, repository-root pathspecs, `git push`, `legacy/`, shell redirection).
 

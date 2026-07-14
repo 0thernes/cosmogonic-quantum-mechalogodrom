@@ -1,4 +1,4 @@
-<!-- reviewed: 2026-07-11 | V4 Phase-A current-truth pass | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-14 | dome-ecology release receipt reconciliation | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # Verification Analytical Data — cross-surface fact ledger
 
@@ -7,7 +7,7 @@ surfaces (MD · HTML · XML · code), its **single source of truth**, and where 
 so a drift between the README, the dashboard, a master XML, or a spec page is caught at a glance.
 Rewritten in place when the facts change (per the binding living-doc law in
 [CLAUDE.md](../CLAUDE.md)). Last reconciled by a publication-surface current-truth pass on
-**2026-07-11** (§1 plus the V4 Phase-A result and preserved V3 predecessor).
+**2026-07-14** (§1 plus the V4 Phase-A result, preserved V3 predecessor, and Dome ecology release evidence).
 
 > **How the numbers stay honest:** the version (`package.json`) and the measured receipts +
 > NHSI design counts (`scripts/canonical-receipts.ts`) are the ONLY places those facts are edited.
@@ -20,8 +20,8 @@ Rewritten in place when the facts change (per the binding living-doc law in
 
 | Fact                                          | Canonical value                                                                                                                                                                              | Source of truth                                                                                                                                                                            | Propagated by           |
 | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------- |
-| Package version                               | `0.22.0`                                                                                                                                                                                     | `package.json` `version`                                                                                                                                                                   | `sync-surfaces.ts`      |
-| Test count (exact tracked suite)              | `3293`                                                                                                                                                                                       | `scripts/canonical-receipts.ts`                                                                                                                                                            | `sync-surfaces.ts`      |
+| Package version                               | `0.23.0`                                                                                                                                                                                     | `package.json` `version`                                                                                                                                                                   | `sync-surfaces.ts`      |
+| Test count (exact tracked suite)              | `3297`                                                                                                                                                                                       | `scripts/canonical-receipts.ts`                                                                                                                                                            | `sync-surfaces.ts`      |
 | Line coverage                                 | `84.64%`                                                                                                                                                                                     | `scripts/canonical-receipts.ts`                                                                                                                                                            | `sync-surfaces.ts`      |
 | Function coverage                             | `82.21%`                                                                                                                                                                                     | `scripts/canonical-receipts.ts`                                                                                                                                                            | `sync-surfaces.ts`      |
 | Faculties (design)                            | `100` (~30 deep-wired)                                                                                                                                                                       | `CANONICAL_FACULTIES`                                                                                                                                                                      | `sync-surfaces.ts`      |
@@ -31,7 +31,7 @@ Rewritten in place when the facts change (per the binding living-doc law in
 | Digital Biologics / PrimordialSoup forms      | `26`                                                                                                                                                                                         | `CANONICAL_BIOLOGIC_FORMS`                                                                                                                                                                 | `sync-surfaces.ts`      |
 | Morphotypes                                   | `250` live · `100` legacy                                                                                                                                                                    | `phyla.ts` (`PHYLUM_COUNT 10 × MORPHS_PER_PHYLUM 25`) / `constants.ts` `MORPH_COUNT`                                                                                                       | prose (NOT auto-synced) |
 | Butlin scorecard                              | `8/14 met + 6/14 partial`                                                                                                                                                                    | measured 2026-06-21 adversarial code audit                                                                                                                                                 | prose (NOT auto-synced) |
-| Tsotchke corpus                               | `22 external repos: 8 deep / 7 wired / 2 harvest / 4 fenced / 1 meta; 17/21 non-meta integrated`                                                                                             | [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md), `src/sim/tsotchke-registry.ts`                                                                         | prose (NOT auto-synced) |
+| Tsotchke corpus                               | `23 public repos (16 user + 7 org); 22 causal/runtime entries: 8 deep / 7 wired / 2 harvest / 4 fenced / 1 meta; 17/21 non-meta integrated; homebrew-moonlab census-only`                    | [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md), `src/sim/tsotchke-registry.ts`                                                                         | prose (NOT auto-synced) |
 | Organism-intelligence causal claim            | V4: ordinary and Petri fail magnitude, adaptive predictor fails both controls, Titans pass; only bounded Titan game-policy semantic causality is authorized                                  | [V4 report](./reports/ORGANISM-INTELLIGENCE-V4-RESULTS-2026-07-11.md), V4 JSON/CSV/forest receipt                                                                                          | prose (NOT auto-synced) |
 | A-Life 9-axis profile                         | `[4.0, 2.4, 3.3, 3.8, 4.5, 4.6, 4.4, 3.5, 4.0]`; breadth `3.8`; rank `#1/113`; z `+3.080` population / `+3.234` peers                                                                        | `docs/reports/2026-06-26-alife-comparison-matrix.csv`, generated stats/geometry                                                                                                            | generated + prose       |
 | Comprehensive standing synthesis (2026-07-12) | Xeno multi-system interactive integration + compact multi-faculty apex minds; SuperCreature **not** an OpenWorm competitor; indicator-only consciousness; public/scientific legitimacy early | [COMPREHENSIVE-STANDING report](./reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.md) · [HTML](./reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.html) | prose (NOT auto-synced) |
@@ -43,8 +43,8 @@ Rewritten in place when the facts change (per the binding living-doc law in
 
 <!-- cqm-sync:local-measurement:start -->
 
-- `bun run verify:receipts` → **3,275 tests, zero failures** · **365 test files** · **3,551,817**
-  `expect()` calls · **93.58% line / 91.60% func** on this Windows checkout.
+- `bun run verify:receipts` → **3,297 tests, zero failures** · **366 test files** · **3,589,864**
+  `expect()` calls · **93.60% line / 91.61% func** on this Windows checkout.
 
 <!-- cqm-sync:local-measurement:end -->
 
@@ -195,10 +195,10 @@ verified correct. **Determinism law holds:** no `Math.random` / `Date.now` / `pe
 `src/sim/**` or `src/math/**` logic (the one allowed `world.ts` super-evo localStorage timestamp is
 outside sim logic). Only fidelity caveat = Finding H above.
 
-Consistency that **passed** verification (no drift found): Butlin `8/14 met + 6/14 partial` (every
-current surface; the only `14/14` hits are in `legacy/` verbatim-preserved files + append-only CHANGELOG
-history with the correction logged), version `0.22.0` (matches `package.json` — the version SSOT), entity `50,000`, bioforms
-`26`, faculty/Archon/ToM/emergence counts, Tsotchke `20`.
+At the **2026-06-27 historical reconciliation**, these values passed the then-current consistency check:
+Butlin `8/14 met + 6/14 partial`, package version `0.22.0`, entity ceiling `50,000`, bioforms `26`, the
+faculty/Archon/ToM/emergence counts, and the then-used Tsotchke count `20`. This paragraph is a dated
+audit receipt, not current SSOT; the v0.23.0 values and dual Tsotchke denominators are published in §1.
 
 ---
 
@@ -452,7 +452,7 @@ verify:facts` = 0 drift / 80 surfaces, 0 git-conflict-markers tree-wide, 100% of
 | `src/ui/**`                                                                       | 20    | subsystems agent                                         | clean (3 cosmetic Low: DPR-on-monitor-move)                                                      |
 | `src/core,audio,server,memory,logging` + `main/types/docs-page` + `server.ts`     | ~14   | subsystems agent                                         | clean; security exceptionally hardened                                                           |
 | `src/styles/app.css`                                                              | 1     | front-end agent                                          | clean                                                                                            |
-| `tests/**`                                                                        | 366   | exact gate (3,275 cases across 365 test files) + tooling | healthy, 0 disabled, all assert                                                                  |
+| `tests/**`                                                                        | 367   | exact gate (3,297 cases across 366 test files) + tooling | healthy, 0 disabled, all assert                                                                  |
 | `scripts/**`                                                                      | 16    | scripts/tooling agents                                   | sound; **CI sync:check gap FIXED**, dead `.sync-receipts.cjs` removed                            |
 | `bench/**`                                                                        | 13    | tooling agent                                            | clean; aggregate now includes the P1 quantum-classical bench                                     |
 | `.github/workflows/*.yml` + issue/PR templates                                    | 8+    | CI agent                                                 | SHA-pinned, least-priv; `master`->`main` URLs FIXED; **gate now runs sync:check + verify:facts** |

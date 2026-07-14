@@ -1,5 +1,6 @@
 /**
- * TSOTCHKE REGISTRY + PETRI DISH — 22 external repos plus separate internal controls.
+ * TSOTCHKE REGISTRY + PETRI DISH — 22 causal/runtime ledger entries selected from a
+ * 23-public-repository census, plus separate internal controls.
  */
 import { describe, expect, test } from 'bun:test';
 import { mulberry32 } from '../src/math/rng';
@@ -91,8 +92,8 @@ const EXPECTED_BRAIN_CHANNELS = [
   ['.github', null],
 ] as const satisfies readonly (readonly [TsotchkeRepoSlug, TsotchkeBrainChannel | null])[];
 
-describe('Tsotchke registry — exact external ledger and internal-control boundary', () => {
-  test('live external parity is exactly 15 user + 7 org repositories', () => {
+describe('Tsotchke registry — causal/runtime ledger, public census, and control boundaries', () => {
+  test('the causal/runtime ledger is exactly 15 user + 7 org entries', () => {
     expect(TSOTCHKE_USER_REPOS).toEqual(EXPECTED_USER_REPOS);
     expect(TSOTCHKE_ORG_REPOS).toEqual(EXPECTED_ORG_REPOS);
     expect(TSOTCHKE_USER_REPOS).toHaveLength(15);
@@ -102,9 +103,12 @@ describe('Tsotchke registry — exact external ledger and internal-control bound
     expect(
       Array.from({ length: TSOTCHKE_REPO_COUNT }, (_, i) => getTsotchkeRepoByIndex(i).slug),
     ).toEqual([...EXPECTED_USER_REPOS, ...EXPECTED_ORG_REPOS]);
+    // Public census: 16 user + 7 organization repositories. The extra user repository is
+    // deployment metadata only and therefore must not become a causal/runtime ledger row.
+    expect([...TSOTCHKE_USER_REPOS, ...TSOTCHKE_ORG_REPOS]).not.toContain('homebrew-moonlab');
   });
 
-  test('classical contrast remains operational without inflating the external ledger', () => {
+  test('classical contrast remains operational without inflating the causal/runtime ledger', () => {
     expect(TSOTCHKE_INTERNAL_CONTROLS).toHaveLength(1);
     expect(TSOTCHKE_INTERNAL_CONTROLS[0]).toMatchObject({
       id: 'classical-contrast',
@@ -242,7 +246,7 @@ describe('Tsotchke registry — exact external ledger and internal-control bound
     expect(getTsotchkeRepo('.github')!.wiring).toBe(0);
   });
 
-  test('corpus beat rotates all 22 repos deterministically', () => {
+  test('corpus beat rotates all 22 causal/runtime ledger entries deterministically', () => {
     const a = corpusBeatForArchon(2, 100);
     const b = corpusBeatForArchon(2, 100);
     expect(a).toBe(b);
@@ -280,7 +284,7 @@ describe('Tsotchke registry — exact external ledger and internal-control bound
     }
   });
 
-  test('every external entry declares an integration mode and source boundary', () => {
+  test('every causal/runtime ledger entry declares an integration mode and source boundary', () => {
     const valid = new Set<TsotchkeIntegrationMode>([
       'direct-port',
       'deterministic-facade',

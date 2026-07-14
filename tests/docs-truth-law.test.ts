@@ -231,6 +231,18 @@ describe('docs truth law — honest Tsotchke wiring', () => {
       expect(text).toContain('fenced');
       expect(text).toContain('obliteratus');
     }
+
+    const pkg = (await Bun.file('package.json').json()) as { version: string };
+    const brain = await Bun.file(
+      'docs/BRAIN-NEUROLOGY-CONSCIOUSNESS-ENGINEERING-ASSESSMENT-2026-07-06.md',
+    ).text();
+    const canonicalVersionRow = brain.split('\n').find((line) => line.includes('| **Version**'));
+    expect(canonicalVersionRow).toContain(`| \`${pkg.version}\``);
+
+    const docsHtml = await Bun.file('docs.html').text();
+    expect(docsHtml).toContain('22-entry Tsotchke causal/runtime ledger');
+    expect(docsHtml).toContain('The separate public census has 23 repositories');
+    expect(docsHtml).toContain('homebrew-moonlab');
   });
 });
 

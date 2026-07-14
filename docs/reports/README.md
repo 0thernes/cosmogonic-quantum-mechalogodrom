@@ -5,9 +5,9 @@
 Technical reports and audits for Cosmogonic Quantum Mechalogodrom. Dated filenames (`2026-*`) are
 **historical worldline snapshots** when present — they preserve evidence from their authoring pass.
 **Current published** gate receipts: [VERIFICATION-ANALYTICAL-DATA.md](../VERIFICATION-ANALYTICAL-DATA.md) §1 ·
-`scripts/canonical-receipts.ts` (v0.22.0 · **3,293-test floor** · **84.64 % / 82.21 %** coverage).
-Latest final-tree Windows receipt: **3,275 completed cases, zero failures, 3,551,817 expect() calls,
-93.58% line coverage, and 91.60% function coverage across 365 test files**. The lower portable floor
+`scripts/canonical-receipts.ts` (v0.23.0 · **3,297-test floor** · **84.64 % / 82.21 %** coverage).
+Latest final-tree Windows receipt: **3,297 completed cases, zero failures, 3,589,864 expect() calls,
+93.60% line coverage, and 91.61% function coverage across 366 test files**. The lower portable floor
 remains the cross-platform public guarantee; `scripts/canonical-receipts.ts` is the live authority.
 
 The batch-26 adversarial repair pass made the flora sampler bilinear and sealed chemotaxis against
@@ -24,10 +24,12 @@ two-meal competence lead, subject to a 25-second per-learner simulation-time coo
 all-or-nothing deterministic checks. Neither establishes cross-species learning, general intelligence,
 consciousness, or sentience. The fauna social matcher uses O(A) adapter reads followed by bounded numeric
 O(A²), with A ≤ 72, and food matrix changes upload one 16-float instance range each. Focused automated
-tests, the 3,293-test whole-repository receipt, a 117-artifact production build, and one atomic
-phone-plus-desktop natural-rAF/canvas-isolated smoke are green. Exact behavior commit `0ce2f7eb` also
+tests, the measured merged 3,297-test canonical floor, a 117-artifact v0.23.0 production build, and one atomic
+phone-plus-desktop natural-rAF/canvas-isolated smoke are green. Prior behavior baseline `0ce2f7eb` also
 passed CI, CodeQL, post-build smoke, exact-SHA Pages deployment, and an independent public-URL browser
-probe with HTTP 200 main/worker assets, a booted canvas, and zero console/page/network failures.
+probe with HTTP 200 main/worker assets, a booted canvas, and zero console/page/network failures. The final
+v0.23.0 deployment run IDs are necessarily bound in the external release handoff after its immutable
+commit exists.
 
 ## Reports
 
@@ -56,8 +58,9 @@ probe with HTTP 200 main/worker assets, a booted canvas, and zero console/page/n
   — current fresh-disjoint fixed-family causal report for the shared living-system intelligence field:
   synthetic goal-only/corpus effects, `6.1213%` adaptation, `17/17` integrated-row reach, `5/5`
   excluded-row inertness, numerical safety, three-process performance stability, and complete named
-  consumer coverage pass; uniform random-action baseline separation and aggregate specificity fail. Includes the 22-repository ledger,
-  Eshkol/QRNG boundaries, the code-grounded 9-axis profile, and the no-additional-uplift gate.
+  consumer coverage pass; uniform random-action baseline separation and aggregate specificity fail. Includes the 23-public-repository
+  census and 22-entry causal/runtime ledger (`homebrew-moonlab` is census-only deployment metadata), Eshkol/QRNG boundaries, the
+  code-grounded 9-axis profile, and the no-additional-uplift gate.
 - [VERIFICATION-ANALYTICAL-DATA.md](../VERIFICATION-ANALYTICAL-DATA.md) — canonical current facts.
 - [CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md](../CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md)
   — active 22-report master synthesis and current publication-facing truth pass.

@@ -10,9 +10,9 @@ adversarial verification of every finding). It is deliberately **not** all-green
 a scorecard is where it is red.
 
 > Read every claim against [`VERIFICATION-ANALYTICAL-DATA.md`](../VERIFICATION-ANALYTICAL-DATA.md) §1.
-> Current receipts: **v0.22.0 · canonical floor 3,293 tests · 84.64 % line / 82.21 % function**;
-> latest Windows-local gate on 2026-07-14 measured **3,275 completed cases · 0 failures ·
-> 3,551,817 `expect()` calls**. The portable coverage floor remains the synced canonical
+> Current receipts: **v0.23.0 · canonical floor 3,297 tests · 84.64 % line / 82.21 % function**;
+> latest Windows-local gate on 2026-07-14 measured **3,297 completed cases · 0 failures ·
+> 3,589,864 `expect()` calls**. The portable coverage floor remains the synced canonical
 > `84.64 % / 82.21 %`; the latest Windows-local coverage receipt is recorded in the table below.
 
 ## Bottom line
@@ -40,7 +40,7 @@ Grade key: **A** ≥ 9 · **A−** 8–9 · **B+** 7.5–8 · **B** 6.5–7.5 ·
 | --- | ------------------------- | ----- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1   | Determinism integrity     | 9.5   | A     | No `Math.random`/`Date.now`/`performance.now` in sim/math; all randomness via seeded `Rng` (`src/math/rng.ts`). Only UI-seed exceptions in `src/main.ts`.                                                                                                                                                                                                                 |
 | 2   | Type safety & lint        | 9.5   | A     | `tsc --strict` + `oxlint`; **0** `TODO`/`FIXME`/`@ts-ignore`/`eslint-disable` across `src/`. Gate-enforced.                                                                                                                                                                                                                                                               |
-| 3   | Test rigor & coverage     | 9.0   | A     | `3,293`-test canonical floor; latest Windows-local full receipt measured `3,275` completed cases / `0` fail and `3,551,817` `expect()` calls. Windows coverage measured `93.58%` line / `91.60%` func; published portable coverage remains the canonical `84.64%` line / `82.21%` func floor. Receipts law (`verify-receipts.ts`) makes an unmeasured number unshippable. |
+| 3   | Test rigor & coverage     | 9.0   | A     | `3,297`-test canonical floor; latest Windows-local full receipt measured `3,297` completed cases / `0` fail and `3,589,864` `expect()` calls. Windows coverage measured `93.60%` line / `91.61%` func; published portable coverage remains the canonical `84.64%` line / `82.21%` func floor. Receipts law (`verify-receipts.ts`) makes an unmeasured number unshippable. |
 | 4   | Time complexity / scaling | 8.5   | A−    | Entity update is `O(n·k)` on a spatial grid (`ctx.grid`), not `O(n²)`; ultra-tier LOD ≥ 5k; 50k ceiling. Stagger gates never gate RNG draws (determinism-safe).                                                                                                                                                                                                           |
 | 5   | GPU resource discipline   | 8.0   | A−    | Recurring leak class (per-instance `THREE.*` outside cache) — but caught: `World.dispose()` sweep landed `bf1a405d`/2026-07-01, spy-verified `count→0` + idempotent.                                                                                                                                                                                                      |
 
@@ -55,11 +55,11 @@ Grade key: **A** ≥ 9 · **A−** 8–9 · **B+** 7.5–8 · **B** 6.5–7.5 ·
 
 ### C · Tsotchke integration depth
 
-| #   | Scrutiny point            | Score | Grade | Criticism / evidence                                                                                                                                                                                                 |
-| --- | ------------------------- | ----- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 10  | Corpus breadth            | 8.5   | A−    | 20 corpus projects / 22 registry entries: **9 deep, 7 wired, 2 harvest, 3 fenced, 1 meta**; precise scientific wired fraction is `18/21`. Fenced entries remain provenance-only; no blanket full-depth wiring claim. |
-| 11  | Causal depth              | 8.5   | A−    | Outputs consumed in hot paths: PIMC `pathWeight`→`super-mind.ts:1437` (EXPLORE) + `petri-dish.ts:219`; logo `logoMorphScalar`→`petri-dish.ts:226`; ulg/QGT/spin/Eshkol into `super-mind`/`world`.                    |
-| 12  | Quantum-substrate honesty | 9.0   | A     | Exact classical simulation (Born rule, unitarity 1e-12); **no quantum advantage claimed** — "lacks only a physical QPU = speed/scale, not correctness." Never called fake.                                           |
+| #   | Scrutiny point            | Score | Grade | Criticism / evidence                                                                                                                                                                                                                                                                                                                         |
+| --- | ------------------------- | ----- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 10  | Corpus breadth            | 8.5   | A−    | **23 public repositories** (`16` user + `7` organization) and a **22-entry causal/runtime ledger**: **8 deep, 7 wired, 2 harvest, 4 fenced, 1 meta**; `17/21` non-meta entries are integrated. `homebrew-moonlab` is census-only deployment metadata; fenced entries remain provenance-only, and no blanket full-depth wiring claim is made. |
+| 11  | Causal depth              | 8.5   | A−    | Outputs consumed in hot paths: PIMC `pathWeight`→`super-mind.ts:1437` (EXPLORE) + `petri-dish.ts:219`; logo `logoMorphScalar`→`petri-dish.ts:226`; ulg/QGT/spin/Eshkol into `super-mind`/`world`.                                                                                                                                            |
+| 12  | Quantum-substrate honesty | 9.0   | A     | Exact classical simulation (Born rule, unitarity 1e-12); **no quantum advantage claimed** — "lacks only a physical QPU = speed/scale, not correctness." Never called fake.                                                                                                                                                                   |
 
 ### D · Consciousness / cognition claims
 

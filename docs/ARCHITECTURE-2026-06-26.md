@@ -4,9 +4,11 @@
 
 > **Current operational-intelligence addendum (2026-07-10).** A single bounded-cadence
 > `TsotchkeOrganismIntelligence` field now converts the integrated corpus channels into a stable signal
-> consumed by ordinary entities and the wider living-system paths. The corrected external ledger is
-> `8 deep / 7 wired / 2 harvest / 4 fenced / 1 meta`, or `17/21` integrated after excluding metadata;
-> `classical-contrast` is an internal control. The verified V4 Phase-A descendant evaluates 64 frozen
+> consumed by ordinary entities and the wider living-system paths. The public census contains 23
+> repositories, while the causal/runtime ledger intentionally contains 22 entries:
+> `8 deep / 7 wired / 2 harvest / 4 fenced / 1 meta`, or `17/21` integrated after excluding metadata.
+> `homebrew-moonlab` is census-only deployment metadata; `classical-contrast` is an internal control
+> outside both denominators. The verified V4 Phase-A descendant evaluates 64 frozen
 > seeds and retains every failed family: ordinary and Petri pass inference but miss the fixed magnitude
 > floor, the adaptive predictor loses to both controls, and only Titans pass. It authorizes bounded Titan
 > game-policy semantic causality, not ordinary recurrent benefit, adaptive prediction, Petri causality,
@@ -24,10 +26,12 @@ modify, and share it freely for any non-commercial purpose, provided you keep th
 © 0thernes notices (don't claim it as your own). Commercial / for-profit use needs
 written permission. See [LICENSE](../LICENSE).
 
-**Tsotchke depth-ledger wire:** 22 external repositories from the `tsotchke` user and
-`Tsotchke-Corporation` organization are accounted for as `8 deep`, `7 wired`, `2 harvest`, `4 fenced`,
-and `1 meta`. The non-meta integrated fraction is `17/21`; direct ports, deterministic facades, harvests,
-and fences remain distinct. Fenced repositories have no simulation effect. Petri
+**Tsotchke depth-ledger wire:** The public `tsotchke` and `Tsotchke-Corporation` census contains 23
+repositories. The causal/runtime ledger intentionally contains 22 entries: `8 deep`, `7 wired`,
+`2 harvest`, `4 fenced`, and `1 meta`. `homebrew-moonlab` is census-only deployment metadata, not a
+causal/runtime entry. The non-meta integrated fraction is `17/21`; direct ports, deterministic facades,
+harvests, and fences remain distinct. `classical-contrast` is an internal control outside both
+denominators. Fenced repositories have no simulation effect. Petri
 (`primordial-soup.ts` + `petri-dish.ts` + `digital-biologics.ts`) grows computational digital-biologic
 forms and indicators; none of these mechanisms proves sentience.
 
@@ -128,7 +132,7 @@ graph TD
   end
 
   subgraph tsotchke["Tsotchke Depth-Ledger Wiring (paramount, non-negotiable by class)"]
-    registry["tsotchke-registry.ts<br/>22 external repos: 8 deep, 7 wired, 2 harvest, 4 fenced, 1 meta; 17/21 non-meta integrated"]
+    registry["tsotchke-registry.ts<br/>23 public repos; 22 causal/runtime entries: 8 deep, 7 wired, 2 harvest, 4 fenced, 1 meta; 17/21 non-meta integrated; homebrew-moonlab census-only"]
     facade["tsotchke-facade.ts<br/>Re-exports + bridges"]
     eshkolb["eshkol-bridge.ts + workspace<br/>Consciousness engine (AD primitive, GWT broadcast/ignition, inference)"]
     soup["primordial-soup.ts + petri-dish.ts + digital-biologics<br/>Petri dish birthing digital biologics (EshkolProgram genomes + depth-ledger catalysis + AD mutation)"]
@@ -447,7 +451,7 @@ shared `SpatialHash`, shared `Rng`) and explicit constructor references
 
 **Eshkol** (the main non-transformer language for consciousness/sentience): AD-as-compiler-primitive, GWT workspace, active inference factor graphs, .esk programs. Wired as the core "consciousness engine" in `eshkol-bridge.ts` (with real tape AD path), driving sentience proxies, soup growth, and Archon minds.
 
-**All repos wired**: Moonlab (tensors/MPO/Clifford), quantum_geometric_tensor (QGT/Berry), spin_based (instinct glass), libirrep (symmetry/forms), quantum-quake (aliveness/physics), ulg (laws), logo-lab (morph), PINN/PIMC (physics), tensorcore, etc. Mapped in `tsotchke-registry.ts` (22 slug entries, wiring scores, substrate vectors). Fenced LLM ones stay out of sim.
+**Depth-classed causal/runtime set**: Moonlab (tensors/MPO/Clifford), quantum_geometric_tensor (QGT/Berry), spin_based (instinct glass), libirrep (symmetry/forms), quantum-quake (aliveness/physics), ulg (laws), logo-lab (morph), PINN/PIMC (physics), tensorcore, etc. are mapped in `tsotchke-registry.ts` as 22 causal/runtime entries with explicit wiring scores and substrate vectors. The broader public census has 23 repositories; `homebrew-moonlab` is census-only deployment metadata. Fenced LLM entries stay out of the simulation.
 
 **Petri Dish / Primordial Soup**: The growth engine. `primordial-soup.ts` + `petri-dish.ts` use the depth-ledger corpus for catalysis, mutation (Eshkol AD-inspired), GWT ignition births, speciation. Super Creature/Archons are the initial sparks; independent digital biologics emerge ("Grow What Thou Wilt").
 

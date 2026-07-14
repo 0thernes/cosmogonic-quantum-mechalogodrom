@@ -54,8 +54,8 @@ const FACTS: Fact[] = [
   {
     name: 'Tsotchke project count',
     pattern: /\b(\d+)\s+(?:Tsotchke\s+)?(?:corpus\s+)?projects?\b/gi,
-    allowed: new Set(['20', '22']), // 20 corpus (mirrors+flagship); 22 = the distinct GH repo count
-    note: '20 historical corpus projects / 22 live external repositories; 8 deep, 7 wired, 2 harvest, 4 fenced, 1 meta; non-meta integration fraction 17/21',
+    allowed: new Set(['20', '22', '23']),
+    note: '20 historical corpus projects; 23 public repositories; 22 causal/runtime ledger entries; 8 deep, 7 wired, 2 harvest, 4 fenced, 1 meta; non-meta integration fraction 17/21',
   },
   {
     name: 'Fenced Tsotchke repos',
@@ -71,14 +71,14 @@ const FACTS: Fact[] = [
     pattern:
       /\b(\d+)\s+deep\b(?=[^\n]{0,100}\b\d+\s+wired\b[^\n]{0,100}\b\d+\s+harvest\b[^\n]{0,100}\b\d+\s+fenced\b)/gi,
     allowed: new Set(['8']),
-    note: '22 external repositories = 8 deep + 7 wired + 2 harvest + 4 fenced + 1 meta',
+    note: '22 causal/runtime entries = 8 deep + 7 wired + 2 harvest + 4 fenced + 1 meta; public census is 23',
   },
   {
     name: 'Tsotchke non-meta integration fraction',
     pattern:
       /\b(\d+)\s*\/\s*21\b(?=[^\n]{0,80}\b(?:wired|integrated|integration|scientific|non-meta)\b)|\b(?:wired|integrated|integration|scientific|non-meta)\b[^\n]{0,80}\b(\d+)\s*\/\s*21\b/gi,
     allowed: new Set(['17']),
-    note: '17 of 21 non-meta external repositories are deep, wired, or harvest; four are fenced',
+    note: '17 of 21 non-meta causal/runtime entries are deep, wired, or harvest; four are fenced',
   },
   {
     name: 'Faculties (design)',

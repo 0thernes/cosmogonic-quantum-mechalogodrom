@@ -867,9 +867,10 @@ export class World {
   // GOAL5: per-archon small creature snapshots (for body.setMind) + the 5 deep minds/bodies.
   private readonly superCreatures: SuperCreature[] = [];
   /**
-   * Primordial petri dishes — one per Archon. The external ledger has 22 repositories: 17 represented
-   * scientific/tooling entries, four deliberate fences, and one metadata entry; internal classical
-   * contrast is tracked separately. Soup dynamics use deterministic local primitives, adaptations, and
+   * Primordial petri dishes — one per Archon. The causal/runtime ledger has 22 entries (15 user + 7
+   * organization): 17 represented scientific/tooling entries, four deliberate fences, and one metadata
+   * entry. The public census has 23 repositories because homebrew-moonlab is census-only deployment
+   * metadata; internal classical contrast is tracked separately. Soup dynamics use deterministic local primitives, adaptations, and
    * harvested program fingerprints. Its consciousness/sentience fields are indicators and control
    * signals only, not evidence of phenomenal experience or physical quantum computation.
    */
@@ -1613,7 +1614,7 @@ export class World {
           this.bigTreeNhiSource?.unregister(nhiId);
         }
       } else {
-        // `nhiMinion` remains an ordinary organism and intentionally uses this canonical path.
+        // NHI minions remain ordinary organisms and use the canonical ordinary visitor lifecycle.
         this.bigTreeVisitors?.cancelOrdinary(entity);
       }
       const ecologyId = entity.userData.ecologyId;
@@ -1846,8 +1847,9 @@ export class World {
     this.entities.attachBrainSlotLifecycle(this.entityBrains);
     this.superScene = ctx.scene;
     // 5 SUPER CREATURES (GOAL5 Archons/Godforms): World.GODFORMS from exclusive godform.ts source.
-    // Driven by the represented entries in the 22-repository ledger (17 integrated; four fenced; one
-    // metadata-only), using deterministic local primitives/facades for per-Archon bias and telemetry.
+    // Driven by the represented entries in the 22-entry causal/runtime ledger (15 user + 7 org;
+    // 17 integrated, four fenced, one metadata-only). The public census is 23 repositories because
+    // homebrew-moonlab remains census-only deployment metadata rather than a runtime ledger row.
     // Determinism: child seeds only (no consumption of main/super streams). Spaced + archetype bias.
     const master = (this.persisted.seed ^ 0x5e1f3d11) >>> 0 || 1;
     for (let i = 0; i < APEX_INDIVIDUATED; i++) {
@@ -6408,22 +6410,10 @@ export class World {
     this.portalDeath.clearPendingRespawns();
     this.superHunt.clearPendingRespawns();
     this.bigTreeVisitors.resetOrdinary();
-    // Genesis replaces only the ordinary EntityManager population. Preserve Xenomimic boundary
-    // history (and all fixed-fauna/NHI records) while clearing the discarded ordinary identities.
+    // Genesis replaces only the ordinary EntityManager population. Preserve fixed-fauna and
+    // Xenomimic boundary histories while clearing ordinary identities; launched NHI records are
+    // retired separately because their bodies belonged to the discarded EntityManager.
     this.bigTreeSanctuary.removeKind(BIG_TREE_SANCTUARY_ORDINARY);
-    // The pooled tree food is a separate canonical checkpoint. Reset it without discarding preserved
-    // visitors; generation-checked target loss makes any former food holder recover on its next tick.
-    this.crystalEcosystem.resetFood(this.state.elapsed);
-    // Absence is the canonical clean checkpoint. Clearing cannot leave an older depleted snapshot
-    // behind after a quota-limited setItem; on failure, keep the revision dirty so pagehide retries.
-    if (this.store.clearBigTreeEcology()) {
-      this.lastPersistedBigTreeFoodRevision =
-        this.crystalEcosystem.edibleResources.persistenceRevision;
-      this.lastPersistedBigTreeFoodTime = this.crystalEcosystem.foodTime;
-    } else {
-      this.lastPersistedBigTreeFoodRevision = -1;
-      this.lastPersistedBigTreeFoodTime = Number.NaN;
-    }
     this.clearNhiPopulation();
     this.entities.reset(1); // USER: reset → ONE entity, never a 500-strong instant repopulation
     // V121: re-anchor the growth ramp at THIS moment with a base of 1, so the target climbs slowly

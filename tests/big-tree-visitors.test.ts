@@ -337,22 +337,29 @@ describe('BigTreeSpeciesVisitors', () => {
     expect(out.acceptedVisits).toBe(1);
   });
 
-  test('launched NHIs use their dedicated binding while ordinary NHI minions remain eligible', () => {
-    const tree = new FakeTree();
-    const visits = manager(2);
+  test('launched NHI bodies use their dedicated source while ordinary NHI minions can eat', () => {
+    const tree = new FakeTree([FOODS[0]!]);
+    const visits = manager(1);
     visits.addSlot(BigTreeSlotKind.Eat, -10, 0);
-    visits.addSlot(BigTreeSlotKind.Eat, 10, 0);
     const visitors = adapter(tree, visits);
-    const launched = ordinary(101, -10, 0);
+    const launched = ordinary(101, 10, 0);
     launched.userData.isNhi = true;
-    const minion = ordinary(102, 10, 0);
+    const minion = ordinary(102, -10, 0);
     minion.userData.nhiMinion = true;
 
-    tick(tree, visitors, 0, 0.1, [launched, minion], []);
+    tick(tree, visitors, 0, 0, [launched, minion], []);
 
-    expect(visitors.isEntityVisitorActive(101)).toBe(false);
-    expect(visits.stateOf(BIG_TREE_OWNER_ORDINARY, 101)).toBe(BigTreeVisitState.Outside);
-    expect(visitors.isEntityVisitorActive(102)).toBe(true);
+    expect(visitors.activeVisitors).toBe(1);
+    expect(tree.edibleResources.get(10)?.state).toBe('reserved');
+    expect(launched.userData.treeVisit).toBeUndefined();
+    expect(minion.userData.treeVisit).toBe(true);
+
+    tick(tree, visitors, 0.1, 0.1, [launched, minion], []);
+
+    expect(minion.userData.energy).toBe(28);
+    expect(minion.userData.belly).toBe(24);
+    expect(tree.completeCalls).toBe(1);
+    expect(tree.edibleResources.get(10)?.state).toBe('respawning');
   });
 
   test('ordinary organisms and Xenomimics discover, travel to, and eat fruit and leaves once', () => {
@@ -596,7 +603,7 @@ describe('BigTreeSpeciesVisitors', () => {
     expect(view.partnerId).toBe(high.id);
   });
 
-  test('Xenomimic locomotion intent travels to activities, calms while social, then travels out', () => {
+  test('Xenomimic locomotion remains Travel through cooldown egress until a real outer exit', () => {
     const tree = new FakeTree();
     const visits = manager(1);
     visits.addSlot(BigTreeSlotKind.Socialize, 0, 0);
@@ -614,7 +621,17 @@ describe('BigTreeSpeciesVisitors', () => {
     expect(visitors.xenomimicLocomotionMode(xeno.pairId, xeno.role)).toBe(
       XenomimicVisitMode.Travel,
     );
-    visitors.cancelXenomimic(xeno);
+    tick(tree, visitors, 4.12, 0.1, [], [xeno], social);
+    expect(visits.stateOf(BIG_TREE_OWNER_XENOMIMIC, xeno.pairId * 2 + xeno.role)).toBe(
+      BigTreeVisitState.Cooldown,
+    );
+    expect(visitors.xenomimicLocomotionMode(xeno.pairId, xeno.role)).toBe(
+      XenomimicVisitMode.Travel,
+    );
+    expect(Math.hypot(xeno.vx, xeno.vz)).toBeGreaterThan(0);
+
+    xeno.x = 36;
+    tick(tree, visitors, 4.2, 0, [], [xeno], social);
     expect(visitors.xenomimicLocomotionMode(xeno.pairId, xeno.role)).toBe(
       XenomimicVisitMode.Normal,
     );
@@ -866,6 +883,35 @@ describe('BigTreeSpeciesVisitors', () => {
     );
     expect(visits.stateOf(foreignKind, foreignId)).toBe(BigTreeVisitState.Travelling);
     expect(visits.trackedActors).toBe(1);
+  });
+
+  test('ordinary reset removes cooldown-only records while preserving other owner namespaces', () => {
+    const tree = new FakeTree();
+    const visits = manager(3);
+    visits.addRadialSlots(BigTreeSlotKind.Observe, 3, 5);
+    const visitors = adapter(tree, visits);
+    const entity = ordinary(81, 5, 100);
+    const quiet: BigTreeVisitorEnvironment = { danger: 0, stress: 0 };
+
+    tick(tree, visitors, 0, 0, [entity], [], quiet);
+    tick(tree, visitors, 0.1, 0.1, [entity], [], quiet);
+    tick(tree, visitors, 1.11, 0, [entity], [], quiet);
+    tick(tree, visitors, 4.12, 0.1, [entity], [], quiet);
+    entity.position.x = 36;
+    tick(tree, visitors, 4.2, 0, [entity], [], quiet);
+    expect(visits.stateOf(BIG_TREE_OWNER_ORDINARY, entity.id)).toBe(BigTreeVisitState.Cooldown);
+    expect(visitors.activeVisitors).toBe(0);
+
+    expect(
+      visits.requestVisit(BIG_TREE_OWNER_XENOMIMIC, 82, BigTreeVisitReason.Safety, 4.2, 100, 0),
+    ).not.toBe(-1);
+    expect(visits.requestVisit(99, 83, BigTreeVisitReason.Safety, 4.2, -100, 0)).not.toBe(-1);
+
+    visitors.resetOrdinary();
+    expect(visits.stateOf(BIG_TREE_OWNER_ORDINARY, entity.id)).toBe(BigTreeVisitState.Outside);
+    expect(visits.stateOf(BIG_TREE_OWNER_XENOMIMIC, 82)).toBe(BigTreeVisitState.Travelling);
+    expect(visits.stateOf(99, 83)).toBe(BigTreeVisitState.Travelling);
+    expect(visits.trackedActors).toBe(2);
   });
 
   test('event-driven disposal reclaims cooldown records for fresh organism identities', () => {

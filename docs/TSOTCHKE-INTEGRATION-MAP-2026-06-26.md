@@ -18,7 +18,8 @@ consciousness/sentience uplift.
 
 | Measure                    |                       Current value |
 | -------------------------- | ----------------------------------: |
-| External repositories      | `22` (`15` user + `7` organization) |
+| Public repository census   | `23` (`16` user + `7` organization) |
+| Causal/runtime ledger      | `22` (`15` user + `7` organization) |
 | Deep                       |                                 `8` |
 | Wired                      |                                 `7` |
 | Harvest                    |                                 `2` |
@@ -26,9 +27,11 @@ consciousness/sentience uplift.
 | Meta                       |                                 `1` |
 | Integrated, excluding meta |        `17/21 = 0.8095238095238095` |
 
-The former tally was wrong because it counted Cosmogonic's internal `classical-contrast` control as an
-external repository and omitted the external `OBLITERATUS` repository. The control remains operational,
-but it is listed separately and never inflates external coverage.
+`homebrew-moonlab` is public deployment metadata and remains census-only; it does not occupy a
+causal/runtime row. The former tally was also wrong because it counted Cosmogonic's internal
+`classical-contrast` control as an external repository and omitted the external `OBLITERATUS`
+repository. The control remains operational, but it is listed separately and never inflates ledger
+coverage.
 
 ### Depth and representation
 
@@ -40,7 +43,7 @@ but it is listed separately and never inflates external coverage.
 - **Direct port:** compatible mathematics represented directly with attribution.
 - **Deterministic facade:** local Cosmogonic behavior inspired by an upstream role; not source parity.
 
-## All 22 external repositories
+## All 22 causal/runtime ledger entries
 
 |   # | Repository                  | Owner        | Depth   | Representation               | Cosmogonic leaf / role                                                                       | Declared source boundary                                      |
 | --: | --------------------------- | ------------ | ------- | ---------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
@@ -67,7 +70,13 @@ but it is listed separately and never inflates external coverage.
 |  21 | `OBLITERATUS`               | organization | fenced  | none                         | no simulation leaf                                                                           | AGPL-3.0 refusal-removal LLM toolkit; mandate-fenced          |
 |  22 | `.github`                   | organization | meta    | metadata                     | registry provenance only                                                                     | no runtime source or simulation leaf                          |
 
-### Internal control, not an external repository
+### Census-only public repository
+
+| Repository         | Owner | Role                                                                     |
+| ------------------ | ----- | ------------------------------------------------------------------------ |
+| `homebrew-moonlab` | user  | public deployment metadata; excluded from the causal/runtime denominator |
+
+### Internal control, not a public repository or causal/runtime entry
 
 | ID                   | Role                                                                    | Operational status                                         |
 | -------------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------- |
@@ -75,7 +84,7 @@ but it is listed separately and never inflates external coverage.
 
 ## Shared organism-intelligence path
 
-`src/sim/tsotchke-organism-intelligence.ts` evaluates all 22 repository rows at a bounded cadence,
+`src/sim/tsotchke-organism-intelligence.ts` evaluates all 22 causal/runtime rows at a bounded cadence,
 folds them into four aggregate semantic channels, and reuses one stable signal object. Ordinary
 entities, flora, shoggoths, puppeteers, titans,
 leviathans, NHI, glyph beings, wilderness fauna, and primordial digital biologics consume bounded

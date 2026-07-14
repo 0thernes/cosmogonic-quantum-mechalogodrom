@@ -3,9 +3,11 @@
 # Cosmogonic Quantum Mechalogodrom — Technical Specification
 
 > **Current intelligence contract (2026-07-11):** `TsotchkeOrganismIntelligence` is one shared,
-> bounded-cadence field feeding living-system consumers through a stable signal object. The external
-> ledger is `22` repositories (`8 deep`, `7 wired`, `2 harvest`, `4 fenced`, `1 meta`; `17/21`
-> non-meta integrated). V3 remains the predecessor fixed-family receipt. The verified V4 Phase-A
+> bounded-cadence field feeding living-system consumers through a stable signal object. The public
+> census contains 23 repositories; the causal/runtime ledger intentionally contains 22 entries
+> (`8 deep`, `7 wired`, `2 harvest`, `4 fenced`, `1 meta`; `17/21` non-meta integrated).
+> `homebrew-moonlab` is census-only deployment metadata and `classical-contrast` is an internal control
+> outside both denominators. V3 remains the predecessor fixed-family receipt. The verified V4 Phase-A
 > descendant publishes 1,152 rows over 64 frozen seeds: ordinary and Petri pass inference but miss the
 > fixed magnitude floor, the adaptive predictor loses to frozen and shuffled controls, and only Titans
 > pass. The only new authorized claim is bounded Titan game-policy semantic causality—no ordinary
@@ -18,15 +20,16 @@
 > estimated. **Live:** <https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/> · **Spec page:**
 > `/spec` · **Architecture docs:** `/docs`
 
-**Version:** v0.22.0 · **Generated:** 2026-06-26 · **License:** Non-commercial research & play (© 0thernes; study / run / modify / share non-commercially, keep attribution, no for-profit use).
-**Gate:** 3,293 tests · 84.64% line / 82.21% func (canonical synced via verify-receipts 2026-06-26, receipts law enforced).
+**Version:** v0.23.0 · **Generated:** 2026-06-26 · **License:** Non-commercial research & play (© 0thernes; study / run / modify / share non-commercially, keep attribution, no for-profit use).
+**Gate:** 3,297 tests · 84.64% line / 82.21% func (canonical synced via verify-receipts 2026-06-26, receipts law enforced).
 
 **Standing / xeno-A-life position (2026-07-12):** readable synthesis of engineering, comparative matrix, and apex-mind design (SuperCreature ≈1.4k-param multi-faculty spine + online heads; SuperMind ~10k composite; Apex/Mechalogodrom designed scaling roadmaps)—**xeno scaffolds, not OpenWorm competitors, not sentience claims.** See [COMPREHENSIVE-STANDING report](./reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.md) · [HTML](./reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.html).
 **NHSI scorecard:** [NHSI-PROGRESS-DASHBOARD-2026-06-26.md](./NHSI-PROGRESS-DASHBOARD-2026-06-26.md) · **Tsotchke depth:** [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md)
 
-**Tsotchke depth ledger:** 22 external repositories are accounted for as `8 deep`, `7 wired`,
-`2 harvest`, `4 fenced`, and `1 meta`, with `17/21` non-meta repositories integrated. The internal
-`classical-contrast` control is operational but outside that count. Eshkol is represented by bounded
+**Tsotchke depth ledger:** The public census contains 23 repositories. The causal/runtime ledger
+intentionally contains 22 entries: `8 deep`, `7 wired`, `2 harvest`, `4 fenced`, and `1 meta`, with
+`17/21` non-meta entries integrated. `homebrew-moonlab` is census-only deployment metadata. The
+internal `classical-contrast` control is operational but outside both counts. Eshkol is represented by bounded
 ports and an order-0-through-8 Float64 Taylor analogue pinned to v1.3.2; the QRNG path is a deterministic
 classical statevector adaptation pinned to v3.0.1, not physical entropy or a CSPRNG. Primordial soup/petri
 is a growth engine for computational digital biologics and indicators, not evidence of sentience.
@@ -50,17 +53,17 @@ seed**.
 These figures are **measured, not pinned** — line counts move every commit, so they are a dated
 snapshot rather than a gate-enforced receipt. Refresh them with `bun run metrics`
 ([`scripts/codebase-metrics.ts`](../scripts/codebase-metrics.ts), deterministic over `git ls-files`).
-Snapshot: **2026-07-13**. (Coverage + passing-test counts ARE SSOT-synced — see §1's last two rows.)
+Snapshot: **2026-07-14**. (Coverage + passing-test counts ARE SSOT-synced — see §1's last two rows.)
 
 | Metric                                  | Value                                                                 |
 | --------------------------------------- | --------------------------------------------------------------------- |
-| Total tracked authored files            | **900**                                                               |
-| Total tracked authored lines            | **269,227**                                                           |
-| App source (`src/`)                     | 117,810 lines · 314 files                                             |
-| Tests (`tests/`)                        | 61,090 lines · 362 files                                              |
+| Total tracked authored files            | **940**                                                               |
+| Total tracked authored lines            | **295,227**                                                           |
+| App source (`src/`)                     | 131,572 lines · 327 files                                             |
+| Tests (`tests/`)                        | 63,495 lines · 367 files                                              |
 | Native C++ engine (`native/`, ADR-0007) | 1,835 lines · 12 files                                                |
-| Test : source ratio                     | 0.46 → **84.64% line / 82.21% func** coverage (`bun test --coverage`) |
-| Passing tests                           | **3,293** (exact tracked suite; 0 failing)                            |
+| Test : source ratio                     | 0.48 → **84.64% line / 82.21% func** coverage (`bun test --coverage`) |
+| Passing tests                           | **3,297** (exact tracked suite; 0 failing)                            |
 
 (Excludes the vendored `node_modules/`, generated `dist/` · `coverage/` · `native/build/`, and nested
 `.claude/worktrees/` checkouts.)
@@ -69,42 +72,42 @@ Snapshot: **2026-07-13**. (Coverage + passing-test counts ARE SSOT-synced — se
 
 | Type                 | Files |   Lines |   Share |
 | -------------------- | ----: | ------: | ------: |
-| TypeScript           |   724 | 194,971 | 72.42 % |
-| Markdown             |    76 |  22,562 |  8.38 % |
-| JSON                 |    19 |  16,797 |  6.24 % |
-| HTML                 |    11 |  15,561 |  5.78 % |
-| PNG (shots)          |     4 |   9,552 |  3.55 % |
-| CSS (Tailwind)       |     2 |   2,476 |  0.92 % |
-| CSV                  |     6 |   2,070 |  0.77 % |
-| YML                  |    11 |   1,016 |  0.38 % |
-| C/C++ headers + impl |     8 |   1,527 |  0.57 % |
-| XML                  |     4 |     707 |  0.26 % |
-| PowerShell           |     2 |     515 |  0.19 % |
-| Lockfile             |     1 |     454 |  0.17 % |
-| No extension         |     9 |     282 |  0.10 % |
-| Text                 |     5 |     238 |  0.09 % |
-| SVG                  |    14 |     335 |  0.12 % |
+| TypeScript           |   762 | 218,578 | 74.04 % |
+| Markdown             |    78 |  24,928 |  8.44 % |
+| JSON                 |    19 |  16,797 |  5.69 % |
+| HTML                 |    11 |  15,583 |  5.28 % |
+| PNG (shots)          |     4 |   9,552 |  3.24 % |
+| CSS (Tailwind)       |     2 |   2,476 |  0.84 % |
+| CSV                  |     6 |   2,070 |  0.70 % |
+| YML                  |    11 |   1,016 |  0.34 % |
+| C/C++ headers + impl |     8 |   1,527 |  0.52 % |
+| XML                  |     4 |     707 |  0.24 % |
+| PowerShell           |     2 |     515 |  0.17 % |
+| Lockfile             |     1 |     454 |  0.15 % |
+| No extension         |     9 |     287 |  0.10 % |
+| Text                 |     5 |     238 |  0.08 % |
+| SVG                  |    14 |     335 |  0.11 % |
 | JavaScript           |     1 |      85 |  0.03 % |
 | DOCX                 |     1 |      64 |  0.02 % |
 | YAML                 |     1 |       9 |  0.00 % |
 | TOML                 |     1 |       6 |  0.00 % |
 
-**Code (TS + C/C++ + HTML + CSS) = 214,535 lines = 79.69 %**; documentation + config + assets = 20.31 %.
+**Code (TS + C/C++ + HTML + CSS) = 238,164 lines = 80.67 %**; documentation + config + assets = 19.33 %.
 
 ### 1.2 Lines by area
 
 | Area                                  | Files |   Lines |
 | ------------------------------------- | ----: | ------: |
-| `src/` (application)                  |   314 | 117,810 |
-| `tests/`                              |   346 |  54,717 |
-| `docs/`                               |    93 |  30,670 |
-| `scripts/`                            |    50 |  23,268 |
+| `src/` (application)                  |   327 | 131,572 |
+| `tests/`                              |   367 |  63,495 |
+| `docs/`                               |    95 |  32,958 |
+| `scripts/`                            |    52 |  23,990 |
 | `lab/` (self-contained artifact)      |     5 |  14,039 |
-| repo root (README, LICENSE, configs)  |    27 |  12,082 |
+| repo root (README, LICENSE, configs)  |    27 |  12,187 |
 | `output/` (tracked visual receipts)   |     3 |   9,551 |
 | `legacy/` (preserved origin)          |     6 |   2,072 |
 | `native/` (C++ engine, ADR-0007)      |    12 |   1,835 |
-| `bench/`                              |    16 |   1,260 |
+| `bench/`                              |    18 |   1,605 |
 | `.github/`                            |    13 |   1,080 |
 | `masters/` (3 governing XML personas) |     3 |     477 |
 | `.memory/`                            |     5 |     167 |
@@ -410,7 +413,7 @@ Complexity classes are catalogued in [COMPLEXITY-2026-06-26.md](COMPLEXITY-2026-
 
 The single gate — `bun run check` — must pass before every commit:
 
-`prettier --check` → `tsc --noEmit` (strict) → `oxlint` → `bun test` (**3,293 tests, 0 fail**) →
+`prettier --check` → `tsc --noEmit` (strict) → `oxlint` → `bun test` (**3,297 tests, 0 fail**) →
 `bun scripts/build.ts`. Receipt regression guard: coverage must stay within the `verify:receipts` tolerance from the canonical **84.64% line / 82.21% func** floor; local Windows receipt runs may measure higher.
 Three governing "master" personas (`masters/*.xml`) encode the discipline: **the Executor** (finish
 everything, full gates), **the Architect** (contracts before code, exclusive ownership), **the
@@ -422,36 +425,36 @@ Physicist** (determinism, measurement, frame budgets, provenance).
 
 A full per-file roster is generated, not hand-kept — run `bun run metrics`
 ([`scripts/codebase-metrics.ts`](../scripts/codebase-metrics.ts)) for the current per-area / per-type
-breakdown, or `bun run filemap` for the file tree. Below is the **2026-07-13** measured snapshot of the
+breakdown, or `bun run filemap` for the file tree. Below is the **2026-07-14** measured snapshot of the
 heaviest files (where the weight sits); refresh it with the same commands when source lines move.
 
-### `src/` — heaviest files (314 files · 117,810 lines total; top of the list)
+### `src/` — heaviest files (327 files · 131,572 lines total; top of the list)
 
-| Lines | File                        | Lines | File                            |
-| ----: | --------------------------- | ----: | ------------------------------- |
-|  5866 | world.ts (composition root) |  1847 | ui/super-neural.ts              |
-|  2442 | styles/app.css              |  1661 | sim/titans.ts                   |
-|  2430 | ui/observatory.ts           |  1559 | sim/entities.ts                 |
-|  2249 | sim/apex-brain.ts           |  1424 | sim/super-body.ts               |
-|  2247 | sim/alien-flora.ts          |  1395 | sim/creature-exterior-layers.ts |
-|  2077 | sim/super-mind.ts           |  1324 | sim/nhi.ts                      |
+| Lines | File                        | Lines | File                 |
+| ----: | --------------------------- | ----: | -------------------- |
+|  7076 | world.ts (composition root) |  2077 | sim/super-mind.ts    |
+|  3036 | sim/crystal-ecosystem.ts    |  1863 | sim/titans.ts        |
+|  2442 | styles/app.css              |  1855 | sim/big-tree-zone.ts |
+|  2430 | ui/observatory.ts           |  1847 | ui/super-neural.ts   |
+|  2259 | sim/alien-flora.ts          |  1605 | sim/entities.ts      |
+|  2249 | sim/apex-brain.ts           |  1516 | sim/super-body.ts    |
 
-### `tests/` — heaviest files (362 files · 61,090 lines total)
+### `tests/` — heaviest files (367 files · 63,495 lines total)
 
-`worker-pool 899 · nhi 767 · singularities 746 · observatory 670 ·
-operational-organism-intelligence 568 · titans 511 · phase-b-predictor-development 509 ·
-organism-intelligence-v4-benchmark 471 · quantum 462 · organism-intelligence-v4-artifact-integrity 460 ·
-phase-b-nhi-closed-loop 454 · entity-vitals 448 · tsotchke-ecology-predictor-v2 428 ·
-tsotchke-ecology-predictor-v3 427` ·
+`big-tree-visitors 988 · worker-pool 899 · big-tree-fauna-visitors 841 · singularities 837 ·
+titans 786 · nhi 769 · crystal-ecosystem 745 · big-tree-zone 682 · observatory 670 ·
+xenomimics 669 · shoggoths 617 · alien-flora 569 · operational-organism-intelligence 568 ·
+phase-b-predictor-development 527 · organism-intelligence-v4-benchmark 510` ·
 … (full list via `bun run metrics`).
 
 ---
 
 ## 13 · Positioning
 
-This is a ~117.8k-line app-source (+ optional C++/Jolt native engine) browser-native simulation that
-renders **up to 50,000 agents** (10,000 at 60 fps on a laptop iGPU with zero AI accelerator), is
-**bit-reproducible from one seed**, ships through a **full CI/CD gate** (3,293 tests, 84.64% line / 82.21% func coverage),
+This is a ~131.6k-line app-source (+ optional C++/Jolt native engine) browser-native simulation that
+renders **up to 50,000 agents** and targets 10,000 at 60 fps on supported laptop iGPUs with zero AI
+accelerator. The final headless SwiftShader smoke establishes liveness, not that native-GPU target. It is
+**bit-reproducible from one seed**, ships through a **full CI/CD gate** (3,297 tests, 84.64% line / 82.21% func coverage),
 and whose entire emergent intelligence weighs **≈ 14 MB — 1/50,000th of GPT-3** at the mega ceiling. It
 demonstrates that depth comes from **architecture,
 determinism, and engineering discipline**, not parameter count or hardware.

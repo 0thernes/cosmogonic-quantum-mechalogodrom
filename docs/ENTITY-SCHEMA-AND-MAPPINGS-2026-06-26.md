@@ -75,7 +75,7 @@ erDiagram
   ANALYTICS_WINDOW ||--o{ OMEN : "emits when |z| > 2.5"
   WORLD ||--o{ AUDIT_EVENT : "records actions"
   %% Tsotchke digital biologics: one compact relationship set, not three drifting diagrams.
-  TSOTCHKE_REGISTRY ||--o{ TSOTCHKE_SUBSTRATE : "22 external repos: 8 deep, 7 wired, 2 harvest, 4 fenced, 1 meta; OBLITERATUS fenced"
+  TSOTCHKE_REGISTRY ||--o{ TSOTCHKE_SUBSTRATE : "23 public repos; 22 causal/runtime entries: 8 deep, 7 wired, 2 harvest, 4 fenced, 1 meta; homebrew-moonlab census-only"
   PRIMORDIAL_SOUP ||--o{ SOUP_STRAIN : "digital biologics born (EshkolProgram + AD mutation + depth-ledger catalysis)"
   SOUP_STRAIN ||--|| ESHKOL_PROGRAM : "heritable program fingerprint (from biologicProgramFingerprint + AD gradients)"
   SOUP_STRAIN ||--o{ ENTITY : "emergent life injected into world with substrate-specific dynamics"
@@ -170,7 +170,7 @@ nonetheless, and the composition root (`world.ts`) is effectively its join
 engine. Diagrams below follow ERD (structure), ERM (relationship narrative),
 and ERP (process models).
 
-> **Scope (v0.22.0 TSOTCHKE + NHSI):** Per binding [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md): 22 external repositories = 8 deep, 7 wired, 2 harvest, 4 fenced, 1 meta; non-meta integrated fraction `17/21 = 0.8095238095238095`. `OBLITERATUS` is one of the four fences; `classical-contrast` is a separate internal control. **100-faculty design (~30 deep-wired)**, **5 individuated apex + 20 light-echo Archons**, **25 ToM wired**, **10 emergence angles** (+5 god-scale events), **Butlin 8/14 met + 6/14 partial** (computational indicators, not sentience). Gate: 3,293 tests · 84.64% / 82.21%. Not LLM. 0thernes NHSI.
+> **Scope (v0.23.0 TSOTCHKE + NHSI):** Per binding [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md): the public census contains 23 repositories, while the causal/runtime ledger contains 22 entries = 8 deep, 7 wired, 2 harvest, 4 fenced, 1 meta; non-meta integrated fraction `17/21 = 0.8095238095238095`. `homebrew-moonlab` is census-only deployment metadata. `OBLITERATUS` is one of the four fences; `classical-contrast` is a separate internal control outside both denominators. **100-faculty design (~30 deep-wired)**, **5 individuated apex + 20 light-echo Archons**, **25 ToM wired**, **10 emergence angles** (+5 god-scale events), **Butlin 8/14 met + 6/14 partial** (computational indicators, not sentience). Gate: 3,297 tests · 84.64% / 82.21%. Not LLM. 0thernes NHSI.
 
 #
 

@@ -528,6 +528,28 @@ describe('GATE-XENOMIMIC — population lifecycle', () => {
     expect(target.alive).toBe(false);
   });
 
+  test('sanctuary queries preserve stable pair and role identity through sensing and predation', () => {
+    const pop = new XenomimicPopulation(0x1de17a, { growthRamp: 999 });
+    const bodies = pop.bodyView();
+    const sensed = new Set<string>();
+    let protectedIdentity = '';
+
+    pop.step(1e-6, {
+      foodAt: () => 0.9,
+      safeZoneAt: (_x, _z, pairId, role) => {
+        const identity = `${pairId}:${role}`;
+        sensed.add(identity);
+        return identity === protectedIdentity;
+      },
+    });
+
+    expect(sensed).toEqual(new Set([`${bodies[0]!.pairId}:0`, `${bodies[1]!.pairId}:1`]));
+    const target = bodies[1]!;
+    protectedIdentity = `${target.pairId}:${target.role}`;
+    expect(pop.consume(target)).toBe(0);
+    expect(target.alive).toBe(true);
+  });
+
   test('weighted-ragdoll fulcrum lean stays bounded + finite, and responds to motion', () => {
     const pop = new XenomimicPopulation(44, { growthRamp: 40 });
     let anyLean = false;

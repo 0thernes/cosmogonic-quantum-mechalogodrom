@@ -11,6 +11,7 @@ import {
   CRYSTAL_TREE_MOTES,
   CRYSTAL_TREE_RELICS,
   CRYSTAL_TREE_TRIANGLE_BUDGET,
+  CRYSTAL_ECOLOGY_MAX_FRAME_DELTA_SECONDS,
   CrystalEcosystem,
   type CrystalEcosystemConfig,
   type CrystalEcosystemFrame,
@@ -403,6 +404,37 @@ describe('CrystalEcosystem headless contract', () => {
     });
     expect(tree.foodTime).toBeCloseTo(EDIBLE_RESOURCE_RESPAWN_SECONDS, 8);
     expect(tree.edibleResources.get(resourceId)?.state).toBe('available');
+    tree.dispose();
+  });
+
+  test('one high-speed frame advances residents exactly like equivalent stable substeps', () => {
+    const a = makeTree(9925).tree;
+    const b = makeTree(9925).tree;
+
+    a.update({ ...BASE_FRAME, dt: 0.5, visualDt: 0.1, time: 0.5 });
+    for (let step = 1; step <= 5; step++) {
+      b.update({ ...BASE_FRAME, dt: 0.1, visualDt: 0.02, time: step * 0.1 });
+    }
+
+    expect(a.foodTime).toBeCloseTo(0.5, 12);
+    expect(b.foodTime).toBeCloseTo(0.5, 12);
+    expect(a.stateChecksum()).toBe(b.stateChecksum());
+    a.dispose();
+    b.dispose();
+  });
+
+  test('a huge finite direct-call delta is bounded instead of creating an unbounded substep loop', () => {
+    const scene = new THREE.Scene();
+    const tree = new CrystalEcosystem(scene, 99201, new THREE.Vector3(), {
+      ...TINY_CONFIG,
+      creaturesPerSpecies: 0,
+      ambientCreatures: 0,
+    });
+
+    tree.update({ ...BASE_FRAME, dt: Number.MAX_VALUE, visualDt: 0.1, time: 1 });
+
+    expect(tree.foodTime).toBe(CRYSTAL_ECOLOGY_MAX_FRAME_DELTA_SECONDS);
+    expect(Number.isFinite(tree.stateChecksum())).toBe(true);
     tree.dispose();
   });
 

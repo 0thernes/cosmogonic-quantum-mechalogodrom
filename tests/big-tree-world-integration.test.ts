@@ -181,7 +181,7 @@ describe('Big Tree production composition root', () => {
     expect(world.bigTreeSanctuary.protectedMembers).toBe(3);
   });
 
-  test('restores and flushes only the food checkpoint across application lifecycle boundaries', async () => {
+  test('restores and flushes only the food checkpoint while entity-only Genesis preserves it', async () => {
     const [worldSource, mainSource] = await Promise.all([
       Bun.file(WORLD_URL).text(),
       Bun.file(MAIN_URL).text(),
@@ -204,8 +204,17 @@ describe('Big Tree production composition root', () => {
     expect(worldSource).toContain('persistBigTreeEcology(): void');
     expect(worldSource).toContain('food: this.crystalEcosystem.snapshotFoodPersistence()');
     expect(worldSource).toMatch(
-      /this\.bigTreeFaunaVisitors\.reset\(\);[\s\S]*this\.bigTreeVisitors\.reset\(\);[\s\S]*this\.crystalEcosystem\.resetFood\(this\.state\.elapsed\);[\s\S]*this\.store\.clearBigTreeEcology\(\)/,
+      /this\.crystalEcosystem\.resetFood\(this\.state\.elapsed\);\s*bigTreeCheckpointSynchronized = this\.store\.clearBigTreeEcology\(\);/,
     );
+    const genesisStart = worldSource.indexOf('private resetSim(): void {');
+    const genesisEnd = worldSource.indexOf('private summonSingularity(): string {', genesisStart);
+    const genesisBody = worldSource.slice(genesisStart, genesisEnd);
+    expect(genesisStart).toBeGreaterThan(-1);
+    expect(genesisEnd).toBeGreaterThan(genesisStart);
+    expect(genesisBody).toContain('this.bigTreeVisitors.resetOrdinary();');
+    expect(genesisBody).not.toContain('this.bigTreeFaunaVisitors.reset();');
+    expect(genesisBody).not.toContain('this.crystalEcosystem.resetFood(');
+    expect(genesisBody).not.toContain('this.store.clearBigTreeEcology()');
     expect(worldSource).toContain('resources.persistenceRevision');
     expect(worldSource).toContain('resources.hasPendingRespawns');
     expect(worldSource).toContain('foodTime !== this.lastPersistedBigTreeFoodTime');

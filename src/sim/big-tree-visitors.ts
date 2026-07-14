@@ -44,7 +44,7 @@ export interface BigTreeOrdinaryBody {
     age: number;
     life: number;
     alive?: boolean;
-    /** Launched NHIs have a dedicated adapter keyed by mind id; ordinary NHI minions remain false. */
+    /** Launched NHIs have a dedicated adapter keyed by mind id. */
     isNhi?: boolean;
     /** True while this body holds an active tree visit; exempts it from centre-gravity herding. */
     treeVisit?: boolean;
@@ -54,6 +54,7 @@ export interface BigTreeOrdinaryBody {
     payoff?: number;
     /** Heritable Prisoner's-Dilemma policy consumed by ordinary behavior outside the sanctuary. */
     strategy?: 0 | 1;
+    /** Spawned NHI minions remain ordinary feeding organisms and use this adapter. */
     nhiMinion?: boolean;
     vel: { x: number; y?: number; z: number };
   };
@@ -490,6 +491,7 @@ export class BigTreeSpeciesVisitors {
     if (
       this.visitView.state === BigTreeVisitState.Travelling ||
       this.visitView.state === BigTreeVisitState.Leaving ||
+      this.visitView.state === BigTreeVisitState.Cooldown ||
       (this.visitView.state === BigTreeVisitState.Active &&
         this.visitView.activity === BigTreeActivity.Eat)
     ) {

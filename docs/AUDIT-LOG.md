@@ -1,4 +1,4 @@
-<!-- reviewed: 2026-06-27 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-14 | dome-ecology final receipt reconciliation | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # Audit Log (centralized)
 
@@ -49,10 +49,10 @@ gate flake) — raised to 60 s.
 
 ## 2026-07-14 — Dome ecology final merged-tree verification and publication handoff
 
-The converged ecology tree now has a final Windows coverage receipt of **3,275 tests / 0 fail /
-3,551,817 expectations across 365 files**, measuring **93.58% line / 91.60% function coverage**; the
+The converged ecology tree now has a final Windows coverage receipt of **3,297 tests / 0 fail /
+3,589,864 expectations across 366 files**, measuring **93.60% line / 91.61% function coverage**; the
 portable published floors remain **84.64% / 82.21%**. A focused cross-system ecology/tether suite also
-completed **211 tests / 0 fail / 10,764 expectations across 17 files**.
+completed **214 tests / 0 fail / 10,788 expectations across 17 files**.
 
 One status-bearing atomic browser run completed both requested tiers against the exact 117-artifact
 Pages build. Phone (390x844 at DPR 2) and desktop (1280x720 at DPR 1) produced nonblank canvas-only

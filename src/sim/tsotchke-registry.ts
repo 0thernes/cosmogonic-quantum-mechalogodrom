@@ -1,7 +1,8 @@
 /**
  * TSOTCHKE CORPUS REGISTRY — BINDING LEDGER PER docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md
- * ALL 22 public repos from the tsotchke user + Tsotchke-Corporation org are accounted for as
- * digital-biologic substrate, harvest, deliberate fence, or metadata. Internal Cosmogonic controls
+ * The 22-entry causal/runtime ledger selected from the 23 public repos under the tsotchke user and
+ * Tsotchke-Corporation org is accounted for as digital-biologic substrate, harvest, deliberate
+ * fence, or metadata. `homebrew-moonlab` is census-only deployment metadata. Internal Cosmogonic controls
  * are recorded separately and never inflate the external-repository count or coverage denominator.
  * Deep apex (8): Eshkol (AD/GWT/consciousness-engine + .esk DNA), Moonlab (Clifford/tensor), QGTL,
  * spin NN, quantum_rng, libirrep, tensorcore, classical_rng.
@@ -520,7 +521,8 @@ export const ARCHON_PRIMARY_REPOS: readonly TsotchkeRepoSlug[] = [
 ];
 
 /** FULL CORPUS BIOLOGICS CATALYSIS — registry-driven, not blanket "all deeply wired".
- * Ledger truth: 22 external repositories; 8 deep, 7 wired, 2 harvest, 4 fenced, 1 meta.
+ * Ledger truth: 23 public repositories; 22 causal/runtime entries; 8 deep, 7 wired, 2 harvest,
+ * 4 fenced, 1 meta.
  * The non-meta integration fraction is 17/21. Fenced LLM/chain/license entries and metadata stay
  * provenance-only, while represented external entries with wiring > 0 contribute to catalysis.
  * Eshkol supplies digital-biologic DNA and consciousness-proxy substrate signals (AD primitive,

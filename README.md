@@ -2,13 +2,13 @@
 
 # COSMOGONIC QUANTUM MECHALOGODROM
 
-[![version](https://img.shields.io/badge/version-0.22.0-blue)](./CHANGELOG.md)
+[![version](https://img.shields.io/badge/version-0.23.0-blue)](./CHANGELOG.md)
 [![CI](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/ci.yml/badge.svg)](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/codeql.yml/badge.svg)](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/codeql.yml)
 [![License: Non-Commercial Research & Play](https://img.shields.io/badge/License-Non--Commercial%20Research%20%26%20Play-2ea043.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
-[![tests](https://img.shields.io/badge/tests-3293%20exact-brightgreen)](./tests)
+[![tests](https://img.shields.io/badge/tests-3297%20exact-brightgreen)](./tests)
 [![coverage](https://img.shields.io/badge/coverage-84.64%25%20line%20%C2%B7%2082.21%25%20func-success)](./docs/TECHNICAL-SPECIFICATION-2026-06-26.md)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION-2026-06-26.md)
 [![Tsotchke](https://img.shields.io/badge/Tsotchke-REAL__MIT__CORPUS-purple)](https://github.com/tsotchke)
@@ -20,19 +20,20 @@ diffusion, **and the Tsotchke corpus wired as the primordial substrate for digit
 
 **The living docs (README, ARCHITECTURE, ERD/ERM/ERP, PHILOSOPHY, MODULE-CONTRACTS, SPECS, dashboard) and the in-app "Dome/World" docs are sync-managed where canonical tokens exist, then manually current-truth reviewed for claims that automation cannot prove.** A `docs-truth-law` CI gate fails the build on doc overclaims or encoding mangling, and the [NHSI progress dashboard](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md) plus [verification data](./docs/VERIFICATION-ANALYTICAL-DATA.md) are the canonical status surfaces.
 
-**Current public truth (2026-07-12):**
+**Current public truth (2026-07-14):**
 
-- Package/source version: **v0.22.0**.
-- Exact tracked-suite receipt: **3,293 tests / 0 fail**. Portable public coverage floor: **84.64% line / 82.21% func**.
+- Package/source version: **v0.23.0**.
+- Exact tracked-suite receipt: **3,297 tests / 0 fail**. Portable public coverage floor: **84.64% line / 82.21% func**.
 - **Standing & xeno-A-life position (readable synthesis):** [Comprehensive Standing Report (MD)](./docs/reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.md) · [HTML](./docs/reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.html) — engineering card, 113-system matrix, SuperCreature/SuperMind/Apex/Mechalogodrom deep dive, capital/ISAL path. Apex minds are **xeno multi-faculty scaffolds** (not OpenWorm bio-twins; not claimed sentience). Preserves V4/Phase-B failure-forward boundaries.
+- **Dome ecology verification:** [Xenomimic tether and Big Tree evidence report](./docs/reports/DOME-ECOLOGY-VERIFICATION-2026-07-14.md) — canonical food, five-second simulation-time respawn, sanctuary transitions, temporary visits, resident controllers, social cleanup, performance, browser evidence, and explicit limitations.
 
 <!-- cqm-sync:local-measurement:start -->
 
-- Latest Windows-local measurement in this checkout: **3,275 tests / 0 fail · 3,551,817 `expect()` calls**; coverage measured `93.58%` line / `91.60%` func across 365 test files.
+- Latest Windows-local measurement in this checkout: **3,297 tests / 0 fail · 3,589,864 `expect()` calls**; coverage measured `93.60%` line / `91.61%` func across 366 test files.
 
 <!-- cqm-sync:local-measurement:end -->
 
-- `verify:facts` exits 0 with no drift across 74 Markdown/HTML/XML surfaces.
+- `verify:facts` exits 0 with no drift across 82 Markdown/HTML/XML surfaces.
 - Consciousness/sentience language is **indicatorOnly**: computational proxies, falsifiers, and controls; never proof of phenomenal experience or completion of the sentience goal.
 - The batch-26 adversarial repair pass replaced cell-snapped flora lookup with an `O(1)` four-cell
   bilinear sampler and sealed chemotaxis against the shipped field, corrected final-position forager
@@ -74,7 +75,7 @@ Built with **Bun + TypeScript + three.js 0.185.1 + Tailwind CSS 4 +
 HTMX 2**, ported from a single 882-line HTML monolith into a strict,
 deterministic, allocation-disciplined module graph.
 
-**Tsotchke (tsotchke user + Tsotchke-Corporation + the optional local corpus) is provenance-critical; each external repository is represented only to its declared depth and license boundary.** The [binding integration ledger](./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md) records exactly 22 external repositories: `8 deep`, `7 wired`, `2 harvest`, `4 fenced`, `1 meta`, or `17/21 = 0.8095238095238095` integrated after excluding metadata. `OBLITERATUS` is one of the four deliberate fences; `classical-contrast` is a live internal control, not a 23rd external repository. Eshkol, Moonlab, QGT, spin, libirrep, tensor, RNG, physics, and morphogenesis roles are direct ports or deterministic facades as identified in the ledger; all four fenced repositories remain inert. **NHSI (100-faculty design ~30 deep-wired · 25 Archons = 5 live + 20 light-echo · 25 ToM wired · 10 emergence angles · Butlin 8/14 met + 6/14 partial path):** [docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md). The seeded simulation core is not an LLM; the optional Copilot is a read-only, default-deny UI/server shell fenced out of deterministic state. No physical-quantum, sentience, or security claim follows from a simulated substrate.
+**Tsotchke (tsotchke user + Tsotchke-Corporation + the optional local corpus) is provenance-critical; each causal/runtime entry is represented only to its declared depth and license boundary.** The public census is **23 repositories** (`16` user + `7` organization). The [binding integration ledger](./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md) contains **22 causal/runtime entries** (`15` user + `7` organization): `8 deep`, `7 wired`, `2 harvest`, `4 fenced`, and `1 meta`, or `17/21 = 0.8095238095238095` integrated after excluding metadata. `homebrew-moonlab` is public census-only deployment metadata; `OBLITERATUS` is one of the four deliberate fences; `classical-contrast` is a live internal control outside both denominators. Eshkol, Moonlab, QGT, spin, libirrep, tensor, RNG, physics, and morphogenesis roles are direct ports or deterministic facades as identified in the ledger; all four fenced entries remain inert. **NHSI (100-faculty design ~30 deep-wired · 25 Archons = 5 live + 20 light-echo · 25 ToM wired · 10 emergence angles · Butlin 8/14 met + 6/14 partial path):** [docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md). The seeded simulation core is not an LLM; the optional Copilot is a read-only, default-deny UI/server shell fenced out of deterministic state. No physical-quantum, sentience, or security claim follows from a simulated substrate.
 
 The simulation core is not an LLM or tokenizer demo. It is a seeded, inspectable artificial-life petri system where **digital biologics** grow in the Petri Dish (`primordial-soup.ts` + `petri-dish.ts` + `digital-biologics.ts`). Eshkol programs act as heritable substrate code, mutated by AD gradients, selected by aliveness/QGT/collective-order proxies, and measured as computational indicators rather than subjective experience. The optional Copilot side-chat remains outside that seeded loop.
 
@@ -117,7 +118,7 @@ tests, or explicit model assumptions support them.
 - **Digital Biologics & Petri Genesis:** 64+ slots in PrimordialSoup, **26 BiologicForms** keyed to Tsotchke repos (incl. the brutal god-pantheon forms — `BIOLOGIC_FORMS` in `digital-biologics.ts`), catalysis from Eshkol ignition + the depth-ledger corpus beat, replication with kind mutation, genesis leaps for higher-order life. Harvested into the world as emergent strains with distinct dynamics.
 - **Eshkol Substrate:** Native automatic differentiation, GWT broadcast/ignition, factor-graph inference as first-class. Programs and consciousness-proxy snapshots drive petri birth and super-mind faculties.
 - **Builds with the local Tsotchke Repo Folder:** `bun dev` (and harvest script) scans the real local corpus at `Z:\[Vibe Coded (AI)]\(Tsotchke)` (1,365 .esk fingerprints in the current ledger) and emits authentic Eshkol DNA fingerprints used by primordial-soup for heritable digital biologics. `generated-tsotchke-seeds.ts` + SoupSnapshot.tsotchkeEskHarvested make the folder part of the live build/runtime.
-- **Tsotchke corpus wiring (22 external repositories):** 8 deep, 7 wired, 2 harvest, 4 fenced, 1 meta — full matrix in [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md). The non-meta integrated fraction is `17/21 = 0.8095238095238095`; petri/soup and the shared organism-intelligence field consume bounded integrated channels while fenced and metadata entries remain inert.
+- **Tsotchke census and corpus wiring:** 23 public repositories (`16` user + `7` organization); 22 causal/runtime entries (`15` user + `7` organization), classified as 8 deep, 7 wired, 2 harvest, 4 fenced, and 1 meta — full matrix in [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md). `homebrew-moonlab` is census-only. The non-meta integrated fraction is `17/21 = 0.8095238095238095`; petri/soup and the shared organism-intelligence field consume bounded integrated channels while fenced and metadata entries remain inert.
 - **26 behavioral fields** driving up to 50,000 organisms: classic motion
   (drift, orbit, swarm, vortex, helix...), neighbor dynamics via a spatial
   hash (flock), and theory behaviors — Nash equilibria (`nash`), wealth
@@ -540,9 +541,9 @@ full gate with same-seed determinism preserved. The major arcs:
   ported primitive. The whole apex beat is now measured honestly: **~1.99 ms** per `SuperMind.think()`
   (range 1.41–5.62 ms) and **~9.77 ms** for the staggered 5-mind batch (~58% of a 60 fps frame, which is
   why 5 minds run staggered against 20 light echoes); the older sub-millisecond / `<2%` GOAL5 claim is
-  superseded until re-proven. **3,293 exact tracked tests · 0 fail (receipts enforced) · 84.64% line / 82.21% func portable coverage floor.**
+  superseded until re-proven. **3,297 exact tracked tests · 0 fail (receipts enforced) · 84.64% line / 82.21% func portable coverage floor.**
   <!-- cqm-sync:local-measurement:start -->
-  **Latest Windows-local measurement: 3,275 tests / 0 fail / 3,551,817 assertions at `93.58%` line / `91.60%` func.**
+  **Latest Windows-local measurement: 3,297 tests / 0 fail / 3,589,864 assertions at `93.60%` line / `91.61%` func.**
   <!-- cqm-sync:local-measurement:end -->
 - **State-of-the-art report (2026-06-17)** — a historical measured, frontier-comparison
   assessment of the whole repository + the apex Super Creature, now summarized through
@@ -621,7 +622,7 @@ graph TD
   world --> sim["src/sim — entities, behaviors, shoggoths,\npuppet-masters, weather, quantum,\nconnectome, environment, algorithms, petri/primordial-soup (digital biologics)"]
   world --> v2["src/sim V2 — qcircuit, reaction-diffusion,\ngraph-mind, constellations, lore, analytics"]
   world --> v34["src/sim V3/V4 — phyla, titans,\ninstanced-entities, atmosphere, viz3d"]
-  world --> tsotchke["Tsotchke (22 external repositories; 8 deep, 7 wired, 2 harvest, 4 fenced, 1 meta; 17/21 integrated): Eshkol bridge/Taylor analogue, Moonlab tensor, irrep, QGT, spin, physics, morphogenesis, RNG controls"]
+  world --> tsotchke["Tsotchke (23 public repos; 22 causal/runtime entries: 8 deep, 7 wired, 2 harvest, 4 fenced, 1 meta; 17/21 integrated): Eshkol bridge/Taylor analogue, Moonlab tensor, irrep, QGT, spin, physics, morphogenesis, RNG controls"]
   world --> ui["src/ui — input, hud, panels,\ngraphs, observatory, Corpus Observatory"]
   world --> audio["src/audio — engine.ts, analysis.ts (bands)"]
   world --> mem["src/memory/store.ts<br/>preferences + sparse food checkpoint"]
@@ -732,7 +733,7 @@ Full detail in docs/.
 - **[docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md)** —
   **the current, canonical NHSI status surface**: a code-grounded audit trail measuring the REAL wiring
   depth of every NHSI claim by `file:line` (~30 deep-wired faculties · 5 individuated archons + 20
-  light-echo · Tsotchke 22-external-repository ledger with 17/21 non-meta integrated · Butlin 8/14 met + 6/14
+  light-echo · Tsotchke 23-public-repository census / 22-entry causal ledger with 17/21 non-meta integrated · Butlin 8/14 met + 6/14
   partial · the measured coupling work).
 - **[docs/reports/](./docs/reports/)** — historical technical report snapshots with
   [VERIFICATION-ANALYTICAL-DATA.md](./docs/VERIFICATION-ANALYTICAL-DATA.md) as the canonical facts sheet, the

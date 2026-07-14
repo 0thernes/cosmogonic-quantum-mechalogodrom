@@ -288,6 +288,14 @@ export interface CrystalEcosystemFrame {
   visualOnly?: boolean;
 }
 
+/**
+ * Defensive public-call ceiling. World supplies at most 0.25 scaled seconds per frame; the wider
+ * ten-second envelope also supports exact five-second food-deadline probes and deterministic
+ * direct/headless stepping without allowing an accidental huge finite delta to create an unbounded
+ * substep loop.
+ */
+export const CRYSTAL_ECOLOGY_MAX_FRAME_DELTA_SECONDS = 10;
+
 export interface CrystalEcosystemStats {
   readonly mainBranches: number;
   readonly subBranches: number;
@@ -1891,7 +1899,10 @@ export class CrystalEcosystem {
       : 0;
     // Food deadlines and resident behavior share the full scaled delta. Integrate residents in
     // stable <=100 ms slices so accelerated simulation cannot expire food while under-stepping them.
-    const simulationDt = frame.visualOnly || !Number.isFinite(frame.dt) ? 0 : Math.max(0, frame.dt);
+    const simulationDt =
+      frame.visualOnly || !Number.isFinite(frame.dt)
+        ? 0
+        : Math.min(CRYSTAL_ECOLOGY_MAX_FRAME_DELTA_SECONDS, Math.max(0, frame.dt));
     const time = Number.isFinite(frame.time) ? frame.time : this.simTime;
     const chaos = clamp01(Number.isFinite(frame.chaos) ? frame.chaos : 0);
     const entropy = clamp01(Number.isFinite(frame.entropy) ? frame.entropy : 0);

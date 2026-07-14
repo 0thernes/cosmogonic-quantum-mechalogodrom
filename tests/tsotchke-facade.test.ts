@@ -87,7 +87,7 @@ describe('Tsotchke legacy mirror bindings and current registry', () => {
     expect(TSOTCHKE_REPO_BINDINGS.length).toBe(20);
   });
 
-  test('canonical registry tracks the exact live 22-repository external ledger', () => {
+  test('canonical registry tracks the exact 22-entry causal/runtime ledger', () => {
     expect(TSOTCHKE_REPO_COUNT).toBe(22);
   });
 

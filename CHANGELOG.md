@@ -9,15 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.0] — 2026-07-14
+
 - Integrated the Crystal Big Tree with the canonical edible-resource lifecycle: fixed pools of 10,000
   fruits and 10,000 leaves, owner/generation-safe reservation and consumption, exactly-once
   nourishment, and exact five-scaled-simulation-second reactivation of the same authored instance.
 - Added a separate, versioned `cqm.big-tree-ecology.v1` sparse checkpoint. It persists only food
   generations and remaining respawn time; actors, visits, slots, owners, partners, cooldowns, callbacks,
-  and render state reconstruct cleanly and are never treated as save-game state. Genesis clears the
-  checkpoint, normalized live claims are immediately rewritten in canonical sparse form after restore,
-  failed writes remain retryable, and visibility/page-exit disposal paths perform best-effort lifecycle
-  flushes.
+  and render state reconstruct cleanly and are never treated as save-game state. Entity-only Genesis
+  preserves the fixed food checkpoint while releasing discarded ordinary visitor identities; corrupt or
+  incompatible boot checkpoints reset cleanly. Normalized live claims are immediately rewritten in
+  canonical sparse form after restore, failed writes remain retryable, and visibility/page-exit disposal
+  paths perform best-effort lifecycle flushes.
 - Wired the Big Tree sanctuary and bounded temporary-visit lifecycle across ordinary Entities,
   Xenomimics, Shoggoths, Titans, Leviathans, Puppeteers, and autonomous Apex bodies. Tree residents use
   validated 6-6-4 controllers with deterministic fallback. Willing nearby same-species residents now
@@ -31,6 +34,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   then compares cached numeric positions in bounded O(A²), with A limited by the shared 72-visitor
   capacity. Food instance changes add one 16-float `instanceMatrix` update range per changed resource,
   avoiding a full 10,000-matrix upload.
+- Reconciled visitor ownership and lifecycle edges: Xenomimic travel intent remains active through
+  cooldown egress until a real outer-boundary exit, stable pair/role identity reaches sanctuary sensing
+  and predation, launched NHI bodies use their dedicated source, and hunger-driven NHI minions use the
+  canonical ordinary-organism visitor adapter. An anomalous finite direct Crystal delta is capped before
+  deterministic ≤100 ms resident substeps, preventing an unbounded loop while preserving exact
+  five-second simulation-time probes.
+- Added ten real-math Mechalogodrom variant shells with per-variant body-to-brain geometry signals and
+  brain-to-body learned activity/trust drives, preserving the existing fused exterior and deterministic
+  runtime contract.
+- Separated the live Tsotchke inventory into a verified census of 23 public repositories (16 user + 7
+  organization) and a 22-entry causal/runtime ledger (15 user + 7 organization). `homebrew-moonlab` is
+  census-only deployment metadata, and the internal `classical-contrast` control is outside both
+  denominators.
 - Made the Xenomimic connectome topology-only: it creates no renderer, line geometry, or physical
   tether, and now clears stale captured creature references on population shrink and all captures on
   disposal. Added a tested legacy-tether purge that detaches and disposes historic named Three.js line
@@ -2892,6 +2908,8 @@ to the legacy prototype:
   write-only.
 
 [Unreleased]: ./CHANGELOG.md
+[0.23.0]: ./CHANGELOG.md
+[0.22.0]: ./CHANGELOG.md
 [0.18.0]: ./CHANGELOG.md
 [0.17.1]: ./CHANGELOG.md
 [0.16.1]: ./CHANGELOG.md

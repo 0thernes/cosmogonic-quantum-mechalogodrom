@@ -15,12 +15,14 @@ Evidence labels used below:
   semantic scenario in this report.
 - **Pending** — not yet demonstrated by the dedicated semantic/manual or native-GPU validation named below.
 
-The final merged-tree Windows coverage receipt is **3,275 pass, 0 fail**, with **3,551,817
-expectations across 365 files** and **93.58% line / 91.60% function coverage**. The portable
-published floors remain **84.64% / 82.21%**. The exact GitHub Pages artifact also passed one atomic,
-serial phone-plus-desktop Chromium run. The aggregate gate, CI, CodeQL, post-build smoke, Pages workflow,
-exact-SHA deployment, and public-URL browser probe are green for behavior commit
-[`0ce2f7eb`](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/commit/0ce2f7eb6fa083e1f9d70349e4c2add1a31a8d0c).
+The final merged-tree Windows coverage receipt is **3,297 pass, 0 fail**, with **3,589,864
+expectations across 366 files** and **93.60% line / 91.61% function coverage**. The portable
+published floors remain **84.64% / 82.21%**. A prior behavior baseline at
+[`0ce2f7eb`](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/commit/0ce2f7eb6fa083e1f9d70349e4c2add1a31a8d0c)
+passed an atomic phone-plus-desktop Chromium run plus CI, CodeQL, post-build smoke, exact-SHA Pages
+deployment, and a public-URL browser probe. That prior deployment is baseline evidence only; the final
+v0.23.0 deployment receipt is verified externally after the release commit exists, because a source
+commit cannot contain the SHA or workflow run that its own creation triggers.
 
 ## Xenomimic tether: root cause and closure
 
@@ -65,8 +67,9 @@ percept accounting; rendering or physically constraining that relationship was t
   integrator explicitly has no origin radius, partner-distance clamp, spring, or home force; each axis is
   clamped/reflected independently only at the authored platform edge.
 - Temporary Big Tree travel is explicit locomotion intent from the shared visitor adapter. `Travel`
-  preserves the authored heading, `Calm` settles the body, and `Normal` returns to the existing neural
-  locomotion. This state is bounded visit behavior, not a twin or origin tether.
+  preserves the authored heading through travel, departure, and cooldown egress; `Calm` settles the
+  body during a peaceful activity, and `Normal` returns only after a real outer-boundary exit. This
+  state is bounded visit behavior, not a twin or origin tether.
 
 ### Evidence that no hidden tether remains
 
@@ -83,7 +86,9 @@ percept accounting; rendering or physically constraining that relationship was t
   Xenomimic visual.
 - **Automated:** `tests/xenomimics.test.ts` places bodies near square corners, widely separates twins,
   and proves neither radial projection nor partner-distance pulling occurs. Separate tests cover normal,
-  travel, calm, teleport, predation/respawn, ground movement, lifecycle, and renderer disposal.
+  travel, calm, teleport, predation/respawn, ground movement, lifecycle, and renderer disposal. Its
+  sanctuary callback test also proves stable pair/role identity is preserved through sensing and
+  predation protection.
 - **Automated:** the Big Tree visitor tests drive Xenomimic travel, calm social activity, departure, food,
   rest, death/despawn cleanup, and reset without introducing tether state.
 - **Inspected:** there is no physics-joint or constraint object in the Xenomimic population, renderer,
@@ -141,13 +146,14 @@ Directly wired visitor categories are:
 
 - ordinary `Entity` organisms;
 - Xenomimics;
+- launched NHI matrix beings through the dedicated `NhiBigTreeSource` / `BIG_TREE_OWNER_NHI` binding;
+- NHI-owned minions through the ordinary-organism adapter;
 - all ten resident Crystal-tree species;
 - Shoggoths, Titans, Leviathans, Puppeteers, and each autonomous Apex body.
 
-Launched NHI matrix beings and player-controlled hero/avatar bodies are intentionally excluded so their
-separate agency/locomotion remains authoritative. `WildernessPopulation` has no direct Big Tree visitor
-adapter in this change. Those exclusions mean the literal claim –every living object in the repository—
-is **not** made.
+Player-controlled hero/avatar bodies remain outside autonomous visits so direct player locomotion stays
+authoritative. `WildernessPopulation` has no direct Big Tree visitor adapter in this release. Those
+exclusions mean the literal claim –every living object in the repository— is **not** made.
 
 ### Exact 5.0-second respawn and race safety
 
@@ -158,7 +164,10 @@ indexed deadline heap at `now + 5`. It never allocates a replacement food object
 All food deadlines use `CrystalEcosystem.foodTime`, which advances from the world's scaled simulation
 delta. No `Date`, `performance.now`, `setTimeout`, or wall-clock timer participates. Passing the same
 simulation time pauses leases, visits, and respawns; changing simulation speed changes all of them through
-the same established scaled-time model.
+the same established scaled-time model. World frames already cap scaled deltas at 0.25 seconds. The
+public Crystal update additionally clamps anomalous finite direct-call deltas to 10 seconds before
+integrating residents in deterministic steps of at most 0.1 seconds, preventing an accidental
+`Number.MAX_VALUE` call from creating an unbounded loop without interfering with exact five-second tests.
 
 Duplicate protection is layered:
 
@@ -200,14 +209,17 @@ does not consume that time, and the remaining interval resumes after reload.
 
 Boot validates the entire snapshot before applying it and restores food before constructing visitor
 adapters. Corrupt, wrong-version, wrong-capacity, duplicate-ID, or out-of-range data is rejected without
-leaking a half-mutated registry. Genesis clears the isolated key. Dirty revision/time tracking suppresses
+leaking a half-mutated registry. Entity-only Genesis preserves the fixed tree-food pool and sparse
+checkpoint while releasing only discarded ordinary visitor identities; this prevents an unrelated
+population reset from resurrecting or discarding food. A corrupt or incompatible boot checkpoint is the
+narrower path that resets food and clears the isolated key. Dirty revision/time tracking suppresses
 duplicate serialization, but a failed storage write remains retryable. Hidden-page, `pagehide`, and world
 disposal hooks perform best-effort flushes.
 
-**Automated evidence:** `tests/store.test.ts`, `tests/edible-resource.test.ts`, and
-`tests/big-tree-world-integration.test.ts` cover JSON round trips, sparse checkpoints, normalized live
-claims, remaining-time restoration, corrupt payload rejection, failed-write retry, Genesis clear, and
-application lifecycle wiring.
+**Automated evidence:** `tests/store.test.ts`, `tests/edible-resource.test.ts`,
+`tests/big-tree-world-integration.test.ts`, and `tests/world-lifecycle-wiring.test.ts` cover JSON round
+trips, sparse checkpoints, normalized live claims, remaining-time restoration, corrupt payload
+rejection, failed-write retry, entity-only Genesis preservation, and application lifecycle wiring.
 
 Active visit state deliberately starts clean after reload. Protection is recomputed from position and new
 decisions; stale targets, pairings, or faction state are not restored. This is safe cleanup, not seamless
@@ -348,11 +360,11 @@ restricted to localhost/127.0.0.1. No Big Tree or Xenomimic debug line is enable
 
 ## Automated test receipt
 
-The final merged-tree cross-system ecology/tether run completed **211 pass, 0 fail** with **10,764
+The final merged-tree cross-system ecology/tether run completed **214 pass, 0 fail** with **10,788
 expectations across 17 files**. It covered the production activity bridge, canonical and fauna visitors,
 zone/world composition, food registry and Crystal lifecycle, dome feeding, Shoggoth/Titan/Puppet/Apex
 suppression, Entity and Xenomimic connectomes, GraphMind, and Xenomimic cosmetics. The repository-wide
-coverage run then completed **3,275 pass, 0 fail** with **3,551,817 expectations across 365 files**.
+coverage run then completed **3,297 pass, 0 fail** with **3,589,864 expectations across 366 files**.
 
 ```text
 tests/big-tree-activity-bridge.test.ts
@@ -384,24 +396,28 @@ deadline scans, and linear active-identity lookup.
 
 ## Performance measurements
 
-Fresh local microbenchmark on 2026-07-14:
+Fresh local microbenchmarks on 2026-07-14:
 
-- CPU: Intel Core Ultra 9 275HX, observed clock about 3.64 GHz;
+- CPU: Intel Core Ultra 9 275HX, observed clock about 3.18–3.26 GHz;
 - runtime: Bun 1.3.14, x64 Windows;
-- command: `bun bench/big-tree-ecology.bench.ts`.
+- commands: `bun bench/big-tree-ecology.bench.ts` and
+  `bun bench/crystal-ecosystem.bench.ts`.
 
-| Scenario                                          |  Average |  Minimum |      p75 |       p99 |
-| ------------------------------------------------- | -------: | -------: | -------: | --------: |
-| 20,000 food records, no deadline due              |  1.81 ns |  1.22 ns |  1.83 ns |   5.64 ns |
-| Renew 72 live food reservations                   |  1.73 us |  1.22 us |  1.79 us |   1.95 us |
-| Snapshot a clean sparse 20,000-slot pool          | 75.77 us | 33.40 us | 80.30 us | 347.90 us |
-| Stringify the clean sparse snapshot               | 81.49 ns | 56.30 ns | 87.01 ns | 133.40 ns |
-| Step 72 active visit records                      |  4.50 ns |  2.10 ns |  4.79 ns |   7.89 ns |
-| Match/update 50 unmatched fauna social candidates | 82.51 us | 52.40 us | 85.20 us | 142.90 us |
+| Scenario                                              |   Average |   Minimum |       p75 |       p99 |
+| ----------------------------------------------------- | --------: | --------: | --------: | --------: |
+| 20,000 food records, no deadline due                  |   1.67 ns |   1.22 ns |   1.68 ns |   3.86 ns |
+| Renew 72 live food reservations                       |   1.54 us |   1.03 us |   1.62 us |   1.71 us |
+| Snapshot a clean sparse 20,000-slot pool              |  42.10 us |  29.40 us |  41.70 us | 136.50 us |
+| Stringify the clean sparse snapshot                   |  69.43 ns |  50.29 ns |  71.48 ns | 127.29 ns |
+| Step 72 active visit records                          |   4.15 ns |   2.08 ns |   4.22 ns |   6.32 ns |
+| Match/update 50 unmatched fauna social candidates     |  71.31 us |  47.00 us |  72.40 us |  99.60 us |
+| Full Crystal census: 30k canopy, 20k food, 349 beings | 316.27 us | 181.50 us | 405.50 us | 635.30 us |
 
 The 50-candidate fauna fixture performs one source read per active candidate rather than a nested
 adapter-read scan. Food selection uses deterministic free lists; deadlines use indexed heaps;
 active visit work is capacity-bounded; food hide/restore uses a single instance-matrix update range.
+The Crystal benchmark exercises the full authored census, including all 20,000 canonical edible
+records and 349 resident/ambient beings.
 
 These microbenchmarks verify bounded component costs on this machine. They do **not** establish whole-world
 60–120 FPS, browser GPU performance, or another machine's result.
@@ -418,19 +434,21 @@ camera framing, exercises a habitat-stress interval, and writes stage/failure ar
 | Viewport / DPR               | 390x844 / 2 | 1280x720 / 1 |
 | Drawing buffer               |    780x1688 |     1280x720 |
 | Flora instances              |      20,800 |       60,000 |
-| World frame at capture       |           4 |            5 |
-| Canvas-only average luma     |       71.44 |        50.32 |
-| Canvas-only colour buckets   |         449 |          285 |
+| World frame at capture       |           5 |            4 |
+| Canvas-only average luma     |       71.24 |        49.90 |
+| Canvas-only colour buckets   |         431 |          268 |
 | Console errors / page errors |       0 / 0 |        0 / 0 |
 | Failed responses / requests  |       0 / 0 |        0 / 0 |
-| Active tree visitors         |           9 |            7 |
-| Stress frames / duration     | 3 / 34.23 s |  2 / 56.40 s |
-| Reported stress rate         |   0.088 FPS |    0.035 FPS |
+| Active tree visitors         |           7 |            9 |
+| Stress frames / duration     | 3 / 30.20 s |  2 / 49.24 s |
+| Reported stress rate         |   0.099 FPS |    0.041 FPS |
 
-Both runs used Chromium's ANGLE **SwiftShader** software Vulkan renderer. Their explicit measurement class
-is `headless-browser-liveness-not-production-fps`; the very low rates must not be presented as a native-GPU
-performance result or compliance with the 60–120 FPS objective. Screenshots were visually inspected as
-nonblank, abundant world renders, but they do not prove each requested ecology state transition.
+Both final v0.23.0 working-tree runs used Chromium's ANGLE **SwiftShader** software Vulkan renderer. Their
+explicit measurement class is `headless-browser-liveness-not-production-fps`; the very low rates must not
+be presented as a native-GPU performance result or compliance with the 60–120 FPS objective. Screenshots
+were visually inspected as nonblank, visually abundant world renders with the phone and desktop control
+surfaces present; the canvas-only captures retain the authored dense foreground geometry and varied flora.
+They do not prove each requested ecology state transition or native-GPU frame rate.
 
 Worker status was intentionally `dormant-main-thread`, matching the accepted runtime override: the
 wilderness worker asset was built and served successfully, but no worker pool was active. This report does
@@ -441,7 +459,7 @@ The status-bearing atomic summary records `status: passed`, requested/completed 
 census equality, sanctuary/visitor/neural diagnostics, worker-asset HTTP 200, and the four inspected PNG
 paths under `output/playwright/`.
 
-## Published GitHub Pages verification
+## Prior published GitHub Pages baseline
 
 Behavior commit
 [`0ce2f7eb`](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/commit/0ce2f7eb6fa083e1f9d70349e4c2add1a31a8d0c)
@@ -462,23 +480,28 @@ An independent Chromium probe then opened the
 - the localhost-only `__CQM_VISUAL_SMOKE__` hook was absent in production; and
 - the deployed screenshot was visually inspected as a nonblank world/UI render.
 
+This is the last published baseline that predates the v0.23.0 release commit. The final handoff must bind
+the immutable v0.23.0 commit SHA to its CI, CodeQL, post-build smoke, release/tag, Pages deployment, and
+public-browser receipts after that commit exists; those run IDs cannot be embedded in the commit whose
+creation triggers them.
+
 ## Manual scenario accounting
 
 The following requested behaviors have strong automated equivalents but have not all been completed as a
 single human-observed live checklist:
 
-| Requested scenario family                                  | Current evidence                                                                                    | Status                                                  |
-| ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| Xenomimic line absence and free movement                   | Scene/source tests; corner/separated-twin movement tests; broad local screenshots                   | Dedicated multi-angle/state manual follow still pending |
-| Multi-species hunger, travel, fruit/leaf eating            | Core + all five direct fauna-category adapter tests                                                 | Automated; live long-form observation pending           |
-| Exact 5.0-second reuse and two-eater race                  | Exact clock and transaction tests                                                                   | Automated                                               |
-| Peaceful rest/social coexistence and hostile de-escalation | Zone, species, fauna, combat/hazard tests                                                           | Automated; live hostile-arrival observation pending     |
-| Temporary visits, varied dwell, departure, cooldown        | Visit-state tests with bounded deadlines                                                            | Automated                                               |
-| Friendly tree residents, peer teaching, and safe fallback  | Neural/controller, teaching, and Crystal integration tests                                          | Automated; live behavior tour pending                   |
-| Crowding and blocked navigation                            | 72-capacity stress, multiple slots, stuck reroute/timeout tests                                     | Automated                                               |
-| Repeated resource/visit cleanup                            | 64-cycle pool stress plus reset/despawn/dispose tests                                               | Automated                                               |
-| Save/load/reset                                            | Primitive checkpoint, corruption, reset, lifecycle tests                                            | Automated; application restart manual pass pending      |
-| Production build and deployed Pages                        | Local 117-artifact Pages build + atomic smoke; exact-SHA CI/Pages deployment + public-browser probe | Verified for `0ce2f7eb`                                 |
+| Requested scenario family                                  | Current evidence                                                                                     | Status                                                          |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| Xenomimic line absence and free movement                   | Scene/source tests; corner/separated-twin movement tests; broad local screenshots                    | Dedicated multi-angle/state manual follow still pending         |
+| Multi-species hunger, travel, fruit/leaf eating            | Core + all five direct fauna-category adapter tests                                                  | Automated; live long-form observation pending                   |
+| Exact 5.0-second reuse and two-eater race                  | Exact clock and transaction tests                                                                    | Automated                                                       |
+| Peaceful rest/social coexistence and hostile de-escalation | Zone, species, fauna, combat/hazard tests                                                            | Automated; live hostile-arrival observation pending             |
+| Temporary visits, varied dwell, departure, cooldown        | Visit-state tests with bounded deadlines                                                             | Automated                                                       |
+| Friendly tree residents, peer teaching, and safe fallback  | Neural/controller, teaching, and Crystal integration tests                                           | Automated; live behavior tour pending                           |
+| Crowding and blocked navigation                            | 72-capacity stress, multiple slots, stuck reroute/timeout tests                                      | Automated                                                       |
+| Repeated resource/visit cleanup                            | 64-cycle pool stress plus reset/despawn/dispose tests                                                | Automated                                                       |
+| Save/load/reset                                            | Primitive checkpoint, corruption, reset, lifecycle tests                                             | Automated; application restart manual pass pending              |
+| Production build and deployed Pages                        | Final local v0.23.0 117-artifact build + atomic smoke; prior exact-SHA Pages/public-browser baseline | Local final verified; final deployment bound in release handoff |
 
 ## Remaining limitations and final acceptance blockers
 
@@ -486,8 +509,8 @@ single human-observed live checklist:
    naturally arriving hostility, long-form visit diversity, and repeated application restart.
 2. Profile whole-world frame time and memory on representative native GPUs. Current SwiftShader evidence is
    liveness only and cannot validate 60–120 FPS.
-3. Decide whether `WildernessPopulation` should become a direct visitor. NHI and player hero/avatar
-   exclusions are intentional; wilderness absence is currently an unsupported category.
+3. Decide whether `WildernessPopulation` should become a direct visitor. Player hero/avatar exclusion is
+   intentional; wilderness absence is currently an unsupported category.
 4. Audit any future projectile, trap, area-effect, or delayed-damage subsystem against the shared
    sanctuary predicate before extending the safe-zone claim to it.
 5. Do not describe social animations as general learning. The verified transfers are the separate

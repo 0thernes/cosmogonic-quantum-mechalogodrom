@@ -3,14 +3,14 @@
  *
  * Count remeasured 2026-07-14 (Bun 1.3.14; merged Dome ecology, lifecycle, browser-harness,
  * fauna-control, Apex-hunger, and reciprocal resident-social suites). The final merged Windows
- * measurement was 3,275 tests / 0 fail / 3,551,817 expectations across 365 files at 93.58% line /
- * 91.60% function coverage. Coverage remains the clean Ubuntu floor for the portable public contract.
+ * measurement was 3,297 tests / 0 fail / 3,589,864 expectations across 366 files at 93.60% line /
+ * 91.61% function coverage. Coverage remains the clean Ubuntu floor for the portable public contract.
  * Propagated to every public surface and
  * policed by `tests/docs-receipts-law.test.ts`. Dr. Manhattan's law: if it is not measured, it is not real.
  *
  * To update after adding/removing tests: `bun scripts/verify-receipts.ts --print`, paste here, re-sync.
  */
-export const CANONICAL_TEST_COUNT = 3293;
+export const CANONICAL_TEST_COUNT = 3297;
 export const CANONICAL_LINE_COV = '84.64';
 export const CANONICAL_FUNC_COV = '82.21';
 

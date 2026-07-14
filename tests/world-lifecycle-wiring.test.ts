@@ -51,6 +51,9 @@ describe('World lifecycle wiring', () => {
     }
     expect(body.indexOf('this.clearNhiPopulation()')).toBeGreaterThanOrEqual(0);
     expect(body.indexOf('this.clearNhiPopulation()')).toBeLessThan(resetAt);
+    expect(body).toContain('this.bigTreeVisitors.resetOrdinary()');
+    expect(body).not.toContain('this.bigTreeFaunaVisitors.reset()');
+    expect(body).not.toContain('this.crystalEcosystem.resetFood(');
   });
 
   test('NHI death/reset retires minds, bodies, targets, and collision-free economy wallets', () => {
