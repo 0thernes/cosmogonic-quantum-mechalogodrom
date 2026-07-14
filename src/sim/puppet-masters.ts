@@ -220,7 +220,9 @@ interface Puppet {
  * meddling. Interventions are surfaced to the HUD via the injected `onEvent` callback
  * (legacy `showNM` toast).
  */
-export class PuppetMasterSystem implements PortalCullable, DomeFeeder, BigTreeFaunaSource, BigTreeActorSource {
+export class PuppetMasterSystem
+  implements PortalCullable, DomeFeeder, BigTreeFaunaSource, BigTreeActorSource
+{
   // Canonical migration surface: get bigTreeActorCount(), readBigTreeActor(), writeBigTreeActor(), nourishBigTreeActor(), setBigTreeActorControlled(); out.category = 'puppet'; out.moveSpeed = 0; bigTreeControlled = false; if (pm.bigTreeControlled); return pm.bigTreeControlled || this.isProtectedAt
   private readonly ctx: SimContext;
   private readonly entities: EntityManager;
