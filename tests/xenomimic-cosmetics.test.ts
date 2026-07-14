@@ -77,5 +77,19 @@ describe('xenomimic RENDER + BRUTAL skins are unique APIs', () => {
     expect(src.includes('private purgeOrphanXenomimicTethers()')).toBe(true);
     // Must never re-enable cosmetic tethers via NEURAL WEB.
     expect(src.includes('xenomimicConnectome.setVisible(on)')).toBe(false);
+    // Scoped transition seal: the NEURAL WEB toggle itself must force xenomimic invisibility,
+    // re-purge legacy lines, and construct no line primitive of its own — whole-file pins alone
+    // cannot catch a toggle-local regression drawing xenomimic lines through another object.
+    const toggleStart = src.indexOf('toggleConnectomeWeb');
+    expect(toggleStart).toBeGreaterThan(0);
+    const toggleBody = src.slice(toggleStart, src.indexOf('return false;', toggleStart));
+    expect(toggleBody).toContain('this.xenomimicConnectome.setVisible(false)');
+    expect(toggleBody).toContain('this.purgeOrphanXenomimicTethers()');
+    expect(toggleBody).not.toContain('new THREE.Line');
+    expect(toggleBody).not.toContain('LineSegments');
+    // Owner 2026-07-14: the ENTITY axon-web lines are retired too — the key can only re-assert
+    // invisibility, never draw connection lines of any kind again.
+    expect(toggleBody).toContain('this.connectome.setWebVisible(false)');
+    expect(toggleBody).not.toContain('setWebVisible(on)');
   });
 });

@@ -253,6 +253,8 @@ function assertOwner(ownerId: number): void {
 export class EdibleResourceRegistry {
   private readonly items: MutableEdibleResource[];
   private readonly indexById: ReadonlyMap<number, number>;
+  /** ownerId -> indices of live reserved/consuming claims; keeps releaseOwner O(claims held). */
+  private readonly ownerClaims = new Map<number, Set<number>>();
   private readonly lifecycle: EdibleResourceVisualLifecycle;
   private readonly freePrevious: Int32Array;
   private readonly freeNext: Int32Array;
@@ -438,6 +440,7 @@ export class EdibleResourceRegistry {
     }
 
     this.leaseHeap.remove(index);
+    this.untrackClaim(resource.ownerId, index);
     resource.ownerId = null;
     resource.leaseUntil = 0;
     resource.respawnAt = now + EDIBLE_RESOURCE_RESPAWN_SECONDS;
@@ -467,8 +470,14 @@ export class EdibleResourceRegistry {
    */
   releaseOwner(ownerId: number): number {
     assertOwner(ownerId);
+    // O(claims held) via the owner-claims index — this sits on the global entity-death hook, which
+    // fires for owners that never reserved anything (the common case returns in O(1)).
+    const claims = this.ownerClaims.get(ownerId);
+    if (claims === undefined || claims.size === 0) return 0;
     let released = 0;
-    for (let index = 0; index < this.items.length; index++) {
+    // Iterating the live set is safe: JS Set iterators skip entries deleted mid-iteration, and
+    // makeAvailable->untrackClaim only deletes the entry currently being visited.
+    for (const index of claims) {
       const resource = this.items[index]!;
       if (
         resource.ownerId === ownerId &&
@@ -526,6 +535,7 @@ export class EdibleResourceRegistry {
     assertFiniteAtLeast('now', now, 0);
     this.leaseHeap.clear();
     this.respawnHeap.clear();
+    this.ownerClaims.clear();
     this.freePrevious.fill(-1);
     this.freeNext.fill(-1);
     this.freeListed.fill(0);
@@ -609,6 +619,7 @@ export class EdibleResourceRegistry {
     const resource = this.items[index]!;
     this.removeFree(index);
     resource.ownerId = ownerId;
+    this.trackClaim(ownerId, index);
     resource.leaseUntil = leaseUntil;
     resource.respawnAt = 0;
     this.transition(resource, 'reserved');
@@ -621,6 +632,23 @@ export class EdibleResourceRegistry {
       ownerId,
       leaseUntil,
     };
+  }
+
+  private trackClaim(ownerId: number, index: number): void {
+    let claims = this.ownerClaims.get(ownerId);
+    if (claims === undefined) {
+      claims = new Set();
+      this.ownerClaims.set(ownerId, claims);
+    }
+    claims.add(index);
+  }
+
+  private untrackClaim(ownerId: number | null, index: number): void {
+    if (ownerId === null) return;
+    const claims = this.ownerClaims.get(ownerId);
+    if (claims === undefined) return;
+    claims.delete(index);
+    if (claims.size === 0) this.ownerClaims.delete(ownerId);
   }
 
   private matchesOwnedActive(
@@ -662,6 +690,7 @@ export class EdibleResourceRegistry {
   private makeAvailable(index: number): void {
     const resource = this.items[index]!;
     this.transition(resource, 'available');
+    this.untrackClaim(resource.ownerId, index);
     resource.ownerId = null;
     resource.leaseUntil = 0;
     resource.respawnAt = 0;

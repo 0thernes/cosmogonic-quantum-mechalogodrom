@@ -561,7 +561,10 @@ describe('TitanSystem — sanctuary is transient, neutral, and non-harmful', () 
     const energyBefore = [a.energy, b.energy];
     titans.attachSanctuary(() => true);
     for (let round = 0; round < 3; round++) harness.diplomacy(0);
-    expect(rngDraws).toBe(0);
+    // Draw-then-skip (repo determinism law, singularities.ts pattern): the two unconditional PD
+    // draws per round stay consumed so protected and counterfactual runs share one seeded stream —
+    // while the round itself (history, energy, war) is fully suppressed.
+    expect(rngDraws).toBe(6);
     expect(harness.histories[0]?.rounds).toBe(0);
     expect([a.energy, b.energy]).toEqual(energyBefore);
     expect(titans.warMatrix[1]).toBe(0);
@@ -569,7 +572,7 @@ describe('TitanSystem — sanctuary is transient, neutral, and non-harmful', () 
     // Leaving resumes the exact existing diplomacy path; three always-defect rounds establish war.
     titans.attachSanctuary(null);
     for (let round = 0; round < 3; round++) harness.diplomacy(0);
-    expect(rngDraws).toBe(6);
+    expect(rngDraws).toBe(12);
     expect(titans.warMatrix[1]).toBe(REL_WAR);
     expect(a.warCount).toBe(1);
     expect(b.warCount).toBe(1);

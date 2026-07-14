@@ -1705,7 +1705,6 @@ export class TitanSystem implements DomeFeeder, BigTreeFaunaSource, BigTreeActor
     const b = this.titans[j];
     const h = this.histories[p];
     if (!a || !b || !h) return; // invariant: tables sized for PAIR_COUNT
-    if (this.isProtectedTitan(a) || this.isProtectedTitan(b)) return;
     const sa = STRATEGIES[a.strategy];
     const sb = STRATEGIES[b.strategy];
     if (!sa || !sb) return; // invariant: strategy clamped to registry range
@@ -1714,6 +1713,9 @@ export class TitanSystem implements DomeFeeder, BigTreeFaunaSource, BigTreeActor
     // the legacy strategy round, retained so enabled and counterfactual runs consume equal streams.
     const sampleA = rng();
     const sampleB = rng();
+    // Sanctuary suspends the PD round AFTER the unconditional draws (draw-then-skip), so a titan
+    // resting at the Big Tree never shifts the core seeded stream for every downstream consumer.
+    if (this.isProtectedTitan(a) || this.isProtectedTitan(b)) return;
     const round = playRound(PRISONERS_DILEMMA, sa.move, sb.move, h, sampleA, sampleB);
     const intelligence = this.ctx.organismIntelligence;
     if (intelligence?.enabled) {

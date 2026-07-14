@@ -1,15 +1,21 @@
 import { describe, expect, test } from 'bun:test';
 
-const FILES = [
-  ['shoggoths.ts', 'ShoggothSystem', 'shoggoth'],
-  ['titans.ts', 'TitanSystem', 'titan'],
+// Migration split (2026-07-14): shoggoths/titans/puppeteers speak the narrow
+// BigTreeFaunaSource visitor bridge; leviathans and the apex still speak the
+// original BigTreeActorSource ownership contract. Both halves stay sealed.
+const ACTOR_SOURCE_FILES = [
   ['leviathans.ts', 'LeviathanSystem', 'leviathan'],
-  ['puppet-masters.ts', 'PuppetMasterSystem', 'puppet'],
   ['super-body.ts', 'SuperBodySystem', 'apex'],
 ] as const;
 
+const FAUNA_SOURCE_FILES = [
+  ['shoggoths.ts', 'ShoggothSystem'],
+  ['titans.ts', 'TitanSystem'],
+  ['puppet-masters.ts', 'PuppetMasterSystem'],
+] as const;
+
 describe('Big Tree production fauna sources', () => {
-  test.each(FILES)(
+  test.each(ACTOR_SOURCE_FILES)(
     '%s exposes the canonical lifecycle and nutrition contract',
     async (file, name, kind) => {
       const source = await Bun.file(new URL(`../src/sim/${file}`, import.meta.url)).text();
@@ -25,6 +31,21 @@ describe('Big Tree production fauna sources', () => {
     },
   );
 
+  test.each(FAUNA_SOURCE_FILES)(
+    '%s exposes the narrow visitor bridge contract',
+    async (file, name) => {
+      const source = await Bun.file(new URL(`../src/sim/${file}`, import.meta.url)).text();
+      expect(source).toMatch(new RegExp(`class ${name} implements [^{]*BigTreeFaunaSource`));
+      expect(source).toContain('bigTreeVisitorSlotCount');
+      expect(source).toContain('readBigTreeVisitor(');
+      expect(source).toContain('setBigTreeVisitorIntent(');
+      expect(source).toContain('nourishBigTreeVisitor(');
+      expect(source).toContain('clearBigTreeVisitorIntent(');
+      // Release restores the Normal intent mode (the migrated ownership vocabulary).
+      expect(source).toContain('= BigTreeFaunaIntentMode.Normal;');
+    },
+  );
+
   test('native hostile or autonomous intent yields while the canonical visitor owns locomotion', async () => {
     const shoggoths = await Bun.file(new URL('../src/sim/shoggoths.ts', import.meta.url)).text();
     const titans = await Bun.file(new URL('../src/sim/titans.ts', import.meta.url)).text();
@@ -33,12 +54,12 @@ describe('Big Tree production fauna sources', () => {
     const apex = await Bun.file(new URL('../src/sim/super-body.ts', import.meta.url)).text();
     const hunt = await Bun.file(new URL('../src/sim/super-hunt.ts', import.meta.url)).text();
 
-    expect(shoggoths).toContain('if (!sg.bigTreeControlled)');
-    expect(shoggoths).toContain('sg.bigTreeControlled || this.sanctuary?.');
-    expect(titans).toContain('if (!ti.bigTreeControlled)');
-    expect(titans).toContain('return titan.bigTreeControlled || this.isProtectedAt');
-    expect(puppets).toContain('if (pm.bigTreeControlled)');
-    expect(puppets).toContain('return pm.bigTreeControlled || this.isProtectedAt');
+    // Migrated systems yield native intent whenever the visitor coordinator holds a non-Normal
+    // intent mode; leviathans and the apex still yield through the bigTreeControlled flag.
+    expect(shoggoths).toContain('if (visitMode === BigTreeFaunaIntentMode.Normal) {');
+    expect(shoggoths).toContain('visitMode !== BigTreeFaunaIntentMode.Normal || memberProtected');
+    expect(titans).toContain('BigTreeFaunaIntentMode.Normal');
+    expect(puppets).toContain('if (visitMode === BigTreeFaunaIntentMode.Normal) {');
     expect(leviathans).toContain('if (!lv.bigTreeControlled)');
     expect(apex).toContain('if (this.bigTreeControlled)');
     expect(apex).toContain('if (this.disposed || this.bigTreeControlled) return;');
@@ -46,9 +67,13 @@ describe('Big Tree production fauna sources', () => {
   });
 
   test('portal and teardown paths release visitor ownership instead of retaining stale controls', async () => {
-    for (const [file] of FILES) {
+    for (const [file] of ACTOR_SOURCE_FILES) {
       const source = await Bun.file(new URL(`../src/sim/${file}`, import.meta.url)).text();
       expect(source).toMatch(/bigTreeControlled\s*=\s*false/);
+    }
+    for (const [file] of FAUNA_SOURCE_FILES) {
+      const source = await Bun.file(new URL(`../src/sim/${file}`, import.meta.url)).text();
+      expect(source).toContain('= BigTreeFaunaIntentMode.Normal;');
     }
     const world = await Bun.file(new URL('../src/world.ts', import.meta.url)).text();
     const dispose = world.indexOf('  dispose(): void {');

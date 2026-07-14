@@ -2943,6 +2943,11 @@ export class CrystalEcosystem {
     this.resetFood(this.simTime);
     this.disposed = true;
     this.scene.remove(this.root);
+    // InstancedMesh owns its instanceMatrix/instanceColor GL buffers (mesh attributes, not geometry
+    // attributes), so geometry.dispose() alone leaks them — release every instanced draw explicitly.
+    this.root.traverse((object) => {
+      if (object instanceof THREE.InstancedMesh) object.dispose();
+    });
     for (const geometry of this.ownedGeometries) geometry.dispose();
     for (const material of this.ownedMaterials) material.dispose();
     this.ownedGeometries.length = 0;

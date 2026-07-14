@@ -174,25 +174,27 @@ export class Connectome {
       }),
     );
     const lines = this.lines;
-    // USER (always-visible connectome): the axon web spans the WHOLE dome and its vertices are
-    // rebuilt every frame, but three.js computes the geometry bounding sphere ONCE (lazily) and never
-    // again — so as creatures roam, the stale sphere drifts out of the frustum and the ENTIRE web
-    // flickers out at certain camera angles/distances (the "sometimes I can't see it close or far"
-    // trigger). Disable frustum culling so it is drawn unconditionally at every angle + distance.
-    // depthTest:true keeps links BETWEEN bodies (not smeared ON TOP of every skin — the V127 eyesore).
-    // Additive blending + V109/V110 dynamic HSL + waving polylines = the living neural net the user sees.
+    // OWNER (2026-07-14, screenshot receipt): connection LINES are permanently invisible — the
+    // white cross-ground webbing between creatures "clutters and dirties the visual"; "the
+    // connection should be invisible graphically always." This mirrors the xenomimic bond ruling:
+    // the GRAPH stays fully live (links, topology pairs, activation propagation for GraphMind,
+    // tribes, and telemetry) — only the render layer is retired. The LineSegments object is kept
+    // (draw range pinned to 0) so disposal and telemetry paths are unchanged.
     lines.frustumCulled = false;
     lines.renderOrder = 2;
-    lines.visible = true;
+    lines.visible = false;
     ctx.scene.add(lines);
   }
 
-  /** Show/hide the axon-web render (default ON — the entity neural net). The graph keeps computing
-   *  regardless; this only toggles the visual layer. O(1). */
-  setWebVisible(show: boolean): void {
-    this.lines.visible = show;
-    // Never expose a stale web between the toggle and the next rebuild.
-    if (!show) this.geo.setDrawRange(0, 0);
+  /**
+   * RETIRED VISUAL (owner 2026-07-14): the axon-web lines never render — connections are
+   * graphically invisible ALWAYS. Kept as a deliberate no-op so existing callers and toggles stay
+   * compile-safe; every call re-forces invisibility and a zero draw range. The graph itself keeps
+   * computing regardless. O(1).
+   */
+  setWebVisible(_show: boolean): void {
+    this.lines.visible = false;
+    this.geo.setDrawRange(0, 0);
   }
 
   /** Whether the axon-web LineSegments are currently drawn. */

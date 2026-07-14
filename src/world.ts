@@ -6173,8 +6173,14 @@ export class World {
       if (!e) continue;
       const nextMorph = Math.floor(this.uiRng() * this.morphTotal);
       // Preserve the UI RNG cadence, but never force a protected visitor through a hostile global
-      // transformation while it is eating, resting, or socializing in the sanctuary.
-      if (this.isBigTreeProtected(e.position.x, e.position.z)) continue;
+      // transformation while it is eating, resting, or socializing in the sanctuary. Mirror the two
+      // internal remorph draws (puppet-masters.ts convention) so later actors see the same seeded
+      // core stream whether or not anyone stood in the zone.
+      if (this.isBigTreeProtected(e.position.x, e.position.z)) {
+        this.rng();
+        this.rng();
+        continue;
+      }
       this.entities.remorph(e, nextMorph);
       changed++;
     }
@@ -6968,14 +6974,16 @@ export class World {
       },
       toggleConnectomeWeb: (): boolean => {
         this.unlock();
-        const on = !this.connectome.webVisible;
-        // Entity axon web only. Xenomimic bipolar bonds stay psionic — never re-enable cosmetic tethers.
-        this.connectome.setWebVisible(on);
+        // OWNER (2026-07-14): connection lines are RETIRED for the entity axon web AND the
+        // xenomimic bond alike — graphically invisible always. The key now re-asserts the psionic
+        // state (re-purges any legacy lines) instead of toggling a visual back on; the neural
+        // GRAPH keeps computing underneath either way.
+        this.connectome.setWebVisible(false);
         this.xenomimicConnectome.setVisible(false);
         this.purgeOrphanXenomimicTethers();
-        this.hud.showSector(on ? 'NEURAL WEB · ON' : 'NEURAL WEB · OFF');
-        this.audit.record('connectome-web', { visible: on });
-        return on;
+        this.hud.showSector('NEURAL WEB · PSIONIC (lines retired)');
+        this.audit.record('connectome-web', { visible: false });
+        return false;
       },
     };
   }
