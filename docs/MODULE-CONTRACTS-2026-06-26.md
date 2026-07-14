@@ -1576,7 +1576,7 @@ Copilot are constructed boot-stream-neutral and never write sim state, so the go
 
 ### V9 acceptance
 
-Full `bun run check` green: prettier → tsc strict → oxlint → 3188 tests (0 fail, 300-frame golden
+Full `bun run check` green: prettier → tsc strict → oxlint → 3200 tests (0 fail, 300-frame golden
 included) → build. The Copilot sandbox verified live (allow: `git log`, file reads; deny:
 path-escape, repository-root pathspecs, `git push`, `legacy/`, shell redirection).
 
@@ -1717,6 +1717,8 @@ above.
 | `src/sim/big-tree-fauna-source.ts`   | Allocation-free ownership contract for Shoggoths, Titans, Leviathans, Puppeteers, and autonomous Apex bodies: stable identity, native energy, movement ownership, nourishment, and lifecycle |
 | `src/sim/big-tree-fauna-visitors.ts` | Bounded shared adapter for those five fauna categories: contextual visits, ground/flight steering, canonical food transactions, rest, cross-species social pairing, departure, and cleanup   |
 | `src/sim/tree-creature-brain.ts`     | One deterministic fixed-size neural controller per tree-dwelling creature, with validated model loading and a safe fallback                                                                  |
+| `src/sim/tree-creature-teaching.ts`  | Bounded resident-to-resident policy transfer: competence-gap and cooldown gates, all-or-nothing finite weight blending, and the honest events-only ledger                                    |
+| `src/sim/xenomimic-tether-purge.ts`  | The tether law's enforcement sweep: legacy-name predicate plus detach-and-dispose destruction of orphan xenomimic line primitives                                                            |
 | `src/world.ts`                       | Composition only: construct the shared zone/visit/visitor systems, supply canonical living populations and clocks, attach sanctuary predicates, and bridge peaceful activity feedback        |
 
 Tree food is not a parallel exception. `CrystalEcosystem.edibleResources` is the shared

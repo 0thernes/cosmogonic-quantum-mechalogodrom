@@ -115,6 +115,9 @@ export interface BigTreeVisitorConfig {
   socialLeaseSeconds?: number;
   socialReachRadius?: number;
   eatingFeedbackSeconds?: number;
+  /** World seed folded into the personality/social/curiosity hashes so dispositions vary per
+   *  cosmos. Default 0 preserves the seed-free legacy hash exactly. */
+  hashSeed?: number;
 }
 
 export type BigTreeVisitorBody = BigTreeOrdinaryBody | BigTreeXenomimicBody;
@@ -256,6 +259,7 @@ export class BigTreeSpeciesVisitors {
   private readonly foodReachRadiusSquared: number;
   private readonly ordinarySpeed: number;
   private readonly xenomimicSpeed: number;
+  private readonly hashSeedValue: number;
   private readonly steeringGain: number;
   private readonly ordinaryRestPerSecond: number;
   private readonly xenomimicRestPerSecond: number;
@@ -387,6 +391,7 @@ export class BigTreeSpeciesVisitors {
     this.foodReachRadiusSquared = foodReachRadius * foodReachRadius;
     this.ordinarySpeed = this.positive(config.ordinarySpeed, 24, 'ordinarySpeed');
     this.xenomimicSpeed = this.positive(config.xenomimicSpeed, 18, 'xenomimicSpeed');
+    this.hashSeedValue = Number.isFinite(config.hashSeed) ? config.hashSeed! >>> 0 : 0;
     this.steeringGain = this.positive(config.steeringGain, 4, 'steeringGain');
     this.ordinaryRestPerSecond = this.positive(
       config.ordinaryRestPerSecond,
@@ -1261,7 +1266,7 @@ export class BigTreeSpeciesVisitors {
   }
 
   private hashUnit(ownerKind: number, ownerId: number, salt: number): number {
-    let hash = (salt ^ Math.imul(ownerKind + 1, 0x85ebca6b)) >>> 0;
+    let hash = (salt ^ this.hashSeedValue ^ Math.imul(ownerKind + 1, 0x85ebca6b)) >>> 0;
     hash = Math.imul(hash ^ ownerId, 0xc2b2ae35) >>> 0;
     hash ^= hash >>> 15;
     hash = Math.imul(hash, 0x2c1b3c6d) >>> 0;

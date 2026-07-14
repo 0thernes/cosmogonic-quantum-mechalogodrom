@@ -22,9 +22,16 @@ import type { Entity, SimContext } from '../types';
 
 /** A roaming body that grazes plants + eats organisms near it (titans / leviathans / puppeteers). */
 export interface DomeFeeder {
-  /** Visit each LIVE member's world position (downed / hidden members are skipped). Allocation-free. */
-  eachFeederPos(cb: (x: number, y: number, z: number) => void): void;
+  /** Visit each LIVE member's world position (downed / hidden members are skipped). Allocation-free.
+   *  Implementations may pass the member's index so a successful meal can be credited back. */
+  eachFeederPos(cb: (x: number, y: number, z: number, memberIndex?: number) => void): void;
+  /** Optional nutrition write-back: a member's dome-feeding meal replenishes its reserve lane
+   *  (normalized 0..1). Systems without a per-member nutrition lane simply omit this. */
+  nourishFromDomeFood?(memberIndex: number, normalizedNutrition: number): boolean;
 }
+
+/** Normalized nutrition one caught organism grants a colossal feeder's reserve lane. */
+const DOME_FOOD_NUTRITION = 0.15;
 
 /** Allocation-free policy gate for predator/prey interactions (for example, authored safe zones). */
 export type DomeFeedingHarmAllowed = (
@@ -68,6 +75,11 @@ export class DomeFeeding {
   private cursor = 0;
   /** Flat feeder positions collected each frame (x,y,z per slot). */
   private readonly feederXYZ = new Float32Array(MAX_FEEDERS * 3);
+  /** Which system + member occupies each feeder slot this frame (meal write-back routing). */
+  private readonly feederRefs: (DomeFeeder | null)[] = new Array<DomeFeeder | null>(
+    MAX_FEEDERS,
+  ).fill(null);
+  private readonly feederMembers = new Int32Array(MAX_FEEDERS).fill(-1);
   private readonly respawns: { at: number; mi: number }[] = [];
   private respawnHead = 0;
   private readonly deathIndices: number[] = [];
@@ -153,7 +165,7 @@ export class DomeFeeding {
       let fc = 0;
       const xyz = this.feederXYZ;
       for (const f of feeders) {
-        f.eachFeederPos((x, y, z) => {
+        f.eachFeederPos((x, y, z, memberIndex) => {
           if (fc >= MAX_FEEDERS) return;
           // A denied attacker is neutral here: no competitive grazing and no attack origin is recorded.
           if (harmAllowed !== undefined && !harmAllowed(x, z, x, z)) return;
@@ -161,6 +173,10 @@ export class DomeFeeding {
           xyz[o] = x;
           xyz[o + 1] = y;
           xyz[o + 2] = z;
+          // Remember WHO occupies this slot so a successful meal can replenish that member's
+          // nutrition lane (leviathans decay without it; titans/puppeteers simply have no hook).
+          this.feederRefs[fc] = f;
+          this.feederMembers[fc] = memberIndex ?? -1;
           fc++;
           graze(x, z, GRAZE_PRESSURE, dt);
         });
@@ -189,6 +205,11 @@ export class DomeFeeding {
               this.deathIndices.push(i);
               this.respawns.push({ at: t + RESPAWN_DELAY, mi });
               this.eaten++;
+              // Credit the meal to the member that caught it (closes the leviathan nutrition loop:
+              // decay is real, so its replenishment must be too).
+              const member = this.feederMembers[g] ?? -1;
+              if (member >= 0)
+                this.feederRefs[g]?.nourishFromDomeFood?.(member, DOME_FOOD_NUTRITION);
               break; // this organism is gone — stop checking feeders
             }
           }

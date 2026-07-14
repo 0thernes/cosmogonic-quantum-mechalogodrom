@@ -157,6 +157,9 @@ export interface BigTreeVisitConfig {
   stuckAfterSeconds?: number;
   progressEpsilon?: number;
   maxStuckRecoveries?: number;
+  /** World seed folded into the per-actor dwell/cooldown/threshold hashes so visit rhythms vary
+   *  per cosmos. Default 0 preserves the seed-free legacy hash exactly. */
+  hashSeed?: number;
 }
 
 export interface BigTreeVisitView {
@@ -287,6 +290,7 @@ export class BigTreeVisitManager {
   private readonly maxCooldownSeconds: number;
   private readonly travelTimeoutSeconds: number;
   private readonly leaveTimeoutSeconds: number;
+  private readonly hashSeedValue: number;
 
   /** Authored travel deadline; adapters use it to reject visits the traveller cannot reach in time. */
   get travelTimeout(): number {
@@ -378,6 +382,7 @@ export class BigTreeVisitManager {
       'maxCooldownSeconds',
     );
     this.travelTimeoutSeconds = this.positive(config.travelTimeoutSeconds, 45);
+    this.hashSeedValue = Number.isFinite(config.hashSeed) ? config.hashSeed! >>> 0 : 0;
     this.leaveTimeoutSeconds = this.positive(config.leaveTimeoutSeconds, 20);
     this.slotLeaseSeconds = this.positive(config.slotLeaseSeconds, 6);
     this.stuckAfterSeconds = this.positive(config.stuckAfterSeconds, 4);
@@ -1447,7 +1452,7 @@ export class BigTreeVisitManager {
     maximum: number,
   ): number {
     if (maximum <= minimum) return minimum;
-    let hash = (salt ^ Math.imul(ownerKind + 1, 0x85ebca6b)) >>> 0;
+    let hash = (salt ^ this.hashSeedValue ^ Math.imul(ownerKind + 1, 0x85ebca6b)) >>> 0;
     hash = Math.imul(hash ^ ownerId, 0xc2b2ae35) >>> 0;
     hash = Math.imul(hash ^ ordinal, 0x27d4eb2d) >>> 0;
     hash ^= hash >>> 15;

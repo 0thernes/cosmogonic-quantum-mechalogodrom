@@ -389,6 +389,24 @@ Bun 1.3.11 x64-win32, Intel Core Ultra 9 275HX (~3.45 GHz). Port of tsotchke/Esh
 
 Reproduce: `bun bench/eshkol-ad.bench.ts`.
 
+## Crystal/Big Tree ecosystem (2026-07-14)
+
+Bun 1.3.14 x64-win32, Intel Core Ultra 9 275HX (~3.45 GHz). One full production-census
+`CrystalEcosystem.update()`: ~30k instanced canopy sync, the 20k-item edible-resource clock,
+250 neural residents (6-6-4 TinyMLP inference + state machines + food transactions), 99 ambient
+fauna, and resident social pairing with peer teaching.
+
+| Benchmark                                             | median  | Notes                           |
+| ----------------------------------------------------- | ------- | ------------------------------- |
+| `CrystalEcosystem.update` (full census, steady state) | 0.77 ms | p90 1.29 ms over 60 warm frames |
+
+**Finding:** the complete Big Tree ecology costs under 5% of a 16.67 ms frame at the production
+census, dominated by the instanced canopy sync rather than the neural or food logic. The matching
+regression guard (`tests/crystal-ecosystem-perf.test.ts`) holds a generous 20 ms median ceiling
+(~26x slack) so a structural regression fails loudly without CI flake.
+
+Reproduce: `bun bench/crystal-ecosystem.bench.ts`.
+
 ## Interpretation
 
 The entire deterministic core (grid rebuild + a frame's worth of neighbor

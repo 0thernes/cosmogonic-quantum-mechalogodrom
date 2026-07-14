@@ -391,8 +391,15 @@ export class BigTreeFaunaVisitors {
     this.lastPollCount = 0;
     if (now < this.nextPollAt || this.bindings.length === 0) return;
     this.nextPollAt = now + this.pollIntervalSeconds;
+    // A poll tick never needs more calls than there are addressable actors — without this cap a
+    // tick over mostly one-member sources (the apexes) re-polls the same bodies to burn the budget.
+    let addressable = 0;
+    for (const binding of this.bindings) {
+      addressable += Math.max(0, binding.source.bigTreeActorCount);
+    }
+    const budget = Math.min(this.pollBudget, addressable);
     let emptyBindings = 0;
-    while (this.lastPollCount < this.pollBudget && emptyBindings < this.bindings.length) {
+    while (this.lastPollCount < budget && emptyBindings < this.bindings.length) {
       const bindingIndex = this.bindingCursor % this.bindings.length;
       this.bindingCursor = (bindingIndex + 1) % this.bindings.length;
       const binding = this.bindings[bindingIndex]!;

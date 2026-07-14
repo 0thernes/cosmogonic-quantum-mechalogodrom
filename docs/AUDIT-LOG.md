@@ -11,6 +11,47 @@ changed and why.
 
 ---
 
+## 2026-07-14 — Dome ecology round 2: real peer teaching, resident social, fauna-commit audit fixes, measured perf receipts
+
+Continuation of the dome-ecology directive after the parallel lane landed `7eafdd48` (all-fauna
+tree visits) on the round-1 base. One targeted audit of that commit (verdict SOLID; 1 major +
+minors) plus the items round 1 deferred honestly:
+
+- **Peer teaching is now a real knowledge-transfer system** (`src/sim/tree-creature-teaching.ts`):
+  when two same-species residents socialize (no visitors present), the strictly better forager —
+  measured by its `mealsEaten` record, counted only at the canonical `completeConsumption` site —
+  blends the learner's LIVE 70-parameter policy toward its own (8% per lesson) through the
+  validated brain weight surface. All-or-nothing finiteness (a corrupt vector is never
+  half-learned — caught by the test battery before ship), competence-gap + per-learner cooldown
+  gates, deterministic (zero rng), and the ledger records only transfers that actually moved
+  weights. Surfaced via `neuralStatus()` + the `big-tree-ecology` audit record.
+- **Resident↔resident social** no longer requires visitor presence: SOCIAL residents pair with the
+  nearest willing same-species partner (bounded 25-creature block scan), meet at the pair midpoint
+  for one bounded episode, and release the pairing on every state change.
+- **Fauna-commit audit fixes:** closed the dead leviathan nutrition loop (its reserve decayed but
+  dome-feeding meals never replenished it — `DomeFeeding` now credits each catch back to the exact
+  member via the optional `nourishFromDomeFood` hook, behaviorally tested); gave the puppeteer
+  metabolic reserve a real downstream consequence (a starving hand meddles at ~half cadence);
+  capped the fauna poll budget by addressable actors (no more burning 32 calls re-polling the same
+  apex); tightened the `writeBigTreeActor` contract docs (aggression suppression rides
+  `setBigTreeActorControlled`, never the write path).
+- **Seed-folded visit hashes:** dwell/cooldown/threshold and personality/social/curiosity hashes
+  now fold the cosmos seed (default 0 preserves every legacy pin byte-for-byte), so visit rhythms
+  differ per seed instead of being universal constants.
+- **Tether purge is behaviorally tested:** the sweep moved to `src/sim/xenomimic-tether-purge.ts`;
+  planted legacy LineSegments/Line/LineLoop (including a material-array case) are removed AND
+  dispose their GPU resources, live instanced bodies survive, and the world delegates.
+- **World harm predicate** routes through `BigTreeZone.harmAllowedAt` — the policy lives in one
+  place and the zone API is no longer test-only.
+- **Measured perf receipts:** `bench/crystal-ecosystem.bench.ts` (full census ≈ 0.77 ms median,
+  recorded in BENCHMARKS) + a coverage-aware 20 ms median regression guard
+  (`tests/crystal-ecosystem-perf.test.ts`).
+
+Deferred, honestly: apex nutrition still has no downstream read outside visit utility (the
+leviathan/puppeteer/titan lanes now all do); fauna capacity fairness (shared 72-slot pool) is
+telemetry-observable but has no per-kind quota yet; the fauna-source integration test file remains
+string-pin based (its companion behavioral suite covers the real transactions).
+
 ## 2026-07-14 — Dome ecology ship: Big Tree food/sanctuary/visits + xenomorph tether closure + spec audit fix-pass
 
 Owner directive (FULL-REPOSITORY-AUDIT-PROMPT «DOME ECOLOGY, XENOMORPH, AND BIG TREE BEHAVIOR»):

@@ -41,6 +41,7 @@ import {
   type TreeCreatureFallbackReason,
   type TreeCreaturePercept,
 } from './tree-creature-brain';
+import { TreeCreatureTeaching, type TreeTeachingStatus } from './tree-creature-teaching';
 export { CRYSTAL_TREE_ORIGIN_X, CRYSTAL_TREE_ORIGIN_Z } from './constants';
 
 // The source's highest bonsai tips reach 1.02× its nominal trunk height. At the platform floor this
@@ -324,6 +325,12 @@ export interface CrystalTreeNeuralStatus {
   readonly visitorCount: number;
   readonly visitorPresence: number;
   readonly visitorSocialActivity: number;
+  /** Peer policy transfers that actually moved learner weights (never counts no-op "lessons"). */
+  readonly teachingEvents: number;
+  readonly lastTeachingTeacher: number;
+  readonly lastTeachingLearner: number;
+  readonly lastTeachingAt: number;
+  readonly lastTeachingWeightDelta: number;
 }
 
 export interface CrystalInteraction {
@@ -1055,6 +1062,10 @@ interface TreeCreature {
   neuralSpeed: number;
   neuralActivity: TreeCreatureActivity;
   interference: number;
+  /** Completed tree-food meals — the measured foraging competence that gates peer teaching. */
+  mealsEaten: number;
+  /** Current resident social partner (creature index) or -1; cleared on every state change. */
+  socialPartner: number;
 }
 
 interface AmbientCreature {
@@ -1133,6 +1144,8 @@ export class CrystalEcosystem {
   private readonly routes: readonly Float32Array[];
   private readonly creatures: TreeCreature[] = [];
   private readonly treeBrains: TreeCreatureBrain[] = [];
+  /** Peer policy-transfer arbiter (constructed once the resident population size is known). */
+  private treeTeaching!: TreeCreatureTeaching;
   private readonly treeBrainActions: TreeCreatureAction[] = [];
   private readonly treeBrainReady: Uint8Array;
   private readonly brainPercept: TreeCreaturePercept = {
@@ -1379,6 +1392,7 @@ export class CrystalEcosystem {
     this.own(flowerGeometry, flowerMaterial);
 
     this.buildCreatures(scale);
+    this.treeTeaching = new TreeCreatureTeaching(Math.max(1, this.creatures.length));
     this.eyeMesh = this.buildEyes();
     this.buildAmbient(scale);
     const moteTriangles = this.buildMotes(scale);
@@ -1556,6 +1570,8 @@ export class CrystalEcosystem {
           neuralSpeed: 0,
           neuralActivity: TREE_CREATURE_ACTIVITY.REST,
           interference: 0,
+          mealsEaten: 0,
+          socialPartner: -1,
         });
       }
     }
@@ -2167,6 +2183,8 @@ export class CrystalEcosystem {
     scale: number,
   ): void {
     if (creature.targetFoodId >= 0) this.releaseCreatureFood(creature, 2);
+    // Every state change releases the social pairing — partners are per-episode, never permanent.
+    creature.socialPartner = -1;
     creature.stateTimer = 3 + this.rng() * 7;
     const survivalHunger = creature.energy < 45;
     const neuralHunger =
@@ -2196,11 +2214,29 @@ export class CrystalEcosystem {
       creature.stateTimer = 1.5 + this.rng() * 2.5;
       return;
     }
-    if (creature.neuralActivity === TREE_CREATURE_ACTIVITY.SOCIAL && this.visitorPresence > 0) {
-      creature.state = 'orbit';
-      creature.radius += (55 * scale - creature.radius) * 0.2;
-      creature.stateTimer = 2 + this.rng() * 4;
-      return;
+    if (creature.neuralActivity === TREE_CREATURE_ACTIVITY.SOCIAL) {
+      if (this.visitorPresence > 0) {
+        // Visitors present: gather on the welcome ring (the outward-facing social behavior).
+        creature.state = 'orbit';
+        creature.radius += (55 * scale - creature.radius) * 0.2;
+        creature.stateTimer = 2 + this.rng() * 4;
+        return;
+      }
+      // No visitors: residents socialize WITH EACH OTHER — a willing same-species partner that is
+      // itself in the SOCIAL activity, within reach. The pair meets at its midpoint for one bounded
+      // episode, and the measurably better forager teaches (real bounded policy transfer).
+      const partner = this.findResidentSocialPartner(creature, scale);
+      if (partner) {
+        creature.state = 'swarm';
+        creature.targetX = (creature.x + partner.x) * 0.5;
+        creature.targetY = (creature.y + partner.y) * 0.5;
+        creature.targetZ = (creature.z + partner.z) * 0.5;
+        creature.stateTimer = 2 + this.rng() * 3;
+        creature.socialPartner = partner.index;
+        this.attemptResidentTeaching(creature, partner);
+        return;
+      }
+      // No willing partner right now — fall through to the species default and retry later.
     }
     if (hasQuantum(creature.quantumMask, 'phaseShift') && Math.sin(creature.phase) > 0.3) {
       creature.state = species.behavior === 'climb' ? 'orbit' : 'climb';
@@ -2222,6 +2258,53 @@ export class CrystalEcosystem {
     creature.targetX = (this.rng() - 0.5) * 90 * scale;
     creature.targetY = (45 + this.rng() * 175) * scale;
     creature.targetZ = (this.rng() - 0.5) * 90 * scale;
+  }
+
+  /**
+   * Nearest willing same-species partner for a resident social episode: another creature currently
+   * in the SOCIAL neural activity within the resident social radius. Bounded to the species block
+   * (25 creatures), allocation-free, draws no randomness.
+   */
+  private findResidentSocialPartner(creature: TreeCreature, scale: number): TreeCreature | null {
+    const start = creature.species * this.config.creaturesPerSpecies;
+    const end = start + this.config.creaturesPerSpecies;
+    const reachSq = (26 * scale) ** 2;
+    let nearest: TreeCreature | null = null;
+    let nearestD2 = Infinity;
+    for (let index = start; index < end; index++) {
+      const other = this.creatures[index];
+      if (!other || other.index === creature.index) continue;
+      if (other.neuralActivity !== TREE_CREATURE_ACTIVITY.SOCIAL) continue;
+      const dx = other.x - creature.x;
+      const dy = other.y - creature.y;
+      const dz = other.z - creature.z;
+      const d2 = dx * dx + dy * dy + dz * dz;
+      if (d2 <= reachSq && d2 < nearestD2) {
+        nearest = other;
+        nearestD2 = d2;
+      }
+    }
+    return nearest;
+  }
+
+  /**
+   * One social episode may carry one lesson: the strictly more successful forager teaches, blending
+   * the learner's live policy toward its own through the validated brain weight surface. All gates
+   * (meal-competence gap, per-learner cooldown, finiteness) live in {@link TreeCreatureTeaching};
+   * the ledger records only transfers that actually moved weights.
+   */
+  private attemptResidentTeaching(a: TreeCreature, b: TreeCreature): number {
+    const teacher = a.mealsEaten >= b.mealsEaten ? a : b;
+    const learner = teacher === a ? b : a;
+    return this.treeTeaching.attempt(
+      teacher.index,
+      learner.index,
+      this.treeBrains[teacher.index]?.weightsView() ?? null,
+      this.treeBrains[learner.index]?.weightsView() ?? null,
+      teacher.mealsEaten,
+      learner.mealsEaten,
+      this.simTime,
+    );
   }
 
   private stepSeeking(creature: TreeCreature, dt: number, scale: number): void {
@@ -2265,8 +2348,12 @@ export class CrystalEcosystem {
             this.simTime,
           )
         : 0;
-      if (nourishment > 0) creature.energy = Math.min(100, creature.energy + nourishment);
-      else this.edibleResources.cancel(resource.id, creature.targetFoodGeneration, ownerId);
+      if (nourishment > 0) {
+        creature.energy = Math.min(100, creature.energy + nourishment);
+        // Foraging competence record — the meal count gates peer teaching (teacher must have a
+        // strictly better measured record, not a label).
+        creature.mealsEaten = Math.min(0xffff, creature.mealsEaten + 1);
+      } else this.edibleResources.cancel(resource.id, creature.targetFoodGeneration, ownerId);
       creature.targetFoodId = -1;
       creature.targetFoodGeneration = 0;
       creature.foodCooldownUntil = this.simTime + 3 + this.rng() * 4;
@@ -2336,6 +2423,7 @@ export class CrystalEcosystem {
 
   /** Low-cadence, development-facing proof that the neural path is loaded and executing. */
   neuralStatus(): CrystalTreeNeuralStatus {
+    const teaching = this.treeTeaching.status();
     return {
       controllerCount: this.treeBrains.length,
       inputCount: TREE_CREATURE_BRAIN_INPUTS,
@@ -2354,7 +2442,17 @@ export class CrystalEcosystem {
       visitorCount: this.visitorCount,
       visitorPresence: this.visitorPresence,
       visitorSocialActivity: this.visitorSocialActivity,
+      teachingEvents: teaching.events,
+      lastTeachingTeacher: teaching.lastTeacher,
+      lastTeachingLearner: teaching.lastLearner,
+      lastTeachingAt: teaching.lastAt,
+      lastTeachingWeightDelta: teaching.lastWeightDelta,
     };
+  }
+
+  /** Full peer-teaching ledger (development/audit surface). */
+  teachingStatus(): TreeTeachingStatus {
+    return this.treeTeaching.status();
   }
 
   /** Stable ID for an authored food instance, or null for an invalid index. */

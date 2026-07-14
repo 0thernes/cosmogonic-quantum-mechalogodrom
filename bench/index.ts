@@ -19,6 +19,7 @@ import './eshkol-ad.bench';
 import './quantization.bench';
 import './motion-interpolation.bench';
 import './perceptual-priority.bench';
+import './crystal-ecosystem.bench';
 import { run } from 'mitata';
 
 await run();

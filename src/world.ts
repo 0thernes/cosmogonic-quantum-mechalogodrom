@@ -78,6 +78,7 @@ import { Connectome } from './sim/connectome';
 import { EnvironmentSystem } from './sim/environment';
 import { AlienFlora } from './sim/alien-flora';
 import { BigTreeSlotKind, BigTreeVisitManager, BigTreeZone } from './sim/big-tree-zone';
+import { purgeLegacyXenomimicTethers } from './sim/xenomimic-tether-purge';
 import {
   BigTreeSpeciesVisitors,
   performBigTreeActivity,
@@ -1489,6 +1490,9 @@ export class World {
       stuckAfterSeconds: 8,
       progressEpsilon: 1.5,
       maxStuckRecoveries: 2,
+      // Fold the cosmos seed into dwell/cooldown/threshold hashes: visit rhythms differ per seed
+      // while remaining fully deterministic within one cosmos.
+      hashSeed: (this.persisted.seed ^ 0x51b7ee13) >>> 0,
     });
     this.bigTreeVisits.addRadialSlots(BigTreeSlotKind.Eat, 32, 78, Math.PI / 32);
     this.bigTreeVisits.addRadialSlots(BigTreeSlotKind.Rest, 24, 132, Math.PI / 24);
@@ -1513,6 +1517,7 @@ export class World {
         socialLeaseSeconds: 3,
         socialReachRadius: 68,
         eatingFeedbackSeconds: 0.9,
+        hashSeed: (this.persisted.seed ^ 0x2e8c9f47) >>> 0,
       },
       this.bigTreeActivityCallbacks,
     );
@@ -4162,7 +4167,9 @@ export class World {
     return this.bigTreeZone?.protects(x, z, true) ?? false;
   }
 
-  /** Hostile actions are legal only when neither endpoint is inside the neutral sanctuary. */
+  /** Hostile actions are legal only when neither endpoint is inside the neutral sanctuary. Routed
+   *  through the zone's own both-endpoint predicate (conservative outer hysteresis boundary on
+   *  both sides) so the policy lives in ONE place. */
   private isBigTreeHarmAllowed(
     attackerX: number,
     attackerZ: number,
@@ -4170,7 +4177,7 @@ export class World {
     targetZ: number,
   ): boolean {
     const allowed =
-      !this.isBigTreeProtected(attackerX, attackerZ) && !this.isBigTreeProtected(targetX, targetZ);
+      this.bigTreeZone?.harmAllowedAt(attackerX, attackerZ, true, targetX, targetZ, true) ?? true;
     if (!allowed) this.bigTreeSuppressedHarm++;
     return allowed;
   }
@@ -4395,6 +4402,8 @@ export class World {
         neuralReady: neural.modelReady,
         neuralDecisions: neural.decisions,
         neuralFallbacks: neural.fallbackCount,
+        teachingEvents: neural.teachingEvents,
+        lastTeachingWeightDelta: neural.lastTeachingWeightDelta,
       });
     }
   }
@@ -6202,47 +6211,9 @@ export class World {
    * Xenomimic bipolar bonds are psionic only — never re-create cosmetic cords.
    */
   private purgeOrphanXenomimicTethers(): void {
-    const scene = this.engine.scene;
-    const doomed: THREE.Object3D[] = [];
-    scene.traverse((obj) => {
-      const name = (obj.name || '').toLowerCase();
-      if (!name) return;
-      const looksXeno =
-        name.includes('xeno') || name.includes('mimic') || name.includes('xenomimic');
-      const looksTether =
-        name.includes('connectome') ||
-        name.includes('tether') ||
-        name.includes('causal') ||
-        name.includes('twin') ||
-        name.includes('cord') ||
-        name.includes('bond') ||
-        name.includes('link');
-      const legacyExact =
-        name === 'xenomimiccausalconnectome' ||
-        name === 'xeno-mimic-causal-connectome' ||
-        name === 'xenomimic-connectome' ||
-        name === 'xenoconnectome';
-      if (!(legacyExact || (looksXeno && looksTether))) return;
-      if (
-        obj instanceof THREE.LineSegments ||
-        obj instanceof THREE.Line ||
-        obj instanceof THREE.LineLoop
-      ) {
-        doomed.push(obj);
-      }
-    });
-    for (let i = 0; i < doomed.length; i++) {
-      const obj = doomed[i]!;
-      obj.removeFromParent();
-      const line = obj as THREE.LineSegments;
-      line.geometry?.dispose();
-      const mat = line.material;
-      if (Array.isArray(mat)) {
-        for (let m = 0; m < mat.length; m++) mat[m]?.dispose();
-      } else {
-        mat?.dispose();
-      }
-    }
+    // Delegates to the behaviorally-tested sweep (src/sim/xenomimic-tether-purge.ts) so the
+    // predicate + dispose path are proven against planted legacy lines, not just string-pinned.
+    purgeLegacyXenomimicTethers(this.engine.scene);
   }
 
   private buildActions(): UiActions {

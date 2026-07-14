@@ -97,6 +97,23 @@ function mockFeeder(...positions: [number, number, number][]): DomeFeeder {
   };
 }
 
+/** A feeder with a per-member nutrition lane (the leviathan shape). */
+function nutritionFeeder(...positions: [number, number, number][]): DomeFeeder & {
+  credited: Array<{ member: number; nutrition: number }>;
+} {
+  const credited: Array<{ member: number; nutrition: number }> = [];
+  return {
+    credited,
+    eachFeederPos(cb: (x: number, y: number, z: number, memberIndex?: number) => void): void {
+      positions.forEach(([x, y, z], member) => cb(x, y, z, member));
+    },
+    nourishFromDomeFood(member: number, nutrition: number): boolean {
+      credited.push({ member, nutrition });
+      return true;
+    },
+  };
+}
+
 describe('DomeFeeding', () => {
   test('an organism within reach of a feeder is eaten; one far away is untouched', () => {
     const ctx = makeCtx(1, 50);
@@ -112,6 +129,22 @@ describe('DomeFeeding', () => {
     expect(feeding.stats().pending).toBe(1);
     feeding.update([feeder], entities, noGraze, 6.02, DT); // 1 + 5 → respawns
     expect(entities.list.length).toBe(2);
+    feeding.dispose();
+  });
+
+  test('a meal is credited back to the exact member that caught it (leviathan nutrition loop)', () => {
+    const ctx = makeCtx(3, 50);
+    const entities = new EntityManager(ctx);
+    const feeding = new DomeFeeding(ctx);
+    // Member 0 far away, member 1 at the prey — the credit must route to member 1 only.
+    const feeder = nutritionFeeder([400, 10, 400], [0, 10, 0]);
+    entities.spawn(new THREE.Vector3(0, 10, 0), 0);
+    feeding.update([feeder], entities, noGraze, 1, DT);
+    expect(feeding.eaten).toBe(1);
+    expect(feeder.credited).toEqual([{ member: 1, nutrition: 0.15 }]);
+    // A feeder without the hook (legacy 3-arg callback) is silently skipped — no throw, no credit.
+    const plain = mockFeeder([0, 10, 0]);
+    feeding.update([plain], entities, noGraze, 6.5, DT); // respawned prey may be elsewhere; just no-throw
     feeding.dispose();
   });
 

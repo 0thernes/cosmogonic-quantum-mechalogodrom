@@ -586,10 +586,16 @@ export class PuppetMasterSystem implements PortalCullable, DomeFeeder, BigTreeAc
       if (!protectedHere) pm.ti += dt * 30;
       // Meddle cadence: WEALTH (V19 boldness) × the V25 opportunism HUNT drive — a rich hand over a
       // disordered, target-rich sector that hasn't acted lately strikes soonest; a spent one waits.
+      // The tree-food nutrition lane has a real downstream consequence: a starving hand (reserve→0)
+      // meddles at roughly half cadence until it eats again, so hunger is behavior, not a gauge.
+      const nutritionGain = 0.55 + 0.45 * clamp(pm.metabolicReserve, 0, 1);
       const planningGain = intelligence?.enabled
         ? 0.9 + intelligence.confidence * 0.06 + intelligence.exploration * 0.08
         : 1;
-      if (!protectedHere && pm.ti >= cfg.iv / (boldness * (0.6 + 0.5 * hunt) * planningGain)) {
+      if (
+        !protectedHere &&
+        pm.ti >= cfg.iv / (boldness * (0.6 + 0.5 * hunt) * planningGain * nutritionGain)
+      ) {
         pm.ti = 0;
         pm.satiation = clamp(pm.satiation + PUP_SAT_BUMP, 0, 1); // remember the meddle
         this.act(pm);

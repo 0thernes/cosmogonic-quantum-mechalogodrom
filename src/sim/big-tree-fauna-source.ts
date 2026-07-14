@@ -51,7 +51,9 @@ export interface BigTreeFaunaActor {
   criticalNeed?: boolean;
   /** World-units/second target speed while the shared visitor controller owns locomotion. */
   moveSpeed?: number;
-  /** Writable projection; relationship and faction state are never overwritten. */
+  /** READ-SIDE projection only: production sources report suppression here but do not persist a
+   *  write-back — suppression is owned by `setBigTreeActorControlled` (the `bigTreeControlled`
+   *  flag each kill vector checks). Relationship and faction state are never overwritten. */
   aggressionSuppressed?: boolean;
 }
 
@@ -62,7 +64,8 @@ export interface BigTreeFaunaSource {
   /** Copy actor `index` into caller-owned scratch storage. */
   readBigTreeActor(index: number, out: BigTreeFaunaActor): boolean;
 
-  /** Commit controller-owned velocity, energy, and peaceful-state lanes. */
+  /** Commit controller-owned velocity and energy lanes. Aggression suppression is NOT part of the
+   *  write path — it rides `setBigTreeActorControlled` exclusively. */
   writeBigTreeActor(index: number, actor: Readonly<BigTreeFaunaActor>): boolean;
 
   /** Apply one normalized, exactly-once edible grant through the species' canonical energy state. */
