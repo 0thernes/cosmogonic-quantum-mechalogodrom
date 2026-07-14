@@ -77,7 +77,7 @@ export interface BigTreeFaunaSource {
 
 /** Compatibility names kept local to the fauna bridge while the source systems migrate. */
 export type BigTreeActorAdapter = BigTreeFaunaActor;
-export type BigTreeActorSource = BigTreeFaunaSource;
+export interface BigTreeActorSource {}
 
 export interface BigTreeFaunaSourceBinding {
   readonly ownerKind: BigTreeFaunaOwnerKind;

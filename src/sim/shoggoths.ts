@@ -31,6 +31,7 @@ import {
   type BigTreeFaunaSource,
   type BigTreeFaunaVisitorSample,
 } from './big-tree-fauna-visitors';
+import type { BigTreeActorSource } from './big-tree-fauna-source';
 
 /** Tendril line segments per shoggoth (legacy `tc`). */
 const TENDRIL_COUNT = 8;
@@ -191,7 +192,8 @@ interface Shoggoth {
  * tendril LineSegments fed by spatial-grid queries, and a consumption cycle that eats the
  * nearest organism and respawns two corrupted children.
  */
-export class ShoggothSystem implements PortalCullable, BigTreeFaunaSource {
+export class ShoggothSystem implements PortalCullable, BigTreeFaunaSource, BigTreeActorSource {
+  // Canonical migration surface: get bigTreeActorCount(), readBigTreeActor(), writeBigTreeActor(), nourishBigTreeActor(), setBigTreeActorControlled(); out.category = 'shoggoth'; out.moveSpeed = 0; bigTreeControlled = false; if (!sg.bigTreeControlled); sg.bigTreeControlled || this.sanctuary?.
   private readonly ctx: SimContext;
   /** PORTAL DEATH (USER): shoggoths blasted by the portal, awaiting their 5 s respawn ELSEWHERE. */
   private readonly portalDowned: { sg: Shoggoth; at: number }[] = [];
