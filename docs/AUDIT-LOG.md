@@ -82,7 +82,7 @@ paths (structural bounds + GPU budgets are pinned; runtime is deadline-scheduled
 construction); teach/learn as a distinct knowledge-transfer mechanism (Socialize/Observe transfer
 real activation/payoff/shimmer state — nothing more is claimed anywhere).
 
-Suite: 3,167 tests / 0 fail after fix-pass (baseline main was 3,024/0 + 3 coverage-gated). A parallel
+Suite: 3,168 tests / 0 fail after fix-pass (baseline main was 3,024/0 + 3 coverage-gated). A parallel
 session continues evolving fauna visit adapters (`big-tree-fauna-visitors`, sanctuary extraction) in
 its own lane; this entry is the audited green base it lands on.
 
