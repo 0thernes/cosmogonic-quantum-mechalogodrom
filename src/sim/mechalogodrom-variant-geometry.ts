@@ -35,7 +35,7 @@
 
 export const VARIANT_SHELL_COUNT = 10;
 /** Fixed per-shell segment budget: 2 vertices × 3 floats per segment. */
-export const VARIANT_SHELL_MAX_SEGMENTS = 560;
+export const VARIANT_SHELL_MAX_SEGMENTS = 2304;
 export const VARIANT_SHELL_FLOATS = VARIANT_SHELL_MAX_SEGMENTS * 6;
 
 const TAU = Math.PI * 2;
@@ -74,7 +74,7 @@ function clamp01(v: number): number {
 
 /* ────────────────────────────── 0 · MÖBIUS–ESCHER BAND ────────────────────────────── */
 
-const MOBIUS_U = 96;
+const MOBIUS_U = 220;
 const MOBIUS_W = 0.42;
 
 function mobiusPoint(
@@ -227,8 +227,8 @@ export function mobiusHolonomyDot(): number {
 
 /* ─────────────────────────── 1 · POINCARÉ HYPERBOLIC WEB ─────────────────────────── */
 
-const POINCARE_CHORDS = 42;
-const POINCARE_ARC_SEGS = 10;
+const POINCARE_CHORDS = 78;
+const POINCARE_ARC_SEGS = 14;
 
 /** Sample the Poincaré geodesic between boundary angles a and b at parameter s∈[0,1]. */
 export function poincareGeodesicPoint(
@@ -349,8 +349,8 @@ function makePoincareWeb(): VariantShellGeometry {
 
 /* ────────────────────────── 2 · MERCATOR LOXODROME SHELL ────────────────────────── */
 
-const LOXO_CURVES = 7;
-const LOXO_SEGS = 44;
+const LOXO_CURVES = 12;
+const LOXO_SEGS = 88;
 
 /** Loxodrome point at latitude φ for bearing β: lon = tan(β)·(inverse Gudermannian of φ). */
 export function loxodromePoint(
@@ -436,7 +436,7 @@ function makeLoxodromeShell(): VariantShellGeometry {
 
 /* ─────────────────────────── 3 · KAKEYA NEEDLE SWEEP ─────────────────────────── */
 
-const KAKEYA_GHOSTS = 40;
+const KAKEYA_GHOSTS = 440;
 
 /**
  * Needle position for sweep phase s∈[0,1) with J Besicovitch sectors: within sector j the unit
@@ -504,16 +504,22 @@ function makeKakeyaSweep(): VariantShellGeometry {
       const J = 2 + Math.round(6 * clamp01(drive.activity));
       const phase = (t * 0.05 + 0.2 * clamp01(drive.blaze)) % 1;
       let f = 0;
-      for (let g = 0; g < KAKEYA_GHOSTS; g++) {
-        if (f + 6 > VARIANT_SHELL_FLOATS) return f;
-        kakeyaNeedle((((g / KAKEYA_GHOSTS + phase) % 1) + 1) % 1, J, N);
-        const lift = 0.22 * Math.sin((g / KAKEYA_GHOSTS) * TAU + drive.bipolar * 2);
-        out[f++] = N.ax;
-        out[f++] = lift;
-        out[f++] = N.ay;
-        out[f++] = N.bx;
-        out[f++] = -lift;
-        out[f++] = N.by;
+      // TWO interleaved ghost families (quarter-phase apart, lifts mirrored) — the sweep reads as a
+      // dense interfering needle storm instead of a sparse fan, while every needle stays length 1.
+      for (let fam = 0; fam < 2; fam++) {
+        const famPhase = phase + fam * 0.25;
+        const famSign = fam === 0 ? 1 : -1;
+        for (let g = 0; g < KAKEYA_GHOSTS; g++) {
+          if (f + 6 > VARIANT_SHELL_FLOATS) return f;
+          kakeyaNeedle((((g / KAKEYA_GHOSTS + famPhase) % 1) + 1) % 1, J, N);
+          const lift = famSign * 0.22 * Math.sin((g / KAKEYA_GHOSTS) * TAU + drive.bipolar * 2);
+          out[f++] = N.ax;
+          out[f++] = lift;
+          out[f++] = N.ay;
+          out[f++] = N.bx;
+          out[f++] = -lift;
+          out[f++] = N.by;
+        }
       }
       return f;
     },
@@ -529,8 +535,8 @@ function makeKakeyaSweep(): VariantShellGeometry {
 
 /* ────────────────────────── 4 · COLLATZ ORBIT CATHEDRAL ────────────────────────── */
 
-const COLLATZ_SEEDS = 8;
-const COLLATZ_MAX_STEPS = 64;
+const COLLATZ_SEEDS = 22;
+const COLLATZ_MAX_STEPS = 96;
 
 /** Exact 3n+1 stopping time (number of steps to reach 1). Pure integer arithmetic. */
 export function collatzStoppingTime(n: number): number {
@@ -603,8 +609,8 @@ function makeCollatzCathedral(): VariantShellGeometry {
 
 /* ───────────────────────── 5 · HOPF FIBRATION CHANDELIER ───────────────────────── */
 
-const HOPF_FIBERS = 11;
-const HOPF_FIBER_SEGS = 22;
+const HOPF_FIBERS = 30;
+const HOPF_FIBER_SEGS = 34;
 
 /**
  * A point of the Hopf fiber over base (θ,φ) ∈ S² at fiber parameter ψ, stereographically
@@ -744,8 +750,8 @@ function makeHopfChandelier(): VariantShellGeometry {
 
 /* ─────────────────────────── 6 · CLIFFORD TORUS ROTOR ─────────────────────────── */
 
-const CLIFF_U = 18;
-const CLIFF_V = 14;
+const CLIFF_U = 32;
+const CLIFF_V = 24;
 
 /**
  * Clifford torus point (u,v) ↦ (cos u, sin u, cos v, sin v)/√2 ∈ S³ (|p| ≡ 1: the flat,
@@ -845,8 +851,8 @@ function makeCliffordRotor(): VariantShellGeometry {
 
 /* ────────────────────────── 7 · ENNEPER MINIMAL BLOOM ────────────────────────── */
 
-const ENNEPER_RAD = 12;
-const ENNEPER_ANG = 20;
+const ENNEPER_RAD = 24;
+const ENNEPER_ANG = 44;
 
 /** Enneper's minimal surface — the classical Weierstrass–Enneper parametrization. */
 export function enneperPoint(u: number, v: number, out: { x: number; y: number; z: number }): void {
@@ -947,7 +953,7 @@ function makeEnneperBloom(): VariantShellGeometry {
 
 /* ───────────────────────── 8 · AIZAWA STRANGE ATTRACTOR ───────────────────────── */
 
-const AIZAWA_STEPS = 260;
+const AIZAWA_STEPS = 1300;
 const AIZAWA_DT = 0.014;
 
 /** One RK4 step of the Aizawa system (a,b,c,d,e,f) = (0.95,0.7,0.6,3.5,0.25,0.1). */
@@ -1033,8 +1039,8 @@ function makeAizawaAttractor(): VariantShellGeometry {
 
 /* ──────────────────────── 9 · WEIERSTRASS ROUGHNESS BLOOM ──────────────────────── */
 
-const WEIER_RINGS = 12;
-const WEIER_RING_SEGS = 36;
+const WEIER_RINGS = 22;
+const WEIER_RING_SEGS = 72;
 const WEIER_B = 3.1;
 const WEIER_ALPHA = 0.62;
 

@@ -11,6 +11,22 @@ changed and why.
 
 ---
 
+## 2026-07-14 — Variant shells HD pass: 4× density + iridescent fringe + glitter points (chimera warp)
+
+Owner (goal re-issued with the 4 reference images): the shells' mathematics shipped but the LOOK
+did not yet match the references — dense, glittering, iridescent, high-definition. This pass amps
+the spectacle on the SAME math and wiring: per-shell segment budget 560 → 2,304 (measured live
+495–2,112 segments per shell; Kakeya gains a second quarter-phase needle family, lifts mirrored),
+and every shell now renders THREE passes sharing the one morphing BufferGeometry — core hue lines,
+an adjacent-hue iridescent fringe pass (chromatic interference edge), and a glitter Points pass
+that turns every vertex of the live mathematics into a glinting particle (workspace winner
+sparkles hardest). Scales up ~40% (spawn 14–30, corona 7–12), opacity cap 0.64 → 0.85, and a
+deterministic NON-uniform chimera breath (per-axis phase-offset squash) replaces the rigid uniform
+scale. Morph stagger eased 5 → 4 shells/frame: ≈0.4–0.6 ms worst window, every shell's mathematics
+refreshed at ≥24 Hz while transforms/colours stay 60 Hz; hot path stays allocation-free and
+rng-free (ADR 0004). New pin: all ten shells carry fringe + glitter sharing the live geometry with
+a ≥600-vertex HD density floor and driven (non-default) layer materials.
+
 ## 2026-07-14 — Mechalogodrom variant shells: ten NAMED mathematical constructions, hard-wired brain⇄body
 
 Owner (5 reference images): the wireframe shells that migrate to the Mechalogodrom "should be

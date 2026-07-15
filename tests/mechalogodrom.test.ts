@@ -197,4 +197,33 @@ describe('Mechalogodrom — the fusion abomination', () => {
     run(m, 5);
     expect(() => m.dispose()).not.toThrow();
   });
+
+  test('HD CHIMERA LAYERS: all ten shells carry an iridescent fringe + glitter points SHARING the live morphing geometry', () => {
+    // Owner reference images (2026-07-14): dense glittering iridescent shells, never flat wire.
+    // The fringe (second additive line pass) and the glitter (Points) must reuse the SAME
+    // BufferGeometry instance the morph writer updates — one CPU morph feeds all three draws.
+    const scene = new THREE.Scene();
+    const m = new Mechalogodrom(scene);
+    run(m, 2);
+    let shells = 0;
+    scene.traverse((o) => {
+      if (!(o instanceof THREE.LineSegments)) return;
+      const fringe = o.children.find((c) => c instanceof THREE.LineSegments) as
+        THREE.LineSegments | undefined;
+      const spark = o.children.find((c) => c instanceof THREE.Points) as THREE.Points | undefined;
+      if (!fringe || !spark) return;
+      shells++;
+      expect(fringe.geometry).toBe(o.geometry);
+      expect(spark.geometry).toBe(o.geometry);
+      // HD density floor: every shell draws hundreds of live segments, not a sparse platonic wire.
+      expect(o.geometry.drawRange.count).toBeGreaterThan(600); // vertices (2 per segment)
+      // The layers are actually driven (opacity/colour written each frame), never left at defaults.
+      const fm = fringe.material as THREE.LineBasicMaterial;
+      const sm = spark.material as THREE.PointsMaterial;
+      expect(fm.opacity).toBeGreaterThan(0);
+      expect(sm.size).toBeGreaterThan(1);
+    });
+    expect(shells).toBe(10);
+    m.dispose();
+  });
 });

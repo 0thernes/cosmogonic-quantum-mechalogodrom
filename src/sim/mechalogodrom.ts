@@ -29,9 +29,10 @@
  * meshes, so one displacement pass updates both with no per-frame allocation.
  *
  * COMPLEXITY: O(V) per frame for the warp (V = 642 icosa-detail-3 verts) + O(1) transforms for the
- * rings/spikes + O(S) for the variant-shell morphs (S ≤ 5 shells × 560 segments round-robin per
- * frame, each shell refreshed at ≥30 Hz) — a fixed, population-independent cost, so it never scales
- * with the entity count. Allocation-free hot path (module + instance scratch only).
+ * rings/spikes + O(S) for the variant-shell morphs (S ≤ 4 shells × ≤2304 segments round-robin per
+ * frame ≈ 0.4–0.6 ms, each shell's mathematics refreshed at ≥24 Hz) — a fixed,
+ * population-independent cost, so it never scales with the entity count. Allocation-free hot path
+ * (module + instance scratch only).
  *
  * VARIANT SHELLS (2026-07-14, owner directive): the ten shells are NAMED mathematical constructions
  * (Möbius–Escher · Poincaré · Mercator loxodrome · Kakeya · Collatz · Hopf · Clifford torus ·
@@ -110,6 +111,9 @@ interface Variant {
   /** USER #14: each shell owns its OWN line material so all 10 render in their OWN distinct colour
    * (a shared material could only ever show one hue — "multi-color defined lines for readability"). */
   readonly mat: THREE.LineBasicMaterial;
+  /** Chimera layers sharing the SAME morphing geometry: iridescent fringe pass + glitter points. */
+  readonly fringeMat: THREE.LineBasicMaterial;
+  readonly sparkMat: THREE.PointsMaterial;
   /** The shell's mathematical generator (Möbius/Poincaré/loxodrome/Kakeya/Collatz/Hopf/Clifford/
    *  Enneper/Aizawa/Weierstrass — see mechalogodrom-variant-geometry.ts). */
   readonly geo: VariantShellGeometry;
@@ -187,7 +191,7 @@ export class Mechalogodrom {
   private readonly variantGains = new Float32Array(VARIANT_COUNT).fill(1);
   /** Per-variant live measured mathematical invariant — the shells' embodied sense vector. */
   private readonly variantInvariants = new Float32Array(VARIANT_COUNT);
-  /** Round-robin cursor: half the shells morph each frame (fixed cost, all stay live at ≥30 Hz). */
+  /** Round-robin cursor: 4 of the 10 shells morph each frame (fixed cost, all live at ≥24 Hz). */
   private variantMorphCursor = 0;
   /** Combined chaos+apex arousal, recomputed each update; with no apex feed it equals `chaos`. */
   private drive = 0;
@@ -360,16 +364,45 @@ export class Mechalogodrom {
       const seg = new THREE.LineSegments(geo, mat);
       // The generators rewrite vertices every morph; a stale bounding sphere would cull them mid-flight.
       seg.frustumCulled = false;
+      // CHIMERA LAYERS (owner reference images: dense, glittering, iridescent, high-definition).
+      // Both extra passes SHARE the morphing BufferGeometry — zero extra CPU per frame, two extra
+      // draws: an offset-hue fringe (chromatic interference edge) and a glitter-point pass that
+      // turns every vertex of the mathematics into a glinting particle.
+      const fringeMat = new THREE.LineBasicMaterial({
+        color: 0x220044,
+        transparent: true,
+        opacity: 0.16,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      const fringe = new THREE.LineSegments(geo, fringeMat);
+      fringe.frustumCulled = false;
+      fringe.scale.setScalar(1.018);
+      seg.add(fringe);
+      const sparkMat = new THREE.PointsMaterial({
+        color: 0x8844ff,
+        size: 4,
+        sizeAttenuation: true,
+        transparent: true,
+        opacity: 0.5,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      const spark = new THREE.Points(geo, sparkMat);
+      spark.frustumCulled = false;
+      seg.add(spark);
       const th = golden * i;
       const ylift = (1 - (i / (VARIANT_COUNT - 1)) * 2) * 70;
       const ax = Math.cos(th) * RING_R;
       const az = Math.sin(th) * RING_R;
       seg.position.set(ax, ylift, az);
-      seg.scale.setScalar(10 + (i % 5) * 3);
+      seg.scale.setScalar(14 + (i % 5) * 4);
       this.group.add(seg);
       this.variants.push({
         mesh: seg,
         mat,
+        fringeMat,
+        sparkMat,
         geo: shellGeo,
         buf,
         posAttr,
@@ -707,19 +740,21 @@ export class Mechalogodrom {
   /** Migrate + bipolar-oscillate the ten variant shells; melt them into the corona as fusion
    *  completes. Each shell also MORPHS through its own mathematical generator under its sub-brain's
    *  live drive, and its measured invariant is refreshed for the brain's embodied-sense vector —
-   *  staggered round-robin (5 shells/frame) so the cost is fixed while every shell stays live. */
+   *  staggered round-robin (4 shells/frame at the HD density, ≈0.4–0.6 ms worst window) so every
+   *  shell's mathematics refreshes at ≥24 Hz while its transforms/colours stay 60 Hz. */
   private driveVariants(t: number, ease: number): void {
     const st = t * MECHA_EXTERIOR_TIME_SCALE;
-    const half = Math.ceil(this.variants.length / 2);
+    const stride = Math.ceil(this.variants.length / 3);
     const morphStart = this.variantMorphCursor;
-    this.variantMorphCursor = (this.variantMorphCursor + half) % Math.max(1, this.variants.length);
+    this.variantMorphCursor =
+      (this.variantMorphCursor + stride) % Math.max(1, this.variants.length);
     for (let i = 0; i < this.variants.length; i++) {
       const v = this.variants[i];
       if (!v) continue;
       const bip = Math.sin(st * v.freq + v.phase);
       // ── Sub-brain → shell morph (this variant's OWN cognition sculpts its OWN mathematics). ──
       const inWindow =
-        (i - morphStart + this.variants.length) % Math.max(1, this.variants.length) < half;
+        (i - morphStart + this.variants.length) % Math.max(1, this.variants.length) < stride;
       if (inWindow) {
         v.drive.activity = this.variantActivity[i] ?? 0.5;
         v.drive.gain = this.variantGains[i] ?? 1;
@@ -750,8 +785,16 @@ export class Mechalogodrom {
       // workspace this beat. The winning thought's PHYSICAL shell swells + ignites; losers now dim only to
       // the LIVING floor (not out), so the dominant coalition still reads brightest.
       const blaze = this.variantBlaze[i] ?? 0;
-      const baseScale = lerp(10 + (i % 5) * 3, 4 + (i % 3) * 2, k); // shells shrink as they fuse in
-      v.mesh.scale.setScalar(baseScale * (0.6 + 0.8 * manic) * (1 + 0.35 * blaze));
+      const baseScale = lerp(14 + (i % 5) * 4, 7 + (i % 3) * 3, k); // shells shrink as they fuse in
+      // CHIMERA WARP (owner: "distorted morphing mutational chimera fuckery"): the shell breathes
+      // NON-uniformly — each axis rides its own deterministic phase, so the mathematics squashes and
+      // shears as it tumbles instead of scaling like a rigid prop. Pure (st, phase) — no rng.
+      const cs = baseScale * (0.6 + 0.8 * manic) * (1 + 0.5 * blaze);
+      v.mesh.scale.set(
+        cs * (1 + 0.16 * Math.sin(st * 0.9 + v.phase * 2)),
+        cs * (1 - 0.13 * Math.sin(st * 0.7 + v.phase * 3)),
+        cs * (1 + 0.11 * Math.cos(st * 1.1 + v.phase)),
+      );
       v.mesh.rotation.x = st * (0.3 + 0.1 * i) + bip;
       v.mesh.rotation.y = st * (0.2 + 0.07 * i);
       // Hue swings between the two poles; opacity flares with the manic phase and fades as it melts in.
@@ -759,13 +802,25 @@ export class Mechalogodrom {
       // USER #14: keep the lightness low so the additive shell never blows out. ENLIVEN: lift the FLOOR
       // 0.28 → 0.40 (+ a faint breath) so a depressive/losing shell glows alive; blaze still adds the
       // winner's legible edge. Each shell drives its OWN material, so all 10 read as distinct colours.
-      v.mat.color.setHSL(hue, 0.9, 0.4 + 0.07 * manic + 0.05 * breathe + 0.14 * blaze);
+      v.mat.color.setHSL(hue, 0.92, 0.44 + 0.09 * manic + 0.06 * breathe + 0.18 * blaze);
       // ENLIVEN: opacity FLOOR 0.18 → 0.35 with a breathing shimmer, so even a fused-in losing shell is a
       // LIVING wire, never a dead one; manic + blaze still lift the winner (cap raised 0.6 → 0.64).
       v.mat.opacity = Math.min(
-        0.64,
-        (0.35 + 0.12 * manic * (1 - 0.4 * k) + 0.06 * breathe) * (1 + 0.9 * blaze),
+        0.85,
+        (0.42 + 0.14 * manic * (1 - 0.4 * k) + 0.07 * breathe) * (1 + 1.1 * blaze),
       );
+      // Iridescent fringe: an adjacent hue that drifts against the core hue — the two additive line
+      // passes interfere into a chromatic edge (reference images: iridescent chrome, never flat).
+      const fringeHue = (hue + 0.09 + 0.05 * Math.sin(st * 1.3 + v.phase) + 1) % 1;
+      v.fringeMat.color.setHSL(fringeHue, 1, 0.5 + 0.1 * blaze);
+      v.fringeMat.opacity = Math.min(
+        0.5,
+        (0.14 + 0.1 * manic + 0.05 * breathe) * (1 + 1.2 * blaze),
+      );
+      // Glitter: every vertex of the live mathematics glints; the workspace winner sparkles hardest.
+      v.sparkMat.color.setHSL((hue + 0.04) % 1, 0.85, 0.62 + 0.12 * blaze);
+      v.sparkMat.size = 3.5 + 2.6 * blaze + 1.2 * breathe + 0.9 * manic;
+      v.sparkMat.opacity = Math.min(0.85, 0.35 + 0.2 * manic + 0.45 * blaze);
     }
   }
 
@@ -806,8 +861,10 @@ export class Mechalogodrom {
     this.exoCage.geometry.dispose();
     this.satellites.dispose();
     for (const v of this.variants) {
-      v.mesh.geometry.dispose();
+      v.mesh.geometry.dispose(); // shared by lines + fringe + glitter — one dispose frees all three
       v.mat.dispose(); // USER #14: dispose each shell's own line material
+      v.fringeMat.dispose();
+      v.sparkMat.dispose();
     }
     this.coreMat.dispose();
     this.rimMat.dispose();
