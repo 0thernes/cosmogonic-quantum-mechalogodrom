@@ -11,6 +11,26 @@ changed and why.
 
 ---
 
+## 2026-07-14 — Time-scale ×50 rescale + Mechalogodrom suspended-animation idle
+
+Owner: "the 5x speed should be the 0.1x speed for the whole thing … it's too slow", the morphing
+colour panels "cool but too slow", and the first PAUSE click must stay true suspended animation
+("they spin rotate gimble fully axis"). Shipped three couplings:
+(1) `TIME_SCALES` rescaled ×50 → `[0, 5, 10, 25, 50, 100, 150, 250]` — the legacy top (5×) is the
+new floor; boot default 0.25 → 10; `TIME_SCALE_BASELINE = 50` marks the legacy-1× pivot for
+formulas calibrated on the old 0.1–5 domain. Empirically verified in the booted world before
+committing: 250× stays finite and stable (no NaN positions, sane radii; per-frame cost mostly
+70–90 ms in the software-GL pane with occasional event-burst spikes — the sim's defensive clamps
+absorb the large integration steps, and the HUD shows the honest multiplier).
+(2) The Mechalogodrom's manic-churn multiplier renormalizes the slot value by the baseline
+(`tsn = timeScale / 50`), so each slot keeps its authored character while the ×50 speed-up flows
+through the scaled `dt` — this is also what makes the exterior colour panels ~40× faster at boot.
+(3) SUSPENDED ANIMATION: at timeScale 0 the god no longer freezes — the churn formula's ts→0 limit
+(0.3) is the idle rate, so the shells keep spinning/gimbaling/morphing on the pause visual clock
+while FUSION (world progress) freezes; FROZEN (second click) still holds a static tableau. Pinned
+behaviorally (rotation advances + fusion byte-frozen under timeScale 0, resumes on unpause) and
+verified live in the booted world. Ladder pins in wave1-foundations resealed to the new contract.
+
 ## 2026-07-14 — Glitter blow-out fix: constant-pixel star specks (owner screenshot receipt)
 
 Owner screenshot: the shells rendered as giant white chunky blobs — "1980s white digital blobs".

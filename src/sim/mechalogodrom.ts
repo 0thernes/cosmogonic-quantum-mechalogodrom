@@ -43,7 +43,7 @@
  */
 import * as THREE from 'three';
 import { TAU, clamp, lerp } from '../math/scalar';
-import { ARENA_RADIUS, HABITAT_XZ_SCALE, HABITAT_Y_SCALE } from './constants';
+import { ARENA_RADIUS, HABITAT_XZ_SCALE, HABITAT_Y_SCALE, TIME_SCALE_BASELINE } from './constants';
 import { MechaExteriorAbomination } from './creature-exterior-layers';
 import {
   createMechalogodromDarkStarMaterial,
@@ -700,12 +700,19 @@ export class Mechalogodrom {
    * @param t elapsed seconds (s.elapsed) · @param dt clamped frame delta
    */
   update(_t: number, dt: number): void {
-    const scale =
-      this.worldTimeScale > 0 ? MECHA_TIME_SCALE * (0.3 + 0.7 * this.worldTimeScale) : 0;
+    // The churn multiplier was calibrated for the legacy 0.1–5 timeScale domain; the 2026-07-14
+    // ladder rescale (×50) arrives through the scaled `dt` itself, so normalize the slot value back
+    // to that domain to keep each slot's CHARACTER while the ×50 speed-up flows through dt.
+    const tsn = this.worldTimeScale / TIME_SCALE_BASELINE;
+    // SUSPENDED ANIMATION (owner 2026-07-14): at timeScale 0 the god must NOT freeze — like every
+    // other creature it stays alive in place, spinning/gimbaling/morphing on the pause visual clock
+    // (stepSuspended hands us the REAL frame delta). The formula's ts→0 limit (0.3) IS the idle
+    // rate, so pacing is continuous across pause. Only FUSION (world progress) freezes below.
+    const scale = MECHA_TIME_SCALE * (0.3 + 0.7 * tsn);
     this.localT += dt * scale;
     const lt = this.localT;
-    // Freeze fusion when paused; otherwise use already-timeScaled dt.
-    if (scale > 0) this.fusion = clamp(this.fusion + dt / CONVERGE_SECONDS, 0, 1);
+    // Freeze fusion when paused (suspended animation = body alive, world progress halted).
+    if (this.worldTimeScale > 0) this.fusion = clamp(this.fusion + dt / CONVERGE_SECONDS, 0, 1);
     const f = this.fusion;
     const ease = f * f * f * (f * (f * 6 - 15) + 10);
 

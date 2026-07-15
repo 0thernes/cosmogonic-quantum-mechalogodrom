@@ -198,6 +198,48 @@ describe('Mechalogodrom — the fusion abomination', () => {
     expect(() => m.dispose()).not.toThrow();
   });
 
+  test('SUSPENDED ANIMATION: at timeScale 0 the shells keep spinning/gimbaling while FUSION freezes', () => {
+    // Owner 2026-07-14: the first PAUSE click is suspended animation — bodies alive in place. The
+    // god must keep rotating/morphing on the pause visual clock; only world PROGRESS (fusion) halts.
+    const scene = new THREE.Scene();
+    const m = new Mechalogodrom(scene);
+    run(m, 4); // partially fused, shells mid-migration
+    const fusionBefore = m.snapshot().fusion;
+    m.setTimeScale(0); // SUSPENDED — stepSuspended feeds the REAL frame delta
+    // Find a variant shell (a LineSegments parent carrying the chimera children).
+    let shell: THREE.LineSegments | null = null;
+    scene.traverse((o) => {
+      if (
+        o instanceof THREE.LineSegments &&
+        o.children.filter((c) => c instanceof THREE.LineSegments).length >= 3
+      ) {
+        shell ??= o;
+      }
+    });
+    expect(shell).not.toBeNull();
+    const sh = shell as unknown as THREE.LineSegments;
+    const rotBefore = { x: sh.rotation.x, y: sh.rotation.y };
+    const dt = 1 / 60;
+    let t = 4;
+    for (let i = 0; i < 120; i++) {
+      t += dt;
+      m.update(t, dt);
+    }
+    // Body ALIVE: rotation advanced on the visual clock (spin/gimbal — multi-axis).
+    expect(sh.rotation.x).not.toBe(rotBefore.x);
+    expect(sh.rotation.y).not.toBe(rotBefore.y);
+    // World progress HALTED: fusion untouched while suspended.
+    expect(m.snapshot().fusion).toBe(fusionBefore);
+    // Resuming keeps fusion advancing again.
+    m.setTimeScale(50);
+    for (let i = 0; i < 60; i++) {
+      t += dt;
+      m.update(t, dt);
+    }
+    expect(m.snapshot().fusion).toBeGreaterThan(fusionBefore);
+    m.dispose();
+  });
+
   test('HD CHIMERA LAYERS: all ten shells carry fringe + glitter + TWO recursive echoes SHARING the live morphing geometry', () => {
     // Owner reference images (2026-07-14): dense glittering iridescent shells with the recursive
     // mirrored-tunnel read — never flat wire. The fringe, the glitter Points, and the two nested

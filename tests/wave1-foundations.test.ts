@@ -70,14 +70,17 @@ describe('F-CAM5 — motion camera views', () => {
 });
 
 describe('F-TIME — time-dilation steps', () => {
-  test('includes a true pause (0) and realtime (1)', () => {
+  test('includes a true pause (0), the ×50-rescaled floor (5 = the legacy 5× top), and the 250× ceiling', () => {
+    // OWNER RESCALE 2026-07-14: "the 5x speed should be the 0.1x speed — it's too slow." The whole
+    // ladder is the legacy ladder ×50: the old maximum is the new FLOOR.
     expect(TIME_SCALES).toContain(0);
-    expect(TIME_SCALES).toContain(1);
+    expect(TIME_SCALES).toContain(5);
+    expect(TIME_SCALES).toContain(250);
+    expect(Math.max(...TIME_SCALES)).toBe(250);
   });
 
-  test('preserves the legacy 0.2 and 3 scales (existing behaviour/tests unchanged)', () => {
-    expect(TIME_SCALES).toContain(0.2);
-    expect(TIME_SCALES).toContain(3);
+  test('the 1×-feel baseline sits on the ladder (legacy-formula renormalization pivot)', () => {
+    expect(TIME_SCALES).toContain(50);
   });
 
   test('is strictly ascending and all non-negative finite (no divide-by-zero hazard beyond pause)', () => {

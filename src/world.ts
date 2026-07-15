@@ -46,6 +46,7 @@ import {
   RENDER_MODES,
   SPACE_FOVS,
   TIME_SCALES,
+  TIME_SCALE_BASELINE,
   TRACKING_VIEWS,
   ULTRA_GRID_CELL,
   VIEW_MODES,
@@ -508,7 +509,7 @@ export class World {
   private readonly nhiPolicyRng: Rng;
   private readonly nhiEffectRng: Rng;
   private readonly state: SimState;
-  private prePauseTimeScale = 1;
+  private prePauseTimeScale = TIME_SCALE_BASELINE;
   /**
    * USER three-state pause: the ⏸ PAUSE button cycles RUNNING → SUSPENDED (`timeScale===0`, bodies alive
    * in place) → FROZEN (`frozenAll`, the whole world a static tableau) → RUNNING. Only ever true while
@@ -1417,8 +1418,9 @@ export class World {
       chaos: 0.5,
       entropy: 0,
       mutations: 0,
-      // Boot 0.25× + GLOBAL_MOTION_SCALE 0.14 on integrate (owner: still too fast at 0.5×/1×).
-      timeScale: 0.25,
+      // OWNER RESCALE 2026-07-14 ("too slow — old 5× = new 0.1× floor"): boot at ladder slot 10
+      // (the old ~0.2×-slot feel ×50). GLOBAL_MOTION_SCALE 0.14 stays as the travel calibration.
+      timeScale: 10,
       renderMode: cyc(RENDER_MODES, this.persisted.renderIdx ?? 0),
       brutalism: false, // BRUTALISM: session-only Super Creature concrete-monolith mode (B hotkey)
       sim: this.persisted.sim === 2 ? 2 : 1,
@@ -6957,12 +6959,13 @@ export class World {
       },
       cycleTimeScale: () => {
         this.unlock();
-        // Step through TIME_SCALES (F-TIME): 0 (pause) · 0.1 · 0.2 · 0.5 · 1 · 2 · 3 · 5.
+        // Step through TIME_SCALES (F-TIME): 0 (pause) · 5 · 10 · 25 · 50 · 100 · 150 · 250.
         const scales = TIME_SCALES as readonly number[];
         const i = scales.indexOf(s.timeScale);
-        // A value not in the table (e.g. a legacy persisted scale) resumes at realtime.
-        s.timeScale = i < 0 ? 1 : (scales[(i + 1) % scales.length] ?? 1);
-        this.prePauseTimeScale = s.timeScale === 0 ? 1 : s.timeScale;
+        // A value not in the table (e.g. a legacy persisted scale) resumes at the 1×-feel baseline.
+        s.timeScale =
+          i < 0 ? TIME_SCALE_BASELINE : (scales[(i + 1) % scales.length] ?? TIME_SCALE_BASELINE);
+        this.prePauseTimeScale = s.timeScale === 0 ? TIME_SCALE_BASELINE : s.timeScale;
         // Stepping the time scale to 0 means SUSPENDED (bodies alive in place), never FROZEN — the total
         // freeze is reachable only via the PAUSE button's 2nd click, so clear the flag here.
         this.frozenAll = false;
@@ -6988,7 +6991,7 @@ export class World {
         } else {
           // FROZEN → RUNNING
           this.frozenAll = false;
-          s.timeScale = this.prePauseTimeScale || 1;
+          s.timeScale = this.prePauseTimeScale || TIME_SCALE_BASELINE;
           label = 'RESUME · ' + s.timeScale + '×';
         }
         this.hud.showSector(label);
