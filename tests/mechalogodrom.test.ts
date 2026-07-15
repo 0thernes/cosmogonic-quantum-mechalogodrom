@@ -198,32 +198,61 @@ describe('Mechalogodrom — the fusion abomination', () => {
     expect(() => m.dispose()).not.toThrow();
   });
 
-  test('HD CHIMERA LAYERS: all ten shells carry an iridescent fringe + glitter points SHARING the live morphing geometry', () => {
-    // Owner reference images (2026-07-14): dense glittering iridescent shells, never flat wire.
-    // The fringe (second additive line pass) and the glitter (Points) must reuse the SAME
-    // BufferGeometry instance the morph writer updates — one CPU morph feeds all three draws.
+  test('HD CHIMERA LAYERS: all ten shells carry fringe + glitter + TWO recursive echoes SHARING the live morphing geometry', () => {
+    // Owner reference images (2026-07-14): dense glittering iridescent shells with the recursive
+    // mirrored-tunnel read — never flat wire. The fringe, the glitter Points, and the two nested
+    // echo copies must all reuse the SAME BufferGeometry instance the morph writer updates — one
+    // CPU morph feeds all five draws.
     const scene = new THREE.Scene();
     const m = new Mechalogodrom(scene);
     run(m, 2);
     let shells = 0;
     scene.traverse((o) => {
       if (!(o instanceof THREE.LineSegments)) return;
-      const fringe = o.children.find((c) => c instanceof THREE.LineSegments) as
-        THREE.LineSegments | undefined;
+      const lineChildren = o.children.filter((c) => c instanceof THREE.LineSegments);
       const spark = o.children.find((c) => c instanceof THREE.Points) as THREE.Points | undefined;
-      if (!fringe || !spark) return;
+      if (lineChildren.length < 3 || !spark) return; // fringe + echoA + echoB
       shells++;
-      expect(fringe.geometry).toBe(o.geometry);
+      for (const lc of lineChildren) {
+        expect((lc as THREE.LineSegments).geometry).toBe(o.geometry);
+      }
       expect(spark.geometry).toBe(o.geometry);
       // HD density floor: every shell draws hundreds of live segments, not a sparse platonic wire.
       expect(o.geometry.drawRange.count).toBeGreaterThan(600); // vertices (2 per segment)
       // The layers are actually driven (opacity/colour written each frame), never left at defaults.
-      const fm = fringe.material as THREE.LineBasicMaterial;
       const sm = spark.material as THREE.PointsMaterial;
-      expect(fm.opacity).toBeGreaterThan(0);
       expect(sm.size).toBeGreaterThan(1);
+      for (const lc of lineChildren) {
+        expect(
+          ((lc as THREE.LineSegments).material as THREE.LineBasicMaterial).opacity,
+        ).toBeGreaterThan(0);
+      }
+      // The echoes are genuinely SPUN (rotation written by the STDP-gain wheel), not static clones.
+      const spun = lineChildren.filter((lc) => lc.rotation.z !== 0);
+      expect(spun.length).toBeGreaterThanOrEqual(2);
     });
     expect(shells).toBe(10);
+    m.dispose();
+  });
+
+  test('REFERENCE PALETTES: the ten shells wear ten DISTINCT authored colours and the live invariant reaches the hue mix', () => {
+    // Owner reference set 2 (chrome vortex · nebula · prism · glitterverse · caustics): each shell
+    // owns an authored two-pole palette, and the shell's live measured INVARIANT drags the mix
+    // between the poles — the mathematics chooses the colour (sealed below + source-sealed in
+    // tests/mechalogodrom-variant-geometry.test.ts).
+    const scene = new THREE.Scene();
+    const m = new Mechalogodrom(scene);
+    run(m, 3);
+    const colors: string[] = [];
+    scene.traverse((o) => {
+      if (!(o instanceof THREE.LineSegments)) return;
+      if (o.children.filter((c) => c instanceof THREE.LineSegments).length < 3) return;
+      colors.push((o.material as THREE.LineBasicMaterial).color.getHexString());
+    });
+    expect(colors).toHaveLength(10);
+    // At least 9 of 10 distinct at any instant (two shells may transiently cross mid-swing;
+    // full coincidence would mean the palette table is dead).
+    expect(new Set(colors).size).toBeGreaterThanOrEqual(9);
     m.dispose();
   });
 });

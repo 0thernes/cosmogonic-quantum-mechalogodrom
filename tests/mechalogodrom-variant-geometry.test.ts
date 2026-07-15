@@ -298,6 +298,14 @@ describe('brain⇄body wiring (the shells are hard-wired into the neural network
     expect(mecha).toContain('createVariantShellGeometries()');
     expect(mecha).toContain('v.geo.write(v.buf, st, v.drive)');
     expect(mecha).toContain('this.variantInvariants[i] = v.geo.invariant(st, v.drive)');
+    // Reference-skin coupling seals: the live invariant reaches the palette hue mix, and the
+    // STDP-learned gain turns the recursive echo wheels — colour/recursion are wired, not vibes.
+    expect(mecha).toContain('const inv = this.variantInvariants[i] ?? 0.5;');
+    expect(mecha).toContain('const mix = clamp(0.5 * manic + 0.5 * inv, 0, 1);');
+    expect(mecha).toContain('const hue = lerp(v.hueA, v.hueB, mix);');
+    expect(mecha).toMatch(
+      /gainNorm = clamp\(\(\(this\.variantGains\[i\] \?\? 1\) - 0\.25\) \/ 2\.25/,
+    );
     const brain = await Bun.file(
       new URL('../src/sim/mechalogodrom-brain.ts', import.meta.url),
     ).text();

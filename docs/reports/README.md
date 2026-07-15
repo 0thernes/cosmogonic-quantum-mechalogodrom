@@ -5,7 +5,7 @@
 Technical reports and audits for Cosmogonic Quantum Mechalogodrom. Dated filenames (`2026-*`) are
 **historical worldline snapshots** when present — they preserve evidence from their authoring pass.
 **Current published** gate receipts: [VERIFICATION-ANALYTICAL-DATA.md](../VERIFICATION-ANALYTICAL-DATA.md) §1 ·
-`scripts/canonical-receipts.ts` (v0.23.0 · **3,298-test floor** · **84.64 % / 82.21 %** coverage).
+`scripts/canonical-receipts.ts` (v0.23.0 · **3,299-test floor** · **84.64 % / 82.21 %** coverage).
 Latest final-tree Windows receipt: **3,297 completed cases, zero failures, 3,589,864 expect() calls,
 93.60% line coverage, and 91.61% function coverage across 366 test files**. The lower portable floor
 remains the cross-platform public guarantee; `scripts/canonical-receipts.ts` is the live authority.
@@ -24,7 +24,7 @@ two-meal competence lead, subject to a 25-second per-learner simulation-time coo
 all-or-nothing deterministic checks. Neither establishes cross-species learning, general intelligence,
 consciousness, or sentience. The fauna social matcher uses O(A) adapter reads followed by bounded numeric
 O(A²), with A ≤ 72, and food matrix changes upload one 16-float instance range each. Focused automated
-tests, the measured merged 3,298-test canonical floor, a 117-artifact v0.23.0 production build, and one atomic
+tests, the measured merged 3,299-test canonical floor, a 117-artifact v0.23.0 production build, and one atomic
 phone-plus-desktop natural-rAF/canvas-isolated smoke are green. Prior behavior baseline `0ce2f7eb` also
 passed CI, CodeQL, post-build smoke, exact-SHA Pages deployment, and an independent public-URL browser
 probe with HTTP 200 main/worker assets, a booted canvas, and zero console/page/network failures. The final

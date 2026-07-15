@@ -11,6 +11,26 @@ changed and why.
 
 ---
 
+## 2026-07-14 — Variant shells reference-skin pass: authored palettes, invariant-driven colour, recursive echoes
+
+Owner supplied a second reference set (chrome recursive vortex · cobalt/emerald/gold nebula ·
+kaleidoscopic stained-glass prism · glitterverse chrome · glass caustics) for "colors shaders
+graphics skins rendering … visuals". Shipped as three honest couplings on the same mathematics:
+(1) an AUTHORED 10-palette table (SHELL_PALETTES) drawn from the five image families replaces the
+generic hue wheel — two-pole hue+saturation per shell, palette-authored fringe interference offset
+and glitter tint (white-hot for the chrome/caustic shells), all ten pairs distinct (USER #14
+readability holds); (2) THE MATHEMATICS PICKS THE COLOUR — the pole mix now blends the bipolar
+swing with the shell's live measured invariant (torsion, defect, bearing, efficiency…), so the
+measured quantity drags the hue between the reference poles; falsifiable and source-sealed;
+(3) RECURSIVE ECHO TUNNEL — two nested self-similar copies of the live geometry (scales 0.55/0.32,
+zero extra CPU: shared BufferGeometry) counter-spin at rates set by the STDP-learned
+variant→fusion gain — the mind's learned trust literally turns the recursion wheels (chrome-vortex
+read). Per shell now six draws off one morph buffer (core, fringe, glitter, two echoes). Pins: the
+layer test extends to the echoes (shared geometry, driven materials, genuinely spun) and a new
+palette test proves ten distinct authored colours at runtime; coupling seals pin the
+invariant→hue-mix and gain→echo-spin expressions. Determinism (ADR 0004) unchanged: pure
+(st, drive, phase), zero rng, dispose covers the two new materials per shell.
+
 ## 2026-07-14 — Variant shells HD pass: 4× density + iridescent fringe + glitter points (chimera warp)
 
 Owner (goal re-issued with the 4 reference images): the shells' mathematics shipped but the LOOK

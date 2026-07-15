@@ -103,6 +103,136 @@ export interface MechalogodromSnapshot {
   readonly fused: boolean;
 }
 
+/** REFERENCE PALETTES (owner 2026-07-14, five reference images): chrome recursive vortex ·
+ *  cobalt/emerald/gold nebula · kaleidoscopic stained-glass prism · glitterverse chrome ·
+ *  glass caustics. Each shell owns an authored two-pole palette from one of the five families —
+ *  dark-base + bright-rim discipline, never flat TRON — and its live measured INVARIANT picks the
+ *  mix between the poles (the mathematics chooses the colour; falsifiable, not time-noise). */
+interface ShellPalette {
+  readonly hueA: number;
+  readonly satA: number;
+  readonly hueB: number;
+  readonly satB: number;
+  /** Fringe hue offset from the live core hue (the iridescent interference edge). */
+  readonly fringeOff: number;
+  readonly fringeSat: number;
+  readonly glitterHue: number;
+  readonly glitterSat: number;
+}
+
+const SHELL_PALETTES: readonly ShellPalette[] = [
+  // 0 Möbius — CHROME VORTEX: champagne ↔ gunmetal steel, near-white glitter (ref 1).
+  {
+    hueA: 0.09,
+    satA: 0.38,
+    hueB: 0.58,
+    satB: 0.24,
+    fringeOff: 0.5,
+    fringeSat: 0.55,
+    glitterHue: 0.12,
+    glitterSat: 0.08,
+  },
+  // 1 Poincaré — PRISM: teal ↔ magenta stained-glass panes, gold wire fringe (ref 3).
+  {
+    hueA: 0.47,
+    satA: 0.95,
+    hueB: 0.87,
+    satB: 0.92,
+    fringeOff: 0.28,
+    fringeSat: 1,
+    glitterHue: 0.12,
+    glitterSat: 0.55,
+  },
+  // 2 Loxodrome — NEBULA: cobalt ↔ emerald marbled flow, gold filament fringe (ref 2).
+  {
+    hueA: 0.65,
+    satA: 0.95,
+    hueB: 0.38,
+    satB: 0.95,
+    fringeOff: -0.5,
+    fringeSat: 0.95,
+    glitterHue: 0.13,
+    glitterSat: 0.4,
+  },
+  // 3 Kakeya — CAUSTIC: silver light-dapple, almost achromatic, pure white glitter (ref 5).
+  {
+    hueA: 0.58,
+    satA: 0.08,
+    hueB: 0.55,
+    satB: 0.16,
+    fringeOff: 0.03,
+    fringeSat: 0.2,
+    glitterHue: 0.6,
+    glitterSat: 0.02,
+  },
+  // 4 Collatz — BRASS TUNNEL: brass ↔ copper recursive corridor warmth (ref 1 warm face).
+  {
+    hueA: 0.1,
+    satA: 0.85,
+    hueB: 0.05,
+    satB: 0.75,
+    fringeOff: 0.46,
+    fringeSat: 0.5,
+    glitterHue: 0.11,
+    glitterSat: 0.3,
+  },
+  // 5 Hopf — PRISM B: violet ↔ orange kaleidoscope wedge, gold wire (ref 3).
+  {
+    hueA: 0.75,
+    satA: 0.95,
+    hueB: 0.07,
+    satB: 0.95,
+    fringeOff: 0.35,
+    fringeSat: 1,
+    glitterHue: 0.12,
+    glitterSat: 0.5,
+  },
+  // 6 Clifford — GLITTERVERSE: steel-cyan ↔ amber streak-light chrome, icy glitter (ref 4).
+  {
+    hueA: 0.55,
+    satA: 0.78,
+    hueB: 0.1,
+    satB: 0.85,
+    fringeOff: 0.5,
+    fringeSat: 0.7,
+    glitterHue: 0.55,
+    glitterSat: 0.15,
+  },
+  // 7 Enneper — NEBULA B: emerald ↔ gold vein bloom (ref 2).
+  {
+    hueA: 0.36,
+    satA: 0.95,
+    hueB: 0.13,
+    satB: 0.9,
+    fringeOff: 0.3,
+    fringeSat: 0.9,
+    glitterHue: 0.35,
+    glitterSat: 0.35,
+  },
+  // 8 Aizawa — NEBULA C: deep cobalt ↔ aqua storm-cloud attractor (ref 2 blue wall).
+  {
+    hueA: 0.62,
+    satA: 0.92,
+    hueB: 0.5,
+    satB: 0.88,
+    fringeOff: -0.48,
+    fringeSat: 0.85,
+    glitterHue: 0.58,
+    glitterSat: 0.25,
+  },
+  // 9 Weierstrass — PRISM C: pink-magenta ↔ teal shattered-plane roughness (ref 3).
+  {
+    hueA: 0.9,
+    satA: 0.92,
+    hueB: 0.46,
+    satB: 0.9,
+    fringeOff: 0.22,
+    fringeSat: 1,
+    glitterHue: 0.12,
+    glitterSat: 0.45,
+  },
+];
+
 /** One bipolar variant shell: a NAMED mathematical construction that migrates inward and morphs
  *  under its own sub-brain's live drive (owner 2026-07-14: "real math … hard wired into the neural
  *  network", never a decorative platonic wireframe). */
@@ -114,6 +244,14 @@ interface Variant {
   /** Chimera layers sharing the SAME morphing geometry: iridescent fringe pass + glitter points. */
   readonly fringeMat: THREE.LineBasicMaterial;
   readonly sparkMat: THREE.PointsMaterial;
+  /** Authored reference palette (see SHELL_PALETTES) — the invariant picks the pole mix live. */
+  readonly pal: ShellPalette;
+  /** RECURSIVE ECHOES (chrome-vortex/kaleidoscope refs): two nested self-similar copies of the
+   *  live geometry, counter-spun by the sub-brain's STDP-learned gain — the infinite-tunnel read. */
+  readonly echoA: THREE.LineSegments;
+  readonly echoB: THREE.LineSegments;
+  readonly echoMatA: THREE.LineBasicMaterial;
+  readonly echoMatB: THREE.LineBasicMaterial;
   /** The shell's mathematical generator (Möbius/Poincaré/loxodrome/Kakeya/Collatz/Hopf/Clifford/
    *  Enneper/Aizawa/Weierstrass — see mechalogodrom-variant-geometry.ts). */
   readonly geo: VariantShellGeometry;
@@ -391,6 +529,19 @@ export class Mechalogodrom {
       const spark = new THREE.Points(geo, sparkMat);
       spark.frustumCulled = false;
       seg.add(spark);
+      // Recursive echo tunnel: two nested self-similar copies of the SAME live geometry (zero
+      // extra CPU), each with its own dimmer material, counter-spun in driveVariants by the
+      // sub-brain's learned gain — the reference images' infinite mirrored-corridor recursion.
+      const echoMatA = this.shellMat.clone();
+      const echoA = new THREE.LineSegments(geo, echoMatA);
+      echoA.frustumCulled = false;
+      echoA.scale.setScalar(0.55);
+      seg.add(echoA);
+      const echoMatB = this.shellMat.clone();
+      const echoB = new THREE.LineSegments(geo, echoMatB);
+      echoB.frustumCulled = false;
+      echoB.scale.setScalar(0.32);
+      seg.add(echoB);
       const th = golden * i;
       const ylift = (1 - (i / (VARIANT_COUNT - 1)) * 2) * 70;
       const ax = Math.cos(th) * RING_R;
@@ -403,6 +554,11 @@ export class Mechalogodrom {
         mat,
         fringeMat,
         sparkMat,
+        pal: SHELL_PALETTES[i]!,
+        echoA,
+        echoB,
+        echoMatA,
+        echoMatB,
         geo: shellGeo,
         buf,
         posAttr,
@@ -411,8 +567,10 @@ export class Mechalogodrom {
         ay: ylift,
         az,
         freq: 0.18 + (i % VARIANT_COUNT) * 0.05, // each shell its own bipolar period
-        hueA: (i / VARIANT_COUNT) % 1, // pole A
-        hueB: (i / VARIANT_COUNT + 0.5) % 1, // pole B (opposite → manic vs depressive)
+        // Colour poles now come from the AUTHORED reference palette (still 10 distinct pairs —
+        // USER #14's per-shell readability holds; the palettes replace the generic hue wheel).
+        hueA: SHELL_PALETTES[i]!.hueA,
+        hueB: SHELL_PALETTES[i]!.hueB,
         phase: (i / VARIANT_COUNT) * TAU,
       });
     }
@@ -797,30 +955,56 @@ export class Mechalogodrom {
       );
       v.mesh.rotation.x = st * (0.3 + 0.1 * i) + bip;
       v.mesh.rotation.y = st * (0.2 + 0.07 * i);
-      // Hue swings between the two poles; opacity flares with the manic phase and fades as it melts in.
-      const hue = lerp(v.hueA, v.hueB, manic);
-      // USER #14: keep the lightness low so the additive shell never blows out. ENLIVEN: lift the FLOOR
-      // 0.28 → 0.40 (+ a faint breath) so a depressive/losing shell glows alive; blaze still adds the
-      // winner's legible edge. Each shell drives its OWN material, so all 10 read as distinct colours.
-      v.mat.color.setHSL(hue, 0.92, 0.44 + 0.09 * manic + 0.06 * breathe + 0.18 * blaze);
-      // ENLIVEN: opacity FLOOR 0.18 → 0.35 with a breathing shimmer, so even a fused-in losing shell is a
-      // LIVING wire, never a dead one; manic + blaze still lift the winner (cap raised 0.6 → 0.64).
+      // THE MATHEMATICS PICKS THE COLOUR: the pole mix blends the bipolar swing with this shell's
+      // live measured INVARIANT — torsion, defect, bearing, efficiency… — so as the sub-brain morphs
+      // its mathematics, the measured quantity literally drags the hue between the reference-palette
+      // poles. Falsifiable coupling: pin the invariant and the mix component freezes with it.
+      const inv = this.variantInvariants[i] ?? 0.5;
+      const mix = clamp(0.5 * manic + 0.5 * inv, 0, 1);
+      const hue = lerp(v.hueA, v.hueB, mix);
+      const sat = lerp(v.pal.satA, v.pal.satB, mix);
+      // USER #14: keep the lightness low so the additive shell never blows out. ENLIVEN: floor lifted
+      // so a depressive/losing shell glows alive; blaze still adds the winner's legible edge. Each
+      // shell drives its OWN material, so all 10 read as distinct authored palettes.
+      v.mat.color.setHSL(
+        hue,
+        sat,
+        0.42 + 0.09 * manic + 0.05 * breathe + 0.06 * inv + 0.18 * blaze,
+      );
+      // ENLIVEN: opacity floor keeps even a fused-in losing shell a LIVING wire, never a dead one;
+      // manic + blaze still lift the winner.
       v.mat.opacity = Math.min(
         0.85,
         (0.42 + 0.14 * manic * (1 - 0.4 * k) + 0.07 * breathe) * (1 + 1.1 * blaze),
       );
-      // Iridescent fringe: an adjacent hue that drifts against the core hue — the two additive line
-      // passes interfere into a chromatic edge (reference images: iridescent chrome, never flat).
-      const fringeHue = (hue + 0.09 + 0.05 * Math.sin(st * 1.3 + v.phase) + 1) % 1;
-      v.fringeMat.color.setHSL(fringeHue, 1, 0.5 + 0.1 * blaze);
+      // Iridescent fringe: the palette's authored interference offset drifting against the core hue —
+      // the two additive line passes beat into a chromatic edge (chrome/prism reference images).
+      const fringeHue = (hue + v.pal.fringeOff + 0.05 * Math.sin(st * 1.3 + v.phase) + 2) % 1;
+      v.fringeMat.color.setHSL(fringeHue, v.pal.fringeSat, 0.5 + 0.1 * blaze);
       v.fringeMat.opacity = Math.min(
         0.5,
         (0.14 + 0.1 * manic + 0.05 * breathe) * (1 + 1.2 * blaze),
       );
-      // Glitter: every vertex of the live mathematics glints; the workspace winner sparkles hardest.
-      v.sparkMat.color.setHSL((hue + 0.04) % 1, 0.85, 0.62 + 0.12 * blaze);
+      // Glitter: every vertex of the live mathematics glints in the palette's authored spark tint
+      // (white-hot for the chrome/caustic shells); the workspace winner sparkles hardest.
+      v.sparkMat.color.setHSL(v.pal.glitterHue, v.pal.glitterSat, 0.68 + 0.14 * blaze);
       v.sparkMat.size = 3.5 + 2.6 * blaze + 1.2 * breathe + 0.9 * manic;
       v.sparkMat.opacity = Math.min(0.85, 0.35 + 0.2 * manic + 0.45 * blaze);
+      // Recursive echo tunnel: the nested copies counter-spin at rates set by the STDP-learned
+      // variant→fusion gain — the mind's learned trust in this coalition literally turns the wheels
+      // of its recursion (chrome-vortex reference). Deterministic: pure (st, gain, phase).
+      const gainNorm = clamp(((this.variantGains[i] ?? 1) - 0.25) / 2.25, 0, 1);
+      v.echoA.rotation.z = st * (0.5 + 0.8 * gainNorm) + v.phase;
+      v.echoA.rotation.x = st * 0.21;
+      v.echoB.rotation.z = -st * (0.7 + 1.1 * gainNorm) - v.phase;
+      v.echoB.rotation.y = st * 0.27;
+      const echoPulse = 1 + 0.08 * Math.sin(st * 1.7 + v.phase * 4);
+      v.echoA.scale.setScalar(0.55 * echoPulse);
+      v.echoB.scale.setScalar(0.32 / echoPulse);
+      v.echoMatA.color.setHSL((hue + 0.5 * v.pal.fringeOff + 2) % 1, sat, 0.34 + 0.1 * blaze);
+      v.echoMatA.opacity = Math.min(0.4, v.mat.opacity * 0.45);
+      v.echoMatB.color.setHSL(hue, Math.min(1, sat * 1.1), 0.3 + 0.08 * blaze);
+      v.echoMatB.opacity = Math.min(0.3, v.mat.opacity * 0.3);
     }
   }
 
@@ -861,10 +1045,12 @@ export class Mechalogodrom {
     this.exoCage.geometry.dispose();
     this.satellites.dispose();
     for (const v of this.variants) {
-      v.mesh.geometry.dispose(); // shared by lines + fringe + glitter — one dispose frees all three
+      v.mesh.geometry.dispose(); // shared by lines + fringe + glitter + echoes — one dispose frees all
       v.mat.dispose(); // USER #14: dispose each shell's own line material
       v.fringeMat.dispose();
       v.sparkMat.dispose();
+      v.echoMatA.dispose();
+      v.echoMatB.dispose();
     }
     this.coreMat.dispose();
     this.rimMat.dispose();
