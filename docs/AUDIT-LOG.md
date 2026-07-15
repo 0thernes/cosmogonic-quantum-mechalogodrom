@@ -11,6 +11,19 @@ changed and why.
 
 ---
 
+## 2026-07-14 — Glitter blow-out fix: constant-pixel star specks (owner screenshot receipt)
+
+Owner screenshot: the shells rendered as giant white chunky blobs — "1980s white digital blobs".
+Root cause: the glitter Points pass used `sizeAttenuation: true`, so each of the ~2,000 vertex
+sprites inflated with camera proximity to ~30 px additive white squares that stacked into pure
+white and buried every palette colour. Fix: `sizeAttenuation: false` pins each glint to a constant
+1.6–3.7 PIXEL star speck at any distance (the glitterverse reference is micro-points), opacity cap
+0.85 → 0.7, glitter lightness 0.68 → 0.55, plus core/fringe lightness ceilings trimmed (≤ ~0.7) so
+the four additive line passes hold saturation where they overlap densely. Verified on RENDERED
+PIXELS this time (forced manual renderer pass in the embedded pane, JPEG posted to a local
+listener): the Poincaré shell reads as its magenta prism web with fine glitter specks and zero
+white wash-out.
+
 ## 2026-07-14 — Variant shells reference-skin pass: authored palettes, invariant-driven colour, recursive echoes
 
 Owner supplied a second reference set (chrome recursive vortex · cobalt/emerald/gold nebula ·

@@ -517,12 +517,17 @@ export class Mechalogodrom {
       fringe.frustumCulled = false;
       fringe.scale.setScalar(1.018);
       seg.add(fringe);
+      // GLITTER FIX (owner screenshot 2026-07-14: attenuated sprites ballooned into 30px additive
+      // white squares up close — "1980s white digital blobs" — burying every palette colour).
+      // sizeAttenuation:false pins each glint to a constant PIXEL size: 2–3px star specks at ANY
+      // camera distance (the glitterverse reference is micro-points, never blobs). Physically
+      // incapable of washing out: ~2k specks × 2px additive reads as starfield, not fog.
       const sparkMat = new THREE.PointsMaterial({
         color: 0x8844ff,
-        size: 4,
-        sizeAttenuation: true,
+        size: 2,
+        sizeAttenuation: false,
         transparent: true,
-        opacity: 0.5,
+        opacity: 0.4,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
       });
@@ -966,11 +971,9 @@ export class Mechalogodrom {
       // USER #14: keep the lightness low so the additive shell never blows out. ENLIVEN: floor lifted
       // so a depressive/losing shell glows alive; blaze still adds the winner's legible edge. Each
       // shell drives its OWN material, so all 10 read as distinct authored palettes.
-      v.mat.color.setHSL(
-        hue,
-        sat,
-        0.42 + 0.09 * manic + 0.05 * breathe + 0.06 * inv + 0.18 * blaze,
-      );
+      // Lightness ceiling trimmed (owner screenshot: additive stacking of the four line passes
+      // bleached dense regions white) — saturation survives overlap only if lightness stays ≤~0.7.
+      v.mat.color.setHSL(hue, sat, 0.4 + 0.08 * manic + 0.04 * breathe + 0.06 * inv + 0.12 * blaze);
       // ENLIVEN: opacity floor keeps even a fused-in losing shell a LIVING wire, never a dead one;
       // manic + blaze still lift the winner.
       v.mat.opacity = Math.min(
@@ -980,16 +983,17 @@ export class Mechalogodrom {
       // Iridescent fringe: the palette's authored interference offset drifting against the core hue —
       // the two additive line passes beat into a chromatic edge (chrome/prism reference images).
       const fringeHue = (hue + v.pal.fringeOff + 0.05 * Math.sin(st * 1.3 + v.phase) + 2) % 1;
-      v.fringeMat.color.setHSL(fringeHue, v.pal.fringeSat, 0.5 + 0.1 * blaze);
+      v.fringeMat.color.setHSL(fringeHue, v.pal.fringeSat, 0.45 + 0.08 * blaze);
       v.fringeMat.opacity = Math.min(
         0.5,
         (0.14 + 0.1 * manic + 0.05 * breathe) * (1 + 1.2 * blaze),
       );
       // Glitter: every vertex of the live mathematics glints in the palette's authored spark tint
-      // (white-hot for the chrome/caustic shells); the workspace winner sparkles hardest.
-      v.sparkMat.color.setHSL(v.pal.glitterHue, v.pal.glitterSat, 0.68 + 0.14 * blaze);
-      v.sparkMat.size = 3.5 + 2.6 * blaze + 1.2 * breathe + 0.9 * manic;
-      v.sparkMat.opacity = Math.min(0.85, 0.35 + 0.2 * manic + 0.45 * blaze);
+      // (white-hot for the chrome/caustic shells); the workspace winner sparkles hardest. Sizes are
+      // constant PIXELS (attenuation off) — micro-star specks, never distance-inflated blobs.
+      v.sparkMat.color.setHSL(v.pal.glitterHue, v.pal.glitterSat, 0.55 + 0.12 * blaze);
+      v.sparkMat.size = 1.6 + 1.4 * blaze + 0.4 * breathe + 0.3 * manic;
+      v.sparkMat.opacity = Math.min(0.7, 0.26 + 0.14 * manic + 0.3 * blaze);
       // Recursive echo tunnel: the nested copies counter-spin at rates set by the STDP-learned
       // variant→fusion gain — the mind's learned trust in this coalition literally turns the wheels
       // of its recursion (chrome-vortex reference). Deterministic: pure (st, gain, phase).
