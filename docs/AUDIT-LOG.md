@@ -11,6 +11,22 @@ changed and why.
 
 ---
 
+## 2026-07-15 — NHI cap raised 32 → 1000 (owner directive), pairwise social scan stagger-budgeted
+
+Owner: "NHI CAP should be 1000 maximum. it's at 32!!!!" `NHI_SYSTEM_MIND_CAP` 32 → 1000 — the
+composition root's live launch ceiling, checkpoint validation bound, and the Big-Tree NHI source
+capacity all derive from the one constant, so the whole chain moves together (the cap is a CEILING
+on launches, not an allocation: minds are Map entries created per launch, TinyMLP-scale ≈ µs each
+to think, so a full 1000-mind population ticks in low single-digit ms). The one thing that scaled
+quadratically with the cap — the NHI body system's pairwise social-proximity sweep, previously an
+honest O(n²/2) justified by the 32 cap — is now stagger-budgeted: populations ≤64 keep the exact
+full sweep every frame (today's behaviour unchanged), larger ones rotate through anchor rows
+(⌈n/8⌉ per frame) over a decaying social scalar, so the glow stays smooth while the worst case
+drops from ~500k pair visits per frame to ~62k. Deterministic (frame-advanced cursor, no rng),
+allocation-free (reused snapshot array). Stale "cap is 32" comments corrected at both sites; the
+1000 ceiling is sealed in tests ("OWNER cap seal") and the full 1000-mind checkpoint round-trip is
+exercised. All 95 NHI-family tests green.
+
 ## 2026-07-15 — Speed FINAL: classic TIME_SCALES restored; ×50 god-clock scoped to the Mechalogodrom
 
 Owner (final, after one mis-scoped ship): "I want the old values." The global `TIME_SCALES` ladder

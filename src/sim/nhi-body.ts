@@ -185,6 +185,10 @@ export class NhiBodySystem {
   /** Per-NHI SPIKE/blade/barb morphology set — the index picks a different protrusion form. */
   private readonly spikeGeos: THREE.BufferGeometry[];
   private spawnIndex = 0;
+  /** Reused snapshot of the live bodies for the staggered pairwise social scan (no per-frame alloc). */
+  private readonly pairScratch: Body[] = [];
+  /** Rotating anchor cursor: which slice of pair-space the social scan covers this frame. */
+  private pairCursor = 0;
 
   constructor(scene: THREE.Scene) {
     scene.add(this.root);
@@ -349,8 +353,9 @@ export class NhiBodySystem {
   /**
    * Per frame: each body follows its NHI (position via `posOf`), spins, breathes (non-uniform scale
    * wobble = the morph), and pulses its glow. A body whose NHI has died (`posOf` → null) is disposed.
-   * Allocation-free. Position callbacks are O(bodies); pairwise visual proximity is O(bodies²/2)
-   * and the composition root caps the launched population at 32.
+   * Allocation-free. Position callbacks are O(bodies); pairwise visual proximity is
+   * stagger-budgeted (full sweep ≤64 bodies; rotating anchor rows above that) so the cost stays
+   * bounded at the composition root's launched-population cap of 1000 (owner 2026-07-15).
    *
    * @param onSocial optional callback fired when this body is within SOCIAL_NHI_BODY_R of another NHI; the scalar
    *   `0..1` is the social proximity level so callers can layer sound (e.g. NhiBodySystem emits no
@@ -362,6 +367,9 @@ export class NhiBodySystem {
     onSocial?: (id: number, level: number) => void,
   ): void {
     // Resolve each backing position exactly once and retire missing bodies before pair evaluation.
+    // Social DECAYS instead of hard-resetting so the staggered scan below can top it up smoothly
+    // (a body not re-scanned this frame keeps a fading glow instead of flickering to zero).
+    this.pairScratch.length = 0;
     for (const [id, b] of this.bodies) {
       const p = posOf(id);
       if (!p) {
@@ -370,14 +378,27 @@ export class NhiBodySystem {
         continue;
       }
       b.group.position.copy(p);
-      b.social = 0;
+      b.social *= 0.85;
+      if (b.social < 0.01) b.social = 0;
+      this.pairScratch.push(b);
     }
 
-    // Visit each unordered pair once and update both endpoints' nearest-proximity scalar.
-    for (const [id, b] of this.bodies) {
+    // Pairwise social proximity, STAGGER-BUDGETED (owner 2026-07-15: cap raised 32 → 1000, where a
+    // full O(n²/2) sweep would be ~500k pair visits per frame). Small populations (≤64) still get
+    // the exact full sweep every frame; larger ones rotate through anchor rows so every body is
+    // re-anchored at ≥⅛ of frame rate — plenty for a glow scalar riding the decay above.
+    // Deterministic: the cursor advances per call, no rng.
+    const bodiesArr = this.pairScratch;
+    const n = bodiesArr.length;
+    const anchorsPerFrame = n <= 64 ? n : Math.ceil(n / 8);
+    const start = n > 0 ? this.pairCursor % n : 0;
+    this.pairCursor = n > 0 ? (this.pairCursor + anchorsPerFrame) % n : 0;
+    for (let k = 0; k < anchorsPerFrame; k++) {
+      const i = (start + k) % n;
+      const b = bodiesArr[i]!;
       const p = b.group.position;
-      for (const [otherId, other] of this.bodies) {
-        if (otherId <= id) continue;
+      for (let j = i + 1; j < n; j++) {
+        const other = bodiesArr[j]!;
         const op = other.group.position;
         const dx = p.x - op.x;
         const dy = p.y - op.y;

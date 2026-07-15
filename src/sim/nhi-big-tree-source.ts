@@ -47,7 +47,7 @@ export interface NhiBigTreeIntentView {
  * Fixed-capacity source binding keyed by monotonic NHI mind id.
  *
  * Slots never move while registered, so another NHI's death cannot make an active visit follow the
- * wrong body. Empty slots are cheap: the launched-NHI cap is 32 and the fauna adapter polls them on
+ * wrong body. Empty slots are cheap: the launched-NHI cap is 1000 and the fauna adapter polls them on
  * its existing staggered cadence.
  */
 export class NhiBigTreeSource implements BigTreeFaunaSource {

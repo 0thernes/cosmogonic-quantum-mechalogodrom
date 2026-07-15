@@ -310,7 +310,13 @@ describe('NhiSystem', () => {
     }
   });
 
-  test('state round-trips the full 32-mind runtime cap', () => {
+  test('OWNER cap seal: the launched-NHI ceiling is exactly 1000', () => {
+    // Owner 2026-07-15: "NHI CAP should be 1000 maximum. it's at 32!!!!" — sealed so it cannot
+    // silently regress; the composition root derives its live cap from this constant.
+    expect(NHI_SYSTEM_MIND_CAP).toBe(1000);
+  });
+
+  test('state round-trips the full runtime mind cap', () => {
     const source = new NhiSystem();
     for (let id = 0; id < NHI_SYSTEM_MIND_CAP; id++) {
       source.register(id, mulberry32(0x1000 + id));
