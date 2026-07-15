@@ -198,6 +198,43 @@ describe('Mechalogodrom — the fusion abomination', () => {
     expect(() => m.dispose()).not.toThrow();
   });
 
+  test('GOD-CLOCK CALIBRATION: the 0.1× dial reproduces the legacy 5× churn, capped ×4 at higher dials', () => {
+    // Owner 2026-07-14/15 (FINAL): the global ladder keeps the old values; the ×50 is the god's.
+    // Legacy rate at the old top slot was MECHA_TIME_SCALE·(0.3+0.7·5)·5 = 66.5; shell 0's absolute
+    // rotation.y = localT·0.15·0.2, so one update at dial 0.1 with real delta r must turn it by
+    // r·66.5·0.03. A regression to the old dt-coupled formula fails this by ~500×.
+    const scene = new THREE.Scene();
+    const m = new Mechalogodrom(scene);
+    let shell: THREE.LineSegments | null = null;
+    scene.traverse((o) => {
+      if (
+        !shell &&
+        o instanceof THREE.LineSegments &&
+        o.children.filter((c) => c instanceof THREE.LineSegments).length >= 3
+      ) {
+        shell = o;
+      }
+    });
+    const sh = shell as unknown as THREE.LineSegments;
+    const r = 1 / 60;
+    m.setTimeScale(0.1);
+    const y0 = sh.rotation.y;
+    m.update(0, r * 0.1, r);
+    const perDialFloor = sh.rotation.y - y0;
+    expect(perDialFloor).toBeCloseTo(r * 66.5 * 0.15 * 0.2, 6);
+    // Higher dials scale linearly up to the strobe-safe ×4 cap (0.5× and 5× land on the same cap).
+    m.setTimeScale(0.5);
+    const y1 = sh.rotation.y;
+    m.update(0, r * 0.5, r);
+    const atHalf = sh.rotation.y - y1;
+    expect(atHalf).toBeCloseTo(perDialFloor * 4, 6);
+    m.setTimeScale(5);
+    const y2 = sh.rotation.y;
+    m.update(0, r * 5, r);
+    expect(sh.rotation.y - y2).toBeCloseTo(atHalf, 6);
+    m.dispose();
+  });
+
   test('SUSPENDED ANIMATION: at timeScale 0 the shells keep spinning/gimbaling while FUSION freezes', () => {
     // Owner 2026-07-14: the first PAUSE click is suspended animation — bodies alive in place. The
     // god must keep rotating/morphing on the pause visual clock; only world PROGRESS (fusion) halts.
@@ -231,7 +268,7 @@ describe('Mechalogodrom — the fusion abomination', () => {
     // World progress HALTED: fusion untouched while suspended.
     expect(m.snapshot().fusion).toBe(fusionBefore);
     // Resuming keeps fusion advancing again.
-    m.setTimeScale(50);
+    m.setTimeScale(1);
     for (let i = 0; i < 60; i++) {
       t += dt;
       m.update(t, dt);

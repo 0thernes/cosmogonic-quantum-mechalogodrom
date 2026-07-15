@@ -262,21 +262,12 @@ export const TRACKING_VIEWS: ReadonlySet<ViewMode> = new Set(['follow', 'chase',
 
 /**
  * Time-dilation steps cycled by the TIME control (F-TIME). `0` is a true pause (frames still tick
- * but `dt` is 0, so nothing integrates). OWNER RESCALE 2026-07-14: "the 5x speed should be the
- * 0.1x speed — it's too slow" — the whole ladder is multiplied ×50, so the old top (5×) is the new
- * FLOOR and the range runs to 250×. Values are honest dome-time multipliers (the HUD shows them
- * verbatim); high steps trade fidelity for speed (bigger integration dt), which the sim's
- * defensive clamps absorb (empirically verified finite + stable at 250×).
+ * but `dt` is 0, so nothing integrates); `1` is realtime. Includes the legacy `0.2`/`3` values so
+ * existing behaviour/tests at those scales are unchanged; append-only like {@link VIEW_MODES}.
+ * OWNER 2026-07-14/15: these values are FINAL ("I want the old values") — the ×50 speed-up lives in
+ * the Mechalogodrom god-clock only (src/sim/mechalogodrom.ts), never in this ladder.
  */
-export const TIME_SCALES = [0, 5, 10, 25, 50, 100, 150, 250] as const;
-
-/**
- * The ladder value that corresponds to the LEGACY 1× realtime feel (the ×50 rescale pivot).
- * Systems whose internal pacing formulas were calibrated for the old 0.1–5 domain (e.g. the
- * Mechalogodrom's manic churn multiplier) divide the live timeScale by this to keep their
- * per-slot character while the ×50 speed-up arrives through the scaled `dt` itself.
- */
-export const TIME_SCALE_BASELINE = 50;
+export const TIME_SCALES = [0, 0.1, 0.2, 0.5, 1, 2, 3, 5] as const;
 
 /**
  * Discrete camera field-of-view levels the SPACE control dilates through (F-SPACE — the spatial

@@ -11,25 +11,23 @@ changed and why.
 
 ---
 
-## 2026-07-14 — Time-scale ×50 rescale + Mechalogodrom suspended-animation idle
+## 2026-07-15 — Speed FINAL: classic TIME_SCALES restored; ×50 god-clock scoped to the Mechalogodrom
 
-Owner: "the 5x speed should be the 0.1x speed for the whole thing … it's too slow", the morphing
-colour panels "cool but too slow", and the first PAUSE click must stay true suspended animation
-("they spin rotate gimble fully axis"). Shipped three couplings:
-(1) `TIME_SCALES` rescaled ×50 → `[0, 5, 10, 25, 50, 100, 150, 250]` — the legacy top (5×) is the
-new floor; boot default 0.25 → 10; `TIME_SCALE_BASELINE = 50` marks the legacy-1× pivot for
-formulas calibrated on the old 0.1–5 domain. Empirically verified in the booted world before
-committing: 250× stays finite and stable (no NaN positions, sane radii; per-frame cost mostly
-70–90 ms in the software-GL pane with occasional event-burst spikes — the sim's defensive clamps
-absorb the large integration steps, and the HUD shows the honest multiplier).
-(2) The Mechalogodrom's manic-churn multiplier renormalizes the slot value by the baseline
-(`tsn = timeScale / 50`), so each slot keeps its authored character while the ×50 speed-up flows
-through the scaled `dt` — this is also what makes the exterior colour panels ~40× faster at boot.
-(3) SUSPENDED ANIMATION: at timeScale 0 the god no longer freezes — the churn formula's ts→0 limit
-(0.3) is the idle rate, so the shells keep spinning/gimbaling/morphing on the pause visual clock
-while FUSION (world progress) freezes; FROZEN (second click) still holds a static tableau. Pinned
-behaviorally (rotation advances + fusion byte-frozen under timeScale 0, resumes on unpause) and
-verified live in the booted world. Ladder pins in wave1-foundations resealed to the new contract.
+Owner (final, after one mis-scoped ship): "I want the old values." The global `TIME_SCALES` ladder
+is restored VERBATIM to `[0, 0.1, 0.2, 0.5, 1, 2, 3, 5]` with boot 0.25× and realtime fallbacks (a
+whole-world ×50 ladder briefly shipped as `84955d79` and is fully reverted here; the ladder values
+are now sealed exactly in wave1-foundations so they cannot drift again). The demanded speed-up
+lands where it was meant: the MECHALOGODROM AND ITS RIG. The god's body clock now advances on the
+REAL frame delta with a slot-anchored rate — the 0.1× dial reproduces the legacy 5× churn EXACTLY
+(`MECHA_TIME_SCALE·(0.3+0.7·5)·5 = 66.5`), higher dials scale linearly to a strobe-safe ×4 cap so
+phase steps stay coherent. Everything downstream of the god's local clock rides along: the ten
+variant shells, satellites, the exterior morphing colour panels ("cool but too slow"), rings,
+spikes, dark-star uniforms. FUSION (world progress) still advances on the sim dt, so world
+pause/speed semantics are untouched. SUSPENDED ANIMATION stays: at timeScale 0 the god idles at the
+churn formula's ts→0 limit — shells keep spinning/gimbaling/morphing on the pause visual clock
+while fusion is byte-frozen; FROZEN (second click) still holds the static tableau. Pinned: the
+exact ladder array; the dial-0.1 rotation rate to 1e-6 (a regression to the dt-coupled formula
+fails by ~500×); cap equality at 0.5×/5×; suspended spin + frozen fusion + seamless resume.
 
 ## 2026-07-14 — Glitter blow-out fix: constant-pixel star specks (owner screenshot receipt)
 
