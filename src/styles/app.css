@@ -2,7 +2,7 @@
  * Cosmogonic Quantum Mechalogodrom — Tailwind v4 stylesheet.
  *
  * Visual styling lives as utilities in index.html. This file holds the design
- * tokens (documented in docs/DESIGN-SYSTEM.md) plus the few rules utilities
+ * tokens (documented in docs/DESIGN-SYSTEM-2026-06-26.md) plus the few rules utilities
  * cannot express: stateful classes toggled by JS (`.col`, `.show`, `.on`),
  * keyboard focus rings, control-pad `<kbd>` key-hint chips, reduced-motion
  * damping, pointer-media joystick layout, safe-area padding, and styling for

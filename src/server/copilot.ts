@@ -4,8 +4,8 @@
  * Powers the side-chat where a user can "ask, learn, and talk about this world" with a free AI
  * that can READ the repo and RUN read-only commands but can never change code. This module lives
  * entirely OUTSIDE the deterministic sim (it makes network calls and reads the wall clock); it
- * never imports or touches sim state, so the seeded golden is unaffected (see PHILOSOPHY / ADR
- * 0004 and docs/research/PRE-TRANSFORMER-GAME-AI.md Part II).
+ * never imports or touches sim state, so the seeded golden is unaffected (see
+ * docs/PHILOSOPHY-2026-06-26.md and docs/adr/0004-deterministic-rng-2026-06-26.md).
  *
  * FREE-LLM PICKER (the user's "free LLMs on the side box"): the provider is chosen per request from
  * a curated table of free, OpenAI-compatible endpoints (docs/research free-LLM report). Two are

@@ -188,7 +188,10 @@ export const HELP_KB: readonly HelpEntry[] = [
       'power',
     ],
     body: 'The always-active apex being (ARCHITECT-Ω) — half a Titan but ~100× the power, driven by a genuine 1444-parameter deep neural mind (cortex→actor) with an emotion-like state, episodic memory, a prediction loop, GOAP planning, and self-replication (up to 3 mutated twins). It wears a masterful many-eyed god-jewel body and FLIES the whole world — roaming, banking, quantum-teleporting and morphing as it thinks. It also SELF-EVOLVES like Goku/Vegeta: a hard XP curve through five ascensions (BASE→ASCENDED→SUPER→ULTRA→LEGENDARY at 1/10/25/50/100). LEVEL 100 is the first summit, not a cap: it unlocks the full ten GODLIKE POWERS (KAIO AURA → GODHEAD HALO), raises the reactive shadow-core temple, and then post-summit research levels keep climbing beyond it. The ⬢ ARCHITECT panel shows live level, summit state, godlike-power tally and stage.',
-    see: ['docs/adr/0008-super-creature-deep-mind-2026-06-26.md', 'docs/ENTITY-SHEETS.md'],
+    see: [
+      'docs/adr/0008-super-creature-deep-mind-2026-06-26.md',
+      'docs/ENTITY-SHEETS-2026-06-26.md',
+    ],
   },
   {
     id: 'chaos-mode',
@@ -290,7 +293,7 @@ export const HELP_KB: readonly HelpEntry[] = [
       'auction',
     ],
     body: 'Every power has a wallet in two currencies (AURUM ☉, UMBRA ☾) and two commodities (QUANTA ◇, ICHOR ❖). Prices clear by tâtonnement; a currency-adoption game shifts dominance; the richest few form a cartel; arbitrage mean-reverts the price gap; titan wars trigger sanctions and a black market; windfalls are sold by second-price (Vickrey) auction. Wealth drives behaviour — rich creatures hunt harder and loom larger. Open ⊙ MARKET.',
-    see: ['src/sim/economy.ts', 'docs/ENTITY-SHEETS.md'],
+    see: ['src/sim/economy.ts', 'docs/ENTITY-SHEETS-2026-06-26.md'],
   },
   {
     id: 'math',

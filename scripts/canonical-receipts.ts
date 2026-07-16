@@ -1,9 +1,13 @@
 /**
  * CANONICAL RECEIPTS -- the single source of truth for the repo's measured gate figures.
  *
- * Count remeasured 2026-07-16 (Bun 1.3.14): 3,303 tests / 0 fail / 3,742,750 expectations across 366
- * files, measured on Windows. +1 versus the 2026-07-14 pass, from the inline-radar geometry gate added
- * to `tests/alife-codeground-consistency.test.ts` (it decodes the shipped polygon back into a vector,
+ * Count remeasured 2026-07-16 (Bun 1.3.14): 3,304 tests / 0 fail / 3,742,758 expectations across 366
+ * files, measured on Windows. +1 versus the earlier 2026-07-16 pass (3,303), from RESTORING
+ * docs/PRD-2026-07-02.md: `tests/doc-links.test.ts` enumerates tracked markdown via `git ls-files`
+ * and emits ONE test per file, so the suite grows by one whenever a .md is tracked — a real trap,
+ * because a doc gates green while still untracked and only drifts the receipt once `git add` runs.
+ * The prior +1 (3,302 -> 3,303) came from the inline-radar geometry gate in
+ * `tests/alife-codeground-consistency.test.ts` (it decodes the shipped polygon back into a vector,
  * closing the hole that let docs.html/specs.html ship a radar stale on four axes).
  *
  * COUNT is platform-invariant, so the Windows measurement above is canon. COVERAGE is NOT: the two
@@ -15,7 +19,7 @@
  *
  * To update after adding/removing tests: `bun scripts/verify-receipts.ts --print`, paste here, re-sync.
  */
-export const CANONICAL_TEST_COUNT = 3303;
+export const CANONICAL_TEST_COUNT = 3304;
 export const CANONICAL_LINE_COV = '84.64';
 export const CANONICAL_FUNC_COV = '82.21';
 
