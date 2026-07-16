@@ -613,7 +613,7 @@
         an alien atmosphere, a unified 4-tab neural observatory, 25 visible sorting algorithms, and
         nine dramatic songs, served by Bun. This page is the local equivalent of a project GitHub
         Page: it documents the <strong>file/folder architecture</strong>, the data model as an
-        explicit <strong>ERD / ERM / ERP</strong> triad, the per-frame process pipeline, and the
+        explicit <strong>ERD / ERM / ERP / PRD</strong> set, the per-frame process pipeline, and the
         V1&ndash;V100 evolution of the system. The diagrams mirror the markdown sources in
         <code>docs/ARCHITECTURE-2026-06-26.md</code> and
         <code>docs/ENTITY-SCHEMA-AND-MAPPINGS-2026-06-26.md</code>.
@@ -638,6 +638,7 @@
         <a href="#erd">ERD &mdash; diagram</a>
         <a href="#erm">ERM &mdash; model</a>
         <a href="#erp">ERP &mdash; process</a>
+        <a href="#prd">PRD &mdash; requirements</a>
         <a href="#eras">The six eras</a>
         <a href="#stack">Tech stack</a>
         <a href="#determinism">Determinism model</a>
@@ -1212,6 +1213,84 @@ sequenceDiagram
       </p>
       <p><a class="totop" href="#architecture">&uarr; top</a></p>
 
+      <h2 id="prd">
+        <span class="tag">PRD</span>Product requirements &mdash; intent &amp; non-goals
+      </h2>
+      <p>
+        The ERD / ERM / ERP triad above describes <em>how</em> the system is built. The
+        <strong>PRD</strong> is the fourth face of the same object: <em>why</em> it exists, and what
+        it deliberately refuses to be &mdash; the written intent that scope creep and overclaim are
+        measured against. The full document is
+        <a href="./docs/PRD-2026-07-02.md">docs/PRD-2026-07-02.md</a>; the load-bearing parts:
+      </p>
+      <div class="card">
+        <table>
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>Requirement</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><b>Product</b></td>
+              <td>
+                A deterministic, browser-native, multi-substrate A-Life and cognition testbed
+                &mdash; a petri dish for NHSI digital biologics and proto-sentience research. A
+                research artifact and a demonstrable experience; not a product for sale.
+              </td>
+            </tr>
+            <tr>
+              <td><b>Users</b></td>
+              <td>
+                The owner (explore emergence hypotheses with real math) &middot; the A-Life /
+                cognition researcher (read code-grounded receipts, reproduce a claim from one seed)
+                &middot; the curious visitor (watch a living cosmos, read honest explanations).
+              </td>
+            </tr>
+            <tr>
+              <td><b>Done means</b></td>
+              <td>
+                Every load-bearing number measured to a <code>file:line</code> or gate receipt
+                &middot; identical seed &rarr; bit-identical run &middot; <code>bun run check</code>
+                green &middot; 60 fps at the desktop tier &middot; boots and self-recovers on Pages
+                with no frontend secrets.
+              </td>
+            </tr>
+            <tr>
+              <td><b>Non-goals</b></td>
+              <td>
+                <b>Not</b> a claim of consciousness / sentience / AGI &middot; <b>not</b> an LLM or
+                transformer &middot; <b>not</b> a quantum-advantage claim (the quantum math is exact
+                <em>classical</em> simulation) &middot; <b>not</b> commercial or multi-user &middot;
+                <b>no</b> world-first claim &mdash; novelty is by integration, not primacy.
+              </td>
+            </tr>
+            <tr>
+              <td><b>Binding</b></td>
+              <td>
+                Determinism via seeded <code>Rng</code> (no <code>Math.random</code> /
+                <code>Date.now</code> in sim) &middot; living-docs SSOT &middot; full gate before
+                commit &middot; no PRs (local &rarr; <code>main</code>) &middot; proprietary
+                licence.
+              </td>
+            </tr>
+            <tr>
+              <td><b>Open bets</b></td>
+              <td>
+                <b>Coupling &gt; count</b> &mdash; <code>meanAbsCoupling &asymp; 0.27</code> against
+                a gate floor of <code>0.188</code>, still well under the
+                <code>0.5</code> dense-binding threshold: <em>a pile is not a mind</em>.
+                <b>Reproduction without selection</b> &mdash; heredity is live but no birth or death
+                path reads a heritable trait, so the population drifts rather than evolves.
+                <b>External validation</b> &mdash; no third party has reproduced a claim yet.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p><a class="totop" href="#architecture">&uarr; top</a></p>
+
       <h2 id="eras"><span class="tag">LOG</span>The eras</h2>
       <p>
         The system grew in many contract-governed waves. Each era is a binding section in
@@ -1283,7 +1362,7 @@ sequenceDiagram
           title bands so labels never overlap data; a wider, taller observatory plus a scrollable
           algorithm picker panel; the lab grown into four pages of 3D data-visual boards; and
           <em>this report page</em> &mdash; the local GitHub-Page-style document you are reading,
-          with the full file/folder tree, the explicit ERD / ERM / ERP triad, and these era
+          with the full file/folder tree, the explicit ERD / ERM / ERP / PRD set, and these era
           narratives.
         </p>
       </div>
