@@ -429,6 +429,38 @@ function svgAssetFromPath(pathname: string, prefix: string): BunFile | null {
 }
 
 /**
+ * Hashed build assets at the dist/ root, for the statically-served surfaces.
+ *
+ * `/docs`, `/spec` and `/bible` are served straight out of dist/ by {@link serveHtml}, so their
+ * markup carries the hashed entry the bundler emitted (`<script src="./chunk-fpdgmsjv.js">`).
+ * `/` is different: it is a Bun HTML import, so the dev bundler owns that graph and serves its
+ * chunks itself. Nothing served dist/'s own chunks, so all three static surfaces loaded with ZERO
+ * javascript — the mermaid ERD/ERM/ERP diagrams and the ALife metric gallery rendered as blank
+ * boxes (`pre.mermaid` is `color: transparent` until mermaid stamps data-processed) while the HTML
+ * around them looked perfectly healthy.
+ *
+ * Matches a SINGLE path segment only — the pattern admits no '/', so no traversal is expressible
+ * and the leading-dot guard keeps dotfiles out.
+ */
+const DIST_ASSET_PATH = /^\/(?!\.)[A-Za-z0-9._-]+\.(?:js|css|map|woff2?)$/;
+function distAssetFromPath(pathname: string): { file: BunFile; type: string } | null {
+  if (!DIST_ASSET_PATH.test(pathname)) return null;
+  const name = pathname.slice(1);
+  const ext = name.slice(name.lastIndexOf('.') + 1).toLowerCase();
+  const type =
+    ext === 'css'
+      ? 'text/css; charset=utf-8'
+      : ext === 'map'
+        ? 'application/json; charset=utf-8'
+        : ext === 'woff2'
+          ? 'font/woff2'
+          : ext === 'woff'
+            ? 'font/woff'
+            : 'application/javascript; charset=utf-8';
+  return { file: Bun.file(new URL(name, HTML_ROOT)), type };
+}
+
+/**
  * The simulation worker must be served PRE-BUNDLED: world.ts resolves
  * `new URL('./workers/simulation-worker.js', import.meta.url)` against the served chunk origin,
  * and Bun's HTML bundler does not follow `new Worker(...)` graphs (the raw `.ts` path 404'd, so
@@ -849,6 +881,21 @@ if (import.meta.main) {
             }),
           );
         }
+      }
+      // Hashed chunks/styles for the dist-served surfaces (/docs, /spec, /bible). Runs AFTER the
+      // named handlers above so `/alife-gallery.js` + `/satellite-music.js` keep their dev
+      // source-transpile fallbacks; content-hashed names are immutable by construction.
+      const distAsset = distAssetFromPath(p);
+      if (distAsset && (await distAsset.file.exists())) {
+        logRequest(req, 200);
+        return withSecurityHeaders(
+          new Response(distAsset.file, {
+            headers: {
+              'Content-Type': distAsset.type,
+              'Cache-Control': 'public, max-age=31536000, immutable',
+            },
+          }),
+        );
       }
       if (p.startsWith('/textures/')) {
         const rel = p.slice('/textures/'.length);

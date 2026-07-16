@@ -51,6 +51,78 @@ const docsResult = await Bun.build({
   plugins: [tailwind],
 });
 
+// Bun 1.3.14 mis-links an HTML entry built with `splitting: true`: dist/docs.html came out pointing at
+// an ARBITRARY split chunk (a mermaid internal — 15 KB of railroad-diagram parser) instead of its own
+// entry, while the real entry chunk was emitted and referenced by NOTHING. So /docs ran with zero
+// javascript: `pre.mermaid` is `color: transparent` until mermaid stamps data-processed, so the
+// ERD/ERM/ERP + module diagrams rendered as empty boxes, and the ALife metric gallery never mounted —
+// on a page whose surrounding HTML looked perfectly healthy. Verified against a clean outdir, so it is
+// the bundler and not outdir crosstalk from the static build above.
+//
+// Repair the tag from the build's OWN metadata rather than sniffing chunk contents: the single
+// `kind: 'entry-point'` output whose path is a .js file IS the entry Bun meant to link (a tiny shim
+// that statically imports the real entry chunk). Keeping `splitting: true` is what preserves the lazy
+// mermaid chunk — building docs.html unsplit also fixes the link, but inlines mermaid's entire lazy
+// graph eagerly and takes the entry from ~1.3 MB to ~4.8 MB.
+{
+  const jsEntries = docsResult.outputs.filter(
+    (o) => o.kind === 'entry-point' && o.path.endsWith('.js'),
+  );
+  const entry = jsEntries[0];
+  if (jsEntries.length !== 1 || !entry) {
+    throw new Error(
+      `build: expected exactly 1 js entry-point for docs.html, found ${jsEntries.length}`,
+    );
+  }
+  const entryName = entry.path.split(/[\\/]/).pop() ?? '';
+  const docsHtml = './dist/docs.html';
+  const html = await Bun.file(docsHtml).text();
+  const tag = html.match(/<script\b[^>]*\bsrc="\.\/(chunk-[a-z0-9]+\.js)"[^>]*><\/script>/);
+  if (!tag?.[1]) throw new Error('build: could not find the docs.html entry <script> tag');
+  if (tag[1] !== entryName) {
+    await Bun.write(docsHtml, html.replace(tag[0], tag[0].replace(tag[1], entryName)));
+    console.log(`docs: repaired mis-linked entry <script> ${tag[1]} -> ${entryName}`);
+  }
+  if (!(await Bun.file(`./dist/${entryName}`).exists())) {
+    throw new Error(`build: docs entry ${entryName} is referenced but missing from dist/`);
+  }
+
+  // Existence is not enough to prove the link is RIGHT: the mis-linked chunk existed too, and was a
+  // perfectly valid module that loaded 200 and threw nothing — it simply wasn't ours. So gate on the
+  // wired module GRAPH actually containing docs-page.ts's top-level work (`mountAlifeMetricsGallery`
+  // + mermaid's `startOnLoad` init). Walk the static imports because the entry Bun links may be a
+  // shim that re-exports the real chunk; a marker check on the entry file alone would false-throw on
+  // that shape. Cheap (a handful of chunks) and it fails the build loudly rather than shipping a
+  // silently dead /docs again.
+  const seen = new Set<string>();
+  const pending = [entryName];
+  let graph = '';
+  while (pending.length > 0) {
+    const name = pending.pop();
+    if (name === undefined || seen.has(name)) continue;
+    seen.add(name);
+    const chunk = Bun.file(`./dist/${name}`);
+    if (!(await chunk.exists())) continue;
+    const code = await chunk.text();
+    graph += code;
+    // Match every static-import spelling the bundler emits, not just `from"./x"`: the entry Bun links
+    // can be a bare side-effect shim (`import"./chunk-a.js";import"./chunk-b.js";`) with no `from` at
+    // all, and missing those edges would strand the walk at the shim and false-throw below.
+    for (const [, dep] of code.matchAll(/(?:from|import)\s*\(?"\.\/(chunk-[a-z0-9]+\.js)"/g)) {
+      if (dep !== undefined) pending.push(dep);
+    }
+  }
+  for (const marker of ['alife-metrics', 'startOnLoad']) {
+    if (!graph.includes(marker)) {
+      throw new Error(
+        `build: dist/docs.html is wired to ${entryName}, whose import graph lacks "${marker}" — ` +
+          `that is not the docs entry module. /docs would load with a dead script: blank ERD/ERM/ERP ` +
+          `diagrams and an empty ALife metric gallery.`,
+      );
+    }
+  }
+}
+
 // The simulation worker is its OWN browser entrypoint: Bun's HTML bundler does not follow
 // `new Worker(new URL(...))` references, so the worker graph must be bundled explicitly. world.ts
 // resolves `./workers/simulation-worker.js` against the served chunk origin, so the artifact must
