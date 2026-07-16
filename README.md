@@ -765,15 +765,15 @@ the table retains the earlier self-score only as a historical sensitivity baseli
 | ------------------------------ | ----------: | -----------------------------------: |
 | Breadth (mean of 9 axes)       |    4.44 / 5 |                         **3.84 / 5** |
 | Rank among 129 systems         |    #1 / 129 |                         **#1 / 129** |
-| z-score vs population          |      +4.17σ |                           **+3.20σ** |
-| z-score vs peers               |      +4.50σ |                           **+3.35σ** |
-| Mahalanobis vs peer centroid   |       10.32 |                             **8.65** |
+| z-score vs population          |      +4.17σ |                           **+3.22σ** |
+| z-score vs peers               |      +4.50σ |                           **+3.37σ** |
+| Mahalanobis vs peer centroid   |       10.32 |                             **8.64** |
 | Systems that dominate it (9-D) |           0 |                                **0** |
-| Breadth lead over nearest peer |       +0.94 |                            **+0.33** |
+| Breadth lead over nearest peer |       +0.94 |                            **+0.34** |
 
 <p align="center">
   <img src="./docs/reports/assets/alife-breadth-ranked.svg" alt="Ranked breadth of integrated mechanisms — Cosmogonic ranks #1 of 129" width="49%">
-  <img src="./docs/reports/assets/alife-pca.svg" alt="PCA of 113 A-Life systems — Cosmogonic is a high-breadth outlier on PC1" width="49%">
+  <img src="./docs/reports/assets/alife-pca.svg" alt="PCA of 129 A-Life systems — Cosmogonic is a high-breadth outlier on PC1" width="49%">
 </p>
 
 ![Nine-axis capability radar — Cosmogonic vs survey mean vs nearest peer ALIEN](./docs/reports/assets/alife-radar-profile.svg)
