@@ -4,10 +4,10 @@
   "nSystems": 129,
   "nPeers": 128,
   "cosmogonic": {
-    "breadthMean": 3.83,
+    "breadthMean": 3.78,
     "breadthRank": 1,
-    "zScorePopulation": 3.2,
-    "zScoreVsPeers": 3.35,
+    "zScorePopulation": 3.11,
+    "zScoreVsPeers": 3.25,
     "percentile": 100,
     "peerMaturity": 1.5
   },
@@ -18,7 +18,7 @@
     "breadthStdPeers": 0.53,
     "medianBreadth": 2.11,
     "medianPeerMaturity": 3.5,
-    "corrBreadthVsMaturity": -0.082
+    "corrBreadthVsMaturity": -0.08
   },
   "perAxis": [
     {
@@ -26,8 +26,8 @@
       "mean": 2.54,
       "std": 1.76,
       "max": 5,
-      "cosmo": 4,
-      "cosmoZ": 0.83,
+      "cosmo": 3.5,
+      "cosmoZ": 0.55,
       "leaders": [
         "Tierra",
         "Avida",
@@ -193,52 +193,52 @@
     {
       "name": "ALIEN",
       "full": "ALIEN",
-      "d": 4.61
+      "d": 4.64
     },
     {
       "name": "Creatures",
       "full": "Creatures",
-      "d": 4.97
-    },
-    {
-      "name": "Framsticks",
-      "full": "Framsticks",
-      "d": 5.48
+      "d": 5.1
     },
     {
       "name": "Division Blocks",
       "full": "Division Blocks",
-      "d": 5.56
+      "d": 5.58
+    },
+    {
+      "name": "Framsticks",
+      "full": "Framsticks",
+      "d": 5.59
+    },
+    {
+      "name": "OpenWorm",
+      "full": "OpenWorm",
+      "d": 5.6
     },
     {
       "name": "biosim4",
       "full": "biosim4",
-      "d": 5.65
+      "d": 5.67
     },
     {
       "name": "The Bibites",
       "full": "The Bibites",
-      "d": 5.7
+      "d": 5.72
     },
     {
       "name": "DERL (Deep Evolutionary Reinforcement Learning)",
       "full": "DERL (Deep Evolutionary Reinforcement Learning)",
-      "d": 5.81
+      "d": 5.83
+    },
+    {
+      "name": "UNIMAL (Universal Animal design space)",
+      "full": "UNIMAL (Universal Animal design space)",
+      "d": 5.83
     },
     {
       "name": "Karl Sims VC",
       "full": "Karl Sims Evolved Virtual Creatures",
-      "d": 5.82
-    },
-    {
-      "name": "Neural Graph Evolution (NGE)",
-      "full": "Neural Graph Evolution (NGE)",
       "d": 5.84
-    },
-    {
-      "name": "Polyworld",
-      "full": "Polyworld",
-      "d": 5.87
     }
   ]
 }

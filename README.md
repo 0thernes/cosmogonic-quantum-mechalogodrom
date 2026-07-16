@@ -763,7 +763,7 @@ historical sensitivity baseline:
 
 | Metric                         | Self-scored | Code-grounded (re-audited vs source) |
 | ------------------------------ | ----------: | -----------------------------------: |
-| Breadth (mean of 9 axes)       |    4.44 / 5 |                         **3.83 / 5** |
+| Breadth (mean of 9 axes)       |    4.44 / 5 |                         **3.78 / 5** |
 | Rank among 129 systems         |    #1 / 129 |                         **#1 / 129** |
 | z-score vs population          |      +4.17σ |                           **+3.20σ** |
 | z-score vs peers               |      +4.50σ |                           **+3.35σ** |

@@ -12,7 +12,25 @@
  *
  * Canonical code-grounded Cosmogonic vector — each axis cites the strongest source the auditor
  * could defend. The script fails if the CSV drifts from this expected vector:
- *   reproduction        4.0  genome.ts:77-149 + primordial-soup.ts:126-155 (seeded recombine rebirth) — DEFENSIBLE
+ *   reproduction        3.5  entities.ts:466-494 breedTraits + :557 — asexual inherit + point-mutation of 4
+ *                            behaviorally load-bearing traits in the LIVE base population, lineage-verified
+ *                            against the shipped EntityManager (entity-heredity.test.ts:121-159: >10% parental
+ *                            signature vs a 2.5% random baseline). Real heredity, so it clears the repro=3 anchor
+ *                            (Primordial Particle Systems: "emergent fission but no heritable genome/mutation").
+ *                            It cannot reach 4: there is NO SELECTION. Birth is a flat trait-blind rng()<0.06
+ *                            (entities.ts:1135); death is age-driven on `life: 200 + rng()*900` (entities.ts:563),
+ *                            drawn from the MAIN rng at spawn and never inherited. No birth or death path reads a
+ *                            heritable trait, so heredity + mutation + zero fitness differential = NEUTRAL DRIFT.
+ *                            Every repro=4 peer has selection (Cell Lab, Bibites, Life Engine, biosim4, Karl Sims)
+ *                            or true self-replication (Langton's Loops, von Neumann UC). The prior 4.0 cited
+ *                            genome.ts breed/crossover — ZERO callers in src/, "reserved for the planned spawn-path
+ *                            wiring" by their own docstring — and the soup rebirth, which is `pa = i` inside
+ *                            `if (!alive[i])`: corpse x living, not two live parents, and a startup transient that
+ *                            is dormant thereafter. Reproduction was the ONLY axis carried verbatim from the
+ *                            superseded self-score with no gate and no revision — OVERCLAIMED (was 4.0).
+ *                            HONEST PATH BACK: make one reproductive quantity depend on a heritable trait (gate the
+ *                            split roll on inherited nW/strategy, or derive `life` from a gene), then add
+ *                            GATE-REPRO-SELECT proving trait frequencies shift vs a fitness-blind ablated control.
  *   open-endedness      2.4  emergence-angles.ts real GA + TWO live fitness-selection loops (soup harvest
  *                            world.ts:4094 + petri truncation-selection petri-dish.ts:204, live at :526) + the birth
  *                            engine shows bounded active novelty versus a frozen control and the petri ring
@@ -153,7 +171,27 @@ const HISTORICAL_SELF_SCORED = [4.0, 3.5, 5.0, 4.0, 4.5, 5.0, 4.5, 4.5, 5.0];
 //              degenerate stream far lower under the SAME battery, is deterministic, and surfaces with recompute
 //              fidelity. A genuine new MEASURED-observability mechanism; classical statistics over a classical
 //              PRNG — a reproducibility receipt, not a physical-entropy or security claim)
-export const CODE_GROUNDED = [4.0, 2.4, 3.3, 3.8, 4.5, 4.6, 4.4, 3.5, 4.0];
+//   batch-58:  reproduction 4.0 -> 3.5 (the floor's FIRST DOWNWARD move, and the first correction of an
+//              unearned score rather than a credit for new work. A 9-axis re-audit — one auditor per axis,
+//              each proposed move then put to three independent skeptics prompted to REFUTE it — returned
+//              8 of 9 axes DEFENSIBLE and this one OVERCLAIMED; all three skeptics returned "cannot
+//              refute". Note the law is deliberately ASYMMETRIC: a gate is the price of a RAISE, and
+//              demanding one for a LOWERING would freeze unearned scores forever, since no gate can prove
+//              a mechanism ISN'T there. Reproduction was the only axis carried verbatim from the
+//              superseded optimistic self-score with no gate and no revision, while five siblings were
+//              lowered on inspection. Both of its cited groundings fail on the code: genome.ts
+//              breed/crossover have ZERO callers in src/ and their own docstring calls them "reserved for
+//              the planned entity/NHI spawn-path wiring", decodeTraits (sole reader of the 10-trait
+//              phenotype, fertility included) has no caller at all, and the soup rebirth breeds `pa = i`
+//              from INSIDE `if (!alive[i])` — a corpse genome, not the "two living parents" both modules
+//              claimed (docstrings corrected separately). What remains is real but unselected: heritable
+//              traits + point mutation with a flat trait-blind birth roll and an uninherited lifespan =
+//              neutral drift. 3.5 credits the genuine live heredity the rationale never cited and refuses
+//              credit for selection that does not exist. Lowering a score is not a capability regression:
+//              nothing in the sim changed, only the honesty of the number. NOTE the anti-inflation assert
+//              floor[i] <= self[i] still holds (3.5 <= 4.0), but that cap is worth revisiting — it lets a
+//              superseded 2026-06-26 guess bound the measured floor, and Cognition sits at zero headroom)
+export const CODE_GROUNDED = [3.5, 2.4, 3.3, 3.8, 4.5, 4.6, 4.4, 3.5, 4.0];
 const EXPECTED_CANONICAL_CODE_GROUNDED = CODE_GROUNDED;
 
 interface Row {
