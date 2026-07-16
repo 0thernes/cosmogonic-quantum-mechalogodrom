@@ -16,6 +16,7 @@ import { execSync } from 'node:child_process';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { CANONICAL_FACULTIES, CANONICAL_ARCHONS, CANONICAL_TOM_ORGANS } from './canonical-receipts';
+import { CODE_GROUNDED, HISTORICAL_SELF_SCORED } from './alife-codeground-sensitivity';
 
 interface Fact {
   name: string;
@@ -24,9 +25,47 @@ interface Fact {
   /** Values that are canonical/allowed for this fact. */
   allowed: Set<string>;
   note: string;
+  /** Optional canonicaliser applied to the capture before the allowed-set lookup (spacing/precision). */
+  normalize?: (v: string) => string;
+  /**
+   * Optional escape hatch: a line matching this is NOT drift. For facts whose superseded values stay
+   * quotable when the line SAYS they are superseded — "Historical snapshot (… #1/113)", "retired audit
+   * snapshot vs 112 known systems". The marker must be on the line, so an unlabelled stale number is
+   * still caught; this permits honest history, not silent staleness.
+   */
+  skipLine?: RegExp;
 }
 
+/** Render a 9-axis profile the way every surface writes it: one decimal, comma-space separated. */
+const axisVector = (v: readonly number[]): string => v.map((n) => n.toFixed(1)).join(', ');
+
 const FACTS: Fact[] = [
+  {
+    name: 'A-Life 9-axis vector',
+    // A bracketed 9-tuple of one-decimal scores is unambiguous — nothing else in these docs looks like
+    // it. This is the guard the SSOT was missing: the CSV <-> CODE_GROUNDED <-> codeground.json chain is
+    // hard-gated, but the same vector is restated in PROSE on a dozen surfaces with nothing policing it,
+    // which is exactly how [4.0,2.4,3.3,...] / [3.5,2.4,3.3,...] / [4.0,2.4,3.2,...] all survived at once.
+    // Allowed = the live CODE_GROUNDED floor, or the labelled historical self-score kept as a baseline.
+    pattern: /\[\s*(\d\.\d\s*(?:,\s*\d\.\d\s*){8})\]/g,
+    allowed: new Set([axisVector(CODE_GROUNDED), axisVector(HISTORICAL_SELF_SCORED)]),
+    normalize: (v) =>
+      v
+        .split(',')
+        .map((s) => Number(s.trim()).toFixed(1))
+        .join(', '),
+    note: 'canonical CODE_GROUNDED, or the superseded self-score when explicitly labelled historical',
+  },
+  {
+    name: 'A-Life survey size',
+    // "#1/N" ranks and "N-system" corpus references. 113 is the superseded corpus; the 129-peer
+    // re-evaluation is canonical (128 peers + Cosmogonic).
+    pattern:
+      /#1\s*(?:\/|of)\s*(\d{2,3})\b|\b(\d{2,3})[-\s]system\b(?=[^\n]{0,60}(?:matrix|survey|compar|expansion|corpus|A-?Life))/gi,
+    allowed: new Set(['129']),
+    skipLine: /\b(?:historical|superseded|retired|snapshot|legacy|point-in-time|was\s+#1)\b/i,
+    note: 'the survey is 129 systems (128 peers + Cosmogonic); 113 is the superseded corpus size',
+  },
   {
     name: 'Butlin scorecard (X/14)',
     // Only scorecard framings (met/partial/failed/Butlin/indicator). Excludes "Puppeteers 100 / 14 styles",
@@ -177,13 +216,26 @@ for (const file of surfaceFiles) {
     continue;
   }
   const lines = text.split('\n');
+  // `cqm-sync:historical` blocks are a DELIBERATELY frozen snapshot of an older release — sync-surfaces
+  // excludes them from receipt propagation by the same policy, so they must not be read as drift either.
+  const frozen = new Set<number>();
+  let inFrozen = false;
+  for (let i = 0; i < lines.length; i++) {
+    const l = lines[i]!;
+    if (/cqm-sync:historical:start/.test(l)) inFrozen = true;
+    if (inFrozen) frozen.add(i);
+    if (/cqm-sync:historical:end/.test(l)) inFrozen = false;
+  }
   for (const fact of FACTS) {
     for (let i = 0; i < lines.length; i++) {
+      if (frozen.has(i)) continue;
       const line = lines[i]!;
+      if (fact.skipLine?.test(line)) continue;
       fact.pattern.lastIndex = 0;
       let m: RegExpExecArray | null;
       while ((m = fact.pattern.exec(line)) !== null) {
-        const value = (m[1] ?? m[2])!;
+        const raw = (m[1] ?? m[2])!;
+        const value = fact.normalize ? fact.normalize(raw) : raw;
         const drift = !fact.allowed.has(value);
         if (drift)
           hits.push({

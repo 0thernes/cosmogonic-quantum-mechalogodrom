@@ -11,6 +11,15 @@ changed and why.
 
 ---
 
+## 2026-07-16 — Assessment surface close-out (MODULE / entity sheets / bible / labs / standing HTML)
+
+- MODULE-CONTRACTS: multi-loop dome ecology table + CODE_GROUNDED honesty binding.
+- ENTITY-SHEETS: food-web consumer table; entity heredity GATE-REPRO-SELECT note.
+- bible.html philosophy: paste-ready maximalist + specialist-humility blocks.
+- Consciousness lab header: null-gap / Butlin / #1/129 pointer.
+- Standing HTML: HISTORICAL SNAPSHOT banner + current CODE_GROUNDED pointer.
+- BRAIN §10.3 morphology note: mind/evo/RD/soft-flora (not Jolt-as-live-morph overclaim).
+
 ## 2026-07-16 — GATE-DOME-REFUGE honesty hardening + assessment residual close
 
 - Hardened GATE-DOME-REFUGE: unbiased foraging predator (Fisher-Yates sample, not iteration-head

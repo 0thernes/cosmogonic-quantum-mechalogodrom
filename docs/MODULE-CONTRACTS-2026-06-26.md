@@ -1,4 +1,4 @@
-<!-- reviewed: 2026-07-14 | dome-ecology implementation-truth pass | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-16 | Grok assessment dome ecology + A-Life honesty pass | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # Module Contracts
 
@@ -1708,6 +1708,28 @@ End of GOAL5 amendments.
 This amendment records the implemented ownership and lifecycle boundaries for the Crystal Big Tree
 ecology. It does not replace the general determinism, allocation, rendering, or honesty contracts
 above.
+
+## Multi-loop dome ecology (product framing — not a claim of Polyworld-class coevo)
+
+The live composition root (`src/world.ts`) is a **multi-caste food web**, not a paint layer:
+
+| Loop                               | Owner modules                                | Contract claim                                                         |
+| ---------------------------------- | -------------------------------------------- | ---------------------------------------------------------------------- |
+| Flora food field                   | `alien-flora.ts`                             | 60k edible plants; biomass graze yield; logistic regrow + fertilizer   |
+| Waste → fertilizer                 | `waste-ecology.ts`                           | Graze wasteLoad → grid → flora regrow boost + xeno constructs          |
+| Base population graze / chemotaxis | `entities.ts`                                | Biomass gradient climb; fitness-linked fission (**GATE-REPRO-SELECT**) |
+| Xenomimic trophic                  | `xenomimics.ts`                              | Graze flora; prey for entities; **GATE-XENO-TROPHIC** regulation       |
+| Big Tree sanctuary refuge          | `big-tree-zone.ts` + `xenomimics` safeZoneAt | Predation immunity inside disc (**GATE-DOME-REFUGE**)                  |
+| Titan harvest / dual economy       | `titans.ts` + `economy.ts`                   | Matter/energy ledger + AURUM/UMBRA market; PD diplomacy                |
+| Weather climate                    | weather system                               | Wind/temp couple flora, entities, xeno agitation                       |
+| RD ground scars                    | `reaction-diffusion.ts`                      | Titan waste scars into Gray–Scott skin                                 |
+
+**A-Life honesty (binding):** Ecology axis is code-grounded **3.4/5** (above survey mean) because
+this multi-loop stack is real and gated — **not** because it is long-horizon multi-genome
+coevolution. Morphology is mind/evo/RD/soft-flora reactive (**3.8**), not Sims articulated
+body-plan evolution. Open-endedness remains **2.4** (bounded selection + authored novelty).
+Canonical vector: `CODE_GROUNDED` in `scripts/alife-codeground-sensitivity.ts` —
+`[4.0, 2.4, 3.4, 3.8, 4.5, 4.6, 4.4, 3.5, 4.0]` · breadth **3.84** · **#1/129**.
 
 ## Canonical module ownership
 

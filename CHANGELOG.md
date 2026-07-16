@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Full-surface accuracy pass from the Grok assessment: ecology multi-loop dome framing,
   mind-coupled morphology honesty, visual-scale 10k product language, breadth-champion
   comparative framing, consciousness indicatorOnly law on public surfaces.
+- Dome ecology + food-web language integrated into MODULE-CONTRACTS, ENTITY-SHEETS, bible,
+  consciousness lab, and historical standing HTML.
 
 ## [0.23.0] — 2026-07-14
 

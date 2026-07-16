@@ -24,7 +24,7 @@ diffusion, **and the Tsotchke corpus wired as the primordial substrate for digit
 
 - Package/source version: **v0.23.0**.
 - Exact tracked-suite receipt: **3,313 tests / 0 fail**. Portable public coverage floor: **84.64% line / 82.21% func**.
-- **Standing & xeno-A-life position (readable synthesis):** [Comprehensive Standing Report (MD)](./docs/reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.md) · [HTML](./docs/reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.html) — engineering card, 113-system matrix, SuperCreature/SuperMind/Apex/Mechalogodrom deep dive, capital/ISAL path. Apex minds are **xeno multi-faculty scaffolds** (not OpenWorm bio-twins; not claimed sentience). Preserves V4/Phase-B failure-forward boundaries.
+- **Standing & xeno-A-life position (readable synthesis):** [Comprehensive Standing Report (MD)](./docs/reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.md) · [HTML](./docs/reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.html) — engineering card, historical 113-system matrix (a point-in-time snapshot, superseded by the current 129-system re-evaluation), SuperCreature/SuperMind/Apex/Mechalogodrom deep dive, capital/ISAL path. Apex minds are **xeno multi-faculty scaffolds** (not OpenWorm bio-twins; not claimed sentience). Preserves V4/Phase-B failure-forward boundaries.
 - **Dome ecology verification:** [Xenomimic tether and Big Tree evidence report](./docs/reports/DOME-ECOLOGY-VERIFICATION-2026-07-14.md) — canonical food, five-second simulation-time respawn, sanctuary transitions, temporary visits, resident controllers, social cleanup, performance, browser evidence, and explicit limitations.
 
 <!-- cqm-sync:local-measurement:start -->

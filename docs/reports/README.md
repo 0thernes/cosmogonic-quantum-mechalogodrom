@@ -39,7 +39,8 @@ commit exists.
   remaining deployment/manual-validation boundaries.
 - [2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.md](./2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.md)
   · [HTML](./2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.html) — combined standing
-  synthesis (engineering · 113-system matrix · SuperCreature/Apex/Mechalogodrom · xeno-A-life thesis ·
+  synthesis (engineering · historical 113-system matrix, a snapshot superseded by the current
+  129-system re-evaluation · SuperCreature/Apex/Mechalogodrom · xeno-A-life thesis ·
   capital/ISAL outreach). Does **not** authorize consciousness/sentience uplift; preserves V4/Phase-B
   failure-forward boundaries. Prefer this for –where do we stand?— over ad-hoc chat summaries.
 - [PHASE-B-MECHANISM-DEVELOPMENT-V3-2026-07-11.md](./PHASE-B-MECHANISM-DEVELOPMENT-V3-2026-07-11.md)

@@ -1402,17 +1402,17 @@ Source: `docs/reports/2026-06-26-alife-comparison-matrix.csv`, receipts in `asse
 
 **Table 10.3a — Nine-axis code-grounded capability scores + population z:**
 
-| Axis                 | Cosmogonic | Survey mean | Survey σ |  z-score  | Note                                                             |
-| -------------------- | :--------: | :---------: | :------: | :-------: | ---------------------------------------------------------------- |
-| Reproduction         |    4.0     |    2.54     |   1.76   |   +0.83   | Heritable `nW` scales the shipped auto-split (GATE-REPRO-SELECT) |
-| Open-endedness       |  **2.4**   |    2.55     |   1.27   | **−0.11** | **The ONLY axis below the survey mean** — the weakest absolute   |
-| Ecology              |    3.4     |    2.16     |   1.37   |   +0.90   | Multi-loop dome food web + Big Tree refuge (GATE-DOME-REFUGE)    |
-| Morphology/Physics   |    3.8     |    2.25     |   1.68   |   +0.93   | 3D rigid+soft, Jolt physics; not Sims-style body-plan evolution  |
-| Cognition/Learning   |    4.5     |    1.84     |   1.63   | **+1.63** | SuperMind depth (rare for A-Life)                                |
-| Substrate pluralism  |    4.6     |    1.10     |   0.43   | **+8.05** | **SOLE LEADER** — digital+quantum+classical+Tsotchke             |
-| Instrumentation      |    4.4     |    3.11     |   1.05   |   +1.23   | SVG charts, stats JSON, reproducibility                          |
-| Consciousness-theory |    3.5     |    0.12     |   0.70   | **+4.85** | Strong outlier — but **LIDA and CTM both score above it**        |
-| Visual scale         |    4.0     |    2.85     |   1.16   |   +0.99   | Multi-scale 2D/3D rendering                                      |
+| Axis                 | Cosmogonic | Survey mean | Survey σ |  z-score  | Note                                                              |
+| -------------------- | :--------: | :---------: | :------: | :-------: | ----------------------------------------------------------------- |
+| Reproduction         |    4.0     |    2.54     |   1.76   |   +0.83   | Heritable `nW` scales the shipped auto-split (GATE-REPRO-SELECT)  |
+| Open-endedness       |  **2.4**   |    2.55     |   1.27   | **−0.11** | **The ONLY axis below the survey mean** — the weakest absolute    |
+| Ecology              |    3.4     |    2.16     |   1.37   |   +0.90   | Multi-loop dome food web + Big Tree refuge (GATE-DOME-REFUGE)     |
+| Morphology/Physics   |    3.8     |    2.25     |   1.68   |   +0.93   | Mind/evo/RD/soft-flora morph; not Sims body-plan evo under MuJoCo |
+| Cognition/Learning   |    4.5     |    1.84     |   1.63   | **+1.63** | SuperMind depth (rare for A-Life)                                 |
+| Substrate pluralism  |    4.6     |    1.10     |   0.43   | **+8.05** | **SOLE LEADER** — digital+quantum+classical+Tsotchke              |
+| Instrumentation      |    4.4     |    3.11     |   1.05   |   +1.23   | SVG charts, stats JSON, reproducibility                           |
+| Consciousness-theory |    3.5     |    0.12     |   0.70   | **+4.85** | Strong outlier — but **LIDA and CTM both score above it**         |
+| Visual scale         |    4.0     |    2.85     |   1.16   |   +0.99   | Multi-scale 2D/3D rendering                                       |
 
 **Breadth (mean of 9): 3.844 / 5.00 code-grounded** — the canonical figure, and the one every downstream statistic in 10.3b uses. The historical **self-scored 4.444 / 5.00** is superseded: it is what the axes read before the code audit, and it is published only as dated evidence of how far the self-score inflated.
 

@@ -1,4 +1,4 @@
-<!-- reviewed: 2026-06-27 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-16 | Grok assessment dome ecology / bestiary honesty | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # Entity Sheets — the Bestiary of the Mechalogodrom
 
@@ -10,10 +10,28 @@ bug._
 > Source of truth: this doc names the intent; the code (`src/sim/*`, `native/src/*`) is the
 > implementation. When they disagree, fix the code or amend the sheet — never let them drift silently.
 > Cross-refs: [ENTITY-SCHEMA-AND-MAPPINGS-2026-06-26.md](./ENTITY-SCHEMA-AND-MAPPINGS-2026-06-26.md) · [MODULE-CONTRACTS-2026-06-26.md](./MODULE-CONTRACTS-2026-06-26.md) ·
-> [AI-SUBSYSTEM-2026-06-26.md](./AI-SUBSYSTEM-2026-06-26.md) · economy in [`src/sim/economy.ts`](../src/sim/economy.ts).
+> [AI-SUBSYSTEM-2026-06-26.md](./AI-SUBSYSTEM-2026-06-26.md) · economy in [`src/sim/economy.ts`](../src/sim/economy.ts) ·
+> dome ecology ownership in MODULE-CONTRACTS § DOME ECOLOGY · A-Life standing in
+> [VERIFICATION-ANALYTICAL-DATA.md](./VERIFICATION-ANALYTICAL-DATA.md) §1.
 
 Legend for the **economic role** row (V13): which currency a class leans toward (AURUM ☉ hoarders vs
 UMBRA ☾ speculators), and a relative purse weight (stature).
+
+### Dome food web (who eats whom — load-bearing, not scenery)
+
+| Consumer                         | How they eat                                 | Recovery                     |
+| -------------------------------- | -------------------------------------------- | ---------------------------- |
+| Base entities                    | Chemotaxis up flora biomass; graze           | Flora ~5 s regrow            |
+| Xenomimics                       | Brain motor eat → grazeAt; prey for entities | Flora + 5 s predation revive |
+| Titans / Leviathans / Puppeteers | DomeFeeding graze + swallow                  | Prey respawn 5 s elsewhere   |
+| Apex SuperCreatures              | SuperHunt predation                          | Prey 5 s                     |
+| Shoggoths                        | Own feed cycle                               | Own stack                    |
+| Big Tree visitors                | Fruit/leaf `EdibleResourceRegistry`          | Slot restore 5 s             |
+| Titans (economy)                 | Harvest → matter/energy ledger               | Population respawn path      |
+
+Sanctuary (Big Tree) can pause competitive graze/predation (**GATE-DOME-REFUGE**). Waste from graze
+fertilizes flora and nucleates xeno constructs. Dual economies: titan resource ledger + AURUM/UMBRA
+market. Full census: VERIFICATION § dome census.
 
 ---
 
@@ -21,6 +39,9 @@ UMBRA ☾ speculators), and a relative purse weight (stature).
 
 - **Biology:** instantiated from one of 250 deterministic **morphotypes** (`sim/phyla.ts`); 10 phyla
   × 25 + ~1% wildcard outliers. Each carries geometry, PBR palette, behavior, motion params.
+  **Heredity (ADR-0009 + GATE-REPRO-SELECT):** with `genomeRng`, traits `nW` / strategy / typeId /
+  setGroup inherit + mutate; `nW` scales auto-split probability and lifespan phenotype so lineages
+  are under real selection (not neutral drift). Sexual genome still incomplete vs Avida-class peers.
 - **Behavior:** one of 26 fields (`drift, orbit, pulse, swarm, flee, hunt, split, coil, spiral, …,
 nash, market, lorenz`). They split, age, die (weather-tuned lifespan), and feed the connectome.
   **Neural controller (V42):** each organism also carries the genome's compact **70-param brain**

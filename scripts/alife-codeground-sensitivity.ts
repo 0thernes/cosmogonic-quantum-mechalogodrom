@@ -139,7 +139,7 @@ const AXES = [
   'Consciousness-theory',
   'Visual scale',
 ];
-const HISTORICAL_SELF_SCORED = [4.0, 3.5, 5.0, 4.0, 4.5, 5.0, 4.5, 4.5, 5.0];
+export const HISTORICAL_SELF_SCORED = [4.0, 3.5, 5.0, 4.0, 4.5, 5.0, 4.5, 4.5, 5.0];
 
 /**
  * The self-score is HISTORICAL EVIDENCE, not a ceiling — axes deliberately measured ABOVE it.
