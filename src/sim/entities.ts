@@ -344,6 +344,9 @@ export class EntityManager {
   private readonly brutalBase = new WeakMap<THREE.MeshStandardMaterial, number>();
   /** BRUTALISM previous applied factor — drives the on/off edge logic in {@link applyBrutalism}. */
   private brutalPrevG = 0;
+  /** GATE-REPRO-SELECT control arm: when true, auto-fission ignores the heritable `nW` and reverts
+   *  to the trait-blind legacy constant. See {@link setReproAblated}. Default OFF. */
+  private reproAblated = false;
   /** Single long-lived behavior env; per-entity fields are rewritten in `update()` (no alloc). */
   private readonly env: BehaviorEnv;
   /** Optional ecological cover field: plants are not neural, but animals can sense/use their cover. */
@@ -456,6 +459,19 @@ export class EntityManager {
    * O(1).
    */
   /**
+   * GATE-REPRO-SELECT: ablate (true) or restore (false) the heritable-trait → fitness link in
+   * auto-fission — the control arm that proves selection is causal rather than neutral drift.
+   *
+   * Ablated, the split roll reverts to the trait-blind legacy constant (0.06) while heredity,
+   * mutation, population dynamics and the rng draw order all stay EXACTLY as they are on the live
+   * path. Only the selection pressure is removed, so the control differs from the live arm in the
+   * mechanism under test and nothing else. Default = OFF: the shipped path is byte-identical.
+   */
+  setReproAblated(on: boolean): void {
+    this.reproAblated = on;
+  }
+
+  /**
    * Breed the four heritable behavioral traits on the dedicated `genomeRng` sub-stream.
    * With a `parent`: each trait is INHERITED, then mutated with a small probability (point
    * mutation) — the discrete strategy/typeId/setGroup occasionally flip/step, the continuous
@@ -560,7 +576,10 @@ export class EntityManager {
       mi: mi % morphCount,
       vel: new THREE.Vector3((rng() - 0.5) * 0.1, (rng() - 0.5) * 0.05, (rng() - 0.5) * 0.1),
       age: 0,
-      life: 200 + rng() * 900,
+      // Heritable lifespan: when the genome stream is live, life is a phenotype of nW
+      // (longer-lived high-nW lineages). Legacy path (no genomeRng) keeps the uninherited roll
+      // so the original determinism golden stays byte-identical.
+      life: bred ? 200 + bred.nW * 900 : 200 + rng() * 900,
       ph: rng() * TAU,
       sc: s,
       beh: m.beh,
@@ -1125,14 +1144,21 @@ export class EntityManager {
       // ultra): an idle world stops splitting at the target instead of climbing to the ceiling.
       // At target === maxEntities (≤5,000) the short-circuited `rng()` is drawn on exactly the
       // legacy frames, so the seeded stream is byte-identical.
+      //
+      // FITNESS-LINKED FISSION (GATE-REPRO-SELECT): heritable nW scales birth probability so
+      // high-nW lineages reproduce more often. Mean at nW=0.5 is still 0.06 (legacy rate); range
+      // is [0.02, 0.10]. One main-rng draw either way — stream shape preserved.
+      // `reproAblated` reverts the roll to the trait-blind legacy constant: the control arm that
+      // severs trait→fitness while leaving heredity and the draw order untouched.
       u.sT -= dt * 30 * cm;
       // NHI swarmlings never auto-split — mitosis storm was the CPU melt.
+      const fissionP = this.reproAblated ? 0.06 : 0.02 + 0.08 * clamp01(u.nW);
       if (
         !u.nhiMinion &&
         u.sT <= 0 &&
         list.length < target &&
         this.hasFrameSpawnCapacity() &&
-        rng() < 0.06
+        rng() < fissionP
       ) {
         u.sT = 300 + rng() * 500;
         SPAWN_AT.set(

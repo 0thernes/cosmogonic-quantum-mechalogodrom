@@ -10,7 +10,10 @@
  */
 import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
-import { computeAlifeCodeground } from '../scripts/alife-codeground-sensitivity';
+import {
+  computeAlifeCodeground,
+  SUPERSEDES_SELF_SCORE,
+} from '../scripts/alife-codeground-sensitivity';
 
 const ROOT = `${import.meta.dir}/..`;
 const read = (p: string): string => readFileSync(`${ROOT}/${p}`, 'utf8');
@@ -39,10 +42,32 @@ describe('A-Life code-grounded stats are computed-and-gated (no silent drift)', 
     );
   });
 
-  test('the honest FLOOR never exceeds the self-scored ceiling on any axis (no inflation past the self-score)', () => {
+  // The hard bound on a measurement is the SCALE, not a guess. This replaced an assert of
+  // `floor[i] <= self[i]`, which let the superseded 2026-06-26 self-score cap the measurement built to
+  // supersede it — with cognition sitting exactly at that cap (4.5 == 4.5), the repo's own
+  // wire→gate→move law had no legal move left on the axis. See SUPERSEDES_SELF_SCORE.
+  test('every code-grounded axis is a valid score on the 0..5 scale', () => {
+    const floor = (computed.codeGrounded as { axes: number[] }).axes;
+    expect(floor).toHaveLength(9);
+    for (const v of floor) {
+      expect(v).toBeGreaterThanOrEqual(0);
+      expect(v).toBeLessThanOrEqual(5);
+    }
+  });
+
+  // What the old cap usefully encoded — "claiming more than you originally hoped deserves a second
+  // look" — kept as a deliberate opt-in instead of a wall: exceeding the self-score is allowed, but
+  // only by listing the axis in SUPERSEDES_SELF_SCORE with a batch note naming its gate. An accidental
+  // over-claim still fails here; an EARNED one is no longer unrecordable.
+  test('an axis exceeds its superseded self-score only when explicitly opted in', () => {
     const self = (computed.selfScored as { axes: number[] }).axes;
     const floor = (computed.codeGrounded as { axes: number[] }).axes;
-    for (let i = 0; i < self.length; i++) expect(floor[i]!).toBeLessThanOrEqual(self[i]!);
+    const exceeding = floor.flatMap((v, i) => (v > self[i]! ? [i] : []));
+    expect(
+      exceeding.filter((i) => !SUPERSEDES_SELF_SCORE.includes(i)),
+      `axes above the self-score without an entry in SUPERSEDES_SELF_SCORE — either the move is ` +
+        `unearned, or it is earned and must be opted in with a batch note naming its gate`,
+    ).toEqual([]);
   });
 
   // The surface check above greps for the breadth STRING, which is why a radar that was wrong on four

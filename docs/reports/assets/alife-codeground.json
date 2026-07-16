@@ -72,9 +72,9 @@
   },
   "canonicalCodeGrounded": {
     "axes": [
-      3.5,
+      4,
       2.4,
-      3.3,
+      3.4,
       3.8,
       4.5,
       4.6,
@@ -82,20 +82,20 @@
       3.5,
       4
     ],
-    "breadth": 3.778,
+    "breadth": 3.844,
     "rank": 1,
     "total": 129,
     "percentile": 100,
-    "zPopulation": 3.11,
-    "zVsPeers": 3.248,
-    "mahalanobis": 8.579,
+    "zPopulation": 3.22,
+    "zVsPeers": 3.373,
+    "mahalanobis": 8.644,
     "dominatedBy9d": 0,
-    "leadOverNearestPeerBreadth": 0.278,
+    "leadOverNearestPeerBreadth": 0.344,
     "perAxisZ": [
       {
         "axis": "Reproduction",
-        "score": 3.5,
-        "z": 0.55
+        "score": 4,
+        "z": 0.83
       },
       {
         "axis": "Open-endedness",
@@ -104,8 +104,8 @@
       },
       {
         "axis": "Ecology",
-        "score": 3.3,
-        "z": 0.83
+        "score": 3.4,
+        "z": 0.9
       },
       {
         "axis": "Morphology/Physics",
@@ -210,9 +210,9 @@
   },
   "codeGrounded": {
     "axes": [
-      3.5,
+      4,
       2.4,
-      3.3,
+      3.4,
       3.8,
       4.5,
       4.6,
@@ -220,20 +220,20 @@
       3.5,
       4
     ],
-    "breadth": 3.778,
+    "breadth": 3.844,
     "rank": 1,
     "total": 129,
     "percentile": 100,
-    "zPopulation": 3.11,
-    "zVsPeers": 3.248,
-    "mahalanobis": 8.579,
+    "zPopulation": 3.22,
+    "zVsPeers": 3.373,
+    "mahalanobis": 8.644,
     "dominatedBy9d": 0,
-    "leadOverNearestPeerBreadth": 0.278,
+    "leadOverNearestPeerBreadth": 0.344,
     "perAxisZ": [
       {
         "axis": "Reproduction",
-        "score": 3.5,
-        "z": 0.55
+        "score": 4,
+        "z": 0.83
       },
       {
         "axis": "Open-endedness",
@@ -242,8 +242,8 @@
       },
       {
         "axis": "Ecology",
-        "score": 3.3,
-        "z": 0.83
+        "score": 3.4,
+        "z": 0.9
       },
       {
         "axis": "Morphology/Physics",
@@ -279,8 +279,8 @@
   },
   "deltas": {
     "basis": "canonical-minus-historical",
-    "breadth": -0.666,
-    "zPopulation": -1.055,
-    "mahalanobis": -1.743
+    "breadth": -0.6,
+    "zPopulation": -0.945,
+    "mahalanobis": -1.678
   }
 }

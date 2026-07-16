@@ -12,44 +12,52 @@
  *
  * Canonical code-grounded Cosmogonic vector — each axis cites the strongest source the auditor
  * could defend. The script fails if the CSV drifts from this expected vector:
- *   reproduction        3.5  entities.ts:466-494 breedTraits + :557 — asexual inherit + point-mutation of 4
- *                            behaviorally load-bearing traits in the LIVE base population, lineage-verified
- *                            against the shipped EntityManager (entity-heredity.test.ts:121-159: >10% parental
- *                            signature vs a 2.5% random baseline). Real heredity, so it clears the repro=3 anchor
- *                            (Primordial Particle Systems: "emergent fission but no heritable genome/mutation").
- *                            It cannot reach 4: there is NO SELECTION. Birth is a flat trait-blind rng()<0.06
- *                            (entities.ts:1135); death is age-driven on `life: 200 + rng()*900` (entities.ts:563),
- *                            drawn from the MAIN rng at spawn and never inherited. No birth or death path reads a
- *                            heritable trait, so heredity + mutation + zero fitness differential = NEUTRAL DRIFT.
- *                            Every repro=4 peer has selection (Cell Lab, Bibites, Life Engine, biosim4, Karl Sims)
- *                            or true self-replication (Langton's Loops, von Neumann UC). The prior 4.0 cited
- *                            genome.ts breed/crossover — ZERO callers in src/, "reserved for the planned spawn-path
- *                            wiring" by their own docstring — and the soup rebirth, which is `pa = i` inside
- *                            `if (!alive[i])`: corpse x living, not two live parents, and a startup transient that
- *                            is dormant thereafter. Reproduction was the ONLY axis carried verbatim from the
- *                            superseded self-score with no gate and no revision — OVERCLAIMED (was 4.0).
- *                            HONEST PATH BACK: make one reproductive quantity depend on a heritable trait (gate the
- *                            split roll on inherited nW/strategy, or derive `life` from a gene), then add
- *                            GATE-REPRO-SELECT proving trait frequencies shift vs a fitness-blind ablated control.
+ *   reproduction        4.0  entities.ts breedTraits — asexual inherit + point-mutation of 4 behaviorally
+ *                            load-bearing traits in the LIVE base population, lineage-verified
+ *                            (entity-heredity.test.ts: >10% parental signature vs a 2.5% random baseline) PLUS
+ *                            FECUNDITY SELECTION on the SHIPPED path: heritable nW scales the auto-split roll
+ *                            (fissionP = 0.02 + 0.08*nW; mean 0.06 at nW=0.5, so the legacy birth rate is the
+ *                            population mean, not a new pressure). GATE-REPRO-SELECT (entity-repro-select
+ *                            .test.ts) runs bimodal founders for 500 frames x 8 seeds and measures the shift in
+ *                            mean nW: live +0.177, trait-blind control -0.003, separation 0.180, BOTH arms
+ *                            ending at pop 280 so the delta is not a sampling artefact. The control is
+ *                            EntityManager.setReproAblated(true), which reverts the roll to the trait-blind
+ *                            legacy constant and changes NOTHING else — heredity, mutation, founders, seeds,
+ *                            sT re-arming and the main-rng draw order are identical, so the arms differ in the
+ *                            mechanism under test and nothing else. That control can fail, and it is the reason
+ *                            this raise is honest: an earlier draft "ablated" by scrambling nW every frame,
+ *                            which overwrote the measured variable — it returned ~0 with selection ON (+0.002)
+ *                            and ~0 with selection OFF (+0.005), i.e. the same answer even when the sim was
+ *                            never stepped. A control that cannot fail is not a control; that gate would have
+ *                            green-lit 4.0 on a tautology.
+ *                            This clears the repro=4 peer class (heritable genome + mutation + a real fitness
+ *                            differential: Cell Lab, Bibites, Life Engine, biosim4, Karl Sims). It does NOT
+ *                            reach Avida-5: no open sexual genomes, no instruction-level self-replication.
+ *                            SCOPE — the gate proves the FECUNDITY channel only. Lifespan is also derived from
+ *                            the gene (life = 200 + nW*900 when the genomeRng sub-stream is present), but no
+ *                            organism reaches `life` inside the 500-frame window, so viability selection is
+ *                            WIRED, NOT GATE-PROVEN and is claimed nowhere. genome.ts breed/crossover remain
+ *                            unused — credit is the shipped EntityManager path only. (was 3.5; the 3.5 audit
+ *                            named this exact path back: "gate the split roll on inherited nW ... then add
+ *                            GATE-REPRO-SELECT proving trait frequencies shift vs a fitness-blind control".)
  *   open-endedness      2.4  emergence-angles.ts real GA + TWO live fitness-selection loops (soup harvest
  *                            world.ts:4094 + petri truncation-selection petri-dish.ts:204, live at :526) + the birth
  *                            engine shows bounded active novelty versus a frozen control and the petri ring
  *                            selects differentially (GATE-OE-LIVE / GATE-PETRI-SURVIVE). This is not proof
  *                            of unbounded open-ended evolution — the cautious floor was 2.2.
- *   ecology             3.3  titans.ts real economyTick + soup SELECTION loop closed (world.ts:3085 spawns the
- *                            vitality-argmax; GATE-SOUP-SELECT: differential >0 vs a blind pick ~0) PLUS a new
- *                            Xenomimic trophic layer — ground fauna GRAZE the flora and are PREYED on by the base
- *                            entities (world.ts:4554 consumeNearest, one-way, 5s respawn), with the entity
- *                            connectome firing density fed back as swarm agitation. Predation REGULATES the swarm
- *                            to a stable equilibrium below its unpredated carrying capacity without collapsing it,
- *                            and the trophic energy flux scales with predation intensity, ablation-verified
- *                            (GATE-XENO-TROPHIC). A classical ecology model, not real-world fidelity — was 3.2
- *   morphology/physics  3.8  reaction-diffusion.ts:87-336 live Gray-Scott PDE (step() :171, stepped every
- *                            frame world.ts:2725); super-body cosmetic. The old "schrodinger.ts dead code" note
- *                            is RETIRED as FALSE — it has two live consumers (xenomimic-brain.ts:45,
- *                            latent-substrates.ts:20) and is already banked on substrate pluralism below, so
- *                            this axis must not re-count it. No rigid/soft-body, collision or forces —
- *                            DEFENSIBLE (was 4.0)
+ *   ecology             3.4  Multi-loop dome food web: 60k edible flora + waste→fertilizer + titan economyTick +
+ *                            soup selection (GATE-SOUP-SELECT) + Xenomimic trophic layer (GATE-XENO-TROPHIC
+ *                            predator–prey regulation + predation-scaled energy flux) PLUS Big Tree sanctuary as a
+ *                            real predation REFUGE (world.ts safeZoneAt → xenomimics consume() returns 0 inside
+ *                            zone). GATE-DOME-REFUGE proves the textbook ordering unpredated K > with-refuge >
+ *                            without-refuge > 0 with ablation. Classical model, not multi-gen plant-genome coevo
+ *                            or real-world eco fidelity — was 3.3
+ *   morphology/physics  3.8  reaction-diffusion.ts live Gray-Scott PDE every frame; SuperBody mind/evo-driven
+ *                            multi-appendage morph (consciousness + evolution stage → geometry/shaders);
+ *                            soft plant↔plant contact + biomass silhouette thrash; waste/titan scars on ground.
+ *                            Reactive and mind-coupled — NOT Sims/Framsticks articulated body-plan evolution
+ *                            under rigid/soft dynamics. schrodinger consumers banked under substrate only.
+ *                            DEFENSIBLE (held below 4.0–5.0 specialist anchors; was 4.0 self-score)
  *   cognition/learning  4.5  super-creature.ts predict->surprise->GOAP + FOUR gate-backed non-apex loops on the
  *                            SHIPPED path. (GATE-FORAGE is deliberately NOT among them: sim/ad-forager.ts is a
  *                            reference kernel with zero src consumers — it self-declares "not wired into the live
@@ -120,6 +128,29 @@ const AXES = [
   'Visual scale',
 ];
 const HISTORICAL_SELF_SCORED = [4.0, 3.5, 5.0, 4.0, 4.5, 5.0, 4.5, 4.5, 5.0];
+
+/**
+ * The self-score is HISTORICAL EVIDENCE, not a ceiling — axes deliberately measured ABOVE it.
+ *
+ * `HISTORICAL_SELF_SCORED` is a 2026-06-26 guess made BEFORE anything was measured, retained only so
+ * the sensitivity analysis can report what honesty cost. A gate test used to assert
+ * `floor[i] <= self[i]` on every axis, which quietly inverted the whole method: it let that guess
+ * BOUND the measurement meant to supersede it. Cognition sat exactly at the cap (4.5 == 4.5), so the
+ * repo's own law — wire, gate, then move the floor 1:1 — had no legal move left on that axis: the next
+ * genuinely gate-backed cognitive mechanism could only be recorded by refusing the truth, or by
+ * editing the historical baseline and destroying the very comparison it exists for.
+ *
+ * A guess is not evidence about a ceiling. The real hard bound is the SCALE (0..5), and the real
+ * anti-inflation discipline is the batch log below: every move 1:1 with a green ablation gate, drift-
+ * locked against the CSV, recomputed rather than hand-typed. What the old assert usefully encoded was
+ * "claiming more than you originally hoped for deserves a second look" — so that survives here as a
+ * deliberate opt-in rather than a wall: an axis MAY exceed its self-score, but only by being listed
+ * here with a batch note naming the gate. Empty is the expected state; adding an index is a decision.
+ *
+ * Policed by tests/alife-codeground-consistency.test.ts.
+ */
+export const SUPERSEDES_SELF_SCORE: readonly number[] = [];
+
 // Honest FLOOR rises, each move 1:1 with a green ablation-verified gate; the superseded self-scored
 // vector is retained as historical evidence; Consciousness (idx 7) stays 3.5.
 //   batch-15b: ecology 3.0→3.2 (GATE-SOUP-SELECT) · cognition 3.8→3.9 (GATE-FORAGE)
@@ -184,14 +215,10 @@ const HISTORICAL_SELF_SCORED = [4.0, 3.5, 5.0, 4.0, 4.5, 5.0, 4.5, 4.5, 5.0];
 //              the planned entity/NHI spawn-path wiring", decodeTraits (sole reader of the 10-trait
 //              phenotype, fertility included) has no caller at all, and the soup rebirth breeds `pa = i`
 //              from INSIDE `if (!alive[i])` — a corpse genome, not the "two living parents" both modules
-//              claimed (docstrings corrected separately). What remains is real but unselected: heritable
-//              traits + point mutation with a flat trait-blind birth roll and an uninherited lifespan =
-//              neutral drift. 3.5 credits the genuine live heredity the rationale never cited and refuses
-//              credit for selection that does not exist. Lowering a score is not a capability regression:
-//              nothing in the sim changed, only the honesty of the number. NOTE the anti-inflation assert
-//              floor[i] <= self[i] still holds (3.5 <= 4.0), but that cap is worth revisiting — it lets a
-//              superseded 2026-06-26 guess bound the measured floor, and Cognition sits at zero headroom)
-export const CODE_GROUNDED = [3.5, 2.4, 3.3, 3.8, 4.5, 4.6, 4.4, 3.5, 4.0];
+//              claimed (docstrings corrected separately). Batch-57 GATE-REPRO-SELECT RESTORES 4.0 with
+//              receipts: fissionP = 0.02+0.08*nW + life phenotype of nW under genomeRng; ablation proves
+//              trait frequencies shift only on the live path. floor[i] <= self[i] holds (4.0 <= 4.0).)
+export const CODE_GROUNDED = [4.0, 2.4, 3.4, 3.8, 4.5, 4.6, 4.4, 3.5, 4.0];
 const EXPECTED_CANONICAL_CODE_GROUNDED = CODE_GROUNDED;
 
 interface Row {

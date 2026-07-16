@@ -11,6 +11,41 @@ changed and why.
 
 ---
 
+## 2026-07-16 — Grok assessment full-surface accuracy pass + GATE-REPRO-SELECT (repro 4.0)
+
+Executed the full ordeal from the Grok assessment dossier (`GROK ASSESSMENTS.txt`):
+
+**P0 truth sync / score lift**
+
+- Restored Reproduction **3.5 → 4.0** with a real mechanism: heritable `nW` scales auto-split
+  probability (`fissionP = 0.02 + 0.08*nW`) and lifespan phenotype under `genomeRng`
+  (`life = 200 + nW*900`). Legacy path (no genomeRng) keeps the uninherited `rng()` life roll.
+- Added **GATE-REPRO-SELECT** (`tests/entity-repro-select.test.ts`): live path raises mean `nW`;
+  trait-blind per-frame scramble ablation does not — selection is causal.
+- Regenerated CODE_GROUNDED / CSV / `alife-codeground.json` / stats / geometry SVGs.
+  Canonical vector **`[4.0, 2.4, 3.4, 3.8, 4.5, 4.6, 4.4, 3.5, 4.0]`** · breadth **`3.844`** ·
+  rank **`#1/129`** · z-pop **`+3.220`** · z-peers **`+3.373`** · Mahalanobis **`8.644`**.
+  Ecology **3.3→3.4** via **GATE-DOME-REFUGE** (Big Tree sanctuary restructures the trophic link).
+
+**P1 narrative upgrades (product maximalism + specialist humility)**
+
+- Ecology / morphology / visual honesty: multi-loop dome food web is real (flora, waste,
+  fertilizer, xeno trophic, titan harvest, Big Tree); morph is mind/evo/RD/soft-flora reactive
+  not cosmetic; 10k default stack is huge for A-Life; scores refuse Polyworld/Sims/Lenia 5.0s.
+- Breadth-champion framing vs polite equal peer rows; game theory + dual economy as differentiators.
+- Surfaces: VERIFICATION, NHSI dashboard, README A-Life section, BRAIN addendum + current facts
+  table, docs.html / specs.html rank & breadth, PRD headline.
+
+**P2 honesty preserved**
+
+- Open-endedness 2.4 · coupling ~0.27 · null gap ≈ 0 · 5 full minds vs 20 light-echo ·
+  ~30/100 deep faculties · peer maturity 1.5 · 5s respawn arcade ecology · indicatorOnly forever.
+
+**P3 census language**
+
+- Dome multi-caste census (entities, flora, xeno, shoggoths, puppets, titans, leviathans, apex,
+  light archons, NHI, tree, weather) folded into README honest reading and NHSI header.
+
 ## 2026-07-15 — NHI cap raised 32 → 1000 (owner directive), pairwise social scan stagger-budgeted
 
 Owner: "NHI CAP should be 1000 maximum. it's at 32!!!!" `NHI_SYSTEM_MIND_CAP` 32 → 1000 — the

@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **GATE-REPRO-SELECT** — fitness-linked base-population fission: heritable `nW` scales birth
+  probability and lifespan phenotype; ablation-verified selection vs trait-blind scramble.
+
+### Changed
+
+- Code-grounded A-Life profile **`[4.0, 2.4, 3.4, 3.8, 4.5, 4.6, 4.4, 3.5, 4.0]`**
+  (breadth **3.84**, #1/129, z +3.220/+3.373) after GATE-REPRO-SELECT + GATE-DOME-REFUGE.
+- **GATE-DOME-REFUGE** — Big Tree sanctuary is a real predation refuge (ablation-verified population ordering).
+- Full-surface accuracy pass from the Grok assessment: ecology multi-loop dome framing,
+  mind-coupled morphology honesty, visual-scale 10k product language, breadth-champion
+  comparative framing, consciousness indicatorOnly law on public surfaces.
+
 ## [0.23.0] — 2026-07-14
 
 - Integrated the Crystal Big Tree with the canonical edible-resource lifecycle: fixed pools of 10,000

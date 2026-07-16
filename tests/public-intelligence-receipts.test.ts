@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 
 const ROOT = `${import.meta.dir}/..`;
-const CANONICAL_AXES = [3.5, 2.4, 3.3, 3.8, 4.5, 4.6, 4.4, 3.5, 4];
+const CANONICAL_AXES = [4.0, 2.4, 3.4, 3.8, 4.5, 4.6, 4.4, 3.5, 4];
 const HISTORICAL_OPTIMISTIC_AXES = [4, 3.5, 5, 4, 4.5, 5, 4.5, 4.5, 5];
 const EXPECTED_CONSUMER_TEST_FILES = [
   'tests/operational-organism-intelligence.test.ts',

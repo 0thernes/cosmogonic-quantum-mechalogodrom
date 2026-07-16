@@ -131,8 +131,9 @@ describe('Entity colony / chain ecology (ADR 0016 deep)', () => {
     const { mean, samples, kinContactFrac } = meanKinNearestNeighbor(em.list);
     expect(samples).toBeGreaterThan(POP * 0.4);
     // Ideal graphseek edge is ~4..9u; allow a living band (strings, not collapse, not rim fog).
+    // Fitness-linked fission (GATE-REPRO-SELECT) slightly widens the band; 0.90 still refuses isolation fog.
     expect(mean).toBeGreaterThan(2.5);
-    expect(mean).toBeLessThan(SOCIAL_FLOCK_R * 0.85);
+    expect(mean).toBeLessThan(SOCIAL_FLOCK_R * 0.9);
     // Most organisms with any kin still have one inside the social flock disk.
     expect(kinContactFrac).toBeGreaterThan(0.55);
   });
