@@ -21,7 +21,11 @@ try {
   const { default: mermaid } = await import('mermaid');
   mermaid.initialize({
     startOnLoad: false,
-    theme: 'dark',
+    // 'base' is the ONLY theme mermaid lets themeVariables modify. Under 'dark' every variable below
+    // was silently discarded and the diagrams rendered in mermaid's stock grey, ignoring the page
+    // palette entirely. `darkMode: true` keeps base's DERIVED shades (contrast text, edge labels,
+    // subgraph fills) on the dark side of the fence.
+    theme: 'base',
     themeVariables: {
       darkMode: true,
       background: '#030612',
