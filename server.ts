@@ -429,6 +429,54 @@ function svgAssetFromPath(pathname: string, prefix: string): BunFile | null {
 }
 
 /**
+ * The repo `docs/` tree, read-only — the EVIDENCE every documentary surface cites.
+ *
+ * /docs, /spec, /bible and all three lab pages link their receipts as `./docs/<file>.md` and
+ * `./docs/reports/assets/<file>.json|.csv`, and every one of those 404'd: the only docs route was
+ * {@link svgAssetFromPath}, which serves `/docs/reports/assets/**` and ONLY `.svg`. So the reports,
+ * dashboards, ledgers and benchmark data the pages present as their proof were unreachable on the
+ * host that serves those pages — a dead citation on every claim, in a project whose whole ethos is
+ * receipts. The files were on disk the entire time; nothing routed to them.
+ *
+ * Read-only and allowlisted by extension: documents and data, never source. Traversal is rejected
+ * rather than normalized — any `..`, backslash or empty segment fails closed, and the resolved URL
+ * must still sit under DOCS_ROOT (belt and braces: catches encoded escapes the segment check misses).
+ * `/docs` exact stays the HTML page — this only ever matches the `/docs/` subtree.
+ */
+const DOCS_ROOT = new URL('./docs/', import.meta.url);
+const DOCS_FILE_TYPES: Record<string, string> = {
+  md: 'text/markdown; charset=utf-8',
+  json: 'application/json; charset=utf-8',
+  csv: 'text/csv; charset=utf-8',
+  svg: 'image/svg+xml; charset=utf-8',
+  xml: 'application/xml; charset=utf-8',
+  txt: 'text/plain; charset=utf-8',
+  html: 'text/html; charset=utf-8',
+};
+function docsFileFromPath(pathname: string): { file: BunFile; type: string } | null {
+  if (!pathname.startsWith('/docs/')) return null;
+  let rel: string;
+  try {
+    rel = decodeURIComponent(pathname.slice('/docs/'.length));
+  } catch {
+    return null;
+  }
+  if (
+    rel.length === 0 ||
+    rel.includes('\\') ||
+    rel.includes('\0') ||
+    rel.split('/').some((part) => part.length === 0 || part === '..' || part === '.')
+  ) {
+    return null;
+  }
+  const type = DOCS_FILE_TYPES[rel.slice(rel.lastIndexOf('.') + 1).toLowerCase()];
+  if (!type) return null;
+  const url = new URL(rel, DOCS_ROOT);
+  if (!url.href.startsWith(DOCS_ROOT.href)) return null;
+  return { file: Bun.file(url), type };
+}
+
+/**
  * Hashed build assets at the dist/ root, for the statically-served surfaces.
  *
  * `/docs`, `/spec` and `/bible` are served straight out of dist/ by {@link serveHtml}, so their
@@ -832,6 +880,20 @@ if (import.meta.main) {
         logRequest(req, 200);
         return withSecurityHeaders(
           new Response(file, { headers: { 'Content-Type': 'image/svg+xml; charset=utf-8' } }),
+        );
+      }
+      // The docs/ tree (md/json/csv/svg/xml/txt/html) — the receipts every surface cites. Runs after
+      // the assets/*.svg handler above, which it would otherwise subsume, so that route keeps owning
+      // its own 404 shape.
+      const docsFile = docsFileFromPath(p);
+      if (docsFile) {
+        if (!(await docsFile.file.exists())) {
+          logRequest(req, 404);
+          return withSecurityHeaders(new Response('Not Found', { status: 404 }));
+        }
+        logRequest(req, 200);
+        return withSecurityHeaders(
+          new Response(docsFile.file, { headers: { 'Content-Type': docsFile.type } }),
         );
       }
       if (p.startsWith('/assets/alife/') && p.endsWith('.svg')) {
