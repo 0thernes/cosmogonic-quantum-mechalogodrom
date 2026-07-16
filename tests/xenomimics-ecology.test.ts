@@ -20,6 +20,9 @@
  */
 import { describe, expect, test } from 'bun:test';
 import { XenomimicPopulation } from '../src/sim/xenomimics';
+import { mulberry32 } from '../src/math/rng';
+import { CRYSTAL_TREE_ORIGIN_X, CRYSTAL_TREE_ORIGIN_Z } from '../src/sim/constants';
+import { BIG_TREE_ZONE_ENTRY_RADIUS } from '../src/sim/big-tree-zone';
 
 /**
  * Advance a population `steps` at `dt`. For the first `establish` steps the swarm grows undisturbed
@@ -118,28 +121,118 @@ describe('GATE-XENO-TROPHIC — predator–prey ecology', () => {
  *
  *     unpredated K  >  predated WITH refuge  >  predated WITHOUT refuge  >  0
  *
- * The refuge-OFF arm is the ablation control: same seed, same food, same establish window, same
- * victim selection, same predation cadence — the ONLY difference is whether `safeZoneAt` is supplied.
- * If the sanctuary did no causal work the two predated arms would coincide.
+ * ISOLATE THE REFUGE FROM THE CALM. `safeZoneAt` is read on TWO independent paths: `consume()`
+ * (xenomimics.ts:793 — a protected target cannot be killed) and the per-beat sense construction in
+ * `step()` (xenomimics.ts:507/515 — a sheltered twin's threat percept is zeroed). Withholding the
+ * coupling ablates BOTH at once, so it cannot tell a refuge from a behavioural change: the control
+ * would differ in perception, foraging and breeding as well as in killability. The control arm here
+ * therefore STILL supplies `safeZoneAt` — perception stays bit-identical — and severs only the refuge
+ * via `setRefugeImmunityAblated(true)`. Measured: the immunity-ablated arm lands on the no-sanctuary
+ * arm EXACTLY (604 = 604 across the probe seeds), so the perception channel is worth ZERO at
+ * population level and the whole +46..+54 lift is the refuge. That equality is asserted, not assumed.
+ *
+ * THE PREDATOR MUST FORAGE, NOT PERSEVERATE. An earlier draft of this gate picked victims as the
+ * first floor(alive*f) creatures in fixed `forEach` order. Protected creatures never die, so they
+ * permanently occupied the head of that order and absorbed the whole predation budget forever: on
+ * seed 4242 the refuge arm blocked 80% of attempts while only 28% of the swarm was inside the disc —
+ * a 3x targeting bias. That harness inflated the lift to +277 and measured a predator wasting every
+ * attack on the same unkillable individuals, NOT a spatial restructuring of the trophic link. Real
+ * refuge theory assumes predators forage over the ACCESSIBLE prey, so victims are now drawn as an
+ * unbiased seeded sample (Fisher-Yates prefix on `mulberry32`). Under that predator the block rate
+ * collapses to ~= the disc's spatial occupancy (21-28% vs 21-28%) and the honest lift is +46 (~7.6%),
+ * not +277. The `blocked ~= occupancy` assertion below is the standing guard against that artifact
+ * class: it is what the original gate lacked, and it fails loudly on the biased harness.
+ *
+ * THE DISC IS THE SHIPPED ONE. The earlier draft substituted a test disc at (200,0,r150), justified
+ * by the claim that the swarm only reaches x[-383,308]/z[-279,280] and so never meets the Big Tree.
+ * That claim is FALSE: the measured seed-4242 unpredated envelope is x[-723,478]/z[-662,630], which
+ * overlaps CRYSTAL_TREE_ORIGIN (220,620) r=240 directly. The substitution was never necessary — the
+ * shipped disc produces the same refugia ordering — so this gate now asserts about the actual Big
+ * Tree geometry rather than a stand-in. Gating a stand-in green-lights a no-op.
  *
  * This is what grounds ecology 3.3 → 3.4 in `scripts/alife-codeground-sensitivity.ts`, at the same bar
  * GATE-XENO-TROPHIC set for 3.2 → 3.3: an emergent population-level dynamic measured against an
  * ablated control. Honest scope: a bounded classical refuge model, not real-world ecological fidelity.
  */
+/**
+ * As {@link runWithPredation}, but the predator FORAGES: victims are an unbiased seeded sample of the
+ * live swarm rather than the head of the iteration order. Returns population plus the telemetry the
+ * anti-artifact guard needs (`blocked` attempts vs the disc's mean spatial `occupancy`).
+ */
+function runWithForagingPredation(
+  seed: number,
+  steps: number,
+  dt: number,
+  fraction: number,
+  establish: number,
+  safeZoneAt?: (x: number, z: number) => boolean,
+  ablateImmunity = false,
+): { pop: number; flux: number; attempts: number; blocked: number; occupancy: number } {
+  const pop = new XenomimicPopulation(seed, { growthRamp: 40, predationRespawn: 5 });
+  pop.setRefugeImmunityAblated(ablateImmunity);
+  const food = (): number => 0.9;
+  const pick = mulberry32((seed ^ 0x13579bdf) >>> 0 || 1);
+  let predClock = 0;
+  let flux = 0;
+  let attempts = 0;
+  let blocked = 0;
+  let occSum = 0;
+  let occN = 0;
+  for (let i = 0; i < steps; i++) {
+    pop.step(dt, safeZoneAt ? { foodAt: food, safeZoneAt } : { foodAt: food });
+    if (i < establish) continue;
+    predClock += dt;
+    if (fraction <= 0 || predClock < 0.2) continue;
+    predClock = 0;
+    const live: Parameters<Parameters<XenomimicPopulation['forEach']>[0]>[0][] = [];
+    pop.forEach((c) => live.push(c));
+    if (live.length === 0) continue;
+    if (safeZoneAt) {
+      let inside = 0;
+      for (const c of live) if (safeZoneAt(c.x, c.z)) inside++;
+      occSum += inside / live.length;
+      occN++;
+    }
+    const take = Math.floor(live.length * fraction);
+    if (take <= 0) continue;
+    // Fisher-Yates prefix: an unbiased seeded sample, so the predator cannot perseverate on the
+    // unkillable head of the list.
+    const idx = live.map((_, k) => k);
+    for (let k = 0; k < take && k < idx.length; k++) {
+      const j = k + Math.floor(pick() * (idx.length - k));
+      const t = idx[k]!;
+      idx[k] = idx[j]!;
+      idx[j] = t;
+    }
+    for (let k = 0; k < take && k < idx.length; k++) {
+      attempts++;
+      const victim = live[idx[k]!];
+      if (!victim) continue;
+      const yielded = pop.consume(victim);
+      flux += yielded;
+      if (yielded === 0) blocked++;
+    }
+  }
+  return {
+    pop: pop.population(),
+    flux,
+    attempts,
+    blocked,
+    occupancy: occN > 0 ? occSum / occN : 0,
+  };
+}
+
 describe('GATE-DOME-REFUGE — the sanctuary restructures the trophic link', () => {
-  // GEOMETRY FIDELITY MATTERS, and finding that out is half this gate's value. The shipped sanctuary
-  // is a disc OFFSET from where the fauna spawn (Big Tree at (220,620), r=240; the swarm establishes
-  // near the origin and disperses to x[-383,308] / z[-279,280]). An earlier draft of this gate centred
-  // the disc on the founding pair instead — which zeroes their threat signal during the establish
-  // window, suppresses the forage→breed path, and left the lineage stuck at 2 on seed 77 while other
-  // seeds grew to cap. That is a test artifact, NOT the shipped configuration, and it is exactly the
-  // shape of a seed-lucky result. Keep this disc offset from the spawn area.
-  const refuge = (x: number, z: number): boolean => Math.hypot(x - 200, z) < 150;
+  // THE SHIPPED sanctuary geometry, imported from the constants the composition root uses — not a
+  // stand-in. `isBigTreeMemberProtected` adds a per-member hysteresis registry on top of this disc;
+  // the spatial predicate is its floor (`isBigTreeProtected`), which is what `consume()` consults.
+  const refuge = (x: number, z: number): boolean =>
+    Math.hypot(x - CRYSTAL_TREE_ORIGIN_X, z - CRYSTAL_TREE_ORIGIN_Z) < BIG_TREE_ZONE_ENTRY_RADIUS;
   const food = (): number => 0.9;
   // MULTI-SEED BY CONSTRUCTION: a one-seed arm here would measure a seed, not an ecological law. The
-  // ordering below was verified on 9/9 seeds that reach a standing stock (a few founding lineages —
-  // e.g. 6060, 99 — never establish at all, refuge or not; those are degenerate runs, not refuge
-  // failures, and the K>2 assertion excludes them).
+  // ordering holds on 10/10 seeds that reach a standing stock; a few founding lineages (e.g. 6060,
+  // 99) never establish at all, refuge or not — degenerate runs, not refuge failures, which the
+  // K>2 assertion excludes.
   const SEEDS = [4242, 1234, 2026];
 
   test('refugia signature: unpredated > predated-WITH-refuge > predated-WITHOUT-refuge (ablation)', () => {
@@ -149,34 +242,69 @@ describe('GATE-DOME-REFUGE — the sanctuary restructures the trophic link', () 
       runWithPredation(unpredated, 2400, 1 / 30, food, 0, 99999);
       const K = unpredated.population();
 
-      // Arm 2 — predation WITH the sanctuary: sheltered fauna survive, lifting the equilibrium.
-      const sheltered = new XenomimicPopulation(seed, { growthRamp: 40, predationRespawn: 5 });
-      const shelteredFlux = runWithPredation(sheltered, 2400, 1 / 30, food, 0.03, 1200, refuge);
-      const shelteredPop = sheltered.population();
+      // Arm 2 — predation WITH the shipped sanctuary: sheltered fauna survive, lifting the equilibrium.
+      const sheltered = runWithForagingPredation(seed, 2400, 1 / 30, 0.03, 1200, refuge);
 
-      // Arm 3 — ABLATION: identical seed, food, establish window, victim selection and cadence. The
-      // ONLY difference is that `safeZoneAt` is withheld. If the sanctuary did no causal work these
-      // two arms would coincide.
-      const exposed = new XenomimicPopulation(seed, { growthRamp: 40, predationRespawn: 5 });
-      const exposedFlux = runWithPredation(exposed, 2400, 1 / 30, food, 0.03, 1200);
-      const exposedPop = exposed.population();
+      // Arm 3 — THE CONTROL: `safeZoneAt` is still supplied, so the sheltered twins' threat percept is
+      // zeroed EXACTLY as in arm 2 and perception/foraging/breeding/cadence/RNG are bit-identical.
+      // Only setRefugeImmunityAblated(true) severs the refuge itself. Withholding the coupling instead
+      // would ablate perception AND immunity together and could not isolate the refuge.
+      const immunityAblated = runWithForagingPredation(
+        seed,
+        2400,
+        1 / 30,
+        0.03,
+        1200,
+        refuge,
+        true,
+      );
 
-      // The control must be a real standing stock, and predation must bite in BOTH predated arms.
+      // Arm 4 — no sanctuary at all. Measured only to show arm 3 lands exactly on it, i.e. the
+      // perception channel moves the equilibrium by ZERO and the whole lift is the refuge.
+      const exposed = runWithForagingPredation(seed, 2400, 1 / 30, 0.03, 1200);
+
+      // The control must be a real standing stock, and predation must bite in every predated arm.
       expect(K, `seed ${seed}: no standing stock`).toBeGreaterThan(2);
-      expect(sheltered.telemetry().eaten).toBeGreaterThan(0);
-      expect(exposed.telemetry().eaten).toBeGreaterThan(0);
+      expect(sheltered.flux, `seed ${seed}`).toBeGreaterThan(0);
+      expect(immunityAblated.flux, `seed ${seed}`).toBeGreaterThan(0);
 
       // The ordering. Ablating the refuge must LOWER the equilibrium — that is the causal claim.
-      expect(exposedPop, `seed ${seed}`).toBeLessThan(K * 0.9); // predation still regulates
-      expect(shelteredPop, `seed ${seed}: refuge did no work`).toBeGreaterThan(exposedPop);
-      expect(shelteredPop, `seed ${seed}`).toBeLessThanOrEqual(K); // never beats the unpredated cap
-      expect(exposedPop, `seed ${seed}`).toBeGreaterThan(0); // regulated, not exterminated
+      expect(immunityAblated.pop, `seed ${seed}`).toBeLessThan(K * 0.9); // predation still regulates
+      // Margin, not a hair: the honest foraging-predator lift measures +46..+54 on these seeds.
+      expect(sheltered.pop, `seed ${seed}: refuge did no work`).toBeGreaterThan(
+        immunityAblated.pop + 25,
+      );
+      expect(sheltered.pop, `seed ${seed}`).toBeLessThanOrEqual(K); // never beats the unpredated cap
+      expect(immunityAblated.pop, `seed ${seed}`).toBeGreaterThan(0); // regulated, not exterminated
+
+      // THE LIFT IS THE REFUGE, NOT THE CALM: zeroing a sheltered twin's threat percept is worth
+      // nothing at population level — arm 3 lands on arm 4 exactly.
+      expect(immunityAblated.pop, `seed ${seed}: perception channel moved the equilibrium`).toBe(
+        exposed.pop,
+      );
 
       // Fewer reachable prey ⇒ strictly less energy through the trophic link. The refuge constrains
       // the SAME link GATE-XENO-TROPHIC gates; it is not a separate cosmetic system.
-      expect(shelteredFlux, `seed ${seed}`).toBeLessThan(exposedFlux);
+      expect(sheltered.flux, `seed ${seed}`).toBeLessThan(immunityAblated.flux);
     }
   }, 180_000);
+
+  test('ANTI-ARTIFACT: blocked attempts track the disc occupancy, so the lift is spatial not targeting', () => {
+    // The refuge effect is only real if the predator's blocked-attempt rate reflects how much of the
+    // swarm is actually inside the disc. A biased predator that perseverates on unkillable prey shows
+    // blocked >> occupancy and manufactures the ordering without any ecology. That is exactly the bug
+    // the first draft of this gate shipped (80% blocked at 28% occupancy). Guard it permanently.
+    for (const seed of SEEDS) {
+      const r = runWithForagingPredation(seed, 2400, 1 / 30, 0.03, 1200, refuge);
+      expect(r.attempts, `seed ${seed}`).toBeGreaterThan(0);
+      expect(r.occupancy, `seed ${seed}: nothing ever entered the disc`).toBeGreaterThan(0.01);
+      const blockedRate = r.blocked / r.attempts;
+      // Unbiased foraging ⇒ blocked ≈ occupancy. The biased harness measured ~3x; 1.5x fails it.
+      expect(blockedRate, `seed ${seed}: predator perseverates on unkillable prey`).toBeLessThan(
+        r.occupancy * 1.5,
+      );
+    }
+  }, 120_000);
 
   test('the refuge is a SPATIAL law: sheltered fauna are unkillable, exposed fauna are not', () => {
     // 2400 steps on a seed that reaches cap, so the swarm straddles the disc boundary and BOTH sides

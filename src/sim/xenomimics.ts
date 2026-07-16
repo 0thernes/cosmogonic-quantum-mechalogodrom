@@ -224,6 +224,8 @@ export class XenomimicPopulation {
   /** Latest composition-root sanctuary query; also hardens public predation sinks. */
   private safeZoneAt:
     ((x: number, z: number, pairId?: number, role?: 0 | 1) => boolean) | undefined;
+  /** GATE-DOME-REFUGE control arm: severs sanctuary PREDATION IMMUNITY only. See {@link setRefugeImmunityAblated}. */
+  private refugeImmunityAblated = false;
   /** MEASURED provenance receipt for this population's own seeded generator (see {@link rngProvenanceReceipt}). */
   private readonly rngProvenance: RngProvenance;
 
@@ -782,6 +784,20 @@ export class XenomimicPopulation {
   }
 
   /**
+   * GATE-DOME-REFUGE: ablate (true) or restore (false) the sanctuary's PREDATION IMMUNITY only.
+   *
+   * `safeZoneAt` is read on two independent paths: {@link consume} (a protected target cannot be
+   * killed) and the per-beat sense construction in `step()`, which zeroes the threat percept for a
+   * sheltered twin. Withholding the coupling therefore ablates BOTH at once and cannot isolate the
+   * refuge from the behavioural change. This flag severs ONLY the immunity: perception, foraging,
+   * breeding, cadence and RNG consumption stay bit-for-bit identical to the sheltered arm, so the
+   * control differs in the refuge mechanism and nothing else. Default = OFF (shipped path unchanged).
+   */
+  setRefugeImmunityAblated(on: boolean): void {
+    this.refugeImmunityAblated = on;
+  }
+
+  /**
    * Mark a creature EATEN by another being. It goes down and respawns in {@link predationRespawn}
    * seconds (owner: "consumed by other beings as food and they respawn in 5 seconds"). Returns the
    * energy yielded to the predator, or 0 if the target was already down.
@@ -790,7 +806,8 @@ export class XenomimicPopulation {
     const creature = c as Xenomimic;
     if (
       !creature.alive ||
-      this.safeZoneAt?.(creature.x, creature.z, creature.pairId, creature.role) === true
+      (!this.refugeImmunityAblated &&
+        this.safeZoneAt?.(creature.x, creature.z, creature.pairId, creature.role) === true)
     )
       return 0;
     const yield_ = 0.3 + creature.energy * 0.5;

@@ -47,11 +47,23 @@
  *                            of unbounded open-ended evolution — the cautious floor was 2.2.
  *   ecology             3.4  Multi-loop dome food web: 60k edible flora + waste→fertilizer + titan economyTick +
  *                            soup selection (GATE-SOUP-SELECT) + Xenomimic trophic layer (GATE-XENO-TROPHIC
- *                            predator–prey regulation + predation-scaled energy flux) PLUS Big Tree sanctuary as a
- *                            real predation REFUGE (world.ts safeZoneAt → xenomimics consume() returns 0 inside
- *                            zone). GATE-DOME-REFUGE proves the textbook ordering unpredated K > with-refuge >
- *                            without-refuge > 0 with ablation. Classical model, not multi-gen plant-genome coevo
- *                            or real-world eco fidelity — was 3.3
+ *                            predator–prey regulation + predation-scaled energy flux) PLUS the Big Tree sanctuary
+ *                            as a real predation REFUGE (world.ts:783 safeZoneAt → xenomimics consume() returns 0
+ *                            for a protected target). GATE-DOME-REFUGE proves the textbook Rosenzweig–MacArthur
+ *                            ordering unpredated K (1000) > with-refuge (~650) > without-refuge (604) > 0 against
+ *                            an ablated control that withholds safeZoneAt and changes nothing else, on the SHIPPED
+ *                            disc (CRYSTAL_TREE_ORIGIN 220,620 r=240) — not a stand-in.
+ *                            HONEST EFFECT SIZE — the lift is +46 (~7.6%), NOT the +277 an earlier draft of this
+ *                            gate reported. That draft picked victims from the head of a fixed iteration order;
+ *                            protected fauna never die, so they occupied the head forever and soaked the whole
+ *                            predation budget — it blocked 80% of attempts at 28% disc occupancy (a 3x targeting
+ *                            bias) and measured a perseverating predator, not a spatial restructuring. Victims are
+ *                            now an unbiased seeded sample, which drops the block rate onto the occupancy
+ *                            (21-28% vs 21-28%); a standing `blocked < 1.5x occupancy` assertion now guards that
+ *                            artifact class and fails loudly on the biased harness. The same draft justified a
+ *                            stand-in disc with a FALSE claim that the swarm never reaches the tree (the measured
+ *                            seed-4242 envelope is x[-723,478] / z[-662,630], which overlaps it directly).
+ *                            Classical model, not multi-gen plant-genome coevo or real-world eco fidelity — was 3.3
  *   morphology/physics  3.8  reaction-diffusion.ts live Gray-Scott PDE every frame; SuperBody mind/evo-driven
  *                            multi-appendage morph (consciousness + evolution stage → geometry/shaders);
  *                            soft plant↔plant contact + biomass silhouette thrash; waste/titan scars on ground.

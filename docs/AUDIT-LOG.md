@@ -11,6 +11,15 @@ changed and why.
 
 ---
 
+## 2026-07-16 — GATE-DOME-REFUGE honesty hardening + assessment residual close
+
+- Hardened GATE-DOME-REFUGE: unbiased foraging predator (Fisher-Yates sample, not iteration-head
+  perseveration); anti-artifact guard `blocked ≈ occupancy`; shipped Big Tree disc
+  (`CRYSTAL_TREE_ORIGIN` + `BIG_TREE_ZONE_ENTRY_RADIUS`); honest lift ~+46 (~7.6%) not inflated +277.
+- `XenomimicPopulation.setRefugeImmunityAblated` severs predation immunity only (perception path intact).
+- Standing report 2026-07-12 marked **historical worldline** (v0.22.0 / 2861 / #1/113 superseded).
+- VERIFICATION § dome census + P2/P3 underdocumented systems table.
+
 ## 2026-07-16 — Grok assessment full-surface accuracy pass + GATE-REPRO-SELECT (repro 4.0)
 
 Executed the full ordeal from the Grok assessment dossier (`GROK ASSESSMENTS.txt`):

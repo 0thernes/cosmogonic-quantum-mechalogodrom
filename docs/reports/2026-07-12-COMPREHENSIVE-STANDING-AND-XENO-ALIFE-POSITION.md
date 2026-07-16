@@ -1,10 +1,17 @@
-<!-- reviewed: 2026-07-12 | comprehensive standing + xeno-A-life position | canonical: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-16 | marked historical worldline snapshot | canonical: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # Cosmogonic Quantum Mechalogodrom — Comprehensive Standing & Xeno-A-Life Position
 
-**Report date:** 2026-07-12  
-**Package:** v0.22.0
-**Canonical receipts:** 2,861 tests · 84.64% line / 82.21% func portable floor (`scripts/canonical-receipts.ts`)  
+> **HISTORICAL WORLDLINE SNAPSHOT (2026-07-12).** Receipts below (v0.22.0 · 2,861 tests · #1/113)
+> are **point-in-time**. Current living truth is
+> [VERIFICATION-ANALYTICAL-DATA.md](../VERIFICATION-ANALYTICAL-DATA.md) §1 +
+> `scripts/alife-codeground-sensitivity.ts` `CODE_GROUNDED`
+> **`[4.0, 2.4, 3.4, 3.8, 4.5, 4.6, 4.4, 3.5, 4.0]`** · breadth **3.84** · rank **#1/129** · package
+> **v0.23.0** · **3312+** tests. Do not cite this file’s version/test/A-Life numbers as current.
+
+**Report date:** 2026-07-12 (snapshot)  
+**Package (at snapshot):** v0.22.0  
+**Canonical receipts (at snapshot):** 2,861 tests · 84.64% line / 82.21% func portable floor  
 **License:** Non-commercial research & play (© 0thernes)  
 **Stance:** Honest, operational, multi-audience (art · science · capital · self)
 
@@ -48,7 +55,7 @@ These are **features** of the project’s scientific adulthood:
 | **V4 organism intelligence**              | Ordinary / predictor / Petri families fail gates; Titans authorize only **bounded game-policy semantic causality**                              |
 | **Phase-B**                               | Temporal predictor fails advancement criteria; NHI diagnostics narrow                                                                           |
 | **Quantum**                               | Classical simulation / facades; not physical QPU performance or entropy claims                                                                  |
-| **A-Life #1/113**                         | Code-grounded rank on **this repo’s** 9-axis survey of 113 systems — not peer-reviewed external ranking                                         |
+| **A-Life #1/113 (snapshot)**              | Historical: code-grounded rank on then-113-system survey. **Current:** #1/129 on CODE_GROUNDED — not peer-reviewed external ranking             |
 | **Peer maturity**                         | Self-score **1.5/5** — breadth-first, maturity-late                                                                                             |
 
 ---
