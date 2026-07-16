@@ -109,11 +109,19 @@ export function mutate(g: Float32Array, rng: Rng, rate = 0.12, scale = 0.2): voi
 /**
  * Breed two parents: crossover then mutate the child. Returns the child genome.
  *
- * Heredity is now LIVE in the sim via {@link recombine} (the arbitrary-length variant), which the
- * `PrimordialSoup` rebirth path uses to breed reborn strains from two living parents on the soup's
- * own seeded sub-stream (ADR-0009, Accepted). These fixed-`GENOME_LEN` `breed`/`crossover` exports
- * remain reserved for the planned entity/NHI spawn-path wiring (which needs a dedicated `genomeRng`
- * + a deliberate golden re-baseline) — do NOT delete them as "dead code" without reading ADR-0009.
+ * Heredity is LIVE in the sim via {@link recombine} (the arbitrary-length variant), which the
+ * `PrimordialSoup` rebirth path uses to breed reborn strains on the soup's own seeded sub-stream
+ * (ADR-0009, Accepted) — re-seeding a dead slot from the genome still in that slot (the corpse's)
+ * crossed with ONE living parent picked elsewhere. This used to read "from two living parents",
+ * which the code never did: `pa = i` is the dead slot itself (primordial-soup.ts, inside the
+ * `!alive[i]` branch). Real heredity, but dead x living — do not cite it as live sexual selection.
+ *
+ * These fixed-`GENOME_LEN` `breed`/`crossover` exports remain reserved for the planned entity/NHI
+ * spawn-path wiring (which needs a dedicated `genomeRng` + a deliberate golden re-baseline) — do NOT
+ * delete them as "dead code" without reading ADR-0009. Being reserved, they are NOT grounding for a
+ * reproduction capability score: nothing in src/ calls `breed`/`crossover`, and `decodeTraits` — the
+ * sole reader of the 10-trait phenotype, fertility included — has no caller either. The heredity
+ * that IS live on the base population is entities.ts `breedTraits` (:466, called :557).
  */
 export function breed(a: Float32Array, b: Float32Array, rng: Rng, rate?: number): Float32Array {
   const child = crossover(a, b, rng);

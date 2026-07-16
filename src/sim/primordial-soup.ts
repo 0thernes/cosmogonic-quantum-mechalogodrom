@@ -126,8 +126,15 @@ export class PrimordialSoup {
     for (let i = 0; i < SOUP_SLOTS; i++) {
       if (!this.alive[i]) {
         // REBIRTH WITH HEREDITY (ADR-0009): a dead slot has a per-tick chance to be re-seeded by
-        // breeding two living parents via the genuine seeded `recombine` (inherit + vary), so the
-        // digital-biologics evolution loop actually closes. This branch was previously *below* the
+        // `recombine`-ing (inherit + vary) the genome ALREADY IN THIS SLOT with that of one living
+        // parent picked elsewhere in the soup, so the digital-biologics evolution loop closes.
+        // `pa = i` is this very slot and the branch is inside `if (!this.alive[i])` — a slot's
+        // genome is not cleared on death, so parent A is the CORPSE's genome, not a second living
+        // organism. This comment (and genome.ts) used to claim "two living parents"; that was never
+        // what the code did. The heredity is real either way — a corpse genome is a real inherited
+        // vector and pickLivingParent() supplies a real second lineage — but it is dead x living,
+        // and it must not be cited as sexual selection between two live organisms.
+        // This branch was previously *below* the
         // alive-guard and gated on `!eshkolPrograms[i]`; since a slot's program is not cleared on
         // death, a dead slot was skipped here every tick and could never recover — the documented
         // rebirth path was unreachable (it bred nothing at runtime).
