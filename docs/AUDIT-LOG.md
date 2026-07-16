@@ -107,10 +107,10 @@ Executed the full ordeal from the Grok assessment dossier (`GROK ASSESSMENTS.txt
   (`life = 200 + nW*900`). Legacy path (no genomeRng) keeps the uninherited `rng()` life roll.
 - Added **GATE-REPRO-SELECT** (`tests/entity-repro-select.test.ts`): live path raises mean `nW`;
   trait-blind per-frame scramble ablation does not — selection is causal.
-  **[RETRACTED same-day.** The scramble control ablated the MEASURED variable, not the mechanism, and
-  passes with the sim never stepped — it could not fail, so it established nothing. Replaced by
-  `EntityManager.setReproAblated`; the raise stands on that control (live +0.177 / ablated −0.003).
-  See the "Control repair" entry at the top of this log.**]**
+  **[RETRACTED same-day — the scramble control ablated the MEASURED variable, not the mechanism, and
+  passes with the sim never stepped, so it could not fail and established nothing. Replaced by
+  `EntityManager.setReproAblated`; the raise stands on that control (live +0.177 / ablated −0.003,
+  separation 0.180). See the "Control repair" entry at the top of this log.]**
 - Regenerated CODE_GROUNDED / CSV / `alife-codeground.json` / stats / geometry SVGs.
   Canonical vector **`[4.0, 2.4, 3.4, 3.8, 4.5, 4.6, 4.4, 3.5, 4.0]`** · breadth **`3.844`** ·
   rank **`#1/129`** · z-pop **`+3.220`** · z-peers **`+3.373`** · Mahalanobis **`8.644`**.
