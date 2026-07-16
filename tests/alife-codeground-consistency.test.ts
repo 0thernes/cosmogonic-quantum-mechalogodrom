@@ -44,4 +44,27 @@ describe('A-Life code-grounded stats are computed-and-gated (no silent drift)', 
     const floor = (computed.codeGrounded as { axes: number[] }).axes;
     for (let i = 0; i < self.length; i++) expect(floor[i]!).toBeLessThanOrEqual(self[i]!);
   });
+
+  // The surface check above greps for the breadth STRING, which is why a radar that was wrong on four
+  // axes shipped unnoticed: docs.html and specs.html inline the nine-axis radar as static markup, and
+  // the amber polygon's GEOMETRY — not any number — is what a reader actually sees. It had drifted a
+  // full ratchet behind on ecology, cognition, substrate and instrumentation while both pages
+  // presented it as current. alife-comparison-stats.ts now re-derives the polygon from the CSV; this
+  // decodes the shipped markup back into a vector so a hand-edit or a skipped `gen:alife` fails here.
+  test('the inline radar polygon decodes to the code-grounded vector (stale geometry → fail)', () => {
+    const axes = (computed.codeGrounded as { axes: number[] }).axes;
+    for (const surface of ['docs.html', 'specs.html']) {
+      const points = read(surface).match(/<polygon\s+points="([^"]*)"\s+fill="#f59e0b"/)?.[1];
+      expect(points, `${surface}: amber Cosmogonic polygon not found`).toBeDefined();
+      const decoded = points!.split(' ').map((pair, j) => {
+        const [x, y] = pair.split(',').map(Number) as [number, number];
+        // chartRadar(): centre (320,318), radius = (v/5)*200, axis j at -90° + j*(360/9).
+        const ang = -Math.PI / 2 + (2 * Math.PI * j) / axes.length;
+        const r =
+          Math.abs(Math.cos(ang)) > 0.3 ? (x - 320) / Math.cos(ang) : (y - 318) / Math.sin(ang);
+        return Math.round((r / 40) * 100) / 100;
+      });
+      expect(decoded, `${surface}: inline radar is stale`).toEqual(axes);
+    }
+  });
 });

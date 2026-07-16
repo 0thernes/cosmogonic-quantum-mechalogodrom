@@ -12,25 +12,34 @@
  *
  * Canonical code-grounded Cosmogonic vector — each axis cites the strongest source the auditor
  * could defend. The script fails if the CSV drifts from this expected vector:
- *   reproduction        4.0  genome.ts:77-147 + primordial-soup.ts:118-147 (seeded recombine rebirth) — DEFENSIBLE
+ *   reproduction        4.0  genome.ts:77-149 + primordial-soup.ts:126-155 (seeded recombine rebirth) — DEFENSIBLE
  *   open-endedness      2.4  emergence-angles.ts real GA + TWO live fitness-selection loops (soup harvest
- *                            world.ts:3085 + petri truncation-selection petri-dish.ts:404) + the birth
+ *                            world.ts:4094 + petri truncation-selection petri-dish.ts:204, live at :526) + the birth
  *                            engine shows bounded active novelty versus a frozen control and the petri ring
  *                            selects differentially (GATE-OE-LIVE / GATE-PETRI-SURVIVE). This is not proof
  *                            of unbounded open-ended evolution — the cautious floor was 2.2.
  *   ecology             3.3  titans.ts real economyTick + soup SELECTION loop closed (world.ts:3085 spawns the
  *                            vitality-argmax; GATE-SOUP-SELECT: differential >0 vs a blind pick ~0) PLUS a new
  *                            Xenomimic trophic layer — ground fauna GRAZE the flora and are PREYED on by the base
- *                            entities (world.ts runXenomimicPredation, one-way, 5s respawn), with the entity
+ *                            entities (world.ts:4554 consumeNearest, one-way, 5s respawn), with the entity
  *                            connectome firing density fed back as swarm agitation. Predation REGULATES the swarm
  *                            to a stable equilibrium below its unpredated carrying capacity without collapsing it,
  *                            and the trophic energy flux scales with predation intensity, ablation-verified
  *                            (GATE-XENO-TROPHIC). A classical ecology model, not real-world fidelity — was 3.2
- *   morphology/physics  3.8  reaction-diffusion.ts:87-290 live Gray-Scott PDE; schrodinger.ts dead code, super-body cosmetic — DEFENSIBLE (was 4.0)
- *   cognition/learning  4.5  super-creature.ts predict->surprise->GOAP + FIVE gate-backed non-apex loops:
- *                            AD-gradient forager beats a random walk p<0.01 (GATE-FORAGE); the digital-life
- *                            population LEARNS its fitness by exact Eshkol AD to the analytic optimum, ablation-
- *                            verified, live in petri (GATE-BIOLOGIC-LEARN); the LIVE base 50k population
+ *   morphology/physics  3.8  reaction-diffusion.ts:87-336 live Gray-Scott PDE (step() :171, stepped every
+ *                            frame world.ts:2725); super-body cosmetic. The old "schrodinger.ts dead code" note
+ *                            is RETIRED as FALSE — it has two live consumers (xenomimic-brain.ts:45,
+ *                            latent-substrates.ts:20) and is already banked on substrate pluralism below, so
+ *                            this axis must not re-count it. No rigid/soft-body, collision or forces —
+ *                            DEFENSIBLE (was 4.0)
+ *   cognition/learning  4.5  super-creature.ts predict->surprise->GOAP + FOUR gate-backed non-apex loops on the
+ *                            SHIPPED path. (GATE-FORAGE is deliberately NOT among them: sim/ad-forager.ts is a
+ *                            reference kernel with zero src consumers — it self-declares "not wired into the live
+ *                            EntityManager population" at :5-6 — so the batch-15b +0.1 it once carried is
+ *                            re-attributed to GATE-CHEMOTAXIS, which establishes the same capability by ablation
+ *                            on the REAL EntityManager+AlienFlora. Gating a stand-in green-lights a no-op.) The
+ *                            digital-life population LEARNS its fitness by exact Eshkol AD to the analytic optimum,
+ *                            ablation-verified, live in petri (GATE-BIOLOGIC-LEARN); the LIVE base population
  *                            FORAGES up the flora biomass gradient (chemotaxis) reaching >3x richer flora than
  *                            a blind wanderer (GATE-CHEMOTAXIS, entities.ts); a real VQE resolves the four
  *                            competing drives into a minimum-frustration JOINT commitment by the EXACT
@@ -68,7 +77,12 @@
  *                            code-grounded and counted, so no genuinely-new named theory remains to ground; moving
  *                            this axis would re-label existing work, the exact overclaim this most-exposed dimension
  *                            is deliberately held against. The 4.5 self-score stays unearned — OVERCLAIMED (was 4.5)
- *   visual scale        4.0  instanced-entities.ts pooling is the only desktop/ultra path; 50k tier unbenchmarked, pools cast no shadows — OVERCLAIMED (was 5.0)
+ *   visual scale        4.0  instanced-entities.ts pooling is the only desktop/ultra path; pools cast no shadows
+ *                            (instanced-entities.ts:989). The old "50k tier unbenchmarked" note is RETIRED as FALSE
+ *                            — 50k IS measured (BENCHMARKS-2026-06-26.md:207-225, ~167ms/frame ≈ 6fps raw), which
+ *                            argues the SAME way: auto-tier stops at desktop 10k (quality.ts:129-136), 50k is an
+ *                            explicit ?tier=mega stress ceiling, and whole-world native-GPU frame time is still
+ *                            unprofiled — OVERCLAIMED (was 5.0)
  */
 import { mean, standardDeviation } from 'simple-statistics';
 

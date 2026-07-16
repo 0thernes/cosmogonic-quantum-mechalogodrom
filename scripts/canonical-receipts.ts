@@ -1,16 +1,21 @@
 /**
  * CANONICAL RECEIPTS -- the single source of truth for the repo's measured gate figures.
  *
- * Count remeasured 2026-07-14 (Bun 1.3.14; merged Dome ecology, lifecycle, browser-harness,
- * fauna-control, Apex-hunger, and reciprocal resident-social suites). The final merged Windows
- * measurement was 3,297 tests / 0 fail / 3,589,864 expectations across 366 files at 93.60% line /
- * 91.61% function coverage. Coverage remains the clean Ubuntu floor for the portable public contract.
+ * Count remeasured 2026-07-16 (Bun 1.3.14): 3,303 tests / 0 fail / 3,742,750 expectations across 366
+ * files, measured on Windows. +1 versus the 2026-07-14 pass, from the inline-radar geometry gate added
+ * to `tests/alife-codeground-consistency.test.ts` (it decodes the shipped polygon back into a vector,
+ * closing the hole that let docs.html/specs.html ship a radar stale on four axes).
+ *
+ * COUNT is platform-invariant, so the Windows measurement above is canon. COVERAGE is NOT: the two
+ * percentages below stay the clean UBUNTU floor for the portable public contract and must never be
+ * overwritten with a Windows figure (Windows reads higher — it measured 93.60/91.61 on 2026-07-14 —
+ * and pasting that would silently RAISE the published floor without any new test covering a line).
  * Propagated to every public surface and
  * policed by `tests/docs-receipts-law.test.ts`. Dr. Manhattan's law: if it is not measured, it is not real.
  *
  * To update after adding/removing tests: `bun scripts/verify-receipts.ts --print`, paste here, re-sync.
  */
-export const CANONICAL_TEST_COUNT = 3302;
+export const CANONICAL_TEST_COUNT = 3303;
 export const CANONICAL_LINE_COV = '84.64';
 export const CANONICAL_FUNC_COV = '82.21';
 

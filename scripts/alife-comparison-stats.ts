@@ -251,6 +251,63 @@ function chartRadar(cosmo: Row, meanProfile: number[], near: Row): string {
   return svgDoc(w, h, b, 'Nine-axis capability radar');
 }
 
+/**
+ * Propagate the radar into the two hand-authored pages that inline it.
+ *
+ * `docs.html` and `specs.html` each carry a copy of {@link chartRadar}'s body inline (static markup,
+ * so the profile is readable with JS off). Being hand-copied, it FORKED from this CSV and silently
+ * went stale on four axes — ecology, cognition, substrate and instrumentation each drifted a full
+ * ratchet behind while both pages presented the polygon as the current profile. Nothing caught it:
+ * the consistency test only greps those files for the breadth string, and check-generated.ts guards
+ * only the gallery embeds.
+ *
+ * The drift is not a one-off. The violet/green polygons encode the SURVEY MEAN and the NEAREST PEER,
+ * so they go stale on any CSV row addition — growing the peer corpus silently invalidates both, plus
+ * the peer's name in the caption and aria-label. Hand-maintenance cannot hold that invariant, so the
+ * radar is derived here (single source = the CSV) exactly like every other figure in this script.
+ *
+ * Patches values only — geometry, colours and labels stay in the markup. Returns the files changed.
+ */
+async function syncInlineRadar(cosmo: Row, meanProfile: number[], near: Row): Promise<string[]> {
+  const poly = (vals: number[]): string =>
+    vals
+      .map((v, j) => {
+        const ang = -Math.PI / 2 + (2 * Math.PI * j) / NAX;
+        const r = (v / 5) * 200;
+        return `${round(320 + r * Math.cos(ang), 1)},${round(318 + r * Math.sin(ang), 1)}`;
+      })
+      .join(' ');
+  // fill colour identifies each series — same triple chartRadar() draws (green/violet/amber).
+  const series: [string, number[]][] = [
+    ['#34d399', near.axes],
+    ['#a78bfa', meanProfile],
+    ['#f59e0b', cosmo.axes],
+  ];
+  const peer = esc(short(near.project));
+  const changed: string[] = [];
+  for (const page of ['docs.html', 'specs.html']) {
+    const path = `${ROOT}/${page}`;
+    const before = await Bun.file(path).text();
+    let after = before;
+    for (const [colour, vals] of series) {
+      const re = new RegExp(`(<polygon\\s+points=")[^"]*("\\s+fill="${colour}")`);
+      if (!re.test(after)) throw new Error(`${page}: inline radar ${colour} polygon not found`);
+      after = after.replace(re, `$1${poly(vals)}$2`);
+    }
+    // The nearest peer's NAME is part of the data — it changes whenever a closer peer is added.
+    after = after.replace(/(green = nearest peer \()[^)]*(\))/, `$1${peer}$2`);
+    after = after.replace(
+      /(aria-label="Nine-axis capability radar: Cosmogonic vs survey mean vs )[^"]*(")/,
+      `$1${peer}$2`,
+    );
+    if (after !== before) {
+      await Bun.write(path, after);
+      changed.push(page);
+    }
+  }
+  return changed;
+}
+
 // 4 ── nearest neighbours bar chart ────────────────────────────────────────────
 function chartNeighbours(neigh: { name: string; d: number }[]): string {
   const padL = 150;
@@ -408,6 +465,7 @@ async function main(): Promise<void> {
   await Bun.write(`${OUT}/alife-radar-profile.svg`, chartRadar(cosmo, meanProfile, nearestRow));
   await Bun.write(`${OUT}/alife-nearest-neighbors.svg`, chartNeighbours(neigh.slice(0, 8)));
   await Bun.write(`${OUT}/alife-axis-heatmap.svg`, chartHeatmap(rows));
+  const radarSynced = await syncInlineRadar(cosmo, meanProfile, nearestRow);
 
   // Print a human-readable receipt block.
   const L: string[] = [];
@@ -438,6 +496,11 @@ async function main(): Promise<void> {
       `    ${a.axis.padEnd(22)} mean ${a.mean} sd ${a.std} max ${a.max} | Cosmo ${a.cosmo} (z ${a.cosmoZ >= 0 ? '+' : ''}${a.cosmoZ}) | leaders: ${a.leaders.join(', ')}`,
     );
   L.push(`  wrote 5 SVG charts + alife-stats.json to docs/reports/assets/`);
+  L.push(
+    radarSynced.length > 0
+      ? `  inline radar re-derived from the CSV in: ${radarSynced.join(', ')}`
+      : `  inline radar already matches the CSV (docs.html, specs.html)`,
+  );
   console.log(L.join('\n'));
 }
 

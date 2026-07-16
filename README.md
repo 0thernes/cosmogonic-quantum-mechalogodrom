@@ -8,7 +8,7 @@
 [![License: Non-Commercial Research & Play](https://img.shields.io/badge/License-Non--Commercial%20Research%20%26%20Play-2ea043.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
-[![tests](https://img.shields.io/badge/tests-3302%20exact-brightgreen)](./tests)
+[![tests](https://img.shields.io/badge/tests-3303%20exact-brightgreen)](./tests)
 [![coverage](https://img.shields.io/badge/coverage-84.64%25%20line%20%C2%B7%2082.21%25%20func-success)](./docs/TECHNICAL-SPECIFICATION-2026-06-26.md)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION-2026-06-26.md)
 [![Tsotchke](https://img.shields.io/badge/Tsotchke-REAL__MIT__CORPUS-purple)](https://github.com/tsotchke)
@@ -23,7 +23,7 @@ diffusion, **and the Tsotchke corpus wired as the primordial substrate for digit
 **Current public truth (2026-07-14):**
 
 - Package/source version: **v0.23.0**.
-- Exact tracked-suite receipt: **3,302 tests / 0 fail**. Portable public coverage floor: **84.64% line / 82.21% func**.
+- Exact tracked-suite receipt: **3,303 tests / 0 fail**. Portable public coverage floor: **84.64% line / 82.21% func**.
 - **Standing & xeno-A-life position (readable synthesis):** [Comprehensive Standing Report (MD)](./docs/reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.md) · [HTML](./docs/reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.html) — engineering card, 113-system matrix, SuperCreature/SuperMind/Apex/Mechalogodrom deep dive, capital/ISAL path. Apex minds are **xeno multi-faculty scaffolds** (not OpenWorm bio-twins; not claimed sentience). Preserves V4/Phase-B failure-forward boundaries.
 - **Dome ecology verification:** [Xenomimic tether and Big Tree evidence report](./docs/reports/DOME-ECOLOGY-VERIFICATION-2026-07-14.md) — canonical food, five-second simulation-time respawn, sanctuary transitions, temporary visits, resident controllers, social cleanup, performance, browser evidence, and explicit limitations.
 
@@ -115,9 +115,9 @@ tests, or explicit model assumptions support them.
 
 **Core Paradigm (Tsotchke Genesis):** The entire system is now the Petri dish for digital biologics. The Tsotchke depth ledger accounts for every corpus project, with the non-fenced scientific repos providing mathematical substrates for different forms of life and proto-sentience markers (Eshkol AD/GWT/consciousness proxies as the prime language, tensor nets for qualia compression, geometric curvature, spin-order collectives, equivariant symmetry bodies, unitary aliveness, physics-informed grounds, etc.). Super Creature is the initial godform; the soup grows the rest. Deterministic, seeded, measurable. "Not the text llm transformer tokenizing kind."
 
-- **Digital Biologics & Petri Genesis:** 64+ slots in PrimordialSoup, **26 BiologicForms** keyed to Tsotchke repos (incl. the brutal god-pantheon forms — `BIOLOGIC_FORMS` in `digital-biologics.ts`), catalysis from Eshkol ignition + the depth-ledger corpus beat, replication with kind mutation, genesis leaps for higher-order life. Harvested into the world as emergent strains with distinct dynamics.
+- **Digital Biologics & Petri Genesis:** 128 slots in PrimordialSoup, **26 BiologicForms** keyed to Tsotchke repos (incl. the brutal god-pantheon forms — `BIOLOGIC_FORMS` in `digital-biologics.ts`), catalysis from Eshkol ignition + the depth-ledger corpus beat, replication with kind mutation, genesis leaps for higher-order life. Harvested into the world as emergent strains with distinct dynamics.
 - **Eshkol Substrate:** Native automatic differentiation, GWT broadcast/ignition, factor-graph inference as first-class. Programs and consciousness-proxy snapshots drive petri birth and super-mind faculties.
-- **Builds with the local Tsotchke Repo Folder:** `bun dev` (and harvest script) scans the real local corpus at `Z:\[Vibe Coded (AI)]\(Tsotchke)` (1,365 .esk fingerprints in the current ledger) and emits authentic Eshkol DNA fingerprints used by primordial-soup for heritable digital biologics. `generated-tsotchke-seeds.ts` + SoupSnapshot.tsotchkeEskHarvested make the folder part of the live build/runtime.
+- **Builds with the local Tsotchke Repo Folder:** `bun dev` (and harvest script) scans the real local corpus at `Z:\[Vibe Coded (AI)]\(Tsotchke)` (1,661 .esk fingerprints in the current ledger) and emits authentic Eshkol DNA fingerprints used by primordial-soup for heritable digital biologics. `generated-tsotchke-seeds.ts` + SoupSnapshot.tsotchkeEskHarvested make the folder part of the live build/runtime.
 - **Tsotchke census and corpus wiring:** 23 public repositories (`16` user + `7` organization); 22 causal/runtime entries (`15` user + `7` organization), classified as 8 deep, 7 wired, 2 harvest, 4 fenced, and 1 meta — full matrix in [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md). `homebrew-moonlab` is census-only. The non-meta integrated fraction is `17/21 = 0.8095238095238095`; petri/soup and the shared organism-intelligence field consume bounded integrated channels while fenced and metadata entries remain inert.
 - **26 behavioral fields** driving up to 50,000 organisms: classic motion
   (drift, orbit, swarm, vortex, helix...), neighbor dynamics via a spatial
@@ -126,7 +126,7 @@ tests, or explicit model assumptions support them.
   (`setunion`), optimal-distance graphs (`graphseek`), and a Lorenz attractor
   (`lorenz`).
 - **250 procedural morphotypes** (10 lore-named phyla × 25, ~1% wildcard
-  outliers) over ~41 shared, never-disposed `BufferGeometry` instances;
+  outliers) over 40 shared, never-disposed `BufferGeometry` instances;
   remorphing swaps geometry refs and rewrites the material with zero
   allocation.
 - **25 sorting-field algorithms** with behaviorally honest names (BUBBLE
@@ -141,7 +141,7 @@ tests, or explicit model assumptions support them.
 - **6 weather states** (CLEAR, RAIN, STORM, AURORA, VOID, FOG) modulating
   wind, temperature (and thus lifespan), fog density, and exposure.
 - **Quantum cloud** of 3,500–10,000 particles with wavefunction wobble,
-  collapse, and respawn; **neural connectome** of up to 2,200–8,000 links with
+  collapse, and respawn; **neural connectome** of 12,000–600,000 links, scaling ~12x per-tier with the population, with
   partial GPU uploads.
 - **Exactly 60,000 desktop / 20,800 phone alien-flora plants**
   ([alien-flora.ts](./src/sim/alien-flora.ts)) across 50 species / 9 families / 7 biomes — a
@@ -187,7 +187,7 @@ tests, or explicit model assumptions support them.
   pantheon** as instanced glowing bodies across the upper dome; plus the namesake central
   **Mechalogodrom** fusion-mind ([mechalogodrom-brain.ts](./src/sim/mechalogodrom-brain.ts), ~53,728
   live params) uniting 10 bipolar titan-variant shells.
-- **6 procedural Web Audio songs** + a 110-voice synthesized SFX palette — no
+- **9 procedural Web Audio songs** + a 110-voice synthesized SFX palette — no
   audio assets, just oscillators.
 - **Deterministic seeded RNG** (`mulberry32`) injected everywhere; the global
   random number generator is banned in sim logic.
@@ -541,7 +541,7 @@ full gate with same-seed determinism preserved. The major arcs:
   ported primitive. The whole apex beat is now measured honestly: **~1.99 ms** per `SuperMind.think()`
   (range 1.41–5.62 ms) and **~9.77 ms** for the staggered 5-mind batch (~58% of a 60 fps frame, which is
   why 5 minds run staggered against 20 light echoes); the older sub-millisecond / `<2%` GOAL5 claim is
-  superseded until re-proven. **3,302 exact tracked tests · 0 fail (receipts enforced) · 84.64% line / 82.21% func portable coverage floor.**
+  superseded until re-proven. **3,303 exact tracked tests · 0 fail (receipts enforced) · 84.64% line / 82.21% func portable coverage floor.**
   <!-- cqm-sync:local-measurement:start -->
   **Latest Windows-local measurement: 3,297 tests / 0 fail / 3,589,864 assertions at `93.60%` line / `91.61%` func.**
   <!-- cqm-sync:local-measurement:end -->
@@ -705,7 +705,7 @@ Full detail in docs/.
 - **[docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md](./docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md)** — the **consolidated 22-report master assessment**: comprehensive synthesis of all brain systems, consciousness theories, living entities, reasoning systems, scoring systems, and academic assessment. Explicitly `indicatorOnly` — computational proxies, never phenomenal sentience. Older mega-report drafts are retained as local archive material; public reports route through [docs/reports/README.md](./docs/reports/README.md).
 - [docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md) — honest Tsotchke repo wiring ledger
 - [docs/CONTROLS-2026-06-26.md](./docs/CONTROLS-2026-06-26.md) — every control: mouse, keyboard hotkeys,
-  touch, bottom-panel buttons, and the 10 camera views
+  touch, bottom-panel buttons, and the 12 camera views
 - [docs/MODULE-CONTRACTS-2026-06-26.md](./docs/MODULE-CONTRACTS-2026-06-26.md) — the binding
   per-module spec (V1 through V9: port, Wildbeyond, Pantheon, Xenogenesis,
   Resonance, Atelier, Xenocataclysm, Hardening, AGImAGNOSIS -- plus the V10-V100+ Living-Era / Petri-genesis / V-MECHA addenda), including the
@@ -745,11 +745,11 @@ Full detail in docs/.
 - [CONTRIBUTING.md](./CONTRIBUTING.md) · [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) ·
   [SECURITY.md](./SECURITY.md) · [CHANGELOG.md](./CHANGELOG.md)
 
-## A-Life comparative analysis (vs 113 systems)
+## A-Life comparative analysis (vs 129 systems)
 
-A reproducible, **code-grounded** comparison of this repo against 112 well-known Artificial-Life /
+A reproducible, **code-grounded** comparison of this repo against 128 well-known Artificial-Life /
 open-ended-evolution / digital-organism systems (Tierra, Avida, Polyworld, Framsticks, Karl Sims, Creatures,
-Lenia, ALIEN, ASAL, and 103 more from the historical CA canon to modern GPU ecosystems). Full report — **11 charts**, per-axis `file:line` code-grounding, and an
+Lenia, ALIEN, ASAL, and 119 more from the historical CA canon to modern GPU ecosystems). Full report — **11 charts**, per-axis `file:line` code-grounding, and an
 adversarial novelty defense — consolidated through
 **[docs/reports/README.md](./docs/reports/README.md)** and the generated report assets.
 Every figure is computed (never hand-typed) by three deterministic engines from one CSV:
@@ -757,22 +757,22 @@ Every figure is computed (never hand-typed) by three deterministic engines from 
 [`alife-comparison-geometry.ts`](./scripts/alife-comparison-geometry.ts),
 [`alife-codeground-sensitivity.ts`](./scripts/alife-codeground-sensitivity.ts).
 
-The 112 peers are literature judgments. Cosmogonic's current CSV row is the code-grounded vector
+The 128 peers are literature judgments. Cosmogonic's current CSV row is the code-grounded vector
 `[4.0, 2.4, 3.3, 3.8, 4.5, 4.6, 4.4, 3.5, 4.0]`; the table retains the earlier self-score only as a
 historical sensitivity baseline:
 
 | Metric                         | Self-scored | Code-grounded (re-audited vs source) |
 | ------------------------------ | ----------: | -----------------------------------: |
 | Breadth (mean of 9 axes)       |    4.44 / 5 |                         **3.83 / 5** |
-| Rank among 113 systems         |    #1 / 113 |                         **#1 / 113** |
-| z-score vs population          |      +4.02σ |                           **+3.08σ** |
-| z-score vs peers               |      +4.36σ |                           **+3.23σ** |
-| Mahalanobis vs peer centroid   |       12.65 |                            **10.36** |
+| Rank among 129 systems         |    #1 / 129 |                         **#1 / 129** |
+| z-score vs population          |      +4.17σ |                           **+3.20σ** |
+| z-score vs peers               |      +4.50σ |                           **+3.35σ** |
+| Mahalanobis vs peer centroid   |       10.32 |                             **8.65** |
 | Systems that dominate it (9-D) |           0 |                                **0** |
 | Breadth lead over nearest peer |       +0.94 |                            **+0.33** |
 
 <p align="center">
-  <img src="./docs/reports/assets/alife-breadth-ranked.svg" alt="Ranked breadth of integrated mechanisms — Cosmogonic ranks #1 of 113" width="49%">
+  <img src="./docs/reports/assets/alife-breadth-ranked.svg" alt="Ranked breadth of integrated mechanisms — Cosmogonic ranks #1 of 129" width="49%">
   <img src="./docs/reports/assets/alife-pca.svg" alt="PCA of 113 A-Life systems — Cosmogonic is a high-breadth outlier on PC1" width="49%">
 </p>
 

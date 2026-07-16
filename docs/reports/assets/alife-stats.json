@@ -1,33 +1,33 @@
 {
   "generatedFrom": "docs/reports/2026-06-26-alife-comparison-matrix.csv",
   "method": "population statistics over all systems incl. Cosmogonic; breadth = mean of 9 axes",
-  "nSystems": 113,
-  "nPeers": 112,
+  "nSystems": 129,
+  "nPeers": 128,
   "cosmogonic": {
     "breadthMean": 3.83,
     "breadthRank": 1,
-    "zScorePopulation": 3.08,
-    "zScoreVsPeers": 3.23,
+    "zScorePopulation": 3.2,
+    "zScoreVsPeers": 3.35,
     "percentile": 100,
     "peerMaturity": 1.5
   },
   "survey": {
-    "breadthMeanAll": 2.1,
-    "breadthStdAll": 0.56,
-    "breadthMeanPeers": 2.08,
-    "breadthStdPeers": 0.54,
+    "breadthMeanAll": 2.06,
+    "breadthStdAll": 0.55,
+    "breadthMeanPeers": 2.04,
+    "breadthStdPeers": 0.53,
     "medianBreadth": 2.11,
     "medianPeerMaturity": 3.5,
-    "corrBreadthVsMaturity": -0.115
+    "corrBreadthVsMaturity": -0.082
   },
   "perAxis": [
     {
       "axis": "Reproduction",
-      "mean": 2.63,
-      "std": 1.75,
+      "mean": 2.54,
+      "std": 1.76,
       "max": 5,
       "cosmo": 4,
-      "cosmoZ": 0.79,
+      "cosmoZ": 0.83,
       "leaders": [
         "Tierra",
         "Avida",
@@ -42,16 +42,18 @@
         "Network Tierra",
         "NEAT (NeuroEvolution of Augmenting Topologies)",
         "HyperNEAT",
-        "ES-HyperNEAT"
+        "ES-HyperNEAT",
+        "Stringmol",
+        "Evoloop / SDSR Loop"
       ]
     },
     {
       "axis": "Open-endedness",
-      "mean": 2.62,
-      "std": 1.28,
+      "mean": 2.55,
+      "std": 1.27,
       "max": 5,
       "cosmo": 2.4,
-      "cosmoZ": -0.17,
+      "cosmoZ": -0.11,
       "leaders": [
         "Picbreeder",
         "POET",
@@ -66,11 +68,11 @@
     },
     {
       "axis": "Ecology",
-      "mean": 2.2,
-      "std": 1.38,
+      "mean": 2.16,
+      "std": 1.37,
       "max": 5,
       "cosmo": 3.3,
-      "cosmoZ": 0.8,
+      "cosmoZ": 0.83,
       "leaders": [
         "Polyworld",
         "Sugarscape",
@@ -79,11 +81,11 @@
     },
     {
       "axis": "Morphology/Physics",
-      "mean": 2.33,
-      "std": 1.66,
+      "mean": 2.25,
+      "std": 1.68,
       "max": 5,
       "cosmo": 3.8,
-      "cosmoZ": 0.88,
+      "cosmoZ": 0.93,
       "leaders": [
         "Framsticks",
         "Karl Sims VC",
@@ -99,16 +101,18 @@
         "UNIMAL (Universal Animal design space)",
         "Evolving Soft Robots (Cheney / Unshackling Evolution)",
         "RoboGrammar",
-        "Keiwan Evolution"
+        "Keiwan Evolution",
+        "Xenobots (reconfigurable organisms)",
+        "Voxcraft-sim"
       ]
     },
     {
       "axis": "Cognition/Learning",
-      "mean": 1.9,
-      "std": 1.6,
+      "mean": 1.84,
+      "std": 1.63,
       "max": 5,
       "cosmo": 4.5,
-      "cosmoZ": 1.62,
+      "cosmoZ": 1.63,
       "leaders": [
         "DERL (Deep Evolutionary Reinforcement Learning)",
         "UNIMAL (Universal Animal design space)",
@@ -118,22 +122,22 @@
     },
     {
       "axis": "Substrate pluralism",
-      "mean": 1.11,
-      "std": 0.46,
+      "mean": 1.1,
+      "std": 0.43,
       "max": 4.6,
       "cosmo": 4.6,
-      "cosmoZ": 7.67,
+      "cosmoZ": 8.05,
       "leaders": [
         "COSMOGONIC"
       ]
     },
     {
       "axis": "Instrumentation",
-      "mean": 3.14,
-      "std": 1.02,
+      "mean": 3.11,
+      "std": 1.05,
       "max": 5,
       "cosmo": 4.4,
-      "cosmoZ": 1.24,
+      "cosmoZ": 1.23,
       "leaders": [
         "Game of Life",
         "EvoGym",
@@ -145,27 +149,31 @@
         "MASON",
         "Repast",
         "GAMA Platform",
-        "Mesa"
+        "Mesa",
+        "Melting Pot",
+        "Craftax",
+        "PhysiCell"
       ]
     },
     {
       "axis": "Consciousness-theory",
-      "mean": 0.05,
-      "std": 0.35,
-      "max": 3.5,
+      "mean": 0.12,
+      "std": 0.7,
+      "max": 5,
       "cosmo": 3.5,
-      "cosmoZ": 9.73,
+      "cosmoZ": 4.85,
       "leaders": [
-        "COSMOGONIC"
+        "LIDA",
+        "Conscious Turing Machine (CTM)"
       ]
     },
     {
       "axis": "Visual scale",
-      "mean": 2.92,
-      "std": 1.15,
+      "mean": 2.85,
+      "std": 1.16,
       "max": 5,
       "cosmo": 4,
-      "cosmoZ": 0.94,
+      "cosmoZ": 0.99,
       "leaders": [
         "Karl Sims VC",
         "Creatures",
