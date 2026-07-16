@@ -31,6 +31,9 @@ describe('help knowledge', () => {
     expect(findHelp('what is the ascension shadow core temple')[0]?.id).toBe('ascension-temple');
     expect(findHelp('is it the same every time, random seed')[0]?.id).toBe('determinism');
     expect(findHelp('superhero powers and xp')[0]?.id).toBe('superhero');
+    expect(findHelp('how does the dome ecology food web work')[0]?.id).toBe('dome-ecology');
+    expect(findHelp('how does this rank vs other A-Life systems')[0]?.id).toBe('alife-standing');
+    expect(findHelp('is it conscious or sentient')[0]?.id).toBe('consciousness-honesty');
   });
 
   test('ranking returns best-first and caps the result count', () => {

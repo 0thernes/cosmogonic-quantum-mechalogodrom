@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   comparative framing, consciousness indicatorOnly law on public surfaces.
 - Dome ecology + food-web language integrated into MODULE-CONTRACTS, ENTITY-SHEETS, bible,
   consciousness lab, and historical standing HTML.
+- In-app HELP knowledge base: overview + dome ecology / A-Life standing / consciousness-honesty
+  cards; ARCHITECTURE + PHILOSOPHY carry the same CODE_GROUNDED honesty law.
 
 ## [0.23.0] — 2026-07-14
 

@@ -11,6 +11,73 @@ changed and why.
 
 ---
 
+## 2026-07-16 — Control repair: both same-day raises had gates that could not fail; A-Life vector now guarded in PROSE
+
+Adversarial re-audit of the two score raises recorded below. **Both mechanisms are real and both
+raises stand** — but as first written, neither gate proved it. Three defect classes, one per habit
+worth never repeating. A green suite hides all three.
+
+**1. GATE-REPRO-SELECT ablated the MEASUREMENT, not the mechanism.** The entry below says a
+"trait-blind per-frame scramble ablation" showed "selection is causal". **It could not, and that
+sentence is retracted.** Scrambling `nW` every frame overwrites the measured variable, so `meanNW()`
+read nothing but post-scramble coin-flips and returned ~0 regardless of the mechanism. Falsifier that
+settles it in one run: execute that control with the simulation **never stepped** (`update()`
+skipped, population frozen at 100) — it still returns +0.012 and still passes its own `|mean| < 0.03`
+bound. A control whose output does not depend on whether the sim ran is not a control. Replaced with
+`EntityManager.setReproAblated(on)` on the shipped path, per this codebase's own precedent
+(`setQuantumAblated` / `setSchrodingerAblated` / `corpusAblated`): reverts the split roll to the
+trait-blind legacy `0.06` and changes nothing else — heredity, mutation, founders, seeds, sT re-arming
+and main-`rng` draw order stay identical, and the flag defaults OFF so the shipped path is
+byte-identical. Measured live **+0.177** vs ablated **−0.003**, separation **0.180**, both arms
+pop 280. Scope: the gate proves the FECUNDITY channel only; viability selection is wired but not
+gate-proven, and is claimed nowhere.
+
+**2. GATE-DOME-REFUGE's ordering was a targeting artifact** (hardened in the entry below): victims
+were the head of a fixed `forEach` order, so protected fauna never die, hold the head forever, and
+soak the predation budget — **80% of attempts blocked at 28% disc occupancy**. Unbiased seeded
+sampling (Fisher-Yates prefix on `mulberry32`) drops blocked onto occupancy (21–28% vs 21–28%) and
+the honest lift is **+46 (~7.6%)**, not +277. Permanent guard: `blocked < 1.5 × occupancy`.
+
+**3. Its ablation removed two mechanisms at once.** `safeZoneAt` is read by `consume()` (immunity)
+AND by `senses()` (zeroes the threat percept), so withholding it also changed perception, foraging
+and breeding. `setRefugeImmunityAblated(on)` severs immunity only. Result: the immunity-ablated arm
+lands on the no-sanctuary arm **exactly (604 = 604, 5/5 seeds)** — the perception channel is worth
+zero and the entire lift is the refuge. Now measured rather than assumed.
+
+**Robustness ≠ causality.** The refuge ordering was verified on 10/10 establishing seeds and was
+still wrong: multi-seed rules out seed-luck, not a harness artifact. Ask both questions. Likewise,
+**claimed geometry must be the SHIPPED geometry** — the gate had substituted a test disc justified by
+"the swarm never reaches the Big Tree", which is measurably false (seed-4242 envelope x[-723,478]
+z[-662,630] overlaps `CRYSTAL_TREE_ORIGIN` (220,620) r=240 directly). It now uses the shipped
+constants.
+
+**The SSOT hole that allowed it.** CSV ↔ `CODE_GROUNDED` ↔ `alife-codeground.json` is hard-gated, but
+the vector is RESTATED IN PROSE across a dozen surfaces and `verify:facts` had **zero** knowledge of
+alife/breadth/9-axis — it reported "no drift across 83 surfaces" while **three different vectors were
+live at once**. Added two facts to `scripts/verify-canonical-facts.ts`, importing `CODE_GROUNDED` +
+`HISTORICAL_SELF_SCORED` so the guard can never drift into being a second copy: the bracketed 9-tuple
+(via a new `normalize` hook) and the survey size (129). It caught **11 real drifts** on first run —
+`CONSOLIDATED-22` MASTER/FILE-AUDIT (.md + .html) still carried `[4.0,2.4,3.2,…]` / breadth 3.778 /
+`#1/113` and instructed downstream docs to _preserve_ breadth 4.44 / z +4.02 / z +2.83; README and
+`docs/reports/README` presented the 113-system matrix as current standing. All fixed. History stays
+quotable through a `skipLine` marker regex and a `cqm-sync:historical` block exclusion — both require
+the line to SAY it is history, so unlabelled staleness is still caught. Ledger row upgraded:
+propagated-by is now **generated + `verify:facts`**, not "generated + prose".
+
+**Restored a deleted negative result.** The accuracy pass had removed the V4 causal receipt from
+README's honest reading (enhanced behavior did not separate from the uniform random-action baseline;
+no aggregate-channel mapping, no exploration-surrogate specificity) along with "not proof of a first,
+not evidence of sentience". Both are back. Open-endedness **2.4** remains the ONLY axis below the
+survey mean (z **−0.11**), substrate pluralism is the ONLY axis where COSMOGONIC is sole leader, and
+the 129-corpus put LIDA and CTM above us on consciousness-theory (z +10.04 → **+4.85**).
+
+## 2026-07-16 — In-app HELP + ARCHITECTURE/PHILOSOPHY assessment close-out
+
+- `help-knowledge.ts`: overview rewritten to assessment short block; new cards dome-ecology,
+  alife-standing, consciousness-honesty; economy dual-ledger framing; SVG reports cite 3.84/#1/129.
+- ARCHITECTURE + PHILOSOPHY: CODE_GROUNDED + multi-loop dome + specialist-humility binding.
+- help-knowledge tests route natural questions to the new cards.
+
 ## 2026-07-16 — Assessment surface close-out (MODULE / entity sheets / bible / labs / standing HTML)
 
 - MODULE-CONTRACTS: multi-loop dome ecology table + CODE_GROUNDED honesty binding.
@@ -40,6 +107,10 @@ Executed the full ordeal from the Grok assessment dossier (`GROK ASSESSMENTS.txt
   (`life = 200 + nW*900`). Legacy path (no genomeRng) keeps the uninherited `rng()` life roll.
 - Added **GATE-REPRO-SELECT** (`tests/entity-repro-select.test.ts`): live path raises mean `nW`;
   trait-blind per-frame scramble ablation does not — selection is causal.
+  **[RETRACTED same-day.** The scramble control ablated the MEASURED variable, not the mechanism, and
+  passes with the sim never stepped — it could not fail, so it established nothing. Replaced by
+  `EntityManager.setReproAblated`; the raise stands on that control (live +0.177 / ablated −0.003).
+  See the "Control repair" entry at the top of this log.**]**
 - Regenerated CODE_GROUNDED / CSV / `alife-codeground.json` / stats / geometry SVGs.
   Canonical vector **`[4.0, 2.4, 3.4, 3.8, 4.5, 4.6, 4.4, 3.5, 4.0]`** · breadth **`3.844`** ·
   rank **`#1/129`** · z-pop **`+3.220`** · z-peers **`+3.373`** · Mahalanobis **`8.644`**.
