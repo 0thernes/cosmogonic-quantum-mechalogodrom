@@ -26,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   consciousness lab, and historical standing HTML.
 - In-app HELP knowledge base: overview + dome ecology / A-Life standing / consciousness-honesty
   cards; ARCHITECTURE + PHILOSOPHY carry the same CODE_GROUNDED honesty law.
+- HELP + README + TECHNICAL-SPEC document P3 live castes: collective fields, NHI, sanctuary/portals,
+  connectome topology-only, wilderness non-writeback.
 
 ## [0.23.0] — 2026-07-14
 

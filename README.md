@@ -182,7 +182,12 @@ tests, or explicit model assumptions support them.
   and actors, visit state, reservations, partners, and cooldowns are never persisted.
 - **GOD / GodColossus** ([god-colossus.ts](./src/sim/god-colossus.ts)) — a raymarched, breathing
   **Mandelbulb** deity (domain-warped, orbit-trap palette), the **ASCENSION monolith temple**, and
-  **NHI** autonomous mini-AIs.
+  **NHI** autonomous mini-AIs (≤1000 ceiling; GOAP + 109-weight gene; ⊞ NEURAL observatory).
+- **Collective fields** ([stigmergy.ts](./src/sim/stigmergy.ts) · [noosphere.ts](./src/sim/noosphere.ts) ·
+  [morphic-field.ts](./src/sim/morphic-field.ts) · [dark-energy.ts](./src/sim/dark-energy.ts)) —
+  trails, shared mind-field, apex morphic resonance, deterministic quintessence Λ → chaos write.
+- **Wilderness** ([wilderness-population.ts](./src/sim/wilderness-population.ts)) — camera-chunked
+  horizon fauna; core may seed in, wilderness **never writes back** (ADR 0010).
 - **100 GlyphBrains** ([glyph-brain.ts](./src/sim/glyph-brain.ts)) — the Greek/Latin **alphabet
   pantheon** as instanced glowing bodies across the upper dome; plus the namesake central
   **Mechalogodrom** fusion-mind ([mechalogodrom-brain.ts](./src/sim/mechalogodrom-brain.ts), ~53,728

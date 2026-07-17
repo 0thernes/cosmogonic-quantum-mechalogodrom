@@ -16,12 +16,15 @@
 > [V4 result](./reports/ORGANISM-INTELLIGENCE-V4-RESULTS-2026-07-11.md) and preserved
 > [V3 predecessor](./reports/2026-07-10-OPERATIONAL-ORGANISM-INTELLIGENCE-CAUSAL-AUDIT.md).
 >
-> **A-Life / dome ecology (2026-07-16):** code-grounded 9-axis profile
+> **A-Life / dome ecology (2026-07-17):** code-grounded 9-axis profile
 > `[4.0, 2.4, 3.4, 3.8, 4.5, 4.6, 4.4, 3.5, 4.0]` · breadth **3.84** · **#1/129**
 > (`CODE_GROUNDED` + gates GATE-REPRO-SELECT / GATE-XENO-TROPHIC / GATE-DOME-REFUGE). The composition
 > root is a multi-loop food web (flora → graze → waste → fertilizer → regrow; xenomimic trophic;
-> titan harvest + dual market; weather; Big Tree sanctuary refuge). Ecology/morph/visual scores are
-> above survey mean but refuse specialist 5.0 anchors. indicatorOnly consciousness forever.
+> titan harvest + dual market; weather; Big Tree sanctuary refuge). **Also live:** stigmergy +
+> noosphere + morphic + dark-energy collective fields; NHI caste (GOAP + gene); portal/sanctuary
+> governance; connectome topology-only (no physical twin cords); wilderness camera-chunk population
+> that **never writes back** to core (ADR 0010). Ecology/morph/visual scores are above survey mean
+> but refuse specialist 5.0 anchors. indicatorOnly consciousness forever.
 
 How the Cosmogonic Quantum Mechalogodrom is wired. The binding per-module API
 spec lives in [MODULE-CONTRACTS-2026-06-26.md](./MODULE-CONTRACTS-2026-06-26.md); this document is

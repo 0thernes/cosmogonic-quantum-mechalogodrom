@@ -34,6 +34,13 @@ describe('help knowledge', () => {
     expect(findHelp('how does the dome ecology food web work')[0]?.id).toBe('dome-ecology');
     expect(findHelp('how does this rank vs other A-Life systems')[0]?.id).toBe('alife-standing');
     expect(findHelp('is it conscious or sentient')[0]?.id).toBe('consciousness-honesty');
+    expect(findHelp('what is stigmergy noosphere morphic dark energy')[0]?.id).toBe(
+      'collective-fields',
+    );
+    expect(findHelp('what are NHIs autonomous GOAP minds')[0]?.id).toBe('nhi-caste');
+    expect(findHelp('big tree sanctuary refuge and portals')[0]?.id).toBe('sanctuary-portal');
+    expect(findHelp('neural connectome topology without cords')[0]?.id).toBe('connectome-topology');
+    expect(findHelp('wilderness chunks non-writeback layer')[0]?.id).toBe('wilderness');
   });
 
   test('ranking returns best-first and caps the result count', () => {

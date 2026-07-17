@@ -1,4 +1,4 @@
-<!-- reviewed: 2026-07-11 | V4 Phase-A organism intelligence | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-17 | Grok assessment P3 castes + CODE_GROUNDED | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # Cosmogonic Quantum Mechalogodrom — Technical Specification
 
@@ -14,6 +14,13 @@
 > recurrent benefit, adaptive prediction, Petri causality, neural scaling, pooled cross-family result,
 > numeric capability change, consciousness, or sentience uplift.
 > [V4 receipt and limits.](./reports/ORGANISM-INTELLIGENCE-V4-RESULTS-2026-07-11.md)
+>
+> **A-Life / multi-loop dome (2026-07-17):** code-grounded profile
+> `[4.0, 2.4, 3.4, 3.8, 4.5, 4.6, 4.4, 3.5, 4.0]` · breadth **3.84** · **#1/129**
+> (`CODE_GROUNDED`). Multi-loop ecology (flora · waste · trophic · refuge · titan market · weather);
+> collective fields (stigmergy · noosphere · morphic · dark energy); NHI caste ≤1000; Big Tree
+> sanctuary/portal governance; connectome topology without physical tethers; wilderness one-way
+> non-writeback. indicatorOnly consciousness.
 
 > A complete, measured technical specification of a browser-native, deterministic, 50,000-agent
 > WebGL cosmic-ecosystem simulation. Every figure here was measured from the repository, not

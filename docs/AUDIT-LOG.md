@@ -71,6 +71,14 @@ not evidence of sentience". Both are back. Open-endedness **2.4** remains the ON
 survey mean (z **−0.11**), substrate pluralism is the ONLY axis where COSMOGONIC is sole leader, and
 the 129-corpus put LIDA and CTM above us on consciousness-theory (z +10.04 → **+4.85**).
 
+## 2026-07-17 — P3 castes into HELP + TECHNICAL-SPEC + README (full assessment remainder)
+
+- HELP cards: collective-fields (stigmergy/noosphere/morphic/dark-energy), nhi-caste, sanctuary-portal,
+  connectome-topology, wilderness non-writeback — with routing tests.
+- TECHNICAL-SPEC + ARCHITECTURE: multi-loop dome + P3 systems in the living addendum.
+- README features: NHI ceiling/observatory, four collective fields, wilderness one-way boundary.
+- BRAIN honesty preamble: historical v0.22.0 body labeled; current v0.23.0 / 3313 / 3.84 #1/129 pointer.
+
 ## 2026-07-16 — In-app HELP + ARCHITECTURE/PHILOSOPHY assessment close-out
 
 - `help-knowledge.ts`: overview rewritten to assessment short block; new cards dome-ecology,
