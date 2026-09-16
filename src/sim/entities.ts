@@ -40,6 +40,7 @@ import type { BehaviorEnv } from './behaviors';
 import { resolverCommitFactor } from './vqe-drive-resolver';
 import type { Entity, OrganismGoalField, SimContext, UpdateStats } from '../types';
 import type { Rng } from '../math/rng';
+import type { SpatialHash } from '../math/spatial-hash';
 
 /**
  * Paint morph colours for readable detail — NOT white crystal wash (owner 2026-07-12).
@@ -684,23 +685,28 @@ export class EntityManager {
   }
 
   /**
-   * Rebuild the current-position entity index exactly once when any NHI is live. The work is O(N)
-   * and independent of NHI population M; M=0 is an exact no-op. Returns the number inserted so
-   * deterministic tests and diagnostics can pin that structural scaling without wall-clock flakes.
+   * Rebuild the current-position entity index exactly once when any NHI is live. An optional NHI-only
+   * index is fused into the same O(N) list-order scan, so kin queries never traverse ordinary bodies
+   * while preserving the main grid's exact relative NHI order. M=0 is an exact no-op. Returns the
+   * number inserted into the main grid so deterministic diagnostics can pin structural scaling.
    */
-  rebuildCurrentGridForNhi(liveNhiCount: number): number {
+  rebuildCurrentGridForNhi(liveNhiCount: number, nhiGrid?: SpatialHash<Entity>): number {
     if (!Number.isSafeInteger(liveNhiCount) || liveNhiCount < 0) {
       throw new RangeError('live NHI count must be a non-negative safe integer');
     }
     if (liveNhiCount === 0) return 0;
     const grid = this.ctx.grid;
     grid.clear();
+    nhiGrid?.clear();
     const list = this.list;
     let inserted = 0;
     for (let i = 0; i < list.length; i++) {
       const entity = list[i];
       if (!entity) continue;
       grid.insert(entity);
+      if (nhiGrid && entity.userData?.isNhi && entity.userData.alive !== false) {
+        nhiGrid.insert(entity);
+      }
       inserted++;
     }
     return inserted;

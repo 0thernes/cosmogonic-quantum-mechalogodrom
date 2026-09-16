@@ -18,7 +18,7 @@
 import * as THREE from 'three';
 import { ARENA_MID } from './constants';
 import type { EntityManager } from './entities';
-import type { Entity, SimContext } from '../types';
+import type { Entity, SanctuaryHarmGate, SimContext } from '../types';
 
 /** A roaming body that grazes plants + eats organisms near it (titans / leviathans / puppeteers). */
 export interface DomeFeeder {
@@ -160,6 +160,7 @@ export class DomeFeeding {
     dt: number,
     onKill?: (e: Entity, index: number) => void,
     harmAllowed?: DomeFeedingHarmAllowed,
+    harmGate?: SanctuaryHarmGate,
   ): void {
     if (dt > 0) {
       // (1) collect feeder positions + graze the flora at each footprint.
@@ -169,7 +170,14 @@ export class DomeFeeding {
         f.eachFeederPos((x, y, z, memberIndex) => {
           if (fc >= MAX_FEEDERS) return;
           // A denied attacker is neutral here: no competitive grazing and no attack origin is recorded.
-          if (harmAllowed !== undefined && !harmAllowed(x, z, x, z)) return;
+          // Gate form: attacker == target here, so the pairwise verdict reduces to one endpoint probe
+          // (one suppressed pair when denied — exactly what the pairwise callback recorded).
+          if (harmGate !== undefined) {
+            if (harmGate.isProtected(x, z)) {
+              harmGate.suppressed(1);
+              return;
+            }
+          } else if (harmAllowed !== undefined && !harmAllowed(x, z, x, z)) return;
           const o = fc * 3;
           xyz[o] = x;
           xyz[o + 1] = y;
@@ -191,10 +199,22 @@ export class DomeFeeding {
           // NHI backing bodies are consumption-immune; explicit lethal hazards are handled elsewhere.
           if (!e || e.userData.isNhi) continue;
           const p = e.position;
+          // Decomposed gate fast path: every feeder in xyz[] already passed the attacker-side probe
+          // above, so the pairwise verdict for this row is `!isProtected(prey)` for ALL fc feeders.
+          // One probe replaces fc pairwise calls; a protected prey suppresses exactly fc pairs (the
+          // per-pair increments the pairwise form produced) and skips the row.
+          if (harmGate !== undefined && harmGate.isProtected(p.x, p.z)) {
+            harmGate.suppressed(fc);
+            continue;
+          }
           let caughtFeeder = -1;
           for (let g = 0; g < fc; g++) {
             const o = g * 3;
-            if (harmAllowed !== undefined && !harmAllowed(xyz[o]!, xyz[o + 2]!, p.x, p.z)) {
+            if (
+              harmGate === undefined &&
+              harmAllowed !== undefined &&
+              !harmAllowed(xyz[o]!, xyz[o + 2]!, p.x, p.z)
+            ) {
               continue;
             }
             const dx = p.x - xyz[o]!;

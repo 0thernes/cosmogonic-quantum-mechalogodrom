@@ -24,7 +24,11 @@
  */
 import { describe, expect, test } from 'bun:test';
 import { mulberry32 } from '../src/math/rng';
-import { XenomimicBrain, schrodingerSpread } from '../src/sim/xenomimic-brain';
+import {
+  createSchrodingerSpreadWorkspace,
+  XenomimicBrain,
+  schrodingerSpread,
+} from '../src/sim/xenomimic-brain';
 import { XenomimicPopulation } from '../src/sim/xenomimics';
 
 // senses = [food, crowding, threat, chaos, twinDist, energy]; schrodingerSpread reads [food, crowding, threat].
@@ -38,6 +42,58 @@ const S = (food: number, crowding: number, threat: number): number[] => [
 ];
 
 describe('GATE-XENO-SCHRODINGER — a second, independent quantum substrate', () => {
+  test('the retained workspace is bit-identical to fresh compatibility calls across dirty reuse', () => {
+    const workspace = createSchrodingerSpreadWorkspace();
+    const envs = [S(0.5, 0.5, 0.5), S(1, 0.2, 0), S(0, 0.2, 0), S(0.5, 0.2, 0.9), S(0.5, 1, 0.5)];
+    const expected = envs.map((senses) => schrodingerSpread(senses));
+
+    // Reuse one deliberately dirtied ping-pong workspace in both directions.
+    // Exact equality (not an epsilon) pins floating-point statement order.
+    for (let i = envs.length - 1; i >= 0; i--) {
+      expect(schrodingerSpread(envs[i]!, workspace)).toBe(expected[i]!);
+    }
+    for (let i = 0; i < envs.length; i++) {
+      expect(schrodingerSpread(envs[i]!, workspace)).toBe(expected[i]!);
+    }
+  });
+
+  test('a live recompute reuses its solver buffers without Float64Array allocation', () => {
+    const brain = new XenomimicBrain(4242, 3);
+    const rng = mulberry32(19);
+    const mimic = S(0.25, 0.75, 0.5);
+    const anti = S(0.8, 0.1, 0.6);
+
+    // Beat zero computes once and warms all independent brain machinery. Six
+    // beats leave the next call exactly on the fixed SCHRO_RECOMPUTE cadence.
+    for (let i = 0; i < 6; i++) brain.beat(mimic, anti, rng);
+
+    const NativeFloat64Array = globalThis.Float64Array;
+    let allocations = 0;
+    const CountingFloat64Array = new Proxy(NativeFloat64Array, {
+      construct(target, args, newTarget) {
+        allocations++;
+        return Reflect.construct(target, args, newTarget);
+      },
+    });
+    let liveSpread = 0;
+    Reflect.set(globalThis, 'Float64Array', CountingFloat64Array);
+    try {
+      const live = brain.beat(mimic, anti, rng);
+      liveSpread = live.mimic.quantumSpread + live.anti.quantumSpread;
+    } finally {
+      Reflect.set(globalThis, 'Float64Array', NativeFloat64Array);
+    }
+
+    expect(liveSpread).toBeGreaterThan(0);
+    expect(allocations).toBe(0);
+
+    // Exactly one Born-rule draw per beat remains unchanged by the deterministic
+    // workspace path: seven completed beats put both streams at the same state.
+    const referenceRng = mulberry32(19);
+    for (let i = 0; i < 7; i++) referenceRng();
+    expect(rng()).toBe(referenceRng());
+  });
+
   test('the wavepacket spread is REAL environment-responsive dynamics — bounded, deterministic, not constant', () => {
     const envs = [S(0.5, 0.5, 0.5), S(1, 0.2, 0), S(0, 0.2, 0), S(0.5, 0.2, 0.9), S(0.5, 1, 0.5)];
     const vals: number[] = [];

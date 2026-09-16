@@ -208,37 +208,29 @@ describe('Connectome.pairs (V2 amendment)', () => {
 });
 
 describe('Connectome.setCommunityOf (V2 amendment)', () => {
-  test('null lookup preserves V1 time-hue colors; a lookup switches to the tribe palette', () => {
+  test('null lookup keeps V1 time-hue mode; a lookup switches the instanced hue to the tribe palette', () => {
     const ctx = makeCtx(4);
     const list = [makeEntity(0, 0, 0, { nW: 0 }), makeEntity(2, 0, 0, { nW: 0 })];
     const conn = new Connectome(ctx, makeEntityManager(list));
     for (const e of list) ctx.grid.insert(e);
     const seg = at(ctx.scene.children, 0) as THREE.LineSegments;
-    // The line VISUAL is owner-retired (2026-07-14, invisible always in production) and colour
-    // writes are gated on visibility — flip the raw object flag to exercise the dormant palette
-    // math directly. Production has no path to this (setWebVisible is a forced-invisible no-op).
-    seg.visible = true;
-    const colors = seg.geometry.getAttribute('color');
-
-    // V109 recolours each link (additive glow + firing/retracting brightness + per-vertex saturation),
-    // so the exact RGB is no longer fixed — but the HUE is the invariant the palette switch drives:
-    // nW = 0, t = 0 ⇒ the time-hue palette = 0; installing the community lookup must switch it to the
-    // tribe palette hue (4 & 7)/8 = 0.5. Read the link colour back to HSL and assert the hue.
-    const hsl = { h: 0, s: 0, l: 0 };
-    const hueAt = (v: number): number =>
-      new THREE.Color(colors.getX(v), colors.getY(v), colors.getZ(v)).getHSL(hsl).h;
+    // The web renders by default again (owner 2026-07-19) and the palette now ships to the GPU
+    // as the aHue instance float: -1 = V1 time-hue mode, >= 0 = tribe base hue (c & 7) / 8 (the
+    // vertex shader adds the nw shimmer + time drift on top — same formulas as the CPU bake).
+    const hueAttr = seg.geometry.getAttribute('aHue') as THREE.InterleavedBufferAttribute;
+    const hueAt = (link: number): number => hueAttr.getX(link);
 
     conn.update(0.016, 0);
     expect(conn.links).toBe(1);
-    expect(hueAt(0)).toBeCloseTo(0, 2); // time-hue palette
+    expect(hueAt(0)).toBe(-1); // time-hue mode sentinel
 
     conn.setCommunityOf(() => 4);
     conn.update(0.016, 0);
-    expect(hueAt(0)).toBeCloseTo((4 & 7) / 8, 2); // tribe palette hue = 0.5
+    expect(hueAt(0)).toBeCloseTo((4 & 7) / 8, 5); // tribe palette hue = 0.5
 
-    conn.setCommunityOf(null); // back to the time-hue palette
+    conn.setCommunityOf(null); // back to the time-hue mode
     conn.update(0.016, 0);
-    expect(hueAt(0)).toBeCloseTo(0, 2);
+    expect(hueAt(0)).toBe(-1);
   });
 });
 

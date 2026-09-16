@@ -12,8 +12,9 @@
  * The implicit step is a complex tridiagonal solve (Thomas algorithm) with
  * Dirichlet (hard-wall) boundaries. DETERMINISM (Manhattan): pure linear
  * algebra, NO `Rng`, NO `Date.now`, fixed elimination order; same ψ₀ + V + dt ⇒
- * same trajectory, bit for bit. Per-step scratch is allocated once; the inner
- * sweeps are allocation-free. Ref: Crank & Nicolson, Proc. Camb. Phil. Soc. 43
+ * same trajectory, bit for bit. Callers on a hot path can retain one
+ * {@link SchrodingerWorkspace}; the inner sweeps are then allocation-free.
+ * Ref: Crank & Nicolson, Proc. Camb. Phil. Soc. 43
  * (1947); Goldberg, Schey & Schwartz, Am. J. Phys. 35 (1967).
  */
 
@@ -23,8 +24,42 @@ export interface Wave {
   readonly im: Float64Array;
 }
 
+/**
+ * Reusable storage for the complex Thomas sweep.
+ *
+ * A workspace belongs to one synchronous evolution at a time. Its arrays are
+ * deliberately exposed as readonly references so tests and profilers can pin
+ * their identity; callers must not mutate their contents while
+ * {@link cnStepInto} is running.
+ */
+export interface SchrodingerWorkspace {
+  readonly size: number;
+  readonly dRe: Float64Array;
+  readonly dIm: Float64Array;
+  readonly cpRe: Float64Array;
+  readonly cpIm: Float64Array;
+  readonly dpRe: Float64Array;
+  readonly dpIm: Float64Array;
+}
+
 /** Largest grid supported (keeps the O(N) tridiagonal solve bounded). */
 export const SCHRODINGER_MAX_N = 1024;
+
+/** Allocate the six O(N) Thomas-sweep buffers once for repeated CN steps. */
+export function createSchrodingerWorkspace(n: number): SchrodingerWorkspace {
+  if (!Number.isInteger(n) || n < 0 || n > SCHRODINGER_MAX_N) {
+    throw new Error(`schrodinger: workspace size must be an integer in [0, ${SCHRODINGER_MAX_N}]`);
+  }
+  return {
+    size: n,
+    dRe: new Float64Array(n),
+    dIm: new Float64Array(n),
+    cpRe: new Float64Array(n),
+    cpIm: new Float64Array(n),
+    dpRe: new Float64Array(n),
+    dpIm: new Float64Array(n),
+  };
+}
 
 /** ⟨ψ|ψ⟩ = Σ|ψⱼ|² (grid-normalised norm²; dx cancels in conserved ratios). */
 export function norm2(psi: Wave): number {
@@ -35,20 +70,40 @@ export function norm2(psi: Wave): number {
 
 /** A normalised Gaussian wavepacket centred at x0, width σ, carrying momentum k0. */
 export function gaussianPacket(n: number, dx: number, x0: number, sigma: number, k0: number): Wave {
-  const re = new Float64Array(n);
-  const im = new Float64Array(n);
+  const wave: Wave = { re: new Float64Array(n), im: new Float64Array(n) };
+  return gaussianPacketInto(wave, dx, x0, sigma, k0);
+}
+
+/**
+ * Write a normalised Gaussian wavepacket into caller-owned buffers.
+ * Reusing `out` is bit-identical to {@link gaussianPacket} and allocation-free.
+ */
+export function gaussianPacketInto(
+  out: Wave,
+  dx: number,
+  x0: number,
+  sigma: number,
+  k0: number,
+): Wave {
+  const { re, im } = out;
+  const n = re.length;
+  if (im.length !== n) throw new Error('schrodinger: wave real/imaginary lengths differ');
+  // Fresh typed arrays were zero-filled in gaussianPacket. Clear reused storage
+  // to preserve that exact boundary condition before the identical arithmetic.
+  re.fill(0);
+  im.fill(0);
   for (let j = 1; j < n - 1; j++) {
     const x = j * dx;
     const env = Math.exp(-((x - x0) * (x - x0)) / (2 * sigma * sigma));
     re[j] = env * Math.cos(k0 * x);
     im[j] = env * Math.sin(k0 * x);
   }
-  const nrm = Math.sqrt(norm2({ re, im })) || 1;
+  const nrm = Math.sqrt(norm2(out)) || 1;
   for (let j = 0; j < n; j++) {
     re[j] = re[j]! / nrm;
     im[j] = im[j]! / nrm;
   }
-  return { re, im };
+  return out;
 }
 
 /** ⟨Ĥ⟩ = Σ Re(ψ*ⱼ (Ĥψ)ⱼ) — conserved for a time-independent potential. */
@@ -91,11 +146,34 @@ export function expectationX(psi: Wave, dx: number): number {
  */
 export function cnStep(psi: Wave, V: readonly number[], dt: number, dx: number): Wave {
   const n = psi.re.length;
+  const out: Wave = { re: new Float64Array(n), im: new Float64Array(n) };
+  return cnStepInto(psi, V, dt, dx, out, createSchrodingerWorkspace(n));
+}
+
+/**
+ * Allocation-free Crank–Nicolson step into caller-owned output and scratch.
+ *
+ * The arithmetic and statement order intentionally mirror the historical
+ * allocating {@link cnStep} implementation exactly. `out` may alias `psi`:
+ * the complete RHS is captured in the workspace before back-substitution
+ * writes the result.
+ */
+export function cnStepInto(
+  psi: Wave,
+  V: readonly number[],
+  dt: number,
+  dx: number,
+  out: Wave,
+  workspace: SchrodingerWorkspace,
+): Wave {
+  const n = psi.re.length;
+  if (psi.im.length !== n || out.re.length !== n || out.im.length !== n || workspace.size !== n) {
+    throw new Error('schrodinger: wave/output/workspace sizes differ');
+  }
   const k = dt / (4 * dx * dx);
   const p = dt / (2 * dx * dx);
   // RHS d = B ψ, with B diag (1, −(p + dt·Vⱼ/2)) and off-diag (0, +k).
-  const dRe = new Float64Array(n);
-  const dIm = new Float64Array(n);
+  const { dRe, dIm, cpRe, cpIm, dpRe, dpIm } = workspace;
   for (let j = 0; j < n; j++) {
     const bdi = -(p + 0.5 * dt * V[j]!);
     const sumRe = (j > 0 ? psi.re[j - 1]! : 0) + (j < n - 1 ? psi.re[j + 1]! : 0);
@@ -105,10 +183,6 @@ export function cnStep(psi: Wave, V: readonly number[], dt: number, dx: number):
     dIm[j] = psi.im[j]! + bdi * psi.re[j]! + k * sumRe;
   }
   // Thomas: sub = super = a = (0,−k); diag bⱼ = (1, p + dt·Vⱼ/2). All complex.
-  const cpRe = new Float64Array(n);
-  const cpIm = new Float64Array(n);
-  const dpRe = new Float64Array(n);
-  const dpIm = new Float64Array(n);
   // j = 0
   {
     const b0i = p + 0.5 * dt * V[0]!;
@@ -142,8 +216,7 @@ export function cnStep(psi: Wave, V: readonly number[], dt: number, dx: number):
     dpRe[j] = (numRe * mRe + numIm * mIm) / mDen;
     dpIm[j] = (numIm * mRe - numRe * mIm) / mDen;
   }
-  const re = new Float64Array(n);
-  const im = new Float64Array(n);
+  const { re, im } = out;
   re[n - 1] = dpRe[n - 1]!;
   im[n - 1] = dpIm[n - 1]!;
   for (let j = n - 2; j >= 0; j--) {
@@ -153,7 +226,7 @@ export function cnStep(psi: Wave, V: readonly number[], dt: number, dx: number):
     re[j] = dpRe[j]! - cxRe;
     im[j] = dpIm[j]! - cxIm;
   }
-  return { re, im };
+  return out;
 }
 
 /** Evolve ψ for `steps` Crank–Nicolson ticks under potential V. */

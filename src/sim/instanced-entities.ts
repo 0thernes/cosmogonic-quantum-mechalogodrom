@@ -843,13 +843,59 @@ export class InstancedEntityRenderer {
     slot: number,
     night: number,
   ): void {
-    e.updateMatrix();
-    pool.mesh.setMatrixAt(slot, e.matrix);
+    // Compose position/quaternion/scale STRAIGHT into the instanceMatrix array — the exact
+    // Matrix4.compose formula (same operations, same order ⇒ identical floats), skipping the
+    // e.updateMatrix() staging write + the setMatrixAt 16-float copy. In instanced mode the data
+    // meshes never join the scene graph, so nothing else consumes e.matrix (entities.ts sets
+    // matrixAutoUpdate=false). Measured: the two-call path was the largest share of sync CPU.
+    {
+      const m = pool.mesh.instanceMatrix.array as Float32Array;
+      const mo = slot * 16;
+      const q = e.quaternion;
+      const qx = q.x;
+      const qy = q.y;
+      const qz = q.z;
+      const qw = q.w;
+      const x2 = qx + qx;
+      const y2 = qy + qy;
+      const z2 = qz + qz;
+      const xx = qx * x2;
+      const xy = qx * y2;
+      const xz = qx * z2;
+      const yy = qy * y2;
+      const yz = qy * z2;
+      const zz = qz * z2;
+      const wx = qw * x2;
+      const wy = qw * y2;
+      const wz = qw * z2;
+      const sx = e.scale.x;
+      const sy = e.scale.y;
+      const sz = e.scale.z;
+      m[mo] = (1 - (yy + zz)) * sx;
+      m[mo + 1] = (xy + wz) * sx;
+      m[mo + 2] = (xz - wy) * sx;
+      m[mo + 3] = 0;
+      m[mo + 4] = (xy - wz) * sy;
+      m[mo + 5] = (1 - (xx + zz)) * sy;
+      m[mo + 6] = (yz + wx) * sy;
+      m[mo + 7] = 0;
+      m[mo + 8] = (xz + wy) * sz;
+      m[mo + 9] = (yz - wx) * sz;
+      m[mo + 10] = (1 - (xx + yy)) * sz;
+      m[mo + 11] = 0;
+      m[mo + 12] = e.position.x;
+      m[mo + 13] = e.position.y;
+      m[mo + 14] = e.position.z;
+      m[mo + 15] = 1;
+    }
     const c = e.material.color;
     const em = e.material.emissive;
     const eI = e.material.emissiveIntensity;
     const a = pool.emissive.array as Float32Array;
     const o = slot * 4;
+    const ic = pool.mesh.instanceColor;
+    const colors = ic ? (ic.array as Float32Array) : null;
+    const co = slot * 3;
     if (night > 0) {
       // Inverted, channel-permuted ("glitched") colour: target = vec3(1) - c.bgr, then a
       // per-instance 3-way channel rotation by (listIndex % 3) so the inversion is non-uniform.
@@ -860,19 +906,22 @@ export class InstancedEntityRenderer {
       const tr = rot === 0 ? ir : rot === 1 ? ig : ib;
       const tg = rot === 0 ? ig : rot === 1 ? ib : ir;
       const tb = rot === 0 ? ib : rot === 1 ? ir : ig;
-      NIGHT_COL.setRGB(
-        c.r + (tr - c.r) * night,
-        c.g + (tg - c.g) * night,
-        c.b + (tb - c.b) * night,
-      );
-      pool.mesh.setColorAt(slot, NIGHT_COL);
+      if (colors) {
+        colors[co] = c.r + (tr - c.r) * night;
+        colors[co + 1] = c.g + (tg - c.g) * night;
+        colors[co + 2] = c.b + (tb - c.b) * night;
+      }
       // Emissive inverted + hotter, so the glow goes wrong too.
       const eIn = eI * (1 + 0.6 * night);
       a[o] = (em.r + (1 - em.b - em.r) * night) * eIn;
       a[o + 1] = (em.g + (1 - em.g - em.g) * night) * eIn;
       a[o + 2] = (em.b + (1 - em.r - em.b) * night) * eIn;
     } else {
-      pool.mesh.setColorAt(slot, c);
+      if (colors) {
+        colors[co] = c.r;
+        colors[co + 1] = c.g;
+        colors[co + 2] = c.b;
+      }
       a[o] = em.r * eI;
       a[o + 1] = em.g * eI;
       a[o + 2] = em.b * eI;
@@ -1050,8 +1099,6 @@ export class InstancedEntityRenderer {
 
 /** Scratch color for the instanceColor warm-up write. */
 const WHITE = new THREE.Color(0xffffff);
-/** Scratch color for the N(2) inverted-palette write (reused per instance — no per-frame alloc). */
-const NIGHT_COL = new THREE.Color();
 
 /**
  * Per-frame scalars the integrator hands to {@link InstancedEntityRenderer.sync} (CONTRACTS

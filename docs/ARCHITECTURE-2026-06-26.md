@@ -17,7 +17,7 @@
 > [V3 predecessor](./reports/2026-07-10-OPERATIONAL-ORGANISM-INTELLIGENCE-CAUSAL-AUDIT.md).
 >
 > **A-Life / dome ecology (2026-07-17):** code-grounded 9-axis profile
-> `[4.0, 2.4, 3.4, 3.8, 4.5, 4.6, 4.4, 3.5, 4.0]` · breadth **3.84** · **#1/129**
+> `[4.0, 2.0, 3.4, 3.8, 4.5, 4.6, 4.4, 3.5, 4.0]` · breadth **3.8** · **#1/129**
 > (`CODE_GROUNDED` + gates GATE-REPRO-SELECT / GATE-XENO-TROPHIC / GATE-DOME-REFUGE). The composition
 > root is a multi-loop food web (flora → graze → waste → fertilizer → regrow; xenomimic trophic;
 > titan harvest + dual market; weather; Big Tree sanctuary refuge). **Also live:** stigmergy +

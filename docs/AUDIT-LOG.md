@@ -11,6 +11,76 @@ changed and why.
 
 ---
 
+## 2026-07-17 — Open-endedness 2.4 → 2.0 (OVERCLAIMED): all three cited pillars are false at source
+
+The floor's **second downward move**, after reproduction 4.0→3.5. Chasing the weakest axis for a
+RAISE, the evidence went the other way. Recorded as found.
+
+**All three pillars the 2.4 rested on fail on inspection.** The basis read: "emergence-angles.ts real
+GA + TWO live fitness-selection loops (soup harvest + petri truncation-selection) ... the petri ring
+selects differentially". Verified by hand at source:
+
+- **"emergence-angles.ts real GA"** — `emergence-angles.ts:61` `evolve()` writes
+  `this.genomes.set(programId, mutatedProgram)` **unconditionally**. No acceptance test, no
+  population, no selection; `fitness` only scales the mutation. It is a random walk on program
+  strings. (Its `det01()` is also a `Math.sin` hash, not an injected `Rng` sub-stream.)
+- **"soup harvest fitness-selection loop"** — `primordial-soup.ts` `pickLivingParent` picks
+  **uniformly** among the living; vitality never weights parenthood, so there is no reproductive
+  differential. The harvest is argmax-vitality but the winner does not reproduce. The loop also
+  freezes after boot: `v* ≈ growth/UPKEEP ≳ 0.25` never reaches the `0.05` cull, so `recombine`
+  stops firing.
+- **"petri truncation-selection ... selects differentially"** — selection IS real (`evictLeastFit`
+  :204), but `birthBiologic(archon, tick)` (`digital-biologics.ts:213`) takes **no parent**: every
+  newborn is a pure function of `(archon, tick)`. Selection without heredity transmits nothing, so
+  it cannot produce cumulative adaptation and cannot bear on open-endedness at all.
+
+**What is actually there, and why it scores 2.** The one genuinely shipped evolutionary loop is
+`entities.ts` auto-fission (`breedTraits` :482, live via `world.ts:2644`). Heredity is real and
+gate-proven — but fitness is `fissionP = 0.02 + 0.08*clamp01(nW)`, **monotone in nW**: a fixed
+optimum at 1.0. Directional selection onto a fixed optimum is a CONVERGING OPTIMISER, the opposite
+of open-ended. Measured on the shipped rule against a neutral arm on the same seed, the selected arm
+ends with **FEWER** persisting genotype bins than neutral drift — selection destroys diversity while
+drift preserves it, so Bedau-Packard adaptive activity is not merely ~0, it is **negative**. The
+survey's own stated precedent settles the number: Aevol scores `open_endedness=2` for exactly this
+reason ("Fixed-target fitness => open_endedness=2") — with a far richer genome than ours.
+`strategy`/`typeId`/`setGroup` are heritable but read by no fitness term (neutral markers).
+
+**The shipped OEE instrument is drift-blind, and was measuring a random walk.** Two independent
+defects in `world.ts` V-BEDAU/V-OEE (:4023-4046):
+
+1. **It cannot see selection.** `openEndednessVerdict` has no neutral shadow. Fed pure Wright-Fisher
+   drift with NO selection anywhere, it returns `unbounded` on **5/5 seeds** — the same verdict it
+   gives a real innovator. The high-water-mark rule scores any non-decaying series, so it measures
+   NON-DECAY, not ADAPTATION. This is the repro scramble-control defect in a new costume: the same
+   answer whether or not the mechanism exists. Now pinned as a permanent receipt
+   (**GATE-OE-DRIFT-BLIND**, tests/open-endedness.test.ts) — deliberately asserting the WRONG
+   verdict, so that fixing the instrument breaks the test and re-opens the axis on purpose.
+2. **It measured a non-heritable variable.** The component was `e.userData.mi` (`world.ts:4029`),
+   but `mi` is absent from `breedTraits`; at fission the child gets
+   `(u.mi + Math.floor(rng()*5)) % morphs.length` (`entities.ts:1173`) — a fitness-blind random walk
+   with mean drift +2/birth, read by no fitness term. It diffuses to near-uniform entropy no matter
+   what evolution does.
+
+**Three failed instrument builds, none shipped.** A faithful Bedau-Packard with an internal shadow
+was attempted and **deleted rather than shipped**: it never separated signal from noise (neutral
+classified adaptive 3/5 then 2/5; selected 0/5 — anti-correlated with the truth). Root causes worth
+keeping: (a) a fixed component alphabet all present at t=0 admits no NEW components, and A_new is
+defined over new components crossing significance; (b) the threshold must be the most-negative
+excursion over the WHOLE history — read per-epoch it starts at ≈0 and latches noise; (c) activity
+rewards component PERSISTENCE, so a converging optimiser scores BELOW neutral and the arms cancel.
+Shipping an unvalidated instrument would have repeated the exact defect this log spent two days
+correcting. The rebuild remains open, and honestly open.
+
+**Cascade** (CODE_GROUNDED → CSV → CANONICAL_AXES → `gen:alife` → gated literals):
+`[4.0, 2.0, 3.4, 3.8, 4.5, 4.6, 4.4, 3.5, 4.0]` · breadth **3.844 → 3.8** · z-pop **+3.220 →
++3.147** · z-peers **+3.373 → +3.289** · Mahalanobis **8.644 → 8.679** · lead over ALIEN **+0.344 →
++0.3** · open-endedness z **−0.11 → −0.43**. Rank **#1/129**, Pareto front, and dominated-by 0 are
+unchanged. The `verify:facts` prose guard added 2026-07-16 caught all 9 stale vectors automatically
+— the first time an axis move did not depend on remembering every surface by hand.
+
+The asymmetric law applies: a gate is the price of a RAISE only, so this lowering needs measurement,
+not a gate. No gate can prove a mechanism ISN'T there.
+
 ## 2026-07-16 — Control repair: both same-day raises had gates that could not fail; A-Life vector now guarded in PROSE
 
 Adversarial re-audit of the two score raises recorded below. **Both mechanisms are real and both

@@ -1,6 +1,6 @@
 /**
  * Connectome — the neural link graph rebuilt each cadence from entity proximity (grid-queried),
- * with an open-addressed id→index table and an `ACT_MAX`-clamped activation accumulator. Covered only
+ * with generation-stamped direct list indices and an `ACT_MAX`-clamped activation accumulator. Covered only
  * via the integrated world loop; this pins the direct contract: the link count stays a non-negative
  * integer bounded by the tier's `maxLinks`, neural activation never overflows, and the rebuild is
  * fully reproducible from one seed (it draws no rng — pure proximity + math).
@@ -133,25 +133,44 @@ describe('Connectome — bounded link graph + finite activation, deterministic r
     expect(actTrace(b.entities)).toEqual(actTrace(a.entities));
   });
 
-  test('connection lines are RETIRED: never visible, never drawable, while the graph keeps computing', () => {
-    // Owner 2026-07-14 (screenshot receipt): the cross-ground line webbing between creatures must
-    // be graphically invisible ALWAYS. Mirrors the xenomimic psionic-bond ruling.
+  test('entity axon web SHOWS again: visible by default, REAL toggle, graph computes either way', () => {
+    // Owner 2026-07-19 (/goal): the entity connectome renders again — GPU-instanced waving
+    // axons, visible from construction. (Reverses the 2026-07-14 retirement for ENTITIES only;
+    // the xenomimic psionic-bond ruling stands and is pinned in xenomimic-cosmetics.test.ts.)
     const { ctx, conn, entities } = makeWorld(0x4400aa);
-    expect(conn.webVisible).toBe(false); // invisible from construction
-    conn.setWebVisible(true); // the setter is a deliberate no-op
-    expect(conn.webVisible).toBe(false);
+    expect(conn.webVisible).toBe(true); // visible from construction
 
     arrangeDenseClique(entities); // guarantee in-reach neighbors so the graph provably advances
     rebuildGrid(ctx, entities);
     for (let f = 0; f < 30; f++) conn.update(1 / 60, f / 60);
-    // The GRAPH is fully live underneath: links + topology pairs advance for GraphMind/tribes.
+    // The GRAPH is fully live: links + topology pairs advance for GraphMind/tribes.
     expect(conn.links).toBeGreaterThan(0);
     expect(conn.pairCount).toBeGreaterThan(0);
-    // But no line geometry is ever written or drawn — zero draw range, zero geometry floats.
+    // Visible web: one instance per link, 11 instance floats per link (endpoints + wave/color
+    // params) — the polyline/HSL math itself lives in the vertex shader, not the CPU buffers.
     const lines = connectomeLines(ctx)[0]!;
-    expect(lines.visible).toBe(false);
-    expect(lines.geometry.drawRange.count).toBe(0);
+    expect(lines.visible).toBe(true);
+    const geo = lines.geometry as THREE.InstancedBufferGeometry;
+    expect(geo.instanceCount).toBe(conn.links);
+    expect(conn.geometryFloatsWritten).toBe(conn.links * 11);
+    const lastRenderedLinks = geo.instanceCount;
+
+    // Hiding is a REAL toggle again. A hide→show while the world is FROZEN restores the last
+    // completely written prefix immediately; it does not need a simulation update to become visible.
+    conn.setWebVisible(false);
+    expect(conn.webVisible).toBe(false);
+    expect(geo.instanceCount).toBe(0);
+    conn.setWebVisible(true);
+    expect(geo.instanceCount).toBe(lastRenderedLinks);
+
+    // Hidden updates draw/write nothing while the graph still stays live.
+    conn.setWebVisible(false);
+    conn.update(1 / 60, 1);
+    expect(conn.links).toBeGreaterThan(0);
+    expect(geo.instanceCount).toBe(0);
     expect(conn.geometryFloatsWritten).toBe(0);
+    conn.setWebVisible(true);
+    expect(conn.webVisible).toBe(true);
   });
 
   test('mega startup allocation follows the live population instead of the 600k-link ceiling', () => {
@@ -174,16 +193,12 @@ describe('Connectome — bounded link graph + finite activation, deterministic r
     expect(conn.allocatedLinkCapacity).toBeGreaterThanOrEqual(liveAtBoot * 12);
     expect(conn.allocatedLinkCapacity).toBeLessThan(liveAtBoot * 24);
     expect(conn.allocatedLinkCapacity).toBeLessThan(ctx.quality.maxLinks / 50);
-    expect(conn.allocatedEntityIndexCapacity).toBeGreaterThanOrEqual(liveAtBoot * 4);
-    expect(conn.allocatedEntityIndexCapacity).toBeLessThan(liveAtBoot * 8);
-
-    const positions = lines.geometry.getAttribute('position');
-    const colors = lines.geometry.getAttribute('color');
-    const startupBytes =
-      positions.array.byteLength +
-      colors.array.byteLength +
-      conn.pairs.byteLength +
-      conn.allocatedEntityIndexCapacity * (8 + 4 + 4);
+    // One interleaved instance buffer (11 floats/link) replaces the old per-segment
+    // position+color pair. Direct generation-stamped entity indices also remove the former
+    // population-sized open-address table from the connectome's startup footprint.
+    const instanceData = (lines.geometry.getAttribute('aStart') as THREE.InterleavedBufferAttribute)
+      .data.array as Float32Array;
+    const startupBytes = instanceData.byteLength + conn.pairs.byteLength;
     expect(startupBytes).toBeLessThan(3 * 1024 * 1024);
     conn.dispose();
   });
@@ -225,7 +240,6 @@ describe('Connectome — bounded link graph + finite activation, deterministic r
     reference.update(1 / 60, 2, false);
 
     expect(grown.allocatedLinkCapacity).toBe(512);
-    expect(grown.allocatedEntityIndexCapacity).toBe(128);
     expect(grown.links).toBe(276); // 24 choose 2 crosses the initial capacity boundary.
     expect(grown.links).toBe(reference.links);
     expect(grown.pairCount).toBe(reference.pairCount);
@@ -236,18 +250,17 @@ describe('Connectome — bounded link graph + finite activation, deterministic r
     expect(grownLines.material).toBe(originalMaterial);
     expect(grownLines.geometry).not.toBe(originalGeometry);
     expect(originalGeometryDisposed).toBe(true);
-    expect(grownLines.geometry.drawRange).toEqual(referenceLines.geometry.drawRange);
+    const grownGeo = grownLines.geometry as THREE.InstancedBufferGeometry;
+    const referenceGeo = referenceLines.geometry as THREE.InstancedBufferGeometry;
+    expect(grownGeo.instanceCount).toBe(referenceGeo.instanceCount);
 
     const activeFloats = grown.geometryFloatsWritten;
-    const grownPositions = grownLines.geometry.getAttribute('position').array as Float32Array;
-    const referencePositions = referenceLines.geometry.getAttribute('position')
+    expect(activeFloats).toBe(grown.links * 11); // 11 instance floats per visible link
+    const grownData = (grownGeo.getAttribute('aStart') as THREE.InterleavedBufferAttribute).data
       .array as Float32Array;
-    const grownColors = grownLines.geometry.getAttribute('color').array as Float32Array;
-    const referenceColors = referenceLines.geometry.getAttribute('color').array as Float32Array;
-    expect(grownPositions.slice(0, activeFloats)).toEqual(
-      referencePositions.slice(0, activeFloats),
-    );
-    expect(grownColors.slice(0, activeFloats)).toEqual(referenceColors.slice(0, activeFloats));
+    const referenceData = (referenceGeo.getAttribute('aStart') as THREE.InterleavedBufferAttribute)
+      .data.array as Float32Array;
+    expect(grownData.slice(0, activeFloats)).toEqual(referenceData.slice(0, activeFloats));
 
     grown.dispose();
     reference.dispose();

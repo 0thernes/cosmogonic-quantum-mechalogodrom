@@ -311,7 +311,7 @@ describe('World NHI target-effect wiring', () => {
     const integration = WORLD.indexOf('const stats = this.entities.update');
     const containment = WORLD.indexOf('this.steerNhiBeings(t)', integration);
     const currentGrid = WORLD.indexOf(
-      'this.entities.rebuildCurrentGridForNhi(this.nhi.count);',
+      'this.entities.rebuildCurrentGridForNhi(this.nhi.count, this.nhiGrid);',
       containment,
     );
     const tick = WORLD.indexOf(
@@ -327,7 +327,9 @@ describe('World NHI target-effect wiring', () => {
     expect(WORLD.slice(currentGrid, tick)).not.toContain('catch {}');
     expect(WORLD).toContain("this.nhiGuard('tick-failure-audit'");
     expect(WORLD).toContain("this.audit.record('nhi-tick-failed', receipt)");
-    expect(WORLD).toContain('this.entities.rebuildCurrentGridForNhi(this.nhi.count);');
+    expect(WORLD).toContain(
+      'this.entities.rebuildCurrentGridForNhi(this.nhi.count, this.nhiGrid);',
+    );
     expect(WORLD).not.toContain('nhiEntitySetScratch');
     expect(WORLD).toContain('return this.nhiLiveScratch;');
     expect(percept).toContain('selectNearestNhiTarget(e, near, previousTarget ?? null)');

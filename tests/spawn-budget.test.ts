@@ -236,6 +236,28 @@ describe('current-grid structural scaling receipt', () => {
     }
   });
 
+  test('fuses an NHI-only index in exact entity-list order without retaining dead bodies', () => {
+    const grid = new CountingGrid(32);
+    const nhiGrid = new CountingGrid(32);
+    const ent = new EntityManager(makeCtx(21, 50_000, undefined, grid));
+    const organism = (id: number, isNhi: boolean, alive = true): Entity =>
+      ({
+        id,
+        position: new THREE.Vector3(id, 0, id),
+        userData: { isNhi, alive },
+      }) as unknown as Entity;
+    const ordinary = organism(1, false);
+    const first = organism(2, true);
+    const dead = organism(3, true, false);
+    const second = organism(4, true);
+    ent.list.push(ordinary, first, dead, second);
+
+    expect(ent.rebuildCurrentGridForNhi(2, nhiGrid)).toBe(4);
+    expect(grid.inserts).toBe(4);
+    expect(nhiGrid.inserts).toBe(2);
+    expect([...nhiGrid.query(0, 0, 32)]).toEqual([first, second]);
+  });
+
   test('rejects invalid NHI counts instead of hiding an unbounded caller bug', () => {
     const ent = new EntityManager(makeCtx(23, 50_000));
     for (const invalid of [-1, 0.5, Number.NaN, Number.POSITIVE_INFINITY]) {

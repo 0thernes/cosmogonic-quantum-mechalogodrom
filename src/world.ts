@@ -16,6 +16,7 @@ import { Level } from './core/frame-governor';
 import type {
   PersistedState,
   QualityProfile,
+  SanctuaryHarmGate,
   SimContext,
   SimState,
   TelemetrySnapshot,
@@ -534,6 +535,8 @@ export class World {
   private readonly exposureLevels = [0.52, 0.62, 0.72, 0.82, 0.92] as const;
   private exposureIdx = 1;
   private readonly grid: SpatialHash<Entity>;
+  /** NHI-only mirror of the current entity grid; rebuilt in the same list-order pass for exact kin order. */
+  private readonly nhiGrid: SpatialHash<Entity>;
   private readonly audio: AudioEngine;
   /** Aborts the global (window) hero-event listeners on {@link dispose} — without this they leaked
    *  one set per dev hot-reload, each firing against a dead World (the HMR hook calls dispose()). */
@@ -776,6 +779,18 @@ export class World {
     targetX: number,
     targetZ: number,
   ): boolean => this.isBigTreeHarmAllowed(attackerX, attackerZ, targetX, targetZ);
+  /**
+   * Decomposed form of {@link bigTreeHarmAllowed} for the O(entities × attackers) predation
+   * scans (super-hunt + dome-feeding): one endpoint probe per attacker per frame + one per prey
+   * row replaces 3.2M+ pairwise probe-chains per mega frame. Verdicts AND the suppressed-harm
+   * telemetry stay byte-identical (the scans bulk-increment the exact per-pair denial count).
+   */
+  private readonly bigTreeHarmGate: SanctuaryHarmGate = {
+    isProtected: (x: number, z: number): boolean => this.isBigTreeProtected(x, z),
+    suppressed: (count: number): void => {
+      this.bigTreeSuppressedHarm += count;
+    },
+  };
   private readonly xenomimicCouplings: XenomimicCouplings = {
     foodAt: this.xenomimicFoodAt,
     grazeAt: this.xenomimicGrazeAt,
@@ -1443,9 +1458,9 @@ export class World {
     // A 10-unit cell (measured sweet spot, docs/BENCHMARKS-2026-06-26.md) cuts that ~36% while keeping the
     // visited-cell count low for the radius-8..16 behavior queries — the smaller cells below 10
     // were rejected (per-query cell-iteration overhead overtook the neighbor savings). V3.6.
-    this.grid = new SpatialHash<Entity>(
-      this.quality.maxEntities > 5000 ? ULTRA_GRID_CELL : GRID_CELL,
-    );
+    const spatialCell = this.quality.maxEntities > 5000 ? ULTRA_GRID_CELL : GRID_CELL;
+    this.grid = new SpatialHash<Entity>(spatialCell);
+    this.nhiGrid = new SpatialHash<Entity>(spatialCell);
     // Audio gets its OWN derived stream: its setInterval callbacks drain rng at
     // wall-clock moments, which would make the sim stream timing-dependent and
     // break same-seed reproducibility (audit finding, 0.2.1).
@@ -2447,6 +2462,7 @@ export class World {
       dt,
       (e, i) => this.gedankenOnDeath(e, i, t),
       this.bigTreeHarmAllowed,
+      this.bigTreeHarmGate,
     );
     // USER V127 (D): DOME-WIDE FEEDING — the titans / leviathans / puppeteers graze the flora under them
     // and EAT any organism that wanders within reach (prey bursts + re-enters ELSEWHERE 5s later). The
@@ -2460,6 +2476,7 @@ export class World {
       dt,
       (e, i) => this.gedankenOnDeath(e, i, t), // devoured mind measured too — every death vector now
       this.bigTreeHarmAllowed,
+      this.bigTreeHarmGate,
     );
     // V47 → GOAL: EACH of the 5 Archons' 100-robot wingman escort orbits + assists ITS OWN body every
     // frame, reacting to that Archon's live dominance + quantum aspects; one InstancedMesh per swarm.
@@ -2680,7 +2697,7 @@ export class World {
     // The baseline grid was rebuilt above on its legacy every-second-frame cadence. A live NHI pays
     // one additional current-position rebuild here because its exact-nearest proof requires state
     // after this frame's integration and containment. The no-NHI 50k path pays no duplicate scan.
-    this.entities.rebuildCurrentGridForNhi(this.nhi.count);
+    this.entities.rebuildCurrentGridForNhi(this.nhi.count, this.nhiGrid);
 
     // F-NHI V10: drive launched super-minds every frame at full cadence against the current grid.
     if (this.nhi.count > 0) {
@@ -5714,6 +5731,7 @@ export class World {
       );
     }
     this.nhiEntities.clear();
+    this.nhiGrid.clear();
     this.nhiIdsByEntity.clear();
     this.nhiTargets.clear();
     this.bigTreeNhiSource?.reset();
@@ -5786,8 +5804,14 @@ export class World {
     let kinN = 0;
     if (e) {
       const p = e.position;
-      const KIN_R2 = 90 * 90;
-      const kin = this.grid.query(p.x, p.z, SOCIAL_NHI_KIN_R);
+      // Exact-query fix: this percept has always accepted only the 90-unit 3D sphere below.
+      // Querying the separate sparse-caste radius (90 * SOCIAL_CASTE_SCALE = 900) visited a
+      // 115x115-cell square per launched mind before rejecting every candidate outside 90.
+      // XZ distance <= 3D distance, so the 90-unit XZ query is still a complete superset of the
+      // accepted sphere with identical candidate order/results and ~100x fewer cell visits.
+      const KIN_R = 90;
+      const KIN_R2 = KIN_R * KIN_R;
+      const kin = this.nhiGrid.query(p.x, p.z, KIN_R);
       for (let i = 0; i < kin.length; i++) {
         const oe = kin[i];
         if (!oe || oe === e || !oe.userData.isNhi || oe.userData.alive === false) continue;
@@ -7061,16 +7085,17 @@ export class World {
       },
       toggleConnectomeWeb: (): boolean => {
         this.unlock();
-        // OWNER (2026-07-14): connection lines are RETIRED for the entity axon web AND the
-        // xenomimic bond alike — graphically invisible always. The key now re-asserts the psionic
-        // state (re-purges any legacy lines) instead of toggling a visual back on; the neural
-        // GRAPH keeps computing underneath either way.
-        this.connectome.setWebVisible(false);
+        // OWNER (2026-07-19 /goal): the ENTITY axon web renders again — GPU-instanced waving
+        // axons (connectome.ts vertex shader), toggled here and visible by default. The
+        // XENOMIMIC bond stays psionic (owner 2026-07-13 ruling still binding for xenomimics):
+        // never drawn, re-purged on every press. The neural GRAPH computes either way.
+        const on = !this.connectome.webVisible;
+        this.connectome.setWebVisible(on);
         this.xenomimicConnectome.setVisible(false);
         this.purgeOrphanXenomimicTethers();
-        this.hud.showSector('NEURAL WEB · PSIONIC (lines retired)');
-        this.audit.record('connectome-web', { visible: false });
-        return false;
+        this.hud.showSector(on ? 'NEURAL WEB · VISIBLE (entity axons)' : 'NEURAL WEB · HIDDEN');
+        this.audit.record('connectome-web', { visible: on });
+        return on;
       },
     };
   }

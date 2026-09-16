@@ -110,6 +110,14 @@ export interface EntityData {
   nW: number;
   /** Neural activation accumulator. */
   act: number;
+  /**
+   * Connectome-owned scratch: this entity's current dense-list index. It is valid only when
+   * `connectomeIndexGeneration` matches the rebuilding Connectome pass. Keeping the index beside
+   * the entity removes a population-sized id hash and its probes without changing topology order.
+   */
+  connectomeListIndex?: number;
+  /** Generation stamp guarding {@link connectomeListIndex} against a stale spatial-grid member. */
+  connectomeIndexGeneration?: number;
   /** Quantum phase. */
   qP: number;
   /** Market-behavior wealth 0..100. */
@@ -532,6 +540,23 @@ export interface TelemetrySnapshot {
   singularity: string;
   /** V62: whether CHAOS MODE (the Lorenz quantum storm) is engaged — flagged on the chaos row. */
   chaosMode: boolean;
+}
+
+/**
+ * Decomposed sanctuary harm gate for the O(entities × attackers) predation scans.
+ *
+ * The pairwise callback form (`harmAllowed(ax, az, tx, tz)`) evaluates the SAME two endpoint
+ * predicates 2·N·M times per frame — 3.2M+ evaluations at the mega tier. Because the pair
+ * verdict is exactly `!isProtected(attacker) && !isProtected(target)`, hot loops can hoist each
+ * side to one evaluation per attacker per frame + one per prey per scan and stay byte-identical —
+ * including the suppressed-harm telemetry, which is bulk-incremented via {@link suppressed} with
+ * the exact per-pair denial count the pairwise form would have produced.
+ */
+export interface SanctuaryHarmGate {
+  /** Pure spatial predicate: is this endpoint inside the authored sanctuary? No side effects. */
+  isProtected(x: number, z: number): boolean;
+  /** Bulk telemetry: `count` denied attacker/prey pairs (matches the pairwise increment exactly). */
+  suppressed(count: number): void;
 }
 
 /** One titan's public economy row (structural twin of sim/titans TitanLedgerEntry). */

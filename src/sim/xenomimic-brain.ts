@@ -42,7 +42,13 @@
 import { createMlp, mlpPredict, mlpParamCount, type Mlp } from './ad-mlp';
 import { QuantumRegister } from '../math/quantum';
 import { quantumCoherence } from '../math/quantum-coherence';
-import { gaussianPacket, cnStep, type Wave } from '../math/schrodinger';
+import {
+  cnStepInto,
+  createSchrodingerWorkspace,
+  gaussianPacketInto,
+  type SchrodingerWorkspace,
+  type Wave,
+} from '../math/schrodinger';
 import { mulberry32, hashSeed, type Rng } from '../math/rng';
 
 /** Sense-vector width fed to the shared MLP. */
@@ -73,6 +79,28 @@ const SCHRO_TURN_GAIN = 0.3;
  * is a fixed function of the beat counter, so the same seed reproduces the same cached values bit for bit.
  */
 const SCHRO_RECOMPUTE = 6;
+
+/**
+ * One pair-owned, reusable position-space workspace. The two wave buffers
+ * ping-pong through all CN steps; the potential and Thomas scratch never
+ * allocate again after brain construction.
+ */
+export interface SchrodingerSpreadWorkspace {
+  readonly potential: number[];
+  readonly waveA: Wave;
+  readonly waveB: Wave;
+  readonly solver: SchrodingerWorkspace;
+}
+
+/** Allocate the Xenomimic Schrödinger buffers once for repeated spread probes. */
+export function createSchrodingerSpreadWorkspace(): SchrodingerSpreadWorkspace {
+  return {
+    potential: new Array<number>(SCHRO_GRID).fill(0),
+    waveA: { re: new Float64Array(SCHRO_GRID), im: new Float64Array(SCHRO_GRID) },
+    waveB: { re: new Float64Array(SCHRO_GRID), im: new Float64Array(SCHRO_GRID) },
+    solver: createSchrodingerWorkspace(SCHRO_GRID),
+  };
+}
 
 /** One twin's resolved intent for a beat. All fields finite and bounded. */
 export interface XenomimicThought {
@@ -155,6 +183,8 @@ export class XenomimicBrain {
   /** Cached per-twin Schrödinger positional spreads, refreshed every {@link SCHRO_RECOMPUTE} beats. */
   private qSpreadMimic = 0;
   private qSpreadAnti = 0;
+  /** Pair-owned CN buffers: reused serially for mimic then anti with no hot-path allocation. */
+  private readonly schroWorkspace = createSchrodingerSpreadWorkspace();
 
   constructor(seed: number, species = 0) {
     // Own weight-init substream, derived from the pair seed. Never touches the sim RNG.
@@ -244,8 +274,8 @@ export class XenomimicBrain {
       this.qSpreadMimic = 0;
       this.qSpreadAnti = 0;
     } else if (this.beatCount % SCHRO_RECOMPUTE === 0) {
-      this.qSpreadMimic = schrodingerSpread(sensesMimic);
-      this.qSpreadAnti = schrodingerSpread(sensesAnti);
+      this.qSpreadMimic = schrodingerSpread(sensesMimic, this.schroWorkspace);
+      this.qSpreadAnti = schrodingerSpread(sensesAnti, this.schroWorkspace);
     }
     this.beatCount++;
 
@@ -429,26 +459,35 @@ function meanDrive(senses: readonly number[]): number {
  * algebra). Bounded to [0,1]. Exposed so GATE-XENO-SCHRODINGER can verify the dynamics are drive-responsive
  * and the coupling is operational (ablation-verified), not decorative.
  */
-export function schrodingerSpread(senses: readonly number[]): number {
+export function schrodingerSpread(
+  senses: readonly number[],
+  workspace: SchrodingerSpreadWorkspace = createSchrodingerSpreadWorkspace(),
+): number {
   const food = clamp01(senses[0] ?? 0);
   const crowding = clamp01(senses[1] ?? 0);
   const threat = clamp01(senses[2] ?? 0);
   const mid = (SCHRO_GRID - 1) / 2;
   const barrier = SCHRO_GRID - 4;
-  const V = Array.from({ length: SCHRO_GRID }, () => 0);
+  const V = workspace.potential;
   for (let j = 0; j < SCHRO_GRID; j++) {
     const dm = j - mid;
     const db = j - barrier;
     V[j] = -food * Math.exp(-(dm * dm) / 18) + SCHRO_THREAT_W * threat * Math.exp(-(db * db) / 8);
   }
-  let psi: Wave = gaussianPacket(
-    SCHRO_GRID,
+  let psi = gaussianPacketInto(
+    workspace.waveA,
     SCHRO_DX,
     mid * SCHRO_DX,
     2 + 2 * (1 - food),
     0.5 + crowding,
   );
-  for (let s = 0; s < SCHRO_STEPS; s++) psi = cnStep(psi, V, SCHRO_DT, SCHRO_DX);
+  let next = workspace.waveB;
+  for (let s = 0; s < SCHRO_STEPS; s++) {
+    cnStepInto(psi, V, SCHRO_DT, SCHRO_DX, next, workspace.solver);
+    const swap = psi;
+    psi = next;
+    next = swap;
+  }
   let num = 0;
   let num2 = 0;
   let den = 0;

@@ -132,6 +132,18 @@ describe('World lifecycle wiring', () => {
     expect(audio).toBeGreaterThan(cooldown);
   });
 
+  test('every-frame NHI kin percept queries only its exact 90-unit acceptance superset', () => {
+    const start = WORLD.indexOf('// USER #7a — the SOCIAL field');
+    const end = WORLD.indexOf('const lifeSignal =', start);
+    expect(start).toBeGreaterThanOrEqual(0);
+    expect(end).toBeGreaterThan(start);
+    const body = WORLD.slice(start, end);
+    expect(body).toContain('const KIN_R = 90;');
+    expect(body).toContain('this.nhiGrid.query(p.x, p.z, KIN_R)');
+    expect(body).not.toContain('this.grid.query(p.x, p.z, KIN_R)');
+    expect(body).not.toContain('this.grid.query(p.x, p.z, SOCIAL_NHI_KIN_R)');
+  });
+
   test('edge-column controls are exposed only while the UI is a grid', () => {
     expect(EDGES).not.toMatch(/@media \(min-width: 600px\)[^{]*orientation/);
     expect((EDGES.match(/@media \(min-width: 769px\)/g) ?? []).length).toBeGreaterThanOrEqual(3);

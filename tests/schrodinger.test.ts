@@ -8,8 +8,11 @@
 import { describe, expect, test } from 'bun:test';
 import {
   gaussianPacket,
+  gaussianPacketInto,
   evolve,
   cnStep,
+  cnStepInto,
+  createSchrodingerWorkspace,
   norm2,
   expectationEnergy,
   expectationX,
@@ -94,5 +97,50 @@ describe('determinism', () => {
     const psi0 = packet();
     const stepped = cnStep(psi0, V0, DT, DX);
     expect(Math.abs(norm2(stepped) - norm2(psi0))).toBeLessThan(1e-10);
+  });
+});
+
+describe('reusable workspace', () => {
+  test('caller-owned Gaussian and CN buffers are bit-identical to the allocating API', () => {
+    const expectedPacket = packet();
+    const packetOut: Wave = {
+      re: new Float64Array(N).fill(Number.NaN),
+      im: new Float64Array(N).fill(Number.NaN),
+    };
+    expect(gaussianPacketInto(packetOut, DX, (N * DX) / 2, 1.0, 2.0)).toBe(packetOut);
+    expect(Array.from(packetOut.re)).toEqual(Array.from(expectedPacket.re));
+    expect(Array.from(packetOut.im)).toEqual(Array.from(expectedPacket.im));
+
+    const expectedFirst = cnStep(expectedPacket, V0, DT, DX);
+    const expectedSecond = cnStep(expectedFirst, V0, DT, DX);
+    const workspace = createSchrodingerWorkspace(N);
+    const waveA: Wave = { re: new Float64Array(N), im: new Float64Array(N) };
+    const waveB: Wave = { re: new Float64Array(N), im: new Float64Array(N) };
+    const scratchRefs = [
+      workspace.dRe,
+      workspace.dIm,
+      workspace.cpRe,
+      workspace.cpIm,
+      workspace.dpRe,
+      workspace.dpIm,
+    ];
+
+    expect(cnStepInto(packetOut, V0, DT, DX, waveA, workspace)).toBe(waveA);
+    expect(Array.from(waveA.re)).toEqual(Array.from(expectedFirst.re));
+    expect(Array.from(waveA.im)).toEqual(Array.from(expectedFirst.im));
+    expect(cnStepInto(waveA, V0, DT, DX, waveB, workspace)).toBe(waveB);
+    expect(Array.from(waveB.re)).toEqual(Array.from(expectedSecond.re));
+    expect(Array.from(waveB.im)).toEqual(Array.from(expectedSecond.im));
+
+    // Repeated solves retain every scratch identity; stale contents cannot leak
+    // because each forward/backward sweep overwrites the complete active range.
+    expect([
+      workspace.dRe,
+      workspace.dIm,
+      workspace.cpRe,
+      workspace.cpIm,
+      workspace.dpRe,
+      workspace.dpIm,
+    ]).toEqual(scratchRefs);
   });
 });

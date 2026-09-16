@@ -21,8 +21,8 @@ Audit HTML: `docs/CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.html`
 > `5/5` excluded-row inertness, numerical safety, three-process performance stability, and all named
 > consumer counterfactuals. Uniform random-action baseline separation and aggregate-mapping specificity
 > failed. Separate gate-backed A-Life mechanisms now set the current code-grounded vector to
-> `[4.0, 2.4, 3.4, 3.8, 4.5, 4.6, 4.4, 3.5, 4.0]`: breadth `3.844`, rank `#1/129`, population z
-> `+3.220`, and peer z `+3.373`. The finite 26-form generator plus differential selection establishes
+> `[4.0, 2.0, 3.4, 3.8, 4.5, 4.6, 4.4, 3.5, 4.0]`: breadth `3.8`, rank `#1/129`, population z
+> `+3.147`, and peer z `+3.289`. The finite 26-form generator plus differential selection establishes
 > bounded active novelty against a frozen control, not unbounded open-ended evolution. V3 itself
 > authorizes no additional consciousness, sentience, or numeric capability score change. See the
 > [V3 causal audit](./reports/2026-07-10-OPERATIONAL-ORGANISM-INTELLIGENCE-CAUSAL-AUDIT.md).
@@ -260,7 +260,7 @@ These are now part of the binding carry-forward set.
 | Tsotchke/Eshkol count  | Track `.esk 1,436+` as stale where corrected to `1,365`. Current external truth is 22 repositories with `17/21 = 80.95%` non-meta integrated and `8 deep / 7 wired / 2 harvest / 4 fenced / 1 meta`; `OBLITERATUS` is fenced and `classical-contrast` is a separate internal control. `tsotchkeWiringCoverage() = 1.0` was misleading because it averaged only already-wired entries. |
 | Archon denominator     | Preserve `5 apex + 20 light` rather than saying only "25 Archons."                                                                                                                                                                                                                                                                                                                    |
 | Faculty denominator    | Preserve `144 faculties` and about `30 wired` where those exact denominators are cited.                                                                                                                                                                                                                                                                                               |
-| ALife comparison       | Preserve code-grounded breadth `3.844`, population `z=+3.220`, peer `z=+3.373`, and the 129-system matrix as a cited comparative claim. The `4.44` self-score is quotable only as a labelled historical baseline, never as current.                                                                                                                                                   |
+| ALife comparison       | Preserve code-grounded breadth `3.8`, population `z=+3.147`, peer `z=+3.289`, and the 129-system matrix as a cited comparative claim. The `4.44` self-score is quotable only as a labelled historical baseline, never as current.                                                                                                                                                     |
 | Scale claims           | Carry forward 100 GlyphBrains, 50k EntityBrains, and the Mechalogodrom live-scale claim only with source-path citations.                                                                                                                                                                                                                                                              |
 
 ### Fourth-Pass Semantic Handle Addendum

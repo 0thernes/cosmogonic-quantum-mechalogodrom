@@ -19,7 +19,7 @@ import * as THREE from 'three';
 import { ARENA_MID } from './constants';
 import type { EntityManager } from './entities';
 import type { SuperBodySystem } from './super-body';
-import type { Entity, SimContext } from '../types';
+import type { Entity, SanctuaryHarmGate, SimContext } from '../types';
 
 /** How far an apex SENSES prey (and turns to pursue). */
 const SENSES_R = 60 * ARENA_MID; // 150
@@ -65,6 +65,9 @@ export class SuperHunt {
   private readonly nearPos: THREE.Vector3[] = [];
   private readonly nearD2: number[] = [];
   private readonly hasNear: boolean[] = [];
+  /** Frame-constant per-body facts hoisted out of the O(entities × bodies) scan (see update). */
+  private readonly bodyControlled: boolean[] = [];
+  private readonly bodyProt: boolean[] = [];
   private readonly respawns: { at: number; mi: number }[] = [];
   private respawnHead = 0;
   private readonly deathIndices: number[] = [];
@@ -137,6 +140,8 @@ export class SuperHunt {
       this.nearPos.push(new THREE.Vector3());
       this.nearD2.push(Infinity);
       this.hasNear.push(false);
+      this.bodyControlled.push(false);
+      this.bodyProt.push(false);
     }
   }
 
@@ -152,6 +157,7 @@ export class SuperHunt {
     dt: number,
     onEat?: (e: Entity, index: number) => void,
     harmAllowed?: SuperHuntHarmAllowed,
+    harmGate?: SanctuaryHarmGate,
   ): void {
     const nb = bodies.length;
     if (dt > 0 && nb > 0) {
@@ -160,6 +166,12 @@ export class SuperHunt {
         bodies[b]!.worldPosition(this.bodyPos[b]!);
         this.nearD2[b] = SENSES_R2;
         this.hasNear[b] = false;
+        // Frame-constant per-body facts, hoisted out of the O(entities × bodies) scan: the
+        // big-tree control flag never changes inside this pass (visitor scheduling owns it), and
+        // the attacker-side sanctuary probe depends only on this body's position captured above.
+        this.bodyControlled[b] = bodies[b]!.isBigTreeActorControlled();
+        this.bodyProt[b] =
+          harmGate !== undefined && harmGate.isProtected(this.bodyPos[b]!.x, this.bodyPos[b]!.z);
       }
       const list = entities.list;
       this.deathIndices.length = 0;
@@ -170,10 +182,20 @@ export class SuperHunt {
         if (!e || e.userData.isNhi) continue;
         const p = e.position;
         let consumed = false;
+        // Prey-side sanctuary probe: once per row instead of once per (row × body) pair. Denials
+        // are tallied per pair and bulk-reported after the row, matching the pairwise callback's
+        // suppressed-harm increments exactly (an eat-break truncates the tally the same way).
+        const preyProt = harmGate !== undefined && harmGate.isProtected(p.x, p.z);
+        let denied = 0;
         for (let b = 0; b < nb; b++) {
-          if (bodies[b]!.isBigTreeActorControlled()) continue;
+          if (this.bodyControlled[b]) continue;
           const bp = this.bodyPos[b]!;
-          if (harmAllowed !== undefined && !harmAllowed(bp.x, bp.z, p.x, p.z)) continue;
+          if (harmGate !== undefined) {
+            if (this.bodyProt[b] || preyProt) {
+              denied++;
+              continue;
+            }
+          } else if (harmAllowed !== undefined && !harmAllowed(bp.x, bp.z, p.x, p.z)) continue;
           const dx = p.x - bp.x;
           const dy = p.y - bp.y;
           const dz = p.z - bp.z;
@@ -196,6 +218,7 @@ export class SuperHunt {
             this.hasNear[b] = true;
           }
         }
+        if (denied > 0 && harmGate !== undefined) harmGate.suppressed(denied);
         if (consumed) continue;
       }
       entities.disposeManyDescending(this.deathIndices);

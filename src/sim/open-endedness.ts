@@ -175,9 +175,21 @@ const OEE_SUSTAIN = 0.5;
  *   • both halves ≈ 0            → `inactive` (no innovation — a frozen/monoculture soup)
  *   • late ≥ {@link OEE_SUSTAIN} × early → `unbounded` (innovation persists — open-ended)
  *   • otherwise                   → `bounded` (innovation decayed — the run plateaued)
- * Pure, deterministic, headless — the honest "is it still evolving?" instrument for long runs. Note
- * this is the intrinsic-trend form; the fully rigorous Bedau-Packard test additionally subtracts a
- * neutral-shadow baseline to prove the activity is ADAPTIVE, not drift — see RESEARCH-BEDROCK.
+ * Pure, deterministic, headless.
+ *
+ * ⚠️ DRIFT-BLIND — DO NOT QUOTE `unbounded` AS EVIDENCE OF OPEN-ENDED EVOLUTION. This is the
+ * intrinsic-trend form; the rigorous Bedau-Packard test subtracts a NEUTRAL-SHADOW baseline to
+ * prove activity is ADAPTIVE rather than drift, and this function has no shadow. That is not a
+ * theoretical caveat — it is measured: fed pure Wright-Fisher drift with NO selection anywhere,
+ * this returns `unbounded` on 5/5 seeds, the same verdict it gives a genuinely innovating system
+ * (pinned in tests/open-endedness.test.ts, GATE-OE-DRIFT-BLIND). The cause is structural: the
+ * high-water-mark rule scores ANY non-decaying series, so it measures NON-DECAY, not ADAPTATION.
+ * A verdict that returns the same answer whether or not the mechanism exists cannot support a
+ * claim, for the same reason a control that cannot fail is not a control.
+ *
+ * Read it as "is the diversity trend still rising?" — a legitimate trend question — and nothing
+ * more. The open-endedness axis is scored from the survey's fixed-target precedent, NOT from this.
+ * Building the shadow is real work and remains open; see docs/AUDIT-LOG.md 2026-07-17.
  */
 export function openEndednessVerdict(
   snapshots: readonly number[],

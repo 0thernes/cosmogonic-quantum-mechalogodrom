@@ -17,6 +17,18 @@ interface TestBody {
   ringMat: THREE.MeshStandardMaterial;
   eyeMat: THREE.MeshStandardMaterial;
   tendrilGeos: THREE.BufferGeometry[];
+  ringBlock: number;
+  spikeBlock: number;
+  spikePoolIndex: number;
+  ringLocals: THREE.Matrix4[];
+  spikeLocals: THREE.Matrix4[];
+}
+
+interface TestPartPool {
+  mesh: THREE.InstancedMesh;
+  emissive: THREE.InstancedBufferAttribute;
+  partsPerBlock: number;
+  liveInstances: number;
 }
 
 interface NhiBodyInternals {
@@ -26,6 +38,8 @@ interface NhiBodyInternals {
   ringGeo: THREE.BufferGeometry;
   eyeGeo: THREE.BufferGeometry;
   spikeGeos: THREE.BufferGeometry[];
+  ringPool: TestPartPool;
+  spikePools: TestPartPool[];
   spawnIndex: number;
 }
 
@@ -59,6 +73,122 @@ describe('nhiAscension (pure)', () => {
       expect(Number.isFinite(v)).toBe(true);
       expect(v).toBe(0);
     }
+  });
+});
+
+function expectMatrixClose(actual: THREE.Matrix4, expected: THREE.Matrix4): void {
+  for (let i = 0; i < 16; i++) {
+    expect(actual.elements[i]).toBeCloseTo(expected.elements[i]!, 5);
+  }
+}
+
+describe('NhiBodySystem exact ring/spike batching', () => {
+  test('preserves every component while collapsing ring/spike draws into four shared pools', () => {
+    const system = new NhiBodySystem(new THREE.Scene());
+    const state = internals(system);
+    for (let i = 0; i < 4; i++) system.spawn(100 + i, i * 10, 5, -i * 3);
+
+    // Morphologies 0..3 own 1/2/1/2 rings and 6/8/10/12 spikes: no count reduction.
+    expect(system.batchedPartCount).toBe(42);
+    expect(system.batchedPartDrawCalls).toBe(4);
+    expect(
+      state.root.children.filter((child) => child instanceof THREE.InstancedMesh),
+    ).toHaveLength(4);
+    expect(state.ringPool.liveInstances).toBe(6);
+    expect(state.spikePools.map((pool) => pool.liveInstances)).toEqual([18, 8, 10]);
+    expect(state.ringPool.mesh.geometry).toBe(state.ringGeo);
+    for (let i = 0; i < state.spikePools.length; i++) {
+      expect(state.spikePools[i]!.mesh.geometry).toBe(state.spikeGeos[i]!);
+    }
+
+    // Cores + exact unique tendrils + every eye remain ordinary per-being components. The former
+    // ring/spike geometries occur only on InstancedMeshes, never as hidden duplicate child draws.
+    let ordinaryMeshes = 0;
+    let duplicateBatchedGeometry = 0;
+    for (const body of state.bodies.values()) {
+      body.group.traverse((child) => {
+        if (!(child instanceof THREE.Mesh) || child instanceof THREE.InstancedMesh) return;
+        ordinaryMeshes++;
+        if (child.geometry === state.ringGeo || state.spikeGeos.includes(child.geometry)) {
+          duplicateBatchedGeometry++;
+        }
+      });
+    }
+    expect(ordinaryMeshes).toBe(48); // 4 cores + 18 tendrils + 26 eyes
+    expect(duplicateBatchedGeometry).toBe(0);
+
+    const poolMaterial = state.ringPool.mesh.material as THREE.MeshStandardMaterial;
+    expect(poolMaterial.metalness).toBe(0.95);
+    expect(poolMaterial.roughness).toBe(0.2);
+    expect(state.ringGeo.getAttribute('instNhiEmissive')).toBe(state.ringPool.emissive);
+    system.dispose();
+  });
+
+  test('stable slots carry the exact parent×local matrices and animated material lanes', () => {
+    const system = new NhiBodySystem(new THREE.Scene());
+    const state = internals(system);
+    system.spawn(7, 1, 2, 3); // morphology 0: one ring, six needle spikes
+    const body = state.bodies.get(7)!;
+    const ringBlock = body.ringBlock;
+    const spikeBlock = body.spikeBlock;
+    const position = new THREE.Vector3(13, 17, -19);
+    system.update(2.75, () => position);
+
+    const ringSlot = ringBlock * state.ringPool.partsPerBlock;
+    const expectedRing = new THREE.Matrix4().multiplyMatrices(
+      body.group.matrix,
+      body.ringLocals[0]!,
+    );
+    const actualRing = new THREE.Matrix4();
+    state.ringPool.mesh.getMatrixAt(ringSlot, actualRing);
+    expectMatrixClose(actualRing, expectedRing);
+
+    const actualColor = new THREE.Color();
+    state.ringPool.mesh.getColorAt(ringSlot, actualColor);
+    expect(actualColor.r).toBeCloseTo(body.ringMat.color.r, 6);
+    expect(actualColor.g).toBeCloseTo(body.ringMat.color.g, 6);
+    expect(actualColor.b).toBeCloseTo(body.ringMat.color.b, 6);
+    const em = state.ringPool.emissive;
+    expect(em.getX(ringSlot)).toBeCloseTo(
+      body.ringMat.emissive.r * body.ringMat.emissiveIntensity,
+      6,
+    );
+    expect(em.getY(ringSlot)).toBeCloseTo(
+      body.ringMat.emissive.g * body.ringMat.emissiveIntensity,
+      6,
+    );
+    expect(em.getZ(ringSlot)).toBeCloseTo(
+      body.ringMat.emissive.b * body.ringMat.emissiveIntensity,
+      6,
+    );
+
+    const spikePool = state.spikePools[body.spikePoolIndex]!;
+    const spikeSlot = spikeBlock * spikePool.partsPerBlock;
+    const expectedSpike = new THREE.Matrix4().multiplyMatrices(
+      body.group.matrix,
+      body.spikeLocals[0]!,
+    );
+    const actualSpike = new THREE.Matrix4();
+    spikePool.mesh.getMatrixAt(spikeSlot, actualSpike);
+    expectMatrixClose(actualSpike, expectedSpike);
+
+    // Another lifecycle event never compacts a live being's blocks or changes its visual identity.
+    system.spawn(8, 0, 0, 0);
+    system.update(3, (id) => (id === 7 ? position : new THREE.Vector3(2, 4, 6)));
+    expect(state.bodies.get(7)!.ringBlock).toBe(ringBlock);
+    expect(state.bodies.get(7)!.spikeBlock).toBe(spikeBlock);
+    expect(system.remove(8)).toBe(true);
+    expect(state.bodies.get(7)!.ringBlock).toBe(ringBlock);
+    expect(state.bodies.get(7)!.spikeBlock).toBe(spikeBlock);
+
+    expect(system.remove(7)).toBe(true);
+    expect(system.batchedPartCount).toBe(0);
+    expect(system.batchedPartDrawCalls).toBe(0);
+    state.ringPool.mesh.getMatrixAt(ringSlot, actualRing);
+    expect(actualRing.elements[0]).toBe(0);
+    expect(actualRing.elements[5]).toBe(0);
+    expect(actualRing.elements[10]).toBe(0);
+    system.dispose();
   });
 });
 
@@ -108,7 +238,9 @@ describe('NhiBodySystem lifecycle exception safety', () => {
     expect(system.count).toBe(0);
     expect(system.has(91)).toBe(false);
     expect(state.spawnIndex).toBe(0);
-    expect(state.root.children).toHaveLength(0);
+    // Four permanent appendage pools are system infrastructure; the failed per-being group is gone.
+    expect(state.root.children).toHaveLength(4);
+    expect(state.root.children.every((child) => child instanceof THREE.InstancedMesh)).toBe(true);
     expect(ownedMaterials.size).toBe(3);
     expect(disposedOwnedMaterials.size).toBe(ownedMaterials.size);
     expect(ownedGeometries.size).toBe(3);
@@ -192,7 +324,8 @@ describe('NhiBodySystem lifecycle exception safety', () => {
     expect(system.count).toBe(0);
     expect(system.has(2)).toBe(false);
     expect(system.has(3)).toBe(false);
-    expect(state.root.children).toHaveLength(0);
+    expect(state.root.children).toHaveLength(4);
+    expect(state.root.children.every((child) => child instanceof THREE.InstancedMesh)).toBe(true);
     system.dispose();
   });
 

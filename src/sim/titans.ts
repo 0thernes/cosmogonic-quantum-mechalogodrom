@@ -674,6 +674,12 @@ export class TitanSystem implements DomeFeeder, BigTreeFaunaSource {
   private sanctuary: ((x: number, z: number, ownerId?: number) => boolean) | null = null;
   private readonly rd: TitanRd;
   private readonly titans: Titan[] = [];
+  /** Aura-sweep scratch: frame-constant per-titan facts (see applyAura). Fixed TITAN_COUNT size. */
+  private readonly auraX: number[] = [];
+  private readonly auraY: number[] = [];
+  private readonly auraZ: number[] = [];
+  private readonly auraIdx: number[] = [];
+  private readonly auraColor: (THREE.Color | null)[] = [];
   /** Optional Big Tree locomotion policy, indexed by stable titan ID. */
   private readonly bigTreeModes: Uint8Array;
   private readonly bigTreeTargetXs: Float64Array;
@@ -1487,21 +1493,37 @@ export class TitanSystem implements DomeFeeder, BigTreeFaunaSource {
     const n = list.length;
     if (n === 0) return;
     const titans = this.titans;
+    // Frame-constant per-titan facts hoisted OUT of the O(n/3 · titans) sweep: visibility, the
+    // sanctuary/peace verdict (isProtectedTitan — its member-registry touch is idempotent at a
+    // fixed position, and it still runs exactly once per eligible titan here), the wake origin,
+    // and the stain colour. Eligible titans compact into a scratch prefix in ascending original
+    // order, carrying their ORIGINAL index (auraIdx) — the wake's sin phase is keyed off it, so
+    // per-pair math, mutation order, and every emitted force stay byte-identical.
+    let na = 0;
+    for (let k = 0; k < titans.length; k++) {
+      const tk = titans[k];
+      if (!tk) continue;
+      if (!tk.group.visible) continue; // portal-downed: dead (invisible) — casts no aura
+      if (this.isProtectedTitan(tk)) continue;
+      const tp = tk.group.position;
+      this.auraX[na] = tp.x;
+      this.auraY[na] = tp.y;
+      this.auraZ[na] = tp.z;
+      this.auraIdx[na] = k;
+      this.auraColor[na] = tk.tu.uColor.value;
+      na++;
+    }
+    if (na === 0) return;
     for (let idx = this.ctx.state.frame % 3; idx < n; idx += 3) {
       const e = list[idx];
       if (!e) continue;
       const ep = e.position;
       if (this.isProtectedAt(ep.x, ep.z)) continue;
       const v = e.userData.vel;
-      for (let k = 0; k < titans.length; k++) {
-        const tk = titans[k];
-        if (!tk) continue;
-        if (!tk.group.visible) continue; // portal-downed: dead (invisible) — casts no aura
-        const tp = tk.group.position;
-        if (this.isProtectedTitan(tk)) continue;
-        const dx = tp.x - ep.x;
-        const dy = tp.y - ep.y;
-        const dz = tp.z - ep.z;
+      for (let j = 0; j < na; j++) {
+        const dx = (this.auraX[j] ?? 0) - ep.x;
+        const dy = (this.auraY[j] ?? 0) - ep.y;
+        const dz = (this.auraZ[j] ?? 0) - ep.z;
         const r2 = dx * dx + dy * dy + dz * dz;
         if (r2 > AURA_R2 || r2 < 1e-3) continue;
         const r = Math.sqrt(r2);
@@ -1509,9 +1531,10 @@ export class TitanSystem implements DomeFeeder, BigTreeFaunaSource {
         // Tangential wake only: organisms swirl, stain, recoil, and leave. This deliberately avoids
         // the previous "everything sucked into titan gravity" failure mode.
         v.x += -dz * inv;
-        v.y += Math.sin(this.ctx.state.frame * 0.03 + k) * inv * 0.28;
+        v.y += Math.sin(this.ctx.state.frame * 0.03 + (this.auraIdx[j] ?? 0)) * inv * 0.28;
         v.z += dx * inv;
-        e.material.color.lerp(tk.tu.uColor.value, 0.02 * (1 - r / AURA_R)); // ontological hue-stain
+        const stain = this.auraColor[j];
+        if (stain) e.material.color.lerp(stain, 0.02 * (1 - r / AURA_R)); // ontological hue-stain
         // V69 SHOCK: an organism that strays into the inner well RECOILS — a brief speed-sap (stun), so
         // it no longer drifts through "like nothing"; the colossus's freak-geometry physically rebukes
         // it. The inner zone overlaps the harvest reach, so the captured are soon consumed (economyTick).

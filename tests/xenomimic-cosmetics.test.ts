@@ -149,9 +149,8 @@ describe('xenomimic RENDER + BRUTAL skins are unique APIs', () => {
     expect(toggleBody).toContain('this.purgeOrphanXenomimicTethers()');
     expect(toggleBody).not.toContain('new THREE.Line');
     expect(toggleBody).not.toContain('LineSegments');
-    // Owner 2026-07-14: the ENTITY axon-web lines are retired too — the key can only re-assert
-    // invisibility, never draw connection lines of any kind again.
-    expect(toggleBody).toContain('this.connectome.setWebVisible(false)');
-    expect(toggleBody).not.toContain('setWebVisible(on)');
+    // Owner 2026-07-19 (/goal): the ENTITY axon web toggles for real again (GPU-instanced
+    // axons in connectome.ts) — while the xenomimic bond above stays permanently undrawn.
+    expect(toggleBody).toContain('this.connectome.setWebVisible(on)');
   });
 });

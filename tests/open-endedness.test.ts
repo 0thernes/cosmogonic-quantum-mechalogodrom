@@ -116,4 +116,60 @@ describe('open-endedness metrics (research bedrock: Bedau-Packard + Petri-NCA)',
     // too-short series can't be judged → inactive, not a false positive
     expect(openEndednessVerdict([1, 2, 3], 8).verdict).toBe('inactive');
   });
+
+  /**
+   * GATE-OE-DRIFT-BLIND — the LIMIT of this instrument, pinned as a measured receipt rather than a
+   * caveat in a docstring that nobody re-checks.
+   *
+   * Every other test above feeds `openEndednessVerdict` a hand-authored curve (a rising line, a
+   * logistic, a constant). None feeds it the one series that matters: a NEUTRAL NULL. Do that, and
+   * the instrument fails — pure Wright-Fisher drift with NO selection anywhere is classified
+   * `unbounded`, the same verdict it gives a genuinely innovating system. The reason is structural:
+   * `newActivitySeries` scores `max(0, snap[i] − max(previous window))`, so ANY non-decaying series
+   * keeps minting fresh high-water marks. It measures NON-DECAY, not ADAPTATION.
+   *
+   * This is the reproduction scramble-control defect in a different costume: a verdict that returns
+   * the same answer whether or not the mechanism exists. It is why `open-endedness` is scored on the
+   * survey's fixed-target precedent (2.0) and NOT on this instrument, and why no surface may quote
+   * an `unbounded` verdict as evidence of open-ended evolution. The rigorous Bedau-Packard test
+   * needs a NEUTRAL SHADOW (see the module docstring); this instrument has none.
+   *
+   * The pin is deliberately `toBe('unbounded')`: if someone later fixes the instrument, THIS TEST
+   * MUST FAIL. That failure is the signal to re-open the open-endedness axis — not something to
+   * silence. See docs/AUDIT-LOG.md 2026-07-17.
+   */
+  test('GATE-OE-DRIFT-BLIND: neutral drift is (wrongly) called unbounded — the instrument cannot see selection', () => {
+    // Deterministic mulberry32 — no Math.random, no clock.
+    const mulberry32 = (a: number) => () => {
+      a |= 0;
+      a = (a + 0x6d2b79f5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+    /** Wright-Fisher with NO selection: parents are chosen uniformly. Pure neutral drift. */
+    const neutralDrift = (seed: number): number[] => {
+      const rng = mulberry32(seed);
+      const N = 280;
+      const K = 24;
+      let pop = Array.from({ length: N }, (_, i) => i % K);
+      const out: number[] = [];
+      for (let t = 0; t < 200; t++) {
+        pop = Array.from({ length: N }, () => {
+          const parent = pop[Math.floor(rng() * N)]!;
+          return rng() < 0.02 ? Math.floor(rng() * K) : parent;
+        });
+        const tally = new Array<number>(K).fill(0);
+        for (const a of pop) tally[a]!++;
+        out.push(shannonDiversity(tally));
+      }
+      return out;
+    };
+
+    // The null gets the open-ended verdict on every seed. Not a flake — a structural blind spot.
+    const verdicts = [4242, 1234, 2026, 77, 31415].map(
+      (s) => openEndednessVerdict(neutralDrift(s), 8).verdict,
+    );
+    expect(verdicts).toEqual(['unbounded', 'unbounded', 'unbounded', 'unbounded', 'unbounded']);
+  });
 });

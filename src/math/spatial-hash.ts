@@ -15,6 +15,16 @@
  *
  * Usage per frame: `clear()`, `insert()` everything, then any number of `query()` calls.
  */
+interface CellQueryRecord<T> {
+  readonly cx: number;
+  readonly cz: number;
+  readonly cr: number;
+  readonly cells: T[][];
+  generation: number;
+}
+
+type CellQueryBucket<T> = CellQueryRecord<T> | CellQueryRecord<T>[];
+
 export class SpatialHash<T extends { position: { x: number; z: number } }> {
   /** Cell side length in world units (legacy `CS`). */
   private readonly cellSize: number;
@@ -26,6 +36,14 @@ export class SpatialHash<T extends { position: { x: number; z: number } }> {
   private readonly pool: T[][] = [];
   /** Shared query result buffer (Known Bug 5 fix). Contents valid only until the next query(). */
   private readonly result: T[] = [];
+  /**
+   * Generation-cached live-cell views. Many dense-world entities occupy the same source cell and
+   * therefore have the exact same query-cell sequence; build that sequence once per grid rebuild.
+   */
+  private readonly cellQueries = new Map<number, CellQueryBucket<T>>();
+  /** Records populated in the current generation, so clear() invalidates only live borrowed views. */
+  private readonly usedCellQueries: CellQueryRecord<T>[] = [];
+  private cellQueryGeneration = 1;
 
   constructor(cellSize = 8) {
     this.cellSize = cellSize;
@@ -43,6 +61,27 @@ export class SpatialHash<T extends { position: { x: number; z: number } }> {
     }
     this.cells.clear();
     this.result.length = 0;
+    for (
+      let record = this.usedCellQueries.pop();
+      record !== undefined;
+      record = this.usedCellQueries.pop()
+    ) {
+      record.cells.length = 0;
+      record.generation = 0;
+    }
+    this.cellQueryGeneration++;
+    // At 60 clears/s this branch is millions of years away, but keeping the stamp total makes a
+    // stale cached view impossible even after Number.MAX_SAFE_INTEGER.
+    if (!Number.isSafeInteger(this.cellQueryGeneration)) {
+      for (const bucket of this.cellQueries.values()) {
+        if (Array.isArray(bucket)) {
+          for (const record of bucket) record.generation = 0;
+        } else {
+          bucket.generation = 0;
+        }
+      }
+      this.cellQueryGeneration = 1;
+    }
   }
 
   /**
@@ -91,6 +130,58 @@ export class SpatialHash<T extends { position: { x: number; z: number } }> {
         }
       }
     }
+    return out;
+  }
+
+  /**
+   * Return the non-empty live cells overlapping the same query square and in the exact same
+   * `dx -> dz -> item` traversal order as {@link query}. The outer array is a BORROWED cached view
+   * valid until {@link clear}; every inner array is borrowed from this hash and neither level may be
+   * mutated by the consumer. Entities occupying the same source cell and using the same radius share
+   * one view, so dense high-tier consumers pay the map sweep once per occupied cell per rebuild—not
+   * once per entity. Unlike `query()`, this performs no O(k) candidate-reference copy. O(cells) on a
+   * cold cell and O(1) on a same-generation cache hit; allocation-free after spatial cells warm up.
+   */
+  queryCells(x: number, z: number, radius: number): readonly (readonly T[])[] {
+    const cs = this.cellSize;
+    const cr = Math.ceil(radius / cs);
+    const cx = (x / cs) | 0;
+    const cz = (z / cs) | 0;
+    // Fast numeric key; every hit is validated against all three coordinates, so even an IEEE/key
+    // collision only creates a tiny bucket and can never return the wrong view.
+    const key = (cx * 10007 + cz) * 257 + cr;
+    const bucket = this.cellQueries.get(key);
+    let record: CellQueryRecord<T> | undefined;
+    if (bucket !== undefined) {
+      if (Array.isArray(bucket)) {
+        for (let i = 0; i < bucket.length; i++) {
+          const candidate = bucket[i];
+          if (candidate && candidate.cx === cx && candidate.cz === cz && candidate.cr === cr) {
+            record = candidate;
+            break;
+          }
+        }
+      } else if (bucket.cx === cx && bucket.cz === cz && bucket.cr === cr) {
+        record = bucket;
+      }
+    }
+    if (record === undefined) {
+      record = { cx, cz, cr, cells: [], generation: 0 };
+      if (bucket === undefined) this.cellQueries.set(key, record);
+      else if (Array.isArray(bucket)) bucket.push(record);
+      else this.cellQueries.set(key, [bucket, record]);
+    }
+    if (record.generation === this.cellQueryGeneration) return record.cells;
+    const out = record.cells;
+    out.length = 0;
+    for (let dx = -cr; dx <= cr; dx++) {
+      for (let dz = -cr; dz <= cr; dz++) {
+        const cell = this.cells.get((cx + dx) * 10007 + (cz + dz));
+        if (cell !== undefined) out.push(cell);
+      }
+    }
+    record.generation = this.cellQueryGeneration;
+    this.usedCellQueries.push(record);
     return out;
   }
 }

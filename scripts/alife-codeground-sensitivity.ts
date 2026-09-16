@@ -40,11 +40,37 @@
  *                            unused — credit is the shipped EntityManager path only. (was 3.5; the 3.5 audit
  *                            named this exact path back: "gate the split roll on inherited nW ... then add
  *                            GATE-REPRO-SELECT proving trait frequencies shift vs a fitness-blind control".)
- *   open-endedness      2.4  emergence-angles.ts real GA + TWO live fitness-selection loops (soup harvest
- *                            world.ts:4094 + petri truncation-selection petri-dish.ts:204, live at :526) + the birth
- *                            engine shows bounded active novelty versus a frozen control and the petri ring
- *                            selects differentially (GATE-OE-LIVE / GATE-PETRI-SURVIVE). This is not proof
- *                            of unbounded open-ended evolution — the cautious floor was 2.2.
+ *   open-endedness      2.0  FIXED-TARGET FITNESS — scored by the survey's own stated precedent (Aevol,
+ *                            open_endedness=2: "Fixed-target fitness => open_endedness=2", and Aevol carries a
+ *                            far richer genome than ours). The ONE genuinely shipped evolutionary loop is
+ *                            entities.ts auto-fission (breedTraits :482, live via world.ts:2644): heredity is
+ *                            real and gate-proven, but fitness is `fissionP = 0.02 + 0.08*clamp01(nW)` —
+ *                            MONOTONE in nW, i.e. a fixed optimum at nW=1. Directional selection onto a fixed
+ *                            optimum is a CONVERGING OPTIMISER, the opposite of open-ended: measured on the
+ *                            shipped rule, the selected arm ends with FEWER persisting genotype bins than a
+ *                            neutral-drift arm on the same seed (selection destroys diversity; drift preserves
+ *                            it). Bedau-Packard adaptive activity of the shipped loop against its own neutral
+ *                            shadow is NOT positive — it is negative. `strategy`/`typeId`/`setGroup` are
+ *                            heritable but read by NO fitness term (neutral markers).
+ *                            (was 2.4; that basis cited THREE pillars, and all three are false at source —
+ *                            verified by hand 2026-07-17:
+ *                              • "emergence-angles.ts real GA" — emergence-angles.ts:61 `evolve()` writes
+ *                                `this.genomes.set(programId, mutatedProgram)` UNCONDITIONALLY: no acceptance
+ *                                test, no population, no selection. `fitness` only scales the mutation. It is a
+ *                                random walk on program strings, not a GA. (Also det01() = a Math.sin hash, not
+ *                                an injected Rng sub-stream.)
+ *                              • "soup harvest fitness-selection loop" — primordial-soup.ts `pickLivingParent`
+ *                                picks UNIFORMLY among the living; vitality never weights parenthood, so there
+ *                                is no reproductive differential. The harvest is argmax-vitality but the winner
+ *                                does not reproduce. The loop also freezes after boot (v* ≈ growth/UPKEEP ≳ 0.25
+ *                                never reaches the 0.05 cull ⇒ recombine stops firing).
+ *                              • "petri truncation-selection ... selects differentially" — selection IS real
+ *                                (evictLeastFit :204), but `birthBiologic(archon, tick)` (digital-biologics.ts
+ *                                :213) takes NO PARENT: every newborn is a pure function of (archon, tick).
+ *                                Selection without heredity transmits nothing, so it cannot produce cumulative
+ *                                adaptation and cannot bear on open-endedness at all.
+ *                            The 2.4 was never gate-backed; the asymmetric law makes a gate the price of a RAISE
+ *                            only, so this lowering needs measurement, not a gate. See docs/AUDIT-LOG.md.)
  *   ecology             3.4  Multi-loop dome food web: 60k edible flora + waste→fertilizer + titan economyTick +
  *                            soup selection (GATE-SOUP-SELECT) + Xenomimic trophic layer (GATE-XENO-TROPHIC
  *                            predator–prey regulation + predation-scaled energy flux) PLUS the Big Tree sanctuary
@@ -230,7 +256,7 @@ export const SUPERSEDES_SELF_SCORE: readonly number[] = [];
 //              claimed (docstrings corrected separately). Batch-57 GATE-REPRO-SELECT RESTORES 4.0 with
 //              receipts: fissionP = 0.02+0.08*nW + life phenotype of nW under genomeRng; ablation proves
 //              trait frequencies shift only on the live path. floor[i] <= self[i] holds (4.0 <= 4.0).)
-export const CODE_GROUNDED = [4.0, 2.4, 3.4, 3.8, 4.5, 4.6, 4.4, 3.5, 4.0];
+export const CODE_GROUNDED = [4.0, 2.0, 3.4, 3.8, 4.5, 4.6, 4.4, 3.5, 4.0];
 const EXPECTED_CANONICAL_CODE_GROUNDED = CODE_GROUNDED;
 
 interface Row {

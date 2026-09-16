@@ -146,6 +146,48 @@ describe('SpatialHash shared result buffer (Known Bug 5 fix)', () => {
   });
 });
 
+describe('SpatialHash.queryCells borrowed traversal', () => {
+  test('flattens to query() in the exact same dx → dz → item order', () => {
+    const pts = makePoints(500, 0xc3115, 200);
+    const grid = new SpatialHash<Pt>(8);
+    for (const p of pts) grid.insert(p);
+
+    for (const [x, z, radius] of [
+      [0, 0, 0],
+      [13.7, -41.2, 20],
+      [-72.5, 88.25, 40],
+    ] as const) {
+      const expected = [...grid.query(x, z, radius)];
+      const flattened: Pt[] = [];
+      for (const cell of grid.queryCells(x, z, radius)) {
+        for (const p of cell) flattened.push(p);
+      }
+      expect(flattened).toEqual(expected);
+    }
+  });
+
+  test('shares one view per source cell/radius and clear invalidates borrowed views', () => {
+    const grid = new SpatialHash<Pt>(8);
+    const near: Pt = { id: 1, position: { x: 1, z: 1 } };
+    const far: Pt = { id: 2, position: { x: 500, z: 500 } };
+    grid.insert(near);
+    grid.insert(far);
+
+    const first = grid.queryCells(0, 0, 2);
+    expect(first.flat()).toEqual([near]);
+    const sameCell = grid.queryCells(1.5, 1.5, 2);
+    expect(Object.is(first, sameCell)).toBeTrue();
+    const second = grid.queryCells(500, 500, 2);
+    expect(Object.is(first, second)).toBeFalse();
+    expect(first.flat()).toEqual([near]);
+    expect(second.flat()).toEqual([far]);
+
+    grid.clear();
+    expect(first.length).toBe(0);
+    expect(second.length).toBe(0);
+  });
+});
+
 describe('SpatialHash.clear and cell pooling', () => {
   test('clear empties the grid', () => {
     const pts = makePoints(50, 3, 40);

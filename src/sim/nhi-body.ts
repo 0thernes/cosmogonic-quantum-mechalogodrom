@@ -1,7 +1,9 @@
 /**
  * Alien NHI bodies (CONTRACTS V10 viz) — a dedicated, menacing, morphing form for each launched NHI
  * (reference: the biomechanical red-eyed uncanny alien), rendered OUTSIDE the instanced organism
- * pool so it can carry unique geometry + a wet biomechanical material the pools can't.
+ * pool so it can carry unique geometry + a wet biomechanical material the organism pools can't.
+ * Shared ring/spike appendages have their own exact instanced pools: body-local matrices, per-being
+ * diffuse/emissive colour, component counts, and the parent body's live morph transform are preserved.
  *
  * Additive + deterministic-by-index (no rng, no sim coupling): each body's world position is copied
  * from its NHI entity every frame; the morph (non-uniform scale wobble), spin, and glow pulse are
@@ -18,6 +20,20 @@ import {
   PLATFORM_MID_Y,
   SOCIAL_NHI_BODY_R,
 } from './constants';
+import { NHI_SYSTEM_MIND_CAP } from './nhi-system';
+
+interface BatchedPartPool {
+  readonly mesh: THREE.InstancedMesh;
+  readonly emissive: THREE.InstancedBufferAttribute;
+  readonly partsPerBlock: number;
+  readonly usedBlocks: Uint8Array;
+  readonly freeBlocks: number[];
+  highWaterBlocks: number;
+  liveInstances: number;
+  matrixDirty: boolean;
+  emissiveDirty: boolean;
+  colorDirty: boolean;
+}
 
 interface Body {
   group: THREE.Group;
@@ -33,10 +49,58 @@ interface Body {
   u: NhiUniforms;
   /** Reused nearest-kin proximity scalar for this frame. */
   social: number;
+  /** Stable block in the two-ring instanced pool for this being's lifetime. */
+  ringBlock: number;
+  /** Stable block in the selected spike-geometry pool for this being's lifetime. */
+  spikeBlock: number;
+  /** Which of the three exact spike geometries this being owns. */
+  spikePoolIndex: number;
+  /** Exact body-local matrices formerly carried by individual ring Mesh children. */
+  readonly ringLocals: readonly THREE.Matrix4[];
+  /** Exact body-local matrices formerly carried by individual spike Mesh children. */
+  readonly spikeLocals: readonly THREE.Matrix4[];
 }
 
 /** Silhouette radius of an NHI body — large enough to read as a colossus, not an organism. */
 const R = 3.4;
+/** Maximum physical rings and spikes declared by the deterministic morphology recipe. */
+const RINGS_PER_BODY = 2;
+const SPIKES_PER_BODY = 12;
+/** Zero-scale tombstone for a released instanced slot. */
+const ZERO_PART_MATRIX = new THREE.Matrix4().makeScale(0, 0, 0);
+
+/**
+ * Preserve MeshStandardMaterial's exact ring/spike BRDF while replacing its uniform emissive colour
+ * with the per-instance value the old per-being material supplied. Diffuse colour remains Three's
+ * native `instanceColor × material.color` path. No surface term, light, tone mapping, or colour-space
+ * stage is changed.
+ */
+function patchNhiBatchedPartMaterial(mat: THREE.MeshStandardMaterial): void {
+  mat.onBeforeCompile = (shader) => {
+    shader.vertexShader = shader.vertexShader
+      .replace(
+        '#include <common>',
+        '#include <common>\nattribute vec3 instNhiEmissive;\nvarying vec3 vNhiEmissive;',
+      )
+      .replace(
+        '#include <color_vertex>',
+        '#include <color_vertex>\nvNhiEmissive = instNhiEmissive;',
+      );
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', '#include <common>\nvarying vec3 vNhiEmissive;')
+      .replace(
+        '#include <emissivemap_fragment>',
+        '#include <emissivemap_fragment>\ntotalEmissiveRadiance = vNhiEmissive;',
+      );
+  };
+  mat.customProgramCacheKey = () => 'nhiBatchedPartEmissiveV1';
+}
+
+/** Capture Three's exact Object3D compose order for an immutable body-local appendage transform. */
+function capturePartMatrix(part: THREE.Object3D): THREE.Matrix4 {
+  part.updateMatrix();
+  return part.matrix.clone();
+}
 
 /**
  * USER #7: NHI colour signatures — a curated DARK-ALIEN / OLD-MONEY / "Annihilation-shimmer" palette
@@ -184,6 +248,11 @@ export class NhiBodySystem {
   private readonly eyeGeo: THREE.SphereGeometry;
   /** Per-NHI SPIKE/blade/barb morphology set — the index picks a different protrusion form. */
   private readonly spikeGeos: THREE.BufferGeometry[];
+  /** Exact shared-geometry appendage pools: one ring draw + one draw per spike morphology. */
+  private readonly ringPool: BatchedPartPool;
+  private readonly spikePools: readonly BatchedPartPool[];
+  /** Reused world-matrix product for body matrix × immutable part-local matrix. */
+  private readonly partWorld = new THREE.Matrix4();
   private spawnIndex = 0;
   /** Reused snapshot of the live bodies for the staggered pairwise social scan (no per-frame alloc). */
   private readonly pairScratch: Body[] = [];
@@ -210,6 +279,158 @@ export class NhiBodySystem {
       new THREE.ConeGeometry(R * 0.22, R * 0.72, 4, 1), // blade
       new THREE.CylinderGeometry(R * 0.04, R * 0.15, R * 1.3, 6), // barb
     ];
+    this.ringPool = this.createPartPool(this.ringGeo, RINGS_PER_BODY, 'NHI-RINGS');
+    this.spikePools = this.spikeGeos.map((geometry, index) =>
+      this.createPartPool(geometry, SPIKES_PER_BODY, `NHI-SPIKES-${index}`),
+    );
+  }
+
+  /**
+   * Create one fixed-capacity instanced pool. Capacity is a hard consequence of the NHI mind cap;
+   * blocks are claimed/released only at lifecycle boundaries and never move while their being lives.
+   */
+  private createPartPool(
+    geometry: THREE.BufferGeometry,
+    partsPerBlock: number,
+    name: string,
+  ): BatchedPartPool {
+    const capacity = NHI_SYSTEM_MIND_CAP * partsPerBlock;
+    const emissive = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 3), 3);
+    emissive.setUsage(THREE.DynamicDrawUsage);
+    geometry.setAttribute('instNhiEmissive', emissive);
+    const material = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      emissive: 0x000000,
+      emissiveIntensity: 1,
+      metalness: 0.95,
+      roughness: 0.2,
+    });
+    patchNhiBatchedPartMaterial(material);
+    const mesh = new THREE.InstancedMesh(geometry, material, capacity);
+    mesh.name = name;
+    mesh.count = 0;
+    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    // Instances roam across the whole habitat. A stale aggregate bounds calculation must never make
+    // a live appendage disappear; exact conservative per-instance culling belongs in a later renderer pass.
+    mesh.frustumCulled = false;
+    this.root.add(mesh);
+    return {
+      mesh,
+      emissive,
+      partsPerBlock,
+      usedBlocks: new Uint8Array(NHI_SYSTEM_MIND_CAP),
+      freeBlocks: [],
+      highWaterBlocks: 0,
+      liveInstances: 0,
+      matrixDirty: false,
+      emissiveDirty: false,
+      colorDirty: false,
+    };
+  }
+
+  /** Claim one stable per-being block; throws only if the composition-root cap was violated. */
+  private claimPartBlock(pool: BatchedPartPool, liveParts: number): number {
+    let block = pool.freeBlocks.pop();
+    if (block === undefined) {
+      block = pool.highWaterBlocks;
+      if (block >= pool.usedBlocks.length) {
+        throw new RangeError(`NHI batched-part pool exceeded ${NHI_SYSTEM_MIND_CAP} live blocks`);
+      }
+    }
+    pool.usedBlocks[block] = 1;
+    if (block >= pool.highWaterBlocks) pool.highWaterBlocks = block + 1;
+    pool.liveInstances += liveParts;
+    pool.mesh.count = pool.highWaterBlocks * pool.partsPerBlock;
+    return block;
+  }
+
+  /** Release one block, zeroing every physical slot before it can be reused or drawn as a hole. */
+  private releasePartBlock(pool: BatchedPartPool, block: number, liveParts: number): void {
+    if (block < 0 || block >= pool.usedBlocks.length || pool.usedBlocks[block] === 0) return;
+    const first = block * pool.partsPerBlock;
+    for (let i = 0; i < pool.partsPerBlock; i++) {
+      const slot = first + i;
+      pool.mesh.setMatrixAt(slot, ZERO_PART_MATRIX);
+      pool.emissive.setXYZ(slot, 0, 0, 0);
+    }
+    pool.usedBlocks[block] = 0;
+    pool.freeBlocks.push(block);
+    pool.liveInstances = Math.max(0, pool.liveInstances - liveParts);
+    while (pool.highWaterBlocks > 0 && pool.usedBlocks[pool.highWaterBlocks - 1] === 0) {
+      pool.highWaterBlocks--;
+    }
+    pool.mesh.count = pool.liveInstances > 0 ? pool.highWaterBlocks * pool.partsPerBlock : 0;
+    pool.matrixDirty = true;
+    pool.emissiveDirty = true;
+  }
+
+  /** Write all exact ring/spike transforms and the per-being material lanes into stable pool slots. */
+  private syncBatchedParts(body: Body, writeColor: boolean): void {
+    this.writePoolParts(this.ringPool, body.ringBlock, body.ringLocals, body, writeColor);
+    const spikePool = this.spikePools[body.spikePoolIndex];
+    if (spikePool) {
+      this.writePoolParts(spikePool, body.spikeBlock, body.spikeLocals, body, writeColor);
+    }
+  }
+
+  private writePoolParts(
+    pool: BatchedPartPool,
+    block: number,
+    locals: readonly THREE.Matrix4[],
+    body: Body,
+    writeColor: boolean,
+  ): void {
+    const groupMatrix = body.group.matrix;
+    const color = body.ringMat.color;
+    const emissive = body.ringMat.emissive;
+    const emissiveIntensity = body.ringMat.emissiveIntensity;
+    const first = block * pool.partsPerBlock;
+    for (let i = 0; i < locals.length; i++) {
+      const local = locals[i];
+      if (!local) continue;
+      const slot = first + i;
+      this.partWorld.multiplyMatrices(groupMatrix, local);
+      pool.mesh.setMatrixAt(slot, this.partWorld);
+      pool.emissive.setXYZ(
+        slot,
+        emissive.r * emissiveIntensity,
+        emissive.g * emissiveIntensity,
+        emissive.b * emissiveIntensity,
+      );
+      if (writeColor) pool.mesh.setColorAt(slot, color);
+    }
+    pool.matrixDirty = true;
+    pool.emissiveDirty = true;
+    if (writeColor) pool.colorDirty = true;
+  }
+
+  /** Publish only populated prefixes; called after a spawn/removal or once after the frame batch. */
+  private publishPartPools(): void {
+    this.publishPartPool(this.ringPool);
+    for (const pool of this.spikePools) this.publishPartPool(pool);
+  }
+
+  private publishPartPool(pool: BatchedPartPool): void {
+    const count = pool.mesh.count;
+    if (pool.matrixDirty) {
+      pool.mesh.instanceMatrix.clearUpdateRanges();
+      if (count > 0) pool.mesh.instanceMatrix.addUpdateRange(0, count * 16);
+      pool.mesh.instanceMatrix.needsUpdate = true;
+      pool.matrixDirty = false;
+    }
+    if (pool.emissiveDirty) {
+      pool.emissive.clearUpdateRanges();
+      if (count > 0) pool.emissive.addUpdateRange(0, count * 3);
+      pool.emissive.needsUpdate = true;
+      pool.emissiveDirty = false;
+    }
+    const instanceColor = pool.mesh.instanceColor;
+    if (pool.colorDirty && instanceColor) {
+      instanceColor.clearUpdateRanges();
+      if (count > 0) instanceColor.addUpdateRange(0, count * 3);
+      instanceColor.needsUpdate = true;
+      pool.colorDirty = false;
+    }
   }
 
   /** Birth an alien body for NHI `id` at (x,y,z). Idempotent per id. */
@@ -221,13 +442,17 @@ export class NhiBodySystem {
     let coreMat: THREE.MeshStandardMaterial | undefined;
     let ringMat: THREE.MeshStandardMaterial | undefined;
     let eyeMat: THREE.MeshStandardMaterial | undefined;
+    let ringBlock = -1;
+    let spikeBlock = -1;
+    const spikePoolIndex = si % this.spikeGeos.length;
+    const ringLocals: THREE.Matrix4[] = [];
+    const spikeLocals: THREE.Matrix4[] = [];
 
     try {
       group.position.set(x, y, z);
 
       // USER #7: this NHI's SPECIES — a distinct core body, spike form, and appendage counts per index.
       const coreGeo = this.coreGeos[si % this.coreGeos.length]!;
-      const spikeGeo = this.spikeGeos[si % this.spikeGeos.length]!;
       const ringCount = 1 + (si % 2); // 1..2 orbital rings
       const spikeCount = 6 + (si % 4) * 2; // 6/8/10/12 protrusions
       const tendrilCount = 3 + (si % 4); // 3..6 tendrils
@@ -261,26 +486,26 @@ export class NhiBodySystem {
         metalness: 0.95,
         roughness: 0.2,
       });
-      const ring = new THREE.Mesh(this.ringGeo, ringMat);
-      ring.rotation.x = Math.PI / 2.4;
-      group.add(ring);
+      // The old child Mesh local matrices are captured bit-for-bit, then multiplied by the same live
+      // parent matrix into the ring/spike pools every frame. Counts and every transform remain exact.
+      const part = new THREE.Object3D();
+      part.rotation.x = Math.PI / 2.4;
+      ringLocals.push(capturePartMatrix(part));
       if (ringCount > 1) {
-        const ring2 = new THREE.Mesh(this.ringGeo, ringMat);
-        ring2.rotation.set(Math.PI / 2.05, 0.4 + si * 0.31, 0.75);
-        ring2.scale.set(0.72 + 0.14 * Math.sin(si), 1.18, 0.72 + 0.14 * Math.cos(si));
-        group.add(ring2);
+        part.rotation.set(Math.PI / 2.05, 0.4 + si * 0.31, 0.75);
+        part.scale.set(0.72 + 0.14 * Math.sin(si), 1.18, 0.72 + 0.14 * Math.cos(si));
+        ringLocals.push(capturePartMatrix(part));
       }
       for (let i = 0; i < spikeCount; i++) {
         const a = i * 2.399963229728653 + si * 0.41;
-        const spike = new THREE.Mesh(spikeGeo, ringMat);
-        spike.position.set(
+        part.position.set(
           Math.cos(a) * R * 0.78,
           Math.sin(a * 1.7) * R * 0.34,
           Math.sin(a) * R * 0.78,
         );
-        spike.rotation.set(Math.sin(a) * 1.2, a, Math.cos(a) * 1.2);
-        spike.scale.setScalar(0.55 + 0.35 * Math.sin(i * 1.9 + si));
-        group.add(spike);
+        part.rotation.set(Math.sin(a) * 1.2, a, Math.cos(a) * 1.2);
+        part.scale.setScalar(0.55 + 0.35 * Math.sin(i * 1.9 + si));
+        spikeLocals.push(capturePartMatrix(part));
       }
 
       for (let ti = 0; ti < tendrilCount; ti++) {
@@ -329,7 +554,11 @@ export class NhiBodySystem {
       // Commit only after the complete body has been attached. The morphology index advances only
       // after the map mutation succeeds, so a failed launch is observationally equivalent to no launch.
       this.root.add(group);
-      this.bodies.set(id, {
+      ringBlock = this.claimPartBlock(this.ringPool, ringLocals.length);
+      const spikePool = this.spikePools[spikePoolIndex];
+      if (!spikePool) throw new RangeError(`missing NHI spike pool ${spikePoolIndex}`);
+      spikeBlock = this.claimPartBlock(spikePool, spikeLocals.length);
+      const body: Body = {
         group,
         coreMat,
         ringMat,
@@ -338,13 +567,26 @@ export class NhiBodySystem {
         phase: si * 2.399963229728653,
         u,
         social: 0,
-      });
+        ringBlock,
+        spikeBlock,
+        spikePoolIndex,
+        ringLocals,
+        spikeLocals,
+      };
+      group.updateMatrix();
+      this.syncBatchedParts(body, true);
+      this.publishPartPools();
+      this.bodies.set(id, body);
       this.spawnIndex = si + 1;
     } catch (error) {
       // Construction and attachment form one transaction. Never dispose the shared morphology
       // geometries here: only resources allocated specifically for this attempted body are owned.
       this.bodies.delete(id);
       this.spawnIndex = si;
+      this.releasePartBlock(this.ringPool, ringBlock, ringLocals.length);
+      const spikePool = this.spikePools[spikePoolIndex];
+      if (spikePool) this.releasePartBlock(spikePool, spikeBlock, spikeLocals.length);
+      this.publishPartPools();
       this.disposePartialBody(group, coreMat, ringMat, eyeMat, tendrilGeos);
       throw error;
     }
@@ -459,12 +701,31 @@ export class NhiBodySystem {
         Math.sin(t * 2.5 + b.phase) * 0.45 +
         Math.sin(t * 6.0 + b.phase * 3.0) * 0.25 +
         social * 0.85;
+      // Pool matrices receive the exact same parent compose and the exact same animated ring-material
+      // emissive scalar as the retired child Meshes. `group.matrix` is local-to-root; root is identity.
+      g.updateMatrix();
+      this.syncBatchedParts(b, false);
     }
+    this.publishPartPools();
   }
 
   /** Number of live alien bodies (telemetry). */
   get count(): number {
     return this.bodies.size;
+  }
+
+  /** Exact number of physical ring + spike components represented by the four pooled draws. */
+  get batchedPartCount(): number {
+    let total = this.ringPool.liveInstances;
+    for (const pool of this.spikePools) total += pool.liveInstances;
+    return total;
+  }
+
+  /** Active GPU draws for those components (one ring pool plus the populated spike morphologies). */
+  get batchedPartDrawCalls(): number {
+    let total = this.ringPool.liveInstances > 0 ? 1 : 0;
+    for (const pool of this.spikePools) if (pool.liveInstances > 0) total++;
+    return total;
   }
 
   /** O(1) membership probe used by lifecycle receipts and rollback verification. */
@@ -478,6 +739,7 @@ export class NhiBodySystem {
     if (!body) return false;
     this.bodies.delete(id);
     this.disposeBody(body);
+    this.publishPartPools();
     return true;
   }
 
@@ -486,12 +748,17 @@ export class NhiBodySystem {
     const bodies = [...this.bodies.values()];
     this.bodies.clear();
     for (const b of bodies) this.disposeBody(b);
+    this.resetPartPool(this.ringPool);
+    for (const pool of this.spikePools) this.resetPartPool(pool);
+    this.publishPartPools();
   }
 
   /** Free ALL GPU resources (live body materials via clear(), then the shared geometries) on world
    * teardown / HMR reload. Idempotent — geometry.dispose() is safe to call twice. */
   dispose(): void {
     this.clear();
+    this.disposePartPool(this.ringPool);
+    for (const pool of this.spikePools) this.disposePartPool(pool);
     for (const g of this.coreGeos) g.dispose();
     this.ringGeo.dispose();
     this.eyeGeo.dispose();
@@ -500,7 +767,36 @@ export class NhiBodySystem {
   }
 
   private disposeBody(b: Body): void {
+    this.releasePartBlock(this.ringPool, b.ringBlock, b.ringLocals.length);
+    const spikePool = this.spikePools[b.spikePoolIndex];
+    if (spikePool) this.releasePartBlock(spikePool, b.spikeBlock, b.spikeLocals.length);
     this.disposePartialBody(b.group, b.coreMat, b.ringMat, b.eyeMat, b.tendrilGeos);
+  }
+
+  private disposePartPool(pool: BatchedPartPool): void {
+    try {
+      this.root.remove(pool.mesh);
+    } catch {
+      // Continue through independent GPU resources.
+    }
+    try {
+      pool.mesh.dispose();
+    } catch {
+      // Best effort.
+    }
+    try {
+      (pool.mesh.material as THREE.Material).dispose();
+    } catch {
+      // Best effort.
+    }
+  }
+
+  private resetPartPool(pool: BatchedPartPool): void {
+    pool.usedBlocks.fill(0);
+    pool.freeBlocks.length = 0;
+    pool.highWaterBlocks = 0;
+    pool.liveInstances = 0;
+    pool.mesh.count = 0;
   }
 
   /** Best-effort, no-throw cleanup for both committed bodies and failed spawn transactions. */

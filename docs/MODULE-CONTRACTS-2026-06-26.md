@@ -123,10 +123,22 @@ export class SpatialHash<T extends { position: { x: number; z: number } }> {
   insert(item: T): void;
   /** Returns a SHARED buffer valid only until the next query() call. */
   query(x: number, z: number, radius: number): readonly T[];
+  /**
+   * Returns generation-cached live-cell views in the same dx/dz/item order as query(), without
+   * copying every candidate into the flat result. Both levels are borrowed until clear(). Entities
+   * in the same source cell with the same radius share the exact same view.
+   */
+  queryCells(x: number, z: number, radius: number): readonly (readonly T[])[];
 }
 ```
 
 Port of legacy `SG` (lines 358-367) with cell pooling kept and Known Bug 5 fixed.
+`Connectome` consumes `queryCells()` directly so dense high-tier topology neither copies O(k)
+candidate references per entity nor repeats the neighbor-cell Map sweep for occupants of one cell.
+Its current list index is generation-stamped onto each live Entity
+during the same O(n) pass; candidate lookup is then O(1) property access rather than rebuilding and
+probing a 4x open-addressed Three.js-id table. The stamp is private scratch state, excluded from every
+simulation decision except reproducing the exact same current-list lookup result.
 
 ### src/math/eshkol-ad.ts (leaf, Tsotchke)
 
@@ -319,6 +331,11 @@ export class EntityManager {
   remorph(e: Entity, mi: number): void;
   /** Dispose all, respawn `count` (legacy rSim, line 592). */
   reset(count: number): void;
+  /**
+   * With live NHI, rebuild the exact current main grid once and optionally fuse an NHI-only mirror
+   * into the same list-order scan; returns main-grid insert count. Zero NHI is an exact no-op.
+   */
+  rebuildCurrentGridForNhi(liveNhiCount: number, nhiGrid?: SpatialHash<Entity>): number;
   /** All 26 behaviors + physics + containment + auto-split + death (legacy 699-796). */
   update(dt: number, t: number): UpdateStats;
   setWireframe(on: boolean): void;
@@ -375,10 +392,27 @@ export class QuantumCloud {
 export class Connectome {
   constructor(ctx: SimContext, entities: EntityManager);
   readonly links: number;
+  readonly pairCount: number;
+  readonly pairs: Uint32Array;
+  readonly webVisible: boolean;
+  readonly geometryFloatsWritten: number;
+  /** Entity axons are graphical and user-toggleable; Xenomimics are not a consumer. */
+  setWebVisible(show: boolean): void;
   /** O(n·k) link rebuild; caller decides cadence (legacy 798-821). */
   update(dt: number, t: number): void;
 }
 ```
+
+The Entity connectome owns the only creature-to-creature graphical axon web. It renders the same
+six-segment bowed/waving polyline per live proximity edge through one instanced `LineSegments` draw:
+the CPU uploads compact endpoint + neural metadata attributes, while the vertex shader evaluates the
+existing deterministic wave, firing, retract, community-hue, and HSL-lightness equations. The shader
+rewrite is render-only and must not change topology order, pair recording, activation propagation, or
+seeded simulation state. Dynamic storage grows geometrically with live topology and remains bounded by
+`quality.maxLinks`; only populated attribute prefixes upload. Hidden mode still rebuilds topology and
+propagates activation but writes/uploads zero render attributes. The settings toggle may show/hide this
+Entity web and MUST force `XenomimicConnectome` invisible. `XenomimicConnectome` remains topology and
+telemetry only: no renderer, scene attachment, line/tether geometry, spring, force, or movement owner.
 
 ### src/sim/environment.ts
 
@@ -1579,7 +1613,7 @@ Copilot are constructed boot-stream-neutral and never write sim state, so the go
 
 ### V9 acceptance
 
-Full `bun run check` green: prettier → tsc strict → oxlint → 3313 tests (0 fail, 300-frame golden
+Full `bun run check` green: prettier → tsc strict → oxlint → 3324 tests (0 fail, 300-frame golden
 included) → build. The Copilot sandbox verified live (allow: `git log`, file reads; deny:
 path-escape, repository-root pathspecs, `git push`, `legacy/`, shell redirection).
 
@@ -1729,7 +1763,7 @@ this multi-loop stack is real and gated — **not** because it is long-horizon m
 coevolution. Morphology is mind/evo/RD/soft-flora reactive (**3.8**), not Sims articulated
 body-plan evolution. Open-endedness remains **2.4** (bounded selection + authored novelty).
 Canonical vector: `CODE_GROUNDED` in `scripts/alife-codeground-sensitivity.ts` —
-`[4.0, 2.4, 3.4, 3.8, 4.5, 4.6, 4.4, 3.5, 4.0]` · breadth **3.84** · **#1/129**.
+`[4.0, 2.0, 3.4, 3.8, 4.5, 4.6, 4.4, 3.5, 4.0]` · breadth **3.8** · **#1/129**.
 
 ## Canonical module ownership
 
@@ -1887,6 +1921,11 @@ sentience claim. Social animation alone is not reported as learning.
 
 - Candidate discovery is round-robin and capped at 64 ordinary/Xenomimic plus 32 independently-owned
   fauna candidates every 0.1 simulation seconds, not a full-population scan every frame.
+- A launched NHI's every-frame kin-percept accepts companions only inside the existing 90-unit 3D
+  sphere. Its spatial-hash query radius is therefore exactly 90 (a conservative XZ superset of that
+  sphere), not the separate 900-unit sparse-caste/Big-Tree companionship radius. The distance filter,
+  candidate order, mood aggregation, neural input, and 60 Hz cadence remain unchanged; visiting the
+  extra 13,000+ empty/irrelevant cells per mind is a contract violation, not intelligence fidelity.
 - Active work is bounded by the 72-visitor capacity. O(1) identity maps locate active ordinary and
   Xenomimic/fauna visitors; the visit manager steps a dense scheduled-record set rather than every
   actor record. Ordinary matching is a single bounded pass. Fauna matching reads each eligible active
