@@ -38,6 +38,13 @@ const SLOTS: readonly Slot[] = [
   },
   // Canonical ground-fauna inspector; its internal wireframe stays owned by XenomimicPanel.
   {
+    name: 'XYLOS',
+    icon: '✧',
+    panel: 'cqm-xylos-panel',
+    toggle: 'cqm-xylos-toggle',
+    open: 'open',
+  },
+  {
     name: 'XENOMIMIC',
     icon: '◈',
     panel: 'cqm-xenomimic-panel',
@@ -150,6 +157,7 @@ ${SLOTS.map((s) => `#${s.panel} > *:first-child`).join(',')} { padding-right: va
 #cqm-dock > #cqm-sup-toggle,
 #cqm-dock > #cqm-arch-toggle,
 #cqm-dock > #cqm-xenomimic-toggle,
+#cqm-dock > #cqm-xylos-toggle,
 #cqm-dock > #cqm-settings-toggle,
 #cqm-dock > #cqm-acc-toggle,
 #cqm-dock > a.cqm-dock-nav {
@@ -947,6 +955,7 @@ function buildPersistentNav(doc: Document): void {
     'MARKET',
     'ARCHON GODFORMS',
     'PANTHEONS',
+    'XYLOS',
     'XENOMIMIC',
   ] as const;
   for (let i = 0; i < SLOTS.length; i++) {

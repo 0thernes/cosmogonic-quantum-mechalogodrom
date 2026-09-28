@@ -137,6 +137,10 @@ import {
 import { writeNhiRoamTarget } from './sim/habitat-roaming';
 import { QuantumCircuitSystem } from './sim/qcircuit';
 import { ReactionDiffusionSystem } from './sim/reaction-diffusion';
+import { XylosBody, XYLOS_WORLD_RADIUS } from './sim/xylos-body';
+import { XylosHabitat } from './sim/xylos-habitat';
+import { XylosSession } from './core/xylos-session';
+import { XylosPanel } from './ui/xylos-panel';
 import { GraphMind } from './sim/graph-mind';
 import { ConstellationSystem } from './sim/constellations';
 import { AtmosphereSystem } from './sim/atmosphere';
@@ -1096,6 +1100,11 @@ export class World {
   private readonly abominationArchitecture: AbominationArchitecture;
   /** V-MECHA: the central fusion abomination — 10 bipolar titan shells converge + fuse into one monster (additive; no rng). */
   private readonly mechalogodrom: Mechalogodrom;
+  /** Independent organism; live entropy crosses only the runtime boundary, never the seeded RNG. */
+  private readonly xylos: XylosSession;
+  private readonly xylosBody: XylosBody;
+  private readonly xylosHabitat: XylosHabitat;
+  private readonly xylosPanel: XylosPanel;
   private readonly mechalogodromBrain: MechalogodromBrain;
   private lastMechaBrainSnap: MechalogodromBrainSnapshot | null = null;
   private lastGlyphSnaps: GlyphBrainSnapshot[] = [];
@@ -1808,6 +1817,37 @@ export class World {
     this.foundationals = new Foundationals(this.persisted.seed);
 
     this.hud = new Hud();
+    this.xylos = new XylosSession(
+      (this.persisted.seed ^ 0x78796c6f) >>> 0,
+      new URLSearchParams(location.search).get('xylos') === 'seeded' ? 'seeded' : 'live',
+    );
+    this.xylosHabitat = new XylosHabitat(this.rd, XYLOS_WORLD_RADIUS, GROUND_EXTENT);
+    this.xylosBody = new XylosBody(ctx.scene);
+    this.xylosBody.update(this.xylos.view, 0);
+    this.xylosPanel = new XylosPanel({
+      focus: () => this.focusXylos(),
+      setMode: (mode) => {
+        this.xylos.setMode(mode);
+        this.xylosPanel.update(this.xylos.view, this.xylos.status);
+        this.audit.record('xylos-mode', { mode });
+      },
+      startRecording: () => {
+        this.xylos.startRecording();
+        this.xylosBody.update(this.xylos.view, this.state.elapsed);
+        this.xylosPanel.update(this.xylos.view, this.xylos.status);
+        this.audit.record('xylos-record', {
+          worldSeed: this.persisted.seed,
+          xylosSeed: (this.persisted.seed ^ 0x78796c6f) >>> 0,
+        });
+      },
+      replay: () => {
+        this.xylos.replay();
+        this.xylosBody.update(this.xylos.view, this.state.elapsed);
+        this.xylosPanel.update(this.xylos.view, this.xylos.status);
+        this.audit.record('xylos-replay', { steps: this.xylos.status.recordedSteps });
+      },
+    });
+    this.xylosPanel.update(this.xylos.view, this.xylos.status);
     this.panel = new TelemetryPanel();
     this.xenomimicPanel = new XenomimicPanel();
     this.observatory = new Observatory();
@@ -2156,6 +2196,8 @@ export class World {
     this.xenomimicsRender.dispose();
     this.xenomimicConnectome.dispose();
     this.xenomimicPanel.dispose();
+    this.xylosPanel.dispose();
+    this.xylosBody.dispose();
     // Free the GPU-resource-owning subsystems that expose a dispose(). The Engine's
     // forceContextLoss() reclaims the context's VRAM, but these JS-side geometry/material
     // dispose paths were skipped entirely — each HMR reload built a fresh World whose
@@ -2350,6 +2392,9 @@ export class World {
     xenomimicCouplings.temperature = s.temperature;
     this.xenomimics.step(dt, xenomimicCouplings);
     this.updateXenomimicPresentation(t, false);
+    this.xylosHabitat.hazard = clamp(s.chaos / CHAOS_MAX, 0, 1);
+    this.xylos.advance(dt, this.xylosHabitat.sense, this.xylosHabitat.effect);
+    this.xylosBody.update(this.xylos.view, t);
 
     this.updateGrowthTarget(); // V66: ramp the live population target 500 → ceiling, then breathe
 
@@ -3054,6 +3099,7 @@ export class World {
     this.connectome.update(0, vt, false);
     this.wildernessRender.sync(this.wilderness, vt);
     this.updateXenomimicPresentation(vt, true); // paused bodies shimmer; lifecycle/audio stay stopped
+    this.xylosBody.update(this.xylos.view, vt); // presentation only: no entropy, learning or field write
     this.artifacts.update(uiDt, vt);
     this.monolithTemple.setEnvironment({
       chaos: chaosN,
@@ -3151,6 +3197,7 @@ export class World {
       this.analytics.push(n, this.energy, this.connectome.links);
       this.panel.update(this.snapshot());
       this.xenomimicPanel.update(this.syncXenomimicPanelData());
+      this.xylosPanel.update(this.xylos.view, this.xylos.status);
       this.updateAlgoPicker(); // live progress on the active field's row
     }
     if (s.frame % 60 === 0) this.analytics.analyze(); // after push at coinciding frames
@@ -4409,6 +4456,20 @@ export class World {
     cam.position.set(cx + r * 0.5, cy + r * 0.8, cz + r * 1.1);
     cam.lookAt(cx, cy, cz);
     this.hud.showSector('◈ XENOMIMICS');
+  }
+
+  /** Frame the living manifold from a close three-quarter vantage. */
+  private focusXylos(): void {
+    const freeIdx = VIEW_MODES.indexOf('free');
+    this.state.viewIdx = freeIdx;
+    this.persisted.viewIdx = freeIdx;
+    const p = this.xylosBody.group.position;
+    const camera = this.engine.camera;
+    camera.up.set(0, 1, 0);
+    camera.position.set(p.x + 88, p.y + 42, p.z + 112);
+    camera.lookAt(p.x, p.y, p.z);
+    this.hud.showSector('✧ XYLOS · AUTONOMOUS MANIFOLD');
+    this.audit.record('xylos-focus', {});
   }
 
   /** Frame the complete Big Tree canopy, sanctuary glade, and local fauna. */

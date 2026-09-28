@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Xylos** — one autonomous alien manifold creature with a sparse plastic recurrent brain,
+  state-driven Möbius membranes, actual neural foci/edges, numerical chemical sensing and
+  write-back, live browser entropy and seeded modes, bounded local experiment replay,
+  an inspector/camera focus, and a sourced path through the actual fourteen Butlin indicators.
+
 - **GATE-REPRO-SELECT** — fitness-linked base-population fission: heritable `nW` scales birth
   probability and lifespan phenotype; ablation-verified selection vs trait-blind scramble.
 

@@ -17,6 +17,12 @@ scores are **indicatorOnly** (Butlin 8/14+6 partial; lab null gap ≈ 0; couplin
 
 ## Manifesto
 
+**Xylos boundary exception:** the requested live stochastic creature obtains browser
+entropy outside simulation modules. Its isolated neural core is reproducible from
+seed plus complete numeric inputs; seeded mode remains available. Once live Xylos
+changes shared chemistry, the world seed alone no longer reproduces that run.
+See [ADR 0017](./adr/0017-xylos-autonomous-manifold.md) and [Xylos](./XYLOS.md).
+
 Quantum Wildbeyond is the aesthetics of measurement as a creative act. The world
 does not exist and then get observed; it is summoned by observation, frame after
 frame, from a superposition of everything it could have been. Every subsystem in

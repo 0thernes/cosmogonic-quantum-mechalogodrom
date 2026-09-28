@@ -16,6 +16,26 @@ Measured results for the hot-path primitives. Reproduce with `bun run bench`
 
 ## Results
 
+### Xylos autonomous manifold
+
+Measured 2026-09-28 on Intel Core Ultra 9 275HX (~3.38 GHz), Windows x64,
+Bun 1.3.14, mitata 1.0.34. Reproduce: `bun bench/xylos.bench.ts`.
+Seed `0x78796c6f`, fixed numeric percept, warmed brain, advancing visual clock;
+construction is excluded. The full suite also registers through `bun run bench`.
+
+| Operation                                         | Mean     | p99       | Cadence      |
+| ------------------------------------------------- | -------- | --------- | ------------ |
+| Sparse neural update, 48 foci / 192 plastic edges | 5.63 µs  | 6.48 µs   | Fixed 20 Hz  |
+| Procedural membrane, foci and neural edge buffers | 99.86 µs | 644.40 µs | Render frame |
+
+Combined mean CPU cost on a cognition frame is approximately 0.105 ms, or 0.63%
+of a 16.67 ms frame. Four capped catch-up ticks plus the mean body update are
+approximately 0.122 ms. These are CPU measurements, not GPU timings or an FPS
+guarantee for the full world. The fixed body submits four draws and 3,072 membrane
+triangles; all neuron/edge and body arrays are preallocated. Recording is separately
+capped at 192 KiB of numeric inputs. One-cell-radius chemical writes run at most
+twice per simulation second.
+
 ### RNG (`src/math/rng.ts`)
 
 | Benchmark                                        | avg/iter | Notes                             |

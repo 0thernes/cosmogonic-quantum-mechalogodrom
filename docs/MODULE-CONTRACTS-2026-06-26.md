@@ -2,6 +2,57 @@
 
 # Module Contracts
 
+## Xylos autonomous manifold creature
+
+Xylos is a separate, single organism, not a sixth Archon. It runs without prompts,
+tokens, network inference, or a language model. Its numerical senses and actions
+close a loop through the existing Gray–Scott substrate. The requested live
+stochastic behavior is an explicit boundary exception to seed-only world replay:
+browser entropy is sampled outside `sim/` and `math/`, and injected as numeric
+input. The neural core remains deterministic given seed and input sequence.
+Chaos alone is not described as nondeterminism or physical quantum entropy.
+
+| Owner/module                | Contract                                                                                                                                                                                                                                           |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/sim/xylos-mind.ts`     | Owns one bounded sparse recurrent neural manifold, plastic weights, workspace, predictions, attention model and autonomous action; no DOM, Three.js, clocks, crypto or I/O. `XylosMind(seed)`, `tick(percept, noise = 0)`, stable borrowed `view`. |
+| `src/sim/xylos-body.ts`     | Owns procedural non-anthropomorphic Three.js geometry and GPU disposal. `XylosBody(scene)`, `update(view, elapsed)`, `dispose()`. Reads the mind's actual activations, topology and metrics; no simulation writes.                                 |
+| `src/core/xylos-session.ts` | Owns live/seeded mode, injected entropy source, bounded experiment recording and replay of numeric input. Never silently labels fallback randomness live.                                                                                          |
+| `src/ui/xylos-panel.ts`     | Owns discoverable Xylos inspector, mode/observe controls and live causal metrics. Shows all 14 actual Butlin indicator labels as research targets with evidence and remaining tests, never a fabricated consciousness percentage.                  |
+| `src/world.ts`              | Sole assembler. Runs cognition at a fixed 20 Hz with capped catch-up; reads local U/V and gradients, writes a bounded deterministic substrate disturbance, updates body and inspector, releases all resources on teardown.                         |
+
+`XylosPercept` contains finite numeric `nutrient`, `hazard`, `signal`,
+`gradientX`, `gradientZ` in [0,1] (first three) or [-1,1] (gradients).
+`noise` is a finite scalar in [-1,1]. Invalid values are rejected before state
+changes. A zero percept still permits intrinsic recurrent activity.
+The stable `XylosView` exposes `tick`, `x`, `z` (normalized position), `phase`,
+`coherence`, `predictionError`, `confidence`, `energy`, `valence`, `pulse`,
+`attention`, `workspaceWinner`, `workspace`, `activity`, `coordinates`,
+`sources`, `weights`, and `rewires`. Arrays are borrowed read-only views.
+Forty-eight foci in six specialist groups have four sparse incoming edges each;
+the Poincaré disk metric modulates recurrent transmission and plasticity. A
+two-slot workspace broadcasts back to all specialists. Prediction, confidence,
+attention and learned action consequences must affect subsequent behavior.
+
+Time/memory budgets: O(48 × 4) cognition plus bounded six-module competition;
+no growing network, queues or per-tick allocations. Target added CPU cost is
+under 1 ms per cognition/body update on the measured host (a target until
+benchmarked). Body buffers and draw calls have fixed caps. At most four cognitive
+steps run in a frame; excess accumulated time is discarded and counted.
+
+| Failure                             | Required behavior                                                                |
+| ----------------------------------- | -------------------------------------------------------------------------------- |
+| Missing/failing browser entropy     | Visible seeded fallback; preserve autonomous life.                               |
+| Recording reaches its cap           | Stop recording visibly; continue life without unbounded storage.                 |
+| Invalid numeric input or replay     | Reject before mutation; never convert NaN into plausible telemetry.              |
+| Paused world                        | No cognition, entropy consumption or substrate write; inspection remains usable. |
+| Teardown/HMR                        | Idempotent GPU and DOM listener cleanup.                                         |
+| Indicator lacks controlled evidence | Label it a research target; retain its concrete acceptance experiment.           |
+
+The 14 targets use Butlin et al. (2023), Table 1: RPT-1/2, GWT-1–4,
+HOT-1–4, AST-1, PP-1, AE-1/2. Presence of mechanisms or a high coherence
+scalar does not certify these indicators or establish subjective experience.
+Existing apex receipts remain separate from Xylos evidence.
+
 **TSOTCHKE MASTER WIRE ERA (v0.23.0):** The public census contains 23 repositories. The
 causal/runtime ledger intentionally contains 22 entries represented as `8 deep`, `7 wired`, `2 harvest`,
 `4 fenced`, and `1 meta` (`17/21` non-meta integrated). `homebrew-moonlab` is census-only deployment
@@ -1613,7 +1664,7 @@ Copilot are constructed boot-stream-neutral and never write sim state, so the go
 
 ### V9 acceptance
 
-Full `bun run check` green: prettier → tsc strict → oxlint → 3324 tests (0 fail, 300-frame golden
+Full `bun run check` green: prettier → tsc strict → oxlint → 3358 tests (0 fail, 300-frame golden
 included) → build. The Copilot sandbox verified live (allow: `git log`, file reads; deny:
 path-escape, repository-root pathspecs, `git push`, `legacy/`, shell redirection).
 

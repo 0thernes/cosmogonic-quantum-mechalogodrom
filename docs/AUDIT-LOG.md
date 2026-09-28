@@ -11,6 +11,43 @@ changed and why.
 
 ---
 
+## 2026-09-28 — Xylos autonomous manifold creature
+
+Added a separate sparse recurrent organism with 48 foci and 192 plastic edges,
+Poincaré distance attenuation, two-slot Eshkol workspace, learned sensory forecasts,
+reliability/attention estimates, action-conditioned prediction and chemical write-back.
+Its new Möbius body renders the live graph in four fixed GPU submissions. The inspector
+provides camera focus, live/seeded modes, fresh-life recording and exact local replay.
+
+Corrected the supplied thematic indicator list against Butlin et al.'s primary Table 1;
+the actual fourteen research targets and their falsification path live in `XYLOS.md`.
+No apex assessment or consciousness claim was promoted. Browser entropy is an explicit
+runtime-boundary exception: deterministic reconstruction requires the full numeric
+input sequence, and a brain replay does not rewind the world.
+
+Adversarial review corrected finite-delta overflow in dropped-step telemetry, preserved
+fractional time after rejected perception, and fixed recorded seed provenance. Browser
+review caught the persistent launcher's separate label list; Xylos now has its own label.
+Record/replay commands refresh the inspector and body immediately; replay also checks the
+current capture before invoking the session, closing the stale-control reset window.
+Focused tests cover causal ablations, chemical feedback, long-run bounds, input rejection,
+pause, replay, and idempotent disposal. Full coverage measurement: 3,358 pass / 0 fail,
+3,749,547 expectations across 371 files on Bun 1.3.14 / Windows; measured coverage
+93.60% line / 91.55% function. Portable published floors remain unchanged.
+The complete `bun run check` also passed: formatting, strict types, lint, measured
+receipts, surface/fact synchronization, mechanism evidence, file map, build and
+generated-artifact checks. The two existing `no-new-array` lint warnings are unchanged.
+
+Actual isolated Chromium WebGL: 100 animation frames, 22 cognitive ticks, four draws,
+3,072 triangles and 48 foci; no shader, page or console errors. Full-world Chromium
+also passed onboarding, inspector discovery, live cognition, a ten-step recording,
+completed replay, return to live mode and camera focus, with no page or console errors.
+The inspector's isolated browser regression covers empty/stale replay clicks and disposal.
+CPU measurements and
+reproduction conditions are recorded in `BENCHMARKS-2026-06-26.md`. The mapped-drive
+sandbox blocked Bun reads of the existing Three.js dependency (EPERM); the same tests
+passed with approved execution outside the sandbox, without dependency changes.
+
 ## 2026-07-17 — Open-endedness 2.4 → 2.0 (OVERCLAIMED): all three cited pillars are false at source
 
 The floor's **second downward move**, after reproduction 4.0→3.5. Chasing the weakest axis for a
