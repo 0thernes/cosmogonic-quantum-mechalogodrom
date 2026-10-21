@@ -26,13 +26,13 @@ TypeScript oracle.
 
 ## Frameworks
 
-| Concern         | Library                             | How it's wired                          |
-| --------------- | ----------------------------------- | --------------------------------------- |
-| Windowing       | **GLFW 3.4**                        | FetchContent (auto)                     |
-| Math            | **GLM 1.0.1**                       | FetchContent (auto, header-only)        |
-| GL loading      | hand-rolled 3.3-core loader         | `src/gl_core.*` (no codegen dependency) |
-| Physics         | **Jolt Physics 5.2** (shipping-AAA) | default; `-DCQM_WITH_JOLT=OFF` fallback |
-| Debug HUD (opt) | **Dear ImGui 1.91**                 | `-DCQM_WITH_IMGUI=ON`                   |
+| Concern         | Library                               | How it's wired                          |
+| --------------- | ------------------------------------- | --------------------------------------- |
+| Windowing       | **GLFW 3.4**                          | FetchContent (auto)                     |
+| Math            | **GLM 1.0.3**                         | FetchContent (auto, header-only)        |
+| GL loading      | hand-rolled 3.3-core loader           | `src/gl_core.*` (no codegen dependency) |
+| Physics         | **Jolt Physics 5.5.0** (shipping-AAA) | default; `-DCQM_WITH_JOLT=OFF` fallback |
+| Debug HUD (opt) | **Dear ImGui 1.92.8**                 | `-DCQM_WITH_IMGUI=ON`                   |
 
 ## Build
 

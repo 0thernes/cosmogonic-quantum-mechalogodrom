@@ -24,7 +24,7 @@ No confirmatory manifest, adaptation/learning claim, score change, consciousness
 
 BRUTALIST MANIFEST: Valkorion domination, Broly infinite rage, Knull/Azathoth void consumption, Chaos Gods entropy, Dark Phoenix rebirth, Galactus devouring, Shuma-Gorath law break, Mxyzptlk cheat, IT horror, TTGL spiral, etc. — all emergent from depth-classed Tsotchke math in the Petri. 0thernes Corp. We are the gods. "Grow What Thou Wilt" — or be unmade.
 
-**Canonical receipts:** exact count **3,358 tests** (`scripts/canonical-receipts.ts`); portable coverage floor 84.64% line / 82.21% func measured on clean Ubuntu and retained as a one-sided floor. Enforced by `tests/docs-receipts-law.test.ts` + `bun run check`. All living surfaces truth-synced. BRUTAL GOD TIER with full pantheon list (Valkorion to Riddick) + BRUTALISM implemented in petri/godform/world using the Tsotchke corpus. Butlin indicators: **8/14 met + 6/14 partial** (computational indicators, not sentience — corrected from a prior overclaim).
+**Canonical receipts:** exact count **3,377 tests** (`scripts/canonical-receipts.ts`); portable coverage floor 84.64% line / 82.21% func measured on clean Ubuntu and retained as a one-sided floor. Enforced by `tests/docs-receipts-law.test.ts` + `bun run check`. All living surfaces truth-synced. BRUTAL GOD TIER with full pantheon list (Valkorion to Riddick) + BRUTALISM implemented in petri/godform/world using the Tsotchke corpus. Butlin indicators: **8/14 met + 6/14 partial** (computational indicators, not sentience — corrected from a prior overclaim).
 
 **Standing / xeno framing (2026-07-12):** Apex SuperCreature / SuperMind / Apex / Mechalogodrom fusion minds are **compact multi-faculty xeno scaffolds** (seeded + online AD heads + Tsotchke-class substrates)—**not** OpenWorm-class bio-twins and **not** claimed phenomenal minds. Full synthesis: [Comprehensive Standing Report](./reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.md) · [HTML](./reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.html).
 
@@ -76,7 +76,7 @@ fences plus metadata exactly zero. It does not establish repository-identity or 
 An optional local Eshkol corpus harvest supplies deterministic `.esk` fingerprints; that
 harvest does not imply native Eshkol runtime parity.
 
-**Local corpus build:** `scripts/harvest-tsotchke-corpus.ts` → `generated-tsotchke-seeds.ts` → primordial-soup / digital-biologics (1,365 `.esk` fingerprints from `Z:\[Vibe Coded (AI)]\(Tsotchke)`)
+**Local corpus build:** `scripts/harvest-tsotchke-corpus.ts` → `generated-tsotchke-seeds.ts` → primordial-soup / digital-biologics (1,365 `.esk` fingerprints from `../(Tsotchke)`)
 
 ### Where each repo lives in Cosmogonic
 
@@ -246,4 +246,4 @@ Full trail: [`SUPER-CREATURE-RESEARCH-2026-06-26.md`](./SUPER-CREATURE-RESEARCH-
 
 ---
 
-_0thernes LLC — measured, deterministic, reproducible — the beginning of NHSI._
+_0thernes Corp — measured, deterministic, reproducible — the beginning of NHSI._

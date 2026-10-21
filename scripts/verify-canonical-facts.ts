@@ -93,8 +93,8 @@ const FACTS: Fact[] = [
   {
     name: 'Tsotchke project count',
     pattern: /\b(\d+)\s+(?:Tsotchke\s+)?(?:corpus\s+)?projects?\b/gi,
-    allowed: new Set(['20', '22', '23']),
-    note: '20 historical corpus projects; 23 public repositories; 22 causal/runtime ledger entries; 8 deep, 7 wired, 2 harvest, 4 fenced, 1 meta; non-meta integration fraction 17/21',
+    allowed: new Set(['20', '22', '23', '27']),
+    note: '20 historical corpus projects; 23 July public repositories (27 as of Oct 2026); 22 causal/runtime ledger entries; 8 deep, 7 wired, 2 harvest, 4 fenced, 1 meta; non-meta integration fraction 17/21',
   },
   {
     name: 'Fenced Tsotchke repos',

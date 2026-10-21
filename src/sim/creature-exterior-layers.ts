@@ -1119,10 +1119,7 @@ export function syncGlyphExteriorShell(
   _M.compose(_P, _Q, _S);
   shellMesh.setMatrixAt(shellSlot, _M);
   const hue = (sig.accentHue + activity * 0.06) % 1;
-  shellMesh.setColorAt(
-    shellSlot,
-    new THREE.Color().setHSL(hue < 0 ? hue + 1 : hue, 0.8, 0.48 + activity * 0.12),
-  );
+  shellMesh.setColorAt(shellSlot, _C.setHSL(hue < 0 ? hue + 1 : hue, 0.8, 0.48 + activity * 0.12));
 }
 
 // ── Per-glyph stellated accent motes (100 unique micro-shells) ────────────────

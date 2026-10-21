@@ -1086,12 +1086,9 @@ export class World {
   /** Static terrain profile under the tree; animated displacement is added each presentation tick. */
   private readonly crystalTerrainBase: number;
   /**
-   * REAL-TIME wall clock for the God-Colossus ONLY (USER: "animated as it is ALWAYS — even on render speed
-   * and Pausing it stays constant"). Advanced by the true, unscaled frame delta (`uiDt`) every single frame
-   * in RUNNING, SUSPENDED *and* FROZEN, so the deity's morph runs at a fixed real-world rate that never
-   * changes with the ▦ time-scale (0.5×/1×/…) and never stops when the world is paused or frozen. Kept
-   * separate from `elapsed`/`pauseVisualClock` (both of which scale with time-scale / halt on pause) and
-   * fed only to a presentation-only shader uniform — no sim state reads it, so the golden is untouched.
+   * Simulation-scaled clock for the God-Colossus. Advanced by the scaled frame delta (`dt`) while
+   * `timeScale > 0`, and held steady when the world is paused or frozen (`timeScale === 0`).
+   * Fed only to a presentation-only shader uniform — no sim state reads it, so the golden is untouched.
    */
   private godClock = 0;
   /** Floating neon sacred-geometry shells — the quantum heart (additive; assigned in the constructor). */
@@ -3004,10 +3001,7 @@ export class World {
       fr.nightmare = s.sim === 2 ? 1 : 0;
       this.instanced.sync(this.entities.list, s.renderMode, fr, this.quality.simRate);
     }
-    // USER: the God-Colossus is the ONE structure that stays ANIMATED even in the FROZEN tableau — its
-    // real-time clock (advanced every frame in step()) keeps the fractal morphing so the deity never turns
-    // into a dead still-frame. Presentation-only uniform write — no sim step, no rng — so the frozen world
-    // stays byte-golden while the god alone keeps breathing.
+    // Sync the God-Colossus uniform at the held godClock value so the FROZEN tableau stays byte-golden.
     this.godColossus.update(this.godClock, s.chaos / CHAOS_MAX, (s.entropy ?? 0) / ENTROPY_MAX);
     // FROZEN: recenter the observer-centred sky shells on the (still-free) God-mode camera so a narrow-FOV
     // TOP survey stays inside the BackSide dome, matching RUNNING/SUSPENDED. Position-only — no atmosphere

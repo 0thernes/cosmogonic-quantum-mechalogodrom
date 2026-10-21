@@ -880,8 +880,7 @@ anomaly fires once per window on a step impulse; ring buffers are pre-allocated.
 ## lab/quantum-wildbeyond.html (writer: lab) — algorithmic-art deliverable
 
 Self-contained p5.js artifact expressing docs/PHILOSOPHY-2026-06-26.md. MUST start from the
-skill template at
-`C:\Users\Alexa\AppData\Roaming\Claude\local-agent-mode-sessions\skills-plugin\cdc38a9f-1e3b-4c72-a4e7-8d39e1ccb11d\5da6077d-38bd-4073-b218-1373e774ec00\skills\algorithmic-art\templates\viewer.html`
+`algorithmic-art` skill template `templates/viewer.html`
 (Read it FIRST; keep header/sidebar/branding/seed controls/action buttons
 EXACTLY; replace only the algorithm + parameter controls). Algorithm: "collapse
 field" — particles flowing a blended Lorenz-XZ/curl-noise field, a Voronoi
@@ -1664,7 +1663,7 @@ Copilot are constructed boot-stream-neutral and never write sim state, so the go
 
 ### V9 acceptance
 
-Full `bun run check` green: prettier → tsc strict → oxlint → 3358 tests (0 fail, 300-frame golden
+Full `bun run check` green: prettier → tsc strict → oxlint → 3377 tests (0 fail, 300-frame golden
 included) → build. The Copilot sandbox verified live (allow: `git log`, file reads; deny:
 path-escape, repository-root pathspecs, `git push`, `legacy/`, shell redirection).
 

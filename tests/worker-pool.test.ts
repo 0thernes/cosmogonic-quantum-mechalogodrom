@@ -735,7 +735,7 @@ describe('Phase 3.1: Worker Pool', () => {
           generation: msg.generation,
         };
         if (this.index === 0) setTimeout(() => reply?.({ data: response } as MessageEvent), 30);
-        else setTimeout(() => reply?.({ data: response } as MessageEvent), 0);
+        else queueMicrotask(() => reply?.({ data: response } as MessageEvent));
       }
       terminate(): void {}
     }

@@ -278,6 +278,8 @@ export class SuperPanel {
   private open = false;
   private minimized = false;
   private neuralOn = false;
+  private radarRafId = 0;
+  private disposed = false;
   // GOAL5: rows for all 5 Archons (name + plan + full affect dimensions) for first-class telemetry
   private archonRows: Array<{
     nm: HTMLElement;
@@ -476,7 +478,8 @@ export class SuperPanel {
     if (typeof requestAnimationFrame === 'function') {
       let tick = 0;
       const radarLoop = (): void => {
-        requestAnimationFrame(radarLoop);
+        if (this.disposed) return;
+        this.radarRafId = requestAnimationFrame(radarLoop);
         if (!this.open || this.minimized || this.neuralOn || this.doc.hidden) return;
         if (++tick % 2 !== 0) return;
         const now = typeof performance !== 'undefined' ? performance.now() / 1000 : 0;
@@ -500,7 +503,7 @@ export class SuperPanel {
           );
         }
       };
-      requestAnimationFrame(radarLoop);
+      this.radarRafId = requestAnimationFrame(radarLoop);
     }
   }
 
@@ -809,6 +812,11 @@ export class SuperPanel {
    * re-instantiation (bun --hot) doesn't accumulate a dead listener per reload.
    */
   dispose(): void {
+    this.disposed = true;
+    if (this.radarRafId && typeof cancelAnimationFrame === 'function') {
+      cancelAnimationFrame(this.radarRafId);
+      this.radarRafId = 0;
+    }
     this.neural.dispose();
     this.doc.getElementById('cqm-sup-panel')?.remove();
     this.doc.getElementById('cqm-sup-toggle')?.remove();

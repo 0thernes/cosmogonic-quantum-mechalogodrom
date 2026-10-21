@@ -135,6 +135,8 @@ export class EmergentLanguage {
     if (!s2s) {
       s2s = { signalId, signId, strength: 0 };
       this.signalToSign.set(signalId, s2s);
+    } else if (s2s.signId !== signId) {
+      s2s.signId = signId;
     }
     s2s.strength = clamp01(s2s.strength + this.config.learningRate);
 
@@ -143,6 +145,8 @@ export class EmergentLanguage {
     if (!s2r) {
       s2r = { signId, signalId, strength: 0 };
       this.signToSignal.set(signId, s2r);
+    } else if (s2r.signalId !== signalId) {
+      s2r.signalId = signalId;
     }
     s2r.strength = clamp01(s2r.strength + this.config.learningRate);
 

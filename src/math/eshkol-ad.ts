@@ -78,7 +78,7 @@ interface CustomVjpEntry {
 }
 
 /** Tape node structure (mirrors C struct AdNode) */
-interface AdNode {
+export interface AdNode {
   op: AdOpType; /* operation type */
   value: number; /* forward-pass result */
   gradient: number; /* accumulated backward gradient (adjoint) */
@@ -470,11 +470,13 @@ export function adBackward(tape: AdTape, output: number): void {
         break;
 
       case AdOpType.AD_DIV:
-        // d/dL (L/R) = 1/R, d/dR (L/R) = -L/R^2
+        // d/dL (L/R) = 1/R, d/dR (L/R) = -L/R^2 — guard rv==0 so division by zero contributes 0 rather than NaN/±Infinity
         {
           const rv = n.saved; // saved = right.value at forward time
-          tape.nodes[L]!.gradient += g / rv;
-          tape.nodes[R]!.gradient -= (g * tape.nodes[L]!.value) / (rv * rv);
+          if (rv !== 0) {
+            tape.nodes[L]!.gradient += g / rv;
+            tape.nodes[R]!.gradient -= (g * tape.nodes[L]!.value) / (rv * rv);
+          }
         }
         break;
 
@@ -513,7 +515,9 @@ export function adBackward(tape: AdTape, output: number): void {
         {
           const ev = n.saved;
           const lv = tape.nodes[L]!.value;
-          tape.nodes[L]!.gradient += g * ev * Math.pow(lv, ev - 1.0);
+          if (!(lv === 0 && ev < 1)) {
+            tape.nodes[L]!.gradient += g * ev * Math.pow(lv, ev - 1.0);
+          }
           // d/dR (L^R) = L^R * ln(L) — for variable exponent. ln(L) is undefined for L<=0, so guard
           // against a NaN gradient poisoning the whole reverse sweep (the exponent-derivative simply
           // does not exist for a non-positive base; contribute 0 rather than NaN).
@@ -864,8 +868,11 @@ export function adHvp(
       }
       case AdOpType.AD_POW: {
         const ev = n.saved;
-        const p1 = ev * Math.pow(lv, ev - 1); // ∂/∂L
-        const p1dot = ev * (ev - 1) * Math.pow(lv, ev - 2) * lvd; // Rᵥ{∂/∂L} (base term)
+        const p1 = lv === 0 && ev < 1 ? 0 : ev * Math.pow(lv, ev - 1); // ∂/∂L
+        const p1BaseDot = lv === 0 && ev < 2 ? 0 : ev * (ev - 1) * Math.pow(lv, ev - 2) * lvd;
+        const p1ExpDot =
+          R >= 0 && lv > 0 && rvd !== 0 ? Math.pow(lv, ev - 1) * (1 + ev * Math.log(lv)) * rvd : 0;
+        const p1dot = p1BaseDot + p1ExpDot; // Rᵥ{∂/∂L} (base + exponent terms)
         adj[L]! += g * p1;
         adjDot[L]! += gd * p1 + g * p1dot;
         if (R >= 0 && lv > 0) {

@@ -8,8 +8,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": true,
-      "cwd": "z:/[Vibe Coded (AI)]/CLAUDECODE/Cosmogonic Quantum Mechalogodrom",
-      "program": "z:/[Vibe Coded (AI)]/CLAUDECODE/Cosmogonic Quantum Mechalogodrom/build/Debug/outDebug",
+      "cwd": "${workspaceFolder}",
+      "program": "${workspaceFolder}/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [

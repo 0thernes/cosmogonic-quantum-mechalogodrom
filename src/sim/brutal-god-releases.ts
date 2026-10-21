@@ -98,18 +98,21 @@ export function triggerBrutalRelease(
     effect = 'quantum-god-time-loop-watchmaker';
   }
 
+  let substrateMod = 0;
   if (arch.includes('DEVOUR') || arch.includes('GALACTUS') || arch.includes('THANOS')) {
-    void pinnLoss(power * 0.8);
+    substrateMod += pinnLoss(power * 0.8) * 0.01;
   }
   if (arch.includes('PHOENIX') || arch.includes('REBIRTH')) {
-    void qgeAlivenessStep(power, qgt, frame);
+    substrateMod += qgeAlivenessStep(power, qgt, frame) * 0.01;
   }
-  void ulgFieldSample(chaos, spinOrder, qgt, frame + (power > 0.85 ? 99 : 0));
+  const ulgSample = ulgFieldSample(chaos, spinOrder, qgt, frame + (power > 0.85 ? 99 : 0));
   const turtle = turtleNew(frame ^ Math.floor(power * 997));
-  void logoMorphScalar(turtle, frame, Math.floor(power * 8 + 3));
-  void libirrepSymmetry(power * 0.7, Math.max(1, Math.floor(power * 5)));
+  const logoMod = logoMorphScalar(turtle, frame, Math.floor(power * 8 + 3));
+  const irrepMod = libirrepSymmetry(power * 0.7, Math.max(1, Math.floor(power * 5)));
+  substrateMod += (ulgSample + logoMod + (irrepMod % 5) * 0.1) * 0.005;
+  const finalPower = clamp(power + substrateMod, 0.7, 1.0);
 
-  return { archetype: arch, power, duration, substrate, effect };
+  return { archetype: arch, power: finalPower, duration, substrate, effect };
 }
 
 /** Apply brutal release side effects to petri strain vitality (deterministic). */
@@ -127,11 +130,11 @@ export function applyBrutalRelease(
 
   if (release.effect.includes('rage') || release.effect.includes('buster')) {
     // BROLY / ASURA: spin + irrep rage buster (full spin subs)
-    void libirrepSymmetry(p, Math.max(1, (rngSeed % 4) + 1));
+    const sym = libirrepSymmetry(p, Math.max(1, (rngSeed % 4) + 1));
     for (let i = 0; i < entities.length; i += 3) {
       const ent = entities[i];
       if (ent && rngSeed % (i + 2) < p * 5) {
-        ent.vitality *= 1 - p * 0.7;
+        ent.vitality *= 1 - p * 0.7 + (sym % 5) * 0.001;
         consumed++;
       }
     }
@@ -144,7 +147,7 @@ export function applyBrutalRelease(
     release.effect.includes('fire')
   ) {
     // DARK PHOENIX / JEAN / EVA: rebirth with QGE + eshkol + pinn metabolism
-    void qgeAlivenessStep(p * 1.1, 0.6, 1);
+    const qge = qgeAlivenessStep(p * 1.1, 0.6, 1);
     for (let i = 0; i < entities.length; i++) {
       const ent = entities[i];
       if (ent && ent.vitality < 0.15) {
@@ -152,7 +155,7 @@ export function applyBrutalRelease(
         reborn++;
       }
     }
-    warp = p * 0.3;
+    warp = p * 0.3 + qge * 0.02;
   }
 
   if (
@@ -169,8 +172,8 @@ export function applyBrutalRelease(
         consumed++;
       }
     }
-    void ulgFieldSample(p, p * 0.5, p * 0.3, rngSeed);
-    warp = p * 0.5;
+    const ulg = ulgFieldSample(p, p * 0.5, p * 0.3, rngSeed);
+    warp = p * 0.5 + ulg * 0.02;
   }
 
   if (
@@ -180,7 +183,7 @@ export function applyBrutalRelease(
     release.effect.includes('anti')
   ) {
     // KNULL / AZATHOTH / ANTI: void consume (pimc soul + quake aliveness + QGT negative + pinn)
-    void pinnLoss(p * 0.9);
+    const loss = pinnLoss(p * 0.9);
     for (let i = 0; i < entities.length; i += 2) {
       const ent = entities[i];
       if (ent) {
@@ -188,8 +191,8 @@ export function applyBrutalRelease(
         consumed++;
       }
     }
-    void qgeAlivenessStep(p * 1.3, 0.9, 2);
-    warp = p * 0.7;
+    const qge = qgeAlivenessStep(p * 1.3, 0.9, 2);
+    warp = p * 0.7 + (loss + qge) * 0.01;
   }
 
   if (
@@ -200,7 +203,7 @@ export function applyBrutalRelease(
   ) {
     // GURREN / SIMON / TTGL: spiral drill transcendence (logo morph + eshkol evolution + coupling).
     const turtle = turtleNew(rngSeed);
-    void logoMorphScalar(turtle, rngSeed % 120, (p * 10) | 0);
+    const morph = logoMorphScalar(turtle, rngSeed % 120, (p * 10) | 0);
     for (let i = 0; i < entities.length; i += 2) {
       const ent = entities[i];
       if (ent) {
@@ -208,7 +211,7 @@ export function applyBrutalRelease(
       }
     }
     reborn = Math.max(reborn, Math.floor(p * 5));
-    warp = p * 0.5;
+    warp = p * 0.5 + morph * 0.02;
   }
 
   if (release.effect.includes('shatter')) {

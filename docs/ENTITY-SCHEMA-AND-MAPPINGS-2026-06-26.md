@@ -88,7 +88,7 @@ erDiagram
 | ---------------------- | -------------------------------------------------- | --------------------------------------- | ----------------------------------- |
 | `PERSISTED_STATE`      | `localStorage` (MemoryStore)                       | fixed namespaced keys                   | 1                                   |
 | `WORLD`                | `world.ts` (composition root)                      | singleton                               | 1                                   |
-| `ENTITY`               | InstancedMesh pools + `entities.list`              | list index                              | ≤ `maxEntities` (650…10,000)        |
+| `ENTITY`               | InstancedMesh pools + `entities.list`              | list index                              | ≤ `maxEntities` (650…50,000)        |
 | `PHYLUM`               | `sim/phyla.ts` + `sim/lore.ts`                     | phylum id 0…9                           | 10                                  |
 | `MORPHOTYPE`           | `sim/morphotypes.ts` / phyla                       | morph id 0…249                          | 250 (+ ~1% outliers)                |
 | `BEHAVIOR`             | `sim/behaviors.ts`                                 | behavior name (26)                      | 26                                  |
@@ -150,7 +150,7 @@ cadences, and lifecycles), and [BENCHMARKS-2026-06-26.md](./BENCHMARKS-2026-06-2
 
 The Tsotchke corpus (Eshkol as consciousness language with native AD/GWT/inference; Moonlab, QGT, spin, irrep, quake, ulg, etc.) is the substrate for **digital biologics**.
 
-- `TSOTCHKE_CORPUS` (registry + local Z:\...\(Tsotchke)) drives `SOUP_STRAIN` and `PETRI_DISH`.
+- `TSOTCHKE_CORPUS` (registry + local `../(Tsotchke)` mirror) drives `SOUP_STRAIN` and `PETRI_DISH`.
 - `PETRI_DISH` / `PrimordialSoup` births `BIOLOGIC` (emergent life with sentience proxies: Eshkol sentience, GWT ignition, IIT phi, spin polarization).
 - `ARCHON` / `GODFORM` use per-repo Tsotchke biases and .esk programs.
 - `BIOLOGIC` feeds back into `ENTITY`, phyla, evolution, super minds.
@@ -170,7 +170,7 @@ nonetheless, and the composition root (`world.ts`) is effectively its join
 engine. Diagrams below follow ERD (structure), ERM (relationship narrative),
 and ERP (process models).
 
-> **Scope (v0.23.0 TSOTCHKE + NHSI):** Per binding [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md): the public census contains 23 repositories, while the causal/runtime ledger contains 22 entries = 8 deep, 7 wired, 2 harvest, 4 fenced, 1 meta; non-meta integrated fraction `17/21 = 0.8095238095238095`. `homebrew-moonlab` is census-only deployment metadata. `OBLITERATUS` is one of the four fences; `classical-contrast` is a separate internal control outside both denominators. **100-faculty design (~30 deep-wired)**, **5 individuated apex + 20 light-echo Archons**, **25 ToM wired**, **10 emergence angles** (+5 god-scale events), **Butlin 8/14 met + 6/14 partial** (computational indicators, not sentience). Gate: 3,358 tests · 84.64% / 82.21%. Not LLM. 0thernes NHSI.
+> **Scope (v0.23.0 TSOTCHKE + NHSI):** Per binding [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md): the public census contains 23 repositories, while the causal/runtime ledger contains 22 entries = 8 deep, 7 wired, 2 harvest, 4 fenced, 1 meta; non-meta integrated fraction `17/21 = 0.8095238095238095`. `homebrew-moonlab` is census-only deployment metadata. `OBLITERATUS` is one of the four fences; `classical-contrast` is a separate internal control outside both denominators. **100-faculty design (~30 deep-wired)**, **5 individuated apex + 20 light-echo Archons**, **25 ToM wired**, **10 emergence angles** (+5 god-scale events), **Butlin 8/14 met + 6/14 partial** (computational indicators, not sentience). Gate: 3,377 tests · 84.64% / 82.21%. Not LLM. 0thernes NHSI.
 
 #
 

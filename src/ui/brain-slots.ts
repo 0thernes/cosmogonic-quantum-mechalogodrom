@@ -24,6 +24,7 @@ interface Slot {
   id: 'apex' | 'mecha' | 'glyph';
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
+  dpr: number;
   history: number[];
   color: string;
   /** Latest REAL snapshot values (ingest targets) — presentation eases toward these. */
@@ -58,6 +59,7 @@ function createCanvas(doc: Document, slotId: string): Slot | null {
   canvas.setAttribute('aria-label', 'Brain visualizer booting');
   const ctx = canvas.getContext('2d');
   if (!ctx) return null;
+  ctx.setTransform?.(dpr, 0, 0, dpr, 0, 0);
   wrap.appendChild(canvas);
   const idMap: Record<string, Slot['id']> = {
     'brain-apex-slot': 'apex',
@@ -68,6 +70,7 @@ function createCanvas(doc: Document, slotId: string): Slot | null {
     id: idMap[slotId] ?? 'apex',
     canvas,
     ctx,
+    dpr,
     history: Array.from({ length: MAX_HISTORY }, () => 0),
     color: '#c79bff',
     values: [],
@@ -375,8 +378,9 @@ function ingestSlots(slots: Slot[], payload: BrainSlotPayload): void {
 
 function renderSlot(slot: Slot, pulse: number): void {
   const ctx = slot.ctx;
-  const w = slot.canvas.width;
-  const h = slot.canvas.height;
+  ctx.setTransform?.(slot.dpr, 0, 0, slot.dpr, 0, 0);
+  const w = CANVAS_W;
+  const h = CANVAS_H;
   drawBackground(ctx, w, h);
   if (!slot.booted) {
     slot.canvas.setAttribute('aria-label', `${slot.id} brain visualizer booting`);
@@ -409,33 +413,43 @@ function renderSlot(slot: Slot, pulse: number): void {
   }
 }
 
-export function initBrainSlotVisualizers(doc: Document = document): void {
-  if (doc.documentElement.dataset[BRAIN_SLOTS_WIRED] === '1') return;
+export function initBrainSlotVisualizers(doc: Document = document): () => void {
+  if (doc.documentElement.dataset[BRAIN_SLOTS_WIRED] === '1') return () => {};
   const slots: Slot[] = [];
   for (const id of ['brain-apex-slot', 'brain-mecha-slot', 'brain-glyph-slot'] as const) {
     const s = createCanvas(doc, id);
     if (s) slots.push(s);
   }
-  if (slots.length === 0) return;
+  if (slots.length === 0) return () => {};
   doc.documentElement.dataset[BRAIN_SLOTS_WIRED] = '1';
-  window.addEventListener('cqm:brain-snapshots', (e) => {
+  const onSnapshot = (e: Event): void => {
     const payload = (e as CustomEvent).detail as BrainSlotPayload | undefined;
     if (!payload) return;
     ingestSlots(slots, payload);
-  });
+  };
+  window.addEventListener('cqm:brain-snapshots', onSnapshot);
   // V121 autonomous render loop (~30 fps): the synapse waves / travelling spikes / node breathing
   // animate continuously between real snapshots — no fabricated data, hidden tabs skipped, every
   // 2nd rAF frame so the 3 canvases cost ≲1 ms. Draw one placeholder frame immediately.
   for (const s of slots) renderSlot(s, nowPulse());
   let tick = 0;
+  let rafId = 0;
+  let disposed = false;
   const loop = (): void => {
-    requestAnimationFrame(loop);
+    if (disposed) return;
+    rafId = requestAnimationFrame(loop);
     if (doc.hidden) return;
     if (++tick % 2 !== 0) return;
     const pulse = nowPulse();
     for (const s of slots) renderSlot(s, pulse);
   };
-  requestAnimationFrame(loop);
+  rafId = requestAnimationFrame(loop);
+  return (): void => {
+    disposed = true;
+    if (rafId) cancelAnimationFrame(rafId);
+    window.removeEventListener('cqm:brain-snapshots', onSnapshot);
+    delete doc.documentElement.dataset[BRAIN_SLOTS_WIRED];
+  };
 }
 
 function clamp01(v: number): number {

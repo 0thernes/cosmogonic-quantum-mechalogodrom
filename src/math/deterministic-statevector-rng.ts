@@ -163,7 +163,7 @@ export class DeterministicStatevectorRng {
     );
     const healthWindowBits = requireIntegerInRange(
       'healthWindowBits',
-      options.healthWindowBits ?? 512,
+      options.healthWindowBits ?? SP80090B_APT_WINDOW_BINARY,
       64,
       4096,
     );

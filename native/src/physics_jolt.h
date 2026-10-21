@@ -2,7 +2,7 @@
 //  RELIQUARY PHYSICS — Jolt backend (-DCQM_WITH_JOLT=ON).
 //
 //  A drop-in replacement for the built-in solver that drives the SAME `Body` set with
-//  the shipping-AAA Jolt Physics engine (jrouwe/JoltPhysics v5.2 — Horizon Forbidden
+//  the shipping-AAA Jolt Physics engine (jrouwe/JoltPhysics v5.5.0 — Horizon Forbidden
 //  West). Specimens become real Jolt rigid bodies (sphere shapes, true mass/inertia
 //  from density, restitution, damping); each step we apply a central harmonic force +
 //  a soft spherical-case spring (Jolt has no built-in radial gravity), let Jolt run its

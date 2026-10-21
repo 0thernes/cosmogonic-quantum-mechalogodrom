@@ -455,6 +455,7 @@ export class MythRitual {
     for (const myth of this.culture.myths) totalStrength += myth.strength;
     for (const ritual of this.culture.rituals) totalStrength += ritual.frequency;
     for (const taboo of this.culture.taboos) totalStrength += taboo.strength;
+    for (const symbol of this.culture.symbols) totalStrength += clamp01(symbol.users);
 
     return clamp01(totalStrength / totalElements);
   }

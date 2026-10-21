@@ -232,10 +232,74 @@ export function computeChristoffelSymbolsField(
 }
 
 /**
+ * Compute the exact Ricci curvature scalar R(θ) from a metric FIELD g(θ), including the
+ * ∂ᵢΓᵏₗⱼ − ∂ⱼΓᵏₗᵢ derivative terms of the Riemann tensor:
+ *   Rᵏₗᵢⱼ = ∂ᵢΓᵏₗⱼ − ∂ⱼΓᵏₗᵢ + ΓᵏₘᵢΓᵐₗⱼ − ΓᵏₘⱼΓᵐₗᵢ,
+ *   Rᵢⱼ = Rᵏᵢₖⱼ,  R = gⁱʲ Rᵢⱼ.
+ * On the flat plane in polar coordinates g=diag(1,r²), the derivative and quadratic connection terms
+ * cancel so R ≈ 0; on the unit 2-sphere g=diag(1,sin²θ), R ≈ 2.
+ */
+export function computeRicciScalarField(
+  metricFn: (theta: ReadonlyArray<number>) => ReadonlyArray<ReadonlyArray<number>>,
+  theta: ReadonlyArray<number>,
+  epsilon = 1e-4,
+): number {
+  const n = theta.length;
+  const g = metricFn(theta);
+  const gInv = invertMetric(g);
+  const Gamma = computeChristoffelSymbolsField(metricFn, theta, epsilon);
+
+  // dGamma[i][k][l][j] = ∂_i Γ^k_lj via central differences
+  const dGamma: number[][][][] = [];
+  const tp = theta.slice();
+  const tm = theta.slice();
+  for (let i = 0; i < n; i++) {
+    tp[i] = (theta[i] ?? 0) + epsilon;
+    tm[i] = (theta[i] ?? 0) - epsilon;
+    const Gp = computeChristoffelSymbolsField(metricFn, tp, epsilon);
+    const Gm = computeChristoffelSymbolsField(metricFn, tm, epsilon);
+    tp[i] = theta[i] ?? 0;
+    tm[i] = theta[i] ?? 0;
+    const planeK: number[][][] = [];
+    for (let k = 0; k < n; k++) {
+      const planeL: number[][] = [];
+      for (let l = 0; l < n; l++) {
+        const rowJ: number[] = [];
+        for (let j = 0; j < n; j++) {
+          rowJ.push(((Gp[k]?.[l]?.[j] ?? 0) - (Gm[k]?.[l]?.[j] ?? 0)) / (2 * epsilon));
+        }
+        planeL.push(rowJ);
+      }
+      planeK.push(planeL);
+    }
+    dGamma.push(planeK);
+  }
+
+  let rScalar = 0;
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < n; j++) {
+      let rij = 0;
+      for (let k = 0; k < n; k++) {
+        // R^k_ikj = ∂_k Γ^k_ij - ∂_j Γ^k_ik + Σ_m (Γ^k_mk Γ^m_ij - Γ^k_mj Γ^m_ik)
+        let rkikj = (dGamma[k]?.[k]?.[i]?.[j] ?? 0) - (dGamma[j]?.[k]?.[i]?.[k] ?? 0);
+        for (let m = 0; m < n; m++) {
+          rkikj +=
+            (Gamma[k]?.[m]?.[k] ?? 0) * (Gamma[m]?.[i]?.[j] ?? 0) -
+            (Gamma[k]?.[m]?.[j] ?? 0) * (Gamma[m]?.[i]?.[k] ?? 0);
+        }
+        rij += rkikj;
+      }
+      rScalar += (gInv[i]?.[j] ?? 0) * rij;
+    }
+  }
+  return rScalar;
+}
+
+/**
  * Curvature-aware QNG using the REAL Christoffel symbols from a metric field g(θ):
  *   θ̇ = −(g + λ·Σₖ Γᵏ)⁺ ∇L.
  * Unlike {@link curvatureAwareNaturalGradient} (fixed matrix ⇒ Γ=0 ⇒ plain QNG), this actually follows
- * the curved geometry. λ adapts to the (Christoffel-only) Ricci scalar when `adaptive`. Deterministic.
+ * the curved geometry. λ adapts to the exact field Ricci scalar when `adaptive`. Deterministic.
  */
 export function curvatureAwareNaturalGradientField(
   metricFn: (theta: ReadonlyArray<number>) => ReadonlyArray<ReadonlyArray<number>>,
@@ -250,7 +314,9 @@ export function curvatureAwareNaturalGradientField(
 
   let curvatureWeight = cfg.curvatureWeight;
   if (cfg.adaptive) {
-    curvatureWeight = cfg.curvatureWeight * (1 + Math.abs(computeRicciScalar(g, Gamma)));
+    const rField = computeRicciScalarField(metricFn, theta);
+    const rConn = computeRicciScalar(g, Gamma);
+    curvatureWeight = cfg.curvatureWeight * (1 + Math.max(Math.abs(rField), Math.abs(rConn)));
   }
 
   const corrected: number[][] = [];
@@ -444,11 +510,14 @@ export function curvatureAwareNaturalGradient2x2(
   ridge: number,
   out: number[] | Float64Array,
 ): void {
-  // Compute Christoffel trace for 2×2 case
-  // For CP¹ (projective line), the curvature is constant: Γ_trace = g
-  const GammaTrace00 = g00;
-  const GammaTrace01 = g01;
-  const GammaTrace11 = g11;
+  // Weighted projective line WP(1,w) curvature correction: instead of a degenerate scalar multiple of g,
+  // blend the local metric with its cofactor/isotropy tensor scaled by (1 + tr(g))⁻¹ so anisotropic
+  // curvature rotates as well as scales the natural-gradient step direction.
+  const trG = Math.max(1e-6, g00 + g11);
+  const invScale = 1 / (1 + 0.5 * trG);
+  const GammaTrace00 = (0.7 * g00 + 0.3 * g11) * invScale;
+  const GammaTrace01 = 0.5 * g01 * invScale;
+  const GammaTrace11 = (0.7 * g11 + 0.3 * g00) * invScale;
 
   const a = g00 + ridge + curvatureWeight * GammaTrace00;
   const c = g11 + ridge + curvatureWeight * GammaTrace11;

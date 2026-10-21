@@ -95,6 +95,18 @@ export function svd(A: Mat): { U: Mat; S: number[]; V: Mat } {
   if (m > MPS_MAX_DIM || n > MPS_MAX_DIM) {
     throw new Error(`svd: dimension exceeds MPS_MAX_DIM=${MPS_MAX_DIM} (${m}×${n})`);
   }
+  if (m < n) {
+    // Wide matrix (rows < cols): decompose Aᵀ (n × m, tall) = U_t · diag(S) · V_tᵀ,
+    // so A = V_t · diag(S) · U_tᵀ with orthonormal columns on both sides.
+    const AT = mat(n, m);
+    for (let i = 0; i < m; i++) {
+      for (let j = 0; j < n; j++) {
+        AT.data[j * m + i] = A.data[i * n + j]!;
+      }
+    }
+    const { U: Ut, S, V: Vt } = svd(AT);
+    return { U: Vt, S, V: Ut };
+  }
   // Working copy whose columns are rotated toward mutual orthogonality.
   const W = Float64Array.from(A.data);
   const V = mat(n, n);
@@ -190,18 +202,19 @@ export function lowRankApprox(
   chi: number,
 ): { approx: Mat; truncationError: number; keptRank: number } {
   const { U, S, V } = svd(A);
-  const n = A.cols;
+  const uCols = U.cols;
+  const vCols = V.cols;
   const k = Math.max(0, Math.min(chi, S.length));
   const approx = mat(A.rows, A.cols);
   for (let t = 0; t < k; t++) {
     const sigma = S[t]!;
     if (sigma <= SVD_TOL) continue;
     for (let i = 0; i < A.rows; i++) {
-      const ui = U.data[i * n + t]! * sigma;
+      const ui = U.data[i * uCols + t]! * sigma;
       if (ui === 0) continue;
       for (let j = 0; j < A.cols; j++) {
         const ai = i * A.cols + j;
-        approx.data[ai] = (approx.data[ai] ?? 0) + ui * (V.data[j * n + t] ?? 0);
+        approx.data[ai] = (approx.data[ai] ?? 0) + ui * (V.data[j * vCols + t] ?? 0);
       }
     }
   }

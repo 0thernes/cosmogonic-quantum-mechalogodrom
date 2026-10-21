@@ -75,7 +75,7 @@ export function gwtSoftmax(
   let max = -Infinity;
   for (let i = 0; i < n; i++) {
     const s = saliences[i] ?? 0;
-    if (s > max) max = s;
+    if (Number.isFinite(s) && s > max) max = s;
   }
   // All saliences -Infinity (or NaN) leaves max non-finite, so `exp((s - max)/t)` = exp(NaN) = NaN and
   // every weight becomes NaN. Degrade to a uniform distribution instead of poisoning the workspace.
@@ -86,7 +86,8 @@ export function gwtSoftmax(
   }
   let sum = 0;
   for (let i = 0; i < n; i++) {
-    const e = Math.exp(((saliences[i] ?? 0) - max) / t);
+    const s = saliences[i] ?? 0;
+    const e = Number.isFinite(s) ? Math.exp((s - max) / t) : 0;
     out[i] = e;
     sum += e;
   }

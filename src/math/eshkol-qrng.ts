@@ -49,7 +49,7 @@ export class EshkolQrng {
     this.model = new DeterministicStatevectorRng(seed, {
       qubits: ESHKOL_QUBITS,
       evolutionRounds: 2,
-      healthWindowBits: 512,
+      healthWindowBits: 1024,
       repetitionCutoff: 32,
     });
   }

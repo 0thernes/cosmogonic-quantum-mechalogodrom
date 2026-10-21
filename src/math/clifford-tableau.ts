@@ -89,9 +89,16 @@ export class CliffordTableau {
     this._caMpsCurrentBond = 1;
   }
 
+  private checkQubit(a: number): void {
+    if (!Number.isInteger(a) || a < 0 || a >= this.n) {
+      throw new RangeError(`CliffordTableau: qubit ${a} out of [0, ${this.n})`);
+    }
+  }
+
   // ── Single-qubit Clifford gates (each O(n)) ───────────────────────────────────────────────────────
   /** Hadamard: X ↔ Z. */
   h(a: number): this {
+    this.checkQubit(a);
     const { x, z, r, n, rows } = this;
     for (let i = 0; i < rows - 1; i++) {
       const xi = x[i * n + a] ?? 0;
@@ -105,6 +112,7 @@ export class CliffordTableau {
 
   /** Phase gate S = diag(1, i): Z ← XZ. */
   s(a: number): this {
+    this.checkQubit(a);
     const { x, z, r, n, rows } = this;
     for (let i = 0; i < rows - 1; i++) {
       const xi = x[i * n + a] ?? 0;
@@ -122,6 +130,7 @@ export class CliffordTableau {
 
   /** Pauli-X (flips the sign of Z stabilisers). */
   x_(a: number): this {
+    this.checkQubit(a);
     const { z, r, n, rows } = this;
     for (let i = 0; i < rows - 1; i++) r[i] = (r[i] ?? 0) ^ (z[i * n + a] ?? 0);
     return this;
@@ -129,6 +138,7 @@ export class CliffordTableau {
 
   /** Pauli-Z (flips the sign of X stabilisers). */
   z_(a: number): this {
+    this.checkQubit(a);
     const { x, r, n, rows } = this;
     for (let i = 0; i < rows - 1; i++) r[i] = (r[i] ?? 0) ^ (x[i * n + a] ?? 0);
     return this;
@@ -136,6 +146,7 @@ export class CliffordTableau {
 
   /** Pauli-Y = iXZ. */
   y_(a: number): this {
+    this.checkQubit(a);
     const { x, z, r, n, rows } = this;
     for (let i = 0; i < rows - 1; i++)
       r[i] = (r[i] ?? 0) ^ ((x[i * n + a] ?? 0) ^ (z[i * n + a] ?? 0));
@@ -145,6 +156,9 @@ export class CliffordTableau {
   // ── Two-qubit Clifford gates ──────────────────────────────────────────────────────────────────────
   /** Controlled-NOT (control `a`, target `b`). */
   cnot(a: number, b: number): this {
+    this.checkQubit(a);
+    this.checkQubit(b);
+    if (a === b) return this;
     const { x, z, r, n, rows } = this;
     for (let i = 0; i < rows - 1; i++) {
       const xa = x[i * n + a] ?? 0;

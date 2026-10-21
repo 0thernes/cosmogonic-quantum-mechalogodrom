@@ -862,7 +862,7 @@ if (import.meta.main) {
             typeof rec['args'] === 'object' && rec['args'] !== null
               ? (rec['args'] as Record<string, unknown>)
               : {};
-          const result = await dispatchTool(tool, args);
+          const result = await dispatchTool(tool, args, req.signal);
           logRequest(req, result.ok ? 200 : 400);
           return Response.json(result, { status: result.ok ? 200 : 400 });
         },

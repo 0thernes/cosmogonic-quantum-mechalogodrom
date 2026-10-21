@@ -1111,4 +1111,13 @@ export class NhiObservatory {
     }
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
   }
+
+  /** Stop the self-animation loop and remove Observatory DOM nodes. */
+  dispose(doc: Document = document): void {
+    this.open = false;
+    this.stopLoop();
+    this.panel.remove();
+    doc.getElementById('cqm-nhi-toggle')?.remove();
+    doc.getElementById('cqm-nhi-style')?.remove();
+  }
 }

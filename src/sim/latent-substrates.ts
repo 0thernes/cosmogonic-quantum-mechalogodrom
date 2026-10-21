@@ -17,7 +17,12 @@
  * Determinism law: pure functions of their inputs; no `Math.random`, no `Date.now`. Same inputs ⇒ same
  * bytes. NOT sentient — three functional substrates now reachable from the decision loop.
  */
-import { gaussianPacket, cnStep, type Wave } from '../math/schrodinger';
+import {
+  gaussianPacketInto,
+  cnStepInto,
+  createSchrodingerWorkspace,
+  type Wave,
+} from '../math/schrodinger';
 import { quatFromAxisAngle, geodesicDistance, type Quat } from '../math/so3';
 import { CausalGraph } from './causal-graph';
 
@@ -40,6 +45,10 @@ const DT = 0.05;
 const STEPS = 8;
 const Z_AXIS: readonly [number, number, number] = [0, 0, 1];
 
+const _V: number[] = Array.from({ length: GRID }, () => 0);
+const _PSI: Wave = { re: new Float64Array(GRID), im: new Float64Array(GRID) };
+const _WS = createSchrodingerWorkspace(GRID);
+
 /**
  * Evolve a Gaussian wavepacket for {@link STEPS} Crank–Nicolson steps under an attractive well whose
  * depth grows with `drive`, then return its normalized positional spread. Deterministic + bounded.
@@ -47,18 +56,17 @@ const Z_AXIS: readonly [number, number, number] = [0, 0, 1];
 export function quantumUncertainty(drive: number): number {
   const d = clamp01(drive);
   const mid = (GRID - 1) / 2;
-  const V = Array.from({ length: GRID }, () => 0);
   for (let j = 0; j < GRID; j++) {
     const dxm = j - mid;
-    V[j] = -d * Math.exp(-(dxm * dxm) / 18); // attractive well, depth ∝ drive
+    _V[j] = -d * Math.exp(-(dxm * dxm) / 18); // attractive well, depth ∝ drive
   }
-  let psi: Wave = gaussianPacket(GRID, DX, mid * DX, 2 + 2 * (1 - d), 1.0);
-  for (let s = 0; s < STEPS; s++) psi = cnStep(psi, V, DT, DX);
+  gaussianPacketInto(_PSI, DX, mid * DX, 2 + 2 * (1 - d), 1.0);
+  for (let s = 0; s < STEPS; s++) cnStepInto(_PSI, _V, DT, DX, _PSI, _WS);
   let num = 0;
   let num2 = 0;
   let den = 0;
   for (let j = 0; j < GRID; j++) {
-    const p = psi.re[j]! * psi.re[j]! + psi.im[j]! * psi.im[j]!;
+    const p = _PSI.re[j]! * _PSI.re[j]! + _PSI.im[j]! * _PSI.im[j]!;
     const x = j * DX;
     num += x * p;
     num2 += x * x * p;

@@ -262,3 +262,87 @@ export type {
   CorpusBrainReport,
   RepoBrainAblation,
 } from './tsotchke-brain-intake';
+
+/** Extended NHSI cognitive, resonance, hyperbolic, and telos substrates. */
+export {
+  EmergentLanguage,
+  computeLanguageDiversity,
+  computeLanguageStructure,
+  type Sign,
+  type SignalToSignMapping,
+  type SignToSignalMapping,
+  type EmergentLanguageConfig,
+} from './emergent-language';
+export { OmegaPoint, type OmegaPointSnapshot } from './omega-point';
+export {
+  ResonanceIntegrator,
+  facultyPhaseFromActivation,
+  computeCoherence,
+  findCoalition,
+  computePhaseVariance,
+  type FacultyPhase,
+  type IntegratorSnapshot,
+  type ResonanceConfig,
+} from './resonance-integrator';
+export {
+  ValenceSteering,
+  computeValence,
+  computeValenceSteeringStrength,
+  type ValenceState,
+  type ValenceSteeringConfig,
+} from './valence-steering';
+export { Xenomind, type XenomindSnapshot } from './xenomind';
+export {
+  beliefPropagation,
+  beliefEntropy,
+  type Factor,
+  type FactorGraph,
+} from '../math/belief-propagation';
+export { dConst, dVar, dAdd, dSub, dMul, dDiv, type Dual } from '../math/dual';
+export { hdConst, hdVar, hdAdd, hdSub, hdMul, type HyperDual } from '../math/hyperdual';
+export { clebschGordan, wignerD, sphericalHarmonic } from '../math/libirrep-symmetry';
+export {
+  mixedStateQuantumGeometricTensor,
+  computePurity,
+  computeEntropy,
+  statevectorToDensityMatrix,
+  applyDepolarizingNoise,
+  type MixedStateGeometry,
+} from '../math/mixed-state-qgt';
+export {
+  getZigKernelBridge,
+  getZigKernelReceipt,
+  zigGrayScottStep,
+  zigTdseStep,
+  zigQgtFubiniStudy,
+  zigRosetteFnv1a64,
+  zigPqWireBytes,
+  zigGeoRefineVerifyFrame,
+  type PqSignatureSchemeId,
+  type ZigKernelReceipt,
+  type ZigWasmExports,
+} from '../math/zig-bridge';
+export {
+  TSOTCHKE_WEBSITES,
+  TSOTCHKE_X_ACCOUNTS,
+  TSOTCHKE_OCT2026_WAVE2_REPOS,
+  TSOTCHKE_HOMEBREW_TAP_REPO,
+  TSOTCHKE_OCT2026_USER_PUBLIC_REPOS,
+  TSOTCHKE_OCT2026_ORG_PUBLIC_REPOS,
+  TSOTCHKE_OCT2026_ALL_PUBLIC_REPOS,
+  TSOTCHKE_OCT2026_PUBLIC_REPO_COUNT,
+  TSOTCHKE_OCT2026_USER_PUBLIC_COUNT,
+  TSOTCHKE_OCT2026_ORG_PUBLIC_COUNT,
+  encodeRosetteWireEnvelope,
+  evaluatePqConsensusRound,
+  refineGeometricSimplex,
+  evaluateBonsaiFidelity,
+  stepOct2026WaveSubstrates,
+  type TsotchkeWebSurface,
+  type TsotchkeOct2026RepoSpec,
+  type RosetteWireEnvelope,
+  type PqConsensusRoundMetrics,
+  type GeoRefineSimplexResult,
+  type BonsaiFidelityResult,
+  type TsotchkeOct2026Telemetry,
+} from './tsotchke-oct2026-wave';

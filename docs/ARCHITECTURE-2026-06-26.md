@@ -414,7 +414,7 @@ flowchart LR
 ```
 
 The flowchart above is the **V1/V2 core**. The V10–V75 systems interleave on their own cadences
-(verified against `world.ts`); the full as-built per-stage frame order is in
+across `World.update` and `World.updateSecondary` (verified against `world.ts`); the full as-built per-stage frame order is in
 [BOOK-2026-06-26.md §A](./BOOK-2026-06-26.md). Cadences — V1 rows from the legacy loop, V2 rows from MODULE-CONTRACTS-2026-06-26.md
 §Frame pipeline V2, V10+ rows verified against `world.ts`:
 

@@ -65,7 +65,8 @@
     "evidence:phase-b:mechanisms:check": "bun scripts/organism-intelligence-phase-b/mechanism-evidence-artifacts.ts --check",
     "smoke": "bun run build && bun scripts/smoke.ts",
     "smoke:visual": "bun scripts/browser-visual-smoke.ts",
-    "harvest:tsotchke": "bun scripts/harvest-tsotchke-corpus.ts"
+    "harvest:tsotchke": "bun scripts/harvest-tsotchke-corpus.ts",
+    "build:zig": "bun scripts/build-zig.ts"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.8",

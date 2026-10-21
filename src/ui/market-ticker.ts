@@ -564,6 +564,14 @@ export class MarketTicker {
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     return cssW;
   }
+
+  /** Cleanly remove the MarketTicker DOM and style nodes. */
+  dispose(doc: Document = document): void {
+    this.open = false;
+    this.panel.remove();
+    doc.getElementById('cqm-mkt-toggle')?.remove();
+    doc.getElementById('cqm-mkt-style')?.remove();
+  }
 }
 
 /** Compact human number (1.2k, 3.4M) for the readout. */

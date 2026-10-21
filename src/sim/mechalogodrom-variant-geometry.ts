@@ -955,6 +955,10 @@ function makeEnneperBloom(): VariantShellGeometry {
 
 const AIZAWA_STEPS = 1300;
 const AIZAWA_DT = 0.014;
+const _AIZAWA_K1 = { x: 0, y: 0, z: 0 };
+const _AIZAWA_K2 = { x: 0, y: 0, z: 0 };
+const _AIZAWA_K3 = { x: 0, y: 0, z: 0 };
+const _AIZAWA_K4 = { x: 0, y: 0, z: 0 };
 
 /** One RK4 step of the Aizawa system (a,b,c,d,e,f) = (0.95,0.7,0.6,3.5,0.25,0.1). */
 export function aizawaStep(
@@ -972,17 +976,23 @@ export function aizawaStep(
     o.y = D * x + (z - B) * y;
     o.z = C + A * z - (z * z * z) / 3 - (x * x + y * y) * (1 + eParam * z) + F * z * x * x * x;
   };
-  const k1 = { x: 0, y: 0, z: 0 };
-  const k2 = { x: 0, y: 0, z: 0 };
-  const k3 = { x: 0, y: 0, z: 0 };
-  const k4 = { x: 0, y: 0, z: 0 };
-  deriv(p.x, p.y, p.z, k1);
-  deriv(p.x + (dt / 2) * k1.x, p.y + (dt / 2) * k1.y, p.z + (dt / 2) * k1.z, k2);
-  deriv(p.x + (dt / 2) * k2.x, p.y + (dt / 2) * k2.y, p.z + (dt / 2) * k2.z, k3);
-  deriv(p.x + dt * k3.x, p.y + dt * k3.y, p.z + dt * k3.z, k4);
-  p.x += (dt / 6) * (k1.x + 2 * k2.x + 2 * k3.x + k4.x);
-  p.y += (dt / 6) * (k1.y + 2 * k2.y + 2 * k3.y + k4.y);
-  p.z += (dt / 6) * (k1.z + 2 * k2.z + 2 * k3.z + k4.z);
+  deriv(p.x, p.y, p.z, _AIZAWA_K1);
+  deriv(
+    p.x + (dt / 2) * _AIZAWA_K1.x,
+    p.y + (dt / 2) * _AIZAWA_K1.y,
+    p.z + (dt / 2) * _AIZAWA_K1.z,
+    _AIZAWA_K2,
+  );
+  deriv(
+    p.x + (dt / 2) * _AIZAWA_K2.x,
+    p.y + (dt / 2) * _AIZAWA_K2.y,
+    p.z + (dt / 2) * _AIZAWA_K2.z,
+    _AIZAWA_K3,
+  );
+  deriv(p.x + dt * _AIZAWA_K3.x, p.y + dt * _AIZAWA_K3.y, p.z + dt * _AIZAWA_K3.z, _AIZAWA_K4);
+  p.x += (dt / 6) * (_AIZAWA_K1.x + 2 * _AIZAWA_K2.x + 2 * _AIZAWA_K3.x + _AIZAWA_K4.x);
+  p.y += (dt / 6) * (_AIZAWA_K1.y + 2 * _AIZAWA_K2.y + 2 * _AIZAWA_K3.y + _AIZAWA_K4.y);
+  p.z += (dt / 6) * (_AIZAWA_K1.z + 2 * _AIZAWA_K2.z + 2 * _AIZAWA_K3.z + _AIZAWA_K4.z);
 }
 
 function makeAizawaAttractor(): VariantShellGeometry {

@@ -68,25 +68,17 @@ class ReliquaryPhysics {
   /** Linear/angular damping per second so the cluster settles instead of ringing forever. */
   float linDamp = 0.6f;
   float angDamp = 0.8f;
+  static constexpr int kMaxBodies = 256;
 
   /** Seed `n` bodies (≤ cap) at deterministic shell positions with spin + inward drift. */
   void init(int n) {
     bodies_.clear();
     maxClose_ = 0.0f;
+    if (n < 0) n = 0;
+    if (n > kMaxBodies) n = kMaxBodies;
     for (int i = 0; i < n; ++i) {
       Body b;
-      const float h1 = hash(i * 3 + 1), h2 = hash(i * 3 + 2), h3 = hash(i * 3 + 7);
-      const float theta = h1 * 6.2831853f;
-      const float phi = std::acos(2.0f * h2 - 1.0f);
-      const float rad = 3.0f + 2.5f * h3;
-      b.pos = glm::vec3(rad * std::sin(phi) * std::cos(theta), rad * std::cos(phi),
-                        rad * std::sin(phi) * std::sin(theta));
-      b.radius = 0.55f + 0.55f * hash(i * 7 + 5);
-      b.mass = b.radius * b.radius * b.radius;
-      b.type = static_cast<int>(hash(i * 11 + 2) * 7.0f) % 7;
-      b.hue = hash(i * 13 + 4);
-      b.vel = (vrand(i * 5) - 0.5f) * 2.0f;
-      b.angVel = (vrand(i * 9) - 0.5f) * 2.5f;
+      rqSeedBody(b, i);
       bodies_.push_back(b);
     }
   }
@@ -163,17 +155,6 @@ class ReliquaryPhysics {
     const glm::vec3 torque = glm::cross(nrm, vt) * 0.35f;
     a.angVel -= torque * invA;
     b.angVel += torque * invB;
-  }
-
-  // Deterministic integer hash → float in [0, 1). No clock, no global rng — same run, same dance.
-  static float hash(int x) {
-    unsigned int h = static_cast<unsigned int>(x);
-    h = (h << 13) ^ h;
-    h = h * (h * h * 15731u + 789221u) + 1376312589u;
-    return static_cast<float>(h & 0x7fffffffu) / 2147483648.0f;
-  }
-  static glm::vec3 vrand(int base) {
-    return glm::vec3(hash(base + 1), hash(base + 2), hash(base + 3));
   }
 };
 

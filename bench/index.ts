@@ -21,6 +21,7 @@ import './motion-interpolation.bench';
 import './perceptual-priority.bench';
 import './crystal-ecosystem.bench';
 import './xylos.bench';
+import './big-tree-ecology.bench';
 import { run } from 'mitata';
 
 await run();

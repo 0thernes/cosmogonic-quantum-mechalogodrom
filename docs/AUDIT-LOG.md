@@ -11,6 +11,64 @@ changed and why.
 
 ---
 
+## 2026-10-21 — Deep-Dive Assessment Resolution, Zig 0.17.0 Kernel Layer, and Tsotchke Oct 21 2026 Ecosystem Sync
+
+Resolved all 17 findings (`C-1`, `H-1`–`H-7`, `M-1`–`M-6`, `L-1`–`L-3`) from the repository-wide
+deep-dive audit, incorporated a deterministic **Zig 0.17.0** WebAssembly kernel subsystem
+(`zig/src/root.zig`, `zig/build.zig`, `zig/zig-out/cqm_kernels.wasm`, `src/math/zig-bridge.ts`),
+and synchronized Tsotchke's October 21, 2026 ecosystem (`27` public repositories across `tsotchke`
+[`17`] and `Tsotchke-Corporation` [`10`], `4` official websites, and `2` official X accounts) in
+both the local corpus (`../(Tsotchke)`) and CQM (`src/sim/tsotchke-oct2026-wave.ts`).
+
+- **Critical & High fixes (`C-1`, `H-1`–`H-7`)**:
+  - Removed untracked `learning-101.html` containing deceptive external link and broken HTML (`C-1`);
+    restored `.github/copilot-instructions.md` (`H-1`).
+  - Exported `AdNode`, guarded `AD_DIV` (`rv !== 0`) and `AD_POW` (`lv === 0 && ev < 1`) in
+    `adBackward`, and added the mixed exponent-tangent second derivative term
+    $u^{v-1}(1 + v \ln u)\dot{v}$ in `adHvp` (`src/math/eshkol-ad.ts`, `H-2`).
+  - Aligned default `healthWindowBits` to `SP80090B_APT_WINDOW_BINARY` (`1024`) in both
+    `DeterministicStatevectorRng` and `EshkolQrng` so the NIST SP 800-90B §4.4.2 Adaptive
+    Proportion Test executes by default (`H-3`).
+  - Wired `src/ui/audit-dock.ts` to live `window.world` fields (`governor.emaMs`, `governor.current`,
+    `entities.list.length`, `superCreature.mind.snapshot().composite`, `economy.summary().wealthGini`)
+    and eliminated fabricated fallback numbers when `world` is offline (`H-4`).
+  - Tracked `radarRafId` and cancelled the radar `requestAnimationFrame` loop in
+    `SuperPanel.dispose()` (`src/ui/super-panel.ts`, `H-5`).
+  - Added full Riemann/Ricci tensor derivative computation (`computeRicciScalarField`) and
+    anisotropic weighted-projective-line preconditioning in `src/math/curvature-aware-qng.ts` (`H-6`).
+  - Stripped and re-attached parentheses around tokens in `EshkolProgramEvolution.mutateProgram`
+    and replaced cancelling mean-substraction with constructive superposition norm
+    $\|\sum_a v_a\| / \sqrt{m}$ in `HigherOrderEmergence.getSynergy()` (`src/sim/emergence-angles.ts`, `H-7`).
+- **Medium & Low fixes (`M-1`–`M-6`, `L-1`–`L-3`)**:
+  - Forwarded `req.signal` to `dispatchTool` in `server.ts` and validated/preserved `muteOn` in
+    `src/memory/store.ts` (`M-1`).
+  - Fixed DPR transform accumulation in `src/ui/brain-slots.ts` and added `dispose()` to
+    `MarketTicker` and `NhiObservatory` (`M-2`).
+  - Fixed `isGodForm` substring checks in `src/sim/digital-biologics.ts`, folded Tsotchke substrate
+    outputs into `power`/`warp` in `src/sim/brutal-god-releases.ts`, included `symbol.users` in
+    `MythRitual.strength` (`src/sim/myth-ritual.ts`), and computed real `deathRate`/`birthRate` in
+    `src/sim/mortality.ts` (`M-3`).
+  - Updated `reinforce()` in `src/sim/emergent-language.ts` to update `signId`/`signalId` on existing
+    entries and re-exported all orphaned sim/math leaves from `src/sim/tsotchke-facade.ts` (`M-4`).
+  - Replaced machine-specific absolute paths in `.vscode/*`, docs, and `src/sim/tsotchke-corpus.ts`,
+    and normalized `TSOTCHKE_BIOLOGICS_GROWTH_RECEIPT.txt` to LF (`M-5`).
+  - Eliminated hot-loop temporary allocations in `src/sim/creature-exterior-layers.ts`,
+    `src/sim/latent-substrates.ts`, and `src/sim/mechalogodrom-variant-geometry.ts`, and hoisted
+    benchmark setup allocations in `bench/quantization.bench.ts` and `bench/eshkol-ad.bench.ts` (`M-6`).
+  - Reconciled prose drift across `masters/*.xml` and `docs/*.md` (`L-1`), clamped `n` to `kMaxBodies`
+    and delegated to `rqSeedBody` in `native/src/physics.h` (`L-2`), and added non-finite/wide-SVD/qubit
+    bounds guards in `src/math/global-workspace.ts`, `src/math/mps-svd.ts`, and
+    `src/math/clifford-tableau.ts` (`L-3`).
+- **Zig 0.17.0 & Tsotchke October 21, 2026 Wave-2 Integration**:
+  - Added `zig/src/root.zig`, `zig/build.zig`, `scripts/build-zig.ts`, `src/math/zig-wasm-binary.ts`,
+    and `src/math/zig-bridge.ts` exporting 6 deterministic WASM kernels (`cqm_gray_scott_step`,
+    `cqm_tdse_step`, `cqm_qgt_fubini_study`, `cqm_rosette_fnv1a64`, `cqm_pq_wire_bytes`,
+    `cqm_georefine_verify_frame`).
+  - Added `src/sim/tsotchke-oct2026-wave.ts` cataloging the 27-public-repo October 21, 2026 census,
+    4 websites (`eshkol.ai`, `tsotchke.org`, `tsotchke.net`, `api.tsotchke.net`), 2 X accounts
+    (`@tsotchke`, `@tsotchkecorp`), and operational substrates for `rosette-wire`,
+    `pq-consensus-bandwidth`, `GeoRefine`, and `bonsai-fidelity-study`.
+
 ## 2026-09-28 — Xylos autonomous manifold creature
 
 Added a separate sparse recurrent organism with 48 foci and 192 plastic edges,

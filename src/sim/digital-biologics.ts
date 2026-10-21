@@ -377,7 +377,8 @@ export function stepBiologic(b: Biologic, flux: number, learn = false): void {
     (b.form as string).startsWith('CHAOS_') ||
     (b.form as string).startsWith('REALITY_') ||
     (b.form as string).startsWith('BRUTAL_') ||
-    (b.form as string).startsWith('SPIRAL_');
+    (b.form as string).startsWith('SPIRAL_') ||
+    (b.form as string).startsWith('GURREN_');
   if (isGodForm) {
     const godFlux = flux * 1.6 + b.qgtCurvature * 0.4 + (b.spinOrder > 0.6 ? 0.3 : 0); // god amp from substrates
     const basePower = clamp01(
@@ -434,10 +435,20 @@ export function stepBiologic(b: Biologic, flux: number, learn = false): void {
     b.irrepSymmetry = clamp01(b.irrepSymmetry + r * 0.1); // brutal monolith heavy
     b.spinOrder = clamp01(b.spinOrder + r * 0.08); // raw rage/chaos
     b.qgtCurvature = clamp01(b.qgtCurvature + r * 0.07); // raw reality break
-    if (b.form.includes('SPIRAL') || b.form.includes('GURREN') || b.form.includes('BROLY')) {
+    if (
+      b.form.includes('SPIRAL') ||
+      b.form.includes('GURREN') ||
+      b.form.includes('ZOD') ||
+      b.form.includes('BROLY')
+    ) {
       b.adFitness = Math.min(4, b.adFitness * (1 + r * 0.4)); // raw power scale (brutal, no elegance cap)
     }
-    if (b.form.includes('VOID') || b.form.includes('KNUL') || b.form.includes('AZATHOTH')) {
+    if (
+      b.form.includes('VOID') ||
+      b.form.includes('DEVOUR') ||
+      b.form.includes('KNUL') ||
+      b.form.includes('AZATHOTH')
+    ) {
       b.consciousness = clamp01(b.consciousness - r * 0.25); // raw void siphon
     }
   }
@@ -466,6 +477,7 @@ export function stepBiologic(b: Biologic, flux: number, learn = false): void {
     if (
       b.form.includes('REALITY') ||
       b.form.includes('MXY') ||
+      b.form.includes('WARHAMMER') ||
       b.form.includes('JOKER') ||
       b.form.includes('JASPERS')
     ) {

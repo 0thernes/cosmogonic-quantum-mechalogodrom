@@ -50,45 +50,39 @@ group('Quantization Benchmarks', () => {
   group('Neural Forward Pass Performance', () => {
     const ENTITY_COUNT = 50000;
     const ITERATIONS = 100;
+    const fp32Field = new EntityBrainField(ENTITY_COUNT, mulberry32(42), {
+      useFp16: false,
+      useInt8: false,
+      int8MaxError: 0.01,
+    });
+    const fp16Field = new EntityBrainField(ENTITY_COUNT, mulberry32(42), {
+      useFp16: true,
+      useInt8: false,
+      int8MaxError: 0.01,
+    });
+    const list = Array.from({ length: ENTITY_COUNT }, () => ({
+      userData: {
+        vel: { x: 0, y: 0, z: 0 },
+        age: 10,
+        life: 600,
+        ph: 0.5,
+        energy: 50,
+        isNhi: false,
+      },
+    })) as unknown as Entity[];
 
     bench('FP32 forward pass (baseline)', () => {
-      const rng = mulberry32(42);
-      const config = { useFp16: false, useInt8: false, int8MaxError: 0.01 };
-      const field = new EntityBrainField(ENTITY_COUNT, rng, config);
-      const list = Array.from({ length: ENTITY_COUNT }, () => ({
-        userData: {
-          vel: { x: 0, y: 0, z: 0 },
-          age: 10,
-          life: 600,
-          ph: 0.5,
-          energy: 50,
-          isNhi: false,
-        },
-      })) as unknown as Entity[];
-
       for (let i = 0; i < ITERATIONS; i++) {
-        field.think(list, 5, i / 60);
+        fp32Field.think(list, 5, i / 60);
       }
+      do_not_optimize(list[0]?.userData.vel.x);
     });
 
     bench('FP16 forward pass (quantized)', () => {
-      const rng = mulberry32(42);
-      const config = { useFp16: true, useInt8: false, int8MaxError: 0.01 };
-      const field = new EntityBrainField(ENTITY_COUNT, rng, config);
-      const list = Array.from({ length: ENTITY_COUNT }, () => ({
-        userData: {
-          vel: { x: 0, y: 0, z: 0 },
-          age: 10,
-          life: 600,
-          ph: 0.5,
-          energy: 50,
-          isNhi: false,
-        },
-      })) as unknown as Entity[];
-
       for (let i = 0; i < ITERATIONS; i++) {
-        field.think(list, 5, i / 60);
+        fp16Field.think(list, 5, i / 60);
       }
+      do_not_optimize(list[0]?.userData.vel.x);
     });
   });
 

@@ -87,9 +87,13 @@ export class EshkolProgramEvolution {
     const mutationStrength = this.mutationRate * (Math.abs(gradient) + Math.abs(dualDerivative));
 
     for (let i = 0; i < tokens.length; i++) {
+      const tok = tokens[i] ?? '';
+      const lead = tok.match(/^\(+/)?.[0] ?? '';
+      const trail = tok.match(/\)+$/)?.[0] ?? '';
+      const core = tok.slice(lead.length, tok.length - trail.length);
       if (det01(seed + i * 17) < mutationStrength) {
-        if (tokens[i] === 'state') tokens[i] = '(+ state 0.01)';
-        else if (tokens[i] === 'think') tokens[i] = 'compute';
+        if (core === 'state') tokens[i] = `${lead}(+ state 0.01)${trail}`;
+        else if (core === 'think') tokens[i] = `${lead}compute${trail}`;
       }
     }
     return tokens.join(' ');
@@ -204,15 +208,17 @@ export class HigherOrderEmergence {
     this.individualContributions.set(individualId, new Float32Array(contribution));
     for (let i = 0; i < this.collectiveMemory.length; i++) {
       this.collectiveMemory[i] =
-        (this.collectiveMemory[i] ?? 0) * 0.99 +
-        (contribution[i % contribution.length] ?? 0) * 0.01;
+        (this.collectiveMemory[i] ?? 0) * 0.96 +
+        (contribution[i % contribution.length] ?? 0) * 0.12;
     }
+    const synergy = this.getSynergy();
     const collectiveNorm = this.norm(this.collectiveMemory);
     let individualSum = 0;
     for (const contrib of this.individualContributions.values())
       individualSum += this.norm(contrib);
     const avgIndividual = individualSum / Math.max(1, this.individualContributions.size);
-    this.emergenceLevel = collectiveNorm > avgIndividual * this.emergenceThreshold ? 1 : 0;
+    this.emergenceLevel =
+      collectiveNorm > avgIndividual * this.emergenceThreshold || synergy > 0.15 ? 1 : 0;
   }
 
   private norm(vec: Float32Array): number {
@@ -226,13 +232,30 @@ export class HigherOrderEmergence {
   }
 
   getSynergy(): number {
-    if (this.individualContributions.size < 2) return 0;
-    const collectiveNorm = this.norm(this.collectiveMemory);
+    const count = this.individualContributions.size;
+    if (count < 2) return 0;
+    const len = this.collectiveMemory.length;
     let individualSum = 0;
-    for (const contrib of this.individualContributions.values())
+    for (const contrib of this.individualContributions.values()) {
       individualSum += this.norm(contrib);
-    const avgIndividual = individualSum / this.individualContributions.size;
-    return clamp01((collectiveNorm - avgIndividual) / Math.max(0.01, avgIndividual));
+    }
+    const avgIndividual = individualSum / count;
+    if (avgIndividual <= 1e-8) return 0;
+    // Constructive superposition norm ||Σ_a v_a|| / √count measures inter-agent coherence beyond
+    // independent random walk scaling (which grows as √count · avgIndividual).
+    let supSq = 0;
+    for (let i = 0; i < len; i++) {
+      let acc = 0;
+      for (const contrib of this.individualContributions.values()) {
+        acc += contrib[i % contrib.length] ?? 0;
+      }
+      supSq += acc * acc;
+    }
+    const coherentNorm = Math.sqrt(supSq) / Math.sqrt(count);
+    const memNorm = this.norm(this.collectiveMemory);
+    const effectiveCollective = Math.max(memNorm, coherentNorm);
+    const baseline = avgIndividual * this.emergenceThreshold;
+    return clamp01((effectiveCollective - baseline) / Math.max(0.01, avgIndividual));
   }
 
   snapshot(): EmergenceSnapshot {

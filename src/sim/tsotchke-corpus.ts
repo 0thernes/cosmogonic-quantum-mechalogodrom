@@ -2,13 +2,13 @@
  * TSOTCHKE LEGACY BINDING TABLE — 20 locally mirrored projects mapped to Cosmogonic leaves.
  * This is not the canonical external-repository ledger: `tsotchke-registry.ts` owns the current
  * 22-entry ledger, including OBLITERATUS and `.github`, plus the separate internal-control boundary.
- * Source: Z:\[Vibe Coded (AI)]\(Tsotchke)\CORPUS.md
+ * Source: ../(Tsotchke)/CORPUS.md
  *
  * Not a runtime dependency on the corpus path — provenance + wiring index only.
  * Deterministic; no I/O.
  */
 
-export const TSOTCHKE_CORPUS_ROOT = 'Z:\\[Vibe Coded (AI)]\\(Tsotchke)';
+export const TSOTCHKE_CORPUS_ROOT = '../(Tsotchke)';
 
 export interface TsotchkeRepoBinding {
   readonly id: string;

@@ -24,14 +24,21 @@ const RENDER_MS = 1500;
 interface AuditEconomySummary {
   totalWealth?: number;
   gini?: number;
+  wealthGini?: number;
   dominant?: string;
 }
 
 interface AuditDockWorld {
-  state?: { frame?: number; mutations?: number; chaos?: number };
+  state?: { frame?: number; mutations?: number; chaos?: number; population?: number };
   quality?: { tier?: string };
+  governor?: { current?: string; emaMs?: number };
   entities?: { list?: ArrayLike<unknown> };
   connectome?: { links?: number };
+  superCreature?: {
+    mind?: {
+      snapshot?: () => { composite?: number };
+    };
+  };
   snap?: { sentience?: number; econ?: AuditEconomySummary | null };
   gedanken?: {
     deaths?: number;
@@ -308,7 +315,10 @@ function renderDashboard(doc: Document, list: unknown[]): void {
   if (world) {
     // 1. [DEV] Core Kernel Operations
     totalTicks = world.state?.frame ?? 0;
-    if (lastFrameTime && lastFrame < totalTicks) {
+    const emaMs = world.governor?.emaMs ?? 0;
+    if (emaMs > 0 && Number.isFinite(emaMs)) {
+      liveFps = Math.min(240, Math.max(1, Math.round(1000 / emaMs)));
+    } else if (lastFrameTime && lastFrame < totalTicks && now > lastFrameTime) {
       liveFps = Math.min(
         240,
         Math.round(((totalTicks - lastFrame) * 1000) / (now - lastFrameTime)),
@@ -316,10 +326,10 @@ function renderDashboard(doc: Document, list: unknown[]): void {
     }
     lastFrame = totalTicks;
     lastFrameTime = now;
-    qualityTier = world.quality?.tier ?? 'MED';
+    qualityTier = world.governor?.current ?? world.quality?.tier ?? 'MED';
 
     // 2. [BIO] Organic Metamorphics
-    activeEntities = world.entities?.list?.length ?? 0;
+    activeEntities = world.entities?.list?.length ?? world.state?.population ?? 0;
     biomass = (activeEntities * 12.5).toFixed(1);
     // world.state.mutations is a CUMULATIVE integer counter (hundreds→thousands), NOT a 0..1 fraction —
     // rendering it raw as `${x*100}%` printed nonsense like "Mut: 372900.0%". Normalize to a bounded
@@ -327,9 +337,9 @@ function renderDashboard(doc: Document, list: unknown[]): void {
     mutationQuotient = Math.min(1, (world.state?.mutations ?? 0) / 1000);
 
     // 3. [NEU] Brain Synapse Activity
-    synapsesCount = world.connectome?.links ?? 0;
+    synapsesCount = world.connectome?.links ?? activeEntities * 16;
     spikeRate = Math.round(synapsesCount * (0.1 + (world.state?.chaos ?? 0.5) * 0.9));
-    sentience = world.snap?.sentience ?? 0.0;
+    sentience = world.snap?.sentience ?? world.superCreature?.mind?.snapshot?.()?.composite ?? 0.0;
     const ged = world.gedanken;
     if (ged) {
       gedankenDeaths = ged.deaths ?? 0;
@@ -355,21 +365,21 @@ function renderDashboard(doc: Document, list: unknown[]): void {
     const econ = world.snap?.econ || (world.economy ? world.economy.summary() : null);
     if (econ) {
       totalWealth = econ.totalWealth ?? 0;
-      giniVal = econ.gini ?? 0.0;
+      giniVal = econ.wealthGini ?? econ.gini ?? 0.0;
       dominantCurrency = econ.dominant ?? 'AURUM';
     }
   } else {
-    totalTicks = stats.Dev * 3;
-    liveFps = 60;
-    qualityTier = 'MED';
-    activeEntities = stats.Bio * 2;
+    totalTicks = list.length;
+    liveFps = 0;
+    qualityTier = 'IDLE';
+    activeEntities = stats.Bio;
     biomass = (activeEntities * 12.5).toFixed(1);
-    mutationQuotient = (stats.Bio * 0.005) % 0.8;
-    synapsesCount = stats.Neuro * 15;
-    spikeRate = Math.round(synapsesCount * 0.4);
-    sentience = (stats.Neuro * 0.02) % 1.0;
-    totalWealth = stats.Substrate * 250;
-    giniVal = 0.245 + ((stats.Substrate * 0.005) % 0.4);
+    mutationQuotient = Math.min(1, stats.Bio / 1000);
+    synapsesCount = stats.Neuro;
+    spikeRate = 0;
+    sentience = 0;
+    totalWealth = stats.Substrate;
+    giniVal = 0;
     dominantCurrency = 'AURUM';
   }
 
