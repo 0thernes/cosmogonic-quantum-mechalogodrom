@@ -92,6 +92,12 @@
       and loudly in logs — never by silent corruption. No audio context? The
       world runs silent. No WebGL? Say so on screen. Half a feature honestly
       beats a whole feature probabilistically.</canon>
+    <canon name="CONCURRENCY">Single-thread starvation is defeated by explicit
+      multi-core Web Worker offloading (`WorkerPool` executing `wilderness` and
+      `simulation` Zig WASM tasks off the main thread) paired with adaptive
+      30-60 FPS `ComputeCadencePlan` cohort scheduling (`thinkCohort`, fused
+      `stepZigFast`, `tickShaderTime`) that preserves full 25,000-parameter and
+      70-parameter neural architectures without ever dumbing down a system.</canon>
   </systems-canon>
 
   <security-doctrine>

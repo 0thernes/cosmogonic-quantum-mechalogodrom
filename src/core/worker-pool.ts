@@ -368,12 +368,15 @@ export class WorkerPool {
     return executor({ ...task, dt: normalizeWorkerDt(task.dt) });
   }
 
-  /** Execute wilderness work asynchronously. Every return path settles with a WorkerResult. */
+  /** Execute wilderness or offloaded simulation work asynchronously across the Web Worker pool. */
   async executeAsync(task: WorkerTask): Promise<WorkerResult> {
-    if (task.type !== 'wilderness') {
+    if (task.type !== 'wilderness' && task.type !== 'simulation') {
+      return this.failure(task, `Unsupported worker task type: ${String(task.type)}`);
+    }
+    if (task.type === 'simulation' && (this.workers.length === 0 || task.data.length === 0)) {
       return this.failure(
         task,
-        'ASYNC worker executor is wilderness-only; deterministic simulation tasks must use executeSync',
+        'Async worker pool is wilderness-only unless initialized with a non-empty simulation payload (ADR 0010); use executeSync for synchronous tasks',
       );
     }
     if (this.disposed) return this.failure(task, 'Worker pool disposed');

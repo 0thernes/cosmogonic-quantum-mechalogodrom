@@ -2,16 +2,23 @@ import { describe, expect, test } from 'bun:test';
 import {
   getZigKernelBridge,
   getZigKernelReceipt,
+  zigEntityBrainBatchForward,
+  zigEshkolTaylorDiff,
   zigGeoRefineVerifyFrame,
+  zigGlyphHebbianStep,
   zigGrayScottStep,
+  zigGrayScottStepRgbaF32,
+  zigMoonlabIsingAnneal,
   zigPqWireBytes,
   zigQgtFubiniStudy,
+  zigQgtlFullTensor2D,
+  zigQrngQuantumChaosStep,
   zigRosetteFnv1a64,
   zigTdseStep,
 } from '../src/math/zig-bridge';
 
 describe('Zig 0.17.0 WASM Kernel Bridge (src/math/zig-bridge.ts)', () => {
-  test('getZigKernelReceipt reports Zig 0.17.0 and all 6 exported kernels ready', () => {
+  test('getZigKernelReceipt reports Zig 0.17.0 and all 13 exported kernels ready', () => {
     const receipt = getZigKernelReceipt();
     expect(receipt.compilerVersion).toBe('0.17.0');
     expect(receipt.wasmByteLength).toBeGreaterThan(500);
@@ -19,8 +26,15 @@ describe('Zig 0.17.0 WASM Kernel Bridge (src/math/zig-bridge.ts)', () => {
     expect(receipt.ready).toBe(true);
     expect(receipt.exports).toEqual([
       'cqm_gray_scott_step',
+      'cqm_gray_scott_step_rgba_f32',
       'cqm_tdse_step',
       'cqm_qgt_fubini_study',
+      'cqm_qgtl_full_tensor_2d',
+      'cqm_moonlab_ising_anneal',
+      'cqm_qrng_quantum_chaos_step',
+      'cqm_eshkol_taylor_diff',
+      'cqm_entity_brain_batch_forward',
+      'cqm_glyph_hebbian_step',
       'cqm_rosette_fnv1a64',
       'cqm_pq_wire_bytes',
       'cqm_georefine_verify_frame',
@@ -125,5 +139,69 @@ describe('Zig 0.17.0 WASM Kernel Bridge (src/math/zig-bridge.ts)', () => {
     expect(col.orientation).toBe('collinear');
     expect(col.certified).toBe(false);
     expect(getZigKernelBridge()).toBeDefined();
+  });
+
+  test('zigGrayScottStepRgbaF32 fuses f32 PDE steps and RGBA8 pixel rasterization', () => {
+    const w = 8;
+    const h = 8;
+    const u = new Float32Array(w * h).fill(1.0);
+    const v = new Float32Array(w * h).fill(0.0);
+    const rgba = new Uint8Array(w * h * 4);
+    v[3 * w + 3] = 0.5;
+    u[3 * w + 3] = 0.5;
+
+    const res = zigGrayScottStepRgbaF32(u, v, rgba, w, h, 2, 0.16, 0.08, 0.037, 0.06, 1.0);
+    expect(res.meanV).toBeGreaterThan(0);
+    expect(rgba[3]).toBe(255);
+  });
+
+  test('zigQgtlFullTensor2D, zigMoonlabIsingAnneal, zigQrngQuantumChaosStep, and zigEshkolTaylorDiff execute in WASM', () => {
+    const psiRe = new Float64Array([1, 0]);
+    const psiIm = new Float64Array([0, 0]);
+    const dmuRe = new Float64Array([0, 1]);
+    const dmuIm = new Float64Array([0, 0]);
+    const dnuRe = new Float64Array([0, 0]);
+    const dnuIm = new Float64Array([0, 1]);
+    const qgtl = zigQgtlFullTensor2D(psiRe, psiIm, dmuRe, dmuIm, dnuRe, dnuIm, 0.05);
+    expect(qgtl.gMuMu).toBeCloseTo(1.0, 9);
+    expect(qgtl.gNuNu).toBeCloseTo(1.0, 9);
+    expect(qgtl.berryCurvature).toBeCloseTo(-2.0, 9);
+    expect(qgtl.oEps2Suppression).toBeLessThan(1.0);
+
+    const jMat = new Float64Array([0, -1, -1, 0]);
+    const hVec = new Float64Array([-0.5, -0.5]);
+    const anneal = zigMoonlabIsingAnneal(2, jMat, hVec, 24, 3.0, 2);
+    expect(anneal.expectedEnergy).toBeLessThan(-0.5);
+    expect(anneal.groundOverlap).toBeGreaterThan(0.5);
+
+    const state = new BigUint64Array([1n, 2n, 3n, 4n]);
+    const samples = new Float64Array(8);
+    const word = zigQrngQuantumChaosStep(state, samples, 0x9e3779b97f4a7c15n);
+    expect(word).not.toBe(0n);
+    for (const s of samples) {
+      expect(s).toBeGreaterThanOrEqual(0);
+      expect(s).toBeLessThan(1);
+    }
+
+    const esh = zigEshkolTaylorDiff(0.6, -0.3, 0.4, 1.5, 0.25);
+    expect(Number.isFinite(esh.d1)).toBe(true);
+    expect(Number.isFinite(esh.d4)).toBe(true);
+    expect(Number.isFinite(esh.divergence)).toBe(true);
+    expect(esh.curlMagnitude).toBeGreaterThanOrEqual(0);
+  });
+
+  test('zigEntityBrainBatchForward and zigGlyphHebbianStep accelerate neural hot paths', () => {
+    const weights = new Float32Array(70).fill(0.05);
+    const senses = new Float32Array(6).fill(0.4);
+    const hidden = new Float32Array(6);
+    const actions = new Float32Array(4);
+    const processed = zigEntityBrainBatchForward(weights, senses, hidden, actions, 1);
+    expect(processed).toBe(1);
+    expect(Number.isFinite(actions[0]!)).toBe(true);
+
+    const hidden32 = new Float32Array(32).fill(0.25);
+    const wMat = new Float32Array(32 * 32).fill(0.01);
+    const meanAbs = zigGlyphHebbianStep(wMat, hidden32, 32, 0.01, 0.001);
+    expect(meanAbs).toBeGreaterThan(0);
   });
 });

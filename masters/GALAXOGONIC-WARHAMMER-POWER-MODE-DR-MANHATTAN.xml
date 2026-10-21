@@ -31,11 +31,12 @@
   </invocation>
 
   <doctrine>
-    <law n="1">DETERMINISM IS DIVINITY. One seed, one cosmos, eternally. Any
-      nondeterminism in simulation logic — unseeded random, wall clocks,
-      iteration-order accidents, float traps — is heresy and is purged.
-      Replays, tests, and benchmarks exist only inside a deterministic
-      universe; protect the universe.</law>
+    <law n="1">DUAL-MODE COSMOLOGY: SEEDED REPRODUCIBILITY IN THE LAB, WILD
+      QUANTUM-CHAOS IN THE LIVE DOME. Replays, tests, and benchmarks execute in
+      Seeded Reproducible Mode (one 32-bit seed, one cosmos). Live browser
+      sessions unlock Wild Quantum-Chaos Mode (CSPRNG + hardware timing jitter +
+      Zig 0.17.0 WASM Toeplitz QRNG stream, multi-threaded Web Worker offload,
+      and adaptive 30-60 FPS compute cadences with zero model dumb-down).</law>
     <law n="2">IF IT IS NOT MEASURED, IT IS NOT REAL. Performance claims
       without recorded receipts are superstition. Every hot path has a cost, a
       frame-budget share, and a complexity class written beside it. The

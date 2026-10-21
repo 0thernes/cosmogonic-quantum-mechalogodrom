@@ -12,7 +12,7 @@
 import * as THREE from 'three';
 import type { Engine } from './core/engine';
 import { rotatingSquareSurveyHeight } from './core/camera-framing';
-import { Level } from './core/frame-governor';
+import { Level, type ComputeCadencePlan } from './core/frame-governor';
 import type {
   PersistedState,
   QualityProfile,
@@ -58,6 +58,7 @@ import {
 import { ALGOS, ALGO_GLYPHS, ALGO_IGNITE } from './sim/algorithms';
 import { SONGS, SFX_EXTRA_BANDS } from './audio/songs';
 import { mulberry32, createIsolatedStreams, type Rng } from './math/rng';
+import { isWildEntropyMode, setWildEntropyMode } from './math/wild-entropy';
 import { clamp } from './math/scalar';
 import { SpatialHash } from './math/spatial-hash';
 import { createGeometryCache } from './sim/geometry-cache';
@@ -257,6 +258,9 @@ import {
   PrimordialSoup,
   tsotchkeSimWiringFraction,
   ulgCorpusResonance,
+  evaluateQrngQuantumChaosStream,
+  stepOct2026WaveSubstrates,
+  type TsotchkeOct2026Telemetry,
 } from './sim/tsotchke-facade'; // Ralph continue 10x: + libirrepSymmetry for more irrep in world
 import { qgeWorldPerturb } from './sim/qge-aliveness';
 import { qgeAlivenessProxy } from './sim/quantum-quake-physics';
@@ -549,6 +553,14 @@ export class World {
   /** Worker pool for offloading simulation to multiple CPU cores (ADR 0010) */
   /** Compatibility/perf-stats sentinel; POWER runtime keeps browser workers intentionally dormant. */
   public workerPool: WorkerPool | null = null;
+  /** Adaptive compute cadence plan supplied by the browser RenderGovernor (null in headless deterministic tests). */
+  private computeCadence: ComputeCadencePlan | null = null;
+  /** Latest Tsotchke Flagship + Wave-2 Zig WASM substrate telemetry receipt. */
+  private latestOct2026Telemetry: TsotchkeOct2026Telemetry | null = null;
+  /** Latest Wild Non-Deterministic Quantum-Chaos QRNG 64-bit word (hex). */
+  private lastWildQrngHex = '0000000000000000';
+  /** Guard ensuring at most one off-thread Tsotchke wave simulation worker task is in flight at a time. */
+  private workerSimInFlight = false;
   /** Entity neural-net axon web (proximity links, activation propagation, GraphMind writer). */
   public readonly connectome: Connectome;
   /** Wilderness population — synchronous in POWER; ADR 0010's historical worker lane is dormant. */
@@ -2301,6 +2313,63 @@ export class World {
     this.hud.showSector(label);
   }
 
+  /**
+   * Updates the adaptive 30–60 FPS compute cadence plan supplied by the browser RenderGovernor.
+   * When null (default in headless deterministic tests), every subsystem steps on its legacy
+   * every-frame cadence.
+   */
+  setComputeCadence(plan: ComputeCadencePlan | null): void {
+    this.computeCadence = plan;
+  }
+
+  getComputeCadence(): ComputeCadencePlan | null {
+    return this.computeCadence;
+  }
+
+  /**
+   * Attaches a multi-threaded Web Worker pool at runtime (live browser mode) so both
+   * WildernessPopulation chunks and Tsotchke Zig WASM simulation substrates execute across
+   * multiple CPU cores.
+   */
+  attachWorkerPool(pool: WorkerPool | null): void {
+    this.workerPool = pool;
+    this.wilderness.setWorkerPool(pool);
+  }
+
+  /**
+   * Enables or disables Wild Non-Deterministic Quantum-Chaos Mode (`crypto.getRandomValues`
+   * + `performance.now()` timing jitter + Zig WASM `cqm_qrng_quantum_chaos_step` Toeplitz stream).
+   */
+  setWildMode(enabled: boolean): void {
+    setWildEntropyMode(enabled);
+    this.audit.record('wild-quantum-chaos-mode', { enabled });
+  }
+
+  isWildMode(): boolean {
+    return isWildEntropyMode();
+  }
+
+  toggleWildMode(): boolean {
+    const next = !isWildEntropyMode();
+    this.setWildMode(next);
+    this.hud.showSector(
+      next
+        ? '⚡ WILD QUANTUM-CHAOS MODE · HARDWARE CSPRNG + ZIG QRNG'
+        : '◈ SEEDED DETERMINISTIC MODE · REPRODUCIBLE',
+    );
+    return next;
+  }
+
+  /** Returns the latest Tsotchke Flagship + Wave-2 Zig WASM substrate telemetry receipt. */
+  getOct2026Telemetry(): TsotchkeOct2026Telemetry | null {
+    return this.latestOct2026Telemetry;
+  }
+
+  /** Returns the latest 64-bit hex word harvested from the Wild Quantum-Chaos QRNG stream. */
+  getLastWildQrngHex(): string {
+    return this.lastWildQrngHex;
+  }
+
   /** Advance one frame. rawDt is the unclamped clock delta in seconds. */
   step(rawDt: number): void {
     // Reject corrupt clock samples before touching simulation state. `Math.min/max` propagate NaN, and
@@ -2645,7 +2714,9 @@ export class World {
         },
         lifeSignal,
       );
-      this.lastGlyphSnaps = this.glyphBrains.thinkAll(percept);
+      this.lastGlyphSnaps = this.computeCadence
+        ? this.glyphBrains.thinkCohort(percept, this.computeCadence.glyphCohortStride)
+        : this.glyphBrains.thinkAll(percept);
       const snaps = this.lastGlyphSnaps;
       const act = this.glyphActivity;
       const nov = this.glyphNovelty;
@@ -2749,8 +2820,14 @@ export class World {
     // NHI SPAWN_SWARM can add ordinary minions above. Capture population only after that material
     // effect so every same-frame density, super-creature, telemetry, and panel consumer sees them.
     const n = this.entities.list.length;
-    // Full 60 Hz connectome: every frame rebuilds links, propagates activation, uploads GPU geometry.
-    this.connectome.update(dt, t);
+    // Full 60 Hz connectome in headless mode; adaptive cadence in live browser mode keeps GPU
+    // shader wave/color running at 60 FPS via tickShaderTime(t) on off-frames.
+    const connStride = this.computeCadence?.connectomeRebuildStride ?? 1;
+    if (connStride <= 1 || s.frame % connStride === 0) {
+      this.connectome.update(dt, t);
+    } else {
+      this.connectome.tickShaderTime(t);
+    }
 
     // 5 SUPER CREATURES (pantheon): driveSuper every frame — GOAL5 cadence inside
     // (1 full Tree-of-Thought mind + 4 echo minds, round-robin; see apex-cadence.ts).
@@ -2781,8 +2858,43 @@ export class World {
 
     this.quantum.update(dt, t);
 
-    this.rd.step();
+    const rdStride = this.computeCadence?.reactionDiffusionStride ?? 1;
+    if (this.computeCadence) {
+      if (s.frame % rdStride === 0) {
+        this.rd.stepZigFast(1);
+      }
+    } else {
+      this.rd.step();
+    }
     this.titans.drainPerturb(); // route any pending waste scar AFTER the RD step
+
+    // Tsotchke October 2026 Flagship (Moonlab Ising Annealer, QGTL full 2D metric + O(eps^2) suppression,
+    // QRNG chaotic Bell-Toeplitz stream, Eshkol 4th-order Taylor tower + 3D divergence/curl) + Wave-2
+    // (rosette-wire, pq-consensus-bandwidth, GeoRefine, bonsai-fidelity-study) Zig WASM cadence.
+    const waveStride = this.computeCadence?.tsotchkeWaveStride ?? 12;
+    if (s.frame % waveStride === 0) {
+      const coh = clamp(1 - s.chaos / CHAOS_MAX, 0, 1);
+      const ent = clamp((s.entropy ?? 0) / ENTROPY_MAX, 0, 1);
+      this.latestOct2026Telemetry = stepOct2026WaveSubstrates(s.frame, coh, ent, Math.max(4, n));
+      if (this.computeCadence && isWildEntropyMode()) {
+        const wildQrng = evaluateQrngQuantumChaosStream(s.frame, true);
+        this.lastWildQrngHex = wildQrng.wordHex;
+      }
+      if (this.workerPool && !this.workerSimInFlight) {
+        this.workerSimInFlight = true;
+        void this.workerPool
+          .executeAsync({
+            id: `oct2026-wave-${s.frame}`,
+            type: 'simulation',
+            data: new Float32Array([s.frame, coh, ent, Math.max(4, n)]),
+            seed: this.persisted.seed,
+            dt,
+          })
+          .finally(() => {
+            this.workerSimInFlight = false;
+          });
+      }
+    }
     const gmScale = 1;
     if (s.frame % (240 * gmScale) === 0) this.graphMind.updateCommunities();
     // Offset 300 provably never collides with the communities cadence above.

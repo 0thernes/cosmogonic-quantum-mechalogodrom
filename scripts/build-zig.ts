@@ -18,8 +18,15 @@ mkdirSync(OUT_DIR, { recursive: true });
 
 const exports = [
   'cqm_gray_scott_step',
+  'cqm_gray_scott_step_rgba_f32',
   'cqm_tdse_step',
   'cqm_qgt_fubini_study',
+  'cqm_qgtl_full_tensor_2d',
+  'cqm_moonlab_ising_anneal',
+  'cqm_qrng_quantum_chaos_step',
+  'cqm_eshkol_taylor_diff',
+  'cqm_entity_brain_batch_forward',
+  'cqm_glyph_hebbian_step',
   'cqm_rosette_fnv1a64',
   'cqm_pq_wire_bytes',
   'cqm_georefine_verify_frame',

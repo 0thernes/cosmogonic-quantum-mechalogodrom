@@ -29,6 +29,7 @@
  */
 import * as THREE from 'three';
 import type { Rng } from '../math/rng';
+import { zigGrayScottStepRgbaF32 } from '../math/zig-bridge';
 import type { SimContext, SimState } from '../types';
 import { WEATHERS, type Weather } from './constants';
 
@@ -107,6 +108,8 @@ export class ReactionDiffusionSystem {
   private vBack: Float32Array;
   /** RGBA8 display buffer backing {@link texture}; alpha pre-filled with 255. */
   private readonly pixels: Uint8Array;
+  /** 32-bit word view over `pixels.buffer` for single-instruction RGBA writes. */
+  private readonly pixels32: Uint32Array;
 
   /**
    * Builds the field in the uniform trivial state u = 1, v = 0 (so "uniform
@@ -127,13 +130,8 @@ export class ReactionDiffusionSystem {
     this.uBack = new Float32Array(cells).fill(1);
     this.vBack = new Float32Array(cells);
     this.pixels = new Uint8Array(cells * 4);
-    for (let i = 0; i < cells; i++) {
-      const p = i * 4;
-      this.pixels[p] = 255;
-      this.pixels[p + 1] = 255;
-      this.pixels[p + 2] = 255;
-      this.pixels[p + 3] = 255;
-    }
+    this.pixels32 = new Uint32Array(this.pixels.buffer);
+    this.pixels32.fill(0xffffffff);
     const tex = new THREE.DataTexture(this.pixels, size, size, THREE.RGBAFormat);
     tex.wrapS = THREE.RepeatWrapping; // the field is toroidal — wrap is seamless
     tex.wrapT = THREE.RepeatWrapping;
@@ -252,17 +250,49 @@ export class ReactionDiffusionSystem {
     this.uBack = u;
     this.vBack = v;
 
-    // U → RGBA8 luminance refresh (alpha stays 255 from construction).
-    const px = this.pixels;
+    // U → RGBA8 luminance refresh via single 32-bit word store (alpha = 0xff).
+    const px32 = this.pixels32;
     const fu = this.u;
     const cells = s * s;
-    for (let i = 0, p = 0; i < cells; i++, p += 4) {
-      const lum = ((fu[i] ?? 0) * 255) | 0; // u ∈ [0,1] ⇒ lum ∈ [0,255], 1 maps to exactly 255
-      px[p] = lum;
-      px[p + 1] = lum;
-      px[p + 2] = lum;
+    for (let i = 0; i < cells; i++) {
+      const lum = (fu[i]! * 255) | 0; // u ∈ [0,1] ⇒ lum ∈ [0,255], 1 maps to 255
+      px32[i] = 0xff000000 | (lum << 16) | (lum << 8) | lum;
     }
     this.texture.needsUpdate = true;
+  }
+
+  /**
+   * Zig 0.17.0 WebAssembly accelerated Gray-Scott step + RGBA8 rasterizer
+   * (`cqm_gray_scott_step_rgba_f32`). Executes `steps` substeps and updates
+   * `u`, `v`, and `pixels` in a single WASM pass.
+   */
+  stepZigFast(steps = 1): { meanV: number; peakV: number } {
+    const s = this.size;
+    const state = this.state;
+    const weather: Weather = WEATHERS[state.weatherIdx % WEATHERS.length] ?? 'CLEAR';
+    let feed = FEED_BASE;
+    let kill = KILL_BASE;
+    let diffusion = 1;
+    if (weather === 'STORM') feed += FEED_STORM_BOOST;
+    else if (weather === 'VOID') kill += KILL_VOID_BOOST;
+    else if (weather === 'AURORA') diffusion = AURORA_DIFFUSION_BOOST;
+    const du = DIFFUSION_U * 0.16 * diffusion;
+    const dv = DIFFUSION_V * 0.16 * diffusion;
+    const res = zigGrayScottStepRgbaF32(
+      this.u,
+      this.v,
+      this.pixels,
+      s,
+      s,
+      steps,
+      du,
+      dv,
+      feed,
+      kill,
+      DT,
+    );
+    this.texture.needsUpdate = true;
+    return res;
   }
 
   /**

@@ -197,7 +197,7 @@ export interface WildernessSnapshot {
  */
 export class WildernessPopulation {
   private readonly chunks = new Map<string, WildernessChunk>();
-  private readonly workerPool: WorkerPool | null;
+  private workerPool: WorkerPool | null;
   private readonly baseSeed: number;
   private readonly chunkSize = 100; // World units per chunk
   private frameCounter = 0; // Frame counter for timestamps (determinism-safe)
@@ -224,6 +224,13 @@ export class WildernessPopulation {
       { length: this.maxChunks },
       () => new Float32Array(this.entitiesPerChunk * WILDERNESS_ENTITY_STRIDE),
     );
+  }
+
+  /**
+   * Attach or detach the multi-threaded Web Worker pool at runtime.
+   */
+  setWorkerPool(workerPool: WorkerPool | null): void {
+    this.workerPool = workerPool;
   }
 
   /**

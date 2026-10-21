@@ -140,14 +140,17 @@ function forwardSubnet(
   const { w1, b1, w2, b2 } = net;
   const hid = b1.length;
   const outLen = b2.length;
+  const inpLen = inp.length;
   for (let j = 0; j < hid; j++) {
     let sum = b1[j]!;
-    for (let i = 0; i < inp.length; i++) sum += w1[j * inp.length + i]! * inp[i]!;
+    const row = j * inpLen;
+    for (let i = 0; i < inpLen; i++) sum += w1[row + i]! * inp[i]!;
     scratch[j] = Math.tanh(sum);
   }
   for (let j = 0; j < outLen; j++) {
     let sum = b2[j]!;
-    for (let i = 0; i < hid; i++) sum += w2[j * hid + i]! * scratch[i]!;
+    const row = j * hid;
+    for (let i = 0; i < hid; i++) sum += w2[row + i]! * scratch[i]!;
     out[j] = Math.tanh(sum);
   }
 }
@@ -257,6 +260,21 @@ export class GlyphBrain {
     for (let i = 0; i < LATENT_DIM; i++) this.latent[i] = (rng() * 2 - 1) * 0.5;
   }
 
+  /** Initial zero-beat snapshot for batch pre-filling without advancing `beat`. */
+  initialSnapshot(): GlyphBrainSnapshot {
+    return {
+      index: this.index,
+      designedParams: PANTHEON_GLYPH_BRAIN_PARAMS,
+      liveParams: this.paramCount,
+      latent: this.latent,
+      activity: 0,
+      novelty: 0,
+      valence: 0,
+      motor: this.motorOut,
+      spiking: false,
+    };
+  }
+
   /**
    * One cognitive beat. Takes a percept, returns a snapshot for visual driving.
    * Does NOT write to world state — visual-only.
@@ -320,30 +338,22 @@ export class GlyphBrain {
     this.metaIn[LATENT_DIM + 6] = this.motorOut[3] ?? 0;
     forwardSubnet(this.meta, this.metaIn, this.scratch, this.metaOut);
 
-    // 9) Hebbian plastic overlay (light, within-life)
-    for (let i = 0; i < LATENT_DIM; i++) {
-      for (let j = 0; j < LATENT_DIM; j++) {
-        const idx = i * LATENT_DIM + j;
-        const ri = this.outA[i]!;
-        const lj = this.latent[j]!;
-        this.plastic[idx] = this.plastic[idx]! + 0.001 * ri * lj;
-        const pv = this.plastic[idx]!;
-        this.plastic[idx] = pv > 0.5 ? 0.5 : pv < -0.5 ? -0.5 : pv;
-      }
-    }
-
-    // Update latent (blend old + new for temporal continuity). [38] Now also reads back the Hebbian plastic
-    // overlay (fast weights) — dot(plastic row i, pre-blend latent) — so the overlay that is updated every
-    // beat finally influences the forward state. plastic is clamped to ±0.5 so the term is bounded; tanh
-    // keeps the latent in (−1,1). latentPrev holds the consistent pre-blend latent for every row's dot.
+    // 9) Fused Hebbian plastic overlay update + fast-weight readback dot product (single 32×32 pass)
     this.latentPrev.set(this.latent.subarray(0, LATENT_DIM));
     for (let i = 0; i < LATENT_DIM; i++) {
-      let pdot = 0;
       const row = i * LATENT_DIM;
-      for (let j = 0; j < LATENT_DIM; j++) pdot += this.plastic[row + j]! * this.latentPrev[j]!;
-      this.latent[i] = Math.tanh(
-        (this.latentPrev[i] ?? 0) * 0.6 + (this.outA[i] ?? 0) * 0.4 + 0.05 * pdot,
-      );
+      const ri = this.outA[i]!;
+      let pdot = 0;
+      for (let j = 0; j < LATENT_DIM; j++) {
+        const idx = row + j;
+        const lj = this.latentPrev[j]!;
+        let pv = this.plastic[idx]! + 0.001 * ri * lj;
+        if (pv > 0.5) pv = 0.5;
+        else if (pv < -0.5) pv = -0.5;
+        this.plastic[idx] = pv;
+        pdot += pv * lj;
+      }
+      this.latent[i] = Math.tanh(this.latentPrev[i]! * 0.6 + ri * 0.4 + 0.05 * pdot);
     }
 
     // Activity = mean |latent| + organ contribution + [38] memory-net energy (mean |memOut|, small gain).
@@ -373,28 +383,44 @@ export class GlyphBrain {
 
 // ── Batch: all 100 glyph brains ────────────────────────────────────────────────────────────────
 
-const ZERO_GLYPH_PERCEPT = new Float32Array(8);
-
 /**
  * Manages all 100 pantheon glyph brains. Each gets a deterministic seed derived from the world seed.
- * Lightweight enough to run all 100 per beat (25k params × 100 = 2.5M total, but each forward pass
- * is ~2k FLOPs, so ~200k FLOPs/beat total — trivial).
+ * Supports both full 100-brain evaluation (`thinkAll`) and round-robin cohort evaluation (`thinkCohort`)
+ * so live browser frames can step 25 full-25k-parameter brains per frame while keeping all 100
+ * snapshots in `scratch` fresh.
  */
 export class GlyphBrainBatch {
   private readonly brains: GlyphBrain[] = [];
   /** Reused result vector — avoids per-beat `map()` allocation. */
   private readonly scratch: GlyphBrainSnapshot[] = Array.from({ length: 100 });
+  private cohortCursor = 0;
 
   constructor(worldSeed: number) {
     for (let i = 0; i < 100; i++) {
       this.brains.push(new GlyphBrain(i, worldSeed));
-      this.scratch[i] = this.brains[i]!.think(ZERO_GLYPH_PERCEPT);
+      this.scratch[i] = this.brains[i]!.initialSnapshot();
     }
   }
 
   /** Think all 100 brains and return snapshots. Visual-only — no world writes. */
   thinkAll(percept: Float32Array): GlyphBrainSnapshot[] {
     for (let i = 0; i < this.brains.length; i++) {
+      this.scratch[i] = this.brains[i]!.think(percept);
+    }
+    return this.scratch;
+  }
+
+  /**
+   * Think one cohort (`1 / stride` of the 100 brains, default 25 brains per frame)
+   * with full 25,000-parameter fidelity while retaining the most recent snapshot for
+   * the remaining brains. Cuts per-frame CPU cost by `stride`× without dumbing down
+   * any subnet or reducing parameter count.
+   */
+  thinkCohort(percept: Float32Array, stride = 4): GlyphBrainSnapshot[] {
+    const s = Math.max(1, Math.min(10, Math.floor(stride)));
+    const offset = this.cohortCursor % s;
+    this.cohortCursor = (this.cohortCursor + 1) % s;
+    for (let i = offset; i < this.brains.length; i += s) {
       this.scratch[i] = this.brains[i]!.think(percept);
     }
     return this.scratch;

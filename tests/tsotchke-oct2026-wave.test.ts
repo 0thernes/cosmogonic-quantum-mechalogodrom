@@ -18,14 +18,23 @@ import {
 } from '../src/math/eshkol-ad';
 import { EshkolQrng } from '../src/math/eshkol-qrng';
 import { makeRng } from '../src/math/rng';
+import { createDualModeRng, isWildEntropyMode, setWildEntropyMode } from '../src/math/wild-entropy';
+import { deriveComputeCadence, RenderGovernor } from '../src/core/frame-governor';
+import { GlyphBrainBatch } from '../src/sim/glyph-brain';
+import { executeSimulationWorkerKernel } from '../src/workers/simulation-worker';
 import { EshkolProgramEvolution, HigherOrderEmergence } from '../src/sim/emergence-angles';
 import { EmergentLanguage } from '../src/sim/emergent-language';
 import {
   encodeRosetteWireEnvelope,
   evaluateBonsaiFidelity,
+  evaluateEshkolTaylorCalculus,
+  evaluateMoonlabIsingAnnealer,
   evaluatePqConsensusRound,
+  evaluateQgtlGeometricSuppression,
+  evaluateQrngQuantumChaosStream,
   refineGeometricSimplex,
   stepOct2026WaveSubstrates,
+  TSOTCHKE_FULL_27_REPO_CATALOG,
   TSOTCHKE_OCT2026_ALL_PUBLIC_REPOS,
   TSOTCHKE_OCT2026_ORG_PUBLIC_COUNT,
   TSOTCHKE_OCT2026_ORG_PUBLIC_REPOS,
@@ -106,6 +115,60 @@ describe('Tsotchke October 21, 2026 Full Ecosystem Census & Wave-2 Substrates', 
     expect(a).toEqual(b);
     expect(a.zigWasmReady).toBe(true);
     expect(a.publicRepoCount).toBe(27);
+    expect(TSOTCHKE_FULL_27_REPO_CATALOG).toHaveLength(27);
+  });
+
+  test('Flagship Zig WASM evaluators (Moonlab Ising, QGTL 2D, Eshkol Taylor/Curl, QRNG Chaos) + Dual-Mode & 30-60 FPS Cadence', () => {
+    const moonlab = evaluateMoonlabIsingAnnealer(0.85, 0.2, 2);
+    expect(moonlab.expectedEnergy).toBeLessThan(0);
+    expect(moonlab.groundOverlap).toBeGreaterThan(0.1);
+
+    const qgtl = evaluateQgtlGeometricSuppression(1.1, 0.4, 0.04);
+    expect(qgtl.gMuMu).toBeCloseTo(0.25, 6);
+    expect(qgtl.oEps2Suppression).toBeLessThan(1.0);
+
+    const eshkol = evaluateEshkolTaylorCalculus(0.5, 0.3, -0.2);
+    expect(Number.isFinite(eshkol.d4)).toBe(true);
+    expect(Number.isFinite(eshkol.divergence)).toBe(true);
+    expect(eshkol.curlMagnitude).toBeGreaterThan(0);
+
+    const qrngSeeded = evaluateQrngQuantumChaosStream(77, false);
+    expect(qrngSeeded.wildMode).toBe(false);
+    expect(qrngSeeded.wordHex).toMatch(/^[0-9a-f]{16}$/);
+
+    // Dual-Mode RNG + EshkolQrng.nextZigBatch
+    expect(isWildEntropyMode()).toBe(false);
+    setWildEntropyMode(true);
+    expect(isWildEntropyMode()).toBe(true);
+    const wildRng = createDualModeRng(12345, true);
+    const wSample = wildRng();
+    expect(wSample).toBeGreaterThanOrEqual(0);
+    expect(wSample).toBeLessThan(1);
+    setWildEntropyMode(false);
+    expect(isWildEntropyMode()).toBe(false);
+
+    const qrng = new EshkolQrng(makeRng(99));
+    const batch = new Float64Array(8);
+    const word = qrng.nextZigBatch(batch, false);
+    expect(word).not.toBe(0n);
+
+    // 30-60 FPS Adaptive Compute Cadence & GlyphBrainBatch.thinkCohort + Worker Simulation Kernel
+    expect(deriveComputeCadence(12).glyphCohortStride).toBe(2);
+    expect(deriveComputeCadence(22).glyphCohortStride).toBe(4);
+    expect(deriveComputeCadence(22).connectomeRebuildStride).toBe(3);
+    expect(deriveComputeCadence(34).glyphCohortStride).toBe(5);
+    const gov = new RenderGovernor(true);
+    gov.observe(0.025);
+    expect(gov.computeCadence().glyphCohortStride).toBeGreaterThanOrEqual(2);
+
+    const glyphBatch = new GlyphBrainBatch(42);
+    const percept = new Float32Array(16).fill(0.25);
+    const cohortSnaps = glyphBatch.thinkCohort(percept, 4);
+    expect(cohortSnaps).toHaveLength(100);
+
+    const workerOut = executeSimulationWorkerKernel(new Float32Array([42, 0.82, 0.18, 64]), 777);
+    expect(workerOut).toHaveLength(12);
+    expect(workerOut[11]).toBe(1);
   });
 });
 

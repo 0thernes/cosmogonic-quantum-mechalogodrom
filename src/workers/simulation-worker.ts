@@ -1,17 +1,20 @@
 /**
- * Phase 3.1: Simulation Worker Script
+ * Phase 3.1: Multi-Threaded Simulation & Wilderness Worker Script
  *
- * Web Worker for offloading simulation tasks.
- * Implements ADR 0010's worker kernel for wilderness simulation.
+ * Web Worker for offloading both wilderness chunk dynamics and heavy
+ * Zig 0.17.0 WebAssembly / Tsotchke quantum-geometry simulation kernels
+ * off the main browser thread.
  *
  * This worker:
- * - Receives simulation tasks via postMessage
- * - Executes brain evaluation logic off-thread
- * - Returns results via transferable Float32Array buffers
- * - Supports SharedArrayBuffer for zero-copy where available
+ * - Receives `'wilderness'` and `'simulation'` tasks via postMessage
+ * - Executes Zig WASM kernels (`moonlab`, `quantum_geometric_tensor`, `eshkol`,
+ *   `quantum_rng`, `rosette-wire`, `pq-consensus-bandwidth`, `GeoRefine`) and
+ *   neural/field updates off-thread
+ * - Returns results via transferable Float32Array buffers or SharedArrayBuffer
  */
 
 import { simulateWildernessData } from '../sim/wilderness-population';
+import { stepOct2026WaveSubstrates } from '../sim/tsotchke-oct2026-wave';
 
 const workerSelf = self as unknown as {
   postMessage(message: WorkerResponse, transfer?: Transferable[]): void;
@@ -38,6 +41,49 @@ export interface WorkerResponse {
   success: boolean;
   generation: number;
   error?: string;
+}
+
+/**
+ * Off-thread simulation kernel backed by Zig 0.17.0 WASM (`stepOct2026WaveSubstrates`).
+ * Accepts an input `Float32Array` (`[tick, coherence, entropy, activeAgents, ...optionalField]`),
+ * executes the Moonlab Ising annealer, QGTL Berry curvature & O(eps^2) suppression, Eshkol
+ * Taylor-tower & 3D vector calculus, QRNG chaos step, and Wave-2 verifiers, and returns a
+ * populated `Float32Array` telemetry & coupled state vector.
+ */
+export function executeSimulationWorkerKernel(
+  input: Float32Array,
+  seed: number,
+  dt = 0.016,
+): Float32Array {
+  const tick = Math.max(0, Math.floor((input[0] ?? seed) || seed));
+  const coherence = Number.isFinite(input[1]) ? input[1]! : 0.75;
+  const entropy = Number.isFinite(input[2]) ? input[2]! : 0.22;
+  const activeAgents = Math.max(4, Math.floor(input[3] ?? 32));
+
+  const wave = stepOct2026WaveSubstrates(tick, coherence, entropy, activeAgents);
+  const outLen = Math.max(12, input.length);
+  const out = new Float32Array(outLen);
+  out.set(input);
+
+  out[0] = wave.pqRoundWireBytes;
+  out[1] = wave.pqEstimatedRoundMs;
+  out[2] = wave.geoRefineAspectQuality;
+  out[3] = wave.bonsaiRetainedFidelity;
+  out[4] = wave.bonsaiActiveBranchRatio;
+  out[5] = wave.moonlabAnnealExpectedEnergy;
+  out[6] = wave.moonlabAnnealGroundOverlap;
+  out[7] = wave.qgtlBerryCurvature;
+  out[8] = wave.qgtlOEps2Suppression;
+  out[9] = wave.eshkolDivergence;
+  out[10] = wave.eshkolCurlMagnitude;
+  out[11] = wave.zigWasmReady ? 1 : 0;
+
+  // Apply damped symplectic coupling to any additional field lanes in `input[12..]`
+  const damp = Math.exp(-0.05 * Math.max(0.001, dt));
+  for (let i = 12; i < outLen; i++) {
+    out[i] = out[i]! * damp + 0.01 * wave.eshkolDivergence;
+  }
+  return out;
 }
 
 function isWorkerMessage(value: unknown): value is WorkerMessage {
@@ -72,63 +118,59 @@ function isWorkerMessage(value: unknown): value is WorkerMessage {
 /**
  * Handle worker messages
  */
-self.onmessage = (event: MessageEvent<unknown>) => {
-  // Dedicated-worker messages come only from the owning Worker. Chromium represents that channel
-  // with an empty origin, while an explicitly reported foreign origin must still be rejected.
-  if (event.origin !== '' && event.origin !== self.origin) return;
+if (typeof self !== 'undefined' && typeof self.postMessage === 'function') {
+  self.onmessage = (event: MessageEvent<unknown>) => {
+    if (event.origin !== '' && event.origin !== self.origin) return;
 
-  const message = event.data;
-  if (!isWorkerMessage(message)) {
-    console.warn('[simulation-worker] ignored malformed message');
-    return;
-  }
-
-  try {
-    let result: Float32Array;
-
-    if (message.type === 'wilderness') {
-      result = simulateWildernessData(
-        message.data,
-        message.seed,
-        message.chunkId || '0,0',
-        message.dt,
-        100,
-        message.intelligenceResource,
-        message.intelligenceThreat,
-        message.intelligenceExplore,
-      );
-    } else {
-      // Simulation type - placeholder
-      result = new Float32Array(message.data);
+    const message = event.data;
+    if (!isWorkerMessage(message)) {
+      console.warn('[simulation-worker] ignored malformed message');
+      return;
     }
 
-    const response: WorkerResponse = {
-      id: message.id,
-      type: message.type,
-      data: result,
-      success: true,
-      generation: message.generation,
-    };
+    try {
+      let result: Float32Array;
 
-    // Send response with transferable buffer
-    if (message.useSharedArrayBuffer) {
-      // SharedArrayBuffer: no transfer needed (it's shared memory)
+      if (message.type === 'wilderness') {
+        result = simulateWildernessData(
+          message.data,
+          message.seed,
+          message.chunkId || '0,0',
+          message.dt,
+          100,
+          message.intelligenceResource,
+          message.intelligenceThreat,
+          message.intelligenceExplore,
+        );
+      } else {
+        result = executeSimulationWorkerKernel(message.data, message.seed, message.dt);
+      }
+
+      const response: WorkerResponse = {
+        id: message.id,
+        type: message.type,
+        data: result,
+        success: true,
+        generation: message.generation,
+      };
+
+      if (message.useSharedArrayBuffer) {
+        self.postMessage(response);
+      } else {
+        const transfer = result.buffer instanceof ArrayBuffer ? [result.buffer] : undefined;
+        workerSelf.postMessage(response, transfer);
+      }
+    } catch (error) {
+      const response: WorkerResponse = {
+        id: message.id,
+        type: message.type,
+        data: new Float32Array(0),
+        success: false,
+        generation: message.generation,
+        error: error instanceof Error ? error.message : String(error),
+      };
+
       self.postMessage(response);
-    } else {
-      // Transferable: transfer buffer ownership
-      const transfer = result.buffer instanceof ArrayBuffer ? [result.buffer] : undefined;
-      workerSelf.postMessage(response, transfer);
     }
-  } catch (error) {
-    const response: WorkerResponse = {
-      id: message.id,
-      type: message.type,
-      data: new Float32Array(0),
-      success: false,
-      generation: message.generation,
-      error: error instanceof Error ? error.message : String(error),
-    };
-
-    self.postMessage(response);
-  }
-};
+  };
+}

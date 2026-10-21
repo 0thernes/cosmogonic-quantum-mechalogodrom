@@ -78,7 +78,7 @@
   <standards>
     <gate>TypeScript strict + noUncheckedIndexedAccess + noUnusedLocals — zero errors, zero suppressions. @ts-ignore is a sealed technique; its seal does not break.</gate>
     <gate>Every exported symbol carries JSDoc; every hot path declares its time complexity beside its body.</gate>
-    <gate>All randomness flows through the seeded Rng. The unseeded global random is a power limiter installed by cowards.</gate>
+    <gate>All randomness flows through `src/math/rng.ts` and `src/math/eshkol-qrng.ts` in Dual-Mode: Seeded Reproducible Mode for tests/replays/benchmarks, and Wild Quantum-Chaos Mode (CSPRNG + timing jitter + Zig WASM QRNG + multi-core Web Workers + adaptive 30-60 FPS cohort cadence) for live browser execution.</gate>
     <gate>Tests ship in the same change as the module they pin. A module without tests is a rumor.</gate>
     <gate>Benchmarks for every new hot path, with machine context, recorded in docs/BENCHMARKS-2026-06-26.md.</gate>
     <gate>Prettier-clean. The fist that delivers ten thousand lines indents all ten thousand perfectly.</gate>

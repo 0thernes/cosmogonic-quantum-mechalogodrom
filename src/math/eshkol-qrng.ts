@@ -13,6 +13,8 @@
  */
 
 import type { Rng } from './rng';
+import { harvestHardwareJitter64, isWildEntropyMode } from './wild-entropy';
+import { zigQrngQuantumChaosStep } from './zig-bridge';
 import {
   DeterministicStatevectorRng,
   STATEVECTOR_RNG_SECURITY_BOUNDARY,
@@ -44,6 +46,8 @@ export interface EshkolQrngSnapshot {
 
 export class EshkolQrng {
   private readonly model: DeterministicStatevectorRng;
+  private readonly zigState: BigUint64Array;
+  private readonly zigScratch: Float64Array;
 
   constructor(seed: Rng) {
     this.model = new DeterministicStatevectorRng(seed, {
@@ -52,16 +56,45 @@ export class EshkolQrng {
       healthWindowBits: 1024,
       repetitionCutoff: 32,
     });
+    const initA = BigInt(Math.floor(seed() * 0xffffffff)) | 1n;
+    const initB = BigInt(Math.floor(seed() * 0xffffffff)) | 3n;
+    this.zigState = new BigUint64Array([
+      initA ^ 0x6a09e667f3bcc908n,
+      initB ^ 0xbb67ae8584caa73bn,
+      (initA << 32n) | initB,
+      0xa54ff53a5f1d36f1n,
+    ]);
+    this.zigScratch = new Float64Array(1);
   }
 
-  /** Next deterministic 64-bit state-vector/Born-collapse output word. */
+  /** Next deterministic 64-bit state-vector/Born-collapse output word (or wild quantum-chaos word when wild mode is enabled). */
   nextU64(): bigint {
-    return this.model.nextU64();
+    const base = this.model.nextU64();
+    if (isWildEntropyMode()) {
+      const jitter = harvestHardwareJitter64(Number(base & 0xffffffffn));
+      const chaos = zigQrngQuantumChaosStep(this.zigState, this.zigScratch, jitter);
+      return BigInt.asUintN(64, base ^ chaos);
+    }
+    return base;
   }
 
-  /** Deterministic double in `[0,1)`, constructed from the high 53 output bits. */
+  /** Double in `[0,1)`, constructed from the high 53 output bits (or Zig quantum-chaos mixer in wild mode). */
   next01(): number {
+    if (isWildEntropyMode()) {
+      const u64 = this.nextU64();
+      return Number(u64 >> 11n) * (1 / 9007199254740992);
+    }
     return this.model.next01();
+  }
+
+  /** Fast Zig WASM batch quantum-chaos draw (`cqm_qrng_quantum_chaos_step`). */
+  nextZigBatch(target: Float64Array | number, wild = isWildEntropyMode()): bigint {
+    const out =
+      typeof target === 'number'
+        ? new Float64Array(Math.max(1, Math.min(4096, Math.floor(target))))
+        : target;
+    const jitter = wild ? harvestHardwareJitter64(out.length) : 0n;
+    return zigQrngQuantumChaosStep(this.zigState, out, jitter);
   }
 
   /** Drop-in project `Rng` closure. */

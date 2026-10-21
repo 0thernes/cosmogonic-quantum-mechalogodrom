@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import { detectQuality } from './core/quality';
 import { Engine } from './core/engine';
 import { RenderGovernor } from './core/frame-governor';
+import { createWorkerPool } from './core/worker-pool';
 import { mountPerfHud } from './ui/perf-hud';
 import type { PerfHudWorldMetrics } from './ui/perf-hud';
 import { PerformanceMonitor } from './core/perf-monitor';
@@ -347,6 +348,30 @@ async function boot(): Promise<void> {
   await bootPaint();
   if (!continueMainLifecycle()) return;
 
+  // Dual-Mode Law: enable Wild Quantum-Chaos Mode (CSPRNG + hardware timing jitter + Zig WASM QRNG)
+  // in live browser sessions unless ?deterministic=1 or ?seed= is explicitly requested.
+  const searchParams = new URLSearchParams(location.search);
+  const forceDeterministic = searchParams.get('deterministic') === '1' || searchParams.has('seed');
+  world.setWildMode(!forceDeterministic);
+
+  // Multi-threaded Web Worker Pool (ADR 0010): offload wilderness chunks and Tsotchke Zig WASM
+  // substrate simulation to background CPU cores when Web Workers are available and not in visual-smoke mode.
+  if (typeof Worker !== 'undefined' && searchParams.get('workers') !== '0') {
+    const pool = createWorkerPool(quality.tier);
+    void pool
+      .initialize('/workers/simulation-worker.js')
+      .then(() => {
+        if (!mainLifecycleActive() || !world) {
+          pool.dispose();
+          return;
+        }
+        world.attachWorkerPool(pool);
+      })
+      .catch(() => {
+        pool.dispose();
+      });
+  }
+
   resizeHandler = (): void => engine?.onResize();
   window.addEventListener('resize', resizeHandler, { signal: mainLifecycle.signal });
 
@@ -396,6 +421,7 @@ async function boot(): Promise<void> {
     last = now;
     governor.observe(dt);
     if (engine) governor.apply(engine);
+    world?.setComputeCadence(governor.computeCadence());
     perfMonitor.recordFrame();
     world?.step(dt);
     // V121: the first rendered world frame retires the boot loader (FIRST LIGHT = total ms from

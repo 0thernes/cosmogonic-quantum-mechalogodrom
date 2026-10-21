@@ -363,6 +363,16 @@ export class Connectome {
   }
 
   /**
+   * Advances the GPU vertex-shader wave/color uniform (`uTime`) without rebuilding
+   * the CPU neighbor topology. Used on off-frames when adaptive compute cadence
+   * (`connectomeRebuildStride > 1`) staggers the O(n·k) link rebuild while keeping
+   * all instanced axons waving and pulsing at 60 FPS.
+   */
+  tickShaderTime(t: number): void {
+    this.uTime.value = t;
+  }
+
+  /**
    * Grow topology + render storage geometrically while retaining the scene LineSegments/material.
    * The populated prefixes and current instance count survive the swap. Replacing and disposing the
    * geometry releases old GPU buffers instead of leaking every intermediate capacity. Amortized O(1)

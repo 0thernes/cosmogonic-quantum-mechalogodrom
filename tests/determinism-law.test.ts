@@ -51,11 +51,13 @@ describe('determinism law — the sim layer never reads unseeded randomness or t
   // unseeded PRNG or wall-clock read slipped into a math leaf would silently break the same "one
   // seed, one cosmos" law from underneath. leaf-dom-freedom.test.ts already treats src/math as part
   // of the deterministic trust boundary; this extends the wall-clock/PRNG guard to match.
-  test('src/math/** contains no unseeded-randomness or wall-clock CALLS', async () => {
+  test('src/math/** contains no unseeded-randomness or wall-clock CALLS (except opt-in wild-entropy.ts)', async () => {
     const glob = new Bun.Glob('src/math/**/*.ts');
     const offenders: string[] = [];
     let scanned = 0;
     for await (const path of glob.scan('.')) {
+      const normalized = path.replaceAll('\\', '/');
+      if (normalized === 'src/math/wild-entropy.ts') continue;
       scanned++;
       const code = stripComments(await Bun.file(path).text());
       for (const { name, re } of BANNED) {

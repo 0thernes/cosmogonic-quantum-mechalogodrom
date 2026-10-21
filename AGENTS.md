@@ -65,8 +65,8 @@ hooks.autopush false`. A local commit ships to GitHub `main` with no manual push
 - Dev server: `bun dev` — MUST run with cwd inside this repo (Bun HTML-import
   bundler fails from elsewhere). App at :3000, diagrams at /docs.
 - Benchmarks: `bun run bench`; record new hot paths in docs/BENCHMARKS-2026-06-26.md.
-- Determinism: all sim randomness via seeded `Rng` (`src/math/rng.ts`).
-  `Math.random`/`Date.now` are banned in sim logic.
+- **Dual-Mode Determinism & Wild Quantum-Chaos Law:** headless tests, golden replays, and benchmarks run in **Seeded Reproducible Mode** (`wild = false` via `src/math/rng.ts`, deterministic from seed). Live browser sessions (`src/main.ts`) unlock **Wild Quantum-Chaos & Multi-Threaded Mode** (`setWildEntropyMode(true)` harvesting `crypto.getRandomValues` + `performance.now()` timing jitter + Zig 0.17.0 WASM `cqm_qrng_quantum_chaos_step` Toeplitz stream, multi-core `WorkerPool` offload for wilderness and Tsotchke substrates, and adaptive 30–60 FPS `ComputeCadencePlan` cohort scheduling with zero model dumb-down; opt back into seeded browser mode via `?deterministic=1` or `?seed=`).
+- **Zig 0.17.0 WebAssembly Acceleration:** `zig/src/root.zig` compiles 13 mathematical/physics kernels to `zig/zig-out/cqm_kernels.wasm` (`bun run build:zig`), powering Moonlab Ising annealing, QGTL full 2D metric & $O(\varepsilon^2)$ gate suppression, QRNG Bell-Toeplitz chaos, Eshkol 4th-order Taylor tower & 3D `divergence`/`curl`, fused `f32` Gray-Scott PDE + RGBA8 rasterization, EntityBrain batch forward passes, and GlyphBrain Hebbian plasticity.
 - Path warning: this repo's absolute path contains `[ ]` — PowerShell requires
   `-LiteralPath`; prefer dedicated file tools.
 - The original single-file artifact is preserved verbatim in `legacy/` — never

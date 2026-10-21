@@ -80,9 +80,13 @@ Binding spec for every module in this repo. Writer agents and humans MUST confor
    per-frame `update()` bodies. Reuse module-level scratch objects (document them).
 6. **Every exported symbol gets JSDoc**; hot-path functions document time complexity (e.g.
    `O(k) where k = neighbors in radius`).
-7. **Determinism**: the sim NEVER calls `Math.random()`. All randomness flows through the injected
-   `Rng` (`SimContext.rng` or a constructor arg). This makes runs reproducible from a seed and
-   benchmarks stable.
+7. **Dual-Mode Determinism & Wild Quantum-Chaos**: headless tests, replays, and benchmarks run in
+   **Seeded Reproducible Mode** (`wild = false` in `src/math/rng.ts`), where all randomness flows
+   through the injected seeded `Rng`. Live browser sessions (`src/main.ts`) enable **Wild
+   Quantum-Chaos & Multi-Threaded Mode** (`setWildEntropyMode(true)`, harvesting `crypto.getRandomValues`
+   - `performance.now()` timing jitter + Zig 0.17.0 WASM `cqm_qrng_quantum_chaos_step`, multi-core
+     `WorkerPool` offload for `wilderness` and `simulation` tasks, and adaptive 30–60 FPS
+     `ComputeCadencePlan` cohort scheduling without dumbing down any neural or physical substrate).
 8. Browser globals only in `src/ui`, `src/core/engine.ts`, `src/audio/engine.ts`,
    `src/logging/audit.ts`, `src/memory/store.ts`, `src/main.ts`. Pure logic (math, algorithms,
    morphotypes, constants, songs data) must run under `bun test` with no DOM.
@@ -1663,7 +1667,7 @@ Copilot are constructed boot-stream-neutral and never write sim state, so the go
 
 ### V9 acceptance
 
-Full `bun run check` green: prettier → tsc strict → oxlint → 3377 tests (0 fail, 300-frame golden
+Full `bun run check` green: prettier → tsc strict → oxlint → 3381 tests (0 fail, 300-frame golden
 included) → build. The Copilot sandbox verified live (allow: `git log`, file reads; deny:
 path-escape, repository-root pathspecs, `git push`, `legacy/`, shell redirection).
 
