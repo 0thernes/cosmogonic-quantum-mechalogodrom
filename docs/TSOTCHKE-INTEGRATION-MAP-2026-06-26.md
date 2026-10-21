@@ -180,3 +180,40 @@ This section records repository evidence, not legal advice.
 See [THIRD-PARTY-NOTICES.md](../THIRD-PARTY-NOTICES.md) for attribution and
 [ADR-0013](./adr/0013-operational-organism-intelligence-2026-07-10.md) for the binding runtime and
 claim contract.
+
+---
+
+## October 21, 2026 Full 27-Repository Census & Zig 0.17.0 WASM Flagship Architecture
+
+While the V1/V4 preregistered causal/runtime ledger (`src/sim/tsotchke-registry.ts`) remains frozen at its
+22-entry denominator (`8 deep, 7 wired, 2 harvest, 4 fenced, 1 meta; 17/21 non-meta integrated`) for
+V4 Phase-A reproducibility, [`src/sim/tsotchke-oct2026-wave.ts`](../src/sim/tsotchke-oct2026-wave.ts) and
+[`zig/src/root.zig`](../zig/src/root.zig) (`16` exported Zig 0.17.0 WebAssembly kernels in
+`zig/zig-out/cqm_kernels.wasm`) bridge the complete **October 21, 2026** public GitHub corpus of **27
+Tsotchke projects** (`17` personal under `github.com/tsotchke` + `10` corporate under
+`github.com/Tsotchke-Corporation`):
+
+- **`tsotchke` (17 personal repositories)**: `moonlab`, `eshkol`, `quantum_geometric_tensor`,
+  `quantum_rng`, `rosette-wire`, `homebrew-eshkol`, `homebrew-moonlab`, `tensorcore`, `gpt2-basic`,
+  `libirrep`, `spin_based_neural_network`, `llm-arbitrator`, `simple_mnist`, `asteroids`,
+  `classical_rng`, `PINN`, `PIMC`.
+- **`Tsotchke-Corporation` (10 corporate repositories)**: `GeoRefine`, `pq-consensus-bandwidth`,
+  `bonsai-fidelity-study`, `Quantum-RNG-API`, `OBLITERATUS`, `quantum-quake`, `ulg`, `logo-lab`,
+  `SolanaQuantumFlux`, `.github`.
+- **16 Zig 0.17.0 WebAssembly Kernels (`src/math/zig-bridge.ts`)**:
+  1. `cqm_gray_scott_step` — 9-point isotropic Laplacian Gray-Scott PDE (`f64`).
+  2. `cqm_gray_scott_step_rgba_f32` — Fused multi-substep `f32` Gray-Scott PDE + direct RGBA8 pixel rasterizer.
+  3. `cqm_tdse_step` — Symplectic leapfrog 1D Time-Dependent Schrödinger Equation (TDSE) + $L^2$ norm preservation.
+  4. `cqm_qgt_fubini_study` — 1D Fubini-Study metric diagonal $g_{\mu\mu}$.
+  5. `cqm_qgtl_full_tensor_2d` — QGTL v0.777 Beta full 2D Quantum Geometric Tensor ($g_{\mu\nu}$, Berry curvature $\Omega_{\mu\nu}$, condition number $\kappa(g)$, and $O(\varepsilon^2)$ geometric gate suppression).
+  6. `cqm_moonlab_ising_anneal` — Moonlab v1.2.1 (ABI 0.8.0) transverse-field Ising/QUBO quantum annealer with second-order Suzuki-Trotter $ZZ$/$X$ evolution and `linear`/`cosine`/`s-curve` schedules.
+  7. `cqm_qrng_quantum_chaos_step` — QRNG v3.0.1 Bell-entangled chaotic statevector + 64-bit Toeplitz extractor with dual-mode hardware jitter injection.
+  8. `cqm_eshkol_taylor_diff` — Eshkol v1.3.6-evolve 4th-order Taylor jet tower (`derivative-n` $d^0..d^4$) + exact 3D `divergence` ($\nabla\cdot\mathbf{F}$) and `curl` ($\nabla\times\mathbf{F}$).
+  9. `cqm_entity_brain_batch_forward` — Vectorized `6 -> 6 -> 4` MLP batch forward pass across active entities.
+  10. `cqm_glyph_hebbian_step` — Vectorized `32x32` Hebbian plasticity + decay update for GlyphBeing cohorts.
+  11. `cqm_rosette_fnv1a64` — `rosette-wire` v0.1.0 deterministic 64-bit FNV-1a envelope & receipt verifier.
+  12. `cqm_pq_wire_bytes` — `pq-consensus-bandwidth` CometBFT v0.40.0 post-quantum BFT round wire-size model (`ML-DSA-65`, `Falcon-512`, `SLH-DSA-128f`).
+  13. `cqm_georefine_verify_frame` — `GeoRefine` dual-frame 2D simplex orientation & aspect quality verifier.
+  14. `cqm_eshkol_dbsp_delta_gemm` — Eshkol v1.3.6-evolve (`core.dbsp.tensor`, PR #782) Incremental Differential Stream Processing bilinear matrix update $\Delta(AB) = (\Delta A)B + A(\Delta B) + (\Delta A)(\Delta B)$.
+  15. `cqm_eshkol_cyclotomic8_mul` — Eshkol v1.3.6-evolve (`core.cyclotomic`, PR #783) Exact Cyclotomic Field $\mathbb{Z}[\zeta_8]/(\zeta_8^4+1)$ Clifford+$T$ multiplication and integer Galois field norm $N_{\mathbb{Q}(\zeta_8)/\mathbb{Q}}(\alpha) = A_0^2 - 2A_1^2 \in \mathbb{Z}_{\ge 0}$.
+  16. `cqm_moonlab_qwz_chern_fhs` — Moonlab v1.2.1 (`moonlab_qwz_chern`) & QGTL v0.777 Beta Fukui-Hatsugai-Suzuki (FHS) gauge-invariant $U(1)$ lattice Berry-flux topological Chern number $\mathcal{C}(m) \in \{-1, 0, +1\}$ on the 2D Qi-Wu-Zhang (QWZ) Dirac insulator Brillouin torus $T^2$.

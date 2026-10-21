@@ -30,6 +30,9 @@ const exports = [
   'cqm_rosette_fnv1a64',
   'cqm_pq_wire_bytes',
   'cqm_georefine_verify_frame',
+  'cqm_eshkol_dbsp_delta_gemm',
+  'cqm_eshkol_cyclotomic8_mul',
+  'cqm_moonlab_qwz_chern_fhs',
 ];
 
 const verProc = Bun.spawnSync(['zig', 'version'], { cwd: ROOT });

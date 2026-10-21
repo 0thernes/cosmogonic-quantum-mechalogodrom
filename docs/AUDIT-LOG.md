@@ -59,14 +59,27 @@ both the local corpus (`../(Tsotchke)`) and CQM (`src/sim/tsotchke-oct2026-wave.
     and delegated to `rqSeedBody` in `native/src/physics.h` (`L-2`), and added non-finite/wide-SVD/qubit
     bounds guards in `src/math/global-workspace.ts`, `src/math/mps-svd.ts`, and
     `src/math/clifford-tableau.ts` (`L-3`).
-- **Zig 0.17.0 & Tsotchke October 21, 2026 Wave-2 Integration**:
+- **Zig 0.17.0 (16 Kernels), Dual-Mode Wild Quantum-Chaos, 30–60 FPS Cadence & Tsotchke October 21, 2026 27-Repo Integration**:
   - Added `zig/src/root.zig`, `zig/build.zig`, `scripts/build-zig.ts`, `src/math/zig-wasm-binary.ts`,
-    and `src/math/zig-bridge.ts` exporting 6 deterministic WASM kernels (`cqm_gray_scott_step`,
-    `cqm_tdse_step`, `cqm_qgt_fubini_study`, `cqm_rosette_fnv1a64`, `cqm_pq_wire_bytes`,
-    `cqm_georefine_verify_frame`).
-  - Added `src/sim/tsotchke-oct2026-wave.ts` cataloging the 27-public-repo October 21, 2026 census,
-    4 websites (`eshkol.ai`, `tsotchke.org`, `tsotchke.net`, `api.tsotchke.net`), 2 X accounts
-    (`@tsotchke`, `@tsotchkecorp`), and operational substrates for `rosette-wire`,
+    and `src/math/zig-bridge.ts` exporting **16 Zig 0.17.0 WebAssembly kernels** (`cqm_gray_scott_step`,
+    `cqm_gray_scott_step_rgba_f32`, `cqm_tdse_step`, `cqm_qgt_fubini_study`, `cqm_qgtl_full_tensor_2d`,
+    `cqm_moonlab_ising_anneal`, `cqm_qrng_quantum_chaos_step`, `cqm_eshkol_taylor_diff`,
+    `cqm_entity_brain_batch_forward`, `cqm_glyph_hebbian_step`, `cqm_rosette_fnv1a64`,
+    `cqm_pq_wire_bytes`, `cqm_georefine_verify_frame`, `cqm_eshkol_dbsp_delta_gemm`,
+    `cqm_eshkol_cyclotomic8_mul`, `cqm_moonlab_qwz_chern_fhs`).
+  - Added `src/math/wild-entropy.ts` (`setWildEntropyMode`, `harvestHardwareJitter64`, `createDualModeRng`)
+    preserving the frozen `src/math/rng.ts` SHA-256 while unlocking non-deterministic hardware jitter +
+    Zig QRNG Bell-Toeplitz chaos in live browser sessions (`src/main.ts`), plus `WorkerPool` off-thread
+    `simulation` + `wilderness` execution (`src/workers/simulation-worker.ts`) and adaptive 30–60 FPS
+    cohort scheduling (`ComputeCadencePlan` in `src/core/frame-governor.ts`, `GlyphBrainBatch.thinkCohort`,
+    `ReactionDiffusion.stepZigFast`).
+  - Added `src/sim/tsotchke-oct2026-wave.ts` cataloging the exact 27-public-repo October 21, 2026 census
+    (`17` personal `tsotchke` + `10` corporate `Tsotchke-Corporation`), 4 websites (`eshkol.ai`,
+    `tsotchke.org`, `tsotchke.net`, `api.tsotchke.net`), 2 X accounts (`@tsotchke`, `@tsotchkecorp`),
+    and operational Zig-accelerated evaluators for `moonlab` (Ising annealing + FHS QWZ Chern number),
+    `quantum_geometric_tensor` (2D QGT + $O(\varepsilon^2)$ gate error suppression), `eshkol` (4th-order
+    Taylor jet + 3D `divergence`/`curl`, DBSP incremental bilinear delta streams, and $\mathbb{Z}[\zeta_8]$
+    cyclotomic Clifford+$T$ algebra), `quantum_rng` / `Quantum-RNG-API`, `rosette-wire`,
     `pq-consensus-bandwidth`, `GeoRefine`, and `bonsai-fidelity-study`.
 
 ## 2026-09-28 — Xylos autonomous manifold creature

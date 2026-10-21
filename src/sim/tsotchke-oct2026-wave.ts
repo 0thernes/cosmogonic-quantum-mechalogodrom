@@ -34,17 +34,23 @@
 
 import {
   getZigKernelReceipt,
+  zigEshkolCyclotomic8Mul,
+  zigEshkolDbspDeltaGemm,
   zigEshkolTaylorDiff,
   zigGeoRefineVerifyFrame,
   zigMoonlabIsingAnneal,
+  zigMoonlabQwzChernFhs,
   zigPqWireBytes,
   zigQgtlFullTensor2D,
   zigQrngQuantumChaosStep,
   zigRosetteFnv1a64,
   type MoonlabAnnealScheduleId,
   type PqSignatureSchemeId,
+  type ZigEshkolCyclotomic8Report,
+  type ZigEshkolDbspDeltaReport,
   type ZigEshkolTaylorReport,
   type ZigMoonlabAnnealReport,
+  type ZigMoonlabQwzChernReport,
   type ZigQgtlTensor2DReport,
 } from '../math/zig-bridge';
 import { harvestHardwareJitter64, isWildEntropyMode } from '../math/wild-entropy';
@@ -107,32 +113,32 @@ export const TSOTCHKE_OCT2026_USER_PUBLIC_REPOS: readonly string[] = Object.free
   'eshkol',
   'quantum_geometric_tensor',
   'quantum_rng',
-  'Metal-Bindings-For-Pytorch',
-  'Constraint-Theory',
-  'G.O.D',
-  'Deep-Seek-R1-Distill-Qwen-32B-Uncensored',
-  'OBLITERATUS',
-  'Legacy-Build-Script',
-  'Save-Load-Variables',
-  'Semi-Supervised-GAN',
-  'Simple-Website',
-  'The-Beginning',
-  'tsotchke',
+  'rosette-wire',
+  'homebrew-eshkol',
   'homebrew-moonlab',
-  'bonsai-fidelity-study',
+  'tensorcore',
+  'gpt2-basic',
+  'libirrep',
+  'spin_based_neural_network',
+  'llm-arbitrator',
+  'simple_mnist',
+  'asteroids',
+  'classical_rng',
+  'PINN',
+  'PIMC',
 ]);
 
 export const TSOTCHKE_OCT2026_ORG_PUBLIC_REPOS: readonly string[] = Object.freeze([
-  'Bonsai-8B',
-  'Counterfactual-Reasoning-Engine',
-  'Numen',
-  'prismai-core',
-  'Quantum-RNG-API',
-  'TensorCore',
-  'tsotchke-corp.github.io',
-  'rosette-wire',
-  'pq-consensus-bandwidth',
   'GeoRefine',
+  'pq-consensus-bandwidth',
+  'bonsai-fidelity-study',
+  'Quantum-RNG-API',
+  'OBLITERATUS',
+  'quantum-quake',
+  'ulg',
+  'logo-lab',
+  'SolanaQuantumFlux',
+  '.github',
 ]);
 
 export const TSOTCHKE_OCT2026_USER_PUBLIC_COUNT = 17 as const;
@@ -144,7 +150,7 @@ export const TSOTCHKE_OCT2026_ALL_PUBLIC_REPOS: readonly string[] = Object.freez
   ...TSOTCHKE_OCT2026_ORG_PUBLIC_REPOS,
 ]);
 
-/** Canonical October 2026 live GitHub personal (`tsotchke`, 17) & corporate (`Tsotchke-Corporation`, 10) 27-repo catalog. */
+/** Canonical October 21, 2026 live GitHub personal (`tsotchke`, 17) & corporate (`Tsotchke-Corporation`, 10) 27-repo catalog. */
 export interface TsotchkeCanonicalRepoCatalogEntry {
   readonly index: number;
   readonly owner: 'tsotchke' | 'Tsotchke-Corporation';
@@ -163,7 +169,7 @@ export const TSOTCHKE_FULL_27_REPO_CATALOG: readonly TsotchkeCanonicalRepoCatalo
       name: 'moonlab',
       category: 'flagship',
       cqmModule: 'src/sim/super-mind.ts + src/sim/tsotchke-oct2026-wave.ts',
-      zigKernel: 'cqm_moonlab_ising_anneal',
+      zigKernel: 'cqm_moonlab_ising_anneal + cqm_moonlab_qwz_chern_fhs',
     },
     {
       index: 2,
@@ -172,7 +178,7 @@ export const TSOTCHKE_FULL_27_REPO_CATALOG: readonly TsotchkeCanonicalRepoCatalo
       category: 'flagship',
       cqmModule:
         'src/math/eshkol-ad.ts + src/sim/eshkol-bytecode-vm.ts + src/sim/tsotchke-oct2026-wave.ts',
-      zigKernel: 'cqm_eshkol_taylor_diff',
+      zigKernel: 'cqm_eshkol_taylor_diff + cqm_eshkol_dbsp_delta_gemm + cqm_eshkol_cyclotomic8_mul',
     },
     {
       index: 3,
@@ -181,7 +187,7 @@ export const TSOTCHKE_FULL_27_REPO_CATALOG: readonly TsotchkeCanonicalRepoCatalo
       category: 'flagship',
       cqmModule:
         'src/math/fubini-study.ts + src/math/curvature-aware-qng.ts + src/sim/tsotchke-oct2026-wave.ts',
-      zigKernel: 'cqm_qgtl_full_tensor_2d',
+      zigKernel: 'cqm_qgtl_full_tensor_2d + cqm_moonlab_qwz_chern_fhs',
     },
     {
       index: 4,
@@ -381,7 +387,7 @@ export type TsotchkeOct2026RepoSpec = TsotchkeOct2026WaveRepoEntry;
 export const TSOTCHKE_OCT2026_WAVE2_REPOS: readonly TsotchkeOct2026WaveRepoEntry[] = Object.freeze([
   {
     name: 'rosette-wire',
-    owner: 'Tsotchke-Corporation',
+    owner: 'tsotchke',
     url: 'https://github.com/tsotchke/rosette-wire',
     domain: 'Component/composition/receipt verification lane & FNV-1a 64-bit wire framing',
     zigKernelExport: 'cqm_rosette_fnv1a64',
@@ -409,11 +415,11 @@ export const TSOTCHKE_OCT2026_WAVE2_REPOS: readonly TsotchkeOct2026WaveRepoEntry
   },
   {
     name: 'bonsai-fidelity-study',
-    owner: 'tsotchke',
+    owner: 'Tsotchke-Corporation',
     url: 'https://github.com/Tsotchke-Corporation/bonsai-fidelity-study',
     domain:
       '63-layer SAE rare-feature survival (0.8022 vs 0.975 gate) & tensor-tree pruning fidelity',
-    zigKernelExport: 'cqm_qgt_fubini_study',
+    zigKernelExport: 'cqm_qgtl_full_tensor_2d',
     summary:
       'Tracks Fubini-Study quantum fidelity retention, 63-layer Sparse Autoencoder (SAE) rare-feature survival (0.8022 vs 0.975 gate), and active branch survival under bond-dimension truncation.',
   },
@@ -759,6 +765,57 @@ export function evaluateQrngQuantumChaosStream(
   };
 }
 
+/**
+ * Evaluates Tsotchke `eshkol` v1.3.6-evolve (`core.dbsp.tensor`, PR #782) Incremental
+ * Differential Stream Processing (DBSP) bilinear matrix update:
+ *   Delta(A * B) = (Delta A) * B + A * (Delta B) + (Delta A) * (Delta B)
+ * via Zig 0.17.0 WASM (`cqm_eshkol_dbsp_delta_gemm`).
+ */
+export function evaluateEshkolDbspDeltaStream(
+  coherence: number,
+  entropy: number,
+): ZigEshkolDbspDeltaReport {
+  const c = Math.max(-2, Math.min(2, coherence));
+  const e = Math.max(0, Math.min(2, entropy));
+  const aBase = new Float64Array([1.0, 0.4 * c, -0.3 * e, 0.85]);
+  const bBase = new Float64Array([0.9, -0.25 * e, 0.35 * c, 1.1]);
+  const dA = new Float64Array([0.08 * c, -0.05 * e, 0.04 * (c - e), 0.06 * c]);
+  const dB = new Float64Array([-0.03 * e, 0.07 * c, -0.02 * c, 0.05 * e]);
+  // Initial C_0 = A_0 * B_0 for 2x2
+  const cInOut = new Float64Array([
+    aBase[0]! * bBase[0]! + aBase[1]! * bBase[2]!,
+    aBase[0]! * bBase[1]! + aBase[1]! * bBase[3]!,
+    aBase[2]! * bBase[0]! + aBase[3]! * bBase[2]!,
+    aBase[2]! * bBase[1]! + aBase[3]! * bBase[3]!,
+  ]);
+  return zigEshkolDbspDeltaGemm(aBase, bBase, dA, dB, cInOut, 2);
+}
+
+/**
+ * Evaluates Tsotchke `eshkol` v1.3.6-evolve (`core.cyclotomic`, PR #783) Exact
+ * Cyclotomic Field Z[zeta_8]/(zeta_8^4 + 1) Clifford+T algebraic ring multiplication
+ * and Galois norm N_{Q(zeta_8)/Q}(alpha) in Z_{>= 0} via Zig 0.17.0 WASM (`cqm_eshkol_cyclotomic8_mul`).
+ */
+export function evaluateEshkolCyclotomic8CliffordT(
+  aCoeffs: readonly [bigint, bigint, bigint, bigint] = [1n, 1n, 0n, 0n],
+  bCoeffs: readonly [bigint, bigint, bigint, bigint] = [1n, 0n, 1n, -1n],
+): ZigEshkolCyclotomic8Report {
+  return zigEshkolCyclotomic8Mul(aCoeffs, bCoeffs);
+}
+
+/**
+ * Evaluates Tsotchke `moonlab` v1.2.1 (`moonlab_qwz_chern`) & `quantum_geometric_tensor`
+ * (QGTL v0.777 Beta) Fukui-Hatsugai-Suzuki (FHS) gauge-invariant U(1) lattice Berry-flux
+ * topological Chern number C(m) in {-1, 0, +1} on the 2D Qi-Wu-Zhang (QWZ) Dirac insulator
+ * Brillouin torus T^2 via Zig 0.17.0 WASM (`cqm_moonlab_qwz_chern_fhs`).
+ */
+export function evaluateMoonlabQwzChernInsulator(
+  diracMass = -1.0,
+  gridN = 12,
+): ZigMoonlabQwzChernReport {
+  return zigMoonlabQwzChernFhs(diracMass, gridN);
+}
+
 export type PqConsensusRoundMetrics = PqConsensusReport;
 export type GeoRefineSimplexResult = GeoRefineReport;
 export type BonsaiFidelityResult = BonsaiFidelityReport;
@@ -773,10 +830,13 @@ export interface TsotchkeOct2026Telemetry {
   readonly bonsaiActiveBranchRatio: number;
   readonly moonlabAnnealExpectedEnergy: number;
   readonly moonlabAnnealGroundOverlap: number;
+  readonly moonlabQwzChernNumber: number;
   readonly qgtlBerryCurvature: number;
   readonly qgtlOEps2Suppression: number;
   readonly eshkolDivergence: number;
   readonly eshkolCurlMagnitude: number;
+  readonly eshkolDbspExactResidual: number;
+  readonly eshkolCyclotomicNorm: bigint;
   readonly qrngChaosWordHex: string;
   readonly zigWasmReady: boolean;
   readonly publicRepoCount: number;
@@ -811,6 +871,8 @@ export function stepOct2026WaveSubstrates(
   const bondDim = Math.max(4, Math.min(32, Math.round(coherence * 32)));
   const bonsai = evaluateBonsaiFidelity(12, bondDim, 32, Math.max(1e-4, entropy * 0.02));
   const moonlab = evaluateMoonlabIsingAnnealer(coherence, entropy, 2);
+  const qwzMass = coherence >= entropy ? -1.0 : 1.0;
+  const qwzChern = evaluateMoonlabQwzChernInsulator(qwzMass, 10);
   const qgtl = evaluateQgtlGeometricSuppression(
     Math.max(0.1, Math.min(Math.PI - 0.1, coherence * Math.PI * 0.5)),
     phase,
@@ -823,6 +885,8 @@ export function stepOct2026WaveSubstrates(
     1.618033988749895,
     0.25,
   );
+  const dbsp = evaluateEshkolDbspDeltaStream(coherence, entropy);
+  const cyc = evaluateEshkolCyclotomic8CliffordT([2n, 1n, 0n, 1n], [1n, 1n, -1n, 0n]);
   // Note: pass wild = false by default inside stepOct2026WaveSubstrates so seeded tests stay reproducible
   const qrng = evaluateQrngQuantumChaosStream(tick, false);
   const zigReceipt = getZigKernelReceipt();
@@ -837,10 +901,13 @@ export function stepOct2026WaveSubstrates(
     bonsaiActiveBranchRatio: bonsai.activeBranchRatio,
     moonlabAnnealExpectedEnergy: moonlab.expectedEnergy,
     moonlabAnnealGroundOverlap: moonlab.groundOverlap,
+    moonlabQwzChernNumber: qwzChern.quantizedChern,
     qgtlBerryCurvature: qgtl.berryCurvature,
     qgtlOEps2Suppression: qgtl.oEps2Suppression,
     eshkolDivergence: eshkol.divergence,
     eshkolCurlMagnitude: eshkol.curlMagnitude,
+    eshkolDbspExactResidual: dbsp.exactnessResidual,
+    eshkolCyclotomicNorm: cyc.exactFieldNorm,
     qrngChaosWordHex: qrng.wordHex,
     zigWasmReady: zigReceipt.ready,
     publicRepoCount: TSOTCHKE_OCT2026_PUBLIC_REPO_COUNT,

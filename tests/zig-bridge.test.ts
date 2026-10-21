@@ -3,12 +3,15 @@ import {
   getZigKernelBridge,
   getZigKernelReceipt,
   zigEntityBrainBatchForward,
+  zigEshkolCyclotomic8Mul,
+  zigEshkolDbspDeltaGemm,
   zigEshkolTaylorDiff,
   zigGeoRefineVerifyFrame,
   zigGlyphHebbianStep,
   zigGrayScottStep,
   zigGrayScottStepRgbaF32,
   zigMoonlabIsingAnneal,
+  zigMoonlabQwzChernFhs,
   zigPqWireBytes,
   zigQgtFubiniStudy,
   zigQgtlFullTensor2D,
@@ -18,7 +21,7 @@ import {
 } from '../src/math/zig-bridge';
 
 describe('Zig 0.17.0 WASM Kernel Bridge (src/math/zig-bridge.ts)', () => {
-  test('getZigKernelReceipt reports Zig 0.17.0 and all 13 exported kernels ready', () => {
+  test('getZigKernelReceipt reports Zig 0.17.0 and all 16 exported kernels ready', () => {
     const receipt = getZigKernelReceipt();
     expect(receipt.compilerVersion).toBe('0.17.0');
     expect(receipt.wasmByteLength).toBeGreaterThan(500);
@@ -38,6 +41,9 @@ describe('Zig 0.17.0 WASM Kernel Bridge (src/math/zig-bridge.ts)', () => {
       'cqm_rosette_fnv1a64',
       'cqm_pq_wire_bytes',
       'cqm_georefine_verify_frame',
+      'cqm_eshkol_dbsp_delta_gemm',
+      'cqm_eshkol_cyclotomic8_mul',
+      'cqm_moonlab_qwz_chern_fhs',
     ]);
   });
 
@@ -188,6 +194,43 @@ describe('Zig 0.17.0 WASM Kernel Bridge (src/math/zig-bridge.ts)', () => {
     expect(Number.isFinite(esh.d4)).toBe(true);
     expect(Number.isFinite(esh.divergence)).toBe(true);
     expect(esh.curlMagnitude).toBeGreaterThanOrEqual(0);
+
+    // Kernel 14: Eshkol v1.3.6-evolve DBSP Incremental Bilinear Delta Stream
+    const aMat = new Float64Array([1.2, -0.4, 0.7, 1.5]);
+    const bMat = new Float64Array([0.8, 0.3, -0.5, 1.1]);
+    const cMat = new Float64Array([
+      aMat[0]! * bMat[0]! + aMat[1]! * bMat[2]!,
+      aMat[0]! * bMat[1]! + aMat[1]! * bMat[3]!,
+      aMat[2]! * bMat[0]! + aMat[3]! * bMat[2]!,
+      aMat[2]! * bMat[1]! + aMat[3]! * bMat[3]!,
+    ]);
+    const dbsp = zigEshkolDbspDeltaGemm(
+      aMat,
+      bMat,
+      new Float64Array([0.05, -0.02, 0.03, 0.04]),
+      new Float64Array([-0.01, 0.04, 0.02, -0.03]),
+      cMat,
+      2,
+    );
+    expect(dbsp.exactnessResidual).toBeLessThan(1e-14);
+    expect(dbsp.linearTermNorm).toBeGreaterThan(0);
+    expect(dbsp.crossTermNorm).toBeGreaterThan(0);
+
+    // Kernel 15: Eshkol v1.3.6-evolve Exact Cyclotomic Field Z[zeta_8]
+    const cycUnit = zigEshkolCyclotomic8Mul([0n, 1n, 0n, 0n], [0n, 0n, 0n, 1n]);
+    expect(Array.from(cycUnit.product)).toEqual([-1n, 0n, 0n, 0n]);
+    expect(cycUnit.exactFieldNorm).toBe(1n);
+    const cycAlpha = zigEshkolCyclotomic8Mul([1n, 1n, 0n, 0n], [1n, 0n, 0n, 0n]);
+    expect(cycAlpha.exactFieldNorm).toBe(2n);
+
+    // Kernel 16: Moonlab v1.2.1 & QGTL v0.777 FHS Topological Chern Number on 2D QWZ Torus
+    const chernMinus = zigMoonlabQwzChernFhs(-1.0, 12);
+    const chernPlus = zigMoonlabQwzChernFhs(1.0, 12);
+    const chernTrivial = zigMoonlabQwzChernFhs(3.0, 12);
+    expect(chernMinus.quantizedChern).toBe(-1);
+    expect(chernPlus.quantizedChern).toBe(1);
+    expect(chernTrivial.quantizedChern).toBe(0);
+    expect(chernMinus.minBandGap).toBeGreaterThan(1.5);
   });
 
   test('zigEntityBrainBatchForward and zigGlyphHebbianStep accelerate neural hot paths', () => {

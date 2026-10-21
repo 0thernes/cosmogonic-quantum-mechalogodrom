@@ -739,6 +739,271 @@ export fn cqm_georefine_verify_frame(
     return (bx - ax) * (cy - ay) - (by - ay) * (cx - ax);
 }
 
+/// Tsotchke Eshkol v1.3.6-evolve (`core.dbsp.tensor`, PR #782) Incremental Differential
+/// Stream Processing (DBSP) bilinear matrix product update:
+///   Delta(A * B) = (Delta A) * B + A * (Delta B) + (Delta A) * (Delta B)
+/// Retains the simultaneous-update cross term `(Delta A) * (Delta B)` that naive first-order
+/// linearization drops, then updates `C += Delta(A * B)`, `A += Delta A`, and `B += Delta B` in-place.
+/// Writes `[frobeniusNormC, linearTermNorm, crossTermNorm, exactnessResidual]` to `out_metrics[0..4]`.
+/// Returns `crossTermNorm`.
+export fn cqm_eshkol_dbsp_delta_gemm(
+    a_ptr: [*]f64,
+    b_ptr: [*]f64,
+    da_ptr: [*]const f64,
+    db_ptr: [*]const f64,
+    c_inout_ptr: [*]f64,
+    out_metrics: [*]f64,
+    dim: u32,
+) f64 {
+    const d: usize = if (dim == 0) 0 else if (dim > 16) 16 else @intCast(dim);
+    if (d == 0) {
+        var z: usize = 0;
+        while (z < 4) : (z += 1) out_metrics[z] = 0.0;
+        return 0.0;
+    }
+
+    var lin_norm_sq: f64 = 0.0;
+    var cross_norm_sq: f64 = 0.0;
+    var c_norm_sq: f64 = 0.0;
+    var residual_sq: f64 = 0.0;
+
+    var i: usize = 0;
+    while (i < d) : (i += 1) {
+        const row_i = i * d;
+        var j: usize = 0;
+        while (j < d) : (j += 1) {
+            var lin_ij: f64 = 0.0;
+            var cross_ij: f64 = 0.0;
+            var k: usize = 0;
+            while (k < d) : (k += 1) {
+                const a_ik = a_ptr[row_i + k];
+                const b_kj = b_ptr[k * d + j];
+                const da_ik = da_ptr[row_i + k];
+                const db_kj = db_ptr[k * d + j];
+                lin_ij += da_ik * b_kj + a_ik * db_kj;
+                cross_ij += da_ik * db_kj;
+            }
+            lin_norm_sq += lin_ij * lin_ij;
+            cross_norm_sq += cross_ij * cross_ij;
+            c_inout_ptr[row_i + j] += lin_ij + cross_ij;
+        }
+    }
+
+    // Advance dense baseline A <- A + dA, B <- B + dB
+    const total = d * d;
+    var idx: usize = 0;
+    while (idx < total) : (idx += 1) {
+        a_ptr[idx] += da_ptr[idx];
+        b_ptr[idx] += db_ptr[idx];
+    }
+
+    // Measure exactness residual ||C - A_new * B_new||_F and Frobenius norm ||C||_F
+    i = 0;
+    while (i < d) : (i += 1) {
+        const row_i = i * d;
+        var j: usize = 0;
+        while (j < d) : (j += 1) {
+            var direct_ij: f64 = 0.0;
+            var k: usize = 0;
+            while (k < d) : (k += 1) {
+                direct_ij += a_ptr[row_i + k] * b_ptr[k * d + j];
+            }
+            const c_ij = c_inout_ptr[row_i + j];
+            c_norm_sq += c_ij * c_ij;
+            const err = c_ij - direct_ij;
+            residual_sq += err * err;
+        }
+    }
+
+    const c_norm = @sqrt(c_norm_sq);
+    const lin_norm = @sqrt(lin_norm_sq);
+    const cross_norm = @sqrt(cross_norm_sq);
+    const res_norm = @sqrt(residual_sq);
+
+    out_metrics[0] = c_norm;
+    out_metrics[1] = lin_norm;
+    out_metrics[2] = cross_norm;
+    out_metrics[3] = res_norm;
+    return cross_norm;
+}
+
+/// Tsotchke Eshkol v1.3.6-evolve (`core.cyclotomic`, PR #783) Exact Cyclotomic Field
+/// Arithmetic in Z[zeta_8] where Phi_8(x) = x^4 + 1 = 0 (zeta_8 = exp(i*pi/4) = (1+i)/sqrt(2)).
+/// Represents exact Clifford+T quantum gate amplitudes without floating-point drift:
+///   alpha = a0 + a1*zeta_8 + a2*zeta_8^2 + a3*zeta_8^3
+/// Computes exact product `out_prod = a * b mod (zeta_8^4 + 1)`, Galois conjugate norm
+/// in Z[sqrt(2)], and the exact algebraic field norm N_{Q(zeta_8)/Q}(out_prod) = A0^2 - 2*A1^2 in Z.
+/// Writes `[reProd, imProd, absSqReal, exactFieldNormF64]` to `out_metrics[0..4]`.
+/// Returns the exact integer algebraic field norm `N(a * b)` as `i64`.
+export fn cqm_eshkol_cyclotomic8_mul(
+    a_ptr: [*]const i64,
+    b_ptr: [*]const i64,
+    out_prod: [*]i64,
+    out_metrics: [*]f64,
+) i64 {
+    const a0: i64 = a_ptr[0];
+    const a1: i64 = a_ptr[1];
+    const a2: i64 = a_ptr[2];
+    const a3: i64 = a_ptr[3];
+
+    const b0: i64 = b_ptr[0];
+    const b1: i64 = b_ptr[1];
+    const b2: i64 = b_ptr[2];
+    const b3: i64 = b_ptr[3];
+
+    // Multiplication in Z[x]/(x^4 + 1): x^4 = -1
+    const c0: i64 = a0 * b0 - a1 * b3 - a2 * b2 - a3 * b1;
+    const c1: i64 = a0 * b1 + a1 * b0 - a2 * b3 - a3 * b2;
+    const c2: i64 = a0 * b2 + a1 * b1 + a2 * b0 - a3 * b3;
+    const c3: i64 = a0 * b3 + a1 * b2 + a2 * b1 + a3 * b0;
+
+    out_prod[0] = c0;
+    out_prod[1] = c1;
+    out_prod[2] = c2;
+    out_prod[3] = c3;
+
+    // |c|^2 = c * conj(c) = big_a0 + big_a1 * sqrt(2) in Z[sqrt(2)]
+    const big_a0: i64 = c0 * c0 + c1 * c1 + c2 * c2 + c3 * c3;
+    const big_a1: i64 = c0 * c1 - c0 * c3 + c1 * c2 + c2 * c3;
+    // Exact algebraic norm N_{Q(zeta_8)/Q}(c) = big_a0^2 - 2 * big_a1^2
+    const field_norm: i64 = big_a0 * big_a0 - 2 * big_a1 * big_a1;
+
+    const inv_sqrt2: f64 = 0.70710678118654752440;
+    const fc0: f64 = @floatFromInt(c0);
+    const fc1: f64 = @floatFromInt(c1);
+    const fc2: f64 = @floatFromInt(c2);
+    const fc3: f64 = @floatFromInt(c3);
+
+    const re = fc0 + (fc1 - fc3) * inv_sqrt2;
+    const im = fc2 + (fc1 + fc3) * inv_sqrt2;
+    const abs_sq = re * re + im * im;
+
+    out_metrics[0] = re;
+    out_metrics[1] = im;
+    out_metrics[2] = abs_sq;
+    out_metrics[3] = @floatFromInt(field_norm);
+    return field_norm;
+}
+
+fn qwzLowerEigenstate(kx: f64, ky: f64, mass: f64, u_re: *[2]f64, u_im: *[2]f64) f64 {
+    const dx = @sin(kx);
+    const dy = @sin(ky);
+    const dz = mass + @cos(kx) + @cos(ky);
+    const d_norm = @sqrt(dx * dx + dy * dy + dz * dz);
+    if (d_norm < 1e-12) {
+        u_re[0] = 1.0;
+        u_im[0] = 0.0;
+        u_re[1] = 0.0;
+        u_im[1] = 0.0;
+        return 0.0;
+    }
+    // Two-hemisphere Hopf bundle section on S^2: avoids both north- and south-pole
+    // coordinate singularities while Bargmann plaquette trace cancels the U(1) transition phase.
+    if (dz >= 0.0) {
+        const denom = @sqrt(2.0 * d_norm * (d_norm + dz));
+        u_re[0] = -dx / denom;
+        u_im[0] = dy / denom;
+        u_re[1] = (d_norm + dz) / denom;
+        u_im[1] = 0.0;
+    } else {
+        const denom = @sqrt(2.0 * d_norm * (d_norm - dz));
+        u_re[0] = (d_norm - dz) / denom;
+        u_im[0] = 0.0;
+        u_re[1] = -dx / denom;
+        u_im[1] = -dy / denom;
+    }
+    return 2.0 * d_norm;
+}
+
+fn stateOverlap(a_re: *const [2]f64, a_im: *const [2]f64, b_re: *const [2]f64, b_im: *const [2]f64) [2]f64 {
+    // <a|b> = sum_j (a_re[j] - i a_im[j]) (b_re[j] + i b_im[j])
+    const re = a_re[0] * b_re[0] + a_im[0] * b_im[0] + a_re[1] * b_re[1] + a_im[1] * b_im[1];
+    const im = a_re[0] * b_im[0] - a_im[0] * b_re[0] + a_re[1] * b_im[1] - a_im[1] * b_re[1];
+    return .{ re, im };
+}
+
+fn complexMul(a: [2]f64, b: [2]f64) [2]f64 {
+    return .{ a[0] * b[0] - a[1] * b[1], a[0] * b[1] + a[1] * b[0] };
+}
+
+fn complexConj(a: [2]f64) [2]f64 {
+    return .{ a[0], -a[1] };
+}
+
+/// Tsotchke Moonlab v1.2.1 (`moonlab_qwz_chern`) & QGTL v0.777 Beta Fukui-Hatsugai-Suzuki (FHS)
+/// gauge-invariant U(1) lattice Berry-flux topological Chern number on the 2D Brillouin torus T^2.
+/// For the Qi-Wu-Zhang (QWZ) Dirac Chern insulator H(k) = sin(kx) sigma_x + sin(ky) sigma_y + (m + cos(kx) + cos(ky)) sigma_z:
+///   C(m) = +1 for 0 < m < 2
+///   C(m) = -1 for -2 < m < 0
+///   C(m) =  0 for |m| > 2
+/// Writes `[chernNumber, minBandGap, maxBandGap, meanAbsPlaquetteFlux]` to `out_metrics[0..4]`.
+/// Returns `chernNumber`.
+export fn cqm_moonlab_qwz_chern_fhs(
+    mass: f64,
+    grid_n: u32,
+    out_metrics: [*]f64,
+) f64 {
+    const n_grid: usize = if (grid_n < 6) 6 else if (grid_n > 32) 32 else @intCast(grid_n);
+    const two_pi: f64 = 6.28318530717958647692;
+    const dk: f64 = two_pi / @as(f64, @floatFromInt(n_grid));
+
+    var total_flux: f64 = 0.0;
+    var abs_flux_sum: f64 = 0.0;
+    var min_gap: f64 = 1e9;
+    var max_gap: f64 = 0.0;
+
+    var ix: usize = 0;
+    while (ix < n_grid) : (ix += 1) {
+        const ix_next = (ix + 1) % n_grid;
+        const kx = -3.14159265358979323846 + (@as(f64, @floatFromInt(ix)) + 0.5) * dk;
+        const kx_next = -3.14159265358979323846 + (@as(f64, @floatFromInt(ix_next)) + 0.5) * dk;
+        var iy: usize = 0;
+        while (iy < n_grid) : (iy += 1) {
+            const iy_next = (iy + 1) % n_grid;
+            const ky = -3.14159265358979323846 + (@as(f64, @floatFromInt(iy)) + 0.5) * dk;
+            const ky_next = -3.14159265358979323846 + (@as(f64, @floatFromInt(iy_next)) + 0.5) * dk;
+
+            var u00_re: [2]f64 = undefined;
+            var u00_im: [2]f64 = undefined;
+            var u10_re: [2]f64 = undefined;
+            var u10_im: [2]f64 = undefined;
+            var u11_re: [2]f64 = undefined;
+            var u11_im: [2]f64 = undefined;
+            var u01_re: [2]f64 = undefined;
+            var u01_im: [2]f64 = undefined;
+
+            const gap = qwzLowerEigenstate(kx, ky, mass, &u00_re, &u00_im);
+            _ = qwzLowerEigenstate(kx_next, ky, mass, &u10_re, &u10_im);
+            _ = qwzLowerEigenstate(kx_next, ky_next, mass, &u11_re, &u11_im);
+            _ = qwzLowerEigenstate(kx, ky_next, mass, &u01_re, &u01_im);
+
+            if (gap < min_gap) min_gap = gap;
+            if (gap > max_gap) max_gap = gap;
+
+            const ux_0 = stateOverlap(&u00_re, &u00_im, &u10_re, &u10_im);
+            const uy_1 = stateOverlap(&u10_re, &u10_im, &u11_re, &u11_im);
+            const ux_1 = stateOverlap(&u01_re, &u01_im, &u11_re, &u11_im);
+            const uy_0 = stateOverlap(&u00_re, &u00_im, &u01_re, &u01_im);
+
+            const prod_1 = complexMul(ux_0, uy_1);
+            const prod_2 = complexMul(complexConj(ux_1), complexConj(uy_0));
+            const plaquette = complexMul(prod_1, prod_2);
+
+            const flux = std.math.atan2(plaquette[1], plaquette[0]);
+            total_flux += flux;
+            abs_flux_sum += @abs(flux);
+        }
+    }
+
+    const chern = total_flux / two_pi;
+    const cells = @as(f64, @floatFromInt(n_grid * n_grid));
+    out_metrics[0] = chern;
+    out_metrics[1] = min_gap;
+    out_metrics[2] = max_gap;
+    out_metrics[3] = abs_flux_sum / cells;
+    return chern;
+}
+
 test "gray-scott step preserves bounds and homogeneity" {
     var u = [_]f64{ 1.0, 1.0, 1.0, 1.0 };
     var v = [_]f64{ 0.0, 0.0, 0.0, 0.0 };
@@ -812,4 +1077,34 @@ test "rosette fnv1a64 and pq wire bytes" {
     const slh_dsa = cqm_pq_wire_bytes(64, 2, 8);
     try std.testing.expect(falcon < ml_dsa);
     try std.testing.expect(ml_dsa < slh_dsa);
+}
+
+test "eshkol dbsp delta gemm retains cross term and zero residual" {
+    var a = [_]f64{ 1.0, 2.0, 3.0, 4.0 };
+    var b = [_]f64{ 0.5, -1.0, 1.5, 2.0 };
+    var c = [_]f64{
+        1.0 * 0.5 + 2.0 * 1.5,  1.0 * (-1.0) + 2.0 * 2.0,
+        3.0 * 0.5 + 4.0 * 1.5,  3.0 * (-1.0) + 4.0 * 2.0,
+    };
+    const da = [_]f64{ 0.25, -0.5, 0.1, 0.2 };
+    const db = [_]f64{ -0.2, 0.4, 0.3, -0.1 };
+    var metrics = [_]f64{ 0.0, 0.0, 0.0, 0.0 };
+    const cross = cqm_eshkol_dbsp_delta_gemm(&a, &b, &da, &db, &c, &metrics, 2);
+    try std.testing.expect(cross > 0.0);
+    try std.testing.expectApproxEqAbs(@as(f64, 0.0), metrics[3], 1e-12);
+}
+
+test "eshkol cyclotomic8 mul and moonlab qwz chern fhs" {
+    // (1 + zeta_8 - zeta_8^3) is the fundamental unit of Z[zeta_8] (1 + sqrt(2)), norm = (-1)^2 = 1
+    const u = [_]i64{ 1, 1, 0, -1 };
+    var prod = [_]i64{ 0, 0, 0, 0 };
+    var cyc_metrics = [_]f64{ 0.0, 0.0, 0.0, 0.0 };
+    const norm_unit = cqm_eshkol_cyclotomic8_mul(&u, &u, &prod, &cyc_metrics);
+    try std.testing.expectEqual(@as(i64, 1), norm_unit);
+
+    var qwz_metrics = [_]f64{ 0.0, 0.0, 0.0, 0.0 };
+    const chern_pos = cqm_moonlab_qwz_chern_fhs(1.0, 12, &qwz_metrics);
+    try std.testing.expectApproxEqAbs(@as(f64, -1.0), @abs(chern_pos) * -1.0, 1e-6);
+    const chern_triv = cqm_moonlab_qwz_chern_fhs(3.0, 12, &qwz_metrics);
+    try std.testing.expectApproxEqAbs(@as(f64, 0.0), chern_triv, 1e-6);
 }

@@ -27,8 +27,11 @@ import { EmergentLanguage } from '../src/sim/emergent-language';
 import {
   encodeRosetteWireEnvelope,
   evaluateBonsaiFidelity,
+  evaluateEshkolCyclotomic8CliffordT,
+  evaluateEshkolDbspDeltaStream,
   evaluateEshkolTaylorCalculus,
   evaluateMoonlabIsingAnnealer,
+  evaluateMoonlabQwzChernInsulator,
   evaluatePqConsensusRound,
   evaluateQgtlGeometricSuppression,
   evaluateQrngQuantumChaosStream,
@@ -53,9 +56,10 @@ describe('Tsotchke October 21, 2026 Full Ecosystem Census & Wave-2 Substrates', 
     expect(TSOTCHKE_OCT2026_ALL_PUBLIC_REPOS.length).toBe(TSOTCHKE_OCT2026_PUBLIC_REPO_COUNT);
     expect(TSOTCHKE_OCT2026_PUBLIC_REPO_COUNT).toBe(27);
 
-    expect(TSOTCHKE_OCT2026_USER_PUBLIC_REPOS).toContain('bonsai-fidelity-study');
+    expect(TSOTCHKE_OCT2026_USER_PUBLIC_REPOS).toContain('rosette-wire');
     expect(TSOTCHKE_OCT2026_USER_PUBLIC_REPOS).toContain('homebrew-moonlab');
-    expect(TSOTCHKE_OCT2026_ORG_PUBLIC_REPOS).toContain('rosette-wire');
+    expect(TSOTCHKE_OCT2026_USER_PUBLIC_REPOS).toContain('homebrew-eshkol');
+    expect(TSOTCHKE_OCT2026_ORG_PUBLIC_REPOS).toContain('bonsai-fidelity-study');
     expect(TSOTCHKE_OCT2026_ORG_PUBLIC_REPOS).toContain('pq-consensus-bandwidth');
     expect(TSOTCHKE_OCT2026_ORG_PUBLIC_REPOS).toContain('GeoRefine');
     expect(TSOTCHKE_OCT2026_WAVE2_REPOS.length).toBe(4);
@@ -131,6 +135,16 @@ describe('Tsotchke October 21, 2026 Full Ecosystem Census & Wave-2 Substrates', 
     expect(Number.isFinite(eshkol.d4)).toBe(true);
     expect(Number.isFinite(eshkol.divergence)).toBe(true);
     expect(eshkol.curlMagnitude).toBeGreaterThan(0);
+
+    const dbsp = evaluateEshkolDbspDeltaStream(0.85, 0.25);
+    expect(dbsp.exactnessResidual).toBeLessThan(1e-14);
+    expect(dbsp.linearTermNorm).toBeGreaterThan(0);
+
+    const cyc = evaluateEshkolCyclotomic8CliffordT([1n, 1n, 0n, 0n], [1n, 0n, 0n, 0n]);
+    expect(cyc.exactFieldNorm).toBe(2n);
+
+    const qwz = evaluateMoonlabQwzChernInsulator(-1.0, 10);
+    expect(qwz.quantizedChern).toBe(-1);
 
     const qrngSeeded = evaluateQrngQuantumChaosStream(77, false);
     expect(qrngSeeded.wildMode).toBe(false);

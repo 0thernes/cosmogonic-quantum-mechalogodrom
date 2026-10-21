@@ -135,6 +135,46 @@ export interface ZigWasmExports {
     cx: number,
     cy: number,
   ) => number;
+  cqm_eshkol_dbsp_delta_gemm: (
+    aPtr: number,
+    bPtr: number,
+    daPtr: number,
+    dbPtr: number,
+    cInOutPtr: number,
+    outMetricsPtr: number,
+    dim: number,
+  ) => number;
+  cqm_eshkol_cyclotomic8_mul: (
+    aPtr: number,
+    bPtr: number,
+    outProdPtr: number,
+    outMetricsPtr: number,
+  ) => bigint;
+  cqm_moonlab_qwz_chern_fhs: (mass: number, gridN: number, outMetricsPtr: number) => number;
+}
+
+export interface ZigEshkolDbspDeltaReport {
+  frobeniusNormC: number;
+  linearTermNorm: number;
+  crossTermNorm: number;
+  exactnessResidual: number;
+}
+
+export interface ZigEshkolCyclotomic8Report {
+  product: BigInt64Array;
+  re: number;
+  im: number;
+  absSqReal: number;
+  exactFieldNorm: bigint;
+}
+
+export interface ZigMoonlabQwzChernReport {
+  chernNumber: number;
+  quantizedChern: number;
+  minBandGap: number;
+  maxBandGap: number;
+  meanAbsPlaquetteFlux: number;
+  topologicalPhase: 'chern-plus' | 'chern-minus' | 'trivial';
 }
 
 export interface ZigQgtlTensor2DReport {
@@ -184,6 +224,7 @@ class ZigKernelBridge {
   private f64View: Float64Array;
   private f32View: Float32Array;
   private u64View: BigUint64Array;
+  private i64View: BigInt64Array;
   private u8View: Uint8Array;
 
   constructor() {
@@ -195,6 +236,7 @@ class ZigKernelBridge {
     this.f64View = new Float64Array(buf);
     this.f32View = new Float32Array(buf);
     this.u64View = new BigUint64Array(buf);
+    this.i64View = new BigInt64Array(buf);
     this.u8View = new Uint8Array(buf);
   }
 
@@ -203,6 +245,7 @@ class ZigKernelBridge {
     this.f64View = new Float64Array(buf);
     this.f32View = new Float32Array(buf);
     this.u64View = new BigUint64Array(buf);
+    this.i64View = new BigInt64Array(buf);
     this.u8View = new Uint8Array(buf);
   }
 
@@ -669,6 +712,110 @@ class ZigKernelBridge {
       certified: orientation !== 'collinear' && Number.isFinite(det),
     };
   }
+
+  eshkolDbspDeltaGemm(
+    a: Float64Array,
+    b: Float64Array,
+    da: Float64Array,
+    db: Float64Array,
+    cInOut: Float64Array,
+    dim: number,
+  ): ZigEshkolDbspDeltaReport {
+    const d = Math.max(1, Math.min(16, Math.floor(dim)));
+    const cells = d * d;
+    if (
+      a.length < cells ||
+      b.length < cells ||
+      da.length < cells ||
+      db.length < cells ||
+      cInOut.length < cells
+    ) {
+      return { frobeniusNormC: 0, linearTermNorm: 0, crossTermNorm: 0, exactnessResidual: 0 };
+    }
+    const matBytes = cells * 8;
+    const metricsBytes = 32;
+    this.ensureCapacity(matBytes * 5 + metricsBytes);
+
+    const aPtr = SCRATCH_BASE_OFFSET;
+    const bPtr = aPtr + matBytes;
+    const daPtr = bPtr + matBytes;
+    const dbPtr = daPtr + matBytes;
+    const cPtr = dbPtr + matBytes;
+    const metricsPtr = cPtr + matBytes;
+
+    this.f64View.set(a.subarray(0, cells), aPtr >> 3);
+    this.f64View.set(b.subarray(0, cells), bPtr >> 3);
+    this.f64View.set(da.subarray(0, cells), daPtr >> 3);
+    this.f64View.set(db.subarray(0, cells), dbPtr >> 3);
+    this.f64View.set(cInOut.subarray(0, cells), cPtr >> 3);
+
+    this.exports.cqm_eshkol_dbsp_delta_gemm(aPtr, bPtr, daPtr, dbPtr, cPtr, metricsPtr, d >>> 0);
+
+    a.set(this.f64View.subarray(aPtr >> 3, (aPtr >> 3) + cells));
+    b.set(this.f64View.subarray(bPtr >> 3, (bPtr >> 3) + cells));
+    cInOut.set(this.f64View.subarray(cPtr >> 3, (cPtr >> 3) + cells));
+
+    const mBase = metricsPtr >> 3;
+    return {
+      frobeniusNormC: this.f64View[mBase] ?? 0,
+      linearTermNorm: this.f64View[mBase + 1] ?? 0,
+      crossTermNorm: this.f64View[mBase + 2] ?? 0,
+      exactnessResidual: this.f64View[mBase + 3] ?? 0,
+    };
+  }
+
+  eshkolCyclotomic8Mul(
+    a: BigInt64Array | readonly [bigint, bigint, bigint, bigint],
+    b: BigInt64Array | readonly [bigint, bigint, bigint, bigint],
+  ): ZigEshkolCyclotomic8Report {
+    this.ensureCapacity(32 * 4);
+    const aPtr = SCRATCH_BASE_OFFSET;
+    const bPtr = aPtr + 32;
+    const prodPtr = bPtr + 32;
+    const metricsPtr = prodPtr + 32;
+
+    const aBase = aPtr >> 3;
+    const bBase = bPtr >> 3;
+    for (let i = 0; i < 4; i++) {
+      this.i64View[aBase + i] = a[i] ?? 0n;
+      this.i64View[bBase + i] = b[i] ?? 0n;
+    }
+
+    const norm = this.exports.cqm_eshkol_cyclotomic8_mul(aPtr, bPtr, prodPtr, metricsPtr);
+    const product = new BigInt64Array(4);
+    product.set(this.i64View.subarray(prodPtr >> 3, (prodPtr >> 3) + 4));
+    const mBase = metricsPtr >> 3;
+
+    return {
+      product,
+      re: this.f64View[mBase] ?? 0,
+      im: this.f64View[mBase + 1] ?? 0,
+      absSqReal: this.f64View[mBase + 2] ?? 0,
+      exactFieldNorm: norm,
+    };
+  }
+
+  moonlabQwzChernFhs(mass: number, gridN = 12): ZigMoonlabQwzChernReport {
+    this.ensureCapacity(32);
+    const metricsPtr = SCRATCH_BASE_OFFSET;
+    const chern = this.exports.cqm_moonlab_qwz_chern_fhs(
+      mass,
+      Math.max(6, Math.min(32, Math.floor(gridN))) >>> 0,
+      metricsPtr,
+    );
+    const mBase = metricsPtr >> 3;
+    const quantizedChern = Math.round(chern) || 0;
+    const topologicalPhase =
+      quantizedChern > 0 ? 'chern-plus' : quantizedChern < 0 ? 'chern-minus' : 'trivial';
+    return {
+      chernNumber: chern,
+      quantizedChern,
+      minBandGap: this.f64View[mBase + 1] ?? 0,
+      maxBandGap: this.f64View[mBase + 2] ?? 0,
+      meanAbsPlaquetteFlux: this.f64View[mBase + 3] ?? 0,
+      topologicalPhase,
+    };
+  }
 }
 
 let _singleton: ZigKernelBridge | null = null;
@@ -846,6 +993,28 @@ export function zigGeoRefineVerifyFrame(
   return getZigKernelBridge().geoRefineVerifyFrame(ax, ay, bx, by, cx, cy);
 }
 
+export function zigEshkolDbspDeltaGemm(
+  a: Float64Array,
+  b: Float64Array,
+  da: Float64Array,
+  db: Float64Array,
+  cInOut: Float64Array,
+  dim: number,
+): ZigEshkolDbspDeltaReport {
+  return getZigKernelBridge().eshkolDbspDeltaGemm(a, b, da, db, cInOut, dim);
+}
+
+export function zigEshkolCyclotomic8Mul(
+  a: BigInt64Array | readonly [bigint, bigint, bigint, bigint],
+  b: BigInt64Array | readonly [bigint, bigint, bigint, bigint],
+): ZigEshkolCyclotomic8Report {
+  return getZigKernelBridge().eshkolCyclotomic8Mul(a, b);
+}
+
+export function zigMoonlabQwzChernFhs(mass: number, gridN = 12): ZigMoonlabQwzChernReport {
+  return getZigKernelBridge().moonlabQwzChernFhs(mass, gridN);
+}
+
 export function getZigKernelReceipt(): ZigKernelReceipt {
   const bridge = getZigKernelBridge();
   return {
@@ -866,10 +1035,16 @@ export function getZigKernelReceipt(): ZigKernelReceipt {
       'cqm_rosette_fnv1a64',
       'cqm_pq_wire_bytes',
       'cqm_georefine_verify_frame',
+      'cqm_eshkol_dbsp_delta_gemm',
+      'cqm_eshkol_cyclotomic8_mul',
+      'cqm_moonlab_qwz_chern_fhs',
     ],
     ready:
       typeof bridge.exports.cqm_gray_scott_step === 'function' &&
       typeof bridge.exports.cqm_moonlab_ising_anneal === 'function' &&
-      typeof bridge.exports.cqm_qgtl_full_tensor_2d === 'function',
+      typeof bridge.exports.cqm_qgtl_full_tensor_2d === 'function' &&
+      typeof bridge.exports.cqm_eshkol_dbsp_delta_gemm === 'function' &&
+      typeof bridge.exports.cqm_eshkol_cyclotomic8_mul === 'function' &&
+      typeof bridge.exports.cqm_moonlab_qwz_chern_fhs === 'function',
   };
 }
