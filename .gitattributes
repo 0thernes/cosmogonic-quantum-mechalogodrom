@@ -8,3 +8,18 @@
 
 # The reviewed PDF is a binary document; text exports use the repository LF convention.
 docs/alife/*.pdf binary
+
+# GitHub Linguist classification: prevent large HTML/JSON report bundles and static
+# site builds from drowning out Zig, C++, and TypeScript in the GitHub Languages bar,
+# and classify Eshkol (.esk) files as detectable Scheme-family code until upstream
+# github-linguist/linguist merges a native Eshkol grammar entry.
+docs/**/*.html linguist-documentation=true
+docs/alife/** linguist-documentation=true
+site/** linguist-generated=true
+lab/*.json linguist-generated=true
+src/math/zig-wasm-binary.ts linguist-generated=true
+src/generated/** linguist-generated=true
+zig/**/*.zig linguist-detectable=true
+native/**/*.cpp linguist-detectable=true
+native/**/*.hpp linguist-detectable=true
+*.esk linguist-language=Scheme linguist-detectable=true

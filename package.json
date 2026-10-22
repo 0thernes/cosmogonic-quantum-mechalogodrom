@@ -26,7 +26,17 @@
     "nhsi",
     "xenomimics",
     "generative",
-    "procedural"
+    "procedural",
+    "tsotchke",
+    "eshkol",
+    "moonlab",
+    "qgtl",
+    "qrng",
+    "libirrep",
+    "sbnn",
+    "zig",
+    "webassembly",
+    "quantum-computing"
   ],
   "private": true,
   "type": "module",

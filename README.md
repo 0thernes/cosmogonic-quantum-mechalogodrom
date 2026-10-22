@@ -12,6 +12,13 @@
 [![coverage](https://img.shields.io/badge/coverage-84.64%25%20line%20%C2%B7%2082.21%25%20func-success)](./docs/TECHNICAL-SPECIFICATION-2026-06-26.md)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION-2026-06-26.md)
 [![Tsotchke](https://img.shields.io/badge/Tsotchke-REAL__MIT__CORPUS-purple)](https://github.com/tsotchke)
+[![Eshkol](https://img.shields.io/badge/Eshkol-v1.3.6--evolve-7c3aed)](https://github.com/tsotchke/eshkol)
+[![Moonlab](https://img.shields.io/badge/Moonlab-v1.2.1-0ea5e9)](https://github.com/tsotchke/moonlab)
+[![QGTL](https://img.shields.io/badge/QGTL-v0.777__Beta-f59e0b)](https://github.com/tsotchke/quantum_geometric_tensor)
+[![QRNG](https://img.shields.io/badge/QRNG-v3__Toeplitz-10b981)](https://github.com/tsotchke/quantum_rng)
+[![libirrep](https://img.shields.io/badge/libirrep-v1.5.0-ec4899)](https://github.com/tsotchke/libirrep)
+[![SbNN](https://img.shields.io/badge/SbNN-v0.6__MinSR-6366f1)](https://github.com/tsotchke/spin_based_neural_network)
+[![Zig WASM](https://img.shields.io/badge/Zig-0.17.0__WASM__18__Kernels-f7a41d?logo=zig&logoColor=white)](./zig/src/root.zig)
 [![NHSI](https://img.shields.io/badge/NHSI-Progress__Dashboard-blue)](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md)
 
 A procedural WebGL cosmic ecosystem — morphogenic organisms, Shoggoths,
