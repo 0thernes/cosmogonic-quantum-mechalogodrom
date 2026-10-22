@@ -16,10 +16,14 @@
 [![Moonlab](https://img.shields.io/badge/Moonlab-v1.2.1-0ea5e9)](https://github.com/tsotchke/moonlab)
 [![QGTL](https://img.shields.io/badge/QGTL-v0.777__Beta-f59e0b)](https://github.com/tsotchke/quantum_geometric_tensor)
 [![QRNG](https://img.shields.io/badge/QRNG-v3__Toeplitz-10b981)](https://github.com/tsotchke/quantum_rng)
-[![libirrep](https://img.shields.io/badge/libirrep-v1.5.0-ec4899)](https://github.com/tsotchke/libirrep)
-[![SbNN](https://img.shields.io/badge/SbNN-v0.6__MinSR-6366f1)](https://github.com/tsotchke/spin_based_neural_network)
+[![libirrep](https://img.shields.io/badge/libirrep-v1.5.0__prerelease-ec4899)](https://github.com/tsotchke/libirrep)
+[![SbNN](https://img.shields.io/badge/SbNN-v0.5.0__MinSR-6366f1)](https://github.com/tsotchke/spin_based_neural_network)
 [![Zig WASM](https://img.shields.io/badge/Zig-0.17.0__WASM__18__Kernels-f7a41d?logo=zig&logoColor=white)](./zig/src/root.zig)
 [![NHSI](https://img.shields.io/badge/NHSI-Progress__Dashboard-blue)](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md)
+
+The Tsotchke badges identify upstream source versions used as references for CQM adaptations;
+[the integration ledger](./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md) documents each integration's
+scope. The Zig badge counts the 18 kernel functions exported by the embedded WASM module.
 
 A procedural WebGL cosmic ecosystem — morphogenic organisms, Shoggoths,
 puppet-master NPCs, atmospheric weather, a neural connectome, quantum

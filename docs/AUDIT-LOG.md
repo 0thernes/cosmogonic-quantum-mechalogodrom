@@ -11,6 +11,30 @@ changed and why.
 
 ---
 
+## 2026-10-21 (local date) — GitHub stack visibility and version review
+
+- Verified all six requested topics through the GitHub API and the seven stack badges in commit
+  `52da91c2`. HTML reports under `docs/` are classified as documentation; Git attributes resolve
+  that exclusion for both ALife catalog and landscape-report exports.
+- Corrected SbNN from the future `0.6` target to the upstream `0.5.0` source pin
+  ([VERSION_PINS](https://github.com/tsotchke/spin_based_neural_network/blob/main/VERSION_PINS)).
+  Qualified libirrep `1.5.0` as a prerelease source reference; its latest published release is
+  [`1.4.0`](https://github.com/tsotchke/libirrep/releases/tag/v1.4.0).
+- Verified Eshkol's `1.3.6-evolve` release, Moonlab `1.2.1`, QGTL `0.777` Beta, QRNG's `3.0.1`
+  release lineage, and the local Zig `0.17.0` executable. The README describes upstream references
+  and CQM adaptations; badges do not establish full upstream-package execution.
+- Counted 18 `cqm_` function exports independently in `zig/src/root.zig` and the embedded WASM
+  module. The 22,148-byte module's SHA-256 is
+  `5114b82a072dec727b231b858d605b8cce52756126d685347c303b48aa3659e7`.
+- Checked [Linguist's contribution rules](https://github.com/github-linguist/linguist/blob/main/CONTRIBUTING.md):
+  extensions used multiple times per repository require at least 2,000 indexed files and reasonable
+  distribution across users/repositories. Creating 200 repositories under one owner is no guarantee
+  of eligibility; a grammar submission alone is insufficient. Acceptance, release and deployment
+  have no guaranteed schedule. The existing `.esk` override classifies files as Scheme, not as a
+  newly registered Eshkol language.
+- Publication validation uses the repository's full pre-commit `bun run check` gate; this review
+  introduces no simulation or scientific capability change.
+
 ## 2026-10-21 (local date) — Source-reviewed catalog publication and local/GitHub reconciliation
 
 - Preserved upstream `f53a3fbe` (dated 22 October UTC), including its 155-entry numerical matrix,
