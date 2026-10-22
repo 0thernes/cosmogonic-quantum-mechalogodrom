@@ -201,7 +201,7 @@ Tsotchke projects** (`17` personal under `github.com/tsotchke` + `10` corporate 
 - **`Tsotchke-Corporation` (10 corporate repositories)**: `GeoRefine`, `pq-consensus-bandwidth`,
   `bonsai-fidelity-study`, `Quantum-RNG-API`, `OBLITERATUS`, `quantum-quake`, `ulg`, `logo-lab`,
   `SolanaQuantumFlux`, `.github`.
-- **16 Zig 0.17.0 WebAssembly Kernels (`src/math/zig-bridge.ts`)**:
+- **18 Zig 0.17.0 WebAssembly Kernels (`src/math/zig-bridge.ts`)**:
   1. `cqm_gray_scott_step` — 9-point isotropic Laplacian Gray-Scott PDE (`f64`).
   2. `cqm_gray_scott_step_rgba_f32` — Fused multi-substep `f32` Gray-Scott PDE + direct RGBA8 pixel rasterizer.
   3. `cqm_tdse_step` — Symplectic leapfrog 1D Time-Dependent Schrödinger Equation (TDSE) + $L^2$ norm preservation.
@@ -218,3 +218,5 @@ Tsotchke projects** (`17` personal under `github.com/tsotchke` + `10` corporate 
   14. `cqm_eshkol_dbsp_delta_gemm` — Eshkol v1.3.6-evolve (`core.dbsp.tensor`, PR #782) Incremental Differential Stream Processing bilinear matrix update $\Delta(AB) = (\Delta A)B + A(\Delta B) + (\Delta A)(\Delta B)$.
   15. `cqm_eshkol_cyclotomic8_mul` — Eshkol v1.3.6-evolve (`core.cyclotomic`, PR #783) Exact Cyclotomic Field $\mathbb{Z}[\zeta_8]/(\zeta_8^4+1)$ Clifford+$T$ multiplication and integer Galois field norm $N_{\mathbb{Q}(\zeta_8)/\mathbb{Q}}(\alpha) = A_0^2 - 2A_1^2 \in \mathbb{Z}_{\ge 0}$.
   16. `cqm_moonlab_qwz_chern_fhs` — Moonlab v1.2.1 (`moonlab_qwz_chern`) & QGTL v0.777 Beta Fukui-Hatsugai-Suzuki (FHS) gauge-invariant $U(1)$ lattice Berry-flux topological Chern number $\mathcal{C}(m) \in \{-1, 0, +1\}$ on the 2D Qi-Wu-Zhang (QWZ) Dirac insulator Brillouin torus $T^2$.
+  17. `cqm_libirrep_bdg_skyrmion_mzm` — libirrep v1.5.0 prerelease source (`src/bdg_skyrmion.c`, Theorem 3.1) 2D Bogoliubov-de Gennes Belavin-Polyakov skyrmion on an s-wave superconductor: discrete Berg-Lüscher topological charge $Q_{\mathrm{lat}}$, band-inversion criterion $J_{sd} > \sqrt{(|\mu|-2)^2 + \Delta_0^2}$, and the protected Majorana zero-mode count $2|Q|$ on the $S_z = 0$ domain wall.
+  18. `cqm_sbnn_minsr_step` — `spin_based_neural_network` v0.5.0 source pin (`src/nqs/nqs_optimizer.c`) sample-space Minimum-Step Stochastic Reconfiguration (MinSR): solves $(S + \lambda I)\delta = F$ in the $N_s \times N_s$ sample Gram matrix via the push-through identity.

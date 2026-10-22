@@ -16,6 +16,11 @@
  *  11. `cqm_rosette_fnv1a64` — Tsotchke `rosette-wire` canonical 64-bit FNV-1a digest
  *  12. `cqm_pq_wire_bytes` — Tsotchke `pq-consensus-bandwidth` BFT wire-footprint calculator
  *  13. `cqm_georefine_verify_frame` — Tsotchke `GeoRefine` dual-frame orientation determinant
+ *  14. `cqm_eshkol_dbsp_delta_gemm` — Tsotchke Eshkol v1.3.6 DBSP incremental bilinear delta update
+ *  15. `cqm_eshkol_cyclotomic8_mul` — Tsotchke Eshkol v1.3.6 exact Z[zeta_8] Clifford+T multiply + norm
+ *  16. `cqm_moonlab_qwz_chern_fhs` — Tsotchke Moonlab v1.2.1 / QGTL v0.777 FHS QWZ Chern number
+ *  17. `cqm_libirrep_bdg_skyrmion_mzm` — Tsotchke libirrep v1.5.0-prerelease BdG skyrmion 2|Q| Majorana zero modes
+ *  18. `cqm_sbnn_minsr_step` — Tsotchke `spin_based_neural_network` v0.5.0 MinSR stochastic reconfiguration
  */
 
 import {

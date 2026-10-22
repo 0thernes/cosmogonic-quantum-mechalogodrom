@@ -23,3 +23,12 @@ zig/**/*.zig linguist-detectable=true
 native/**/*.cpp linguist-detectable=true
 native/**/*.hpp linguist-detectable=true
 *.esk linguist-language=Scheme linguist-detectable=true
+# Linguist already skips `docs/` by default, so the line above leaves the HTML total unchanged; the
+# HTML that counts lives at the root and in the verbatim archive. Measured with `github-linguist`
+# on the committed tree, these lines take HTML 5.57% -> 2.97% and Zig 0.50% -> 0.52%. Live app
+# pages (index.html, lab/*.html) stay counted.
+docs.html linguist-documentation=true
+specs.html linguist-documentation=true
+bible.html linguist-generated=true
+alife-gallery.js linguist-generated=true
+legacy/** linguist-vendored=true

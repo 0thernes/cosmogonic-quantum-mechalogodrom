@@ -51,7 +51,7 @@ diffusion, **and the Tsotchke corpus wired as the primordial substrate for digit
 
 <!-- cqm-sync:local-measurement:end -->
 
-- `verify:facts` exits 0 with no drift across 82 Markdown/HTML/XML surfaces.
+- `verify:facts` exits 0 with no drift across 88 Markdown/HTML/XML surfaces.
 - Consciousness/sentience language is **indicatorOnly**: computational proxies, falsifiers, and controls; never proof of phenomenal experience or completion of the sentience goal.
 - The batch-26 adversarial repair pass replaced cell-snapped flora lookup with an `O(1)` four-cell
   bilinear sampler and sealed chemotaxis against the shipped field, corrected final-position forager

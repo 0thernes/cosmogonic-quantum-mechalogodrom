@@ -11,6 +11,22 @@ changed and why.
 
 ---
 
+## 2026-10-22 — Zig kernel-count drift and measured Linguist classification
+
+- Counted 18 `export fn` kernels in `zig/src/root.zig`; `CLAUDE.md`, `AGENTS.md`, the Tsotchke
+  integration map and the `zig-bridge.ts` header still said 16 (the header listed 13) after `fbdf94d`.
+  All four now list 18, with libirrep and SbNN versions matching the review below (`1.5.0` prerelease,
+  `0.5.0` source pin).
+- Ran `github-linguist` 9.7.0 on the committed tree. Linguist already excludes `docs/` by default, so the
+  `docs/**/*.html` attribute left HTML unchanged at 562,037 bytes. The counted HTML was root and
+  archive pages. Classifying `docs.html`/`specs.html` as documentation, `bible.html` and
+  `alife-gallery.js` as generated, and `legacy/` as vendored gives TypeScript 94.74%, HTML 2.97%,
+  CSS 0.82%, C++ 0.54%, Zig 0.52%. Zig stays small because it is 50,960 bytes against 9.3 MB of
+  TypeScript; no honest attribute changes that.
+- README `verify:facts` surface count corrected from 82 to the measured 88.
+
+---
+
 ## 2026-10-21 (local date) — GitHub stack visibility and version review
 
 - Verified all six requested topics through the GitHub API and the seven stack badges in commit

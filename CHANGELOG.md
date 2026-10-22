@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `.gitattributes`: root documentation HTML (`docs.html`, `specs.html`), the generated `bible.html`
+  and gallery bundle, and the verbatim `legacy/` archive no longer count toward the GitHub Languages
+  bar. Measured with `github-linguist`: HTML 5.57% to 2.97%, C++ 0.53% to 0.54%, Zig 0.50% to 0.52%.
 - Source-reviewed 150-entry ALife evidence catalog with PDF, workbook, CSV, searchable HTML,
   evidence JSON, editable notes and complete bundle. Explicit source-review status, exclusions,
   family relationships and snapshot provenance distinguish it from the 155-entry scoring rubric.
@@ -48,6 +51,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   cards; ARCHITECTURE + PHILOSOPHY carry the same CODE_GROUNDED honesty law.
 - HELP + README + TECHNICAL-SPEC document P3 live castes: collective fields, NHI, sanctuary/portals,
   connectome topology-only, wilderness non-writeback.
+
+### Fixed
+
+- Zig kernel count corrected from 16 to 18 in `CLAUDE.md`, `AGENTS.md`, the Tsotchke integration map
+  and the `zig-bridge.ts` header (which listed 13), adding the libirrep BdG-skyrmion and SbNN MinSR
+  kernels. README `verify:facts` surface count corrected from 82 to the measured 88.
 
 ## [0.23.0] — 2026-07-14
 
