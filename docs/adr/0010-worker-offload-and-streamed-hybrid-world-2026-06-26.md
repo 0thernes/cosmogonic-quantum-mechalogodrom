@@ -2,21 +2,46 @@
 
 # ADR 0010 — Worker offload + streamed "Hybrid world" for scaling
 
-- Status: Accepted design; live POWER runtime disabled pending delivered-frame proof
+- Status: Accepted design; browser worker pool enabled by default when available; performance benefit unproven
 - Date: 2026-06-20
 - Governs: Scaling stages 3–5 ([BENCHMARKS-2026-06-26.md](../BENCHMARKS-2026-06-26.md) § Scaling Stages)
 
-## Operational override — 2026-07-12
+## Current runtime and validation boundary — 2026-10-21
 
-The architecture remains documented, but the live browser runtime now constructs
-`WildernessPopulation(null, seed)` and keeps `World.workerPool` null. Nominal FPS remained plausible
-while delivered frames stalled for multiple seconds during the worker-enabled path; therefore the
-worker lane is dormant in POWER mode until a production-shaped benchmark proves improved delivered
-frame cadence, not merely a higher FPS counter. Wilderness remains synchronous and lower-fidelity
-streaming may not be reintroduced as a hidden fallback. The deterministic core, cognition, visual
-quality, Xenomimics, and other living systems remain enabled.
+Upstream had already restored the default browser worker path before this repair. `src/main.ts`
+initializes a pool when `Worker` is available unless the URL explicitly selects `?workers=0`;
+`World.attachWorkerPool` attaches it to the wilderness after asynchronous initialization. The
+constructor starts with a null pool, and initialization failure leaves the synchronous path active.
+The built module URL is resolved with
+`new URL('./workers/simulation-worker.js', document.baseURI).href`, so both a root deployment and
+the repository's GitHub Pages subpath address the emitted worker asset relative to the document.
+The presence of a visual-smoke rAF gate must not silently change the application's worker policy.
 
-## Context
+The worker also accepts Tsotchke simulation-summary tasks. `World` retains the synchronous substrate
+step and stores the asynchronous result separately for telemetry; attaching the pool is not evidence
+that this work was removed from the main thread. Neither worker summaries nor wilderness results
+may feed the seed-only core golden.
+
+`scripts/browser-visual-smoke.ts` deliberately sets `?workers=0` for its bounded visual fixtures.
+Their `dormant-main-thread` expectation describes that explicit fixture, not the default application.
+A separate default-worker probe removes that query parameter, visits the actual
+deployment base path, observes the worker URL, and allows one bounded natural frame. Further rendering
+is then held while default workers stay enabled, isolating a successful finite simulation-task
+round trip. It writes `visual-smoke-default-workers.json` with measurement class
+`default-worker-initialization-and-roundtrip-not-production-fps`; failures produce bounded receipts.
+This is functional initialization and messaging coverage. It establishes neither a throughput gain
+nor improved delivered-frame cadence. Production-shaped cadence measurements remain required for
+any performance claim; no such improvement is asserted by this repair.
+
+## Historical operational override — 2026-07-12
+
+The July override constructed `WildernessPopulation(null, seed)` and kept `World.workerPool` null.
+Its recorded reason was multi-second delivered-frame stalls despite plausible nominal FPS during
+the worker-enabled path. That shutdown is historical; the current default-enabled path is described
+above. The warning against treating an FPS counter or a functional worker round trip as performance
+proof remains applicable. Lower-fidelity streaming must not be introduced as a hidden fallback.
+
+## Original design context — 2026-06-20
 
 The single hard scaling bottleneck is the **one JavaScript thread**: neighbour queries +
 per-creature brains + behaviours for up to 50,000 agents all run on it. The quality tier
@@ -41,7 +66,7 @@ core + a streamed best-effort wilderness.
 ## Decision
 
 **The Hybrid split IS the worker boundary.** Workers are never on the deterministic critical
-path; they run the wilderness, which is explicitly outside the golden.
+path; wilderness and the separate asynchronous substrate summaries remain outside the golden.
 
 1. **Deterministic CORE — main thread, synchronous, in the golden.** The preserve-core
    population + the apex Archon minds stay on the main thread, computed bit-exact each tick
@@ -59,10 +84,9 @@ path; they run the wilderness, which is explicitly outside the golden.
      **never** writes back any value the golden reads.
 
 3. **Offload harness contract.** A generic offload utility with:
-   - a **SYNC executor** (default — used by anything determinism-bound, and the universal
-     fallback when Workers/SharedArrayBuffer are unavailable: graceful degradation to a
-     smaller-but-correct world);
-   - an **ASYNC worker executor** (wilderness only);
+   - a **SYNC executor** for determinism-bound work and the explicit worker-off path;
+     unavailable or failed workers retain the synchronous path without a hidden fidelity change;
+   - an **ASYNC worker executor** for wilderness and separate substrate-summary tasks;
    - a **typed message protocol** using transferable `Float32Array` buffers for
      positions/colours (no per-frame structured-clone of objects);
    - **SharedArrayBuffer** for zero-copy where cross-origin isolation (COOP/COEP) allows,
@@ -80,12 +104,12 @@ path; they run the wilderness, which is explicitly outside the golden.
 
 ## Consequences
 
-**Projected positive (worker lane currently dormant)**
+**Potential benefits (not measured performance claims)**
 
-- Could use idle cores for wilderness only if delivered-frame benchmarks clear the operational gate.
+- Wilderness work can run on available worker threads; delivered-frame benefit still requires measurement.
 - The determinism superpower is **preserved for the core** — the receipts/science identity intact.
-- The world can grow arbitrarily (wilderness chunks) without re-baselining the core golden.
-- Graceful degradation: no Workers / no SAB ⇒ everything runs sync on main (smaller, correct).
+- Streamed wilderness chunks can extend coverage without re-baselining the core golden, within resource budgets.
+- Unavailable workers retain synchronous execution; unavailable SAB uses transferable messages.
 
 **Negative / accepted risks**
 
@@ -99,10 +123,10 @@ path; they run the wilderness, which is explicitly outside the golden.
   server/Pages header config; the harness falls back to transferables if unavailable.
 - Implementation is **multi-push**, each its own gate-green commit (see below).
 
-## Implementation plan (this ADR governs Stages 3–5)
+## Original implementation stages (design sequence, not a current completion receipt)
 
 - **3a** — offload harness: sync executor + worker executor + typed protocol + fallback;
-  tested via the sync path. _(next push)_
+  tested via the sync path.
 - **3b** — a minimal wilderness population simulated on a worker, rendered from snapshots
   (1-frame lag), strictly one-way; goldens untouched.
 - **3c** — camera-streamed chunks: the world grows (load near / freeze far).

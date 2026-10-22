@@ -11,6 +11,7 @@ import {
   auditPostOriginAllowed,
   copilotEnabled,
   developmentMode,
+  docsFileFromPath,
   makeRateLimiter,
   parseAuditBody,
   parseChatMessages,
@@ -332,5 +333,28 @@ describe('withSecurityHeaders — defense-in-depth response headers (RISK-05)', 
     const res = new Response('not found', { status: 404 });
     expect(withSecurityHeaders(res)).toBe(res);
     expect(res.headers.get('X-Content-Type-Options')).toBe('nosniff');
+  });
+});
+
+describe('document file routes — malformed encoded paths', () => {
+  test('rejects invalid file URLs while preserving valid percent and Unicode document names', () => {
+    for (const path of [
+      '/docs/alife/%252e%252e%252f%252e%252e%252fpackage.json',
+      '/docs/alife/%2e%2e%2f%2e%2e%2fpackage.json',
+      '/docs/alife/%00cqm-audit-evidence.json',
+      '/docs/alife/%zz.json',
+    ]) {
+      expect(docsFileFromPath(path), path).toBeNull();
+    }
+    for (const [path, filename] of [
+      ['/docs/alife/cqm-audit-notes.md', 'cqm-audit-notes.md'],
+      ['/docs/alife/100%25-growth.md', '100%-growth.md'],
+      ['/docs/alife/notes%20caf%C3%A9.md', 'notes café.md'],
+    ]) {
+      const resolved = docsFileFromPath(path!);
+      expect(resolved, path).not.toBeNull();
+      expect(resolved!.file.name?.endsWith(filename!)).toBe(true);
+      expect(resolved!.type).toBe('text/markdown; charset=utf-8');
+    }
   });
 });

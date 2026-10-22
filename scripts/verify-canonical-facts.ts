@@ -10,7 +10,9 @@
  *
  * `--check` is a hard gate; without it the script remains a report for exploratory triage. Point-in-time records
  * (`docs/reports/2026-*`, `docs/ln/*`, `docs/DAILY_RUNS/*`, `CHANGELOG.md`, `docs/AUDIT-LOG.md`) keep
- * their historical numbers by policy and are excluded. Deterministic: sorted `git ls-files`.
+ * their historical numbers by policy and are excluded. The reviewed docs/alife/cqm-* snapshot is also
+ * historical; its live README stays audited and catalog integrity has a dedicated test.
+ * Deterministic: sorted `git ls-files`.
  */
 import { execSync } from 'node:child_process';
 import { readFileSync, readdirSync } from 'node:fs';
@@ -144,7 +146,7 @@ const FACTS: Fact[] = [
 ];
 
 const EXCLUDE =
-  /^(legacy|node_modules|dist|coverage)\/|^\.claude\/worktrees\/|^CHANGELOG\.md$|^docs\/(AUDIT-LOG\.md|ln\/|DAILY_RUNS\/|reports\/20)/;
+  /^(legacy|node_modules|dist|coverage)\/|^\.claude\/worktrees\/|^CHANGELOG\.md$|^docs\/(AUDIT-LOG\.md|ln\/|DAILY_RUNS\/|reports\/20|alife\/cqm-)/;
 
 const FALLBACK_SKIP_DIRS = new Set([
   '.agents',

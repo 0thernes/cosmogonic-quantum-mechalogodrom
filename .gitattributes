@@ -5,3 +5,6 @@
 *.jpg binary
 *.webp binary
 *.woff2 binary
+
+# The reviewed PDF is a binary document; text exports use the repository LF convention.
+docs/alife/*.pdf binary

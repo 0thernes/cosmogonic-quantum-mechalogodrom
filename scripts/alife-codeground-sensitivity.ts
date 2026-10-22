@@ -77,7 +77,7 @@
  *                            as a real predation REFUGE (world.ts:783 safeZoneAt → xenomimics consume() returns 0
  *                            for a protected target). GATE-DOME-REFUGE proves the textbook Rosenzweig–MacArthur
  *                            ordering unpredated K (1000) > with-refuge (~650) > without-refuge (604) > 0 against
- *                            an ablated control that withholds safeZoneAt and changes nothing else, on the SHIPPED
+ *                            an ablated control that disables refuge immunity while retaining safeZoneAt percept coupling, on the SHIPPED
  *                            disc (CRYSTAL_TREE_ORIGIN 220,620 r=240) — not a stand-in.
  *                            HONEST EFFECT SIZE — the lift is +46 (~7.6%), NOT the +277 an earlier draft of this
  *                            gate reported. That draft picked victims from the head of a fixed iteration order;

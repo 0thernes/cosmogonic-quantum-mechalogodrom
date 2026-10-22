@@ -452,8 +452,11 @@ const DOCS_FILE_TYPES: Record<string, string> = {
   xml: 'application/xml; charset=utf-8',
   txt: 'text/plain; charset=utf-8',
   html: 'text/html; charset=utf-8',
+  pdf: 'application/pdf',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  zip: 'application/zip',
 };
-function docsFileFromPath(pathname: string): { file: BunFile; type: string } | null {
+export function docsFileFromPath(pathname: string): { file: BunFile; type: string } | null {
   if (!pathname.startsWith('/docs/')) return null;
   let rel: string;
   try {
@@ -471,9 +474,15 @@ function docsFileFromPath(pathname: string): { file: BunFile; type: string } | n
   }
   const type = DOCS_FILE_TYPES[rel.slice(rel.lastIndexOf('.') + 1).toLowerCase()];
   if (!type) return null;
-  const url = new URL(rel, DOCS_ROOT);
-  if (!url.href.startsWith(DOCS_ROOT.href)) return null;
-  return { file: Bun.file(url), type };
+  try {
+    const url = new URL(rel, DOCS_ROOT);
+    if (!url.href.startsWith(DOCS_ROOT.href)) return null;
+    return { file: Bun.file(url), type };
+  } catch {
+    // A second encoded separator can survive decoding but is invalid in a file URL.
+    // Treat that malformed path like the other rejected documents instead of returning 500.
+    return null;
+  }
 }
 
 /**

@@ -557,6 +557,8 @@ export class World {
   private computeCadence: ComputeCadencePlan | null = null;
   /** Latest Tsotchke Flagship + Wave-2 Zig WASM substrate telemetry receipt. */
   private latestOct2026Telemetry: TsotchkeOct2026Telemetry | null = null;
+  /** Latest off-thread WorkerPool Tsotchke simulation summary vector (12 floats). */
+  private latestWorkerOct2026Summary: Float32Array | null = null;
   /** Latest Wild Non-Deterministic Quantum-Chaos QRNG 64-bit word (hex). */
   private lastWildQrngHex = '0000000000000000';
   /** Guard ensuring at most one off-thread Tsotchke wave simulation worker task is in flight at a time. */
@@ -2262,6 +2264,8 @@ export class World {
     this.superheroHud.dispose();
     this.pantheonArchitecturePanel.dispose();
     this.superPanel.dispose(); // frees SuperNeural's rAF loop + leaked 'cqm:brutal-style' window listener
+    this.marketTicker.dispose();
+    this.nhiObs.dispose();
     this.input.dispose();
   }
 
@@ -2363,6 +2367,11 @@ export class World {
   /** Returns the latest Tsotchke Flagship + Wave-2 Zig WASM substrate telemetry receipt. */
   getOct2026Telemetry(): TsotchkeOct2026Telemetry | null {
     return this.latestOct2026Telemetry;
+  }
+
+  /** Returns the latest off-thread WorkerPool 12-float Tsotchke simulation summary vector. */
+  getWorkerOct2026Summary(): Float32Array | null {
+    return this.latestWorkerOct2026Summary;
   }
 
   /** Returns the latest 64-bit hex word harvested from the Wild Quantum-Chaos QRNG stream. */
@@ -2889,6 +2898,11 @@ export class World {
             data: new Float32Array([s.frame, coh, ent, Math.max(4, n)]),
             seed: this.persisted.seed,
             dt,
+          })
+          .then((res) => {
+            if (res.success && res.data instanceof Float32Array) {
+              this.latestWorkerOct2026Summary = res.data;
+            }
           })
           .finally(() => {
             this.workerSimInFlight = false;

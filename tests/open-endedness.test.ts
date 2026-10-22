@@ -159,7 +159,7 @@ describe('open-endedness metrics (research bedrock: Bedau-Packard + Petri-NCA)',
           const parent = pop[Math.floor(rng() * N)]!;
           return rng() < 0.02 ? Math.floor(rng() * K) : parent;
         });
-        const tally = new Array<number>(K).fill(0);
+        const tally = Array.from({ length: K }, () => 0);
         for (const a of pop) tally[a]!++;
         out.push(shannonDiversity(tally));
       }

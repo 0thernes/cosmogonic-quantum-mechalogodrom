@@ -355,11 +355,12 @@ async function boot(): Promise<void> {
   world.setWildMode(!forceDeterministic);
 
   // Multi-threaded Web Worker Pool (ADR 0010): offload wilderness chunks and Tsotchke Zig WASM
-  // substrate simulation to background CPU cores when Web Workers are available and not in visual-smoke mode.
+  // substrate simulation to background CPU cores when available. Explicit ?workers=0 keeps
+  // deterministic visual fixtures on the main thread without changing behavior for a test harness.
   if (typeof Worker !== 'undefined' && searchParams.get('workers') !== '0') {
     const pool = createWorkerPool(quality.tier);
     void pool
-      .initialize('/workers/simulation-worker.js')
+      .initialize(new URL('./workers/simulation-worker.js', document.baseURI).href)
       .then(() => {
         if (!mainLifecycleActive() || !world) {
           pool.dispose();

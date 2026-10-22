@@ -16,16 +16,17 @@ consciousness/sentience uplift.
 
 ## Current totals
 
-| Measure                    |                       Current value |
-| -------------------------- | ----------------------------------: |
-| Public repository census   | `23` (`16` user + `7` organization) |
-| Causal/runtime ledger      | `22` (`15` user + `7` organization) |
-| Deep                       |                                 `8` |
-| Wired                      |                                 `7` |
-| Harvest                    |                                 `2` |
-| Fenced                     |                                 `4` |
-| Meta                       |                                 `1` |
-| Integrated, excluding meta |        `17/21 = 0.8095238095238095` |
+| Measure                       |                                   Current value |
+| ----------------------------- | ----------------------------------------------: |
+| Public repository census (V4) |             `23` (`16` user + `7` organization) |
+| Full Oct 2026 public census   | `27` (`17` user + `10` organization; see below) |
+| Causal/runtime ledger         |             `22` (`15` user + `7` organization) |
+| Deep                          |                                             `8` |
+| Wired                         |                                             `7` |
+| Harvest                       |                                             `2` |
+| Fenced                        |                                             `4` |
+| Meta                          |                                             `1` |
+| Integrated, excluding meta    |                    `17/21 = 0.8095238095238095` |
 
 `homebrew-moonlab` is public deployment metadata and remains census-only; it does not occupy a
 causal/runtime row. The former tally was also wrong because it counted Cosmogonic's internal

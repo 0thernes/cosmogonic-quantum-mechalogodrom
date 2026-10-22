@@ -2,6 +2,33 @@
 
 # Module Contracts
 
+## Artificial-life evidence catalog publication
+
+`docs/alife/` owns one static source-review edition: **150 external entries**, with a separate
+Mechalogodrom profile, **132 primary-source reviews** and **18 explicit partial reviews**. These
+labels describe source inspection, not reproduced experiments or independently validated capability
+scores. Related variants keep family labels; the count does not assert independent ecosystems.
+The edition preserves the 21 October 2026 inspection of working files at reference HEAD
+`3ab92db558d73b4e84c6576d1d92e76946f2f7f6`, including file hashes, the original 129-row input and
+its Git-status limitation. Its README explains the snapshot; its PDF is not a current test receipt.
+
+The upstream **155-entry numerical rubric** (154 peers plus Mechalogodrom) and `gen:alife` outputs
+remain a separate artifact with different inclusion criteria. Publishing this catalog does not
+replace or rescore that matrix, combine their denominators, or transfer statistics between them.
+Single-rater literature ratings and arithmetic do not establish scientific superiority.
+
+| Owner                                  | Publication contract                                                                                                                                                                               |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `docs/alife/cqm-audit-evidence.json`   | Owns snapshot IDs, names, categories, source-review labels and provenance. The seven reader/download artifacts, including ZIP members, are updated together for a new reviewed edition.            |
+| `server.ts`                            | Serves the read-only artifacts through the existing `/docs/` route, adding PDF, XLSX and ZIP MIME/extension support while retaining segment rejection, path containment and traversal protections. |
+| `build.ts`                             | Copies the complete catalog directory to `dist/docs/alife/` for production downloads.                                                                                                              |
+| `build-pages.ts`                       | Its recursive documentation copy includes the same directory at `site/docs/alife/`; relative links remain valid under the repository subpath.                                                      |
+| `tests/alife-evidence-catalog.test.ts` | Guards unique IDs, the 150-entry denominator, the 132/18 review-status partition, and consistency of the published formats and local artifact links.                                               |
+
+Catalog publication adds static documents and download support. It introduces no simulation-state
+writes or new simulation work and claims no runtime or performance improvement. Current executable
+receipts remain owned by `scripts/canonical-receipts.ts` and the synchronized verification surfaces.
+
 ## Xylos autonomous manifold creature
 
 Xylos is a separate, single organism, not a sixth Archon. It runs without prompts,
@@ -1667,7 +1694,7 @@ Copilot are constructed boot-stream-neutral and never write sim state, so the go
 
 ### V9 acceptance
 
-Full `bun run check` green: prettier → tsc strict → oxlint → 3388 tests (0 fail, 300-frame golden
+Full `bun run check` green: prettier → tsc strict → oxlint → 3394 tests (0 fail, 300-frame golden
 included) → build. The Copilot sandbox verified live (allow: `git log`, file reads; deny:
 path-escape, repository-root pathspecs, `git push`, `legacy/`, shell redirection).
 
@@ -2005,9 +2032,17 @@ Automated contract coverage lives in `tests/edible-resource.test.ts`,
 `tests/xenomimic-connectome.test.ts`, the Crystal ecosystem test family, `tests/super-hunt.test.ts`,
 `tests/portal-death.test.ts`, and
 `tests/big-tree-world-integration.test.ts`. `tests/browser-visual-smoke-harness.test.ts` statically seals
-natural-rAF advancement, bounded stage/failure receipts, the viewport plus canvas-isolated proof, and
-the intentional `dormant-main-thread` worker expectation. Current live-browser and deployment evidence
-is recorded separately in the dated Dome Ecology verification report.
+natural-rAF advancement, bounded stage/failure receipts, and the viewport plus canvas-isolated proof.
+The deterministic visual fixture explicitly selects `?workers=0`; its `dormant-main-thread`
+expectation is not the default browser policy and must not depend on a hidden harness flag.
+The separate default-worker probe uses the ordinary worker-enabled boot, resolves the module with
+`new URL('./workers/simulation-worker.js', document.baseURI).href`, and verifies worker creation
+plus a successful finite task round trip at the deployment subpath after one bounded natural frame
+with subsequent rendering held and default workers still enabled. Its
+`visual-smoke-default-workers.json` receipt proves functional initialization and messaging, not
+production FPS or a delivered-frame improvement. Current live-browser and deployment evidence
+is recorded separately in the dated Dome Ecology verification report; ADR 0010 distinguishes the
+historical worker shutdown from the current default-enabled path.
 
 ## Mechalogodrom variant-shell mathematics contract (2026-07-14)
 

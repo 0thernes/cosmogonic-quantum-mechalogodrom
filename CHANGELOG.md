@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Source-reviewed 150-entry ALife evidence catalog with PDF, workbook, CSV, searchable HTML,
+  evidence JSON, editable notes and complete bundle. Explicit source-review status, exclusions,
+  family relationships and snapshot provenance distinguish it from the 155-entry scoring rubric.
+- Local and production download support for the catalog, plus artifact consistency regression gates.
+
 - **A-Life landscape index** — `scripts/gen-alife-landscape-report.ts` derives a print-ready index of all
   155 surveyed systems (rubric, lineage families, integrity checks, per-system evidence) from the comparison
   CSV inside `gen:alife`; `bun run report:alife-landscape` prints the PDF; gated by

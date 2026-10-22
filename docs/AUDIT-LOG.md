@@ -1,4 +1,4 @@
-<!-- reviewed: 2026-07-14 | dome-ecology final receipt reconciliation | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-10-21 | Publication review and reported 27-repository corpus refresh | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # Audit Log (centralized)
 
@@ -10,6 +10,23 @@ Living receipt truth is [VERIFICATION-ANALYTICAL-DATA.md](./VERIFICATION-ANALYTI
 changed and why.
 
 ---
+
+## 2026-10-21 (local date) — Source-reviewed catalog publication and local/GitHub reconciliation
+
+- Preserved upstream `f53a3fbe` (dated 22 October UTC), including its 155-entry numerical matrix,
+  generated rubric index and seven tests; retained the existing local lifecycle/corpus changes.
+- Published [the 150-entry external evidence catalog](./alife/README.md): 132 primary-source reviews,
+  18 partial reviews, 25 additions, explicit merge/exclusion decisions and seven linked reader artifacts.
+  The supplied PDF's ten-name repetition is removed. The catalog's original 129-row input is retained
+  only as a historical source-review snapshot, with captured working-file hashes.
+- Added public links and complete local/production downloads. The catalog has no new overall ranking;
+  the separate 155-entry matrix remains a single-rater rubric with related methods and variants.
+- Qualified an unsupported prior exhaustive-audit claim, corrected the harvester's filename-seed
+  description, and aligned the refuge-ablation comment with the tested immunity-only intervention.
+- Reviewed the existing worker change: explicit deterministic fixture mode, project-relative asset
+  resolution, and a separate default-worker functional probe replace a hidden smoke-only bypass.
+- Validation is recorded in the publication handoff and canonical receipts after the final tree passes
+  `bun run check`; this entry does not claim external-system replication or new scientific capabilities.
 
 ## 2026-10-22 — A-Life Landscape Audit: Broken External Index Replaced, Matrix Expanded 129 → 155
 
@@ -51,6 +68,41 @@ project against 140 A-Life systems. Audit of that PDF, of the canonical matrix
   judgments; a second independent rater is the open methodological gap.
 
 ---
+
+## 2026-10-21 — Reported corpus refresh and local lifecycle/documentation fixes
+
+The prior local work reported a repository-wide review and a sibling corpus refresh
+(`27` public repositories across `tsotchke` [`17`] and `Tsotchke-Corporation` [`10`] + `4` websites).
+Its claimed coverage of `965` authored files / `306,408` lines has no accompanying per-file review
+tracker in this change and is **unverified**. The publication pass reviewed the concrete diff below;
+it does not certify an exhaustive audit. External mirror operations below are prior-run reports.
+
+- **27-Repo Local Mirror & `.esk` Seed Harvest**:
+  - Identified that `../(Tsotchke)/update-tsotchke-corpus.py` previously had `SKIP_REPOS = {".github"}`
+    and therefore only mirrored `26` of the `27` public repositories on GitHub. Removed the skip filter
+    (`SKIP_REPOS = set()`), updated `update-tsotchke-corpus.bat` to resolve Python 3.12, and executed
+    `update-tsotchke-corpus.py`: `GITHUB DISCOVERY tsotchke: 17 repos`, `Tsotchke-Corporation: 10 repos`,
+    `GIT TARGETS DISCOVERED: 27`, `CLONE OK mirrors/.github` (`ea3554d93f970e6aaf1e19eaf1c3f7bb82b4b4a9`,
+    `2026-07-14`, `profile/README.md` 220 lines), `Git updates: 27 ok, 0 issues`, `Sites basic: 4/4`
+    (`eshkol.ai`, `tsotchke.org`, `tsotchke.net`, `api.tsotchke.net`).
+  - Re-ran `bun scripts/harvest-tsotchke-corpus.ts` to refresh `src/sim/generated-tsotchke-seeds.ts`
+    against the updated local mirror (`eskCount: 2493`, `totalScanned: 5156`, up from `1671`/`3115`).
+- **Code, Lifecycle, and Surface Fixes**:
+  - The prior edit disabled workers only under a hidden visual-smoke sentinel. Publication review
+    replaced that bypass with explicit `?workers=0` fixture configuration and a separate default-worker
+    functional probe. Runtime worker URLs are document-relative for project-subpath hosting.
+    Functional worker availability is not evidence of a frame-time improvement.
+  - Retained the resolved `Float32Array(12)` off-thread `WorkerPool` simulation summary vector on `World`
+    (`latestWorkerOct2026Summary` / `getWorkerOct2026Summary()`) and added `this.marketTicker.dispose()`
+    and `this.nhiObs.dispose()` to `World.dispose()` (`src/world.ts`).
+  - Removed the duplicate `@media (prefers-reduced-motion: reduce)` rule at the tail of `src/styles/app.css`
+    and deduplicated 10 repeated topic chip labels in `src/ui/help-system.ts`.
+  - Registered `docs/PRD-2026-07-02.md` in `scripts/sync-surfaces.ts` and `tests/docs-receipts-law.test.ts`
+    so its test-count receipt (`3,381 tests`) stays auto-synced and gate-policed.
+  - Updated `SECURITY.md` supported version table to `0.23.x`, added the `Full Oct 2026 public census: 27`
+    row to the top summary table in `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`, aligned
+    `masters/LEGENDARY-SUPER-SAIYAN-BROLY-MANIFESTO.xml` with the 27-repo / 16-Zig-kernel Oct 2026 notes,
+    and updated the header comment in `scripts/canonical-receipts.ts`.
 
 ## 2026-10-21 — Deep-Dive Assessment Resolution, Zig 0.17.0 Kernel Layer, and Tsotchke Oct 21 2026 Ecosystem Sync
 

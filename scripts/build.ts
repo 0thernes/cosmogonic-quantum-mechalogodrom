@@ -150,6 +150,9 @@ await mkdir('./dist/docs/reports/assets', { recursive: true });
 await cp('./docs/reports/assets', './dist/docs/reports/assets', { recursive: true });
 await mkdir('./dist/assets/alife', { recursive: true });
 await cp('./docs/reports/assets', './dist/assets/alife', { recursive: true });
+// Publish the reviewed catalog and its complete, linked download set.
+await mkdir('./dist/docs/alife', { recursive: true });
+await cp('./docs/alife', './dist/docs/alife', { recursive: true });
 
 const distFiles = await readdir('./dist');
 let satSrc = distFiles.find((f) => f.startsWith('satellite-music') && f.endsWith('.js'));

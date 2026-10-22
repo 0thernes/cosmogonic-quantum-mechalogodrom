@@ -285,7 +285,98 @@ const results = [];
 function tierUrl(tier) {
   const url = new URL(baseUrl);
   url.searchParams.set('tier', tier);
+  // Stable visual fixtures opt out explicitly; the separate probe below checks default worker-on boot.
+  url.searchParams.set('workers', '0');
   return url.toString();
+}
+
+/** Functional default-worker proof at the actual Pages subpath; this is not a throughput benchmark. */
+async function verifyDefaultWorkerPool() {
+  const url = new URL(baseUrl);
+  url.searchParams.set('tier', 'phone');
+  url.searchParams.delete('workers');
+  const lifecycle = {
+    tier: 'default-workers', currentStage: 'setup', stages: [], page: null,
+    pageCrashed: false, browserDisconnected: false, lastFailure: null,
+  };
+  const report = {
+    status: 'running', url: url.href,
+    measurementClass: 'default-worker-initialization-and-roundtrip-not-production-fps',
+    workerUrls: [], pageErrors: [],
+  };
+  let context = null;
+  activeLifecycle = lifecycle;
+  try {
+    await Promise.all([
+      rm(join(outDir, 'visual-smoke-default-workers.json'), { force: true }),
+      rm(join(outDir, 'visual-smoke-default-workers-failure.json'), { force: true }),
+    ]);
+    context = await runStage(lifecycle, 'worker-context-create', operationTimeoutMs, () =>
+      browser.newContext({ viewport: { width: 390, height: 844 } }),
+    );
+    await runStage(lifecycle, 'worker-frame-gate', operationTimeoutMs, () =>
+      context.addInitScript({ content: visualSmokeRafGateSource }),
+    );
+    const page = await runStage(lifecycle, 'worker-page-create', operationTimeoutMs, () => context.newPage());
+    lifecycle.page = page;
+    page.on('worker', (worker) => report.workerUrls.push(worker.url()));
+    page.on('pageerror', (error) => report.pageErrors.push(error.message));
+    page.on('crash', () => { lifecycle.pageCrashed = true; });
+    // Keep the normal worker-enabled boot path. After a real frame, hold subsequent rendering so
+    // software WebGL cannot starve the task reply or its timeout; this does not disable workers.
+    await runStage(lifecycle, 'worker-navigation', 125000, () =>
+      page.goto(url.href, { waitUntil: 'domcontentloaded', timeout: 120000 }),
+    );
+    report.presentedFrame = await runStage(lifecycle, 'worker-natural-frame-quiesce', 125000, () =>
+      waitForWorldHookAndQuiesce(page),
+    );
+    report.rendering = 'quiesced-after-bounded-natural-frame';
+    await runStage(lifecycle, 'worker-pool-ready', 65000, () =>
+      page.waitForFunction(() => window.__CQM__?.world?.workerPool?.getStats().totalWorkers > 0,
+        null, { polling: 250, timeout: 60000 }),
+    );
+    report.roundtrip = await runStage(lifecycle, 'worker-roundtrip', operationTimeoutMs, () =>
+      page.evaluate(async () => {
+        const pool = window.__CQM__?.world?.workerPool;
+        if (!pool) throw new Error('Default browser boot did not attach a worker pool');
+        const before = pool.getStats();
+        const result = await pool.executeAsync({
+          id: 'visual-smoke-default-worker-probe', type: 'simulation',
+          data: new Float32Array([1, 0.75, 0.22, 4]), seed: 42, dt: 0.016,
+        });
+        return {
+          expectedWorkerUrl: new URL('./workers/simulation-worker.js', document.baseURI).href,
+          success: result.success, error: result.error ?? null,
+          length: result.data.length, finite: Array.from(result.data).every(Number.isFinite),
+          hardwareConcurrency: navigator.hardwareConcurrency,
+          workerOverride: new URLSearchParams(location.search).get('workers'),
+          heldAnimationCallbacks: window.__CQM_VISUAL_SMOKE_RAF_GATE__?.heldCount ?? 0,
+          before, pool: pool.getStats(),
+        };
+      }),
+    );
+    const roundtrip = report.roundtrip;
+    if (!roundtrip.success || roundtrip.length !== 12 || !roundtrip.finite ||
+        roundtrip.workerOverride !== null || roundtrip.heldAnimationCallbacks < 1 ||
+        roundtrip.pool.totalWorkers < 1 || !report.workerUrls.includes(roundtrip.expectedWorkerUrl) ||
+        report.pageErrors.length > 0) {
+      throw new Error('Default worker roundtrip failed: ' + JSON.stringify(report));
+    }
+    report.status = 'passed';
+    report.stages = lifecycle.stages;
+    await writeFile(join(outDir, 'visual-smoke-default-workers.json'), JSON.stringify(report, null, 2));
+    return report;
+  } catch (error) {
+    await writeFailureArtifact(report, lifecycle, error);
+    await writeFile(summaryPath, JSON.stringify({
+      status: 'failed', requestedTiers: tiers, completedTiers: [],
+      failedProbe: 'default-workers', defaultWorkerProbe: report, results: [],
+    }, null, 2));
+    throw error;
+  } finally {
+    await closeContextBounded(context);
+    activeLifecycle = null;
+  }
 }
 
 function paeth(a, b, c) {
@@ -775,11 +866,13 @@ async function finishHabitatStressProbe(page) {
 }
 
 let activeLifecycle = null;
+let defaultWorkerProbe = null;
 browser.on('disconnected', () => {
   if (activeLifecycle) activeLifecycle.browserDisconnected = true;
 });
 
 try {
+  defaultWorkerProbe = await verifyDefaultWorkerPool();
   for (const tier of tiers) {
     console.log('visual-smoke: opening ' + tier);
     const screenshotPath = join(outDir, 'visual-smoke-' + tier + '.png');
@@ -1159,7 +1252,7 @@ try {
           !String(habitatStress.workers.asset.contentType).includes('javascript')
         ) {
           throw new Error(
-            tier + ': dormant worker override or built worker asset does not match ADR 0010',
+            tier + ': explicit workers=0 fixture or built worker asset check failed',
           );
         }
         if (
@@ -1225,6 +1318,7 @@ try {
             requestedTiers: tiers,
             completedTiers: results.map((result) => result.tier),
             failedTier: tier,
+            defaultWorkerProbe,
             startedAt: runStartedAt,
             completedAt: new Date().toISOString(),
             failure: report.failure ?? lifecycle.lastFailure,
@@ -1245,6 +1339,7 @@ try {
     JSON.stringify(
       {
         status: 'passed',
+        defaultWorkerProbe,
         requestedTiers: tiers,
         completedTiers: results.map((result) => result.tier),
         startedAt: runStartedAt,

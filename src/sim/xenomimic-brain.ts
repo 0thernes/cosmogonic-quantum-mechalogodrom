@@ -95,7 +95,7 @@ export interface SchrodingerSpreadWorkspace {
 /** Allocate the Xenomimic Schrödinger buffers once for repeated spread probes. */
 export function createSchrodingerSpreadWorkspace(): SchrodingerSpreadWorkspace {
   return {
-    potential: new Array<number>(SCHRO_GRID).fill(0),
+    potential: Array.from({ length: SCHRO_GRID }, () => 0),
     waveA: { re: new Float64Array(SCHRO_GRID), im: new Float64Array(SCHRO_GRID) },
     waveB: { re: new Float64Array(SCHRO_GRID), im: new Float64Array(SCHRO_GRID) },
     solver: createSchrodingerWorkspace(SCHRO_GRID),

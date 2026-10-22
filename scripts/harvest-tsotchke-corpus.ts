@@ -46,9 +46,10 @@ function harvest(): Harvest {
         // Sort by name: readdirSync order is filesystem-dependent, but this harvest
         // emits ESK_SAMPLE_PROGRAMS into generated source — the sample set (and the
         // committed output) must be reproducible across machines/OSes.
-        const ents = readdirSync(dir, { withFileTypes: true }).sort((a, b) =>
-          a.name < b.name ? -1 : a.name > b.name ? 1 : 0,
-        );
+        const ents = readdirSync(dir, { withFileTypes: true }).sort((a, b) => {
+          if (a.isDirectory() !== b.isDirectory()) return a.isDirectory() ? -1 : 1;
+          return a.name < b.name ? -1 : a.name > b.name ? 1 : 0;
+        });
         for (const e of ents) {
           const p = join(dir, e.name);
           if (e.isDirectory()) {
@@ -83,7 +84,7 @@ function harvest(): Harvest {
     // generated file, so every `bun dev` produced a spurious diff and a non-reproducible artifact.
     // Derive it from the corpus census instead: it changes only when the corpus actually changes.
     timestamp: `corpus:${eskCount}esk/${total}files`,
-    note: 'Harvested directly from local Tsotchke Repo Folder at build time. Eshkol .esk programs are the heritable substrate for digital biologics sentience. All other Tsotchke mirrors (moonlab, libirrep, QGT, spin, quake, etc.) provide the additional physics/geometry/order kernels.',
+    note: 'Local corpus census and filename-derived numeric seeds. This harvester counts files and hashes sampled .esk paths; it does not read or execute Eshkol program contents or establish sentience. Other Tsotchke integrations are documented separately in the integration ledger.',
   };
 }
 

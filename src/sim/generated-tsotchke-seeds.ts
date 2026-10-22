@@ -4,20 +4,20 @@
 // This file makes Cosmogonic actually BUILD WITH the Tsotchke Repo Folder.
 
 export const TSOTCHKE_HARVEST = {
-  eskCount: 1671,
+  eskCount: 2493,
   eskSamples: [
     'Eshkol/eshkol_repo/bench/pgo_corpus/arithmetic.esk',
     'Eshkol/eshkol_repo/bench/pgo_corpus/autodiff.esk',
     'Eshkol/eshkol_repo/bench/pgo_corpus/lists.esk',
     'Eshkol/eshkol_repo/bench/pgo_corpus/strings.esk',
     'Eshkol/eshkol_repo/bench/pgo_corpus/tensors.esk',
+    'Eshkol/eshkol_repo/bench/allocation_hardening_probe.esk',
     'Eshkol/eshkol_repo/benchmarks/activation_bench.esk',
     'Eshkol/eshkol_repo/benchmarks/conv2d_bench.esk',
-    'Eshkol/eshkol_repo/benchmarks/gpu_vs_cpu_bench.esk',
   ],
-  totalScanned: 3115,
-  timestamp: 'corpus:1671esk/3115files',
-  note: 'Harvested directly from local Tsotchke Repo Folder at build time. Eshkol .esk programs are the heritable substrate for digital biologics sentience. All other Tsotchke mirrors (moonlab, libirrep, QGT, spin, quake, etc.) provide the additional physics/geometry/order kernels.',
+  totalScanned: 5156,
+  timestamp: 'corpus:2493esk/5156files',
+  note: 'Local corpus census and filename-derived numeric seeds. This harvester counts files and hashes sampled .esk paths; it does not read or execute Eshkol program contents or establish sentience. Other Tsotchke integrations are documented separately in the integration ledger.',
 } as const;
 
 export const ESK_SAMPLE_PROGRAMS: readonly string[] = [
@@ -26,15 +26,15 @@ export const ESK_SAMPLE_PROGRAMS: readonly string[] = [
   'Eshkol/eshkol_repo/bench/pgo_corpus/lists.esk',
   'Eshkol/eshkol_repo/bench/pgo_corpus/strings.esk',
   'Eshkol/eshkol_repo/bench/pgo_corpus/tensors.esk',
+  'Eshkol/eshkol_repo/bench/allocation_hardening_probe.esk',
   'Eshkol/eshkol_repo/benchmarks/activation_bench.esk',
   'Eshkol/eshkol_repo/benchmarks/conv2d_bench.esk',
-  'Eshkol/eshkol_repo/benchmarks/gpu_vs_cpu_bench.esk',
 ];
 
 // Convenience: a small set of numeric "genomes" derived from real .esk file name hashes.
 // These can seed primordial-soup / digital-biologics with authentic Eshkol DNA.
 export const ESK_DERIVED_SEEDS: readonly number[] = [
-  322207808, 120001544, 530687100, 1418981936, 1248097469, 1316209996, 606386545, 422515204,
+  322207808, 120001544, 530687100, 1418981936, 1248097469, 2159812821, 1316209996, 606386545,
 ];
 
 export function getEshkolProgramFingerprint(index: number): number {

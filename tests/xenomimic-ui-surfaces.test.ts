@@ -83,14 +83,18 @@ describe('canonical Xenomimic public integration', () => {
     expect(issue).toContain('not evidence of sentience or physical quantum effects');
   });
 
-  test('keeps browser workers dormant in POWER mode while preserving synchronous wilderness', () => {
+  test('starts workers explicitly in main while preserving the synchronous wilderness fallback', () => {
     const world = read('src/world.ts');
     const adr = read('docs/adr/0010-worker-offload-and-streamed-hybrid-world-2026-06-26.md');
     expect(world).toContain('this.workerPool = null');
     expect(world).toContain('new WildernessPopulation(null, this.persisted.seed)');
     expect(world).not.toContain('new WorkerPool(');
     expect(world).not.toContain('initWorkerPoolAsync');
-    expect(adr).toContain('live browser runtime now constructs');
-    expect(adr).toContain('delivered frames stalled for multiple seconds');
+    const main = read('src/main.ts');
+    expect(main).toContain("searchParams.get('workers') !== '0'");
+    expect(main).toContain("new URL('./workers/simulation-worker.js', document.baseURI).href");
+    expect(main).not.toContain("!('__CQM_VISUAL_SMOKE_RAF_GATE__' in window)");
+    expect(adr).toContain('Historical operational override');
+    expect(adr).toContain('performance benefit unproven');
   });
 });

@@ -8,7 +8,7 @@
 [![License: Non-Commercial Research & Play](https://img.shields.io/badge/License-Non--Commercial%20Research%20%26%20Play-2ea043.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
-[![tests](https://img.shields.io/badge/tests-3388%20exact-brightgreen)](./tests)
+[![tests](https://img.shields.io/badge/tests-3394%20exact-brightgreen)](./tests)
 [![coverage](https://img.shields.io/badge/coverage-84.64%25%20line%20%C2%B7%2082.21%25%20func-success)](./docs/TECHNICAL-SPECIFICATION-2026-06-26.md)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION-2026-06-26.md)
 [![Tsotchke](https://img.shields.io/badge/Tsotchke-REAL__MIT__CORPUS-purple)](https://github.com/tsotchke)
@@ -30,7 +30,7 @@ diffusion, **and the Tsotchke corpus wired as the primordial substrate for digit
   certified indicators or consciousness.
 
 - Package/source version: **v0.23.0**.
-- Exact tracked-suite receipt: **3,388 tests / 0 fail**. Portable public coverage floor: **84.64% line / 82.21% func**.
+- Exact tracked-suite receipt: **3,394 tests / 0 fail**. Portable public coverage floor: **84.64% line / 82.21% func**.
 - **Standing & xeno-A-life position (readable synthesis):** [Comprehensive Standing Report (MD)](./docs/reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.md) · [HTML](./docs/reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.html) — engineering card, historical 113-system matrix (a point-in-time snapshot, superseded by the current 155-system re-evaluation), SuperCreature/SuperMind/Apex/Mechalogodrom deep dive, capital/ISAL path. Apex minds are **xeno multi-faculty scaffolds** (not OpenWorm bio-twins; not claimed sentience). Preserves V4/Phase-B failure-forward boundaries.
 - **Dome ecology verification:** [Xenomimic tether and Big Tree evidence report](./docs/reports/DOME-ECOLOGY-VERIFICATION-2026-07-14.md) — canonical food, five-second simulation-time respawn, sanctuary transitions, temporary visits, resident controllers, social cleanup, performance, browser evidence, and explicit limitations.
 
@@ -553,7 +553,7 @@ full gate with same-seed determinism preserved. The major arcs:
   ported primitive. The whole apex beat is now measured honestly: **~1.99 ms** per `SuperMind.think()`
   (range 1.41–5.62 ms) and **~9.77 ms** for the staggered 5-mind batch (~58% of a 60 fps frame, which is
   why 5 minds run staggered against 20 light echoes); the older sub-millisecond / `<2%` GOAL5 claim is
-  superseded until re-proven. **3,388 exact tracked tests · 0 fail (receipts enforced) · 84.64% line / 82.21% func portable coverage floor.**
+  superseded until re-proven. **3,394 exact tracked tests · 0 fail (receipts enforced) · 84.64% line / 82.21% func portable coverage floor.**
   <!-- cqm-sync:local-measurement:start -->
   **Latest Windows-local measurement: 3,297 tests / 0 fail / 3,589,864 assertions at `93.60%` line / `91.61%` func.**
   <!-- cqm-sync:local-measurement:end -->
@@ -757,7 +757,17 @@ Full detail in docs/.
 - [CONTRIBUTING.md](./CONTRIBUTING.md) · [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) ·
   [SECURITY.md](./SECURITY.md) · [CHANGELOG.md](./CHANGELOG.md)
 
-## A-Life comparative analysis (vs 155 systems)
+## A-Life evidence catalog and comparative analysis
+
+**[Browse the 150-entry source-reviewed catalog](./docs/alife/cqm-alife-catalog.html)** ·
+[PDF](./docs/alife/cqm-alife-audit.pdf) · [Workbook](./docs/alife/cqm-alife-catalog.xlsx) ·
+[CSV](./docs/alife/cqm-alife-catalog.csv) · [Complete bundle](./docs/alife/cqm-alife-audit-bundle.zip).
+This audit removes the repeated PDF filler, corrects identities and citations, and records 132
+primary-source reviews plus 18 partial reviews. Mechalogodrom has a separate mechanism-and-limit profile.
+[Scope, exclusions and snapshot provenance](./docs/alife/README.md) explain why this external-entry
+catalog differs from the 155-entry scoring matrix below.
+
+### Single-rater 155-entry comparison rubric
 
 A reproducible, **code-grounded** comparison of this repo against 154 well-known Artificial-Life /
 open-ended-evolution / digital-organism systems (Tierra, Avida, Polyworld, Framsticks, Karl Sims, Creatures,
@@ -774,7 +784,7 @@ evidence notes — is generated from the same CSV by
 [`gen-alife-landscape-report.ts`](./scripts/gen-alife-landscape-report.ts) inside `gen:alife`;
 `bun run report:alife-landscape` prints it to PDF.
 
-The 154 peers are literature judgments, each with a cited source and a verification note in the CSV. Cosmogonic's current CSV row is the code-grounded vector
+The 154 peer rows are single-rater literature judgments, including related variants and methods, each with a cited source and a verification note in the CSV. These are named entries, not independent project families. Numerical ranks and z-scores describe the chosen rubric and sample; they do not establish scientific superiority or statistical significance. Cosmogonic's current CSV row is the code-grounded vector
 `[4.0, 2.0, 3.4, 3.8, 4.5, 4.6, 4.4, 3.5, 4.0]` (GATE-REPRO-SELECT + GATE-DOME-REFUGE);
 the table retains the earlier self-score only as a historical sensitivity baseline:
 
