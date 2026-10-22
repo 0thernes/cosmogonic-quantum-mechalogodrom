@@ -1,10 +1,98 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "title": "CQM-25: digital-life capability research profile",
   "reviewedAt": "2026-10-21",
   "sourceCommit": "339c6daa8cdcaf27e4e6dcce3b93bdba39980bf9",
   "scope": "A research-informed profile for artificial life, embodied synthetic cognition and procedural morphogenesis, spanning the organization of one being, adaptive behavior, consciousness-related mechanisms and the engineering of inspectable worlds.",
+  "governance": {
+    "status": "canonical",
+    "adopted": "2026-10-22",
+    "decision": "docs/adr/0018-cqm-25-capability-law-2026-10-22.md",
+    "rules": [
+      "CQM-25 is the canonical capability framework of this repository. Every claim about life-like organization, cognition, consciousness-linked mechanisms, valence-related control or engineering scale, in documentation, user interface text, commits and agent output, is made against it.",
+      "A capability claim names its CQM-25 axis and that axis's current evidence state, and claims no more than that state supports.",
+      "An evidence state changes only with repository evidence that exists at the pinned commit and a passing test. Raising a state follows the axis's acceptance experiment and survives its falsifier.",
+      "Numeric capability scores stay null until a calibrated successor edition executes the axis protocols with controls, independent experimental units and reported rater agreement.",
+      "The nine-axis, 155-system peer survey is a legacy comparison view. It keeps its own rubric and scores, is crosswalked to CQM-25 at the level of constructs only, and never supplies or receives CQM-25 scores.",
+      "No aggregate life, consciousness, sentience, AGI or superintelligence score is derived from the axes."
+    ]
+  },
   "legacyVisualReview": "The existing visual-scale rating remains 4.0 (rich visuals). A single complex being qualifies: Xylos exposes neural activity through deforming membranes and a visible graph, while apex forms and populations add other scales. Population capacity, delivered frame time and individual visual expressiveness are distinct measurements. The rubric's 5.0 anchor, iconic spectacle, has no independent calibration that justifies a numerical uplift in this review.",
+  "legacyCrosswalk": [
+    {
+      "legacyAxis": "Reproduction",
+      "axisIds": [
+        "reproduction_heredity"
+      ],
+      "relation": "Same construct. The legacy rubric grades heredity, mutation and selection; CQM-25 adds pedigree tracking and a randomized-parentage control."
+    },
+    {
+      "legacyAxis": "Open-endedness",
+      "axisIds": [
+        "evolutionary_innovation"
+      ],
+      "relation": "Same construct. CQM-25 adds neutral-drift and frozen-heredity controls, retention of new functions and finite-horizon novelty trajectories."
+    },
+    {
+      "legacyAxis": "Ecology",
+      "axisIds": [
+        "environmental_coupling"
+      ],
+      "relation": "The legacy rubric grades multi-species interaction and food webs. CQM-25 generalizes it to bidirectional entity-environment coupling, for which a single being is eligible."
+    },
+    {
+      "legacyAxis": "Morphology/Physics",
+      "axisIds": [
+        "morphology_development",
+        "embodied_dynamics"
+      ],
+      "relation": "The legacy axis merges body and physics. CQM-25 separates developmental morphology from consistency with declared dynamics and does not require Earth-like realism."
+    },
+    {
+      "legacyAxis": "Cognition/Learning",
+      "axisIds": [
+        "perception",
+        "learning",
+        "memory",
+        "predictive_causal_models",
+        "autonomous_goals",
+        "reasoning_planning",
+        "transfer_generalization"
+      ],
+      "relation": "The legacy rubric is one ladder from reactive control to deep reinforcement learning. CQM-25 assesses seven cognitive functions separately."
+    },
+    {
+      "legacyAxis": "Substrate pluralism",
+      "axisIds": [
+        "substrate_pluralism"
+      ],
+      "relation": "Same construct, reported in CQM-25 as engineering context rather than capability."
+    },
+    {
+      "legacyAxis": "Instrumentation",
+      "axisIds": [
+        "instrumentation_reproducibility"
+      ],
+      "relation": "Same construct. CQM-25 adds preregistration, independent units, archived inputs and replication."
+    },
+    {
+      "legacyAxis": "Consciousness-theory",
+      "axisIds": [
+        "metacognition_self_model",
+        "recurrent_processing",
+        "global_availability",
+        "causal_integration"
+      ],
+      "relation": "The legacy rubric grades whether a computational theory of consciousness is implemented. CQM-25 separates theory-linked mechanisms and treats none of them as evidence of experience."
+    },
+    {
+      "legacyAxis": "Visual scale",
+      "axisIds": [
+        "visual_embodied_scale"
+      ],
+      "relation": "Same construct. CQM-25 measures single-being expression, population capacity and delivered frame time separately."
+    }
+  ],
   "evaluationProtocol": [
     "Declare the unit of analysis, entity boundary, intended modeling fidelity and applicable axes before evaluation. Treat individual, population and world measurements separately. N/A needs a scope reason; missing or failed evidence cannot be relabeled N/A.",
     "Freeze the implementation, task generator, development and held-out distributions, training exposure, horizon, hardware and resource budget. Preregister primary metrics, meaningful effect sizes, failure conditions and stopping rules.",

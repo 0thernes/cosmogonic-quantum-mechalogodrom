@@ -10,6 +10,7 @@
  */
 import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
+import { RADAR } from '../scripts/alife-comparison-stats';
 import {
   computeAlifeCodeground,
   SUPERSEDES_SELF_SCORE,
@@ -83,11 +84,13 @@ describe('A-Life code-grounded stats are computed-and-gated (no silent drift)', 
       expect(points, `${surface}: amber Cosmogonic polygon not found`).toBeDefined();
       const decoded = points!.split(' ').map((pair, j) => {
         const [x, y] = pair.split(',').map(Number) as [number, number];
-        // chartRadar(): centre (240,300), radius = (v/5)*116, axis j at -90° + j*(360/9).
+        // chartRadar(): centre (RADAR.cx, RADAR.cy), radius = (v/5)*RADAR.r, axis j at -90° + j*(360/9).
         const ang = -Math.PI / 2 + (2 * Math.PI * j) / axes.length;
         const r =
-          Math.abs(Math.cos(ang)) > 0.3 ? (x - 240) / Math.cos(ang) : (y - 300) / Math.sin(ang);
-        return Math.round((r / 23.2) * 100) / 100;
+          Math.abs(Math.cos(ang)) > 0.3
+            ? (x - RADAR.cx) / Math.cos(ang)
+            : (y - RADAR.cy) / Math.sin(ang);
+        return Math.round((r / (RADAR.r / 5)) * 100) / 100;
       });
       expect(decoded, `${surface}: inline radar is stale`).toEqual(axes);
     }

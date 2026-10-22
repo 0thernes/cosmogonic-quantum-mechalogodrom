@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **CQM-25 is the capability law** (ADR 0018). The profile (schema v2) carries the binding rules
+  and a construct-level crosswalk from the nine legacy survey axes to 19 of the 25 constructs; the
+  six the survey never measured (social cognition, individuality, self-maintenance, homeostasis,
+  repair, valence-related control) are named in every rendering. The law is in `CLAUDE.md`,
+  `AGENTS.md` and MODULE-CONTRACTS, leads the capability gallery and the in-app HELP, and is enforced
+  by the generator and `tests/cqm-capability-law.test.ts`. No score is added or transferred.
+- Nine-axis radar upgraded to the **survey view**: larger plot, scale rings, each spoke's score and
+  survey mean, and the CQM-25 axes it maps to. Its scores keep the survey rubric.
 - CQM-25 research profile: 25 operational dimensions, primary-source foundations, pinned repository evidence, explicit acceptance experiments and falsifiers. Searchable responsive HTML, JSON, Markdown and an evidence-map SVG supplement the historical nine-axis comparison without inventing capability ratings.
 - `.gitattributes`: root documentation HTML (`docs.html`, `specs.html`), the generated `bible.html`
   and gallery bundle, and the verbatim `legacy/` archive no longer count toward the GitHub Languages

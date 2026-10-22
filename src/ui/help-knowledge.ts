@@ -323,6 +323,28 @@ export const HELP_KB: readonly HelpEntry[] = [
     ],
   },
   {
+    id: 'capability-law',
+    title: 'What is CQM-25, the capability law?',
+    keywords: [
+      'cqm-25',
+      'cqm',
+      'capability',
+      'law',
+      'framework',
+      'benchmark',
+      '25-axis',
+      'evidence',
+      'falsifier',
+      'crosswalk',
+    ],
+    body: 'CQM-25 is the canonical capability framework (ADR 0018): 25 constructs across life, evolution and embodiment, individual organization, cognition, consciousness-linked mechanisms and engineering context, each with measures, an acceptance experiment, a falsifier, sources and a repository evidence state. Every capability claim names its axis and state and claims no more. Scores stay null until a calibrated edition; no aggregate life, consciousness, sentience, AGI or SI score exists. The 155-system nine-axis survey is the legacy comparison view, crosswalked to 19 of the 25 constructs.',
+    see: [
+      'docs/alife/cqm-capability-profile.html',
+      'docs/adr/0018-cqm-25-capability-law-2026-10-22.md',
+      'docs/reports/assets/alife-capability-profile-25.svg',
+    ],
+  },
+  {
     id: 'alife-standing',
     title: 'How does this rank vs other A-Life systems?',
     keywords: [
@@ -339,7 +361,7 @@ export const HELP_KB: readonly HelpEntry[] = [
       '9-axis',
       'peer',
     ],
-    body: 'Against an internal 155-system 9-axis survey, Cosmogonic ranks #1 by breadth (3.80 code-grounded). Vector: reproduction 4.0, open-endedness 2.0, ecology 3.4, morphology 3.8, cognition 4.5, substrate 4.6, instrumentation 4.4, consciousness-theory 3.5 held, visual 4.0. Solo-class strengths are substrate + cognition + instrumentation. Softest absolute axis is open-endedness 2.0 (fixed-target fitness). Peer maturity is 1.5/5 — no external peer review yet. Not a Nature ranking; not Avida/Sims/Polyworld at their specialty. Charts live under docs/reports/assets/.',
+    body: 'Legacy survey view (capability claims follow CQM-25, the capability law). Against an internal 155-system 9-axis survey, Cosmogonic ranks #1 by breadth (3.80 code-grounded). Vector: reproduction 4.0, open-endedness 2.0, ecology 3.4, morphology 3.8, cognition 4.5, substrate 4.6, instrumentation 4.4, consciousness-theory 3.5 held, visual 4.0. Solo-class strengths are substrate + cognition + instrumentation. Softest absolute axis is open-endedness 2.0 (fixed-target fitness). Peer maturity is 1.5/5 — no external peer review yet. Not a Nature ranking; not Avida/Sims/Polyworld at their specialty. Charts live under docs/reports/assets/.',
     see: [
       'docs/VERIFICATION-ANALYTICAL-DATA.md',
       'docs/reports/assets/alife-radar-profile.svg',

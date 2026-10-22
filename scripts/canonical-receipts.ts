@@ -1,6 +1,9 @@
 /**
  * CANONICAL RECEIPTS -- the single source of truth for the repo's measured gate figures.
  *
+ * CQM-25 capability law adds seven law checks and one tracked Markdown link check for ADR 0018
+ * (+8 from 3422). The full receipt gate verifies the exact count below.
+ *
  * Chart-bounds gate adds twelve per-chart canvas checks, a clipped-label regression and four
  * label-helper tests (+17 from 3405). The full receipt gate verifies the exact count below.
  *
@@ -32,7 +35,7 @@
  *
  * To update after adding/removing tests: `bun scripts/verify-receipts.ts --print`, paste here, re-sync.
  */
-export const CANONICAL_TEST_COUNT = 3422;
+export const CANONICAL_TEST_COUNT = 3430;
 export const CANONICAL_LINE_COV = '84.64';
 export const CANONICAL_FUNC_COV = '82.21';
 

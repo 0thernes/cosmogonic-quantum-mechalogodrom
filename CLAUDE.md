@@ -19,6 +19,16 @@ substantive change; they are personas of one discipline and they outrank vibes:
   (V1 + V2). Contract wins over any writer deviation.
 - Aesthetic constitution: [docs/PHILOSOPHY-2026-06-26.md](docs/PHILOSOPHY-2026-06-26.md) — real math
   under every effect; every system reads AND writes another system.
+- **CQM-25 capability law (binding, [ADR 0018](docs/adr/0018-cqm-25-capability-law-2026-10-22.md)):**
+  [docs/alife/cqm-capability-profile.json](docs/alife/cqm-capability-profile.json) is the canonical
+  capability framework. Every claim about life-like organization, cognition, consciousness-linked
+  mechanisms, valence-related control or engineering scale names its CQM-25 axis and that axis's
+  evidence state, and claims no more. An evidence state moves only with repository evidence and a
+  passing test at a pinned commit, following the axis's acceptance experiment and falsifier. Scores
+  stay null until a calibrated edition; no aggregate life, consciousness, sentience, AGI or SI score.
+  The nine-axis, 155-system survey is the legacy comparison view, crosswalked to CQM-25 by construct
+  only (`legacyCrosswalk`), never a score source in either direction. Enforced by
+  `scripts/gen-capability-profile.ts` and `tests/cqm-capability-law.test.ts`.
 - Full gate before any commit: `bun run check`
   (prettier → tsc strict → oxlint → verify:receipts [test + coverage] → sync:check → verify:facts → build).
 - **Single source of truth + auto-sync:** the version (`package.json`) and the receipts

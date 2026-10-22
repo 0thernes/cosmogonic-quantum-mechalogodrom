@@ -1,6 +1,7 @@
 /**
- * ALife survey metric gallery — hero + full thumbnail grid with pan/zoom for docs.html + specs.html.
- * Nine-axis radar is the default hero; tabs / hero-click cycle; every chart is visible below with its own zoom.
+ * ALife capability gallery — hero + full thumbnail grid with pan/zoom for docs.html + specs.html.
+ * CQM-25, the canonical capability framework (ADR 0018), is the default hero; the nine-axis survey view
+ * and its statistics follow. Tabs / hero-click cycle; every chart is visible below with its own zoom.
  */
 import { ALIFE_SVG_EMBED } from './generated/alife-svg-embed';
 
@@ -129,16 +130,16 @@ async function loadMetricImg(
 
 export const ALIFE_METRICS: readonly AlifeMetric[] = [
   {
-    id: 'radar',
-    label: 'Nine-axis profile',
-    file: 'alife-radar-profile.svg',
-    alt: 'Nine-axis capability radar profile',
+    id: 'capability-25',
+    label: 'CQM-25 capability law',
+    file: 'alife-capability-profile-25.svg',
+    alt: 'CQM-25, the canonical capability framework: twenty-five dimensions with categorical repository evidence, not capability scores',
   },
   {
-    id: 'capability-25',
-    label: '25-axis research profile',
-    file: 'alife-capability-profile-25.svg',
-    alt: 'Twenty-five research dimensions with categorical repository evidence, not capability scores',
+    id: 'radar',
+    label: 'Nine-axis survey view',
+    file: 'alife-radar-profile.svg',
+    alt: 'Nine-axis survey radar with each axis crosswalked to CQM-25 axis numbers',
   },
   {
     id: 'pca',
@@ -434,8 +435,8 @@ export function mountAlifeMetricsGallery(root: HTMLElement | null): void {
 
   root.className = 'alife-gallery';
   root.innerHTML =
-    `<h2>ALife survey metric visuals</h2>` +
-    `<p class="lead">Explore the <a data-capability-profile>25-axis research profile: measures, scope and evidence</a>, alongside eleven nine-axis survey charts. The new profile reports evidence categories without invented numerical ratings; click a tab, the hero, or any thumbnail below to focus. Drag to pan, wheel or +/- to zoom.</p>` +
+    `<h2>Capability framework and survey visuals</h2>` +
+    `<p class="lead"><a data-capability-profile>CQM-25 is the capability law: 25 constructs with measures, scope, falsifiers and evidence</a>. It reports evidence categories, not invented ratings. The eleven nine-axis survey charts follow as the legacy peer comparison, crosswalked to CQM-25 by construct. Click a tab, the hero, or any thumbnail below to focus. Drag to pan, wheel or +/- to zoom.</p>` +
     `<div class="alife-hero" role="tabpanel"><div class="alife-toolbar">` +
     `<button type="button" class="alife-tool" data-zoom-in title="Zoom in">+</button>` +
     `<button type="button" class="alife-tool" data-zoom-out title="Zoom out">−</button>` +

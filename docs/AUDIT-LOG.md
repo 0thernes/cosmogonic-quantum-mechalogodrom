@@ -11,6 +11,24 @@ changed and why.
 
 ---
 
+## 2026-10-22 — CQM-25 enacted as the capability law
+
+- Owner directive: make CQM-25 the binding framework and upgrade the nine-axis view. Recorded as
+  [ADR 0018](./adr/0018-cqm-25-capability-law-2026-10-22.md); the rules live in the profile's
+  `governance` block and in `CLAUDE.md`/`AGENTS.md`.
+- The crosswalk maps each legacy survey axis to the constructs its rubric grades: reproduction (01),
+  open-endedness (02), ecology (03), morphology/physics (04-05), cognition/learning (06-12),
+  consciousness-theory (13, 19-21), substrate pluralism (23), instrumentation (24), visual scale (25).
+  Six constructs have no legacy counterpart: 14, 15, 16, 17, 18 and 22. Mapping is by construct only;
+  the 155-system scores, statistics and rankings are unchanged, and CQM-25 scores remain null.
+- Kept honest by design: CQM-25 binds claims made in this repository and is still described as
+  author-defined, not an external consensus standard. Evidence states move only through an axis's
+  acceptance experiment; calibration is the prerequisite for any score.
+- The survey radar now shows values, means, rings and CQM-25 axis numbers on a 720 x 780 canvas;
+  every label passes the chart-bounds gate. `tests/cqm-capability-law.test.ts` adds seven checks.
+
+---
+
 ## 2026-10-22 — Chart canvas audit after the radar repair
 
 - The radar repair in `44dc4450` fixed one figure. Rendering all eleven survey charts in Chromium and

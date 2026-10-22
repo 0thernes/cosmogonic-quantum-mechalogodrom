@@ -1,16 +1,43 @@
 # CQM-25: digital-life capability research profile
 
-Proposed operational framework; reviewed 2026-10-21. Evidence reference: `339c6daa8cdcaf27e4e6dcce3b93bdba39980bf9`.
+Canonical capability framework of this repository, binding since 2026-10-22 ([ADR 0018](../adr/0018-cqm-25-capability-law-2026-10-22.md)). Evidence reviewed 2026-10-21; reference `339c6daa8cdcaf27e4e6dcce3b93bdba39980bf9`.
 
 A research-informed profile for artificial life, embodied synthetic cognition and procedural morphogenesis, spanning the organization of one being, adaptive behavior, consciousness-related mechanisms and the engineering of inspectable worlds.
 
 This is an author-defined research profile, not a consensus gold standard or an executed 25-task benchmark. Engineering dimensions do not establish consciousness, sentience, AGI or superintelligence. Numeric capability scores remain null until calibrated.
+
+## The capability law
+
+1. CQM-25 is the canonical capability framework of this repository. Every claim about life-like organization, cognition, consciousness-linked mechanisms, valence-related control or engineering scale, in documentation, user interface text, commits and agent output, is made against it.
+2. A capability claim names its CQM-25 axis and that axis's current evidence state, and claims no more than that state supports.
+3. An evidence state changes only with repository evidence that exists at the pinned commit and a passing test. Raising a state follows the axis's acceptance experiment and survives its falsifier.
+4. Numeric capability scores stay null until a calibrated successor edition executes the axis protocols with controls, independent experimental units and reported rater agreement.
+5. The nine-axis, 155-system peer survey is a legacy comparison view. It keeps its own rubric and scores, is crosswalked to CQM-25 at the level of constructs only, and never supplies or receives CQM-25 scores.
+6. No aggregate life, consciousness, sentience, AGI or superintelligence score is derived from the axes.
 
 ## Visual scale and the nine-axis comparison
 
 The existing visual-scale rating remains 4.0 (rich visuals). A single complex being qualifies: Xylos exposes neural activity through deforming membranes and a visible graph, while apex forms and populations add other scales. Population capacity, delivered frame time and individual visual expressiveness are distinct measurements. The rubric's 5.0 anchor, iconic spectacle, has no independent calibration that justifies a numerical uplift in this review.
 
 The 155-system comparison remains a separate nine-axis rubric. No peer scores or rankings are inferred here.
+
+## From the nine-axis survey to CQM-25
+
+Each legacy survey axis maps to the CQM-25 constructs it measures. No score moves in either direction.
+
+| Legacy axis | CQM-25 axes | Relation |
+| --- | --- | --- |
+| Reproduction | 01 | Same construct. The legacy rubric grades heredity, mutation and selection; CQM-25 adds pedigree tracking and a randomized-parentage control. |
+| Open-endedness | 02 | Same construct. CQM-25 adds neutral-drift and frozen-heredity controls, retention of new functions and finite-horizon novelty trajectories. |
+| Ecology | 03 | The legacy rubric grades multi-species interaction and food webs. CQM-25 generalizes it to bidirectional entity-environment coupling, for which a single being is eligible. |
+| Morphology/Physics | 04–05 | The legacy axis merges body and physics. CQM-25 separates developmental morphology from consistency with declared dynamics and does not require Earth-like realism. |
+| Cognition/Learning | 06–12 | The legacy rubric is one ladder from reactive control to deep reinforcement learning. CQM-25 assesses seven cognitive functions separately. |
+| Substrate pluralism | 23 | Same construct, reported in CQM-25 as engineering context rather than capability. |
+| Instrumentation | 24 | Same construct. CQM-25 adds preregistration, independent units, archived inputs and replication. |
+| Consciousness-theory | 13, 19–21 | The legacy rubric grades whether a computational theory of consciousness is implemented. CQM-25 separates theory-linked mechanisms and treats none of them as evidence of experience. |
+| Visual scale | 25 | Same construct. CQM-25 measures single-being expression, population capacity and delivered frame time separately. |
+
+Not measured by the nine-axis survey: 14 Social cognition and communication · 15 Individuality and maintained boundary · 16 Resource-dependent self-maintenance · 17 Homeostatic regulation · 18 Repair and functional resilience · 22 Valence-related control and motivational trade-offs.
 
 ## Evaluation protocol
 
@@ -40,6 +67,7 @@ The 155-system comparison remains a separate nine-axis rubric. No peer scores or
 Production of descendants with causally inherited, variable organization.
 
 - Domain: Life, evolution and embodiment; kind: life; scope: entity, population.
+- Legacy survey axis: Reproduction.
 - Evidence review: Bounded test evidence. Capability score: uncalibrated.
 - Current finding: Genome crossover and mutation are implemented, and the shipped entity fission test compares inherited-trait selection with a trait-blind control. This supports bounded heredity and fecundity selection; autonomous open-ended reproduction and the new pedigree protocol remain unassessed.
 - Measures: viable offspring per parent; parent-offspring trait transmission; heritable variation under matched conditions
@@ -53,6 +81,7 @@ Production of descendants with causally inherited, variable organization.
 Selection produces retained adaptive novelty across generations; open-endedness remains a finite-horizon research claim.
 
 - Domain: Life, evolution and embodiment; kind: life; scope: population.
+- Legacy survey axis: Open-endedness.
 - Evidence review: Mixed or restricted evidence. Capability score: uncalibrated.
 - Current finding: Existing entity and Petri tests exercise differential selection and strain-specific fitness effects. They do not establish retained new functions, superiority to drift across novel tasks, or sustained open-ended innovation; finite forms and scripted progression must not be counted as such evidence.
 - Measures: fitness gain over drift control; functional novelty and retention; MODES trajectories with horizon
@@ -66,6 +95,7 @@ Selection produces retained adaptive novelty across generations; open-endedness 
 Bidirectional functional dependence between an entity and its surroundings; multi-species ecology is an optional extension.
 
 - Domain: Life, evolution and embodiment; kind: life; scope: entity, population, world.
+- Legacy survey axis: Ecology.
 - Evidence review: Bounded test evidence. Capability score: uncalibrated.
 - Current finding: Xylos senses local Gray-Scott chemistry and changes that field through gated actions; tests check subsequent perception and compare a closed loop with uniform inputs. This supports a single-entity causal loop, not the full new perturbation protocol or long-horizon ecological persistence.
 - Measures: effect of world perturbation on behavior; effect of entity intervention on world state; niche or interaction persistence when applicable
@@ -79,6 +109,7 @@ Bidirectional functional dependence between an entity and its surroundings; mult
 Structured embodiment develops or changes through local rules and interactions, with measurable functional consequences.
 
 - Domain: Life, evolution and embodiment; kind: life; scope: entity.
+- Legacy survey axis: Morphology/Physics.
 - Evidence review: Mixed or restricted evidence. Capability score: uncalibrated.
 - Current finding: Procedural bodies change with internal state, evolution parameters and deterministic morph transitions. Existing body tests demonstrate state-dependent geometry and rendering behavior; they do not establish developmental growth with independently measured functional benefits under body lesions or changed boundary conditions.
 - Measures: developmental reproducibility; structural organization; body perturbation effect on function
@@ -92,6 +123,7 @@ Structured embodiment develops or changes through local rules and interactions, 
 Action, body and environment follow declared, consistent update laws. Earth-like physical realism is not required.
 
 - Domain: Life, evolution and embodiment; kind: engineering; scope: entity, world.
+- Legacy survey axis: Morphology/Physics.
 - Evidence review: Bounded test evidence. Capability score: uncalibrated.
 - Current finding: Xylos uses fixed-step cognitive updates and bounded motion, with tests for timestep partitioning, input validation and finite state. These are local consistency checks, not a convergence or invariant audit of every world subsystem; Earth-like physical realism is not required by this axis.
 - Measures: timestep or resolution convergence; declared invariant violations; action-body-environment causal response
@@ -105,6 +137,7 @@ Action, body and environment follow declared, consistent update laws. Earth-like
 Task-relevant state is inferred from available sensory input across noise, ambiguity and transformations.
 
 - Domain: Adaptive and general cognition; kind: cognition; scope: entity.
+- Legacy survey axis: Cognition/Learning.
 - Evidence review: Bounded test evidence. Capability score: uncalibrated.
 - Current finding: Xylos integrates numeric chemical, hazard and gradient channels with learned reliability; existing tests compare predictable and noisy observations. These channels expose simulation measurements directly, so they do not establish visual recognition, label-free perception or robustness on the proposed held-out sensory tasks.
 - Measures: held-out discrimination accuracy; noise/occlusion robustness; cross-channel integration benefit
@@ -118,6 +151,7 @@ Task-relevant state is inferred from available sensory input across noise, ambig
 Experience causes durable, useful changes in behavior or internal mappings.
 
 - Domain: Adaptive and general cognition; kind: cognition; scope: entity.
+- Legacy survey axis: Cognition/Learning.
 - Evidence review: Bounded test evidence. Capability score: uncalibrated.
 - Current finding: Xylos has plastic connections and online sensory/action predictors; existing tests compare learning with frozen controls and check forecast improvement in a bounded feedback environment. This establishes narrow mechanisms, not a broad learning benchmark, reversal generalization or durable improvement across task families.
 - Measures: learning curve and sample efficiency; retained improvement; contingency-reversal adaptation
@@ -131,6 +165,7 @@ Experience causes durable, useful changes in behavior or internal mappings.
 Information from earlier experience affects later behavior despite delay, interference and new learning.
 
 - Domain: Adaptive and general cognition; kind: cognition; scope: entity.
+- Legacy survey axis: Cognition/Learning.
 - Evidence review: Bounded test evidence. Capability score: uncalibrated.
 - Current finding: Associative fast weights and holographic context-action traces store and retrieve information, with tests for recall, interference-like superposition and decay. These bounded memory mechanisms do not establish continual retention across independently held-out task sequences or the proposed delayed behavioral memory protocol.
 - Measures: delay-dependent recall; interference resistance; forward/backward transfer and forgetting
@@ -144,6 +179,7 @@ Information from earlier experience affects later behavior despite delay, interf
 Internal models predict outcomes and discriminate the consequences of interventions, rather than only correlations.
 
 - Domain: Adaptive and general cognition; kind: cognition; scope: entity.
+- Legacy survey axis: Cognition/Learning.
 - Evidence review: Mixed or restricted evidence. Capability score: uncalibrated.
 - Current finding: Xylos has bounded action-conditioned prediction tests. Broader evidence remains negative: the V4 adaptive ecology predictor failed both controls, and the Phase-B temporal predictor failed its advancement gate. These branch-specific results neither validate general causal modeling nor show that every predictor lacks useful ability.
 - Measures: held-out prediction error; intervention prediction accuracy; counterfactual control benefit
@@ -157,6 +193,7 @@ Internal models predict outcomes and discriminate the consequences of interventi
 Persistent internal priorities select and revise actions without a human choosing each step.
 
 - Domain: Adaptive and general cognition; kind: cognition; scope: entity.
+- Legacy survey axis: Cognition/Learning.
 - Evidence review: Implementation identified. Capability score: uncalibrated.
 - Current finding: Xylos selects actions without stepwise human commands using energy-dependent hunger, uncertainty-linked curiosity and learned action forecasts. Its priorities are designed control rules; extended goal-persistence, novel goal switching and matched open-loop comparisons for this new axis have not been evaluated.
 - Measures: goal persistence under distraction; context-sensitive goal switching; intervention rate per successful episode
@@ -170,6 +207,7 @@ Persistent internal priorities select and revise actions without a human choosin
 Multi-step decisions use relations or prospective consequences to achieve new goals.
 
 - Domain: Adaptive and general cognition; kind: cognition; scope: entity.
+- Legacy survey axis: Cognition/Learning.
 - Evidence review: Implementation identified. Capability score: uncalibrated.
 - Current finding: NHI computes bounded GOAP next steps and updates its fact model after material outcome acknowledgement; the apex also has a discrete active-inference policy model. These constrained planners do not establish unfamiliar relational reasoning, broad planning generalization or success on the new planning protocol.
 - Measures: novel-task success; planning-horizon scaling; replanning benefit under changed constraints
@@ -183,6 +221,7 @@ Multi-step decisions use relations or prospective consequences to achieve new go
 Previously acquired capacities support unfamiliar tasks, combinations and environments under an explicit adaptation budget.
 
 - Domain: Adaptive and general cognition; kind: cognition; scope: entity.
+- Legacy survey axis: Cognition/Learning.
 - Evidence review: Mixed or restricted evidence. Capability score: uncalibrated.
 - Current finding: Bounded tasks and controlled development harnesses exist, but V4 passed only the Titan diplomacy family and failed ordinary, Petri and predictor gates. Phase-B remains development-only, including a failed temporal-predictor gate. Those results do not establish broad transfer; the new held-out-family protocol is unrun.
 - Measures: zero/few-shot transfer; held-out combination accuracy; performance breadth and depth by task family
@@ -196,6 +235,7 @@ Previously acquired capacities support unfamiliar tasks, combinations and enviro
 The system monitors uncertainty or its own limitations and uses that information to regulate cognition and action.
 
 - Domain: Adaptive and general cognition; kind: cognition; scope: entity.
+- Legacy survey axis: Consciousness-theory.
 - Evidence review: Mixed or restricted evidence. Capability score: uncalibrated.
 - Current finding: Reliability cues and Taylor forecast remainders influence confidence and decision coherence; tests check directional changes and a causal resolver effect. This supports functional uncertainty regulation, not calibrated metacognitive accuracy, a comprehensive self-model or matched first-order-performance evaluation under the proposed protocol.
 - Measures: confidence calibration; meta-d-prime/d-prime when assumptions hold; adaptive opt-out or information seeking; self-perturbation prediction
@@ -209,6 +249,7 @@ The system monitors uncertainty or its own limitations and uses that information
 Behavior uses information about other agents; signals causally coordinate or inform interaction.
 
 - Domain: Adaptive and general cognition; kind: cognition; scope: entity, population.
+- Not measured by the nine-axis survey.
 - Evidence review: Mixed or restricted evidence. Capability score: uncalibrated.
 - Current finding: Opponent beliefs and a learned rival-proximity head influence social threat/readiness; existing tests examine determinism, learning and isolated control effects. They do not establish communication semantics, unfamiliar-partner generalization or flexible social cognition across the new interaction protocol.
 - Measures: novel-partner adaptation; coordination benefit; message-intervention effect; partner-state prediction
@@ -222,6 +263,7 @@ Behavior uses information about other agents; signals causally coordinate or inf
 A temporally identifiable organized unit maintains a functional distinction from its environment; boundaries may be distributed.
 
 - Domain: Individual organization and viability; kind: life; scope: entity, population.
+- Not measured by the nine-axis survey.
 - Evidence review: Implementation identified. Capability score: uncalibrated.
 - Current finding: Xylos maintains a separate recurrent state, topology, position and session history while exchanging numeric inputs and effects with its habitat. This identifies an implemented computational unit; maintained identity through component turnover, selective boundary exchange and functional cohesion under partition have not been assessed.
 - Measures: identity persistence through component turnover; boundary-selective exchange; functional cohesion under partition
@@ -235,6 +277,7 @@ A temporally identifiable organized unit maintains a functional distinction from
 Acquired resources support ongoing maintenance of the entity's operational organization.
 
 - Domain: Individual organization and viability; kind: life; scope: entity, world.
+- Not measured by the nine-axis survey.
 - Evidence review: Mixed or restricted evidence. Capability score: uncalibrated.
 - Current finding: Entities consume edible resources and receive nourishment; Xylos energy affects hunger and movement. Existing resource tests cover ownership, depletion and timed restoration. These controls do not establish autonomous maintenance of operational organization or deprivation-dependent viability; scheduled resource respawn remains a designed intervention.
 - Measures: resource-budget accounting; viability versus deprivation; maintenance flux and replenishment recovery
@@ -248,6 +291,7 @@ Acquired resources support ongoing maintenance of the entity's operational organ
 Feedback keeps important internal variables within declared viable ranges despite disturbance.
 
 - Domain: Individual organization and viability; kind: life; scope: entity.
+- Not measured by the nine-axis survey.
 - Evidence review: Bounded test evidence. Capability score: uncalibrated.
 - Current finding: A criticality controller adjusts activation gain from a leaky branching-ratio estimate; existing tests cover silent-input excitation, bounded trajectories and an active-input regime. This is a narrow neural-gain homeostat, not evidence for whole-organism viable-range regulation or robust criticality across the new disturbance protocol.
 - Measures: time in viable range; disturbance-recovery time; regulation cost and overshoot
@@ -261,6 +305,7 @@ Feedback keeps important internal variables within declared viable ranges despit
 Function is restored or preserved after damage through regeneration, reconfiguration or adaptation.
 
 - Domain: Individual organization and viability; kind: life; scope: entity.
+- Not measured by the nine-axis survey.
 - Evidence review: Not established. Capability score: uncalibrated.
 - Current finding: Xylos supports bounded plastic rewiring and stable long-run state, but this review found no matching unseen-lesion recovery comparison for the proposed repair axis. Rewiring, visual morphing and timed resource restoration should not be counted as demonstrated functional regeneration or damage compensation.
 - Measures: function recovered relative to predamage baseline; recovery time and resource cost; performance under unseen lesions
@@ -274,6 +319,7 @@ Function is restored or preserved after damage through regeneration, reconfigura
 Feedback interactions perform temporally extended processing with a demonstrated functional contribution.
 
 - Domain: Consciousness and sentience research; kind: theory-linked; scope: entity.
+- Legacy survey axis: Consciousness-theory.
 - Evidence review: Bounded test evidence. Capability score: uncalibrated.
 - Current finding: Xylos has sparse recurrent state, and existing matched-input tests cut recurrence and observe changed activity. This establishes a causal local mechanism; selective task benefits under timed, compute-matched interruption and broader theory-linked interpretation remain unassessed. It is not a consciousness finding.
 - Measures: recurrent influence over time; task-specific recurrence-ablation effect; stability under input removal
@@ -287,6 +333,7 @@ Feedback interactions perform temporally extended processing with a demonstrated
 Selected information becomes usable by multiple otherwise specialized processes through a constrained shared route.
 
 - Domain: Consciousness and sentience research; kind: theory-linked; scope: entity.
+- Legacy survey axis: Consciousness-theory.
 - Evidence review: Bounded test evidence. Capability score: uncalibrated.
 - Current finding: Xylos admits two of six specialist groups into a constrained workspace, and existing tests check admission and broadcast effects across groups. This is a bounded broadcast mechanism; flexible use of novel content by independently tested consumers and the full new protocol remain unassessed.
 - Measures: cross-module access; broadcast bottleneck behavior; downstream dependence on selected content
@@ -300,6 +347,7 @@ Selected information becomes usable by multiple otherwise specialized processes 
 Perturbations reveal both interaction between parts and distinguishable system responses beyond shared input or noise.
 
 - Domain: Consciousness and sentience research; kind: theory-linked; scope: entity.
+- Legacy survey axis: Consciousness-theory.
 - Evidence review: Mixed or restricted evidence. Capability score: uncalibrated.
 - Current finding: The indicator lab compares structured oscillator coupling with shuffled and ablated conditions, and tests check resulting index changes. Its synthetic driver and chosen estimator do not establish integrated information or perturbational complexity of the full organism, human PCI validity, or consciousness.
 - Measures: perturbation spread and duration; response differentiation; partition and shuffled-surrogate effects
@@ -313,6 +361,7 @@ Perturbations reveal both interaction between parts and distinguishable system r
 Persistent positive/negative functional states modulate learning and flexible trade-offs; this is evidence about control, not felt experience.
 
 - Domain: Consciousness and sentience research; kind: theory-linked; scope: entity.
+- Not measured by the nine-axis survey.
 - Evidence review: Mixed or restricted evidence. Capability score: uncalibrated.
 - Current finding: Hunger, threat and uncertainty influence action utilities, and drive tests compare context-dependent hunting, fleeing and social responses. Signed valence telemetry and these designed trade-offs do not establish a persistent learned valence pathway, the new devaluation protocol or felt positive/negative experience.
 - Measures: context-sensitive approach/avoidance; devaluation and reversal response; cross-context state persistence; state-ablation effect
@@ -326,6 +375,7 @@ Persistent positive/negative functional states modulate learning and flexible tr
 The platform supports meaningfully distinct dynamics or implementation substrates under explicit interfaces and evaluation conditions.
 
 - Domain: Engineering and observation context; kind: engineering; scope: entity, population, world.
+- Legacy survey axis: Substrate pluralism.
 - Evidence review: Implementation identified. Capability score: uncalibrated.
 - Current finding: CQM combines distinct classical mathematical mechanisms, including simulated quantum dynamics, geometry, recurrent controllers and fields, with documented adapters. Selected substrate coupling is implemented; equivalent cross-substrate evaluation and universal semantic fidelity are unassessed. These integrations do not imply physical quantum hardware or complete upstream runtimes.
 - Measures: independent substrate families supported; cross-substrate protocol coverage; semantic fidelity of adapters
@@ -339,6 +389,7 @@ The platform supports meaningfully distinct dynamics or implementation substrate
 Experiments expose traceable state, interventions, configurations and replayable or statistically reproducible outcomes.
 
 - Domain: Engineering and observation context; kind: engineering; scope: entity, population, world.
+- Legacy survey axis: Instrumentation.
 - Evidence review: Bounded test evidence. Capability score: uncalibrated.
 - Current finding: Seeded receipts, bounded numeric recording and exact Xylos input replay are implemented and tested locally. Xylos replay suppresses habitat effects and does not rewind the shared world. Independent replication of this new profile and execution of its 25-axis protocols have not occurred.
 - Measures: trace completeness; seed/replay agreement; independent rerun agreement; provenance and intervention coverage
@@ -352,6 +403,7 @@ Experiments expose traceable state, interventions, configurations and replayable
 Observable detail, responsiveness and inspectability across body and population scales; one complex being is a valid primary target.
 
 - Domain: Engineering and observation context; kind: engineering; scope: entity, population, world.
+- Legacy survey axis: Visual scale.
 - Evidence review: Bounded test evidence. Capability score: uncalibrated.
 - Current finding: Xylos alone is a valid visual subject: its neural state drives membranes and a visible sparse graph, with tests for geometry changes and fixed rendering bounds. This is separate from population capacity; no new hardware-specific latency, frame-rate or comparative aesthetic benchmark was run.
 - Measures: per-entity functional degrees of freedom; inspectable component depth; entity count separately; latency and frame rate at stated hardware
