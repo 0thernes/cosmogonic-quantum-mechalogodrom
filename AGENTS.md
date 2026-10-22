@@ -17,7 +17,7 @@ substantive change; they are personas of one discipline and they outrank vibes:
 
 - Binding per-module spec: [docs/MODULE-CONTRACTS-2026-06-26.md](docs/MODULE-CONTRACTS-2026-06-26.md)
   (V1 + V2). Contract wins over any writer deviation.
-- **CQM-25 capability authority (binding):** version **1.0.0**, adopted **2026-10-22**, is the
+- **CQM-25 capability law (binding, [ADR 0018](docs/adr/0018-cqm-25-capability-law-2026-10-22.md)):** version **1.0.0**, adopted **2026-10-22**, is the
   canonical project capability framework. [The source data and protocols](docs/alife/cqm-capability-profile.json)
   own the 25 stable axis IDs; [the readable profile](docs/alife/cqm-capability-profile.html) is the
   default capability reference. Every feature plan and capability assessment must identify affected
@@ -27,8 +27,11 @@ substantive change; they are personas of one discipline and they outrank vibes:
   null until calibrated. Separately labeled provisional author estimates may be published with their
   own [rubric, source provenance and limitations](docs/alife/cqm-capability-estimates.json). They confer
   no measured capability; publish no overall/domain mean, ranking or aggregate verdict from them.
-  The historical nine-axis 155-system rubric is secondary: no rank or score transfers to
-  CQM-25. The separate 14 Butlin indicators remain research evidence, never a consciousness, sentience,
+  The source `governance` rules bind evidence-state changes to pinned repository evidence, a
+  passing test, the affected acceptance experiment and its falsifier. The historical nine-axis
+  155-system rubric is secondary; its `legacyCrosswalk` is conceptual construct correspondence,
+  never a score source or validation transfer in either direction. The separate 14 Butlin indicators
+  remain research evidence, never a consciousness, sentience,
   AGI, or superintelligence verdict. See the [adoption contract](docs/MODULE-CONTRACTS-2026-06-26.md).
 - Aesthetic constitution: [docs/PHILOSOPHY-2026-06-26.md](docs/PHILOSOPHY-2026-06-26.md) — real math
   under every effect; every system reads AND writes another system.

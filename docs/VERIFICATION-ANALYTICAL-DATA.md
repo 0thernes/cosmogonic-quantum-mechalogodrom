@@ -6,7 +6,7 @@
 **1.0.0**, adopted **2026-10-22**. The [source data and protocols](./alife/cqm-capability-profile.json)
 own the 25 stable axis IDs. Feature plans and capability assessments must name affected IDs,
 subject/scope, measures, controls, falsifiers and pinned source/run provenance, including failures.
-The [adoption contract](./MODULE-CONTRACTS-2026-06-26.md) governs taxonomy changes and publication.
+The [adoption contract](./MODULE-CONTRACTS-2026-06-26.md) and accepted [ADR 0018](./adr/0018-cqm-25-capability-law-2026-10-22.md) govern taxonomy changes and publication.
 Evidence states describe implementation and bounded tests; canonical `assessment.score` fields remain
 null until calibrated. A single organism is eligible; ecology is one domain, and physical models are
 judged against declared dynamics. CQM-25 is the project standard, not an externally validated
@@ -33,6 +33,12 @@ rubric evidence; they do not define the current capability framework or transfer
 
 ---
 
+The [legacy construct crosswalk](./alife/cqm-capability-profile.html#crosswalk) corresponds to
+**19 of the 25** constructs, without transferring scores or protocol validation. Social
+communication, individuality, resource maintenance, homeostasis, repair/resilience and valence
+trade-offs are not separately represented in the historical survey. Conceptual correspondence
+does not establish that the survey measured or validated CQM-25 acceptance protocols.
+
 ## 1 · Canonical facts (single source of truth)
 
 **Xylos:** the additional single organism is specified in [XYLOS.md](./XYLOS.md)
@@ -44,7 +50,7 @@ numeric input sequence and does not rewind the shared world.
 | Fact                                          | Canonical value                                                                                                                                                                                        | Source of truth                                                                                                                                                                            | Propagated by               |
 | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------- |
 | Package version                               | `0.23.0`                                                                                                                                                                                               | `package.json` `version`                                                                                                                                                                   | `sync-surfaces.ts`          |
-| Test count (exact tracked suite)              | `3436`                                                                                                                                                                                                 | `scripts/canonical-receipts.ts`                                                                                                                                                            | `sync-surfaces.ts`          |
+| Test count (exact tracked suite)              | `3444`                                                                                                                                                                                                 | `scripts/canonical-receipts.ts`                                                                                                                                                            | `sync-surfaces.ts`          |
 | Line coverage                                 | `84.64%`                                                                                                                                                                                               | `scripts/canonical-receipts.ts`                                                                                                                                                            | `sync-surfaces.ts`          |
 | Function coverage                             | `82.21%`                                                                                                                                                                                               | `scripts/canonical-receipts.ts`                                                                                                                                                            | `sync-surfaces.ts`          |
 | Faculties (design)                            | `100` (~30 deep-wired)                                                                                                                                                                                 | `CANONICAL_FACULTIES`                                                                                                                                                                      | `sync-surfaces.ts`          |

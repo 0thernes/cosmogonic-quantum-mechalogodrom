@@ -141,9 +141,9 @@ export const ALIFE_METRICS: readonly AlifeMetric[] = [
   {
     id: 'radar',
     context: 'historical',
-    label: 'Nine-axis radar',
+    label: 'Nine-axis survey view',
     file: 'alife-radar-profile.svg',
-    alt: 'Historical nine-axis capability radar using its preserved comparison rubric',
+    alt: 'Historical nine-axis survey radar with each spoke crosswalked to CQM-25 constructs, not CQM-25 ratings',
   },
   {
     id: 'pca',
@@ -233,7 +233,7 @@ const STYLE = `
 .alife-tab.active{border-color:rgba(0,238,255,.75);background:rgba(0,80,120,.35);color:#fff}
 .alife-hero{position:relative;border:1px solid rgba(120,160,255,.28);border-radius:12px;
   background:rgba(4,8,18,.92);width:100%;height:min(70vh,1200px);min-height:min(52vh,420px);overflow:hidden;touch-action:none;margin-bottom:14px}
-.alife-hero[data-profile="canonical"]{height:auto;min-height:0;aspect-ratio:1000/1280}
+.alife-hero[data-profile="canonical"]{height:auto;min-height:0;aspect-ratio:1000/1444}
 .alife-stage{position:absolute;inset:0;cursor:grab;overflow:hidden}
 .alife-stage.dragging{cursor:grabbing}
 .alife-stage img{max-width:none;max-height:none;width:auto;height:auto;display:block;user-select:none;-webkit-user-drag:none;transform-origin:0 0}
@@ -454,7 +454,7 @@ export function mountAlifeMetricsGallery(root: HTMLElement | null): void {
   root.className = 'alife-gallery';
   root.innerHTML =
     `<h3>CQM-25 evidence map</h3>` +
-    `<p class="lead"><a data-capability-profile>Read the canonical 25-axis framework, measures and evidence</a>. The map shows review states, not numerical capability scores. Historical nine-axis charts remain available below with their original rubric. Drag to pan, or use the zoom controls; the full reader reflows every axis for small screens.</p>` +
+    `<p class="lead"><a data-capability-profile>Read the canonical 25-axis framework, measures and evidence</a>. The map shows review states, not numerical capability scores. Historical nine-axis charts remain available below with their original rubric and a construct crosswalk to CQM-25; their scores do not transfer. Drag to pan, or use the zoom controls; the full reader reflows every axis for small screens.</p>` +
     `<p class="alife-context" role="status" aria-live="polite"></p>` +
     `<div class="alife-hero" role="tabpanel" tabindex="0"><div class="alife-toolbar">` +
     `<button type="button" class="alife-tool" data-zoom-in title="Zoom in">+</button>` +
@@ -496,6 +496,7 @@ export function mountAlifeMetricsGallery(root: HTMLElement | null): void {
     idx = ((i % ALIFE_METRICS.length) + ALIFE_METRICS.length) % ALIFE_METRICS.length;
     const m = ALIFE_METRICS[idx]!;
     hero.dataset.profile = m.context;
+    hero.style.removeProperty('aspect-ratio');
     hero.setAttribute('aria-labelledby', `${hero.id}-tab-${m.id}`);
     context.textContent =
       m.context === 'canonical'
@@ -506,7 +507,11 @@ export function mountAlifeMetricsGallery(root: HTMLElement | null): void {
       const err = heroStage.querySelector('.alife-loaderr') as HTMLElement | null;
       if (err) err.style.display = 'grid';
     }).then(() => {
+      if (ALIFE_METRICS[idx] !== m) return;
       heroView.metricFile = m.file;
+      if (m.context === 'canonical' && heroView.img.naturalWidth && heroView.img.naturalHeight) {
+        hero.style.aspectRatio = `${heroView.img.naturalWidth} / ${heroView.img.naturalHeight}`;
+      }
       heroView.fit();
     });
     heroView.img.alt = m.alt;

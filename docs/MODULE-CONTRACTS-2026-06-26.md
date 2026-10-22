@@ -2,16 +2,22 @@
 
 # Module Contracts
 
-## CQM-25 canonical capability standard (binding)
+## CQM-25 capability law (canonical framework)
 
-`docs/alife/cqm-capability-profile.json` owns the canonical CQM-25 operational framework,
-primary-source references, a repository evidence inventory and the explicit evaluation protocol.
+`docs/alife/cqm-capability-profile.json` owns the canonical 25-axis capability framework
+([ADR 0018](./adr/0018-cqm-25-capability-law-2026-10-22.md)): the binding rules (`governance`),
+primary-source references, a repository evidence inventory, the explicit evaluation protocol and the
+construct-level crosswalk from the legacy nine-axis survey (`legacyCrosswalk`). Every capability
+claim in the repository names a CQM-25 axis and its evidence state.
 `scripts/gen-capability-profile.ts` validates it and derives the public HTML, Markdown and SVG.
 The SVG is embedded in the existing ALife gallery; the HTML provides readable axis definitions,
 scope filters, evidence links and acceptance/falsification procedures. Generation is deterministic,
 offline and independent of simulation state. Its cost is bounded by 25 axes and their references.
 
 CQM-25 version 1.0.0 is the binding project capability framework, adopted 2026-10-22.
+Profile schema version 2 adds `governance` and `legacyCrosswalk`; this serialization migration
+does not change framework version 1.0.0 or its taxonomy. The separate provisional-estimates
+dataset retains schema version 1.
 Its metadata declares project authority and canonical status; its 25 stable axis identifiers,
 domains, kinds and subject scopes form the versioned taxonomy. The generator rejects missing,
 substituted or reassigned constructs instead of silently accepting another set of 25 names.
@@ -26,8 +32,12 @@ profile and its derived rankings are explicitly labeled historical comparison ma
 secondary/collapsible context for reproducibility. They cannot stand in for the current profile.
 Steering files, current architecture/verification documentation and in-app help follow this boundary.
 
-The historical nine-axis, 155-system peer matrix retains its definitions and scores. No mapping
-may infer 25 peer scores, combine the two denominators or claim a calibrated leaderboard. A
+The historical nine-axis, 155-system peer matrix retains its definitions and scores as the legacy
+survey view. Its construct-level crosswalk corresponds to 19 of the 25 CQM-25 constructs, each at
+most once, and names the six not separately represented. This is conceptual coverage, not evidence
+that the survey measured or validated any CQM-25 acceptance protocol. It is never a score source
+in either direction. No mapping may infer 25 peer scores, combine the two denominators, transfer
+validation or claim a calibrated leaderboard. A
 single organism is an eligible subject. Ecology is one domain; physical models are assessed
 against their declared dynamics rather than compulsory Earth fidelity. Entity visual expression
 and population/delivery scale are separate measurements within the visual dimension.
@@ -55,6 +65,9 @@ definitions; it does not endorse the 25-axis selection as a universal gold stand
 | Missing/substituted axis, malformed schema or unknown source           | Generator rejects the input.                                                               |
 | Unsafe source URL or repository path                                   | Reject before generating links.                                                            |
 | Numeric canonical assessment.score in the uncalibrated initial edition | Reject canonical scores; separately labeled provisional author estimates remain permitted. |
+| Governance missing or not `canonical`; decision not an ADR             | Generator rejects the input.                                                               |
+| Crosswalk misses, reorders or double-maps a legacy axis                | Generator rejects the input.                                                               |
+| Law removed from steering files, contract or gallery lead              | `tests/cqm-capability-law.test.ts` fails.                                                  |
 | Stale generated HTML/SVG/Markdown                                      | Focused drift test and generated-artifact check fail.                                      |
 | JavaScript unavailable                                                 | All 25 axis cards and evidence remain readable.                                            |
 | Filters find no axes                                                   | Show an explicit empty state and preserve reset access.                                    |
@@ -1757,7 +1770,7 @@ Copilot are constructed boot-stream-neutral and never write sim state, so the go
 
 ### V9 acceptance
 
-Full `bun run check` green: prettier → tsc strict → oxlint → 3436 tests (0 fail, 300-frame golden
+Full `bun run check` green: prettier → tsc strict → oxlint → 3444 tests (0 fail, 300-frame golden
 included) → build. The Copilot sandbox verified live (allow: `git log`, file reads; deny:
 path-escape, repository-root pathspecs, `git push`, `legacy/`, shell redirection).
 

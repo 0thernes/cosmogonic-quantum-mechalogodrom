@@ -22,12 +22,13 @@ import { mean, standardDeviation, sampleCorrelation } from 'simple-statistics';
 import { format, resolveConfig } from 'prettier';
 import { escapeMarkupAttribute, escapeMarkupText } from './markup-escape';
 import { estimateTextWidth, fitText, fullNameTitle, pointLabelMarkup } from './svg-labels';
+import { axisNumbers, loadCapabilityProfile } from './gen-capability-profile';
 
 const ROOT = `${import.meta.dir}/..`;
 const CSV = `${ROOT}/docs/reports/2026-06-26-alife-comparison-matrix.csv`;
 const OUT = `${ROOT}/docs/reports/assets`;
 
-const AXES = [
+export const AXES = [
   'Reproduction',
   'Open-endedness',
   'Ecology',
@@ -231,17 +232,46 @@ function chartScatter(rows: Row[], medBreadth: number, medMaturity: number): str
 }
 
 // 3 ── radar profile ───────────────────────────────────────────────────────────
-/** Render the unchanged nine-axis scores with complete labels inside a responsive canvas. */
+/** Survey-view geometry: canvas, plot centre and the radius of score 5. */
+export const RADAR = { w: 720, h: 780, cx: 360, cy: 416, r: 170 } as const;
+
+/** What the survey view states besides the three polygons. */
+export interface RadarContext {
+  /** CQM-25 axis numbers per legacy axis, in survey order ("01", "06–12"). */
+  cqm: readonly string[];
+  nSystems: number;
+  breadthRank: number;
+}
+
+/** Axis names split for the label blocks; aria-labels keep the full names. */
+const RADAR_NAME_LINES: readonly (readonly string[])[] = [
+  ['Reproduction'],
+  ['Open-endedness'],
+  ['Ecology'],
+  ['Morphology/', 'Physics'],
+  ['Cognition/', 'Learning'],
+  ['Substrate', 'pluralism'],
+  ['Instrumentation'],
+  ['Consciousness', 'theory'],
+  ['Visual scale'],
+];
+const NAME_SIZE = 17;
+const VALUE_SIZE = 14.5;
+const CQM_SIZE = 13;
+
+/**
+ * The legacy nine-axis survey view. Each spoke carries its score, the survey mean and the CQM-25
+ * axes the legacy construct maps to (ADR 0018); the scores keep the survey rubric and are never
+ * CQM-25 ratings. Label blocks sit outside the rim and are clamped inside the canvas.
+ */
 export function chartRadar(
   cosmo: Pick<Row, 'project' | 'axes'>,
   meanProfile: number[],
   near: Pick<Row, 'project' | 'axes'>,
+  ctx: RadarContext,
 ): string {
-  const w = 480;
-  const h = 500;
-  const cx = 240;
-  const cy = 300;
-  const R = 116;
+  const { w, h, cx, cy, r: R } = RADAR;
+  const pad = 14;
   const pt = (j: number, v: number): [number, number] => {
     const ang = -Math.PI / 2 + (2 * Math.PI * j) / NAX;
     const r = (v / 5) * R;
@@ -255,48 +285,72 @@ export function chartRadar(
           .join(','),
       )
       .join(' ');
-  // Fixed slots reserve space for the full words on both sides. At 320 CSS pixels wide,
-  // these 18-unit labels remain 12 CSS pixels, instead of the former 5-pixel single lines.
-  const labels = [
-    { x: 240, y: 160, lines: ['Reproduction'] },
-    { x: 366, y: 178, lines: ['Open-', 'endedness'] },
-    { x: 422, y: 283, lines: ['Ecology'] },
-    { x: 404, y: 365, lines: ['Morphology/', 'Physics'] },
-    { x: 316, y: 438, lines: ['Cognition/', 'Learning'] },
-    { x: 167, y: 438, lines: ['Substrate', 'pluralism'] },
-    { x: 88, y: 387, lines: ['Instrumentation'] },
-    { x: 74, y: 250, lines: ['Consciousness', 'theory'] },
-    { x: 112, y: 180, lines: ['Visual scale'] },
-  ];
   const peer = short(near.project);
-  const title = `Nine-axis capability radar: Cosmogonic vs survey mean vs ${peer}`;
+  const title = `Nine-axis survey radar: Cosmogonic vs survey mean vs ${peer}`;
   const description =
-    'Legacy comparison on a 0 to 5 scale; scores retain the existing rubric. ' +
+    'Legacy comparison on a 0 to 5 scale; scores retain the existing rubric and are not CQM-25 ratings. ' +
     'Consciousness-theory describes implemented theory mechanisms, not demonstrated consciousness. ' +
     AXES.map(
       (axis, j) =>
-        `${axis}: Cosmogonic ${cosmo.axes[j]}, survey mean ${meanProfile[j]}, ${peer} ${near.axes[j]}.`,
+        `${axis} (CQM-25 ${ctx.cqm[j]}): Cosmogonic ${cosmo.axes[j]}, survey mean ${meanProfile[j]}, ${peer} ${near.axes[j]}.`,
     ).join(' ');
   let b = `<title>${esc(title)}</title><desc>${esc(description)}</desc>`;
-  b += `<text x="20" y="30" fill="${TEXT}" font-size="20" font-weight="700">Historical nine-axis comparison</text>`;
-  b += `<text x="20" y="58" fill="${COSMO}" font-size="16">Amber: Cosmogonic</text>`;
-  b += `<text x="20" y="84" fill="${MEANC}" font-size="16">Violet: survey mean</text>`;
-  b += `<text x="20" y="110" fill="${NEAR}" font-size="16">Green: nearest peer (${esc(peer)})</text>`;
+  b += `<text x="28" y="40" fill="${TEXT}" font-size="24" font-weight="700">Nine-axis survey view</text>`;
+  b += `<text x="28" y="66" fill="${MUTE}" font-size="14">Historical ${ctx.nSystems}-system peer rubric (0–5) · CQM-25 construct crosswalk</text>`;
+  let lx = 28;
+  for (const [colour, label] of [
+    [COSMO, 'Cosmogonic'],
+    [MEANC, 'survey mean'],
+    [NEAR, `nearest peer (${peer})`],
+  ] as const) {
+    b += `<rect x="${lx}" y="82" width="12" height="12" rx="2" fill="${colour}"/>`;
+    b += `<text x="${lx + 18}" y="93" fill="${colour}" font-size="14">${esc(label)}</text>`;
+    lx += 18 + estimateTextWidth(label, 14) + 22;
+  }
   for (let g = 1; g <= 5; g++) {
-    b += `<polygon points="${poly(Array.from({ length: NAX }, () => g))}" fill="none" stroke="${GRID}" stroke-width="0.7"/>`;
+    b += `<polygon points="${poly(Array.from({ length: NAX }, () => g))}" fill="none" stroke="${GRID}" stroke-width="0.8"/>`;
+    const [, gy] = pt(0, g);
+    b += `<text x="${cx + 5}" y="${round(gy - 4, 2)}" fill="${MUTE}" font-size="11">${g}</text>`;
   }
   for (let j = 0; j < NAX; j++) {
     const [ex, ey] = pt(j, 5);
-    b += `<line x1="${cx}" y1="${cy}" x2="${round(ex, 2)}" y2="${round(ey, 2)}" stroke="${GRID}" stroke-width="0.7"/>`;
-    const label = labels[j]!;
-    const spans = label.lines
-      .map((line, i) => `<tspan x="${label.x}" dy="${i === 0 ? 0 : 24}">${esc(line)}</tspan>`)
-      .join('');
-    b += `<text data-radar-axis="${j}" aria-label="${escapeMarkupAttribute(AXES[j]!)}" x="${label.x}" y="${label.y}" fill="${TEXT}" font-size="18" text-anchor="middle">${spans}</text>`;
+    b += `<line x1="${cx}" y1="${cy}" x2="${round(ex, 2)}" y2="${round(ey, 2)}" stroke="${GRID}" stroke-width="0.8"/>`;
   }
-  b += `<polygon points="${poly(near.axes)}" fill="${NEAR}" fill-opacity="0.10" stroke="${NEAR}" stroke-width="1.4"/>`;
-  b += `<polygon points="${poly(meanProfile)}" fill="${MEANC}" fill-opacity="0.12" stroke="${MEANC}" stroke-width="1.4"/>`;
-  b += `<polygon points="${poly(cosmo.axes)}" fill="${COSMO}" fill-opacity="0.22" stroke="${COSMO}" stroke-width="2.2"/>`;
+  b += `<polygon points="${poly(near.axes)}" fill="${NEAR}" fill-opacity="0.10" stroke="${NEAR}" stroke-width="1.5"/>`;
+  b += `<polygon points="${poly(meanProfile)}" fill="${MEANC}" fill-opacity="0.12" stroke="${MEANC}" stroke-width="1.5"/>`;
+  b += `<polygon points="${poly(cosmo.axes)}" fill="${COSMO}" fill-opacity="0.22" stroke="${COSMO}" stroke-width="2.4"/>`;
+  for (let j = 0; j < NAX; j++) {
+    const ang = -Math.PI / 2 + (2 * Math.PI * j) / NAX;
+    const cos = Math.cos(ang);
+    const sin = Math.sin(ang);
+    const names = RADAR_NAME_LINES[j]!;
+    const value = `${cosmo.axes[j]!.toFixed(1)} · mean ${meanProfile[j]!.toFixed(1)}`;
+    const cqm = `CQM-25 ${ctx.cqm[j]}`;
+    const anchor = Math.abs(cos) < 0.25 ? 'middle' : cos < 0 ? 'end' : 'start';
+    const blockH = names.length * 20 + 18 + 16;
+    const ex = cx + (R + 24) * cos;
+    const ey = cy + (R + 24) * sin;
+    const first = sin < -0.5 ? ey - blockH + 14 : sin > 0.5 ? ey + 16 : ey - blockH / 2 + 14;
+    const width = Math.max(
+      ...names.map((n) => estimateTextWidth(n, NAME_SIZE, 600)),
+      estimateTextWidth(value, VALUE_SIZE),
+      estimateTextWidth(cqm, CQM_SIZE),
+    );
+    let x = ex;
+    if (anchor === 'end') x = Math.max(x, pad + width);
+    if (anchor === 'start') x = Math.min(x, w - pad - width);
+    if (anchor === 'middle') x = Math.min(Math.max(x, pad + width / 2), w - pad - width / 2);
+    x = round(x, 1);
+    const spans = names
+      .map((line, i) => `<tspan x="${x}" dy="${i === 0 ? 0 : 20}">${esc(line)}</tspan>`)
+      .join('');
+    const yValue = round(first + names.length * 20 - 2, 1);
+    b += `<text data-radar-axis="${j}" aria-label="${escapeMarkupAttribute(AXES[j]!)}" x="${x}" y="${round(first, 1)}" fill="${TEXT}" font-size="${NAME_SIZE}" font-weight="600" text-anchor="${anchor}">${spans}</text>`;
+    b += `<text x="${x}" y="${yValue}" fill="${COSMO}" font-size="${VALUE_SIZE}" text-anchor="${anchor}">${esc(value)}</text>`;
+    b += `<text x="${x}" y="${round(yValue + 17, 1)}" fill="#5eead4" font-size="${CQM_SIZE}" text-anchor="${anchor}">${esc(cqm)}</text>`;
+  }
+  const breadth = mean(cosmo.axes).toFixed(2);
+  b += `<text x="28" y="${h - 26}" fill="${MUTE}" font-size="13">breadth ${breadth} · #${ctx.breadthRank} of ${ctx.nSystems} · survey scores never become CQM-25 ratings</text>`;
   return svgDoc(w, h, b, title).replace(
     '<svg ',
     '<svg style="width: 100%; height: auto; display: block" ',
@@ -305,7 +359,8 @@ export function chartRadar(
 
 /** Replace exactly one inline radar with the complete generated SVG, including labels and a11y. */
 export function replaceInlineRadar(html: string, radar: string, surface: string): string {
-  const pattern = /<svg\b[^>]*aria-label="Nine-axis capability radar[^"]*"[^>]*>[\s\S]*?<\/svg>/g;
+  const pattern =
+    /<svg\b[^>]*aria-label="Nine-axis (?:capability|survey) radar[^"]*"[^>]*>[\s\S]*?<\/svg>/g;
   const matches = html.match(pattern);
   if (matches?.length !== 1) {
     throw new Error(`${surface}: expected one inline radar, found ${matches?.length ?? 0}`);
@@ -493,7 +548,18 @@ async function main(): Promise<void> {
     `${OUT}/alife-breadth-vs-maturity.svg`,
     chartScatter(rows, medBreadth, medMaturity),
   );
-  const radar = chartRadar(cosmo, meanProfile, nearestRow);
+  // The survey view names the CQM-25 constructs each legacy axis measures (ADR 0018).
+  const profile = loadCapabilityProfile(ROOT);
+  const cqm = AXES.map((axis) => {
+    const entry = profile.legacyCrosswalk.find((c) => c.legacyAxis === axis);
+    if (!entry) throw new Error(`CQM-25 crosswalk has no entry for legacy axis ${axis}`);
+    return axisNumbers(profile, entry.axisIds);
+  });
+  const radar = chartRadar(cosmo, meanProfile, nearestRow, {
+    cqm,
+    nSystems: rows.length,
+    breadthRank: stats.cosmogonic.breadthRank,
+  });
   await Bun.write(`${OUT}/alife-radar-profile.svg`, radar);
   await Bun.write(`${OUT}/alife-nearest-neighbors.svg`, chartNeighbours(neigh.slice(0, 8)));
   await Bun.write(`${OUT}/alife-axis-heatmap.svg`, chartHeatmap(rows));

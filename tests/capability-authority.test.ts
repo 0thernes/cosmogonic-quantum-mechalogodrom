@@ -43,11 +43,11 @@ describe('CQM-25 is the canonical project capability publication', () => {
       expect(section![0]).toMatch(/canonical/i);
       expect(section![0]).toContain(canonicalAsset);
       expect(section![0]).toContain('docs/alife/cqm-capability-profile.html');
-      expect(section![0]).not.toContain('Nine-axis capability radar');
+      expect(section![0]).not.toContain('Nine-axis survey radar');
       const historical = historicalDisclosure(html);
       expect(section!.index!).toBeLessThan(historical.start);
-      expect(historical.body).toContain('Nine-axis capability radar');
-      expect([...html.matchAll(/aria-label="Nine-axis capability radar[^"]*"/g)]).toHaveLength(1);
+      expect(historical.body).toContain('Nine-axis survey radar');
+      expect([...html.matchAll(/aria-label="Nine-axis survey radar[^"]*"/g)]).toHaveLength(1);
     },
   );
 

@@ -21,7 +21,7 @@ changed and why.
   material, including the preceding chart-bounds corrections from `9ac7eee0`.
 - Added explicit adoption metadata and guards for the complete taxonomy, including domains, kinds
   and scopes. Project authority is distinct from research validation: original evidence provenance
-  is preserved, the unified acceptance protocols remain unexecuted and all numeric scores stay null.
+  is preserved, the unified acceptance protocols remain unexecuted and all canonical numeric scores stay null.
 - Detected a concurrent proposal assigning numerical ratings to all 25 axes. Preserved the raw
   proposal, then followed the owner's explicit request to include both the canonical evidence
   framework and a separate provisional author-estimate layer. The latter declares a heuristic
@@ -32,6 +32,22 @@ changed and why.
   consciousness, sentience, AGI or SI aggregate verdict; the Butlin mapping remains separate.
 - Publication checks cover canonical selection, historical disclosure, generated artifacts and
   browser behavior. The full gate and GitHub publication receipt are reported in the handoff.
+
+## 2026-10-22 — CQM-25 enacted as the capability law
+
+- Owner directive: make CQM-25 the binding framework and upgrade the nine-axis view. Recorded as
+  [ADR 0018](./adr/0018-cqm-25-capability-law-2026-10-22.md); the rules live in the profile's
+  `governance` block and in `CLAUDE.md`/`AGENTS.md`.
+- The crosswalk maps each legacy survey axis to the constructs its rubric conceptually addresses: reproduction (01),
+  open-endedness (02), ecology (03), morphology/physics (04-05), cognition/learning (06-12),
+  consciousness-theory (13, 19-21), substrate pluralism (23), instrumentation (24), visual scale (25).
+  Six constructs have no legacy counterpart: 14, 15, 16, 17, 18 and 22. Mapping is by construct only;
+  the 155-system scores, statistics and rankings are unchanged, and CQM-25 scores remain null.
+- Kept honest by design: CQM-25 binds claims made in this repository and is still described as
+  author-defined, not an external consensus standard. Evidence states move only through an axis's
+  acceptance experiment; calibration is the prerequisite for any canonical capability score.
+- The survey radar now shows values, means, rings and CQM-25 axis numbers on a 720 x 780 canvas;
+  every label passes the chart-bounds gate. `tests/cqm-capability-law.test.ts` adds seven checks.
 
 ---
 

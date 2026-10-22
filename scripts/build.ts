@@ -153,6 +153,12 @@ await cp('./docs/reports/assets', './dist/assets/alife', { recursive: true });
 // Publish the reviewed catalog and its complete, linked download set.
 await mkdir('./dist/docs/alife', { recursive: true });
 await cp('./docs/alife', './dist/docs/alife', { recursive: true });
+// Keep the canonical profile's accepted decision link usable in standalone dist builds.
+await mkdir('./dist/docs/adr', { recursive: true });
+await cp(
+  './docs/adr/0018-cqm-25-capability-law-2026-10-22.md',
+  './dist/docs/adr/0018-cqm-25-capability-law-2026-10-22.md',
+);
 
 const distFiles = await readdir('./dist');
 let satSrc = distFiles.find((f) => f.startsWith('satellite-music') && f.endsWith('.js'));

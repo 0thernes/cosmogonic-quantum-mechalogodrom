@@ -1,4 +1,4 @@
-/** Deterministic publication of the canonical CQM-25 project standard; no simulation writes. */
+/** Deterministic publication of the canonical CQM-25 project standard (ADR 0018), construct-only legacy crosswalk and separate provisional estimates; no simulation writes. */
 import { readFileSync, writeFileSync } from 'node:fs';
 
 /** The reviewed input and its three derived reader surfaces. */
@@ -39,9 +39,22 @@ export interface ProfileAxis {
     evidence: { path: string; label: string }[];
   };
 }
+/** The adopted law: canonical status, its decision record and the binding rules. */
+export interface ProfileGovernance {
+  status: 'canonical';
+  adopted: string;
+  decision: string;
+  rules: string[];
+}
+/** One legacy nine-axis survey axis and the corresponding CQM-25 constructs (no score or validation transfer). */
+export interface LegacyCrosswalkEntry {
+  legacyAxis: string;
+  axisIds: string[];
+  relation: string;
+}
 /** Canonical project standard; adoption authority is separate from scientific validation. */
 export interface CapabilityProfile {
-  schemaVersion: 1;
+  schemaVersion: 2;
   frameworkId: 'CQM-25';
   frameworkVersion: '1.0.0';
   authority: 'project';
@@ -54,6 +67,8 @@ export interface CapabilityProfile {
   limitations: string[];
   evaluationProtocol: string[];
   legacyVisualReview: string;
+  governance: ProfileGovernance;
+  legacyCrosswalk: LegacyCrosswalkEntry[];
   sources: ProfileSource[];
   axes: ProfileAxis[];
 }
@@ -83,6 +98,19 @@ export interface CapabilityEstimates {
   limitations: string[];
   estimates: { axisId: string; value: number; rationale: string }[];
 }
+
+/** The nine legacy survey axes, in survey order (scripts/alife-comparison-stats.ts `AXES`). */
+export const LEGACY_SURVEY_AXES = [
+  'Reproduction',
+  'Open-endedness',
+  'Ecology',
+  'Morphology/Physics',
+  'Cognition/Learning',
+  'Substrate pluralism',
+  'Instrumentation',
+  'Consciousness-theory',
+  'Visual scale',
+] as const;
 
 /** Versioned project contract; adoption does not certify scientific capability. */
 const CANONICAL_METADATA = {
@@ -397,12 +425,14 @@ export function validateCapabilityProfile(value: unknown): asserts value is Capa
       'limitations',
       'evaluationProtocol',
       'legacyVisualReview',
+      'governance',
+      'legacyCrosswalk',
       'sources',
       'axes',
     ],
     'canonical profile',
   );
-  if (p.schemaVersion !== 1) throw new Error('Unsupported profile schema');
+  if (p.schemaVersion !== 2) throw new Error('Unsupported profile schema');
   for (const [key, expected] of Object.entries(CANONICAL_METADATA)) {
     if (p[key] !== expected)
       throw new Error('Invalid canonical metadata: ' + key + ' must equal ' + expected);
@@ -501,6 +531,59 @@ export function validateCapabilityProfile(value: unknown): asserts value is Capa
         throw new Error('Unsafe evidence path');
     }
   }
+  const g = record(p.governance, 'governance');
+  exactKeys(g, ['status', 'adopted', 'decision', 'rules'], 'governance');
+  if (g.status !== 'canonical') throw new Error('governance.status must be canonical');
+  if (g.adopted !== p.adoptedAt)
+    throw new Error('governance.adopted must match canonical adoption metadata');
+  nonempty(g.decision, 'governance.decision');
+  if (g.decision !== 'docs/adr/0018-cqm-25-capability-law-2026-10-22.md')
+    throw new Error('governance.decision must identify the accepted CQM-25 ADR');
+  strings(g.rules, 'governance.rules');
+  list(p.legacyCrosswalk, 'legacyCrosswalk');
+  if (p.legacyCrosswalk.length !== LEGACY_SURVEY_AXES.length)
+    throw new Error('legacyCrosswalk must cover the nine legacy survey axes');
+  const mapped = new Set<string>();
+  p.legacyCrosswalk.forEach((candidate, i) => {
+    const c = record(candidate, 'crosswalk entry');
+    exactKeys(c, ['legacyAxis', 'axisIds', 'relation'], 'crosswalk entry');
+    if (c.legacyAxis !== LEGACY_SURVEY_AXES[i])
+      throw new Error(`legacyCrosswalk[${i}] must be ${LEGACY_SURVEY_AXES[i]}, in survey order`);
+    nonempty(c.relation, 'crosswalk relation');
+    strings(c.axisIds, 'crosswalk axisIds');
+    for (const id of c.axisIds) {
+      if (!ids.has(id)) throw new Error(`Crosswalk names unknown axis ${id}`);
+      // One construct maps to one legacy axis, so no CQM-25 axis is counted twice.
+      if (mapped.has(id)) throw new Error(`Crosswalk maps ${id} to two legacy axes`);
+      mapped.add(id);
+    }
+  });
+}
+
+/** 1-based CQM-25 numbers of `ids`, compressed into runs: "06–12", "13, 19–21". */
+export function axisNumbers(p: CapabilityProfile, ids: readonly string[]): string {
+  if (new Set(ids).size !== ids.length) throw new Error('Duplicate axis number reference');
+  const nums = ids
+    .map((id) => {
+      const index = p.axes.findIndex((a) => a.id === id);
+      if (index < 0) throw new Error('Unknown axis number reference: ' + id);
+      return index + 1;
+    })
+    .sort((a, b) => a - b);
+  const runs: string[] = [];
+  for (let i = 0; i < nums.length;) {
+    let j = i;
+    while (j + 1 < nums.length && nums[j + 1] === nums[j]! + 1) j++;
+    const pad = (n: number): string => String(n).padStart(2, '0');
+    runs.push(j > i ? `${pad(nums[i]!)}–${pad(nums[j]!)}` : pad(nums[i]!));
+    i = j + 1;
+  }
+  return runs.join(', ');
+}
+
+/** The legacy survey axis corresponding to CQM-25 axis `id`, or null when not separately represented. */
+export function legacyAxisOf(p: CapabilityProfile, id: string): string | null {
+  return p.legacyCrosswalk.find((c) => c.axisIds.includes(id))?.legacyAxis ?? null;
 }
 
 /** Read the single source of truth without deriving ratings from the historical nine-axis matrix. */
@@ -521,6 +604,23 @@ function esc(text: string): string {
 function evidenceUrl(p: CapabilityProfile, path: string): string {
   return `https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/blob/${p.sourceCommit}/${path}`;
 }
+
+/** The decision record's path relative to docs/alife/, where the HTML and Markdown are published. */
+const decisionHref = (p: CapabilityProfile): string =>
+  `../${p.governance.decision.slice('docs/'.length)}`;
+const decisionName = (p: CapabilityProfile): string =>
+  `ADR ${p.governance.decision.match(/adr\/(\d+)/)?.[1] ?? ''}`.trim();
+/** The CQM-25 axes not separately represented in the nine-axis survey, numbered. */
+const unmappedAxes = (p: CapabilityProfile): string[] =>
+  p.axes.flatMap((a, i) =>
+    legacyAxisOf(p, a.id) ? [] : [`${String(i + 1).padStart(2, '0')} ${a.name}`],
+  );
+const legacyTag = (p: CapabilityProfile, id: string): string => {
+  const legacy = legacyAxisOf(p, id);
+  return legacy
+    ? `Legacy construct correspondence: ${legacy}`
+    : 'Not separately represented in the nine-axis survey';
+};
 
 function estimateHtml(p: CapabilityProfile, e: CapabilityEstimates): string {
   const rows = p.axes
@@ -596,7 +696,7 @@ export function renderCapabilityHtml(p: CapabilityProfile, estimates: Capability
       ) => `<article class="axis" id="axis-${a.id}" data-domain="${esc(a.domain)}" data-state="${a.assessment.status}" data-scope="${a.scope.join(' ')}">
 <div class="axis-top"><span class="number">${String(i + 1).padStart(2, '0')}</span><span class="kind">${esc(a.kind)} · ${esc(a.domain)}</span></div>
 <h2>${esc(a.name)}</h2><p>${esc(a.definition)}</p>
-<div class="tags"><span><code>${a.id}</code></span><span>${a.scope.join(' / ')}</span><span class="state ${a.assessment.status}">${STATE_LABELS[a.assessment.status]}</span></div>
+<div class="tags"><span><code>${a.id}</code></span><span>${a.scope.join(' / ')}</span><span class="state ${a.assessment.status}">${STATE_LABELS[a.assessment.status]}</span><span class="legacy">${esc(legacyTag(p, a.id))}</span></div>
 <p class="finding">${esc(a.assessment.summary)}</p><p class="uncalibrated">Capability score: uncalibrated</p>
 <details><summary>Measures, protocol and evidence</summary><h3>Record these measures</h3><ul>${a.measures.map((m) => `<li>${esc(m)}</li>`).join('')}</ul>
 <h3>Acceptance experiment</h3><p>${esc(a.protocol)}</p><h3>What would weaken the claim?</h3><p>${esc(a.falsifier)}</p>
@@ -608,12 +708,14 @@ export function renderCapabilityHtml(p: CapabilityProfile, estimates: Capability
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${esc(p.title)}</title>
 <meta name="description" content="CQM-25 is the canonical project capability standard for digital life, synthetic cognition and embodied systems, with source-grounded definitions and falsifiable protocols.">
 <style>
-:root{color-scheme:dark;--bg:#09111c;--panel:#101e2d;--ink:#e4edf7;--muted:#b0c2d7;--line:#30465f;--cyan:#5eead4;--amber:#fbbf24}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,sans-serif}main{max-width:1260px;margin:auto;padding:36px 24px 64px}a{color:#93c5fd;text-underline-offset:3px}h1{font-size:clamp(2rem,5vw,3.6rem);line-height:1.08;margin:12px 0 20px;letter-spacing:-.035em}h2{line-height:1.25}h3{font-size:1rem;margin-bottom:6px}p{margin:12px 0}header{max-width:1000px}.eyebrow{color:var(--cyan);letter-spacing:.14em;text-transform:uppercase;font-size:.8rem;font-weight:700}.intro{font-size:1.13rem;color:var(--muted)}.notice,.method{border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:20px 24px;margin:24px 0}.notice{border-left:4px solid var(--amber)}.notice h2{margin-top:0;font-size:1.2rem}.downloads{display:flex;flex-wrap:wrap;gap:10px 20px;margin:20px 0}.filters{display:grid;grid-template-columns:2fr repeat(3,1fr) auto;gap:12px;border:1px solid var(--line);padding:18px;border-radius:14px;margin-top:28px;background:var(--panel)}label{display:flex;flex-direction:column;gap:5px;font-size:.82rem;color:var(--muted)}input,select,button{font:inherit;color:var(--ink);background:var(--bg);border:1px solid #56708c;border-radius:6px;min-height:44px;padding:8px;min-width:0;max-width:100%}button{align-self:end;cursor:pointer}button:hover{border-color:var(--cyan)}:focus-visible{outline:3px solid var(--cyan);outline-offset:3px}.summary{color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.axis{border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:24px;min-width:0}.axis-top{display:flex;gap:14px;align-items:center}.number{font-size:1.6rem;color:var(--cyan);font-variant-numeric:tabular-nums}.kind{text-transform:uppercase;letter-spacing:.07em;font-size:.7rem;color:var(--muted)}.axis h2{font-size:1.3rem;margin:12px 0}.tags{display:flex;gap:7px;flex-wrap:wrap;font-size:.75rem}.tags span{padding:3px 8px;border:1px solid var(--line);border-radius:5px}.bounded-test{color:#5eead4}.implemented{color:#93c5fd}.mixed{color:#fbbf24}.unassessed{color:#cbd5e1}.finding{border-top:1px solid var(--line);padding-top:12px;font-size:.91rem}.uncalibrated{font-size:.8rem;color:var(--muted)}details{margin-top:18px}summary{cursor:pointer;color:#93c5fd;padding:5px 0}li{margin:7px 0}code{font-size:.8em;overflow-wrap:anywhere}a{overflow-wrap:anywhere}.provisional{border-left:4px solid var(--amber)}.estimate-table{overflow-x:auto;margin-top:20px}.estimate-table table{width:100%;border-collapse:collapse;font-size:.88rem}.estimate-table th,.estimate-table td{border:1px solid var(--line);padding:12px;text-align:left;vertical-align:top}.estimate-table th:first-child{min-width:210px}.estimate-table th:nth-child(2),.estimate-table td:nth-child(2){min-width:96px}.estimate-table th:nth-child(3),.estimate-table td:nth-child(3){min-width:280px}.estimate-scroll-hint{display:none;color:var(--muted);font-size:.88rem}.estimate-table caption{text-align:left;color:var(--muted);margin-bottom:10px}.estimate-table details{margin:0}.estimate-value{font-variant-numeric:tabular-nums;font-weight:700;color:var(--amber)}.sources li{margin-bottom:16px}.source-note{color:var(--muted);display:block;font-size:.9rem}footer{color:var(--muted);border-top:1px solid var(--line);margin-top:32px;padding-top:18px;font-size:.85rem}[hidden]{display:none!important}@media(max-width:900px){.filters{grid-template-columns:repeat(2,minmax(0,1fr))}.filters label:first-child{grid-column:1/-1}}@media(max-width:620px){main{padding:24px 16px}.grid{grid-template-columns:1fr}.axis{padding:20px}.notice,.method{padding:18px}.filters{padding:12px;gap:10px}.filters button{grid-column:1/-1}.intro{font-size:1rem}.estimate-scroll-hint{display:block}}@media print{body{background:white;color:#111}main{max-width:none}.filters,.downloads{display:none}.axis,.notice,.method{background:white;border-color:#bbb;break-inside:avoid}.grid{display:block}.axis{margin:12px 0}a,.kind,.summary,.source-note,.intro,.uncalibrated{color:#333}details{display:block}}
+:root{color-scheme:dark;--bg:#09111c;--panel:#101e2d;--ink:#e4edf7;--muted:#b0c2d7;--line:#30465f;--cyan:#5eead4;--amber:#fbbf24}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,sans-serif}main{max-width:1260px;margin:auto;padding:36px 24px 64px}a{color:#93c5fd;text-underline-offset:3px}h1{font-size:clamp(2rem,5vw,3.6rem);line-height:1.08;margin:12px 0 20px;letter-spacing:-.035em}h2{line-height:1.25}h3{font-size:1rem;margin-bottom:6px}p{margin:12px 0}header{max-width:1000px}.eyebrow{color:var(--cyan);letter-spacing:.14em;text-transform:uppercase;font-size:.8rem;font-weight:700}.intro{font-size:1.13rem;color:var(--muted)}.notice,.method{border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:20px 24px;margin:24px 0}.notice{border-left:4px solid var(--amber)}.notice h2{margin-top:0;font-size:1.2rem}.downloads{display:flex;flex-wrap:wrap;gap:10px 20px;margin:20px 0}.filters{display:grid;grid-template-columns:2fr repeat(3,1fr) auto;gap:12px;border:1px solid var(--line);padding:18px;border-radius:14px;margin-top:28px;background:var(--panel)}label{display:flex;flex-direction:column;gap:5px;font-size:.82rem;color:var(--muted)}input,select,button{font:inherit;color:var(--ink);background:var(--bg);border:1px solid #56708c;border-radius:6px;min-height:44px;padding:8px;min-width:0;max-width:100%}button{align-self:end;cursor:pointer}button:hover{border-color:var(--cyan)}:focus-visible{outline:3px solid var(--cyan);outline-offset:3px}.summary{color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.axis{border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:24px;min-width:0}.axis-top{display:flex;gap:14px;align-items:center}.number{font-size:1.6rem;color:var(--cyan);font-variant-numeric:tabular-nums}.kind{text-transform:uppercase;letter-spacing:.07em;font-size:.7rem;color:var(--muted)}.axis h2{font-size:1.3rem;margin:12px 0}.tags{display:flex;gap:7px;flex-wrap:wrap;font-size:.75rem}.tags span{padding:3px 8px;border:1px solid var(--line);border-radius:5px}.bounded-test{color:#5eead4}.implemented{color:#93c5fd}.mixed{color:#fbbf24}.unassessed{color:#cbd5e1}.finding{border-top:1px solid var(--line);padding-top:12px;font-size:.91rem}.uncalibrated{font-size:.8rem;color:var(--muted)}details{margin-top:18px}summary{cursor:pointer;color:#93c5fd;padding:5px 0}li{margin:7px 0}code{font-size:.8em;overflow-wrap:anywhere}a{overflow-wrap:anywhere}.provisional{border-left:4px solid var(--amber)}.estimate-table{overflow-x:auto;margin-top:20px}.estimate-table table{width:100%;border-collapse:collapse;font-size:.88rem}.estimate-table th,.estimate-table td{border:1px solid var(--line);padding:12px;text-align:left;vertical-align:top}.estimate-table th:first-child{min-width:210px}.estimate-table th:nth-child(2),.estimate-table td:nth-child(2){min-width:96px}.estimate-table th:nth-child(3),.estimate-table td:nth-child(3){min-width:280px}.estimate-scroll-hint{display:none;color:var(--muted);font-size:.88rem}.estimate-table caption{text-align:left;color:var(--muted);margin-bottom:10px}.estimate-table details{margin:0}.estimate-value{font-variant-numeric:tabular-nums;font-weight:700;color:var(--amber)}.sources li{margin-bottom:16px}.source-note{color:var(--muted);display:block;font-size:.9rem}footer{color:var(--muted);border-top:1px solid var(--line);margin-top:32px;padding-top:18px;font-size:.85rem}[hidden]{display:none!important}.law{border:1px solid var(--line);border-left:4px solid var(--cyan);border-radius:14px;background:var(--panel);padding:20px 24px;margin:24px 0}.law h2{margin-top:0;font-size:1.2rem}.table-wrap{overflow-x:auto}.crosswalk{width:100%;border-collapse:collapse;font-size:.92rem}.crosswalk th,.crosswalk td{border-top:1px solid var(--line);padding:10px 8px;text-align:left;vertical-align:top}.crosswalk th{color:var(--muted);font-weight:600}.legacy{color:var(--muted)}@media(max-width:900px){.filters{grid-template-columns:repeat(2,minmax(0,1fr))}.filters label:first-child{grid-column:1/-1}}@media(max-width:620px){.crosswalk thead{display:none}.crosswalk tr{display:block;border-top:1px solid var(--line);padding:10px 0}.crosswalk th,.crosswalk td{display:block;border:0;padding:3px 0}.crosswalk td::before{content:attr(data-label) ": ";color:var(--muted);font-weight:600}main{padding:24px 16px}.grid{grid-template-columns:1fr}.axis{padding:20px}.notice,.method{padding:18px}.filters{padding:12px;gap:10px}.filters button{grid-column:1/-1}.intro{font-size:1rem}.estimate-scroll-hint{display:block}}@media print{body{background:white;color:#111}main{max-width:none}.filters,.downloads{display:none}.axis,.notice,.method{background:white;border-color:#bbb;break-inside:avoid}.grid{display:block}.axis{margin:12px 0}a,.kind,.summary,.source-note,.intro,.uncalibrated{color:#333}details{display:block}}
 </style></head><body><main>
 <header><p class="eyebrow">Cosmogonic Quantum Mechalogodrom · canonical project standard</p><h1>CQM-25: the project capability standard.</h1><p class="intro">${esc(p.scope)}</p><p><strong>Version ${esc(p.frameworkVersion)} · adopted ${esc(p.adoptedAt)}.</strong> These 25 operational dimensions govern project capability plans and claims across individual beings, interacting populations and constructed worlds.</p></header>
 <section class="notice"><h2>Canonical project authority; explicit evidence limits</h2><p>CQM-25 is the binding project standard, not a consensus certification or an executed 25-task benchmark. Acceptance experiments remain proposed and unexecuted as a unified benchmark. Review states describe available repository evidence. Numerical capability scores remain uncalibrated.</p><p>Feature plans and capability claims must identify the affected stable axis IDs and their evidence requirements. Taxonomy changes require an explicit framework version and contract review.</p><p>Engineering breadth and visual expression do not count as evidence of consciousness, sentience, AGI or superintelligence. No aggregate verdict is calculated.</p></section>
+<section class="law" id="law"><h2>The capability law</h2><p>Adopted ${esc(p.governance.adopted)} as the binding capability framework of this repository (<a href="${esc(decisionHref(p))}">${esc(decisionName(p))}</a>). It governs claims made here; it is not an external consensus standard.</p><ol>${p.governance.rules.map((r) => `<li>${esc(r)}</li>`).join('')}</ol></section>
 <nav class="downloads" aria-label="Profile downloads"><a href="#provisional-estimates">Separate provisional author estimates</a><a href="cqm-capability-profile.json" download>Data / protocols (JSON)</a><a href="cqm-capability-profile.md">Readable specification</a><a href="../reports/assets/alife-capability-profile-25.svg">Canonical 25-axis evidence map (SVG)</a></nav>
 <section class="method"><h2>Scope of the standard</h2><p>Constructed physics is evaluated against declared rules and constraints. Ecology is one domain among several. An entity-level study can declare reproduction or population ecology not applicable, with a reason; a missing measurement remains unknown.</p><details><summary>Historical nine-axis comparison and visual review</summary><p>${esc(p.legacyVisualReview)}</p><p>The original nine-axis, 155-system comparison is historical secondary context. It retains its own rubric and scores; its rankings and averages are not transferred into the canonical CQM-25 standard.</p><p><a href="../reports/assets/alife-radar-profile.svg">Historical nine-axis comparison (SVG)</a></p></details></section>
+<section class="method" id="crosswalk"><details><summary>Historical construct crosswalk: 19 of the 25 axes</summary><h2>From the nine-axis survey to CQM-25</h2><p>The legacy survey grades nine broad constructs. This table gives conceptual correspondence to 19 of the 25 CQM-25 axes; it does not mean those protocols were measured or validated. No score or validation transfers in either direction.</p><div class="table-wrap"><table class="crosswalk"><thead><tr><th scope="col">Legacy axis</th><th scope="col">CQM-25 axes</th><th scope="col">Relation</th></tr></thead><tbody>${p.legacyCrosswalk.map((c) => `<tr><th scope="row">${esc(c.legacyAxis)}</th><td data-label="CQM-25 axes">${esc(axisNumbers(p, c.axisIds))}</td><td data-label="Relation">${esc(c.relation)}</td></tr>`).join('')}</tbody></table></div><p><strong>Not separately represented in the nine-axis survey:</strong> ${unmappedAxes(p).map(esc).join(' · ')}.</p></details></section>
 <form class="filters" role="search"><label>Search axes or evidence<input id="search" type="search" placeholder="Try memory, Xylos, morphology…"></label><label>Domain<select id="domain"><option value="">All domains</option>${domains.map((d) => `<option>${esc(d)}</option>`).join('')}</select></label><label>Subject scope<select id="scope"><option value="">All scopes</option><option value="entity">Individual being</option><option value="population">Population</option><option value="world">World</option></select></label><label>Evidence state<select id="state"><option value="">All evidence</option>${STATES.map((s) => `<option value="${s}">${STATE_LABELS[s]}</option>`).join('')}</select></label><button type="reset">Reset filters</button></form>
 <p id="result-count" class="summary" role="status" aria-live="polite">Showing all 25 axes. Scope tags indicate where a protocol can apply, not proof that it has passed.</p><p id="empty" hidden>No matching axes. Reset the filters to see the complete profile.</p>
 <section class="grid" aria-label="25 operational dimensions">${cards}</section>
@@ -632,13 +734,17 @@ form.addEventListener('input',filter);form.addEventListener('change',filter);for
 /** Render a labeled inventory rather than an uncalibrated 25-spoke numerical radar. */
 export function renderCapabilitySvg(p: CapabilityProfile): string {
   validateCapabilityProfile(p);
+  const rowH = 50;
+  const top = 160;
   const rows = p.axes
     .map((a, i) => {
-      const y = 152 + i * 43;
-      return `<g><rect x="24" y="${y - 24}" width="952" height="38" rx="5" fill="${i % 2 ? '#122235' : '#0d1b2b'}"/><text x="40" y="${y}" fill="#5eead4" font-size="15">${String(i + 1).padStart(2, '0')}</text><text x="78" y="${y}" fill="#e4edf7" font-size="16">${esc(a.name)}</text><text x="955" y="${y}" text-anchor="end" fill="${COLORS[a.assessment.status]}" font-size="13">${esc(STATE_LABELS[a.assessment.status])}</text></g>`;
+      const y = top + i * rowH;
+      const legacy = legacyAxisOf(p, a.id);
+      return `<g><rect x="24" y="${y - 26}" width="952" height="${rowH - 6}" rx="5" fill="${i % 2 ? '#122235' : '#0d1b2b'}"/><text x="40" y="${y}" fill="#5eead4" font-size="15">${String(i + 1).padStart(2, '0')}</text><text x="78" y="${y}" fill="#e4edf7" font-size="16">${esc(a.name)}</text><text x="78" y="${y + 15}" fill="${legacy ? '#8ea3bd' : '#c4b5fd'}" font-size="11.5">${esc(legacyTag(p, a.id))}</text><text x="955" y="${y}" text-anchor="end" fill="${COLORS[a.assessment.status]}" font-size="13">${esc(STATE_LABELS[a.assessment.status])}</text></g>`;
     })
     .join('\n');
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1280" role="img" aria-labelledby="title desc" font-family="system-ui,sans-serif"><title id="title">CQM-25 v${esc(p.frameworkVersion)}: canonical project standard</title><desc id="desc">Canonical project standard adopted ${esc(p.adoptedAt)}. Twenty-five stable axes with categorical repository evidence states from ${esc(p.reviewedAt)}. Acceptance experiments remain proposed and unexecuted as a unified benchmark. No numerical capability, consciousness, sentience or general-intelligence score is inferred.</desc><rect width="1000" height="1280" rx="16" fill="#09111c"/><text x="32" y="48" fill="#e4edf7" font-size="27" font-weight="700">CQM-25 v${esc(p.frameworkVersion)} · Canonical project standard</text><text x="32" y="78" fill="#b0c2d7" font-size="15">Adopted ${esc(p.adoptedAt)} · evidence reviewed ${esc(p.reviewedAt)} · entity / population / world</text><text x="32" y="105" fill="#fbbf24" font-size="14">Proposed experiments; unified benchmark unexecuted. Scores uncalibrated; no aggregate verdict.</text>${rows}<text x="32" y="1243" fill="#b0c2d7" font-size="14">Open the interactive profile for measures, falsifiers, scope, and source-linked evidence.</text></svg>\n`;
+  const h = top + p.axes.length * rowH + 34;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 ${h}" role="img" aria-labelledby="title desc" font-family="system-ui,sans-serif"><title id="title">CQM-25 v${esc(p.frameworkVersion)}: canonical project standard</title><desc id="desc">Canonical project standard adopted ${esc(p.adoptedAt)}. Evidence reviewed ${esc(p.reviewedAt)}. Acceptance experiments remain proposed and unexecuted as a unified benchmark. Twenty-five named dimensions with categorical repository evidence states, each tagged with its construct-only legacy survey correspondence, if any. No numerical capability, consciousness, sentience or general-intelligence score is inferred.</desc><rect width="1000" height="${h}" rx="16" fill="#09111c"/><text x="32" y="48" fill="#e4edf7" font-size="27" font-weight="700">CQM-25 v${esc(p.frameworkVersion)} · Canonical project standard</text><text x="32" y="78" fill="#b0c2d7" font-size="15">Adopted ${esc(p.adoptedAt)} (${esc(decisionName(p))}) · evidence reviewed ${esc(p.reviewedAt)} · entity / population / world</text><text x="32" y="105" fill="#fbbf24" font-size="14">Proposed experiments; unified benchmark unexecuted. Scores uncalibrated; no aggregate verdict.</text>${rows}<text x="32" y="${h - 22}" fill="#b0c2d7" font-size="14">Open the interactive profile for the law, measures, falsifiers, scope and source-linked evidence.</text></svg>\n`;
 }
 
 /** Render an editable, source-linked specification from the same reviewed input. */
@@ -649,9 +755,12 @@ export function renderCapabilityMarkdown(
   validatePublication(p, estimates);
   const blocks = p.axes.map(
     (a, i) =>
-      `## ${i + 1}. ${a.name}\n\n${a.definition}\n\n- Axis ID: \`${a.id}\`.\n- Domain: ${a.domain}; kind: ${a.kind}; scope: ${a.scope.join(', ')}.\n- Evidence review: ${STATE_LABELS[a.assessment.status]}. Capability score: uncalibrated.\n- Current finding: ${a.assessment.summary}\n- Measures: ${a.measures.join('; ')}\n- Acceptance experiment: ${a.protocol}\n- Falsifier: ${a.falsifier}\n- Repository evidence: ${a.assessment.evidence.map((e) => `[${e.label}](${evidenceUrl(p, e.path)})`).join('; ') || 'Not established.'}\n- Sources: ${a.sourceIds.join(', ')}\n`,
+      `## ${i + 1}. ${a.name}\n\n${a.definition}\n\n- Axis ID: \`${a.id}\`.\n- Domain: ${a.domain}; kind: ${a.kind}; scope: ${a.scope.join(', ')}.\n- ${legacyTag(p, a.id)}.\n- Evidence review: ${STATE_LABELS[a.assessment.status]}. Capability score: uncalibrated.\n- Current finding: ${a.assessment.summary}\n- Measures: ${a.measures.join('; ')}\n- Acceptance experiment: ${a.protocol}\n- Falsifier: ${a.falsifier}\n- Repository evidence: ${a.assessment.evidence.map((e) => `[${e.label}](${evidenceUrl(p, e.path)})`).join('; ') || 'Not established.'}\n- Sources: ${a.sourceIds.join(', ')}\n`,
   );
-  return `# ${p.title}\n\nCanonical project standard, version ${p.frameworkVersion}; adopted ${p.adoptedAt}.\n\nAuthority: ${p.authority}; status: ${p.status}. Evidence reviewed ${p.reviewedAt}, pinned to \`${p.sourceCommit}\`.\n\n${p.scope}\n\nCQM-25 is the binding project capability standard, not a consensus gold standard or an executed 25-task benchmark. Acceptance experiments remain proposed and unexecuted as a unified benchmark. Feature plans and capability claims identify affected stable axis IDs and their evidence requirements; taxonomy changes require an explicit framework version and contract review. Engineering dimensions do not establish consciousness, sentience, AGI or superintelligence. Numeric capability scores remain null until calibrated.\n\n## Historical nine-axis comparison and visual review\n\n${p.legacyVisualReview}\n\nThe 155-system comparison is historical secondary context with its separate nine-axis rubric. It cannot substitute for the canonical CQM-25 standard. No peer scores or rankings are inferred here.\n\n## Evaluation protocol\n\n${p.evaluationProtocol.map((s, i) => `${i + 1}. ${s}`).join('\n')}\n\n## Limits\n\n${p.limitations.map((s) => `- ${s}`).join('\n')}\n\n${blocks.join('\n')}\n${estimateMarkdown(p, estimates)}\n## Research foundations\n\n${p.sources.map((s) => `- **${s.id}:** [${s.title}](${s.url}) (${s.kind}). ${s.note}`).join('\n')}\n`;
+  const crosswalk = p.legacyCrosswalk
+    .map((c) => `| ${c.legacyAxis} | ${axisNumbers(p, c.axisIds)} | ${c.relation} |`)
+    .join('\n');
+  return `# ${p.title}\n\nCanonical project standard, version ${p.frameworkVersion}; adopted ${p.adoptedAt}.\n\nAuthority: ${p.authority}; status: ${p.status}. Evidence reviewed ${p.reviewedAt}, pinned to \`${p.sourceCommit}\`.\n\n${p.scope}\n\nCQM-25 is the binding project capability standard, not a consensus gold standard or an executed 25-task benchmark. Acceptance experiments remain proposed and unexecuted as a unified benchmark. Feature plans and capability claims identify affected stable axis IDs and their evidence requirements; taxonomy changes require an explicit framework version and contract review. Engineering dimensions do not establish consciousness, sentience, AGI or superintelligence. Numeric capability scores remain null until calibrated.\n\n## The capability law\n\nAdopted ${p.governance.adopted} under [${decisionName(p)}](${decisionHref(p)}).\n\n${p.governance.rules.map((r, i) => `${i + 1}. ${r}`).join('\n')}\n\n## Historical nine-axis comparison and visual review\n\n${p.legacyVisualReview}\n\nThe 155-system comparison is historical secondary context with its separate nine-axis rubric. It cannot substitute for the canonical CQM-25 standard. No peer scores or rankings are inferred here.\n\n## From the nine-axis survey to CQM-25\n\nHistorical construct-only correspondence: 19 of the 25 axes. Each legacy survey axis maps to related CQM-25 constructs. No score or validation transfers in either direction; correspondence does not establish that these protocols were measured.\n\n| Legacy axis | CQM-25 axes | Relation |\n| --- | --- | --- |\n${crosswalk}\n\nNot separately represented in the nine-axis survey: ${unmappedAxes(p).join(' · ')}.\n\n## Evaluation protocol\n\n${p.evaluationProtocol.map((s, i) => `${i + 1}. ${s}`).join('\n')}\n\n## Limits\n\n${p.limitations.map((s) => `- ${s}`).join('\n')}\n\n${blocks.join('\n')}\n${estimateMarkdown(p, estimates)}\n## Research foundations\n\n${p.sources.map((s) => `- **${s.id}:** [${s.title}](${s.url}) (${s.kind}). ${s.note}`).join('\n')}\n`;
 }
 
 if (import.meta.main) {
