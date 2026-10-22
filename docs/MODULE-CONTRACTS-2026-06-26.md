@@ -2,6 +2,43 @@
 
 # Module Contracts
 
+## CQM-25 capability research profile
+
+`docs/alife/cqm-capability-profile.json` owns the proposed 25-axis operational framework,
+primary-source references, a repository evidence inventory and the explicit evaluation protocol.
+`scripts/gen-capability-profile.ts` validates it and derives the public HTML, Markdown and SVG.
+The SVG is embedded in the existing ALife gallery; the HTML provides readable axis definitions,
+scope filters, evidence links and acceptance/falsification procedures. Generation is deterministic,
+offline and independent of simulation state. Its cost is bounded by 25 axes and their references.
+
+The existing nine-axis, 155-system peer matrix retains its definitions and scores. No mapping
+may infer 25 peer scores, combine the two denominators or claim a calibrated leaderboard. A
+single organism is an eligible subject. Ecology is one domain; physical models are assessed
+against their declared dynamics rather than compulsory Earth fidelity. Entity visual expression
+and population/delivery scale are separate measurements within the visual dimension.
+
+Scientific capability, engineering properties and evidence strength are distinct. The initial
+25-axis inventory uses implemented/bounded-test/mixed/unassessed review states, with numeric
+capability scores explicitly null until task-specific calibration. Missing evidence is not zero;
+N/A requires a declared subject/scope reason. No average, consciousness percentage, sentience,
+AGI or superintelligence verdict is derived from the axes. Literature informs the construct
+definitions; it does not endorse the 25-axis selection as a universal gold standard.
+
+| Failure                                                    | Required behavior                                                        |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Missing/duplicate axis, malformed schema or unknown source | Generator rejects the input.                                             |
+| Unsafe source URL or repository path                       | Reject before generating links.                                          |
+| Numeric score in the uncalibrated initial edition          | Reject rather than publish an invented rating.                           |
+| Stale generated HTML/SVG/Markdown                          | Focused drift test and generated-artifact check fail.                    |
+| JavaScript unavailable                                     | All 25 axis cards and evidence remain readable.                          |
+| Filters find no axes                                       | Show an explicit empty state and preserve reset access.                  |
+| Narrow screen                                              | Reflow controls/cards; standalone radar text remains inside its viewBox. |
+
+`tests/capability-profile.test.ts` owns schema, provenance, escaping, completeness and deterministic
+artifact checks. The radar generator additionally synchronizes the full inline SVG rather than
+only its polygons. Browser review verifies label bounds, filtering and mobile overflow. There is
+no simulation hot-path change or new runtime performance claim.
+
 ## Artificial-life evidence catalog publication
 
 `docs/alife/` owns one static source-review edition: **150 external entries**, with a separate
@@ -1694,7 +1731,7 @@ Copilot are constructed boot-stream-neutral and never write sim state, so the go
 
 ### V9 acceptance
 
-Full `bun run check` green: prettier → tsc strict → oxlint → 3394 tests (0 fail, 300-frame golden
+Full `bun run check` green: prettier → tsc strict → oxlint → 3405 tests (0 fail, 300-frame golden
 included) → build. The Copilot sandbox verified live (allow: `git log`, file reads; deny:
 path-escape, repository-root pathspecs, `git push`, `legacy/`, shell redirection).
 

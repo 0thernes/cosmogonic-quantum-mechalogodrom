@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- CQM-25 research profile: 25 operational dimensions, primary-source foundations, pinned repository evidence, explicit acceptance experiments and falsifiers. Searchable responsive HTML, JSON, Markdown and an evidence-map SVG supplement the historical nine-axis comparison without inventing capability ratings.
 - `.gitattributes`: root documentation HTML (`docs.html`, `specs.html`), the generated `bible.html`
   and gallery bundle, and the verbatim `legacy/` archive no longer count toward the GitHub Languages
   bar. Measured with `github-linguist`: HTML 5.57% to 2.97%, C++ 0.53% to 0.54%, Zig 0.50% to 0.52%.
@@ -35,6 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   probability and lifespan phenotype; ablation-verified selection vs trait-blind scramble.
 
 ### Changed
+
+- Fixed clipped radar labels with a readable wrapped layout and complete inline/standalone SVG synchronization. Clarified organism-level visual richness, preserved the existing 4.0 visual rating, and broadened the README, app overview and About metadata around embodied digital life and synthetic cognition.
 
 - A-Life receipts re-derived on the 155-system survey: breadth 3.8, #1/155, z +3.236 / +3.362,
   Mahalanobis 8.987; stale open-endedness 2.4 / breadth 3.84 prose corrected on every current surface;

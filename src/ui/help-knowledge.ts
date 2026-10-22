@@ -37,7 +37,7 @@ export const HELP_KB: readonly HelpEntry[] = [
       'game',
       'about',
     ],
-    body: 'Deterministic multi-caste xeno-dome: 60k edible flora, waste→fertilizer ecology, multi-tier predation, dual economies + game theory, multi-scale neural control (70p swarms → ~10k SuperMinds), mind-driven morphing bodies, weather-coupled climate — indicator-only consciousness stack. Internal A-Life breadth #1/155 (3.80 code-grounded). Not sentience. Not a QPU. Not an LLM sim core. Thousands of procedural creatures drift, feed, mutate and trade; every system reads and writes another. Open the panels from the menu bar (centered, just above the bottom toolbar) to inspect any layer live.',
+    body: 'Cosmogonic Quantum Mechalogodrom is an experimental platform for artificial life, embodied synthetic cognition and procedural morphogenesis, from individual beings to worlds across scales. Its adaptive controllers, morphing bodies and coupled mathematical substrates connect behavior with expressive 3D presentation. Physical models and deliberately constructed dynamics support investigations of agency, adaptation and emergence through live inspection, seeded experiments and causal interventions; Xylos also supports recorded-input replay. Individual minds, populations and ecologies are complementary subjects of study. Consciousness and open-ended evolution remain research questions. Open the panels from the menu bar to inspect a system or observe Xylos.',
     see: ['docs/PHILOSOPHY-2026-06-26.md', 'README.md', 'docs/VERIFICATION-ANALYTICAL-DATA.md'],
   },
   {

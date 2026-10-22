@@ -19,6 +19,7 @@
  * Pure + deterministic: no Math.random / Date.now; identical CSV -> identical bytes out.
  */
 import { mean, standardDeviation, sampleCorrelation } from 'simple-statistics';
+import { format, resolveConfig } from 'prettier';
 import { escapeMarkupAttribute, escapeMarkupText } from './markup-escape';
 
 const ROOT = `${import.meta.dir}/..`;
@@ -213,12 +214,17 @@ function chartScatter(rows: Row[], medBreadth: number, medMaturity: number): str
 }
 
 // 3 ── radar profile ───────────────────────────────────────────────────────────
-function chartRadar(cosmo: Row, meanProfile: number[], near: Row): string {
-  const w = 640;
-  const h = 600;
-  const cx = w / 2;
-  const cy = h / 2 + 18;
-  const R = 200;
+/** Render the unchanged nine-axis scores with complete labels inside a responsive canvas. */
+export function chartRadar(
+  cosmo: Pick<Row, 'project' | 'axes'>,
+  meanProfile: number[],
+  near: Pick<Row, 'project' | 'axes'>,
+): string {
+  const w = 480;
+  const h = 500;
+  const cx = 240;
+  const cy = 300;
+  const R = 116;
   const pt = (j: number, v: number): [number, number] => {
     const ang = -Math.PI / 2 + (2 * Math.PI * j) / NAX;
     const r = (v / 5) * R;
@@ -228,78 +234,84 @@ function chartRadar(cosmo: Row, meanProfile: number[], near: Row): string {
     vals
       .map((v, j) =>
         pt(j, v)
-          .map((n) => round(n, 1))
+          .map((n) => round(n, 2))
           .join(','),
       )
       .join(' ');
-  let b = '';
-  b += `<text x="28" y="30" fill="${TEXT}" font-size="18" font-weight="700">Nine-axis capability profile</text>`;
-  b += `<text x="28" y="50" fill="${MUTE}" font-size="12">amber = Cosmogonic · violet = survey mean · green = nearest peer (${esc(short(near.project))})</text>`;
+  // Fixed slots reserve space for the full words on both sides. At 320 CSS pixels wide,
+  // these 18-unit labels remain 12 CSS pixels, instead of the former 5-pixel single lines.
+  const labels = [
+    { x: 240, y: 160, lines: ['Reproduction'] },
+    { x: 366, y: 178, lines: ['Open-', 'endedness'] },
+    { x: 422, y: 283, lines: ['Ecology'] },
+    { x: 404, y: 365, lines: ['Morphology/', 'Physics'] },
+    { x: 316, y: 438, lines: ['Cognition/', 'Learning'] },
+    { x: 167, y: 438, lines: ['Substrate', 'pluralism'] },
+    { x: 88, y: 387, lines: ['Instrumentation'] },
+    { x: 74, y: 250, lines: ['Consciousness', 'theory'] },
+    { x: 112, y: 180, lines: ['Visual scale'] },
+  ];
+  const peer = short(near.project);
+  const title = `Nine-axis capability radar: Cosmogonic vs survey mean vs ${peer}`;
+  const description =
+    'Legacy comparison on a 0 to 5 scale; scores retain the existing rubric. ' +
+    'Consciousness-theory describes implemented theory mechanisms, not demonstrated consciousness. ' +
+    AXES.map(
+      (axis, j) =>
+        `${axis}: Cosmogonic ${cosmo.axes[j]}, survey mean ${meanProfile[j]}, ${peer} ${near.axes[j]}.`,
+    ).join(' ');
+  let b = `<title>${esc(title)}</title><desc>${esc(description)}</desc>`;
+  b += `<text x="20" y="30" fill="${TEXT}" font-size="20" font-weight="700">Nine-axis capability profile</text>`;
+  b += `<text x="20" y="58" fill="${COSMO}" font-size="16">Amber: Cosmogonic</text>`;
+  b += `<text x="20" y="84" fill="${MEANC}" font-size="16">Violet: survey mean</text>`;
+  b += `<text x="20" y="110" fill="${NEAR}" font-size="16">Green: nearest peer (${esc(peer)})</text>`;
   for (let g = 1; g <= 5; g++) {
     b += `<polygon points="${poly(Array.from({ length: NAX }, () => g))}" fill="none" stroke="${GRID}" stroke-width="0.7"/>`;
   }
   for (let j = 0; j < NAX; j++) {
     const [ex, ey] = pt(j, 5);
-    b += `<line x1="${cx}" y1="${cy}" x2="${round(ex, 1)}" y2="${round(ey, 1)}" stroke="${GRID}" stroke-width="0.7"/>`;
-    const [lx, ly] = pt(j, 5.95);
-    const anchor = Math.abs(lx - cx) < 12 ? 'middle' : lx < cx ? 'end' : 'start';
-    b += `<text x="${round(lx, 1)}" y="${round(ly, 1)}" fill="${TEXT}" font-size="10" text-anchor="${anchor}">${esc(AXES[j]!)}</text>`;
+    b += `<line x1="${cx}" y1="${cy}" x2="${round(ex, 2)}" y2="${round(ey, 2)}" stroke="${GRID}" stroke-width="0.7"/>`;
+    const label = labels[j]!;
+    const spans = label.lines
+      .map((line, i) => `<tspan x="${label.x}" dy="${i === 0 ? 0 : 24}">${esc(line)}</tspan>`)
+      .join('');
+    b += `<text data-radar-axis="${j}" aria-label="${escapeMarkupAttribute(AXES[j]!)}" x="${label.x}" y="${label.y}" fill="${TEXT}" font-size="18" text-anchor="middle">${spans}</text>`;
   }
   b += `<polygon points="${poly(near.axes)}" fill="${NEAR}" fill-opacity="0.10" stroke="${NEAR}" stroke-width="1.4"/>`;
   b += `<polygon points="${poly(meanProfile)}" fill="${MEANC}" fill-opacity="0.12" stroke="${MEANC}" stroke-width="1.4"/>`;
   b += `<polygon points="${poly(cosmo.axes)}" fill="${COSMO}" fill-opacity="0.22" stroke="${COSMO}" stroke-width="2.2"/>`;
-  return svgDoc(w, h, b, 'Nine-axis capability radar');
+  return svgDoc(w, h, b, title).replace(
+    '<svg ',
+    '<svg style="width: 100%; height: auto; display: block" ',
+  );
+}
+
+/** Replace exactly one inline radar with the complete generated SVG, including labels and a11y. */
+export function replaceInlineRadar(html: string, radar: string, surface: string): string {
+  const pattern = /<svg\b[^>]*aria-label="Nine-axis capability radar[^"]*"[^>]*>[\s\S]*?<\/svg>/g;
+  const matches = html.match(pattern);
+  if (matches?.length !== 1) {
+    throw new Error(`${surface}: expected one inline radar, found ${matches?.length ?? 0}`);
+  }
+  return html.replace(pattern, () => radar);
 }
 
 /**
- * Propagate the radar into the two hand-authored pages that inline it.
- *
- * `docs.html` and `specs.html` each carry a copy of {@link chartRadar}'s body inline (static markup,
- * so the profile is readable with JS off). Being hand-copied, it FORKED from this CSV and silently
- * went stale on four axes — ecology, cognition, substrate and instrumentation each drifted a full
- * ratchet behind while both pages presented the polygon as the current profile. Nothing caught it:
- * the consistency test only greps those files for the breadth string, and check-generated.ts guards
- * only the gallery embeds.
- *
- * The drift is not a one-off. The violet/green polygons encode the SURVEY MEAN and the NEAREST PEER,
- * so they go stale on any CSV row addition — growing the peer corpus silently invalidates both, plus
- * the peer's name in the caption and aria-label. Hand-maintenance cannot hold that invariant, so the
- * radar is derived here (single source = the CSV) exactly like every other figure in this script.
- *
- * Patches values only — geometry, colours and labels stay in the markup. Returns the files changed.
+ * Derive the entire inline SVG from the same source as the standalone asset. Synchronizing only
+ * polygon values previously left clipped labels and stale geometry in docs.html/specs.html.
+ * The generated body, title, description, labels and series now travel together; JS is not needed.
  */
-async function syncInlineRadar(cosmo: Row, meanProfile: number[], near: Row): Promise<string[]> {
-  const poly = (vals: number[]): string =>
-    vals
-      .map((v, j) => {
-        const ang = -Math.PI / 2 + (2 * Math.PI * j) / NAX;
-        const r = (v / 5) * 200;
-        return `${round(320 + r * Math.cos(ang), 1)},${round(318 + r * Math.sin(ang), 1)}`;
-      })
-      .join(' ');
-  // fill colour identifies each series — same triple chartRadar() draws (green/violet/amber).
-  const series: [string, number[]][] = [
-    ['#34d399', near.axes],
-    ['#a78bfa', meanProfile],
-    ['#f59e0b', cosmo.axes],
-  ];
-  const peer = esc(short(near.project));
+async function syncInlineRadar(radar: string): Promise<string[]> {
   const changed: string[] = [];
   for (const page of ['docs.html', 'specs.html']) {
     const path = `${ROOT}/${page}`;
     const before = await Bun.file(path).text();
-    let after = before;
-    for (const [colour, vals] of series) {
-      const re = new RegExp(`(<polygon\\s+points=")[^"]*("\\s+fill="${colour}")`);
-      if (!re.test(after)) throw new Error(`${page}: inline radar ${colour} polygon not found`);
-      after = after.replace(re, `$1${poly(vals)}$2`);
-    }
-    // The nearest peer's NAME is part of the data — it changes whenever a closer peer is added.
-    after = after.replace(/(green = nearest peer \()[^)]*(\))/, `$1${peer}$2`);
-    after = after.replace(
-      /(aria-label="Nine-axis capability radar: Cosmogonic vs survey mean vs )[^"]*(")/,
-      `$1${peer}$2`,
-    );
+    // The pre-commit formatter and subsequent build must converge to identical page bytes.
+    // Formatting before comparison also makes repeated generation a no-op after a normal format.
+    const after = await format(replaceInlineRadar(before, radar, page), {
+      ...(await resolveConfig(path)),
+      filepath: path,
+    });
     if (after !== before) {
       await Bun.write(path, after);
       changed.push(page);
@@ -462,10 +474,11 @@ async function main(): Promise<void> {
     `${OUT}/alife-breadth-vs-maturity.svg`,
     chartScatter(rows, medBreadth, medMaturity),
   );
-  await Bun.write(`${OUT}/alife-radar-profile.svg`, chartRadar(cosmo, meanProfile, nearestRow));
+  const radar = chartRadar(cosmo, meanProfile, nearestRow);
+  await Bun.write(`${OUT}/alife-radar-profile.svg`, radar);
   await Bun.write(`${OUT}/alife-nearest-neighbors.svg`, chartNeighbours(neigh.slice(0, 8)));
   await Bun.write(`${OUT}/alife-axis-heatmap.svg`, chartHeatmap(rows));
-  const radarSynced = await syncInlineRadar(cosmo, meanProfile, nearestRow);
+  const radarSynced = await syncInlineRadar(radar);
 
   // Print a human-readable receipt block.
   const L: string[] = [];
@@ -504,4 +517,4 @@ async function main(): Promise<void> {
   console.log(L.join('\n'));
 }
 
-void main();
+if (import.meta.main) void main();

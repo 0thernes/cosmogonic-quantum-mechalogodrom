@@ -8,7 +8,7 @@
 [![License: Non-Commercial Research & Play](https://img.shields.io/badge/License-Non--Commercial%20Research%20%26%20Play-2ea043.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
-[![tests](https://img.shields.io/badge/tests-3394%20exact-brightgreen)](./tests)
+[![tests](https://img.shields.io/badge/tests-3405%20exact-brightgreen)](./tests)
 [![coverage](https://img.shields.io/badge/coverage-84.64%25%20line%20%C2%B7%2082.21%25%20func-success)](./docs/TECHNICAL-SPECIFICATION-2026-06-26.md)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION-2026-06-26.md)
 [![Tsotchke](https://img.shields.io/badge/Tsotchke-REAL__MIT__CORPUS-purple)](https://github.com/tsotchke)
@@ -25,9 +25,16 @@ The Tsotchke badges identify upstream source versions used as references for CQM
 [the integration ledger](./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md) documents each integration's
 scope. The Zig badge counts the 18 kernel functions exported by the embedded WASM module.
 
-A procedural WebGL cosmic ecosystem — morphogenic organisms, Shoggoths,
-puppet-master NPCs, atmospheric weather, a neural connectome, quantum
-diffusion, **and the Tsotchke corpus wired as the primordial substrate for digital biologics — the deterministic, measured path toward proto-sentience and the consciousness indicators** (real math substrates; sentience is the GOAL, never claimed as reached).
+Cosmogonic Quantum Mechalogodrom is an experimental platform for artificial life, embodied synthetic
+cognition and procedural morphogenesis, from individual beings to worlds across scales. Its adaptive
+controllers, morphing bodies and coupled mathematical substrates connect behavior with expressive 3D
+presentation. Physical models and deliberately constructed dynamics support investigations of
+agency, adaptation and emergence through live inspection, seeded experiments and causal
+interventions; Xylos also supports recorded-input replay. Individual minds, populations and
+ecologies are complementary subjects of study. Consciousness and open-ended evolution remain
+research questions.
+
+**[Explore the CQM-25 research profile](./docs/alife/cqm-capability-profile.html)** — 25 operational dimensions spanning individual organization, adaptive cognition, consciousness-related mechanisms and engineering context, with primary sources, concrete experiments and explicit evidence limits. [Specification](./docs/alife/cqm-capability-profile.md) · [Data and protocols](./docs/alife/cqm-capability-profile.json). The nine-axis peer comparison remains a separate rubric.
 
 **The living docs (README, ARCHITECTURE, ERD/ERM/ERP, PHILOSOPHY, MODULE-CONTRACTS, SPECS, dashboard) and the in-app "Dome/World" docs are sync-managed where canonical tokens exist, then manually current-truth reviewed for claims that automation cannot prove.** A `docs-truth-law` CI gate fails the build on doc overclaims or encoding mangling, and the [NHSI progress dashboard](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md) plus [verification data](./docs/VERIFICATION-ANALYTICAL-DATA.md) are the canonical status surfaces.
 
@@ -41,7 +48,7 @@ diffusion, **and the Tsotchke corpus wired as the primordial substrate for digit
   certified indicators or consciousness.
 
 - Package/source version: **v0.23.0**.
-- Exact tracked-suite receipt: **3,394 tests / 0 fail**. Portable public coverage floor: **84.64% line / 82.21% func**.
+- Exact tracked-suite receipt: **3,405 tests / 0 fail**. Portable public coverage floor: **84.64% line / 82.21% func**.
 - **Standing & xeno-A-life position (readable synthesis):** [Comprehensive Standing Report (MD)](./docs/reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.md) · [HTML](./docs/reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.html) — engineering card, historical 113-system matrix (a point-in-time snapshot, superseded by the current 155-system re-evaluation), SuperCreature/SuperMind/Apex/Mechalogodrom deep dive, capital/ISAL path. Apex minds are **xeno multi-faculty scaffolds** (not OpenWorm bio-twins; not claimed sentience). Preserves V4/Phase-B failure-forward boundaries.
 - **Dome ecology verification:** [Xenomimic tether and Big Tree evidence report](./docs/reports/DOME-ECOLOGY-VERIFICATION-2026-07-14.md) — canonical food, five-second simulation-time respawn, sanctuary transitions, temporary visits, resident controllers, social cleanup, performance, browser evidence, and explicit limitations.
 
@@ -564,7 +571,7 @@ full gate with same-seed determinism preserved. The major arcs:
   ported primitive. The whole apex beat is now measured honestly: **~1.99 ms** per `SuperMind.think()`
   (range 1.41–5.62 ms) and **~9.77 ms** for the staggered 5-mind batch (~58% of a 60 fps frame, which is
   why 5 minds run staggered against 20 light echoes); the older sub-millisecond / `<2%` GOAL5 claim is
-  superseded until re-proven. **3,394 exact tracked tests · 0 fail (receipts enforced) · 84.64% line / 82.21% func portable coverage floor.**
+  superseded until re-proven. **3,405 exact tracked tests · 0 fail (receipts enforced) · 84.64% line / 82.21% func portable coverage floor.**
   <!-- cqm-sync:local-measurement:start -->
   **Latest Windows-local measurement: 3,297 tests / 0 fail / 3,589,864 assertions at `93.60%` line / `91.61%` func.**
   <!-- cqm-sync:local-measurement:end -->

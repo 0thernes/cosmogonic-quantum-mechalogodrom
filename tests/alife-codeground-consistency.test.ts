@@ -83,11 +83,11 @@ describe('A-Life code-grounded stats are computed-and-gated (no silent drift)', 
       expect(points, `${surface}: amber Cosmogonic polygon not found`).toBeDefined();
       const decoded = points!.split(' ').map((pair, j) => {
         const [x, y] = pair.split(',').map(Number) as [number, number];
-        // chartRadar(): centre (320,318), radius = (v/5)*200, axis j at -90° + j*(360/9).
+        // chartRadar(): centre (240,300), radius = (v/5)*116, axis j at -90° + j*(360/9).
         const ang = -Math.PI / 2 + (2 * Math.PI * j) / axes.length;
         const r =
-          Math.abs(Math.cos(ang)) > 0.3 ? (x - 320) / Math.cos(ang) : (y - 318) / Math.sin(ang);
-        return Math.round((r / 40) * 100) / 100;
+          Math.abs(Math.cos(ang)) > 0.3 ? (x - 240) / Math.cos(ang) : (y - 300) / Math.sin(ang);
+        return Math.round((r / 23.2) * 100) / 100;
       });
       expect(decoded, `${surface}: inline radar is stale`).toEqual(axes);
     }

@@ -135,6 +135,12 @@ export const ALIFE_METRICS: readonly AlifeMetric[] = [
     alt: 'Nine-axis capability radar profile',
   },
   {
+    id: 'capability-25',
+    label: '25-axis research profile',
+    file: 'alife-capability-profile-25.svg',
+    alt: 'Twenty-five research dimensions with categorical repository evidence, not capability scores',
+  },
+  {
     id: 'pca',
     label: 'PCA',
     file: 'alife-pca.svg',
@@ -429,7 +435,7 @@ export function mountAlifeMetricsGallery(root: HTMLElement | null): void {
   root.className = 'alife-gallery';
   root.innerHTML =
     `<h2>ALife survey metric visuals</h2>` +
-    `<p class="lead">Eleven SVG reports from <code>docs/reports/assets/</code> — the hero fills the space; click a tab, the hero, or any thumbnail below to focus. Drag to pan, wheel or +/- to zoom.</p>` +
+    `<p class="lead">Explore the <a data-capability-profile>25-axis research profile: measures, scope and evidence</a>, alongside eleven nine-axis survey charts. The new profile reports evidence categories without invented numerical ratings; click a tab, the hero, or any thumbnail below to focus. Drag to pan, wheel or +/- to zoom.</p>` +
     `<div class="alife-hero" role="tabpanel"><div class="alife-toolbar">` +
     `<button type="button" class="alife-tool" data-zoom-in title="Zoom in">+</button>` +
     `<button type="button" class="alife-tool" data-zoom-out title="Zoom out">−</button>` +
@@ -438,6 +444,9 @@ export function mountAlifeMetricsGallery(root: HTMLElement | null): void {
     `<div class="alife-caption"></div><span class="alife-hint">Click hero · next chart</span></div>` +
     `<div class="alife-tabs" role="tablist" aria-label="ALife metric charts"></div>` +
     `<div class="alife-grid" aria-label="All metric charts"></div>`;
+
+  const profileLink = root.querySelector<HTMLAnchorElement>('[data-capability-profile]');
+  if (profileLink) profileLink.href = `${siteBasePrefix()}/docs/alife/cqm-capability-profile.html`;
 
   const tabs = root.querySelector('.alife-tabs') as HTMLElement;
   const grid = root.querySelector('.alife-grid') as HTMLElement;

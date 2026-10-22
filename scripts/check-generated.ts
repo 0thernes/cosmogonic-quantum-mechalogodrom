@@ -4,6 +4,9 @@ import { spawnSync } from 'node:child_process';
 
 export const GENERATED_ARTIFACTS = [
   'src/generated/alife-svg-embed.ts',
+  'docs/alife/cqm-capability-profile.html',
+  'docs/alife/cqm-capability-profile.md',
+  'docs/reports/assets/alife-capability-profile-25.svg',
   'bible.html',
   'lab/consciousness-data.json',
   'lab/sentience-data.json',

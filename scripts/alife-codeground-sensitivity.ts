@@ -141,12 +141,15 @@
  *                            code-grounded and counted, so no genuinely-new named theory remains to ground; moving
  *                            this axis would re-label existing work, the exact overclaim this most-exposed dimension
  *                            is deliberately held against. The 4.5 self-score stays unearned — OVERCLAIMED (was 4.5)
- *   visual scale        4.0  instanced-entities.ts pooling is the only desktop/ultra path; pools cast no shadows
- *                            (instanced-entities.ts:989). The old "50k tier unbenchmarked" note is RETIRED as FALSE
- *                            — 50k IS measured (BENCHMARKS-2026-06-26.md:207-225, ~167ms/frame ≈ 6fps raw), which
- *                            argues the SAME way: auto-tier stops at desktop 10k (quality.ts:129-136), 50k is an
- *                            explicit ?tier=mega stress ceiling, and whole-world native-GPU frame time is still
- *                            unprofiled — OVERCLAIMED (was 5.0)
+ *   visual scale        4.0  rich procedural visuals at both individual-being and world scales: Xylos's
+ *                            neural-state-driven membranes/graph (xylos-body.ts; xylos-body.test.ts), apex
+ *                            substrate uniforms, mathematical variant shells and instanced populations.
+ *                            One complex entity is eligible; this axis does not require an ecology or a
+ *                            large population. The rubric anchors 4 at "rich visuals" and 5 at "iconic
+ *                            spectacle" (gen-alife-landscape-report.ts); the latter remains subjective and
+ *                            uncalibrated, so this review supports 4.0 without assigning an arbitrary uplift.
+ *                            Population capacity and delivered-frame performance are separate measurements;
+ *                            historical 50k timings or absent pooled shadows do not define visual richness.
  */
 import { mean, standardDeviation } from 'simple-statistics';
 

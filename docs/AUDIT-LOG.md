@@ -11,6 +11,31 @@ changed and why.
 
 ---
 
+## 2026-10-21 (local date) — Capability profile, radar layout and project scope
+
+- Repaired the nine-axis radar at its generator: wrapped readable labels, full-word Consciousness,
+  accessible values and complete inline synchronization in Docs and Specs. Chromium checks at
+  320px and 540px chart widths found all nine labels inside the image and no label overlaps.
+- Reviewed the existing visual rubric: 4.0 means rich visuals; the 5.0 iconic-spectacle anchor is
+  subjective and lacks independent calibration. Retained 4.0 while crediting single-being neural
+  embodiment, procedural morphogenesis and world-scale presentation. Population performance is a
+  separate measurement, and terrestrial physical realism is not the project's required objective.
+- Added [CQM-25](./alife/cqm-capability-profile.md), an author-defined research framework with 25
+  constructs, 23 primary/authoritative sources, scoped measurements, interventions, falsifiers and
+  repository evidence pinned to `339c6daa`. The new protocol has not been executed as a unified
+  benchmark: numerical capability scores remain null, negative V4/Phase-B evidence remains visible,
+  and no life, consciousness, sentience, AGI or SI aggregate verdict is inferred.
+- Retained the original nine-axis 155-system numerical comparison without changing scores or
+  mapping its rankings to the new framework. Ecology is one domain among individual organization,
+  cognition, morphology and engineering. Engineering dimensions contribute no mental-capability points.
+- Broadened the About summary, README introduction, package metadata, search/social description
+  and in-app overview. Added deterministic profile generation, schema/provenance/escaping/drift
+  regression tests, and browser verification of the published profile and image assets.
+- Full repository gates and publication status are recorded in the handoff; this review does not
+  claim execution of the proposed scientific experiments or external validation of the framework.
+
+---
+
 ## 2026-10-22 — Zig kernel-count drift and measured Linguist classification
 
 - Counted 18 `export fn` kernels in `zig/src/root.zig`; `CLAUDE.md`, `AGENTS.md`, the Tsotchke
