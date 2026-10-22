@@ -58,13 +58,13 @@ const FACTS: Fact[] = [
   },
   {
     name: 'A-Life survey size',
-    // "#1/N" ranks and "N-system" corpus references. 113 is the superseded corpus; the 129-peer
-    // re-evaluation is canonical (128 peers + Cosmogonic).
+    // "#1/N" ranks and "N-system" corpus references. 113 and 129 are superseded corpus sizes; the
+    // 2026-10-22 verified expansion is canonical (154 peers + Cosmogonic = 155).
     pattern:
       /#1\s*(?:\/|of)\s*(\d{2,3})\b|\b(\d{2,3})[-\s]system\b(?=[^\n]{0,60}(?:matrix|survey|compar|expansion|corpus|A-?Life))/gi,
-    allowed: new Set(['129']),
+    allowed: new Set(['155']),
     skipLine: /\b(?:historical|superseded|retired|snapshot|legacy|point-in-time|was\s+#1)\b/i,
-    note: 'the survey is 129 systems (128 peers + Cosmogonic); 113 is the superseded corpus size',
+    note: 'the survey is 155 systems (154 peers + Cosmogonic); 113 and 129 are superseded corpus sizes',
   },
   {
     name: 'Butlin scorecard (X/14)',

@@ -11,6 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **A-Life landscape index** — `scripts/gen-alife-landscape-report.ts` derives a print-ready index of all
+  155 surveyed systems (rubric, lineage families, integrity checks, per-system evidence) from the comparison
+  CSV inside `gen:alife`; `bun run report:alife-landscape` prints the PDF; gated by
+  `tests/alife-landscape-report.test.ts`.
+- **26 verified A-Life peers** (Barricelli 1953 → Project Sid 2024): the comparison matrix grows from 129
+  to 155 systems (154 peers + Cosmogonic).
+
 - **Xylos** — one autonomous alien manifold creature with a sparse plastic recurrent brain,
   state-driven Möbius membranes, actual neural foci/edges, numerical chemical sensing and
   write-back, live browser entropy and seeded modes, bounded local experiment replay,
@@ -21,6 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- A-Life receipts re-derived on the 155-system survey: breadth 3.8, #1/155, z +3.236 / +3.362,
+  Mahalanobis 8.987; stale open-endedness 2.4 / breadth 3.84 prose corrected on every current surface;
+  breve and Krcah sources, Nanopond era and Flow Lenia peer maturity corrected (docs/AUDIT-LOG.md 2026-10-22).
 - Code-grounded A-Life profile **`[4.0, 2.4, 3.4, 3.8, 4.5, 4.6, 4.4, 3.5, 4.0]`**
   (breadth **3.84**, #1/129, z +3.220/+3.373) after GATE-REPRO-SELECT + GATE-DOME-REFUGE.
 - **GATE-DOME-REFUGE** — Big Tree sanctuary is a real predation refuge (ablation-verified population ordering).

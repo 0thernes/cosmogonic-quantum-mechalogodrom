@@ -264,7 +264,12 @@ interface Row {
   axes: number[];
   peerMaturity: number;
 }
-function parseCsv(text: string): string[][] {
+/**
+ * RFC-4180-ish CSV parse of the comparison matrix (quoted fields with commas and doubled quotes).
+ * Exported so other matrix consumers (the landscape index report) parse exactly the same way.
+ * O(n) in the text length.
+ */
+export function parseCsv(text: string): string[][] {
   const rows: string[][] = [];
   let f = '';
   let row: string[] = [];

@@ -15,11 +15,11 @@
     ],
     "breadth": 4.444,
     "rank": 1,
-    "total": 129,
+    "total": 155,
     "percentile": 100,
-    "zPopulation": 4.165,
-    "zVsPeers": 4.497,
-    "mahalanobis": 10.322,
+    "zPopulation": 4.283,
+    "zVsPeers": 4.578,
+    "mahalanobis": 10.668,
     "dominatedBy9d": 0,
     "leadOverNearestPeerBreadth": 0.944,
     "perAxisZ": [
@@ -31,17 +31,17 @@
       {
         "axis": "Open-endedness",
         "score": 3.5,
-        "z": 0.74
+        "z": 0.81
       },
       {
         "axis": "Ecology",
         "score": 5,
-        "z": 2.03
+        "z": 2.07
       },
       {
         "axis": "Morphology/Physics",
         "score": 4,
-        "z": 1.04
+        "z": 1.11
       },
       {
         "axis": "Cognition/Learning",
@@ -51,22 +51,22 @@
       {
         "axis": "Substrate pluralism",
         "score": 5,
-        "z": 8.46
+        "z": 9.13
       },
       {
         "axis": "Instrumentation",
         "score": 4.5,
-        "z": 1.32
+        "z": 1.38
       },
       {
         "axis": "Consciousness-theory",
         "score": 4.5,
-        "z": 5.92
+        "z": 6.5
       },
       {
         "axis": "Visual scale",
         "score": 5,
-        "z": 1.83
+        "z": 1.88
       }
     ]
   },
@@ -84,11 +84,11 @@
     ],
     "breadth": 3.8,
     "rank": 1,
-    "total": 129,
+    "total": 155,
     "percentile": 100,
-    "zPopulation": 3.147,
-    "zVsPeers": 3.289,
-    "mahalanobis": 8.679,
+    "zPopulation": 3.236,
+    "zVsPeers": 3.362,
+    "mahalanobis": 8.987,
     "dominatedBy9d": 0,
     "leadOverNearestPeerBreadth": 0.3,
     "perAxisZ": [
@@ -100,7 +100,7 @@
       {
         "axis": "Open-endedness",
         "score": 2,
-        "z": -0.43
+        "z": -0.42
       },
       {
         "axis": "Ecology",
@@ -110,7 +110,7 @@
       {
         "axis": "Morphology/Physics",
         "score": 3.8,
-        "z": 0.93
+        "z": 0.99
       },
       {
         "axis": "Cognition/Learning",
@@ -120,22 +120,22 @@
       {
         "axis": "Substrate pluralism",
         "score": 4.6,
-        "z": 8.05
+        "z": 8.66
       },
       {
         "axis": "Instrumentation",
         "score": 4.4,
-        "z": 1.23
+        "z": 1.29
       },
       {
         "axis": "Consciousness-theory",
         "score": 3.5,
-        "z": 4.85
+        "z": 5.33
       },
       {
         "axis": "Visual scale",
         "score": 4,
-        "z": 0.99
+        "z": 1.05
       }
     ]
   },
@@ -153,11 +153,11 @@
     ],
     "breadth": 4.444,
     "rank": 1,
-    "total": 129,
+    "total": 155,
     "percentile": 100,
-    "zPopulation": 4.165,
-    "zVsPeers": 4.497,
-    "mahalanobis": 10.322,
+    "zPopulation": 4.283,
+    "zVsPeers": 4.578,
+    "mahalanobis": 10.668,
     "dominatedBy9d": 0,
     "leadOverNearestPeerBreadth": 0.944,
     "perAxisZ": [
@@ -169,17 +169,17 @@
       {
         "axis": "Open-endedness",
         "score": 3.5,
-        "z": 0.74
+        "z": 0.81
       },
       {
         "axis": "Ecology",
         "score": 5,
-        "z": 2.03
+        "z": 2.07
       },
       {
         "axis": "Morphology/Physics",
         "score": 4,
-        "z": 1.04
+        "z": 1.11
       },
       {
         "axis": "Cognition/Learning",
@@ -189,22 +189,22 @@
       {
         "axis": "Substrate pluralism",
         "score": 5,
-        "z": 8.46
+        "z": 9.13
       },
       {
         "axis": "Instrumentation",
         "score": 4.5,
-        "z": 1.32
+        "z": 1.38
       },
       {
         "axis": "Consciousness-theory",
         "score": 4.5,
-        "z": 5.92
+        "z": 6.5
       },
       {
         "axis": "Visual scale",
         "score": 5,
-        "z": 1.83
+        "z": 1.88
       }
     ]
   },
@@ -222,11 +222,11 @@
     ],
     "breadth": 3.8,
     "rank": 1,
-    "total": 129,
+    "total": 155,
     "percentile": 100,
-    "zPopulation": 3.147,
-    "zVsPeers": 3.289,
-    "mahalanobis": 8.679,
+    "zPopulation": 3.236,
+    "zVsPeers": 3.362,
+    "mahalanobis": 8.987,
     "dominatedBy9d": 0,
     "leadOverNearestPeerBreadth": 0.3,
     "perAxisZ": [
@@ -238,7 +238,7 @@
       {
         "axis": "Open-endedness",
         "score": 2,
-        "z": -0.43
+        "z": -0.42
       },
       {
         "axis": "Ecology",
@@ -248,7 +248,7 @@
       {
         "axis": "Morphology/Physics",
         "score": 3.8,
-        "z": 0.93
+        "z": 0.99
       },
       {
         "axis": "Cognition/Learning",
@@ -258,29 +258,29 @@
       {
         "axis": "Substrate pluralism",
         "score": 4.6,
-        "z": 8.05
+        "z": 8.66
       },
       {
         "axis": "Instrumentation",
         "score": 4.4,
-        "z": 1.23
+        "z": 1.29
       },
       {
         "axis": "Consciousness-theory",
         "score": 3.5,
-        "z": 4.85
+        "z": 5.33
       },
       {
         "axis": "Visual scale",
         "score": 4,
-        "z": 0.99
+        "z": 1.05
       }
     ]
   },
   "deltas": {
     "basis": "canonical-minus-historical",
     "breadth": -0.644,
-    "zPopulation": -1.018,
-    "mahalanobis": -1.643
+    "zPopulation": -1.047,
+    "mahalanobis": -1.681
   }
 }

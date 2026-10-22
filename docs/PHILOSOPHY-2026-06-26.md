@@ -9,10 +9,10 @@ every system in this repository expresses._
 
 Maximalism with receipts. The dome is a real multi-caste interactive xeno-ecology (food, waste,
 predation, dual economies, multi-scale brains, mind-coupled morph, weather) at 10k-default scale.
-Internal survey breadth **#1/129 (3.84 code-grounded)** is a breadth/integration win — not Nature
+Internal survey breadth **#1/155 (3.80 code-grounded)** is a breadth/integration win — not Nature
 ranking, not Avida OEE, not Sims body-plan evo, not Polyworld long-horizon coevo. Consciousness
 scores are **indicatorOnly** (Butlin 8/14+6 partial; lab null gap ≈ 0; coupling ~0.27). Peer maturity
-**1.5/5**. Softest absolute axis: open-endedness **2.4**. Canonical vector lives only in
+**1.5/5**. Softest absolute axis: open-endedness **2.0**. Canonical vector lives only in
 `CODE_GROUNDED` — never hand-edit axis numbers in prose without the gate.
 
 ## Manifesto

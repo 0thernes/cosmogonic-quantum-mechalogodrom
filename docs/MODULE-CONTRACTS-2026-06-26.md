@@ -1667,7 +1667,7 @@ Copilot are constructed boot-stream-neutral and never write sim state, so the go
 
 ### V9 acceptance
 
-Full `bun run check` green: prettier → tsc strict → oxlint → 3381 tests (0 fail, 300-frame golden
+Full `bun run check` green: prettier → tsc strict → oxlint → 3388 tests (0 fail, 300-frame golden
 included) → build. The Copilot sandbox verified live (allow: `git log`, file reads; deny:
 path-escape, repository-root pathspecs, `git push`, `legacy/`, shell redirection).
 
@@ -1815,9 +1815,9 @@ The live composition root (`src/world.ts`) is a **multi-caste food web**, not a 
 **A-Life honesty (binding):** Ecology axis is code-grounded **3.4/5** (above survey mean) because
 this multi-loop stack is real and gated — **not** because it is long-horizon multi-genome
 coevolution. Morphology is mind/evo/RD/soft-flora reactive (**3.8**), not Sims articulated
-body-plan evolution. Open-endedness remains **2.4** (bounded selection + authored novelty).
+body-plan evolution. Open-endedness is **2.0** (fixed-target fitness; the earlier 2.4 basis was retracted as overclaimed).
 Canonical vector: `CODE_GROUNDED` in `scripts/alife-codeground-sensitivity.ts` —
-`[4.0, 2.0, 3.4, 3.8, 4.5, 4.6, 4.4, 3.5, 4.0]` · breadth **3.8** · **#1/129**.
+`[4.0, 2.0, 3.4, 3.8, 4.5, 4.6, 4.4, 3.5, 4.0]` · breadth **3.8** · **#1/155**.
 
 ## Canonical module ownership
 

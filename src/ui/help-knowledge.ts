@@ -37,7 +37,7 @@ export const HELP_KB: readonly HelpEntry[] = [
       'game',
       'about',
     ],
-    body: 'Deterministic multi-caste xeno-dome: 60k edible flora, waste→fertilizer ecology, multi-tier predation, dual economies + game theory, multi-scale neural control (70p swarms → ~10k SuperMinds), mind-driven morphing bodies, weather-coupled climate — indicator-only consciousness stack. Internal A-Life breadth #1/129 (3.84 code-grounded). Not sentience. Not a QPU. Not an LLM sim core. Thousands of procedural creatures drift, feed, mutate and trade; every system reads and writes another. Open the panels from the menu bar (centered, just above the bottom toolbar) to inspect any layer live.',
+    body: 'Deterministic multi-caste xeno-dome: 60k edible flora, waste→fertilizer ecology, multi-tier predation, dual economies + game theory, multi-scale neural control (70p swarms → ~10k SuperMinds), mind-driven morphing bodies, weather-coupled climate — indicator-only consciousness stack. Internal A-Life breadth #1/155 (3.80 code-grounded). Not sentience. Not a QPU. Not an LLM sim core. Thousands of procedural creatures drift, feed, mutate and trade; every system reads and writes another. Open the panels from the menu bar (centered, just above the bottom toolbar) to inspect any layer live.',
     see: ['docs/PHILOSOPHY-2026-06-26.md', 'README.md', 'docs/VERIFICATION-ANALYTICAL-DATA.md'],
   },
   {
@@ -339,7 +339,7 @@ export const HELP_KB: readonly HelpEntry[] = [
       '9-axis',
       'peer',
     ],
-    body: 'Against an internal 129-system 9-axis survey, Cosmogonic ranks #1 by breadth (3.84 code-grounded). Vector: reproduction 4.0, open-endedness 2.4, ecology 3.4, morphology 3.8, cognition 4.5, substrate 4.6, instrumentation 4.4, consciousness-theory 3.5 held, visual 4.0. Solo-class strengths are substrate + cognition + instrumentation. Softest absolute axis is open-endedness 2.4. Peer maturity is 1.5/5 — no external peer review yet. Not a Nature ranking; not Avida/Sims/Polyworld at their specialty. Charts live under docs/reports/assets/.',
+    body: 'Against an internal 155-system 9-axis survey, Cosmogonic ranks #1 by breadth (3.80 code-grounded). Vector: reproduction 4.0, open-endedness 2.0, ecology 3.4, morphology 3.8, cognition 4.5, substrate 4.6, instrumentation 4.4, consciousness-theory 3.5 held, visual 4.0. Solo-class strengths are substrate + cognition + instrumentation. Softest absolute axis is open-endedness 2.0 (fixed-target fitness). Peer maturity is 1.5/5 — no external peer review yet. Not a Nature ranking; not Avida/Sims/Polyworld at their specialty. Charts live under docs/reports/assets/.',
     see: [
       'docs/VERIFICATION-ANALYTICAL-DATA.md',
       'docs/reports/assets/alife-radar-profile.svg',
@@ -650,7 +650,7 @@ export const HELP_KB: readonly HelpEntry[] = [
       'breadth',
       'maturity',
     ],
-    body: 'The docs/reports/assets/ directory contains 11 SVG scientific visualizations of the A-Life comparative substrate: axis-correlation, axis-heatmap, breadth-ranked, breadth-vs-maturity, dendrogram, distance-matrix, entropy, nearest-neighbors, pareto, pca, and radar-profile. Cosmogonic’s code-grounded breadth is 3.84 (#1/129 on the internal survey). They are real scientific metrics, not decorative — regenerated from the comparison CSV by deterministic scripts.',
+    body: 'The docs/reports/assets/ directory contains 11 SVG scientific visualizations of the A-Life comparative substrate: axis-correlation, axis-heatmap, breadth-ranked, breadth-vs-maturity, dendrogram, distance-matrix, entropy, nearest-neighbors, pareto, pca, and radar-profile. Cosmogonic’s code-grounded breadth is 3.80 (#1/155 on the internal survey). They are real scientific metrics, not decorative — regenerated from the comparison CSV by deterministic scripts.',
     see: ['docs/reports/assets/', 'docs/VERIFICATION-ANALYTICAL-DATA.md'],
   },
   {

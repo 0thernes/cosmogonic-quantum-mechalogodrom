@@ -5,7 +5,7 @@
 Technical reports and audits for Cosmogonic Quantum Mechalogodrom. Dated filenames (`2026-*`) are
 **historical worldline snapshots** when present — they preserve evidence from their authoring pass.
 **Current published** gate receipts: [VERIFICATION-ANALYTICAL-DATA.md](../VERIFICATION-ANALYTICAL-DATA.md) §1 ·
-`scripts/canonical-receipts.ts` (v0.23.0 · **3,381-test floor** · **84.64 % / 82.21 %** coverage).
+`scripts/canonical-receipts.ts` (v0.23.0 · **3,388-test floor** · **84.64 % / 82.21 %** coverage).
 Latest final-tree Windows receipt: **3,297 completed cases, zero failures, 3,589,864 expect() calls,
 93.60% line coverage, and 91.61% function coverage across 366 test files**. The lower portable floor
 remains the cross-platform public guarantee; `scripts/canonical-receipts.ts` is the live authority.
@@ -24,7 +24,7 @@ two-meal competence lead, subject to a 25-second per-learner simulation-time coo
 all-or-nothing deterministic checks. Neither establishes cross-species learning, general intelligence,
 consciousness, or sentience. The fauna social matcher uses O(A) adapter reads followed by bounded numeric
 O(A²), with A ≤ 72, and food matrix changes upload one 16-float instance range each. Focused automated
-tests, the measured merged 3,381-test canonical floor, a 117-artifact v0.23.0 production build, and one atomic
+tests, the measured merged 3,388-test canonical floor, a 117-artifact v0.23.0 production build, and one atomic
 phone-plus-desktop natural-rAF/canvas-isolated smoke are green. Prior behavior baseline `0ce2f7eb` also
 passed CI, CodeQL, post-build smoke, exact-SHA Pages deployment, and an independent public-URL browser
 probe with HTTP 200 main/worker assets, a booted canvas, and zero console/page/network failures. The final
@@ -33,6 +33,11 @@ commit exists.
 
 ## Reports
 
+- [assets/alife-landscape-index.html](./assets/alife-landscape-index.html) — the current A-Life
+  competitive landscape index: 155 distinct systems (154 peers + Cosmogonic) ranked by breadth, with
+  the nine-axis rubric, declared lineage families, integrity checks and every row's source and basis.
+  Generated from the comparison CSV by `scripts/gen-alife-landscape-report.ts` (never hand-edited);
+  `bun run report:alife-landscape` prints the PDF.
 - [DOME-ECOLOGY-VERIFICATION-2026-07-14.md](./DOME-ECOLOGY-VERIFICATION-2026-07-14.md) — current
   evidence-separated verification of Xenomimic tether removal, canonical Big Tree food, sanctuary,
   temporary visits, tree residents, social behavior, persistence, performance, browser evidence, and
@@ -40,7 +45,7 @@ commit exists.
 - [2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.md](./2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.md)
   · [HTML](./2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.html) — combined standing
   synthesis (engineering · historical 113-system matrix, a snapshot superseded by the current
-  129-system re-evaluation · SuperCreature/Apex/Mechalogodrom · xeno-A-life thesis ·
+  155-system re-evaluation · SuperCreature/Apex/Mechalogodrom · xeno-A-life thesis ·
   capital/ISAL outreach). Does **not** authorize consciousness/sentience uplift; preserves V4/Phase-B
   failure-forward boundaries. Prefer this for –where do we stand?— over ad-hoc chat summaries.
 - [PHASE-B-MECHANISM-DEVELOPMENT-V3-2026-07-11.md](./PHASE-B-MECHANISM-DEVELOPMENT-V3-2026-07-11.md)

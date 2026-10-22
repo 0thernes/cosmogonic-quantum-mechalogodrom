@@ -1,6 +1,11 @@
 /**
  * CANONICAL RECEIPTS -- the single source of truth for the repo's measured gate figures.
  *
+ * Count remeasured 2026-10-22 (Bun 1.4.2, Linux, full-history clone): 3,388 tests / 0 fail across 374
+ * files; +7 from `tests/alife-landscape-report.test.ts` (the derived A-Life landscape index gate).
+ * Measured 85.79% line / 83.90% function coverage, above the portable floor below. A SHALLOW clone
+ * fails two provenance tests that `git show` historical commits — unshallow before measuring.
+ *
  * Count remeasured 2026-07-16 (Bun 1.3.14): 3,304 tests / 0 fail / 3,742,758 expectations across 366
  * files, measured on Windows. +1 versus the earlier 2026-07-16 pass (3,303), from RESTORING
  * docs/PRD-2026-07-02.md: `tests/doc-links.test.ts` enumerates tracked markdown via `git ls-files`
@@ -19,7 +24,7 @@
  *
  * To update after adding/removing tests: `bun scripts/verify-receipts.ts --print`, paste here, re-sync.
  */
-export const CANONICAL_TEST_COUNT = 3381;
+export const CANONICAL_TEST_COUNT = 3388;
 export const CANONICAL_LINE_COV = '84.64';
 export const CANONICAL_FUNC_COV = '82.21';
 

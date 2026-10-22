@@ -1,30 +1,30 @@
 {
   "generatedFrom": "docs/reports/2026-06-26-alife-comparison-matrix.csv",
   "method": "population statistics over all systems incl. Cosmogonic; breadth = mean of 9 axes",
-  "nSystems": 129,
-  "nPeers": 128,
+  "nSystems": 155,
+  "nPeers": 154,
   "cosmogonic": {
     "breadthMean": 3.8,
     "breadthRank": 1,
-    "zScorePopulation": 3.15,
-    "zScoreVsPeers": 3.29,
+    "zScorePopulation": 3.24,
+    "zScoreVsPeers": 3.36,
     "percentile": 100,
     "peerMaturity": 1.5
   },
   "survey": {
-    "breadthMeanAll": 2.06,
+    "breadthMeanAll": 2.03,
     "breadthStdAll": 0.55,
-    "breadthMeanPeers": 2.04,
+    "breadthMeanPeers": 2.02,
     "breadthStdPeers": 0.53,
-    "medianBreadth": 2.11,
-    "medianPeerMaturity": 3.5,
-    "corrBreadthVsMaturity": -0.081
+    "medianBreadth": 2.06,
+    "medianPeerMaturity": 4,
+    "corrBreadthVsMaturity": -0.121
   },
   "perAxis": [
     {
       "axis": "Reproduction",
-      "mean": 2.54,
-      "std": 1.76,
+      "mean": 2.55,
+      "std": 1.74,
       "max": 5,
       "cosmo": 4,
       "cosmoZ": 0.83,
@@ -49,11 +49,11 @@
     },
     {
       "axis": "Open-endedness",
-      "mean": 2.54,
-      "std": 1.27,
+      "mean": 2.51,
+      "std": 1.21,
       "max": 5,
       "cosmo": 2,
-      "cosmoZ": -0.43,
+      "cosmoZ": -0.42,
       "leaders": [
         "Picbreeder",
         "POET",
@@ -68,8 +68,8 @@
     },
     {
       "axis": "Ecology",
-      "mean": 2.16,
-      "std": 1.37,
+      "mean": 2.2,
+      "std": 1.33,
       "max": 5,
       "cosmo": 3.4,
       "cosmoZ": 0.9,
@@ -81,11 +81,11 @@
     },
     {
       "axis": "Morphology/Physics",
-      "mean": 2.25,
-      "std": 1.68,
+      "mean": 2.17,
+      "std": 1.64,
       "max": 5,
       "cosmo": 3.8,
-      "cosmoZ": 0.93,
+      "cosmoZ": 0.99,
       "leaders": [
         "Framsticks",
         "Karl Sims VC",
@@ -108,7 +108,7 @@
     },
     {
       "axis": "Cognition/Learning",
-      "mean": 1.84,
+      "mean": 1.85,
       "std": 1.63,
       "max": 5,
       "cosmo": 4.5,
@@ -117,27 +117,29 @@
         "DERL (Deep Evolutionary Reinforcement Learning)",
         "UNIMAL (Universal Animal design space)",
         "Transform2Act",
-        "NerveNet"
+        "NerveNet",
+        "Hide-and-Seek Multi-Agent Autocurricula",
+        "XLand (Open-Ended Learning Team)"
       ]
     },
     {
       "axis": "Substrate pluralism",
-      "mean": 1.1,
-      "std": 0.43,
+      "mean": 1.09,
+      "std": 0.41,
       "max": 4.6,
       "cosmo": 4.6,
-      "cosmoZ": 8.05,
+      "cosmoZ": 8.66,
       "leaders": [
         "COSMOGONIC"
       ]
     },
     {
       "axis": "Instrumentation",
-      "mean": 3.11,
-      "std": 1.05,
+      "mean": 3.02,
+      "std": 1.07,
       "max": 5,
       "cosmo": 4.4,
-      "cosmoZ": 1.23,
+      "cosmoZ": 1.29,
       "leaders": [
         "Game of Life",
         "EvoGym",
@@ -157,11 +159,11 @@
     },
     {
       "axis": "Consciousness-theory",
-      "mean": 0.12,
-      "std": 0.7,
+      "mean": 0.1,
+      "std": 0.64,
       "max": 5,
       "cosmo": 3.5,
-      "cosmoZ": 4.85,
+      "cosmoZ": 5.33,
       "leaders": [
         "LIDA",
         "Conscious Turing Machine (CTM)"
@@ -169,11 +171,11 @@
     },
     {
       "axis": "Visual scale",
-      "mean": 2.85,
-      "std": 1.16,
+      "mean": 2.76,
+      "std": 1.18,
       "max": 5,
       "cosmo": 4,
-      "cosmoZ": 0.99,
+      "cosmoZ": 1.05,
       "leaders": [
         "Karl Sims VC",
         "Creatures",
@@ -185,7 +187,8 @@
         "Spore",
         "Noita",
         "Clusters (Particle Life)",
-        "Sandspiel"
+        "Sandspiel",
+        "Electric Sheep"
       ]
     }
   ],
@@ -226,6 +229,11 @@
       "d": 5.8
     },
     {
+      "name": "Biomaker CA",
+      "full": "Biomaker CA",
+      "d": 5.87
+    },
+    {
       "name": "Karl Sims VC",
       "full": "Karl Sims Evolved Virtual Creatures",
       "d": 5.9
@@ -234,11 +242,6 @@
       "name": "DERL (Deep Evolutionary Reinforcement Learning)",
       "full": "DERL (Deep Evolutionary Reinforcement Learning)",
       "d": 5.9
-    },
-    {
-      "name": "Neural Graph Evolution (NGE)",
-      "full": "Neural Graph Evolution (NGE)",
-      "d": 5.93
     }
   ]
 }
