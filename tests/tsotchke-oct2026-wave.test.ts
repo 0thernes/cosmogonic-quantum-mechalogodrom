@@ -30,11 +30,13 @@ import {
   evaluateEshkolCyclotomic8CliffordT,
   evaluateEshkolDbspDeltaStream,
   evaluateEshkolTaylorCalculus,
+  evaluateLibirrepBdgSkyrmionMzm,
   evaluateMoonlabIsingAnnealer,
   evaluateMoonlabQwzChernInsulator,
   evaluatePqConsensusRound,
   evaluateQgtlGeometricSuppression,
   evaluateQrngQuantumChaosStream,
+  evaluateSbnnMinsrStep,
   refineGeometricSimplex,
   stepOct2026WaveSubstrates,
   TSOTCHKE_FULL_27_REPO_CATALOG,
@@ -145,6 +147,14 @@ describe('Tsotchke October 21, 2026 Full Ecosystem Census & Wave-2 Substrates', 
 
     const qwz = evaluateMoonlabQwzChernInsulator(-1.0, 10);
     expect(qwz.quantizedChern).toBe(-1);
+
+    const bdg = evaluateLibirrepBdgSkyrmionMzm(12, 2, -3.0, 4.0, 1.0);
+    expect(bdg.mzmCount).toBe(4);
+    expect(bdg.topologicalProtected).toBe(true);
+
+    const minsr = evaluateSbnnMinsrStep(0.85, 0.2, 1e-2, 0.05);
+    expect(minsr.updateNorm).toBeGreaterThan(0);
+    expect(minsr.traceT).toBeGreaterThan(0);
 
     const qrngSeeded = evaluateQrngQuantumChaosStream(77, false);
     expect(qrngSeeded.wildMode).toBe(false);

@@ -151,6 +151,40 @@ export interface ZigWasmExports {
     outMetricsPtr: number,
   ) => bigint;
   cqm_moonlab_qwz_chern_fhs: (mass: number, gridN: number, outMetricsPtr: number) => number;
+  cqm_libirrep_bdg_skyrmion_mzm: (
+    gridL: number,
+    chargeQ: number,
+    mu: number,
+    jSd: number,
+    delta0: number,
+    outMetricsPtr: number,
+  ) => number;
+  cqm_sbnn_minsr_step: (
+    gradsPtr: number,
+    energiesPtr: number,
+    nSamples: number,
+    nParams: number,
+    diagShift: number,
+    learningRate: number,
+    outDeltaPtr: number,
+    outMetricsPtr: number,
+  ) => number;
+}
+
+export interface ZigLibirrepBdgSkyrmionReport {
+  mzmCount: number;
+  topologicalCharge: number;
+  minBulkGap: number;
+  domainWallLocalization: number;
+  topologicalProtected: boolean;
+}
+
+export interface ZigSbnnMinsrReport {
+  delta: Float64Array;
+  meanEnergy: number;
+  energyVariance: number;
+  updateNorm: number;
+  traceT: number;
 }
 
 export interface ZigEshkolDbspDeltaReport {
@@ -816,6 +850,83 @@ class ZigKernelBridge {
       topologicalPhase,
     };
   }
+
+  libirrepBdgSkyrmionMzm(
+    gridL = 12,
+    chargeQ = 1,
+    mu = -3.0,
+    jSd = 4.0,
+    delta0 = 1.0,
+  ): ZigLibirrepBdgSkyrmionReport {
+    this.ensureCapacity(32);
+    const metricsPtr = SCRATCH_BASE_OFFSET;
+    const mzmCount = this.exports.cqm_libirrep_bdg_skyrmion_mzm(
+      Math.max(6, Math.min(20, Math.floor(gridL))) >>> 0,
+      Math.max(-4, Math.min(4, Math.trunc(chargeQ))) | 0,
+      mu,
+      jSd,
+      delta0,
+      metricsPtr,
+    );
+    const mBase = metricsPtr >> 3;
+    return {
+      mzmCount,
+      topologicalCharge: this.f64View[mBase + 1] ?? 0,
+      minBulkGap: this.f64View[mBase + 2] ?? 0,
+      domainWallLocalization: this.f64View[mBase + 3] ?? 0,
+      topologicalProtected: mzmCount > 0,
+    };
+  }
+
+  sbnnMinsrStep(
+    grads: Float64Array,
+    energies: Float64Array,
+    nSamples: number,
+    nParams: number,
+    diagShift = 1e-2,
+    learningRate = 0.05,
+  ): ZigSbnnMinsrReport {
+    const ns = Math.max(2, Math.min(8, Math.floor(nSamples)));
+    const np = Math.max(1, Math.min(32, Math.floor(nParams)));
+    const delta = new Float64Array(np);
+    if (grads.length < ns * np || energies.length < ns) {
+      return { delta, meanEnergy: 0, energyVariance: 0, updateNorm: 0, traceT: 0 };
+    }
+    const gradsBytes = ns * np * 8;
+    const energiesBytes = ns * 8;
+    const deltaBytes = np * 8;
+    const metricsBytes = 32;
+    this.ensureCapacity(gradsBytes + energiesBytes + deltaBytes + metricsBytes);
+
+    const gradsPtr = SCRATCH_BASE_OFFSET;
+    const energiesPtr = gradsPtr + gradsBytes;
+    const deltaPtr = energiesPtr + energiesBytes;
+    const metricsPtr = deltaPtr + deltaBytes;
+
+    this.f64View.set(grads.subarray(0, ns * np), gradsPtr >> 3);
+    this.f64View.set(energies.subarray(0, ns), energiesPtr >> 3);
+
+    const updateNorm = this.exports.cqm_sbnn_minsr_step(
+      gradsPtr,
+      energiesPtr,
+      ns >>> 0,
+      np >>> 0,
+      diagShift,
+      learningRate,
+      deltaPtr,
+      metricsPtr,
+    );
+
+    delta.set(this.f64View.subarray(deltaPtr >> 3, (deltaPtr >> 3) + np));
+    const mBase = metricsPtr >> 3;
+    return {
+      delta,
+      meanEnergy: this.f64View[mBase] ?? 0,
+      energyVariance: this.f64View[mBase + 1] ?? 0,
+      updateNorm,
+      traceT: this.f64View[mBase + 3] ?? 0,
+    };
+  }
 }
 
 let _singleton: ZigKernelBridge | null = null;
@@ -1015,6 +1126,34 @@ export function zigMoonlabQwzChernFhs(mass: number, gridN = 12): ZigMoonlabQwzCh
   return getZigKernelBridge().moonlabQwzChernFhs(mass, gridN);
 }
 
+export function zigLibirrepBdgSkyrmionMzm(
+  gridL = 12,
+  chargeQ = 1,
+  mu = -3.0,
+  jSd = 4.0,
+  delta0 = 1.0,
+): ZigLibirrepBdgSkyrmionReport {
+  return getZigKernelBridge().libirrepBdgSkyrmionMzm(gridL, chargeQ, mu, jSd, delta0);
+}
+
+export function zigSbnnMinsrStep(
+  grads: Float64Array,
+  energies: Float64Array,
+  nSamples: number,
+  nParams: number,
+  diagShift = 1e-2,
+  learningRate = 0.05,
+): ZigSbnnMinsrReport {
+  return getZigKernelBridge().sbnnMinsrStep(
+    grads,
+    energies,
+    nSamples,
+    nParams,
+    diagShift,
+    learningRate,
+  );
+}
+
 export function getZigKernelReceipt(): ZigKernelReceipt {
   const bridge = getZigKernelBridge();
   return {
@@ -1038,6 +1177,8 @@ export function getZigKernelReceipt(): ZigKernelReceipt {
       'cqm_eshkol_dbsp_delta_gemm',
       'cqm_eshkol_cyclotomic8_mul',
       'cqm_moonlab_qwz_chern_fhs',
+      'cqm_libirrep_bdg_skyrmion_mzm',
+      'cqm_sbnn_minsr_step',
     ],
     ready:
       typeof bridge.exports.cqm_gray_scott_step === 'function' &&
@@ -1045,6 +1186,8 @@ export function getZigKernelReceipt(): ZigKernelReceipt {
       typeof bridge.exports.cqm_qgtl_full_tensor_2d === 'function' &&
       typeof bridge.exports.cqm_eshkol_dbsp_delta_gemm === 'function' &&
       typeof bridge.exports.cqm_eshkol_cyclotomic8_mul === 'function' &&
-      typeof bridge.exports.cqm_moonlab_qwz_chern_fhs === 'function',
+      typeof bridge.exports.cqm_moonlab_qwz_chern_fhs === 'function' &&
+      typeof bridge.exports.cqm_libirrep_bdg_skyrmion_mzm === 'function' &&
+      typeof bridge.exports.cqm_sbnn_minsr_step === 'function',
   };
 }

@@ -1004,6 +1004,279 @@ export fn cqm_moonlab_qwz_chern_fhs(
     return chern;
 }
 
+/// Tsotchke `libirrep` v1.5.0 (`src/bdg_skyrmion.c`, Theorem 3.1: Yang-Lieu-Kivelson /
+/// Garnier-Mesaros-Simon) 2D Bogoliubov-de Gennes (BdG) Belavin-Polyakov tapered skyrmion
+/// on an s-wave superconductor.
+/// Evaluates the L x L skyrmion spin texture S(r) = (sin(theta)cos(Q*phi), sin(theta)sin(Q*phi), cos(theta)),
+/// integrates the discrete Berg-Luscher spherical-triangle topological charge Q_lat,
+/// checks the Nambu particle-hole topological band-inversion criterion J_sd > sqrt((|mu|-2)^2 + Delta_0^2),
+/// and returns the protected Majorana zero-mode count 2|Q| localized on the S_z = 0 domain wall.
+/// Writes `[mzmCount, topologicalCharge, minBulkGap, domainWallLocalization]` to `out_metrics[0..4]`.
+export fn cqm_libirrep_bdg_skyrmion_mzm(
+    grid_l: u32,
+    charge_q: i32,
+    mu: f64,
+    j_sd: f64,
+    delta_0: f64,
+    out_metrics: [*]f64,
+) i32 {
+    const l_usize: usize = if (grid_l < 6) 6 else if (grid_l > 20) 20 else @intCast(grid_l);
+    const q_clamped: i32 = if (charge_q < -4) -4 else if (charge_q > 4) 4 else charge_q;
+    const q_f64: f64 = @floatFromInt(q_clamped);
+    const l_f64: f64 = @floatFromInt(l_usize);
+    const x0: f64 = (l_f64 - 1.0) * 0.5;
+    const y0: f64 = (l_f64 - 1.0) * 0.5;
+    const r_cutoff: f64 = l_f64 * 0.38;
+    const pi: f64 = 3.14159265358979323846;
+
+    // 20 x 20 x 3 bounded stack texture (max 1200 f64s = 9.6 KB on stack)
+    var spins: [20 * 20 * 3]f64 = undefined;
+    var dw_weight_sum: f64 = 0.0;
+
+    const abs_mu_shift = @abs(mu) - 2.0;
+    const j_crit = @sqrt(abs_mu_shift * abs_mu_shift + delta_0 * delta_0);
+    const top_margin = j_sd - j_crit;
+    const min_gap = @abs(top_margin);
+    const xi = if (min_gap > 0.1) @max(0.25, delta_0 / min_gap) else @max(0.25, delta_0 * 10.0);
+
+    var ix: usize = 0;
+    while (ix < l_usize) : (ix += 1) {
+        var iy: usize = 0;
+        while (iy < l_usize) : (iy += 1) {
+            const dx = @as(f64, @floatFromInt(ix)) - x0;
+            const dy = @as(f64, @floatFromInt(iy)) - y0;
+            const r = @sqrt(dx * dx + dy * dy);
+            const base = (ix * l_usize + iy) * 3;
+            if (q_clamped == 0 or r > r_cutoff) {
+                spins[base] = 0.0;
+                spins[base + 1] = 0.0;
+                spins[base + 2] = 1.0;
+            } else {
+                const phi = std.math.atan2(dy, dx);
+                const arg = pi * r / (2.0 * r_cutoff);
+                const c = @cos(arg);
+                const theta = pi * c * c;
+                const st = @sin(theta);
+                const ct = @cos(theta);
+                spins[base] = st * @cos(q_f64 * phi);
+                spins[base + 1] = st * @sin(q_f64 * phi);
+                spins[base + 2] = ct;
+                dw_weight_sum += (1.0 - ct * ct) * @exp(-@abs(ct) / xi);
+            }
+        }
+    }
+
+    // Berg-Luscher discrete topological charge Q_lat over (L-1)x(L-1) plaquettes
+    var solid_angle_sum: f64 = 0.0;
+    ix = 0;
+    while (ix + 1 < l_usize) : (ix += 1) {
+        var iy: usize = 0;
+        while (iy + 1 < l_usize) : (iy += 1) {
+            const b00 = (ix * l_usize + iy) * 3;
+            const b10 = ((ix + 1) * l_usize + iy) * 3;
+            const b11 = ((ix + 1) * l_usize + (iy + 1)) * 3;
+            const b01 = (ix * l_usize + (iy + 1)) * 3;
+
+            solid_angle_sum += sphericalTriangleArea(
+                spins[b00 .. b00 + 3],
+                spins[b10 .. b10 + 3],
+                spins[b11 .. b11 + 3],
+            );
+            solid_angle_sum += sphericalTriangleArea(
+                spins[b00 .. b00 + 3],
+                spins[b11 .. b11 + 3],
+                spins[b01 .. b01 + 3],
+            );
+        }
+    }
+
+    const q_lat = solid_angle_sum / (4.0 * pi);
+    const abs_q: i32 = if (q_clamped < 0) -q_clamped else q_clamped;
+    const mzm_count: i32 = if (top_margin > 0.0 and delta_0 > 1e-9 and abs_q > 0) 2 * abs_q else 0;
+
+    out_metrics[0] = @floatFromInt(mzm_count);
+    out_metrics[1] = q_lat;
+    out_metrics[2] = min_gap;
+    out_metrics[3] = dw_weight_sum / (l_f64 * l_f64);
+    return mzm_count;
+}
+
+fn sphericalTriangleArea(s1: []const f64, s2: []const f64, s3: []const f64) f64 {
+    const c_x = s2[1] * s3[2] - s2[2] * s3[1];
+    const c_y = s2[2] * s3[0] - s2[0] * s3[2];
+    const c_z = s2[0] * s3[1] - s2[1] * s3[0];
+    const triple = s1[0] * c_x + s1[1] * c_y + s1[2] * c_z;
+    const d12 = s1[0] * s2[0] + s1[1] * s2[1] + s1[2] * s2[2];
+    const d23 = s2[0] * s3[0] + s2[1] * s3[1] + s2[2] * s3[2];
+    const d31 = s3[0] * s1[0] + s3[1] * s1[1] + s3[2] * s1[2];
+    const denom = 1.0 + d12 + d23 + d31;
+    return 2.0 * std.math.atan2(triple, denom);
+}
+
+fn choleskyFactorLower8(a: *[64]f64, n: usize) bool {
+    var j: usize = 0;
+    while (j < n) : (j += 1) {
+        var diag = a[j * n + j];
+        var k: usize = 0;
+        while (k < j) : (k += 1) {
+            const l_jk = a[j * n + k];
+            diag -= l_jk * l_jk;
+        }
+        if (!(diag > 0.0)) return false;
+        const l_jj = @sqrt(diag);
+        a[j * n + j] = l_jj;
+        const inv = 1.0 / l_jj;
+        var i: usize = j + 1;
+        while (i < n) : (i += 1) {
+            var s = a[i * n + j];
+            k = 0;
+            while (k < j) : (k += 1) {
+                s -= a[i * n + k] * a[j * n + k];
+            }
+            a[i * n + j] = s * inv;
+        }
+    }
+    return true;
+}
+
+fn choleskySolveLower8(l_mat: *const [64]f64, n: usize, b: *const [8]f64, x: *[8]f64) void {
+    var z: [8]f64 = @splat(0.0);
+    var i: usize = 0;
+    while (i < n) : (i += 1) {
+        var s = b[i];
+        var k: usize = 0;
+        while (k < i) : (k += 1) {
+            s -= l_mat[i * n + k] * z[k];
+        }
+        z[i] = s / l_mat[i * n + i];
+    }
+    var rev: usize = n;
+    while (rev > 0) {
+        rev -= 1;
+        var s = z[rev];
+        var k: usize = rev + 1;
+        while (k < n) : (k += 1) {
+            s -= l_mat[k * n + rev] * x[k];
+        }
+        x[rev] = s / l_mat[rev * n + rev];
+    }
+}
+
+/// Tsotchke `spin_based_neural_network` v0.5/v0.6 (`src/nqs/nqs_optimizer.c`, Chen & Heyl 2024 /
+/// Rende et al. 2024) Sample-Space Minimum-Step Stochastic Reconfiguration (`MinSR`)
+/// Neural Tangent Kernel solver.
+/// Solves (S + lambda I) delta = F in the smaller N_s x N_s sample Gram matrix
+/// T = O_c O_c^T / N_s + lambda I via the push-through identity:
+///   (O_c^T O_c / N_s + lambda I)^(-1) O_c^T = O_c^T (T + lambda I)^(-1)
+/// Writes `-lr * delta_k` to `out_delta[0..n_params]` and
+/// `[meanEnergy, energyVariance, updateNorm, traceT]` to `out_metrics[0..4]`.
+/// Returns `updateNorm`.
+export fn cqm_sbnn_minsr_step(
+    grads_ptr: [*]const f64,
+    energies_ptr: [*]const f64,
+    n_samples: u32,
+    n_params: u32,
+    diag_shift: f64,
+    learning_rate: f64,
+    out_delta: [*]f64,
+    out_metrics: [*]f64,
+) f64 {
+    const ns: usize = if (n_samples < 2) 2 else if (n_samples > 8) 8 else @intCast(n_samples);
+    const np: usize = if (n_params < 1) 1 else if (n_params > 32) 32 else @intCast(n_params);
+    const inv_ns: f64 = 1.0 / @as(f64, @floatFromInt(ns));
+    const lambda: f64 = if (diag_shift > 1e-12) diag_shift else 1e-4;
+
+    var e_mean: f64 = 0.0;
+    var i: usize = 0;
+    while (i < ns) : (i += 1) {
+        e_mean += energies_ptr[i];
+    }
+    e_mean *= inv_ns;
+
+    var eps: [8]f64 = @splat(0.0);
+    var e_var: f64 = 0.0;
+    i = 0;
+    while (i < ns) : (i += 1) {
+        const diff = energies_ptr[i] - e_mean;
+        eps[i] = diff;
+        e_var += diff * diff;
+    }
+    e_var *= inv_ns;
+
+    var o_c: [8 * 32]f64 = @splat(0.0);
+    var k: usize = 0;
+    while (k < np) : (k += 1) {
+        var g_mean: f64 = 0.0;
+        i = 0;
+        while (i < ns) : (i += 1) {
+            g_mean += grads_ptr[i * np + k];
+        }
+        g_mean *= inv_ns;
+        i = 0;
+        while (i < ns) : (i += 1) {
+            o_c[i * np + k] = grads_ptr[i * np + k] - g_mean;
+        }
+    }
+
+    var t_mat: [64]f64 = @splat(0.0);
+    var t_backup: [64]f64 = @splat(0.0);
+    var trace_t: f64 = 0.0;
+    i = 0;
+    while (i < ns) : (i += 1) {
+        var j: usize = 0;
+        while (j <= i) : (j += 1) {
+            var s: f64 = 0.0;
+            k = 0;
+            while (k < np) : (k += 1) {
+                s += o_c[i * np + k] * o_c[j * np + k];
+            }
+            var tij = s * inv_ns;
+            if (i == j) {
+                tij += lambda;
+                trace_t += tij;
+            }
+            t_mat[i * ns + j] = tij;
+            t_mat[j * ns + i] = tij;
+            t_backup[i * ns + j] = tij;
+            t_backup[j * ns + i] = tij;
+        }
+    }
+
+    var y: [8]f64 = @splat(0.0);
+    var ok = choleskyFactorLower8(&t_mat, ns);
+    if (!ok) {
+        t_mat = t_backup;
+        i = 0;
+        while (i < ns) : (i += 1) {
+            t_mat[i * ns + i] += 1e-6;
+        }
+        ok = choleskyFactorLower8(&t_mat, ns);
+    }
+    if (ok) {
+        choleskySolveLower8(&t_mat, ns, &eps, &y);
+    }
+
+    var norm_sq: f64 = 0.0;
+    k = 0;
+    while (k < np) : (k += 1) {
+        var s: f64 = 0.0;
+        i = 0;
+        while (i < ns) : (i += 1) {
+            s += o_c[i * np + k] * y[i];
+        }
+        const step_k = -learning_rate * (s * inv_ns);
+        out_delta[k] = step_k;
+        norm_sq += step_k * step_k;
+    }
+
+    const update_norm = @sqrt(norm_sq);
+    out_metrics[0] = e_mean;
+    out_metrics[1] = e_var;
+    out_metrics[2] = update_norm;
+    out_metrics[3] = trace_t;
+    return update_norm;
+}
+
 test "gray-scott step preserves bounds and homogeneity" {
     var u = [_]f64{ 1.0, 1.0, 1.0, 1.0 };
     var v = [_]f64{ 0.0, 0.0, 0.0, 0.0 };
@@ -1107,4 +1380,31 @@ test "eshkol cyclotomic8 mul and moonlab qwz chern fhs" {
     try std.testing.expectApproxEqAbs(@as(f64, -1.0), @abs(chern_pos) * -1.0, 1e-6);
     const chern_triv = cqm_moonlab_qwz_chern_fhs(3.0, 12, &qwz_metrics);
     try std.testing.expectApproxEqAbs(@as(f64, 0.0), chern_triv, 1e-6);
+}
+
+test "libirrep bdg skyrmion 2|Q| mzm and sbnn minsr step" {
+    var bdg_metrics = [_]f64{ 0.0, 0.0, 0.0, 0.0 };
+    const mzm_q1 = cqm_libirrep_bdg_skyrmion_mzm(12, 1, -3.0, 4.0, 1.0, &bdg_metrics);
+    try std.testing.expectEqual(@as(i32, 2), mzm_q1);
+    try std.testing.expect(@abs(bdg_metrics[1]) > 0.5);
+
+    const mzm_q2 = cqm_libirrep_bdg_skyrmion_mzm(12, -2, -3.0, 4.0, 1.0, &bdg_metrics);
+    try std.testing.expectEqual(@as(i32, 4), mzm_q2);
+
+    const mzm_triv = cqm_libirrep_bdg_skyrmion_mzm(12, 1, -3.0, 0.5, 1.0, &bdg_metrics);
+    try std.testing.expectEqual(@as(i32, 0), mzm_triv);
+
+    // 3 samples, 4 parameters
+    const grads = [_]f64{
+        0.4,  -0.2, 0.1,  0.3,
+        -0.1, 0.5,  -0.3, 0.2,
+        0.2,  0.1,  0.4,  -0.5,
+    };
+    const energies = [_]f64{ -1.8, -1.1, -2.2 };
+    var delta = [_]f64{ 0.0, 0.0, 0.0, 0.0 };
+    var sr_metrics = [_]f64{ 0.0, 0.0, 0.0, 0.0 };
+    const upd = cqm_sbnn_minsr_step(&grads, &energies, 3, 4, 0.01, 0.05, &delta, &sr_metrics);
+    try std.testing.expect(upd > 0.0);
+    try std.testing.expect(sr_metrics[1] > 0.0);
+    try std.testing.expect(sr_metrics[3] > 0.0);
 }

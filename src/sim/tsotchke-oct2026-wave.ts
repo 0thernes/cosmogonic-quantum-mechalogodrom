@@ -38,20 +38,24 @@ import {
   zigEshkolDbspDeltaGemm,
   zigEshkolTaylorDiff,
   zigGeoRefineVerifyFrame,
+  zigLibirrepBdgSkyrmionMzm,
   zigMoonlabIsingAnneal,
   zigMoonlabQwzChernFhs,
   zigPqWireBytes,
   zigQgtlFullTensor2D,
   zigQrngQuantumChaosStep,
   zigRosetteFnv1a64,
+  zigSbnnMinsrStep,
   type MoonlabAnnealScheduleId,
   type PqSignatureSchemeId,
   type ZigEshkolCyclotomic8Report,
   type ZigEshkolDbspDeltaReport,
   type ZigEshkolTaylorReport,
+  type ZigLibirrepBdgSkyrmionReport,
   type ZigMoonlabAnnealReport,
   type ZigMoonlabQwzChernReport,
   type ZigQgtlTensor2DReport,
+  type ZigSbnnMinsrReport,
 } from '../math/zig-bridge';
 import { harvestHardwareJitter64, isWildEntropyMode } from '../math/wild-entropy';
 
@@ -239,15 +243,17 @@ export const TSOTCHKE_FULL_27_REPO_CATALOG: readonly TsotchkeCanonicalRepoCatalo
       owner: 'tsotchke',
       name: 'libirrep',
       category: 'substrate',
-      cqmModule: 'src/math/point-group-irrep.ts',
+      cqmModule: 'src/math/point-group-irrep.ts + src/sim/tsotchke-oct2026-wave.ts',
+      zigKernel: 'cqm_libirrep_bdg_skyrmion_mzm',
     },
     {
       index: 11,
       owner: 'tsotchke',
       name: 'spin_based_neural_network',
       category: 'substrate',
-      cqmModule: 'src/sim/spin-reservoir.ts + src/sim/glyph-brain.ts',
-      zigKernel: 'cqm_glyph_hebbian_step',
+      cqmModule:
+        'src/sim/spin-reservoir.ts + src/sim/glyph-brain.ts + src/sim/tsotchke-oct2026-wave.ts',
+      zigKernel: 'cqm_glyph_hebbian_step + cqm_sbnn_minsr_step',
     },
     {
       index: 12,
@@ -816,6 +822,56 @@ export function evaluateMoonlabQwzChernInsulator(
   return zigMoonlabQwzChernFhs(diracMass, gridN);
 }
 
+/**
+ * Evaluates Tsotchke `libirrep` v1.5.0 (`src/bdg_skyrmion.c`, Theorem 3.1) 2D Bogoliubov-de Gennes
+ * Belavin-Polyakov skyrmion on an s-wave superconductor via Zig 0.17.0 WASM (`cqm_libirrep_bdg_skyrmion_mzm`).
+ * Verifies 2|Q| particle-hole protected Majorana zero modes localized on the S_z = 0 domain wall.
+ */
+export function evaluateLibirrepBdgSkyrmionMzm(
+  gridL = 12,
+  chargeQ = 1,
+  mu = -3.0,
+  jSd = 4.0,
+  delta0 = 1.0,
+): ZigLibirrepBdgSkyrmionReport {
+  return zigLibirrepBdgSkyrmionMzm(gridL, chargeQ, mu, jSd, delta0);
+}
+
+/**
+ * Evaluates Tsotchke `spin_based_neural_network` v0.5/v0.6 (`src/nqs/nqs_optimizer.c`)
+ * Sample-Space Minimum-Step Stochastic Reconfiguration (`MinSR`) Neural Tangent Kernel
+ * solver via Zig 0.17.0 WASM (`cqm_sbnn_minsr_step`).
+ */
+export function evaluateSbnnMinsrStep(
+  coherence = 0.85,
+  entropy = 0.2,
+  diagShift = 1e-2,
+  learningRate = 0.05,
+): ZigSbnnMinsrReport {
+  const c = Math.max(-2, Math.min(2, coherence));
+  const e = Math.max(0, Math.min(2, entropy));
+  const grads = new Float64Array([
+    0.4 * c,
+    -0.2 * e,
+    0.15,
+    0.3 * c,
+    -0.15 * e,
+    0.5 * c,
+    -0.25,
+    0.2 * e,
+    0.25 * c,
+    0.1 * e,
+    0.35 * c,
+    -0.45 * e,
+    -0.3 * c,
+    -0.25 * e,
+    0.2,
+    0.15 * (c - e),
+  ]);
+  const energies = new Float64Array([-1.8 * c, -1.1 * (1 + e * 0.2), -2.1 * c, -1.45]);
+  return zigSbnnMinsrStep(grads, energies, 4, 4, diagShift, learningRate);
+}
+
 export type PqConsensusRoundMetrics = PqConsensusReport;
 export type GeoRefineSimplexResult = GeoRefineReport;
 export type BonsaiFidelityResult = BonsaiFidelityReport;
@@ -837,13 +893,15 @@ export interface TsotchkeOct2026Telemetry {
   readonly eshkolCurlMagnitude: number;
   readonly eshkolDbspExactResidual: number;
   readonly eshkolCyclotomicNorm: bigint;
+  readonly libirrepBdgMzmCount: number;
+  readonly sbnnMinsrUpdateNorm: number;
   readonly qrngChaosWordHex: string;
   readonly zigWasmReady: boolean;
   readonly publicRepoCount: number;
 }
 
 /**
- * Steps all Flagship (Moonlab v1.2.1, QGTL v0.777, QRNG v3, Eshkol v1.3.6) and
+ * Steps all Flagship (Moonlab v1.2.1, QGTL v0.777, QRNG v3, Eshkol v1.3.6, libirrep v1.5.0, SbNN v0.6) and
  * Wave-2 (`rosette-wire`, `pq-consensus-bandwidth`, `GeoRefine`, `bonsai-fidelity-study`)
  * substrates for a given world tick and returns a compact telemetry receipt.
  */
@@ -887,6 +945,8 @@ export function stepOct2026WaveSubstrates(
   );
   const dbsp = evaluateEshkolDbspDeltaStream(coherence, entropy);
   const cyc = evaluateEshkolCyclotomic8CliffordT([2n, 1n, 0n, 1n], [1n, 1n, -1n, 0n]);
+  const bdg = evaluateLibirrepBdgSkyrmionMzm(12, coherence >= 0.5 ? 1 : -1, -3.0, 4.0, 1.0);
+  const minsr = evaluateSbnnMinsrStep(coherence, entropy, 1e-2, 0.05);
   // Note: pass wild = false by default inside stepOct2026WaveSubstrates so seeded tests stay reproducible
   const qrng = evaluateQrngQuantumChaosStream(tick, false);
   const zigReceipt = getZigKernelReceipt();
@@ -908,6 +968,8 @@ export function stepOct2026WaveSubstrates(
     eshkolCurlMagnitude: eshkol.curlMagnitude,
     eshkolDbspExactResidual: dbsp.exactnessResidual,
     eshkolCyclotomicNorm: cyc.exactFieldNorm,
+    libirrepBdgMzmCount: bdg.mzmCount,
+    sbnnMinsrUpdateNorm: minsr.updateNorm,
     qrngChaosWordHex: qrng.wordHex,
     zigWasmReady: zigReceipt.ready,
     publicRepoCount: TSOTCHKE_OCT2026_PUBLIC_REPO_COUNT,

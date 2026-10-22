@@ -10,6 +10,7 @@ import {
   zigGlyphHebbianStep,
   zigGrayScottStep,
   zigGrayScottStepRgbaF32,
+  zigLibirrepBdgSkyrmionMzm,
   zigMoonlabIsingAnneal,
   zigMoonlabQwzChernFhs,
   zigPqWireBytes,
@@ -17,11 +18,12 @@ import {
   zigQgtlFullTensor2D,
   zigQrngQuantumChaosStep,
   zigRosetteFnv1a64,
+  zigSbnnMinsrStep,
   zigTdseStep,
 } from '../src/math/zig-bridge';
 
 describe('Zig 0.17.0 WASM Kernel Bridge (src/math/zig-bridge.ts)', () => {
-  test('getZigKernelReceipt reports Zig 0.17.0 and all 16 exported kernels ready', () => {
+  test('getZigKernelReceipt reports Zig 0.17.0 and all 18 exported kernels ready', () => {
     const receipt = getZigKernelReceipt();
     expect(receipt.compilerVersion).toBe('0.17.0');
     expect(receipt.wasmByteLength).toBeGreaterThan(500);
@@ -44,6 +46,8 @@ describe('Zig 0.17.0 WASM Kernel Bridge (src/math/zig-bridge.ts)', () => {
       'cqm_eshkol_dbsp_delta_gemm',
       'cqm_eshkol_cyclotomic8_mul',
       'cqm_moonlab_qwz_chern_fhs',
+      'cqm_libirrep_bdg_skyrmion_mzm',
+      'cqm_sbnn_minsr_step',
     ]);
   });
 
@@ -231,6 +235,28 @@ describe('Zig 0.17.0 WASM Kernel Bridge (src/math/zig-bridge.ts)', () => {
     expect(chernPlus.quantizedChern).toBe(1);
     expect(chernTrivial.quantizedChern).toBe(0);
     expect(chernMinus.minBandGap).toBeGreaterThan(1.5);
+
+    // Kernel 17: libirrep v1.5.0 BdG-Skyrmion 2|Q| Majorana Zero-Mode Solver
+    const bdgQ1 = zigLibirrepBdgSkyrmionMzm(12, 1, -3.0, 4.0, 1.0);
+    const bdgQ2 = zigLibirrepBdgSkyrmionMzm(12, -2, -3.0, 4.0, 1.0);
+    const bdgTrivial = zigLibirrepBdgSkyrmionMzm(12, 1, -3.0, 0.5, 1.0);
+    expect(bdgQ1.mzmCount).toBe(2);
+    expect(bdgQ1.topologicalProtected).toBe(true);
+    expect(Math.abs(bdgQ1.topologicalCharge)).toBeGreaterThan(0.5);
+    expect(bdgQ2.mzmCount).toBe(4);
+    expect(bdgTrivial.mzmCount).toBe(0);
+    expect(bdgTrivial.topologicalProtected).toBe(false);
+
+    // Kernel 18: spin_based_neural_network v0.6 Sample-Space MinSR Neural Tangent Kernel
+    const srGrads = new Float64Array([
+      0.4, -0.2, 0.1, 0.3, -0.1, 0.5, -0.3, 0.2, 0.2, 0.1, 0.4, -0.5,
+    ]);
+    const srEnergies = new Float64Array([-1.8, -1.1, -2.2]);
+    const minsr = zigSbnnMinsrStep(srGrads, srEnergies, 3, 4, 0.01, 0.05);
+    expect(minsr.updateNorm).toBeGreaterThan(0);
+    expect(minsr.energyVariance).toBeGreaterThan(0);
+    expect(minsr.traceT).toBeGreaterThan(0);
+    expect(minsr.delta).toHaveLength(4);
   });
 
   test('zigEntityBrainBatchForward and zigGlyphHebbianStep accelerate neural hot paths', () => {

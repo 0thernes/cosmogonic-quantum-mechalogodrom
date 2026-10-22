@@ -24,6 +24,24 @@ const TSOTCHKE_BASE = 'Z:\\[Vibe Coded (AI)]\\(Tsotchke)';
 const OUT_DIR = 'src/sim';
 const OUT_FILE = join(OUT_DIR, 'generated-tsotchke-seeds.ts');
 
+function maybeSyncMirrors(): void {
+  if (!process.argv.includes('--sync-mirrors')) return;
+  const batPath = join(TSOTCHKE_BASE, 'update-tsotchke-corpus.bat');
+  if (!existsSync(batPath)) {
+    console.warn(`[harvest-tsotchke] --sync-mirrors requested, but ${batPath} is absent.`);
+    return;
+  }
+  const extraFlags = process.argv.includes('--git-only') ? ['--git-only'] : [];
+  console.log(`[harvest-tsotchke] Syncing 27 Tsotchke GitHub mirrors via ${batPath}...`);
+  const proc = Bun.spawnSync(['cmd.exe', '/c', batPath, ...extraFlags], {
+    cwd: TSOTCHKE_BASE,
+    stdio: ['ignore', 'inherit', 'inherit'],
+  });
+  if (proc.exitCode !== 0) {
+    throw new Error(`[harvest-tsotchke] Mirror sync exited with code ${proc.exitCode}`);
+  }
+}
+
 interface Harvest {
   eskCount: number;
   eskSamples: string[];
@@ -133,6 +151,7 @@ export function getEshkolProgramFingerprint(index: number): number {
   console.log(`  samples: ${h.eskSamples.slice(0, 3).join(', ')}...`);
 }
 
+maybeSyncMirrors();
 const data = harvest();
 emit(data);
 console.log('Tsotchke corpus harvest complete. Wired as build source.');

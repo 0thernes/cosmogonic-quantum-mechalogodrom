@@ -67,6 +67,7 @@
     "smoke": "bun run build && bun scripts/smoke.ts",
     "smoke:visual": "bun scripts/browser-visual-smoke.ts",
     "harvest:tsotchke": "bun scripts/harvest-tsotchke-corpus.ts",
+    "sync:tsotchke": "bun scripts/harvest-tsotchke-corpus.ts --sync-mirrors",
     "build:zig": "bun scripts/build-zig.ts"
   },
   "dependencies": {

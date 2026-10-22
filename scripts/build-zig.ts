@@ -33,6 +33,8 @@ const exports = [
   'cqm_eshkol_dbsp_delta_gemm',
   'cqm_eshkol_cyclotomic8_mul',
   'cqm_moonlab_qwz_chern_fhs',
+  'cqm_libirrep_bdg_skyrmion_mzm',
+  'cqm_sbnn_minsr_step',
 ];
 
 const verProc = Bun.spawnSync(['zig', 'version'], { cwd: ROOT });
