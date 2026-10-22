@@ -1,7 +1,10 @@
 /**
  * CANONICAL RECEIPTS -- the single source of truth for the repo's measured gate figures.
  *
- * CQM-25 adds seven profile tests, three radar tests and one tracked Markdown link check (+11 from 3394). The full receipt gate verifies the exact count below.
+ * Chart-bounds gate adds twelve per-chart canvas checks, a clipped-label regression and four
+ * label-helper tests (+17 from 3405). The full receipt gate verifies the exact count below.
+ *
+ * CQM-25 adds seven profile tests, three radar tests and one tracked Markdown link check (+11 from 3394).
  *
  * Prior publication adds three catalog tests, one malformed-document-URL test and two tracked Markdown
  * link checks (+6 from 3388). The full receipt gate verifies the exact count below.
@@ -29,7 +32,7 @@
  *
  * To update after adding/removing tests: `bun scripts/verify-receipts.ts --print`, paste here, re-sync.
  */
-export const CANONICAL_TEST_COUNT = 3405;
+export const CANONICAL_TEST_COUNT = 3422;
 export const CANONICAL_LINE_COV = '84.64';
 export const CANONICAL_FUNC_COV = '82.21';
 

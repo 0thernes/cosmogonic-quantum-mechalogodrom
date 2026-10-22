@@ -11,6 +11,22 @@ changed and why.
 
 ---
 
+## 2026-10-22 — Chart canvas audit after the radar repair
+
+- The radar repair in `44dc4450` fixed one figure. Rendering all eleven survey charts in Chromium and
+  measuring every `<text>` box showed eight more leaving their canvas: system names cut at the left
+  edge of the ranked-breadth, evenness, heatmap and distance-matrix charts; dendrogram leaves past the
+  right edge; the correlation title and two rotated headers past the right edge; and the scatter and
+  Pareto plots drawing all 155 labels, which overlapped into an unreadable band.
+- `scripts/svg-labels.ts` supplies a per-glyph-class width estimate, calibrated against Chromium's
+  rendering of 1,898 chart strings (never below the real width; minimum ratio 1.03), plus name
+  fitting with hover titles and greedy collision-free point labelling. Both generators use it.
+- `tests/alife-chart-bounds.test.ts` measures every text line of every generated chart, including
+  rotated headers and multi-line `<tspan>` labels, and also covers the new CQM-25 chart. It
+  reproduces the original radar clipping as a regression case. Scores and statistics are unchanged.
+
+---
+
 ## 2026-10-21 (local date) — Capability profile, radar layout and project scope
 
 - Repaired the nine-axis radar at its generator: wrapped readable labels, full-word Consciousness,

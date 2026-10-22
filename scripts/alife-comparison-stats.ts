@@ -21,6 +21,7 @@
 import { mean, standardDeviation, sampleCorrelation } from 'simple-statistics';
 import { format, resolveConfig } from 'prettier';
 import { escapeMarkupAttribute, escapeMarkupText } from './markup-escape';
+import { estimateTextWidth, fitText, fullNameTitle, pointLabelMarkup } from './svg-labels';
 
 const ROOT = `${import.meta.dir}/..`;
 const CSV = `${ROOT}/docs/reports/2026-06-26-alife-comparison-matrix.csv`;
@@ -137,12 +138,18 @@ const ABBR: Record<string, string> = {
 const short = (p: string): string => ABBR[p] ?? p;
 const isCosmo = (p: string): boolean => p.startsWith('Cosmogonic');
 
+/** A row label shortened to `maxW` px, carrying the full system name as hover text. */
+const rowLabel = (full: string, maxW: number, size: number, weight = 400): string => {
+  const shown = fitText(full, maxW, size, weight);
+  return `${fullNameTitle(full, shown, esc)}${esc(shown)}`;
+};
+
 // 1 ── ranked breadth bar chart ────────────────────────────────────────────────
 function chartRanked(rows: Row[]): string {
   const data = rows
     .map((r) => ({ name: short(r.project), v: breadthOf(r), cosmo: isCosmo(r.project) }))
     .sort((a, b) => b.v - a.v);
-  const padL = 168;
+  const padL = 214;
   const padR = 56;
   const padT = 64;
   const rowH = 22;
@@ -162,7 +169,7 @@ function chartRanked(rows: Row[]): string {
   data.forEach((d, i) => {
     const y = padT + i * rowH;
     const col = d.cosmo ? COSMO : PEER;
-    b += `<text x="${padL - 10}" y="${y + rowH / 2 + 4}" fill="${d.cosmo ? COSMO : TEXT}" font-size="11" font-weight="${d.cosmo ? 700 : 400}" text-anchor="end">${esc(d.name)}</text>`;
+    b += `<text x="${padL - 10}" y="${y + rowH / 2 + 4}" fill="${d.cosmo ? COSMO : TEXT}" font-size="11" font-weight="${d.cosmo ? 700 : 400}" text-anchor="end">${rowLabel(d.name, padL - 24, 11, d.cosmo ? 700 : 400)}</text>`;
     b += `<rect x="${padL}" y="${y + 4}" width="${Math.max(1, x(d.v) - padL)}" height="${rowH - 8}" rx="3" fill="${col}" opacity="${d.cosmo ? 0.95 : 0.7}"/>`;
     b += `<text x="${x(d.v) + 6}" y="${y + rowH / 2 + 4}" fill="${d.cosmo ? COSMO : MUTE}" font-size="10" font-weight="${d.cosmo ? 700 : 400}">${round(d.v).toFixed(2)}</text>`;
   });
@@ -183,7 +190,7 @@ function chartScatter(rows: Row[], medBreadth: number, medMaturity: number): str
   const Y = (v: number): number => padT + plotH - (v / 5) * plotH;
   let b = '';
   b += `<text x="28" y="30" fill="${TEXT}" font-size="18" font-weight="700">Breadth of synthesis vs peer maturity</text>`;
-  b += `<text x="28" y="50" fill="${MUTE}" font-size="12">y = breadth mean (0–5) · x = peer scientific maturity (0–5). upper-left = broad but immature.</text>`;
+  b += `<text x="28" y="50" fill="${MUTE}" font-size="12">y = breadth (0–5) · x = peer maturity (0–5) · upper-left = broad but immature · hover for names</text>`;
   for (let g = 0; g <= 5; g++) {
     b += `<line x1="${X(g)}" y1="${padT}" x2="${X(g)}" y2="${padT + plotH}" stroke="${GRID}" stroke-width="0.7"/>`;
     b += `<line x1="${padL}" y1="${Y(g)}" x2="${padL + plotW}" y2="${Y(g)}" stroke="${GRID}" stroke-width="0.7"/>`;
@@ -196,20 +203,30 @@ function chartScatter(rows: Row[], medBreadth: number, medMaturity: number): str
   b += `<text x="${padL + plotW}" y="${padT + 14}" fill="${MEANC}" font-size="10" text-anchor="end">medians</text>`;
   b += `<text x="${w / 2}" y="${h - 16}" fill="${TEXT}" font-size="12" text-anchor="middle">peer maturity →</text>`;
   b += `<text x="20" y="${padT + plotH / 2}" fill="${TEXT}" font-size="12" text-anchor="middle" transform="rotate(-90 20 ${padT + plotH / 2})">breadth →</text>`;
-  // jitter labels deterministically by index parity to reduce overlap
-  rows.forEach((r, i) => {
-    const cx = X(r.peerMaturity);
-    const cy = Y(breadthOf(r));
-    const cosmo = isCosmo(r.project);
-    if (cosmo) {
-      b += `<circle cx="${cx}" cy="${cy}" r="8" fill="${COSMO}"/><circle cx="${cx}" cy="${cy}" r="13" fill="none" stroke="${COSMO}" stroke-width="1.4" opacity="0.6"/>`;
-      b += `<text x="${cx - 12}" y="${cy - 12}" fill="${COSMO}" font-size="11" font-weight="700" text-anchor="end">${esc(short(r.project))}</text>`;
-    } else {
-      b += `<circle cx="${cx}" cy="${cy}" r="4.5" fill="${PEER}" opacity="0.85"/>`;
-      const dy = i % 2 === 0 ? -8 : 14;
-      b += `<text x="${cx + 7}" y="${cy + dy}" fill="${MUTE}" font-size="9">${esc(short(r.project))}</text>`;
-    }
-  });
+  // Markers first; labels only where they fit (Cosmogonic, then broadest systems first), names on hover.
+  const pts = rows.map((r) => ({
+    name: short(r.project),
+    x: X(r.peerMaturity),
+    y: Y(breadthOf(r)),
+    cosmo: isCosmo(r.project),
+    breadth: breadthOf(r),
+  }));
+  for (const p of pts) {
+    if (p.cosmo)
+      b += `<circle cx="${p.x}" cy="${p.y}" r="8" fill="${COSMO}"><title>${esc(p.name)}</title></circle><circle cx="${p.x}" cy="${p.y}" r="13" fill="none" stroke="${COSMO}" stroke-width="1.4" opacity="0.6"/>`;
+    else
+      b += `<circle cx="${p.x}" cy="${p.y}" r="4.5" fill="${PEER}" opacity="0.85"><title>${esc(p.name)}</title></circle>`;
+  }
+  b += pointLabelMarkup(
+    pts.map((p) => ({ name: p.name, x: p.x, y: p.y, focus: p.cosmo, priority: p.breadth })),
+    { x0: padL + 2, y0: padT + 2, x1: w - 6, y1: padT + plotH - 2 },
+    (focus) => (focus ? 13 : 4.5),
+    (focus) =>
+      focus
+        ? { attrs: `fill="${COSMO}" font-size="12" font-weight="700"`, size: 12, weight: 700 }
+        : { attrs: `fill="${MUTE}" font-size="9"`, size: 9 },
+    esc,
+  );
   return svgDoc(w, h, b, 'Breadth vs peer maturity scatter');
 }
 
@@ -367,11 +384,13 @@ function lerpColor(t: number): string {
 }
 function chartHeatmap(rows: Row[]): string {
   const ordered = [...rows].sort((a, b) => breadthOf(b) - breadthOf(a));
-  const padL = 168;
+  const padL = 214;
   const padT = 150;
   const cellW = 50;
   const cellH = 21;
-  const w = padL + NAX * cellW + 20;
+  // Headers are rotated -45°, so the last ones reach right of the grid by width·cos45°.
+  const headRight = Math.max(...AXES.map((a) => estimateTextWidth(a, 10) * Math.SQRT1_2));
+  const w = padL + NAX * cellW + Math.ceil(headRight) + 20;
   const h = padT + ordered.length * cellH + 20;
   let b = '';
   b += `<text x="28" y="30" fill="${TEXT}" font-size="18" font-weight="700">Capability heatmap — ${ordered.length} systems × 9 axes</text>`;
@@ -382,7 +401,7 @@ function chartHeatmap(rows: Row[]): string {
   });
   ordered.forEach((r, i) => {
     const y = padT + i * cellH;
-    b += `<text x="${padL - 10}" y="${y + cellH / 2 + 4}" fill="${isCosmo(r.project) ? COSMO : TEXT}" font-size="10" font-weight="${isCosmo(r.project) ? 700 : 400}" text-anchor="end">${esc(short(r.project))}</text>`;
+    b += `<text x="${padL - 10}" y="${y + cellH / 2 + 4}" fill="${isCosmo(r.project) ? COSMO : TEXT}" font-size="10" font-weight="${isCosmo(r.project) ? 700 : 400}" text-anchor="end">${rowLabel(short(r.project), padL - 24, 10, isCosmo(r.project) ? 700 : 400)}</text>`;
     r.axes.forEach((v, j) => {
       const x = padL + j * cellW;
       b += `<rect x="${x + 1}" y="${y + 1}" width="${cellW - 2}" height="${cellH - 2}" rx="2" fill="${lerpColor(v / 5)}"/>`;

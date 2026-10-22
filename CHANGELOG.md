@@ -57,6 +57,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Eight more A-Life charts clipped or overlapped text: long system names were cut at the left edge
+  (ranked breadth, evenness, heatmap, distance matrix), dendrogram leaves ran off the right, the
+  correlation title and rotated headers left the canvas, and the scatter, Pareto and PCA plots drew
+  every one of 155 labels on top of each other. Names are now fitted (parenthetical dropped, then
+  ellipsis) with the full name on hover, plots label points only where a label fits, and
+  `tests/alife-chart-bounds.test.ts` fails any chart whose text leaves its viewBox.
 - Zig kernel count corrected from 16 to 18 in `CLAUDE.md`, `AGENTS.md`, the Tsotchke integration map
   and the `zig-bridge.ts` header (which listed 13), adding the libirrep BdG-skyrmion and SbNN MinSR
   kernels. README `verify:facts` surface count corrected from 82 to the measured 88.

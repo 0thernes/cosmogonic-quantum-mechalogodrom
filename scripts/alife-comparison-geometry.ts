@@ -24,6 +24,7 @@
  */
 import { mean, standardDeviation, sampleCorrelation } from 'simple-statistics';
 import { escapeMarkupAttribute, escapeMarkupText } from './markup-escape';
+import { estimateTextWidth, fitText, fullNameTitle, pointLabelMarkup } from './svg-labels';
 
 const ROOT = `${import.meta.dir}/..`;
 const CSV = `${ROOT}/docs/reports/2026-06-26-alife-comparison-matrix.csv`;
@@ -205,6 +206,16 @@ const PEER = '#38bdf8';
 const COSMO = '#f59e0b';
 const NEAR = '#34d399';
 const esc = escapeMarkupText;
+
+/** A label shortened to `maxW` px, carrying the full system name as hover text. */
+const fitLabel = (full: string, maxW: number, size: number, weight = 400): string => {
+  const shown = fitText(full, maxW, size, weight);
+  return `${fullNameTitle(full, shown, esc)}${esc(shown)}`;
+};
+const pointStyle = (focus: boolean): { attrs: string; size: number; weight?: number } =>
+  focus
+    ? { attrs: `fill="${COSMO}" font-size="12" font-weight="700"`, size: 12, weight: 700 }
+    : { attrs: `fill="${MUTE}" font-size="9"`, size: 9 };
 function svgDoc(w: number, h: number, body: string, title: string): string {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" font-family="ui-sans-serif,system-ui,Segoe UI,Roboto,sans-serif" role="img" aria-label="${escapeMarkupAttribute(title)}">
 <rect width="${w}" height="${h}" rx="14" fill="${BG}"/>
@@ -322,18 +333,28 @@ function chartPca(p: ReturnType<typeof pca>): string {
     b += `<line x1="${padL}" y1="${Y(0)}" x2="${w - padR}" y2="${Y(0)}" stroke="${GRID}" stroke-width="0.8"/>`;
   b += `<text x="${w - padR}" y="${Y(ymin) + 4}" fill="${MUTE}" font-size="11" text-anchor="end">PC1 (generalist breadth →)</text>`;
   b += `<text x="${padL - 6}" y="${padT - 8}" fill="${MUTE}" font-size="11">PC2</text>`;
-  p.scores.forEach((s, i) => {
-    const cx = X(s.pc1);
-    const cy = Y(s.pc2);
-    if (s.cosmo) {
-      b += `<circle cx="${cx}" cy="${cy}" r="8" fill="${COSMO}"/><circle cx="${cx}" cy="${cy}" r="13" fill="none" stroke="${COSMO}" stroke-width="1.4" opacity="0.6"/>`;
-      b += `<text x="${cx - 12}" y="${cy - 12}" fill="${COSMO}" font-size="11" font-weight="700" text-anchor="end">${esc(s.name)}</text>`;
-    } else {
-      b += `<circle cx="${cx}" cy="${cy}" r="4.5" fill="${PEER}" opacity="0.85"/>`;
-      const dy = i % 2 === 0 ? -8 : 14;
-      b += `<text x="${cx + 7}" y="${cy + dy}" fill="${MUTE}" font-size="9">${esc(s.name)}</text>`;
-    }
-  });
+  for (const sc of p.scores) {
+    const cx = X(sc.pc1);
+    const cy = Y(sc.pc2);
+    if (sc.cosmo)
+      b += `<circle cx="${cx}" cy="${cy}" r="8" fill="${COSMO}"><title>${esc(sc.name)}</title></circle><circle cx="${cx}" cy="${cy}" r="13" fill="none" stroke="${COSMO}" stroke-width="1.4" opacity="0.6"/>`;
+    else
+      b += `<circle cx="${cx}" cy="${cy}" r="4.5" fill="${PEER}" opacity="0.85"><title>${esc(sc.name)}</title></circle>`;
+  }
+  // Labels only where they fit, most extreme systems first (distance from the PCA origin).
+  b += pointLabelMarkup(
+    p.scores.map((sc) => ({
+      name: sc.name,
+      x: X(sc.pc1),
+      y: Y(sc.pc2),
+      focus: sc.cosmo,
+      priority: Math.hypot(sc.pc1, sc.pc2),
+    })),
+    { x0: padL + 2, y0: padT + 2, x1: w - 6, y1: h - padB - 2 },
+    (focus) => (focus ? 13 : 4.5),
+    pointStyle,
+    esc,
+  );
   return svgDoc(w, h, b, 'PCA projection');
 }
 
@@ -344,9 +365,11 @@ function distanceMatrix(rows: Row[]): number[][] {
 function chartDistance(rows: Row[], D: number[][], order: number[]): string {
   const n = rows.length;
   const cell = 20;
-  const padL = 150;
-  const padT = 150;
-  const w = padL + n * cell + 20;
+  const labelW = 170;
+  const padL = labelW + 14;
+  // Column headers are rotated -55°: they rise labelW·sin55° and reach right by labelW·cos55°.
+  const padT = Math.ceil(labelW * Math.sin((55 * Math.PI) / 180)) + 80;
+  const w = padL + n * cell + Math.ceil(labelW * Math.cos((55 * Math.PI) / 180)) + 20;
   const h = padT + n * cell + 20;
   const mx = Math.max(...D.flat());
   let b = '';
@@ -355,9 +378,9 @@ function chartDistance(rows: Row[], D: number[][], order: number[]): string {
   order.forEach((ri, i) => {
     const lab = short(rows[ri]!.project);
     const cosmo = isCosmo(rows[ri]!.project);
-    b += `<text x="${padL - 8}" y="${padT + i * cell + cell / 2 + 3}" fill="${cosmo ? COSMO : TEXT}" font-size="9" font-weight="${cosmo ? 700 : 400}" text-anchor="end">${esc(lab)}</text>`;
+    b += `<text x="${padL - 8}" y="${padT + i * cell + cell / 2 + 3}" fill="${cosmo ? COSMO : TEXT}" font-size="9" font-weight="${cosmo ? 700 : 400}" text-anchor="end">${fitLabel(lab, labelW - 8, 9, cosmo ? 700 : 400)}</text>`;
     const tx = padL + i * cell + cell / 2;
-    b += `<text x="${tx}" y="${padT - 8}" fill="${cosmo ? COSMO : MUTE}" font-size="9" text-anchor="start" transform="rotate(-55 ${tx} ${padT - 8})">${esc(lab)}</text>`;
+    b += `<text x="${tx}" y="${padT - 8}" fill="${cosmo ? COSMO : MUTE}" font-size="9" font-weight="${cosmo ? 700 : 400}" text-anchor="start" transform="rotate(-55 ${tx} ${padT - 8})">${fitLabel(lab, labelW - 8, 9, cosmo ? 700 : 400)}</text>`;
   });
   order.forEach((ri, i) =>
     order.forEach((cj, j) => {
@@ -454,7 +477,7 @@ function chartDendrogram(rows: Row[], root: Node, order: number[]): string {
     if (nd.leaf !== undefined) {
       const y = yOf[nd.leaf]!;
       const cosmo = isCosmo(rows[nd.leaf]!.project);
-      b += `<text x="${w - padR + 8}" y="${y + 3}" fill="${cosmo ? COSMO : TEXT}" font-size="10" font-weight="${cosmo ? 700 : 400}">${esc(short(rows[nd.leaf]!.project))}</text>`;
+      b += `<text x="${w - padR + 8}" y="${y + 3}" fill="${cosmo ? COSMO : TEXT}" font-size="10" font-weight="${cosmo ? 700 : 400}">${fitLabel(short(rows[nd.leaf]!.project), padR - 18, 10, cosmo ? 700 : 400)}</text>`;
       return y;
     }
     const yl = draw(nd.left!);
@@ -504,7 +527,7 @@ function chartPareto(pts: ReturnType<typeof pareto>): string {
   const Y = (v: number): number => padT + (h - padT - padB) - (v / 5) * (h - padT - padB);
   let b = '';
   b += `<text x="28" y="30" fill="${TEXT}" font-size="18" font-weight="700">Pareto frontier — breadth vs peer maturity</text>`;
-  b += `<text x="28" y="50" fill="${MUTE}" font-size="12">green ring = non-dominated (Pareto-optimal). no system beats Cosmogonic on breadth; many beat it on maturity.</text>`;
+  b += `<text x="28" y="50" fill="${MUTE}" font-size="12">green ring = non-dominated (Pareto-optimal) · none beats Cosmogonic on breadth; many on maturity</text>`;
   for (let g = 0; g <= 5; g++) {
     b += `<line x1="${X(g)}" y1="${padT}" x2="${X(g)}" y2="${h - padB}" stroke="${GRID}" stroke-width="0.6"/>`;
     b += `<line x1="${padL}" y1="${Y(g)}" x2="${w - padR}" y2="${Y(g)}" stroke="${GRID}" stroke-width="0.6"/>`;
@@ -517,20 +540,31 @@ function chartPareto(pts: ReturnType<typeof pareto>): string {
   const front = pts.filter((p) => p.onFront).sort((a, b2) => a.maturity - b2.maturity);
   if (front.length > 1)
     b += `<polyline points="${front.map((p) => `${X(p.maturity)},${Y(p.breadth)}`).join(' ')}" fill="none" stroke="${NEAR}" stroke-width="1.2" stroke-dasharray="5 4" opacity="0.7"/>`;
-  pts.forEach((p, i) => {
+  for (const p of pts) {
     const cx = X(p.maturity);
     const cy = Y(p.breadth);
     if (p.cosmo) {
-      b += `<circle cx="${cx}" cy="${cy}" r="8" fill="${COSMO}"/><circle cx="${cx}" cy="${cy}" r="13" fill="none" stroke="${NEAR}" stroke-width="1.8"/>`;
-      b += `<text x="${cx - 12}" y="${cy - 10}" fill="${COSMO}" font-size="11" font-weight="700" text-anchor="end">${esc(p.name)}</text>`;
+      b += `<circle cx="${cx}" cy="${cy}" r="8" fill="${COSMO}"><title>${esc(p.name)}</title></circle><circle cx="${cx}" cy="${cy}" r="13" fill="none" stroke="${NEAR}" stroke-width="1.8"/>`;
     } else {
-      b += `<circle cx="${cx}" cy="${cy}" r="4.5" fill="${PEER}" opacity="0.85"/>`;
+      b += `<circle cx="${cx}" cy="${cy}" r="4.5" fill="${PEER}" opacity="0.85"><title>${esc(p.name)}</title></circle>`;
       if (p.onFront)
         b += `<circle cx="${cx}" cy="${cy}" r="8" fill="none" stroke="${NEAR}" stroke-width="1.5"/>`;
-      const dy = i % 2 === 0 ? -8 : 14;
-      b += `<text x="${cx + 7}" y="${cy + dy}" fill="${MUTE}" font-size="9">${esc(p.name)}</text>`;
     }
-  });
+  }
+  // Labels only where they fit: the frontier first, then by breadth; every point names itself on hover.
+  b += pointLabelMarkup(
+    pts.map((p) => ({
+      name: p.name,
+      x: X(p.maturity),
+      y: Y(p.breadth),
+      focus: p.cosmo,
+      priority: (p.onFront ? 10 : 0) + p.breadth,
+    })),
+    { x0: padL + 2, y0: padT + 2, x1: w - 6, y1: h - padB - 2 },
+    (focus) => (focus ? 13 : 8),
+    pointStyle,
+    esc,
+  );
   return svgDoc(w, h, b, 'Pareto frontier');
 }
 
@@ -561,7 +595,7 @@ function evenness(
     .sort((a, b) => b.evenness - a.evenness);
 }
 function chartEvenness(rows: ReturnType<typeof evenness>): string {
-  const padL = 168;
+  const padL = 214;
   const padR = 56;
   const padT = 64;
   const rowH = 22;
@@ -580,7 +614,7 @@ function chartEvenness(rows: ReturnType<typeof evenness>): string {
   rows.forEach((d, i) => {
     const y = padT + i * rowH;
     const col = d.cosmo ? COSMO : PEER;
-    b += `<text x="${padL - 10}" y="${y + rowH / 2 + 4}" fill="${d.cosmo ? COSMO : TEXT}" font-size="11" font-weight="${d.cosmo ? 700 : 400}" text-anchor="end">${esc(d.name)}</text>`;
+    b += `<text x="${padL - 10}" y="${y + rowH / 2 + 4}" fill="${d.cosmo ? COSMO : TEXT}" font-size="11" font-weight="${d.cosmo ? 700 : 400}" text-anchor="end">${fitLabel(d.name, padL - 24, 11, d.cosmo ? 700 : 400)}</text>`;
     b += `<rect x="${padL}" y="${y + 4}" width="${Math.max(1, X(d.evenness) - padL)}" height="${rowH - 8}" rx="3" fill="${col}" opacity="${d.cosmo ? 0.95 : 0.7}"/>`;
     b += `<text x="${X(d.evenness) + 6}" y="${y + rowH / 2 + 4}" fill="${d.cosmo ? COSMO : MUTE}" font-size="10" font-weight="${d.cosmo ? 700 : 400}">${d.evenness.toFixed(3)}</text>`;
   });
@@ -603,11 +637,15 @@ function chartAxisCorr(M: number[][]): string {
   const cell = 46;
   const padL = 150;
   const padT = 150;
-  const w = padL + NAX * cell + 20;
+  const headRight = Math.max(
+    ...AXES.map((a) => estimateTextWidth(a, 9) * Math.cos((55 * Math.PI) / 180)),
+  );
+  const w = padL + NAX * cell + Math.ceil(headRight) + 20;
   const h = padT + NAX * cell + 20;
   let b = '';
-  b += `<text x="28" y="30" fill="${TEXT}" font-size="18" font-weight="700">Axis co-occurrence correlation (which capabilities travel together)</text>`;
-  b += `<text x="28" y="50" fill="${MUTE}" font-size="12">Pearson r across all rows. cyan = co-occur · red = trade off · slate = independent.</text>`;
+  b += `<text x="28" y="30" fill="${TEXT}" font-size="18" font-weight="700">Axis co-occurrence correlation</text>`;
+  b += `<text x="28" y="50" fill="${MUTE}" font-size="12">which capabilities travel together · Pearson r across all rows</text>`;
+  b += `<text x="28" y="68" fill="${MUTE}" font-size="12">cyan = co-occur · red = trade off · slate = independent</text>`;
   AXES.forEach((a, j) => {
     b += `<text x="${padL - 8}" y="${padT + j * cell + cell / 2 + 3}" fill="${TEXT}" font-size="9" text-anchor="end">${esc(a)}</text>`;
     const tx = padL + j * cell + cell / 2;
