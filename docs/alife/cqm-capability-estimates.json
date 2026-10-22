@@ -1,0 +1,187 @@
+{
+  "schemaVersion": 1,
+  "frameworkId": "CQM-25",
+  "frameworkVersion": "1.0.0",
+  "classification": "provisional-author-estimates",
+  "calibrationStatus": "uncalibrated",
+  "recordedAt": "2026-10-22",
+  "basedOnEvidenceCommit": "339c6daa8cdcaf27e4e6dcce3b93bdba39980bf9",
+  "rationaleStatus": "imported-pending-review",
+  "measurementStatus": "not-protocol-results",
+  "aggregation": "prohibited",
+  "rubric": {
+    "id": "cqm25-author-heuristic-v1",
+    "interpretation": "ordinal-implementation-judgment",
+    "assignmentStatus": "imported-not-recalibrated",
+    "scaleMin": 0,
+    "scaleMax": 5,
+    "description": "A heuristic author judgment about implementation breadth and integration within each axis and its declared scope. These ordinal anchors are not equal-interval measurements, calibrated capability scores, probabilities or scientific acceptance thresholds.",
+    "assignmentNote": "The incoming values and rationales are preserved verbatim. This rubric declares how the provisional overlay is to be read; the imported values have not been recomputed or independently rated against its anchors. Decimal values indicate author interpolation only, not measurement precision.",
+    "anchors": [
+      {
+        "value": 0,
+        "label": "No implementation identified",
+        "definition": "The author judges that no relevant implementation is present in the inspected scope. Missing evidence alone does not justify zero."
+      },
+      {
+        "value": 1,
+        "label": "Illustrative component",
+        "definition": "An isolated demonstration or component suggests the construct, with little integration into the operating system."
+      },
+      {
+        "value": 2,
+        "label": "Partial implementation",
+        "definition": "Some relevant mechanisms operate, but major parts of the declared construct or integration remain absent or restricted."
+      },
+      {
+        "value": 3,
+        "label": "Bounded working implementation",
+        "definition": "Relevant mechanisms function together in a limited setting; broader behavior, coverage or acceptance evidence remains incomplete."
+      },
+      {
+        "value": 4,
+        "label": "Substantial integrated implementation",
+        "definition": "Multiple relevant mechanisms or behaviors are substantially integrated in the inspected scope, while material limitations remain."
+      },
+      {
+        "value": 5,
+        "label": "Extensive implementation in declared scope",
+        "definition": "The author judges implementation breadth and integration to be extensive within the declared scope. This is not a claim of scientific validation, unlimited generality or human-level ability."
+      }
+    ]
+  },
+  "limitations": [
+    "All 25 values are provisional author estimates, not measured protocol results. Imported rationales may contain unverified interpretation or numerical claims and await independent review.",
+    "The original evidence review remains dated 2026-10-21 at the pinned commit. Recording these estimates on 2026-10-22 is not a new execution or review of the canonical acceptance protocols.",
+    "Different axes concern different constructs and units of analysis. Values are not calibrated across axes or systems, so no overall score, domain mean, ranking or uncertainty interval is published.",
+    "Engineering estimates describe implementation context only. No value is a probability or verdict of consciousness, sentience, AGI or superintelligence, and theory-linked implementation does not establish experience.",
+    "Canonical assessment.score remains null for all 25 axes. Missing measurements remain unknown; not-applicable requires an explicit subject and scope reason."
+  ],
+  "estimates": [
+    {
+      "axisId": "reproduction_heredity",
+      "value": 4,
+      "rationale": "Code-grounded 4.0 (GATE-REPRO-SELECT): heritable nW scales auto-fission probability (0.02 + 0.08*nW) and lifespan phenotype in the live EntityManager population (+0.180 separation vs trait-blind control across 500 frames x 8 seeds); held below 5.0 because open instruction-level self-replication and live sexual crossover are not active."
+    },
+    {
+      "axisId": "evolutionary_innovation",
+      "value": 2,
+      "rationale": "Code-grounded 2.0: directional fecundity selection converges onto a fixed monotone optimum (nW -> 1) and Petri strain selection operates over a fixed 26-form catalog; held at 2.0 because unbounded open-ended novelty and superiority to neutral drift on novel held-out tasks are not established."
+    },
+    {
+      "axisId": "environmental_coupling",
+      "value": 3.4,
+      "rationale": "Code-grounded 3.4 (GATE-DOME-REFUGE + GATE-XENO-TROPHIC + Xylos habitat): bidirectional Gray-Scott chemical sensing/actuation for single-being Xylos plus 60k edible flora, waste-to-fertilizer recycling, Xenomimic predator-prey regulation, and Big Tree sanctuary refuge (+7.6% equilibrium lift); held below 5.0 because multi-generation plant-genome coevolution is absent."
+    },
+    {
+      "axisId": "morphology_development",
+      "value": 3.8,
+      "rationale": "Code-grounded 3.8: Xylos neural-state-driven membrane/graph deformation, SuperBody consciousness/evolution-coupled multi-appendage morphing, and 250 procedural phyla morphotypes; held below 5.0 because morphology is state- and genome-driven rather than evolved via EvoGym/Sims joint body-brain developmental selection."
+    },
+    {
+      "axisId": "embodied_dynamics",
+      "value": 3.9,
+      "rationale": "Code-grounded 3.9: fixed-step deterministic integration, partition-invariant Xylos session stepping, live fused f32 Gray-Scott PDE + Crank-Nicolson wavefunction dynamics, and soft plant-canopy contact under declared xeno-physical laws (Earth-physics replication is not required); held below 5.0 pending a full cross-subsystem PDE convergence audit."
+    },
+    {
+      "axisId": "perception",
+      "value": 3.8,
+      "rationale": "Code-grounded 3.8 (GATE-CHEMOTAXIS + Xylos reliability percepts): bilinear 4-cell flora gradient foraging (>3x biomass capture vs blind control) and Xylos precision-weighted chemical/hazard/gradient integration; held below 5.0 because channels consume structured simulation fields rather than raw pixel/occlusion vision."
+    },
+    {
+      "axisId": "learning",
+      "value": 4.5,
+      "rationale": "Code-grounded 4.5 (GATE-BIOLOGIC-LEARN + GATE-MLP + GATE-SELFMODEL + Xylos plasticity): exact Eshkol forward/reverse AD online fitness learning in the live Petri, nonlinear XOR-capable MLP self-model backprop, and Xylos associative plastic predictors outperforming frozen controls."
+    },
+    {
+      "axisId": "memory",
+      "value": 3.7,
+      "rationale": "Code-grounded 3.7: Plate HRR circular-convolution holographic associative memory (context-action binding, unbinding, and decay) plus fast Hebbian plastic weight imprints; held below 5.0 pending multi-task continual-retention benchmarks across interleaved held-out task families."
+    },
+    {
+      "axisId": "predictive_causal_models",
+      "value": 2.6,
+      "rationale": "Code-grounded 2.6: Xylos action-conditioned sensory predictors reduce forecast error on local feedback loops, but V4 adaptive ecology predictors failed frozen/shuffled controls and Phase-B temporal Predictor-V3 failed all 8 advancement criteria; score explicitly reflects those negative results."
+    },
+    {
+      "axisId": "autonomous_goals",
+      "value": 4,
+      "rationale": "Code-grounded 4.0 (GATE-VQE-RESOLVE + Xylos autonomous policy): unprompted need-weighted hunger/curiosity/hazard motor policy in Xylos plus Variational Quantum Eigensolver 4-drive frustration minimization via exact parameter-shift gradients in the base population."
+    },
+    {
+      "axisId": "reasoning_planning",
+      "value": 3.5,
+      "rationale": "Code-grounded 3.5: NHI multi-step GOAP planner with material-outcome fact revision plus discrete active-inference expected-free-energy policy evaluation in SuperMind; held below 5.0 because combinatorial detour and novel relational puzzle generalization are unestablished."
+    },
+    {
+      "axisId": "transfer_generalization",
+      "value": 2.2,
+      "rationale": "Code-grounded 2.2: under the frozen 64-seed V4 cross-being causality benchmark (1,152 rows), Titans passed all inference/magnitude/replay gates (1/4 families), while ordinary organisms, Petri biologics, and adaptive predictors failed magnitude or control gates."
+    },
+    {
+      "axisId": "metacognition_self_model",
+      "value": 3.7,
+      "rationale": "Code-grounded 3.7 (GATE-PREDICTIVE-METACOG + GATE-SELFMODEL, indicator-only): arbitrary-order Eshkol Taylor-jet trajectory extrapolation whose remainder causally damps VQE commitment under volatility, paired with online MLP forward self-modeling; held below 5.0 pending difficulty-matched meta-d'/d' calibration."
+    },
+    {
+      "axisId": "social_communication",
+      "value": 3.5,
+      "rationale": "Code-grounded 3.5: 25 Theory-of-Mind organs (6-family ensemble), learned rival-proximity head, Nash game-theory encounters, and V4-verified Titan Prisoner's Dilemma diplomacy causality; held below 5.0 because open compositional signalling to unseen partner policies is unassessed."
+    },
+    {
+      "axisId": "individuality",
+      "value": 3.8,
+      "rationale": "Code-grounded 3.8: Xylos maintains an individuated recurrent neural manifold, persistent body topology, and recorded session boundary distinct from the shared world; held below 5.0 pending component-turnover and partition-cohesion perturbation assays."
+    },
+    {
+      "axisId": "resource_maintenance",
+      "value": 3.4,
+      "rationale": "Code-grounded 3.4: single-consumption edible resource accounting, energy-coupled foraging/movement in Entities and Xylos, and trophic energy transfer; held below 5.0 because 5-second flora/fauna respawn timers act as a designed habitat floor."
+    },
+    {
+      "axisId": "homeostasis",
+      "value": 3.6,
+      "rationale": "Code-grounded 3.6: branching-ratio neural criticality controller (sigma -> 1.0 homeostat) and multi-drive physiological regulation keep internal dynamics bounded across silent and active regimes; held below 5.0 pending whole-organism multi-variable viable-envelope perturbation trials."
+    },
+    {
+      "axisId": "repair_resilience",
+      "value": 1.8,
+      "rationale": "Code-grounded 1.8: Xylos implements bounded sparse plastic topology rewiring and state clamping, but unseen structural lesion and functional regeneration assays have not yet been executed."
+    },
+    {
+      "axisId": "recurrent_processing",
+      "value": 3.6,
+      "rationale": "Code-grounded 3.6 (indicator-only): explicit recurrent pathways in Xylos, SuperMind, and ordinary resource heads with matched-input recurrence-ablation tests demonstrating causal state divergence; computational indicator only, not phenomenal experience."
+    },
+    {
+      "axisId": "global_availability",
+      "value": 3.6,
+      "rationale": "Code-grounded 3.6 (indicator-only): capacity-2-of-6 Global Workspace admission bottleneck and cross-specialist broadcast in Xylos and SuperMind (Eshkol §17 GWT primitives), verified by admission and broadcast ablation tests; computational indicator only."
+    },
+    {
+      "axisId": "causal_integration",
+      "value": 3.3,
+      "rationale": "Code-grounded 3.3 (indicator-only): exact bipartition quantum/classical integrated information (Phi) and perturbational oscillator complexity lab with shuffled/ablated surrogates; held at 3.3 because live mind-to-lab null separation remains near zero and software proxies do not inherit human PCI validity."
+    },
+    {
+      "axisId": "valence_tradeoffs",
+      "value": 3.1,
+      "rationale": "Code-grounded 3.1 (indicator-only): context-dependent hunger, threat, and uncertainty utility trade-offs modulate hunting, fleeing, and foraging across Entities, Xenomimics, and Xylos; functional control indicator only, not felt pleasure or pain."
+    },
+    {
+      "axisId": "substrate_pluralism",
+      "value": 4.6,
+      "rationale": "Code-grounded 4.6 (GATE-XENO-SCHRODINGER + 18 Zig WASM kernels + Tsotchke 17/21 causal ledger): independent live consumers of 5-qubit statevectors, Crank-Nicolson Schrödinger wavepackets, Aaronson-Gottesman Clifford tableaus, QGTL Fubini-Study metrics, Eshkol AD/Taylor towers, libirrep BdG skyrmions, and SbNN MinSR."
+    },
+    {
+      "axisId": "instrumentation_reproducibility",
+      "value": 4.4,
+      "rationale": "Code-grounded 4.4 (GATE-RNG-PROVENANCE + canonical receipts): live Tsotchke randomness battery provenance (~0.99 vs degenerate stream), deterministic seeded mulberry32 streams, Xylos input-tape replay, and gate-enforced SHA-256 benchmark receipts."
+    },
+    {
+      "axisId": "visual_embodied_scale",
+      "value": 4.2,
+      "rationale": "Code-grounded 4.2: combines single-being biomorphic visual morphogenesis (Xylos neural-state membranes and live 3D connectome graph, SuperBody shader/appendage morphing, 250 phyla morphotypes: 4.4) with ecosystem instanced scale (60k flora, 10k default / 50k mega entities: 4.0); legacy 9-axis comparison matrix retains 4.0."
+    }
+  ]
+}

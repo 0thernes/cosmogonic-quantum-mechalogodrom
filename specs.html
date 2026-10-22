@@ -17,7 +17,7 @@
     />
     <meta
       property="og:description"
-      content="Up to 50,000 agents (10,000 at 60 fps on integrated graphics). 3,422 exact tracked tests, portable coverage floors, Tsotchke depth ledger, and proxy-only consciousness/sentience labs. Seeded core is non-LLM; optional Copilot is fenced."
+      content="Up to 50,000 agents (10,000 at 60 fps on integrated graphics). 3,436 exact tracked tests, portable coverage floors, Tsotchke depth ledger, and proxy-only consciousness/sentience labs. Seeded core is non-LLM; optional Copilot is fenced."
     />
     <meta name="theme-color" content="#030612" />
     <link
@@ -388,6 +388,26 @@
       .muted {
         color: var(--ink-faint);
       }
+      .legacy-comparison {
+        margin: 24px 0;
+      }
+      .legacy-comparison > summary {
+        cursor: pointer;
+        padding: 12px 0;
+        font-size: 1.1rem;
+        font-weight: 700;
+      }
+      .capability-open {
+        font-weight: 700;
+      }
+      #capability-profile {
+        width: 100%;
+        min-width: 0;
+      }
+      #capability-profile figcaption {
+        margin: 12px 0;
+        font-size: 0.95rem;
+      }
     </style>
   </head>
   <body>
@@ -421,6 +441,7 @@
           <span>COSMOGONIC</span>
         </a>
         <nav class="sat-nav" aria-label="Satellite pages">
+          <a href="#capability-profile">CQM-25</a>
           <a href="/">Dome</a>
           <a href="/docs">Docs</a>
           <a href="/spec" aria-current="page">Spec</a>
@@ -445,6 +466,7 @@
           figure below was measured from the repository.
         </p>
         <nav class="topnav">
+          <a href="#capability-profile">CQM-25 — canonical standard</a>
           <a href="/">&larr; the dome (/)</a>
           <a href="/docs">architecture docs (/docs)</a>
           <a href="/lab">the lab (/lab)</a>
@@ -459,6 +481,55 @@
     </header>
 
     <main class="wrap">
+      <section id="capability-profile" class="card">
+        <h2>CQM-25 — canonical capability standard</h2>
+        <p>
+          CQM-25 version 1.0.0 is the project's binding framework for capability descriptions,
+          evidence reviews and evaluation plans. Its 25 dimensions cover individual beings, adaptive
+          cognition, consciousness-related mechanisms and the engineering of constructed worlds. A
+          single organism is an eligible subject; ecology is one domain among several.
+        </p>
+        <p>
+          <a class="capability-open" href="./docs/alife/cqm-capability-profile.html"
+            >Read all 25 axes, evidence and acceptance protocols</a
+          >
+          &middot;
+          <a href="./docs/alife/cqm-capability-profile.md">Canonical specification</a> &middot;
+          <a href="./docs/alife/cqm-capability-profile.json">Data and protocols</a>.
+        </p>
+        <p>
+          <a
+            data-provisional-estimates
+            href="./docs/alife/cqm-capability-profile.html#provisional-estimates"
+            >View provisional author estimates for all 25 axes</a
+          >
+          — a separate, uncalibrated rating layer with its own rubric and evidence notes, not
+          executed benchmark results.
+        </p>
+        <p>
+          Review states describe available evidence. Numerical capability scores remain
+          uncalibrated, and the proposed experiments have not been executed as a unified benchmark.
+          Project adoption does not establish scientific validation, consciousness, sentience, AGI
+          or superintelligence. Historical nine-axis scores are retained separately below.
+        </p>
+        <div id="alife-metrics">
+          <figure style="margin: 0">
+            <img
+              src="./docs/reports/assets/alife-capability-profile-25.svg"
+              width="1000"
+              height="1280"
+              style="width: 100%; height: auto; display: block"
+              alt="Canonical CQM-25 framework: 25 operational dimensions and repository evidence states, with no numerical capability scores"
+            />
+            <figcaption>
+              CQM-25 is the current project framework. For readable axis definitions and evidence at
+              any screen size,
+              <a href="./docs/alife/cqm-capability-profile.html">open the full 25-axis reader</a>.
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
       <section>
         <h2><span class="tag">01</span> At a glance</h2>
         <div class="stats">
@@ -471,7 +542,7 @@
             <div class="l">tracked authored files</div>
           </div>
           <div class="stat">
-            <div class="n gd">3,422</div>
+            <div class="n gd">3,436</div>
             <div class="l">tests · 84.64% line / 82.21% func cov</div>
           </div>
           <div class="stat">
@@ -753,7 +824,7 @@ server.ts ──serves──▶  /  (app)   /docs   /spec   /lab   /lab/sentienc
           >
           ·
           <a href="./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md">Tsotchke depth ledger</a>
-          · gate <b>3,422 tests</b>
+          · gate <b>3,436 tests</b>
         </p>
         <p class="muted" style="margin-top: 10px">
           <b>Current consolidated assessment:</b>
@@ -955,7 +1026,7 @@ server.ts ──serves──▶  /  (app)   /docs   /spec   /lab   /lab/sentienc
         <h2><span class="tag">09</span> Build, CI/CD &amp; quality</h2>
         <p>
           <b>Gate (every commit):</b>
-          <code>prettier → tsc strict → oxlint → 3,422 tests → evidence checks → bun build</code>.
+          <code>prettier → tsc strict → oxlint → 3,436 tests → evidence checks → bun build</code>.
           Public release floor is 84.64 % line / 82.21 % function;
           <!-- cqm-sync:local-measurement:start -->
           the current audit separately records a Windows-local measurement of 3,297 tests, zero
@@ -1135,8 +1206,13 @@ server.ts ──serves──▶  /  (app)   /docs   /spec   /lab   /lab/sentienc
         </table>
       </section>
 
-      <section>
-        <h2><span class="tag">11</span> A-Life comparative analysis — vs 155 systems</h2>
+      <details class="legacy-comparison" data-legacy-comparison>
+        <summary>Historical nine-axis comparison — preserved 155-system rubric</summary>
+        <p>
+          CQM-25 above is the current project capability framework. This earlier comparison retains
+          its own definitions and scores for reproducibility; its rankings do not transfer to
+          CQM-25.
+        </p>
         <p>
           <a href="./docs/alife/cqm-alife-catalog.html"
             >150-entry source-reviewed evidence catalog</a
@@ -1225,7 +1301,7 @@ server.ts ──serves──▶  /  (app)   /docs   /spec   /lab   /lab/sentienc
               Visual scale: Cosmogonic 4, survey mean 2.76, ALIEN 5.
             </desc>
             <text x="20" y="30" fill="#cbd5e1" font-size="20" font-weight="700">
-              Nine-axis capability profile
+              Historical nine-axis comparison
             </text>
             <text x="20" y="58" fill="#f59e0b" font-size="16">Amber: Cosmogonic</text>
             <text x="20" y="84" fill="#a78bfa" font-size="16">Violet: survey mean</text>
@@ -1396,7 +1472,7 @@ server.ts ──serves──▶  /  (app)   /docs   /spec   /lab   /lab/sentienc
             />
           </svg>
         </div>
-      </section>
+      </details>
 
       <section id="xenomimics">
         <h2><span class="tag">12</span> Xenomimics &mdash; canonical ground intelligence</h2>
@@ -1473,30 +1549,6 @@ server.ts ──serves──▶  /  (app)   /docs   /spec   /lab   /lab/sentienc
           </p>
         </div>
       </section>
-
-      <section id="capability-profile" class="card">
-        <h2>CQM-25: digital-life research profile</h2>
-        <p>
-          A broader profile for individual beings, adaptive minds and constructed worlds. Its 25
-          dimensions separate living organization, cognition, consciousness-related mechanisms and
-          engineering context. Ecology is one domain; physical realism is a declared modeling
-          choice.
-        </p>
-        <p>
-          <a href="./docs/alife/cqm-capability-profile.html"
-            >Explore all 25 axes, measurements and falsifiers</a
-          >
-          &middot; <a href="./docs/alife/cqm-capability-profile.md">Specification</a> &middot;
-          <a href="./docs/alife/cqm-capability-profile.json">Data and protocols</a>.
-        </p>
-        <p>
-          A single complex being contributes to visual expression. The historical visual rating
-          remains 4.0 under its existing rubric; entity expression and population delivery have
-          separate measures in the new profile. Evidence labels are not calibrated capability scores
-          or consciousness, sentience, AGI or SI verdicts.
-        </p>
-      </section>
-      <section id="alife-metrics"></section>
 
       <footer>
         Cosmogonic Quantum Mechalogodrom &middot; &copy; 2026 0thernes &middot; non-commercial

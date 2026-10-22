@@ -278,7 +278,7 @@ export function chartRadar(
         `${axis}: Cosmogonic ${cosmo.axes[j]}, survey mean ${meanProfile[j]}, ${peer} ${near.axes[j]}.`,
     ).join(' ');
   let b = `<title>${esc(title)}</title><desc>${esc(description)}</desc>`;
-  b += `<text x="20" y="30" fill="${TEXT}" font-size="20" font-weight="700">Nine-axis capability profile</text>`;
+  b += `<text x="20" y="30" fill="${TEXT}" font-size="20" font-weight="700">Historical nine-axis comparison</text>`;
   b += `<text x="20" y="58" fill="${COSMO}" font-size="16">Amber: Cosmogonic</text>`;
   b += `<text x="20" y="84" fill="${MEANC}" font-size="16">Violet: survey mean</text>`;
   b += `<text x="20" y="110" fill="${NEAR}" font-size="16">Green: nearest peer (${esc(peer)})</text>`;

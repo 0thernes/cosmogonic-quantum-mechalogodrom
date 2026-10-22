@@ -410,10 +410,11 @@ export function renderLandscapeHtml(inputs: LandscapeInputs): string {
   const out: string[] = [];
   out.push(`<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>A-Life Landscape Index</title><style>${CSS}</style></head><body>`);
+<title>Historical Nine-Axis A-Life Landscape Index</title><style>${CSS}</style></head><body>`);
 
   // ── 1. Header + receipts ──────────────────────────────────────────────────
-  out.push(`<h1>Cosmogonic Quantum Mechalogodrom<br>A-Life Competitive Landscape Index</h1>
+  out.push(`<h1>Cosmogonic Quantum Mechalogodrom<br>Historical Nine-Axis Landscape Index</h1>
+<div class="box"><b>Historical comparison context.</b> <a href="../../alife/cqm-capability-profile.html">CQM-25 is the canonical project capability standard</a>. This preserved nine-axis literature rubric retains its own scores and methods; its rankings are not transferred to CQM-25, whose numerical scores remain uncalibrated.</div>
 <div class="sub">${stats.nSystems} distinct systems (${stats.nPeers} peers + Cosmogonic) scored on nine capability axes ·
 derived from <code>${esc(CSV_PATH)}</code> and its generated receipts · v${esc(inputs.version)}</div>`);
   out.push(`<div class="cards">
@@ -447,7 +448,7 @@ ${AUDIT.corrections.map((d) => `<li>${esc(d)}</li>`).join('\n')}
 <h3>Verification coverage</h3><p>${esc(AUDIT.verification)}</p>`);
 
   // ── 3. Profile vs survey ──────────────────────────────────────────────────
-  out.push(`<h2>Cosmogonic's nine-axis profile against the survey</h2>
+  out.push(`<h2>Historical nine-axis profile against the survey</h2>
 <table><thead><tr><th>Axis</th><th class="c">Cosmogonic</th><th class="c">Survey mean</th><th class="c">σ</th><th class="c">z</th><th class="c">Rank on axis</th><th>Axis leaders (top score)</th></tr></thead><tbody>
 ${stats.perAxis
   .map((a, i) => {

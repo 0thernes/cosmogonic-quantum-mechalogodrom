@@ -1,14 +1,16 @@
 /**
- * ALife survey metric gallery — hero + full thumbnail grid with pan/zoom for docs.html + specs.html.
- * Nine-axis radar is the default hero; tabs / hero-click cycle; every chart is visible below with its own zoom.
+ * CQM-25 canonical profile with secondary historical nine-axis comparisons for Docs and Specs.
+ * The canonical evidence map is the default hero; historical charts retain their own rubric.
  */
 import { ALIFE_SVG_EMBED } from './generated/alife-svg-embed';
 
+/** A canonical profile or a historical comparison retained with its original rubric. */
 export interface AlifeMetric {
   id: string;
   label: string;
   file: string;
   alt: string;
+  context: 'canonical' | 'historical';
 }
 
 /** GitHub Pages project subpath (e.g. `/cosmogonic-quantum-mechalogodrom`) or `` for root/dev. */
@@ -127,75 +129,88 @@ async function loadMetricImg(
   onAllFailed?.();
 }
 
+/** Display order keeps the canonical CQM-25 profile ahead of every historical comparison. */
 export const ALIFE_METRICS: readonly AlifeMetric[] = [
   {
-    id: 'radar',
-    label: 'Nine-axis profile',
-    file: 'alife-radar-profile.svg',
-    alt: 'Nine-axis capability radar profile',
+    id: 'capability-25',
+    context: 'canonical',
+    label: 'CQM-25 · canonical profile',
+    file: 'alife-capability-profile-25.svg',
+    alt: 'Canonical CQM-25 capability framework: twenty-five dimensions with categorical repository evidence, not capability scores',
   },
   {
-    id: 'capability-25',
-    label: '25-axis research profile',
-    file: 'alife-capability-profile-25.svg',
-    alt: 'Twenty-five research dimensions with categorical repository evidence, not capability scores',
+    id: 'radar',
+    context: 'historical',
+    label: 'Nine-axis radar',
+    file: 'alife-radar-profile.svg',
+    alt: 'Historical nine-axis capability radar using its preserved comparison rubric',
   },
   {
     id: 'pca',
+    context: 'historical',
     label: 'PCA',
     file: 'alife-pca.svg',
     alt: 'PCA projection of ALife systems',
   },
   {
     id: 'pareto',
+    context: 'historical',
     label: 'Pareto',
     file: 'alife-pareto.svg',
     alt: 'Pareto frontier',
   },
   {
     id: 'breadth',
+    context: 'historical',
     label: 'Breadth ranked',
     file: 'alife-breadth-ranked.svg',
     alt: 'Breadth ranked',
   },
   {
     id: 'maturity',
+    context: 'historical',
     label: 'Breadth vs maturity',
     file: 'alife-breadth-vs-maturity.svg',
     alt: 'Breadth vs maturity',
   },
   {
     id: 'heatmap',
+    context: 'historical',
     label: 'Axis heatmap',
     file: 'alife-axis-heatmap.svg',
     alt: 'Axis heatmap',
   },
   {
     id: 'correlation',
+    context: 'historical',
     label: 'Correlation',
     file: 'alife-axis-correlation.svg',
     alt: 'Axis correlation matrix',
   },
   {
     id: 'dendrogram',
+    context: 'historical',
     label: 'Dendrogram',
     file: 'alife-dendrogram.svg',
     alt: 'Hierarchical dendrogram',
   },
   {
     id: 'distance',
+    context: 'historical',
     label: 'Distance matrix',
     file: 'alife-distance-matrix.svg',
     alt: 'Distance matrix',
   },
   {
     id: 'neighbors',
+    context: 'historical',
     label: 'Nearest neighbors',
     file: 'alife-nearest-neighbors.svg',
     alt: 'Nearest neighbors',
   },
   {
     id: 'entropy',
+    context: 'historical',
     label: 'Entropy',
     file: 'alife-entropy.svg',
     alt: 'Entropy distribution',
@@ -206,14 +221,19 @@ const STYLE = `
 .alife-gallery{margin:1.5rem 0 2.5rem}
 .alife-gallery h2{margin-bottom:.35rem}
 .alife-gallery .lead{color:#9fb6dd;font-size:.92rem;margin-bottom:.75rem}
-.alife-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.alife-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+.alife-tab[data-context="canonical"]{font-size:13px;border-color:#5eead4;color:#5eead4}
+.alife-history{border:1px solid rgba(120,160,255,.28);border-radius:10px;padding:12px;margin-top:14px}
+.alife-history>summary{font-size:1rem;cursor:pointer;padding:8px 0}
+.alife-context{font-size:.9rem;color:#b0c2d7;margin:10px 0}
 .alife-tab{border:1px solid rgba(120,160,255,.35);background:rgba(12,20,40,.7);color:#cfe0fb;
-  border-radius:8px;padding:5px 10px;font:600 10px/1.2 var(--font-mono,ui-monospace,monospace);
+  border-radius:8px;padding:8px 10px;min-height:44px;font:600 11px/1.3 var(--font-mono,ui-monospace,monospace);
   letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:border-color .12s,background .12s}
 .alife-tab:hover,.alife-tab:focus-visible{border-color:rgba(0,238,255,.55);outline:none;background:rgba(30,50,90,.85)}
 .alife-tab.active{border-color:rgba(0,238,255,.75);background:rgba(0,80,120,.35);color:#fff}
 .alife-hero{position:relative;border:1px solid rgba(120,160,255,.28);border-radius:12px;
   background:rgba(4,8,18,.92);width:100%;height:min(70vh,1200px);min-height:min(52vh,420px);overflow:hidden;touch-action:none;margin-bottom:14px}
+.alife-hero[data-profile="canonical"]{height:auto;min-height:0;aspect-ratio:1000/1280}
 .alife-stage{position:absolute;inset:0;cursor:grab;overflow:hidden}
 .alife-stage.dragging{cursor:grabbing}
 .alife-stage img{max-width:none;max-height:none;width:auto;height:auto;display:block;user-select:none;-webkit-user-drag:none;transform-origin:0 0}
@@ -223,10 +243,9 @@ const STYLE = `
 .alife-tool{border:1px solid rgba(120,160,255,.4);background:rgba(8,14,30,.88);color:#cfe0fb;
   border-radius:6px;padding:4px 8px;font:600 10px var(--font-mono,monospace);cursor:pointer}
 .alife-tool:hover{border-color:rgba(0,238,255,.6)}
-.alife-caption{position:absolute;left:10px;bottom:8px;font:600 12px var(--font-ui,system-ui,sans-serif);
-  color:#aaccff;letter-spacing:.04em;text-shadow:0 1px 8px rgba(0,0,0,.8);pointer-events:none}
-.alife-hint{position:absolute;right:10px;bottom:8px;font:400 9px var(--font-mono,monospace);color:#7f93b8;
-  opacity:.85;pointer-events:none}
+.alife-caption{margin:8px 0 4px;font:600 13px var(--font-ui,system-ui,sans-serif);
+  color:#aaccff;letter-spacing:.04em}
+.alife-hint{display:block;margin-bottom:8px;font:400 11px var(--font-mono,monospace);color:#7f93b8}
 .alife-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr));gap:10px;margin-top:4px}
 .alife-card{position:relative;border:1px solid rgba(120,160,255,.22);border-radius:10px;
   background:rgba(4,8,18,.88);overflow:hidden;display:flex;flex-direction:column}
@@ -244,8 +263,8 @@ const STYLE = `
   border-radius:4px;padding:2px 5px;font:600 8px var(--font-mono,monospace);cursor:pointer;line-height:1}
 @media (max-width:768px){
   .alife-hero{height:min(58vh,520px);min-height:min(50vh,280px);margin-bottom:8px}
-  .alife-tabs{gap:3px;margin-bottom:6px;max-height:72px;overflow-y:auto}
-  .alife-tab{padding:3px 6px;font-size:7px;letter-spacing:.04em}
+  .alife-tabs{gap:5px;margin-bottom:10px}
+  .alife-tab{padding:8px;font-size:11px;letter-spacing:.02em}
   .alife-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
   .alife-thumb-wrap{height:min(14vh,96px);min-height:72px}
   .alife-card-label{padding:3px 5px 2px;font-size:6px;line-height:1.2}
@@ -434,16 +453,19 @@ export function mountAlifeMetricsGallery(root: HTMLElement | null): void {
 
   root.className = 'alife-gallery';
   root.innerHTML =
-    `<h2>ALife survey metric visuals</h2>` +
-    `<p class="lead">Explore the <a data-capability-profile>25-axis research profile: measures, scope and evidence</a>, alongside eleven nine-axis survey charts. The new profile reports evidence categories without invented numerical ratings; click a tab, the hero, or any thumbnail below to focus. Drag to pan, wheel or +/- to zoom.</p>` +
-    `<div class="alife-hero" role="tabpanel"><div class="alife-toolbar">` +
+    `<h3>CQM-25 evidence map</h3>` +
+    `<p class="lead"><a data-capability-profile>Read the canonical 25-axis framework, measures and evidence</a>. The map shows review states, not numerical capability scores. Historical nine-axis charts remain available below with their original rubric. Drag to pan, or use the zoom controls; the full reader reflows every axis for small screens.</p>` +
+    `<p class="alife-context" role="status" aria-live="polite"></p>` +
+    `<div class="alife-hero" role="tabpanel" tabindex="0"><div class="alife-toolbar">` +
     `<button type="button" class="alife-tool" data-zoom-in title="Zoom in">+</button>` +
     `<button type="button" class="alife-tool" data-zoom-out title="Zoom out">−</button>` +
     `<button type="button" class="alife-tool" data-fit title="Fit">Fit</button>` +
-    `</div><div class="alife-stage"></div>` +
-    `<div class="alife-caption"></div><span class="alife-hint">Click hero · next chart</span></div>` +
-    `<div class="alife-tabs" role="tablist" aria-label="ALife metric charts"></div>` +
-    `<div class="alife-grid" aria-label="All metric charts"></div>`;
+    `</div><div class="alife-stage"></div></div>` +
+    `<div class="alife-caption"></div><span class="alife-hint">Click hero · next chart</span>` +
+    `<div class="alife-tabs" role="tablist" aria-label="Canonical CQM-25 and historical nine-axis charts"></div>` +
+    `<details class="alife-history"><summary>Historical nine-axis chart archive — 11 comparisons</summary>` +
+    `<p class="alife-context">These charts preserve the former nine-axis, 155-system comparison. Its scores and rankings do not describe CQM-25 and are not converted into 25-axis peer ratings.</p>` +
+    `<div class="alife-grid" aria-label="Historical nine-axis comparison charts"></div></details>`;
 
   const profileLink = root.querySelector<HTMLAnchorElement>('[data-capability-profile]');
   if (profileLink) profileLink.href = `${siteBasePrefix()}/docs/alife/cqm-capability-profile.html`;
@@ -453,10 +475,13 @@ export function mountAlifeMetricsGallery(root: HTMLElement | null): void {
   const heroStage = root.querySelector('.alife-stage') as HTMLElement;
   const caption = root.querySelector('.alife-caption') as HTMLElement;
   const hero = root.querySelector('.alife-hero') as HTMLElement;
+  const context = root.querySelector('.alife-context') as HTMLElement;
+  const history = root.querySelector('.alife-history') as HTMLDetailsElement;
+  hero.id = `${root.id || 'alife-metrics'}-panel`;
 
   let idx = 0;
   const thumbViews: ZoomView[] = [];
-  const cardEls: HTMLElement[] = [];
+  const cardEls = new Map<number, HTMLElement>();
 
   const heroView = mountZoomView(
     heroStage,
@@ -470,6 +495,12 @@ export function mountAlifeMetricsGallery(root: HTMLElement | null): void {
   const show = (i: number): void => {
     idx = ((i % ALIFE_METRICS.length) + ALIFE_METRICS.length) % ALIFE_METRICS.length;
     const m = ALIFE_METRICS[idx]!;
+    hero.dataset.profile = m.context;
+    hero.setAttribute('aria-labelledby', `${hero.id}-tab-${m.id}`);
+    context.textContent =
+      m.context === 'canonical'
+        ? 'Current project standard: CQM-25. Evidence categories remain separate from capability and scientific validation.'
+        : 'Historical nine-axis comparison: preserved scores and rankings, separate from the canonical CQM-25 framework.';
     void loadMetricImg(heroView.img, m.file, () => {
       heroView.img.classList.add('error');
       const err = heroStage.querySelector('.alife-loaderr') as HTMLElement | null;
@@ -479,10 +510,11 @@ export function mountAlifeMetricsGallery(root: HTMLElement | null): void {
       heroView.fit();
     });
     heroView.img.alt = m.alt;
-    caption.textContent = m.label;
+    caption.textContent = m.context === 'canonical' ? m.label : `Historical · ${m.label}`;
     tabs.querySelectorAll('.alife-tab').forEach((el, j) => {
       el.classList.toggle('active', j === idx);
       el.setAttribute('aria-selected', j === idx ? 'true' : 'false');
+      (el as HTMLButtonElement).tabIndex = j === idx ? 0 : -1;
     });
     cardEls.forEach((el, j) => el.classList.toggle('active', j === idx));
   };
@@ -491,11 +523,31 @@ export function mountAlifeMetricsGallery(root: HTMLElement | null): void {
     const tab = document.createElement('button');
     tab.type = 'button';
     tab.className = 'alife-tab' + (i === 0 ? ' active' : '');
-    tab.textContent = m.label;
+    tab.textContent = m.context === 'canonical' ? m.label : `Historical · ${m.label}`;
+    tab.dataset.context = m.context;
+    tab.id = `${hero.id}-tab-${m.id}`;
+    tab.setAttribute('aria-controls', hero.id);
     tab.setAttribute('role', 'tab');
     tab.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
     tab.addEventListener('click', () => show(i));
+    tab.addEventListener('keydown', (event) => {
+      const next =
+        event.key === 'Home'
+          ? 0
+          : event.key === 'End'
+            ? ALIFE_METRICS.length - 1
+            : event.key === 'ArrowRight'
+              ? i + 1
+              : event.key === 'ArrowLeft'
+                ? i - 1
+                : null;
+      if (next === null) return;
+      event.preventDefault();
+      show(next);
+      (tabs.querySelectorAll('.alife-tab')[idx] as HTMLButtonElement | undefined)?.focus();
+    });
     tabs.appendChild(tab);
+    if (m.context === 'canonical') return;
 
     const card = document.createElement('article');
     card.className = 'alife-card' + (i === 0 ? ' active' : '');
@@ -517,10 +569,13 @@ export function mountAlifeMetricsGallery(root: HTMLElement | null): void {
     tv.img.alt = m.alt;
     wireToolbar(card, '.alife-thumb-tool', tv);
     thumbViews.push(tv);
-    cardEls.push(card);
+    cardEls.set(i, card);
     grid.appendChild(card);
   });
 
+  history.addEventListener('toggle', () => {
+    if (history.open) for (const view of thumbViews) scheduleZoomFit(view);
+  });
   show(0);
   window.addEventListener(
     'resize',

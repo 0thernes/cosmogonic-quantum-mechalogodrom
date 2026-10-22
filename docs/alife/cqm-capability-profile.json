@@ -1,11 +1,17 @@
 {
   "schemaVersion": 1,
-  "title": "CQM-25: digital-life capability research profile",
+  "frameworkId": "CQM-25",
+  "frameworkVersion": "1.0.0",
+  "authority": "project",
+  "status": "canonical",
+  "adoptedAt": "2026-10-22",
+  "title": "CQM-25: canonical project capability standard",
   "reviewedAt": "2026-10-21",
   "sourceCommit": "339c6daa8cdcaf27e4e6dcce3b93bdba39980bf9",
   "scope": "A research-informed profile for artificial life, embodied synthetic cognition and procedural morphogenesis, spanning the organization of one being, adaptive behavior, consciousness-related mechanisms and the engineering of inspectable worlds.",
   "legacyVisualReview": "The existing visual-scale rating remains 4.0 (rich visuals). A single complex being qualifies: Xylos exposes neural activity through deforming membranes and a visible graph, while apex forms and populations add other scales. Population capacity, delivered frame time and individual visual expressiveness are distinct measurements. The rubric's 5.0 anchor, iconic spectacle, has no independent calibration that justifies a numerical uplift in this review.",
   "evaluationProtocol": [
+    "Feature plans and capability claims identify affected stable CQM-25 axis IDs and their evidence requirements. Taxonomy changes require an explicit framework version and contract review; evidence updates preserve axis identity and pinned provenance.",
     "Declare the unit of analysis, entity boundary, intended modeling fidelity and applicable axes before evaluation. Treat individual, population and world measurements separately. N/A needs a scope reason; missing or failed evidence cannot be relabeled N/A.",
     "Freeze the implementation, task generator, development and held-out distributions, training exposure, horizon, hardware and resource budget. Preregister primary metrics, meaningful effect sizes, failure conditions and stopping rules.",
     "Use controls appropriate to the claim: random/fixed policy, frozen learning, interrupted recurrence, disconnected broadcast, replayed environment or matched sham intervention. Match compute and other confounds where feasible.",
@@ -19,12 +25,13 @@
     "Reuse relevant existing evaluation resources such as Avida, MODES, EvoGym, Animal-AI, Melting Pot and Brain-Score with their own protocols. This profile organizes several research goals; it is not the first ALife benchmark or a universal standard."
   ],
   "limitations": [
-    "This initial edition is a source and repository review with proposed experiments. Its 25 acceptance protocols have not been executed as a unified benchmark; every numeric capability score is null.",
+    "Project adoption on 2026-10-22 establishes CQM-25 as the canonical framework. It does not rerun the 2026-10-21 evidence review: its 25 acceptance protocols remain proposed and unexecuted as a unified benchmark; every numeric capability score is null.",
     "The selected axes and grouping are author-defined, correlated and not exhaustive. Primary literature motivates the constructs; it does not establish consensus on this exact profile or equal axis weights.",
     "Implementation and bounded-test labels refer to cited repository mechanisms and narrow tests. Failed V4 and Phase-B advancement criteria remain visible; mechanism presence does not imply generalization.",
     "Life-like organization, cognition, subjective consciousness and valenced sentience are different claims. Theory-linked mechanisms and reward or valence variables do not establish experience.",
     "The profile supplements the original Butlin indicator mapping; it does not replace those 14 indicators or claim their criteria are all met. Human neuroscience and animal behavior evidence require justified transfer to artificial systems.",
-    "Engineering breadth, substrate count, photorealism, visual beauty, number of beings and parameter count contribute no points to mental-capability claims. No overall life, consciousness, sentience, AGI or SI score is calculated."
+    "Engineering breadth, substrate count, photorealism, visual beauty, number of beings and parameter count contribute no points to mental-capability claims. No overall life, consciousness, sentience, AGI or SI score is calculated.",
+    "The separate provisional author estimates use an uncalibrated heuristic implementation rubric. Their imported rationales await independent review and are not new protocol results; they never populate canonical capability scores or produce aggregate verdicts."
   ],
   "sources": [
     {

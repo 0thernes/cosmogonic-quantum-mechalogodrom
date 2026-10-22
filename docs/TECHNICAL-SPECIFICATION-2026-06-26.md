@@ -2,6 +2,22 @@
 
 # Cosmogonic Quantum Mechalogodrom — Technical Specification
 
+**[CQM-25 canonical capability framework](./alife/cqm-capability-profile.html)** — version
+**1.0.0**, adopted **2026-10-22**. The [source data and protocols](./alife/cqm-capability-profile.json)
+own the 25 stable axis IDs. Feature plans and capability assessments must name affected IDs,
+subject/scope, measures, controls, falsifiers and pinned source/run provenance, including failures.
+The [adoption contract](./MODULE-CONTRACTS-2026-06-26.md) governs taxonomy changes and publication.
+Evidence states describe implementation and bounded tests; canonical `assessment.score` fields remain
+null until calibrated. A single organism is eligible; ecology is one domain, and physical models are
+judged against declared dynamics. CQM-25 is the project standard, not an externally validated
+scientific certification. The separate 14 Butlin indicators remain distinct. The historical
+nine-axis 155-system comparison cannot supply CQM-25 scores, ranks or an aggregate verdict.
+
+[Provisional author estimates](./alife/cqm-capability-profile.html#provisional-estimates)
+are a separate, explicitly labeled layer with their own [rubric and source data](./alife/cqm-capability-estimates.json).
+They retain source provenance and limitations, confer no measured capability, and do not populate
+canonical `assessment.score` fields. No overall or domain mean, ranking or aggregate verdict is published.
+
 > **Current intelligence contract (2026-07-11):** `TsotchkeOrganismIntelligence` is one shared,
 > bounded-cadence field feeding living-system consumers through a stable signal object. The public
 > census contains 23 repositories; the causal/runtime ledger intentionally contains 22 entries
@@ -15,12 +31,11 @@
 > numeric capability change, consciousness, or sentience uplift.
 > [V4 receipt and limits.](./reports/ORGANISM-INTELLIGENCE-V4-RESULTS-2026-07-11.md)
 >
-> **A-Life / multi-loop dome (2026-07-17):** code-grounded profile
-> `[4.0, 2.0, 3.4, 3.8, 4.5, 4.6, 4.4, 3.5, 4.0]` · breadth **3.8** · **#1/155**
-> (`CODE_GROUNDED`). Multi-loop ecology (flora · waste · trophic · refuge · titan market · weather);
-> collective fields (stigmergy · noosphere · morphic · dark energy); NHI caste ≤1000; Big Tree
-> sanctuary/portal governance; connectome topology without physical tethers; wilderness one-way
-> non-writeback. indicatorOnly consciousness.
+> **Implemented world coupling:** flora, waste, trophic interactions, sanctuary refuge,
+> titan markets and weather form declared feedback paths. Collective fields and NHI controllers
+> are separate mechanisms; wilderness is one-way non-writeback. Capability claims use affected
+> CQM-25 axis IDs and their measures/controls/falsifiers. The historical nine-axis rubric is not
+> the current capability specification, and implementation alone does not establish consciousness.
 
 > A complete, measured technical specification of a browser-native, deterministic, 50,000-agent
 > WebGL cosmic-ecosystem simulation. Every figure here was measured from the repository, not
@@ -28,10 +43,10 @@
 > `/spec` · **Architecture docs:** `/docs`
 
 **Version:** v0.23.0 · **Generated:** 2026-06-26 · **License:** Non-commercial research & play (© 0thernes; study / run / modify / share non-commercially, keep attribution, no for-profit use).
-**Gate:** 3,422 tests · 84.64% line / 82.21% func (canonical synced via verify-receipts 2026-06-26, receipts law enforced).
+**Gate:** 3,436 tests · 84.64% line / 82.21% func (canonical synced via verify-receipts 2026-06-26, receipts law enforced).
 
-**Standing / xeno-A-life position (2026-07-12):** readable synthesis of engineering, comparative matrix, and apex-mind design (SuperCreature ≈1.4k-param multi-faculty spine + online heads; SuperMind ~10k composite; Apex/Mechalogodrom designed scaling roadmaps)—**xeno scaffolds, not OpenWorm competitors, not sentience claims.** See [COMPREHENSIVE-STANDING report](./reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.md) · [HTML](./reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.html).
-**NHSI scorecard:** [NHSI-PROGRESS-DASHBOARD-2026-06-26.md](./NHSI-PROGRESS-DASHBOARD-2026-06-26.md) · **Tsotchke depth:** [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md)
+**Historical standing / xeno-A-life position (2026-07-12):** readable synthesis of engineering, comparative matrix, and apex-mind design (SuperCreature ≈1.4k-param multi-faculty spine + online heads; SuperMind ~10k composite; Apex/Mechalogodrom designed scaling roadmaps)—**xeno scaffolds, not OpenWorm competitors, not sentience claims.** See [COMPREHENSIVE-STANDING report](./reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.md) · [HTML](./reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.html).
+**Mechanism and separate Butlin indicator status:** [NHSI-PROGRESS-DASHBOARD-2026-06-26.md](./NHSI-PROGRESS-DASHBOARD-2026-06-26.md) · **Tsotchke depth:** [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md)
 
 **Tsotchke depth ledger:** The public census contains 23 repositories. The causal/runtime ledger
 intentionally contains 22 entries: `8 deep`, `7 wired`, `2 harvest`, `4 fenced`, and `1 meta`, with
@@ -70,7 +85,7 @@ Snapshot: **2026-07-14**. (Coverage + passing-test counts ARE SSOT-synced — se
 | Tests (`tests/`)                        | 63,495 lines · 367 files                                              |
 | Native C++ engine (`native/`, ADR-0007) | 1,835 lines · 12 files                                                |
 | Test : source ratio                     | 0.48 → **84.64% line / 82.21% func** coverage (`bun test --coverage`) |
-| Passing tests                           | **3,422** (exact tracked suite; 0 failing)                            |
+| Passing tests                           | **3,436** (exact tracked suite; 0 failing)                            |
 
 (Excludes the vendored `node_modules/`, generated `dist/` · `coverage/` · `native/build/`, and nested
 `.claude/worktrees/` checkouts.)
@@ -420,7 +435,7 @@ Complexity classes are catalogued in [COMPLEXITY-2026-06-26.md](COMPLEXITY-2026-
 
 The single gate — `bun run check` — must pass before every commit:
 
-`prettier --check` → `tsc --noEmit` (strict) → `oxlint` → `bun test` (**3,422 tests, 0 fail**) →
+`prettier --check` → `tsc --noEmit` (strict) → `oxlint` → `bun test` (**3,436 tests, 0 fail**) →
 `bun scripts/build.ts`. Receipt regression guard: coverage must stay within the `verify:receipts` tolerance from the canonical **84.64% line / 82.21% func** floor; local Windows receipt runs may measure higher.
 Three governing "master" personas (`masters/*.xml`) encode the discipline: **the Executor** (finish
 everything, full gates), **the Architect** (contracts before code, exclusive ownership), **the
@@ -461,7 +476,7 @@ phase-b-predictor-development 527 · organism-intelligence-v4-benchmark 510` ·
 This is a ~131.6k-line app-source (+ optional C++/Jolt native engine) browser-native simulation that
 renders **up to 50,000 agents** and targets 10,000 at 60 fps on supported laptop iGPUs with zero AI
 accelerator. The final headless SwiftShader smoke establishes liveness, not that native-GPU target. It is
-**bit-reproducible from one seed**, ships through a **full CI/CD gate** (3,422 tests, 84.64% line / 82.21% func coverage),
+**bit-reproducible from one seed**, ships through a **full CI/CD gate** (3,436 tests, 84.64% line / 82.21% func coverage),
 and whose entire emergent intelligence weighs **≈ 14 MB — 1/50,000th of GPT-3** at the mega ceiling. It
 demonstrates that depth comes from **architecture,
 determinism, and engineering discipline**, not parameter count or hardware.

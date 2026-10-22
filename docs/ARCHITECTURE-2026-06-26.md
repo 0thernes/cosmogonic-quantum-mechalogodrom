@@ -2,6 +2,22 @@
 
 # Architecture
 
+**[CQM-25 canonical capability framework](./alife/cqm-capability-profile.html)** — version
+**1.0.0**, adopted **2026-10-22**. The [source data and protocols](./alife/cqm-capability-profile.json)
+own the 25 stable axis IDs. Feature plans and capability assessments must name affected IDs,
+subject/scope, measures, controls, falsifiers and pinned source/run provenance, including failures.
+The [adoption contract](./MODULE-CONTRACTS-2026-06-26.md) governs taxonomy changes and publication.
+Evidence states describe implementation and bounded tests; canonical `assessment.score` fields remain
+null until calibrated. A single organism is eligible; ecology is one domain, and physical models are
+judged against declared dynamics. CQM-25 is the project standard, not an externally validated
+scientific certification. The separate 14 Butlin indicators remain distinct. The historical
+nine-axis 155-system comparison cannot supply CQM-25 scores, ranks or an aggregate verdict.
+
+[Provisional author estimates](./alife/cqm-capability-profile.html#provisional-estimates)
+are a separate, explicitly labeled layer with their own [rubric and source data](./alife/cqm-capability-estimates.json).
+They retain source provenance and limitations, confer no measured capability, and do not populate
+canonical `assessment.score` fields. No overall or domain mean, ranking or aggregate verdict is published.
+
 > **Current operational-intelligence addendum (2026-07-10).** A single bounded-cadence
 > `TsotchkeOrganismIntelligence` field now converts the integrated corpus channels into a stable signal
 > consumed by ordinary entities and the wider living-system paths. The public census contains 23
@@ -16,15 +32,12 @@
 > [V4 result](./reports/ORGANISM-INTELLIGENCE-V4-RESULTS-2026-07-11.md) and preserved
 > [V3 predecessor](./reports/2026-07-10-OPERATIONAL-ORGANISM-INTELLIGENCE-CAUSAL-AUDIT.md).
 >
-> **A-Life / dome ecology (2026-07-17):** code-grounded 9-axis profile
-> `[4.0, 2.0, 3.4, 3.8, 4.5, 4.6, 4.4, 3.5, 4.0]` · breadth **3.8** · **#1/155**
-> (`CODE_GROUNDED` + gates GATE-REPRO-SELECT / GATE-XENO-TROPHIC / GATE-DOME-REFUGE). The composition
-> root is a multi-loop food web (flora → graze → waste → fertilizer → regrow; xenomimic trophic;
-> titan harvest + dual market; weather; Big Tree sanctuary refuge). **Also live:** stigmergy +
-> noosphere + morphic + dark-energy collective fields; NHI caste (GOAP + gene); portal/sanctuary
-> governance; connectome topology-only (no physical twin cords); wilderness camera-chunk population
-> that **never writes back** to core (ADR 0010). Ecology/morph/visual scores are above survey mean
-> but refuse specialist 5.0 anchors. indicatorOnly consciousness forever.
+> **Implemented world coupling:** the composition root connects flora, grazing, waste,
+> fertilizer, trophic interactions, titan harvest/markets, weather and Big Tree sanctuary refuge.
+> Collective fields, NHI control and portal governance are additional mechanisms; wilderness
+> remains one-way non-writeback (ADR 0010). Assess these under the affected CQM-25 axis IDs,
+> including `environmental_coupling`, without promoting implementation breadth to validated
+> ecology, cognition or consciousness. The former nine-axis scores are historical only.
 
 How the Cosmogonic Quantum Mechalogodrom is wired. The binding per-module API
 spec lives in [MODULE-CONTRACTS-2026-06-26.md](./MODULE-CONTRACTS-2026-06-26.md); this document is

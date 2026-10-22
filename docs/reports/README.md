@@ -2,17 +2,30 @@
 
 # Reports
 
+**Current capability authority:** [CQM-25](../alife/cqm-capability-profile.html) version
+**1.0.0**, adopted **2026-10-22**, is the canonical project framework.
+[Stable axis IDs, measures, controls, falsifiers and provenance](../alife/cqm-capability-profile.json)
+govern feature/capability assessments under the [adoption contract](../MODULE-CONTRACTS-2026-06-26.md).
+Canonical `assessment.score` fields remain null until calibrated; evidence states are not scientific
+certification. The separate 14 Butlin indicators retain their own scope. The nine-axis
+155-system matrix and derived ranks are historical, secondary comparisons, with no CQM-25 score transfer.
+
+[Provisional author estimates](../alife/cqm-capability-profile.html#provisional-estimates)
+are a separate, explicitly labeled layer with their own [rubric and source data](../alife/cqm-capability-estimates.json).
+They retain source provenance and limitations, confer no measured capability, and do not populate
+canonical `assessment.score` fields. No overall or domain mean, ranking or aggregate verdict is published.
+
 Technical reports and audits for Cosmogonic Quantum Mechalogodrom. Dated filenames (`2026-*`) are
 **historical worldline snapshots** when present — they preserve evidence from their authoring pass.
 **Current published** gate receipts: [VERIFICATION-ANALYTICAL-DATA.md](../VERIFICATION-ANALYTICAL-DATA.md) §1 ·
-`scripts/canonical-receipts.ts` (v0.23.0 · **3,422-test floor** · **84.64 % / 82.21 %** coverage).
+`scripts/canonical-receipts.ts` (v0.23.0 · **3,436-test floor** · **84.64 % / 82.21 %** coverage).
 Latest final-tree Windows receipt: **3,297 completed cases, zero failures, 3,589,864 expect() calls,
 93.60% line coverage, and 91.61% function coverage across 366 test files**. The lower portable floor
 remains the cross-platform public guarantee; `scripts/canonical-receipts.ts` is the live authority.
 
 The batch-26 adversarial repair pass made the flora sampler bilinear and sealed chemotaxis against
 the real cell-quantized field, corrected forager final-position telemetry, and closed root-pathspec
-plus cancellation gaps in the read-only AI sandbox. These fixes preserve the current code-grounded
+plus cancellation gaps in the read-only AI sandbox. These fixes preserve the retained historical nine-axis
 A-Life vector and do not add organism-intelligence, consciousness, or sentience uplift.
 
 The current Dome ecology continuation implements a canonical pooled Big Tree food path, a real
@@ -24,7 +37,7 @@ two-meal competence lead, subject to a 25-second per-learner simulation-time coo
 all-or-nothing deterministic checks. Neither establishes cross-species learning, general intelligence,
 consciousness, or sentience. The fauna social matcher uses O(A) adapter reads followed by bounded numeric
 O(A²), with A ≤ 72, and food matrix changes upload one 16-float instance range each. Focused automated
-tests, the measured merged 3,422-test canonical floor, a 117-artifact v0.23.0 production build, and one atomic
+tests, the measured merged 3,436-test canonical floor, a 117-artifact v0.23.0 production build, and one atomic
 phone-plus-desktop natural-rAF/canvas-isolated smoke are green. Prior behavior baseline `0ce2f7eb` also
 passed CI, CodeQL, post-build smoke, exact-SHA Pages deployment, and an independent public-URL browser
 probe with HTTP 200 main/worker assets, a booted canvas, and zero console/page/network failures. The final
@@ -33,13 +46,18 @@ commit exists.
 
 ## Reports
 
+- [CQM-25 canonical capability framework](../alife/cqm-capability-profile.html) — the primary
+  capability reference, with [specification](../alife/cqm-capability-profile.md),
+  [source data/protocols](../alife/cqm-capability-profile.json) and
+  [25-axis evidence map](./assets/alife-capability-profile-25.svg). A single entity is eligible;
+  failed and unassessed results stay visible. No aggregate capability verdict is calculated.
 - [150-entry evidence catalog](../alife/README.md) — corrected PDF, searchable HTML, CSV, workbook,
   evidence JSON and downloadable bundle; 132 primary-source reviews and 18 partial reviews.
   This source-review snapshot uses different inclusion criteria from the 155-entry numerical rubric.
   Its original 129-row input and pending findings are historical; the catalog README records integration.
 
-- [assets/alife-landscape-index.html](./assets/alife-landscape-index.html) — the current A-Life
-  competitive landscape index: 155 distinct systems (154 peers + Cosmogonic) ranked by breadth, with
+- [assets/alife-landscape-index.html](./assets/alife-landscape-index.html) — the historical nine-axis A-Life
+  comparison index: 155 named entries (154 peers + Cosmogonic) ranked by breadth, with
   the nine-axis rubric, declared lineage families, integrity checks and every row's source and basis.
   Generated from the comparison CSV by `scripts/gen-alife-landscape-report.ts` (never hand-edited);
   `bun run report:alife-landscape` prints the PDF.
@@ -49,10 +67,10 @@ commit exists.
   remaining deployment/manual-validation boundaries.
 - [2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.md](./2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.md)
   · [HTML](./2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.html) — combined standing
-  synthesis (engineering · historical 113-system matrix, a snapshot superseded by the current
-  155-system re-evaluation · SuperCreature/Apex/Mechalogodrom · xeno-A-life thesis ·
+  synthesis (engineering · historical 113-system matrix, a snapshot followed by the historical
+  155-system rubric · SuperCreature/Apex/Mechalogodrom · xeno-A-life thesis ·
   capital/ISAL outreach). Does **not** authorize consciousness/sentience uplift; preserves V4/Phase-B
-  failure-forward boundaries. Prefer this for –where do we stand?— over ad-hoc chat summaries.
+  failure-forward boundaries. Use CQM-25 for current capability assessment; this report supplies historical specialist context.
 - [PHASE-B-MECHANISM-DEVELOPMENT-V3-2026-07-11.md](./PHASE-B-MECHANISM-DEVELOPMENT-V3-2026-07-11.md)
   — executable temporal-identifiability and NHI closed-loop development result with exact checkpoints,
   structured production action outcomes, complete negative-result retention, compact JSON/CSV/SVG
@@ -71,14 +89,14 @@ commit exists.
   excluded-row inertness, numerical safety, three-process performance stability, and complete named
   consumer coverage pass; uniform random-action baseline separation and aggregate specificity fail. Includes the 23-public-repository
   census and 22-entry causal/runtime ledger (`homebrew-moonlab` is census-only deployment metadata), Eshkol/QRNG boundaries, the
-  code-grounded 9-axis profile, and the no-additional-uplift gate.
+  historical code-grounded nine-axis profile, and the no-additional-uplift gate.
 - [VERIFICATION-ANALYTICAL-DATA.md](../VERIFICATION-ANALYTICAL-DATA.md) — canonical current facts.
 - [CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md](../CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md)
-  — active 22-report master synthesis and current publication-facing truth pass.
+  — retained 22-report specialist synthesis; CQM-25 governs current capability assessments.
 - [CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md](../CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md)
   — active file-trust ledger for stale claims, omitted handles, and public-page gaps.
 - [CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.html](../CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.html)
-  — condensed browser companion for the current master; not a full Markdown mirror.
+  — condensed browser companion for the retained specialist synthesis; not a full Markdown mirror.
 - [CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.html](../CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.html)
   — browser companion for the current file-trust ledger; Markdown preserved verbatim.
 - [2026-07-01-25-POINT-SCRUTINY-SCORECARD.md](./2026-07-01-25-POINT-SCRUTINY-SCORECARD.md) — 25-point
@@ -111,4 +129,4 @@ commit exists.
 ## Rule
 
 Do not treat old receipt numbers inside dated reports as current claims. Living truth is always
-VERIFICATION §1. No forked copies, no archives folder.
+VERIFICATION §1 for receipts and CQM-25 for capability authority. No forked copies, no archives folder.

@@ -2,20 +2,46 @@
 
 # Module Contracts
 
-## CQM-25 capability research profile
+## CQM-25 canonical capability standard (binding)
 
-`docs/alife/cqm-capability-profile.json` owns the proposed 25-axis operational framework,
+`docs/alife/cqm-capability-profile.json` owns the canonical CQM-25 operational framework,
 primary-source references, a repository evidence inventory and the explicit evaluation protocol.
 `scripts/gen-capability-profile.ts` validates it and derives the public HTML, Markdown and SVG.
 The SVG is embedded in the existing ALife gallery; the HTML provides readable axis definitions,
 scope filters, evidence links and acceptance/falsification procedures. Generation is deterministic,
 offline and independent of simulation state. Its cost is bounded by 25 axes and their references.
 
-The existing nine-axis, 155-system peer matrix retains its definitions and scores. No mapping
+CQM-25 version 1.0.0 is the binding project capability framework, adopted 2026-10-22.
+Its metadata declares project authority and canonical status; its 25 stable axis identifiers,
+domains, kinds and subject scopes form the versioned taxonomy. The generator rejects missing,
+substituted or reassigned constructs instead of silently accepting another set of 25 names.
+Changing that taxonomy requires an explicit framework version and contract review. Evidence
+updates retain the applicable axis IDs, pinned provenance, controls, falsifiers and negative results.
+Feature plans and capability claims identify affected axes and their evidence requirements;
+an implementation or unit-test pass alone does not execute a scientific acceptance protocol.
+
+CQM-25 is the default profile in the README, Docs, Specs and interactive gallery. Primary
+navigation and introductory language identify it as the canonical standard. The former nine-axis
+profile and its derived rankings are explicitly labeled historical comparison material, kept in
+secondary/collapsible context for reproducibility. They cannot stand in for the current profile.
+Steering files, current architecture/verification documentation and in-app help follow this boundary.
+
+The historical nine-axis, 155-system peer matrix retains its definitions and scores. No mapping
 may infer 25 peer scores, combine the two denominators or claim a calibrated leaderboard. A
 single organism is an eligible subject. Ecology is one domain; physical models are assessed
 against their declared dynamics rather than compulsory Earth fidelity. Entity visual expression
 and population/delivery scale are separate measurements within the visual dimension.
+
+The separately owned `docs/alife/cqm-capability-estimates.json` may publish provisional author
+estimates on a declared heuristic 0-5 rubric, as explicitly requested by the owner. It identifies
+the canonical framework/version, original evidence reference, adoption-independent recording date,
+uncalibrated status and submitted rationale for all 25 matching axis IDs. The generator rejects
+missing/duplicate/unknown IDs, non-finite or out-of-range values, missing rubric anchors and
+misleading measurement/validation status. Imported rationales are proposals awaiting independent
+review, not new test receipts. Reader surfaces label these values separately from canonical
+assessments, link their rubric/data and publish no overall or domain capability mean. These
+estimates never populate canonical `assessment.score`, confer mental-status verdicts or transfer
+the historical nine-axis rankings. The canonical SVG continues to display evidence categories.
 
 Scientific capability, engineering properties and evidence strength are distinct. The initial
 25-axis inventory uses implemented/bounded-test/mixed/unassessed review states, with numeric
@@ -24,18 +50,18 @@ N/A requires a declared subject/scope reason. No average, consciousness percenta
 AGI or superintelligence verdict is derived from the axes. Literature informs the construct
 definitions; it does not endorse the 25-axis selection as a universal gold standard.
 
-| Failure                                                    | Required behavior                                                        |
-| ---------------------------------------------------------- | ------------------------------------------------------------------------ |
-| Missing/duplicate axis, malformed schema or unknown source | Generator rejects the input.                                             |
-| Unsafe source URL or repository path                       | Reject before generating links.                                          |
-| Numeric score in the uncalibrated initial edition          | Reject rather than publish an invented rating.                           |
-| Stale generated HTML/SVG/Markdown                          | Focused drift test and generated-artifact check fail.                    |
-| JavaScript unavailable                                     | All 25 axis cards and evidence remain readable.                          |
-| Filters find no axes                                       | Show an explicit empty state and preserve reset access.                  |
-| Narrow screen                                              | Reflow controls/cards; standalone radar text remains inside its viewBox. |
+| Failure                                                                | Required behavior                                                                          |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Missing/substituted axis, malformed schema or unknown source           | Generator rejects the input.                                                               |
+| Unsafe source URL or repository path                                   | Reject before generating links.                                                            |
+| Numeric canonical assessment.score in the uncalibrated initial edition | Reject canonical scores; separately labeled provisional author estimates remain permitted. |
+| Stale generated HTML/SVG/Markdown                                      | Focused drift test and generated-artifact check fail.                                      |
+| JavaScript unavailable                                                 | All 25 axis cards and evidence remain readable.                                            |
+| Filters find no axes                                                   | Show an explicit empty state and preserve reset access.                                    |
+| Narrow screen                                                          | Reflow controls/cards; standalone radar text remains inside its viewBox.                   |
 
 `tests/capability-profile.test.ts` owns schema, provenance, escaping, completeness and deterministic
-artifact checks. The radar generator additionally synchronizes the full inline SVG rather than
+artifact and canonical-publication checks. The historical radar generator additionally synchronizes the full inline SVG rather than
 only its polygons. Browser review verifies label bounds, filtering and mobile overflow. There is
 no simulation hot-path change or new runtime performance claim.
 
@@ -1731,7 +1757,7 @@ Copilot are constructed boot-stream-neutral and never write sim state, so the go
 
 ### V9 acceptance
 
-Full `bun run check` green: prettier → tsc strict → oxlint → 3422 tests (0 fail, 300-frame golden
+Full `bun run check` green: prettier → tsc strict → oxlint → 3436 tests (0 fail, 300-frame golden
 included) → build. The Copilot sandbox verified live (allow: `git log`, file reads; deny:
 path-escape, repository-root pathspecs, `git push`, `legacy/`, shell redirection).
 
@@ -1876,12 +1902,14 @@ The live composition root (`src/world.ts`) is a **multi-caste food web**, not a 
 | Weather climate                    | weather system                               | Wind/temp couple flora, entities, xeno agitation                       |
 | RD ground scars                    | `reaction-diffusion.ts`                      | Titan waste scars into Gray–Scott skin                                 |
 
-**A-Life honesty (binding):** Ecology axis is code-grounded **3.4/5** (above survey mean) because
+**Historical nine-axis comparison:** Ecology is recorded as **3.4/5** (above survey mean) because
 this multi-loop stack is real and gated — **not** because it is long-horizon multi-genome
 coevolution. Morphology is mind/evo/RD/soft-flora reactive (**3.8**), not Sims articulated
 body-plan evolution. Open-endedness is **2.0** (fixed-target fitness; the earlier 2.4 basis was retracted as overclaimed).
-Canonical vector: `CODE_GROUNDED` in `scripts/alife-codeground-sensitivity.ts` —
+Historical vector source: `CODE_GROUNDED` in `scripts/alife-codeground-sensitivity.ts` —
 `[4.0, 2.0, 3.4, 3.8, 4.5, 4.6, 4.4, 3.5, 4.0]` · breadth **3.8** · **#1/155**.
+These preserved survey values do not substitute for the binding CQM-25 standard above.
+New capability claims identify the applicable CQM-25 axes and their scoped evidence requirements.
 
 ## Canonical module ownership
 

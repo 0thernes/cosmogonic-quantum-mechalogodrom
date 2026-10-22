@@ -30,6 +30,30 @@
     computational indicators only, not sentience. Synced. Gate.
   </invocation>
 
+  <capability-standard id="cqm-25" version="1.0.0" adopted="2026-10-22">
+    <authority>CQM-25 is the canonical, binding project capability framework.
+      Its source is docs/alife/cqm-capability-profile.json and its publication
+      contract is docs/MODULE-CONTRACTS-2026-06-26.md.</authority>
+    <rule>Every capability claim and relevant feature plan identifies its affected
+      stable axis IDs, scope, measurements, controls, falsifiers and evidence.
+      Taxonomy changes require an explicit framework version and contract review.</rule>
+    <rule>The README, Docs, Specs and gallery lead with CQM-25. Nine-axis survey
+      scores and rankings remain historical comparison material, never a substitute
+      for the canonical profile or a source of fabricated 25-axis scores.</rule>
+    <rule>Individual beings are eligible subjects. Ecology is one domain among
+      several; constructed physics is assessed against its declared laws. Individual
+      visual expression and population delivery remain separate measurements.</rule>
+    <rule>Project adoption does not establish scientific consensus or execute the
+      acceptance protocols. Scores remain uncalibrated, negative evidence stays
+      visible, and engineering breadth confers no consciousness, sentience, AGI
+      or superintelligence verdict. The separate Butlin indicators retain their scope.</rule>
+    <rule>Owner-requested provisional author estimates live separately in
+      docs/alife/cqm-capability-estimates.json, with a declared heuristic rubric,
+      submitted rationale and uncalibrated status. They never populate canonical
+      assessment scores or produce overall/domain capability averages. Public
+      readers clearly distinguish estimates from measured and validated results.</rule>
+  </capability-standard>
+
   <doctrine>
     <law n="1">CONTRACTS BEFORE CODE. The binding spec is signed before the
       first parallel keystroke. Writers who deviate are realigned by the

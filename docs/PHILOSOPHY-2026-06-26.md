@@ -7,13 +7,26 @@ every system in this repository expresses._
 
 ## A-Life honesty (binding product posture)
 
-Maximalism with receipts. The dome is a real multi-caste interactive xeno-ecology (food, waste,
-predation, dual economies, multi-scale brains, mind-coupled morph, weather) at 10k-default scale.
-Internal survey breadth **#1/155 (3.80 code-grounded)** is a breadth/integration win — not Nature
-ranking, not Avida OEE, not Sims body-plan evo, not Polyworld long-horizon coevo. Consciousness
-scores are **indicatorOnly** (Butlin 8/14+6 partial; lab null gap ≈ 0; coupling ~0.27). Peer maturity
-**1.5/5**. Softest absolute axis: open-endedness **2.0**. Canonical vector lives only in
-`CODE_GROUNDED` — never hand-edit axis numbers in prose without the gate.
+[CQM-25](./alife/cqm-capability-profile.md), framework version 1.0.0, is the canonical
+project capability standard. Relevant capability claims and feature plans identify the affected
+stable axis IDs, declared subject scope, measurements, controls, falsifiers and pinned evidence.
+One being, a population and a constructed world are distinct eligible subjects. Ecology is one
+domain among several; physical consistency follows the declared model, without compulsory
+Earth-like fidelity. Individual visual expression is assessed separately from population delivery.
+
+Maximalism with receipts. Engineering breadth and visual expression contribute no consciousness,
+sentience, AGI or SI verdict. Current CQM-25 evidence categories remain separate from uncalibrated
+capability scores; adoption does not execute the proposed acceptance experiments or establish
+scientific consensus. The fourteen Butlin indicators retain their own definitions and evidence.
+Owner-requested [provisional author estimates](./alife/cqm-capability-estimates.json) use a separate
+declared heuristic rubric and retain their submitted rationale. They are uncalibrated proposals,
+not measured protocol outcomes; canonical assessment scores remain null and no aggregate is inferred.
+
+The historical nine-axis survey records breadth **#1/155 (3.80 code-grounded)**, peer maturity
+**1.5/5**, and open-endedness **2.0** under its internal rubric. Those figures remain reproducible
+comparison context, with the legacy vector owned by `CODE_GROUNDED`; they are not the canonical
+CQM-25 profile and must not be converted into 25-axis scores. Never hand-edit those historical
+axis numbers without updating their evidence and generation gate.
 
 ## Manifesto
 

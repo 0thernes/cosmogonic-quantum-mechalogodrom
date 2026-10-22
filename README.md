@@ -8,7 +8,7 @@
 [![License: Non-Commercial Research & Play](https://img.shields.io/badge/License-Non--Commercial%20Research%20%26%20Play-2ea043.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
-[![tests](https://img.shields.io/badge/tests-3422%20exact-brightgreen)](./tests)
+[![tests](https://img.shields.io/badge/tests-3436%20exact-brightgreen)](./tests)
 [![coverage](https://img.shields.io/badge/coverage-84.64%25%20line%20%C2%B7%2082.21%25%20func-success)](./docs/TECHNICAL-SPECIFICATION-2026-06-26.md)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION-2026-06-26.md)
 [![Tsotchke](https://img.shields.io/badge/Tsotchke-REAL__MIT__CORPUS-purple)](https://github.com/tsotchke)
@@ -34,11 +34,32 @@ interventions; Xylos also supports recorded-input replay. Individual minds, popu
 ecologies are complementary subjects of study. Consciousness and open-ended evolution remain
 research questions.
 
-**[Explore the CQM-25 research profile](./docs/alife/cqm-capability-profile.html)** — 25 operational dimensions spanning individual organization, adaptive cognition, consciousness-related mechanisms and engineering context, with primary sources, concrete experiments and explicit evidence limits. [Specification](./docs/alife/cqm-capability-profile.md) · [Data and protocols](./docs/alife/cqm-capability-profile.json). The nine-axis peer comparison remains a separate rubric.
+**[CQM-25 is the canonical capability framework](./docs/alife/cqm-capability-profile.html)** —
+version **1.0.0**, adopted **2026-10-22**. Its 25 dimensions cover individual organization, adaptive
+cognition, consciousness-related mechanisms and engineering context. Feature plans and capability
+assessments identify affected stable axis IDs, subject/scope, measures, controls, falsifiers and
+pinned source/run provenance, including negative results. [Specification](./docs/alife/cqm-capability-profile.md)
+· [Data and protocols](./docs/alife/cqm-capability-profile.json)
+· [Binding contract](./docs/MODULE-CONTRACTS-2026-06-26.md).
+
+![CQM-25 canonical capability profile — 25 dimensions with categorical evidence states and uncalibrated scores](./docs/reports/assets/alife-capability-profile-25.svg)
+
+The profile records evidence states; canonical `assessment.score` fields remain null until calibrated.
+
+[Provisional author estimates](./docs/alife/cqm-capability-profile.html#provisional-estimates)
+are a separate, explicitly labeled layer with their own [rubric and source data](./docs/alife/cqm-capability-estimates.json).
+They retain source provenance and limitations, confer no measured capability, and do not populate
+canonical `assessment.score` fields. No overall or domain mean, ranking or aggregate verdict is published.
+
+One complex organism is an eligible subject. Ecology is one domain, and physical models are
+assessed against their declared dynamics. The separate 14 Butlin indicators remain research
+evidence. Adoption does not certify consciousness, sentience, AGI or superintelligence. The
+former nine-axis peer rubric is retained below as historical comparison material, with no score
+or rank transfer to CQM-25.
 
 **The living docs (README, ARCHITECTURE, ERD/ERM/ERP, PHILOSOPHY, MODULE-CONTRACTS, SPECS, dashboard) and the in-app "Dome/World" docs are sync-managed where canonical tokens exist, then manually current-truth reviewed for claims that automation cannot prove.** A `docs-truth-law` CI gate fails the build on doc overclaims or encoding mangling, and the [NHSI progress dashboard](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md) plus [verification data](./docs/VERIFICATION-ANALYTICAL-DATA.md) are the canonical status surfaces.
 
-**Current public truth (2026-07-14):**
+**Current public truth:**
 
 - **[Xylos autonomous manifold](./docs/XYLOS.md):** open **XYLOS → Observe Xylos** to
   find the new alien organism. Its small sparse recurrent brain drives folded membranes,
@@ -48,8 +69,8 @@ research questions.
   certified indicators or consciousness.
 
 - Package/source version: **v0.23.0**.
-- Exact tracked-suite receipt: **3,422 tests / 0 fail**. Portable public coverage floor: **84.64% line / 82.21% func**.
-- **Standing & xeno-A-life position (readable synthesis):** [Comprehensive Standing Report (MD)](./docs/reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.md) · [HTML](./docs/reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.html) — engineering card, historical 113-system matrix (a point-in-time snapshot, superseded by the current 155-system re-evaluation), SuperCreature/SuperMind/Apex/Mechalogodrom deep dive, capital/ISAL path. Apex minds are **xeno multi-faculty scaffolds** (not OpenWorm bio-twins; not claimed sentience). Preserves V4/Phase-B failure-forward boundaries.
+- Exact tracked-suite receipt: **3,436 tests / 0 fail**. Portable public coverage floor: **84.64% line / 82.21% func**.
+- **Standing & xeno-A-life position (readable synthesis):** [Comprehensive Standing Report (MD)](./docs/reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.md) · [HTML](./docs/reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.html) — engineering card, historical 113-system matrix (a point-in-time snapshot, followed by the historical 155-system rubric; current capability authority is CQM-25), SuperCreature/SuperMind/Apex/Mechalogodrom deep dive, capital/ISAL path. Apex minds are **xeno multi-faculty scaffolds** (not OpenWorm bio-twins; not claimed sentience). Preserves V4/Phase-B failure-forward boundaries.
 - **Dome ecology verification:** [Xenomimic tether and Big Tree evidence report](./docs/reports/DOME-ECOLOGY-VERIFICATION-2026-07-14.md) — canonical food, five-second simulation-time respawn, sanctuary transitions, temporary visits, resident controllers, social cleanup, performance, browser evidence, and explicit limitations.
 
 <!-- cqm-sync:local-measurement:start -->
@@ -571,7 +592,7 @@ full gate with same-seed determinism preserved. The major arcs:
   ported primitive. The whole apex beat is now measured honestly: **~1.99 ms** per `SuperMind.think()`
   (range 1.41–5.62 ms) and **~9.77 ms** for the staggered 5-mind batch (~58% of a 60 fps frame, which is
   why 5 minds run staggered against 20 light echoes); the older sub-millisecond / `<2%` GOAL5 claim is
-  superseded until re-proven. **3,422 exact tracked tests · 0 fail (receipts enforced) · 84.64% line / 82.21% func portable coverage floor.**
+  superseded until re-proven. **3,436 exact tracked tests · 0 fail (receipts enforced) · 84.64% line / 82.21% func portable coverage floor.**
   <!-- cqm-sync:local-measurement:start -->
   **Latest Windows-local measurement: 3,297 tests / 0 fail / 3,589,864 assertions at `93.60%` line / `91.61%` func.**
   <!-- cqm-sync:local-measurement:end -->
@@ -775,7 +796,7 @@ Full detail in docs/.
 - [CONTRIBUTING.md](./CONTRIBUTING.md) · [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) ·
   [SECURITY.md](./SECURITY.md) · [CHANGELOG.md](./CHANGELOG.md)
 
-## A-Life evidence catalog and comparative analysis
+## A-Life evidence catalog and historical comparisons
 
 **[Browse the 150-entry source-reviewed catalog](./docs/alife/cqm-alife-catalog.html)** ·
 [PDF](./docs/alife/cqm-alife-audit.pdf) · [Workbook](./docs/alife/cqm-alife-catalog.xlsx) ·
@@ -785,9 +806,16 @@ primary-source reviews plus 18 partial reviews. Mechalogodrom has a separate mec
 [Scope, exclusions and snapshot provenance](./docs/alife/README.md) explain why this external-entry
 catalog differs from the 155-entry scoring matrix below.
 
-### Single-rater 155-entry comparison rubric
+<details data-legacy-comparison>
+<summary>Historical nine-axis comparison: 155-entry single-rater rubric</summary>
 
-A reproducible, **code-grounded** comparison of this repo against 154 well-known Artificial-Life /
+### Historical comparison retained for reproducibility
+
+This nine-axis matrix and its statistics are secondary historical comparison material. They are
+not the current CQM capability framework, cannot be mapped into 25 peer scores, and supply no
+CQM-25 ranking. Definitions, scores and generated artifacts remain available for reproduction.
+
+The retained **code-grounded** rubric compares this repo with 154 Artificial-Life /
 open-ended-evolution / digital-organism systems (Tierra, Avida, Polyworld, Framsticks, Karl Sims, Creatures,
 Lenia, ALIEN, ASAL, and 145 more from Barricelli's 1953 IAS runs and the historical CA canon to modern GPU ecosystems and LLM societies). Full report — **11 charts**, per-axis `file:line` code-grounding, and an
 adversarial novelty defense — consolidated through
@@ -802,7 +830,7 @@ evidence notes — is generated from the same CSV by
 [`gen-alife-landscape-report.ts`](./scripts/gen-alife-landscape-report.ts) inside `gen:alife`;
 `bun run report:alife-landscape` prints it to PDF.
 
-The 154 peer rows are single-rater literature judgments, including related variants and methods, each with a cited source and a verification note in the CSV. These are named entries, not independent project families. Numerical ranks and z-scores describe the chosen rubric and sample; they do not establish scientific superiority or statistical significance. Cosmogonic's current CSV row is the code-grounded vector
+The 154 peer rows are single-rater literature judgments, including related variants and methods, each with a cited source and a verification note in the CSV. These are named entries, not independent project families. Numerical ranks and z-scores describe the chosen rubric and sample; they do not establish scientific superiority or statistical significance. Cosmogonic's retained nine-axis CSV row is the code-grounded vector
 `[4.0, 2.0, 3.4, 3.8, 4.5, 4.6, 4.4, 3.5, 4.0]` (GATE-REPRO-SELECT + GATE-DOME-REFUGE);
 the table retains the earlier self-score only as a historical sensitivity baseline:
 
@@ -821,10 +849,10 @@ the table retains the earlier self-score only as a historical sensitivity baseli
   <img src="./docs/reports/assets/alife-pca.svg" alt="PCA of 155 A-Life systems — Cosmogonic is a high-breadth outlier on PC1" width="49%">
 </p>
 
-![Nine-axis capability radar — Cosmogonic vs survey mean vs nearest peer ALIEN](./docs/reports/assets/alife-radar-profile.svg)
+![Historical nine-axis comparison radar — Cosmogonic vs survey mean vs nearest peer ALIEN](./docs/reports/assets/alife-radar-profile.svg)
 
-**Honest reading.** Cosmogonic is the densest deterministic multi-caste interactive xeno-dome in this
-155-system survey: **60k edible flora**, waste→fertilizer ecology, multi-tier predation, dual economies +
+**Historical rubric interpretation.** The retained 155-system survey assigns Cosmogonic its highest
+breadth score for the combination of: **60k edible flora**, waste→fertilizer ecology, multi-tier predation, dual economies +
 game theory, multi-scale neural control (70p swarms → ~10k SuperMinds), mind-coupled morphing bodies, and
 indicator-only multi-theory consciousness machinery at 10k default scale (50k mega stress). Breadth
 **#1/155 (3.80)**. Strongest separation is substrate pluralism (4.6 solo), cognition (4.5), and
@@ -837,11 +865,13 @@ it is sole leader on exactly one axis of nine (substrate pluralism); on the othe
 holds the top, including consciousness-theory, where LIDA and CTM both score above it. **Peer maturity
 1.5/5**. Butlin **8/14 met + 6/14 partial** as computational indicators only — not sentience, not a QPU,
 not an LLM sim core. Tsotchke-derived math is classified by direct ports, adaptations, facades, and fenced
-provenance. The current causal receipt explicitly blocks additional numeric uplift: enhanced behavior did
+provenance. The cited predecessor causal receipt explicitly blocks additional numeric uplift: enhanced behavior did
 not separate from the uniform random-action baseline, and neither aggregate-channel mapping nor
 exploration-surrogate specificity was established. Fixed-family reversal adaptation, all 10 consumer-class
 counterfactuals, and all 30 counterbalanced performance batches passed their declared gates; those are
 fixed-family results, not independent validation.
+
+</details>
 
 ## License & legal
 

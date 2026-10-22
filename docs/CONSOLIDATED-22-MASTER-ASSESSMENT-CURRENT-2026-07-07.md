@@ -1,5 +1,20 @@
 # Consolidated 22-Report Master Assessment
 
+**Canonical capability authority:** [CQM-25](./alife/cqm-capability-profile.html) version
+**1.0.0**, adopted **2026-10-22**, is the binding project framework. Feature plans and capability
+assessments identify affected [stable axis IDs](./alife/cqm-capability-profile.json), subject/scope,
+measures, controls, falsifiers and pinned source/run provenance, including negative results.
+The [adoption contract](./MODULE-CONTRACTS-2026-06-26.md) governs taxonomy changes. Evidence states
+are not calibrated capability scores; canonical `assessment.score` fields remain null. The nine-axis 155-system comparisons,
+rankings and ratings below are historical specialist context and cannot transfer to CQM-25.
+The separate 14 Butlin indicators and causal experiment receipts retain their original scope;
+framework adoption does not certify consciousness, sentience, AGI or superintelligence.
+
+[Provisional author estimates](./alife/cqm-capability-profile.html#provisional-estimates)
+are a separate, explicitly labeled layer with their own [rubric and source data](./alife/cqm-capability-estimates.json).
+They retain source provenance and limitations, confer no measured capability, and do not populate
+canonical `assessment.score` fields. No overall or domain mean, ranking or aggregate verdict is published.
+
 Current pass: 2026-07-07  
 Workspace: `Z:\[Vibe Coded (AI)]\CLAUDECODE\Cosmogonic Quantum Mechalogodrom`  
 Companion audit: `docs/CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.md`  
@@ -20,7 +35,7 @@ Audit HTML: `docs/CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.html`
 > goal-only and corpus-conditioned effects, `6.1213%` reversal adaptation, `17/17` integrated-row reach,
 > `5/5` excluded-row inertness, numerical safety, three-process performance stability, and all named
 > consumer counterfactuals. Uniform random-action baseline separation and aggregate-mapping specificity
-> failed. Separate gate-backed A-Life mechanisms now set the current code-grounded vector to
+> failed. The retained historical nine-axis comparison records the code-grounded vector as
 > `[4.0, 2.0, 3.4, 3.8, 4.5, 4.6, 4.4, 3.5, 4.0]`: breadth `3.8`, rank `#1/155`, population z
 > `+3.236`, and peer z `+3.362`. The finite 26-form generator plus differential selection establishes
 > bounded active novelty against a frozen control, not unbounded open-ended evolution. V3 itself
@@ -33,9 +48,9 @@ Audit HTML: `docs/CONSOLIDATED-22-FILE-AUDIT-CURRENT-2026-07-07.html`
 > semantic causality and changes no A-Life, consciousness, or sentience score. See the
 > [V4 report](./reports/ORGANISM-INTELLIGENCE-V4-RESULTS-2026-07-11.md).
 
-## Current Truth Banner
+## Specialist assessment banner (historical body)
 
-This is the sober master. The right assessment is not "sentience proven" and not
+This retained specialist assessment informs CQM-25 evidence review. Its historical conclusion is not "sentience proven" and not
 "nothing is there." The accurate position is stronger and more interesting:
 
 Cosmogonic Quantum Mechalogodrom has a large, highly textured ALife and

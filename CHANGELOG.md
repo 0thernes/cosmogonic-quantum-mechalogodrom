@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Separate provisional author-estimate dataset and reader table for all 25 axes, with a declared heuristic rubric, imported rationale and explicit uncalibrated status; canonical assessment scores remain null.
+- Binding CQM-25 version 1.0.0 adoption across the three masters, agent steering and module contract; stable taxonomy and canonical-publication regression gates.
 - CQM-25 research profile: 25 operational dimensions, primary-source foundations, pinned repository evidence, explicit acceptance experiments and falsifiers. Searchable responsive HTML, JSON, Markdown and an evidence-map SVG supplement the historical nine-axis comparison without inventing capability ratings.
 - `.gitattributes`: root documentation HTML (`docs.html`, `specs.html`), the generated `bible.html`
   and gallery bundle, and the verbatim `legacy/` archive no longer count toward the GitHub Languages
@@ -37,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Promoted CQM-25 to the primary README, Docs, Specs, gallery and in-app capability profile. The nine-axis survey is retained as historical comparison context; its values are not converted into 25-axis ratings.
 - Fixed clipped radar labels with a readable wrapped layout and complete inline/standalone SVG synchronization. Clarified organism-level visual richness, preserved the existing 4.0 visual rating, and broadened the README, app overview and About metadata around embodied digital life and synthetic cognition.
 
 - A-Life receipts re-derived on the 155-system survey: breadth 3.8, #1/155, z +3.236 / +3.362,

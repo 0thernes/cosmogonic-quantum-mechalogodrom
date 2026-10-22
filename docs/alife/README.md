@@ -1,4 +1,31 @@
-# Artificial-life evidence catalog
+# CQM-25 capability framework and artificial-life evidence catalog
+
+## Canonical capability framework
+
+**[CQM-25](./cqm-capability-profile.html)** version **1.0.0**, adopted **2026-10-22**, is the
+canonical project capability framework. Its [JSON](./cqm-capability-profile.json) owns the 25
+stable axis IDs, definitions, source references, measures, controls, falsifiers and pinned
+repository evidence. The [readable specification](./cqm-capability-profile.md) and
+[25-axis evidence map](../reports/assets/alife-capability-profile-25.svg) are generated views.
+Feature plans and capability assessments must identify affected IDs, subject/scope and
+evidence requirements, retaining negative results. Taxonomy changes require framework version
+and contract review under [MODULE-CONTRACTS](../MODULE-CONTRACTS-2026-06-26.md).
+
+Evidence states are implemented, bounded-test, mixed or unassessed; they are not numerical
+capability ratings. Canonical `assessment.score` fields remain null until calibrated. A single organism is eligible; ecology
+is one domain, and physical models follow their declared dynamics. The separate 14 Butlin
+indicators retain their own assessment boundary. This project standard does not certify
+consciousness, sentience, AGI or superintelligence and is not a universal scientific standard.
+
+[Provisional author estimates](./cqm-capability-profile.html#provisional-estimates)
+are a separate, explicitly labeled layer with their own [rubric and source data](./cqm-capability-estimates.json).
+They retain source provenance and limitations, confer no measured capability, and do not populate
+canonical `assessment.score` fields. No overall or domain mean, ranking or aggregate verdict is published.
+
+The historical nine-axis 155-system matrix remains secondary comparison material. Its peer
+scores, ranks and denominator cannot be transferred to CQM-25 or to the separate catalog below.
+
+## Source-review catalog
 
 Start with the [searchable 150-entry catalog](./cqm-alife-catalog.html),
 [40-page PDF](./cqm-alife-audit.pdf), or [audit workbook](./cqm-alife-catalog.xlsx).
@@ -38,7 +65,7 @@ their counts, transfer old z-scores to the new population, or interpret either a
 DarwinBots and EcoLab are included here using identifiable project sources; uncertainty about exact
 inception dates is not treated as evidence that a project does not exist.
 
-The nine-axis scoring matrix is a single-rater literature rubric. Deterministic arithmetic does
+The historical nine-axis scoring matrix is a single-rater literature rubric, not the current capability framework. Deterministic arithmetic does
 not validate the ratings, equal axis weights, project independence or scientific superiority.
 The evidence catalog publishes no new aggregate winner. A controlled cross-system benchmark,
 independent scoring and long-horizon causal experiments remain open work.
@@ -53,7 +80,9 @@ The seven download artifacts form one reviewed snapshot and are preserved byte-f
 the ZIP members. Update them together when a new source-review edition is produced. The evidence JSON
 owns catalog IDs, names, categories, status labels and provenance for this snapshot; CSV/HTML/workbook
 are reader formats. `tests/alife-evidence-catalog.test.ts` guards identity/count/status and format
-consistency. Existing `gen:alife` continues to regenerate the separate numerical matrix reports.
+consistency. `scripts/gen-capability-profile.ts` separately generates the canonical CQM-25
+HTML, Markdown and SVG from its JSON. Existing `gen:alife` continues to regenerate the historical
+nine-axis numerical matrix reports without changing their retained scores.
 
 The local server serves these files through its existing traversal-checked `/docs/` route. Production
 builds copy this directory into `dist/docs/alife/`; GitHub Pages copies it into `site/docs/alife/`.

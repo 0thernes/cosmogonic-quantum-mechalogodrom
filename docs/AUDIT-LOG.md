@@ -11,6 +11,30 @@ changed and why.
 
 ---
 
+## 2026-10-22 (local date) — CQM-25 adopted as the canonical project capability standard
+
+- Adopted CQM-25 version 1.0.0 as binding project policy in the three masters, agent steering,
+  module contract and current capability documentation. Relevant feature plans and capability
+  claims identify affected stable axis IDs, scoped measurements, controls, falsifiers and evidence.
+- Promoted the 25-axis profile to the main README image, Docs/Specs capability section and default
+  gallery view. Preserved the historical nine-axis survey and derived plots as secondary comparison
+  material, including the preceding chart-bounds corrections from `9ac7eee0`.
+- Added explicit adoption metadata and guards for the complete taxonomy, including domains, kinds
+  and scopes. Project authority is distinct from research validation: original evidence provenance
+  is preserved, the unified acceptance protocols remain unexecuted and all numeric scores stay null.
+- Detected a concurrent proposal assigning numerical ratings to all 25 axes. Preserved the raw
+  proposal, then followed the owner's explicit request to include both the canonical evidence
+  framework and a separate provisional author-estimate layer. The latter declares a heuristic
+  rubric and imported rationale; it does not overwrite measured assessments or publish an overall
+  or domain capability average. The original evidence review date and source commit are retained.
+- Kept individual beings eligible, ecology one domain among several and constructed dynamics
+  evaluated against declared rules. Engineering dimensions and the historical survey confer no
+  consciousness, sentience, AGI or SI aggregate verdict; the Butlin mapping remains separate.
+- Publication checks cover canonical selection, historical disclosure, generated artifacts and
+  browser behavior. The full gate and GitHub publication receipt are reported in the handoff.
+
+---
+
 ## 2026-10-22 — Chart canvas audit after the radar repair
 
 - The radar repair in `44dc4450` fixed one figure. Rendering all eleven survey charts in Chromium and
