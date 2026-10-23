@@ -8,6 +8,12 @@ import { detectQuality } from './core/quality';
 import { Engine } from './core/engine';
 import { RenderGovernor } from './core/frame-governor';
 import { createWorkerPool } from './core/worker-pool';
+import {
+  SocialScanPool,
+  formatSocialCompute,
+  socialWorkerCount,
+  type SocialWorkerLike,
+} from './core/social-scan-pool';
 import { mountPerfHud } from './ui/perf-hud';
 import type { PerfHudWorldMetrics } from './ui/perf-hud';
 import { PerformanceMonitor } from './core/perf-monitor';
@@ -213,6 +219,7 @@ let engine: Engine | null = null;
 let world: World | null = null;
 let rafId = 0;
 let resizeHandler: (() => void) | null = null;
+let socialScanPool: SocialScanPool | null = null;
 
 function mainLifecycleActive(): boolean {
   return !mainLifecycle.signal.aborted;
@@ -386,6 +393,21 @@ async function boot(): Promise<void> {
     void world.configureBrowserCompute(computePreference);
   }
 
+  // Social-field worker cores (ADR 0019): every frame's organism neighbourhoods are answered from
+  // a frame-end snapshot while the GPU renders. A late or failed core is replaced by the identical
+  // main-thread answer, so this never changes the simulation — ?workers=0 still opts out.
+  const socialCores = socialWorkerCount(navigator.hardwareConcurrency);
+  if (typeof Worker !== 'undefined' && searchParams.get('workers') !== '0' && socialCores > 0) {
+    const url = new URL('./workers/social-field-worker.js', document.baseURI).href;
+    const socialPool = new SocialScanPool(
+      socialCores,
+      () => new Worker(url, { type: 'module' }) as unknown as SocialWorkerLike,
+    );
+    world.attachSocialScanner(socialPool);
+    socialScanPool = socialPool;
+    mainLifecycle.signal.addEventListener('abort', () => socialPool.dispose(), { once: true });
+  }
+
   resizeHandler = (): void => engine?.onResize();
   window.addEventListener('resize', resizeHandler, { signal: mainLifecycle.signal });
 
@@ -417,6 +439,7 @@ async function boot(): Promise<void> {
   // Render-only ⇒ determinism-safe; headless-safe (no-op without a DOM).
   const perfHud = mountPerfHud(quality.tier);
   const perfMonitor = new PerformanceMonitor(120, 1000);
+  let socialPrev = { offloaded: 0, local: 0 };
   let fpsEma = 60;
   let perfFrame = 0;
   let automaticFramesEnabled = true;
@@ -465,7 +488,16 @@ async function boot(): Promise<void> {
         hardwareCores: Math.max(1, navigator.hardwareConcurrency ?? 8),
         simFrame: 0,
       };
+      const social = world?.socialFieldStats() ?? { offloaded: 0, local: 0 };
+      const offloaded = social.offloaded - socialPrev.offloaded;
+      const recent = offloaded + (social.local - socialPrev.local);
+      socialPrev = { offloaded: social.offloaded, local: social.local };
       perfHud.update({
+        // Shown only while the social field runs (above 2,000 organisms).
+        social:
+          recent > 0
+            ? formatSocialCompute(socialScanPool?.stats().workers ?? 0, offloaded / recent)
+            : undefined,
         fps: fpsEma,
         level: governor.level,
         frameMs: governor.emaMs > 0 ? governor.emaMs : metrics.avgFrameTime,

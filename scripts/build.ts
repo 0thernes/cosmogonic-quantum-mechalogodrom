@@ -128,7 +128,7 @@ const docsResult = await Bun.build({
 // resolves `./workers/simulation-worker.js` against the served chunk origin, so the artifact must
 // sit at that stable path next to the chunks (dev: server.ts route; Pages: dist/ → site/ copy).
 const workerResult = await Bun.build({
-  entrypoints: ['./src/workers/simulation-worker.ts'],
+  entrypoints: ['./src/workers/simulation-worker.ts', './src/workers/social-field-worker.ts'],
   outdir: './dist/workers',
   target: 'browser',
   minify: true,
@@ -190,8 +190,13 @@ await cp('./dist/alife-gallery.js', './alife-gallery.js');
 
 // The worker pool dies silently (main-thread sync fallback) if this artifact goes missing, so a
 // partial build must fail loudly here rather than ship a workerless bundle.
-if (!(await Bun.file('./dist/workers/simulation-worker.js').exists())) {
-  throw new Error('build: workers/simulation-worker.js output is missing');
+for (const worker of [
+  './dist/workers/simulation-worker.js',
+  './dist/workers/social-field-worker.js',
+]) {
+  if (!(await Bun.file(worker).exists())) {
+    throw new Error(`build: ${worker.slice('./dist/'.length)} output is missing`);
+  }
 }
 
 // Copy public textures (pantheon equirect atlas + portal sampling) into dist for production.

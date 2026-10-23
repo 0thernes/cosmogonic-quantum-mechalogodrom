@@ -78,18 +78,24 @@ describe('Mechalogodrom — the fusion abomination', () => {
     m.dispose();
   });
 
-  test('every value + the warped geometry stays finite over a long run at max chaos', () => {
-    const scene = new THREE.Scene();
-    const m = new Mechalogodrom(scene);
-    const s = run(m, 40, 1); // long max-chaos run (kept under bun's 5s default timeout under load)
-    for (const v of [s.fusion, s.dimension, s.power, s.warp, s.variants] as const) {
-      expect(Number.isFinite(v)).toBe(true);
-    }
-    expect(s.power).toBeGreaterThan(0);
-    // `warp` finiteness proves the per-vertex displacement `1 + w·0.32·d` never blew up (d is a
-    // bounded sum of sines), so the shared mass geometry stays NaN-free under sustained warp.
-    m.dispose();
-  });
+  test(
+    'every value + the warped geometry stays finite over a long run at max chaos',
+    () => {
+      const scene = new THREE.Scene();
+      const m = new Mechalogodrom(scene);
+      const s = run(m, 40, 1); // long max-chaos run
+      for (const v of [s.fusion, s.dimension, s.power, s.warp, s.variants] as const) {
+        expect(Number.isFinite(v)).toBe(true);
+      }
+      expect(s.power).toBeGreaterThan(0);
+      // `warp` finiteness proves the per-vertex displacement `1 + w·0.32·d` never blew up (d is a
+      // bounded sum of sines), so the shared mass geometry stays NaN-free under sustained warp.
+      m.dispose();
+    },
+    // Same headroom as the determinism run below: it measured 5.5 s under coverage on a 4-vCPU
+    // runner, past bun's 5 s default, while its values stayed finite.
+    { timeout: 45_000 },
+  );
 
   test(
     'is deterministic — identical (t, dt) sequences ⇒ identical snapshots',

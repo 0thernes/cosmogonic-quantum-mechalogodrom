@@ -518,7 +518,7 @@ function distAssetFromPath(pathname: string): { file: BunFile; type: string } | 
 }
 
 /**
- * The simulation worker must be served PRE-BUNDLED: world.ts resolves
+ * Worker scripts (simulation, social field) must be served PRE-BUNDLED: world.ts resolves
  * `new URL('./workers/simulation-worker.js', import.meta.url)` against the served chunk origin,
  * and Bun's HTML bundler does not follow `new Worker(...)` graphs (the raw `.ts` path 404'd, so
  * every worker lineage died on startup and a 24-core machine ran the sim main-thread-only).
@@ -527,22 +527,43 @@ function distAssetFromPath(pathname: string): { file: BunFile; type: string } | 
  * cached per process — `bun --hot` resets it when server.ts reloads, and the pool requests the
  * script once per spawned worker (~cores), so rebuilding per request would be pure waste.
  */
-let workerFallbackBundle: Promise<string | null> | null = null;
-async function simulationWorkerJs(): Promise<string | null> {
-  const dist = Bun.file(new URL('./dist/workers/simulation-worker.js', import.meta.url));
+const workerFallbackBundles = new Map<string, Promise<string | null>>();
+async function workerJs(name: 'simulation-worker' | 'social-field-worker'): Promise<string | null> {
+  const dist = Bun.file(new URL(`./dist/workers/${name}.js`, import.meta.url));
   if (await dist.exists()) return dist.text();
-  workerFallbackBundle ??= (async () => {
-    const entry = Bun.fileURLToPath(new URL('./src/workers/simulation-worker.ts', import.meta.url));
-    const built = await Bun.build({ entrypoints: [entry], target: 'browser' });
-    const output = built.outputs[0];
-    if (!built.success || !output) {
-      log.warn('simulation-worker bundle failed — worker pool will fall back to sync');
-      for (const message of built.logs) log.warn(String(message));
-      return null;
-    }
-    return output.text();
-  })();
-  return workerFallbackBundle;
+  let bundle = workerFallbackBundles.get(name);
+  if (bundle === undefined) {
+    bundle = (async () => {
+      const entry = Bun.fileURLToPath(new URL(`./src/workers/${name}.ts`, import.meta.url));
+      const built = await Bun.build({ entrypoints: [entry], target: 'browser' });
+      const output = built.outputs[0];
+      if (!built.success || !output) {
+        log.warn(`${name} bundle failed — its worker pool will fall back to sync`);
+        for (const message of built.logs) log.warn(String(message));
+        return null;
+      }
+      return output.text();
+    })();
+    workerFallbackBundles.set(name, bundle);
+  }
+  return bundle;
+}
+
+/** Handlers serving one pre-bundled worker script (see {@link workerJs}); wrap with `secured`. */
+function workerHandlers(name: 'simulation-worker' | 'social-field-worker') {
+  return {
+    async GET(req: Request) {
+      const js = await workerJs(name);
+      if (js === null) {
+        logRequest(req, 503);
+        return new Response('worker bundle unavailable', { status: 503 });
+      }
+      logRequest(req, 200);
+      return new Response(js, {
+        headers: { 'Content-Type': 'application/javascript; charset=utf-8' },
+      });
+    },
+  };
 }
 
 function serveHtml(path: string): (req: Request) => Promise<Response> {
@@ -622,19 +643,8 @@ if (import.meta.main) {
           });
         },
       }),
-      '/workers/simulation-worker.js': secured({
-        async GET(req) {
-          const js = await simulationWorkerJs();
-          if (js === null) {
-            logRequest(req, 503);
-            return new Response('worker bundle unavailable', { status: 503 });
-          }
-          logRequest(req, 200);
-          return new Response(js, {
-            headers: { 'Content-Type': 'application/javascript; charset=utf-8' },
-          });
-        },
-      }),
+      '/workers/simulation-worker.js': secured(workerHandlers('simulation-worker')),
+      '/workers/social-field-worker.js': secured(workerHandlers('social-field-worker')),
       '/api/health': secured({
         GET(req) {
           logRequest(req, 200);

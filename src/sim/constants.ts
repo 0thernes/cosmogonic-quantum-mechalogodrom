@@ -125,6 +125,15 @@ export const casteR2 = (legacy: number): number => {
 
 /** Canonical organism social radii (legacy bases × {@link SOCIAL_SCALE}). */
 export const SOCIAL_FLOCK_R = socialR(8);
+/**
+ * Above this live population the per-organism ambient social pass reads at most
+ * {@link SOCIAL_NEIGHBOR_BUDGET} neighbours, nearest grid cells first. Colonies cluster, so an
+ * unbounded radius scan grew with the square of the population (68% of all sim CPU at 10,000).
+ * At or below this count (phone/tablet tiers, every seeded test world) the exact scan is unchanged.
+ */
+export const SOCIAL_BUDGET_MIN_POP = 2000;
+/** Neighbour budget for the bounded social pass — far above the counts it saturates (crowd 8, kin 4). */
+export const SOCIAL_NEIGHBOR_BUDGET = 64;
 export const SOCIAL_NASH_R = socialR(10);
 export const SOCIAL_MARKET_R = socialR(12);
 export const SOCIAL_TYPEMORPH_R = socialR(10);

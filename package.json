@@ -58,6 +58,7 @@
     "sbom": "bun scripts/sbom.ts",
     "bench": "bun bench/index.ts",
     "bench:nhi-grid": "bun scripts/bench-nhi-current-grid.ts",
+    "bench:social-field": "bun scripts/bench-social-field.ts",
     "filemap": "bun scripts/gen-filemap.ts",
     "filemap:check": "bun scripts/gen-filemap.ts --check",
     "generated:check": "bun scripts/check-generated.ts",

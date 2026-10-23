@@ -14,6 +14,7 @@ import * as THREE from 'three';
 import { TAU, lerp, clamp01 } from '../math/scalar';
 import {
   CENTER_GRAVITY_K,
+  HABITAT_RADIUS,
   ENTROPY_MAX,
   LIVING_ZONE,
   PLATFORM_HALF,
@@ -23,6 +24,8 @@ import {
   RENDER_MODE_DYN,
   SOCIAL_FEED_TRAIL_GAIN,
   SOCIAL_FLOCK_R,
+  SOCIAL_BUDGET_MIN_POP,
+  SOCIAL_NEIGHBOR_BUDGET,
   SOCIAL_GRAVITY_GAIN,
   SOCIAL_KIN_GAIN,
   SOCIAL_SEPARATION_FRAC,
@@ -33,6 +36,15 @@ import {
 } from './constants';
 import { decideFaction, intentSteerXZ, FACTION_COUNT, type FactionPercept } from './factions';
 import type { RenderMode } from './constants';
+import {
+  allocSocialField,
+  buildSocialGrid,
+  scanSocialRange,
+  SOCIAL_NEAREST,
+  type SocialScanExecutor,
+  type SocialFieldBuffers,
+  type SocialFieldParams,
+} from './social-field';
 import { PHYLUM_COUNT } from './phyla';
 import type { PhylumMorphType } from './phyla';
 import { applyBehavior } from './behaviors';
@@ -285,6 +297,21 @@ function applySpring(
   u.vel.z += ((partner.position.z - pz) / d) * force;
 }
 
+/** One social-field snapshot slot: the packed field, its organism order, and its pending ticket. */
+interface SocialSlot {
+  field: SocialFieldBuffers | null;
+  ents: Entity[];
+  /** Ticket handed to the executor for this snapshot; 0 = nothing pending. */
+  ticket: number;
+}
+
+/** Snapshot partner `j` (−1 = none), or null when it has died since the snapshot was taken. */
+function livePartner(ents: readonly Entity[], j: number): Entity | null {
+  if (j < 0) return null;
+  const e = ents[j]!;
+  return e.userData.alive === false ? null : e;
+}
+
 /** Structural readout from AlienFlora.comfortAt; kept local to avoid a runtime module dependency. */
 interface FloraComfortReadout {
   readonly x: number;
@@ -365,6 +392,32 @@ export class EntityManager {
   /** Optional authored sanctuary. Protected organisms keep friendly flocking but suppress threat/faction
    * aggression and the global home pull that could drag a visitor out of a neutral gathering zone. */
   private sanctuary: ((x: number, z: number, ecologyId?: number) => boolean) | null = null;
+  /**
+   * Structure-of-arrays social field (above SOCIAL_BUDGET_MIN_POP), double-buffered by update parity:
+   * the snapshot packed at the end of update k is answered — on worker cores or this thread, with
+   * identical results — and consumed at the start of update k + 2, so cores get a whole frame of
+   * slack. `socialField` / `socialEnts` point at the slot being consumed this frame.
+   */
+  private readonly socialSlots: SocialSlot[] = [
+    { field: null, ents: [], ticket: 0 },
+    { field: null, ents: [], ticket: 0 },
+  ];
+  private socialUpdateSeq = 0;
+  private socialField: SocialFieldBuffers | null = null;
+  private socialEnts: Entity[] = [];
+  /** Update parity of the slot being consumed (selects `socialSlot0` / `socialSlot1`). */
+  private socialParity = 0;
+  private readonly socialParams: SocialFieldParams = {
+    radius: SOCIAL_FLOCK_R,
+    budget: SOCIAL_NEIGHBOR_BUDGET,
+    cell: 16,
+    extent: HABITAT_RADIUS * 1.25,
+  };
+  /** Optional executor (worker cores); when null or late the scan runs on this thread instead. */
+  private socialScanner: SocialScanExecutor | null = null;
+  private socialTicketSeq = 0;
+  /** Frames whose field an executor answered vs frames this thread scanned (HUD receipt). */
+  private readonly socialStats = { offloaded: 0, local: 0 };
   /** Reserved material-organism births THIS frame, reset by {@link update}. Auto-split, behavior
    *  mitosis, sparse recovery, and post-update NHI swarms share it at the ultra tier. */
   private spawnsThisFrame = 0;
@@ -393,6 +446,8 @@ export class EntityManager {
       cosWF: 0,
       doTheory: false,
       doFlock: true,
+      neighborBudget: 0,
+      neighborSalt: 0,
     };
   }
 
@@ -446,6 +501,90 @@ export class EntityManager {
   attachSanctuary(predicate: ((x: number, z: number, ecologyId?: number) => boolean) | null): void {
     this.sanctuary = predicate;
     this.env.sanctuaryAt = predicate;
+  }
+
+  /**
+   * Route the social-field scan to another executor (e.g. worker cores). The executor must fill the
+   * result arrays for all `f.n` organisms with {@link scanSocialRange} semantics and return true, or
+   * return false to have this thread scan. Results are identical either way. Null detaches it.
+   */
+  attachSocialScanner(scanner: SocialScanExecutor | null): void {
+    this.socialScanner = scanner;
+  }
+
+  /** How many frames' social fields were answered off this thread vs on it. */
+  socialFieldStats(): { readonly offloaded: number; readonly local: number } {
+    return this.socialStats;
+  }
+
+  /**
+   * Make this frame's social field ready: the snapshot this parity's slot took two updates ago, or —
+   * when there is none (first frames above the threshold, after a reset) — one packed now. It is
+   * answered from that snapshot alone, so whether an executor or this thread answers it, or how
+   * late, never changes a result.
+   */
+  private resolveSocialField(list: readonly Entity[]): void {
+    const parity = this.socialUpdateSeq & 1;
+    const slot = this.socialSlots[parity]!;
+    const ticket = slot.ticket;
+    slot.ticket = 0;
+    this.socialParity = parity;
+    if (slot.field === null || ticket === 0) this.packSocialField(slot, parity, list);
+    else if (this.socialScanner !== null && this.socialScanner.collect(slot.field, ticket)) {
+      this.socialStats.offloaded++;
+      this.socialField = slot.field;
+      this.socialEnts = slot.ents;
+      return;
+    }
+    this.socialField = slot.field;
+    this.socialEnts = slot.ents;
+    scanSocialRange(slot.field!, this.socialParams, 0, slot.field!.n);
+    this.socialStats.local++;
+  }
+
+  /** Snapshot the population as this update leaves it and hand it to the executor, if any. */
+  private snapshotSocialField(list: readonly Entity[]): void {
+    const parity = this.socialUpdateSeq & 1;
+    const slot = this.socialSlots[parity]!;
+    this.packSocialField(slot, parity, list);
+    slot.ticket = ++this.socialTicketSeq;
+    this.socialScanner?.dispatch(slot.field!, this.socialParams, slot.ticket);
+  }
+
+  /** Pack the live population into a slot (positions, tribe, energy, shelter) + its grid. */
+  private packSocialField(slot: SocialSlot, parity: number, list: readonly Entity[]): void {
+    const n = list.length;
+    let f = slot.field;
+    if (f === null || f.px.length < n) {
+      f = allocSocialField(
+        Math.ceil(Math.max(n, this.ctx.quality.maxEntities) * 1.25),
+        this.socialParams,
+      );
+      slot.field = f;
+    }
+    const ents = slot.ents;
+    ents.length = n;
+    const sanctuary = this.sanctuary;
+    for (let k = 0; k < n; k++) {
+      const e = list[k]!;
+      const u = e.userData;
+      ents[k] = e;
+      if (parity === 0) u.socialSlot0 = k;
+      else u.socialSlot1 = k;
+      const x = e.position.x;
+      const z = e.position.z;
+      f.px[k] = x;
+      f.py[k] = e.position.y;
+      f.pz[k] = z;
+      f.group[k] = u.setGroup | 0;
+      f.type[k] = u.typeId | 0;
+      f.energy[k] = typeof u.energy === 'number' ? u.energy : 50;
+      f.alive[k] = u.alive === false ? 0 : 1;
+      f.hostile[k] = u.strategy === 1 ? 1 : 0;
+      f.shelter[k] = sanctuary !== null && sanctuary(x, z, u.ecologyId) === true ? 1 : 0;
+    }
+    f.n = n;
+    buildSocialGrid(f, this.socialParams);
   }
 
   /** Whether another material organism may use this frame's ultra-tier birth budget. */
@@ -574,6 +713,8 @@ export class EntityManager {
     const bred = gr ? this.breedTraits(gr, parent) : null;
     mesh.userData = {
       ecologyId: this.nextEcologyId++,
+      socialSlot0: -1,
+      socialSlot1: -1,
       mi: mi % morphCount,
       vel: new THREE.Vector3((rng() - 0.5) * 0.1, (rng() - 0.5) * 0.05, (rng() - 0.5) * 0.1),
       age: 0,
@@ -877,6 +1018,9 @@ export class EntityManager {
       if (e) this.dispose(e);
     }
     list.length = 0;
+    for (const slot of this.socialSlots) slot.ticket = 0;
+    this.socialEnts = [];
+    this.socialField = null;
     this.morphLive.fill(0); // whole-population reset; spawn() below re-counts as it repopulates
     this.organismGoals.directionX.fill(0);
     this.organismGoals.directionZ.fill(0);
@@ -966,6 +1110,15 @@ export class EntityManager {
     const emiBoost = RENDER_MODE_FX[state.renderMode].emissiveBoost;
     // Hard cap — was 2.5 and blew distant entities pure white (owner 2026-07-12).
     const emiCap = Math.min(1.15, ENTITY_EM_CAP * 1.35 * emiBoost);
+    // Bounded social neighbourhood above the phone/tablet populations (see SOCIAL_BUDGET_MIN_POP).
+    const socialBudget = list.length > SOCIAL_BUDGET_MIN_POP ? SOCIAL_NEIGHBOR_BUDGET : 0;
+    this.socialUpdateSeq++;
+    if (socialBudget > 0) this.resolveSocialField(list);
+    else {
+      this.socialEnts = [];
+      this.socialField = null;
+    }
+    env.neighborBudget = socialBudget;
 
     for (let i = list.length - 1; i >= 0; i--) {
       const e = list[i];
@@ -988,6 +1141,7 @@ export class EntityManager {
       env.doTheory = (frame + i) % theoryStride === 0;
       // Flock: every frame on every tier.
       env.doFlock = flockEvery === 1 || (frame + i) % flockEvery === 0;
+      env.neighborSalt = Math.imul(i, 0x9e3779b1) >>> 0;
       // V3.2 OUTLIER blend: a wildcard with a second behavior runs it on the odd
       // TWO-FRAME block (((frame+i) >> 1) & 1) — temporal 50/50 blending,
       // allocation-free (swap, dispatch, restore). The block parity is decoupled
@@ -1010,7 +1164,7 @@ export class EntityManager {
       this.applyFloraComfort(e, i, frame, dt);
       // Ambient colony filaments + tribal intent (ADR 0016 deep) — every organism, every frame.
       // Half-rate thinned the springs and dissolved chains under wander/jitter.
-      this.applyAmbientSocial(e, u, i, frame, sp2);
+      this.applyAmbientSocial(e, u, i, frame, sp2, socialBudget);
 
       // Neural activation decay — slower decay so connectome + brain firing reads as sustained live activity.
       u.act *= 0.975;
@@ -1207,6 +1361,10 @@ export class EntityManager {
         }
       }
     }
+
+    // The social field two updates ahead is packed from the population as this update leaves it.
+    if (list.length > SOCIAL_BUDGET_MIN_POP) this.snapshotSocialField(list);
+    else this.socialSlots[this.socialUpdateSeq & 1]!.ticket = 0;
 
     STATS.energy = energy;
     STATS.morphCount = MORPHS_SEEN.size;
@@ -1452,10 +1610,10 @@ export class EntityManager {
     index: number,
     frame: number,
     sp2: number,
+    budget: number,
   ): void {
     const r = SOCIAL_FLOCK_R;
     const r2 = r * r;
-    const nb = this.ctx.grid.query(e.position.x, e.position.z, r);
     let n = 0;
     let kn = 0;
     let nearThreatX = 0;
@@ -1481,57 +1639,100 @@ export class EntityManager {
     const myGroup = u.setGroup;
     const myType = u.typeId;
     const myEnergy = typeof u.energy === 'number' ? u.energy : 50;
-    for (let j = 0; j < nb.length; j++) {
-      const ne = nb[j];
-      if (!ne || ne === e || ne.userData.alive === false) continue;
-      const dx = ne.position.x - px;
-      const dy = ne.position.y - py;
-      const dz = ne.position.z - pz;
-      const dd = dx * dx + dz * dz;
-      if (dd >= r2 || dd < 1e-8) continue;
-      const d3 = dx * dx + dy * dy + dz * dz;
-      n++;
-      if (d3 < minD2) {
-        min3D2 = min2D2;
-        near3 = near2;
-        min2D2 = minD2;
-        near2 = near;
-        minD2 = d3;
-        near = ne;
-      } else if (d3 < min2D2) {
-        min3D2 = min2D2;
-        near3 = near2;
-        min2D2 = d3;
-        near2 = ne;
-      } else if (d3 < min3D2) {
-        min3D2 = d3;
-        near3 = ne;
-      }
-      if (ne.userData.setGroup === myGroup) {
-        kn++;
-        if (d3 < kinMinD2) {
-          kinMinD2 = d3;
-          kinNear = ne;
+    const field = this.socialField;
+    const slotIndex = (this.socialParity === 0 ? u.socialSlot0 : u.socialSlot1) ?? -1;
+    if (
+      budget > 0 &&
+      field !== null &&
+      slotIndex >= 0 &&
+      slotIndex < field.n &&
+      this.socialEnts[slotIndex] === e
+    ) {
+      // Packed path: the neighbourhood was answered for the whole snapshot.
+      const ents = this.socialEnts;
+      const k = slotIndex;
+      const b = k * SOCIAL_NEAREST;
+      const j0 = field.near[b]!;
+      const j1 = field.near[b + 1]!;
+      const j2 = field.near[b + 2]!;
+      const jk = field.kin[k]!;
+      const jt = field.sameType[k]!;
+      const jf = field.fedKin[k]!;
+      // A partner that died since the snapshot is dropped (its filament simply lapses).
+      near = livePartner(ents, j0);
+      near2 = livePartner(ents, j1);
+      near3 = livePartner(ents, j2);
+      kinNear = livePartner(ents, jk);
+      typeNear = livePartner(ents, jt);
+      fedKin = livePartner(ents, jf);
+      minD2 = field.nearD2[b]!;
+      min2D2 = field.nearD2[b + 1]!;
+      min3D2 = field.nearD2[b + 2]!;
+      kinMinD2 = field.kinD2[k]!;
+      typeMinD2 = field.sameTypeD2[k]!;
+      fedKinEnergy = field.fedKinEnergy[k]!;
+      n = field.count[k]!;
+      kn = field.kinCount[k]!;
+      nearThreatX = field.threatX[k]!;
+      nearThreatZ = field.threatZ[k]!;
+      threatN = field.threatCount[k]!;
+    } else {
+      const nb =
+        budget > 0
+          ? this.ctx.grid.queryNearFirst(px, pz, r, budget, index * 2654435761)
+          : this.ctx.grid.query(px, pz, r);
+      for (let j = 0; j < nb.length; j++) {
+        const ne = nb[j];
+        if (!ne || ne === e || ne.userData.alive === false) continue;
+        const dx = ne.position.x - px;
+        const dy = ne.position.y - py;
+        const dz = ne.position.z - pz;
+        const dd = dx * dx + dz * dz;
+        if (dd >= r2 || dd < 1e-8) continue;
+        const d3 = dx * dx + dy * dy + dz * dz;
+        n++;
+        if (d3 < minD2) {
+          min3D2 = min2D2;
+          near3 = near2;
+          min2D2 = minD2;
+          near2 = near;
+          minD2 = d3;
+          near = ne;
+        } else if (d3 < min2D2) {
+          min3D2 = min2D2;
+          near3 = near2;
+          min2D2 = d3;
+          near2 = ne;
+        } else if (d3 < min3D2) {
+          min3D2 = d3;
+          near3 = ne;
         }
-        const neE = typeof ne.userData.energy === 'number' ? ne.userData.energy : 50;
-        if (neE > fedKinEnergy) {
-          fedKinEnergy = neE;
-          fedKin = ne;
+        if (ne.userData.setGroup === myGroup) {
+          kn++;
+          if (d3 < kinMinD2) {
+            kinMinD2 = d3;
+            kinNear = ne;
+          }
+          const neE = typeof ne.userData.energy === 'number' ? ne.userData.energy : 50;
+          if (neE > fedKinEnergy) {
+            fedKinEnergy = neE;
+            fedKin = ne;
+          }
         }
-      }
-      if (ne.userData.typeId === myType && d3 < typeMinD2) {
-        typeMinD2 = d3;
-        typeNear = ne;
-      }
-      if (
-        !protectedHere &&
-        sanctuary?.(ne.position.x, ne.position.z, ne.userData.ecologyId) !== true &&
-        (ne.userData.strategy === 1 || ne.userData.setGroup !== myGroup)
-      ) {
-        if (dd < r2 * 0.25) {
-          nearThreatX += dx;
-          nearThreatZ += dz;
-          threatN++;
+        if (ne.userData.typeId === myType && d3 < typeMinD2) {
+          typeMinD2 = d3;
+          typeNear = ne;
+        }
+        if (
+          !protectedHere &&
+          sanctuary?.(ne.position.x, ne.position.z, ne.userData.ecologyId) !== true &&
+          (ne.userData.strategy === 1 || ne.userData.setGroup !== myGroup)
+        ) {
+          if (dd < r2 * 0.25) {
+            nearThreatX += dx;
+            nearThreatZ += dz;
+            threatN++;
+          }
         }
       }
     }

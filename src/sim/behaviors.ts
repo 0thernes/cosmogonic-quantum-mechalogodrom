@@ -104,6 +104,27 @@ export interface BehaviorEnv {
    * frame. 'flock' draws no rng, so this gate never perturbs the seeded stream.
    */
   doFlock: boolean;
+  /**
+   * Neighbour-candidate budget for the grid-query behaviors. 0 (every population ≤
+   * SOCIAL_BUDGET_MIN_POP) keeps the exact legacy query; above it each query reads at most this
+   * many candidates, nearest grid cells first, so a dense colony costs O(budget) per organism.
+   */
+  neighborBudget: number;
+  /** Per-organism salt for the bounded query, so neighbours sample different colony members. */
+  neighborSalt: number;
+}
+
+/** Grid neighbours of `e` within `r`: exact, or bounded nearest-first when a budget is set. */
+function nearby(e: Entity, r: number, env: BehaviorEnv): readonly Entity[] {
+  return env.neighborBudget > 0
+    ? env.ctx.grid.queryNearFirst(
+        e.position.x,
+        e.position.z,
+        r,
+        env.neighborBudget,
+        env.neighborSalt,
+      )
+    : env.ctx.grid.query(e.position.x, e.position.z, r);
 }
 
 type Handler = (e: Entity, u: EntityData, env: BehaviorEnv) => void;
@@ -235,7 +256,7 @@ function bounce(e: Entity, u: EntityData, _env: BehaviorEnv): void {
 
 /** Cohere toward XZ neighbors within distance 8 (legacy lines 723-727). O(k). */
 function flock(e: Entity, u: EntityData, env: BehaviorEnv): void {
-  const nb = env.ctx.grid.query(e.position.x, e.position.z, SOCIAL_FLOCK_R);
+  const nb = nearby(e, SOCIAL_FLOCK_R, env);
   let fx = 0;
   let fz = 0;
   let fn = 0;
@@ -310,7 +331,7 @@ function quantum(_e: Entity, u: EntityData, env: BehaviorEnv): void {
  */
 function nash(e: Entity, u: EntityData, env: BehaviorEnv): void {
   if (!env.actorProtected) {
-    const nb = env.ctx.grid.query(e.position.x, e.position.z, SOCIAL_NASH_R);
+    const nb = nearby(e, SOCIAL_NASH_R, env);
     for (let i = 0; i < nb.length; i++) {
       const ne = nb[i];
       if (
@@ -349,7 +370,7 @@ function market(e: Entity, u: EntityData, env: BehaviorEnv): void {
   e.scale.setScalar(u.sc * (0.5 + u.energy / 100));
   // Personal income/metabolism remains live at the tree; only cross-body trade and steering pause.
   if (env.actorProtected) return;
-  const nb = env.ctx.grid.query(e.position.x, e.position.z, SOCIAL_MARKET_R);
+  const nb = nearby(e, SOCIAL_MARKET_R, env);
   for (let i = 0; i < nb.length; i++) {
     const ne = nb[i];
     if (
@@ -379,7 +400,7 @@ function market(e: Entity, u: EntityData, env: BehaviorEnv): void {
  */
 function typemorph(e: Entity, u: EntityData, env: BehaviorEnv): void {
   if (env.actorProtected) return;
-  const nb = env.ctx.grid.query(e.position.x, e.position.z, SOCIAL_TYPEMORPH_R);
+  const nb = nearby(e, SOCIAL_TYPEMORPH_R, env);
   for (let i = 0; i < nb.length; i++) {
     const ne = nb[i];
     if (
@@ -409,7 +430,7 @@ function typemorph(e: Entity, u: EntityData, env: BehaviorEnv): void {
  */
 function setunion(e: Entity, u: EntityData, env: BehaviorEnv): void {
   if (env.actorProtected) return;
-  const nb = env.ctx.grid.query(e.position.x, e.position.z, SOCIAL_SETUNION_R);
+  const nb = nearby(e, SOCIAL_SETUNION_R, env);
   V2.set(0, 0, 0);
   let cnt = 0;
   let kinMinD2 = Infinity;
@@ -464,7 +485,7 @@ function setunion(e: Entity, u: EntityData, env: BehaviorEnv): void {
  * O(k).
  */
 function graphseek(e: Entity, u: EntityData, env: BehaviorEnv): void {
-  const nb = env.ctx.grid.query(e.position.x, e.position.z, SOCIAL_GRAPHSEEK_R);
+  const nb = nearby(e, SOCIAL_GRAPHSEEK_R, env);
   let minD2 = 9999 * SOCIAL_SCALE * SOCIAL_SCALE;
   let minE: Entity | null = null;
   let kinD2 = 9999 * SOCIAL_SCALE * SOCIAL_SCALE;

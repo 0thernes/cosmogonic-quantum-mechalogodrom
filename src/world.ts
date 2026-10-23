@@ -77,6 +77,7 @@ import { createGeometryCache } from './sim/geometry-cache';
 import { createMorphotypes } from './sim/morphotypes';
 import { createPhyla } from './sim/phyla';
 import { EntityManager } from './sim/entities';
+import type { SocialScanExecutor } from './sim/social-field';
 import { growthTargetAt } from './sim/growth-ramp';
 import { EntityBrainField } from './sim/entity-brain';
 import { gedankenDeath, GedankenLedger } from './sim/gedanken-death';
@@ -2504,6 +2505,19 @@ export class World {
           ? 'WebNN API detected; no CQM NPU model executed'
           : 'WebNN unavailable; NPU not active',
     };
+  }
+
+  /**
+   * Attaches worker cores for the organism social field (ADR 0019). The field is answered from a
+   * frame-end snapshot, so a pool (or none) changes only speed, never the simulation.
+   */
+  attachSocialScanner(scanner: SocialScanExecutor | null): void {
+    this.entities.attachSocialScanner(scanner);
+  }
+
+  /** Frames whose organism social field was answered by worker cores vs the main thread. */
+  socialFieldStats(): { readonly offloaded: number; readonly local: number } {
+    return this.entities.socialFieldStats();
   }
 
   /**

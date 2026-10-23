@@ -55,6 +55,8 @@ export interface PerfHudSnapshot {
   heapMb: number;
   tier: string;
   world: PerfHudWorldMetrics;
+  /** Social-field execution (ADR 0019), e.g. `3 cores · 96% off-thread`; omitted = not shown. */
+  social?: string;
 }
 
 /** Format the timing row: `16 ms · p95 22 ms · 412 MB`. Pure. */
@@ -85,8 +87,9 @@ export function formatWorkerLine(w: PerfHudWorldMetrics): string {
 }
 
 /** Distinguish auxiliary compute from core cognition and graphics. */
-export function formatComputeLine(w: PerfHudWorldMetrics): string {
-  return `ambient: ${w.ambientCompute ?? 'pending'} · core brains: CPU`;
+export function formatComputeLine(w: PerfHudWorldMetrics, social?: string): string {
+  const field = social === undefined ? '' : ` · social: ${social}`;
+  return `ambient: ${w.ambientCompute ?? 'pending'}${field} · core brains: CPU`;
 }
 
 export interface PerfHud {
@@ -179,7 +182,7 @@ export function mountPerfHud(currentTier: string): PerfHud {
       timingEl.textContent = formatTimingLine(snapshot.frameMs, snapshot.p95Ms, snapshot.heapMb);
       popEl.textContent = formatPopulationLine(snapshot.world);
       workerEl.textContent = formatWorkerLine(snapshot.world);
-      computeEl.textContent = formatComputeLine(snapshot.world);
+      computeEl.textContent = formatComputeLine(snapshot.world, snapshot.social);
     },
   };
 }

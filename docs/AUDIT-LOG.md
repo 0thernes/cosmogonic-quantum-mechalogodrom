@@ -11,6 +11,43 @@ changed and why.
 
 ---
 
+## 2026-10-23 — Performance audit: single-thread hot spots → multicore social field (ADR 0019)
+
+- **Profile.** At base `e590f8c4` (4-vCPU container), a 10k-organism frame spent 60 of 88 ms in the
+  ambient social pass.
+  - Ablation: 87.6 → 27.0 ms with the pass removed.
+  - The grid queries themselves cost about 10 ms. The rest was megamorphic reads of three.js
+    objects and `userData`.
+  - The grid-query behaviors averaged 166 candidates per query in dense colonies.
+- **Fix.** A pure structure-of-arrays snapshot kernel answers the social pass, bounded to 64
+  candidates nearest-first. The behaviors use the same bound. Worker cores answer the kernel two
+  updates ahead. Worlds of 2,000 organisms or fewer keep the exact legacy path.
+- **Measured** (main-thread update):
+
+  | Organisms |   Before |    After |
+  | --------: | -------: | -------: |
+  |        5k |  ≈ 30 ms | 11–13 ms |
+  |       10k | ≈ 133 ms | 22–26 ms |
+  |       25k | ≈ 865 ms | 73–88 ms |
+
+  Reproduce with `bun run bench:social-field`. See also
+  [BENCHMARKS](./BENCHMARKS-2026-06-26.md).
+
+- **Falsifiers** (`tests/social-field.test.ts`): an executor that corrupts its answers must change
+  the world, and it does. The on-time, late-every-third-frame and never-answering executors all
+  leave every seeded position bit-identical.
+- **Negative results retained in ADR 0019:**
+  - A one-update pipeline was answered on 0 of 90 frames at 25k, because worker replies only
+    arrive when the main thread yields.
+  - Cell-order traversal and budget hoisting did not speed up the branch-bound kernel.
+  - Real Chromium under software WebGL loaded the worker and offloaded the field, but GPU-hardware
+    frame rates were not measured here.
+- **Not done for the social field:** it runs on CPU worker cores only. Its WebGPU port and shared
+  memory (which needs COOP/COEP headers) are planned phases. The ambient wilderness WebGPU path
+  that landed concurrently upstream is separate and unaffected. The world and creature expansion is planned in ADR 0019, not implemented.
+
+---
+
 ## 2026-10-23 (UTC) — Pages deployment dependency gate follow-through
 
 - The hybrid release `0b59ca64` passed its full local gate and reached GitHub main. Direct-main CI

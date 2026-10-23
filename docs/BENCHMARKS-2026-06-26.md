@@ -16,6 +16,31 @@ Measured results for the hot-path primitives. Reproduce with `bun run bench`
 
 ## Results
 
+### Organism social field across CPU cores (ADR 0019)
+
+Measured 2026-10-23 in a 4-vCPU Linux container with Bun 1.4.2, using 3 social worker cores
+(`min(8, cores − 1)`). Reproduce with `bun run bench:social-field`, which takes the environment
+variables `GAP`, `POPS` and `FRAMES`. The script drives the real `SocialScanPool` and worker script
+under Bun, sleeping a 12 ms gap between updates in place of render time.
+
+Each figure is the median main-thread `EntityManager.update` time over 60 steady-state frames, from
+seed `0xb0d6e7`. CPU only; GPU draw cost is excluded. Ranges span repeated runs on this container.
+The base column was measured at `e590f8c4` with the earlier probe, which also included
+`InstancedEntityRenderer.sync` (≈ 1–11 ms).
+
+| Organisms | Base, 1 core, unbounded | Bounded field, 1 core | Bounded field + 3 worker cores |
+| --------: | ----------------------: | --------------------: | -----------------------------: |
+|     5,000 |                 ≈ 30 ms |              25–27 ms |                       11–13 ms |
+|    10,000 |                ≈ 133 ms |              47–55 ms |                       22–26 ms |
+|    25,000 |                ≈ 865 ms |            128–150 ms |                       73–88 ms |
+
+- **Worker coverage:** workers answered 84–88 of 90 frames. The first two updates always scan on
+  the main thread by construction.
+- **Kernel alone:** about 20 ms per 10,000 organisms on one core, branch-bound. Cell-order
+  traversal and hoisting gave no gain.
+- **Below the threshold:** at 2,000 organisms or fewer the field is never built, and timings and
+  trajectories are those of the exact legacy scan.
+
 ### Browser ambient hybrid compute
 
 Measured 2026-10-23 UTC on Windows, Intel Core Ultra 9 275HX (24 logical processors),

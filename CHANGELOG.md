@@ -17,6 +17,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **The organism simulation now uses every CPU core (ADR 0019).** Above 2,000 organisms, each
+  update ends by packing the population into a structure-of-arrays snapshot (`src/sim/social-field.ts`).
+  Worker cores (`src/core/social-scan-pool.ts`, `src/workers/social-field-worker.ts`) answer every
+  organism's social neighbourhood while the next frame renders.
+  - **Determinism:** the snapshot is consumed two updates later. A late or failed core is replaced
+    by the bit-identical main-thread answer, so seeded runs are unchanged by core count or timing.
+    `?workers=0` opts out.
+  - **Measured, 4 vCPUs** (`bun run bench:social-field`; main-thread update time):
+
+    | Organisms |   Before |    After |
+    | --------: | -------: | -------: |
+    |       10k | ≈ 133 ms | 22–26 ms |
+    |       25k | ≈ 865 ms | 73–88 ms |
+
+- **The perf HUD compute row adds a social segment** (`social: 3 cores · 96% off-thread`) while the
+  social field runs: worker cores alive and the share of recent frames they answered. The social
+  field runs on CPU worker cores only. CUDA and NPU drivers cannot be reached from a web page.
+
+- **Browser Hybrid Compute Engine, Counter-Based Parallel Determinism & 3D Multi-Biome Organism Substrate:**
+  - `src/math/wild-entropy.ts`: 4-round stateless Philox-2x32 counter PRNG (`philoxCounter32`, `sampleParallelCounter01`, `fillParallelCounterShard`, `createParallelEntityRng`) eliminating sequential single-thread PRNG lockstep stalls across parallel CPU/GPU/NPU shards.
+  - `src/core/hybrid-compute.ts` & `src/workers/simulation-worker.ts`: Browser Hybrid Compute Engine (`HYBRID_ENTITY_BRAIN_WGSL` WebGPU compute shader, `detectHybridHardware` probing CPU logical cores / `SharedArrayBuffer` / Zig WASM SIMD / WebGPU / WebNN NPU `navigator.ml`, `planHybridPartition`, `executeHybridEntityBrainBatch`, and `executeHybridShardWorkerKernel`).
+  - `src/sim/biome-strata.ts` & `src/world.ts`: 5-stratum 3D ecological habitat (`hadal_abyss`, `benthic_reef`, `quantum_thermocline`, `photonic_canopy`, `aetherial_crown`), $\sqrt{N/10000}$ habitat envelope expansion above 10,000 entities (`computeHabitatEnvelope`), 4 developmental organism life stages (`larval_spore`, `juvenile_forager`, `mature_symbiont`, `elder_apex`), and SoA `OrganismBioStatePool` (3-channel neuromodulation `dopamine`/`serotonin`/`noradrenaline` + 4-channel recurrent working memory `memoryTrace`).
 - Browser-only hybrid-compute foundation: bounded batched WebGPU implementation of the complete
   ambient wilderness numerical kernel, CPU reference checks, transfer-inclusive calibration,
   explicit automatic/CPU/experimental-GPU selection and accepted-backend telemetry. CPU workers
@@ -91,6 +113,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   probability and lifespan phenotype; ablation-verified selection vs trait-blind scramble.
 
 ### Changed
+
+- **Above 2,000 organisms the social model is sampled, from a snapshot.** Social statistics and the
+  grid-query behaviors (flock, nash, market, setunion, typemorph, graphseek) read at most 64
+  neighbour candidates, nearest cells first, salted per organism. The social pass reads a
+  two-update-old snapshot instead of live, in-order objects. At 2,000 organisms or fewer the exact
+  legacy scan runs and seeded worlds are byte-identical.
 
 - Promoted CQM-25 to the primary README, Docs, Specs, gallery and in-app capability profile. The nine-axis survey is retained as historical comparison context; its values are not converted into 25-axis ratings.
 - Fixed clipped radar labels with a readable wrapped layout and complete inline/standalone SVG synchronization. Clarified organism-level visual richness, preserved the existing 4.0 visual rating, and broadened the README, app overview and About metadata around embodied digital life and synthetic cognition.

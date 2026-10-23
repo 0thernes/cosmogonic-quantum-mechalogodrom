@@ -89,6 +89,8 @@ function makeEnv(ctx: SimContext): BehaviorEnv {
     cosWF: Math.cos(t),
     doTheory: true,
     doFlock: true,
+    neighborBudget: 0,
+    neighborSalt: 0,
   };
 }
 

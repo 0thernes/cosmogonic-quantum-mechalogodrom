@@ -467,6 +467,30 @@ export const HELP_KB: readonly HelpEntry[] = [
     ],
   },
   {
+    id: 'multicore',
+    title: 'Does it use all my CPU cores, the GPU or an NPU?',
+    keywords: [
+      'cores',
+      'multicore',
+      'threads',
+      'workers',
+      'gpu',
+      'cuda',
+      'npu',
+      'webgpu',
+      'webnn',
+      'slow',
+      'hot',
+      'performance',
+    ],
+    body: "Above 2,000 organisms, every update ends by packing the population into a flat snapshot. Worker cores (min(8, cores − 1)) answer each organism's social neighbourhood while the next frame renders, and the answers are consumed two updates later. A late core is replaced by the identical main-thread answer, so seeded runs never change with core count or timing. The GPU renders the world. The ambient wilderness population can run on WebGPU when it calibrates faster than the CPU; organism brains and the social field run on CPU cores, and no NPU inference runs. The perf HUD compute row says which paths are live. A web page cannot call CUDA or an NPU driver directly. Add ?workers=0 to keep everything on the main thread.",
+    see: [
+      'src/sim/social-field.ts',
+      'src/core/social-scan-pool.ts',
+      'docs/adr/0019-hybrid-compute-social-field-2026-10-23.md',
+    ],
+  },
+  {
     id: 'math',
     title: 'What math powers this?',
     keywords: [

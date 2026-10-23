@@ -134,6 +134,55 @@ export class SpatialHash<T extends { position: { x: number; z: number } }> {
   }
 
   /**
+   * Bounded, nearest-cells-first variant of {@link query}: visits the centre cell, then each square
+   * ring of cells outward (fixed order), and stops as soon as `budget` items are collected or the
+   * radius is exhausted. A dense colony can pack hundreds of items into one cell, so each cell is
+   * read as a ring buffer starting at `salt mod length`: callers pass a per-querier salt (e.g. their
+   * index) and different queriers sample different members instead of all seeing the same first
+   * few. Deterministic for a given grid and salt. Callers that need only nearest neighbours and
+   * saturating counts get them in O(budget + cells). Same shared result buffer and lifetime rule as
+   * {@link query}; callers still filter by true distance. Allocation-free.
+   */
+  queryNearFirst(x: number, z: number, radius: number, budget: number, salt = 0): readonly T[] {
+    const cs = this.cellSize;
+    const out = this.result;
+    out.length = 0;
+    const cr = Math.ceil(radius / cs);
+    const cx = (x / cs) | 0;
+    const cz = (z / cs) | 0;
+    const s = salt >>> 0;
+    if (this.takeCell(cx, cz, budget, s)) return out;
+    for (let k = 1; k <= cr; k++) {
+      for (let d = -k; d <= k; d++) {
+        if (this.takeCell(cx + d, cz - k, budget, s) || this.takeCell(cx + d, cz + k, budget, s))
+          return out;
+      }
+      for (let d = -k + 1; d <= k - 1; d++) {
+        if (this.takeCell(cx - k, cz + d, budget, s) || this.takeCell(cx + k, cz + d, budget, s))
+          return out;
+      }
+    }
+    return out;
+  }
+
+  /** Append a cell's items (from `salt mod length`, wrapping) until the buffer holds `budget`. */
+  private takeCell(kx: number, kz: number, budget: number, salt: number): boolean {
+    const cell = this.cells.get(kx * 10007 + kz);
+    const out = this.result;
+    if (cell !== undefined && cell.length > 0) {
+      const n = cell.length;
+      const room = budget - out.length;
+      const count = n < room ? n : room;
+      let i = salt % n;
+      for (let c = 0; c < count; c++) {
+        out.push(cell[i]!);
+        i = i + 1 === n ? 0 : i + 1;
+      }
+    }
+    return out.length >= budget;
+  }
+
+  /**
    * Return the non-empty live cells overlapping the same query square and in the exact same
    * `dx -> dz -> item` traversal order as {@link query}. The outer array is a BORROWED cached view
    * valid until {@link clear}; every inner array is borrowed from this hash and neither level may be
