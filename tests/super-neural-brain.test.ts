@@ -107,17 +107,20 @@ describe('IV · BRAIN measured module connectome', () => {
     const flow = (a: string, b: string) => g.edges.find((e) => e.from === a && e.to === b)!;
     expect(flow('senses', 'cortex').carried).toEqual(byId.get('senses')!.values);
     expect(flow('cortex', 'meta').carried).toEqual(snap.latent);
-    expect(flow('imagitron', 'reasoner').carried).toEqual(snap.imagined);
+    expect(flow('imagitron', 'reasoner').carried).toEqual(snap.observatory.brain.imaginationWinner);
     expect(flow('organs', 'meta').carried).toEqual(snap.observatory.organAggregates);
     expect(flow('meta', 'plan').carried).toEqual(snap.observatory.actionOutputs.slice(3, 8));
     expect(flow('reservoir', 'plan').carried).toEqual([snap.reservoir.novelty]);
   });
 
-  test('both views are pure: same graph ⇒ identical drawing; the tick turns MEGA, not the clock', () => {
+  test('both views are pure and a tick-only change updates status, never plotted geometry', () => {
     for (const view of [drawBrainConnectome, drawBrainMega])
       expect(draw(view, g)).toBe(draw(view, g));
     const later = { ...g, tick: g.tick + 1 };
-    expect(draw(drawBrainMega, later)).not.toBe(draw(drawBrainMega, g));
+    for (const view of [drawBrainConnectome, drawBrainMega])
+      expect(draw(view, later).replace(/tick \d+/g, 'tick')).toBe(
+        draw(view, g).replace(/tick \d+/g, 'tick'),
+      );
   });
 
   test("changing any one module's values changes both drawings", () => {
@@ -151,5 +154,105 @@ describe('IV · BRAIN measured module connectome', () => {
     for (const m of g.modules) expect(txt).toContain(m.label);
     expect(txt.split('\n').filter((l) => l.includes(' → '))).toHaveLength(g.edges.length);
     expect(txt).toContain(`tick ${g.tick}`);
+  });
+
+  test('temporal payloads use captured inputs, not later imagination/aspect states', () => {
+    const graph = buildBrainGraph(snap);
+    const flow = (a: string, b: string) => graph.edges.find((e) => e.from === a && e.to === b)!;
+    expect(flow('quantum', 'meta').carried).toEqual(snap.observatory.brain.quantumRaw);
+    expect(flow('quantum', 'meta').carried).not.toEqual(snap.quantum);
+    expect(flow('quantum', 'qubits').carried).toEqual(snap.observatory.brain.qubitAspects);
+    expect(flow('imagitron', 'reasoner').carried).toEqual(snap.observatory.brain.imaginationWinner);
+    expect(flow('imagitron', 'reasoner').carried).not.toEqual(snap.imagined);
+    expect(flow('search', 'imagitron').carried).toEqual(
+      snap.observatory.brain.searchWinnerVectors.slice(0, 64),
+    );
+    expect(flow('search', 'imagitron').carried).toHaveLength(64);
+    expect(flow('memory', 'senses').carried).toEqual([snap.observatory.senses[13]!]);
+    expect(flow('memory', 'senses').carried).not.toEqual([snap.observatory.memory.mean]);
+    expect(flow('senses', 'instinct').measurement).toBe('operands');
+    expect(flow('organs', 'meta').measurement).toBe('payload');
+    expect(flow('cortex', 'organs').carried).toHaveLength(120);
+  });
+
+  test('invalid values remain invalid and are disclosed without invalid canvas commands', () => {
+    const changed = structuredClone(snap);
+    changed.latent[0] = NaN;
+    changed.observatory.actionOutputs[3] = Infinity;
+    const graph = buildBrainGraph(changed);
+    expect(Number.isNaN(graph.modules.find((m) => m.id === 'cortex')!.values[0])).toBe(true);
+    expect(graph.modules.find((m) => m.id === 'meta')!.values[3]).toBe(Infinity);
+    expect(graph.warning).toContain('invalid');
+    expect(brainGraphText(graph)).toContain('NaN');
+    expect(brainGraphText(graph)).toContain('Infinity');
+    for (const view of [drawBrainConnectome, drawBrainMega]) {
+      const { ctx, ops } = recorder();
+      view(ctx, 372, 460, graph);
+      expect(ops.filter((op) => !op.startsWith('fillText(')).join('|')).not.toMatch(/NaN|Infinity/);
+      expect(ops.some((op) => op.includes('invalid'))).toBe(true);
+    }
+  });
+
+  test('unstarted and missing payloads are unavailable, never zero activity', () => {
+    const unstarted = buildBrainGraph(new SuperMind(mulberry32(20)).snapshot());
+    expect(unstarted.units).toBe(0);
+    expect(unstarted.edges).toEqual([]);
+    expect(unstarted.modules.every((m) => m.values.length === 0 && Number.isNaN(m.rms))).toBe(true);
+    expect(unstarted.warning).toContain('No completed');
+    const missing = structuredClone(snap);
+    Reflect.deleteProperty(missing.observatory, 'brain');
+    const graph = buildBrainGraph(missing);
+    const edge = graph.edges.find((e) => e.from === 'quantum' && e.to === 'meta')!;
+    expect(edge.measurement).toBe('unavailable');
+    expect(edge.carried).toEqual([]);
+    expect(Number.isNaN(edge.rms)).toBe(true);
+    expect(graph.warning).toContain('unavailable');
+    expect(draw(drawBrainMega, graph)).toContain('setLineDash(3,3)');
+  });
+
+  test('numeric disclosure round-trips every finite value without four-digit rounding', () => {
+    const changed = structuredClone(snap);
+    changed.latent[0] = 0.12345678901234568;
+    changed.latent[1] = -0;
+    const graph = buildBrainGraph(changed);
+    const text = brainGraphText(graph);
+    expect(text).toContain('0.12345678901234568');
+    expect(text).toContain('-0');
+    for (const module of graph.modules)
+      for (const value of module.values)
+        expect(text).toContain(Object.is(value, -0) ? '-0' : String(value));
+    expect(graph.modules.find((m) => m.id === 'memory')!.note).toContain('one writer');
+    expect(graph.modules.find((m) => m.id === 'reservoir')!.note).toContain('outside');
+  });
+
+  test('responsive drawings use readable fonts and an echo graph omits an unexecuted recursive link', () => {
+    for (const view of [drawBrainConnectome, drawBrainMega]) {
+      const { ctx, ops } = recorder();
+      view(ctx, 372, 460, g);
+      for (const op of ops.filter((op) => op.startsWith('font='))) {
+        const size = Number(op.match(/(\d+(?:\.\d+)?)px/)![1]);
+        expect(size).toBeGreaterThanOrEqual(9);
+      }
+    }
+    const mind = new SuperMind(mulberry32(22));
+    mind.think(
+      {
+        energy: 0.5,
+        threat: 0.2,
+        crowding: 0.1,
+        chaos: 0.3,
+        wealthRel: 0.5,
+        preyClose: 0.4,
+        rivalClose: 0.2,
+        pull: 0.1,
+        light: 0.3,
+        sound: 0.1,
+        phase: 0.2,
+      },
+      'echo',
+    );
+    const echo = buildBrainGraph(mind.snapshot());
+    expect(echo.edges.find((e) => e.from === 'search' && e.to === 'imagitron')).toBeUndefined();
+    expect(echo.edges).toHaveLength(g.edges.length - 1);
   });
 });

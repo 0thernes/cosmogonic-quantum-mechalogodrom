@@ -349,6 +349,20 @@ export interface SuperMindObservatorySnapshot {
   };
   /** Real bounded memory ring, newest first; empty means no stored observations. */
   memory: { mean: number; values: number[] };
+  /** Exact completed-beat core-network payloads for the partial Brain graph, copied only on snapshot. */
+  brain: {
+    cortexOutput: number[];
+    /** Final selected candidate before learned-recurrence blending; actual reasoner input. */
+    imaginationWinner: number[];
+    /** Selected candidate vectors, depth-major; only completed depths are present. */
+    searchWinnerVectors: number[];
+    /** Signed raw MLP output consumed by meta, before unit conversion and aspect modulation. */
+    quantumRaw: number[];
+    /** Aspect vector at qmind.evolve(), before the later quake mutation of aspect 9. */
+    qubitAspects: number[];
+    consolidatorOutput: number[];
+    metaInput: number[];
+  };
 }
 
 /** Read-only telemetry snapshot. */
@@ -790,6 +804,9 @@ export class SuperMind {
   private readonly metaIn = new Float32Array(LATENT * 3 + 4 + SUPER_QUANTUM + 3 + 4); // 69
   private readonly affIn = new Float32Array(12);
   private readonly quantumOut = new Float32Array(SUPER_QUANTUM);
+  // Brain provenance capture: O(depths * LATENT + SUPER_QUANTUM), fixed storage, no random draws.
+  private readonly observedWinnerVectors = new Float32Array(SUPER_DEPTHS * LATENT);
+  private readonly observedQubitAspects = new Float32Array(SUPER_QUANTUM);
   private readonly latent: Float32Array;
   /** Stable borrowed view returned by readCoupling(); scalar/object references are refreshed on read. */
   private readonly couplingView: SuperMindCouplingView;
@@ -1210,6 +1227,7 @@ export class SuperMind {
       }
       // keep the winning branch and recurse (grow the tree one depth)
       this.cur.set(this.best);
+      this.observedWinnerVectors.set(this.cur, d * LATENT);
       reasoningGain += clamp01(bestScore * 0.5 + 0.5);
     }
     this.imagined.set(this.cur);
@@ -1446,6 +1464,7 @@ export class SuperMind {
 
     // ── QUANTUM COMPUTING MIND ── drive the simulated-qubit register with this beat's aspects +
     // latent: the circuit encodes cognition into unitary state-vector evolution + model entanglement.
+    this.observedQubitAspects.set(this.quantumOut);
     this.qmind.evolve(this.quantumOut, this.latent);
     // V1.2 · QUANTUM RESERVOIR COMPUTING — read the register's evolved Bloch observables and step the QRC
     // readout: the 6-qubit register is the high-dimensional reservoir; its quantum-state velocity (qFlux)
@@ -2177,6 +2196,17 @@ export class SuperMind {
         memory: {
           mean: this.memory.mean(),
           values: Array.from({ length: this.memory.size }, (_, i) => this.memory.recent(i) ?? 0),
+        },
+        brain: {
+          cortexOutput: this.observationTick ? Array.from(this.cortex.out) : [],
+          imaginationWinner: this.observationTick ? Array.from(this.cur) : [],
+          searchWinnerVectors: Array.from(
+            this.observedWinnerVectors.subarray(0, this.observationDepths * LATENT),
+          ),
+          quantumRaw: this.observationTick ? Array.from(this.quantum.out) : [],
+          qubitAspects: this.observationTick ? Array.from(this.observedQubitAspects) : [],
+          consolidatorOutput: this.observationTick ? Array.from(this.consolidator.out) : [],
+          metaInput: this.observationTick ? Array.from(this.metaIn) : [],
         },
       },
       paramCount: this.paramCount,

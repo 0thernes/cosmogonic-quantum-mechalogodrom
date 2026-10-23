@@ -1,4 +1,6 @@
-import { describe, expect, test } from 'bun:test';
+import { describe, expect, test, spyOn } from 'bun:test';
+import { TinyMLP } from '../src/sim/ai/brains';
+import { QuantumMind } from '../src/sim/super-qubits';
 import { mulberry32 } from '../src/math/rng';
 import { SuperMind, SUPER_SENSE_CHANNELS } from '../src/sim/super-mind';
 import { SUPER_PLANS, type SuperPercept } from '../src/sim/super-creature';
@@ -147,6 +149,9 @@ describe('SuperMind observatory provenance', () => {
     caller.observatory.search.scores[0] = 100;
     caller.observatory.rawPercept!.energy = 100;
     caller.observatory.drives.move.x = 100;
+    caller.observatory.brain.quantumRaw[0] = 100;
+    caller.observatory.brain.metaInput[0] = 100;
+    caller.observatory.brain.searchWinnerVectors[0] = 100;
     caller.consciousness.dreaming = 100;
     const fresh = m.snapshot();
     expect(fresh.observatory).toEqual(first.observatory);
@@ -169,5 +174,78 @@ describe('SuperMind observatory provenance', () => {
       expect(observed.snapshot().observatory.tick).toBe(i + 1);
     }
     expect(observed.snapshot()).toEqual(control.snapshot());
+  });
+
+  test('Brain telemetry equals actual receiver arguments at their call time', () => {
+    const m = new SuperMind(mulberry32(408));
+    const calls: { shape: string; input: number[]; output: number[] }[] = [];
+    const forward = TinyMLP.prototype.forward;
+    const evolve = QuantumMind.prototype.evolve;
+    let qubitInput: number[] = [];
+    const networkSpy = spyOn(TinyMLP.prototype, 'forward').mockImplementation(function (
+      this: TinyMLP,
+      input,
+      hidden,
+      out,
+    ) {
+      const values = Array.from(input);
+      forward.call(this, input, hidden, out);
+      calls.push({
+        shape: [this.nIn, this.nHidden, this.nOut].join('/'),
+        input: values,
+        output: Array.from(out),
+      });
+    });
+    const qubitSpy = spyOn(QuantumMind.prototype, 'evolve').mockImplementation(function (
+      this: QuantumMind,
+      aspects,
+      latent,
+    ) {
+      qubitInput = Array.from(aspects);
+      evolve.call(this, aspects, latent);
+    });
+    try {
+      m.think(percept(), 'full');
+    } finally {
+      networkSpy.mockRestore();
+      qubitSpy.mockRestore();
+    }
+    const s = m.snapshot(),
+      b = s.observatory.brain;
+    const first = (shape: string) => calls.find((c) => c.shape === shape)!;
+    expect(b.cortexOutput).toEqual(first('18/32/16').output);
+    expect(b.imaginationWinner).toEqual(first('16/24/16').input);
+    expect(b.quantumRaw).toEqual(first('16/20/10').output);
+    expect(b.metaInput).toEqual(first('69/26/12').input);
+    expect(b.qubitAspects).toEqual(qubitInput);
+    expect(b.consolidatorOutput).toEqual(first('16/16/16').output);
+    expect(first('16/16/4').input).toEqual(s.imagined);
+    const generators = calls.filter((c) => c.shape === '24/32/16');
+    for (let depth = 0; depth < 5; depth++) {
+      const selected = s.observatory.search.selectedVariants[depth]!;
+      const winner = generators[depth * 5 + selected]!.output;
+      expect(b.searchWinnerVectors.slice(depth * 16, (depth + 1) * 16)).toEqual(winner);
+      if (depth < 4) expect(generators[(depth + 1) * 5]!.input.slice(0, 16)).toEqual(winner);
+    }
+  });
+
+  test('Brain payloads expose only completed full/echo slices and snapshots own their copies', () => {
+    const m = new SuperMind(mulberry32(409));
+    expect(Object.values(m.snapshot().observatory.brain).every((v) => v.length === 0)).toBe(true);
+    m.think(percept(), 'full');
+    const saved = m.snapshot();
+    const before = structuredClone(saved.observatory.brain);
+    expect(before.searchWinnerVectors).toHaveLength(80);
+    m.think(percept({ phase: 0.7 }), 'echo');
+    const current = m.snapshot().observatory.brain;
+    expect(current.searchWinnerVectors).toHaveLength(16);
+    expect(current.imaginationWinner).toHaveLength(16);
+    expect(current.metaInput).toHaveLength(69);
+    expect(current.qubitAspects).toHaveLength(10);
+    expect(saved.observatory.brain).toEqual(before);
+    current.qubitAspects[0] = 99;
+    current.cortexOutput[0] = 99;
+    expect(m.snapshot().observatory.brain.qubitAspects[0]).not.toBe(99);
+    expect(m.snapshot().observatory.brain.cortexOutput[0]).not.toBe(99);
   });
 });

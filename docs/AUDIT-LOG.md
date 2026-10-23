@@ -11,6 +11,37 @@ changed and why.
 
 ---
 
+## 2026-10-22 (America/Los_Angeles) — Brain IV provenance and all-tab regression audit
+
+- Continued from upstream `fbf44f32` and `b885d4ff` in the isolated release checkout, preserving
+  the active writer's primary files. The earlier 27-card release remains the base. This pass covers
+  both IV layouts as well as all nine cards in each of I–III.
+- Found that some graph links called later, mutated snapshot arrays the exact inputs consumed
+  earlier in cognition. Added bounded stage captures and explicit payload/operand/unavailable
+  provenance. The graph is a selected module view, not a complete execution trace or a causal
+  intervention result. Core MLP counts remain distinct from neuron count and total stored state.
+- Removed tick-driven camera rotation; both views use fixed geometry. Preserved invalid values
+  instead of converting them to zero, restored full-precision numerical disclosures, and made
+  JSON export schema 2 include the selected view and its interpretation. Observer instances own
+  their view selection independently.
+- The baseline browser fixture retained 74 passing assertions and 10 failures: clipped expanded
+  details, rounded values labeled exact, and canvas label overflow. The existing 27-card behavior,
+  duplicate/frozen identity, live cognition response and source/reset behavior passed. These
+  failures were preserved before repair; the production method/details layout now grows and scrolls.
+- Added finite, normalized-state validation at the pairwise-information boundary; malformed
+  probabilities or phases cannot turn into a plausible correlation matrix. Mutual information is
+  total correlation; the GHZ pair example requires at least three qubits.
+- Final component browser fixture: 115 assertions passed with zero browser exceptions, including
+  both modes at desktop/mobile widths, unrounded values, lossless invalid/negative-zero exports,
+  details reachability, fixed/frozen/duplicate snapshots, real cognition response, source resets,
+  keyboard view selection and independent observer instances. These are seeded component checks,
+  not a browser FPS or complete scientific acceptance result.
+- Twelve added regressions cover temporal capture against actual receiver-call arguments, graph
+  provenance and invalid-data rendering, normalized-state validation and exact circuit-input binding.
+  The reproducible builder benchmark and its scope are recorded in [BENCHMARKS-2026-06-26.md](./BENCHMARKS-2026-06-26.md).
+- CQM-25 axes: `instrumentation_reproducibility`, `visual_embodied_scale`, `substrate_pluralism`
+  and `causal_integration`. Scope is PRIME instrumentation, not calibrated capability or mental status.
+
 ## 2026-10-23 (local date) — IV · BRAIN rebuilt as a measured module connectome
 
 - Owner asked again whether all four tabs, including IV's two Brain views, are live data. I–III were

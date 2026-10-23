@@ -78,17 +78,26 @@ The balanced-cut linear-entropy statistic omits unbalanced cuts: the tested `GHZ
 counterexample remains positive despite a separable cut. Participation ratio can be maximal for
 constant equal activations without any causal interaction. Neither statistic is IIT Phi.
 
-IV · BRAIN is now a **measured module connectome**, not an illustration. Its 16 nodes are the
-computing modules of `SuperMind.think()` (senses, cortex, 30 organs, imagitron, thought search,
+IV · BRAIN presents a **sampled, partial module graph** in two layouts. Its 16 groups cover selected
+stages and state stores of `SuperMind.think()` (senses, cortex, 30 organs, imagitron, thought search,
 predictor, reasoner, self-model, affect, quantum net, qubit register, reservoir, spin instinct,
-memory, meta, plan), each holding an exact copy of its output this tick; their TinyMLP parameter
-counts sum to the mind's 10,081. Its 31 lines are the data flows the code performs, each carrying
-the exact values passed (or the slice the receiver reads), sized by their RMS. CONNECTOME draws
-these as a flow map with each node's actual values as a bar strip; MEGA 4D places the 16 modules on
-the 16 vertices of a tesseract and every measured value (~395) as one dot, turning only when a new
-cognition tick arrives. The former synthetic EEG bands, sine-driven spikes, XOR "axons", traveling
-pulses and orbiting satellites are gone. Positions remain layout, dots are model variables rather
-than neurons, flows are code paths rather than axons, and none of it is a consciousness test.
+memory, meta, plan). Each group names its exact snapshot source. Associated core TinyMLP parameter
+allocations sum to 10,081; that sum is neither a neuron count nor the whole system's stored state.
+Dedicated `observatory.brain` captures preserve earlier stage values before recurrence and later
+updates alter them. A final workspace or transformed quantum vector cannot substitute for an earlier
+network input. Link metadata distinguishes captured payloads, selected operands and unavailable
+intermediates. A structural relationship with unavailable values has no measured strength; the graph
+is not a complete execution trace or a causal intervention result.
+
+COMPOSITE draws a module flow map and value strips; MEGA 4D maps those same groups to the 16 tesseract
+vertices and draws each available value as a dot. Both layouts are fixed. A new tick changes the tick
+label but cannot manufacture rotation or signal motion. Synthetic EEG bands, sine-driven spikes,
+XOR "axons", traveling pulses and orbiting satellites are absent. Module hue identifies a group;
+value marks encode sign and normalized magnitude under the displayed method. Positions are layout,
+dots are model variables rather than neurons, and links are code relationships rather than axons.
+Neither view measures EEG, subjective experience or intelligence. Missing/nonfinite values remain
+unavailable, and exact numerical text agrees with the graph exported in JSON. The shared 96-sample
+history and source/running/suspended/frozen status apply to both views.
 
 Relevant CQM-25 axes: `instrumentation_reproducibility`, `visual_embodied_scale`,
 `substrate_pluralism`, and `causal_integration`. This audit improves evidence fidelity without

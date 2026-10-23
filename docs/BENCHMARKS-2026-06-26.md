@@ -16,6 +16,30 @@ Measured results for the hot-path primitives. Reproduce with `bun run bench`
 
 ## Results
 
+### PRIME observatory data builders (I–IV)
+
+Measured 2026-10-22 (America/Los_Angeles) on Intel Core Ultra 9 275HX, 24 logical processors,
+Windows 10.0.26300, Bun 1.3.14. Reproduce with `bun bench/neural-observatory.bench.ts`;
+`--output-dir <directory>` also writes the raw timings, runtime context and source hashes.
+Separate seeded full/echo snapshots follow 96 completed beats, each with 96 observed history
+samples. Construction and snapshot acquisition are excluded. Each condition uses 48 warmups and
+200 timed samples in rotated order with a monotonic clock. Source hashes and snapshot/history/output
+digests remained unchanged during the measurement.
+
+| Mode | Operation                                               | Mean (ms) | P95 (ms) |
+| ---- | ------------------------------------------------------- | --------: | -------: |
+| Full | 27 cards, including pairwise quantum mutual information |    0.1461 |   0.1717 |
+| Full | Partial Brain graph                                     |    0.0320 |   0.0385 |
+| Full | Both builders                                           |    0.1775 |   0.2218 |
+| Echo | 27 cards                                                |    0.1351 |   0.1729 |
+| Echo | Partial Brain graph                                     |    0.0226 |   0.0393 |
+| Echo | Both builders                                           |    0.1742 |   0.2056 |
+
+The full-mode combined mean is approximately 1.07% of a 16.67 ms CPU frame budget per
+observation, before snapshot acquisition, DOM, drawing or the rest of World. Builders run on accepted
+snapshot delivery, not every repaint. These current-only native Bun timings do not establish a
+before/after speedup, browser render cost, GPU cost or production FPS.
+
 ### Xylos autonomous manifold
 
 Measured 2026-09-28 on Intel Core Ultra 9 275HX (~3.38 GHz), Windows x64,

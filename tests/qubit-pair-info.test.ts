@@ -1,7 +1,7 @@
 /**
  * Pairwise quantum mutual information (src/math/qubit-pair-info.ts) — the math behind the observatory's
- * Q · ENTANGLEMENT readout. Pinned on states with known answers: a Bell pair shares 2 bits, every pair of
- * a GHZ state shares 1 bit, a product state shares nothing, and arbitrary states stay inside [0, 2].
+ * pairwise total-correlation readout. A Bell pair shares 2 bits, a pair in a GHZ state of at least three
+ * qubits shares 1 bit despite being separable, and a product state shares nothing.
  */
 import { describe, expect, test } from 'bun:test';
 import {
@@ -92,6 +92,89 @@ describe('pairwise quantum mutual information', () => {
         expect(v).toBeLessThanOrEqual(2);
       }
     }
+  });
+
+  test('a full-rank complex reduced state matches its known spectrum and local-unitary invariance', () => {
+    // Purify a Bell-diagonal state on qubits 0,2 using orthogonal environment states on 1,3.
+    // Its marginals are I/2 and its spectrum is these four unequal probabilities.
+    const weights = [0.4, 0.3, 0.2, 0.1];
+    const bellStates = [
+      [
+        [0, 1],
+        [5, 1],
+      ],
+      [
+        [0, 1],
+        [5, -1],
+      ],
+      [
+        [1, 1],
+        [4, 1],
+      ],
+      [
+        [1, 1],
+        [4, -1],
+      ],
+    ];
+    const re = new Float64Array(16);
+    const im = new Float64Array(16);
+    for (let k = 0; k < 4; k++) {
+      const environment = ((k & 1) << 1) | ((k & 2) << 2);
+      for (const [state, sign] of bellStates[k]!)
+        re[environment | state!] = sign! * Math.sqrt(weights[k]! / 2);
+    }
+    const expected = 2 + weights.reduce((sum, p) => sum + p * Math.log2(p), 0);
+    const before = pairwiseMutualInformation(re, im);
+    expect(before.mutual[pairIndex(0, 2, 4)]).toBeCloseTo(expected, 10);
+    // Local Rx(0.73) produces complex off-diagonal density entries without changing the spectrum.
+    const rotatedRe = new Float64Array(16);
+    const rotatedIm = new Float64Array(16);
+    for (let i = 0; i < 16; i++) {
+      rotatedRe[i] = Math.cos(0.73 / 2) * re[i]!;
+      rotatedIm[i] = -Math.sin(0.73 / 2) * re[i ^ 1]!;
+    }
+    const after = pairwiseMutualInformation(rotatedRe, rotatedIm);
+    expect(after.single[0]).toBeCloseTo(1, 10);
+    expect(after.single[2]).toBeCloseTo(1, 10);
+    expect(after.mutual[pairIndex(0, 2, 4)]).toBeCloseTo(expected, 10);
+  });
+
+  test('invalid amplitudes, probabilities and phases cannot become plausible correlation values', () => {
+    for (const re of [
+      [NaN, 0],
+      [Infinity, 0],
+      [0, 0],
+      [0.5, 0.5],
+      [1.001, 0],
+    ])
+      expect(() => pairwiseMutualInformation(re, [0, 0])).toThrow(RangeError);
+    expect(() => pairwiseMutualInformation([1, 0], [NaN, 0])).toThrow(RangeError);
+    expect(() => pairwiseMutualInformation([1, 0], [0])).toThrow(RangeError);
+    for (const probs of [
+      [NaN, 0],
+      [Infinity, 0],
+      [-0.5, 1.5],
+      [0, 0],
+      [0.4, 0.4],
+    ])
+      expect(() => amplitudesFromBorn(probs, [0, 0])).toThrow(RangeError);
+    const missingPhases: number[] = [];
+    missingPhases.length = 2;
+    for (const phase of [[0], [0, NaN], [0, Infinity], missingPhases])
+      expect(() => amplitudesFromBorn([1, 0], phase)).toThrow(RangeError);
+    for (const r of [NaN, Infinity, -1, 2])
+      expect(() => qubitEntropyFromBloch(r)).toThrow(RangeError);
+  });
+
+  test('only bounded normalization roundoff is removed, without mutating inputs', () => {
+    const scale = Math.sqrt(1 + 5e-10);
+    const re = [S * scale, 0, 0, S * scale];
+    const im = [0, 0, 0, 0];
+    const before = re.slice();
+    expect(pairwiseMutualInformation(re, im).mutual[0]).toBeCloseTo(2, 10);
+    expect(re).toEqual(before);
+    expect(im).toEqual([0, 0, 0, 0]);
+    expect(qubitEntropyFromBloch(1 + 1e-12)).toBe(0);
   });
 
   test('pairIndex enumerates (0,1),(0,2),…,(n−2,n−1) without gaps and is order-free', () => {

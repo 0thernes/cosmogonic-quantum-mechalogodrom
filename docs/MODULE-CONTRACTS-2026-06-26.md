@@ -2,7 +2,7 @@
 
 # Module Contracts
 
-## Neural observatory measurement contract (World I, Cognition II, Quantum III)
+## Neural observatory measurement contract (World I, Cognition II, Quantum III, Brain IV)
 
 The 27 cards inspect the PRIME Archon (index 0), not a population aggregate. Each card identifies
 its snapshot source, units, transformation and limitations. The affected CQM-25 axes are
@@ -14,6 +14,17 @@ For this amendment the exclusive writers are: root/integrator for `src/ui/super-
 and its observatory tests; quantum writer for `src/sim/super-qubits.ts`,
 `src/sim/integrated-information.ts` and their tests; data writer for
 `src/ui/super-neural-data.ts` and its tests.
+
+The Brain IV follow-through uses exclusive owners for the brain graph/renderer and its tests,
+the pairwise quantum-information/data-card modules and their tests, and the root UI/documentation.
+Both brain views must preserve invalid values, distinguish captured values from inferred code-path
+relationships, and disclose any unavailable intermediate payload rather than relabel a later output
+as the exact earlier input. No completeness claim follows from a selected module graph. Its layout
+and camera orientation are presentation choices, never neural activity. Exact-value details and JSON
+export must agree; details must remain reachable at mobile widths. Controls include fixed-snapshot
+repaints, known channel perturbations, invalid inputs, both full and echo cognition, source resets,
+and suspended/frozen runtime transitions. A wrong edge payload, fabricated zero, clipped method
+disclosure, or a clock-dependent measurement falsifies the relevant instrumentation claim.
 
 `SuperMindSnapshot.observatory` contains owned copies of the completed cognition tick, active
 full/echo search shape, actual original percept and encoded inputs, intermediate module outputs,
@@ -33,7 +44,7 @@ styling; it cannot change the measured marks in tabs I–III.
 The quantum layer remains a classical statevector simulation. Controlled-RY is unitary and tested
 on every basis input; geometry uses a scratch register and a copied input. Metric determinant and
 trace are labeled as such, not curvature or speed. Finite differences that cross a discrete gate
-switch are flagged. Pairwise quantum mutual information is computed exactly from the full statevector,
+switch are flagged. Pairwise quantum mutual information is evaluated numerically from the full statevector,
 never inferred from single-qubit P(1) or mixedness; computational-basis
 Shannon entropy is not von Neumann entropy. Born samples are explicitly non-destructive observations.
 The balanced-cut linear-entropy proxy remains scoped to its tested partitions and is not IIT Phi.
@@ -44,11 +55,13 @@ history and simulation trajectories unchanged; invalid samples are visibly rejec
 all 27 cards have source metadata and exportable numeric data. Browser checks cover all tabs,
 running/suspended/frozen transitions and narrow-screen overflow. Snapshot copies and card building
 occur on the existing observatory cadence; bounded chart data are cached between paints. IV · BRAIN
-(`src/ui/super-neural-brain.ts`) draws one measured graph two ways: 16 modules holding exact copies of
-their snapshot outputs (parameter counts summing to `paramCount`) and the 31 data flows `think()`
-performs, each carrying the exact values passed. CONNECTOME is a flow map; MEGA 4D puts each module on
-a tesseract vertex and every value on a dot, turning only per cognition tick. Positions are layout;
-dots are model variables, not neurons; flows are code paths, not axons
+(`src/ui/super-neural-brain.ts`) draws one partial graph two ways: 16 module groups with explicitly
+named source values and associated core MLP parameter allocations. Link metadata distinguishes captured
+payloads, selected operands and unavailable intermediate values; no signal magnitude is inferred for
+an unavailable payload. COMPOSITE is a module flow map; MEGA 4D uses a fixed tesseract layout. Positions
+are layout; dots are model variables, not neurons; links are declared code relationships, not axons.
+Neither a tick-only change nor a repaint may manufacture visual signal activity. The export includes
+the graph, measurement provenance and selected view; exact-value details preserve numerical precision
 (`tests/super-neural-brain.test.ts`).
 
 ## CQM-25 capability law (canonical framework)
@@ -1819,7 +1832,7 @@ Copilot are constructed boot-stream-neutral and never write sim state, so the go
 
 ### V9 acceptance
 
-Full `bun run check` green: prettier → tsc strict → oxlint → 3485 tests (0 fail, 300-frame golden
+Full `bun run check` green: prettier → tsc strict → oxlint → 3497 tests (0 fail, 300-frame golden
 included) → build. The Copilot sandbox verified live (allow: `git log`, file reads; deny:
 path-escape, repository-root pathspecs, `git push`, `legacy/`, shell redirection).
 

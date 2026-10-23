@@ -224,6 +224,18 @@ describe('Neural observatory numeric provenance', () => {
     ]);
   });
 
+  test('circuit control inputs use the captured pre-evolve vector, not later modulated outputs', () => {
+    const s = snapshot();
+    s.observatory.brain.qubitAspects[9] = 0.37;
+    s.quantum[9] = 0.13;
+    const inputs = card(s, 'quantum_control_inputs');
+    expect(inputs.source).toBe('observatory.brain.qubitAspects');
+    expect(inputs.series[0]!.values).toEqual(s.observatory.brain.qubitAspects);
+    expect(inputs.series[0]!.values[9]).toBe(0.37);
+    s.observatory.brain.qubitAspects = [];
+    expect(card(s, 'quantum_control_inputs').warning).toContain('No received samples');
+  });
+
   test('Born and adapter probabilities retain exact values without display multiplication', () => {
     const s = snapshot();
     s.qubits.probs[0] = 0.125;
@@ -251,6 +263,31 @@ describe('Neural observatory numeric provenance', () => {
     for (const row of product.series) for (const v of row.values) expect(v).toBeCloseTo(0, 9);
     s.qubits.probs = [0.5, 0.5, 0];
     expect(card(s, 'quantum_pair_information').warning).toContain('unavailable');
+  });
+
+  test('invalid pairwise inputs remain unavailable instead of becoming a fabricated zero matrix', () => {
+    const s = snapshot();
+    for (const probs of [
+      [NaN, 0, 0, 1],
+      [-0.5, 0, 0, 1.5],
+      [0, 0, 0, 0],
+      [0.4, 0, 0, 0.4],
+    ]) {
+      s.qubits.probs = probs;
+      s.qubits.phase = [0, 0, 0, 0];
+      const invalid = card(s, 'quantum_pair_information');
+      expect(invalid.warning).toContain('unavailable');
+      expect(invalid.series).toEqual([]);
+      expect(invalid.columns).toBeUndefined();
+    }
+    s.qubits.probs = [0.5, 0, 0, 0.5];
+    s.qubits.phase = [0, NaN, 0, 0];
+    expect(card(s, 'quantum_pair_information').warning).toContain('unavailable');
+    s.qubits.phase = [0, 0, 0, 0];
+    const recovered = card(s, 'quantum_pair_information');
+    expect(recovered.warning).toBeUndefined();
+    expect(recovered.series[0]!.values[1]).toBeCloseTo(2, 9);
+    expect(recovered.note).toContain('not a pairwise entanglement witness');
   });
 
   test('local coherence and Bloch vectors stay single-qubit measurements', () => {

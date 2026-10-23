@@ -1,20 +1,8 @@
 /**
- * IV · BRAIN — the PRIME Archon's measured module connectome. Pure: a function of one SuperMind snapshot,
- * no clock, paint state, RNG or simulation writes.
- *
- * {@link buildBrainGraph} copies the output vector of each of the mind's 16 computing modules from the
- * snapshot, and lists the data flows `SuperMind.think()` actually performs between them. Every flow
- * carries the exact values passed along it this beat (or the read-out slice the receiver uses), so its
- * strength is the RMS of real numbers, not an invented synapse weight. The per-module parameter counts
- * are the TinyMLP weights of the network that produced the values and sum to `paramCount` (tested).
- *
- * Two renderings read that graph and nothing else:
- *   • CONNECTOME — a left-to-right flow map: node size = output RMS, line width = √(RMS carried), and each
- *     node prints its RMS, its parameter count and its actual values as a bar strip.
- *   • MEGA 4D — the 16 modules sit on the 16 vertices of a tesseract; every measured value is one dot
- *     (size and brightness = |value| ÷ that module's largest |value|, hue flips for negatives), and the
- *     same flows join the vertices. The view turns only when a new cognition tick arrives.
- * Positions are layout. Dots are model variables, not neurons; flows are code paths, not axons.
+ * Two fixed-camera views of selected PRIME Archon state and code-path measurements. This partial
+ * graph is not a complete execution trace. Positions and tesseract edges are layout, not anatomy.
+ * Values include current state, selected network outputs and stored entries as declared by source.
+ * Associated core TinyMLP allocations sum to paramCount; other subsystem parameters are excluded.
  */
 import type { SuperMindSnapshot } from '../sim/super-mind';
 
@@ -41,7 +29,8 @@ export interface BrainModule {
   readonly label: string;
   /** Snapshot path the values are copied from. */
   readonly source: string;
-  /** TinyMLP weights of the network that produced the values (0 = no weight network). */
+  /** Associated core TinyMLP allocation, including biases; 0 means outside this counted budget. */
+  readonly note: string;
   readonly params: number;
   /** Flow-map column (0 = input … 6 = decision). */
   readonly column: number;
@@ -54,7 +43,10 @@ export interface BrainModule {
 export interface BrainEdge {
   readonly from: BrainModuleId;
   readonly to: BrainModuleId;
-  /** What travels along this flow in think(). */
+  /** Complete payload, selected formula operands, or an unavailable structural relationship. */
+  readonly measurement: 'payload' | 'operands' | 'unavailable';
+  readonly source: string;
+  /** Scope and timing of the values. */
   readonly via: string;
   readonly carried: number[];
   readonly rms: number;
@@ -67,26 +59,38 @@ export interface BrainGraph {
   readonly paramCount: number;
   readonly modules: BrainModule[];
   readonly edges: BrainEdge[];
-  /** Total measured values across all modules (= MEGA 4D dot count). */
+  readonly warning?: string;
+  /** Available value slots; invalid values are not rendered as measured dots. */
   readonly units: number;
 }
 
-function finite(v: unknown): number {
-  return typeof v === 'number' && Number.isFinite(v) ? v : 0;
+function numeric(v: unknown): number {
+  return typeof v === 'number' ? v : NaN;
 }
 function vec(a: ArrayLike<number> | undefined): number[] {
-  return a ? Array.from(a, finite) : [];
+  return a ? Array.from(a, numeric) : [];
 }
 function rmsOf(a: readonly number[]): number {
-  return a.length ? Math.sqrt(a.reduce((s, v) => s + v * v, 0) / a.length) : 0;
+  return a.length ? Math.sqrt(a.reduce((s, v) => s + v * v, 0) / a.length) : NaN;
 }
 function maxAbsOf(a: readonly number[]): number {
-  let m = 0;
+  let m = a.length ? 0 : NaN;
   for (const v of a) m = Math.max(m, Math.abs(v));
   return m;
 }
 
-/** The 16 modules: id, label, snapshot source, producing-network weights, flow column, hue. */
+const MODULE_NOTES: Partial<Record<BrainModuleId, string>> = {
+  cortex:
+    'Workspace after cortex, broadcast, plastic recall and MPO coupling; associated cortex MLP 18→32→16.',
+  imagitron: 'Selected imagination after recurrence blending; associated generator MLP 24→32→16.',
+  search: 'Perceptor score channel across candidates; associated critic MLP 16→20→4.',
+  quantum: 'Signed raw network output; unit conversion and aspect modulation are separate.',
+  memory:
+    'Stored ring, newest first; associated 16→16→16 consolidator is one writer, not producer of every entry.',
+  reservoir: 'Reservoir state; recurrent/readout parameters are outside the core TinyMLP count.',
+  instinct: 'Spin state; coupling parameters are outside the core TinyMLP count.',
+};
+/** Sixteen selected state groups and associated core-network allocation, not neuron counts. */
 const MODULE_SPECS: readonly {
   id: BrainModuleId;
   label: string;
@@ -107,7 +111,7 @@ const MODULE_SPECS: readonly {
   },
   {
     id: 'cortex',
-    label: 'CORTEX',
+    label: 'WORKSPACE',
     source: 'latent',
     params: 1136,
     column: 1,
@@ -134,7 +138,7 @@ const MODULE_SPECS: readonly {
   },
   {
     id: 'imagitron',
-    label: 'IMAGITRON',
+    label: 'IMAGINATION',
     source: 'imagined',
     params: 1328,
     column: 2,
@@ -153,11 +157,11 @@ const MODULE_SPECS: readonly {
   {
     id: 'quantum',
     label: 'QUANTUM NET',
-    source: 'quantum',
+    source: 'observatory.brain.quantumRaw',
     params: 550,
     column: 2,
     hue: 260,
-    read: (s) => vec(s.quantum),
+    read: (s) => vec(s.observatory.brain?.quantumRaw),
   },
   {
     id: 'reservoir',
@@ -242,201 +246,290 @@ const MODULE_SPECS: readonly {
   },
 ];
 
-/** The data flows think() performs, each with the values it carries (or the slice the receiver reads). */
+/** Selected relationships, with scope and timing explicit rather than a complete execution trace. */
 const EDGE_SPECS: readonly {
   from: BrainModuleId;
   to: BrainModuleId;
   via: string;
+  source: string;
+  measurement: 'payload' | 'operands';
   carry: (s: SuperMindSnapshot, m: Record<BrainModuleId, number[]>) => number[];
 }[] = [
   {
     from: 'senses',
     to: 'cortex',
-    via: 'the 18 encoded senses are the cortex input',
+    measurement: 'payload',
+    source: 'observatory.senses',
+    via: 'Complete cortex input; displayed workspace also includes subsequent coupling.',
     carry: (_s, m) => m.senses,
   },
   {
     from: 'senses',
     to: 'instinct',
-    via: 'senses 0–5 set the plan saliences that drive the spin field',
+    measurement: 'operands',
+    source: 'observatory.senses[0..5]',
+    via: 'Sensory salience operands; novelty, affect, attention and archetypes also determine the spin field.',
     carry: (_s, m) => m.senses.slice(0, 6),
   },
   {
     from: 'senses',
     to: 'memory',
-    via: 'salience pushed to memory reads threat and crowding',
-    carry: (_s, m) => [m.senses[1] ?? 0, m.senses[2] ?? 0],
+    measurement: 'operands',
+    source: 'observatory.senses[1,2]',
+    via: 'Threat/crowding operands before salience weighting, predicted magnitude and clamp.',
+    carry: (_s, m) => [numeric(m.senses[1]), numeric(m.senses[2])],
   },
   {
     from: 'senses',
     to: 'affect',
-    via: 'affect input reads energy, threat, wealth',
-    carry: (_s, m) => [m.senses[0] ?? 0, m.senses[1] ?? 0, m.senses[4] ?? 0],
+    measurement: 'operands',
+    source: 'observatory.senses[0,1,4]',
+    via: 'Energy, threat and wealth operands in the 12-channel affect input.',
+    carry: (_s, m) => [numeric(m.senses[0]), numeric(m.senses[1]), numeric(m.senses[4])],
   },
   {
     from: 'senses',
     to: 'plan',
-    via: 'plan drive formulas read energy, threat, wealth, prey',
-    carry: (_s, m) => [m.senses[0] ?? 0, m.senses[1] ?? 0, m.senses[4] ?? 0, m.senses[5] ?? 0],
+    measurement: 'operands',
+    source: 'observatory.senses[0,1,4,5]',
+    via: 'Sensory operands of initial drive formulas; later controller terms also modify scores.',
+    carry: (_s, m) => [
+      numeric(m.senses[0]),
+      numeric(m.senses[1]),
+      numeric(m.senses[4]),
+      numeric(m.senses[5]),
+    ],
   },
   {
     from: 'cortex',
     to: 'organs',
-    via: 'each organ reads a 4-wide latent window',
-    carry: (_s, m) => m.cortex,
+    measurement: 'payload',
+    source: 'latent (30 four-channel windows)',
+    via: 'Concatenated inputs in organ order: window offset (organ × 4) modulo latent width.',
+    carry: (s, m) =>
+      Array.from({ length: s.observatory.organOutputs.length / 2 }, (_, k) =>
+        Array.from({ length: 4 }, (_, i) => numeric(m.cortex[((k * 4) % m.cortex.length) + i])),
+      ).flat(),
   },
   {
     from: 'cortex',
     to: 'imagitron',
-    via: 'latent + 8 noise values seed every imagined branch',
+    measurement: 'operands',
+    source: 'latent',
+    via: 'First-depth seed only; each generator input also contains eight noise values.',
     carry: (_s, m) => m.cortex,
   },
   {
     from: 'cortex',
     to: 'predictor',
-    via: 'latent, rolled forward once per depth',
+    measurement: 'payload',
+    source: 'latent',
+    via: 'Complete first predictor input; later inputs are previous predictor outputs.',
     carry: (_s, m) => m.cortex,
   },
   {
     from: 'cortex',
     to: 'quantum',
-    via: 'latent is the quantum-net input',
+    measurement: 'payload',
+    source: 'latent',
+    via: 'Complete raw quantum-network input.',
     carry: (_s, m) => m.cortex,
   },
   {
     from: 'cortex',
     to: 'reservoir',
-    via: 'latent drives the echo-state reservoir',
+    measurement: 'payload',
+    source: 'latent',
+    via: 'Complete echo-state reservoir input.',
     carry: (_s, m) => m.cortex,
   },
   {
     from: 'cortex',
     to: 'qubits',
-    via: 'latent sets the register rotation angles',
+    measurement: 'payload',
+    source: 'latent',
+    via: 'Complete latent argument of qmind.evolve; aspect controls are separate.',
     carry: (_s, m) => m.cortex,
   },
-  { from: 'cortex', to: 'meta', via: 'latent is meta input 0–15', carry: (_s, m) => m.cortex },
+  {
+    from: 'cortex',
+    to: 'meta',
+    measurement: 'payload',
+    source: 'observatory.brain.metaInput[0..15]',
+    via: 'Exact first 16-channel meta input block.',
+    carry: (s) => vec(s.observatory.brain?.metaInput).slice(0, 16),
+  },
   {
     from: 'imagitron',
     to: 'search',
-    via: 'the perceptor scores each imagined branch (winning branch shown)',
-    carry: (_s, m) => m.imagitron,
+    measurement: 'payload',
+    source: 'observatory.brain.imaginationWinner',
+    via: 'Final-depth selected candidate, one actual perceptor input; other candidate vectors are not displayed.',
+    carry: (s) => vec(s.observatory.brain?.imaginationWinner),
   },
   {
     from: 'search',
     to: 'imagitron',
-    via: 'the winning score per depth re-seeds the next depth',
-    carry: (s) => winners(s),
+    measurement: 'operands',
+    source: 'observatory.brain.searchWinnerVectors (except final depth)',
+    via: 'Selected vectors re-seed later depths, not scores; eight noise inputs are omitted.',
+    carry: (s) =>
+      vec(s.observatory.brain?.searchWinnerVectors).slice(
+        0,
+        Math.max(0, s.observatory.activeDepths - 1) * 16,
+      ),
   },
   {
     from: 'imagitron',
     to: 'reasoner',
-    via: 'imagined winner is the reasoner input',
-    carry: (_s, m) => m.imagitron,
+    measurement: 'payload',
+    source: 'observatory.brain.imaginationWinner',
+    via: 'Exact reasoner input before the later learned-recurrence blend.',
+    carry: (s) => vec(s.observatory.brain?.imaginationWinner),
   },
   {
     from: 'imagitron',
     to: 'self',
-    via: 'imagined winner is the self-model input',
+    measurement: 'payload',
+    source: 'imagined',
+    via: 'Complete self-model input after learned-recurrence blending.',
     carry: (_s, m) => m.imagitron,
   },
   {
     from: 'imagitron',
     to: 'memory',
-    via: 'the consolidator folds the imagined winner into memory',
+    measurement: 'payload',
+    source: 'imagined',
+    via: 'Complete consolidator input; only its transformed, gated first output enters the ring.',
     carry: (_s, m) => m.imagitron,
   },
   {
     from: 'imagitron',
     to: 'affect',
-    via: 'affect input reads imagined[0]',
-    carry: (_s, m) => [m.imagitron[0] ?? 0],
+    measurement: 'operands',
+    source: 'imagined[0]',
+    via: 'Post-blend imagined channel 0 is one affect input.',
+    carry: (_s, m) => [numeric(m.imagitron[0])],
   },
   {
     from: 'imagitron',
     to: 'meta',
-    via: 'imagined winner is meta input 16–31',
-    carry: (_s, m) => m.imagitron,
+    measurement: 'payload',
+    source: 'observatory.brain.metaInput[16..31]',
+    via: 'Exact post-blend imagination block consumed by meta.',
+    carry: (s) => vec(s.observatory.brain?.metaInput).slice(16, 32),
   },
   {
     from: 'predictor',
     to: 'memory',
-    via: 'salience pushed to memory reads |predicted[0]|',
-    carry: (_s, m) => [m.predictor[0] ?? 0],
+    measurement: 'operands',
+    source: 'observatory.predicted[0]',
+    via: 'Signed predictor operand; salience applies abs, weighting and clamp before writing.',
+    carry: (_s, m) => [numeric(m.predictor[0])],
   },
   {
     from: 'quantum',
     to: 'qubits',
-    via: 'aspect drives gate the Hadamards and the entangler',
-    carry: (_s, m) => m.quantum,
+    measurement: 'payload',
+    source: 'observatory.brain.qubitAspects',
+    via: 'Exact converted/modulated aspect argument before the later quake mutation.',
+    carry: (s) => vec(s.observatory.brain?.qubitAspects),
   },
-  { from: 'quantum', to: 'meta', via: 'aspects are meta input 52–61', carry: (_s, m) => m.quantum },
+  {
+    from: 'quantum',
+    to: 'meta',
+    measurement: 'payload',
+    source: 'observatory.brain.metaInput[52..61]',
+    via: 'Exact signed raw quantum-network block, not final aspect intensities.',
+    carry: (s) => vec(s.observatory.brain?.metaInput).slice(52, 62),
+  },
   {
     from: 'organs',
     to: 'affect',
-    via: 'affect input reads organ aggregate 0',
-    carry: (s) => [finite(s.observatory.organAggregates[0])],
+    measurement: 'operands',
+    source: 'observatory.organAggregates[0]',
+    via: 'Attention-weighted aggregate 0 is one affect input.',
+    carry: (s) => [numeric(s.observatory.organAggregates[0])],
   },
   {
     from: 'organs',
     to: 'meta',
-    via: 'the 4 organ aggregates are meta input 48–51',
-    carry: (s) => vec(s.observatory.organAggregates),
+    measurement: 'payload',
+    source: 'observatory.brain.metaInput[48..51]',
+    via: 'Exact four attention-weighted aggregate channels consumed by meta.',
+    carry: (s) => vec(s.observatory.brain?.metaInput).slice(48, 52),
   },
   {
     from: 'reasoner',
     to: 'affect',
-    via: 'affect input reads reasoned[0]',
-    carry: (_s, m) => [m.reasoner[0] ?? 0],
+    measurement: 'operands',
+    source: 'observatory.reasoned[0]',
+    via: 'Reasoner channel 0 is one affect input.',
+    carry: (_s, m) => [numeric(m.reasoner[0])],
   },
   {
     from: 'reasoner',
     to: 'meta',
-    via: 'reasoned is meta input 32–47',
-    carry: (_s, m) => m.reasoner,
+    measurement: 'payload',
+    source: 'observatory.brain.metaInput[32..47]',
+    via: 'Exact reasoned block consumed by meta.',
+    carry: (s) => vec(s.observatory.brain?.metaInput).slice(32, 48),
   },
   {
     from: 'affect',
     to: 'meta',
-    via: 'the 3 affect outputs are meta input 62–64',
-    carry: (_s, m) => m.affect,
+    measurement: 'payload',
+    source: 'observatory.brain.metaInput[62..64]',
+    via: 'Exact raw affect block, not smoothed emotion state.',
+    carry: (s) => vec(s.observatory.brain?.metaInput).slice(62, 65),
   },
   {
     from: 'self',
     to: 'meta',
-    via: 'the 4 self-model outputs are meta input 65–68',
-    carry: (_s, m) => m.self,
+    measurement: 'payload',
+    source: 'observatory.brain.metaInput[65..68]',
+    via: 'Exact four raw self-model outputs consumed by meta.',
+    carry: (s) => vec(s.observatory.brain?.metaInput).slice(65, 69),
   },
   {
     from: 'meta',
     to: 'plan',
-    via: 'meta outputs 3–7 become aggression, deception, dominance, spawn, curiosity',
+    measurement: 'operands',
+    source: 'observatory.actionOutputs[3..7]',
+    via: 'Raw outputs before unit conversion; curiosity also combines novelty and other terms.',
     carry: (_s, m) => m.meta.slice(3, 8),
   },
   {
     from: 'instinct',
     to: 'plan',
-    via: 'the recalled archetype biases its plan by its overlap',
-    carry: (s) => [finite(s.spin?.bestOverlap)],
+    measurement: 'operands',
+    source: 'spin.bestOverlap',
+    via: 'Maximum absolute archetype overlap, multiplied by INSTINCT_GAIN for its selected plan.',
+    carry: (s) => [numeric(s.spin?.bestOverlap)],
   },
   {
     from: 'reservoir',
     to: 'plan',
-    via: 'reservoir novelty raises curiosity (EXPLORE)',
-    carry: (s) => [finite(s.reservoir?.novelty)],
+    measurement: 'operands',
+    source: 'reservoir.novelty',
+    via: 'Reservoir novelty is one weighted curiosity operand, not the full EXPLORE score.',
+    carry: (s) => [numeric(s.reservoir?.novelty)],
+  },
+  {
+    from: 'memory',
+    to: 'senses',
+    measurement: 'payload',
+    source: 'observatory.senses[13]',
+    via: 'Prior memory mean read before this beat writes the ring; final ring mean can differ.',
+    carry: (_s, m) => [numeric(m.senses[13])],
   },
 ];
-
-function winners(s: SuperMindSnapshot): number[] {
-  const o = s.observatory;
-  const w = Math.max(0, Math.trunc(o.variantsPerDepth));
-  return o.search.selectedVariants.map((v, d) => finite(o.search.scores[d * w + v]));
-}
 
 /** Build the measured module graph of one snapshot. Pure; copies every value it reads. */
 export function buildBrainGraph(s: SuperMindSnapshot): BrainGraph {
   const raw = {} as Record<BrainModuleId, number[]>;
-  for (const spec of MODULE_SPECS) raw[spec.id] = spec.read(s);
+  const available = s.observatory.tick > 0 && s.observatory.mode !== 'unstarted';
+  for (const spec of MODULE_SPECS) raw[spec.id] = available ? spec.read(s) : [];
   const modules: BrainModule[] = MODULE_SPECS.map((spec) => {
     const values = raw[spec.id];
     return {
@@ -444,6 +537,9 @@ export function buildBrainGraph(s: SuperMindSnapshot): BrainGraph {
       label: spec.label,
       source: spec.source,
       params: spec.params,
+      note:
+        MODULE_NOTES[spec.id] ??
+        'Selected state/output; parameters count only the associated fixed core TinyMLP, including biases. Zero does not mean weightless.',
       column: spec.column,
       hue: spec.hue,
       values,
@@ -451,15 +547,40 @@ export function buildBrainGraph(s: SuperMindSnapshot): BrainGraph {
       maxAbs: maxAbsOf(values),
     };
   });
-  const edges: BrainEdge[] = EDGE_SPECS.map((e) => {
-    const carried = e.carry(s, raw).map(finite);
-    return { from: e.from, to: e.to, via: e.via, carried, rms: rmsOf(carried) };
-  });
+  const edges: BrainEdge[] = available
+    ? EDGE_SPECS.filter(
+        (e) => !(e.from === 'search' && e.to === 'imagitron' && s.observatory.activeDepths < 2),
+      ).map((e) => {
+        const carried = e.carry(s, raw).map(numeric);
+        return {
+          from: e.from,
+          to: e.to,
+          via: e.via,
+          source: e.source,
+          measurement: carried.length ? e.measurement : 'unavailable',
+          carried,
+          rms: rmsOf(carried),
+        };
+      })
+    : [];
+  const invalid = modules.reduce(
+    (n, m) => n + m.values.filter((v) => !Number.isFinite(v)).length,
+    0,
+  );
+  const unavailable = edges.filter((e) => !Number.isFinite(e.rms)).length;
   return {
     tick: s.observatory.tick,
     mode: s.observatory.mode,
     plan: String(s.plan),
     paramCount: s.paramCount,
+    warning: !available
+      ? 'No completed cognition tick; state unavailable.'
+      : invalid || unavailable
+        ? String(invalid) +
+          ' invalid module value(s); ' +
+          unavailable +
+          ' invalid/unavailable relationship(s).'
+        : undefined,
     modules,
     edges,
     units: modules.reduce((n, m) => n + m.values.length, 0),
@@ -468,16 +589,16 @@ export function buildBrainGraph(s: SuperMindSnapshot): BrainGraph {
 
 /** Plain-text dump of the exact numbers the two views draw (for the details panel and export). */
 export function brainGraphText(g: BrainGraph): string {
-  const f = (v: number): string =>
-    Math.abs(v) >= 1000 || (v !== 0 && Math.abs(v) < 0.001) ? v.toExponential(3) : v.toFixed(4);
+  const f = (v: number): string => (Object.is(v, -0) ? '-0' : String(v));
   const mods = g.modules.map(
     (m) =>
-      `${m.label} (${m.source}, ${m.params}p) rms ${f(m.rms)} max|v| ${f(m.maxAbs)} n ${m.values.length}: [${m.values.map(f).join(', ')}]`,
+      `${m.label} (${m.source}, ${m.params} core-MLP parameters; ${m.note}) rms ${f(m.rms)} max|v| ${f(m.maxAbs)} n ${m.values.length}: [${m.values.map(f).join(', ')}]`,
   );
   const edges = g.edges.map(
-    (e) => `${e.from} → ${e.to} · rms ${f(e.rms)} · ${e.via}: [${e.carried.map(f).join(', ')}]`,
+    (e) =>
+      `${e.from} → ${e.to} · rms ${f(e.rms)} · ${e.measurement}; ${e.source}; ${e.via}: [${e.carried.map(f).join(', ')}]`,
   );
-  return `tick ${g.tick} (${g.mode}) · plan ${g.plan} · ${g.units} values · ${g.edges.length} flows\nMODULES\n${mods.join('\n')}\nFLOWS\n${edges.join('\n')}`;
+  return `tick ${g.tick} (${g.mode}) · plan ${g.plan} · ${g.units} values · ${g.edges.length} partial relationships\n${g.warning ?? ''}\nMODULES\n${mods.join('\n')}\nFLOWS\n${edges.join('\n')}`;
 }
 
 // ── rendering ────────────────────────────────────────────────────────────────────────────────────
@@ -487,11 +608,43 @@ const DIM = '#8f7cba';
 
 function font(ctx: CanvasRenderingContext2D, w: number, base: number, weight = ''): void {
   const k = Math.max(0.85, Math.min(2.2, w / 460));
-  ctx.font = `${weight}${(base * k).toFixed(1)}px ui-monospace,monospace`;
+  ctx.font = `${weight}${Math.max(9, base * k).toFixed(1)}px ui-monospace,monospace`;
 }
 function num(v: number): string {
+  if (!Number.isFinite(v)) return 'unavailable';
   return Math.abs(v) >= 100 ? v.toFixed(0) : Math.abs(v) >= 1 ? v.toFixed(2) : v.toFixed(3);
 }
+
+/** Keep labels within their measured slot without shrinking below the readable font minimum. */
+function fitted(
+  ctx: CanvasRenderingContext2D,
+  value: string,
+  x: number,
+  y: number,
+  width: number,
+): void {
+  let text = value;
+  while (text.length > 1 && ctx.measureText(text).width > width) text = text.slice(0, -2) + '…';
+  ctx.fillText(text, x, y);
+}
+function finiteMax(values: readonly number[]): number {
+  return Math.max(1e-9, ...values.filter(Number.isFinite));
+}
+function strength(value: number, maximum: number): number {
+  return Number.isFinite(value) ? Math.sqrt(Math.max(0, value) / maximum) : 0;
+}
+const SHORT_LABELS: Partial<Record<BrainModuleId, string>> = {
+  cortex: 'WORKSPACE',
+  imagitron: 'IMAGINE',
+  quantum: 'Q-NET',
+  search: 'SEARCH',
+  reservoir: 'RESERVOIR',
+  self: 'SELF',
+  qubits: 'QUBITS',
+  organs: 'ORGANS',
+  memory: 'MEMORY',
+};
+
 function header(
   ctx: CanvasRenderingContext2D,
   w: number,
@@ -505,11 +658,11 @@ function header(
   ctx.textBaseline = 'top';
   ctx.fillStyle = '#00ffd5';
   font(ctx, w, 9, '600 ');
-  ctx.fillText(title, 8, 6);
+  fitted(ctx, title, 8, 6, w - 16);
   ctx.fillStyle = DIM;
   font(ctx, w, 7);
   ctx.textBaseline = 'bottom';
-  ctx.fillText(foot, 8, h - 4);
+  fitted(ctx, foot, 8, h - 4, w - 16);
   ctx.textBaseline = 'top';
 }
 
@@ -524,16 +677,18 @@ export function drawBrainConnectome(
     ctx,
     w,
     h,
-    `IV · CONNECTOME — ${g.modules.length} modules · ${g.edges.length} measured flows · ${g.paramCount}p · tick ${g.tick}`,
-    'node size = output RMS · strip = its actual values · line width = √(RMS carried) · layout only',
+    `CONNECTOME · ${g.modules.length} groups · ${g.edges.length} partial links · tick ${g.tick}`,
+    g.warning ??
+      'Partial graph · RMS scaled within view · dashed = unavailable · details: exact sources/values',
   );
-  const cols = 7;
+  const compact = w < 620;
+  const cols = compact ? 4 : 7;
   const top = 34;
   const bottom = h - 22;
-  const left = 46;
-  const right = w - 58;
+  const left = compact ? 45 : 76;
+  const right = w - left;
   const byCol: BrainModule[][] = Array.from({ length: cols }, () => []);
-  for (const m of g.modules) byCol[m.column]!.push(m);
+  g.modules.forEach((m, i) => byCol[compact ? i % cols : m.column]!.push(m));
   const pos = new Map<BrainModuleId, { x: number; y: number }>();
   byCol.forEach((list, c) => {
     const x = left + (c / (cols - 1)) * (right - left);
@@ -541,27 +696,29 @@ export function drawBrainConnectome(
       pos.set(m.id, { x, y: top + ((i + 0.5) / list.length) * (bottom - top) });
     });
   });
-  const nodeMax = Math.max(1e-9, ...g.modules.map((m) => m.rms));
-  const edgeMax = Math.max(1e-9, ...g.edges.map((e) => e.rms));
+  const nodeMax = finiteMax(g.modules.map((m) => m.rms));
+  const edgeMax = finiteMax(g.edges.map((e) => e.rms));
   const hueOf = new Map(g.modules.map((m) => [m.id, m.hue]));
   for (const e of g.edges) {
     const a = pos.get(e.from)!;
     const b = pos.get(e.to)!;
-    const k = Math.sqrt(e.rms / edgeMax);
+    const k = strength(e.rms, edgeMax);
     const back = b.x <= a.x;
     const mx = (a.x + b.x) / 2;
     const my = back ? Math.min(a.y, b.y) - 26 : (a.y + b.y) / 2;
     ctx.strokeStyle = `hsla(${hueOf.get(e.from) ?? 200},90%,62%,${(0.12 + 0.75 * k).toFixed(2)})`;
+    ctx.setLineDash(Number.isFinite(e.rms) ? [] : [3, 3]);
     ctx.lineWidth = 0.6 + 4.2 * k;
     ctx.beginPath();
     ctx.moveTo(a.x, a.y);
     ctx.quadraticCurveTo(mx, my, b.x, b.y);
     ctx.stroke();
   }
+  ctx.setLineDash([]);
   for (const m of g.modules) {
     const p = pos.get(m.id)!;
-    const k = Math.sqrt(m.rms / nodeMax);
-    const r = 3.5 + 9 * k;
+    const k = strength(m.rms, nodeMax);
+    const r = 3.5 + (compact ? 5 : 9) * k;
     ctx.fillStyle = `hsla(${m.hue},90%,${(30 + 40 * k).toFixed(0)}%,0.95)`;
     ctx.beginPath();
     ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
@@ -573,20 +730,28 @@ export function drawBrainConnectome(
     ctx.fillStyle = TEXT;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'bottom';
-    ctx.fillText(m.id === 'plan' ? `PLAN · ${g.plan}` : m.label, p.x, p.y - r - 2);
+    fitted(
+      ctx,
+      compact ? (SHORT_LABELS[m.id] ?? m.label) : m.id === 'plan' ? `PLAN · ${g.plan}` : m.label,
+      p.x,
+      p.y - r - 2,
+      compact ? w / 4 - 8 : (w - 32) / 7,
+    );
     ctx.textBaseline = 'top';
     font(ctx, w, 6.2);
     ctx.fillStyle = DIM;
-    ctx.fillText(`rms ${num(m.rms)}${m.params ? ` · ${m.params}p` : ''}`, p.x, p.y + r + 2);
+    fitted(ctx, `rms ${num(m.rms)}`, p.x, p.y + r + 2, compact ? w / 4 - 8 : (w - 32) / 7);
     // the module's actual values, scaled by its own largest |value|
     const sw = 40;
     const sh = 8;
     const sx = p.x - sw / 2;
     const sy = p.y + r + 12;
     const n = m.values.length;
-    const scale = m.maxAbs > 1e-12 ? m.maxAbs : 1;
+    const scale = finiteMax(m.values.map((v) => Math.abs(v)));
     for (let i = 0; i < n; i++) {
-      const v = (m.values[i] ?? 0) / scale;
+      const raw = m.values[i];
+      if (raw === undefined || !Number.isFinite(raw)) continue;
+      const v = raw / scale;
       const bw = sw / n;
       ctx.fillStyle =
         v >= 0 ? `hsla(${m.hue},90%,65%,0.9)` : `hsla(${(m.hue + 180) % 360},90%,65%,0.9)`;
@@ -595,7 +760,7 @@ export function drawBrainConnectome(
         sx + i * bw,
         v >= 0 ? sy + sh / 2 - hh : sy + sh / 2,
         Math.max(0.4, bw - 0.2),
-        Math.max(0.4, hh),
+        hh,
       );
     }
   }
@@ -660,7 +825,7 @@ function proj(
 
 /**
  * MEGA 4D: every measured value is one dot at its module's tesseract vertex; the real flows join the
- * vertices. The view angle advances with the cognition tick, never with browser time.
+ * vertices. The camera is fixed: changing only the tick changes the status text, never geometry.
  */
 export function drawBrainMega(
   ctx: CanvasRenderingContext2D,
@@ -672,15 +837,18 @@ export function drawBrainMega(
     ctx,
     w,
     h,
-    `IV · MEGA 4D — ${g.units} measured values · 16 modules on 16 tesseract vertices · ${g.edges.length} flows · tick ${g.tick}`,
-    'dot = one value · size = |value| ÷ module max · hue flip = negative · line = √(RMS carried) · turns per tick',
+    `MEGA 4D · ${g.units} value slots · ${g.edges.length} partial links · tick ${g.tick}`,
+    g.warning ??
+      'Fixed layout · dot = valid value · magnitude scaled per group · dotted links unavailable',
   );
   const cx = w / 2;
-  const cy = h / 2 + 6;
-  const s = Math.min(w, h - 50) * 0.36;
-  const a = g.tick * 0.021;
-  const b = g.tick * 0.013;
-  const c = 0.5 + g.tick * 0.008;
+  const legendTop = h - 100;
+  const graphBottom = legendTop - 12;
+  const cy = (34 + graphBottom) / 2;
+  const s = Math.min(w, graphBottom - 34) * 0.36;
+  const a = 0.42;
+  const b = 0.26;
+  const c = 0.66;
   const vp = TESS.map((v) => proj(rot4(v, a, b, c), cx, cy, s));
   ctx.strokeStyle = 'hsla(220,70%,55%,0.16)';
   ctx.lineWidth = 1;
@@ -693,24 +861,26 @@ export function drawBrainMega(
       ctx.lineTo(vp[j]!.x, vp[j]!.y);
       ctx.stroke();
     }
-  const edgeMax = Math.max(1e-9, ...g.edges.map((e) => e.rms));
+  const edgeMax = finiteMax(g.edges.map((e) => e.rms));
   const hueOf = new Map(g.modules.map((m) => [m.id, m.hue]));
   for (const e of g.edges) {
     const p = vp[VERTEX[e.from]]!;
     const q = vp[VERTEX[e.to]]!;
-    const k = Math.sqrt(e.rms / edgeMax);
+    const k = strength(e.rms, edgeMax);
     ctx.strokeStyle = `hsla(${hueOf.get(e.from) ?? 200},95%,62%,${(0.15 + 0.7 * k).toFixed(2)})`;
+    ctx.setLineDash(Number.isFinite(e.rms) ? [] : [3, 3]);
     ctx.lineWidth = 0.5 + 3.5 * k;
     ctx.beginPath();
     ctx.moveTo(p.x, p.y);
     ctx.lineTo(q.x, q.y);
     ctx.stroke();
   }
+  ctx.setLineDash([]);
   for (const m of g.modules) {
     const base = TESS[VERTEX[m.id]]!;
     const n = m.values.length;
     const radius = 0.07 + 0.022 * Math.sqrt(n);
-    const scale = m.maxAbs > 1e-12 ? m.maxAbs : 1;
+    const scale = finiteMax(m.values.map((v) => Math.abs(v)));
     for (let i = 0; i < n; i++) {
       // fixed Fibonacci-sphere slot around the vertex (layout only)
       const yy = 1 - (2 * (i + 0.5)) / n;
@@ -732,7 +902,9 @@ export function drawBrainMega(
         cy,
         s,
       );
-      const v = (m.values[i] ?? 0) / scale;
+      const raw = m.values[i];
+      if (raw === undefined || !Number.isFinite(raw)) continue;
+      const v = raw / scale;
       const mag = Math.abs(v);
       const hue = v >= 0 ? m.hue : (m.hue + 180) % 360;
       ctx.fillStyle = `hsla(${hue},95%,${(28 + 50 * mag).toFixed(0)}%,${(0.35 + 0.65 * mag).toFixed(2)})`;
@@ -745,7 +917,17 @@ export function drawBrainMega(
     ctx.fillStyle = `hsla(${m.hue},90%,78%,0.95)`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'bottom';
-    ctx.fillText(`${m.id === 'plan' ? `PLAN ${g.plan}` : m.label} · ${n}`, lp.x, lp.y - 10);
+    const index = g.modules.indexOf(m);
+    ctx.fillText(String(index + 1).padStart(2, '0'), lp.x, lp.y - 10);
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    fitted(
+      ctx,
+      String(index + 1).padStart(2, '0') + ' ' + (SHORT_LABELS[m.id] ?? m.label),
+      8 + ((index % 4) * (w - 16)) / 4,
+      legendTop + Math.floor(index / 4) * 18,
+      (w - 16) / 4 - 6,
+    );
   }
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';

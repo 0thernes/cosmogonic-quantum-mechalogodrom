@@ -1,6 +1,6 @@
 /**
  * PRIME Archon observatory: 27 source-stamped measurement cards (tabs I–III) plus IV · BRAIN, the
- * measured module connectome (CONNECTOME and MEGA 4D views of the same graph, see super-neural-brain.ts).
+ * sampled partial module graph (COMPOSITE and MEGA 4D views, see super-neural-brain.ts).
  * Everything advances only on completed cognition samples; canvas repaint and browser time never
  * synthesize activity in any tab.
  */
@@ -52,7 +52,7 @@ const STYLE = `
    panel tints toward the live BRUTAL style via --sneu-tint (0 = off) driven by cqm:brutal-style. */
 .cqm-sneu-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:minmax(260px,auto);gap:7px;padding:8px;
   overflow-y:auto;flex:1 1 auto;min-height:200px;border-top:1px solid rgba(180,120,255,.28);align-content:stretch}
-.cqm-sneu-grid.brain{grid-template-columns:1fr;grid-template-rows:min(56vh,520px);min-height:min(56vh,520px)}
+.cqm-sneu-grid.brain{grid-template-columns:minmax(0,1fr);grid-template-rows:max-content;grid-auto-rows:max-content;align-content:start}
 /* Depth: a radial floor-glow + an inset rim make each tile read as a lit 3D chamber, not a flat pane. */
 .cqm-sneu-cell{position:relative;border:1px solid rgba(180,120,255,.18);border-radius:8px;
   background:
@@ -61,7 +61,8 @@ const STYLE = `
   box-shadow:inset 0 1px 0 rgba(200,170,255,.12), inset 0 -10px 24px rgba(0,0,0,.5), 0 3px 10px rgba(0,0,0,.4);
   overflow:hidden;display:flex;flex-direction:column;min-width:0;min-height:0;transition:box-shadow .4s ease}
 .cqm-sneu-cell canvas{display:block;width:100%;height:164px;flex:0 0 164px}
-.cqm-sneu-grid.brain .cqm-sneu-cell canvas{flex:1 1 auto;min-height:200px}
+.cqm-sneu-grid.brain .cqm-sneu-cell canvas{height:clamp(360px,56vh,560px);flex:0 0 auto}
+.cqm-sneu-grid.brain .cqm-sneu-cell details{flex:0 0 auto}
 .cqm-sneu-cell h3{font:600 12px/1.3 var(--font-mono,monospace);color:#e8dcff;margin:9px 9px 3px;overflow-wrap:anywhere}
 .cqm-sneu-source{font:10px/1.4 var(--font-mono,monospace);color:#b9a3e0;margin:0 9px 5px;overflow-wrap:anywhere}
 .cqm-sneu-cell details{font:11px/1.45 var(--font-mono,monospace);color:#d3c4eb;margin:6px 9px 9px;overflow-wrap:anywhere}
@@ -123,31 +124,25 @@ function project(
   const k = 1 / (1 - rz2 * 0.16);
   return { x: cx + rx * scale * k, y: cy - ry * scale * k, d: rz2 };
 }
-// ════════════════════ TAB IV — BRAIN: measured module connectome (two views of one graph) ═══════════
-let megaBrainMode = true;
-/** Set MEGA 4D brain mode for the neural observatory (instance-safe via setter). */
-export function setMegaBrainMode(v: boolean): void {
-  megaBrainMode = v;
-}
-
-export function getMegaBrainMode(): boolean {
-  return megaBrainMode;
-}
-
 const SERIES_COLORS = [PAL.cyan, PAL.mag, PAL.gold, PAL.green, PAL.violet, PAL.red];
 
 const BRAIN_NOTE =
-  'Both views draw one measured graph. Nodes are the 16 computing modules of SuperMind.think() with their ' +
-  'actual output values this tick; their parameter counts sum to the mind total. Lines are the data flows ' +
-  'think() performs, each sized by the square root of the RMS of the exact values it carries. MEGA 4D places each module on a ' +
-  'tesseract vertex and draws every value as a dot; it turns only when a new tick arrives. Positions are ' +
-  'layout. Dots are model variables, not neurons; lines are code paths, not axons. No consciousness verdict.';
+  'Both views inspect the same sampled, partial module graph. Each module lists its snapshot source and ' +
+  'numerical values below. Link metadata distinguishes captured payloads, selected operands, and structural ' +
+  'relationships whose payload was not captured. A structural link does not measure signal strength or causality. ' +
+  'COMPOSITE arranges modules as a flow map; MEGA 4D uses a fixed tesseract layout. Positions and colors identify ' +
+  'modules; dots represent model variables, not neurons. Neither view measures EEG, neural spikes, feelings, ' +
+  'or consciousness. Parameter annotations count associated core MLP coefficients, not the full system state.';
 
 function numeric(v: number): string {
   if (!Number.isFinite(v)) return 'INVALID';
   return Math.abs(v) >= 1000 || (v !== 0 && Math.abs(v) < 0.001)
     ? v.toExponential(3)
     : v.toFixed(3);
+}
+
+function exactNumeric(v: number): string {
+  return Object.is(v, -0) ? '-0' : String(v);
 }
 
 /** Render bounded cached values only. There is deliberately no time argument. */
@@ -379,6 +374,7 @@ export class SuperNeural {
   private readonly brainCycleBtn: HTMLButtonElement;
   private ctxs: (CanvasRenderingContext2D | null)[] = [];
   private tab = 0;
+  private megaBrainMode = true;
   private active = false;
   private snap: Snap | null = null;
   private cards: NeuralCard[][] = [];
@@ -435,7 +431,7 @@ export class SuperNeural {
     this.brainCycleBtn.type = 'button';
     this.brainCycleBtn.className = 'cqm-sneu-brain-cycle';
     this.brainCycleBtn.addEventListener('click', () => {
-      setMegaBrainMode(!getMegaBrainMode());
+      this.megaBrainMode = !this.megaBrainMode;
       this.updateBrainButton();
       this.paint();
     });
@@ -475,10 +471,11 @@ export class SuperNeural {
 
   private updateBrainButton(): void {
     this.brainCycleBtn.hidden = this.tab !== 3;
-    this.brainCycleBtn.textContent = getMegaBrainMode() ? '⬡ MEGA 4D' : '⟁ CONNECTOME';
-    this.brainCycleBtn.classList.toggle('mega', getMegaBrainMode());
+    this.brainCycleBtn.textContent = this.megaBrainMode ? '⬡ MEGA 4D' : '⟁ COMPOSITE · FLOW';
+    this.brainCycleBtn.classList.toggle('mega', this.megaBrainMode);
+    this.brainCycleBtn.setAttribute('aria-pressed', String(this.megaBrainMode));
     this.brainCycleBtn.title =
-      'Switch views of the same measured graph: every dot is a model value, every line a data flow in think().';
+      'Switch between the fixed tesseract layout and the Composite module flow map. Both use the same sampled data.';
   }
 
   private buildGrid(): void {
@@ -497,22 +494,23 @@ export class SuperNeural {
       const heading = doc.createElement('h3');
       heading.textContent =
         card?.title ??
-        (this.tab === 3 ? 'Brain · measured module connectome' : 'Awaiting completed cognition');
+        (this.tab === 3 ? 'Brain · sampled module map' : 'Awaiting completed cognition');
       cell.appendChild(heading);
       const source = doc.createElement('p');
       source.className = 'cqm-sneu-source';
       source.textContent = card
         ? `Source: ${card.source}`
         : this.tab === 3
-          ? 'Source: observatory.senses · latent · spin.spins · observatory.organOutputs · imagined · observatory.predicted · quantum · reservoir.state · observatory.search.scores · observatory.reasoned · observatory.selfModel · qubits.probs · observatory.memory.values · observatory.affectOutputs · observatory.actionOutputs · observatory.planScores'
+          ? 'One PRIME snapshot · 16 selected module groups · sources and link limits below · positions are layout'
           : 'Awaiting completed cognition.';
       cell.appendChild(source);
       const warning = doc.createElement('p');
       warning.className = 'cqm-sneu-source';
       warning.dataset.warning = '';
       warning.style.color = PAL.gold;
-      warning.textContent = card?.warning ?? '';
-      warning.hidden = !card?.warning;
+      const warningText = card?.warning ?? (this.tab === 3 ? this.brain?.warning : undefined);
+      warning.textContent = warningText ?? '';
+      warning.hidden = !warningText;
       cell.appendChild(warning);
       const canvas = doc.createElement('canvas');
       canvas.setAttribute('role', 'img');
@@ -520,7 +518,7 @@ export class SuperNeural {
         'aria-label',
         card
           ? `${card.title}. ${card.unit}. Exact values available below.`
-          : 'Measured module connectome of the PRIME Archon mind',
+          : 'Sampled module values and labeled data relationships of the PRIME Archon mind. Exact data and limits below.',
       );
       cell.appendChild(canvas);
       const details = doc.createElement('details'),
@@ -549,7 +547,7 @@ export class SuperNeural {
     return (
       `${card.labels.length ? `Channels / x labels: ${card.labels.join(', ')}\n` : ''}` +
       card.series
-        .map((series) => `${series.label}: [${series.values.map(String).join(', ')}]`)
+        .map((series) => `${series.label}: [${series.values.map(exactNumeric).join(', ')}]`)
         .join('\n')
     );
   }
@@ -623,6 +621,11 @@ export class SuperNeural {
     if (this.tab === 3) {
       const raw = this.gridEl.querySelector('pre');
       if (raw) raw.textContent = this.brain ? brainGraphText(this.brain) : '';
+      const warning = this.gridEl.querySelector<HTMLElement>('[data-warning]');
+      if (warning) {
+        warning.textContent = this.brain?.warning ?? '';
+        warning.hidden = !this.brain?.warning;
+      }
       return;
     }
     const cards = this.cards[this.tab] ?? [];
@@ -661,20 +664,31 @@ export class SuperNeural {
   private exportData(): void {
     if (!this.snap) return;
     const data = {
-      schemaVersion: 1,
+      schemaVersion: 2,
       source: this.source,
       runtime: this.runtime,
       exportedAt: new Date().toISOString(),
       sampling: 'Completed observed cognitive ticks only; skipped ticks are not reconstructed.',
+      numericEncoding:
+        'Finite numbers are JSON numbers; NaN, infinities and negative zero are lossless strings.',
       snapshot: this.snap,
       history: this.hist.samples,
       cards: this.cards,
       brain: this.brain,
+      presentation: {
+        activeTab: TAB_LABELS[this.tab],
+        brainView: this.megaBrainMode ? 'mega-4d' : 'composite-flow',
+        brainLayout:
+          'Fixed presentation coordinates; not anatomical positions or measured neural activity.',
+        brainMethod: BRAIN_NOTE,
+      },
     };
     const json = JSON.stringify(
       data,
       (_key, value: unknown) =>
-        typeof value === 'number' && !Number.isFinite(value) ? String(value) : value,
+        typeof value === 'number' && (!Number.isFinite(value) || Object.is(value, -0))
+          ? exactNumeric(value)
+          : value,
       2,
     );
     const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
@@ -732,7 +746,7 @@ export class SuperNeural {
       ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
       const card = this.cards[this.tab]?.[i];
       if (this.tab === 3 && this.brain) {
-        if (getMegaBrainMode()) drawBrainMega(ctx, w, h, this.brain);
+        if (this.megaBrainMode) drawBrainMega(ctx, w, h, this.brain);
         else drawBrainConnectome(ctx, w, h, this.brain);
       } else if (card) drawMeasurement(ctx, w, h, card);
       else frame(ctx, w, h, 'No completed cognitive sample');

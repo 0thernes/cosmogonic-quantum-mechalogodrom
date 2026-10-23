@@ -4,7 +4,7 @@
  */
 import { SUPER_SENSE_CHANNELS, QUANTUM_ASPECTS, type SuperMindSnapshot } from '../sim/super-mind';
 import { SUPER_PLANS } from '../sim/super-creature';
-import { amplitudesFromBorn, pairwiseMutualInformation } from '../math/qubit-pair-info';
+import { amplitudesFromBorn, pairIndex, pairwiseMutualInformation } from '../math/qubit-pair-info';
 
 /** Complete renderer input: units and source are visible, and invalid measurements remain invalid. */
 export interface NeuralCard {
@@ -182,10 +182,10 @@ function candidates(s: SuperMindSnapshot, novelty: boolean): NeuralCard {
 }
 
 /**
- * Pairwise quantum mutual information of the pure register, computed exactly from the full statevector
+ * Pairwise quantum mutual information of the pure register, computed numerically from the full statevector
  * (|amplitude| from the Born probabilities, arg from the phases). Off-diagonal cell (a,b) is
  * I(a:b) = S(a) + S(b) − S(ab) in bits; the diagonal is the single-qubit entropy S(q), a monotone of
- * the mixedness 1 − r². Never inferred from P(1). Non-power-of-two input yields an unavailable card.
+ * the mixedness 1 − r². Never inferred from P(1). Invalid or unnormalized input is unavailable.
  */
 function pairInformationCard(probs: readonly number[], phase: readonly number[]): NeuralCard {
   const base: NeuralCard = {
@@ -195,8 +195,9 @@ function pairInformationCard(probs: readonly number[], phase: readonly number[])
     unit: 'bits',
     note:
       'Cell (a,b) = I(a:b) = S(a)+S(b)−S(ab), von Neumann, of the pure global register: 0 = uncorrelated, ' +
-      '1 = a GHZ pair, 2 = a Bell pair. Diagonal = single-qubit entropy S(q). Computed from amplitudes, ' +
-      'not from P(1); counts classical plus quantum correlation.',
+      '1 = a GHZ pair (≥3 qubits), 2 = a Bell pair. Diagonal = single-qubit entropy S(q). Computed numerically ' +
+      'from amplitudes, not from P(1); total correlation, not a pairwise entanglement witness. Classical simulation. ' +
+      'Normalization roundoff within 1e-9 is removed; larger errors are unavailable.',
     kind: 'heat',
     series: [],
     labels: [],
@@ -205,14 +206,21 @@ function pairInformationCard(probs: readonly number[], phase: readonly number[])
   const dim = probs.length;
   if (dim < 4 || (dim & (dim - 1)) !== 0 || phase.length !== dim)
     return { ...base, warning: 'Statevector shape unavailable; no pairwise matrix computed.' };
-  const amp = amplitudesFromBorn(probs, phase);
-  const pi = pairwiseMutualInformation(amp.re, amp.im);
+  let pi: ReturnType<typeof pairwiseMutualInformation>;
+  try {
+    const amp = amplitudesFromBorn(probs, phase);
+    pi = pairwiseMutualInformation(amp.re, amp.im);
+  } catch (error) {
+    if (!(error instanceof RangeError)) throw error;
+    return {
+      ...base,
+      warning: 'Statevector unavailable: ' + error.message + '; no pairwise matrix computed.',
+    };
+  }
   const n = pi.qubits;
   const at = (a: number, c: number): number => {
     if (a === c) return pi.single[a]!;
-    const lo = Math.min(a, c);
-    const hi = Math.max(a, c);
-    return pi.mutual[lo * n - (lo * (lo + 1)) / 2 + (hi - lo - 1)]!;
+    return pi.mutual[pairIndex(a, c, n)]!;
   };
   return {
     ...base,
@@ -520,11 +528,11 @@ export function buildNeuralCards(s: SuperMindSnapshot, history?: NeuralHistory):
       {
         id: 'quantum_control_inputs',
         title: 'Quantum-aspect control inputs',
-        source: 'quantum',
+        source: 'observatory.brain.qubitAspects',
         unit: 'drive intensity',
-        note: 'Ten designed controller aspects feeding the simulated circuit. Names are controls, not independent physical measurements.',
+        note: 'Ten controller aspects captured at the simulated circuit input, before later output modulation. Names are controls, not independent physical measurements.',
         kind: 'bars',
-        series: [{ label: 'drive', values: copied(s.quantum) }],
+        series: [{ label: 'drive', values: copied(o.brain?.qubitAspects) }],
         labels: [...QUANTUM_ASPECTS],
         range: [0, 1],
       },

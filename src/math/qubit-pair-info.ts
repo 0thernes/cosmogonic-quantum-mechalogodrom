@@ -4,9 +4,9 @@
  * For qubits a, b of a pure state |ψ⟩ the quantum mutual information is
  *   I(a:b) = S(ρ_a) + S(ρ_b) − S(ρ_ab)   (von Neumann entropies, bits)
  * with ρ_ab the two-qubit reduced density matrix. It is 0 for an uncorrelated pair, 1 bit for any pair of
- * a GHZ state, and reaches its maximum 2 bits for a Bell pair (maximally entangled with each other and
- * with nothing else). It counts classical + quantum correlation together; for a pure GLOBAL state a
- * non-zero value means the pair is correlated through the register's entanglement structure.
+ * a GHZ state of at least three qubits, and reaches its maximum 2 bits for a Bell pair (maximally
+ * entangled with each other and with nothing else). It counts classical + quantum correlation
+ * together, not pairwise entanglement: a GHZ pair's reduced state is separable despite its 1 bit.
  *
  * Single-qubit entropies come in closed form from the Bloch length; the 4×4 two-qubit spectrum uses the
  * standard real embedding ρ = A + iB ↦ [[A, −B], [B, A]] (8×8 real symmetric, each eigenvalue doubled)
@@ -16,32 +16,53 @@
  */
 
 const EPS = 1e-12;
+const NORMALIZATION_TOLERANCE = 1e-9;
 
 /** Shannon term −p·log₂p, 0 at p ≤ EPS. */
 function h(p: number): number {
   return p > EPS ? -p * Math.log2(p) : 0;
 }
 
-/** Von Neumann entropy (bits) of a one-qubit state with Bloch length r: eigenvalues (1 ± r)/2. */
+/**
+ * Von Neumann entropy (bits) of a one-qubit state with Bloch length r: eigenvalues (1 ± r)/2.
+ * @throws RangeError for nonfinite or out-of-range lengths (allowing 1e-9 roundoff).
+ */
 export function qubitEntropyFromBloch(r: number): number {
+  if (!Number.isFinite(r) || r < -NORMALIZATION_TOLERANCE || r > 1 + NORMALIZATION_TOLERANCE)
+    throw new RangeError('qubitEntropyFromBloch: need a finite Bloch length in [0,1]');
   const rr = r < 0 ? 0 : r > 1 ? 1 : r;
   return h((1 + rr) / 2) + h((1 - rr) / 2);
 }
 
-/** Rebuild complex amplitudes from Born probabilities and phases (the observatory snapshot form). */
+/**
+ * Rebuild complex amplitudes from Born probabilities and phases (the observatory snapshot form).
+ * @throws RangeError for missing/nonfinite phases, negative probabilities or total probability
+ * differing from 1 by more than 1e-9. Invalid samples are never filled in or clipped to zero.
+ */
 export function amplitudesFromBorn(
   probs: ArrayLike<number>,
   phase: ArrayLike<number>,
 ): { re: Float64Array; im: Float64Array } {
   const n = probs.length;
+  if (n === 0 || phase.length !== n)
+    throw new RangeError('amplitudesFromBorn: need matching nonempty probabilities and phases');
   const re = new Float64Array(n);
   const im = new Float64Array(n);
+  let total = 0;
   for (let i = 0; i < n; i++) {
-    const m = Math.sqrt(Math.max(0, probs[i] ?? 0));
-    const ph = phase[i] ?? 0;
+    const p = probs[i]!;
+    const ph = phase[i]!;
+    if (!Number.isFinite(p) || p < 0 || !Number.isFinite(ph))
+      throw new RangeError(
+        'amplitudesFromBorn: need finite nonnegative probabilities and finite phases',
+      );
+    total += p;
+    const m = Math.sqrt(p);
     re[i] = m * Math.cos(ph);
     im[i] = m * Math.sin(ph);
   }
+  if (Math.abs(total - 1) > NORMALIZATION_TOLERANCE)
+    throw new RangeError('amplitudesFromBorn: total probability must be 1 within 1e-9');
   return { re, im };
 }
 
@@ -145,6 +166,7 @@ function blochLength(re: Float64Array, im: Float64Array, q: number): number {
   return Math.sqrt((2 * cr) ** 2 + (2 * ci) ** 2 + (p0 - p1) ** 2);
 }
 
+/** Reduced-state entropies and total pairwise correlations of a normalized pure register. */
 export interface PairInformation {
   /** Qubit count n. */
   qubits: number;
@@ -156,8 +178,11 @@ export interface PairInformation {
 
 /**
  * Pairwise quantum mutual information of the normalized pure state (re, im) over n = log₂(length)
- * qubits. Values are clamped to their exact ranges to absorb ~1e-12 rounding.
- * @throws RangeError when the amplitude length is not a power of two ≥ 2.
+ * qubits. Evaluates reduced density matrices numerically, not via a marginal-probability proxy.
+ * Squared norm must be within 1e-9 of 1; accepted roundoff is removed on owned amplitude copies.
+ * Output values are clamped to their exact ranges to absorb eigensolver rounding.
+ * @throws RangeError when lengths disagree, are not a power of two ≥ 2, or amplitudes are nonfinite
+ * or not normalized within the stated tolerance.
  */
 export function pairwiseMutualInformation(
   re: ArrayLike<number>,
@@ -170,6 +195,19 @@ export function pairwiseMutualInformation(
   }
   const r = Float64Array.from(re);
   const m = Float64Array.from(im);
+  let norm = 0;
+  for (let i = 0; i < dim; i++) {
+    if (!Number.isFinite(r[i]) || !Number.isFinite(m[i]))
+      throw new RangeError('pairwiseMutualInformation: need finite amplitudes');
+    norm += r[i]! ** 2 + m[i]! ** 2;
+  }
+  if (Math.abs(norm - 1) > NORMALIZATION_TOLERANCE)
+    throw new RangeError('pairwiseMutualInformation: squared norm must be 1 within 1e-9');
+  const scale = 1 / Math.sqrt(norm);
+  for (let i = 0; i < dim; i++) {
+    r[i]! *= scale;
+    m[i]! *= scale;
+  }
   const single = new Float64Array(n);
   for (let q = 0; q < n; q++) single[q] = qubitEntropyFromBloch(blochLength(r, m, q));
   const mutual = new Float64Array((n * (n - 1)) / 2);

@@ -1,6 +1,9 @@
 /**
  * CANONICAL RECEIPTS -- the single source of truth for the repo's measured gate figures.
  *
+ * Brain IV provenance, invalid quantum inputs and actual circuit-control capture add 12 tests.
+ * The full receipt gate verifies the exact count below; portable coverage floors remain unchanged.
+ *
  * PRIME observatory fidelity adds 7 snapshot, 8 quantum/proxy and 12 card/history tests (+27).
  * The full receipt gate verifies the exact count below; portable coverage floors remain unchanged.
  *
@@ -41,7 +44,7 @@
  *
  * To update after adding/removing tests: `bun scripts/verify-receipts.ts --print`, paste here, re-sync.
  */
-export const CANONICAL_TEST_COUNT = 3485;
+export const CANONICAL_TEST_COUNT = 3497;
 export const CANONICAL_LINE_COV = '84.64';
 export const CANONICAL_FUNC_COV = '82.21';
 

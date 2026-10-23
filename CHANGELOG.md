@@ -16,20 +16,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   running/suspended/frozen status, sample age, delivery age and skipped ticks are visible.
 - Exposed copied percepts, encoded inputs, organ outputs, evaluated search candidates, final planner
   scores and memory telemetry. Removed invented sensory/drive bindings, search-tree activity,
-  pairwise quantum edges and wall-clock modulation of measurements. IV is explicitly schematic.
+  fabricated pairwise quantum edges and wall-clock modulation of measurements.
 - Corrected controlled-RY and made quantum geometry and qualia observation non-mutating; metric
   determinant/trace, discrete-switch caveats and balanced-cut proxy limitations are explicit.
-- **IV · BRAIN is measured.** `src/ui/super-neural-brain.ts` builds one graph from the PRIME snapshot:
-  16 computing modules with exact copies of their outputs (parameter counts summing to 10,081) and the
-  31 data flows `think()` performs, each carrying the exact values passed. CONNECTOME draws it as a
-  flow map with each module's values as a bar strip; MEGA 4D puts the modules on the 16 tesseract
-  vertices and each of ~395 measured values on a dot, turning only per cognition tick. Replaces the
-  schematic (synthetic EEG bands, sine spikes, XOR "axons", traveling pulses, orbiting satellites).
+- **IV · BRAIN uses measured state in both views.** COMPOSITE and MEGA 4D share a partial graph of
+  16 module groups with named snapshot sources. Dedicated stage captures preserve inputs before
+  subsequent updates change them. Links distinguish captured payloads, selected operands and
+  unavailable values; invalid numbers cannot become zero. Core MLP allocations sum to 10,081.
+  Both layouts are fixed; the tesseract geometry and grouping are presentation choices. Removed
+  synthetic EEG bands, sine spikes, XOR "axons", traveling pulses and orbiting satellites. Exact
+  text and JSON export agree; method details remain reachable on narrow screens, and each observer
+  instance owns its view selection. Export schema 2 includes graph and view provenance.
 - Q · Pairwise quantum mutual information card (replaces single-qubit mixedness): exact
   I(a:b) = S(a)+S(b)−S(ab) for every qubit pair, computed from the full statevector by
-  `src/math/qubit-pair-info.ts` (Bell pair = 2 bits, GHZ pair = 1 bit, product = 0); the diagonal keeps
-  the single-qubit entropy. The schematic composite MEMORY hub now shows holographic recall confidence
-  instead of the hallucination scalar, and the pantheon MEGA header says "display points", not neurons.
+  `src/math/qubit-pair-info.ts` (Bell pair = 2 bits, GHZ with at least 3 qubits = 1 bit per pair,
+  product = 0); the diagonal keeps the single-qubit entropy. Invalid or unnormalized states are
+  unavailable. Mutual information measures total correlation, not entanglement alone. The separate
+  pantheon MEGA header says "display points", not neurons.
 
 - Separate provisional author-estimate dataset and reader table for all 25 axes, with a declared heuristic rubric, imported rationale and explicit uncalibrated status; canonical assessment scores remain null.
 - Binding CQM-25 version 1.0.0 adoption across the three masters, agent steering and module contract; stable taxonomy and canonical-publication regression gates.
