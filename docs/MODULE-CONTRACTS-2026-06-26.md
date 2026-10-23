@@ -2,6 +2,15 @@
 
 # Module Contracts
 
+## Browser release dependency repair (2026-10-23)
+
+The Pages release retains its high/critical dependency audit. Raise the existing DOMPurify override
+floor to the published patched 3.4.17 and regenerate only its lock entry; Mermaid's declared ^3.3.3
+range permits this patch. Preserve diagram configuration and sanitize behavior at the application
+boundary. Validate the frozen installation, high/critical audit, complete gate and rendered Mermaid
+output. CQM-25 scope is `instrumentation_reproducibility`; no capability score changes. A remaining
+blocking advisory, broken diagram, or broadened unreviewed dependency change falsifies release readiness.
+
 ## Browser hybrid execution migration (2026-10-23)
 
 The owner selects browser-only deployment on GitHub Pages. CPU workers and optional WebGPU compute

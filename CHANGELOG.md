@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Raised the transitive DOMPurify override and lockfile to the patched 3.4.17 release, clearing the
+  existing high/critical advisory gate that blocked Pages publication. Mermaid remains at its current
+  version, and the audit threshold is unchanged.
+
 ### Added
 
 - Browser-only hybrid-compute foundation: bounded batched WebGPU implementation of the complete

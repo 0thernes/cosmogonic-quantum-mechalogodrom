@@ -108,6 +108,6 @@
     "typescript": "7.0.2"
   },
   "overrides": {
-    "dompurify": "^3.4.11"
+    "dompurify": "^3.4.17"
   }
 }

@@ -11,6 +11,18 @@ changed and why.
 
 ---
 
+## 2026-10-23 (UTC) — Pages deployment dependency gate follow-through
+
+- The hybrid release `0b59ca64` passed its full local gate and reached GitHub main. Direct-main CI
+  then blocked Pages on two existing DOMPurify advisories: [critical template/shadow-root issue](https://github.com/advisories/GHSA-cg2g-xh64-v4q7)
+  and [high detached-subtree hook issue](https://github.com/advisories/GHSA-mrv2-3pqr-j5jr).
+- Current advisory metadata identifies 3.4.17 as patched. The existing Mermaid 11.16.0 dependency
+  accepts ^3.3.3; raise the override floor from ^3.4.11 to ^3.4.17 and refresh its frozen lock entry.
+  Preserve the audit threshold and existing application controls. No application exploitability
+  determination follows from the dependency audit alone.
+- Validate an isolated frozen install, the high/critical audit, the full gate and a browser diagram
+  smoke before publication. Also remove one unused destructuring warning in the benchmark logger.
+
 ## 2026-10-23 (UTC) — Concurrent hybrid/biome integration and execution-truth repair
 
 - Integrated upstream `7ae20238` without discarding either contributor. The browser backend passed

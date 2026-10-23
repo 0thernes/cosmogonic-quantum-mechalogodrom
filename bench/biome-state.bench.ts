@@ -211,5 +211,9 @@ if (!report.sourcesUnchanged || cases.some((c) => !c.finite))
 const path = join(output, 'biome-measurement.json');
 await Bun.write(path, JSON.stringify(report, null, 2));
 console.log(
-  JSON.stringify({ path, cases: cases.map(({ samplesMs, ...c }) => c), regression }, null, 2),
+  JSON.stringify(
+    { path, cases: cases.map(({ samplesMs: _samplesMs, ...c }) => c), regression },
+    null,
+    2,
+  ),
 );
