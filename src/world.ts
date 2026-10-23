@@ -59,6 +59,14 @@ import { ALGOS, ALGO_GLYPHS, ALGO_IGNITE } from './sim/algorithms';
 import { SONGS, SFX_EXTRA_BANDS } from './audio/songs';
 import { mulberry32, createIsolatedStreams, type Rng } from './math/rng';
 import { isWildEntropyMode, setWildEntropyMode } from './math/wild-entropy';
+import { OrganismBioStatePool, type OrganismBioTelemetry } from './sim/biome-strata';
+import {
+  detectHybridHardware,
+  getBaselineHybridHardware,
+  planHybridPartition,
+  type HybridHardwareCapabilities,
+  type HybridWorkloadPlan,
+} from './core/hybrid-compute';
 import { clamp } from './math/scalar';
 import { SpatialHash } from './math/spatial-hash';
 import { createGeometryCache } from './sim/geometry-cache';
@@ -563,6 +571,23 @@ export class World {
   private lastWildQrngHex = '0000000000000000';
   /** Guard ensuring at most one off-thread Tsotchke wave simulation worker task is in flight at a time. */
   private workerSimInFlight = false;
+  /** Multi-biome 3D ecological strata + 3-channel neuromodulation + 4-channel working memory pool. */
+  private readonly organismBioPool: OrganismBioStatePool;
+  /** Scratch vectors for parallel shard stepping of OrganismBioStatePool (zero per-frame alloc). */
+  private readonly bioYPositions: Float32Array;
+  private readonly bioEnergies: Float32Array;
+  private readonly bioAges: Float32Array;
+  private readonly bioLives: Float32Array;
+  private readonly bioActivations: Float32Array;
+  private readonly bioVelYDelta: Float32Array;
+  private readonly bioEnergyDelta: Float32Array;
+  private readonly bioScaleMul: Float32Array;
+  /** Detected hybrid CPU + Zig WASM + WebGPU + WebNN NPU hardware capabilities. */
+  private hybridHardware: HybridHardwareCapabilities;
+  /** Latest 3D biome & developmental organism bio-state telemetry summary. */
+  private latestBiomeSummary: OrganismBioTelemetry | null = null;
+  /** Latest hybrid multi-core CPU / WebGPU / WebNN NPU partition plan. */
+  private latestHybridPlan: HybridWorkloadPlan | null = null;
   /** Entity neural-net axon web (proximity links, activation propagation, GraphMind writer). */
   public readonly connectome: Connectome;
   /** Wilderness population — synchronous in POWER; ADR 0010's historical worker lane is dormant. */
@@ -1911,6 +1936,26 @@ export class World {
       this.entities.organismGoals,
     );
     this.entities.attachBrainSlotLifecycle(this.entityBrains);
+    this.organismBioPool = new OrganismBioStatePool(this.quality.maxEntities);
+    this.bioYPositions = new Float32Array(this.quality.maxEntities);
+    this.bioEnergies = new Float32Array(this.quality.maxEntities);
+    this.bioAges = new Float32Array(this.quality.maxEntities);
+    this.bioLives = new Float32Array(this.quality.maxEntities);
+    this.bioActivations = new Float32Array(this.quality.maxEntities);
+    this.bioVelYDelta = new Float32Array(this.quality.maxEntities);
+    this.bioEnergyDelta = new Float32Array(this.quality.maxEntities);
+    this.bioScaleMul = new Float32Array(this.quality.maxEntities);
+    this.hybridHardware = getBaselineHybridHardware();
+    if (
+      typeof navigator !== 'undefined' &&
+      ('gpu' in navigator || 'ml' in (navigator as unknown as Record<string, unknown>))
+    ) {
+      void detectHybridHardware()
+        .then((caps) => {
+          this.hybridHardware = caps;
+        })
+        .catch(() => undefined);
+    }
     this.superScene = ctx.scene;
     // 5 SUPER CREATURES (GOAL5 Archons/Godforms): World.GODFORMS from exclusive godform.ts source.
     // Driven by the represented entries in the 22-entry causal/runtime ledger (15 user + 7 org;
@@ -2377,6 +2422,21 @@ export class World {
   /** Returns the latest 64-bit hex word harvested from the Wild Quantum-Chaos QRNG stream. */
   getLastWildQrngHex(): string {
     return this.lastWildQrngHex;
+  }
+
+  /** Returns the latest 5-stratum 3D biome & developmental organism bio-state telemetry summary. */
+  getBiomeSummary(): OrganismBioTelemetry | null {
+    return this.latestBiomeSummary;
+  }
+
+  /** Returns the latest hybrid CPU / WebGPU / WebNN NPU workload partition plan. */
+  getHybridWorkloadPlan(): HybridWorkloadPlan | null {
+    return this.latestHybridPlan;
+  }
+
+  /** Returns the detected hybrid hardware capabilities (CPU cores, SAB, Zig WASM, WebGPU, WebNN NPU). */
+  getHybridHardware(): HybridHardwareCapabilities {
+    return this.hybridHardware;
   }
 
   /** Advance one frame. rawDt is the unclamped clock delta in seconds. */
@@ -2892,6 +2952,55 @@ export class World {
       if (this.computeCadence && isWildEntropyMode()) {
         const wildQrng = evaluateQrngQuantumChaosStream(s.frame, true);
         this.lastWildQrngHex = wildQrng.wordHex;
+      }
+      // Step the 5-stratum 3D Biome & Developmental Organism Bio-State Pool across parallel shards
+      // using stateless Philox-2x32 counter entropy (zero sequential PRNG draw; 100% golden-neutral).
+      const list = this.entities.list;
+      const bioCount = Math.min(n, this.organismBioPool.capacity);
+      for (let i = 0; i < bioCount; i++) {
+        const e = list[i];
+        if (!e) continue;
+        this.bioYPositions[i] = e.position.y;
+        this.bioEnergies[i] = e.userData.energy;
+        this.bioAges[i] = e.userData.age;
+        this.bioLives[i] = e.userData.life;
+        this.bioActivations[i] = e.userData.act;
+      }
+      this.latestHybridPlan = planHybridPartition(
+        bioCount,
+        this.connectome.links,
+        this.hybridHardware,
+      );
+      const wildActive = Boolean(this.computeCadence && isWildEntropyMode());
+      for (const shard of this.latestHybridPlan.shards) {
+        this.organismBioPool.stepShard(
+          this.bioYPositions,
+          this.bioEnergies,
+          this.bioAges,
+          this.bioLives,
+          this.bioActivations,
+          this.bioVelYDelta,
+          this.bioEnergyDelta,
+          this.bioScaleMul,
+          shard.startSlot,
+          shard.endSlot,
+          this.persisted.seed,
+          s.frame,
+          s.chaos,
+          dt * waveStride,
+          wildActive,
+        );
+      }
+      this.latestBiomeSummary = this.organismBioPool.summarize(bioCount);
+      // In live browser Wild Mode, couple 3D biome vertical buoyancy & neuromodulation back into
+      // organism vertical stratification so creatures colonize all 5 vertical strata dynamically.
+      if (wildActive) {
+        for (let i = 0; i < bioCount; i++) {
+          const e = list[i];
+          if (!e || e.userData.isNhi) continue;
+          e.userData.vel.y += this.bioVelYDelta[i]!;
+          e.userData.energy = clamp(e.userData.energy + this.bioEnergyDelta[i]!, 5, 100);
+        }
       }
       if (this.workerPool && !this.workerSimInFlight) {
         this.workerSimInFlight = true;

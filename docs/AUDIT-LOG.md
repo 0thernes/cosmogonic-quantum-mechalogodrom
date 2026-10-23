@@ -11,6 +11,15 @@ changed and why.
 
 ---
 
+## 2026-10-23 (America/Los_Angeles) — Browser Hybrid Compute Engine, Counter-Based Parallel Determinism & 3D Multi-Biome Organism Substrate
+
+- Engineered browser-native / GitHub Pages compatible **Hybrid Compute & 3D Multi-Biome Organism Expansion** across four tracks without lowering visual quality (`Level.FULL`) or neural depth:
+  1. **Stateless Philox-2x32 Counter-Based Parallel PRNG (`src/math/wild-entropy.ts`):** Added `philoxCounter32`, `sampleParallelCounter01`, `fillParallelCounterShard`, and `createParallelEntityRng` so CPU worker threads, WebGPU compute workgroups, and WebNN NPU cohorts evaluate `(seed, tick, entityId, channel)` in parallel without sequential `mulberry32` lockstep stalls.
+  2. **Browser Hybrid Compute Engine (`src/core/hybrid-compute.ts`, `src/workers/simulation-worker.ts`):** Added `HYBRID_ENTITY_BRAIN_WGSL` (`@compute @workgroup_size(64)` WGSL compute shader), `detectHybridHardware` (probing CPU logical cores, `SharedArrayBuffer`, Zig 0.17.0 WASM SIMD, WebGPU, and WebNN `navigator.ml` `{ deviceType: 'npu', powerPreference: 'low-power' }`), `planHybridPartition` (partitioning entity shards across GPU/NPU/CPU and computing Connectome distance/fog horizon culling above 120k links), and `executeHybridEntityBrainBatch` / `executeHybridShardWorkerKernel`.
+  3. **Expanded 3D Multi-Biome Strata & Deep Organism Bio-State (`src/sim/biome-strata.ts`, `src/world.ts`):** Added five 3D vertical/radial ecological strata (`hadal_abyss`, `benthic_reef`, `quantum_thermocline`, `photonic_canopy`, `aetherial_crown`), `computeHabitatEnvelope` ($\sqrt{N/10000}$ horizontal and logarithmic vertical relief above 10,000 entities while keeping $\le 10,000$ at `1.0` for golden test compatibility), four developmental organism life stages (`larval_spore`, `juvenile_forager`, `mature_symbiont`, `elder_apex`), and SoA `OrganismBioStatePool` (3-channel neuromodulation `dopamine`, `serotonin`, `noradrenaline` + 4-channel recurrent working memory `memoryTrace`).
+- Proof: `tests/hybrid-compute-biome.test.ts` (9 tests / 308 assertions) proves 1-shard vs. 16-reversed-shard bit-identity for both `fillParallelCounterShard` and `OrganismBioStatePool.stepShard`, plus worker shard equivalence for `executeHybridEntityBrainBatch`.
+- CQM-25 axes: `substrate_pluralism`, `visual_embodied_scale`, `instrumentation_reproducibility`, `homeostasis_vital_regulation`, and `morphogenesis_development`.
+
 ## 2026-10-22 (America/Los_Angeles) — Brain IV provenance and all-tab regression audit
 
 - Continued from upstream `fbf44f32` and `b885d4ff` in the isolated release checkout, preserving

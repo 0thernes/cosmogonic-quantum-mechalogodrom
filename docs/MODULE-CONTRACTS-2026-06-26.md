@@ -1832,7 +1832,7 @@ Copilot are constructed boot-stream-neutral and never write sim state, so the go
 
 ### V9 acceptance
 
-Full `bun run check` green: prettier → tsc strict → oxlint → 3497 tests (0 fail, 300-frame golden
+Full `bun run check` green: prettier → tsc strict → oxlint → 3506 tests (0 fail, 300-frame golden
 included) → build. The Copilot sandbox verified live (allow: `git log`, file reads; deny:
 path-escape, repository-root pathspecs, `git push`, `legacy/`, shell redirection).
 
@@ -2209,3 +2209,18 @@ never decoration.
   byte-matches the neutral fill; world/mecha/brain source seals).
 - Determinism (ADR 0004) unchanged: the mechalogodrom still draws zero rng; the brain's percept
   gains one clamped dimension fed only by the shells' own mathematics.
+
+## Browser Hybrid Compute Engine & 3D Multi-Biome Organism Substrate contract (2026-10-23)
+
+Owner directive: eliminate the single-threaded sequential RNG lockstep and fixed-arena $O(N^2)$ crowding bottlenecks across browser/GitHub Pages runtimes without lowering visual fidelity or neural intelligence, while expanding the 3D ecological habitat and internal organism physiology.
+
+| Module                             | Exclusive responsibility                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/math/wild-entropy.ts`         | Stateless 4-round Philox-2x32 counter-based parallel PRNG (`philoxCounter32`, `sampleParallelCounter01`, `fillParallelCounterShard`, `createParallelEntityRng`) alongside Dual-Mode Wild Quantum-Chaos entropy (`setWildEntropyMode`, `createWildQuantumRng`)                                                                                                                                                                                        |
+| `src/core/hybrid-compute.ts`       | Browser Hybrid Compute Engine (`HYBRID_ENTITY_BRAIN_WGSL` `@compute @workgroup_size(64)` shader, `detectHybridHardware` probing CPU cores / `SharedArrayBuffer` / Zig WASM SIMD / WebGPU / WebNN NPU `navigator.ml`, `planHybridPartition`, and `executeHybridEntityBrainBatch`)                                                                                                                                                                     |
+| `src/sim/biome-strata.ts`          | 5-stratum 3D ecological habitat (`hadal_abyss`, `benthic_reef`, `quantum_thermocline`, `photonic_canopy`, `aetherial_crown`), $\sqrt{N/10000}$ habitat envelope expansion above 10,000 entities (`computeHabitatEnvelope`), 4 developmental organism life stages (`evaluateOrganismLifeStage`), and SoA `OrganismBioStatePool` (3-channel neuromodulation `dopamine`/`serotonin`/`noradrenaline` + 4-channel recurrent working memory `memoryTrace`) |
+| `src/workers/simulation-worker.ts` | Off-thread Web Worker execution for both Zig WASM Tsotchke wave kernels (`executeSimulationWorkerKernel`) and parallel counter-seeded neural shards (`executeHybridShardWorkerKernel`)                                                                                                                                                                                                                                                               |
+
+- **Counter-based parallel determinism:** `sampleParallelCounter01(seed, tick, entityId, channel, false)` is a pure $O(1)$ bijection invariant to shard count and thread execution order. Evaluating 1 shard vs. 16 reversed shards produces bit-identical `Float32Array` outputs (`tests/hybrid-compute-biome.test.ts`).
+- **Golden compatibility at $\le 10,000$ entities:** `computeHabitatEnvelope(population)` preserves `horizontalScale === 1.0` and `verticalScale === 1.0` for `population <= 10,000` so all existing headless golden tests remain untouched, while scaling horizontally by $\sqrt{N/10000}$ and vertically by $1 + 0.45 \log_2(N/10000)$ at `ultra` (25k) and `mega` (50k) tiers.
+- **CQM-25 axes:** `substrate_pluralism`, `visual_embodied_scale`, `instrumentation_reproducibility`, `homeostasis_vital_regulation`, and `morphogenesis_development`.

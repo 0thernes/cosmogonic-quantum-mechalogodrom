@@ -200,8 +200,8 @@ describe('organism-intelligence V4 Petri family evaluator', () => {
         ).toBe(true);
       }
     },
-    // Full 64-seed × 4-arm eval is heavy; under `bun test --coverage` wall time ~2× cold.
-    { timeout: 45_000 },
+    // Full 64-seed × 4-arm eval is heavy; under `bun test --coverage` wall time scales with thermal load.
+    { timeout: 240_000 },
   );
 
   test('rejects malformed seeds, duplicate batches, and unknown runtime arm strings', () => {

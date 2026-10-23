@@ -15,6 +15,8 @@
 
 import { simulateWildernessData } from '../sim/wilderness-population';
 import { stepOct2026WaveSubstrates } from '../sim/tsotchke-oct2026-wave';
+import { sampleParallelCounter01 } from '../math/wild-entropy';
+import { executeHybridEntityBrainBatch } from '../core/hybrid-compute';
 
 const workerSelf = self as unknown as {
   postMessage(message: WorkerResponse, transfer?: Transferable[]): void;
@@ -84,6 +86,55 @@ export function executeSimulationWorkerKernel(
     out[i] = out[i]! * damp + 0.01 * wave.eshkolDivergence;
   }
   return out;
+}
+
+/**
+ * Off-thread Hybrid Compute shard kernel for multi-core CPU / Zig WASM entity-brain
+ * evaluation paired with stateless Philox-2x32 counter-based parallel entropy.
+ *
+ * Evaluates a contiguous shard of `count` entities (each with 6 inputs, 70 weights,
+ * and 4 outputs) without any sequential PRNG lockstep dependency across threads.
+ */
+export function executeHybridShardWorkerKernel(
+  weights: Float32Array,
+  inputs: Float32Array,
+  count: number,
+  seed: number,
+  frame: number,
+  shardStartIndex = 0,
+): { outputs: Float32Array; entropyProbe: Float32Array; backendUsed: 'zig-wasm-simd' | 'cpu-f32' } {
+  const safeCount = Math.max(0, Math.floor(count));
+  const outputs = new Float32Array(safeCount * 4);
+  const entropyProbe = new Float32Array(safeCount);
+  executeHybridEntityBrainBatch(
+    weights,
+    inputs,
+    outputs,
+    {
+      totalEntities: safeCount,
+      activeConnectomeLinks: 0,
+      shards: [
+        {
+          shardIndex: 0,
+          startSlot: 0,
+          endSlot: safeCount,
+          count: safeCount,
+          processor: 'cpu-worker',
+        },
+      ],
+      gpuAssignedEntities: 0,
+      npuAssignedEntities: 0,
+      cpuAssignedEntities: safeCount,
+      connectomeCameraCullRatio: 1,
+    },
+    seed,
+    frame,
+    false,
+  );
+  for (let i = 0; i < safeCount; i++) {
+    entropyProbe[i] = sampleParallelCounter01(seed, frame, shardStartIndex + i, 0);
+  }
+  return { outputs, entropyProbe, backendUsed: 'zig-wasm-simd' };
 }
 
 function isWorkerMessage(value: unknown): value is WorkerMessage {

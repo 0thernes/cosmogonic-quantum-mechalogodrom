@@ -102,3 +102,90 @@ export function createWildQuantumRng(baseSeed = 0x517cc1b7): Rng {
 export function createDualModeRng(seed: number, wild = _wildEntropyMode): Rng {
   return wild ? createWildQuantumRng(seed) : mulberry32(seed);
 }
+
+/**
+ * 4-round Philox-2x32 stateless counter-based bijection (`(seed, tick, entityId, channel) -> uint32`).
+ *
+ * Eliminates the single-thread sequential RNG lockstep bottleneck: any CPU worker thread,
+ * WebGPU compute workgroup, or NPU cohort can evaluate `(seed, tick, entityId, channel)` in
+ * arbitrary parallel order and obtain the exact same bit-reproducible uint32 word.
+ */
+export function philoxCounter32(seed: number, tick: number, entityId: number, channel = 0): number {
+  let c0 = (entityId ^ Math.imul(channel >>> 0, 0x9e3779b9)) >>> 0;
+  let c1 = (tick ^ Math.imul(channel >>> 0, 0x85ebca6b)) >>> 0;
+  let k0 = (seed ^ 0x243f6a88) >>> 0;
+  let k1 = (Math.imul(seed >>> 0, 0x6d2b79f5) ^ 0xb7e15162) >>> 0;
+
+  for (let round = 0; round < 4; round++) {
+    const prodLo = Math.imul(c0, 0xd2511f53) >>> 0;
+    const prodHi = Math.imul(c0 ^ (c0 >>> 16), 0xcd9e8d57) >>> 0;
+    const next0 = (prodHi ^ c1 ^ k0) >>> 0;
+    const next1 = (prodLo ^ k1) >>> 0;
+    c0 = next0;
+    c1 = next1;
+    k0 = (k0 + 0x9e3779b9) >>> 0;
+    k1 = (k1 + 0xbb67ae85) >>> 0;
+  }
+  const mixed = (c0 ^ c1 ^ (c0 >>> 15)) >>> 0;
+  return (Math.imul(mixed ^ (mixed >>> 13), 0xc2b2ae35) ^ (mixed >>> 16)) >>> 0;
+}
+
+/**
+ * Stateless parallel uniform sample in `[0, 1)`.
+ * - In **Seeded Reproducible Mode** (`wild = false`): pure O(1) function of `(seed, tick, entityId, channel)`
+ *   — 100% invariant to thread count, shard size, or execution order.
+ * - In **Wild Quantum-Chaos Mode** (`wild = true`): XORs hardware timing/CSPRNG salt into the seed.
+ */
+export function sampleParallelCounter01(
+  seed: number,
+  tick: number,
+  entityId: number,
+  channel = 0,
+  wild = false,
+): number {
+  const effectiveSeed = wild
+    ? (seed ^ Number(harvestHardwareJitter64(seed ^ tick ^ entityId) & 0xffffffffn)) >>> 0
+    : seed >>> 0;
+  return philoxCounter32(effectiveSeed, tick, entityId, channel) / 4294967296;
+}
+
+/**
+ * Fill a contiguous `Float32Array` slice for a shard `[startEntity, startEntity + count)`
+ * using stateless parallel counter evaluation. Safe for multi-worker `SharedArrayBuffer` shards.
+ */
+export function fillParallelCounterShard(
+  out: Float32Array,
+  seed: number,
+  tick: number,
+  startEntity: number,
+  count: number,
+  channel = 0,
+  wild = false,
+): Float32Array {
+  const n = Math.max(0, Math.min(count, out.length));
+  const effectiveSeed = wild
+    ? (seed ^ Number(harvestHardwareJitter64(seed ^ tick ^ startEntity) & 0xffffffffn)) >>> 0
+    : seed >>> 0;
+  for (let i = 0; i < n; i++) {
+    out[i] = philoxCounter32(effectiveSeed, tick, startEntity + i, channel) / 4294967296;
+  }
+  return out;
+}
+
+/**
+ * Create a per-entity `Rng` closure backed by `sampleParallelCounter01`, advancing only the
+ * entity-local `channel` counter. Evaluating entity `A` never perturbs entity `B`'s stream.
+ */
+export function createParallelEntityRng(
+  seed: number,
+  tick: number,
+  entityId: number,
+  wild = false,
+): Rng {
+  let channel = 0;
+  return () => {
+    const val = sampleParallelCounter01(seed, tick, entityId, channel, wild);
+    channel = (channel + 1) | 0;
+    return val;
+  };
+}
