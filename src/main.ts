@@ -353,12 +353,21 @@ async function boot(): Promise<void> {
   const searchParams = new URLSearchParams(location.search);
   const forceDeterministic = searchParams.get('deterministic') === '1' || searchParams.has('seed');
   world.setWildMode(!forceDeterministic);
+  const computePreference =
+    searchParams.get('compute') === 'webgpu'
+      ? 'webgpu'
+      : searchParams.get('compute') === 'cpu' || forceDeterministic
+        ? 'cpu'
+        : 'auto';
 
   // Multi-threaded Web Worker Pool (ADR 0010): offload wilderness chunks and Tsotchke Zig WASM
   // substrate simulation to background CPU cores when available. Explicit ?workers=0 keeps
   // deterministic visual fixtures on the main thread without changing behavior for a test harness.
   if (typeof Worker !== 'undefined' && searchParams.get('workers') !== '0') {
-    const pool = createWorkerPool(quality.tier);
+    const requestedWorkers = searchParams.has('workers')
+      ? Number(searchParams.get('workers'))
+      : undefined;
+    const pool = createWorkerPool(quality.tier, requestedWorkers);
     void pool
       .initialize(new URL('./workers/simulation-worker.js', document.baseURI).href)
       .then(() => {
@@ -367,10 +376,14 @@ async function boot(): Promise<void> {
           return;
         }
         world.attachWorkerPool(pool);
+        void world.configureBrowserCompute(computePreference);
       })
       .catch(() => {
         pool.dispose();
+        if (mainLifecycleActive()) void world?.configureBrowserCompute(computePreference);
       });
+  } else {
+    void world.configureBrowserCompute(computePreference);
   }
 
   resizeHandler = (): void => engine?.onResize();

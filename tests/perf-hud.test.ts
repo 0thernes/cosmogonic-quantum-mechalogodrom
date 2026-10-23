@@ -9,11 +9,18 @@ import {
   formatTimingLine,
   formatPopulationLine,
   formatWorkerLine,
+  formatComputeLine,
   EMPTY_WORLD,
 } from '../src/ui/perf-hud';
 import { Level } from '../src/core/frame-governor';
 
 describe('perf HUD — pure readout helpers', () => {
+  test('compute readout scopes accepted GPU work to ambient state, not core brains', () => {
+    expect(formatComputeLine({ ...EMPTY_WORLD, ambientCompute: 'webgpu' })).toBe(
+      'ambient: webgpu · core brains: CPU',
+    );
+    expect(formatComputeLine(EMPTY_WORLD)).toBe('ambient: pending · core brains: CPU');
+  });
   test('qualityLabel stays locked to full for every governor level', () => {
     expect(qualityLabel(Level.FULL)).toBe('full');
     expect(qualityLabel(Level.DPR_85)).toBe('full');

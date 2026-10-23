@@ -42,6 +42,8 @@ export interface PerfHudWorldMetrics {
   workersReady: boolean;
   hardwareCores: number;
   simFrame: number;
+  /** Accepted ambient numerical backend only; never describes the visible core organism brains. */
+  ambientCompute?: string;
 }
 
 /** Full HUD update payload — pure formatters consume this. */
@@ -80,6 +82,11 @@ export function formatWorkerLine(w: PerfHudWorldMetrics): string {
   if (!w.workersReady || w.workerTotal === 0) return `cpu ${cores} · workers off`;
   const act = w.workerActive > 0 ? ` (${w.workerActive} act)` : '';
   return `cpu ${cores} · workers ${w.workerTotal}${act}`;
+}
+
+/** Distinguish auxiliary compute from core cognition and graphics. */
+export function formatComputeLine(w: PerfHudWorldMetrics): string {
+  return `ambient: ${w.ambientCompute ?? 'pending'} · core brains: CPU`;
 }
 
 export interface PerfHud {
@@ -129,6 +136,10 @@ export function mountPerfHud(currentTier: string): PerfHud {
   popEl.className = 'perf-hud-metrics';
   const workerEl = document.createElement('div');
   workerEl.className = 'perf-hud-metrics';
+  const computeEl = document.createElement('div');
+  computeEl.className = 'perf-hud-metrics';
+  computeEl.title =
+    'Ambient numerical population only. WebGL draws the world; NPU inference is not active.';
 
   const tierRow = document.createElement('div');
   tierRow.className = 'perf-hud-row';
@@ -150,6 +161,8 @@ export function mountPerfHud(currentTier: string): PerfHud {
   hint.textContent = 'fly: drag · scroll · WASD';
 
   el.appendChild(line1);
+  // Keep execution provenance near the top of the chip, visible above the expanded toolbar.
+  el.appendChild(computeEl);
   el.appendChild(timingEl);
   el.appendChild(popEl);
   el.appendChild(workerEl);
@@ -166,6 +179,7 @@ export function mountPerfHud(currentTier: string): PerfHud {
       timingEl.textContent = formatTimingLine(snapshot.frameMs, snapshot.p95Ms, snapshot.heapMb);
       popEl.textContent = formatPopulationLine(snapshot.world);
       workerEl.textContent = formatWorkerLine(snapshot.world);
+      computeEl.textContent = formatComputeLine(snapshot.world);
     },
   };
 }

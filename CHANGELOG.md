@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Browser-only hybrid-compute foundation: bounded batched WebGPU implementation of the complete
+  ambient wilderness numerical kernel, CPU reference checks, transfer-inclusive calibration,
+  explicit automatic/CPU/experimental-GPU selection and accepted-backend telemetry. CPU workers
+  retain headroom by default and allow a bounded worker-count override. Device loss and stale jobs
+  cannot publish after lifecycle changes. This ambient population has no renderer; visible core
+  brains, connectomes, graphics and NPU inference are not migrated by this change. ADR 0010 records
+  the remaining state-ownership, GPU-residency, expanded-world and deeper-organism work.
+
+
 - **Browser Hybrid Compute Engine, Counter-Based Parallel Determinism & 3D Multi-Biome Organism Substrate:**
   - `src/math/wild-entropy.ts`: 4-round stateless Philox-2x32 counter PRNG (`philoxCounter32`, `sampleParallelCounter01`, `fillParallelCounterShard`, `createParallelEntityRng`) eliminating sequential single-thread PRNG lockstep stalls across parallel CPU/GPU/NPU shards.
   - `src/core/hybrid-compute.ts` & `src/workers/simulation-worker.ts`: Browser Hybrid Compute Engine (`HYBRID_ENTITY_BRAIN_WGSL` WebGPU compute shader, `detectHybridHardware` probing CPU logical cores / `SharedArrayBuffer` / Zig WASM SIMD / WebGPU / WebNN NPU `navigator.ml`, `planHybridPartition`, `executeHybridEntityBrainBatch`, and `executeHybridShardWorkerKernel`).

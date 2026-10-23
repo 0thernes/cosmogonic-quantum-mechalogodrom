@@ -2,6 +2,16 @@
 
 # Architecture
 
+**Browser hybrid execution (2026-10-23):** GitHub Pages remains the deployment target.
+WebGL already renders on the GPU, while ordinary organism controllers and the visible connectome
+remain on the main CPU thread. Existing CPU workers now have a configurable bounded budget, and
+the numerical wilderness population has a real WGSL compute backend selected only after parity
+checks and transfer-inclusive calibration. This ambient population's renderer is intentionally a
+no-op; it is not the visible fauna. No NPU model is active. The current boundary, negative GPU
+timings and the migration to complete worker-owned organism state are documented in
+[ADR 0010](./adr/0010-worker-offload-and-streamed-hybrid-world-2026-06-26.md) and
+[the benchmark ledger](./BENCHMARKS-2026-06-26.md#browser-ambient-hybrid-compute).
+
 **[CQM-25 canonical capability framework](./alife/cqm-capability-profile.html)** — version
 **1.0.0**, adopted **2026-10-22**. The [source data and protocols](./alife/cqm-capability-profile.json)
 own the 25 stable axis IDs. Feature plans and capability assessments must name affected IDs,

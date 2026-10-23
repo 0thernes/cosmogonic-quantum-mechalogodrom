@@ -157,9 +157,10 @@ describe('World frame-delta ingress', () => {
   test('both pause states return before dispatching wilderness simulation work', () => {
     const makeReceiver = (
       frozenAll: boolean,
-    ): { world: World; pausedSteps: number[]; runtime: string[] } => {
+    ): { world: World; pausedSteps: number[]; runtime: string[]; ambientPause: boolean[] } => {
       const pausedSteps: number[] = [];
       const runtime: string[] = [];
+      const ambientPause: boolean[] = [];
       const receiver = {
         state: { timeScale: 0, elapsed: 0, frame: 0 },
         godClock: 0,
@@ -169,6 +170,7 @@ describe('World frame-delta ingress', () => {
         stepFrozen: (dt: number) => pausedSteps.push(dt),
         stepSuspended: (dt: number) => pausedSteps.push(dt),
         wilderness: {
+          setPaused: (paused: boolean) => ambientPause.push(paused),
           update: () => {
             throw new Error('paused world dispatched wilderness work');
           },
@@ -179,18 +181,20 @@ describe('World frame-delta ingress', () => {
           },
         },
       } as unknown as World;
-      return { world: receiver, pausedSteps, runtime };
+      return { world: receiver, pausedSteps, runtime, ambientPause };
     };
 
     const frozen = makeReceiver(true);
     World.prototype.step.call(frozen.world, 0.016);
     expect(frozen.pausedSteps).toEqual([0.016]);
     expect(frozen.runtime).toEqual(['frozen']);
+    expect(frozen.ambientPause).toEqual([true]);
 
     const suspended = makeReceiver(false);
     World.prototype.step.call(suspended.world, 0.016);
     expect(suspended.pausedSteps).toEqual([0.016]);
     expect(suspended.runtime).toEqual(['suspended']);
+    expect(suspended.ambientPause).toEqual([true]);
   });
 });
 

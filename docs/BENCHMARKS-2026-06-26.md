@@ -16,6 +16,87 @@ Measured results for the hot-path primitives. Reproduce with `bun run bench`
 
 ## Results
 
+### Browser ambient hybrid compute
+
+Measured 2026-10-23 UTC on Windows, Intel Core Ultra 9 275HX (24 logical processors),
+NVIDIA RTX 5070 Ti Laptop GPU and integrated Intel graphics. Installed Chrome 155 selected
+NVIDIA/Blackwell; installed Edge 157 selected Intel/Xe-LPG. No experimental browser flags,
+cross-origin-isolation headers or system settings were changed. Both lacked `navigator.ml`.
+The bundled Chromium probe instead used software WebGL and found no WebGPU adapter; it is not
+the source of the hardware results below.
+
+| Browser / adapter | Entities | Main CPU median (ms) | 4 workers median (ms) | GPU round trip median (ms) |
+| ----------------- | -------: | -------------------: | --------------------: | -------------------------: |
+| Chrome / NVIDIA   |      128 |                 0.10 |                  0.40 |                       4.90 |
+| Chrome / NVIDIA   |    1,024 |                 0.30 |                  0.70 |                       4.20 |
+| Chrome / NVIDIA   |    8,192 |                 0.80 |                  2.00 |                       5.30 |
+| Edge / Intel      |      128 |                 0.10 |                  0.50 |                       4.00 |
+| Edge / Intel      |    1,024 |                 0.20 |                  0.90 |                       4.90 |
+| Edge / Intel      |    8,192 |                 1.00 |                  3.10 |                       5.90 |
+
+Four warmups and 16 rotated measured trials per route/size, using identical seeded fixtures.
+CPU and worker routes include input copies; GPU includes validation, packing, upload, dispatch,
+readback and output copies. These are completion latencies, not main-thread blocking durations.
+Fine CPU timings are quantized by browser timers. **This small O(n) kernel lost on the GPU.**
+At 8,192 entities the NVIDIA round trip alone consumes about 32% of a 16.67 ms frame interval;
+asynchronous overlap does not make that a CPU-frame share or a delivered-FPS measurement.
+
+The kernel source SHA-256 for these runs is
+`aa56e67e2577eebd0b93a969a2c02ad974f5b188a2bcd68e780a4ee032292874`.
+Raw [NVIDIA](../bench/browser-hybrid/receipts/kernel-nvidia-chrome.json) and
+[Intel](../bench/browser-hybrid/receipts/kernel-intel-edge.json) receipts preserve the timings,
+checks and source hashes. Their original run names are `kernel-chrome-2026-10-23T08-00-57-508Z.json`
+and `kernel-edge-2026-10-23T08-01-00-342Z.json`. Reproduce using
+`bun bench/browser-hybrid/run.ts chrome kernel` or replace `chrome` with `edge`;
+`integration` exercises production calibration, frame acceptance, pause/resume and CPU fallbacks.
+The runner writes source hashes, checks and raw samples under `output/hybrid-browser/`.
+Install the selected ordinary browser first; no optional GPU flags are added by the runner.
+
+Each adapter passed 75 kernel checks, including sizes 1/127/128/129/1,024/8,192, exact identity
+preservation, zero delta, input ownership, repeated steps and CPU-worker parity. The lifecycle
+fixture passed 13 checks per adapter. Calibration uses 49 chunks / 6,272 entities, two warmups
+and five measured rounds. Both automatic routes retained CPU workers; forced WebGPU still
+requires numerical parity and explicitly does not promise a speed improvement.
+
+Negative evidence is retained: an initial reserved-word WGSL compilation failure, and a 50-unit
+boundary discrepancy caused by FP32 division rounding before `floor`. The latter was repaired
+with a chunk-relative boundary decision, without weakening the fixture or tolerance. This is
+bounded FP32 agreement, not universal bit identity or long-run equivalence. The current kernel
+does not accelerate visible organisms, Archons, connectome propagation or rendering. GPU-resident
+state and larger compatible batches remain a measured migration requirement; the existing
+wilderness renderer is deliberately empty.
+
+The preserved [failed compilation](../bench/browser-hybrid/receipts/negative-wgsl-compilation.json)
+and [failed boundary calibration](../bench/browser-hybrid/receipts/negative-boundary-calibration.json)
+remain distinct from the final passing
+[NVIDIA lifecycle](../bench/browser-hybrid/receipts/integration-nvidia-chrome.json) and
+[Intel lifecycle](../bench/browser-hybrid/receipts/integration-intel-edge.json) receipts.
+
+#### Production rendering remains a separate bottleneck
+
+A bounded actual-World check under the GitHub Pages project path, installed Chrome/NVIDIA,
+phone tier and unchanged visual effects timed out after three frames. The
+[failed run](../bench/browser-hybrid/receipts/negative-world-startup.json) and
+[CPU profile summary](../bench/browser-hybrid/receipts/world-startup-profile-summary.json)
+attribute 35,620 of 38,814 samples (91.77%) to Three.js first-use shader link/info checks.
+Blocked main-thread message handling also triggered worker capacity timeouts. This identifies a
+cold-start bottleneck; it does not measure steady-state frame rate or refute worker kernel speed.
+
+A [harness-only preparation experiment](../bench/browser-hybrid/receipts/exploratory-scene-preparation.json)
+compiled 67 programs asynchronously in 20.64 seconds with 1,559 timer callbacks, preserving the
+actual scene, compositor render target and visual settings. The first subsequent rendered World
+step still took 21.75 seconds; the following eleven took 114–223 ms under the diagnostic harness.
+No engine warmup change is shipped from this partial result. Post-processing/shadow/newly selected
+variants and uploads need separate profiling, and the remaining first-use stall is unresolved.
+
+The separate [World functional check](../bench/browser-hybrid/receipts/world-functional-render-bypassed.json)
+passed 27 assertions for actual mode selection, accepted backend, HUD text, pause/freeze/resume and
+CPU override, **with `engine.render` bypassed explicitly**. It establishes coordinator behavior,
+not 3D rendering or production performance. A nine-check harness-only warmup run did render the
+actual scene without GL errors, with the residual stalls above retained. Neither result licenses
+a claim that the entire app became fast, that 50,000 core organisms are accelerated, or that a
+smooth high-quality frame rate is established.
+
 ### PRIME observatory data builders (I–IV)
 
 Measured 2026-10-22 (America/Los_Angeles) on Intel Core Ultra 9 275HX, 24 logical processors,

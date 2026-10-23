@@ -303,6 +303,11 @@ import type { AuditTrail } from './logging/audit';
 import { createLogger } from './logging/logger';
 import type { BigTreeEcologyPersistenceSnapshot, MemoryStore } from './memory/store';
 import type { WorkerPool } from './core/worker-pool';
+import { WildernessWebGpu } from './core/wilderness-webgpu';
+import {
+  calibrateWildernessCompute,
+  type WildernessComputeCalibration,
+} from './core/wilderness-compute';
 import { WildernessPopulation } from './sim/wilderness-population';
 import { WildernessRenderer } from './sim/wilderness-render';
 import {
@@ -559,7 +564,7 @@ export class World {
   private readonly disposeAbort = new AbortController();
   private readonly entities: EntityManager;
   /** Worker pool for offloading simulation to multiple CPU cores (ADR 0010) */
-  /** Compatibility/perf-stats sentinel; POWER runtime keeps browser workers intentionally dormant. */
+  /** Browser-owned pool; absent or failed initialization retains CPU fallback. */
   public workerPool: WorkerPool | null = null;
   /** Adaptive compute cadence plan supplied by the browser RenderGovernor (null in headless deterministic tests). */
   private computeCadence: ComputeCadencePlan | null = null;
@@ -590,9 +595,14 @@ export class World {
   private latestHybridPlan: HybridWorkloadPlan | null = null;
   /** Entity neural-net axon web (proximity links, activation propagation, GraphMind writer). */
   public readonly connectome: Connectome;
-  /** Wilderness population — synchronous in POWER; ADR 0010's historical worker lane is dormant. */
+  /** Ambient numeric population; its renderer is intentionally absent, not visible core fauna. */
   private readonly wilderness: WildernessPopulation;
   private readonly wildernessRender: WildernessRenderer;
+  private browserComputeGeneration = 0;
+  private browserComputeCalibrating = false;
+  private browserComputePreference: 'auto' | 'webgpu' | 'cpu' = 'cpu';
+  private browserComputeReason = 'CPU reference; GPU compute not requested';
+  private browserComputeCalibration: WildernessComputeCalibration | null = null;
   /** Xenomimics — deterministic ground-dwelling entangled-twin fauna (own rng substream; not in the EntityManager golden). */
   private readonly xenomimics: XenomimicPopulation;
   private readonly xenomimicsRender: XenomimicRenderer;
@@ -2239,6 +2249,7 @@ export class World {
    */
   dispose(): void {
     if (this.disposeAbort.signal.aborted) return; // idempotent — abort() is the sentinel
+    this.browserComputeGeneration++;
     // HMR/runtime teardown otherwise discards the last food lifecycle checkpoint before pagehide.
     this.persistBigTreeEcology();
     this.disposeAbort.abort();
@@ -2381,8 +2392,98 @@ export class World {
    * multiple CPU cores.
    */
   attachWorkerPool(pool: WorkerPool | null): void {
+    this.browserComputeGeneration++;
+    this.browserComputeCalibrating = false;
     this.workerPool = pool;
     this.wilderness.setWorkerPool(pool);
+    this.wilderness.setPaused(this.state.timeScale === 0);
+  }
+
+  /** Calibrate optional ambient GPU compute without changing core cognition or render fidelity. */
+  async configureBrowserCompute(preference: 'auto' | 'webgpu' | 'cpu'): Promise<void> {
+    if (this.disposeAbort.signal.aborted) return;
+    const generation = ++this.browserComputeGeneration;
+    this.browserComputeCalibrating = false;
+    this.browserComputePreference = preference;
+    this.browserComputeCalibration = null;
+    this.wilderness.setBatchExecutor(null);
+    this.wilderness.setPaused(this.state.timeScale === 0);
+    if (preference === 'cpu' || !this.isWildMode()) {
+      this.browserComputeReason = preference === 'cpu' ? 'CPU requested' : 'Seeded reference mode';
+      return;
+    }
+    this.browserComputeReason = 'Testing ambient GPU batch; visible fauna remain on CPU';
+    this.browserComputeCalibrating = true;
+    this.wilderness.setPaused(true);
+    let candidate: WildernessWebGpu | null = null;
+    try {
+      candidate = await WildernessWebGpu.create();
+      if (this.disposeAbort.signal.aborted || generation !== this.browserComputeGeneration) return;
+      // Drain pre-existing ambient/summary requests before comparing the same pool to the GPU.
+      // Visible core simulation and presentation continue; no new auxiliary work enters this pool.
+      const drainStart = performance.now();
+      while (this.workerPool && this.workerPool.getStats().activeTasks > 0) {
+        if (this.disposeAbort.signal.aborted || generation !== this.browserComputeGeneration)
+          return;
+        if (performance.now() - drainStart > 10000)
+          throw new Error('Worker calibration drain timed out');
+        await new Promise<void>((resolve) => setTimeout(resolve, 10));
+      }
+      const report = await calibrateWildernessCompute(candidate, this.workerPool, preference, {
+        isActive: () =>
+          !this.disposeAbort.signal.aborted && generation === this.browserComputeGeneration,
+      });
+      if (this.disposeAbort.signal.aborted || generation !== this.browserComputeGeneration) return;
+      this.browserComputeCalibration = report;
+      this.browserComputeReason = report.reason;
+      if (report.workerParityPassed === false) {
+        const rejectedPool = this.workerPool;
+        this.workerPool = null;
+        this.wilderness.setWorkerPool(null);
+        rejectedPool?.dispose();
+      }
+      if (report.selected === 'webgpu') {
+        this.wilderness.setBatchExecutor(candidate);
+        candidate = null; // population now owns disposal
+      }
+      this.audit.record('ambient-compute-calibration', {
+        selected: report.selected,
+        reason: report.reason,
+      });
+    } catch (error) {
+      if (!this.disposeAbort.signal.aborted && generation === this.browserComputeGeneration) {
+        this.browserComputeReason = error instanceof Error ? error.message : String(error);
+        this.log.warn('ambient WebGPU unavailable; CPU fallback retained', {
+          reason: this.browserComputeReason,
+        });
+      }
+    } finally {
+      candidate?.dispose();
+      if (generation === this.browserComputeGeneration && !this.disposeAbort.signal.aborted) {
+        this.browserComputeCalibrating = false;
+        this.wilderness.setPaused(this.state.timeScale === 0);
+      }
+    }
+  }
+
+  /** Inspect actual accepted backend and probe evidence; no GPU/NPU inference claim is implied. */
+  getBrowserComputeStatus() {
+    const status = this.wilderness.getComputeStatus();
+    return {
+      ...status,
+      preference: this.browserComputePreference,
+      reason:
+        status.lastError && status.backend !== 'webgpu'
+          ? status.lastError
+          : this.browserComputeReason,
+      calibrating: this.browserComputeCalibrating,
+      calibration: this.browserComputeCalibration,
+      scope: 'ambient numeric population only; visible fauna and Archons remain CPU',
+      npu:
+        typeof navigator !== 'undefined' && 'ml' in navigator
+          ? 'WebNN API detected; no CQM NPU model executed'
+          : 'WebNN unavailable; NPU not active',
+    };
   }
 
   /**
@@ -2390,7 +2491,15 @@ export class World {
    * + `performance.now()` timing jitter + Zig WASM `cqm_qrng_quantum_chaos_step` Toeplitz stream).
    */
   setWildMode(enabled: boolean): void {
+    this.wilderness.invalidatePending();
     setWildEntropyMode(enabled);
+    if (!enabled) {
+      this.browserComputeGeneration++;
+      this.browserComputeCalibrating = false;
+      this.wilderness.setBatchExecutor(null);
+      this.wilderness.setPaused(this.state.timeScale === 0);
+      this.browserComputeReason = 'Seeded reference mode';
+    }
     this.audit.record('wild-quantum-chaos-mode', { enabled });
   }
 
@@ -2448,6 +2557,7 @@ export class World {
       return;
     }
     const s = this.state;
+    this.wilderness.setPaused(this.browserComputeCalibrating || s.timeScale === 0);
     // Clamp to [0, 50ms]: negative deltas (clock skew) and tab-switch gaps
     // would otherwise drive curve parameters and physics out of range.
     const uiDt = Math.min(Math.max(rawDt, 0), 0.05); // real frame delta, UNSCALED by timeScale
@@ -3002,7 +3112,7 @@ export class World {
           e.userData.energy = clamp(e.userData.energy + this.bioEnergyDelta[i]!, 5, 100);
         }
       }
-      if (this.workerPool && !this.workerSimInFlight) {
+      if (this.workerPool && !this.workerSimInFlight && !this.browserComputeCalibrating) {
         this.workerSimInFlight = true;
         void this.workerPool
           .executeAsync({
@@ -5738,6 +5848,7 @@ export class World {
     workersReady: boolean;
     hardwareCores: number;
     simFrame: number;
+    ambientCompute: string;
   } {
     const wp = this.workerPool?.getStats();
     const nav =
@@ -5755,6 +5866,7 @@ export class World {
       workersReady: (wp?.totalWorkers ?? 0) > 0,
       hardwareCores: Math.max(1, Math.floor(nav?.hardwareConcurrency ?? 8)),
       simFrame: this.state.frame,
+      ambientCompute: this.wilderness.getComputeStatus().acceptedBackend ?? 'pending',
     };
   }
 
@@ -6718,6 +6830,7 @@ export class World {
    *  mind/body/target/wallet lifecycle is closed synchronously below. The old chaos snap-to-0.5 stays
    *  for the counters, and pantheon drift is rate-integrated so chaos cannot teleport them. */
   private resetSim(): void {
+    this.wilderness.invalidatePending();
     this.resetCount++; // V57: keep count for the HUD readout
     this.singularities.dispose(); // tear down any active cosmological effect
     // Death/feeding systems retain delayed respawns by absolute sim time. Those organisms belong to
@@ -7280,6 +7393,7 @@ export class World {
         const i = scales.indexOf(s.timeScale);
         // A value not in the table (e.g. a legacy persisted scale) resumes at realtime.
         s.timeScale = i < 0 ? 1 : (scales[(i + 1) % scales.length] ?? 1);
+        this.wilderness.setPaused(this.browserComputeCalibrating || s.timeScale === 0);
         this.prePauseTimeScale = s.timeScale === 0 ? 1 : s.timeScale;
         // Stepping the time scale to 0 means SUSPENDED (bodies alive in place), never FROZEN — the total
         // freeze is reachable only via the PAUSE button's 2nd click, so clear the flag here.
@@ -7309,6 +7423,7 @@ export class World {
           s.timeScale = this.prePauseTimeScale || 1;
           label = 'RESUME · ' + s.timeScale + '×';
         }
+        this.wilderness.setPaused(this.browserComputeCalibrating || s.timeScale === 0);
         this.hud.showSector(label);
         this.audit.record('pause', { timeScale: s.timeScale, frozen: this.frozenAll });
         return s.timeScale === 0;

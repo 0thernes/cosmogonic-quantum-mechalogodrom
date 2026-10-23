@@ -1,0 +1,238 @@
+{
+  "checkedAt": "2026-10-23T07:56:52.709Z",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+  "crossOriginIsolated": false,
+  "scope": "Real browser calibration + production WildernessPopulation lifecycle with actual worker pool and GPU. No World rendering/FPS assertion.",
+  "checks": [
+    {
+      "passed": false,
+      "name": "actual calibration GPU tolerance and worker exact parity pass",
+      "detail": {
+        "schemaVersion": 1,
+        "measurement": "startup-ambient-batch-transfer-inclusive-not-world-fps",
+        "preference": "auto",
+        "selected": "cpu-workers",
+        "reason": "GPU calibration rejected: Error: Numerical tolerance exceeded 16:576: 50.00000762939453",
+        "adapter": "nvidia / blackwell",
+        "parityPassed": false,
+        "workerParityPassed": true,
+        "gpuTiming": null,
+        "workerTiming": null,
+        "maxPositionError": 50.00000762939453,
+        "maxVelocityError": 2.384185791015625e-7,
+        "tolerance": {
+          "positionAbsolute": 0.0002,
+          "velocityAbsolute": 0.00002,
+          "relative": 0.000002
+        },
+        "chunks": 49,
+        "entities": 6272,
+        "warmupRounds": 2,
+        "sampleRounds": 5
+      }
+    },
+    {
+      "passed": true,
+      "name": "automatic selection obeys measured transfer-inclusive threshold"
+    },
+    {
+      "passed": false,
+      "name": "explicit GPU still requires actual parity"
+    },
+    {
+      "passed": false,
+      "name": "real population publishes completed GPU frame"
+    },
+    {
+      "passed": true,
+      "name": "camera-streamed population includes49chunks and6272entities"
+    },
+    {
+      "passed": true,
+      "name": "accepted population GPU values match CPU control within tolerance",
+      "detail": {
+        "maxError": 0,
+        "violations": 0
+      }
+    },
+    {
+      "passed": true,
+      "name": "pause rejects delayed GPU values"
+    },
+    {
+      "passed": true,
+      "name": "stale-result counter identifies cancelled GPU frame"
+    },
+    {
+      "passed": true,
+      "name": "paused updates schedule no new work"
+    },
+    {
+      "passed": false,
+      "name": "resume accepts fresh GPU work"
+    },
+    {
+      "passed": true,
+      "name": "lost/disposed GPU frame falls back to actual workers"
+    },
+    {
+      "passed": true,
+      "name": "failed workers fall back to serial reference"
+    },
+    {
+      "passed": true,
+      "name": "population disposal recorded"
+    }
+  ],
+  "states": [
+    {
+      "stage": "accepted GPU",
+      "backend": "cpu-workers",
+      "acceptedBackend": "cpu-workers",
+      "acceptedFrame": 1,
+      "requestedFrame": 1,
+      "inFlight": false,
+      "queued": 0,
+      "epoch": 2,
+      "completedFrames": 1,
+      "gpuFailures": 1,
+      "workerFailures": 0,
+      "fallbackTasks": 0,
+      "staleResults": 0,
+      "lastError": "GPU: Error: Wilderness WebGPU disposed",
+      "adapter": null,
+      "paused": false,
+      "disposed": false
+    },
+    {
+      "stage": "pause discards in-flight",
+      "backend": "cpu-workers",
+      "acceptedBackend": "cpu-workers",
+      "acceptedFrame": 1,
+      "requestedFrame": 2,
+      "inFlight": false,
+      "queued": 0,
+      "epoch": 3,
+      "completedFrames": 1,
+      "gpuFailures": 1,
+      "workerFailures": 0,
+      "fallbackTasks": 0,
+      "staleResults": 49,
+      "lastError": "GPU: Error: Wilderness WebGPU disposed",
+      "adapter": null,
+      "paused": true,
+      "disposed": false
+    },
+    {
+      "stage": "device disposed CPU fallback",
+      "backend": "cpu-workers",
+      "acceptedBackend": "cpu-workers",
+      "acceptedFrame": 4,
+      "requestedFrame": 4,
+      "inFlight": false,
+      "queued": 0,
+      "epoch": 4,
+      "completedFrames": 3,
+      "gpuFailures": 1,
+      "workerFailures": 0,
+      "fallbackTasks": 0,
+      "staleResults": 49,
+      "lastError": "GPU: Error: Wilderness WebGPU disposed",
+      "adapter": null,
+      "paused": false,
+      "disposed": false
+    },
+    {
+      "stage": "worker disposed sync fallback",
+      "backend": "cpu-workers",
+      "acceptedBackend": "cpu-main",
+      "acceptedFrame": 5,
+      "requestedFrame": 5,
+      "inFlight": false,
+      "queued": 0,
+      "epoch": 4,
+      "completedFrames": 4,
+      "gpuFailures": 1,
+      "workerFailures": 49,
+      "fallbackTasks": 49,
+      "staleResults": 49,
+      "lastError": "Worker: Worker pool disposed",
+      "adapter": null,
+      "paused": false,
+      "disposed": false
+    }
+  ],
+  "autoCalibration": {
+    "schemaVersion": 1,
+    "measurement": "startup-ambient-batch-transfer-inclusive-not-world-fps",
+    "preference": "auto",
+    "selected": "cpu-workers",
+    "reason": "GPU calibration rejected: Error: Numerical tolerance exceeded 16:576: 50.00000762939453",
+    "adapter": "nvidia / blackwell",
+    "parityPassed": false,
+    "workerParityPassed": true,
+    "gpuTiming": null,
+    "workerTiming": null,
+    "maxPositionError": 50.00000762939453,
+    "maxVelocityError": 2.384185791015625e-7,
+    "tolerance": {
+      "positionAbsolute": 0.0002,
+      "velocityAbsolute": 0.00002,
+      "relative": 0.000002
+    },
+    "chunks": 49,
+    "entities": 6272,
+    "warmupRounds": 2,
+    "sampleRounds": 5
+  },
+  "explicitCalibration": {
+    "schemaVersion": 1,
+    "measurement": "startup-ambient-batch-transfer-inclusive-not-world-fps",
+    "preference": "webgpu",
+    "selected": "cpu-workers",
+    "reason": "GPU calibration rejected: Error: Wilderness WebGPU disposed",
+    "adapter": "nvidia / blackwell",
+    "parityPassed": false,
+    "workerParityPassed": true,
+    "gpuTiming": null,
+    "workerTiming": null,
+    "maxPositionError": 0,
+    "maxVelocityError": 0,
+    "tolerance": {
+      "positionAbsolute": 0.0002,
+      "velocityAbsolute": 0.00002,
+      "relative": 0.000002
+    },
+    "chunks": 49,
+    "entities": 6272,
+    "warmupRounds": 2,
+    "sampleRounds": 5
+  },
+  "status": "failed",
+  "browserChannel": "chrome",
+  "pageErrors": [],
+  "consoleMessages": [
+    {
+      "type": "warning",
+      "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+    }
+  ],
+  "bundleSha256": "67375841e90439bd829d76b8c12f4f5785d92096e23ac163e94bc40a9fd58a3a",
+  "sourceSha256": {
+    "src/core/wilderness-webgpu.ts": "6e4fd1d9ceb5d3dacceac2cc0e4c82ffd0be80c5d4cb2d5dab81730b9eced398",
+    "src/core/wilderness-compute.ts": "f56275a1efc9fa3ce5bc1873eeac99ca0c783decc988d734961fcfcb861bc47e",
+    "src/core/worker-pool.ts": "a343b14dbc677408cb381e65d38f6bd6808b78de2a5e4c32969ffa75abdd8fc4",
+    "src/sim/wilderness-population.ts": "db04982a58939b3445ca041abc8410cddf5f6142cead3ddf747869a3dbc09a7e",
+    "src/workers/simulation-worker.ts": "01a16509e3ddf568942bdd0e93d22587849063891ff2c6ccfc693238f365b006"
+  },
+  "buildManifest": {
+    "builtAt": "2026-10-23T07:56:51.908Z",
+    "sourceSha256": {
+      "src/core/wilderness-webgpu.ts": "6e4fd1d9ceb5d3dacceac2cc0e4c82ffd0be80c5d4cb2d5dab81730b9eced398",
+      "src/core/wilderness-compute.ts": "f56275a1efc9fa3ce5bc1873eeac99ca0c783decc988d734961fcfcb861bc47e",
+      "src/core/worker-pool.ts": "a343b14dbc677408cb381e65d38f6bd6808b78de2a5e4c32969ffa75abdd8fc4",
+      "src/sim/wilderness-population.ts": "db04982a58939b3445ca041abc8410cddf5f6142cead3ddf747869a3dbc09a7e",
+      "src/workers/simulation-worker.ts": "01a16509e3ddf568942bdd0e93d22587849063891ff2c6ccfc693238f365b006"
+    }
+  }
+}

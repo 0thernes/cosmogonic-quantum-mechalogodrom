@@ -491,12 +491,24 @@ export class WorkerPool {
   }
 }
 
-/** Create a worker pool using all available cores up to the configured hardware count. */
-export function createWorkerPool(qualityTier: QualityTier): WorkerPool {
+/** Reserve two logical threads for presentation/driver work unless an explicit bounded override is given. */
+export function chooseWorkerBudget(hardwareConcurrency: number, requested?: number): number {
+  const cores =
+    Number.isFinite(hardwareConcurrency) && hardwareConcurrency >= 1
+      ? Math.floor(hardwareConcurrency)
+      : 4;
+  const fallback = Math.max(1, cores - 2);
+  return requested !== undefined && Number.isFinite(requested) && requested >= 1
+    ? Math.min(cores, Math.floor(requested))
+    : fallback;
+}
+
+/** Create a bounded CPU pool; more workers are not assumed to improve end-to-end throughput. */
+export function createWorkerPool(qualityTier: QualityTier, requestedWorkers?: number): WorkerPool {
   const useSharedArrayBuffer = typeof SharedArrayBuffer !== 'undefined';
   const nav = globalThis.navigator as Navigator | undefined;
   return new WorkerPool({
-    maxWorkers: nav?.hardwareConcurrency || 4,
+    maxWorkers: chooseWorkerBudget(nav?.hardwareConcurrency ?? 4, requestedWorkers),
     useSharedArrayBuffer,
     qualityTier,
   });

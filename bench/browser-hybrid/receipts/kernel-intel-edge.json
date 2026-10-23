@@ -1,0 +1,847 @@
+{
+  "checkedAt": "2026-10-23T08:01:01.143Z",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0",
+  "logicalCpus": 24,
+  "crossOriginIsolated": false,
+  "webNNAvailable": false,
+  "scope": "Bounded ambient wilderness kernel, real production WebGPU and CPU worker implementations. CPU and worker measurements include input-copy; GPU includes validation, packing, upload, dispatch, readback, and output-copy. No rendering, full World, or overall FPS measurement.",
+  "checks": [
+    {
+      "passed": true,
+      "name": "1 entities / legacy CPU-GPU parity",
+      "detail": {
+        "maxPositionError": 0,
+        "maxVelocityError": 2.384185791015625e-7,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "1 entities input ownership preserved"
+    },
+    {
+      "passed": true,
+      "name": "1 entities / legacy worker exact parity"
+    },
+    {
+      "passed": true,
+      "name": "127 entities / legacy CPU-GPU parity",
+      "detail": {
+        "maxPositionError": 2.384185791015625e-7,
+        "maxVelocityError": 4.76837158203125e-7,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "127 entities input ownership preserved"
+    },
+    {
+      "passed": true,
+      "name": "127 entities / legacy worker exact parity"
+    },
+    {
+      "passed": true,
+      "name": "128 entities / legacy CPU-GPU parity",
+      "detail": {
+        "maxPositionError": 2.384185791015625e-7,
+        "maxVelocityError": 4.76837158203125e-7,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "128 entities input ownership preserved"
+    },
+    {
+      "passed": true,
+      "name": "128 entities / legacy worker exact parity"
+    },
+    {
+      "passed": true,
+      "name": "129 entities / legacy CPU-GPU parity",
+      "detail": {
+        "maxPositionError": 2.384185791015625e-7,
+        "maxVelocityError": 4.76837158203125e-7,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "129 entities input ownership preserved"
+    },
+    {
+      "passed": true,
+      "name": "129 entities / legacy worker exact parity"
+    },
+    {
+      "passed": true,
+      "name": "1024 entities / legacy CPU-GPU parity",
+      "detail": {
+        "maxPositionError": 2.384185791015625e-7,
+        "maxVelocityError": 4.76837158203125e-7,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "1024 entities input ownership preserved"
+    },
+    {
+      "passed": true,
+      "name": "1024 entities / legacy worker exact parity"
+    },
+    {
+      "passed": true,
+      "name": "8192 entities / legacy CPU-GPU parity",
+      "detail": {
+        "maxPositionError": 0.0000152587890625,
+        "maxVelocityError": 4.76837158203125e-7,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "8192 entities input ownership preserved"
+    },
+    {
+      "passed": true,
+      "name": "8192 entities / legacy worker exact parity"
+    },
+    {
+      "passed": true,
+      "name": "1 entities / adaptive CPU-GPU parity",
+      "detail": {
+        "maxPositionError": 0,
+        "maxVelocityError": 4.76837158203125e-7,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "1 entities input ownership preserved"
+    },
+    {
+      "passed": true,
+      "name": "1 entities / adaptive worker exact parity"
+    },
+    {
+      "passed": true,
+      "name": "127 entities / adaptive CPU-GPU parity",
+      "detail": {
+        "maxPositionError": 4.656612873077393e-10,
+        "maxVelocityError": 4.76837158203125e-7,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "127 entities input ownership preserved"
+    },
+    {
+      "passed": true,
+      "name": "127 entities / adaptive worker exact parity"
+    },
+    {
+      "passed": true,
+      "name": "128 entities / adaptive CPU-GPU parity",
+      "detail": {
+        "maxPositionError": 4.656612873077393e-10,
+        "maxVelocityError": 4.76837158203125e-7,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "128 entities input ownership preserved"
+    },
+    {
+      "passed": true,
+      "name": "128 entities / adaptive worker exact parity"
+    },
+    {
+      "passed": true,
+      "name": "129 entities / adaptive CPU-GPU parity",
+      "detail": {
+        "maxPositionError": 4.656612873077393e-10,
+        "maxVelocityError": 4.76837158203125e-7,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "129 entities input ownership preserved"
+    },
+    {
+      "passed": true,
+      "name": "129 entities / adaptive worker exact parity"
+    },
+    {
+      "passed": true,
+      "name": "1024 entities / adaptive CPU-GPU parity",
+      "detail": {
+        "maxPositionError": 2.384185791015625e-7,
+        "maxVelocityError": 7.152557373046875e-7,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "1024 entities input ownership preserved"
+    },
+    {
+      "passed": true,
+      "name": "1024 entities / adaptive worker exact parity"
+    },
+    {
+      "passed": true,
+      "name": "8192 entities / adaptive CPU-GPU parity",
+      "detail": {
+        "maxPositionError": 0.000030517578125,
+        "maxVelocityError": 9.5367431640625e-7,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "8192 entities input ownership preserved"
+    },
+    {
+      "passed": true,
+      "name": "8192 entities / adaptive worker exact parity"
+    },
+    {
+      "passed": true,
+      "name": "adaptive sequence step 1",
+      "detail": {
+        "maxPositionError": 2.384185791015625e-7,
+        "maxVelocityError": 7.152557373046875e-7,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "adaptive sequence step 2",
+      "detail": {
+        "maxPositionError": 2.384185791015625e-7,
+        "maxVelocityError": 0.000001430511474609375,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "adaptive sequence step 3",
+      "detail": {
+        "maxPositionError": 4.76837158203125e-7,
+        "maxVelocityError": 0.000001430511474609375,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "adaptive sequence step 4",
+      "detail": {
+        "maxPositionError": 0.000003814697265625,
+        "maxVelocityError": 0.0000019073486328125,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "adaptive sequence step 5",
+      "detail": {
+        "maxPositionError": 0.000003814697265625,
+        "maxVelocityError": 0.000002384185791015625,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "adaptive sequence step 6",
+      "detail": {
+        "maxPositionError": 0.000030517578125,
+        "maxVelocityError": 0.00000286102294921875,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "adaptive sequence step 7",
+      "detail": {
+        "maxPositionError": 0.000030517578125,
+        "maxVelocityError": 0.000003337860107421875,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "adaptive sequence step 8",
+      "detail": {
+        "maxPositionError": 0.000030517578125,
+        "maxVelocityError": 0.000003337860107421875,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "adaptive sequence step 9",
+      "detail": {
+        "maxPositionError": 0.000030517578125,
+        "maxVelocityError": 0.000003814697265625,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "adaptive sequence step 10",
+      "detail": {
+        "maxPositionError": 0.000030517578125,
+        "maxVelocityError": 0.000004291534423828125,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "adaptive sequence step 11",
+      "detail": {
+        "maxPositionError": 0.000030517578125,
+        "maxVelocityError": 0.000004291534423828125,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "adaptive sequence step 12",
+      "detail": {
+        "maxPositionError": 0.000030517578125,
+        "maxVelocityError": 0.00000476837158203125,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "adaptive sequence step 13",
+      "detail": {
+        "maxPositionError": 0.000030517578125,
+        "maxVelocityError": 0.00000476837158203125,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "adaptive sequence step 14",
+      "detail": {
+        "maxPositionError": 0.000030517578125,
+        "maxVelocityError": 0.000005245208740234375,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "adaptive sequence step 15",
+      "detail": {
+        "maxPositionError": 0.000030517578125,
+        "maxVelocityError": 0.0000057220458984375,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "adaptive sequence step 16",
+      "detail": {
+        "maxPositionError": 0.000030517578125,
+        "maxVelocityError": 0.000006198883056640625,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "adaptive sequence step 17",
+      "detail": {
+        "maxPositionError": 0.000030517578125,
+        "maxVelocityError": 0.000006198883056640625,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "adaptive sequence step 18",
+      "detail": {
+        "maxPositionError": 0.000030517578125,
+        "maxVelocityError": 0.000007152557373046875,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "adaptive sequence step 19",
+      "detail": {
+        "maxPositionError": 0.000030517578125,
+        "maxVelocityError": 0.00000762939453125,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "adaptive sequence step 20",
+      "detail": {
+        "maxPositionError": 0.000030517578125,
+        "maxVelocityError": 0.000008106231689453125,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "adaptive sequence step 21",
+      "detail": {
+        "maxPositionError": 0.000030517578125,
+        "maxVelocityError": 0.000008106231689453125,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "adaptive sequence step 22",
+      "detail": {
+        "maxPositionError": 0.000030517578125,
+        "maxVelocityError": 0.000008106231689453125,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "adaptive sequence step 23",
+      "detail": {
+        "maxPositionError": 0.000030517578125,
+        "maxVelocityError": 0.00000858306884765625,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "adaptive sequence step 24",
+      "detail": {
+        "maxPositionError": 0.000030517578125,
+        "maxVelocityError": 0.00000858306884765625,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "adaptive sequence step 25",
+      "detail": {
+        "maxPositionError": 0.000030517578125,
+        "maxVelocityError": 0.000008821487426757812,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "adaptive sequence step 26",
+      "detail": {
+        "maxPositionError": 0.000030517578125,
+        "maxVelocityError": 0.000009059906005859375,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "adaptive sequence step 27",
+      "detail": {
+        "maxPositionError": 0.000030517578125,
+        "maxVelocityError": 0.000009059906005859375,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "adaptive sequence step 28",
+      "detail": {
+        "maxPositionError": 0.000030517578125,
+        "maxVelocityError": 0.0000095367431640625,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "adaptive sequence step 29",
+      "detail": {
+        "maxPositionError": 0.00006103515625,
+        "maxVelocityError": 0.0000095367431640625,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "adaptive sequence step 30",
+      "detail": {
+        "maxPositionError": 0.00006103515625,
+        "maxVelocityError": 0.000010013580322265625,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "adaptive sequence step 31",
+      "detail": {
+        "maxPositionError": 0.00006103515625,
+        "maxVelocityError": 0.00001049041748046875,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "adaptive sequence step 32",
+      "detail": {
+        "maxPositionError": 0.00006103515625,
+        "maxVelocityError": 0.00001049041748046875,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "dt normalization 0",
+      "detail": {
+        "maxPositionError": 0,
+        "maxVelocityError": 0,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "dt normalization -1",
+      "detail": {
+        "maxPositionError": 0,
+        "maxVelocityError": 0,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "dt normalization NaN",
+      "detail": {
+        "maxPositionError": 0,
+        "maxVelocityError": 0,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "dt normalization 1",
+      "detail": {
+        "maxPositionError": 4.656612873077393e-10,
+        "maxVelocityError": 7.152557373046875e-7,
+        "violations": 0,
+        "identityChanges": 0,
+        "nonFinite": 0,
+        "passed": true
+      }
+    },
+    {
+      "passed": true,
+      "name": "empty batch returns empty"
+    },
+    {
+      "passed": true,
+      "name": "nonfinite input rejected"
+    },
+    {
+      "passed": true,
+      "name": "disposed GPU cannot resume"
+    }
+  ],
+  "benchmarks": [
+    {
+      "entities": 128,
+      "chunks": 1,
+      "workerCount": 4,
+      "warmups": 4,
+      "timedTrials": 16,
+      "results": {
+        "main": {
+          "samples": [
+            0.09999999403953552, 0.10000000894069672, 0.09999999403953552, 0.09999999403953552,
+            0.10000000894069672, 0, 0, 0.09999999403953552, 0, 0, 0, 0.09999999403953552,
+            0.09999999403953552, 0.10000000894069672, 0.20000000298023224, 0.09999999403953552
+          ],
+          "medianMs": 0.09999999403953552,
+          "p95Ms": 0.20000000298023224,
+          "meanMs": 0.07499999925494194
+        },
+        "workers": {
+          "samples": [
+            0.6000000089406967, 0.5, 0.5, 0.10000000894069672, 0.5999999940395355,
+            0.6000000089406967, 0.20000000298023224, 0.5, 0.3999999910593033, 0.10000000894069672,
+            0.3999999910593033, 0.6000000089406967, 0.10000000894069672, 0.6000000089406967, 1,
+            0.10000000894069672
+          ],
+          "medianMs": 0.5,
+          "p95Ms": 1,
+          "meanMs": 0.43125000316649675
+        },
+        "gpu": {
+          "samples": [
+            4.5999999940395355, 4, 3, 3.2999999970197678, 7.5, 1.8999999910593033,
+            2.8999999910593033, 4.200000002980232, 3.800000011920929, 5, 1.2000000029802322, 5,
+            3.699999988079071, 5.0999999940395355, 4.5999999940395355, 1.7999999970197678
+          ],
+          "medianMs": 4,
+          "p95Ms": 7.5,
+          "meanMs": 3.849999997764826
+        }
+      }
+    },
+    {
+      "entities": 1024,
+      "chunks": 8,
+      "workerCount": 4,
+      "warmups": 4,
+      "timedTrials": 16,
+      "results": {
+        "main": {
+          "samples": [
+            0.6000000089406967, 0.10000000894069672, 0.19999998807907104, 0.30000001192092896,
+            0.20000000298023224, 0.29999999701976776, 0.20000000298023224, 0.29999999701976776,
+            0.20000000298023224, 0.09999999403953552, 0.20000000298023224, 0.29999999701976776,
+            0.29999999701976776, 0.20000000298023224, 0.20000000298023224, 0.20000000298023224
+          ],
+          "medianMs": 0.20000000298023224,
+          "p95Ms": 0.6000000089406967,
+          "meanMs": 0.2437500013038516
+        },
+        "workers": {
+          "samples": [
+            1.2000000029802322, 0.6000000089406967, 2.5, 0.29999999701976776, 1.2000000029802322,
+            0.9000000059604645, 0.20000000298023224, 1.5, 0.5, 0.5, 0.4000000059604645, 1,
+            0.4000000059604645, 1, 0.8999999910593033, 0.29999999701976776
+          ],
+          "medianMs": 0.8999999910593033,
+          "p95Ms": 2.5,
+          "meanMs": 0.8375000013038516
+        },
+        "gpu": {
+          "samples": [
+            4.399999991059303, 7.899999991059303, 5.5, 4.899999991059303, 4, 4.299999997019768,
+            6.799999997019768, 5, 4, 1.4000000059604645, 5.0999999940395355, 5.299999997019768,
+            4.700000002980232, 4.5999999940395355, 3.2000000029802322, 4.9000000059604645
+          ],
+          "medianMs": 4.899999991059303,
+          "p95Ms": 7.899999991059303,
+          "meanMs": 4.749999998137355
+        }
+      }
+    },
+    {
+      "entities": 8192,
+      "chunks": 64,
+      "workerCount": 4,
+      "warmups": 4,
+      "timedTrials": 16,
+      "results": {
+        "main": {
+          "samples": [
+            0.800000011920929, 1.0999999940395355, 1.2000000029802322, 1.2000000029802322,
+            1.4000000059604645, 0.9000000059604645, 0.6000000089406967, 1.1000000089406967,
+            1.199999988079071, 1, 0.800000011920929, 0.6000000089406967, 0.8999999910593033,
+            1.2000000029802322, 0.9000000059604645, 0.7000000029802322
+          ],
+          "medianMs": 1,
+          "p95Ms": 1.4000000059604645,
+          "meanMs": 0.9750000033527613
+        },
+        "workers": {
+          "samples": [
+            2.5, 6.700000002980232, 3.0999999940395355, 2.7999999970197678, 2.8999999910593033,
+            4.399999991059303, 3.3999999910593033, 3.5, 2.800000011920929, 2.3999999910593033,
+            3.2000000029802322, 2.7999999970197678, 3.1000000089406967, 3.300000011920929,
+            6.5999999940395355, 1.3999999910593033
+          ],
+          "medianMs": 3.1000000089406967,
+          "p95Ms": 6.700000002980232,
+          "meanMs": 3.431249998509884
+        },
+        "gpu": {
+          "samples": [
+            5.199999988079071, 5.0999999940395355, 3.9000000059604645, 6.4000000059604645,
+            7.200000002980232, 5.299999997019768, 7.199999988079071, 7.700000002980232, 5.5,
+            7.200000002980232, 5.399999991059303, 5.399999991059303, 5.899999991059303,
+            6.899999991059303, 7.4000000059604645, 5.600000008940697
+          ],
+          "medianMs": 5.899999991059303,
+          "p95Ms": 7.700000002980232,
+          "meanMs": 6.08124999795109
+        }
+      }
+    }
+  ],
+  "gpuStartupMs": 298,
+  "adapterDescription": "intel / xe-lpg",
+  "status": "passed",
+  "browserChannel": "edge",
+  "pageErrors": [],
+  "consoleMessages": [
+    {
+      "type": "warning",
+      "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+    }
+  ],
+  "bundleSha256": "b0ed7e431c13f4035fd2b083f22a6b3c46223a6a8cee140fb320f4303df50841",
+  "sourceSha256": {
+    "src/core/wilderness-webgpu.ts": "aa56e67e2577eebd0b93a969a2c02ad974f5b188a2bcd68e780a4ee032292874",
+    "src/core/wilderness-compute.ts": "f56275a1efc9fa3ce5bc1873eeac99ca0c783decc988d734961fcfcb861bc47e",
+    "src/core/worker-pool.ts": "a343b14dbc677408cb381e65d38f6bd6808b78de2a5e4c32969ffa75abdd8fc4",
+    "src/sim/wilderness-population.ts": "db04982a58939b3445ca041abc8410cddf5f6142cead3ddf747869a3dbc09a7e",
+    "src/workers/simulation-worker.ts": "01a16509e3ddf568942bdd0e93d22587849063891ff2c6ccfc693238f365b006"
+  },
+  "buildManifest": {
+    "builtAt": "2026-10-23T08:00:26.130Z",
+    "sourceSha256": {
+      "src/core/wilderness-webgpu.ts": "aa56e67e2577eebd0b93a969a2c02ad974f5b188a2bcd68e780a4ee032292874",
+      "src/core/wilderness-compute.ts": "f56275a1efc9fa3ce5bc1873eeac99ca0c783decc988d734961fcfcb861bc47e",
+      "src/core/worker-pool.ts": "a343b14dbc677408cb381e65d38f6bd6808b78de2a5e4c32969ffa75abdd8fc4",
+      "src/sim/wilderness-population.ts": "db04982a58939b3445ca041abc8410cddf5f6142cead3ddf747869a3dbc09a7e",
+      "src/workers/simulation-worker.ts": "01a16509e3ddf568942bdd0e93d22587849063891ff2c6ccfc693238f365b006"
+    }
+  }
+}

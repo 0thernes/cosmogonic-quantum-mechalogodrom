@@ -1,0 +1,158 @@
+{
+  "checkedAt": "2026-10-23T08:18:02.813Z",
+  "scope": "Actual production dist served under GitHub Pages project prefix. Installed Chrome with hardware WebGL and WebGPU; diagnostic hook pauses automatic frames until calibration finishes, then12automaticframes per mode, phone population, full effects and DPR1. No frame-rate, natural startup latency or thermal claim.",
+  "checks": [],
+  "cases": [],
+  "errors": [],
+  "console": [
+    {
+      "mode": "auto",
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "mode": "auto",
+      "type": "error",
+      "text": "Response Status Error Code 404 from /api/audit, [object HTMLDivElement]"
+    },
+    {
+      "mode": "auto",
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 405 (Method Not Allowed)"
+    },
+    {
+      "mode": "auto",
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 405 (Method Not Allowed)"
+    },
+    {
+      "mode": "auto",
+      "type": "warning",
+      "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+    },
+    {
+      "mode": "auto",
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 405 (Method Not Allowed)"
+    },
+    {
+      "mode": "auto",
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 405 (Method Not Allowed)"
+    },
+    {
+      "mode": "auto",
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 405 (Method Not Allowed)"
+    },
+    {
+      "mode": "auto",
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "mode": "auto",
+      "type": "error",
+      "text": "Response Status Error Code 404 from /api/audit, [object HTMLDivElement]"
+    }
+  ],
+  "sourceSha256": {
+    "src/core/wilderness-webgpu.ts": "aa56e67e2577eebd0b93a969a2c02ad974f5b188a2bcd68e780a4ee032292874",
+    "src/core/wilderness-compute.ts": "002def11e99a55ee008aa8680bac2040b3290219c945dab4c72049b399aedefb",
+    "src/core/worker-pool.ts": "a343b14dbc677408cb381e65d38f6bd6808b78de2a5e4c32969ffa75abdd8fc4",
+    "src/sim/wilderness-population.ts": "db04982a58939b3445ca041abc8410cddf5f6142cead3ddf747869a3dbc09a7e",
+    "src/world.ts": "fd01d0e60f61140574675f82c0b141e6918d143b8d695bfed50b950cada649cc",
+    "src/main.ts": "4570ecb08edda27ff43d041a2cfc56432b83b42f162f4c15d7f65292bc52d163",
+    "src/ui/perf-hud.ts": "4029dcf110ef2c71c81dfcd266fba9a5ab166c062ca4f7a180c97b5ebd45bfab"
+  },
+  "distIndexSha256": "17a6412c2953d0ec16fd04e8cb44023a5e675fffceb35edd6319572b6341233a",
+  "status": "failed",
+  "error": "page.waitForFunction: Timeout 45000ms exceeded.\n    at C:\\Users\\Alexa\\Documents\\Codex\\2026-10-20\\every-tool-call-read-file-run\\work\\hybrid-browser\\world-check.mjs:32:73",
+  "failureProfile": "C:\\Users\\Alexa\\Documents\\Codex\\2026-10-20\\every-tool-call-read-file-run\\work\\hybrid-browser\\world-failure-profile-2026-10-23T08-18-02-811Z.json",
+  "failureState": {
+    "frame": 3,
+    "timeScale": 0.25,
+    "frozen": false,
+    "steps": 3,
+    "auto": true,
+    "compute": {
+      "backend": "cpu-workers",
+      "acceptedBackend": "cpu-main",
+      "acceptedFrame": 1,
+      "requestedFrame": 3,
+      "inFlight": true,
+      "queued": 0,
+      "epoch": 5,
+      "completedFrames": 1,
+      "gpuFailures": 0,
+      "workerFailures": 37,
+      "fallbackTasks": 37,
+      "staleResults": 0,
+      "lastError": "Worker: Worker task timed out waiting for capacity after 5000ms",
+      "adapter": null,
+      "paused": false,
+      "disposed": false,
+      "preference": "auto",
+      "reason": "Worker: Worker task timed out waiting for capacity after 5000ms",
+      "calibrating": false,
+      "calibration": {
+        "schemaVersion": 1,
+        "measurement": "startup-ambient-batch-transfer-inclusive-not-world-fps",
+        "preference": "auto",
+        "selected": "cpu-workers",
+        "reason": "CPU route retained: WebGPU did not meet the transfer-inclusive latency threshold",
+        "adapter": "nvidia / blackwell",
+        "parityPassed": true,
+        "workerParityPassed": true,
+        "gpuTiming": {
+          "samplesMs": [
+            4.700000002980232, 3.800000011920929, 3.2999999970197678, 3.7999999970197678,
+            4.799999997019768
+          ],
+          "medianMs": 3.800000011920929,
+          "p95Ms": 4.799999997019768
+        },
+        "workerTiming": {
+          "samplesMs": [
+            3.5999999940395355, 2.2999999970197678, 1.1000000089406967, 2.300000011920929,
+            0.9000000059604645
+          ],
+          "medianMs": 2.2999999970197678,
+          "p95Ms": 3.5999999940395355
+        },
+        "maxPositionError": 0.00000762939453125,
+        "maxVelocityError": 2.384185791015625e-7,
+        "tolerance": {
+          "positionAbsolute": 0.0002,
+          "velocityAbsolute": 0.00002,
+          "relative": 0.000002
+        },
+        "chunks": 49,
+        "entities": 6272,
+        "warmupRounds": 2,
+        "sampleRounds": 5
+      },
+      "scope": "ambient numeric population only; visible fauna and Archons remain CPU",
+      "npu": "WebNN unavailable; NPU not active"
+    },
+    "perf": {
+      "entities": 500,
+      "maxEntities": 1000,
+      "connectomeLinks": 184,
+      "wildernessEntities": 6272,
+      "wildernessChunks": 49,
+      "workerTotal": 4,
+      "workerActive": 4,
+      "workersReady": true,
+      "hardwareCores": 24,
+      "simFrame": 3,
+      "ambientCompute": "cpu-main"
+    },
+    "hud": " · [phone]tabletlaptopdesktopultramegafly: drag · scroll · WASD",
+    "webglRenderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 Ti Laptop GPU (0x00002F18) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "drawCalls": 1,
+    "webglError": 0,
+    "isWild": true,
+    "crossOriginIsolated": false
+  }
+}

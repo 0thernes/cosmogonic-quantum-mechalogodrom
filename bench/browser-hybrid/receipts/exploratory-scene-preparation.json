@@ -1,0 +1,346 @@
+{
+  "checkedAt": "2026-10-23T08:24:37.249Z",
+  "scope": "Harness-only async shader warmup experiment on production World. Actual full-fidelity scene and EffectComposer target, real NVIDIA WebGL, real GPU/worker calibration. Automatic frames paused for calibration and compileAsync then12actual renderedsteps. No shipping-engine source change, sustained FPS or natural startup claim.",
+  "checks": [
+    {
+      "passed": true,
+      "name": "auto: bounded12actualWorldsteps"
+    },
+    {
+      "passed": true,
+      "name": "auto: actualNVIDIAWebGLrendering withoutGLerror",
+      "detail": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 Ti Laptop GPU (0x00002F18) Direct3D11 vs_5_0 ps_5_0, D3D11)"
+    },
+    {
+      "passed": true,
+      "name": "auto: requested4actualworkers"
+    },
+    {
+      "passed": true,
+      "name": "auto: functions withoutcrossoriginisolation"
+    },
+    {
+      "passed": true,
+      "name": "auto: HUDtruthfullyseparatesambientcompute fromcorebrains"
+    },
+    {
+      "passed": true,
+      "name": "auto: actualambientframeaccepted"
+    },
+    {
+      "passed": true,
+      "name": "auto: actualstartupcalibrationpassed"
+    },
+    {
+      "passed": true,
+      "name": "auto: selectedroutefollowstransferinclusivemeasurement"
+    },
+    {
+      "passed": true,
+      "name": "no uncaughtproductionpageerrors",
+      "detail": []
+    }
+  ],
+  "cases": [
+    {
+      "mode": "auto",
+      "url": "http://127.0.0.1:54872/cosmogonic-quantum-mechalogodrom/?tier=phone&workers=4&compute=auto",
+      "calibrated": {
+        "frame": 0,
+        "timeScale": 0.25,
+        "frozen": false,
+        "steps": 0,
+        "auto": false,
+        "compute": {
+          "backend": "cpu-workers",
+          "acceptedBackend": null,
+          "acceptedFrame": 0,
+          "requestedFrame": 0,
+          "inFlight": false,
+          "queued": 0,
+          "epoch": 5,
+          "completedFrames": 0,
+          "gpuFailures": 0,
+          "workerFailures": 0,
+          "fallbackTasks": 0,
+          "staleResults": 0,
+          "lastError": null,
+          "adapter": null,
+          "paused": false,
+          "disposed": false,
+          "preference": "auto",
+          "reason": "CPU route retained: WebGPU did not meet the transfer-inclusive latency threshold",
+          "calibrating": false,
+          "calibration": {
+            "schemaVersion": 1,
+            "measurement": "startup-ambient-batch-transfer-inclusive-not-world-fps",
+            "preference": "auto",
+            "selected": "cpu-workers",
+            "reason": "CPU route retained: WebGPU did not meet the transfer-inclusive latency threshold",
+            "adapter": "nvidia / blackwell",
+            "parityPassed": true,
+            "workerParityPassed": true,
+            "gpuTiming": {
+              "samplesMs": [
+                4.9000000059604645, 5.399999991059303, 3.3999999910593033, 2.0999999940395355,
+                4.9000000059604645
+              ],
+              "medianMs": 4.9000000059604645,
+              "p95Ms": 5.399999991059303
+            },
+            "workerTiming": {
+              "samplesMs": [
+                1.5999999940395355, 2.7999999970197678, 1.2999999970197678, 0.9000000059604645, 2
+              ],
+              "medianMs": 1.5999999940395355,
+              "p95Ms": 2.7999999970197678
+            },
+            "maxPositionError": 0.00000762939453125,
+            "maxVelocityError": 2.384185791015625e-7,
+            "tolerance": {
+              "positionAbsolute": 0.0002,
+              "velocityAbsolute": 0.00002,
+              "relative": 0.000002
+            },
+            "chunks": 49,
+            "entities": 6272,
+            "warmupRounds": 2,
+            "sampleRounds": 5
+          },
+          "scope": "ambient numeric population only; visible fauna and Archons remain CPU",
+          "npu": "WebNN unavailable; NPU not active"
+        },
+        "perf": {
+          "entities": 500,
+          "maxEntities": 1000,
+          "connectomeLinks": 0,
+          "wildernessEntities": 0,
+          "wildernessChunks": 0,
+          "workerTotal": 4,
+          "workerActive": 0,
+          "workersReady": true,
+          "hardwareCores": 24,
+          "simFrame": 0,
+          "ambientCompute": "pending"
+        },
+        "hud": " · [phone]tabletlaptopdesktopultramegafly: drag · scroll · WASD",
+        "webglRenderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 Ti Laptop GPU (0x00002F18) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "drawCalls": 0,
+        "webglError": 0,
+        "isWild": true,
+        "crossOriginIsolated": false
+      },
+      "initial": {
+        "frame": 12,
+        "timeScale": 0.25,
+        "frozen": false,
+        "steps": 12,
+        "auto": false,
+        "compute": {
+          "backend": "cpu-workers",
+          "acceptedBackend": "cpu-workers",
+          "acceptedFrame": 12,
+          "requestedFrame": 12,
+          "inFlight": false,
+          "queued": 0,
+          "epoch": 5,
+          "completedFrames": 4,
+          "gpuFailures": 0,
+          "workerFailures": 37,
+          "fallbackTasks": 37,
+          "staleResults": 0,
+          "lastError": "Worker: Worker task timed out waiting for capacity after 5000ms",
+          "adapter": null,
+          "paused": false,
+          "disposed": false,
+          "preference": "auto",
+          "reason": "Worker: Worker task timed out waiting for capacity after 5000ms",
+          "calibrating": false,
+          "calibration": {
+            "schemaVersion": 1,
+            "measurement": "startup-ambient-batch-transfer-inclusive-not-world-fps",
+            "preference": "auto",
+            "selected": "cpu-workers",
+            "reason": "CPU route retained: WebGPU did not meet the transfer-inclusive latency threshold",
+            "adapter": "nvidia / blackwell",
+            "parityPassed": true,
+            "workerParityPassed": true,
+            "gpuTiming": {
+              "samplesMs": [
+                4.9000000059604645, 5.399999991059303, 3.3999999910593033, 2.0999999940395355,
+                4.9000000059604645
+              ],
+              "medianMs": 4.9000000059604645,
+              "p95Ms": 5.399999991059303
+            },
+            "workerTiming": {
+              "samplesMs": [
+                1.5999999940395355, 2.7999999970197678, 1.2999999970197678, 0.9000000059604645, 2
+              ],
+              "medianMs": 1.5999999940395355,
+              "p95Ms": 2.7999999970197678
+            },
+            "maxPositionError": 0.00000762939453125,
+            "maxVelocityError": 2.384185791015625e-7,
+            "tolerance": {
+              "positionAbsolute": 0.0002,
+              "velocityAbsolute": 0.00002,
+              "relative": 0.000002
+            },
+            "chunks": 49,
+            "entities": 6272,
+            "warmupRounds": 2,
+            "sampleRounds": 5
+          },
+          "scope": "ambient numeric population only; visible fauna and Archons remain CPU",
+          "npu": "WebNN unavailable; NPU not active"
+        },
+        "perf": {
+          "entities": 498,
+          "maxEntities": 1000,
+          "connectomeLinks": 223,
+          "wildernessEntities": 6272,
+          "wildernessChunks": 49,
+          "workerTotal": 4,
+          "workerActive": 0,
+          "workersReady": true,
+          "hardwareCores": 24,
+          "simFrame": 12,
+          "ambientCompute": "cpu-workers"
+        },
+        "hud": "29 fps · q: full · phone96 ms · p95 21758 ms · 196 MBn 498/1,000 · links 223 · wild 6,272 (49 ch)cpu 24c · workers 4 (4 act)ambient: cpu-workers · core brains: CPU[phone]tabletlaptopdesktopultramegafly: drag · scroll · WASD",
+        "webglRenderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 Ti Laptop GPU (0x00002F18) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "drawCalls": 1,
+        "webglError": 0,
+        "isWild": true,
+        "crossOriginIsolated": false
+      },
+      "stepTimes": [
+        21747.90000000596, 119.3999999910593, 223.30000001192093, 165.20000000298023,
+        144.70000000298023, 131.80000001192093, 114, 125.90000000596046, 115.09999999403954,
+        125.79999999701977, 123.30000001192093, 127.29999999701977
+      ],
+      "screenshot": "C:\\Users\\Alexa\\Documents\\Codex\\2026-10-20\\every-tool-call-read-file-run\\work\\hybrid-browser\\world-warmup-auto-2026-10-23T08-24-37-248Z.png"
+    }
+  ],
+  "errors": [],
+  "console": [
+    {
+      "mode": "auto",
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "mode": "auto",
+      "type": "error",
+      "text": "Response Status Error Code 404 from /api/audit, [object HTMLDivElement]"
+    },
+    {
+      "mode": "auto",
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 405 (Method Not Allowed)"
+    },
+    {
+      "mode": "auto",
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 405 (Method Not Allowed)"
+    },
+    {
+      "mode": "auto",
+      "type": "warning",
+      "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+    },
+    {
+      "mode": "auto",
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 405 (Method Not Allowed)"
+    },
+    {
+      "mode": "auto",
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 405 (Method Not Allowed)"
+    },
+    {
+      "mode": "auto",
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 405 (Method Not Allowed)"
+    },
+    {
+      "mode": "auto",
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "mode": "auto",
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "mode": "auto",
+      "type": "error",
+      "text": "Response Status Error Code 404 from /api/audit, [object HTMLElement]"
+    },
+    {
+      "mode": "auto",
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "mode": "auto",
+      "type": "error",
+      "text": "Response Status Error Code 404 from /api/audit, [object HTMLElement]"
+    },
+    {
+      "mode": "auto",
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "mode": "auto",
+      "type": "error",
+      "text": "Response Status Error Code 404 from /api/audit, [object HTMLElement]"
+    },
+    {
+      "mode": "auto",
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "mode": "auto",
+      "type": "error",
+      "text": "Response Status Error Code 404 from /api/audit, [object HTMLElement]"
+    },
+    {
+      "mode": "auto",
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "mode": "auto",
+      "type": "error",
+      "text": "Response Status Error Code 404 from /api/audit, [object HTMLElement]"
+    }
+  ],
+  "sourceSha256": {
+    "src/core/wilderness-webgpu.ts": "aa56e67e2577eebd0b93a969a2c02ad974f5b188a2bcd68e780a4ee032292874",
+    "src/core/wilderness-compute.ts": "002def11e99a55ee008aa8680bac2040b3290219c945dab4c72049b399aedefb",
+    "src/core/worker-pool.ts": "a343b14dbc677408cb381e65d38f6bd6808b78de2a5e4c32969ffa75abdd8fc4",
+    "src/sim/wilderness-population.ts": "db04982a58939b3445ca041abc8410cddf5f6142cead3ddf747869a3dbc09a7e",
+    "src/world.ts": "fd01d0e60f61140574675f82c0b141e6918d143b8d695bfed50b950cada649cc",
+    "src/main.ts": "4570ecb08edda27ff43d041a2cfc56432b83b42f162f4c15d7f65292bc52d163",
+    "src/ui/perf-hud.ts": "4029dcf110ef2c71c81dfcd266fba9a5ab166c062ca4f7a180c97b5ebd45bfab"
+  },
+  "distIndexSha256": "17a6412c2953d0ec16fd04e8cb44023a5e675fffceb35edd6319572b6341233a",
+  "warmup": {
+    "extension": true,
+    "offscreenTarget": true,
+    "programsBefore": 0,
+    "heartbeats": 1559,
+    "maxHeartbeatGapMs": 592.2000000029802,
+    "submissionMs": 311.8999999910593,
+    "elapsedMs": 20641.79999999702,
+    "programsAfter": 67,
+    "restoredTarget": true
+  },
+  "status": "passed"
+}

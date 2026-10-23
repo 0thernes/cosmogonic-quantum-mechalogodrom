@@ -1,0 +1,126 @@
+{
+  "sampleCount": 38814,
+  "topSamples": 35620,
+  "topPercent": 91.77101046014324,
+  "top": {
+    "functionName": "j",
+    "scriptId": "5",
+    "url": "http://127.0.0.1:54872/cosmogonic-quantum-mechalogodrom/chunk-956a5se1.js",
+    "lineNumber": 4621,
+    "columnNumber": 300
+  },
+  "chain": [
+    {
+      "functionName": "j",
+      "scriptId": "5",
+      "url": "http://127.0.0.1:54872/cosmogonic-quantum-mechalogodrom/chunk-956a5se1.js",
+      "lineNumber": 4621,
+      "columnNumber": 300
+    },
+    {
+      "functionName": "getUniforms",
+      "scriptId": "5",
+      "url": "http://127.0.0.1:54872/cosmogonic-quantum-mechalogodrom/chunk-956a5se1.js",
+      "lineNumber": 4628,
+      "columnNumber": 286
+    },
+    {
+      "functionName": "dU",
+      "scriptId": "5",
+      "url": "http://127.0.0.1:54872/cosmogonic-quantum-mechalogodrom/chunk-956a5se1.js",
+      "lineNumber": 4679,
+      "columnNumber": 41394
+    },
+    {
+      "functionName": "CB.renderBufferDirect",
+      "scriptId": "5",
+      "url": "http://127.0.0.1:54872/cosmogonic-quantum-mechalogodrom/chunk-956a5se1.js",
+      "lineNumber": 4679,
+      "columnNumber": 29299
+    },
+    {
+      "functionName": "cX",
+      "scriptId": "5",
+      "url": "http://127.0.0.1:54872/cosmogonic-quantum-mechalogodrom/chunk-956a5se1.js",
+      "lineNumber": 4679,
+      "columnNumber": 37921
+    },
+    {
+      "functionName": "BW",
+      "scriptId": "5",
+      "url": "http://127.0.0.1:54872/cosmogonic-quantum-mechalogodrom/chunk-956a5se1.js",
+      "lineNumber": 4679,
+      "columnNumber": 37657
+    },
+    {
+      "functionName": "HZ",
+      "scriptId": "5",
+      "url": "http://127.0.0.1:54872/cosmogonic-quantum-mechalogodrom/chunk-956a5se1.js",
+      "lineNumber": 4679,
+      "columnNumber": 35753
+    },
+    {
+      "functionName": "CB.render",
+      "scriptId": "5",
+      "url": "http://127.0.0.1:54872/cosmogonic-quantum-mechalogodrom/chunk-956a5se1.js",
+      "lineNumber": 4679,
+      "columnNumber": 32465
+    },
+    {
+      "functionName": "render",
+      "scriptId": "5",
+      "url": "http://127.0.0.1:54872/cosmogonic-quantum-mechalogodrom/chunk-956a5se1.js",
+      "lineNumber": 4702,
+      "columnNumber": 5402
+    },
+    {
+      "functionName": "render",
+      "scriptId": "5",
+      "url": "http://127.0.0.1:54872/cosmogonic-quantum-mechalogodrom/chunk-956a5se1.js",
+      "lineNumber": 4702,
+      "columnNumber": 3639
+    },
+    {
+      "functionName": "render",
+      "scriptId": "5",
+      "url": "http://127.0.0.1:54872/cosmogonic-quantum-mechalogodrom/chunk-956a5se1.js",
+      "lineNumber": 4930,
+      "columnNumber": 951
+    },
+    {
+      "functionName": "render",
+      "scriptId": "5",
+      "url": "http://127.0.0.1:54872/cosmogonic-quantum-mechalogodrom/chunk-956a5se1.js",
+      "lineNumber": 4930,
+      "columnNumber": 2756
+    },
+    {
+      "functionName": "step",
+      "scriptId": "5",
+      "url": "http://127.0.0.1:54872/cosmogonic-quantum-mechalogodrom/chunk-956a5se1.js",
+      "lineNumber": 8635,
+      "columnNumber": 41055
+    },
+    {
+      "functionName": "v.world.step",
+      "scriptId": "4",
+      "url": "",
+      "lineNumber": 1,
+      "columnNumber": 296
+    },
+    {
+      "functionName": "N",
+      "scriptId": "5",
+      "url": "http://127.0.0.1:54872/cosmogonic-quantum-mechalogodrom/chunk-956a5se1.js",
+      "lineNumber": 8996,
+      "columnNumber": 29276
+    },
+    {
+      "functionName": "(root)",
+      "scriptId": "0",
+      "url": "",
+      "lineNumber": -1,
+      "columnNumber": -1
+    }
+  ]
+}

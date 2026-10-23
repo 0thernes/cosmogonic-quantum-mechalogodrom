@@ -22,6 +22,45 @@ import type { OrganismIntelligenceSignal } from '../types';
 export const WILDERNESS_ENTITY_STRIDE = 8;
 const WILDERNESS_DAMPING_60HZ = 0.985;
 
+/** Optional complete-batch accelerator. Inputs remain caller-owned and must never be modified. */
+export interface WildernessBatchExecutor {
+  /** Device description, reported only after successful creation/calibration. */
+  readonly adapterDescription?: string;
+  /** Execute the same complete kernel for every task; each result retains its task identity. */
+  executeBatch(tasks: readonly WorkerTask[]): Promise<WorkerResult[]>;
+  /** Release owned device resources. Ownership transfers to an attached population. */
+  dispose?(): void;
+}
+
+/** Actual wilderness execution routes; none describes core organism or Archon execution. */
+export type WildernessBackend = 'webgpu' | 'cpu-workers' | 'cpu-main';
+
+/** Bounded execution telemetry; acceptedFrame refers to completed ambient work, not render FPS. */
+export interface WildernessComputeStatus {
+  backend: WildernessBackend;
+  acceptedBackend: WildernessBackend | null;
+  acceptedFrame: number;
+  requestedFrame: number;
+  inFlight: boolean;
+  queued: 0 | 1;
+  epoch: number;
+  completedFrames: number;
+  gpuFailures: number;
+  workerFailures: number;
+  fallbackTasks: number;
+  staleResults: number;
+  lastError: string | null;
+  adapter: string | null;
+  paused: boolean;
+  disposed: boolean;
+}
+
+interface WildernessJob {
+  chunkId: string;
+  chunk: WildernessChunk;
+  task: WorkerTask;
+}
+
 /**
  * Recover a diverse deterministic patch key from the lossy Float32 seed lane plus stable chunk-local
  * ordinal. Float32 cannot retain all uint32 low bits; mixing the ordinal prevents adjacent high seeds
@@ -198,6 +237,17 @@ export interface WildernessSnapshot {
 export class WildernessPopulation {
   private readonly chunks = new Map<string, WildernessChunk>();
   private workerPool: WorkerPool | null;
+  private batchExecutor: WildernessBatchExecutor | null = null;
+  private computeEpoch = 1;
+  private paused = false;
+  private acceptedFrame = 0;
+  private acceptedBackend: WildernessBackend | null = null;
+  private completedFrames = 0;
+  private gpuFailures = 0;
+  private workerFailures = 0;
+  private fallbackTasks = 0;
+  private staleResults = 0;
+  private lastError: string | null = null;
   private readonly baseSeed: number;
   private readonly chunkSize = 100; // World units per chunk
   private frameCounter = 0; // Frame counter for timestamps (determinism-safe)
@@ -230,7 +280,56 @@ export class WildernessPopulation {
    * Attach or detach the multi-threaded Web Worker pool at runtime.
    */
   setWorkerPool(workerPool: WorkerPool | null): void {
+    if (this.disposed || this.workerPool === workerPool) return;
+    this.computeEpoch++;
     this.workerPool = workerPool;
+  }
+
+  /** Attach a calibrated batch backend; replacing it invalidates old replies and releases it. */
+  setBatchExecutor(executor: WildernessBatchExecutor | null): void {
+    if (this.batchExecutor === executor) return;
+    if (this.disposed) {
+      executor?.dispose?.();
+      return;
+    }
+    this.computeEpoch++;
+    this.batchExecutor?.dispose?.();
+    this.batchExecutor = executor;
+  }
+
+  /** Pause transitions invalidate pending results so a frozen population cannot move on late delivery. */
+  setPaused(paused: boolean): void {
+    if (this.disposed || this.paused === paused) return;
+    this.paused = paused;
+    this.invalidatePending();
+  }
+
+  /** Invalidate pending work after a reset/mode change without changing the current pause state. */
+  invalidatePending(): void {
+    this.computeEpoch++;
+    this.workerFrameQueued = false;
+  }
+
+  /** Snapshot execution facts without advancing the population. O(1). */
+  getComputeStatus(): WildernessComputeStatus {
+    return {
+      backend: this.batchExecutor ? 'webgpu' : this.workerPool ? 'cpu-workers' : 'cpu-main',
+      acceptedBackend: this.acceptedBackend,
+      acceptedFrame: this.acceptedFrame,
+      requestedFrame: this.frameCounter,
+      inFlight: this.workerFrameRunning,
+      queued: this.workerFrameQueued ? 1 : 0,
+      epoch: this.computeEpoch,
+      completedFrames: this.completedFrames,
+      gpuFailures: this.gpuFailures,
+      workerFailures: this.workerFailures,
+      fallbackTasks: this.fallbackTasks,
+      staleResults: this.staleResults,
+      lastError: this.lastError,
+      adapter: this.batchExecutor?.adapterDescription ?? null,
+      paused: this.paused,
+      disposed: this.disposed,
+    };
   }
 
   /**
@@ -243,7 +342,7 @@ export class WildernessPopulation {
     dt: number,
     intelligence?: OrganismIntelligenceSignal,
   ): void {
-    if (this.disposed) return;
+    if (this.disposed || this.paused) return;
     // A poisoned camera coordinate would otherwise create persistent `NaN,z` chunk keys and
     // hundreds of non-finite entities. Reject before counters or chunk state can mutate.
     if (!Number.isFinite(cameraX) || !Number.isFinite(cameraZ)) return;
@@ -344,8 +443,11 @@ export class WildernessPopulation {
    * Update chunks on worker threads (parallel dispatch — all active chunks at once).
    */
   private updateChunksOnWorkers(dt: number, scheduledFrame: number): void {
-    if (!this.workerPool) {
+    if (!this.workerPool && !this.batchExecutor && !this.workerFrameRunning) {
       this.updateChunksSync(dt, scheduledFrame);
+      this.acceptedFrame = scheduledFrame;
+      this.acceptedBackend = 'cpu-main';
+      this.completedFrames++;
       return;
     }
 
@@ -361,7 +463,7 @@ export class WildernessPopulation {
   /** Drain one active request and, if frames arrived meanwhile, only the newest coalesced request. */
   private async drainWorkerFrames(): Promise<void> {
     try {
-      while (!this.disposed && this.workerFrameQueued) {
+      while (!this.disposed && !this.paused && this.workerFrameQueued) {
         const dt = this.latestWorkerDt;
         const scheduledFrame = this.latestWorkerFrame;
         this.workerFrameQueued = false;
@@ -375,7 +477,7 @@ export class WildernessPopulation {
       this.workerFrameRunning = false;
       // No await occurs between the loop check and this assignment, but keep the restart guard explicit
       // for disposal/HMR callers that may synchronously enqueue from error hooks.
-      if (!this.disposed && this.workerFrameQueued) {
+      if (!this.disposed && !this.paused && this.workerFrameQueued) {
         this.workerFrameRunning = true;
         void this.drainWorkerFrames();
       }
@@ -383,56 +485,140 @@ export class WildernessPopulation {
   }
 
   private async runWorkerUpdates(dt: number, scheduledFrame: number): Promise<void> {
-    const jobs: Promise<void>[] = [];
+    const epoch = this.computeEpoch;
+    const executor = this.batchExecutor;
+    const pool = this.workerPool;
+    const jobs: WildernessJob[] = [];
     let bi = 0;
     for (const [chunkId, chunk] of this.chunks) {
       if (!chunk.active) continue;
       const bufIndex = bi % this.taskBuffers.length;
       bi++;
-      jobs.push(this.updateChunkOnWorker(chunkId, chunk, dt, scheduledFrame, bufIndex));
+      jobs.push({
+        chunkId,
+        chunk,
+        task: this.packTask(chunkId, chunk, dt, scheduledFrame, bufIndex),
+      });
     }
-    await Promise.all(jobs);
-  }
-
-  private async updateChunkOnWorker(
-    chunkId: string,
-    chunk: WildernessChunk,
-    dt: number,
-    scheduledFrame: number,
-    bufIndex: number,
-  ): Promise<void> {
-    const task = this.packTask(chunkId, chunk, dt, scheduledFrame, bufIndex);
-    let result: WorkerResult | null = null;
-    try {
-      result = await this.workerPool!.executeAsync(task);
-    } catch (error) {
-      console.error('Wilderness worker error:', error);
+    let results: (WorkerResult | null)[] | null = null;
+    let backend: WildernessBackend = pool ? 'cpu-workers' : 'cpu-main';
+    if (executor) {
+      try {
+        // Keep the authoritative frame buffers untouched even if a failed backend corrupts its input.
+        const inputs = jobs.map(({ task }) => ({ ...task, data: new Float32Array(task.data) }));
+        const candidate = await this.executeBatchWithDeadline(executor, inputs);
+        if (
+          !Array.isArray(candidate) ||
+          candidate.length !== jobs.length ||
+          !candidate.every((result, i) => this.isValidResult(jobs[i]!.task, result))
+        ) {
+          throw new Error('Malformed wilderness GPU batch');
+        }
+        results = candidate;
+        backend = 'webgpu';
+      } catch (error) {
+        if (this.computeEpoch === epoch && !this.disposed && !this.paused) {
+          this.gpuFailures++;
+          this.lastError = `GPU: ${String(error)}`.slice(0, 500);
+          // Retire a failing device rather than paying for repeated failures each frame. The current
+          // captured frame may still fall back exactly once without changing its epoch or inputs.
+          if (this.batchExecutor === executor) {
+            this.batchExecutor = null;
+            executor.dispose?.();
+          }
+        }
+      }
     }
-
-    if (this.disposed || !chunk.active || this.chunks.get(chunkId) !== chunk) return;
-
-    if (result && this.isValidResult(task, result)) {
-      this.updateEntitiesFromResult(chunk, result.data, scheduledFrame);
+    if (!this.isCurrentFrame(epoch)) {
+      this.staleResults += jobs.length;
       return;
     }
+    if (!results) {
+      results = await Promise.all(jobs.map((job) => this.executeCpuTask(job.task, pool, epoch)));
+      if (results.some((result) => result?.error === 'synchronous-fallback')) backend = 'cpu-main';
+    }
+    if (!this.isCurrentFrame(epoch)) {
+      this.staleResults += jobs.length;
+      return;
+    }
+    // All work settles before any publication; no result from a previous backend epoch can leak in.
+    // Chunk identity rejects unloading and reloading the same coordinate while a frame was in flight.
+    let accepted = 0;
+    for (let i = 0; i < jobs.length; i++) {
+      const job = jobs[i]!;
+      const result = results[i];
+      if (!job.chunk.active || this.chunks.get(job.chunkId) !== job.chunk) {
+        this.staleResults++;
+      } else if (result && this.isValidResult(job.task, result)) {
+        this.updateEntitiesFromResult(job.chunk, result.data, scheduledFrame);
+        accepted++;
+      }
+    }
+    if (accepted > 0) {
+      this.acceptedFrame = scheduledFrame;
+      this.acceptedBackend = backend;
+      this.completedFrames++;
+    }
+  }
 
-    // Any worker-level failure or malformed payload falls back through the exact same pure kernel.
+  private isCurrentFrame(epoch: number): boolean {
+    return !this.disposed && !this.paused && this.computeEpoch === epoch;
+  }
+
+  /** A lost/nonresponsive device must not hold the single ambient frame slot indefinitely. */
+  private async executeBatchWithDeadline(
+    executor: WildernessBatchExecutor,
+    tasks: readonly WorkerTask[],
+  ): Promise<WorkerResult[]> {
+    let timer: ReturnType<typeof setTimeout> | undefined;
     try {
+      return await Promise.race([
+        executor.executeBatch(tasks),
+        new Promise<never>((_resolve, reject) => {
+          timer = setTimeout(() => reject(new Error('Wilderness GPU task exceeded 5000 ms')), 5000);
+        }),
+      ]);
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  /** Run one captured task on a CPU worker, falling back once through the identical pure kernel. */
+  private async executeCpuTask(
+    task: WorkerTask,
+    pool: WorkerPool | null,
+    epoch: number,
+  ): Promise<WorkerResult | null> {
+    if (pool) {
+      try {
+        const result = await pool.executeAsync(task);
+        if (!this.isCurrentFrame(epoch)) return null;
+        if (this.isValidResult(task, result)) return result;
+        this.lastError = `Worker: ${result.error ?? 'malformed wilderness result'}`.slice(0, 500);
+      } catch (error) {
+        if (!this.isCurrentFrame(epoch)) return null;
+        this.lastError = `Worker: ${String(error)}`.slice(0, 500);
+      }
+      this.workerFailures++;
+    }
+    if (!this.isCurrentFrame(epoch)) return null;
+    this.fallbackTasks++;
+    try {
+      const data = new Float32Array(task.data);
       simulateWildernessData(
-        task.data,
+        data,
         task.seed,
-        chunkId,
+        task.chunkId ?? '0,0',
         task.dt,
         this.chunkSize,
         task.intelligenceResource,
         task.intelligenceThreat,
         task.intelligenceExplore,
       );
-      if (this.isValidData(task.data, task.data.length)) {
-        this.updateEntitiesFromResult(chunk, task.data, scheduledFrame);
-      }
+      return { id: task.id, type: task.type, data, success: true, error: 'synchronous-fallback' };
     } catch (error) {
-      console.error('Wilderness fallback error:', error);
+      this.lastError = `CPU fallback: ${String(error)}`.slice(0, 500);
+      return null;
     }
   }
 
@@ -519,11 +705,14 @@ export class WildernessPopulation {
 
   private isValidResult(task: WorkerTask, result: WorkerResult): boolean {
     return (
+      result !== null &&
+      typeof result === 'object' &&
       result.success === true &&
       result.id === task.id &&
       result.type === task.type &&
       result.data instanceof Float32Array &&
-      this.isValidData(result.data, task.data.length)
+      this.isValidData(result.data, task.data.length) &&
+      result.data.every((value, i) => i % 8 < 6 || Object.is(value, task.data[i]))
     );
   }
 
@@ -624,7 +813,10 @@ export class WildernessPopulation {
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
+    this.computeEpoch++;
     this.workerFrameQueued = false;
+    this.batchExecutor?.dispose?.();
+    this.batchExecutor = null;
     this.chunks.clear();
   }
 }

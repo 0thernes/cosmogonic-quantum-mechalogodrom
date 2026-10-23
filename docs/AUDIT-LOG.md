@@ -11,6 +11,47 @@ changed and why.
 
 ---
 
+## 2026-10-23 (UTC) — Browser hybrid execution and negative performance evidence
+
+- Continued from `e590f8c4` in the isolated main release checkout. The owner selected browser-only
+  GitHub Pages deployment. Read-only hardware probes found 24 CPU cores/logical processors,
+  NVIDIA RTX 5070 Ti Laptop GPU and Intel AI Boost. Installed Chrome executed WebGPU on NVIDIA;
+  installed Edge executed on Intel graphics. Both lacked the WebNN API, so no NPU execution is claimed.
+- Added an actual batched WGSL implementation of the existing ambient numerical wilderness kernel,
+  with bounded reusable GPU buffers, strict input/output validation, disposal and device-loss handling.
+  Added parity checks and transfer-inclusive calibration; auto selection needs a median improvement
+  exceeding 10% without a worse p95. Explicit GPU still requires parity. Auxiliary worker jobs drain
+  before calibration; visible simulation continues. A failed worker parity check retires that pool.
+- Kept one active ambient frame plus one latest queued request. Pause, mode change, reset,
+  replacement, chunk unload and disposal reject obsolete results. GPU failure falls back to actual
+  workers and then the unchanged serial CPU kernel. The HUD identifies accepted ambient execution
+  separately from core brains. Default worker budget reserves two logical processors; URL overrides
+  are bounded. No cognition model, visual material or population limit was reduced or expanded.
+- Adversarial review caught delayed pause invalidation, CPU replies crossing a mode change,
+  calibration contention, worker parity failure retaining invalid workers, and stale fallback reason
+  text. Those defects were repaired before release. Actual GPU calibration also caught a 50-unit
+  FP32 boundary-branch discrepancy; chunk-relative comparisons repaired it without relaxed tolerances.
+- Both real adapters passed 75 kernel and 13 lifecycle checks. **GPU round trips were slower** than
+  CPU workers for the measured workload, and auto correctly kept CPU workers. The preserved negative
+  results and exact measurement conditions are in the [benchmark ledger](./BENCHMARKS-2026-06-26.md#browser-ambient-hybrid-compute).
+- The actual rendering probe exposed a separate first-use shader stall; an asynchronous preparation
+  experiment improved responsiveness during preparation but left a 21.75-second first rendered step.
+  No engine warmup is shipped from that partial result. A separately labeled World functional probe
+  passed with rendering bypassed; it does not establish 3D performance. Both failures and successful
+  bounded checks remain available in the benchmark ledger.
+- Scope is explicitly limited: `WildernessRenderer` remains a no-op, visible fauna/Archon/controller
+  state and connectome propagation remain on the main CPU thread, and no full-world FPS or thermal
+  improvement is established. [ADR 0010](./adr/0010-worker-offload-and-streamed-hybrid-world-2026-06-26.md)
+  specifies state ownership, stable identities, commit barriers, GPU residency, optional supported
+  NPU inference, world persistence and deeper-organism acceptance experiments. CQM-25 axes
+  `substrate_pluralism`, `instrumentation_reproducibility` and `visual_embodied_scale` are affected;
+  no canonical capability score or intelligence/sentience claim changes.
+- Release validation measured 3,530 passing tests / zero failures across 388 files, with 93.00% line
+  and 91.05% function coverage on Windows (portable published floors remain unchanged). The first
+  run's two outdated integration fixtures and one contention timeout were retained, corrected or
+  rechecked without weakened assertions. The portable Node/Playwright runner also reproduced all
+  75 kernel and 13 lifecycle checks on installed Chrome.
+
 ## 2026-10-23 (America/Los_Angeles) — Browser Hybrid Compute Engine, Counter-Based Parallel Determinism & 3D Multi-Biome Organism Substrate
 
 - Engineered browser-native / GitHub Pages compatible **Hybrid Compute & 3D Multi-Biome Organism Expansion** across four tracks without lowering visual quality (`Level.FULL`) or neural depth:

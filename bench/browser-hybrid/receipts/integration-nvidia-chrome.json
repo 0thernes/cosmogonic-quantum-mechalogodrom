@@ -1,0 +1,268 @@
+{
+  "checkedAt": "2026-10-23T08:05:28.256Z",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+  "crossOriginIsolated": false,
+  "scope": "Real browser calibration + production WildernessPopulation lifecycle with actual worker pool and GPU. No World rendering/FPS assertion.",
+  "checks": [
+    {
+      "passed": true,
+      "name": "actual calibration GPU tolerance and worker exact parity pass",
+      "detail": {
+        "schemaVersion": 1,
+        "measurement": "startup-ambient-batch-transfer-inclusive-not-world-fps",
+        "preference": "auto",
+        "selected": "cpu-workers",
+        "reason": "CPU route retained: WebGPU did not meet the transfer-inclusive latency threshold",
+        "adapter": "nvidia / blackwell",
+        "parityPassed": true,
+        "workerParityPassed": true,
+        "gpuTiming": {
+          "samplesMs": [
+            17.299999997019768, 9.900000005960464, 8.199999988079071, 7, 4.399999991059303
+          ],
+          "medianMs": 8.199999988079071,
+          "p95Ms": 17.299999997019768
+        },
+        "workerTiming": {
+          "samplesMs": [
+            1.7999999970197678, 1.5, 1.4000000059604645, 1.5999999940395355, 1.4000000059604645
+          ],
+          "medianMs": 1.5,
+          "p95Ms": 1.7999999970197678
+        },
+        "maxPositionError": 0.00000762939453125,
+        "maxVelocityError": 2.384185791015625e-7,
+        "tolerance": {
+          "positionAbsolute": 0.0002,
+          "velocityAbsolute": 0.00002,
+          "relative": 0.000002
+        },
+        "chunks": 49,
+        "entities": 6272,
+        "warmupRounds": 2,
+        "sampleRounds": 5
+      }
+    },
+    {
+      "passed": true,
+      "name": "automatic selection obeys measured transfer-inclusive threshold"
+    },
+    {
+      "passed": true,
+      "name": "explicit GPU still requires actual parity"
+    },
+    {
+      "passed": true,
+      "name": "real population publishes completed GPU frame"
+    },
+    {
+      "passed": true,
+      "name": "camera-streamed population includes49chunks and6272entities"
+    },
+    {
+      "passed": true,
+      "name": "accepted population GPU values match CPU control within tolerance",
+      "detail": {
+        "maxError": 0.000003814697265625,
+        "violations": 0
+      }
+    },
+    {
+      "passed": true,
+      "name": "pause rejects delayed GPU values"
+    },
+    {
+      "passed": true,
+      "name": "stale-result counter identifies cancelled GPU frame"
+    },
+    {
+      "passed": true,
+      "name": "paused updates schedule no new work"
+    },
+    {
+      "passed": true,
+      "name": "resume accepts fresh GPU work"
+    },
+    {
+      "passed": true,
+      "name": "lost/disposed GPU frame falls back to actual workers"
+    },
+    {
+      "passed": true,
+      "name": "failed workers fall back to serial reference"
+    },
+    {
+      "passed": true,
+      "name": "population disposal recorded"
+    }
+  ],
+  "states": [
+    {
+      "stage": "accepted GPU",
+      "backend": "webgpu",
+      "acceptedBackend": "webgpu",
+      "acceptedFrame": 1,
+      "requestedFrame": 1,
+      "inFlight": false,
+      "queued": 0,
+      "epoch": 2,
+      "completedFrames": 1,
+      "gpuFailures": 0,
+      "workerFailures": 0,
+      "fallbackTasks": 0,
+      "staleResults": 0,
+      "lastError": null,
+      "adapter": "nvidia / blackwell",
+      "paused": false,
+      "disposed": false
+    },
+    {
+      "stage": "pause discards in-flight",
+      "backend": "webgpu",
+      "acceptedBackend": "webgpu",
+      "acceptedFrame": 1,
+      "requestedFrame": 2,
+      "inFlight": false,
+      "queued": 0,
+      "epoch": 3,
+      "completedFrames": 1,
+      "gpuFailures": 0,
+      "workerFailures": 0,
+      "fallbackTasks": 0,
+      "staleResults": 49,
+      "lastError": null,
+      "adapter": "nvidia / blackwell",
+      "paused": true,
+      "disposed": false
+    },
+    {
+      "stage": "device disposed CPU fallback",
+      "backend": "cpu-workers",
+      "acceptedBackend": "cpu-workers",
+      "acceptedFrame": 4,
+      "requestedFrame": 4,
+      "inFlight": false,
+      "queued": 0,
+      "epoch": 4,
+      "completedFrames": 3,
+      "gpuFailures": 1,
+      "workerFailures": 0,
+      "fallbackTasks": 0,
+      "staleResults": 49,
+      "lastError": "GPU: Error: Wilderness WebGPU disposed",
+      "adapter": null,
+      "paused": false,
+      "disposed": false
+    },
+    {
+      "stage": "worker disposed sync fallback",
+      "backend": "cpu-workers",
+      "acceptedBackend": "cpu-main",
+      "acceptedFrame": 5,
+      "requestedFrame": 5,
+      "inFlight": false,
+      "queued": 0,
+      "epoch": 4,
+      "completedFrames": 4,
+      "gpuFailures": 1,
+      "workerFailures": 49,
+      "fallbackTasks": 49,
+      "staleResults": 49,
+      "lastError": "Worker: Worker pool disposed",
+      "adapter": null,
+      "paused": false,
+      "disposed": false
+    }
+  ],
+  "autoCalibration": {
+    "schemaVersion": 1,
+    "measurement": "startup-ambient-batch-transfer-inclusive-not-world-fps",
+    "preference": "auto",
+    "selected": "cpu-workers",
+    "reason": "CPU route retained: WebGPU did not meet the transfer-inclusive latency threshold",
+    "adapter": "nvidia / blackwell",
+    "parityPassed": true,
+    "workerParityPassed": true,
+    "gpuTiming": {
+      "samplesMs": [17.299999997019768, 9.900000005960464, 8.199999988079071, 7, 4.399999991059303],
+      "medianMs": 8.199999988079071,
+      "p95Ms": 17.299999997019768
+    },
+    "workerTiming": {
+      "samplesMs": [
+        1.7999999970197678, 1.5, 1.4000000059604645, 1.5999999940395355, 1.4000000059604645
+      ],
+      "medianMs": 1.5,
+      "p95Ms": 1.7999999970197678
+    },
+    "maxPositionError": 0.00000762939453125,
+    "maxVelocityError": 2.384185791015625e-7,
+    "tolerance": {
+      "positionAbsolute": 0.0002,
+      "velocityAbsolute": 0.00002,
+      "relative": 0.000002
+    },
+    "chunks": 49,
+    "entities": 6272,
+    "warmupRounds": 2,
+    "sampleRounds": 5
+  },
+  "explicitCalibration": {
+    "schemaVersion": 1,
+    "measurement": "startup-ambient-batch-transfer-inclusive-not-world-fps",
+    "preference": "webgpu",
+    "selected": "webgpu",
+    "reason": "Explicit WebGPU: parity passed; a performance advantage is not established",
+    "adapter": "nvidia / blackwell",
+    "parityPassed": true,
+    "workerParityPassed": true,
+    "gpuTiming": {
+      "samplesMs": [9.100000008940697, 4.800000011920929, 6, 8.299999997019768, 7.200000002980232],
+      "medianMs": 7.200000002980232,
+      "p95Ms": 9.100000008940697
+    },
+    "workerTiming": {
+      "samplesMs": [1.5, 2, 1.2000000029802322, 1.7999999970197678, 1.800000011920929],
+      "medianMs": 1.7999999970197678,
+      "p95Ms": 2
+    },
+    "maxPositionError": 0.00000762939453125,
+    "maxVelocityError": 2.384185791015625e-7,
+    "tolerance": {
+      "positionAbsolute": 0.0002,
+      "velocityAbsolute": 0.00002,
+      "relative": 0.000002
+    },
+    "chunks": 49,
+    "entities": 6272,
+    "warmupRounds": 2,
+    "sampleRounds": 5
+  },
+  "status": "passed",
+  "browserChannel": "chrome",
+  "pageErrors": [],
+  "consoleMessages": [
+    {
+      "type": "warning",
+      "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+    }
+  ],
+  "bundleSha256": "c8b35afa71095db633881eae75f38af338d04472e9e94f8dc54182b2db8eb6e0",
+  "sourceSha256": {
+    "src/core/wilderness-webgpu.ts": "aa56e67e2577eebd0b93a969a2c02ad974f5b188a2bcd68e780a4ee032292874",
+    "src/core/wilderness-compute.ts": "002def11e99a55ee008aa8680bac2040b3290219c945dab4c72049b399aedefb",
+    "src/core/worker-pool.ts": "a343b14dbc677408cb381e65d38f6bd6808b78de2a5e4c32969ffa75abdd8fc4",
+    "src/sim/wilderness-population.ts": "db04982a58939b3445ca041abc8410cddf5f6142cead3ddf747869a3dbc09a7e",
+    "src/workers/simulation-worker.ts": "01a16509e3ddf568942bdd0e93d22587849063891ff2c6ccfc693238f365b006"
+  },
+  "buildManifest": {
+    "builtAt": "2026-10-23T08:05:27.346Z",
+    "sourceSha256": {
+      "src/core/wilderness-webgpu.ts": "aa56e67e2577eebd0b93a969a2c02ad974f5b188a2bcd68e780a4ee032292874",
+      "src/core/wilderness-compute.ts": "002def11e99a55ee008aa8680bac2040b3290219c945dab4c72049b399aedefb",
+      "src/core/worker-pool.ts": "a343b14dbc677408cb381e65d38f6bd6808b78de2a5e4c32969ffa75abdd8fc4",
+      "src/sim/wilderness-population.ts": "db04982a58939b3445ca041abc8410cddf5f6142cead3ddf747869a3dbc09a7e",
+      "src/workers/simulation-worker.ts": "01a16509e3ddf568942bdd0e93d22587849063891ff2c6ccfc693238f365b006"
+    }
+  }
+}

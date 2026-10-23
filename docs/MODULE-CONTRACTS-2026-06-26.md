@@ -2,6 +2,38 @@
 
 # Module Contracts
 
+## Browser hybrid execution migration (2026-10-23)
+
+The owner selects browser-only deployment on GitHub Pages. CPU workers and optional WebGPU compute
+must run from static assets without a native daemon, CUDA toolkit, cross-origin-isolation requirement
+or hidden model download. WebNN/NPU availability is reported separately from verified execution;
+an available API is never labeled as an active accelerator. Existing WebGL rendering, ordinary
+organism controllers and Archon cognition retain their complete models and visual settings.
+
+First migration boundary: the already asynchronous, non-golden wilderness population. A WebGPU
+backend implements its complete numeric movement/resource/threat/exploration kernel in batched
+dispatches. CPU workers remain the reference/fallback. A bounded startup comparison must test
+actual GPU execution and numerical agreement; unavailable, slower or invalid backends fall back
+explicitly. GPU FP32 arithmetic is not claimed bit-identical to JS arithmetic. Backend selection
+records transfer-inclusive latency and does not imply improved full-world FPS. One in-flight frame
+and one latest queued frame cap asynchronous work. Generation/lifecycle identities reject results
+after unload, reset, backend change or disposal. Fallback receives untouched original inputs.
+
+Exclusive owners: GPU writer owns `src/core/wilderness-webgpu.ts` and its tests; population writer
+owns `src/sim/wilderness-population.ts`, worker configuration and population tests; integrator owns
+`src/main.ts`, `src/world.ts`, performance HUD, documentation and release verification. Shared
+protocols are agreed before parallel implementation. A selected backend must remain inspectable,
+and raw capability detection cannot masquerade as measured execution.
+
+Scope and acceptance map to CQM-25 `substrate_pluralism`, `instrumentation_reproducibility` and
+`visual_embodied_scale`. Measures include per-backend complete batch time, accepted simulation tick,
+queue depth, actual device, numerical deviations and failed probes. Controls are the same seeded
+inputs through the existing CPU kernel, worker route and GPU route, including zero delta, adaptive
+signals, malformed data, device loss and out-of-order completion. Any changed core golden, stale
+state publication, silent model simplification or missing fallback falsifies the migration claim.
+Larger or more intelligent core organisms are separate measured stages, not inferred from this
+ambient-population acceleration. No capability score or mental-status claim changes.
+
 ## Neural observatory measurement contract (World I, Cognition II, Quantum III, Brain IV)
 
 The 27 cards inspect the PRIME Archon (index 0), not a population aggregate. Each card identifies
@@ -1832,7 +1864,7 @@ Copilot are constructed boot-stream-neutral and never write sim state, so the go
 
 ### V9 acceptance
 
-Full `bun run check` green: prettier → tsc strict → oxlint → 3506 tests (0 fail, 300-frame golden
+Full `bun run check` green: prettier → tsc strict → oxlint → 3539 tests (0 fail, 300-frame golden
 included) → build. The Copilot sandbox verified live (allow: `git log`, file reads; deny:
 path-escape, repository-root pathspecs, `git push`, `legacy/`, shell redirection).
 

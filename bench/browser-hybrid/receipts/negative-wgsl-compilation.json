@@ -1,0 +1,31 @@
+{
+  "checkedAt": "2026-10-23T07:50:53.224Z",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+  "logicalCpus": 24,
+  "crossOriginIsolated": false,
+  "webNNAvailable": false,
+  "scope": "Bounded ambient wilderness kernel, real production WebGPU and CPU worker implementations. CPU and worker measurements include input-copy; GPU includes validation, packing, upload, dispatch, readback, and output-copy. No rendering, full World, or overall FPS measurement.",
+  "checks": [],
+  "benchmarks": [],
+  "status": "failed",
+  "error": "GPUPipelineError: [Invalid ShaderModule \"CQM wilderness complete kernel\"] is invalid due to a previous error.\n - While validating compute stage ([Invalid ShaderModule \"CQM wilderness complete kernel\"], entryPoint: \"main\").\n",
+  "browserChannel": "chrome",
+  "pageErrors": [],
+  "consoleMessages": [
+    {
+      "type": "warning",
+      "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+    },
+    {
+      "type": "warning",
+      "text": "Error while parsing WGSL: :4:43 error: 'resource' is a reserved keyword\n  dt: f32, frameScale: f32, damping: f32, resource: f32,\n                                          ^^^^^^^^\n\n:39:20 error: 'resource' is a reserved keyword\n  let adaptive = p.resource > 0.0 || p.threat > 0.0 || p.explore > 0.0;\n                   ^^^^^^^^\n\n:50:29 error: 'resource' is a reserved keyword\n    vx += (targetX - x) * p.resource * 0.00008 * p.frameScale;\n                            ^^^^^^^^\n\n:51:29 error: 'resource' is a reserved keyword\n    vz += (targetZ - z) * p.resource * 0.00008 * p.frameScale;\n                            ^^^^^^^^\n\n\n - While calling [Device].CreateShaderModule([ShaderModuleDescriptor \"\"CQM wilderness complete kernel\"\"]).\n"
+    }
+  ],
+  "bundleSha256": "c314869525b3757caff856436ca0150b1b944ded98a733c402697c64d6d8870d",
+  "sourceSha256": {
+    "src/core/wilderness-webgpu.ts": "76371c6f02c79d5b58b393f6326390b25f758a47cdfd8db5b080effed89d6562",
+    "src/core/worker-pool.ts": "577de916312e00905e8b0041f0f1d91ab6fd85403bd7dbb68ca58e3971cc5f5f",
+    "src/sim/wilderness-population.ts": "c1ca47c45b91d66d194c7fc5a82125d730ffe7a4251875554cfcaf55b2903f7f",
+    "src/workers/simulation-worker.ts": "01a16509e3ddf568942bdd0e93d22587849063891ff2c6ccfc693238f365b006"
+  }
+}

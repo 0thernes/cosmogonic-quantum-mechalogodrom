@@ -2,11 +2,119 @@
 
 # ADR 0010 — Worker offload + streamed "Hybrid world" for scaling
 
-- Status: Accepted design; browser worker pool enabled by default when available; performance benefit unproven
+- Status: Browser-only migration; CPU workers operational, experimental calibrated ambient WebGPU backend; full-world performance benefit unproven; visible-core parallelization remains planned
 - Date: 2026-06-20
 - Governs: Scaling stages 3–5 ([BENCHMARKS-2026-06-26.md](../BENCHMARKS-2026-06-26.md) § Scaling Stages)
 
-## Current runtime and validation boundary — 2026-10-21
+## Browser-only heterogeneous execution — 2026-10-23
+
+The owner selects GitHub Pages as the deployment target. No native daemon, direct CUDA API,
+driver installation, local Python service or cloud compute is required by the application.
+Browser WebGPU can execute on an NVIDIA GPU through the browser graphics stack; this is not
+native CUDA. WebNN is an optional browser capability, not a guarantee that an NPU can execute a
+particular model. No CQM NPU inference model has been wired or executed in this migration.
+
+### What is implemented
+
+- `src/core/wilderness-webgpu.ts` ports the complete existing wilderness movement, seeded random
+  perturbations, resource seeking, threat anticipation and boundary behavior into one batched WGSL
+  dispatch. Type/identity lanes are preserved; caller inputs are not transferred or mutated. Buffers
+  are bounded and reused. Loss, timeout and invalid results retire the executor and retain CPU fallback.
+- `src/core/wilderness-compute.ts` performs numerical checks against the existing CPU kernel and
+  transfer-inclusive timing against the worker route. Automatic selection requires a measured win;
+  a detected GPU alone is insufficient. FP32 numerical agreement is tolerance-based, not a bitwise
+  cross-device guarantee. The runtime probe is a bounded startup sample, not a sustained FPS test.
+  Auxiliary dispatch is held and existing worker jobs drain before calibration; visible simulation
+  and presentation continue, so this remains an in-session routing observation, not an isolated
+  hardware benchmark. A worker that fails numerical parity is detached and retired.
+- `WildernessPopulation` owns one in-flight frame and one latest queued request. Epochs and chunk
+  identity reject late publication after reset, pause, replacement, unload or disposal. The accepted
+  frame and backend, errors and fallbacks are inspectable through `World.getBrowserComputeStatus()`.
+- The worker budget defaults to logical processors minus two (minimum one) to leave browser/driver
+  headroom. `?workers=N` permits an explicit bounded override; `?workers=0` retains the synchronous
+  route. Browser workers do not guarantee affinity to particular performance or efficiency cores.
+- `?compute=auto` calibrates optional ambient GPU work in live mode. `?compute=cpu` retains CPU
+  execution. `?compute=webgpu` is an explicit experiment that still requires numerical checks but may
+  choose a slower GPU. Seeded mode retains the CPU reference. The HUD scopes its backend readout to
+  **ambient numerical work**, separately from visible core cognition.
+
+**Scope limitation:** `WildernessRenderer` is intentionally a no-op. These existing numerical
+organisms are not the visible core fauna, and this backend does not accelerate their 70-parameter
+controllers, the Archons, the visible connectome or WebGL rendering. The auxiliary substrate-summary
+duplication described below remains. Neither auxiliary offload is a substitute for the next stages.
+
+### Target ownership and migration order
+
+```mermaid
+flowchart LR
+  UI[Browser UI and input] --> Commands[Commands assigned to simulation ticks]
+  Commands --> CPU[CPU workers: owned organism state and spatial partitions]
+  CPU --> GPU[WebGPU: batched fields and compatible numeric kernels]
+  CPU -. future supported inference .-> NPU[Optional WebNN NPU models]
+  GPU --> Commit[Validated completed tick]
+  NPU -.-> Commit
+  CPU --> Commit
+  Commit --> Render[WebGL presentation of committed state]
+  Commit --> Evidence[Backend, precision, timing and replay evidence]
+```
+
+This diagram is the target architecture; only the ambient lane above has an additional backend.
+
+1. **Parallel complete organism controllers.** Extract the complete per-organism controller,
+   including actor/value traces, semantic recurrent state, genome and learning flags. Keep stable
+   brain identities resident in worker shards. Pack senses/goals once, evaluate disjoint identities
+   concurrently, and merge in stable order before integration. Birth, death and slot compaction carry
+   generations so a late result cannot attach one organism's memories to another. Preserve the CPU
+   reference path and test identical learned state, not only final positions.
+2. **Independent simulation and presentation clocks.** A simulation coordinator owns step admission
+   and commit barriers; the main thread renders the last completed state and handles input. Bound
+   outstanding work. If full cognition cannot keep real time, report simulation-time throughput
+   instead of silently skipping minds or changing their models. The current once-per-rAF World loop
+   is not yet this coordinator. Fixed visual settings remain separate from simulation fidelity.
+3. **GPU-resident batches.** Keep large field/organism arrays on the GPU across steps; group kernels
+   by shape while preserving each individual's weights. Avoid per-organism requests and repeated
+   CPU/GPU round trips. WebGL/WebGPU resource sharing is not assumed: a migration of render buffers
+   must be measured against readback cost and the existing renderer. Connectome activation currently
+   has traversal-order dependencies; unordered atomic propagation would change its mathematical model.
+4. **Optional NPU inference.** Introduce only models that add measured perception or prediction value.
+   Request a supported WebNN device, compile a concrete graph, execute controls and report the actual
+   provider. An absent API/operator/model means inactive, with the CPU/GPU path intact. Small evolving
+   per-organism networks and online training are not assumed appropriate NPU workloads.
+5. **Persistent expanded world.** Spatial partitions need neighbor halos, stable global identities,
+   bounded resident state and IndexedDB checkpoints with explicit eviction semantics. Preserve the
+   declared causal rules for interactions across chunks. Increasing domain extent, reducing distant
+   fidelity, or changing globally coupled fields is an experiment/configuration change, not a free
+   optimization. Do not inflate entity counts before the step budget is measured.
+6. **Deeper organisms.** Spend measured headroom on persistent memory, learned world predictions,
+   homeostatic goals, embodiment, development, repair and social learning. Each addition needs an
+   intervention and held-out task that distinguishes a working faculty from extra variables. Parameter
+   count, population count and throughput alone do not establish greater intelligence or aliveness.
+
+### Acceptance and scientific fidelity
+
+Affected CQM-25 axes: `substrate_pluralism`, `instrumentation_reproducibility`,
+`visual_embodied_scale`; later stages additionally target `memory`, `learning`,
+`predictive_causal_models`, `morphology_development`, `homeostasis`, `repair_resilience`,
+`social_communication` and `environmental_coupling`. Scores remain uncalibrated.
+
+CPU concurrency can preserve reproducibility with read-only tick inputs, owned output partitions,
+explicit barriers, stable merge order and explicit RNG streams. Determinism does not require one
+thread. GPU arithmetic can require declared tolerances and long-run behavioral comparisons. Keep
+a reproducible reference mode and record backend/version/precision for accelerated runs.
+
+Acceptance for the core migration includes controller and recurrent-state parity, population
+lifecycle/compaction, reordered completion, loss/timeout, bounded memory, unchanged visual materials,
+matched-seed behavior and held-out learning performance. Measure end-to-end pack/queue/compute/
+transfer/commit and delivered-frame p50/p95/p99, GPU timing, simulation-time throughput and memory
+after warmup. Archive negative runs. A kernel-only benchmark, a screenshot, or high utilization
+cannot establish the full-world performance claim.
+
+References: [WebGPU](https://developer.chrome.com/docs/web-platform/webgpu/overview),
+[WebNN availability](https://learn.microsoft.com/en-us/windows/ai/directml/webnn-overview),
+[ONNX Runtime Web providers](https://onnxruntime.ai/docs/tutorials/web/env-flags-and-session-options.html),
+[Intel 275HX specifications](https://www.intel.com/content/www/us/en/products/sku/242293/intel-core-ultra-9-processor-275hx-36m-cache-up-to-5-40-ghz/specifications.html).
+
+## Worker runtime baseline retained from 2026-10-21
 
 Upstream had already restored the default browser worker path before this repair. `src/main.ts`
 initializes a pool when `Worker` is available unless the URL explicitly selects `?workers=0`;
@@ -58,7 +166,9 @@ Two facts collide:
   Naively moving a hot path to a worker either (a) blocks on the round-trip each frame
   (slower than doing it inline — pointless), or (b) pipelines with a 1-frame lag, which
   **changes the golden** (the universe at frame N is no longer bit-identical). So you cannot
-  move the deterministic hot path onto a worker without losing determinism.
+  move the deterministic hot path onto a worker with that naive scheduling design. The broader
+  historical claim that determinism itself prohibits workers is superseded by the ordered-barrier
+  migration above; it was an implementation constraint, not a mathematical impossibility.
 
 The owner decided the determinism fork (2026-06-20): **Hybrid** — a deterministic preserve
 core + a streamed best-effort wilderness.
