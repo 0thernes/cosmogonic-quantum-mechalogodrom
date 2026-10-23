@@ -1,7 +1,7 @@
 # ADR 0019 — Hybrid compute: a snapshot social field on every CPU core
 
-Status: accepted 2026-10-23. Phase 1 (CPU cores) is implemented. Phases 2–4 are planned and
-not implemented.
+Status: accepted 2026-10-23. Phase 1 (CPU cores) and phase 2 (shared memory) are implemented.
+Phases 3–4 are planned and not implemented.
 
 ## Context
 
@@ -22,12 +22,12 @@ was reading and writing live objects in order.
 
 What a browser can reach:
 
-| Path                        | How                    | Status here                                                                             |
-| --------------------------- | ---------------------- | --------------------------------------------------------------------------------------- |
-| CPU cores                   | Web Workers            | used (phase 1)                                                                          |
-| Shared memory between cores | `SharedArrayBuffer`    | needs cross-origin isolation (COOP/COEP headers); GitHub Pages cannot set them          |
-| GPU compute                 | WebGPU compute shaders | ambient wilderness kernel only, when calibrated faster (ADR 0010); not the social field |
-| NPU / ML accelerator        | WebNN (`navigator.ml`) | experimental; no inference runs on it                                                   |
+| Path                        | How                    | Status here                                                                                 |
+| --------------------------- | ---------------------- | ------------------------------------------------------------------------------------------- |
+| CPU cores                   | Web Workers            | used (phase 1)                                                                              |
+| Shared memory between cores | `SharedArrayBuffer`    | used (phase 2) when cross-origin isolated: `server.ts` sends COOP/COEP; GitHub Pages cannot |
+| GPU compute                 | WebGPU compute shaders | ambient wilderness kernel only, when calibrated faster (ADR 0010); not the social field     |
+| NPU / ML accelerator        | WebNN (`navigator.ml`) | experimental; no inference runs on it                                                       |
 
 CUDA and vendor NPU drivers cannot be called from a web page. The GPU's CUDA cores are reached
 through WebGPU.
@@ -77,6 +77,9 @@ members. The grid-query behaviors use the same budget through `SpatialHash.query
 - **Small worlds are unchanged.** At 2,000 organisms or fewer the field is never built, and the
   exact legacy scan and queries run. Seeded small worlds and the determinism goldens are
   byte-identical.
+- **Shared memory changes where answers are written, never what they are.** A core writes only into
+  a range it claimed, and the owner never writes into, or reads answers from, memory a core may still
+  be writing (phase 2 below).
 
 ### 3. Phase 1: worker cores (`src/core/social-scan-pool.ts`, `src/workers/social-field-worker.ts`)
 
@@ -95,12 +98,61 @@ While the field runs, the perf HUD's compute row gains a social segment
 (`social: 3 cores · 96% off-thread`). It shows how many social cores are alive and the share of
 recent frames they answered. The rest of the row is the ambient backend that ADR 0010 reports.
 
-### 4. Planned phases (not implemented)
+### 4. Phase 2: shared memory (`SharedSocialScanPool`, `server.ts`)
 
-- **Phase 2: shared memory.** When `crossOriginIsolated` is true, back the field with a
-  `SharedArrayBuffer` and use `Atomics` completion flags. This removes the per-frame copies and
-  the dependence on the main thread yielding. It needs COOP/COEP on the dev server and a deploy
-  host that can send them.
+**Headers.** `bun dev` and `bun start` serve the app page and both worker scripts with
+`Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp`.
+
+- Bun gives HTML-import routes no header hook. The import is therefore mounted at `/__app-shell`,
+  and `/` re-serves it over loopback with the headers. If the loopback fails, `/` redirects to the
+  plain shell, which runs the copy path.
+- Worker scripts need COEP too. An isolated page may start a dedicated worker only if the worker's
+  script response carries a compatible embedder policy.
+- Only `/` and the worker scripts are isolated. `/docs`, `/spec` and `/bible` do not need it, and
+  `/lab` loads p5.js and Google Fonts cross-origin, which COEP would block.
+- `require-corp` is used rather than `credentialless` because Safari implements only `require-corp`.
+  The app shell loads no cross-origin no-cors subresource: fonts are bundled, textures are
+  same-origin, and the static-deploy AI fallback is a CORS `fetch`, which COEP does not gate. In
+  Chromium the isolated page made 0 cross-origin requests and had no blocked loads.
+
+**Protocol.** When `crossOriginIsolated` is true, `main.ts` starts `SharedSocialScanPool` instead
+of `SocialScanPool`.
+
+- **No per-frame copies.** The owner allocates both slots with
+  `allocSocialField(capacity, params, (b) => new SharedArrayBuffer(b))`, through the executor's
+  `makeBuffer`. Cores read the snapshot where it was packed and write their answers into its result
+  arrays. A core receives a field's buffers once (`bind`); after that a job is a small message.
+- **Every ownership change is a compare-and-swap.** Each field has a control block: one word per
+  range, holding ticket and phase, plus a completion counter.
+  - The owner dispatches: `FREE`/`DONE` → `QUEUED(t)`.
+  - A core claims `QUEUED(t)` → `RUNNING(t)`, scans its range in place, stores `DONE(t)` and adds
+    one to the counter.
+  - The owner takes back an unstarted range: `QUEUED(t)` → `FREE(t)`. The core's claim then fails,
+    and it skips the job.
+- **Completion without yielding.** `collect` reads the counter with `Atomics.load`. A full count
+  means every answer is visible, because each core's atomic add follows its writes. No message is
+  involved, so cores count even while the main thread never yields.
+- **The owner never waits for a core.** Before writing into a field (packing it, or scanning it after
+  a false `collect`), the owner calls `reclaim`. It cancels the unstarted ranges and reports whether
+  any core is still `RUNNING`. If one is, the owner copies the snapshot into fresh buffers and
+  answers there, and the late core keeps the old ones.
+- **Bounded and fail-safe.** Each core counts the jobs it has consumed in a shared progress word, so
+  the two-job in-flight bound still holds. Cores never reply. A message from a core (it found a
+  malformed job) or a worker error retires the pool. A range left `RUNNING` by a terminated core
+  keeps its field held permanently, so that field is never reused.
+
+**Scope.**
+
+- Non-isolated pages (GitHub Pages, `/__app-shell`) keep the phase-1 copy path.
+- `coi-serviceworker` re-serves a static site through a service worker that adds the headers. It is
+  not adopted here and remains a separate evaluation: it reloads the page on the first visit,
+  intercepts every fetch, and adds a service-worker lifecycle to the deploy.
+- Isolation also turns on the ambient `WorkerPool`'s existing `SharedArrayBuffer` input path, because
+  `createWorkerPool` keys on `typeof SharedArrayBuffer`. That path leases each buffer exclusively and
+  copies results out before release (`tests/worker-pool.test.ts`). It was not re-measured here.
+
+### 5. Planned phases (not implemented)
+
 - **Phase 3: WebGPU compute.** Port `scanSocialRange` to WGSL, one invocation per organism over
   the same buffers. Equivalence testing is part of the plan:
   - An integer-exact subset must match the CPU kernel bit for bit: indices, counts and kin choice
@@ -129,13 +181,16 @@ Affected axis IDs:
 - **Subject / scope:** `EntityManager.update` main-thread CPU time and seeded trajectories, at 5k,
   10k and 25k organisms. GPU draw cost is excluded.
 - **Measures:** `bun run bench:social-field` gives the median main-thread update time and the
-  frames the workers answered. It uses the real `SocialScanPool` and worker script under Bun, with
-  a 12 ms inter-frame gap standing in for render time.
+  frames the workers answered. It runs the real pools (copy and shared) and worker script under
+  Bun. A 12 ms inter-frame gap stands in for render time: by default it sleeps, and
+  `GAP_MODE=busy` spins without yielding.
 - **Controls:**
   - the same seed with no executor
   - an executor that is always late
   - an executor that is late on every third frame
   - worlds at or below 2,000 organisms
+  - phase 2: shared cores that are on time, late (with stale jobs arriving afterwards), stalled
+    mid-scan, or retired mid-run
 - **Falsifiers** (`tests/social-field.test.ts`):
   - any executor schedule that changes a seeded position bit
   - a corrupted executor whose world does _not_ change
@@ -143,8 +198,14 @@ Affected axis IDs:
   - a bounded scan that reads more than its budget
   - an unbounded scan that differs from brute force
   - a world at or below 2,000 organisms that touches the field
-- **Pinned provenance:** base `e590f8c4`. Measurements are from a 4-vCPU container with 3 worker
-  cores.
+  - phase 2: a stalled core whose garbage, written during the update that consumes its snapshot,
+    changes a seeded position bit
+  - phase 2: an owner that skips `reclaim` whose world does _not_ change under that core, on both
+    the collect path and the reset (dropped-ticket) path
+  - phase 2: a stale or taken-back job that writes, or a `collect` that returns true before every
+    range is done
+- **Pinned provenance:** phase 1 base `e590f8c4`, phase 2 base `bb3fd3e9`. Measurements are from a
+  4-vCPU container with 3 worker cores.
 
 ### Measured (4-vCPU container, main-thread `EntityManager.update`, median)
 
@@ -158,6 +219,23 @@ Affected axis IDs:
 (≈ 1–11 ms). The two frames not answered by workers in each run are the first two updates, which
 always scan locally by construction.
 
+### Measured, phase 2 (same container, Bun 1.3.14; frames answered out of 90)
+
+| Main thread               | Organisms |     3 cores, copied |     3 cores, shared |
+| ------------------------- | --------: | ------------------: | ------------------: |
+| yields (12 ms sleep)      |     5,000 | 13.3–16.2 ms, 84–88 | 14.4–16.7 ms, 83–84 |
+| yields (12 ms sleep)      |    10,000 | 29.5–36.6 ms, 81–84 | 26.8–34.6 ms, 84–85 |
+| yields (12 ms sleep)      |    25,000 |    86.1–95.7 ms, 88 |   83.8–109.8 ms, 88 |
+| never yields (12 ms spin) |     5,000 |          22.7 ms, 0 |         12.7 ms, 80 |
+| never yields (12 ms spin) |    10,000 |          50.0 ms, 0 |         25.9 ms, 84 |
+| never yields (12 ms spin) |    25,000 |         151.8 ms, 0 |         81.2 ms, 88 |
+
+When the main thread yields, the pools are within run-to-run noise. When it never yields, copied
+replies never arrive and every frame falls back to the main thread; shared cores still answer. On a
+synthetic field the kernel runs at the same speed on shared and plain buffers (61.5 vs 61.3 ms at
+25k), and one snapshot slice costs under 1 ms. Full tables are in
+[BENCHMARKS](../BENCHMARKS-2026-06-26.md).
+
 ### Negative results retained
 
 - **The kernel is branch-bound.** It takes about 20 ms per 10k organisms on one core.
@@ -170,11 +248,31 @@ always scan locally by construction.
   - Worker replies are delivered only when the main thread yields, so a busy update could never
     see them.
   - This is why the pipeline is two updates deep.
-- **Copying is not free.** The structured-clone copy costs measurable main-thread time at 25k.
-  Phase 2 exists to remove it.
+- **Copying was a small cost.** Phase 1 expected the structured-clone copy to cost measurable
+  main-thread time at 25k. Phase 2 removed it on isolated pages, but with a yielding main thread
+  the two pools are within noise: one snapshot slice costs under 1 ms. The measured gain is
+  independence from yielding, not copy time.
 - **The browser proof is narrow.** In real Chromium under software WebGL, the worker bundle loaded
   and answered the field within three updates. Frame rates on GPU hardware were not measured in
   this environment.
+- **Phase 2's browser proof is functional only.** Under headless Chromium with software WebGL:
+  - The isolated page (`/`) reported `crossOriginIsolated: true`, loaded both worker scripts, made
+    no cross-origin request, and had no blocked loads.
+  - Driven at 4,000 organisms, its shared cores answered the field from the third update on (the
+    first two always scan locally).
+  - The never-yielding comparison was not run in the browser: one update took 0.4–112 s under
+    software rendering. The busy-gap benchmark covers that case under Bun.
+- **A single-threaded test cannot interleave a core with the main thread at arbitrary points.**
+  - The first world-level stall test landed its writes between updates. It passed even for an
+    owner that skipped `reclaim`, because the next local scan overwrote the writes.
+  - The writes now land inside `update()` (through the sanctuary predicate), and both owner-side
+    `reclaim` calls have a failing control.
+  - The guarantee itself rests on the compare-and-swap protocol, whose transitions are pinned by
+    unit tests.
+- **Runtimes differ on cloning shared memory.** The repo-pinned Bun 1.3.14 copies a
+  `SharedArrayBuffer` in `structuredClone` but shares it in `postMessage`; Bun 1.4.2 shares in both.
+  The pool only uses `postMessage`. If a runtime ever copied there too, no core's completion would
+  reach the owner, and every frame would fall back to the main thread with identical answers.
 - **Social semantics changed above 2,000.**
   - Statistics are sampled, at most 64 candidates.
   - They come from a two-update-old snapshot rather than live in-order reads.
@@ -219,4 +317,9 @@ must read and write another system (PHILOSOPHY), and each names its falsifier be
   vCPUs. On hardware with more cores the worker share grows, up to the 8-core cap.
 - Every future parallel or GPU kernel must follow the same contract: a pure function of a frame
   snapshot, with a main-thread fallback that gives identical answers.
-- The two-slot snapshot is the integration point for phases 2–4.
+- The two-slot snapshot is the integration point for phases 3–4. Phase 2 kept it unchanged: the
+  same slots now live in shared memory.
+- A shared-memory executor adds one rule to that contract: the owner may write into a field only
+  after `reclaim` confirms that no core is still writing there, and it never waits for a core.
+- The app page is cross-origin isolated under `bun dev`/`bun start`. Any future cross-origin no-cors
+  asset on `/` must send CORP, or it will be blocked.

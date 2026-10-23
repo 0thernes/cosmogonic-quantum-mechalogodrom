@@ -17,6 +17,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **The social field runs in shared memory on cross-origin isolated pages (ADR 0019, phase 2).**
+  - **Headers:** `bun dev` and `bun start` now serve the app page and both worker scripts with
+    `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp`.
+    Bun HTML-import routes have no header hook, so `server.ts` mounts the import at `/__app-shell`
+    and re-serves it at `/` over loopback.
+  - **Shared memory:** with `crossOriginIsolated`, both social-field slots live in
+    `SharedArrayBuffer`s. Worker cores read each snapshot in place, write their answers in place,
+    and publish completion through an `Atomics` counter that `collect()` reads without waiting for a
+    message.
+  - **Determinism:** a late core never shares memory with the main thread, which moves the snapshot
+    to fresh buffers instead of waiting. Seeded runs are unchanged.
+  - **Non-isolated pages** (GitHub Pages) keep the copy path. The perf HUD shows
+    `social: 3 cores · shared memory · …` when the shared path runs.
+  - **Measured, 4 vCPUs** (`bun run bench:social-field`, main-thread update median, 3 cores):
+
+    | Main thread               | Organisms | Copied (phase 1) | Shared (phase 2) |
+    | ------------------------- | --------: | ---------------: | ---------------: |
+    | yields between frames     |       25k |  86–96 ms, 88/90 | 84–110 ms, 88/90 |
+    | never yields (`busy` gap) |       10k |    50.0 ms, 0/90 |   25.9 ms, 84/90 |
+    | never yields (`busy` gap) |       25k |   151.8 ms, 0/90 |   81.2 ms, 88/90 |
+
+    When the main thread yields, the two pools are within noise, because the copy is small. When it
+    never yields, copied replies never arrive, and shared cores still answer.
+
 - **The organism simulation now uses every CPU core (ADR 0019).** Above 2,000 organisms, each
   update ends by packing the population into a structure-of-arrays snapshot (`src/sim/social-field.ts`).
   Worker cores (`src/core/social-scan-pool.ts`, `src/workers/social-field-worker.ts`) answer every

@@ -1,13 +1,16 @@
 /**
  * Social-field benchmark (ADR 0019): main-thread EntityManager.update cost at 5k / 10k / 25k
- * organisms, on one core vs with the social field answered by real worker threads.
+ * organisms, on one core vs with the social field answered by real worker threads — copying each
+ * snapshot to the cores (phase 1, any page) and sharing it with them (phase 2, cross-origin
+ * isolated pages; Bun always has SharedArrayBuffer).
  *
- * Bun runs Web Workers, so this drives the same SocialScanPool and worker script the browser uses.
- * Between updates it sleeps `GAP` ms (default 12) as a stand-in for the render time in which the
- * browser's worker replies arrive. It reports medians over steady-state frames and how many frames
- * the worker cores answered. CPU only: no renderer, no GPU cost.
+ * Bun runs Web Workers, so this drives the same pools and worker script the browser uses. Between
+ * updates the main thread spends `GAP` ms (default 12) as a stand-in for render time: `GAP_MODE=sleep`
+ * (default) yields to the event loop, the way a browser frame does; `GAP_MODE=busy` spins without
+ * yielding, a main thread that never lets a reply message in. It reports medians over steady-state
+ * frames and how many frames the worker cores answered. CPU only: no renderer, no GPU cost.
  *
- *   bun run bench:social-field            # GAP=12 POPS=5000,10000,25000 FRAMES=90
+ *   bun run bench:social-field            # GAP=12 GAP_MODE=sleep POPS=5000,10000,25000 FRAMES=90
  */
 import * as THREE from 'three';
 import { mulberry32 } from '../src/math/rng';
@@ -20,7 +23,7 @@ import { EntityManager } from '../src/sim/entities';
 import { LoreEngine } from '../src/sim/lore';
 import { getQuantizationConfig } from '../src/math/quantization';
 import {
-  SocialScanPool,
+  createSocialScanPool,
   socialWorkerCount,
   type SocialWorkerLike,
 } from '../src/core/social-scan-pool';
@@ -28,6 +31,7 @@ import type { AuditTrail } from '../src/logging/audit';
 import type { Entity, SimContext } from '../src/types';
 
 const GAP = Number(process.env.GAP ?? 12);
+const BUSY = process.env.GAP_MODE === 'busy';
 const FRAMES = Number(process.env.FRAMES ?? 90);
 const WARM = Math.min(30, Math.floor(FRAMES / 3));
 const POPS = (process.env.POPS ?? '5000,10000,25000').split(',').map(Number);
@@ -87,12 +91,22 @@ const median = (xs: number[]): number => {
   return s.length === 0 ? 0 : s[s.length >> 1]!;
 };
 
-async function run(pop: number, workers: number) {
+/** Spend `ms` of main-thread time without yielding to the event loop. */
+function spin(ms: number): void {
+  const t = performance.now();
+  while (performance.now() - t < ms);
+}
+
+async function run(pop: number, workers: number, shared: boolean) {
   const ctx = makeCtx(0xb0d6e7, pop);
   const em = new EntityManager(ctx);
   const pool =
     workers > 0
-      ? new SocialScanPool(workers, () => new Worker(WORKER) as unknown as SocialWorkerLike)
+      ? createSocialScanPool(
+          workers,
+          () => new Worker(WORKER) as unknown as SocialWorkerLike,
+          shared,
+        )
       : null;
   em.attachSocialScanner(pool);
   em.reset(pop);
@@ -107,7 +121,8 @@ async function run(pop: number, workers: number) {
     const t0 = performance.now();
     em.update(1 / 60, ctx.state.elapsed);
     if (f >= WARM) ms.push(performance.now() - t0);
-    await Bun.sleep(GAP);
+    if (BUSY) spin(GAP);
+    else await Bun.sleep(GAP);
   }
   const s = em.socialFieldStats();
   pool?.dispose();
@@ -116,12 +131,18 @@ async function run(pop: number, workers: number) {
 
 const cores = navigator.hardwareConcurrency;
 const w = socialWorkerCount(cores);
-console.log(`cores ${cores} · social worker cores ${w} · render gap ${GAP} ms · ${FRAMES} frames`);
+const gap = `${BUSY ? 'busy (never yields)' : 'sleep'} ${GAP} ms`;
+console.log(`cores ${cores} · social worker cores ${w} · render gap ${gap} · ${FRAMES} frames`);
+const cell = (r: { ms: number; offloaded: number; frames: number }): string =>
+  `${r.ms.toFixed(1)} ms (answered ${r.offloaded}/${r.frames})`;
 for (const pop of POPS) {
-  const one = await run(pop, 0);
-  const many = w > 0 ? await run(pop, w) : null;
-  const tail = many
-    ? ` -> ${many.ms.toFixed(1)} ms with ${w} worker cores (answered ${many.offloaded}/${many.frames} frames)`
-    : '';
-  console.log(`pop ${pop}: main-thread update ${one.ms.toFixed(1)} ms on 1 core${tail}`);
+  const one = await run(pop, 0, false);
+  let tail = '';
+  if (w > 0) {
+    const copied = await run(pop, w, false);
+    const shared = typeof SharedArrayBuffer === 'function' ? await run(pop, w, true) : null;
+    tail = ` · ${w} cores, copied ${cell(copied)}`;
+    if (shared) tail += ` · ${w} cores, shared ${cell(shared)}`;
+  }
+  console.log(`pop ${pop}: main-thread update · 1 core ${one.ms.toFixed(1)} ms${tail}`);
 }

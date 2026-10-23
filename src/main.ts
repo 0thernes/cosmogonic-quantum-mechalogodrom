@@ -9,9 +9,11 @@ import { Engine } from './core/engine';
 import { RenderGovernor } from './core/frame-governor';
 import { createWorkerPool } from './core/worker-pool';
 import {
-  SocialScanPool,
+  canShareSocialField,
+  createSocialScanPool,
   formatSocialCompute,
   socialWorkerCount,
+  type SocialScanCores,
   type SocialWorkerLike,
 } from './core/social-scan-pool';
 import { mountPerfHud } from './ui/perf-hud';
@@ -219,7 +221,7 @@ let engine: Engine | null = null;
 let world: World | null = null;
 let rafId = 0;
 let resizeHandler: (() => void) | null = null;
-let socialScanPool: SocialScanPool | null = null;
+let socialScanPool: SocialScanCores | null = null;
 
 function mainLifecycleActive(): boolean {
   return !mainLifecycle.signal.aborted;
@@ -395,13 +397,16 @@ async function boot(): Promise<void> {
 
   // Social-field worker cores (ADR 0019): every frame's organism neighbourhoods are answered from
   // a frame-end snapshot while the GPU renders. A late or failed core is replaced by the identical
-  // main-thread answer, so this never changes the simulation — ?workers=0 still opts out.
+  // main-thread answer, so this never changes the simulation — ?workers=0 still opts out. On a
+  // cross-origin isolated page (COOP/COEP from server.ts) the field lives in shared memory and cores
+  // answer it in place; elsewhere (GitHub Pages cannot send the headers) snapshots are copied.
   const socialCores = socialWorkerCount(navigator.hardwareConcurrency);
   if (typeof Worker !== 'undefined' && searchParams.get('workers') !== '0' && socialCores > 0) {
     const url = new URL('./workers/social-field-worker.js', document.baseURI).href;
-    const socialPool = new SocialScanPool(
+    const socialPool = createSocialScanPool(
       socialCores,
       () => new Worker(url, { type: 'module' }) as unknown as SocialWorkerLike,
+      canShareSocialField(globalThis),
     );
     world.attachSocialScanner(socialPool);
     socialScanPool = socialPool;
@@ -492,11 +497,16 @@ async function boot(): Promise<void> {
       const offloaded = social.offloaded - socialPrev.offloaded;
       const recent = offloaded + (social.local - socialPrev.local);
       socialPrev = { offloaded: social.offloaded, local: social.local };
+      const socialCoreStats = socialScanPool?.stats();
       perfHud.update({
         // Shown only while the social field runs (above 2,000 organisms).
         social:
           recent > 0
-            ? formatSocialCompute(socialScanPool?.stats().workers ?? 0, offloaded / recent)
+            ? formatSocialCompute(
+                socialCoreStats?.workers ?? 0,
+                offloaded / recent,
+                socialCoreStats?.shared,
+              )
             : undefined,
         fps: fpsEma,
         level: governor.level,

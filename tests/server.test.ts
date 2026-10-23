@@ -8,10 +8,13 @@ import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
+  APP_SHELL_PATH,
+  ISOLATION_HEADERS,
   auditPostOriginAllowed,
   copilotEnabled,
   developmentMode,
   docsFileFromPath,
+  isolatedResponse,
   makeRateLimiter,
   parseAuditBody,
   parseChatMessages,
@@ -356,5 +359,57 @@ describe('document file routes — malformed encoded paths', () => {
       expect(resolved!.file.name?.endsWith(filename!)).toBe(true);
       expect(resolved!.type).toBe('text/markdown; charset=utf-8');
     }
+  });
+});
+
+describe('cross-origin isolation — shared-memory social field (ADR 0019 phase 2)', () => {
+  test('the app page and worker scripts opt into COOP same-origin + COEP require-corp', () => {
+    expect(ISOLATION_HEADERS).toEqual({
+      'Cross-Origin-Opener-Policy': 'same-origin',
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+    });
+    // Worker scripts: an isolated page may only start workers whose script carries COEP.
+    expect(serverSource).toContain(
+      "headers: { 'Content-Type': 'application/javascript; charset=utf-8', ...ISOLATION_HEADERS }",
+    );
+    expect(serverSource).toContain("'/workers/social-field-worker.js': secured(workerHandlers(");
+    // The HTML import moves to the internal mount; `/` re-serves it over loopback, isolated.
+    expect(serverSource).toContain('[APP_SHELL_PATH]: index,');
+    expect(serverSource).not.toContain("'/': index,");
+    expect(serverSource).toContain('`http://127.0.0.1:${srv.port}${APP_SHELL_PATH}`');
+    expect(serverSource).toContain('return Response.redirect(APP_SHELL_PATH, 302);');
+    expect(APP_SHELL_PATH).toBe('/__app-shell');
+  });
+
+  test('isolatedResponse keeps status, type and cache headers, adds isolation, drops encoding', async () => {
+    const inner = new Response('<!doctype html><p>shell</p>', {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/html;charset=utf-8',
+        ETag: '"abc"',
+        'Cache-Control': 'no-cache',
+        'Content-Encoding': 'gzip',
+        'Content-Length': '999',
+      },
+    });
+    const res = await isolatedResponse(inner);
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toBe('text/html;charset=utf-8');
+    expect(res.headers.get('etag')).toBe('"abc"');
+    expect(res.headers.get('cache-control')).toBe('no-cache');
+    expect(res.headers.get('content-encoding')).toBeNull();
+    expect(res.headers.get('cross-origin-opener-policy')).toBe('same-origin');
+    expect(res.headers.get('cross-origin-embedder-policy')).toBe('require-corp');
+    expect(await res.text()).toBe('<!doctype html><p>shell</p>');
+  });
+
+  test('HEAD gets the headers and the real length, without a body; errors pass through', async () => {
+    const head = await isolatedResponse(new Response('12345', { status: 200 }), true);
+    expect(head.headers.get('content-length')).toBe('5');
+    expect(head.headers.get('cross-origin-embedder-policy')).toBe('require-corp');
+    expect(await head.text()).toBe('');
+    const missing = await isolatedResponse(new Response('nope', { status: 404 }));
+    expect(missing.status).toBe(404);
+    expect(missing.headers.get('cross-origin-opener-policy')).toBe('same-origin');
   });
 });

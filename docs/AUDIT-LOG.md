@@ -11,6 +11,65 @@ changed and why.
 
 ---
 
+## 2026-10-23 — Shared-memory social field (ADR 0019 phase 2)
+
+- **Change.** `server.ts` now sends COOP `same-origin` and COEP `require-corp` on `/` and on both
+  worker scripts.
+  - Bun HTML-import routes have no header hook. The import is mounted at `/__app-shell`, and `/`
+    re-serves it over loopback. If the loopback fails, `/` redirects to the plain shell.
+  - On a cross-origin isolated page the social field lives in `SharedArrayBuffer`s. Cores claim
+    ranges by compare-and-swap, answer them in place and publish through an `Atomics` counter that
+    `collect()` reads without a message.
+  - Before the main thread writes into a field it calls `reclaim`. If a late core is still writing,
+    the main thread moves the snapshot to fresh buffers instead of waiting.
+  - Non-isolated pages keep the copy path.
+- **COEP asset audit.** `/` loads no cross-origin no-cors subresource: fonts are bundled, textures
+  are under `/textures/`, and the static AI fallback is a CORS `fetch`. In headless Chromium the
+  isolated page reported `crossOriginIsolated: true`, made 0 cross-origin requests and had no
+  blocked loads. Driven at 4,000 organisms, its shared cores answered the field from the third
+  update on. The first two updates always scan locally.
+- **Measured** (`bun run bench:social-field`, pinned Bun 1.3.14, 4-vCPU container, 3 cores,
+  main-thread update median; frames answered out of 90):
+
+  | Main thread               | Organisms | Before (copy, `bb3fd3e9`) |       Copied |        Shared |
+  | ------------------------- | --------: | ------------------------: | -----------: | ------------: |
+  | yields (12 ms sleep)      |       10k |       25.4–33.3 ms, 83–88 | 29.5–36.6 ms |  26.8–34.6 ms |
+  | yields (12 ms sleep)      |       25k |         80.0–104.5 ms, 88 | 86.1–95.7 ms | 83.8–109.8 ms |
+  | never yields (12 ms spin) |       25k |                         — |  151.8 ms, 0 |   81.2 ms, 88 |
+
+  When the main thread yields, the pools are within noise. One snapshot slice costs under 1 ms,
+  and the kernel runs at the same speed on shared and plain buffers (61.5 vs 61.3 ms at 25k). The
+  gain is independence from yielding. Full tables are in
+  [BENCHMARKS](./BENCHMARKS-2026-06-26.md).
+
+- **Falsifiers** (`tests/social-field.test.ts`, 16 new cases; `tests/server.test.ts`, 3):
+  - A core that stalls mid-scan and writes garbage during the update that consumes its snapshot
+    leaves the seeded world bit-identical.
+  - An owner that skips `reclaim` lets the same garbage change the world. This check fires on both
+    the collect path and the reset (dropped-ticket) path.
+  - Mutation checks: removing the claim compare-and-swap, ignoring the completion counter, a lying
+    `reclaim`, or dropping either owner-side `reclaim` call each fail at least one test.
+- **Negative results.**
+  - The first world-level stall test landed its writes between updates. It could not see an owner
+    that skipped `reclaim`, because the next local scan overwrote the writes. The writes now land
+    inside `update()`.
+  - A single-threaded test cannot interleave a core's writes with the main thread's reads at
+    arbitrary points. The guarantee rests on the protocol, and the unit tests pin each transition.
+  - Isolation also enables the ambient `WorkerPool`'s existing `SharedArrayBuffer` input path. That
+    path was not re-measured.
+  - GitHub Pages stays non-isolated. `coi-serviceworker` is a separate evaluation and is not adopted.
+  - The repo-pinned Bun 1.3.14 (`bun run`) copies a `SharedArrayBuffer` in `structuredClone`, though
+    its `postMessage` shares it (Bun 1.4.2 shares in both). The first gate run failed because the
+    fake core cloned with `structuredClone`; it now copies the object graph by hand. Real workers
+    use `postMessage`, and on 1.3.14 they answered 80–88 of 90 never-yielding frames.
+  - The full gate timed out the 30 s `tests/p1-experiment.test.ts` pressure case. It takes 34.7 s
+    under coverage on this 4-vCPU container with Bun 1.3.14, and fails the same way at base
+    `bb3fd3e9`; CI on `main` passed it. The file imports nothing changed here. That one case now has
+    60 s of headroom, following the precedent the previous commit set for a sibling long-run test.
+    Its assertions are unchanged.
+
+---
+
 ## 2026-10-23 — Performance audit: single-thread hot spots → multicore social field (ADR 0019)
 
 - **Profile.** At base `e590f8c4` (4-vCPU container), a 10k-organism frame spent 60 of 88 ms in the

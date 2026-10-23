@@ -302,13 +302,26 @@ export function scanSocialRange(
 /**
  * Something that can answer a packed field elsewhere (worker cores, later a GPU). The owner packs
  * a snapshot, calls {@link dispatch}, and a later update calls {@link collect}: true means every
- * organism's results were copied into the field; false means they were not ready and the owner
- * runs {@link scanSocialRange} itself. Either way the answers are the same, so an executor can
- * change how fast the world runs but never what happens in it.
+ * organism's results are in the field; false means they were not ready and the owner runs
+ * {@link scanSocialRange} itself. Either way the answers are the same, so an executor can change
+ * how fast the world runs but never what happens in it.
+ *
+ * A shared-memory executor (phase 2) also provides {@link makeBuffer} and {@link reclaim}: its cores
+ * read the snapshot and write their answers in the field's own memory, so before writing into a
+ * field (packing it, or scanning it after a false collect) the owner asks {@link reclaim}. False
+ * means a late core may still be writing answers there; the owner then moves to fresh buffers and
+ * leaves the old ones to that core. The owner never waits for a core.
  */
 export interface SocialScanExecutor {
   dispatch(f: SocialFieldBuffers, p: SocialFieldParams, ticket: number): void;
   collect(f: SocialFieldBuffers, ticket: number): boolean;
+  /** Allocator for new fields (e.g. SharedArrayBuffer), so the cores can read them in place. */
+  makeBuffer?(bytes: number): ArrayBufferLike;
+  /**
+   * Take `f` back for this thread to write: cancel any range no core has started. False if a core
+   * is still writing into `f`, or `f` is not memory the cores can share.
+   */
+  reclaim?(f: SocialFieldBuffers): boolean;
 }
 
 /** The snapshot a scan job reads: input arrays trimmed to the `n` packed organisms. */
@@ -368,6 +381,37 @@ const OUTPUT_KEYS = [
   'threatZ',
   'threatCount',
 ] as const satisfies readonly (keyof SocialScanOutputs)[];
+
+/** Per-organism input arrays of a snapshot (the grid's `cellStart` is sized by cells instead). */
+const SNAPSHOT_KEYS = [
+  'px',
+  'py',
+  'pz',
+  'group',
+  'type',
+  'energy',
+  'alive',
+  'hostile',
+  'shelter',
+  'cellItems',
+] as const satisfies readonly (keyof SocialFieldBuffers)[];
+
+/**
+ * Copy `src`'s packed snapshot (inputs and grid, not answers) into `dst`, which must be at least as
+ * large; returns `dst`. Reads only input arrays, which no core ever writes.
+ */
+export function copySocialSnapshot(
+  src: SocialFieldBuffers,
+  dst: SocialFieldBuffers,
+  p: SocialFieldParams,
+): SocialFieldBuffers {
+  const n = src.n;
+  dst.n = n;
+  for (const k of SNAPSHOT_KEYS)
+    (dst[k] as Float32Array).set((src[k] as Float32Array).subarray(0, n));
+  dst.cellStart.set(src.cellStart.subarray(0, gridDim(p) ** 2 + 1));
+  return dst;
+}
 
 /** Copy the packed snapshot out of a field (the field can then be repacked freely). */
 export function copySocialInputs(f: SocialFieldBuffers, p: SocialFieldParams): SocialScanInputs {
@@ -508,4 +552,205 @@ export function isSocialScanOutputs(v: unknown, count: number): v is SocialScanO
     const typed = intArr ? a instanceof Int32Array : a instanceof Float32Array;
     return typed && (a as Int32Array | Float32Array).length === len;
   });
+}
+
+// ── Shared memory: cores answer a field in place (ADR 0019 phase 2) ──────────────────────────────
+
+/**
+ * With cross-origin isolation the field lives in SharedArrayBuffers. Cores read the snapshot where
+ * the owner packed it and write their answers straight into its result arrays, so nothing is
+ * copied, and completion is a counter the owner reads with `Atomics.load`, so it never depends on
+ * the main thread yielding to receive a message.
+ *
+ * Each field has a control block: one word per range, then a completion counter. A word holds the
+ * range's ticket and phase. Every move between phases is an atomic compare-and-swap, so the owner
+ * and a core can never both own a range:
+ *
+ *   owner: dispatch          FREE|DONE → QUEUED(t)
+ *   core:  claim             QUEUED(t) → RUNNING(t), scan in place, → DONE(t), counter + 1
+ *   owner: take back         QUEUED(t) → FREE(t)   (the core then skips the job)
+ *
+ * The owner writes into a field only after taking it back with no range RUNNING. A core that is
+ * still RUNNING keeps the field: the owner moves to fresh buffers instead of waiting for it.
+ */
+export const SHARED_FREE = 0;
+export const SHARED_QUEUED = 1;
+export const SHARED_RUNNING = 2;
+export const SHARED_DONE = 3;
+
+/** Control word for `phase` of `ticket`. Tickets wrap at 2^29; no range lives that long. */
+export function sharedWord(ticket: number, phase: number): number {
+  return ((ticket & 0x1fffffff) << 2) | phase;
+}
+
+/** Fields a core keeps bound at once (two slots, plus fields replaced by growth or a late core). */
+export const SHARED_MAX_BOUND = 4;
+
+/** A field as a core sees it: the shared arrays and the field's control block. */
+export interface SocialSharedBinding {
+  field: SocialFieldBuffers;
+  control: Int32Array;
+}
+
+/** First message to a shared core: its index and the pool's per-core progress counters. */
+export interface SocialSharedInit {
+  kind: 'shared-init';
+  core: number;
+  progress: Int32Array;
+}
+
+/** Shared-memory job: answer organisms `from..to-1` of field `field` in place, as range `range`. */
+export interface SocialSharedJob {
+  kind: 'shared';
+  ticket: number;
+  field: number;
+  range: number;
+  from: number;
+  to: number;
+  n: number;
+  params: SocialFieldParams;
+  /** Present on a core's first job for this field: its buffers (shared by postMessage, not copied). */
+  bind?: SocialSharedBinding;
+}
+
+/** One core's shared-memory state. `bound` is in binding order, which is also eviction order. */
+export interface SocialSharedCore {
+  core: number;
+  progress: Int32Array;
+  bound: Map<number, SocialSharedBinding>;
+}
+
+/** What a core did with a shared job. `invalid` means the job referenced memory it does not hold. */
+export type SocialSharedOutcome = 'answered' | 'skipped' | 'invalid';
+
+/**
+ * Run one shared job on a core: bind the field if the job carries it, claim the range, scan it in
+ * place, publish the answers, then count the job as consumed. A job whose range was taken back or
+ * reassigned to a newer ticket is skipped without touching the field.
+ */
+export function runSocialSharedJob(c: SocialSharedCore, job: SocialSharedJob): SocialSharedOutcome {
+  if (job.bind !== undefined) {
+    c.bound.delete(job.field);
+    c.bound.set(job.field, job.bind);
+    while (c.bound.size > SHARED_MAX_BOUND) c.bound.delete(c.bound.keys().next().value!);
+  }
+  const b = c.bound.get(job.field);
+  let outcome: SocialSharedOutcome = 'skipped';
+  if (
+    b === undefined ||
+    job.range >= b.control.length - 1 ||
+    job.n > b.field.px.length ||
+    gridDim(job.params) ** 2 + 1 > b.field.cellStart.length
+  ) {
+    outcome = 'invalid';
+  } else {
+    const queued = sharedWord(job.ticket, SHARED_QUEUED);
+    const running = sharedWord(job.ticket, SHARED_RUNNING);
+    if (Atomics.compareExchange(b.control, job.range, queued, running) === queued) {
+      scanSocialRange(b.field, job.params, job.from, job.to);
+      Atomics.store(b.control, job.range, sharedWord(job.ticket, SHARED_DONE));
+      Atomics.add(b.control, b.control.length - 1, 1);
+      outcome = 'answered';
+    }
+  }
+  Atomics.add(c.progress, c.core, 1);
+  return outcome;
+}
+
+const isSharedInt32 = (a: unknown): a is Int32Array =>
+  typeof SharedArrayBuffer !== 'undefined' &&
+  a instanceof Int32Array &&
+  a.buffer instanceof SharedArrayBuffer;
+
+/** True when every array of `f` lives in a SharedArrayBuffer (so cores can answer it in place). */
+export function isSharedSocialField(f: SocialFieldBuffers): boolean {
+  if (typeof SharedArrayBuffer === 'undefined') return false;
+  for (const k in f) {
+    const a = f[k as keyof SocialFieldBuffers];
+    if (typeof a !== 'number' && !(a.buffer instanceof SharedArrayBuffer)) return false;
+  }
+  return true;
+}
+
+const validParams = (p: SocialFieldParams | undefined): p is SocialFieldParams =>
+  p !== undefined &&
+  p !== null &&
+  [p.radius, p.budget, p.cell, p.extent].every((x) => typeof x === 'number' && x > 0) &&
+  isInt(p.budget) &&
+  gridDim(p) <= 4096;
+
+/**
+ * Boundary check for a shared binding: shared arrays of the right types and consistent lengths.
+ * Contents are not checked — shared memory can change after any check, and the kernel reads typed
+ * arrays only, so a hostile value can produce a wrong answer but never an out-of-bounds write.
+ */
+function isSocialSharedBinding(v: unknown, p: SocialFieldParams): v is SocialSharedBinding {
+  if (typeof v !== 'object' || v === null) return false;
+  const b = v as Partial<SocialSharedBinding>;
+  const f = b.field;
+  if (!isSharedInt32(b.control) || b.control.length < 2 || typeof f !== 'object' || f === null)
+    return false;
+  if (!(f.px instanceof Float32Array)) return false;
+  const cap = f.px.length;
+  const shared = (a: unknown, ctor: unknown, len: number): boolean =>
+    a instanceof (ctor as typeof Float32Array) &&
+    (a as Float32Array).buffer instanceof SharedArrayBuffer &&
+    (a as Float32Array).length === len;
+  return (
+    shared(f.px, Float32Array, cap) &&
+    shared(f.py, Float32Array, cap) &&
+    shared(f.pz, Float32Array, cap) &&
+    shared(f.group, Int32Array, cap) &&
+    shared(f.type, Int32Array, cap) &&
+    shared(f.energy, Float32Array, cap) &&
+    shared(f.alive, Uint8Array, cap) &&
+    shared(f.hostile, Uint8Array, cap) &&
+    shared(f.shelter, Uint8Array, cap) &&
+    shared(f.cellItems, Int32Array, cap) &&
+    f.cellStart instanceof Int32Array &&
+    shared(f.cellStart, Int32Array, f.cellStart.length) &&
+    f.cellStart.length >= gridDim(p) ** 2 + 1 &&
+    shared(f.near, Int32Array, cap * SOCIAL_NEAREST) &&
+    shared(f.nearD2, Float32Array, cap * SOCIAL_NEAREST) &&
+    OUTPUT_KEYS.every(
+      (k) =>
+        k === 'near' ||
+        k === 'nearD2' ||
+        shared(f[k], f[k] instanceof Int32Array ? Int32Array : Float32Array, cap),
+    )
+  );
+}
+
+/** Boundary check for the first message a shared core receives. */
+export function isSocialSharedInit(v: unknown): v is SocialSharedInit {
+  if (typeof v !== 'object' || v === null) return false;
+  const m = v as Partial<SocialSharedInit>;
+  return (
+    m.kind === 'shared-init' &&
+    isSharedInt32(m.progress) &&
+    isInt(m.core) &&
+    m.core >= 0 &&
+    m.core < m.progress.length
+  );
+}
+
+/** Boundary check for a shared job arriving at a core (its binding, if any, included). */
+export function isSocialSharedJob(v: unknown): v is SocialSharedJob {
+  if (typeof v !== 'object' || v === null) return false;
+  const j = v as Partial<SocialSharedJob>;
+  return (
+    j.kind === 'shared' &&
+    isInt(j.ticket) &&
+    isInt(j.field) &&
+    isInt(j.range) &&
+    isInt(j.from) &&
+    isInt(j.to) &&
+    isInt(j.n) &&
+    j.range >= 0 &&
+    j.from >= 0 &&
+    j.to >= j.from &&
+    j.n >= j.to &&
+    validParams(j.params) &&
+    (j.bind === undefined || isSocialSharedBinding(j.bind, j.params))
+  );
 }

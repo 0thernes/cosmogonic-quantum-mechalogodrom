@@ -63,6 +63,13 @@ The dev server is meant for `localhost`. If you expose it:
    third-party model, so do not paste secrets into it. CSP + `X-Frame-Options`
    are left to the deploy layer because they can break the bundled shell / an
    embedding iframe and need testing against your host.
+   **Cross-origin isolation is built in for the Dome only.** `/` and the two
+   worker scripts carry `Cross-Origin-Opener-Policy: same-origin` and
+   `Cross-Origin-Embedder-Policy: require-corp`, so the page can share memory
+   with its social-field worker cores (ADR 0019). A reverse proxy must pass those
+   headers through, and any cross-origin no-cors asset added to `/` must send
+   `Cross-Origin-Resource-Policy`. `/lab` stays non-isolated on purpose: its CDN
+   p5.js and Google Fonts would be blocked under COEP.
 5. **Pin dependencies** with the committed `bun.lock` and run `bun run check`
    before deploying.
 

@@ -2,7 +2,9 @@
  * Bun fullstack server for the Cosmogonic Quantum Mechalogodrom.
  *
  * Routes:
- * - `/`               → bundled app shell (`index.html`, scripts/styles bundled by Bun)
+ * - `/`               → bundled app shell (`index.html`, scripts/styles bundled by Bun), served
+ *                       cross-origin isolated (COOP/COEP) — see {@link ISOLATION_HEADERS}
+ * - `/__app-shell`    → the same Bun HTML import without isolation headers (internal: `/` re-serves it)
  * - `/docs`           → bundled architecture docs (`docs.html`, mermaid diagrams)
  * - `/lab`            → the self-contained p5.js lab artifact, served as a static
  *                       file (deliberately NOT bundled — it is CDN-only by design)
@@ -17,8 +19,8 @@
  *                       (detail serialized + truncated at storage time; bodies over
  *                       `MAX_BODY_LEN` are rejected with 413; flooding callers get 429 —
  *                       a token bucket shields the ring from eviction-spam)
- * - `/workers/simulation-worker.js`
- *                     → the pre-bundled wilderness worker (dist artifact, else bundled on the fly)
+ * - `/workers/simulation-worker.js`, `/workers/social-field-worker.js`
+ *                     → the pre-bundled workers (dist artifact, else bundled on the fly), with COEP
  * - anything else     → 404
  *
  * Tailwind is applied to the HTML bundles via `bun-plugin-tailwind` (see bunfig.toml).
@@ -365,6 +367,50 @@ const SECURITY_HEADERS: Record<string, string> = {
   'Referrer-Policy': 'no-referrer',
 };
 
+/**
+ * Cross-origin isolation for the app page and its workers (ADR 0019 phase 2). With these headers the
+ * page is `crossOriginIsolated`, so SharedArrayBuffer exists and the organism social field's worker
+ * cores read and answer it in shared memory instead of copying it every frame.
+ *
+ * - COOP `same-origin` puts the page in its own browsing-context group (cross-origin popups lose
+ *   `window.opener`; the app opens none — its outbound links are `noopener` anchors).
+ * - COEP `require-corp` makes every cross-origin no-cors subresource opt in with CORP. The app shell
+ *   loads none: fonts are bundled, textures come from `/textures/`, and the static-deploy AI fallback
+ *   is a CORS `fetch`, which COEP does not gate. `require-corp` rather than `credentialless` because
+ *   Safari implements only `require-corp`.
+ * - Worker scripts carry COEP too: an isolated page may start a dedicated worker only if the
+ *   worker's script response has a compatible embedder policy.
+ *
+ * Hosts that cannot send headers (GitHub Pages) stay non-isolated and use the copy path.
+ */
+export const ISOLATION_HEADERS: Readonly<Record<string, string>> = {
+  'Cross-Origin-Opener-Policy': 'same-origin',
+  'Cross-Origin-Embedder-Policy': 'require-corp',
+};
+
+/** Internal mount of the Bun HTML import; `/` re-serves it with {@link ISOLATION_HEADERS}. */
+export const APP_SHELL_PATH = '/__app-shell';
+
+/**
+ * Re-serve the HTML import's response with {@link ISOLATION_HEADERS}. Bun gives HTML-import routes
+ * no header hook, so `/` fetches {@link APP_SHELL_PATH} over loopback and passes the page on. Its
+ * asset URLs are absolute (`/chunk-….js`, `/_bun/…`), so they resolve the same from `/`. The body is
+ * read whole (the shell is a few KB), and encoding/length headers are dropped because fetch
+ * decodes the body.
+ */
+export async function isolatedResponse(inner: Response, head = false): Promise<Response> {
+  const headers = new Headers(inner.headers);
+  for (const k of ['content-encoding', 'content-length', 'transfer-encoding']) headers.delete(k);
+  for (const k in ISOLATION_HEADERS) headers.set(k, ISOLATION_HEADERS[k]!);
+  const body = await inner.arrayBuffer();
+  if (head) headers.set('content-length', String(body.byteLength));
+  return new Response(head ? null : body, {
+    status: inner.status,
+    statusText: inner.statusText,
+    headers,
+  });
+}
+
 /** Stamp {@link SECURITY_HEADERS} onto a response in place and return it. O(1). */
 export function withSecurityHeaders(res: Response): Response {
   for (const k in SECURITY_HEADERS) res.headers.set(k, SECURITY_HEADERS[k]!);
@@ -560,7 +606,7 @@ function workerHandlers(name: 'simulation-worker' | 'social-field-worker') {
       }
       logRequest(req, 200);
       return new Response(js, {
-        headers: { 'Content-Type': 'application/javascript; charset=utf-8' },
+        headers: { 'Content-Type': 'application/javascript; charset=utf-8', ...ISOLATION_HEADERS },
       });
     },
   };
@@ -583,7 +629,30 @@ if (import.meta.main) {
     port: Number(process.env.PORT) || 3000,
     development: developmentMode(process.env.NODE_ENV),
     routes: {
-      '/': index,
+      [APP_SHELL_PATH]: index,
+      // The app page, cross-origin isolated (see ISOLATION_HEADERS). Loopback to the HTML import:
+      // the server binds every interface (no `hostname`), so 127.0.0.1 always reaches it. If the
+      // loopback fails, redirect to the plain shell: the app still runs, on the copy path.
+      '/': async (req, srv): Promise<Response> => {
+        if (req.method !== 'GET' && req.method !== 'HEAD') {
+          logRequest(req, 405);
+          return new Response('Method Not Allowed', {
+            status: 405,
+            headers: { Allow: 'GET, HEAD' },
+          });
+        }
+        try {
+          const inner = await fetch(`http://127.0.0.1:${srv.port}${APP_SHELL_PATH}`, {
+            headers: { Accept: req.headers.get('Accept') ?? 'text/html' },
+          });
+          logRequest(req, inner.status);
+          return await isolatedResponse(inner, req.method === 'HEAD');
+        } catch (err) {
+          log.warn(`app shell loopback failed (${String(err)}) — serving it without isolation`);
+          logRequest(req, 302);
+          return Response.redirect(APP_SHELL_PATH, 302);
+        }
+      },
       '/docs': serveHtml('docs.html'),
       '/spec': serveHtml('specs.html'),
       '/bible': serveHtml('bible.html'),

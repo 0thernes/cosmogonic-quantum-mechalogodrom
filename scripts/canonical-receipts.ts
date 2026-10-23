@@ -1,6 +1,10 @@
 /**
  * CANONICAL RECEIPTS -- the single source of truth for the repo's measured gate figures.
  *
+ * The shared-memory social field (ADR 0019 phase 2) adds 16 protocol, pool and seeded-world tests and
+ * 3 cross-origin-isolation server tests (+19 from 3588). Measured 2026-10-23 (Bun 1.4.2, Linux,
+ * full-history clone); portable coverage floors remain unchanged.
+ *
  * Browser hybrid routing adds 33 numerical, transport, lifecycle, budget and coordinator tests.
  * The full receipt gate verifies the exact count below; portable coverage floors remain unchanged.
  * Concurrent upstream numerical biome/proposal tests add 9 cases; lifecycle and execution-truth
@@ -49,7 +53,7 @@
  *
  * To update after adding/removing tests: `bun scripts/verify-receipts.ts --print`, paste here, re-sync.
  */
-export const CANONICAL_TEST_COUNT = 3588;
+export const CANONICAL_TEST_COUNT = 3607;
 export const CANONICAL_LINE_COV = '84.64';
 export const CANONICAL_FUNC_COV = '82.21';
 

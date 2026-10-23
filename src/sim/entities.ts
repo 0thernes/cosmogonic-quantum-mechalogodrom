@@ -39,6 +39,7 @@ import type { RenderMode } from './constants';
 import {
   allocSocialField,
   buildSocialGrid,
+  copySocialSnapshot,
   scanSocialRange,
   SOCIAL_NEAREST,
   type SocialScanExecutor,
@@ -507,9 +508,20 @@ export class EntityManager {
    * Route the social-field scan to another executor (e.g. worker cores). The executor must fill the
    * result arrays for all `f.n` organisms with {@link scanSocialRange} semantics and return true, or
    * return false to have this thread scan. Results are identical either way. Null detaches it.
+   *
+   * Snapshots already packed move into fresh buffers from the new executor's allocator (a copy, so
+   * the simulation is unchanged): the old executor's cores may still be writing into the old ones.
    */
   attachSocialScanner(scanner: SocialScanExecutor | null): void {
+    if (scanner === this.socialScanner) return;
     this.socialScanner = scanner;
+    for (const slot of this.socialSlots)
+      if (slot.field !== null)
+        slot.field = copySocialSnapshot(
+          slot.field,
+          this.freshSocialField(slot.field.n),
+          this.socialParams,
+        );
   }
 
   /** How many frames' social fields were answered off this thread vs on it. */
@@ -535,6 +547,13 @@ export class EntityManager {
       this.socialField = slot.field;
       this.socialEnts = slot.ents;
       return;
+    } else if (this.socialScanner?.reclaim?.(slot.field) === false) {
+      // A late core is still writing answers into this snapshot: answer a copy of it here instead.
+      slot.field = copySocialSnapshot(
+        slot.field,
+        this.freshSocialField(slot.field.n),
+        this.socialParams,
+      );
     }
     this.socialField = slot.field;
     this.socialEnts = slot.ents;
@@ -551,15 +570,23 @@ export class EntityManager {
     this.socialScanner?.dispatch(slot.field!, this.socialParams, slot.ticket);
   }
 
+  /** New field buffers for at least `n` organisms, in memory the executor's cores can read. */
+  private freshSocialField(n: number): SocialFieldBuffers {
+    const scanner = this.socialScanner;
+    return allocSocialField(
+      Math.ceil(Math.max(n, this.ctx.quality.maxEntities) * 1.25),
+      this.socialParams,
+      scanner?.makeBuffer ? (bytes) => scanner.makeBuffer!(bytes) : undefined,
+    );
+  }
+
   /** Pack the live population into a slot (positions, tribe, energy, shelter) + its grid. */
   private packSocialField(slot: SocialSlot, parity: number, list: readonly Entity[]): void {
     const n = list.length;
     let f = slot.field;
-    if (f === null || f.px.length < n) {
-      f = allocSocialField(
-        Math.ceil(Math.max(n, this.ctx.quality.maxEntities) * 1.25),
-        this.socialParams,
-      );
+    // Reuse the slot's buffers unless they are too small or a late core may still write into them.
+    if (f === null || f.px.length < n || this.socialScanner?.reclaim?.(f) === false) {
+      f = this.freshSocialField(n);
       slot.field = f;
     }
     const ents = slot.ents;

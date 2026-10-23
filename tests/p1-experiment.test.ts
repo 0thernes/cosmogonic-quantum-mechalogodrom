@@ -45,7 +45,9 @@ describe('P1 experiment harness — mechanics regression guard', () => {
       expect(pressure.fullSurvival).toBeLessThan(cap.fullSurvival);
       expect(pressure.fullSurvival).toBeLessThan(0.7 * B);
     },
-    T,
+    // Two 120-beat regimes: 34.7 s under coverage on a 4-vCPU container with Bun 1.3.14 (same at
+    // base bb3fd3e9), so this case gets 60 s of headroom. The assertions are unchanged.
+    { timeout: 60000 },
   );
 
   test(

@@ -41,6 +41,48 @@ The base column was measured at `e590f8c4` with the earlier probe, which also in
 - **Below the threshold:** at 2,000 organisms or fewer the field is never built, and timings and
   trajectories are those of the exact legacy scan.
 
+### Organism social field in shared memory (ADR 0019 phase 2)
+
+Measured 2026-10-23 in the same 4-vCPU Linux container with 3 social worker cores, on the repo's
+pinned Bun 1.3.14 (`bun run` resolves `node_modules/.bin/bun`). `bun run bench:social-field` now runs
+every population three ways: on one core, with the copy pool (phase 1, any page), and with the
+shared-memory pool (phase 2, cross-origin isolated pages). Bun always has `SharedArrayBuffer`.
+"Before" figures come from the unmodified script at `bb3fd3e9`, on the same runtime and machine. Each
+figure is the median main-thread `EntityManager.update` time over 60 steady-state frames, from seed
+`0xb0d6e7`.
+
+**Default gap (12 ms sleep, which yields like a browser frame).** Ranges span three after-change
+runs. In parentheses: frames the cores answered, out of 90.
+
+| Organisms |         1 core | 3 cores, copied (phase 1) | 3 cores, shared (phase 2) |
+| --------: | -------------: | ------------------------: | ------------------------: |
+|     5,000 |   30.0–32.5 ms |      13.3–16.2 ms (84–88) |      14.4–16.7 ms (83–84) |
+|    10,000 |   53.9–64.4 ms |      29.5–36.6 ms (81–84) |      26.8–34.6 ms (84–85) |
+|    25,000 | 146.0–172.1 ms |         86.1–95.7 ms (88) |        83.8–109.8 ms (88) |
+
+Before the change (`bb3fd3e9`, three clean runs on Bun 1.3.14): 1 core 31.5–32.4 / 53.1–71.6 /
+141.3–157.7 ms, and 3 worker cores 12.2–14.0 / 25.4–33.3 / 80.0–104.5 ms at 5k / 10k / 25k,
+answering 83–88 of 90 frames.
+
+**Never-yielding gap (`GAP_MODE=busy`, 12 ms spin).** One run.
+
+| Organisms |   1 core | 3 cores, copied (phase 1) | 3 cores, shared (phase 2) |
+| --------: | -------: | ------------------------: | ------------------------: |
+|     5,000 |  28.3 ms |               22.7 ms (0) |              12.7 ms (80) |
+|    10,000 |  53.7 ms |               50.0 ms (0) |              25.9 ms (84) |
+|    25,000 | 141.5 ms |              151.8 ms (0) |              81.2 ms (88) |
+
+- **What phase 2 buys.** With the default gap the two pools are within run-to-run noise on this
+  container. The copy is small next to the rest of the update: one snapshot slice costs 0.36–0.72 ms
+  at 10k–25k (synthetic dense field). When the main thread never yields,
+  copy-pool replies never arrive. Every frame then falls back to the main thread, and at 25k the
+  update is slower than one core. Shared cores still answer 80–88 of 90 frames.
+- **No shared-memory access penalty.** On the same synthetic field, `scanSocialRange` took 61.5 ms
+  on `SharedArrayBuffer` versus 61.3 ms on `ArrayBuffer` at 25k, and 25.8 versus 24.8 ms at 10k
+  (interleaved runs; Bun 1.4.2 gave the same picture).
+- **Noise.** One-core 25k medians ranged 141–172 ms across these runs. Treat differences under about
+  15% between pools in the default mode as noise.
+
 ### Browser ambient hybrid compute
 
 Measured 2026-10-23 UTC on Windows, Intel Core Ultra 9 275HX (24 logical processors),
