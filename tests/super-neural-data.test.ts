@@ -51,7 +51,7 @@ const ids = [
   'quantum_basis_probabilities',
   'quantum_metric',
   'quantum_sample_stream',
-  'quantum_qubit_mixedness',
+  'quantum_pair_information',
   'quantum_local_coherence',
   'quantum_entropy_history',
   'quantum_sample_history',
@@ -235,16 +235,31 @@ describe('Neural observatory numeric provenance', () => {
     expect(card(s, 'quantum_basis_probabilities').labels).toHaveLength(64);
   });
 
-  test('single-qubit purity and coherence do not invent pairwise entanglement from P(1)', () => {
+  test('pairwise information comes from amplitudes, never from P(1): Bell = 2 bits, |++⟩ = 0', () => {
+    const s = snapshot();
+    // Bell pair (|00⟩ + |11⟩)/√2 on two qubits: both qubits have P(1) = 0.5 and share 2 bits.
+    s.qubits.probs = [0.5, 0, 0, 0.5];
+    s.qubits.phase = [0, 0, 0, 0];
+    const bell = card(s, 'quantum_pair_information');
+    expect(bell.columns).toBe(2);
+    expect(bell.series[0]!.values[1]).toBeCloseTo(2, 9);
+    expect(bell.series[1]!.values[0]).toBeCloseTo(2, 9);
+    expect(bell.series[0]!.values[0]).toBeCloseTo(1, 9); // diagonal = S(q), maximally mixed
+    // |+⟩|+⟩: the same P(1) = 0.5 marginals, but a product state shares nothing.
+    s.qubits.probs = [0.25, 0.25, 0.25, 0.25];
+    const product = card(s, 'quantum_pair_information');
+    for (const row of product.series) for (const v of row.values) expect(v).toBeCloseTo(0, 9);
+    s.qubits.probs = [0.5, 0.5, 0];
+    expect(card(s, 'quantum_pair_information').warning).toContain('unavailable');
+  });
+
+  test('local coherence and Bloch vectors stay single-qubit measurements', () => {
     const s = snapshot();
     s.qubits.bloch = [
       { x: 1, y: 0, z: 0, r: 1 },
       { x: 0, y: 0, z: 0, r: 0 },
     ];
     s.qubits.p1 = [0.5, 0.5];
-    const mixedness = card(s, 'quantum_qubit_mixedness');
-    expect(mixedness.series[0]!.values).toEqual([1, 0.5]);
-    expect(mixedness.series[1]!.values).toEqual([0, 1]);
     const coherence = card(s, 'quantum_local_coherence');
     expect(coherence.series[0]!.values).toEqual([0.5, 0.5]);
     expect(coherence.series[1]!.values).toEqual([1, 0]);

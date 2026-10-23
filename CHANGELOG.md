@@ -19,6 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   pairwise quantum edges and wall-clock modulation of measurements. IV is explicitly schematic.
 - Corrected controlled-RY and made quantum geometry and qualia observation non-mutating; metric
   determinant/trace, discrete-switch caveats and balanced-cut proxy limitations are explicit.
+- Q · Pairwise quantum mutual information card (replaces single-qubit mixedness): exact
+  I(a:b) = S(a)+S(b)−S(ab) for every qubit pair, computed from the full statevector by
+  `src/math/qubit-pair-info.ts` (Bell pair = 2 bits, GHZ pair = 1 bit, product = 0); the diagonal keeps
+  the single-qubit entropy. The schematic composite MEMORY hub now shows holographic recall confidence
+  instead of the hallucination scalar, and the pantheon MEGA header says "display points", not neurons.
 
 - Separate provisional author-estimate dataset and reader table for all 25 axes, with a declared heuristic rubric, imported rationale and explicit uncalibrated status; canonical assessment scores remain null.
 - Binding CQM-25 version 1.0.0 adoption across the three masters, agent steering and module contract; stable taxonomy and canonical-publication regression gates.

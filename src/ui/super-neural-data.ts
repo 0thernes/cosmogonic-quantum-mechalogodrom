@@ -4,6 +4,7 @@
  */
 import { SUPER_SENSE_CHANNELS, QUANTUM_ASPECTS, type SuperMindSnapshot } from '../sim/super-mind';
 import { SUPER_PLANS } from '../sim/super-creature';
+import { amplitudesFromBorn, pairwiseMutualInformation } from '../math/qubit-pair-info';
 
 /** Complete renderer input: units and source are visible, and invalid measurements remain invalid. */
 export interface NeuralCard {
@@ -177,6 +178,50 @@ function candidates(s: SuperMindSnapshot, novelty: boolean): NeuralCard {
     ...(data.length !== width * depth || o.search.evaluated !== data.length
       ? { warning: 'Candidate shape/count mismatch; missing cells remain unavailable.' }
       : {}),
+  };
+}
+
+/**
+ * Pairwise quantum mutual information of the pure register, computed exactly from the full statevector
+ * (|amplitude| from the Born probabilities, arg from the phases). Off-diagonal cell (a,b) is
+ * I(a:b) = S(a) + S(b) − S(ab) in bits; the diagonal is the single-qubit entropy S(q), a monotone of
+ * the mixedness 1 − r². Never inferred from P(1). Non-power-of-two input yields an unavailable card.
+ */
+function pairInformationCard(probs: readonly number[], phase: readonly number[]): NeuralCard {
+  const base: NeuralCard = {
+    id: 'quantum_pair_information',
+    title: 'Pairwise quantum mutual information',
+    source: 'qubits.probs + qubits.phase (full statevector)',
+    unit: 'bits',
+    note:
+      'Cell (a,b) = I(a:b) = S(a)+S(b)−S(ab), von Neumann, of the pure global register: 0 = uncorrelated, ' +
+      '1 = a GHZ pair, 2 = a Bell pair. Diagonal = single-qubit entropy S(q). Computed from amplitudes, ' +
+      'not from P(1); counts classical plus quantum correlation.',
+    kind: 'heat',
+    series: [],
+    labels: [],
+    range: [0, 2],
+  };
+  const dim = probs.length;
+  if (dim < 4 || (dim & (dim - 1)) !== 0 || phase.length !== dim)
+    return { ...base, warning: 'Statevector shape unavailable; no pairwise matrix computed.' };
+  const amp = amplitudesFromBorn(probs, phase);
+  const pi = pairwiseMutualInformation(amp.re, amp.im);
+  const n = pi.qubits;
+  const at = (a: number, c: number): number => {
+    if (a === c) return pi.single[a]!;
+    const lo = Math.min(a, c);
+    const hi = Math.max(a, c);
+    return pi.mutual[lo * n - (lo * (lo + 1)) / 2 + (hi - lo - 1)]!;
+  };
+  return {
+    ...base,
+    series: Array.from({ length: n }, (_, a) => ({
+      label: 'q' + a,
+      values: Array.from({ length: n }, (_, c) => at(a, c)),
+    })),
+    labels: labels(n, 'q'),
+    columns: n,
   };
 }
 
@@ -540,20 +585,7 @@ export function buildNeuralCards(s: SuperMindSnapshot, history?: NeuralHistory):
         labels: labels(s.eshkol.amplitudes.length, 'adapter q'),
         range: [0, 1],
       },
-      {
-        id: 'quantum_qubit_mixedness',
-        title: 'Single-qubit purity and mixedness',
-        source: 'qubits.bloch[].r',
-        unit: 'purity / normalized deficit',
-        note: 'Purity = (1+r²)/2; normalized mixedness = 1−r². Pure global register; no pairwise entanglement matrix is inferred.',
-        kind: 'bars',
-        series: [
-          { label: 'purity', values: b.map((v) => (1 + v.r * v.r) / 2) },
-          { label: 'mixedness', values: b.map((v) => 1 - v.r * v.r) },
-        ],
-        labels: labels(b.length, 'q'),
-        range: [0, 1],
-      },
+      pairInformationCard(q.probs, q.phase),
       {
         id: 'quantum_local_coherence',
         title: 'Qubit probability and local coherence',

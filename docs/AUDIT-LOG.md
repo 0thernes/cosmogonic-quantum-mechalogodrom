@@ -11,6 +11,22 @@ changed and why.
 
 ---
 
+## 2026-10-23 (local date) — Observatory follow-up: pairwise quantum information, IV labels
+
+- A second, independent pass on the same owner request reached `main` after the 27-card rebuild above
+  landed. That rebuild was kept as the base; only the pieces it did not cover were ported (the duplicate
+  rewrite is preserved on local ref `recovery/observatory-36c2dd5d`).
+- `quantum_qubit_mixedness` → `quantum_pair_information`: for the pure 6-qubit register the pairwise
+  von Neumann mutual information is exactly computable, so the card shows the full n×n matrix (bits;
+  diagonal = single-qubit entropy, a monotone of mixedness) instead of stating that no pairwise matrix
+  is inferred. Math in `src/math/qubit-pair-info.ts`; `tests/qubit-pair-info.test.ts` pins Bell = 2,
+  GHZ = 1, product = 0, complex phases, bounds and index order; the card test shows identical P(1)
+  marginals giving 2 bits (Bell) or 0 (|++⟩).
+- IV (schematic) labels: composite MEMORY hub read `consciousness.hallucinating`; it now reads
+  `holographic.confidence`. The pantheon panel's MEGA header said "320 neurons · live spikes"; it now
+  says "320 display points · 5 bands · schematic".
+- CQM-25: `instrumentation_reproducibility` only; no evidence state changes.
+
 ## 2026-10-22 (local date) — PRIME neural observatory 27-card audit and measurement wiring
 
 - Audited all 27 data visuals in `src/ui/super-neural.ts` across `I · WORLD` (9), `II · COGNITION` (9)

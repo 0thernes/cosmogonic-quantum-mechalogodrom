@@ -33,7 +33,8 @@ styling; it cannot change the measured marks in tabs I–III.
 The quantum layer remains a classical statevector simulation. Controlled-RY is unitary and tested
 on every basis input; geometry uses a scratch register and a copied input. Metric determinant and
 trace are labeled as such, not curvature or speed. Finite differences that cross a discrete gate
-switch are flagged. Single-qubit mixedness is not pairwise entanglement; computational-basis
+switch are flagged. Pairwise quantum mutual information is computed exactly from the full statevector,
+never inferred from single-qubit P(1) or mixedness; computational-basis
 Shannon entropy is not von Neumann entropy. Born samples are explicitly non-destructive observations.
 The balanced-cut linear-entropy proxy remains scoped to its tested partitions and is not IIT Phi.
 
@@ -1813,7 +1814,7 @@ Copilot are constructed boot-stream-neutral and never write sim state, so the go
 
 ### V9 acceptance
 
-Full `bun run check` green: prettier → tsc strict → oxlint → 3471 tests (0 fail, 300-frame golden
+Full `bun run check` green: prettier → tsc strict → oxlint → 3479 tests (0 fail, 300-frame golden
 included) → build. The Copilot sandbox verified live (allow: `git log`, file reads; deny:
 path-escape, repository-root pathspecs, `git push`, `legacy/`, shell redirection).
 

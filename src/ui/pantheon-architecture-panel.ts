@@ -883,7 +883,11 @@ export class PantheonArchitecturePanel {
     ctx.textBaseline = 'top';
     ctx.fillStyle = 'rgba(0,255,220,0.85)';
     ctx.font = '600 9px ui-monospace,monospace';
-    ctx.fillText('MEGA GODLIKE BRAIN · 4D tesseract · 320 neurons · 5 layers · live spikes', 8, 8);
+    ctx.fillText(
+      'MEGA GODLIKE BRAIN · 4D tesseract · 320 display points · 5 bands · schematic',
+      8,
+      8,
+    );
     this.reveal = (this.reveal + 1) % 10000;
   }
 

@@ -52,7 +52,7 @@ echo mode honestly reports its smaller executed search. Signed inputs and scores
 | Quantum   | Basis probabilities   | All 64 Born probabilities of the six-qubit simulated register; phase is separately recorded.                  |
 | Quantum   | Metric                | Finite-difference circuit metric, determinant, trace and Berry component; not scalar curvature.               |
 | Quantum   | Adapter sample stream | Actual marginal probabilities and recorded bits from the seeded classical adapter; no physical entropy claim. |
-| Quantum   | Qubit mixedness       | Single-qubit reduced-state mixedness; no invented pairwise network.                                           |
+| Quantum   | Pair information      | Exact pairwise quantum mutual information from the full statevector; diagonal = single-qubit entropy.         |
 | Quantum   | Local coherence       | Actual single-qubit probabilities and transverse Bloch coherence; these are distinct quantities.              |
 | Quantum   | Entropy history       | Computational-basis Shannon entropy and mean local coherence; not global von Neumann entropy.                 |
 | Quantum   | Born sample history   | Observed non-destructive basis samples; all six bits retained and gaps disclosed.                             |

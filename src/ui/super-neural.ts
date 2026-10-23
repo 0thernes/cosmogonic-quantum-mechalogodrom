@@ -227,7 +227,7 @@ const drawBrain: Drawer = (ctx, w, h, s, t) => {
     clamp01(k.reasoning ?? 0),
     clamp01((k.feeling ?? 0) * 0.5 + 0.5),
     avg(s.quantum.length ? s.quantum : [0.5]),
-    clamp01(k.hallucinating ?? 0),
+    clamp01(s.holographic?.confidence ?? 0), // MEMORY = holographic recall confidence
     clamp01(s.emotion.dominance ?? 0.5),
     clamp01(k.selfAware ?? 0),
   ];
