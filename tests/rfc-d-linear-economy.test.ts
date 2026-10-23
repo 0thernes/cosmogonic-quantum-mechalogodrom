@@ -62,4 +62,19 @@ describe("RFC-D linear resource economy (MVP v0)", () => {
     // There is no public entries()/values() dump by design — size + take/put/transfer only.
     expect(inv.size).toBe(1);
   });
+
+  test("D8: transfer to self is forbidden", () => {
+    const a = new Inventory();
+    a.put(new LinearResource("self"));
+    expect(() => transfer(a, a, "self")).toThrow(/transfer to self/);
+    expect(a.size).toBe(1);
+  });
+
+  test("D9: transfer of missing id throws", () => {
+    const a = new Inventory();
+    const b = new Inventory();
+    expect(() => transfer(a, b, "missing")).toThrow(/missing resource/);
+    expect(a.size).toBe(0);
+    expect(b.size).toBe(0);
+  });
 });

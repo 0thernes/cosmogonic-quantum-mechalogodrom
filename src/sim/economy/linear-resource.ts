@@ -107,7 +107,10 @@ export class Inventory {
   }
 }
 
-/** Move one id from `from` to `to` (no clone). */
+/** Move one id from `from` to `to` (no clone). Rejects self-transfer. */
 export function transfer(from: Inventory, to: Inventory, id: string): void {
+  if (from === to) {
+    throw new Error("RFC-D: transfer to self is forbidden");
+  }
   to.put(from.take(id));
 }
