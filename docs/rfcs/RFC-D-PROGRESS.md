@@ -2,11 +2,12 @@
 
 **Branch:** `feat/rfc-D-linear-alife-economy`  
 **Status:** MVP v0 module ready for review; not yet adopted by Petri/HUD.  
-**Last test run:** 2026-10-22 (America/Los_Angeles) — **11 pass / 0 fail**
+**Last test run:** 2026-10-22 (America/Los_Angeles) — **11 pass / 0 fail** via `bun run test:linear-economy`
 (`rfc-d-linear-economy.test.ts` D1–D9 + `rfc-d-agent-dual-hold.test.ts`).
 
 ## Done
 
+- `package.json` script alias `test:linear-economy` → economy unit tests (preferred over Petri/HUD wiring this slice)
 - `LinearResource` / `Inventory` / `transfer` / dual-hold + self-transfer guards
 - Tests D1–D9 + forager home/field green
 - `docs/rfcs/RFC-D.md` sober MVP summary + Inventory API table

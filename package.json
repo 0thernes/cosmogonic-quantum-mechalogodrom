@@ -78,7 +78,8 @@
     "smoke:visual": "bun scripts/browser-visual-smoke.ts",
     "harvest:tsotchke": "bun scripts/harvest-tsotchke-corpus.ts",
     "sync:tsotchke": "bun scripts/harvest-tsotchke-corpus.ts --sync-mirrors",
-    "build:zig": "bun scripts/build-zig.ts"
+    "build:zig": "bun scripts/build-zig.ts",
+    "test:linear-economy": "bun test tests/rfc-d-linear-economy.test.ts tests/rfc-d-agent-dual-hold.test.ts"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.8",
