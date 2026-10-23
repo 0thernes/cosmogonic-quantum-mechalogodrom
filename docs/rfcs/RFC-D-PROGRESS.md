@@ -1,13 +1,16 @@
 # RFC-D progress note
 
 **Branch:** `feat/rfc-D-linear-alife-economy`  
-**Status:** MVP v0 module ready for review; not yet adopted by Petri/HUD.
+**Status:** MVP v0 module ready for review; not yet adopted by Petri/HUD.  
+**Last test run:** 2026-10-22 (America/Los_Angeles) — **11 pass / 0 fail**
+(`rfc-d-linear-economy.test.ts` D1–D9 + `rfc-d-agent-dual-hold.test.ts`).
 
 ## Done
 
-- `LinearResource` / `Inventory` / `transfer` / dual-hold guard
-- Tests D1–D7 green
-- Explicit non-goals in `docs/rfcs/RFC-D.md`
+- `LinearResource` / `Inventory` / `transfer` / dual-hold + self-transfer guards
+- Tests D1–D9 + forager home/field green
+- `docs/rfcs/RFC-D.md` sober MVP summary + Inventory API table
+- `PR_BODY.md` / `CHANGELOG-RFC-D.md` for Submit quality
 
 ## Why HUD strings are not ownership
 
@@ -25,3 +28,4 @@ agent payload handling. Deferred on purpose — keep this PR small.
 
 - One Petri trade demo using `transfer`
 - Optional harvest gate vs Eshkol LINEAR (separate RFC)
+- Open draft PR when Alex is ready (do not re-spam create_pr)

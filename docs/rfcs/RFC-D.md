@@ -1,27 +1,26 @@
 # RFC-D (MVP v0): Linear resources in CQM (runtime no-clone bag)
 
-**Status:** Implemented locally on `feat/rfc-D-linear-alife-economy`  
-**Target repo:** `0thernes/cosmogonic-quantum-mechalogodrom`  
-**Effort estimate:** Already small; inventory bag is a modest follow-on (hours)
+**Status:** On branch `feat/rfc-D-linear-alife-economy`  
+**Target:** `0thernes/cosmogonic-quantum-mechalogodrom` → `main` (draft when Alex Submits)  
+**Module:** `src/sim/economy/linear-resource.ts`
 
 ## Intent
 
-Give CQM a **runtime** linear bag for simulation resources (genes / payloads): move and consume are allowed; clone and wholesale `copy()` are rejected. This is an **economic / sim invariant**, not a cryptographic security claim and not a claim that Eshkol types enforce it yet.
+A **runtime** linear bag for simulation payloads (genes / tokens): move and
+consume allowed; clone and wholesale copy rejected. This is an **economic /
+sim invariant**, not cryptography and not Eshkol LINEAR enforcement.
 
-## Precise model
+## Inventory API
 
-- `LinearResource`: single-owner token; `consume()` retires it; second use throws.
-- `moveLinearResource`: transfers ownership (source retired).
-- `cloneLinearResource`: always throws (`no-cloning`).
-- `Inventory`: holds resources; `copy()` throws; `take`/`put` move semantics.
+| Symbol | Role |
+|--------|------|
+| `LinearResource` | Single-owner token; `consume()` retires |
+| `Inventory.put` / `take` | Hold / release; dual-hold forbidden |
+| `transfer(from, to, id)` | Move without clone; rejects self-transfer |
+| `cloneLinearResource` | Always throws |
+| `Inventory.copy` | Always throws |
 
-## Non-goals
-
-- No Eshkol LINEAR bridge in this MVP.
-- No petri UI wiring required for merge.
-- Not “quantum money” or real no-cloning physics — simulation law only.
-
-## Acceptance
+## Acceptance (tests)
 
 | ID | Criterion |
 |----|-----------|
@@ -29,8 +28,22 @@ Give CQM a **runtime** linear bag for simulation resources (genes / payloads): m
 | D2 | use-after-consume throws |
 | D3 | move retires source |
 | D4 | `Inventory.copy()` throws |
+| D5 | dual-hold forbidden |
+| D6 | `transfer` moves without clone |
+| D7 | no structured-clone ownership fork |
+| D8 | transfer-to-self forbidden |
+| D9 | transfer missing id throws |
+| + | forager home/field dual-hold (integration-ish) |
 
-## Open questions
+## Non-goals
 
-1. Tombstone spent ids for telemetry vs delete?
-2. When (if ever) to gate harvest on Eshkol LINEAR?
+- No Eshkol LINEAR bridge in this MVP.
+- No Petri / HUD wiring (`superhero-hud.ts` relic strings are cosmetic, not ownership).
+- Not “quantum money” or physical no-cloning — simulation law only.
+
+## Docs on this branch
+
+- `docs/rfcs/RFC-D-PROGRESS.md` — status + pass counts
+- `docs/rfcs/PR_BODY.md` — draft PR text
+- `docs/rfcs/CHANGELOG-RFC-D.md` — fragment
+- `src/sim/economy/README.md` — module pointer
