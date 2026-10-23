@@ -70,6 +70,15 @@ forms and indicators; none of these mechanisms proves sentience.
 
 **Build with the actual Tsotchke folder:** `scripts/harvest-tsotchke-corpus.ts` walks the real local corpus and emits authentic .esk DNA (see generated-tsotchke-seeds.ts + ESK_SAMPLE_PROGRAMS). 26 BIOLOGIC_FORMS keyed across the corpus. Multi-theory consciousness proxies (GNW + real IIT Φ + FEP + Berry/QGT geometry + spin order + irrep symmetry) measurable live. Full bleeding-edge novelty assessment: [AUDIT-LOG.md](AUDIT-LOG.md). Non-fenced mind/evolution/life systems read AND write the wired Tsotchke substrates per PHILOSOPHY. Fenced LLM repos never enter sim. 0.18.0+ master expansion.
 
+The concurrent organism-biology addition is also integrated: physiology and four-channel memory
+follow stable entity identity through deletion, compaction, reuse and Genesis. Its five habitat bands
+and four developmental categories run on the main CPU thread, with accumulated simulation dt and one
+wild entropy salt per batch. They are phenomenological variables, not validated neurobiology.
+`planHybridPartition` is a proposal; actual entity-brain receipts report calling-thread CPU Zig WASM.
+The prototype brain WGSL and exported shard helper are not dispatched by the application. No
+connectome renderer culling, horizontal world enlargement or body morphing follows from their
+estimated parameter outputs. These limitations also apply to upstream `7ae20238` descriptions.
+
 ## Design rules (enforced, not aspirational)
 
 **Documentation sync note (all must match):** README, this ARCHITECTURE-2026-06-26.md, ENTITY-SCHEMA-AND-MAPPINGS-2026-06-26.md, PHILOSOPHY-2026-06-26.md, MODULE-CONTRACTS-2026-06-26.md, TECHNICAL-SPECIFICATION-2026-06-26.md / SPECS, KANBAN, BOOK-2026-06-26.md, AI-SUBSYSTEM-2026-06-26.md, reports, masters/ references, LABS (lab/), and in-app "Dome/World" docs (observatory, help-system, copilot, /docs page via docs-page.ts + mermaid) must stay consistent with code, generated Pages, and GitHub. Current truth is depth-classed Tsotchke wiring + digital biologics petri as core; do not collapse fenced/provenance entries into blanket full-depth wiring.

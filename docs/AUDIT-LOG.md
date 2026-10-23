@@ -11,6 +11,28 @@ changed and why.
 
 ---
 
+## 2026-10-23 (UTC) — Concurrent hybrid/biome integration and execution-truth repair
+
+- Integrated upstream `7ae20238` without discarding either contributor. The browser backend passed
+  its full gate before rebasing; the final merged tree receives a separate complete release gate.
+- Corrected proposal-only GPU/NPU partition labels and heuristic culling estimates. The entity-brain
+  batch helper reports actual calling-thread CPU Zig WASM execution; its worker helper is still
+  outside the worker message protocol. The separate ambient WGSL backend is actually dispatched.
+- Biological memory and physiology now follow entity lifecycle callbacks through dense compaction,
+  slot reuse and Genesis. Active count is independent of scratch capacity, zero dt is inert, and
+  cadence integrates accumulated simulation time. Stable organism IDs drive counter inputs.
+- Replaced per-organism entropy harvesting with one salt per nonzero wild batch. The custom hash
+  retains output compatibility but makes no Philox, bijection or statistical-quality claim.
+  Capability probes dispose late-created resources; World disposal rejects late updates.
+- Preserved five habitat bands and developmental state. Their bounded causal physiology is distinct
+  from horizontal world resizing, body morphing, renderer culling or validated biological models.
+  No mental-status claim, CQM-25 score, or held-out intelligence improvement follows.
+- Added 35 targeted lifecycle/execution tests across the three repair suites. Post-integration portable
+  browser runs passed all 176 numerical/lifecycle assertions on NVIDIA Chrome and Intel Edge, again
+  retaining CPU workers automatically. Both biology-cost samples and their variation are preserved.
+  The final merged commit is admitted only by the complete repository gate; original numerical and
+  negative rendering receipts remain in the benchmark ledger.
+
 ## 2026-10-23 (UTC) — Browser hybrid execution and negative performance evidence
 
 - Continued from `e590f8c4` in the isolated main release checkout. The owner selected browser-only
@@ -53,6 +75,10 @@ changed and why.
   75 kernel and 13 lifecycle checks on installed Chrome.
 
 ## 2026-10-23 (America/Los_Angeles) — Browser Hybrid Compute Engine, Counter-Based Parallel Determinism & 3D Multi-Biome Organism Substrate
+
+> Historical upstream description from `7ae20238`. Its GPU/NPU execution, SIMD, Philox/bijection,
+> active culling/expansion and two noncanonical axis-ID claims are superseded by the corrective entry
+> above and the current module contract. The original description is retained as audit provenance.
 
 - Engineered browser-native / GitHub Pages compatible **Hybrid Compute & 3D Multi-Biome Organism Expansion** across four tracks without lowering visual quality (`Level.FULL`) or neural depth:
   1. **Stateless Philox-2x32 Counter-Based Parallel PRNG (`src/math/wild-entropy.ts`):** Added `philoxCounter32`, `sampleParallelCounter01`, `fillParallelCounterShard`, and `createParallelEntityRng` so CPU worker threads, WebGPU compute workgroups, and WebNN NPU cohorts evaluate `(seed, tick, entityId, channel)` in parallel without sequential `mulberry32` lockstep stalls.

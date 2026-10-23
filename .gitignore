@@ -27,6 +27,7 @@ terminals/
 output/playwright/
 # Reproducible browser hybrid benchmark runs (selected receipts live under bench/browser-hybrid/receipts).
 output/hybrid-browser/
+output/biome-state/
 # On-demand PDF print of the A-Life landscape index (`bun run report:alife-landscape`); the HTML is the tracked source.
 output/alife-landscape/
 law_error.txt

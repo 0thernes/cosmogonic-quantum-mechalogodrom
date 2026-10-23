@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "measuredAt": "2026-10-23T08:53:14.892Z",
+  "measurement": "bio-pool-only-synchronous-CPU-not-world-FPS",
+  "bun": "1.3.14",
+  "os": "win32 10.0.26300",
+  "cpu": "Intel(R) Core(TM) Ultra 9 275HX",
+  "logicalCores": 24,
+  "conditions": "Reusable arrays, mixed strata/life stages, 4 warmups and 12 samples, dt=.2, one complete serial range. Wild salt preparation included; telemetry summarization, rendering, brain controllers, construction and fixture setup excluded.",
+  "sourceSha256": {
+    "src/sim/biome-strata.ts": "327d9867d4a584c7fd4e39cb0796d3b1f22b599f6edc611874407e59f79fccec",
+    "src/math/wild-entropy.ts": "e01982b2506f6418ac249cf3a9bc260599445fa2552844ef9f976e80ef3a2f23"
+  },
+  "sourcesUnchanged": true,
+  "cases": [
+    {
+      "count": 10000,
+      "mode": "seeded",
+      "warmups": 4,
+      "sampleCount": 12,
+      "elapsedSimulationDt": 0.2,
+      "samplesMs": [
+        3.084000000000003, 1.415300000000002, 0.7124999999999986, 0.6968000000000032,
+        0.8438000000000017, 0.694899999999997, 0.6856000000000009, 0.6579999999999941,
+        0.6474999999999937, 0.6417000000000002, 0.7959000000000032, 0.6646000000000001
+      ],
+      "medianMs": 0.6958500000000001,
+      "p95Ms": 3.084000000000003,
+      "finite": true
+    },
+    {
+      "count": 10000,
+      "mode": "one-salt-wild-batch",
+      "warmups": 4,
+      "sampleCount": 12,
+      "elapsedSimulationDt": 0.2,
+      "samplesMs": [
+        0.6944000000000017, 0.691900000000004, 5.500999999999991, 4.072500000000005,
+        5.575999999999993, 5.350099999999998, 2.1814999999999998, 0.7432000000000016,
+        0.7622000000000071, 0.9524000000000115, 1.3105000000000047, 0.7289999999999992
+      ],
+      "medianMs": 1.131450000000008,
+      "p95Ms": 5.575999999999993,
+      "finite": true
+    },
+    {
+      "count": 50000,
+      "mode": "seeded",
+      "warmups": 4,
+      "sampleCount": 12,
+      "elapsedSimulationDt": 0.2,
+      "samplesMs": [
+        3.5020999999999987, 3.649799999999999, 3.986699999999999, 3.9958000000000027, 4.0779,
+        4.0911000000000115, 4.971299999999985, 14.08669999999998, 13.342900000000014,
+        4.171500000000009, 3.7364000000000033, 3.647899999999993
+      ],
+      "medianMs": 4.036850000000001,
+      "p95Ms": 14.08669999999998,
+      "finite": true
+    },
+    {
+      "count": 50000,
+      "mode": "one-salt-wild-batch",
+      "warmups": 4,
+      "sampleCount": 12,
+      "elapsedSimulationDt": 0.2,
+      "samplesMs": [
+        4.141899999999993, 3.660299999999978, 3.712999999999994, 3.6595000000000084,
+        3.7819999999999823, 4.162500000000023, 3.483699999999999, 3.782199999999989,
+        3.471100000000007, 3.6865999999999985, 3.5966999999999985, 3.8211000000000013
+      ],
+      "medianMs": 3.699799999999996,
+      "p95Ms": 4.162500000000023,
+      "finite": true
+    }
+  ],
+  "regression": {
+    "oracleCommit": "7ae20238",
+    "profileCases": 336,
+    "profileMatch": "exact",
+    "kernelEntities": 128,
+    "kernelDt": 0.016,
+    "maxAbsError": 0,
+    "tolerance": 1e-7
+  }
+}

@@ -22,8 +22,8 @@ import {
 } from '../src/sim/biome-strata';
 import { executeHybridShardWorkerKernel } from '../src/workers/simulation-worker';
 
-describe('Track 1: Stateless Philox-2x32 Counter-Based Parallel PRNG', () => {
-  test('philoxCounter32 and sampleParallelCounter01 are pure, bounded in [0, 1), and channel-independent', () => {
+describe('Track 1: Custom deterministic counter hash', () => {
+  test('legacy hash alias and samples repeat, stay bounded, and distinguish the selected channels', () => {
     const u0 = sampleParallelCounter01(0x12345678, 42, 7, 0);
     const u1 = sampleParallelCounter01(0x12345678, 42, 7, 1);
     const u0Repeat = sampleParallelCounter01(0x12345678, 42, 7, 0);
@@ -81,8 +81,8 @@ describe('Track 1: Stateless Philox-2x32 Counter-Based Parallel PRNG', () => {
   });
 });
 
-describe('Track 2 & Track 3: Browser Hybrid Compute Engine (CPU + Zig WASM + WebGPU + WebNN NPU)', () => {
-  test('HYBRID_ENTITY_BRAIN_WGSL defines a valid @compute @workgroup_size(64) 6->6->4 shader', () => {
+describe('Track 2 & Track 3: Capability proposals and synchronous CPU/WASM helpers', () => {
+  test('unintegrated WGSL source contains its documented entrypoint and neural activation', () => {
     expect(HYBRID_ENTITY_BRAIN_WGSL).toContain('@compute @workgroup_size(64)');
     expect(HYBRID_ENTITY_BRAIN_WGSL).toContain(
       'fn main(@builtin(global_invocation_id) gid: vec3<u32>)',
@@ -90,7 +90,7 @@ describe('Track 2 & Track 3: Browser Hybrid Compute Engine (CPU + Zig WASM + Web
     expect(HYBRID_ENTITY_BRAIN_WGSL).toContain('tanh(acc)');
   });
 
-  test('detectHybridHardware returns valid capability profile and planHybridPartition schedules CPU + GPU + NPU cohorts', async () => {
+  test('capability detection and hypothetical CPU/GPU/NPU partition retain proposal semantics', async () => {
     const detected = await detectHybridHardware(50);
     expect(detected.cpuLogicalCores).toBeGreaterThanOrEqual(1);
     const baseline = getBaselineHybridHardware();
@@ -100,7 +100,8 @@ describe('Track 2 & Track 3: Browser Hybrid Compute Engine (CPU + Zig WASM + Web
       cpuLogicalCores: 16,
       workerCount: 15,
       sharedArrayBufferAvailable: true,
-      zigWasmSimdAvailable: true,
+      zigWasmAvailable: true,
+      zigWasmSimdAvailable: false,
       webGpuComputeAvailable: true,
       webGpuAdapterName: 'NVIDIA RTX WebGPU',
       webNnNpuAvailable: true,
@@ -108,6 +109,8 @@ describe('Track 2 & Track 3: Browser Hybrid Compute Engine (CPU + Zig WASM + Web
     };
 
     const plan = planHybridPartition(50_000, 600_000, fullCaps);
+    expect(plan.kind).toBe('proposal-only');
+    expect(plan.proposedConnectomeLinks).toBe(plan.activeConnectomeLinks);
     expect(plan.shards.length).toBeGreaterThanOrEqual(4);
     expect(plan.gpuAssignedEntities + plan.npuAssignedEntities + plan.cpuAssignedEntities).toBe(
       50_000,
@@ -118,7 +121,7 @@ describe('Track 2 & Track 3: Browser Hybrid Compute Engine (CPU + Zig WASM + Web
     expect(plan.connectomeCameraCullRatio).toBeLessThan(1.0);
   });
 
-  test('executeHybridEntityBrainBatch and executeHybridShardWorkerKernel produce finite, shard-invariant outputs', () => {
+  test('direct CPU/WASM batch and shard helpers produce finite, shard-invariant outputs', () => {
     const count = 32;
     const weights = new Float32Array(count * 70);
     const inputs = new Float32Array(count * 6);
@@ -141,7 +144,7 @@ describe('Track 2 & Track 3: Browser Hybrid Compute Engine (CPU + Zig WASM + Web
       expect(Math.abs(fullOut[i]!)).toBeLessThanOrEqual(2.0);
     }
 
-    // Compare against 2 worker shards of 16 entities each
+    // Directly invoke two synchronous helpers; this is not a worker-dispatch test.
     const half = 16;
     const shard0 = executeHybridShardWorkerKernel(
       weights.subarray(0, half * 70),

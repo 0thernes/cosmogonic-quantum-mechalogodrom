@@ -43,6 +43,15 @@ organisms are not the visible core fauna, and this backend does not accelerate t
 controllers, the Archons, the visible connectome or WebGL rendering. The auxiliary substrate-summary
 duplication described below remains. Neither auxiliary offload is a substitute for the next stages.
 
+The concurrent organism-biology addition is also integrated: physiology and four-channel memory
+follow stable entity identity through deletion, compaction, reuse and Genesis. Its five habitat bands
+and four developmental categories run on the main CPU thread, with accumulated simulation dt and one
+wild entropy salt per batch. They are phenomenological variables, not validated neurobiology.
+`planHybridPartition` is a proposal; actual entity-brain receipts report calling-thread CPU Zig WASM.
+The prototype brain WGSL and exported shard helper are not dispatched by the application. No
+connectome renderer culling, horizontal world enlargement or body morphing follows from their
+estimated parameter outputs. These limitations also apply to upstream `7ae20238` descriptions.
+
 ### Target ownership and migration order
 
 ```mermaid

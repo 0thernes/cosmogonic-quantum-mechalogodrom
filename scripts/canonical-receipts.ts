@@ -3,8 +3,8 @@
  *
  * Browser hybrid routing adds 33 numerical, transport, lifecycle, budget and coordinator tests.
  * The full receipt gate verifies the exact count below; portable coverage floors remain unchanged.
- * Browser Hybrid Compute Engine + Counter-Based Parallel Determinism + 3D Multi-Biome Organism
- * Substrate adds 9 tests in `tests/hybrid-compute-biome.test.ts` (+9 from 3497 -> 3506).
+ * Concurrent upstream numerical biome/proposal tests add 9 cases; lifecycle and execution-truth
+ * repairs are counted by the exact tracked-suite receipt below.
  *
  * Brain IV provenance, invalid quantum inputs and actual circuit-control capture add 12 tests.
  * The full receipt gate verifies the exact count below; portable coverage floors remain unchanged.
@@ -49,7 +49,7 @@
  *
  * To update after adding/removing tests: `bun scripts/verify-receipts.ts --print`, paste here, re-sync.
  */
-export const CANONICAL_TEST_COUNT = 3539;
+export const CANONICAL_TEST_COUNT = 3574;
 export const CANONICAL_LINE_COV = '84.64';
 export const CANONICAL_FUNC_COV = '82.21';
 

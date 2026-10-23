@@ -1,13 +1,13 @@
 /**
  * WebGPU detection and progressive enhancement support.
  *
- * Detects WebGPU availability at runtime and provides fallback to WebGL2.
- * This enables invisible performance improvements on capable devices while
- * maintaining full compatibility across all platforms.
+ * Detects adapter availability without creating a device or dispatching work.
+ * Rendering continues through its existing WebGL path. Capability detection
+ * alone establishes neither an active compute backend nor a performance gain.
  */
 
 export interface WebGpuCapabilities {
-  /** WebGPU is available and can be used */
+  /** A WebGPU adapter was obtained; device/workload support remains untested. */
   available: boolean;
   /** Adapter information (if available) */
   adapter?: string;
@@ -72,7 +72,7 @@ export async function detectWebGpu(
     }
 
     // Adapter available - we won't request detailed info to avoid TypeScript compatibility issues
-    // The presence of an adapter is sufficient for progressive enhancement
+    // Adapter presence is capability evidence only; execution needs a separate device/workload probe.
     return {
       available: true,
       adapter: 'WebGPU Adapter Available',

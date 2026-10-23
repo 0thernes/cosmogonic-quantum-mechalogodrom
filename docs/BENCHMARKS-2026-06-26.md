@@ -72,6 +72,37 @@ remain distinct from the final passing
 [NVIDIA lifecycle](../bench/browser-hybrid/receipts/integration-nvidia-chrome.json) and
 [Intel lifecycle](../bench/browser-hybrid/receipts/integration-intel-edge.json) receipts.
 
+After integrating upstream `7ae20238`, the portable runner repeated all 176 assertions against the
+merged source: [Chrome kernel](../bench/browser-hybrid/receipts/postmerge-kernel-chrome.json),
+[Edge kernel](../bench/browser-hybrid/receipts/postmerge-kernel-msedge.json),
+[Chrome lifecycle](../bench/browser-hybrid/receipts/postmerge-integration-chrome.json) and
+[Edge lifecycle](../bench/browser-hybrid/receipts/postmerge-integration-msedge.json). These receipts
+include source/bundle manifests and retain every timing sample. Automatic selection again retained
+CPU workers; the full visible simulation is outside these tests.
+
+#### Biology pool cost after lifecycle and entropy repairs
+
+A separate bounded Bun 1.3.14 CPU-only experiment uses reusable arrays, mixed habitat/stage inputs,
+actual dt=0.2, four warmups and twelve samples. Seed preparation is included; World packing,
+telemetry summarization, rendering and neural controllers are excluded. Run
+`bun bench/biome-state.bench.ts`; it writes raw samples/hashes under `output/biome-state/`.
+
+| Population | Mode                | Initial median / sample p95 (ms) | Portable repeat median / sample p95 (ms) |
+| ---------: | ------------------- | -------------------------------: | ---------------------------------------: |
+|     10,000 | Seeded              |                    0.696 / 3.084 |                            2.643 / 3.263 |
+|     10,000 | One-salt wild batch |                    1.131 / 5.576 |                            0.762 / 2.069 |
+|     50,000 | Seeded              |                   4.037 / 14.087 |                            3.723 / 4.070 |
+|     50,000 | One-salt wild batch |                    3.700 / 4.163 |                          10.203 / 16.412 |
+
+The [initial receipt](../bench/biome-receipts/initial.json) and
+[portable repeat](../bench/biome-receipts/postmerge.json) retain substantial run-to-run variation.
+These short samples are not stabilized throughput estimates, browser FPS, or a before/after speedup.
+No explanation of the outliers is established. Both runs also compare 336 developmental profiles
+exactly against pinned upstream `7ae20238`, plus every state/output lane for a 128-organism kernel at
+its original 16ms step (maximum absolute error zero). That allocation-refactor control deliberately
+uses the legacy slot counter IDs; it does not claim full trajectory equivalence after lifecycle,
+stable-identity and elapsed-time corrections.
+
 #### Production rendering remains a separate bottleneck
 
 A bounded actual-World check under the GitHub Pages project path, installed Chrome/NVIDIA,

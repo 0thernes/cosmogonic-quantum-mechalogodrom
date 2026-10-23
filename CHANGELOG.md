@@ -19,11 +19,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   brains, connectomes, graphics and NPU inference are not migrated by this change. ADR 0010 records
   the remaining state-ownership, GPU-residency, expanded-world and deeper-organism work.
 
+- Reconciled the concurrent biome substrate with actual execution: routing plans are explicitly
+  proposals, CPU Zig WASM calls emit backend receipts, and NPU detection never implies inference.
+  Fixed biological state ownership through entity compaction, reuse and Genesis, accumulated elapsed
+  simulation time, active population bounds and batch-scoped entropy. Five habitat bands and four
+  developmental categories remain phenomenological mechanisms; horizontal world expansion and
+  rendered morphology/culling are not implemented by their parameter outputs. The custom counter
+  hash is no longer misidentified as validated Philox.
 
-- **Browser Hybrid Compute Engine, Counter-Based Parallel Determinism & 3D Multi-Biome Organism Substrate:**
-  - `src/math/wild-entropy.ts`: 4-round stateless Philox-2x32 counter PRNG (`philoxCounter32`, `sampleParallelCounter01`, `fillParallelCounterShard`, `createParallelEntityRng`) eliminating sequential single-thread PRNG lockstep stalls across parallel CPU/GPU/NPU shards.
-  - `src/core/hybrid-compute.ts` & `src/workers/simulation-worker.ts`: Browser Hybrid Compute Engine (`HYBRID_ENTITY_BRAIN_WGSL` WebGPU compute shader, `detectHybridHardware` probing CPU logical cores / `SharedArrayBuffer` / Zig WASM SIMD / WebGPU / WebNN NPU `navigator.ml`, `planHybridPartition`, `executeHybridEntityBrainBatch`, and `executeHybridShardWorkerKernel`).
-  - `src/sim/biome-strata.ts` & `src/world.ts`: 5-stratum 3D ecological habitat (`hadal_abyss`, `benthic_reef`, `quantum_thermocline`, `photonic_canopy`, `aetherial_crown`), $\sqrt{N/10000}$ habitat envelope expansion above 10,000 entities (`computeHabitatEnvelope`), 4 developmental organism life stages (`larval_spore`, `juvenile_forager`, `mature_symbiont`, `elder_apex`), and SoA `OrganismBioStatePool` (3-channel neuromodulation `dopamine`/`serotonin`/`noradrenaline` + 4-channel recurrent working memory `memoryTrace`).
 - Rebuilt all 27 PRIME neural-observatory cards with actual source fields, explicit units and limits,
   exact values and JSON export. Histories advance on observed cognitive ticks, not repaints;
   running/suspended/frozen status, sample age, delivery age and skipped ticks are visible.

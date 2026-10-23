@@ -104,13 +104,12 @@ export function createDualModeRng(seed: number, wild = _wildEntropyMode): Rng {
 }
 
 /**
- * 4-round Philox-2x32 stateless counter-based bijection (`(seed, tick, entityId, channel) -> uint32`).
- *
- * Eliminates the single-thread sequential RNG lockstep bottleneck: any CPU worker thread,
- * WebGPU compute workgroup, or NPU cohort can evaluate `(seed, tick, entityId, channel)` in
- * arbitrary parallel order and obtain the exact same bit-reproducible uint32 word.
+ * Custom deterministic counter hash: `(seed, tick, entityId, channel) -> uint32`.
+ * Evaluation order does not change a seeded result. This is not the published Philox
+ * algorithm, a bijection of this input tuple, or a statistically validated random generator.
+ * Keep the mixing operations stable for compatibility with existing seeded trajectories.
  */
-export function philoxCounter32(seed: number, tick: number, entityId: number, channel = 0): number {
+export function counterHash32(seed: number, tick: number, entityId: number, channel = 0): number {
   let c0 = (entityId ^ Math.imul(channel >>> 0, 0x9e3779b9)) >>> 0;
   let c1 = (tick ^ Math.imul(channel >>> 0, 0x85ebca6b)) >>> 0;
   let k0 = (seed ^ 0x243f6a88) >>> 0;
@@ -118,8 +117,8 @@ export function philoxCounter32(seed: number, tick: number, entityId: number, ch
 
   for (let round = 0; round < 4; round++) {
     const prodLo = Math.imul(c0, 0xd2511f53) >>> 0;
-    const prodHi = Math.imul(c0 ^ (c0 >>> 16), 0xcd9e8d57) >>> 0;
-    const next0 = (prodHi ^ c1 ^ k0) >>> 0;
+    const mixedHi = Math.imul(c0 ^ (c0 >>> 16), 0xcd9e8d57) >>> 0;
+    const next0 = (mixedHi ^ c1 ^ k0) >>> 0;
     const next1 = (prodLo ^ k1) >>> 0;
     c0 = next0;
     c1 = next1;
@@ -131,10 +130,27 @@ export function philoxCounter32(seed: number, tick: number, entityId: number, ch
 }
 
 /**
- * Stateless parallel uniform sample in `[0, 1)`.
+ * @deprecated Historical misnomer. Use counterHash32; this alias preserves its exact output.
+ */
+export const philoxCounter32 = counterHash32;
+
+/**
+ * Prepare one seed for an entire counter-hash batch. Wild mode harvests exactly one salt;
+ * seeded mode harvests none. Reuse this returned seed across every shard with `wild=false`.
+ * Callers skip this function for zero-delta updates. No hidden global batch state is retained.
+ */
+export function prepareParallelCounterSeed(seed: number, tick: number, wild = false): number {
+  return wild
+    ? (seed ^ Number(harvestHardwareJitter64(seed ^ tick) & 0xffffffffn)) >>> 0
+    : seed >>> 0;
+}
+
+/**
+ * Counter-hash sample normalized to `[0, 1)`; no distribution-quality claim is made.
  * - In **Seeded Reproducible Mode** (`wild = false`): pure O(1) function of `(seed, tick, entityId, channel)`
  *   — 100% invariant to thread count, shard size, or execution order.
- * - In **Wild Quantum-Chaos Mode** (`wild = true`): XORs hardware timing/CSPRNG salt into the seed.
+ * - With `wild=true`, this convenience function harvests a fresh salt per call. Hot loops instead
+ *   call prepareParallelCounterSeed once and use its result here with `wild=false`.
  */
 export function sampleParallelCounter01(
   seed: number,
@@ -146,12 +162,14 @@ export function sampleParallelCounter01(
   const effectiveSeed = wild
     ? (seed ^ Number(harvestHardwareJitter64(seed ^ tick ^ entityId) & 0xffffffffn)) >>> 0
     : seed >>> 0;
-  return philoxCounter32(effectiveSeed, tick, entityId, channel) / 4294967296;
+  return counterHash32(effectiveSeed, tick, entityId, channel) / 4294967296;
 }
 
 /**
  * Fill a contiguous `Float32Array` slice for a shard `[startEntity, startEntity + count)`
- * using stateless parallel counter evaluation. Safe for multi-worker `SharedArrayBuffer` shards.
+ * using counter evaluation. Callers own disjoint output slices. For wild partition invariance,
+ * prepare one shared batch seed first and pass `wild=false` to each shard. Float32 storage can
+ * round a normalized value up to 1; the scalar sample above retains JavaScript-number precision.
  */
 export function fillParallelCounterShard(
   out: Float32Array,
@@ -162,12 +180,11 @@ export function fillParallelCounterShard(
   channel = 0,
   wild = false,
 ): Float32Array {
-  const n = Math.max(0, Math.min(count, out.length));
-  const effectiveSeed = wild
-    ? (seed ^ Number(harvestHardwareJitter64(seed ^ tick ^ startEntity) & 0xffffffffn)) >>> 0
-    : seed >>> 0;
+  const n = Number.isFinite(count) ? Math.max(0, Math.min(Math.trunc(count), out.length)) : 0;
+  if (n === 0) return out;
+  const effectiveSeed = prepareParallelCounterSeed(seed, tick, wild);
   for (let i = 0; i < n; i++) {
-    out[i] = philoxCounter32(effectiveSeed, tick, startEntity + i, channel) / 4294967296;
+    out[i] = counterHash32(effectiveSeed, tick, startEntity + i, channel) / 4294967296;
   }
   return out;
 }

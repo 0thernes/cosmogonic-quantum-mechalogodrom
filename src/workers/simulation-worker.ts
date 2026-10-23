@@ -16,7 +16,10 @@
 import { simulateWildernessData } from '../sim/wilderness-population';
 import { stepOct2026WaveSubstrates } from '../sim/tsotchke-oct2026-wave';
 import { sampleParallelCounter01 } from '../math/wild-entropy';
-import { executeHybridEntityBrainBatch } from '../core/hybrid-compute';
+import {
+  executeHybridEntityBrainBatchWithReceipt,
+  type HybridEntityBrainExecution,
+} from '../core/hybrid-compute';
 
 const workerSelf = self as unknown as {
   postMessage(message: WorkerResponse, transfer?: Transferable[]): void;
@@ -89,8 +92,9 @@ export function executeSimulationWorkerKernel(
 }
 
 /**
- * Off-thread Hybrid Compute shard kernel for multi-core CPU / Zig WASM entity-brain
- * evaluation paired with stateless Philox-2x32 counter-based parallel entropy.
+ * Synchronous CPU/WASM shard helper paired with deterministic counter-hash samples.
+ * The current WorkerMessage protocol does not dispatch this helper. A direct caller runs
+ * it on its own thread; its presence in this module does not establish off-thread execution.
  *
  * Evaluates a contiguous shard of `count` entities (each with 6 inputs, 70 weights,
  * and 4 outputs) without any sequential PRNG lockstep dependency across threads.
@@ -102,16 +106,27 @@ export function executeHybridShardWorkerKernel(
   seed: number,
   frame: number,
   shardStartIndex = 0,
-): { outputs: Float32Array; entropyProbe: Float32Array; backendUsed: 'zig-wasm-simd' | 'cpu-f32' } {
-  const safeCount = Math.max(0, Math.floor(count));
+): HybridEntityBrainExecution & { entropyProbe: Float32Array } {
+  if (
+    !Number.isSafeInteger(count) ||
+    count < 0 ||
+    !Number.isSafeInteger(shardStartIndex) ||
+    shardStartIndex < 0 ||
+    count > Math.floor(weights.length / 70) ||
+    count > Math.floor(inputs.length / 6)
+  )
+    throw new RangeError('Entity-brain shard count or input buffers are invalid');
+  const safeCount = count;
   const outputs = new Float32Array(safeCount * 4);
   const entropyProbe = new Float32Array(safeCount);
-  executeHybridEntityBrainBatch(
+  const receipt = executeHybridEntityBrainBatchWithReceipt(
     weights,
     inputs,
     outputs,
     {
+      kind: 'proposal-only',
       totalEntities: safeCount,
+      proposedConnectomeLinks: 0,
       activeConnectomeLinks: 0,
       shards: [
         {
@@ -134,7 +149,7 @@ export function executeHybridShardWorkerKernel(
   for (let i = 0; i < safeCount; i++) {
     entropyProbe[i] = sampleParallelCounter01(seed, frame, shardStartIndex + i, 0);
   }
-  return { outputs, entropyProbe, backendUsed: 'zig-wasm-simd' };
+  return { ...receipt, entropyProbe };
 }
 
 function isWorkerMessage(value: unknown): value is WorkerMessage {

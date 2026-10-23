@@ -1864,7 +1864,7 @@ Copilot are constructed boot-stream-neutral and never write sim state, so the go
 
 ### V9 acceptance
 
-Full `bun run check` green: prettier → tsc strict → oxlint → 3539 tests (0 fail, 300-frame golden
+Full `bun run check` green: prettier → tsc strict → oxlint → 3574 tests (0 fail, 300-frame golden
 included) → build. The Copilot sandbox verified live (allow: `git log`, file reads; deny:
 path-escape, repository-root pathspecs, `git push`, `legacy/`, shell redirection).
 
@@ -2242,17 +2242,45 @@ never decoration.
 - Determinism (ADR 0004) unchanged: the mechalogodrom still draws zero rng; the brain's percept
   gains one clamped dimension fed only by the shells' own mathematics.
 
-## Browser Hybrid Compute Engine & 3D Multi-Biome Organism Substrate contract (2026-10-23)
+## Browser compute proposals and organism bio-state contract (2026-10-23)
 
-Owner directive: eliminate the single-threaded sequential RNG lockstep and fixed-arena $O(N^2)$ crowding bottlenecks across browser/GitHub Pages runtimes without lowering visual fidelity or neural intelligence, while expanding the 3D ecological habitat and internal organism physiology.
+This amendment reconciles upstream 7ae20238 with the measured ambient backend above. A routing
+proposal is not an execution receipt. Preserve visual settings and complete controller models;
+capability detection alone cannot claim GPU, NPU, SIMD, worker execution or improved intelligence.
 
-| Module                             | Exclusive responsibility                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/math/wild-entropy.ts`         | Stateless 4-round Philox-2x32 counter-based parallel PRNG (`philoxCounter32`, `sampleParallelCounter01`, `fillParallelCounterShard`, `createParallelEntityRng`) alongside Dual-Mode Wild Quantum-Chaos entropy (`setWildEntropyMode`, `createWildQuantumRng`)                                                                                                                                                                                        |
-| `src/core/hybrid-compute.ts`       | Browser Hybrid Compute Engine (`HYBRID_ENTITY_BRAIN_WGSL` `@compute @workgroup_size(64)` shader, `detectHybridHardware` probing CPU cores / `SharedArrayBuffer` / Zig WASM SIMD / WebGPU / WebNN NPU `navigator.ml`, `planHybridPartition`, and `executeHybridEntityBrainBatch`)                                                                                                                                                                     |
-| `src/sim/biome-strata.ts`          | 5-stratum 3D ecological habitat (`hadal_abyss`, `benthic_reef`, `quantum_thermocline`, `photonic_canopy`, `aetherial_crown`), $\sqrt{N/10000}$ habitat envelope expansion above 10,000 entities (`computeHabitatEnvelope`), 4 developmental organism life stages (`evaluateOrganismLifeStage`), and SoA `OrganismBioStatePool` (3-channel neuromodulation `dopamine`/`serotonin`/`noradrenaline` + 4-channel recurrent working memory `memoryTrace`) |
-| `src/workers/simulation-worker.ts` | Off-thread Web Worker execution for both Zig WASM Tsotchke wave kernels (`executeSimulationWorkerKernel`) and parallel counter-seeded neural shards (`executeHybridShardWorkerKernel`)                                                                                                                                                                                                                                                               |
+- Backend owner: `src/core/hybrid-compute.ts`, `src/math/wild-entropy.ts`, worker helper and their tests.
+  `planHybridPartition` is explicitly proposal-only. Actual entity-brain execution reports the
+  calling-thread CPU Zig WASM export and processed count, with zero GPU/NPU entities. Its compatibility
+  wrapper still returns the array. The shader string is an unintegrated prototype; the shard helper
+  is not dispatched by the current worker message protocol. No JS fallback or SIMD proof is invented.
+  WebGPU/WebNN probes have bounded deadlines and dispose acquired devices/contexts, including late
+  results. Detection is separate from activity. The custom `counterHash32` is order independent in
+  seeded mode; `philoxCounter32` is a deprecated output-compatible alias, not validated Philox or a
+  bijection. `prepareParallelCounterSeed` harvests one salt per nonzero wild batch, reused across shards.
+- Bio-state owner: `src/sim/biome-strata.ts` and lifecycle tests. A pool implements
+  `swapEntitySlots`, `clearEntitySlot`, `resetEntitySlots`; memory and physiology follow stable entity
+  identity through dense-list moves, deaths, reuse and reset. `stepShard` accepts actual active count
+  separately from allocated capacity and optional stable entity IDs. Zero dt is an exact no-op;
+  positive dt uses the actual elapsed simulation time, including accumulated cadence intervals.
+- World owner: the biome integration sections of `src/world.ts` and integration tests. Compose the
+  brain and bio-state lifecycle callbacks. Accumulate scaled simulation dt, prepare one batch seed,
+  and process one explicit CPU-main range. Proposed accelerator shards never dictate actual execution
+  labels. Telemetry reports observed frame, count, elapsed dt and coupling. Genesis clears accumulated
+  time and state. NHI entities do not receive this extra physical coupling. Ordinary energy is clamped
+  to its real [0,100] domain; this feature adds no artificial minimum-energy floor. Disposal invalidates
+  pending capability callbacks. Existing ambient calibration and pause safeguards remain intact.
 
-- **Counter-based parallel determinism:** `sampleParallelCounter01(seed, tick, entityId, channel, false)` is a pure $O(1)$ bijection invariant to shard count and thread execution order. Evaluating 1 shard vs. 16 reversed shards produces bit-identical `Float32Array` outputs (`tests/hybrid-compute-biome.test.ts`).
-- **Golden compatibility at $\le 10,000$ entities:** `computeHabitatEnvelope(population)` preserves `horizontalScale === 1.0` and `verticalScale === 1.0` for `population <= 10,000` so all existing headless golden tests remain untouched, while scaling horizontally by $\sqrt{N/10000}$ and vertically by $1 + 0.45 \log_2(N/10000)$ at `ultra` (25k) and `mega` (50k) tiers.
-- **CQM-25 axes:** `substrate_pluralism`, `visual_embodied_scale`, `instrumentation_reproducibility`, `homeostasis_vital_regulation`, and `morphogenesis_development`.
+Five vertical habitat bands, four developmental categories, three named neuromodulatory scalars and
+four memory channels are bounded phenomenological simulation mechanisms. Vertical habitat scale feeds
+bio dynamics. Horizontal envelope size, bioScale and estimated connectome culling do not themselves
+resize the world, morph rendered bodies or cull rendered edges. Additional state is not evidence of
+richer intelligence, biological equivalence, sentience or consciousness.
+
+CQM-25 scope: `substrate_pluralism`, `instrumentation_reproducibility`, `visual_embodied_scale`,
+`environmental_coupling`, `homeostasis`, `morphology_development`, `memory` and `individuality`.
+Controls include fixed seeded inputs, reversed shard order with one shared salt, real EntityManager
+compaction/reuse/Genesis, zero delta and mismatched scratch capacity. Execution receipts must agree
+with actual invoked backends. Stale identity/state, per-organism entropy harvesting, elapsed-time loss,
+leaked late probe resources or a claimed accelerator without dispatch falsify these implementation
+claims. Scores remain null and no held-out capability gain is inferred. Source-pinned tests and raw
+browser receipts are recorded in the living benchmark document and newest audit entry.

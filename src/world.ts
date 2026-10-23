@@ -58,7 +58,11 @@ import {
 import { ALGOS, ALGO_GLYPHS, ALGO_IGNITE } from './sim/algorithms';
 import { SONGS, SFX_EXTRA_BANDS } from './audio/songs';
 import { mulberry32, createIsolatedStreams, type Rng } from './math/rng';
-import { isWildEntropyMode, setWildEntropyMode } from './math/wild-entropy';
+import {
+  isWildEntropyMode,
+  prepareParallelCounterSeed,
+  setWildEntropyMode,
+} from './math/wild-entropy';
 import { OrganismBioStatePool, type OrganismBioTelemetry } from './sim/biome-strata';
 import {
   detectHybridHardware,
@@ -511,6 +515,21 @@ export interface WorldOptions {
   developmentDiagnostics?: boolean;
 }
 
+/** Observed biology execution, deliberately separate from an accelerator routing proposal. */
+export interface OrganismBiomeExecution {
+  readonly kind: 'execution';
+  readonly backend: 'cpu-main';
+  readonly frame: number;
+  readonly population: number;
+  readonly elapsedSimulationSeconds: number;
+  readonly entropyMode: 'seeded' | 'wild-batch';
+  /** Captured once for replay of this batch; null when the population is empty. */
+  readonly batchSeed: number | null;
+  readonly coupledEntities: number;
+  readonly gpuExecutedEntities: 0;
+  readonly npuExecutedEntities: 0;
+}
+
 export class World {
   private readonly engine: Engine;
   private readonly quality: QualityProfile;
@@ -578,8 +597,9 @@ export class World {
   private workerSimInFlight = false;
   /** Multi-biome 3D ecological strata + 3-channel neuromodulation + 4-channel working memory pool. */
   private readonly organismBioPool: OrganismBioStatePool;
-  /** Scratch vectors for parallel shard stepping of OrganismBioStatePool (zero per-frame alloc). */
+  /** Reused input/output vectors for the calling-thread biology batch. */
   private readonly bioYPositions: Float32Array;
+  private readonly bioEntityIds: Uint32Array;
   private readonly bioEnergies: Float32Array;
   private readonly bioAges: Float32Array;
   private readonly bioLives: Float32Array;
@@ -587,12 +607,15 @@ export class World {
   private readonly bioVelYDelta: Float32Array;
   private readonly bioEnergyDelta: Float32Array;
   private readonly bioScaleMul: Float32Array;
-  /** Detected hybrid CPU + Zig WASM + WebGPU + WebNN NPU hardware capabilities. */
+  /** Capability probes describe availability, never which backend executed this biology batch. */
   private hybridHardware: HybridHardwareCapabilities;
+  /** Actual scaled simulation time since the previous biology sample. Pause adds no time. */
+  private bioElapsed = 0;
   /** Latest 3D biome & developmental organism bio-state telemetry summary. */
   private latestBiomeSummary: OrganismBioTelemetry | null = null;
-  /** Latest hybrid multi-core CPU / WebGPU / WebNN NPU partition plan. */
+  /** Hypothetical routing only; the current biology batch executes on the main CPU thread. */
   private latestHybridPlan: HybridWorkloadPlan | null = null;
+  private latestBiomeExecution: OrganismBiomeExecution | null = null;
   /** Entity neural-net axon web (proximity links, activation propagation, GraphMind writer). */
   public readonly connectome: Connectome;
   /** Ambient numeric population; its renderer is intentionally absent, not visible core fauna. */
@@ -1945,9 +1968,9 @@ export class World {
       this.organismIntelligence.signal,
       this.entities.organismGoals,
     );
-    this.entities.attachBrainSlotLifecycle(this.entityBrains);
     this.organismBioPool = new OrganismBioStatePool(this.quality.maxEntities);
     this.bioYPositions = new Float32Array(this.quality.maxEntities);
+    this.bioEntityIds = new Uint32Array(this.quality.maxEntities);
     this.bioEnergies = new Float32Array(this.quality.maxEntities);
     this.bioAges = new Float32Array(this.quality.maxEntities);
     this.bioLives = new Float32Array(this.quality.maxEntities);
@@ -1955,16 +1978,13 @@ export class World {
     this.bioVelYDelta = new Float32Array(this.quality.maxEntities);
     this.bioEnergyDelta = new Float32Array(this.quality.maxEntities);
     this.bioScaleMul = new Float32Array(this.quality.maxEntities);
+    this.attachOrganismBioLifecycle();
     this.hybridHardware = getBaselineHybridHardware();
     if (
       typeof navigator !== 'undefined' &&
       ('gpu' in navigator || 'ml' in (navigator as unknown as Record<string, unknown>))
     ) {
-      void detectHybridHardware()
-        .then((caps) => {
-          this.hybridHardware = caps;
-        })
-        .catch(() => undefined);
+      void this.probeOrganismHardware();
     }
     this.superScene = ctx.scene;
     // 5 SUPER CREATURES (GOAL5 Archons/Godforms): World.GODFORMS from exclusive godform.ts source.
@@ -2492,6 +2512,8 @@ export class World {
    */
   setWildMode(enabled: boolean): void {
     this.wilderness.invalidatePending();
+    // Do not apply elapsed seeded time as live physical coupling after a mode transition.
+    if (enabled !== isWildEntropyMode()) this.bioElapsed = 0;
     setWildEntropyMode(enabled);
     if (!enabled) {
       this.browserComputeGeneration++;
@@ -2538,14 +2560,132 @@ export class World {
     return this.latestBiomeSummary;
   }
 
-  /** Returns the latest hybrid CPU / WebGPU / WebNN NPU workload partition plan. */
+  /** Proposal only: these assignments neither dispatch work nor measure accelerator execution. */
   getHybridWorkloadPlan(): HybridWorkloadPlan | null {
     return this.latestHybridPlan;
   }
 
-  /** Returns the detected hybrid hardware capabilities (CPU cores, SAB, Zig WASM, WebGPU, WebNN NPU). */
+  /** Capability availability is distinct from the observed backend in getBiomeExecution(). */
   getHybridHardware(): HybridHardwareCapabilities {
     return this.hybridHardware;
+  }
+
+  /** Last completed CPU-main biology batch, including the captured counter seed for replay. */
+  getBiomeExecution(): OrganismBiomeExecution | null {
+    return this.latestBiomeExecution;
+  }
+
+  /** A late capability result must not mutate a disposed World. The probe owns its resources. */
+  private async probeOrganismHardware(): Promise<void> {
+    if (this.disposeAbort.signal.aborted) return;
+    try {
+      const caps = await detectHybridHardware();
+      if (!this.disposeAbort.signal.aborted) this.hybridHardware = caps;
+    } catch {
+      // Capability discovery is optional; retain the baseline on a failed probe.
+    }
+  }
+
+  /** Both recurrent controllers follow EntityManager's stable compaction/reuse/reset lifecycle. */
+  private attachOrganismBioLifecycle(): void {
+    this.entities.attachBrainSlotLifecycle({
+      swapEntitySlots: (a, b) => {
+        this.entityBrains.swapEntitySlots(a, b);
+        this.organismBioPool.swapEntitySlots(a, b);
+      },
+      clearEntitySlot: (slot) => {
+        this.entityBrains.clearEntitySlot(slot);
+        this.organismBioPool.clearEntitySlot(slot);
+      },
+      resetEntitySlots: () => {
+        this.entityBrains.resetEntitySlots();
+        this.organismBioPool.resetEntitySlots();
+        this.bioElapsed = 0;
+        this.latestBiomeSummary = null;
+        this.latestBiomeExecution = null;
+        this.latestHybridPlan = null;
+      },
+    });
+  }
+
+  /** Sample current organisms on the wave cadence using actual accumulated simulation time. */
+  private advanceOrganismBiome(dt: number, stride: number): void {
+    if (
+      this.disposeAbort.signal.aborted ||
+      this.state.timeScale <= 0 ||
+      !Number.isFinite(dt) ||
+      dt <= 0
+    )
+      return;
+    this.bioElapsed += dt;
+    const interval = Number.isFinite(stride) ? Math.max(1, Math.trunc(stride)) : 1;
+    if (this.state.frame % interval !== 0) return;
+    const elapsed = this.bioElapsed;
+    this.bioElapsed = 0;
+    const list = this.entities.list;
+    const count = Math.min(list.length, this.organismBioPool.capacity);
+    for (let i = 0; i < count; i++) {
+      const e = list[i]!;
+      this.bioYPositions[i] = e.position.y;
+      this.bioEntityIds[i] = e.userData.ecologyId ?? i;
+      this.bioEnergies[i] = e.userData.energy;
+      this.bioAges[i] = e.userData.age;
+      this.bioLives[i] = e.userData.life;
+      this.bioActivations[i] = e.userData.act;
+    }
+    this.latestHybridPlan = planHybridPartition(count, this.connectome.links, this.hybridHardware);
+    const wild = Boolean(this.computeCadence && this.isWildMode());
+    // One captured salt per nonempty batch, outside the organism loop. Every sample uses a stable
+    // ecology ID rather than its movable dense-list index. No sequential simulation RNG is consumed.
+    const batchSeed =
+      count > 0 ? prepareParallelCounterSeed(this.persisted.seed, this.state.frame, wild) : null;
+    if (batchSeed !== null) {
+      // Proposal shards are intentionally not execution instructions. This is one real CPU-main range.
+      this.organismBioPool.stepShard(
+        this.bioYPositions,
+        this.bioEnergies,
+        this.bioAges,
+        this.bioLives,
+        this.bioActivations,
+        this.bioVelYDelta,
+        this.bioEnergyDelta,
+        this.bioScaleMul,
+        0,
+        count,
+        batchSeed,
+        this.state.frame,
+        this.state.chaos,
+        elapsed,
+        false,
+        count,
+        this.bioEntityIds,
+      );
+    }
+    this.latestBiomeSummary = this.organismBioPool.summarize(count);
+    let coupledEntities = 0;
+    // Preserve the seeded reference's ordinary motion/energy. In browser Wild Mode this additional
+    // phenomenological biology drives buoyancy and nutrient energy, never the NHI motion authority.
+    if (wild) {
+      for (let i = 0; i < count; i++) {
+        const e = list[i]!;
+        if (e.userData.isNhi) continue;
+        e.userData.vel.y += this.bioVelYDelta[i]!;
+        e.userData.energy = clamp(e.userData.energy + this.bioEnergyDelta[i]!, 0, 100);
+        coupledEntities++;
+      }
+    }
+    this.latestBiomeExecution = Object.freeze({
+      kind: 'execution',
+      backend: 'cpu-main',
+      frame: this.state.frame,
+      population: count,
+      elapsedSimulationSeconds: elapsed,
+      entropyMode: wild ? 'wild-batch' : 'seeded',
+      batchSeed,
+      coupledEntities,
+      gpuExecutedEntities: 0,
+      npuExecutedEntities: 0,
+    });
   }
 
   /** Advance one frame. rawDt is the unclamped clock delta in seconds. */
@@ -3055,6 +3195,7 @@ export class World {
     // QRNG chaotic Bell-Toeplitz stream, Eshkol 4th-order Taylor tower + 3D divergence/curl) + Wave-2
     // (rosette-wire, pq-consensus-bandwidth, GeoRefine, bonsai-fidelity-study) Zig WASM cadence.
     const waveStride = this.computeCadence?.tsotchkeWaveStride ?? 12;
+    this.advanceOrganismBiome(dt, waveStride);
     if (s.frame % waveStride === 0) {
       const coh = clamp(1 - s.chaos / CHAOS_MAX, 0, 1);
       const ent = clamp((s.entropy ?? 0) / ENTROPY_MAX, 0, 1);
@@ -3062,55 +3203,6 @@ export class World {
       if (this.computeCadence && isWildEntropyMode()) {
         const wildQrng = evaluateQrngQuantumChaosStream(s.frame, true);
         this.lastWildQrngHex = wildQrng.wordHex;
-      }
-      // Step the 5-stratum 3D Biome & Developmental Organism Bio-State Pool across parallel shards
-      // using stateless Philox-2x32 counter entropy (zero sequential PRNG draw; 100% golden-neutral).
-      const list = this.entities.list;
-      const bioCount = Math.min(n, this.organismBioPool.capacity);
-      for (let i = 0; i < bioCount; i++) {
-        const e = list[i];
-        if (!e) continue;
-        this.bioYPositions[i] = e.position.y;
-        this.bioEnergies[i] = e.userData.energy;
-        this.bioAges[i] = e.userData.age;
-        this.bioLives[i] = e.userData.life;
-        this.bioActivations[i] = e.userData.act;
-      }
-      this.latestHybridPlan = planHybridPartition(
-        bioCount,
-        this.connectome.links,
-        this.hybridHardware,
-      );
-      const wildActive = Boolean(this.computeCadence && isWildEntropyMode());
-      for (const shard of this.latestHybridPlan.shards) {
-        this.organismBioPool.stepShard(
-          this.bioYPositions,
-          this.bioEnergies,
-          this.bioAges,
-          this.bioLives,
-          this.bioActivations,
-          this.bioVelYDelta,
-          this.bioEnergyDelta,
-          this.bioScaleMul,
-          shard.startSlot,
-          shard.endSlot,
-          this.persisted.seed,
-          s.frame,
-          s.chaos,
-          dt * waveStride,
-          wildActive,
-        );
-      }
-      this.latestBiomeSummary = this.organismBioPool.summarize(bioCount);
-      // In live browser Wild Mode, couple 3D biome vertical buoyancy & neuromodulation back into
-      // organism vertical stratification so creatures colonize all 5 vertical strata dynamically.
-      if (wildActive) {
-        for (let i = 0; i < bioCount; i++) {
-          const e = list[i];
-          if (!e || e.userData.isNhi) continue;
-          e.userData.vel.y += this.bioVelYDelta[i]!;
-          e.userData.energy = clamp(e.userData.energy + this.bioEnergyDelta[i]!, 5, 100);
-        }
       }
       if (this.workerPool && !this.workerSimInFlight && !this.browserComputeCalibrating) {
         this.workerSimInFlight = true;
