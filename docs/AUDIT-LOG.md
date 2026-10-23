@@ -11,6 +11,27 @@ changed and why.
 
 ---
 
+## 2026-10-23 (local date) — IV · BRAIN rebuilt as a measured module connectome
+
+- Owner asked again whether all four tabs, including IV's two Brain views, are live data. I–III were
+  (cards rebuilt on 2026-10-22). IV was a labelled schematic: COMPOSITE edges were the mean of two
+  endpoint scalars with clock-driven pulses, orbiting satellites and a 36-dot sine ring; MEGA 4D drew
+  420 points from `latent[i mod 16]`, `quantum[i mod 10]` and per-"EEG band" sine waves, joined by an
+  index-XOR pattern.
+- `src/ui/super-neural-brain.ts` (pure) now builds one graph per snapshot: 16 modules = the computing
+  stages of `think()` with exact output copies (TinyMLP parameter counts sum to `paramCount` = 10,081),
+  and 31 flows traced from the code (e.g. affect reads senses 0/1/4, organ aggregate 0, `reasoned[0]`,
+  `imagined[0]`; meta reads latent, imagined, reasoned, organ aggregates, quantum, affect, self-model),
+  each carrying the exact values passed. CONNECTOME = flow map (node = output RMS, strip = values,
+  line = √RMS carried). MEGA 4D = modules on the 16 tesseract vertices, every value a dot (~395),
+  view angle a function of the cognition tick. No wall clock anywhere in IV.
+- Correction to the 2026-10-23 deep report: the self-model reads the imagined winner, not the latent.
+- Proof: `tests/super-neural-brain.test.ts` — module values equal their snapshot fields; parameter sum
+  = 10,081; every flow joins real modules and its carried values equal the snapshot fields it names;
+  same graph ⇒ identical drawing; tick turns MEGA; changing any module changes both drawings.
+- CQM-25: `instrumentation_reproducibility`, `visual_embodied_scale` (observability only). No evidence
+  state changes.
+
 ## 2026-10-23 (local date) — Observatory follow-up: pairwise quantum information, IV labels
 
 - A second, independent pass on the same owner request reached `main` after the 27-card rebuild above

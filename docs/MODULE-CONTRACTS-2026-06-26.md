@@ -43,8 +43,13 @@ fixed snapshots produce identical charts independent of wall time; duplicate/pau
 history and simulation trajectories unchanged; invalid samples are visibly rejected as measurements;
 all 27 cards have source metadata and exportable numeric data. Browser checks cover all tabs,
 running/suspended/frozen transitions and narrow-screen overflow. Snapshot copies and card building
-occur on the existing observatory cadence; bounded chart data are cached between paints. The IV
-brain illustration is explicitly schematic and does not inherit the measurement claims of I–III.
+occur on the existing observatory cadence; bounded chart data are cached between paints. IV · BRAIN
+(`src/ui/super-neural-brain.ts`) draws one measured graph two ways: 16 modules holding exact copies of
+their snapshot outputs (parameter counts summing to `paramCount`) and the 31 data flows `think()`
+performs, each carrying the exact values passed. CONNECTOME is a flow map; MEGA 4D puts each module on
+a tesseract vertex and every value on a dot, turning only per cognition tick. Positions are layout;
+dots are model variables, not neurons; flows are code paths, not axons
+(`tests/super-neural-brain.test.ts`).
 
 ## CQM-25 capability law (canonical framework)
 
@@ -1814,7 +1819,7 @@ Copilot are constructed boot-stream-neutral and never write sim state, so the go
 
 ### V9 acceptance
 
-Full `bun run check` green: prettier → tsc strict → oxlint → 3479 tests (0 fail, 300-frame golden
+Full `bun run check` green: prettier → tsc strict → oxlint → 3485 tests (0 fail, 300-frame golden
 included) → build. The Copilot sandbox verified live (allow: `git log`, file reads; deny:
 path-escape, repository-root pathspecs, `git push`, `legacy/`, shell redirection).
 

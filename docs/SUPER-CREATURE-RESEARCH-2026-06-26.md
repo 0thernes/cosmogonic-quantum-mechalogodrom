@@ -78,10 +78,17 @@ The balanced-cut linear-entropy statistic omits unbalanced cuts: the tested `GHZ
 counterexample remains positive despite a separable cut. Participation ratio can be maximal for
 constant equal activations without any causal interaction. Neither statistic is IIT Phi.
 
-IV's Composite / Mega 4D remains an explicitly **schematic illustration**: its geometry, synthetic
-rhythms and signal motifs are not a reconstructed connectome, recorded neural spikes, measured EEG,
-or a consciousness test. The misleading repaint-driven synthetic spike history has been removed.
-Its illustrative time now follows cognition ticks rather than browser time.
+IV · BRAIN is now a **measured module connectome**, not an illustration. Its 16 nodes are the
+computing modules of `SuperMind.think()` (senses, cortex, 30 organs, imagitron, thought search,
+predictor, reasoner, self-model, affect, quantum net, qubit register, reservoir, spin instinct,
+memory, meta, plan), each holding an exact copy of its output this tick; their TinyMLP parameter
+counts sum to the mind's 10,081. Its 31 lines are the data flows the code performs, each carrying
+the exact values passed (or the slice the receiver reads), sized by their RMS. CONNECTOME draws
+these as a flow map with each node's actual values as a bar strip; MEGA 4D places the 16 modules on
+the 16 vertices of a tesseract and every measured value (~395) as one dot, turning only when a new
+cognition tick arrives. The former synthetic EEG bands, sine-driven spikes, XOR "axons", traveling
+pulses and orbiting satellites are gone. Positions remain layout, dots are model variables rather
+than neurons, flows are code paths rather than axons, and none of it is a consciousness test.
 
 Relevant CQM-25 axes: `instrumentation_reproducibility`, `visual_embodied_scale`,
 `substrate_pluralism`, and `causal_integration`. This audit improves evidence fidelity without

@@ -19,6 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   pairwise quantum edges and wall-clock modulation of measurements. IV is explicitly schematic.
 - Corrected controlled-RY and made quantum geometry and qualia observation non-mutating; metric
   determinant/trace, discrete-switch caveats and balanced-cut proxy limitations are explicit.
+- **IV · BRAIN is measured.** `src/ui/super-neural-brain.ts` builds one graph from the PRIME snapshot:
+  16 computing modules with exact copies of their outputs (parameter counts summing to 10,081) and the
+  31 data flows `think()` performs, each carrying the exact values passed. CONNECTOME draws it as a
+  flow map with each module's values as a bar strip; MEGA 4D puts the modules on the 16 tesseract
+  vertices and each of ~395 measured values on a dot, turning only per cognition tick. Replaces the
+  schematic (synthetic EEG bands, sine spikes, XOR "axons", traveling pulses, orbiting satellites).
 - Q · Pairwise quantum mutual information card (replaces single-qubit mixedness): exact
   I(a:b) = S(a)+S(b)−S(ab) for every qubit pair, computed from the full statevector by
   `src/math/qubit-pair-info.ts` (Bell pair = 2 bits, GHZ pair = 1 bit, product = 0); the diagonal keeps
