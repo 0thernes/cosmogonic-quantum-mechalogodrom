@@ -270,8 +270,91 @@ export interface SuperMindIntent {
   quantum: number[];
 }
 
+/** Source channels in the exact order consumed by the cortex after top-down modulation. */
+export const SUPER_SENSE_CHANNELS = [
+  'energy',
+  'threat',
+  'crowding',
+  'chaos',
+  'wealthRel',
+  'preyClose',
+  'rivalClose',
+  'pull',
+  'light',
+  'sound',
+  'priorValence',
+  'priorArousalWithBroadcast',
+  'priorDominance',
+  'memoryMean',
+  'priorSurprise',
+  'offspringFraction',
+  'phaseSin',
+  'phaseCos',
+] as const;
+
+const OBSERVATORY_PERCEPT_KEYS = [
+  'energy',
+  'threat',
+  'crowding',
+  'chaos',
+  'wealthRel',
+  'preyClose',
+  'rivalClose',
+  'pull',
+  'light',
+  'sound',
+  'phase',
+] as const;
+
+/** Completed cognition sample for presentation. All arrays/objects are owned copies, never scratch views. */
+export interface SuperMindObservatorySnapshot {
+  /** Advances once per completed think(), never on snapshot reads or browser paints. */
+  tick: number;
+  /** No sample exists before the first think; full/echo describes the last completed beat. */
+  mode: 'unstarted' | 'full' | 'echo';
+  activeDepths: number;
+  variantsPerDepth: number;
+  /** Original World input, before this mind's top-down changes; null before the first beat. */
+  rawPercept: SuperPercept | null;
+  /** Eighteen actual cortex inputs, indexed by SUPER_SENSE_CHANNELS; signed channels remain signed. */
+  senses: number[];
+  /** Current reasoner output and final recursively predicted latent, respectively. */
+  reasoned: number[];
+  predicted: number[];
+  /** Raw output pairs in organ index order; attention gains and aggregate channels are separate. */
+  organOutputs: number[];
+  organAttention: number[];
+  organAggregates: number[];
+  /** Raw MLP outputs; these are computational activations, not measured feelings or self-awareness. */
+  affectOutputs: number[];
+  selfModel: number[];
+  actionOutputs: number[];
+  /** Final scores actually used by the planner argmax, in SUPER_PLANS order. Not probabilities. */
+  planScores: number[];
+  /** Final decoded intent values returned to World; dominance is projected dominance, not emotion. */
+  drives: {
+    move: { x: number; y: number; z: number };
+    aggression: number;
+    deception: number;
+    dominance: number;
+    spawn: number;
+    curiosity: number;
+  };
+  /** Only evaluated candidates, depth-major with variantsPerDepth entries per depth. No invented tree. */
+  search: {
+    scores: number[];
+    novelty: number[];
+    selectedVariants: number[];
+    evaluated: number;
+  };
+  /** Real bounded memory ring, newest first; empty means no stored observations. */
+  memory: { mean: number; values: number[] };
+}
+
 /** Read-only telemetry snapshot. */
 export interface SuperMindSnapshot {
+  /** Source-stamped data for the World/Cognition observatory cards. */
+  observatory: SuperMindObservatorySnapshot;
   paramCount: number;
   depths: number;
   variants: number;
@@ -649,6 +732,38 @@ export class SuperMind {
   /** #87/#91: Hebbian fast weights — within-life plastic overlay (Butlin RPT). */
   private readonly plastic = new FastWeights(LATENT, 0.3, 0.12, 3);
   private readonly organActs = new Float32Array(SUPER_ORGANS);
+  // Observatory captures are bounded, preallocated, and never feed computation back into the model.
+  private observationTick = 0;
+  private observationMode: 'unstarted' | 'full' | 'echo' = 'unstarted';
+  private observationDepths = 0;
+  private observationVariants = 0;
+  private readonly observedPercept: SuperPercept = {
+    energy: 0,
+    threat: 0,
+    crowding: 0,
+    chaos: 0,
+    wealthRel: 0,
+    preyClose: 0,
+    rivalClose: 0,
+    pull: 0,
+    light: 0,
+    sound: 0,
+    phase: 0,
+  };
+  private readonly observedOrganOutputs = new Float32Array(SUPER_ORGANS * 2);
+  private readonly observedOrganAttention = new Float64Array(SUPER_ORGANS);
+  private readonly observedPlanScores = new Float64Array(SUPER_PLANS.length);
+  private readonly observedSearchScores = new Float32Array(SUPER_DEPTHS * SUPER_VARIANTS);
+  private readonly observedSearchNovelty = new Float32Array(SUPER_DEPTHS * SUPER_VARIANTS);
+  private readonly observedSearchWinners = new Int8Array(SUPER_DEPTHS);
+  private readonly observedDrives: SuperMindObservatorySnapshot['drives'] = {
+    move: { x: 0, y: 0, z: 0 },
+    aggression: 0,
+    deception: 0,
+    dominance: 0,
+    spawn: 0,
+    curiosity: 0,
+  };
   private readonly attnSchema = new AttentionSchema();
   private readonly attnController = new AttentionController();
   private readonly topdown = new TopDownPerception();
@@ -1054,6 +1169,9 @@ export class SuperMind {
     for (let k = 0; k < this.organs.length; k++) {
       const o = this.organs[k]!.forward(this.organViews[k]!);
       const w = attnG.gains[k] ?? 1 / SUPER_ORGANS;
+      this.observedOrganOutputs[k * 2] = o[0] ?? 0;
+      this.observedOrganOutputs[k * 2 + 1] = o[1] ?? 0;
+      this.observedOrganAttention[k] = w;
       this.organActs[k] = (o[0] ?? 0) * w;
       oa += this.organActs[k] ?? 0;
       ob += (o[1] ?? 0) * w;
@@ -1071,6 +1189,7 @@ export class SuperMind {
     let reasoningGain = 0;
     for (let d = 0; d < thinkDepths; d++) {
       let bestScore = -Infinity;
+      this.observedSearchWinners[d] = -1;
       for (let v = 0; v < thinkVariants; v++) {
         this.fillNoise();
         this.imgIn.set(this.cur, 0);
@@ -1079,9 +1198,13 @@ export class SuperMind {
         const crit = this.perceptor.forward(img);
         const value = crit[0] ?? 0; // desirability of this imagined branch
         const nov = unit(crit[1] ?? 0); // novelty signal (Thaler perceptor)
+        const candidate = d * thinkVariants + v;
+        this.observedSearchScores[candidate] = value;
+        this.observedSearchNovelty[candidate] = nov;
         if (nov > peakNovelty) peakNovelty = nov;
         if (value > bestScore) {
           bestScore = value;
+          this.observedSearchWinners[d] = v;
           this.best.set(img);
         }
       }
@@ -1827,6 +1950,7 @@ export class SuperMind {
     for (let ki = 0; ki < SUPER_PLANS.length; ki++) {
       const k = SUPER_PLANS[ki]!;
       const d = drives[k];
+      this.observedPlanScores[ki] = d;
       if (d > bestScore) {
         runnerUp = bestScore;
         bestScore = d;
@@ -1952,6 +2076,22 @@ export class SuperMind {
     if (qTone.toneGrad)
       this.cons.qualiaTone = Math.max(0, Math.min(1, qTone.tone + (qTone.toneGrad || 0) * 0.01));
 
+    // Publish one completed cognition sample. O(SENSE + plans + organs + candidates) capture above;
+    // fixed storage, no new RNG draws, and no wall-clock sampling or per-beat telemetry allocation.
+    for (const key of OBSERVATORY_PERCEPT_KEYS) this.observedPercept[key] = p[key];
+    this.observedDrives.move.x = act[0] ?? 0;
+    this.observedDrives.move.y = act[1] ?? 0;
+    this.observedDrives.move.z = act[2] ?? 0;
+    this.observedDrives.aggression = aggression;
+    this.observedDrives.deception = deception;
+    this.observedDrives.dominance = domProject;
+    this.observedDrives.spawn = spawnDesire;
+    this.observedDrives.curiosity = curiosity;
+    this.observationMode = mode;
+    this.observationDepths = thinkDepths;
+    this.observationVariants = thinkVariants;
+    this.observationTick++;
+
     return {
       move: { x: act[0] ?? 0, y: act[1] ?? 0, z: act[2] ?? 0 },
       aggression,
@@ -2007,7 +2147,38 @@ export class SuperMind {
   }
 
   snapshot(): SuperMindSnapshot {
+    const evaluated = this.observationDepths * this.observationVariants;
     return {
+      observatory: {
+        tick: this.observationTick,
+        mode: this.observationMode,
+        activeDepths: this.observationDepths,
+        variantsPerDepth: this.observationVariants,
+        rawPercept: this.observationTick ? { ...this.observedPercept } : null,
+        senses: Array.from(this.senses),
+        reasoned: Array.from(this.reasoner.out),
+        predicted: Array.from(this.pred),
+        organOutputs: Array.from(this.observedOrganOutputs),
+        organAttention: Array.from(this.observedOrganAttention),
+        organAggregates: Array.from(this.organSum),
+        affectOutputs: Array.from(this.affect.out),
+        selfModel: Array.from(this.selfModel.out),
+        actionOutputs: Array.from(this.meta.out),
+        planScores: Array.from(this.observedPlanScores),
+        drives: { ...this.observedDrives, move: { ...this.observedDrives.move } },
+        search: {
+          scores: Array.from(this.observedSearchScores.subarray(0, evaluated)),
+          novelty: Array.from(this.observedSearchNovelty.subarray(0, evaluated)),
+          selectedVariants: Array.from(
+            this.observedSearchWinners.subarray(0, this.observationDepths),
+          ),
+          evaluated,
+        },
+        memory: {
+          mean: this.memory.mean(),
+          values: Array.from({ length: this.memory.size }, (_, i) => this.memory.recent(i) ?? 0),
+        },
+      },
       paramCount: this.paramCount,
       depths: SUPER_DEPTHS,
       variants: SUPER_DEPTHS * SUPER_VARIANTS,
@@ -2015,7 +2186,7 @@ export class SuperMind {
       organs: SUPER_ORGANS,
       plan: this.plan,
       emotion: { valence: this.valence, arousal: this.arousal, dominance: this.dominance },
-      consciousness: this.cons,
+      consciousness: { ...this.cons },
       quantum: Array.from(this.quantumOut),
       latent: Array.from(this.latent),
       imagined: Array.from(this.imagined),
@@ -2052,18 +2223,8 @@ export class SuperMind {
       attentionController: this.attnController.snapshot(),
       tomPantheon: this.tomPantheon.snapshot(),
       topDownError: this.topdown.snapshot().error,
-      qualia: Array.from(
-        this.qualSpace.project([
-          this.valence,
-          this.arousal,
-          this.dominance,
-          this.phi,
-          this.ignition,
-          mean(this.quantumOut, SUPER_QUANTUM),
-          0,
-          this.attnSchema.confidence,
-        ]).code,
-      ),
+      // Read the last cognition projection; observation must not run another projection with altered input.
+      qualia: this.qualSpace.snapshot().code,
       latentSubstrates: { ...this.lastLatentSub },
       gwtCapacity: {
         occupancy: this.lastGwtCapacity.occupancy,

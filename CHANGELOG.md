@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Rebuilt all 27 PRIME neural-observatory cards with actual source fields, explicit units and limits,
+  exact values and JSON export. Histories advance on observed cognitive ticks, not repaints;
+  running/suspended/frozen status, sample age, delivery age and skipped ticks are visible.
+- Exposed copied percepts, encoded inputs, organ outputs, evaluated search candidates, final planner
+  scores and memory telemetry. Removed invented sensory/drive bindings, search-tree activity,
+  pairwise quantum edges and wall-clock modulation of measurements. IV is explicitly schematic.
+- Corrected controlled-RY and made quantum geometry and qualia observation non-mutating; metric
+  determinant/trace, discrete-switch caveats and balanced-cut proxy limitations are explicit.
+
 - Separate provisional author-estimate dataset and reader table for all 25 axes, with a declared heuristic rubric, imported rationale and explicit uncalibrated status; canonical assessment scores remain null.
 - Binding CQM-25 version 1.0.0 adoption across the three masters, agent steering and module contract; stable taxonomy and canonical-publication regression gates.
 - **CQM-25 is the capability law** (ADR 0018). The profile (schema v2) carries the binding rules

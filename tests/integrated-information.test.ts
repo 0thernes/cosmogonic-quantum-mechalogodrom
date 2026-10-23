@@ -1,11 +1,14 @@
 /**
- * INTEGRATED INFORMATION Φ (V90 / SC 1.1) — proves the IIT proxy captures GLOBAL integration, not any
- * entanglement: a product state and a LOCALIZED Bell pair are both reducible (Φ=0), while a GHZ state is
- * irreducible with the closed-form Φ = d/(d−1)·(1−½) = 4/7 at every balanced cut. Falsifiable claims.
+ * Balanced-cut linear entropy (legacy API: integratedInformation / phi). Pins the pure-state
+ * calculation and its limitation: omitted unbalanced separable cuts can coexist with a positive result.
  */
 import { describe, expect, test } from 'bun:test';
 import { QuantumRegister } from '../src/math/quantum';
-import { integratedInformation, subsystemLinearEntropy } from '../src/sim/integrated-information';
+import {
+  integratedInformation,
+  subsystemLinearEntropy,
+  classicalParticipationRatio,
+} from '../src/sim/integrated-information';
 
 const EPS = 1e-9;
 const amps = (reg: QuantumRegister): { re: Float64Array; im: Float64Array } => {
@@ -15,7 +18,7 @@ const amps = (reg: QuantumRegister): { re: Float64Array; im: Float64Array } => {
   return { re, im };
 };
 
-describe('integratedInformation Φ (V90)', () => {
+describe('balanced-cut linear entropy (legacy integratedInformation API)', () => {
   test('a product state |000000⟩ has Φ = 0 (perfectly reducible)', () => {
     const reg = new QuantumRegister(6);
     const { re, im } = amps(reg);
@@ -34,7 +37,7 @@ describe('integratedInformation Φ (V90)', () => {
     expect(integratedInformation(re, im, 6).phi).toBeLessThan(1e-9);
   });
 
-  test('a GHZ register is irreducible: Φ = 4/7 at every balanced cut (closed form)', () => {
+  test('a GHZ6 register gives 4/7 at every balanced cut (closed form)', () => {
     const reg = new QuantumRegister(6);
     reg.apply('h', 0);
     for (let q = 1; q < 6; q++) reg.apply('cx', q, 0); // GHZ: (|000000⟩+|111111⟩)/√2
@@ -87,5 +90,20 @@ describe('integratedInformation Φ (V90)', () => {
     expect(a.phi).toBeGreaterThanOrEqual(0);
     expect(a.phi).toBeLessThanOrEqual(1);
     expect(a.meanIntegration).toBeGreaterThanOrEqual(a.phi - 1e-9); // mean ≥ min
+  });
+
+  test('balanced cuts miss the separable 1|5 cut of GHZ5 tensor |0>: positive is not global irreducibility', () => {
+    const reg = new QuantumRegister(6);
+    reg.apply('h', 0);
+    for (let q = 1; q < 5; q++) reg.apply('cx', q, 0);
+    const { re, im } = amps(reg);
+    expect(integratedInformation(re, im, 6).phi).toBeCloseTo(4 / 7, 9);
+    expect(subsystemLinearEntropy(re, im, 6, 1 << 5)).toBeLessThan(EPS);
+  });
+
+  test('equal constant activations maximize participation without any causal interaction input', () => {
+    expect(classicalParticipationRatio([0.4, 0.4, 0.4, 0.4])).toBeCloseTo(1, 12);
+    expect(classicalParticipationRatio([1, 0, 0, 0])).toBe(0);
+    expect(classicalParticipationRatio([0, 0, 0, 0])).toBe(0);
   });
 });

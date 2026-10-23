@@ -13,7 +13,7 @@ import type { SuperMindSnapshot } from '../sim/super-mind';
 import type { EvoView } from '../sim/super-evolution';
 import { mountToggle } from './panel-dock';
 import { injectPanelBaseCSS } from './panel-shell';
-import { SuperNeural } from './super-neural';
+import { type NeuralRuntimeState, SuperNeural } from './super-neural';
 
 /** Primordial petri dish telemetry — digital biologics soup, not chat. */
 export interface PetriTelemetry {
@@ -385,7 +385,7 @@ export class SuperPanel {
     this.meter.selfAware = bar(bars, 'Self-aware', '#ffd166', doc); // selfAware
     this.meter.novelty = bar(bars, 'Novelty', '#8dff9e', doc); // novelty
     this.meter.ignition = bar(bars, 'Ignition', '#ff7a45', doc); // ignition
-    this.meter.phi = bar(bars, 'Φ (IIT)', '#5ad1c4', doc);
+    this.meter.phi = bar(bars, 'Participation proxy', '#5ad1c4', doc);
     this.meter.confidence = bar(bars, 'Confidence', '#ffa3d1', doc); // confidence
     // GOAL5/USER-5 first-class composites — update() feeds setBar('integrity'/'integration')
     // every telemetry beat; without these registrations both values were silently dropped.
@@ -542,6 +542,10 @@ export class SuperPanel {
    * creature is always-active, so `snap` should be present, but we tolerate a missing beat).
    * GOAL5: 5th param carries all 5 for full first-class inspect (archetype+plan visible for every Archon).
    */
+  setNeuralRuntime(state: NeuralRuntimeState, source: string): void {
+    this.neural.setRuntime(state, source);
+  }
+
   update(
     snap: SuperSnapshot | null,
     netWorth: number,
@@ -679,7 +683,7 @@ export class SuperPanel {
         : '';
       this.id.substrate!.textContent =
         `Eshkol H${mind.eshkol.entropyEstimate.toFixed(2)} · ` +
-        `QGT vol ${geo.scalar.toFixed(2)} κ${geo.curvature.toFixed(3)} · ` +
+        `QGT trace ${geo.trace.toFixed(2)} det ${geo.determinant.toFixed(3)}${geo.stencilCrossesBranch ? ' (gate switch)' : ''} · ` +
         `Spin→${instinct} ${(sp.bestOverlap * 100).toFixed(0)}%` +
         petriStr;
       // V1.1 — the new cognition substrates: reservoir echo/novelty · active-inference free-energy +

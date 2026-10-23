@@ -39,6 +39,15 @@ communication, individuality, resource maintenance, homeostasis, repair/resilien
 trade-offs are not separately represented in the historical survey. Conceptual correspondence
 does not establish that the survey measured or validated CQM-25 acceptance protocols.
 
+## PRIME observatory measurement boundary
+
+The 27 World/Cognition/Quantum cards now use completed cognition snapshots and bounded observed-tick
+history. Exact source values, units, limitations and JSON export accompany each card. Repaints and
+paused frames do not create observations. Quantum geometry and qualia reads no longer change the
+simulation; controlled-RY implements the corrected matrix. The [card-by-card measurement inventory](./SUPER-CREATURE-RESEARCH-2026-06-26.md#prime-neural-observatory-measurement-audit)
+records scope and limitations. IV remains a labeled schematic illustration. These engineering changes
+do not calibrate CQM-25 scores or prove consciousness, sentience or quantum hardware operation.
+
 ## 1 · Canonical facts (single source of truth)
 
 **Xylos:** the additional single organism is specified in [XYLOS.md](./XYLOS.md)
@@ -50,7 +59,7 @@ numeric input sequence and does not rewind the shared world.
 | Fact                                          | Canonical value                                                                                                                                                                                        | Source of truth                                                                                                                                                                            | Propagated by               |
 | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------- |
 | Package version                               | `0.23.0`                                                                                                                                                                                               | `package.json` `version`                                                                                                                                                                   | `sync-surfaces.ts`          |
-| Test count (exact tracked suite)              | `3444`                                                                                                                                                                                                 | `scripts/canonical-receipts.ts`                                                                                                                                                            | `sync-surfaces.ts`          |
+| Test count (exact tracked suite)              | `3471`                                                                                                                                                                                                 | `scripts/canonical-receipts.ts`                                                                                                                                                            | `sync-surfaces.ts`          |
 | Line coverage                                 | `84.64%`                                                                                                                                                                                               | `scripts/canonical-receipts.ts`                                                                                                                                                            | `sync-surfaces.ts`          |
 | Function coverage                             | `82.21%`                                                                                                                                                                                               | `scripts/canonical-receipts.ts`                                                                                                                                                            | `sync-surfaces.ts`          |
 | Faculties (design)                            | `100` (~30 deep-wired)                                                                                                                                                                                 | `CANONICAL_FACULTIES`                                                                                                                                                                      | `sync-surfaces.ts`          |

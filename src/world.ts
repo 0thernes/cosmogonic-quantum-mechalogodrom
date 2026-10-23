@@ -2404,6 +2404,10 @@ export class World {
     // `s.timeScale === 0` = paused; `this.frozenAll` selects the FROZEN sub-state. In BOTH paused states
     // the PLAYER is God Mode — never frozen or slowed: the free-cam + superhero avatar always move on the
     // real frame delta (handled in updateCamera + the branch bodies), never the scaled sim dt.
+    this.superPanel?.setNeuralRuntime(
+      s.timeScale === 0 ? (this.frozenAll ? 'frozen' : 'suspended') : 'running',
+      'PRIME · ' + GODFORMS[0] + ' · Archon [0]',
+    );
     if (s.timeScale === 0 && this.frozenAll) {
       // FROZEN (2nd click): the whole world is a static tableau for inspection — no sim step, no body
       // animation, no visual-clock advance, no rng. Only the player roams. The visual clock is HELD so

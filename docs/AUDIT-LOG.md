@@ -11,6 +11,36 @@ changed and why.
 
 ---
 
+## 2026-10-22 (local date) — PRIME neural observatory 27-card audit and measurement wiring
+
+- Audited all 27 data visuals in `src/ui/super-neural.ts` across `I · WORLD` (9), `II · COGNITION` (9)
+  and `III · QUANTUM` (9) against [docs/MODULE-CONTRACTS-2026-06-26.md](./MODULE-CONTRACTS-2026-06-26.md)
+  and CQM-25 axes `instrumentation_reproducibility`, `visual_embodied_scale`, `substrate_pluralism` and
+  `causal_integration`.
+- Replaced redundant `latent` re-projections, hardcoded pipeline bars (`0.85`), wall-clock-animated
+  synthetic search trees (`Math.sin(t * 1.5 + ...)`), consciousness-scalar drive stand-ins, doubled
+  adapter probabilities (`* 2`), single-qubit marginal entanglement lines, wall-clock metric ellipse
+  rotation and 64→32 basis-state row folding with 27 distinct, source-stamped `NeuralCard` series in
+  `src/ui/super-neural-data.ts` backed by owned snapshot copies in `SuperMindSnapshot.observatory`
+  (`src/sim/super-mind.ts`).
+- Fixed history ingestion so `NeuralHistory` advances only on completed cognitive ticks (`observatory.tick`),
+  collects all history series regardless of active tab, deduplicates paused/repeated frames, retains
+  skipped tick labels without interpolation and clears on source switch or tick rollback.
+- Made `QuantumMind.snapshot()` and `QuantumMind.geometricMetric()` non-interfering via a scratch
+  `analysisReg` and corrected `applyControlledRy` to the exact conditional rotation matrix. Explicit
+  `determinant`, `trace`, `finiteDifferenceStep` and `stencilCrossesBranch` fields replace overloaded
+  scalar/curvature labels, and `IV · BRAIN` is explicitly labeled as a schematic illustration.
+- Added 27 regression tests for snapshot isolation, exact gate matrices, proxy counterexamples,
+  source-to-card bindings, signed/invalid values, candidate winners and bounded observed-tick history.
+  Updated the existing borrowed-view test to require value equality with an independently owned
+  snapshot, and the pause fixture to assert suspended/frozen status delivery before early return.
+- The seeded browser fixture passed 20 checks, covering all 27 cards, wall-time pixel identity,
+  duplicate deliveries, skipped ticks, frozen charts, raw JSON export, 390-pixel overflow, source
+  reset and completed-to-unstarted transitions. It uses the real SuperMind and SuperNeural classes;
+  it does not establish production FPS or scientific capability acceptance.
+- Publication uses an isolated checkout because another writer was confirmed active in the primary
+  working directory. The full repository gate remains mandatory before the local commit and push.
+
 ## 2026-10-22 (local date) — CQM-25 adopted as the canonical project capability standard
 
 - Adopted CQM-25 version 1.0.0 as binding project policy in the three masters, agent steering,

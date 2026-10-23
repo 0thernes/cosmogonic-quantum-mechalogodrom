@@ -2,6 +2,49 @@
 
 # Module Contracts
 
+## Neural observatory measurement contract (World I, Cognition II, Quantum III)
+
+The 27 cards inspect the PRIME Archon (index 0), not a population aggregate. Each card identifies
+its snapshot source, units, transformation and limitations. The affected CQM-25 axes are
+`instrumentation_reproducibility`, `visual_embodied_scale`, `substrate_pluralism` and
+`causal_integration`; this change improves measurement fidelity, not a capability score or mental-status verdict.
+
+For this amendment the exclusive writers are: root/integrator for `src/ui/super-neural.ts`,
+`src/ui/super-panel.ts`, `src/world.ts` and documentation; snapshot writer for `src/sim/super-mind.ts`
+and its observatory tests; quantum writer for `src/sim/super-qubits.ts`,
+`src/sim/integrated-information.ts` and their tests; data writer for
+`src/ui/super-neural-data.ts` and its tests.
+
+`SuperMindSnapshot.observatory` contains owned copies of the completed cognition tick, active
+full/echo search shape, actual original percept and encoded inputs, intermediate module outputs,
+organ outputs/attention, evaluated candidate scores and winners, final planner scores and intent,
+and the bounded scalar memory ring. Reading snapshots must not run a cognitive update, draw
+randomness, mutate qualia, or perturb the live quantum register. Pre-first-think data is unavailable.
+
+Histories contain at most 96 observed completed cognitive ticks. Duplicate snapshots, repaints,
+tab switches and paused frames cannot append samples. A new source or tick rollback clears history.
+All history channels are sampled together even when their cards are hidden. Skipped cognition
+ticks remain visible in tick labels; samples are not interpolated into invented observations.
+Non-finite and missing values remain explicitly invalid/unavailable, never plausible zeros.
+World supplies running/suspended/frozen status separately from snapshot delivery. The UI reports
+cognitive sample age and transport age separately. UI wall time may update age and presentation
+styling; it cannot change the measured marks in tabs I–III.
+
+The quantum layer remains a classical statevector simulation. Controlled-RY is unitary and tested
+on every basis input; geometry uses a scratch register and a copied input. Metric determinant and
+trace are labeled as such, not curvature or speed. Finite differences that cross a discrete gate
+switch are flagged. Single-qubit mixedness is not pairwise entanglement; computational-basis
+Shannon entropy is not von Neumann entropy. Born samples are explicitly non-destructive observations.
+The balanced-cut linear-entropy proxy remains scoped to its tested partitions and is not IIT Phi.
+
+Acceptance/falsifiers: controlled channel perturbations change the corresponding card values;
+fixed snapshots produce identical charts independent of wall time; duplicate/paused reads leave
+history and simulation trajectories unchanged; invalid samples are visibly rejected as measurements;
+all 27 cards have source metadata and exportable numeric data. Browser checks cover all tabs,
+running/suspended/frozen transitions and narrow-screen overflow. Snapshot copies and card building
+occur on the existing observatory cadence; bounded chart data are cached between paints. The IV
+brain illustration is explicitly schematic and does not inherit the measurement claims of I–III.
+
 ## CQM-25 capability law (canonical framework)
 
 `docs/alife/cqm-capability-profile.json` owns the canonical 25-axis capability framework
@@ -1770,7 +1813,7 @@ Copilot are constructed boot-stream-neutral and never write sim state, so the go
 
 ### V9 acceptance
 
-Full `bun run check` green: prettier → tsc strict → oxlint → 3444 tests (0 fail, 300-frame golden
+Full `bun run check` green: prettier → tsc strict → oxlint → 3471 tests (0 fail, 300-frame golden
 included) → build. The Copilot sandbox verified live (allow: `git log`, file reads; deny:
 path-escape, repository-root pathspecs, `git push`, `legacy/`, shell redirection).
 

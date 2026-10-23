@@ -1,6 +1,9 @@
 /**
  * CANONICAL RECEIPTS -- the single source of truth for the repo's measured gate figures.
  *
+ * PRIME observatory fidelity adds 7 snapshot, 8 quantum/proxy and 12 card/history tests (+27).
+ * The full receipt gate verifies the exact count below; portable coverage floors remain unchanged.
+ *
  * Integrated CQM-25 governance/crosswalk adds seven law checks and the tracked ADR link check
  * (+8 from 3436). The full receipt gate verifies the exact count below.
  *
@@ -38,7 +41,7 @@
  *
  * To update after adding/removing tests: `bun scripts/verify-receipts.ts --print`, paste here, re-sync.
  */
-export const CANONICAL_TEST_COUNT = 3444;
+export const CANONICAL_TEST_COUNT = 3471;
 export const CANONICAL_LINE_COV = '84.64';
 export const CANONICAL_FUNC_COV = '82.21';
 

@@ -155,13 +155,17 @@ describe('World frame-delta ingress', () => {
   });
 
   test('both pause states return before dispatching wilderness simulation work', () => {
-    const makeReceiver = (frozenAll: boolean): { world: World; pausedSteps: number[] } => {
+    const makeReceiver = (
+      frozenAll: boolean,
+    ): { world: World; pausedSteps: number[]; runtime: string[] } => {
       const pausedSteps: number[] = [];
+      const runtime: string[] = [];
       const receiver = {
         state: { timeScale: 0, elapsed: 0, frame: 0 },
         godClock: 0,
         frozenAll,
         pauseVisualClock: 0,
+        superPanel: { setNeuralRuntime: (state: string) => runtime.push(state) },
         stepFrozen: (dt: number) => pausedSteps.push(dt),
         stepSuspended: (dt: number) => pausedSteps.push(dt),
         wilderness: {
@@ -175,16 +179,18 @@ describe('World frame-delta ingress', () => {
           },
         },
       } as unknown as World;
-      return { world: receiver, pausedSteps };
+      return { world: receiver, pausedSteps, runtime };
     };
 
     const frozen = makeReceiver(true);
     World.prototype.step.call(frozen.world, 0.016);
     expect(frozen.pausedSteps).toEqual([0.016]);
+    expect(frozen.runtime).toEqual(['frozen']);
 
     const suspended = makeReceiver(false);
     World.prototype.step.call(suspended.world, 0.016);
     expect(suspended.pausedSteps).toEqual([0.016]);
+    expect(suspended.runtime).toEqual(['suspended']);
   });
 });
 

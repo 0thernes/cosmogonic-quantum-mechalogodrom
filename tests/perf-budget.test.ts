@@ -268,7 +268,9 @@ describe('per-beat apex-mind cognitive budget', () => {
     expect(after).toBe(before);
     expect(after.latent).toBe(latent);
     expect(after.quantum).toBe(quantum);
-    expect(after.consciousness).toBe(mind.snapshot().consciousness);
+    const snapshot = mind.snapshot();
+    expect(after.consciousness).toEqual(snapshot.consciousness);
+    expect(after.consciousness).not.toBe(snapshot.consciousness);
   });
 
   test(`SuperMind.think() stays under ${THINK_BUDGET_MS}ms/beat (median) — the 20+ faculty stack must not blow the frame`, () => {

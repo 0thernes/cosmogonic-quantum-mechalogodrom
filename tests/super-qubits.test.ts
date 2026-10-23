@@ -7,9 +7,92 @@
 import { describe, expect, test } from 'bun:test';
 import { QuantumRegister } from '../src/math/quantum';
 import { mulberry32 } from '../src/math/rng';
-import { QuantumMind, QMIND_QUBITS, QMIND_LAYERS } from '../src/sim/super-qubits';
+import {
+  QuantumMind,
+  QMIND_QUBITS,
+  QMIND_LAYERS,
+  applyControlledRy,
+} from '../src/sim/super-qubits';
 
 const EPS = 1e-12;
+
+describe('controlled RY matrix', () => {
+  test('all basis columns match the conditional rotation, for either control and signed/zero angles', () => {
+    for (const control of [0, 1]) {
+      const target = 1 - control;
+      for (const angle of [0, 1e-7, -0.73, Math.PI / 2, Math.PI, 2 * Math.PI]) {
+        for (let basis = 0; basis < 4; basis++) {
+          const reg = new QuantumRegister(2);
+          for (let q = 0; q < 2; q++) if ((basis & (1 << q)) !== 0) reg.apply('x', q);
+          applyControlledRy(reg, control, target, angle);
+          const re = new Float64Array(4);
+          const im = new Float64Array(4);
+          reg.amplitudesInto(re, im);
+          const expected = new Float64Array(4);
+          if ((basis & (1 << control)) === 0) expected[basis] = 1;
+          else {
+            expected[basis] = Math.cos(angle / 2);
+            expected[basis ^ (1 << target)] =
+              ((basis & (1 << target)) === 0 ? 1 : -1) * Math.sin(angle / 2);
+          }
+          for (let i = 0; i < 4; i++) {
+            expect(Math.abs((re[i] ?? 0) - (expected[i] ?? 0))).toBeLessThan(EPS);
+            expect(Math.abs(im[i] ?? 0)).toBeLessThan(EPS);
+          }
+        }
+      }
+    }
+  });
+
+  test('complex superpositions match the independent conditional matrix without disturbing spectators', () => {
+    const reg = new QuantumRegister(3);
+    for (let q = 0; q < 3; q++) {
+      reg.apply('ry', q, undefined, 0.4 + q * 0.6);
+      reg.apply('rz', q, undefined, -0.3 + q * 0.2);
+    }
+    const beforeRe = new Float64Array(8);
+    const beforeIm = new Float64Array(8);
+    reg.amplitudesInto(beforeRe, beforeIm);
+    const angle = -0.83;
+    applyControlledRy(reg, 2, 0, angle);
+    const re = new Float64Array(8);
+    const im = new Float64Array(8);
+    reg.amplitudesInto(re, im);
+    for (let basis = 0; basis < 8; basis++) {
+      const sign = (basis & 1) === 0 ? -1 : 1;
+      const expectedRe =
+        (basis & 4) === 0
+          ? (beforeRe[basis] ?? 0)
+          : Math.cos(angle / 2) * (beforeRe[basis] ?? 0) +
+            sign * Math.sin(angle / 2) * (beforeRe[basis ^ 1] ?? 0);
+      const expectedIm =
+        (basis & 4) === 0
+          ? (beforeIm[basis] ?? 0)
+          : Math.cos(angle / 2) * (beforeIm[basis] ?? 0) +
+            sign * Math.sin(angle / 2) * (beforeIm[basis ^ 1] ?? 0);
+      expect(Math.abs((re[basis] ?? 0) - expectedRe)).toBeLessThan(EPS);
+      expect(Math.abs((im[basis] ?? 0) - expectedIm)).toBeLessThan(EPS);
+    }
+  });
+
+  test('invalid controls, targets and angles fail before touching the state', () => {
+    const reg = new QuantumRegister(2);
+    reg.apply('h', 0);
+    const before = Array.from(reg.probabilities());
+    for (const [control, target, angle] of [
+      [0, 0, 1],
+      [-1, 1, 1],
+      [0, 2, 1],
+      [0.5, 1, 1],
+      [0, 1, NaN],
+    ]) {
+      expect(() => applyControlledRy(reg, control ?? 0, target ?? 0, angle ?? 0)).toThrow(
+        RangeError,
+      );
+    }
+    expect(Array.from(reg.probabilities())).toEqual(before);
+  });
+});
 
 describe('QuantumRegister inspection extensions (V75)', () => {
   test('sample() is non-destructive: the superposition survives + the index is Born-valid', () => {
@@ -101,6 +184,58 @@ const selfOptDrive = (): number[] => {
   return a;
 };
 
+describe('QuantumMind observational noninterference', () => {
+  test('repeated snapshots preserve the exact live amplified state and readouts', () => {
+    const mind = new QuantumMind(mulberry32(173));
+    const drive = aspects(0.72, 0.4);
+    drive[4] = 1;
+    mind.evolve(drive, LATENT);
+    const before = new Float64Array(3 * QMIND_QUBITS);
+    mind.readObservables(before);
+    const phi = mind.integratedInformationNow();
+    const coherence = mind.coherenceL1Now();
+    const magic = mind.magicNormNow();
+    const first = mind.snapshot();
+    expect(mind.snapshot()).toEqual(first);
+    mind.geometricMetric();
+    const after = new Float64Array(before.length);
+    mind.readObservables(after);
+    expect(after).toEqual(before);
+    expect(mind.integratedInformationNow()).toBe(phi);
+    expect(mind.coherenceL1Now()).toBe(coherence);
+    expect(mind.magicNormNow()).toBe(magic);
+    expect(first.amplifiedProb).toBe(first.probs[first.amplified] ?? NaN);
+  });
+
+  test('geometry retains the last evolved input rather than borrowing a mutable caller buffer', () => {
+    const latent = [...LATENT];
+    const mind = new QuantumMind(mulberry32(174));
+    mind.evolve(aspects(0.4, 0.3), latent);
+    const geometry = mind.geometricMetric();
+    latent.fill(-0.913);
+    expect(mind.geometricMetric()).toEqual(geometry);
+  });
+
+  test('geometry reports metric determinant, trace and branch-crossing provenance explicitly', () => {
+    const mind = new QuantumMind(mulberry32(175));
+    const drive = aspects(0, 0.66);
+    drive[2] = 0;
+    drive[6] = 0;
+    mind.evolve(drive, LATENT);
+    const geometry = mind.geometricMetric();
+    const [g00, g01, g10, g11] = geometry.metric;
+    expect(geometry.determinant).toBe(g00 * g11 - g01 * g10);
+    expect(geometry.trace).toBe(g00 + g11);
+    expect(geometry.curvature).toBe(geometry.determinant);
+    expect(geometry.scalar).toBe(geometry.trace);
+    expect(geometry.finiteDifferenceStep).toBe(0.01);
+    expect(geometry.stencilCrossesBranch).toBeTrue();
+    const smooth = new QuantumMind(mulberry32(175));
+    smooth.evolve(aspects(0.4, 0.3), LATENT);
+    expect(smooth.geometricMetric().stencilCrossesBranch).toBeFalse();
+  });
+});
+
 describe('QuantumMind (V75) — the simulated-qubit cognition layer', () => {
   test('snapshot telemetry is well-formed + bounded; probabilities sum to 1', () => {
     const m = new QuantumMind(mulberry32(1));
@@ -187,12 +322,12 @@ describe('QuantumMind (V75) — the simulated-qubit cognition layer', () => {
   });
 
   test('QGT is deterministic AND never corrupts the seeded beat stream', () => {
-    // One mind takes a snapshot (running the QGT, which perturbs the register) mid-run; a control
-    // does not. Their NEXT Born sample must still match bit-for-bit — the readout is side-effect-free.
+    // One mind takes a snapshot (QGT probes use a separate register); the other does not.
+    // Their NEXT Born sample must still match bit-for-bit, in addition to same-beat purity above.
     const withQgt = new QuantumMind(mulberry32(77));
     const control = new QuantumMind(mulberry32(77));
     withQgt.evolve(aspects(0.6, 0.4), LATENT);
-    withQgt.snapshot(); // runs geometricMetric() → leaves the register perturbed
+    withQgt.snapshot(); // geometricMetric() leaves the live register untouched
     control.evolve(aspects(0.6, 0.4), LATENT); // no snapshot
     withQgt.evolve(aspects(0.7, 0.5), LATENT);
     control.evolve(aspects(0.7, 0.5), LATENT);
@@ -202,7 +337,7 @@ describe('QuantumMind (V75) — the simulated-qubit cognition layer', () => {
     ); // same drivers ⇒ identical geometry
   });
 
-  test('QGT RESPONDS to cognition: different drives curve the thought-space differently', () => {
+  test('different circuit drives produce different metric sensitivity', () => {
     const a = new QuantumMind(mulberry32(3));
     a.evolve(aspects(0.2, 0.2), LATENT);
     const b = new QuantumMind(mulberry32(3));
@@ -218,7 +353,7 @@ describe('QuantumMind (V75) — the simulated-qubit cognition layer', () => {
   test('focus (aspects[4]) gates the Grover rounds; the intended thought = the latent-sign basis', () => {
     // The intent is the basis state whose bits are the signs of latent[0..QMIND_QUBITS): LATENT is
     // positive at indices 0, 2, 4 → bits {0,2,4} → 0b010101 = 21. Focus 0 ⇒ 0 rounds (open
-    // superposition); focus 1 ⇒ 2 rounds (collapse pulled toward intent). Intent is set by the latent,
+    // superposition); focus 1 ⇒ 2 oracle/diffuser rounds. Intent is set by the latent,
     // never by the focus — so both minds mark the SAME state, only the amplification differs.
     const lo = aspects(0.5, 0.5);
     lo[4] = 0;
@@ -258,11 +393,12 @@ describe('QuantumMind (V75) — the simulated-qubit cognition layer', () => {
     expect(sa.amplifiedProb).toBeLessThanOrEqual(1);
   });
 
-  // ── V1.1: the snapshot now reports a REAL integrated-information Φ (IIT min-cut entanglement) +
-  // Resource-theory coherence of the simulated register, not a participation-ratio surrogate. ──
-  test('V1.1 — snapshot Φ + coherence are bounded, and Φ rises only with genuine entanglement', () => {
+  // Balanced-cut purity diagnostic and basis coherence of the simulated pure state.
+  test('snapshot balanced-cut entropy and coherence are bounded and respond to entangling drives', () => {
     const sep = new QuantumMind(mulberry32(5));
-    sep.evolve(aspects(0, 0), LATENT); // no controlled-RY ring + no Hadamards ⇒ product (separable) state
+    const sepDrive = aspects(0, 0);
+    sepDrive[4] = 0; // Disable the entangling oracle/diffuser as well as the controlled-RY ring.
+    sep.evolve(sepDrive, LATENT);
     const ssep = sep.snapshot();
     expect(ssep.phi).toBeGreaterThanOrEqual(0);
     expect(ssep.phi).toBeLessThanOrEqual(1);
@@ -271,15 +407,17 @@ describe('QuantumMind (V75) — the simulated-qubit cognition layer', () => {
       expect(c).toBeGreaterThanOrEqual(0);
       expect(c).toBeLessThanOrEqual(1);
     }
-    expect(ssep.phi).toBeLessThan(0.05); // a product state is reducible ⇒ ~zero integrated information
+    expect(ssep.phi).toBeLessThan(1e-9); // a product state has zero cut entropy
 
     const ent = new QuantumMind(mulberry32(5));
-    ent.evolve(aspects(1, 0), LATENT); // full controlled-RY ring ⇒ a globally entangled register
-    expect(ent.snapshot().phi).toBeGreaterThan(ssep.phi); // genuine min-cut integration emerges
+    const entDrive = aspects(1, 0);
+    entDrive[4] = 0;
+    ent.evolve(entDrive, LATENT);
+    expect(ent.snapshot().phi).toBeGreaterThan(ssep.phi); // larger entropy across the evaluated cuts
   });
 
   // ── SC 1.1: the snapshot reports quantum "magic" (stabilizer Rényi entropy) — non-stabilizerness,
-  // the resource that makes a thought hard to simulate classically (closed forms in quantum-magic.test). ──
+  // not a quantum-advantage claim (closed forms in quantum-magic.test). ──
   test('SC 1.1 — snapshot magic is bounded, finite, and deterministic', () => {
     const a = new QuantumMind(mulberry32(31));
     const b = new QuantumMind(mulberry32(31));

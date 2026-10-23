@@ -13,6 +13,81 @@ Compiled 2026-06-16 (research scout pass).
 
 ---
 
+## PRIME neural observatory: measurement audit
+
+The World I, Cognition II and Quantum III tabs contain **27 measured cards**, nine per tab.
+They inspect **PRIME / ORACLE-Σ, Archon index 0**, not all five minds or a population average.
+`src/ui/super-neural-data.ts` maps each card to copied `SuperMindSnapshot` fields; the UI displays
+source paths, units, methods, limitations and exact numeric values and exports the complete snapshot,
+all 27 card datasets and bounded observed history as JSON. The observer does not create intelligence:
+these are measurements of computational mechanisms, not certification of life or subjective experience.
+
+The audit found and replaced clock-modulated bar heights, mislabeled latent-as-sensory displays,
+a hard-coded pipeline activation, an invented four-way thought tree, proxy-as-drive displays,
+fabricated pairwise entanglement edges, and repaint-driven history. Current marks have no wall-clock
+modulation. The five-depth search matrix contains the actual evaluated candidates and winners;
+echo mode honestly reports its smaller executed search. Signed inputs and scores remain signed.
+
+| Tab       | Card                  | Actual data and boundary                                                                                      |
+| --------- | --------------------- | ------------------------------------------------------------------------------------------------------------- |
+| World     | Original percept      | Eleven World-provided input fields, before top-down encoding; phase is a model input.                         |
+| World     | Encoded senses        | Eighteen actual cortex inputs, including internal context and phase encoding; not eighteen physical sensors.  |
+| World     | Latent history        | Sixteen current workspace components at observed cognitive ticks; no initial fake zeros.                      |
+| World     | Latent vs imagined    | Actual present latent and selected imagined vector; imagined states are internal candidates.                  |
+| World     | Candidate novelty     | Actual evaluated candidate novelty values; not novelty inferred from animation.                               |
+| World     | Organ outputs         | Thirty organs' raw output pairs; attention and aggregation are recorded separately.                           |
+| World     | Latent RMS            | Root-mean-square activation; not physical energy or intelligence.                                             |
+| World     | Scalar memory         | Actual bounded scalar memory ring, plotted oldest to newest; not autobiographical recall.                     |
+| World     | Internal prediction   | Reasoned versus recursively predicted vectors; not verified future-world accuracy.                            |
+| Cognition | Stage outputs         | RMS of actual stage output arrays, with explicit dimensions; no execution pulse or fixed activation.          |
+| Cognition | Workspace             | Actual capacity/occupancy/access/pressure values; mechanism telemetry, not conscious access evidence.         |
+| Cognition | Affect                | Modeled valence, arousal and dominance; no measured feelings.                                                 |
+| Cognition | Candidate search      | Executed search scores and depth winners; no invented recursive tree.                                         |
+| Cognition | Active inference      | Actual discrete posterior plus free energy/surprise diagnostics; explicitly scoped model variables.           |
+| Cognition | Activation homeostat  | Branching estimate, gain, proximity and susceptibility; not proof of whole-system criticality.                |
+| Cognition | Plan scores           | Seven final scores used by the actual argmax and the selected plan; scores are not probabilities.             |
+| Cognition | Self model            | Self-model reliability and body-prediction diagnostics; no awareness percentage.                              |
+| Cognition | Ising recall          | Actual spin lattice and associative-memory diagnostics; simulated spins.                                      |
+| Quantum   | Control inputs        | Ten model drive/aspect values, not FTL, absolute-zero or physical quantum capabilities.                       |
+| Quantum   | Basis probabilities   | All 64 Born probabilities of the six-qubit simulated register; phase is separately recorded.                  |
+| Quantum   | Metric                | Finite-difference circuit metric, determinant, trace and Berry component; not scalar curvature.               |
+| Quantum   | Adapter sample stream | Actual marginal probabilities and recorded bits from the seeded classical adapter; no physical entropy claim. |
+| Quantum   | Qubit mixedness       | Single-qubit reduced-state mixedness; no invented pairwise network.                                           |
+| Quantum   | Local coherence       | Actual single-qubit probabilities and transverse Bloch coherence; these are distinct quantities.              |
+| Quantum   | Entropy history       | Computational-basis Shannon entropy and mean local coherence; not global von Neumann entropy.                 |
+| Quantum   | Born sample history   | Observed non-destructive basis samples; all six bits retained and gaps disclosed.                             |
+| Quantum   | Bloch vectors         | Actual reduced-state X/Y/Z vectors under a fixed display projection.                                          |
+
+Histories contain at most 96 **observed completed cognitive ticks**. World delivers snapshots on its
+existing 18-frame / 36-mobile-frame cadence; this is sampled telemetry, not every computation and not
+a guaranteed refresh rate. Hidden tabs collect the same observations. Duplicate snapshots, repaints,
+paused frames and tab switches append nothing. Tick rollback or source change clears history. The
+status strip separately reports running/suspended/frozen, tick, sample age and delivery age; after
+three seconds without a new sample while running it explicitly reports staleness. Missing and
+non-finite values are not converted into zero. Exact source values remain available below each card.
+
+Observation previously perturbed two substrates: qualia was recomputed while reading a snapshot,
+and quantum geometry probes overwrote the live register. Both reads are now non-mutating. Quantum
+geometry uses a dedicated scratch register and copied input; its metric describes the
+**pre-amplification circuit family**, while probability/Bloch diagnostics describe the actual
+**post-amplification register**. A stencil spanning the discrete Hadamard switch is flagged.
+The controlled-RY decomposition is corrected to use two CNOTs; this changes prior numerical trajectories.
+Metric `curvature`/`scalar` names remain compatibility aliases for determinant/trace only.
+
+The balanced-cut linear-entropy statistic omits unbalanced cuts: the tested `GHZ5 ⊗ |0⟩`
+counterexample remains positive despite a separable cut. Participation ratio can be maximal for
+constant equal activations without any causal interaction. Neither statistic is IIT Phi.
+
+IV's Composite / Mega 4D remains an explicitly **schematic illustration**: its geometry, synthetic
+rhythms and signal motifs are not a reconstructed connectome, recorded neural spikes, measured EEG,
+or a consciousness test. The misleading repaint-driven synthetic spike history has been removed.
+Its illustrative time now follows cognition ticks rather than browser time.
+
+Relevant CQM-25 axes: `instrumentation_reproducibility`, `visual_embodied_scale`,
+`substrate_pluralism`, and `causal_integration`. This audit improves evidence fidelity without
+changing canonical capability scores. See the [measurement contract](./MODULE-CONTRACTS-2026-06-26.md)
+for controls and falsifiers and the [audit log](./AUDIT-LOG.md) for validation provenance.
+
 ## What the code actually implements vs. what the science says
 
 | Real research thread                                                                | What Super Creature 1.1 actually computes                                                                                                                                                                                                                                                     | Honesty caveat                                                                                                                                               |

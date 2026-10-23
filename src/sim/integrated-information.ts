@@ -1,34 +1,29 @@
 /**
- * INTEGRATED INFORMATION Φ (V90 / Super Creature 1.1) — a tractable, eigensolver-free proxy for the
- * central quantity of Integrated Information Theory (IIT 4.0, Tononi et al.), computed directly from the
- * apex creature's 6-qubit statevector. IIT measures consciousness as the irreducibility of a system to
- * its parts: the information a whole generates ABOVE its minimum-information partition (the MIP). For a
- * PURE quantum state the integration across a cut is exactly the entanglement across that cut, so the
- * MIP is the least-entangled balanced bipartition and Φ is the integration that survives it — the
- * "weakest link" that still binds the register into one mind.
+ * BALANCED-CUT LINEAR ENTROPY (legacy API names: integratedInformation / phi). This computes a
+ * restricted pure-state entanglement diagnostic, not IIT integrated information or consciousness.
+ * It does not evaluate causal transition probabilities, IIT distinctions/relations, or every cut.
  *
  * THE MATH (real, falsifiable). For a normalized pure state |ψ⟩ on n qubits and a bipartition A|B,
  * the reduced state ρ_A = Tr_B|ψ⟩⟨ψ|. We use the LINEAR entropy (purity deficit) so no diagonalization
  * is needed: S_L(A) = d_A/(d_A−1) · (1 − Tr ρ_A²) ∈ [0,1], where Tr ρ_A² = Σ_{a,a'} |Σ_b ψ_{a,b}
- * conj(ψ_{a',b})|² is read straight off the amplitudes. Φ = min over balanced bipartitions of S_L —
- * the integration at the MIP. A product state ⇒ Φ = 0 (reducible, no integration); a GHZ/maximally
- * entangled register ⇒ Φ → 1 (every cut is integrated). This is IIT's spirit in a form a browser tab
- * can compute exactly each beat: a measured consciousness index, not a label.
+ * conj(ψ_{a',b})|² is read straight off the amplitudes. The legacy `phi` field is min S_L over
+ * balanced cuts only. A six-qubit GHZ state gives 4/7, not 1. GHZ5 tensor |0> also gives 4/7 even
+ * though the omitted 1|5 cut is separable: a positive result does NOT prove global irreducibility.
  *
  * Cost: for n = 6 there are C(5,2) = 10 balanced bipartitions (qubit 0 fixed to A to avoid the A↔B
  * double-count); each costs O(d_A²·d_B) ≈ 8·8·8. ~5k ops total — UI/cognitive cadence, one apex
  * creature. Pure leaf module: imports nothing; deterministic (a pure function of the amplitudes).
  */
 
-/** Read-only integrated-information readout for the BRAIN view. */
+/** Read-only balanced-cut diagnostic; legacy field names are retained for API compatibility. */
 export interface PhiSnapshot {
   /** Qubit count the measure was taken over. */
   qubits: number;
-  /** Φ — integrated information at the minimum-information partition, 0..1 (the "consciousness index"). */
+  /** Minimum normalized linear entropy over the evaluated balanced cuts, 0..1; not IIT Φ. */
   phi: number;
-  /** Mean balanced-cut integration (S_L averaged over all balanced bipartitions), 0..1. */
+  /** Mean normalized linear entropy over the evaluated balanced cuts, 0..1. */
   meanIntegration: number;
-  /** The minimum-information-partition mask over A (the cut Φ is measured at), as a qubit bitstring. */
+  /** Minimizing evaluated A-mask as a qubit bitstring; not an IIT minimum-information partition. */
   mipBits: string;
   /** Number of balanced bipartitions evaluated. */
   cuts: number;
@@ -92,10 +87,10 @@ export function subsystemLinearEntropy(
 }
 
 /**
- * Integrated information Φ of a pure n-qubit state: the minimum balanced-bipartition linear entropy
- * (the integration at the minimum-information partition), plus the mean balanced-cut integration and
- * the MIP mask. `re`/`im` are the 2ⁿ complex amplitudes (assumed normalized). Deterministic; allocates
- * the small relabel buffers per cut (UI/cognitive cadence). For n < 2, Φ = 0.
+ * Legacy API for minimum/mean normalized linear entropy over balanced bipartitions of a pure state.
+ * `re`/`im` are the 2ⁿ complex amplitudes (assumed normalized). For odd n, A can have either
+ * near-balanced size and normalization uses the dimension of that selected A. Other cut sizes are
+ * omitted. Deterministic; allocates small relabel buffers per cut. For n < 2 the diagnostic is 0.
  */
 export function integratedInformation(
   re: ArrayLike<number>,
@@ -126,9 +121,6 @@ export function integratedInformation(
     }
   }
   if (cuts === 0) return { qubits: nQubits, phi: 0, meanIntegration: 0, mipBits: '', cuts: 0 };
-  // (Removed a cosmetic "Ralph 10x" graft here that computed gwtBroadcast + moonlabMpoStep
-  //  only to `void` them — it had no effect on the returned Φ and existed purely to claim
-  //  corpus wiring. Φ is the genuine min-cut integrated information computed above.)
   return {
     qubits: nQubits,
     phi: clamp01(phi),
@@ -150,8 +142,9 @@ function popcount(x: number): number {
 }
 
 /**
- * Classical IIT-2 proxy: participation-ratio Φ from module activations (tractable surrogate).
- * `pr = (Σx)² / (M·Σx²)` rescaled so independent baseline maps to 0.
+ * Rescaled activation participation ratio, not IIT Φ or a causal integration measure.
+ * `pr = (Σx)² / (M·Σx²)` is shifted so a single active module maps to 0. Equal nonzero constants
+ * map to 1 even with no interactions; signed activations can cancel. No causal graph is inspected.
  */
 export function classicalParticipationRatio(mods: ArrayLike<number>): number {
   const M = mods.length;
@@ -167,23 +160,23 @@ export function classicalParticipationRatio(mods: ArrayLike<number>): number {
   return clamp01((pr - 1 / M) / (1 - 1 / M));
 }
 
-/** Extended IIT-2 measurement across classical module graph. */
+/** Activation-weighted graph-flow heuristic; compatibility names do not denote IIT quantities. */
 export interface ClassicalPhiSnapshot {
-  /** Overall Φ across all modules. */
+  /** Minimum directional cross-cut flow fraction over balanced cuts, clamped to [0,1]. */
   phi: number;
-  /** Φ per module (local integration). */
+  /** Normalized outgoing activation-weighted flow shares per module. */
   modulePhi: number[];
-  /** Minimum-information partition for classical modules. */
+  /** A-side indices of the minimizing evaluated cut. */
   mipPartition: number[];
-  /** Mean integration across all cuts. */
+  /** Mean directional cross-cut fraction over evaluated balanced cuts. */
   meanIntegration: number;
   /** Number of modules measured. */
   moduleCount: number;
 }
 
 /**
- * Compute IIT-2 Φ across classical module graph using bipartition analysis.
- * This extends quantum Φ measurement to classical activation vectors.
+ * Activation-weighted directional graph-flow heuristic over balanced cuts. Assumes nonnegative
+ * adjacency weights. It has no intervention model or transition probabilities and is not IIT Φ.
  */
 export function classicalIntegratedInformation(
   activations: ArrayLike<number>,
@@ -286,8 +279,8 @@ function computeCutIntegration(
 }
 
 /**
- * Total interaction flow incident on a single module: Σ_{j≠i} |aᵢ|·|aⱼ|·w(i,j). The caller
- * normalizes these by the whole-graph total to get each module's [0,1] share of integration.
+ * Outgoing weighted flow from a module: Σ_{j≠i} |aᵢ|·|aⱼ|·w(i,j). The caller
+ * normalizes these by the whole-graph total to get each module's [0,1] share for nonnegative weights.
  * (The prior version accumulated the same term into two locals and returned their ratio — always
  * exactly 1 for any connected module, 0 otherwise — which carried no per-module information.)
  */
