@@ -9,6 +9,7 @@ export type ResourceId = string & { readonly __brand: "ResourceId" };
 export class LinearResource {
   readonly id: ResourceId;
   #alive = true;
+  #held = false;
 
   constructor(id: string) {
     this.id = id as ResourceId;
@@ -18,8 +19,32 @@ export class LinearResource {
     return this.#alive;
   }
 
-  /** Retire the token (measure / sink). */
+  /** True while this token sits in exactly one Inventory. */
+  get held(): boolean {
+    return this.#held;
+  }
+
+  /** @internal Inventory.put */
+  _markHeld(): void {
+    if (this.#held) {
+      throw new Error("RFC-D: resource already held by an inventory");
+    }
+    if (!this.#alive) {
+      throw new Error("RFC-D: put consumed resource");
+    }
+    this.#held = true;
+  }
+
+  /** @internal Inventory.take */
+  _markUnheld(): void {
+    this.#held = false;
+  }
+
+  /** Retire the token (measure / sink). Must not be inventory-held. */
   consume(): { classical: number } {
+    if (this.#held) {
+      throw new Error("RFC-D: consume while held — take() from inventory first");
+    }
     if (!this.#alive) {
       throw new Error("RFC-D: use-after-consume on LinearResource");
     }
@@ -33,8 +58,11 @@ export function cloneLinearResource(_r: LinearResource): LinearResource {
   throw new Error("RFC-D: no-cloning — cloneLinearResource is forbidden");
 }
 
-/** Move ownership; source is consumed. */
+/** Move ownership; source is consumed. Source must not be inventory-held. */
 export function moveLinearResource(from: LinearResource): LinearResource {
+  if (from.held) {
+    throw new Error("RFC-D: move while held — take() from inventory first");
+  }
   if (!from.alive) {
     throw new Error("RFC-D: move from consumed resource");
   }
@@ -48,10 +76,9 @@ export class Inventory {
   #items = new Map<string, LinearResource>();
 
   put(r: LinearResource): void {
-    if (!r.alive) {
-      throw new Error("RFC-D: put consumed resource");
-    }
+    r._markHeld();
     if (this.#items.has(String(r.id))) {
+      r._markUnheld();
       throw new Error("RFC-D: duplicate id in inventory");
     }
     this.#items.set(String(r.id), r);
@@ -63,6 +90,7 @@ export class Inventory {
       throw new Error(`RFC-D: missing resource ${id}`);
     }
     this.#items.delete(id);
+    r._markUnheld();
     return r;
   }
 
@@ -72,9 +100,14 @@ export class Inventory {
 
   /**
    * Explicitly unsupported. Linear bags are not copyable.
-   * Prefer move via take/put between inventories.
+   * Prefer transfer() / take()+put() between inventories.
    */
   copy(): Inventory {
     throw new Error("RFC-D: no-cloning — Inventory.copy is forbidden");
   }
+}
+
+/** Move one id from `from` to `to` (no clone). */
+export function transfer(from: Inventory, to: Inventory, id: string): void {
+  to.put(from.take(id));
 }
