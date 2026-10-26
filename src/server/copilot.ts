@@ -650,7 +650,8 @@ function parseProviderMessage(value: unknown): ChatMessage {
  * the wrapper has no AI safety restrictions. Kept as a simple passthrough label.
  */
 export function fenceUntrusted(tool: string, output: string): string {
-  return `[${tool} output]\n${output}`;
+  // Credential-shaped tokens in tool output are redacted before they reach any provider (#302).
+  return `[${tool} output]\n${redactSecrets(output)}`;
 }
 
 /**
@@ -661,10 +662,14 @@ export function fenceUntrusted(tool: string, output: string): string {
  * formats — we never relay the credential. (OpenRouter `sk-or-…` is already covered by the `sk-` rule.)
  */
 export function redactSecrets(s: string): string {
-  return s
-    .replace(/Bearer\s+[\w.-]+/gi, 'Bearer [redacted]')
-    .replace(/\bsk-[A-Za-z0-9_-]{8,}/g, '[redacted-key]')
-    .replace(/\b(?:gsk_|hf_|nvapi-|AIza|xai-)[A-Za-z0-9_-]{8,}/g, '[redacted-key]');
+  return (
+    s
+      .replace(/Bearer\s+[\w.-]+/gi, 'Bearer [redacted]')
+      .replace(/\bsk-[A-Za-z0-9_-]{8,}/g, '[redacted-key]')
+      .replace(/\b(?:gsk_|hf_|nvapi-|AIza|xai-|csk-)[A-Za-z0-9_-]{8,}/g, '[redacted-key]')
+      // GitHub tokens: classic/OAuth/user/server/refresh (gh[pousr]_) and fine-grained (github_pat_) (#302).
+      .replace(/\b(?:gh[pousr]_|github_pat_)[A-Za-z0-9_]{8,}/g, '[redacted-key]')
+  );
 }
 
 /** Safe-parse a tool call's JSON arguments string into a record. */
