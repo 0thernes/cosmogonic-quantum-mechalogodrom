@@ -10,6 +10,7 @@
  * Memory discipline (legacy comments, lines 296-297): geometry is SHARED from the cache and
  * never disposed; the MeshStandardMaterial is per-entity and always disposed.
  */
+import type { Traits } from './genome';
 import * as THREE from 'three';
 import { TAU, lerp, clamp01 } from '../math/scalar';
 import {
@@ -164,6 +165,8 @@ interface RenderModeBase {
  * INITIAL value only — `update()` re-targets it each frame so the glow holds. Used by the
  * per-mesh path here AND by the instanced renderer's pool materials. Allocation-free. O(1).
  */
+const PHENO_HSL = { h: 0, s: 0, l: 0 };
+
 export function applyRenderModeTo(
   mat: THREE.MeshStandardMaterial,
   mode: RenderMode,
@@ -333,6 +336,10 @@ export interface EntityBrainSlotLifecycle {
   resetEntitySlots(): void;
   /** Optional vertical heredity (audit #1/#3): copy+mutate the parent's genome into the child slot. */
   inheritEntitySlot?(childSlot: number, parentSlot: number, rng: Rng): void;
+  /** Audit #2: sexual heredity via genome.breed (crossover + mutation) of two parent slots. */
+  breedEntitySlot?(childSlot: number, parentA: number, parentB: number, rng: Rng): void;
+  /** Audit #31: decoded phenotype of a slot's genome. */
+  traitsAt?(slot: number): Traits;
   /** Optional trait read for metabolism-linked energy costs (audit #31/#40). */
   traitAt?(slot: number, trait: number): number;
 }
@@ -699,6 +706,42 @@ export class EntityManager {
     };
   }
 
+  /** Audit #2: one genome-stream draw picks a candidate mate; same phylum + alive, else selfing. */
+  private pickMate(parentSlot: number, gr: Rng): number {
+    const list = this.list;
+    const idx = Math.floor(gr() * list.length);
+    const p = list[parentSlot];
+    const c = list[idx];
+    if (
+      !p ||
+      !c ||
+      idx === parentSlot ||
+      !c.userData.alive ||
+      c.userData.isNhi === true ||
+      c.userData.phylum !== p.userData.phylum
+    )
+      return parentSlot;
+    return idx;
+  }
+
+  /**
+   * Audit #31: express the decoded genome phenotype. speed scales the morph speed, lifespan scales
+   * life (300–1500 around a 900 mean), hue tints the body 15% toward the gene hue; vision,
+   * fertility and sentience are stored for the brain/fission readers. Live genome path only.
+   */
+  private applyGenomePhenotype(mesh: Entity, t: Traits): void {
+    const u = mesh.userData;
+    u.spd *= t.speed;
+    u.life *= t.lifespan / 900;
+    u.vision = t.vision;
+    u.fertility = t.fertility;
+    u.sentience = t.sentience;
+    mesh.material.color.getHSL(PHENO_HSL);
+    let dh = t.hue - PHENO_HSL.h;
+    dh -= Math.round(dh);
+    mesh.material.color.setHSL((PHENO_HSL.h + dh * 0.15 + 1) % 1, PHENO_HSL.s, PHENO_HSL.l);
+  }
+
   spawn(pos: THREE.Vector3 | null, mi: number, scale = 1, parent?: Entity): Entity | null {
     const ctx = this.ctx;
     if (this.list.length >= ctx.quality.maxEntities) return null;
@@ -802,9 +845,20 @@ export class EntityManager {
       // the caller receives an error but no orphaned list/scene entity.
       this.clearOrganismGoal(slot);
       this.brainSlots?.clearEntitySlot(slot);
-      if (parent && ctx.genomeRng && this.ecologyRules && this.brainSlots?.inheritEntitySlot) {
+      const slots = this.brainSlots;
+      if (parent && ctx.genomeRng && this.ecologyRules && slots) {
         const parentSlot = this.list.indexOf(parent);
-        if (parentSlot >= 0) this.brainSlots.inheritEntitySlot(slot, parentSlot, ctx.genomeRng);
+        if (parentSlot >= 0) {
+          if (slots.breedEntitySlot) {
+            // Audit #2: fission now recombines with a mate — a random same-phylum living organism
+            // drawn on the genome stream (falls back to the parent itself ⇒ clonal mutation).
+            const mate = this.pickMate(parentSlot, ctx.genomeRng);
+            slots.breedEntitySlot(slot, parentSlot, mate, ctx.genomeRng);
+          } else slots.inheritEntitySlot?.(slot, parentSlot, ctx.genomeRng);
+        }
+      }
+      if (ctx.genomeRng && this.ecologyRules && slots?.traitsAt) {
+        this.applyGenomePhenotype(mesh, slots.traitsAt(slot));
       }
       if (!ctx.quality.instanced) ctx.scene.add(mesh);
       this.list.push(mesh);
@@ -1375,7 +1429,10 @@ export class EntityManager {
       // severs trait→fitness while leaving heredity and the draw order untouched.
       u.sT -= dt * 30 * cm;
       // NHI swarmlings never auto-split — mitosis storm was the CPU melt.
-      const fissionP = this.reproAblated ? 0.06 : 0.02 + 0.08 * clamp01(u.nW);
+      // Audit #31: the fertility gene (live genome path) scales the split odds 0.5×–1.5×.
+      const fissionP =
+        (this.reproAblated ? 0.06 : 0.02 + 0.08 * clamp01(u.nW)) *
+        (u.fertility === undefined ? 1 : 0.5 + u.fertility);
       if (
         !u.nhiMinion &&
         u.sT <= 0 &&

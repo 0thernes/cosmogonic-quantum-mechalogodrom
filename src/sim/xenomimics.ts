@@ -651,7 +651,9 @@ export class XenomimicPopulation {
       const jump = 10 + this.rng() * 25;
       c.x += Math.cos(a) * jump;
       c.z += Math.sin(a) * jump;
-      c.teleportCd = 2.5;
+      // Audit #182: the Born gate passes on almost every superposed beat, so the cooldown is what sets
+      // the jump rate. 2.5 s made every body hop 10–35 u continuously; 4 s keeps teleport an event.
+      c.teleportCd = 4;
       this.teleports++;
       this.emitLifecycle('teleport', c);
     }

@@ -309,8 +309,17 @@ describe('GATE-DOME-REFUGE — the sanctuary restructures the trophic link', () 
   test('the refuge is a SPATIAL law: sheltered fauna are unkillable, exposed fauna are not', () => {
     // 2400 steps on a seed that reaches cap, so the swarm straddles the disc boundary and BOTH sides
     // of the law are exercised — otherwise the protected assertion is vacuously true.
-    const pop = new XenomimicPopulation(4242, { growthRamp: 40, predationRespawn: 5 });
-    runWithPredation(pop, 2400, 1 / 30, food, 0, 99999, refuge);
+    // The first seed whose settled swarm straddles the disc is used (the fixed 4242 stopped
+    // straddling when the teleport cadence changed — audit #182); the law itself is unchanged.
+    let pop = new XenomimicPopulation(4242, { growthRamp: 40, predationRespawn: 5 });
+    for (const seed of [4242, 77, 1, 2, 3, 5, 8, 13]) {
+      pop = new XenomimicPopulation(seed, { growthRamp: 40, predationRespawn: 5 });
+      runWithPredation(pop, 2400, 1 / 30, food, 0, 99999, refuge);
+      let ins = 0;
+      let outs = 0;
+      pop.forEach((c) => (refuge(c.x, c.z) ? ins++ : outs++));
+      if (ins > 0 && outs > 0) break;
+    }
     let inside = 0;
     let outside = 0;
     const victims: Parameters<Parameters<XenomimicPopulation['forEach']>[0]>[0][] = [];

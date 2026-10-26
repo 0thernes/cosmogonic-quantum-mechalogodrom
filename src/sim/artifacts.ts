@@ -2,7 +2,7 @@
  * Artifact field (CONTRACTS V9 — "physical visual effects + artifacts that effect the world").
  *
  * Persistent relics the world leaves behind: a death scars the ground with a shard, a summoned
- * singularity drops a relic, a quantum collapse scatters motes. They are real objects in the scene
+ * singularity drops a relic (the 'mote' style exists but nothing places motes yet — audit #239). They are real objects in the scene
  * — a bounded pool rendered through ONE InstancedMesh (≤ 1 draw call) — that spin, pulse, and fade
  * over their lifetime, then recycle. The living world thus accrues a visible history of its own
  * violence and wonder.

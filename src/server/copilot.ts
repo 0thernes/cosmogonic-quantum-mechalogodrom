@@ -685,16 +685,30 @@ function parseArgs(json: string): Record<string, unknown> {
 }
 
 /** Run the bounded model↔tool loop against ONE provider (throws on network/provider failure). */
+/**
+ * Audit #301: one transcript + step counter per user TURN, shared across failover attempts. A later
+ * provider resumes from the tool results already gathered instead of replaying the whole tool loop
+ * (no duplicate tool runs/steps, and the shared tool budget is no longer burned twice).
+ */
+interface TurnTranscript {
+  readonly messages: ChatMessage[];
+  step: number;
+}
+
+function newTurnTranscript(history: ChatMessage[]): TurnTranscript {
+  const trimmed = history.slice(-MAX_MESSAGES).filter((m) => m.role !== 'system');
+  return { messages: [{ role: 'system', content: buildSystemPrompt() }, ...trimmed], step: 0 };
+}
+
 async function runLoop(
   prov: ResolvedProvider,
-  history: ChatMessage[],
+  turn: TurnTranscript,
   steps: ToolStep[],
   toolBudget: { used: number },
   signal: AbortSignal,
 ): Promise<string> {
-  const trimmed = history.slice(-MAX_MESSAGES).filter((m) => m.role !== 'system');
-  const messages: ChatMessage[] = [{ role: 'system', content: buildSystemPrompt() }, ...trimmed];
-  for (let step = 0; step < MAX_STEPS; step++) {
+  const messages = turn.messages;
+  for (; turn.step < MAX_STEPS; turn.step++) {
     if (signal.aborted) throw new Error('agent turn cancelled');
     const msg = await chatCompletion(prov, messages, signal);
     const calls = msg.tool_calls ?? [];
@@ -844,6 +858,7 @@ async function runAgentWithinBounds(
   let lastErr: unknown = null;
   let lastWas429 = false;
   const toolBudget = { used: 0 };
+  const turn = newTurnTranscript(history);
   for (let i = 0; i < order.length && i < attemptLimit; i++) {
     if (signal.aborted) break;
     const prov = order[i];
@@ -855,7 +870,7 @@ async function runAgentWithinBounds(
     try {
       if (lastWas429) await sleep(RATE_LIMIT_COOLDOWN_MS, signal);
       lastWas429 = false;
-      const reply = await runLoop(prov, history, steps, toolBudget, signal);
+      const reply = await runLoop(prov, turn, steps, toolBudget, signal);
       // Suppress the failover note when the only thing skipped was the IMPLICIT FreeLLMAPI proxy (not
       // running) → the key-less backup answering is the expected default out of the box, not an error.
       // But if the user EXPLICITLY picked a provider (providerId set), always show the note so they know

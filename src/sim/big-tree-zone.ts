@@ -662,13 +662,10 @@ export class BigTreeVisitManager {
     const social = socialNeed * 1.05 + stress * 0.12;
     const safety = danger * 1.5 + stress * 0.45 + healthDeficit * 0.2;
     const explore = curiosity * 0.7 + personality * 0.12;
-    const best = Math.max(food, rest, social, safety, explore);
 
     // Select an activity probabilistically without mutable RNG state. Squaring each positive score
     // preserves a strong preference for the most urgent need while leaving lower, non-zero needs a
     // real chance. The actor identity and polling ordinal decorrelate otherwise identical visitors.
-    // Overall visit utility remains based on the strongest need, so a high-priority safety visit is
-    // not rejected merely because that visitor deterministically samples a secondary activity.
     const foodWeight = food * food;
     const restWeight = rest * rest;
     const socialWeight = social * social;
@@ -705,8 +702,20 @@ export class BigTreeVisitManager {
       reason === BigTreeVisitReason.Safety || reason === BigTreeVisitReason.Food
         ? 1
         : 1 - simulationLoad * 0.4;
+    // Audit #154: admission is scored on the drive that was actually SAMPLED as the visit reason, so
+    // the admitted reason/activity always matches the need that crossed the threshold.
+    const reasonScore =
+      reason === BigTreeVisitReason.Food
+        ? food
+        : reason === BigTreeVisitReason.Rest
+          ? rest
+          : reason === BigTreeVisitReason.Social
+            ? social
+            : reason === BigTreeVisitReason.Safety
+              ? safety
+              : explore;
     const utility =
-      Math.max(0, best) * distanceFactor * crowdFactor * recencyFactor * optionalLoadFactor;
+      Math.max(0, reasonScore) * distanceFactor * crowdFactor * recencyFactor * optionalLoadFactor;
     const sampledThreshold = this.sampleRange(
       ownerKind,
       ownerId,

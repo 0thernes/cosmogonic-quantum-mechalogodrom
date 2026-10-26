@@ -6,7 +6,6 @@ import {
   createParallelEntityRng,
 } from '../src/math/wild-entropy';
 import {
-  HYBRID_ENTITY_BRAIN_WGSL,
   detectHybridHardware,
   getBaselineHybridHardware,
   planHybridPartition,
@@ -82,14 +81,6 @@ describe('Track 1: Custom deterministic counter hash', () => {
 });
 
 describe('Track 2 & Track 3: Capability proposals and synchronous CPU/WASM helpers', () => {
-  test('unintegrated WGSL source contains its documented entrypoint and neural activation', () => {
-    expect(HYBRID_ENTITY_BRAIN_WGSL).toContain('@compute @workgroup_size(64)');
-    expect(HYBRID_ENTITY_BRAIN_WGSL).toContain(
-      'fn main(@builtin(global_invocation_id) gid: vec3<u32>)',
-    );
-    expect(HYBRID_ENTITY_BRAIN_WGSL).toContain('tanh(acc)');
-  });
-
   test('capability detection and hypothetical CPU/GPU/NPU partition retain proposal semantics', async () => {
     const detected = await detectHybridHardware(50);
     expect(detected.cpuLogicalCores).toBeGreaterThanOrEqual(1);

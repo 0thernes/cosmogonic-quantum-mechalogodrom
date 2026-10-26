@@ -20,6 +20,7 @@ import { UndirectedGraph } from 'graphology';
 import louvain from 'graphology-communities-louvain';
 import pagerank from 'graphology-metrics/centrality/pagerank';
 import { selectTopK } from '../math/heap';
+import { mulberry32 } from '../math/rng';
 import type { Entity, SimContext } from '../types';
 import type { EntityManager } from './entities';
 import type { Connectome } from './connectome';
@@ -91,6 +92,8 @@ export class GraphMind {
     }
   }
 
+  private readonly louvainRng = mulberry32(0x4c6f7576);
+
   /**
    * Rebuild the graph and run Louvain community detection (rng = `ctx.rng` — deterministic per
    * seed). Each member entity's `userData.setGroup` becomes its community index (tribe-aware
@@ -110,7 +113,9 @@ export class GraphMind {
       }
       return;
     }
-    const result = louvain.detailed(g, { rng: this.ctx.rng, getEdgeWeight: null });
+    // Audit #228: Louvain's tie-breaking draws come from a private stream, not the shared sim rng, so
+    // community detection (a read-only analytic) no longer shifts every later seeded draw.
+    const result = louvain.detailed(g, { rng: this.louvainRng, getEdgeWeight: null });
     this.tribeCount = result.count;
     const list = this.entities.list;
     const mapping = result.communities;

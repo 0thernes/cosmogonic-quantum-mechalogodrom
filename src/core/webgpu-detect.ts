@@ -18,14 +18,28 @@ export interface WebGpuCapabilities {
 /** Maximum time boot waits for an optional WebGPU adapter before continuing with WebGL. */
 export const WEBGPU_ADAPTER_TIMEOUT_MS = 1_500;
 
+/** Audit #274: one in-flight/settled probe per `navigator.gpu` object (boot probed it twice). */
+const PROBES = new WeakMap<object, Promise<WebGpuCapabilities>>();
+
 /**
- * Detect WebGPU capabilities in the current browser environment.
+ * Detect WebGPU capabilities in the current browser environment. Memoised per `navigator.gpu`
+ * instance (the first caller's timeout bounds the shared probe), so quality.ts and detectHybridHardware share one adapter request.
  *
  * @returns WebGPU capabilities object
  */
-export async function detectWebGpu(
+export function detectWebGpu(
   timeoutMs: number = WEBGPU_ADAPTER_TIMEOUT_MS,
 ): Promise<WebGpuCapabilities> {
+  const gpu = typeof navigator === 'undefined' ? undefined : (navigator as { gpu?: object }).gpu;
+  if (!gpu || typeof gpu !== 'object') return detectWebGpuUncached(timeoutMs);
+  const hit = PROBES.get(gpu);
+  if (hit) return hit;
+  const p = detectWebGpuUncached(timeoutMs);
+  PROBES.set(gpu, p);
+  return p;
+}
+
+async function detectWebGpuUncached(timeoutMs: number): Promise<WebGpuCapabilities> {
   // Check if navigator.gpu exists (WebGPU API)
   if (typeof navigator === 'undefined' || !('gpu' in navigator)) {
     return {

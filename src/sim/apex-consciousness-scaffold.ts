@@ -15,7 +15,6 @@ import {
   apexDesignedNeurons,
   apexResearchScaleForScore,
   apexScaleParams,
-  type ApexBrainSnapshot,
   type ApexScale,
   type ApexThought,
 } from './apex-brain';
@@ -138,30 +137,6 @@ export interface ConsciousnessIndicatorSnapshot {
 
 function clamp01(v: number): number {
   return v < 0 ? 0 : v > 1 ? 1 : v;
-}
-
-/** Derive indicator readouts from an apex snapshot + growth stage. */
-export function consciousnessIndicators(
-  snap: ApexBrainSnapshot,
-  growth: ApexGrowthStage,
-): ConsciousnessIndicatorSnapshot {
-  const t = snap.thought;
-  const meta = snap.meta;
-  const q = snap.quantum;
-  return {
-    workspaceIgnition: clamp01(t.superposed ? 0.35 : 0.65 + t.transcendence * 0.3),
-    integratedPhiProxy: clamp01(
-      t.vitality * 0.3 + q.coherence * 0.25 + (1 - t.agony) * 0.2 + growth.roadmapProgress * 0.25,
-    ),
-    selfModelGap: clamp01(meta.godelResidual),
-    globalBroadcast: clamp01(t.transcendence * 0.5 + q.coherence * 0.5),
-    quantumCoherence: clamp01(q.coherence),
-    thermodynamicMortality: clamp01(snap.thermo.paralysis + (1 - snap.necro.liveFraction) * 0.5),
-    retrocausalPull: clamp01(1 - meta.distanceToTarget),
-    variationId: growth.activeVariation.id,
-    variationName: growth.activeVariation.name,
-    honesty: 'computational-indicator-not-sentience',
-  };
 }
 
 /** Convenience: indicators from thought alone (when full snapshot unavailable). */

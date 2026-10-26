@@ -24,6 +24,9 @@ import type { Entity, OrganismGoalField, OrganismIntelligenceSignal } from '../t
 import type { QuantizationConfig } from '../math/quantization';
 import { fp16BitsToFp32, fp32ToFp16Bits, fp32ToInt8, int8ToFp32 } from '../math/quantization';
 import {
+  breed,
+  decodeTraits,
+  type Traits,
   randomGenome,
   BRAIN_IN,
   BRAIN_HIDDEN,
@@ -33,6 +36,9 @@ import {
   TRAIT,
   TRAIT_GENES,
 } from './genome';
+
+const BREED_SCRATCH_A = new Float32Array(GENOME_LEN);
+const BREED_SCRATCH_B = new Float32Array(GENOME_LEN);
 
 /** Steering authority: the brain nudges velocity by at most ~this per think (a flavour, not a takeover). */
 const STEER_GAIN = 0.045;
@@ -68,6 +74,9 @@ export class EntityBrainField {
   private readonly actorBiasX: Float32Array;
   private readonly actorBiasZ: Float32Array;
   private readonly lastActionX: Float32Array;
+  /** Audit #30: hidden activations + raw motor outputs of the last forward pass (weight credit). */
+  private readonly lastHidden: Float32Array;
+  private readonly lastOut: Float32Array;
   private readonly lastActionZ: Float32Array;
   private readonly lastEnergy: Float32Array;
   private readonly adaptiveReady: Uint8Array;
@@ -124,6 +133,8 @@ export class EntityBrainField {
     this.actorBiasZ = new Float32Array(this.capacity);
     this.lastActionX = new Float32Array(this.capacity);
     this.lastActionZ = new Float32Array(this.capacity);
+    this.lastHidden = new Float32Array(this.capacity * BRAIN_HIDDEN);
+    this.lastOut = new Float32Array(this.capacity * 2);
     this.lastEnergy = new Float32Array(this.capacity);
     this.adaptiveReady = new Uint8Array(this.capacity);
     this.semanticContext = new Float32Array(this.capacity * 4);
@@ -309,6 +320,34 @@ export class EntityBrainField {
     }
   }
 
+  /**
+   * Audit #2: sexual heredity — the child's genome is {@link breed}(parentA, parentB) (uniform
+   * crossover + point mutation, genome.ts) on the injected genome stream. `parentB === parentA`
+   * degrades to clonal mutation. O(GENOME_LEN); uses two module scratch genomes.
+   */
+  breedEntitySlot(childSlot: number, parentA: number, parentB: number, rng: Rng): void {
+    this.assertSlot(childSlot);
+    this.assertSlot(parentA);
+    this.assertSlot(parentB);
+    const a = this.readGenome(parentA, BREED_SCRATCH_A);
+    const b = this.readGenome(parentB, BREED_SCRATCH_B);
+    const child = breed(a, b, rng, 0.08);
+    const cb = this.slotToBrain[childSlot]! * GENOME_LEN;
+    for (let k = 0; k < GENOME_LEN; k++) this.setGene(cb + k, child[k] ?? 0);
+  }
+
+  /** Audit #31: the full decoded phenotype ({@link decodeTraits}) of a live slot's genome. */
+  traitsAt(slot: number): Traits {
+    this.assertSlot(slot);
+    return decodeTraits(this.readGenome(slot, BREED_SCRATCH_A));
+  }
+
+  private readGenome(slot: number, out: Float32Array): Float32Array {
+    const base = this.slotToBrain[slot]! * GENOME_LEN;
+    for (let k = 0; k < GENOME_LEN; k++) out[k] = this.getGene(base + k);
+    return out;
+  }
+
   /** Read one decoded-range trait gene ([0,1]) for a live slot (see {@link TRAIT}). O(1). */
   traitAt(slot: number, trait: number): number {
     if (slot < 0 || slot >= this.capacity) return 0.5;
@@ -476,7 +515,9 @@ export class EntityBrainField {
       // Nash payoff is a threat/aggression reward. A sanctuary visit suspends that term without
       // freezing metabolic learning or discarding the actor/value state used after a peaceful exit.
       const payoff = !protectedHere && Number.isFinite(ud.payoff) ? Math.tanh(ud.payoff * 0.1) : 0;
-      const learningRate = this.adaptiveLearningRate;
+      // Audit #31: decoded sentience (0–4, live genome path only) scales learning depth 0.6×–1.4×.
+      const learningRate =
+        this.adaptiveLearningRate * (ud.sentience === undefined ? 1 : 0.6 + 0.2 * ud.sentience);
       if (this.onlineLearningEnabled && (this.adaptiveReady[brainSlot] ?? 0) !== 0) {
         // Temporal-difference reward: food/wealth gain dominates; payoff supplies a smaller social term.
         const reward = Math.max(
@@ -508,13 +549,18 @@ export class EntityBrainField {
               learningRate * advantage * (this.lastActionZ[brainSlot] ?? 0),
           ),
         );
+        // Audit #30: the MLP's two motor-output rows now learn too — a bounded actor-critic step
+        // Δw = η·A·o·(1−o²)·h on the previous forward pass, η = 5% of the trace rate, |w| ≤ 1.
+        // (Learned weights live in the genome, so a lineage inherits them on fission.)
+        this.learnMotorWeights(base + TRAIT_GENES, brainSlot, learningRate * 0.05 * advantage);
       } else if (this.onlineLearningEnabled) {
         this.adaptiveReady[brainSlot] = 1;
       }
       this.lastEnergy[brainSlot] = metabolic;
 
       const goals = this.goals;
-      const goalDesire = clamp01(goals?.desire[slot] ?? 0);
+      // Audit #31: decoded vision (0.5–1.5×) scales how strongly a resource goal is perceived.
+      const goalDesire = clamp01((goals?.desire[slot] ?? 0) * (ud.vision ?? 1));
       const goalCover = clamp01(goals?.cover[slot] ?? 0);
       const goalX = goals?.directionX[slot] ?? 0;
       const goalZ = goals?.directionZ[slot] ?? 0;
@@ -644,6 +690,12 @@ export class EntityBrainField {
           ),
         );
       }
+      if (this.onlineLearningEnabled) {
+        const hb = brainSlot * BRAIN_HIDDEN;
+        for (let h = 0; h < BRAIN_HIDDEN; h++) this.lastHidden[hb + h] = this.hidden[h] ?? 0;
+        this.lastOut[brainSlot * 2] = o[0] ?? 0;
+        this.lastOut[brainSlot * 2 + 1] = o[1] ?? 0;
+      }
       this.lastActionX[brainSlot] = hasGoal ? actionX * goalX + actionZ * goalZ : actionX;
       this.lastActionZ[brainSlot] = hasGoal ? -actionX * goalZ + actionZ * goalX : actionZ;
     }
@@ -660,6 +712,23 @@ export class EntityBrainField {
   }
 
   /** Allocation-free MLP forward reading brain weights from the flat pool at `base` into `out`. */
+  /** Audit #30: bounded gradient step on output rows 0/1 (motor X/Z) of the brain at `wBase`. */
+  private learnMotorWeights(wBase: number, brainSlot: number, step: number): void {
+    if (step === 0 || !Number.isFinite(step)) return;
+    const hb = brainSlot * BRAIN_HIDDEN;
+    const outBase = wBase + BRAIN_HIDDEN * (1 + BRAIN_IN);
+    for (let o = 0; o < 2; o++) {
+      const y = this.lastOut[brainSlot * 2 + o] ?? 0;
+      const g = step * y * (1 - y * y);
+      if (g === 0) continue;
+      let w = outBase + o * (1 + BRAIN_HIDDEN) + 1; // skip bias
+      for (let h = 0; h < BRAIN_HIDDEN; h++, w++) {
+        const v = this.getGene(w) + g * (this.lastHidden[hb + h] ?? 0);
+        this.setGene(w, v < -1 ? -1 : v > 1 ? 1 : v);
+      }
+    }
+  }
+
   private forward(base: number): void {
     const s = this.senses;
     const hid = this.hidden;
@@ -737,6 +806,8 @@ export class EntityBrainField {
     this.actorBiasZ[brainSlot] = 0;
     this.lastActionX[brainSlot] = 0;
     this.lastActionZ[brainSlot] = 0;
+    this.lastOut[brainSlot * 2] = 0;
+    this.lastOut[brainSlot * 2 + 1] = 0;
     this.lastEnergy[brainSlot] = 0;
     this.adaptiveReady[brainSlot] = 0;
     const semanticBase = brainSlot * 4;

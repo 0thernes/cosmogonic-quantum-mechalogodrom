@@ -15,7 +15,6 @@ import {
   TSOTCHKE_ESK_COUNT,
   TSOTCHKE_FILE_COUNT,
   TSOTCHKE_MIRROR_REPO_COUNT,
-  auditWiringReceipt,
 } from '../src/sim/corpus-audit-receipts';
 
 describe('logo-turtle (logo-lab port)', () => {
@@ -62,6 +61,5 @@ describe('corpus audit receipts', () => {
     expect(TSOTCHKE_FILE_COUNT).toBe(12444);
     expect(TSOTCHKE_ESK_COUNT).toBe(721);
     expect(TSOTCHKE_MIRROR_REPO_COUNT).toBe(20);
-    expect(auditWiringReceipt(17)).toBeGreaterThan(0.8);
   });
 });

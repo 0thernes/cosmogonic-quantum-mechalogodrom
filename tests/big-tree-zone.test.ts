@@ -164,11 +164,13 @@ describe('BigTreeVisitManager', () => {
     const decision = emptyDecision();
 
     for (let ownerId = 0; ownerId < 2_048; ownerId++) {
-      expect(visits.decideVisit(3, ownerId, 11, context, decision)).toBe(true);
+      // Audit #154: admission now scores the sampled reason, so weak samples may be declined.
+      if (!visits.decideVisit(3, ownerId, 11, context, decision)) continue;
       first[decision.reason] = (first[decision.reason] ?? 0) + 1;
     }
     for (let ownerId = 0; ownerId < 2_048; ownerId++) {
-      expect(visits.decideVisit(3, ownerId, 11, context, decision)).toBe(true);
+      // Audit #154: admission now scores the sampled reason, so weak samples may be declined.
+      if (!visits.decideVisit(3, ownerId, 11, context, decision)) continue;
       repeat[decision.reason] = (repeat[decision.reason] ?? 0) + 1;
     }
 
@@ -202,12 +204,12 @@ describe('BigTreeVisitManager', () => {
       danger: 0.65,
     };
     const decision = emptyDecision();
-    let firstReason = 0;
+    let firstReason = -1;
     let changed = false;
 
     for (let ordinal = 0; ordinal < 64; ordinal++) {
-      expect(visits.decideVisit(5, 19, ordinal, context, decision)).toBe(true);
-      if (ordinal === 0) firstReason = decision.reason;
+      if (!visits.decideVisit(5, 19, ordinal, context, decision)) continue; // audit #154
+      if (firstReason === -1) firstReason = decision.reason;
       else if (decision.reason !== firstReason) changed = true;
     }
 

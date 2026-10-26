@@ -3,7 +3,7 @@
  *
  * Retires the audit's PROXY_STUB note (honest 0.45): the leaf was a single linear
  * dot-product with no hidden layer or nonlinearity. It now ships BOTH the honest
- * linear baseline (`perceptronScore`/`perceptronTag`/`perceptronStep`, kept for the
+ * linear baseline (`perceptronScore`/`perceptronTag`; the never-called `perceptronStep` was removed, audit #257, kept for the
  * petri/soup consumers) AND a real 1-hidden-layer **ReLU MLP** with sigmoid output
  * and backpropagation (`mlpForward`/`mlpTrainStep`) — the genuine simple_mnist-style
  * classifier the name promised. Weights are caller-supplied (deterministic).
@@ -23,22 +23,6 @@ export function perceptronScore(weights: Float32Array, inputs: Float32Array, n: 
 /** Logistic squash of the linear score → class probability 0..1. O(n). */
 export function perceptronTag(weights: Float32Array, inputs: Float32Array, n: number): number {
   return 1 / (1 + Math.exp(-perceptronScore(weights, inputs, n)));
-}
-
-/** O(n). One online delta-rule update toward `label`. */
-export function perceptronStep(
-  weights: Float32Array,
-  inputs: Float32Array,
-  label: number,
-  lr: number,
-  n: number,
-): void {
-  const lim = Math.min(n, weights.length, inputs.length);
-  const pred = perceptronScore(weights, inputs, lim);
-  const err = label - pred;
-  for (let i = 0; i < lim; i++) {
-    weights[i] = (weights[i] ?? 0) + lr * err * (inputs[i] ?? 0);
-  }
 }
 
 const relu = (x: number): number => (x > 0 ? x : 0);

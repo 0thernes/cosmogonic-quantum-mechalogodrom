@@ -2621,6 +2621,8 @@ export class World {
       inheritEntitySlot: (child, parent, rng) =>
         this.entityBrains.inheritEntitySlot(child, parent, rng),
       traitAt: (slot, trait) => this.entityBrains.traitAt(slot, trait),
+      breedEntitySlot: (child, a, b, rng) => this.entityBrains.breedEntitySlot(child, a, b, rng),
+      traitsAt: (slot) => this.entityBrains.traitsAt(slot),
       resetEntitySlots: () => {
         this.entityBrains.resetEntitySlots();
         this.organismBioPool.resetEntitySlots();

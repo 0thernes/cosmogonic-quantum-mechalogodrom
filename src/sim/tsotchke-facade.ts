@@ -122,7 +122,6 @@ export {
   TSOTCHKE_FILE_COUNT,
   TSOTCHKE_ESK_COUNT,
   TSOTCHKE_MIRROR_REPO_COUNT,
-  auditWiringReceipt,
 } from './corpus-audit-receipts';
 
 export { createPetriDish, petriDishBeat, petriDishView, petriGrowthMultiplier } from './petri-dish';

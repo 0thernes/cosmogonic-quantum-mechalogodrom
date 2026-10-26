@@ -154,6 +154,14 @@ export interface EntityData {
    */
   isNhi?: boolean;
   /**
+   * Audit #2/#31 genome phenotype (live ecology path only; absent on the legacy path): decoded
+   * vision multiplier (goal perception), fertility in [0,1] (fission odds) and sentience 0–4
+   * (online-learning depth).
+   */
+  vision?: number;
+  fertility?: number;
+  sentience?: number;
+  /**
    * Frames remaining of NHI camera-launch toss (lighter velocity damp). World sets on launch;
    * EntityManager decrements. Ordinary organisms leave it undefined.
    */

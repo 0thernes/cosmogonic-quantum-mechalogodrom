@@ -1534,7 +1534,9 @@ export class TitanSystem implements DomeFeeder, BigTreeFaunaSource {
         v.y += Math.sin(this.ctx.state.frame * 0.03 + (this.auraIdx[j] ?? 0)) * inv * 0.28;
         v.z += dx * inv;
         const stain = this.auraColor[j];
-        if (stain) e.material.color.lerp(stain, 0.02 * (1 - r / AURA_R)); // ontological hue-stain
+        // Audit #52: stain the EMISSIVE (which the entity update relaxes back each frame) instead of
+        // permanently lerping the base colour — the stain is now transient, no cumulative hue drift.
+        if (stain) e.material.emissive.lerp(stain, 0.02 * (1 - r / AURA_R));
         // V69 SHOCK: an organism that strays into the inner well RECOILS — a brief speed-sap (stun), so
         // it no longer drifts through "like nothing"; the colossus's freak-geometry physically rebukes
         // it. The inner zone overlaps the harvest reach, so the captured are soon consumed (economyTick).

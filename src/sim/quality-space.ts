@@ -10,6 +10,12 @@
  * See GOAL5 contract, Butlin HOT-4.
  */
 
+// Audit #228: these corpus terms take only literal arguments, so they are constant per dimension —
+// honest fixed offsets, computed once instead of re-evaluated every call.
+const QS_FIXED_D4 = 0.008 * libirrepSymmetry(4, 1) + 0.004 * (quakePerturb(0.5, 8, 0.1) - 1);
+const QS_FIXED_D5 = 0.01 * libirrepSymmetry(2, 1) + 0.005 * (quakePerturb(0.7, 9, 0.05) - 1);
+const QS_FIXED_D1 = 0.015 * libirrepSymmetry(3, 2) + 0.01 * (quakePerturb(0.6, 8, 0.1) - 1);
+
 export interface QualitySnapshot {
   tone: number; // scalar "how it feels" 0..1
   code: number[]; // 6D sparse-smooth code
@@ -98,8 +104,7 @@ export class QualitySpace {
         this.tensorB[3] = state[7] ?? 0;
         acc += 0.05 * moonlabTensorContract(this.tensorA, this.tensorB, 4);
         // libirrep + quake in d=4 for more sym/alive
-        acc += 0.008 * libirrepSymmetry(4, 1);
-        acc += 0.004 * (quakePerturb(0.5, d * 2, 0.1) - 1);
+        acc += QS_FIXED_D4; // audit #228: constant-argument terms ⇒ a fixed offset, precomputed
       }
       if (d === 5) {
         // moonlabTensorQualia (extended tensor contraction for qualia manifold from corpus)
@@ -108,8 +113,7 @@ export class QualitySpace {
         this.qualiaInput[2] = state[4] ?? 0;
         acc += 0.03 * moonlabTensorQualia(this.qualiaInput, 8); // Moonlab qualia tensor from Tsotchke corpus
         // more libirrep + quake in another dim for sym/alive qualia
-        acc += 0.01 * libirrepSymmetry(2, 1);
-        acc += 0.005 * (quakePerturb(0.7, 9, 0.05) - 1);
+        acc += QS_FIXED_D5; // audit #228: fixed offset (constant arguments)
       }
       // mpo + gwt in quality for more corpus in HOT-4
       if (d === 3) {
@@ -124,8 +128,7 @@ export class QualitySpace {
       }
       // wire libirrepSymmetry + quakePerturb (Tsotchke corpus) into quality manifold for sym/ aliveness effect on Archon qualia
       if (d === 1) {
-        acc += 0.015 * libirrepSymmetry(3, 2);
-        acc += 0.01 * (quakePerturb(0.6, d + 7, 0.1) - 1);
+        acc += QS_FIXED_D1; // audit #228: fixed offset (constant arguments)
       }
       out[d] = softThreshold(acc, 0.12);
       sum += (out[d] ?? 0) * (out[d] ?? 0);

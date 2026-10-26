@@ -11,76 +11,6 @@ import { getZigKernelReceipt, zigEntityBrainBatchForward } from '../math/zig-bri
 import { counterHash32 } from '../math/wild-entropy';
 import { detectWebGpu } from './webgpu-detect';
 
-/**
- * Unintegrated WGSL prototype for `6 -> 6 -> 4` forward passes plus counter-hash jitter.
- * No production pipeline dispatches this string, and it is not a numerical-parity receipt.
- * It does not implement biome dynamics or native CUDA/NPU execution.
- */
-export const HYBRID_ENTITY_BRAIN_WGSL = /* wgsl */ `
-struct SimParams {
-  count: u32,
-  seed: u32,
-  tick: u32,
-  wild_salt: u32,
-};
-
-@group(0) @binding(0) var<uniform> params: SimParams;
-@group(0) @binding(1) var<storage, read> weights: array<f32>;
-@group(0) @binding(2) var<storage, read> inputs: array<f32>;
-@group(0) @binding(3) var<storage, read_write> outputs: array<f32>;
-
-fn counter_hash_32(seed: u32, tick: u32, entity_id: u32, channel: u32) -> u32 {
-  var c0: u32 = entity_id ^ (channel * 0x9e3779b9u);
-  var c1: u32 = tick ^ (channel * 0x85ebca6bu);
-  var k0: u32 = seed ^ 0x243f6a88u;
-  var k1: u32 = (seed * 0x6d2b79f5u) ^ 0xb7e15162u;
-
-  for (var r: u32 = 0u; r < 4u; r = r + 1u) {
-    let prod_lo: u32 = c0 * 0xd2511f53u;
-    let mixed_hi: u32 = (c0 ^ (c0 >> 16u)) * 0xcd9e8d57u;
-    let next0: u32 = mixed_hi ^ c1 ^ k0;
-    let next1: u32 = prod_lo ^ k1;
-    c0 = next0;
-    c1 = next1;
-    k0 = k0 + 0x9e3779b9u;
-    k1 = k1 + 0xbb67ae85u;
-  }
-  let mixed: u32 = c0 ^ c1 ^ (c0 >> 15u);
-  return ((mixed ^ (mixed >> 13u)) * 0xc2b2ae35u) ^ (mixed >> 16u);
-}
-
-@compute @workgroup_size(64)
-fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
-  let idx: u32 = gid.x;
-  if (idx >= params.count) {
-    return;
-  }
-  let w_base: u32 = idx * 70u;
-  let in_base: u32 = idx * 6u;
-  let out_base: u32 = idx * 4u;
-
-  var hidden: array<f32, 6>;
-  for (var h: u32 = 0u; h < 6u; h = h + 1u) {
-    var acc: f32 = weights[w_base + 36u + h];
-    for (var i: u32 = 0u; i < 6u; i = i + 1u) {
-      acc = acc + weights[w_base + h * 6u + i] * inputs[in_base + i];
-    }
-    hidden[h] = tanh(acc);
-  }
-
-  let rng_word: u32 = counter_hash_32(params.seed ^ params.wild_salt, params.tick, idx, 0u);
-  let micro_jitter: f32 = (f32(rng_word) / 4294967296.0 - 0.5) * 0.002;
-
-  for (var o: u32 = 0u; o < 4u; o = o + 1u) {
-    var acc2: f32 = weights[w_base + 66u + o];
-    for (var h: u32 = 0u; h < 6u; h = h + 1u) {
-      acc2 = acc2 + weights[w_base + 42u + o * 6u + h] * hidden[h];
-    }
-    outputs[out_base + o] = tanh(acc2) + micro_jitter;
-  }
-}
-`;
-
 export interface HybridHardwareCapabilities {
   readonly cpuLogicalCores: number;
   /** Suggested capacity, not the count of initialized workers. */
@@ -358,6 +288,8 @@ export interface HybridEntityBrainExecution {
   readonly npuExecutedEntities: 0;
 }
 
+let hybridHiddenScratch = new Float32Array(6);
+
 /** Execute the actual WASM export on the calling CPU thread and verify its processed count. */
 export function executeHybridEntityBrainBatchWithReceipt(
   weights: Float32Array,
@@ -391,7 +323,10 @@ export function executeHybridEntityBrainBatchWithReceipt(
     covered = shard.endSlot;
   }
   if (covered !== count) throw new RangeError('Entity-brain shards do not cover the batch');
-  const scratchHidden = new Float32Array(Math.max(6, count * 6));
+  // Audit #274: grow-only module scratch for the hidden layer instead of a fresh count·6 array per call.
+  const need = Math.max(6, count * 6);
+  if (hybridHiddenScratch.length < need) hybridHiddenScratch = new Float32Array(need);
+  const scratchHidden = hybridHiddenScratch;
   let processedEntities = 0;
 
   for (const shard of plan.shards) {
@@ -399,6 +334,7 @@ export function executeHybridEntityBrainBatchWithReceipt(
     const wSub = weights.subarray(shard.startSlot * 70, shard.endSlot * 70);
     const inSub = inputs.subarray(shard.startSlot * 6, shard.endSlot * 6);
     const hidSub = scratchHidden.subarray(shard.startSlot * 6, shard.endSlot * 6);
+    hidSub.fill(0); // the WASM kernel accumulates into hidden, so a reused scratch must start at 0
     const outSub = outputs.subarray(shard.startSlot * 4, shard.endSlot * 4);
 
     const processed = zigEntityBrainBatchForward(wSub, inSub, hidSub, outSub, shard.count);
