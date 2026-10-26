@@ -22,6 +22,7 @@ import { PerformanceMonitor } from './core/perf-monitor';
 import { MemoryStore } from './memory/store';
 import { AuditTrail } from './logging/audit';
 import { createLogger } from './logging/logger';
+import { parseSeedParam } from './core/seed-param';
 import { World } from './world';
 // Center HUD (V56/V84): cyclable center popup for AI · HELP · AUDIT · NEURAL · MARKET · ARCHITECT · ARCHITECTURE.
 import { initCenterHud } from './ui/center-hud';
@@ -327,9 +328,12 @@ async function boot(): Promise<void> {
   const bigTreeEcology = store.loadBigTreeEcology();
   // V95: every browser reload starts a fresh cosmos — new seed, new creatures, new economy.
   // Preferences (audio, view, render, etc.) are kept; only the deterministic seed is reset.
+  // `?seed=` (hex `0x…` or decimal) reproduces a run; the time-based seed applies only when it is
+  // absent or unparseable (audit #303: the value used to be ignored).
+  const urlSeed = parseSeedParam(new URLSearchParams(location.search).get('seed'));
   const persisted = {
     ...loaded,
-    seed: (0xc05a06 ^ ((performance.now() * 1000) | 0)) >>> 0,
+    seed: urlSeed ?? (0xc05a06 ^ ((performance.now() * 1000) | 0)) >>> 0,
   };
   persisted.sessions += 1;
   store.save(persisted);

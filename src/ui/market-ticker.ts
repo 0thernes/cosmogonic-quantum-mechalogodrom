@@ -556,9 +556,12 @@ export class MarketTicker {
   /** Size a canvas to the panel width × `cssH` (DPR-backed) and return the CSS width. */
   private fit(ctx: CanvasRenderingContext2D, cv: HTMLCanvasElement, cssH: number): number {
     const cssW = Math.max(120, (this.panel.clientWidth || 320) - 12);
-    if (cv.width !== cssW * this.dpr || cv.height !== cssH * this.dpr) {
-      cv.width = cssW * this.dpr;
-      cv.height = cssH * this.dpr;
+    // Rounded comparison: a fractional DPR otherwise reallocates every paint (audit #281).
+    const bw = Math.round(cssW * this.dpr);
+    const bh = Math.round(cssH * this.dpr);
+    if (cv.width !== bw || cv.height !== bh) {
+      cv.width = bw;
+      cv.height = bh;
       cv.style.height = cssH + 'px';
     }
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);

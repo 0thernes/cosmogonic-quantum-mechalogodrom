@@ -232,8 +232,15 @@ function setBar(ref: { fill: HTMLElement; num: HTMLElement }, value: number, lab
 
 /** Fit a canvas's backing store to its CSS box at device resolution; returns CSS-pixel size. */
 function fitCanvas(cv: HTMLCanvasElement, dpr: number): { w: number; h: number } {
-  const w = cv.clientWidth || cv.width;
-  const h = cv.clientHeight || cv.height;
+  // Hidden (display:none / minimized) canvases report a 0 CSS box. Falling back to the BACKING width
+  // and multiplying by DPR again grew the canvas every paint (300→19200 px at DPR 2 — audit #286), so
+  // keep the current backing store and report its CSS-equivalent size instead.
+  if (cv.clientWidth === 0 || cv.clientHeight === 0) {
+    const k = dpr > 0 ? dpr : 1;
+    return { w: cv.width / k, h: cv.height / k };
+  }
+  const w = cv.clientWidth;
+  const h = cv.clientHeight;
   const bw = Math.max(1, Math.round(w * dpr));
   const bh = Math.max(1, Math.round(h * dpr));
   if (cv.width !== bw) cv.width = bw;
@@ -501,7 +508,13 @@ export class XenomimicPanel {
         `${telemetry.teleports} Born-rule teleports · FEP ${telemetry.freeEnergy.toFixed(2)} · ` +
         `${XENOMIMIC_BRAIN_PARAMETERS}p shared twin brain`;
     }
-    if (!this.raf) this.startLoop();
+    // Do not restart the rAF loop while the panel is minimized or closed (audit #286).
+    if (
+      !this.raf &&
+      this.panel?.classList.contains('open') &&
+      !this.panel.classList.contains('minimized')
+    )
+      this.startLoop();
   }
 
   /** One presentation frame: all five canvases. Timestamp is rAF-supplied, never sim RNG. */
