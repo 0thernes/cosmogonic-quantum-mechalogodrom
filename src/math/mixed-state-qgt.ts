@@ -1,3 +1,4 @@
+// Audit #87 (honesty, documented): applies the pure-state formula to vec(rho) in Hilbert-Schmidt space: NOT the Bures metric/QFI (pure-state limit is 2x Fubini-Study, berry is identically 0, "entropy" is linear entropy); not used at runtime.
 /**
  * MIXED-STATE QUANTUM GEOMETRIC TENSOR (V94 / Super Creature 1.1) — faculty #8 from research bedrock.
  * Extends the pure-state QGT toward mixed states (density matrices) with a bounded APPROXIMATION to the

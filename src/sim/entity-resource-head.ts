@@ -1,3 +1,4 @@
+// Audit #244 (honesty, documented): the actor update is advantage*action*activation with deterministic actions and no tanh derivative: self-reinforcing, not a policy gradient (measured alignment 56% vs 54% frozen).
 /**
  * Phase-B per-organism resource head.
  *

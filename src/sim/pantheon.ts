@@ -1,3 +1,4 @@
+// Audit #143 (honesty, documented): the 20 light archons have no world input: planBias is a function of archon index and frame%64.
 /**
  * PANTHEON SOCIETY — tiered 25-Archon coordination (NEO-MIND § Archon pantheon).
  *

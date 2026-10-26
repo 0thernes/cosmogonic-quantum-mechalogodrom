@@ -1042,7 +1042,8 @@ export class SuperBodySystem implements BigTreeActorSource {
 
       // QUANTUM TELEPORT is suspended during a tree visit so entry cannot snap or bypass the route.
       this.teleClock -= dt * (1 + 1.5 * this.surprise);
-      if (!manual && this.teleClock <= 0) {
+      // Audit #138: never teleport mid-hunt (it broke pursuit); the clock waits until the lock clears.
+      if (!manual && this.teleClock <= 0 && !this.hunting) {
         this.seed++;
         const a = this.seed * 1.99977 + vph;
         const rr = (0.25 + 0.7 * frac(this.seed * 0.409)) * ARENA_R;
@@ -1053,6 +1054,7 @@ export class SuperBodySystem implements BigTreeActorSource {
         );
         this.teleClock = 11 + 7 * frac(this.seed * 0.271);
       } else {
+        if (this.teleClock < 0) this.teleClock = 0;
         this.pos.addScaledVector(this.vel, dt);
       }
     }

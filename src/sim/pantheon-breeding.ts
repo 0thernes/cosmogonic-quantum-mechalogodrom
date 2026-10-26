@@ -1,3 +1,4 @@
+// Audit #145 (honesty, documented): the harmonic budget is <1, so the measured baby winding always equals the codepoint-difference class (tautological check).
 /**
  * PANTHEON BREEDING — the asexual inbred hybrid game-theory mating ritual of the 101 super
  * creatures, and the FREAK-STRUCTURE genome each rite begets (GOAL: "101 Super Creatures").

@@ -1,3 +1,5 @@
+// Audit #120 (honesty, documented): variant weights are random at construction and never trained (54k live vs "5M designed").
+// Audit #121 (honesty, documented): activity includes 0.3*input fusion and consciousnessProxy is a hand blend of apex inputs; most FUSE indicators are constant.
 /**
  * MECHALOGODROM-BRAIN — the center fusion abomination's 5M-parameter designed mind scaffold.
  *

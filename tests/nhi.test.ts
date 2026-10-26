@@ -550,6 +550,17 @@ describe('NhiMind', () => {
     expect(() => source.restoreState(forgedRegret)).toThrow(/latest choice update/);
     expect(JSON.stringify(source.stateSnapshot())).toBe(before);
 
+    // Audit #58: the realised-outcome credit is persisted and bound into the regret proof.
+    const live = source.stateSnapshot();
+    expect(live.cognition.outcomeAction).toBeGreaterThanOrEqual(0);
+    expect(Number.isFinite(live.cognition.outcomeDelta)).toBe(true);
+    const forgedOutcome = structuredClone(live) as NhiMindStateSnapshot & {
+      cognition: { outcomeDelta: number };
+    };
+    forgedOutcome.cognition.outcomeDelta = (forgedOutcome.cognition.outcomeDelta ?? 0) + 0.5;
+    expect(() => source.restoreState(forgedOutcome)).toThrow(/latest choice update/);
+    expect(JSON.stringify(source.stateSnapshot())).toBe(before);
+
     const unreachableDominance = structuredClone(source.stateSnapshot()) as NhiMindStateSnapshot & {
       cognition: { facts: number };
     };

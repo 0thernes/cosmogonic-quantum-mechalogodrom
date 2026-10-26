@@ -1,3 +1,4 @@
+// Audit #173 (honesty, documented): the 144 named faculties are one identical leaky integrator over 16 world scalars (mod-indexed); only the aggregate mean is consumed.
 /**
  * FACULTIES PANTHEON — the canonical 100-faculty NHSI design PLUS a brutal-god layer, 144 named total.
  * Canonical design target = 100 (the published headline); `FACULTY_NAMES` adds the god-layer (Valkorion

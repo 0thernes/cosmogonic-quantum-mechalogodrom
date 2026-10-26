@@ -1,3 +1,4 @@
+// Audit #187 (honesty, documented): all ten MLPs are frozen at random init; spiking is ~always true; live params 22,467 (not 25,000); chaos/temperature enter unnormalised.
 /**
  * GLYPH-BRAIN — the 25,000-parameter brain model for each of the 100 pantheon letter creatures.
  *

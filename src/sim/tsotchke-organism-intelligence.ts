@@ -1,3 +1,4 @@
+// Audit #172 (honesty, documented): the v1 ecology predictor targets next-step pressure, itself a fixed formula of its inputs, so "risk" is roughly lagged pressure.
 /**
  * SHARED TSOTCHKE ORGANISM INTELLIGENCE
  *

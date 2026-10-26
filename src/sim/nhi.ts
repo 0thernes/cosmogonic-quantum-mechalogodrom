@@ -225,6 +225,7 @@ interface RestoredNhiIdentity {
   readonly neuralGeneOutput: boolean;
   readonly baseUtilityInputs: boolean;
   readonly goapBias: boolean;
+  readonly outcomeFeedback: boolean;
   readonly hidden: NhiGeneHidden;
   readonly voiceWeights: Float32Array;
   readonly geneWeights: Float32Array;
@@ -251,6 +252,8 @@ export interface NhiMindOptions {
   baseUtilityInputs?: boolean;
   /** Ablates the current GOAP plan's utility bias while retaining facts and plan telemetry. */
   goapBias?: boolean;
+  /** Audit #58: credit realised outcomes (mood change) into regret. Default true; frozen protocols pass false. */
+  outcomeFeedback?: boolean;
 }
 
 /** Exact, JSON-safe checkpoint for one NHI mind. The decision RNG remains caller-owned. */
@@ -264,6 +267,7 @@ export interface NhiMindStateSnapshot {
       readonly neuralGeneOutput: boolean;
       readonly baseUtilityInputs: boolean;
       readonly goapBias: boolean;
+      readonly outcomeFeedback?: boolean;
     };
     readonly dims: {
       readonly in: typeof GENE_IN;
@@ -300,6 +304,12 @@ export interface NhiMindStateSnapshot {
     readonly planDirty: boolean;
     readonly plannedAction: number;
     readonly lastAction: number;
+    /** Audit #58 outcome feedback: action credited in the latest regret update (−1 none). Optional for old checkpoints. */
+    readonly outcomeAction?: number;
+    /** Realised mood change credited to {@link outcomeAction}. */
+    readonly outcomeDelta?: number;
+    /** Mood at the moment {@link lastAction} was chosen (baseline for its future payoff). */
+    readonly moodAtChoice?: number;
   };
 }
 
@@ -329,6 +339,27 @@ interface ValidatedNhiState {
   readonly planDirty: boolean;
   readonly plannedAction: number;
   readonly lastAction: number;
+  readonly outcomeAction: number;
+  readonly outcomeDelta: number;
+  readonly moodAtChoice: number;
+}
+
+/**
+ * Audit #58: one regret-matching update with OUTCOME feedback. The counterfactual term compares the
+ * heuristic scores with the sampled action; the outcome term credits the previously chosen action
+ * with its realised payoff (the mood change since it was chosen): a good outcome lowers every other
+ * action's regret, a bad one raises them. Shared by the live update and the checkpoint validator.
+ */
+function regretUpdate(
+  prior: number,
+  score: number,
+  sampledUtility: number,
+  i: number,
+  outcomeAction: number,
+  outcomeDelta: number,
+): number {
+  const outcome = outcomeAction >= 0 && i !== outcomeAction ? -outcomeDelta * 0.05 : 0;
+  return prior * 0.97 + (score - sampledUtility) * 0.1 + outcome;
 }
 
 /** Corpus input order after the five legacy inputs: resource, threat, exploration, social. */
@@ -488,6 +519,11 @@ function validateNhiIdentity(snapshot: unknown): RestoredNhiIdentity {
     'controls.baseUtilityInputs',
   );
   const goapBias = stateBoolean(identity.controls.goapBias, 'controls.goapBias');
+  // Audit #58: absent in pre-#58 checkpoints, which never applied outcome feedback.
+  const outcomeFeedback =
+    identity.controls.outcomeFeedback === undefined
+      ? false
+      : stateBoolean(identity.controls.outcomeFeedback, 'controls.outcomeFeedback');
   if (!isRecord(identity.dims)) throw new TypeError('NHI state dims must be an object');
   if (identity.dims.in !== GENE_IN || identity.dims.out !== GENE_OUT) {
     throw new Error('NHI state input/output topology mismatch');
@@ -517,6 +553,7 @@ function validateNhiIdentity(snapshot: unknown): RestoredNhiIdentity {
     neuralGeneOutput,
     baseUtilityInputs,
     goapBias,
+    outcomeFeedback,
     hidden,
     voiceWeights,
     geneWeights,
@@ -627,6 +664,25 @@ function validateNhiState(snapshot: unknown): ValidatedNhiState {
     ACTION_COUNT - 1,
   );
 
+  const outcomeAction =
+    cognition.outcomeAction === undefined
+      ? -1
+      : stateInteger(cognition.outcomeAction, 'cognition.outcomeAction', -1, ACTION_COUNT - 1);
+  const outcomeDelta =
+    cognition.outcomeDelta === undefined
+      ? 0
+      : stateNumber(cognition.outcomeDelta, 'cognition.outcomeDelta', -2, 2);
+  const moodAtChoice =
+    cognition.moodAtChoice === undefined
+      ? mood
+      : stateNumber(cognition.moodAtChoice, 'cognition.moodAtChoice', -1, 1);
+  if (!identity.outcomeFeedback && outcomeAction !== -1) {
+    throw new Error('NHI state outcomeAction requires the outcomeFeedback control');
+  }
+  if (outcomeAction < 0 && outcomeDelta !== 0) {
+    throw new Error('NHI state outcomeDelta requires an outcomeAction');
+  }
+
   if ((facts & F_DOMINANT) !== 0 && (facts & F_SWARMED) === 0) {
     throw new Error('NHI state dominant fact requires an acknowledged swarm');
   }
@@ -640,7 +696,14 @@ function validateNhiState(snapshot: unknown): ValidatedNhiState {
   const sampledUtility = scores[lastAction] ?? 0;
   for (let i = 0; i < ACTION_COUNT; i++) {
     const expectedRegret = Math.fround(
-      (policyRegret[i] ?? 0) * 0.97 + ((scores[i] ?? 0) - sampledUtility) * 0.1,
+      regretUpdate(
+        policyRegret[i] ?? 0,
+        scores[i] ?? 0,
+        sampledUtility,
+        i,
+        outcomeAction,
+        outcomeDelta,
+      ),
     );
     if (regret[i] !== expectedRegret) {
       throw new Error(`NHI state cognition.regret[${i}] does not match the latest choice update`);
@@ -709,7 +772,8 @@ function validateNhiState(snapshot: unknown): ValidatedNhiState {
       !allZero(regret, scores, sensory, hidden, output, policyRegret) ||
       policyTemperature !== 1 ||
       regretMix !== 0 ||
-      lastAction !== 0
+      lastAction !== 0 ||
+      outcomeAction !== -1
     ) {
       throw new Error('NHI state uninitialized cognition is internally inconsistent');
     }
@@ -742,6 +806,9 @@ function validateNhiState(snapshot: unknown): ValidatedNhiState {
     planDirty,
     plannedAction,
     lastAction,
+    outcomeAction,
+    outcomeDelta,
+    moodAtChoice,
   };
 }
 
@@ -799,6 +866,7 @@ export class NhiMind {
   private readonly neuralGeneOutput: boolean;
   private readonly baseUtilityInputs: boolean;
   private readonly goapBias: boolean;
+  private readonly outcomeFeedback: boolean;
   private readonly rivals = new Map<number, Rival>();
   private readonly cumRegret = new Float32Array(ACTION_COUNT);
   private readonly scores = new Float32Array(ACTION_COUNT);
@@ -814,6 +882,9 @@ export class NhiMind {
   private mood = 0; // -1 brooding .. +1 manic
   /** Telemetry/observatory only: the chosen action + current post-outcome GOAP next step. */
   private lastAction = 0;
+  private outcomeAction = -1;
+  private outcomeDelta = 0;
+  private moodAtChoice = 0;
   private lastPlanned = -1;
   private planDirty = true;
   private policyTemperature = 1;
@@ -838,6 +909,10 @@ export class NhiMind {
     const baseUtilityInputs =
       restoredIdentity?.baseUtilityInputs ?? options.baseUtilityInputs ?? true;
     const goapBias = restoredIdentity?.goapBias ?? options.goapBias ?? true;
+    const outcomeFeedback = restoredIdentity?.outcomeFeedback ?? options.outcomeFeedback ?? true;
+    if (typeof outcomeFeedback !== 'boolean') {
+      throw new TypeError('NHI outcomeFeedback control must be boolean');
+    }
     if (typeof semanticUtilityInputs !== 'boolean') {
       throw new TypeError('NHI semanticUtilityInputs control must be boolean');
     }
@@ -855,6 +930,7 @@ export class NhiMind {
     this.neuralGeneOutput = neuralGeneOutput;
     this.baseUtilityInputs = baseUtilityInputs;
     this.goapBias = goapBias;
+    this.outcomeFeedback = outcomeFeedback;
     if (restoredIdentity) {
       this.narcissism = restoredIdentity.traits.narcissism;
       this.aggression = restoredIdentity.traits.aggression;
@@ -898,6 +974,7 @@ export class NhiMind {
       neuralGeneOutput: this.neuralGeneOutput,
       baseUtilityInputs: this.baseUtilityInputs,
       goapBias: this.goapBias,
+      outcomeFeedback: this.outcomeFeedback,
     });
     const w = child.gene.weights;
     const mateWeights =
@@ -1058,6 +1135,7 @@ export class NhiMind {
     this.policyTemperature = temp;
     this.regretMix = regretMix;
     const useRegret = rng() < regretMix;
+    const prevAction = this.selectionMode === 'uninitialized' ? -1 : this.lastAction;
     this.selectionMode = useRegret
       ? positiveRegret > 0
         ? 'regret-positive'
@@ -1072,9 +1150,19 @@ export class NhiMind {
     // against the greedy maximum would make every increment non-positive and permanently force
     // regretMatch() into its uniform-fallback branch.
     const sampledUtility = s[action] ?? 0;
+    this.outcomeAction = this.outcomeFeedback ? prevAction : -1;
+    this.outcomeDelta = this.outcomeAction >= 0 ? this.mood - this.moodAtChoice : 0;
     for (let i = 0; i < ACTION_COUNT; i++) {
-      this.cumRegret[i] = (this.cumRegret[i] ?? 0) * 0.97 + ((s[i] ?? 0) - sampledUtility) * 0.1;
+      this.cumRegret[i] = regretUpdate(
+        this.cumRegret[i] ?? 0,
+        s[i] ?? 0,
+        sampledUtility,
+        i,
+        this.outcomeAction,
+        this.outcomeDelta,
+      );
     }
+    this.moodAtChoice = this.mood;
 
     // 5. Hallucinated utterance — a Markov walk whose length scales with hallucination + chaos.
     const len = 2 + Math.floor((this.hallucination + chaos) * 4);
@@ -1168,6 +1256,7 @@ export class NhiMind {
           neuralGeneOutput: this.neuralGeneOutput,
           baseUtilityInputs: this.baseUtilityInputs,
           goapBias: this.goapBias,
+          ...(this.outcomeFeedback ? { outcomeFeedback: true } : {}),
         },
         dims: { in: GENE_IN, hid: this.gene.nHidden as NhiGeneHidden, out: GENE_OUT },
         voiceWeights: Array.from(this.voice.weights),
@@ -1192,6 +1281,14 @@ export class NhiMind {
         planDirty: this.planDirty,
         plannedAction: this.lastPlanned,
         lastAction: this.lastAction,
+        // Audit #58: emitted only when the control is on, so feedback-free checkpoints are unchanged.
+        ...(this.outcomeFeedback
+          ? {
+              outcomeAction: this.outcomeAction,
+              outcomeDelta: this.outcomeDelta,
+              moodAtChoice: this.moodAtChoice,
+            }
+          : {}),
       },
     };
   }
@@ -1226,6 +1323,7 @@ export class NhiMind {
       identity.neuralGeneOutput !== this.neuralGeneOutput ||
       identity.baseUtilityInputs !== this.baseUtilityInputs ||
       identity.goapBias !== this.goapBias ||
+      identity.outcomeFeedback !== this.outcomeFeedback ||
       identity.hidden !== this.gene.nHidden
     ) {
       throw new Error('NHI state immutable identity mismatch');
@@ -1263,6 +1361,9 @@ export class NhiMind {
     this.planDirty = state.planDirty;
     this.lastPlanned = state.plannedAction;
     this.lastAction = state.lastAction;
+    this.outcomeAction = state.outcomeAction;
+    this.outcomeDelta = state.outcomeDelta;
+    this.moodAtChoice = state.moodAtChoice;
   }
 
   /**

@@ -442,6 +442,7 @@ class PersistentNarrative {
   } {
     let best = -1;
     let bestSc = -Infinity;
+    let bestIdx = -1;
     const n = Math.min(this.count, this.cap);
     let semE = 0;
     for (let i = 0; i < HRR_DIM; i++) semE += Math.abs(this.semTrace[i] ?? 0);
@@ -462,11 +463,12 @@ class PersistentNarrative {
       if (sc > bestSc) {
         bestSc = sc;
         best = p;
+        bestIdx = i;
       }
     }
     this.lastRouterRel = bestSc > -Infinity ? clamp01(bestSc) : 0;
-    const etIdx = (this.head - 1 + this.cap) % this.cap;
-    const et = best >= 0 ? ((this.types[etIdx] ?? 0) as NarrativeEvent) : 0;
+    // Audit #221: report the event type of the BEST-scoring record, not the newest one.
+    const et = best >= 0 && bestIdx >= 0 ? ((this.types[bestIdx] ?? 0) as NarrativeEvent) : 0;
     return { plan: best, relevance: this.lastRouterRel, eventType: et };
   }
 

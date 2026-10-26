@@ -1,3 +1,4 @@
+// Audit #93 (honesty, documented): the QuantumMind register is re-prepared every beat, so its state is a function of the current latent/aspects (no quantum memory across beats).
 /**
  * THE QUANTUM COMPUTING MIND (V75) — the apex creature's simulated-qubit cognition layer, the
  * directive's "Quantum Computing Mind · Simulated Qubits". Where {@link SuperMind} is a classical

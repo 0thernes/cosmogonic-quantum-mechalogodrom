@@ -1,3 +1,5 @@
+// Audit #132 (honesty, documented): 11/21 indicators are hard-coded met/partial and several others are gated by measures that cannot move, so the met count is effectively constant.
+// Audit #133 (honesty, documented): OrganInterconnect density counts any positive covariance as a connection and its "STDP" is covariance-Hebbian.
 /**
  * FOUNDATIONALS — a project-specific consciousness-indicator architecture for APEX's designed 1B path.
  *

@@ -1,3 +1,4 @@
+// Audit #149 (honesty, documented): the SuperMind selfModel subnet is untrained, so selfModelAccuracy compares a random projection with affect.
 /**
  * THE METACOGNITIVE EXECUTIVE — Super Creature 1.1's fifth pillar (V92). It does not perceive the world
  * but the MIND ITSELF. Where Global Workspace (`ignition`), Integrated Information (`phi`), the Free

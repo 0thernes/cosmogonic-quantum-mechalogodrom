@@ -1,3 +1,4 @@
+// Audit #135 (honesty, documented): cortex/actor weights are random and never trained; only the 9 scalar next-sense predictors learn, and their outputs are hand-shaped drive biases.
 /**
  * THE SUPER CREATURES (5 Archons / pantheon, GOAL5) + legacy spine — apex minds of the Mechalogodrom (V31+).
  *

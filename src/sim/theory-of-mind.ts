@@ -1,3 +1,4 @@
+// Audit #225 (honesty, documented): the ToM MLP is random/untrained, sees only the observer's own state and is never checked against the rival's real plan.
 /**
  * THEORY OF MIND (V94) — Super Creature 1.1's sixth pillar: SOCIAL cognition. The other five pillars model
  * the creature's OWN mind (Global Workspace, Integrated Information, the Free Energy Principle, the echo-

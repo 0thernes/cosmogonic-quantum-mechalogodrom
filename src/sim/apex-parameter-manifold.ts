@@ -1,3 +1,4 @@
+// Audit #112 (honesty, documented): Hilbert dimension 2^q is reported as "parameters"; nativeDeclared also counts undelivered field/dense capacity in designedParams.
 /**
  * APEX Parameter Manifold — the honest, deterministic scaffolding that scales the APEX #101 brain
  * toward **one billion parameters**.

@@ -1,3 +1,4 @@
+// Audit #110 (honesty, documented): the ablation sets differ only by the 0.05*resident term, so the score is ~1 by construction (measured 0.99995): an experiment record, not evidence.
 /**
  * APEX Offworld Umwelt Score — the doctrine's Experiment 2, quantified.
  *

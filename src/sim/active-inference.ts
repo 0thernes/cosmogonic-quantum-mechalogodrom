@@ -1,3 +1,4 @@
+// Audit #147 (honesty, documented): the posterior is exact, so freeEnergy equals surprise (|diff|<=3e-15); generative means A are random and never learned.
 /**
  * ACTIVE INFERENCE (V90) — Super Creature 1.1's **free-energy core**. The Free Energy Principle (Friston
  * 2010; Parr, Pezzulo & Friston, _Active Inference_, MIT Press 2022) casts perception AND action as one

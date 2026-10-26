@@ -1,3 +1,4 @@
+// Audit #181 (honesty, documented): the 100-param MLP is predict-only (never trained) and the circuit mimicBasin is exactly 0.5 for all inputs, so bondTension/broadcast are 0.
 /**
  * XENOMIMIC BRAIN — a bipolar twin mind using exact classical statevector math (NOT sentient).
  *

@@ -612,6 +612,9 @@ export class NhiBodySystem {
     // Social DECAYS instead of hard-resetting so the staggered scan below can top it up smoothly
     // (a body not re-scanned this frame keeps a fading glow instead of flickering to zero).
     this.pairScratch.length = 0;
+    // Audit #69: above 64 bodies each anchor is refreshed only every ~8 frames, so the per-frame decay
+    // is 0.85^(1/8) there — the glow now holds across the stagger instead of flickering.
+    const socialDecay = this.bodies.size <= 64 ? 0.85 : 0.98;
     for (const [id, b] of this.bodies) {
       const p = posOf(id);
       if (!p) {
@@ -620,7 +623,7 @@ export class NhiBodySystem {
         continue;
       }
       b.group.position.copy(p);
-      b.social *= 0.85;
+      b.social *= socialDecay;
       if (b.social < 0.01) b.social = 0;
       this.pairScratch.push(b);
     }

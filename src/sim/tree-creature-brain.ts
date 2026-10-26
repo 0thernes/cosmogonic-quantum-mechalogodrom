@@ -1,3 +1,4 @@
+// Audit #122 (honesty, documented): activity drives are mostly hand-coded terms (EAT steers along the supplied food direction); the net contributes a +/-1 bias.
 /**
  * CRYSTAL BIG TREE CREATURE BRAIN — a deterministic, fixed-size neural controller for the peaceful
  * creatures authored around the Big Tree. It is a genuine 6→6→4 single-hidden-layer MLP using the same

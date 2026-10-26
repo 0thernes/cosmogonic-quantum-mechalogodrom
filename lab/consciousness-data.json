@@ -201,7 +201,7 @@
     ],
     "singularityProven": true,
     "ablationProven": false,
-    "emergenceProven": true,
+    "emergenceProven": false,
     "thalerFraction": 0.916666666667,
     "claim": "indicatorOnly"
   },

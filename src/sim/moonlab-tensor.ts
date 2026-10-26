@@ -1,3 +1,4 @@
+// Audit #214 (honesty, documented): for real 3-4 element callers d=2 and chi caps at 1, so contract/mpoStep are near-constant (~0.997).
 /**
  * MOONLAB TENSOR — REAL tensor-network / MPO kernels (leaf, exclusive owner).
  *

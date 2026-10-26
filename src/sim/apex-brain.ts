@@ -1,3 +1,7 @@
+// Audit #104 (honesty, documented): "parameters/neurons" figures are scale-table node counts; live organs are capped (4096/64/96/12q) and only the 61-weight self-model MLP trains.
+// Audit #106 (honesty, documented): the PendulumHive "lyapunov" is computed once for a single uncoupled standard map from a fixed seed point: a constant, not a measurement of the live hive.
+// Audit #107 (honesty, documented): MetaParadox distanceToTarget/godelResidual relax z->zT independent of input and reach ~0 by ~200 beats; treat as decorative.
+// Audit #108 (honesty, documented): plans are a fixed 1-to-1 map of organ outputs (signal index 4 = threat+|hiveMotor| often wins, so HUNT can dominate).
 /**
  * APEX-BRAIN — THE ENTROPIC TESSERACT HYDRA, the brain of the final-sigma ς apex creature (the
  * pantheon's 101st; see [[pantheon-breeding]]). Ten *incompatible* neuron architectures forced into

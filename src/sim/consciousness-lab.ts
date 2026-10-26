@@ -1,3 +1,4 @@
+// Audit #177 (honesty, documented): the "singularity" is a raised-cosine Kuramoto pulse this lab injects at T/2; singularityProven checks the detector finds the planted pulse.
 /**
  * CONSCIOUSNESS LAB — the offline experiment runner that turns the {@link ConsciousnessKernel}'s claims into
  * FALSIFIABLE, seed-replayable receipts. It never asserts "conscious"; it asks the nastier questions the
@@ -409,7 +410,9 @@ export function runConsciousnessLab(seed: number, cfg: LabConfig = {}): LabRepor
     // every one of the ten frameworks measurably lowers the integrated index when removed, and the stack's
     // total load is non-trivial — the mechanisms are load-bearing, not decorative.
     ablationProven: allLoadBearing && totalLoss > 0.03,
-    emergenceProven: structured.meanEmergence > 0,
+    // Audit #176: emergence is positive for ANY sub-1 input (even all-zero), so "> 0" was always true;
+    // it is now judged against the column-shuffled null run on the same kernel.
+    emergenceProven: structured.meanEmergence > nullShuffled.meanEmergence,
     thalerFraction,
     claim: 'indicatorOnly',
   };

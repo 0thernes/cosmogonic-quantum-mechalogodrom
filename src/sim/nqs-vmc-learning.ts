@@ -1,3 +1,4 @@
+// Audit #90 (honesty, documented): plain SGD VMC (no stochastic reconfiguration / QGT preconditioning) on a fixed 1-D TFIM unrelated to the simulation.
 /**
  * Neural Quantum State (NQS) / Variational Monte Carlo (VMC) online learning substrate.
  *

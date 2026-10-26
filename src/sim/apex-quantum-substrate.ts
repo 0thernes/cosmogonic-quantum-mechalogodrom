@@ -1,3 +1,4 @@
+// Audit #116 (honesty, documented): the Clifford tableau is reset every beat, so stabilizer "memory" is a function of the current drive only.
 /**
  * APEX Quantum Substrate — the Quantum Brain scaled to a **billion-dimensional Hilbert space**.
  *

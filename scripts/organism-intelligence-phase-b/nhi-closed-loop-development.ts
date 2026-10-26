@@ -754,7 +754,8 @@ function runArm(options: RunArmOptions): {
       ? null
       : new NhiMind(
           mulberry32(domainSeed(familySeed, `mind-birth/${role}/paired-phase`)),
-          descriptor.options,
+          // Audit #58: this frozen 2026-07-11 protocol declares counterfactual-only regret.
+          { ...descriptor.options, outcomeFeedback: false },
         );
   const resetPolicyRng = () =>
     mulberry32(domainSeed(familySeed, `policy-decisions/${role}/paired-phase`));
@@ -883,7 +884,9 @@ export interface NhiClosedLoopFaultProbe {
 }
 
 function runFaultProbe(faultSeed: number): NhiClosedLoopFaultProbe {
-  const mind = new NhiMind(mulberry32(domainSeed(faultSeed, 'fault-birth')));
+  const mind = new NhiMind(mulberry32(domainSeed(faultSeed, 'fault-birth')), {
+    outcomeFeedback: false,
+  });
   const intent = mind.think(
     {
       beat: 0,

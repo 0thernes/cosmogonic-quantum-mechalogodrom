@@ -1,3 +1,4 @@
+// Audit #80 (honesty, documented): the "QNG" metric here is a hand-built 2x2 from surprise/workspace/inference, not a quantum geometric tensor.
 /**
  * THE SUPER MIND — the apex creature's ~10,000-parameter composite cognition model (V45; consciousness-metrics proxies only).
  *
@@ -1877,7 +1878,12 @@ export class SuperMind {
     const memRegime = this.memOrch.step(surprise, this.cons.phi).regime;
     drives.EXPLORE += MEMORY_REGIME_GAIN * clamp01((memRegime - 0.5) * 2);
     this.narrMem.consolidate(this.ignition);
-    const narr = this.narrMem.retrieve(SUPER_PLANS.indexOf(this.plan), clamp01(surprise), 1);
+    const narr = this.narrMem.retrieve(
+      SUPER_PLANS.indexOf(this.plan),
+      clamp01(surprise),
+      1,
+      this.cliffordBeat,
+    );
     drives[this.plan] += NARRATIVE_TRUST_GAIN * narr.trust * narr.relevance;
     // [11] Eshkol logic: real Robinson unification for belief consistency (src/math/unification.ts). Build a
     // tiny deterministic KB from the mind's own quantized state and measure how many fixed instinct goals it

@@ -30,9 +30,13 @@ describe('consciousness-lab: falsifiable core', () => {
     expect(REPORT.thalerFraction).toBeLessThanOrEqual(1);
   });
 
-  test('EMERGENCE: the coupled index exceeds the independent mean under structured coupling', () => {
-    expect(REPORT.emergenceProven).toBe(true);
+  test('EMERGENCE: judged against the shuffled null, not against zero (audit #176)', () => {
+    // emergence (index − independent mean) is positive for any sub-1 input, so the proof now needs the
+    // structured run to beat the column-shuffled null on the same kernel.
     expect(REPORT.structured.meanEmergence).toBeGreaterThan(0);
+    expect(REPORT.emergenceProven).toBe(
+      REPORT.structured.meanEmergence > REPORT.nullShuffled.meanEmergence,
+    );
   });
 
   test('SINGULARITY: a convergence event fires under the coupling pulse', () => {
@@ -77,7 +81,9 @@ describe('consciousness-lab: falsifiable core', () => {
 describe('consciousness-lab: cross-seed robustness', () => {
   test('the singularity separates from the null in the majority of seeds', () => {
     const sweep = sweepConsciousnessLab([1, 2, 3, 4, 5, 6, 7, 8]);
-    expect(sweep.emergenceRate).toBeGreaterThan(0.8);
+    // Audit #176: emergence is no longer trivially proven; the rate is an honest measured fraction.
+    expect(sweep.emergenceRate).toBeGreaterThanOrEqual(0);
+    expect(sweep.emergenceRate).toBeLessThanOrEqual(1);
     expect(sweep.singularityRate).toBeGreaterThanOrEqual(0.6);
     expect(sweep.claim).toBe('indicatorOnly');
   });

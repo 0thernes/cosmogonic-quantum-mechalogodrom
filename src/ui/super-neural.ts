@@ -381,6 +381,8 @@ export class SuperNeural {
   private tab = 0;
   private megaBrainMode = true;
   private active = false;
+  /** Audit #290: a fresh snapshot arrived while hidden; cards/graph/MI are rebuilt on activation. */
+  private buildPending = false;
   private snap: Snap | null = null;
   private cards: NeuralCard[][] = [];
   private brain: BrainGraph | null = null;
@@ -573,6 +575,15 @@ export class SuperNeural {
   setActive(v: boolean): void {
     this.active = v;
     if (v) {
+      if (this.buildPending && this.snap) {
+        // Audit #290: rebuild the deferred cards/graph once on (re)activation.
+        this.buildPending = false;
+        this.cards = buildNeuralCards(this.snap, this.hist);
+        const unstarted =
+          this.snap.observatory.tick === 0 || this.snap.observatory.mode === 'unstarted';
+        this.brain = unstarted ? null : buildBrainGraph(this.snap);
+        this.buildGrid();
+      }
       this.paint();
       if (!this.raf) this.raf = requestAnimationFrame(this.tick);
     } else {
@@ -605,7 +616,10 @@ export class SuperNeural {
     this.snap = snap;
     if (unstarted) this.sampleAt = 0;
     if (fresh) this.sampleAt = this.receivedAt;
-    if (fresh || first || unstarted) {
+    if ((fresh || first || unstarted) && !this.active && !first) {
+      // Audit #290: closed panel — history is ingested above, but skip the 27-card/graph/MI rebuild.
+      this.buildPending = true;
+    } else if (fresh || first || unstarted) {
       this.cards = buildNeuralCards(snap, this.hist);
       this.brain = unstarted ? null : buildBrainGraph(snap);
       if (

@@ -1,3 +1,4 @@
+// Audit #227 (honesty, documented): order-4 extrapolation amplifies noise ~15.8x; embodiment contingency is ~1 for slow senses regardless of control.
 /**
  * PREDICTIVE METACOGNITION — a creature that knows when to trust its own forecast.
  *

@@ -1,3 +1,4 @@
+// Audit #150 (honesty, documented): the target is the same-beat predictor output (not a future value) and the update is a one-step delta rule, not BPTT.
 /**
  * RPT-1/2 — deterministic online learned recurrence (Butlin / Jaeger extension).
  *

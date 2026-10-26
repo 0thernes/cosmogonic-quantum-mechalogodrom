@@ -215,6 +215,8 @@ export class Connectome {
   private linkData: Float32Array;
   private instanceBuffer: THREE.InstancedInterleavedBuffer;
   private pairBuffer: Uint32Array;
+  private actPrev = new Float32Array(0);
+  private actDelta = new Float32Array(0);
   private geo: THREE.InstancedBufferGeometry;
   /** Uniform handles retained so update() writes uTime without a lookup. */
   private readonly uTime: { value: number };
@@ -448,6 +450,20 @@ export class Connectome {
       e.userData.connectomeListIndex = i;
       e.userData.connectomeIndexGeneration = indexGeneration;
     }
+    // Audit #34: propagation is SYNCHRONOUS and SYMMETRIC — every link reads the pre-pass activation
+    // of both ends and accumulates into a delta buffer applied after the scan, so the result no longer
+    // depends on list order (which sortStep perturbs) or flows only low→high index.
+    if (this.actPrev.length < list.length) {
+      const cap = Math.max(list.length, this.actPrev.length * 2, 64);
+      this.actPrev = new Float32Array(cap);
+      this.actDelta = new Float32Array(cap);
+    }
+    const actPrev = this.actPrev;
+    const actDelta = this.actDelta;
+    for (let i = 0; i < list.length; i++) {
+      actPrev[i] = list[i]?.userData.act ?? 0;
+      actDelta[i] = 0;
+    }
     let wI = 0;
     let pc = 0;
     for (let ni = 0; ni < list.length && wI < max; ni++) {
@@ -489,9 +505,14 @@ export class Connectome {
           const nw = (ea.userData.nW + eb.userData.nW) * 0.5;
           // Bounded activation propagation: `!(< ACT_MAX)` routes both overflow AND NaN to
           // the cap, the symmetric branch floors the (rare) negative side. O(1), no allocation.
-          const act = eb.userData.act + ea.userData.act * nw * actStep;
           if (mutateAct) {
-            eb.userData.act = !(act < ACT_MAX) ? ACT_MAX : act > -ACT_MAX ? act : -ACT_MAX;
+            if (bi >= 0) {
+              actDelta[bi] = (actDelta[bi] ?? 0) + (actPrev[ni] ?? 0) * nw * actStep;
+              actDelta[ni] = (actDelta[ni] ?? 0) + (actPrev[bi] ?? 0) * nw * actStep;
+            } else {
+              const act = eb.userData.act + ea.userData.act * nw * actStep;
+              eb.userData.act = !(act < ACT_MAX) ? ACT_MAX : act > -ACT_MAX ? act : -ACT_MAX;
+            }
           }
           // Link topology + activation are simulation state and always advance. When the visual layer is
           // hidden, stop here: no instance-data writes, no draw count, no GPU upload.
@@ -513,6 +534,16 @@ export class Connectome {
           data[o + 9] = ni;
           data[o + 10] = communityOf ? (communityOf(ni) & 7) * TRIBE_HUE_STEP : -1;
         }
+      }
+    }
+    if (mutateAct) {
+      for (let i = 0; i < list.length; i++) {
+        const d = actDelta[i] ?? 0;
+        if (d === 0) continue;
+        const e = list[i];
+        if (!e) continue;
+        const act = e.userData.act + d;
+        e.userData.act = !(act < ACT_MAX) ? ACT_MAX : act > -ACT_MAX ? act : -ACT_MAX;
       }
     }
     this.linkCount = wI;

@@ -1,3 +1,4 @@
+// Audit #174 (honesty, documented): no agent model: plan<->cue mapping is (plan+offset)%8 over global scalars, and menace is highest under zero evidence.
 /**
  * THEORY OF MIND PANTHEON — 25 deterministic organs for social cognition, wired into the apex mind as an
  * ENSEMBLE opponent-model (super-mind.ts reads getAggregateMenace()/getAggregateConfidence() each beat to

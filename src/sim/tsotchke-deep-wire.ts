@@ -1,3 +1,4 @@
+// Audit #166 (honesty, documented): Moonlab "contract"/"MPO apply" are a Hadamard product / diagonal scaling, TT reconstruct outer-products cores, and WignerD drops the complex phase: homage kernels, not tensor-network algebra.
 /**
  * TSOTCHKE DEEP WIRING — integration of Moonlab, libirrep, and Eshkol compiler.
  *

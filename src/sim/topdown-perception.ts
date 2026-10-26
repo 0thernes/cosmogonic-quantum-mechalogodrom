@@ -1,3 +1,4 @@
+// Audit #258 (honesty, documented): bias[0] is the AD gradient of |x-l0| at l0+0.05*novelty = sign(novelty), and the quake/irrep calls use literal args, so the percept offset is near-constant.
 /**
  * HOT-1: Genuine Top-Down Generative Perception Loop.
  * The mind's imagination (imagitron) generates expected percepts that bias the next bottom-up sense.

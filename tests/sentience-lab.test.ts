@@ -44,7 +44,9 @@ describe('sentience-lab: headless analytics feed', () => {
     }
     expect(data.sweep.meanConvergenceGap).toBeGreaterThan(0);
     expect(data.sweep.meanRewardGap).toBeGreaterThan(0);
-    expect(data.sweep.emergenceRate).toBeGreaterThan(0.8);
+    // Audit #176: emergence is judged against the shuffled null now, not against zero (was trivially 1).
+    expect(data.sweep.emergenceRate).toBeGreaterThanOrEqual(0);
+    expect(data.sweep.emergenceRate).toBeLessThanOrEqual(1);
   });
 
   test('framework aggregates cover the full ten-framework stack', () => {

@@ -53,7 +53,21 @@ const QC_PAR_BALL = 6.5;
  * returned with their PERP norm so the caller can rank by acceptance (small = deep-lattice block).
  * Perfect icosahedral long-range order, NO repeating unit cell. Deterministic, zero rng.
  */
-export function icosaCutProject(): { x: number; y: number; z: number; perp: number }[] {
+type QcSite = { x: number; y: number; z: number; perp: number };
+let QC_SITES_CACHE: readonly QcSite[] | null = null;
+
+/**
+ * Audit #196: the 531k-point 6-D lattice walk is pure and seed-free, so it runs ONCE per process and is
+ * shared (callers receive a fresh array copy). Note: no perpendicular-space window is applied, so the
+ * set is the parallel projection of a 6-D cube ball — an aperiodic point cloud, not a windowed
+ * quasicrystal; `perp` is reported so callers can window it.
+ */
+export function icosaCutProject(): QcSite[] {
+  QC_SITES_CACHE ??= icosaCutProjectUncached();
+  return QC_SITES_CACHE.slice();
+}
+
+function icosaCutProjectUncached(): QcSite[] {
   const c = 1 / Math.sqrt(1 + PHI * PHI);
   const ip = 1 / PHI;
   const cp = 1 / Math.sqrt(1 + ip * ip);

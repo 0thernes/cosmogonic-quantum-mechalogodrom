@@ -19,7 +19,7 @@
     "runs": 32,
     "singularityRate": 1,
     "ablationRate": 0.40625,
-    "emergenceRate": 1,
+    "emergenceRate": 0,
     "meanStructuredIndex": 0.569244,
     "meanNullIndex": 0.571825,
     "meanNullGap": 0,
@@ -41,7 +41,7 @@
       "peakMoving": 10,
       "singularityProven": true,
       "ablationProven": false,
-      "emergenceProven": true
+      "emergenceProven": false
     },
     {
       "seed": 2044229561,
@@ -56,7 +56,7 @@
       "peakMoving": 10,
       "singularityProven": true,
       "ablationProven": false,
-      "emergenceProven": true
+      "emergenceProven": false
     },
     {
       "seed": 2706994553,
@@ -71,7 +71,7 @@
       "peakMoving": 10,
       "singularityProven": true,
       "ablationProven": true,
-      "emergenceProven": true
+      "emergenceProven": false
     },
     {
       "seed": 2371426144,
@@ -86,7 +86,7 @@
       "peakMoving": 10,
       "singularityProven": true,
       "ablationProven": false,
-      "emergenceProven": true
+      "emergenceProven": false
     },
     {
       "seed": 214672024,
@@ -101,7 +101,7 @@
       "peakMoving": 10,
       "singularityProven": true,
       "ablationProven": true,
-      "emergenceProven": true
+      "emergenceProven": false
     },
     {
       "seed": 3645716557,
@@ -116,7 +116,7 @@
       "peakMoving": 10,
       "singularityProven": true,
       "ablationProven": false,
-      "emergenceProven": true
+      "emergenceProven": false
     },
     {
       "seed": 76331177,
@@ -131,7 +131,7 @@
       "peakMoving": 7,
       "singularityProven": true,
       "ablationProven": false,
-      "emergenceProven": true
+      "emergenceProven": false
     },
     {
       "seed": 3393756084,
@@ -146,7 +146,7 @@
       "peakMoving": 10,
       "singularityProven": true,
       "ablationProven": false,
-      "emergenceProven": true
+      "emergenceProven": false
     },
     {
       "seed": 2559906128,
@@ -161,7 +161,7 @@
       "peakMoving": 10,
       "singularityProven": true,
       "ablationProven": false,
-      "emergenceProven": true
+      "emergenceProven": false
     },
     {
       "seed": 2124050121,
@@ -176,7 +176,7 @@
       "peakMoving": 7,
       "singularityProven": true,
       "ablationProven": true,
-      "emergenceProven": true
+      "emergenceProven": false
     },
     {
       "seed": 3697351393,
@@ -191,7 +191,7 @@
       "peakMoving": 10,
       "singularityProven": true,
       "ablationProven": false,
-      "emergenceProven": true
+      "emergenceProven": false
     },
     {
       "seed": 3035609664,
@@ -206,7 +206,7 @@
       "peakMoving": 10,
       "singularityProven": true,
       "ablationProven": false,
-      "emergenceProven": true
+      "emergenceProven": false
     },
     {
       "seed": 3746881312,
@@ -221,7 +221,7 @@
       "peakMoving": 9,
       "singularityProven": true,
       "ablationProven": false,
-      "emergenceProven": true
+      "emergenceProven": false
     },
     {
       "seed": 2406748429,
@@ -236,7 +236,7 @@
       "peakMoving": 8,
       "singularityProven": true,
       "ablationProven": true,
-      "emergenceProven": true
+      "emergenceProven": false
     },
     {
       "seed": 878035361,
@@ -251,7 +251,7 @@
       "peakMoving": 10,
       "singularityProven": true,
       "ablationProven": false,
-      "emergenceProven": true
+      "emergenceProven": false
     },
     {
       "seed": 992814772,
@@ -266,7 +266,7 @@
       "peakMoving": 10,
       "singularityProven": true,
       "ablationProven": true,
-      "emergenceProven": true
+      "emergenceProven": false
     },
     {
       "seed": 1946589880,
@@ -281,7 +281,7 @@
       "peakMoving": 10,
       "singularityProven": true,
       "ablationProven": true,
-      "emergenceProven": true
+      "emergenceProven": false
     },
     {
       "seed": 934865961,
@@ -296,7 +296,7 @@
       "peakMoving": 9,
       "singularityProven": true,
       "ablationProven": false,
-      "emergenceProven": true
+      "emergenceProven": false
     },
     {
       "seed": 2978192345,
@@ -311,7 +311,7 @@
       "peakMoving": 8,
       "singularityProven": true,
       "ablationProven": false,
-      "emergenceProven": true
+      "emergenceProven": false
     },
     {
       "seed": 3468676208,
@@ -326,7 +326,7 @@
       "peakMoving": 10,
       "singularityProven": true,
       "ablationProven": true,
-      "emergenceProven": true
+      "emergenceProven": false
     },
     {
       "seed": 2336127992,
@@ -341,7 +341,7 @@
       "peakMoving": 10,
       "singularityProven": true,
       "ablationProven": true,
-      "emergenceProven": true
+      "emergenceProven": false
     },
     {
       "seed": 470520861,
@@ -356,7 +356,7 @@
       "peakMoving": 9,
       "singularityProven": true,
       "ablationProven": false,
-      "emergenceProven": true
+      "emergenceProven": false
     },
     {
       "seed": 1506456329,
@@ -371,7 +371,7 @@
       "peakMoving": 8,
       "singularityProven": true,
       "ablationProven": true,
-      "emergenceProven": true
+      "emergenceProven": false
     },
     {
       "seed": 1381348964,
@@ -386,7 +386,7 @@
       "peakMoving": 10,
       "singularityProven": true,
       "ablationProven": true,
-      "emergenceProven": true
+      "emergenceProven": false
     },
     {
       "seed": 1155702160,
@@ -401,7 +401,7 @@
       "peakMoving": 10,
       "singularityProven": true,
       "ablationProven": false,
-      "emergenceProven": true
+      "emergenceProven": false
     },
     {
       "seed": 3702511289,
@@ -416,7 +416,7 @@
       "peakMoving": 10,
       "singularityProven": true,
       "ablationProven": false,
-      "emergenceProven": true
+      "emergenceProven": false
     },
     {
       "seed": 2507020225,
@@ -431,7 +431,7 @@
       "peakMoving": 10,
       "singularityProven": true,
       "ablationProven": true,
-      "emergenceProven": true
+      "emergenceProven": false
     },
     {
       "seed": 836954224,
@@ -446,7 +446,7 @@
       "peakMoving": 10,
       "singularityProven": true,
       "ablationProven": false,
-      "emergenceProven": true
+      "emergenceProven": false
     },
     {
       "seed": 2070681280,
@@ -461,7 +461,7 @@
       "peakMoving": 10,
       "singularityProven": true,
       "ablationProven": false,
-      "emergenceProven": true
+      "emergenceProven": false
     },
     {
       "seed": 696015741,
@@ -476,7 +476,7 @@
       "peakMoving": 10,
       "singularityProven": true,
       "ablationProven": false,
-      "emergenceProven": true
+      "emergenceProven": false
     },
     {
       "seed": 3718869505,
@@ -491,7 +491,7 @@
       "peakMoving": 10,
       "singularityProven": true,
       "ablationProven": true,
-      "emergenceProven": true
+      "emergenceProven": false
     },
     {
       "seed": 3428778852,
@@ -506,7 +506,7 @@
       "peakMoving": 10,
       "singularityProven": true,
       "ablationProven": true,
-      "emergenceProven": true
+      "emergenceProven": false
     }
   ],
   "frameworkAggregates": [

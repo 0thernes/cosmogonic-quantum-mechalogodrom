@@ -1,3 +1,4 @@
+// Audit #185 (honesty, documented): measured: the learned action/forecast/attention models do not improve foraging on the synthetic field (0.47-0.49 for all ablations).
 /**
  * Xylos: a bounded, tokenless recurrent manifold with autonomous numeric sensing/action.
  * Eshkol's MIT workspace softmax primitive supplies competition (see global-workspace.ts

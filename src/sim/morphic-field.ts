@@ -1,3 +1,4 @@
+// Audit #131 (honesty, documented): the field is dominated by a fixed libirrep pattern; latent imprint is <=0.0012/beat (measured <=0.02 vs zero input); its only live effect is a chaos nudge.
 /**
  * MORPHIC FIELD — WIRED (V-MORPH: the apex morphic-resonance beat in world.ts).
  *

@@ -1,3 +1,4 @@
+// Audit #179 (honesty, documented): several Thaler markers are partly tautological (hot-button adds valence to the compared quantity; chaining compares near-memory vs uniform random cue).
 /**
  * THALER SENTIENCE — a full mini "Creativity Machine" enacting Stephen Thaler's OWN consciousness test
  * (reproduce his phenomena his way — meets-his-criteria only, NOT a mainstream "is conscious" claim), at

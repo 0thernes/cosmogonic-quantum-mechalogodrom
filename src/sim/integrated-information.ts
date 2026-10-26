@@ -1,3 +1,4 @@
+// Audit #151 (honesty, documented): "phi" here is a min balanced-cut linear entropy (quantum) or a static |a||w| flow share (classical); it is not IIT phi.
 /**
  * BALANCED-CUT LINEAR ENTROPY (legacy API names: integratedInformation / phi). This computes a
  * restricted pure-state entanglement diagnostic, not IIT integrated information or consciousness.
