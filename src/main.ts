@@ -194,7 +194,7 @@ if (!(canvas instanceof HTMLCanvasElement)) {
  * build now frees its context on every reload (Engine.dispose + the HMR hook below), so it won't recur
  * once the GPU process is restarted once.
  */
-function showWebglRecovery(err: unknown): void {
+function showWebglRecovery(err: unknown, gpu = true): void {
   const msg = err instanceof Error ? err.message : String(err);
   if (document.getElementById('cqm-webgl-error')) return;
   const el = document.createElement('div');
@@ -204,9 +204,13 @@ function showWebglRecovery(err: unknown): void {
     'font:14px/1.6 ui-monospace,monospace;color:#e7e0ff;background:radial-gradient(circle at 50% 40%,#0b0a1e,#04030a)';
   el.innerHTML =
     '<div style="max-width:560px;border:1px solid rgba(150,120,255,.35);border-radius:14px;padding:22px 26px;background:rgba(12,9,28,.85);box-shadow:0 10px 40px rgba(0,0,0,.6)">' +
-    '<div style="font-size:18px;font-weight:700;color:#c79bff;letter-spacing:.08em;margin-bottom:8px">⬢ GPU CONTEXT UNAVAILABLE</div>' +
-    "<p>The browser couldn't create a WebGL context. This is almost always a <b>context leak from repeated hot-reloads</b> — a browser caps how many live WebGL contexts one process may hold (~16), and dev reloads can exhaust them.</p>" +
-    '<p style="color:#9f93c8">Fix: <b>fully restart the browser</b> (close every tab in this window) once, then reload. This build frees its context on every reload, so it will not recur.</p>' +
+    (gpu
+      ? '<div style="font-size:18px;font-weight:700;color:#c79bff;letter-spacing:.08em;margin-bottom:8px">⬢ GPU CONTEXT UNAVAILABLE</div>' +
+        "<p>The browser couldn't create a WebGL context. This is almost always a <b>context leak from repeated hot-reloads</b> — a browser caps how many live WebGL contexts one process may hold (~16), and dev reloads can exhaust them.</p>" +
+        '<p style="color:#9f93c8">Fix: <b>fully restart the browser</b> (close every tab in this window) once, then reload. This build frees its context on every reload, so it will not recur.</p>'
+      : // Non-GPU boot failure (#304): do not blame WebGL for an unrelated error.
+        '<div style="font-size:18px;font-weight:700;color:#c79bff;letter-spacing:.08em;margin-bottom:8px">⬢ STARTUP FAILED</div>' +
+        '<p>The cosmos hit an error while starting. Reloading usually clears it; if it keeps happening, the message below helps diagnose it.</p>') +
     '<button id="cqm-webgl-reload" style="margin-top:12px;padding:8px 18px;border-radius:8px;border:1px solid rgba(150,120,255,.5);background:rgba(60,40,120,.5);color:#e9dcff;font:600 12px ui-monospace,monospace;cursor:pointer">↻ Reload</button>' +
     '<pre id="cqm-webgl-msg" style="margin-top:12px;font-size:10px;color:#7a6fae;white-space:pre-wrap"></pre>' +
     '</div>';
@@ -591,7 +595,8 @@ async function boot(): Promise<void> {
 boot().catch((err: unknown) => {
   log.warn('boot failed', { error: err instanceof Error ? err.message : String(err) });
   bootAbort();
-  showWebglRecovery(err);
+  // Only the Engine (WebGL) stage shows the GPU card; it returns before reaching here (#304).
+  showWebglRecovery(err, false);
 });
 
 // ROBUSTNESS (USER: the "docs-row buttons are gone / AUDIT is wrecked" symptom, intermittently): the
