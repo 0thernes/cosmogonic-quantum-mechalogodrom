@@ -121,11 +121,26 @@ class PrimeSieveLoom {
   private readonly n: number;
   private readonly state: Float64Array;
   private readonly next: Float64Array; // pre-allocated scratch for step()
-  /** Active edges as packed (i*n+j) keys; every edge has a twin-prime |i−j| (the membership law). */
-  private readonly edges: Array<[number, number]> = [];
+  /**
+   * Active edges as parallel typed arrays (edge e = (edgeI[e], edgeJ[e]), i < j); every edge has a
+   * twin-prime |i−j| (the membership law). Typed arrays instead of an Array of tuples + boolean[]
+   * (audit #103: ≈488k edges at the live cap, ≈20 ms per step) — same edge order, same arithmetic,
+   * so the output is bit-identical.
+   */
+  private readonly edgeI: Int32Array;
+  private readonly edgeJ: Int32Array;
+  private readonly alive: Uint8Array;
   private readonly twin: boolean[];
   private readonly builtEdges: number;
-  private alive: boolean[];
+  private liveEdges: number;
+  /**
+   * Edge indices grouped by distance, ascending index within each bucket, plus a per-distance cursor.
+   * Only purgeLongest kills edges and it always kills the lowest-index live edge of a bucket, so each
+   * bucket's live edges are a suffix and the cursor finds the next victim in O(1).
+   */
+  private readonly bucketStart: Int32Array;
+  private readonly bucketEdges: Int32Array;
+  private readonly bucketCursor: Int32Array;
   private allergy = 0;
   private throughput = 0;
 
@@ -134,13 +149,37 @@ class PrimeSieveLoom {
     this.state = new Float64Array(n);
     this.next = new Float64Array(n);
     this.twin = twinPrimeDistances(n);
+    let count = 0;
+    const perDist = new Int32Array(n + 1);
     for (let i = 0; i < n; i++) {
       for (let j = i + 1; j < n; j++) {
-        if (this.twin[j - i]) this.edges.push([i, j]);
+        if (this.twin[j - i]) {
+          count++;
+          perDist[j - i]!++;
+        }
       }
     }
-    this.builtEdges = this.edges.length;
-    this.alive = Array.from({ length: this.edges.length }, () => true);
+    this.edgeI = new Int32Array(count);
+    this.edgeJ = new Int32Array(count);
+    this.bucketStart = new Int32Array(n + 2);
+    for (let d = 0; d <= n; d++) this.bucketStart[d + 1] = this.bucketStart[d]! + perDist[d]!;
+    this.bucketEdges = new Int32Array(count);
+    const fill = this.bucketStart.slice(0, n + 1);
+    let e = 0;
+    for (let i = 0; i < n; i++) {
+      for (let j = i + 1; j < n; j++) {
+        if (this.twin[j - i]) {
+          this.edgeI[e] = i;
+          this.edgeJ[e] = j;
+          this.bucketEdges[fill[j - i]!++] = e;
+          e++;
+        }
+      }
+    }
+    this.bucketCursor = this.bucketStart.slice(0, n + 1);
+    this.builtEdges = count;
+    this.liveEdges = count;
+    this.alive = new Uint8Array(count).fill(1);
   }
 
   /** True iff `d` is a twin-prime distance — exposed so the test asserts the membership law. */
@@ -150,15 +189,13 @@ class PrimeSieveLoom {
   /** Every active edge's |i−j| (for the membership-law test). */
   activeDistances(): number[] {
     const out: number[] = [];
-    for (let e = 0; e < this.edges.length; e++) {
-      if (this.alive[e]) out.push(this.edges[e]![1] - this.edges[e]![0]);
+    for (let e = 0; e < this.builtEdges; e++) {
+      if (this.alive[e]) out.push(this.edgeJ[e]! - this.edgeI[e]!);
     }
     return out;
   }
   activeEdgeCount(): number {
-    let c = 0;
-    for (const a of this.alive) if (a) c++;
-    return c;
+    return this.liveEdges;
   }
 
   /**
@@ -168,13 +205,19 @@ class PrimeSieveLoom {
    */
   step(drive: number, rng: Rng): number {
     const next = this.next;
+    const state = this.state;
+    const edgeI = this.edgeI;
+    const edgeJ = this.edgeJ;
+    const alive = this.alive;
     next.fill(0);
-    for (let e = 0; e < this.edges.length; e++) {
-      if (!this.alive[e]) continue;
-      const [i, j] = this.edges[e]!;
-      const w = 0.12;
-      next[i]! += w * (this.state[j]! + drive * 0.1);
-      next[j]! += w * (this.state[i]! + drive * 0.1);
+    const w = 0.12;
+    const inj = drive * 0.1;
+    for (let e = 0, m = this.builtEdges; e < m; e++) {
+      if (alive[e] === 0) continue;
+      const i = edgeI[e]!;
+      const j = edgeJ[e]!;
+      next[i]! += w * (state[j]! + inj);
+      next[j]! += w * (state[i]! + inj);
     }
     let tp = 0;
     for (let i = 0; i < this.n; i++) {
@@ -195,25 +238,24 @@ class PrimeSieveLoom {
     return Math.tanh(this.throughput * (1 - this.allergy));
   }
 
-  /** Remove up to `k` of the longest-distance live edges (the "fracture to purge"). Monotone. */
+  /**
+   * Remove up to `k` of the longest-distance live edges (the "fracture to purge"). Monotone. Each
+   * removal takes the lowest-index live edge of the largest live distance ≤ the previous one − 1,
+   * exactly as the former full scan did, via the per-distance bucket cursors.
+   */
   private purgeLongest(k: number): void {
     let removed = 0;
-    let maxD = this.n;
-    while (removed < k && maxD > 0) {
-      let bestE = -1;
-      let bestD = -1;
-      for (let e = 0; e < this.edges.length; e++) {
-        if (!this.alive[e]) continue;
-        const d = this.edges[e]![1] - this.edges[e]![0];
-        if (d > bestD && d <= maxD) {
-          bestD = d;
-          bestE = e;
-        }
+    let d = Math.min(this.n, this.bucketCursor.length - 1);
+    while (removed < k && d > 0) {
+      const cur = this.bucketCursor[d]!;
+      if (cur < this.bucketStart[d + 1]!) {
+        const e = this.bucketEdges[cur]!;
+        this.alive[e] = 0;
+        this.bucketCursor[d] = cur + 1;
+        this.liveEdges--;
+        removed++;
       }
-      if (bestE < 0) break;
-      this.alive[bestE] = false;
-      removed++;
-      maxD = bestD - 1; // strictly shrink so we always make progress
+      d--; // strictly shrink so we always make progress
     }
   }
 
