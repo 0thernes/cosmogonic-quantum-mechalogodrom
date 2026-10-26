@@ -71,6 +71,10 @@ export class EshkolConsciousnessEngine {
     this.registerModule('EshkolKB', (c) => c * 0.9 + 0.1);
     this.registerModule('FactorGraph', (c) => 1 - c * 0.4);
     this.registerModule('GWTWorkspace', (c) => c * 1.1);
+    // Audit #205: SuperMind supplies six saliences; with only three modules 3-5 were ignored.
+    this.registerModule('NarrativeMemory', (c) => c * 0.8 + 0.05);
+    this.registerModule('AffectValence', (c) => 0.5 + 0.5 * (c - 0.5));
+    this.registerModule('PlanSelector', (c) => c * c);
   }
 
   /** Eshkol KB: assert/query facts (kb-assert! kb-query from consciousness.esk + GUIDE). */

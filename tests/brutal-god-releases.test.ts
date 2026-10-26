@@ -115,9 +115,9 @@ describe('brutal god releases — apply side-effects on the petri', () => {
   test('snap/drain halves the population to near-zero (VALKORION/THANOS/GRIFFITH)', () => {
     const e = ents(20, 1);
     const out = applyBrutalRelease(make('emperor-drain-possess-snap'), e, 0.5, 1);
-    expect(out.consumed).toBe(10); // first half
-    expect(e[0]!.vitality).toBeCloseTo(0.1, 6);
-    expect(e[19]!.vitality).toBe(1); // second half untouched
+    expect(out.consumed).toBe(10); // exactly half (#197: a seeded contiguous half, not the first)
+    expect(e.filter((x) => Math.abs(x.vitality - 0.1) < 1e-6).length).toBe(10);
+    expect(e.filter((x) => x.vitality === 1).length).toBe(10); // the other half untouched
   });
 
   test('void/consume drains every other body but never below 0.01 (KNULL/AZATHOTH/ANTI)', () => {

@@ -30,6 +30,9 @@ import {
 } from './ai/brains';
 
 /** What an NHI decides to do this beat. The integrator turns each into an actual world effect. */
+/** Audit #61: cap on remembered rival factions per NHI mind. */
+const MAX_RIVALS = 64;
+
 export const NhiAction = {
   /** Whisper false goals into a rival faction (belief-state manipulation / gaslighting). */
   MANIPULATE: 0,
@@ -1322,6 +1325,11 @@ export class NhiMind {
                   ? GameStrategy.ALWAYS_DEFECT
                   : GameStrategy.TIT_FOR_TAT;
       rv = { strategy, everBetrayed: false, lastOpp: -1, round: 0 };
+      // Audit #61: bound the rival memory (oldest-met evicted first) so it cannot grow forever.
+      if (this.rivals.size >= MAX_RIVALS) {
+        const oldest = this.rivals.keys().next().value;
+        if (oldest !== undefined) this.rivals.delete(oldest);
+      }
       this.rivals.set(id, rv);
     }
     return rv;

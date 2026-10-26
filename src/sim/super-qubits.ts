@@ -251,6 +251,8 @@ export class QuantumMind {
   /** Persisted natural-gradient bias on the entanglement drive. */
   private optEnt = 0;
   private readonly soOut: [number, number] = [0, 0];
+  private readonly prepRe = new Float64Array(DIM);
+  private readonly prepIm = new Float64Array(DIM);
   private readonly soBaseRe = new Float64Array(DIM);
   private readonly soBaseIm = new Float64Array(DIM);
   private readonly soSpRe = new Float64Array(DIM);
@@ -324,9 +326,11 @@ export class QuantumMind {
     let target = 0;
     for (let k = 0; k < QMIND_QUBITS; k++) if ((latent[k % L] ?? 0) > 0) target |= 1 << k;
     const rounds = Math.round(clamp01(aspects[4] ?? 0) * 2);
+    // Audit #92: reflect about the PREPARED state (general amplitude amplification), not uniform.
+    if (rounds > 0) this.reg.copyStateInto(this.prepRe, this.prepIm);
     for (let it = 0; it < rounds; it++) {
       this.reg.phaseFlip(target);
-      this.reg.diffuse();
+      this.reg.reflectAbout(this.prepRe, this.prepIm);
       this.gateCount += 2;
     }
     this.amplifyTarget = target;
@@ -426,7 +430,9 @@ export class QuantumMind {
     this.buildInto(clamp01(sup - eps), ent, ftl, mut, latent, L, this.soSmRe, this.soSmIm);
     this.buildInto(sup, clamp01(ent + eps), ftl, mut, latent, L, this.soEpRe, this.soEpIm);
     this.buildInto(sup, clamp01(ent - eps), ftl, mut, latent, L, this.soEmRe, this.soEmIm);
-    const inv2e = 1 / (2 * eps);
+    // Audit #94: at a clamp bound the stencil is one-sided, so divide by the ACTUAL span, not 2ε.
+    const invS = 1 / Math.max(1e-9, clamp01(sup + eps) - clamp01(sup - eps));
+    const invE = 1 / Math.max(1e-9, clamp01(ent + eps) - clamp01(ent - eps));
     // ∇P(target) over (sup, ent) by central difference of the marked-state Born probability.
     const spr = this.soSpRe[target] ?? 0;
     const spi = this.soSpIm[target] ?? 0;
@@ -436,8 +442,8 @@ export class QuantumMind {
     const epi = this.soEpIm[target] ?? 0;
     const emr = this.soEmRe[target] ?? 0;
     const emi = this.soEmIm[target] ?? 0;
-    const gradS = (spr * spr + spi * spi - (smr * smr + smi * smi)) * inv2e;
-    const gradE = (epr * epr + epi * epi - (emr * emr + emi * emi)) * inv2e;
+    const gradS = (spr * spr + spi * spi - (smr * smr + smi * smi)) * invS;
+    const gradE = (epr * epr + epi * epi - (emr * emr + emi * emi)) * invE;
     // 2×2 Fubini–Study metric g_ij = Re⟨∂_iψ|∂_jψ⟩ − Re(⟨∂_iψ|ψ⟩·conj⟨∂_jψ|ψ⟩), each ∂_iψ via central diff.
     let ss = 0;
     let ee = 0;
@@ -447,10 +453,10 @@ export class QuantumMind {
     let ePsiRe = 0;
     let ePsiIm = 0;
     for (let i = 0; i < DIM; i++) {
-      const dsr = ((this.soSpRe[i] ?? 0) - (this.soSmRe[i] ?? 0)) * inv2e;
-      const dsi = ((this.soSpIm[i] ?? 0) - (this.soSmIm[i] ?? 0)) * inv2e;
-      const der = ((this.soEpRe[i] ?? 0) - (this.soEmRe[i] ?? 0)) * inv2e;
-      const dei = ((this.soEpIm[i] ?? 0) - (this.soEmIm[i] ?? 0)) * inv2e;
+      const dsr = ((this.soSpRe[i] ?? 0) - (this.soSmRe[i] ?? 0)) * invS;
+      const dsi = ((this.soSpIm[i] ?? 0) - (this.soSmIm[i] ?? 0)) * invS;
+      const der = ((this.soEpRe[i] ?? 0) - (this.soEmRe[i] ?? 0)) * invE;
+      const dei = ((this.soEpIm[i] ?? 0) - (this.soEmIm[i] ?? 0)) * invE;
       const pr = this.soBaseRe[i] ?? 0;
       const pi = this.soBaseIm[i] ?? 0;
       ss += dsr * dsr + dsi * dsi;

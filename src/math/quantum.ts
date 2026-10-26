@@ -356,6 +356,36 @@ export class QuantumRegister {
     }
   }
 
+  /** Copy the current amplitudes into caller buffers (length ≥ dim). */
+  copyStateInto(outRe: Float64Array, outIm: Float64Array): void {
+    outRe.set(this.re);
+    outIm.set(this.im);
+  }
+
+  /**
+   * Reflect about a normalised reference state |s⟩: ψ → 2|s⟩⟨s|ψ⟩ − ψ. With |s⟩ the PREPARED state this
+   * is the general amplitude-amplification diffuser (audit #92); `diffuse()` is the |s⟩=uniform case.
+   */
+  reflectAbout(sRe: Float64Array, sIm: Float64Array): void {
+    const { re, im, dim } = this;
+    let ar = 0;
+    let ai = 0;
+    for (let i = 0; i < dim; i++) {
+      const xr = sRe[i] ?? 0;
+      const xi = sIm[i] ?? 0;
+      const pr = re[i] ?? 0;
+      const pi = im[i] ?? 0;
+      ar += xr * pr + xi * pi; // ⟨s|ψ⟩ = Σ conj(s)·ψ
+      ai += xr * pi - xi * pr;
+    }
+    for (let i = 0; i < dim; i++) {
+      const xr = sRe[i] ?? 0;
+      const xi = sIm[i] ?? 0;
+      re[i] = 2 * (xr * ar - xi * ai) - (re[i] ?? 0);
+      im[i] = 2 * (xr * ai + xi * ar) - (im[i] ?? 0);
+    }
+  }
+
   /**
    * Applies the 2×2 complex matrix [[a, b], [c, d]] (split into re/im scalars) to the `target`
    * qubit across all 2^(n-1) amplitude pairs. O(2^n); allocation-free.

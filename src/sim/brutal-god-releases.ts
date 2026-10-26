@@ -164,9 +164,13 @@ export function applyBrutalRelease(
     release.effect.includes('possess')
   ) {
     // VALKORION / THANOS / GRIFFITH: snap/drain (pinn brutal feed + ulg law)
-    const half = Math.floor(entities.length / 2);
-    for (let i = 0; i < half; i++) {
-      const ent = entities[i];
+    // Audit #197: the snap used to hit the FIRST half by index; it now takes exactly half the bodies
+    // starting at a seeded offset (wrapping), so which half is snapped is not fixed by list order.
+    const n = entities.length;
+    const half = Math.floor(n / 2);
+    const off = n > 0 ? (Math.imul(rngSeed >>> 0, 0x9e3779b1) >>> 0) % n : 0;
+    for (let k = 0; k < half; k++) {
+      const ent = entities[(off + k) % n];
       if (ent) {
         ent.vitality *= 0.1;
         consumed++;

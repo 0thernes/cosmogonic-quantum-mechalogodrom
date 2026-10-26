@@ -221,8 +221,9 @@ export function scanSocialRange(
         for (let t = 0; t < len && taken < p.budget; t++) {
           const j = cellItems[a + off]!;
           off = off + 1 === len ? 0 : off + 1;
-          taken++;
+          // Audit #68: self and dead slots no longer consume the sampling budget.
           if (j === i || alive[j] !== 1) continue;
+          taken++;
           const ddx = px[j]! - x;
           const ddy = py[j]! - y;
           const ddz = pz[j]! - z;

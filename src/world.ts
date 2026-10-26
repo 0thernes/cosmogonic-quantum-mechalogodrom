@@ -3336,7 +3336,7 @@ export class World {
         const offset = 1 + Math.floor(this.uiRng() * 7);
         // Keep the gesture RNG cadence, but the morph wave may not transform a protected visitor.
         if (this.isBigTreeProtected(e.position.x, e.position.z)) continue;
-        this.entities.remorph(e, (e.userData.mi + offset) % this.morphTotal);
+        this.entities.remorph(e, (e.userData.mi + offset) % this.morphTotal, this.uiRng);
         changed++;
       }
       this.state.mutations += changed;
@@ -6883,16 +6883,11 @@ export class World {
       const e = list[i];
       if (!e) continue;
       const nextMorph = Math.floor(this.uiRng() * this.morphTotal);
-      // Preserve the UI RNG cadence, but never force a protected visitor through a hostile global
-      // transformation while it is eating, resting, or socializing in the sanctuary. Mirror the two
-      // internal remorph draws (puppet-masters.ts convention) so later actors see the same seeded
-      // core stream whether or not anyone stood in the zone.
-      if (this.isBigTreeProtected(e.position.x, e.position.z)) {
-        this.rng();
-        this.rng();
-        continue;
-      }
-      this.entities.remorph(e, nextMorph);
+      // Never force a protected visitor through a hostile global transformation while it is eating,
+      // resting, or socializing in the sanctuary. Audit #27: the remorph draws come from the UI stream,
+      // so a user's MUTATE no longer advances the seeded core physics stream.
+      if (this.isBigTreeProtected(e.position.x, e.position.z)) continue;
+      this.entities.remorph(e, nextMorph, this.uiRng);
       changed++;
     }
     this.state.mutations += changed;

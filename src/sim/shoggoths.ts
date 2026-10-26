@@ -690,9 +690,11 @@ export class ShoggothSystem implements PortalCullable, BigTreeFaunaSource {
       ) {
         if (drive.trade >= drive.ally && drive.trade > 0.05) {
           const amt = drive.trade * TRADE_FRACTION * meanWorth;
+          // Audit #65: wealth used to flow to the bolder (= richer) party, a rich-get-richer loop.
+          // Trade now pays the poorer partner (a redistributive gift economy between shoggoths).
           if (boldness >= nearBold)
-            this.econTrade(nearJ, si, amt); // we out-bargain the weaker → we gain
-          else this.econTrade(si, nearJ, amt); // a bolder neighbour out-bargains us → we pay
+            this.econTrade(si, nearJ, amt); // we are richer → we pay the poorer neighbour
+          else this.econTrade(nearJ, si, amt); // the richer neighbour pays us
         } else if (drive.ally > 0.05) {
           const amt = drive.ally * ALLY_FRACTION * meanWorth;
           if (boldness >= nearBold)

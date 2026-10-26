@@ -20,7 +20,9 @@
 
 import { moonlabTensorContract, eshkolADGradient, quakePerturb } from './tsotchke-facade';
 
-const DT = 0.002;
+// Audit #254: 0.002/beat needed ~5k beats to reach the attractor; 0.01 (still stable RK-free Euler
+// for Lorenz at these parameters) settles in ~1k.
+const DT = 0.01;
 
 // Basin re-injection seeds — the attractors' initial conditions; boundVec resets here on numerical escape.
 const LORENZ_SEED: Vec3 = { x: 0.1, y: 0.0, z: 0.0 };
@@ -176,7 +178,9 @@ export class StrangeAttractor {
 
     // quakePerturb: QGE aliveness on Lorenz state
     const qk = quakePerturb(clamp01(this.lorenz.x / 30 + 0.5), this.beatCount % 37, 0.08);
-    this.lorenz.x *= qk;
+    // Audit #254: a multiplicative kick knocked Lorenz x off the attractor; it is now a small additive
+    // nudge proportional to the QGE deviation.
+    this.lorenz.x += (qk - 1) * 0.1;
 
     // Eshkol AD: self-tune sigma to keep chaos index near criticality (target 0.5)
     const chaosTarget = 0.5 + externalDrive * 0.2;

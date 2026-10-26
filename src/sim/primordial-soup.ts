@@ -16,6 +16,11 @@ import { recombine } from './genome'; // genuine seeded crossover+mutation — c
 
 const clamp01 = (v: number): number => clamp(v, 0, 1);
 
+/** Audit #57: constant Gray-Scott PINN health per slot class (args depend only on i % 5). */
+const SOUP_PINN_HEALTH: readonly number[] = Array.from({ length: 5 }, (_, k) =>
+  pinnLoss(grayScottResidual(0.5 + k * 0.1, 0.3, 0.5, 0.5, 0.5, 0.5, 0.04, 0.06)),
+);
+
 export const SOUP_SLOTS = 128; // Expanded 0.16: depth-classed Tsotchke corpus (local Z:\[Vibe Coded (AI)]\(Tsotchke) + GH) — Eshkol .esk programs as native heritable DNA for digital biologics.
 export const SOUP_GENOME_LEN = 24;
 /** How far above the live-population mean vitality the fittest strain must stand to count as "emergent"
@@ -185,9 +190,9 @@ export class PrimordialSoup {
           : 0);
       // DEEP Tsotchke PINN wiring (promote telemetry): Gray-Scott residual as metabolism health -> vitality boost for digital biologics.
       // PINN from Tsotchke corpus provides physics-informed field residual; high loss = low health = selection pressure.
-      const pinnHealth = pinnLoss(
-        grayScottResidual(0.5 + (i % 5) * 0.1, 0.3, 0.5, 0.5, 0.5, 0.5, 0.04, 0.06),
-      ); // full sig: u v L R U D feed kill; Tsotchke PINN real math for biologics metabolism (deepened)
+      // Audit #57: the residual's arguments are constants per (i % 5), so it is a fixed per-slot bias —
+      // precomputed once (identical values) instead of re-evaluated for all slots every tick.
+      const pinnHealth = SOUP_PINN_HEALTH[i % 5] ?? 0.5;
       const pinnFactor = 0.0005 * (pinnHealth - 0.5); // signed modulation; positive health aids growth
       // Metabolic upkeep (leaky integrator): holding vitality costs a fixed fraction per beat. Without
       // it, growth (floor +0.001) + pinnFactor is unconditionally >0, so EVERY strain's vitality

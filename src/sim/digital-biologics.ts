@@ -216,7 +216,8 @@ export function birthBiologic(archon: number, tick: number): Biologic {
   WORKSPACE_SUBSTRATE[0] = 0.4 + beat * 0.3;
   WORKSPACE_SUBSTRATE[1] = cat;
   WORKSPACE_SUBSTRATE[2] = 0.5;
-  const ws = eshkolWorkspaceTick(WORKSPACE_SUBSTRATE, beat);
+  // Audit #210: the workspace drift phase is (beat % 64)/64, so pass the integer tick, not beat∈[0,1].
+  const ws = eshkolWorkspaceTick(WORKSPACE_SUBSTRATE, tick);
 
   // Determine form based on corpus beat and archon
   const formIdx = Math.floor((cat * 100 + archon * 7 + beat * 10) % BIOLOGIC_FORMS.length);

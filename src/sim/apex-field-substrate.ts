@@ -34,7 +34,10 @@ export interface FieldOrgan {
   readonly kind: FieldKind;
 }
 
-/** The four field organs at their browser-resident texture sizes (tens of millions of texels total). */
+/**
+ * The four field organs at their DESIGNED texture sizes. Audit #113: the live organs run at the
+ * smaller default live size (64×64); these figures are the design envelope, not what is resident.
+ */
 export const APEX_FIELDS: readonly FieldOrgan[] = [
   { name: 'acoustic', w: 2048, h: 2048, components: 1, kind: 'wave' },
   { name: 'heat', w: 2048, h: 2048, components: 1, kind: 'diffusion' },

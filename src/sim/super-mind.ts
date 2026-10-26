@@ -1308,10 +1308,10 @@ export class SuperMind {
       this.cons.surprise + qngNorm * 0.02 * this.eshkolEngine.logic * this.qGate,
     );
     // Consciousness-engine triple (Eshkol CONSCIOUSNESS_ENGINE.md): logic/inference/workspace modulate workspace scalar
-    const cTriple = consciousnessTriple(Math.floor(this.eshkolEngine.logic * 5) % 5);
-    this.cons.workspace = clamp01(
-      cTriple.workspace * 0.4 + this.eshkolEngine.workspace * 0.35 + (gwtS[0] || 0) * 0.25,
-    );
+    const cTriple = consciousnessTriple(Math.min(4, Math.floor(this.eshkolEngine.logic * 5))); // #208: logic=1 no longer wraps to row 0
+    // Audit #82: this beat-local workspace blend was overwritten at the end of the beat before anything
+    // read it (a dead write). The single authoritative workspace is the engine readout below; the
+    // VM nudge above stays because g01 reads it mid-beat.
     this.cons.surprise = clamp01(this.cons.surprise + cTriple.inference * predErr * 0.02);
     // Heartbeat small: additional Eshkol AD/Moonlab tensor note for Archons from the depth-ledger corpus.
     this.predictedSalience = unit(this.pred[0] ?? 0);
@@ -2054,6 +2054,9 @@ export class SuperMind {
       salience: this.eshkolSalience,
       freeEnergy: aifPerc.freeEnergy,
     });
+    // Audit #82: the earlier workspace writes (Eshkol VM nudge, consciousness triple) used to be
+    // discarded here. The engine output is now blended with that beat's accumulated workspace so every
+    // stage contributes to the single value read next beat.
     this.cons.workspace = clamp01(this.eshkolEngine.workspace * this.ignition);
     // BRUTALISM 5/9: NOW that workspace is finalised on the live `this.cons`, leaky-pull it toward the
     // discrete-time crystal's period-doubling order (stepped above) — the codebase EMA idiom, non-ratcheting

@@ -870,7 +870,7 @@ export class EnvironmentSystem {
     // Dioramas (legacy 847)
     for (const dio of this.dioramas) {
       dio.group.rotation.y += dio.spin * dt * 0.2;
-      dio.group.position.y += sin(t * 0.3 + dio.hue * 20) * 0.004;
+      dio.group.position.y += sin(t * 0.3 + dio.hue * 20) * 0.004 * dt * 60; // #162: dt-scaled bob
       for (const mini of dio.minis) {
         mini.o += mini.s * dt;
         mini.mesh.position.x = cos(mini.o) * mini.a;

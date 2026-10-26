@@ -201,9 +201,10 @@ export function activeThoughtVariation(
   transcendence: number,
   beat: number,
 ): ApexThoughtVariation {
+  // Audit #117: `+ beat` made the variation a clock; it is now a readout of level + transcendence.
+  void beat;
   const idx =
-    (Math.floor(level * 0.7) + Math.floor(transcendence * 100) + beat) %
-    APEX_THOUGHT_VARIATIONS.length;
+    (Math.floor(level * 0.7) + Math.floor(transcendence * 100)) % APEX_THOUGHT_VARIATIONS.length;
   return APEX_THOUGHT_VARIATIONS[idx]!;
 }
 

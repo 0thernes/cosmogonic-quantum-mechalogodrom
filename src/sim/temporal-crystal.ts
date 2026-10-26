@@ -108,19 +108,18 @@ export class TemporalCrystal {
         else oddSum += this.spins[i] ?? 0;
       }
       this.z2Symmetry = clamp01(1 - Math.abs(evenSum / (N_SPINS / 2) + oddSum / (N_SPINS / 2)) / 2);
+
+      // Audit #253: with FLOQUET_CYCLES=2 per step, sampling once per step always saw an even cycle
+      // (expectedSign ≡ +1). The period-doubling order is now measured after EVERY Floquet cycle.
+      let mag = 0;
+      for (let i = 0; i < N_SPINS; i++) mag += this.spins[i] ?? 0;
+      mag /= N_SPINS;
+      const expectedSign = this.floquetCycle % 2 === 0 ? 1 : -1;
+      this.orderParameter += 0.15 * (clamp01((mag * expectedSign + 1) / 2) - this.orderParameter);
+      this.periodDoublingStrength +=
+        0.1 * (clamp01(Math.abs(mag - this.lastMagnetization)) - this.periodDoublingStrength);
+      this.lastMagnetization = mag;
     }
-
-    // Magnetization and period-doubling order parameter
-    let mag = 0;
-    for (let i = 0; i < N_SPINS; i++) mag += this.spins[i] ?? 0;
-    mag /= N_SPINS;
-
-    // Period doubling: order parameter measures sign-reversal each cycle
-    const expectedSign = this.floquetCycle % 2 === 0 ? 1 : -1;
-    this.orderParameter += 0.15 * (clamp01((mag * expectedSign + 1) / 2) - this.orderParameter);
-    this.periodDoublingStrength +=
-      0.1 * (clamp01(Math.abs(mag - this.lastMagnetization)) - this.periodDoublingStrength);
-    this.lastMagnetization = mag;
 
     // Crystal phase: angle in [0, 2π] from magnetization oscillation
     this.crystalPhase = (this.crystalPhase + Math.PI * this.periodDoublingStrength) % (2 * Math.PI);

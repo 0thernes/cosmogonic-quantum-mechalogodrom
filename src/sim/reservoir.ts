@@ -167,8 +167,12 @@ export class Reservoir {
 function spectralRadius(w: Float32Array, n: number): number {
   const v = new Float32Array(n).fill(1 / Math.sqrt(n));
   const tmp = new Float32Array(n);
-  let lambda = 0;
-  for (let it = 0; it < 40; it++) {
+  // Audit #222: a nonsymmetric W has complex/rotating dominant modes, so a single 40-step norm ratio
+  // oscillates. Use the geometric mean of the per-step growth over a long tail (Gelfand-style rate).
+  const ITERS = 240;
+  const TAIL = 120;
+  let logSum = 0;
+  for (let it = 0; it < ITERS; it++) {
     for (let i = 0; i < n; i++) {
       let s = 0;
       const base = i * n;
@@ -179,8 +183,8 @@ function spectralRadius(w: Float32Array, n: number): number {
     for (let i = 0; i < n; i++) norm += (tmp[i] ?? 0) * (tmp[i] ?? 0);
     norm = Math.sqrt(norm);
     if (norm < 1e-12) return 0;
-    lambda = norm;
+    if (it >= ITERS - TAIL) logSum += Math.log(norm);
     for (let i = 0; i < n; i++) v[i] = (tmp[i] ?? 0) / norm;
   }
-  return lambda;
+  return Math.exp(logSum / TAIL);
 }

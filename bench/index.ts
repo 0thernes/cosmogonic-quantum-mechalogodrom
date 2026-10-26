@@ -18,7 +18,6 @@ import './super-mind.bench';
 import './eshkol-ad.bench';
 import './quantization.bench';
 import './motion-interpolation.bench';
-import './perceptual-priority.bench';
 import './crystal-ecosystem.bench';
 import './xylos.bench';
 import './big-tree-ecology.bench';

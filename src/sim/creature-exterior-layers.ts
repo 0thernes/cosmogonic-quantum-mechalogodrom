@@ -1033,10 +1033,9 @@ export class MechaExteriorAbomination {
   }
 
   dispose(): void {
-    for (const c of this.crtColumns) {
-      c.geometry.dispose();
-      (c.material as THREE.Material).dispose();
-    }
+    // Audit #192: every CRT column shares ONE EdgesGeometry — dispose it once, not 48×.
+    this.crtColumns[0]?.geometry.dispose();
+    for (const c of this.crtColumns) (c.material as THREE.Material).dispose();
     for (const ln of this.tunnel) {
       ln.geometry.dispose();
       (ln.material as THREE.Material).dispose();

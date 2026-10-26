@@ -337,7 +337,12 @@ export class FloatingMonoliths {
   }
 
   /** Drift + tumble each megalith; kindle the shared emissive with world chaos. O(COUNT). */
+  private lastUpdateT: number | null = null;
+
   update(t: number, chaos: number): void {
+    const k60 =
+      this.lastUpdateT === null ? 1 : Math.max(0, Math.min(0.25, t - this.lastUpdateT)) * 60;
+    this.lastUpdateT = t;
     const c = chaos < 0 ? 0 : chaos > 1 ? 1 : chaos;
     for (let i = 0; i < this.megaliths.length; i++) {
       const mg = this.megaliths[i]!;
@@ -345,9 +350,10 @@ export class FloatingMonoliths {
       g.position.y = mg.baseY + Math.sin(t * mg.bobFreq + mg.phase) * mg.bobAmp;
       g.position.x = mg.baseX + Math.sin(t * mg.bobFreq * 0.7 + mg.phase * 1.3) * mg.swayAmp;
       g.position.z = mg.baseZ + Math.cos(t * mg.bobFreq * 0.6 + mg.phase) * mg.swayAmp;
-      g.rotation.x += mg.spinX * (0.5 + c);
-      g.rotation.y += mg.spinY * (0.5 + c);
-      g.rotation.z += mg.spinZ * (0.5 + c);
+      // Audit #199: spin per second (60 Hz-normalised), not per rendered frame.
+      g.rotation.x += mg.spinX * (0.5 + c) * k60;
+      g.rotation.y += mg.spinY * (0.5 + c) * k60;
+      g.rotation.z += mg.spinZ * (0.5 + c) * k60;
       // V109: sync beam to monolith position + pulse opacity with chaos
       const beam = this.beams[i];
       if (beam) {

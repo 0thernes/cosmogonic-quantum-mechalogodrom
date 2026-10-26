@@ -224,7 +224,7 @@ export class AdaptiveCouplingHomeostat {
     /** Initial coupling. */
     K0 = 1.4,
     /** How hard K is nudged per beat toward holding the mean order at the setpoint. */
-    private readonly eta = 0.5,
+    private readonly eta = 0.2, // Audit #248: 0.5 on an α=.03 EMA limit-cycled K 0.41–2.88
     /** EMA weight for the mean order — SMALL ⇒ slow, so fast ignitions survive (timescale separation). */
     private readonly emaAlpha = 0.03,
     /** Coupling bounds. */

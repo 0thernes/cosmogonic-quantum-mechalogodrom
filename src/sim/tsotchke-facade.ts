@@ -216,6 +216,7 @@ export function corpusPulse(
   seed: number,
   formIdx: number,
   corpusAblated?: ReadonlySet<TsotchkeRepoSlug>,
+  frame: number = formIdx,
 ): TsotchkeQuantumPulse {
   const b = getTsotchkeBias(formIdx);
   const repo = getTsotchkeRepoByIndex(formIdx);
@@ -227,7 +228,9 @@ export function corpusPulse(
   // repos stay negligible (preserving the wired>fenced ordering invariant). See tsotchke-brain-intake.ts.
   // `corpusAblated` (optional) suppresses named repos — used to PROVE each is load-bearing on the pulse
   // the brains read; omitted (the default) reproduces the full-corpus behaviour exactly.
-  const brain = corpusBrainScalar(seed, formIdx, corpusAblated);
+  // Audit #164: the brain term reads a real FRAME (callers with a beat pass it); it used to receive
+  // formIdx, which froze the term per archon. The default keeps legacy callers unchanged.
+  const brain = corpusBrainScalar(seed, frame, corpusAblated);
   return {
     cliffordEnt: c01((b.cliffordWeight + s * 0.1) * scale),
     // Convex blend preserves headroom for repo ablations. The previous unnormalised sum saturated at 1
@@ -264,34 +267,6 @@ export type {
 } from './tsotchke-brain-intake';
 
 /** Extended NHSI cognitive, resonance, hyperbolic, and telos substrates. */
-export {
-  EmergentLanguage,
-  computeLanguageDiversity,
-  computeLanguageStructure,
-  type Sign,
-  type SignalToSignMapping,
-  type SignToSignalMapping,
-  type EmergentLanguageConfig,
-} from './emergent-language';
-export { OmegaPoint, type OmegaPointSnapshot } from './omega-point';
-export {
-  ResonanceIntegrator,
-  facultyPhaseFromActivation,
-  computeCoherence,
-  findCoalition,
-  computePhaseVariance,
-  type FacultyPhase,
-  type IntegratorSnapshot,
-  type ResonanceConfig,
-} from './resonance-integrator';
-export {
-  ValenceSteering,
-  computeValence,
-  computeValenceSteeringStrength,
-  type ValenceState,
-  type ValenceSteeringConfig,
-} from './valence-steering';
-export { Xenomind, type XenomindSnapshot } from './xenomind';
 export {
   beliefPropagation,
   beliefEntropy,

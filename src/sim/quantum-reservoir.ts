@@ -1,4 +1,8 @@
 /**
+ * Audit #218 — honesty note: as implemented this reservoir is CLASSICAL (a leaky integrator plus a fixed
+ * random tanh projection, no trained readout). The quantum-reservoir literature below is the design
+ * inspiration, not a description of the running code.
+ *
  * THE QUANTUM RESERVOIR — Super Creature 1.2's quantum-reservoir-computing readout. Reservoir computing
  * harnesses a fixed high-dimensional nonlinear dynamical system as a temporal kernel and trains only a
  * linear readout. **Quantum** reservoir computing (Fujii & Nakajima 2017, _Phys. Rev. Applied_ 8, 024030;

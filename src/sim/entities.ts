@@ -121,7 +121,12 @@ function paintVibrant(mat: THREE.MeshStandardMaterial, m: PhylumMorphType, mi: n
   const family = mi % 3;
   if (family === 0) {
     // 1/3 — dark graphite / gold: deep bodies, metallic glints (readable, not black voids).
-    mat.color.setHSL((0.1 + j2 * 0.06) % 1, 0.48 + j3 * 0.28, 0.1 + j4 * 0.06);
+    // Audit #47: keep the graphite/gold family but let the phylum hue tint it (25%) instead of
+    // discarding it entirely.
+    const gold = 0.1 + j2 * 0.06;
+    let dh = ominous - gold;
+    dh -= Math.round(dh);
+    mat.color.setHSL((gold + dh * 0.25 + 1) % 1, 0.48 + j3 * 0.28, 0.1 + j4 * 0.06);
   } else if (family === 1) {
     // 1/3 — oil-slick chroma: rich mid-tones, NOT pastel white.
     mat.color.setHSL(ominous, 0.72 + j5 * 0.14, 0.16 + j3 * 0.1);
@@ -1441,7 +1446,7 @@ export class EntityManager {
    * reference and rewrite the per-entity material in place — cheaper than dispose + respawn
    * because the mesh and scene slot are reused. Zero allocation. O(1).
    */
-  remorph(e: Entity, mi: number): void {
+  remorph(e: Entity, mi: number, rng: Rng = this.ctx.rng): void {
     const ctx = this.ctx;
     const morphCount = ctx.morphs.length;
     if (morphCount === 0) return; // defensive: empty taxonomy
@@ -1469,8 +1474,10 @@ export class EntityManager {
     u.mi = remorphMi;
     u.beh = m.beh;
     u.spd = m.spd;
-    u.wf = 0.3 + ctx.rng() * 6;
-    u.wa = 0.03 + ctx.rng() * 0.5;
+    // Audit #27: callers driven by a user gesture pass their UI stream so input never shifts the
+    // seeded physics stream; sim-driven remorphs keep the core rng.
+    u.wf = 0.3 + rng() * 6;
+    u.wa = 0.03 + rng() * 0.5;
     u.phylum = m.phylum ?? -1; // true morphogenesis crosses phylum lines (V3.2)
     u.beh2 = m.beh2 ?? null;
     e.scale.setScalar(u.sc);
@@ -1877,8 +1884,16 @@ export class EntityManager {
     FACTION_PERCEPT.crowd = Math.min(1, n / 8);
     FACTION_PERCEPT.energy = clamp01(myEnergy / 100);
     FACTION_PERCEPT.kin = Math.min(1, kn / 4);
-    FACTION_PERCEPT.resource = clamp01(myEnergy / 100);
-    FACTION_PERCEPT.novelty = clamp01((frame % 97) / 97);
+    // Audit #36: `resource` duplicated `energy` and `novelty` was a frame%97 sawtooth. On the live
+    // genome path resource = energy that is safe to hold (discounted by local threat) and novelty =
+    // the share of non-kin among neighbours (an unfamiliar crowd). The golden path keeps the legacy.
+    if (this.ctx.genomeRng) {
+      FACTION_PERCEPT.resource = clamp01((myEnergy / 100) * (1 - FACTION_PERCEPT.threat));
+      FACTION_PERCEPT.novelty = n > 0 ? clamp01((n - kn) / n) : 0;
+    } else {
+      FACTION_PERCEPT.resource = clamp01(myEnergy / 100);
+      FACTION_PERCEPT.novelty = clamp01((frame % 97) / 97);
+    }
     if (!protectedHere) {
       factionRngReseed(((index * 0x9e3779b9) ^ (frame * 0x85ebca6b) ^ (myGroup * 17)) >>> 0);
       // Audit #38: setGroup spans only 0..3, so factions 4-7 (Leviathans, SwarmMinds, Oracles,

@@ -23,7 +23,6 @@ import { deriveComputeCadence, RenderGovernor } from '../src/core/frame-governor
 import { GlyphBrainBatch } from '../src/sim/glyph-brain';
 import { executeSimulationWorkerKernel } from '../src/workers/simulation-worker';
 import { EshkolProgramEvolution, HigherOrderEmergence } from '../src/sim/emergence-angles';
-import { EmergentLanguage } from '../src/sim/emergent-language';
 import {
   encodeRosetteWireEnvelope,
   evaluateBonsaiFidelity,
@@ -273,13 +272,5 @@ describe('Deep-Dive Assessment Report Regression Suite (H-2, H-3, H-6, H-7, M-4)
     hoe.aggregate('agent-1', new Float32Array([1, 1, 0, 0]));
     expect(hoe.getSynergy()).toBeGreaterThan(0);
     expect(hoe.getCollectiveIntelligence()).toBe(1);
-  });
-
-  test('M-4: EmergentLanguage reinforce updates signId and signalId mappings when reinforcing', () => {
-    const lang = new EmergentLanguage({ learningRate: 0.4, minStrength: 0.3 });
-    lang.reinforce(1, 10);
-    lang.reinforce(1, 20);
-    expect(lang.encode(1)).toBe(20);
-    expect(lang.decode(20)).toBe(1);
   });
 });

@@ -274,11 +274,9 @@ export class SelfEvolutionLoop {
       this.rollbacks++;
       return false;
     } else {
-      // Marginal degradation: keep for exploration
-      this.metrics = newMetrics;
-      this.history.push({ ...newMetrics });
-      if (this.history.length > 500) this.history.shift(); // bounded history (no unbounded growth)
-      return true;
+      // Audit #229: a marginal degradation used to be ACCEPTED "for exploration", so about half the
+      // accepted steps lowered the score. It is now rejected (no metrics change, not a rollback).
+      return false;
     }
   }
 

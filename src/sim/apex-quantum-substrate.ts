@@ -152,7 +152,12 @@ export class ApexQuantumSubstrate {
     if (this.beat % 4 === 0 && pairs > 0) this.stab.measure((this.beat * 13) % pairs, this.rStab);
 
     // ── Tsotchke corpus coupling — refresh the QGT/clifford/AD pulse from the real corpus. ─────────
-    this.pulse = corpusPulse((this.seed ^ (this.beat * 0x9e3779b1)) >>> 0, APEX_FORM_INDEX);
+    this.pulse = corpusPulse(
+      (this.seed ^ (this.beat * 0x9e3779b1)) >>> 0,
+      APEX_FORM_INDEX,
+      undefined,
+      this.beat,
+    );
   }
 
   /** The full quantum-reach telemetry. O(stabilizerQubits²) for the entanglement read. */

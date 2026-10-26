@@ -28,6 +28,7 @@
  * the same evolution. The CONSTRUCTOR draws NO rng and builds NO scene objects, so the system
  * is boot-stream-neutral (the integrator can place its construction anywhere).
  */
+import { mulberry32 } from '../math/rng';
 import * as THREE from 'three';
 import { TAU } from '../math/scalar';
 import { ARENA_MID } from './constants';
@@ -559,7 +560,8 @@ export class SingularitySystem {
   private applyEntropy(dt: number): void {
     const rng = this.ctx.rng;
     const list = this.entities.list;
-    const mag = 0.05;
+    // Audit #194: the entropy kick is per second (60 Hz-normalised), not per call.
+    const mag = 0.05 * Math.min(4, dt * 60);
     for (let i = 0; i < list.length; i += 2) {
       const e = list[i];
       if (!e) continue;
@@ -1084,7 +1086,8 @@ export class SingularitySystem {
   private buildParticles(
     kind: SingularityKind,
   ): { points: THREE.Points; pointsMat: THREE.PointsMaterial; pState: Float32Array } | null {
-    const rng = this.ctx.rng;
+    // Audit #193: the visual cloud uses a private stream (seeded from the kind), not the sim rng.
+    const rng = mulberry32(0x51a6_0000 ^ (kind.length * 0x9e37));
     const tier = this.ctx.quality.tier;
     const n = particleBudget(tier);
     const sizeMul = particleSizeMul(tier);

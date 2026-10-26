@@ -84,9 +84,13 @@ export class AttentionController {
       const salience = clamp01(planSalience[i] ?? 0);
       const drive = clamp01(drives[plan] / maxDrive);
       const prior = this.stateBias(plan, cues);
-      const raw = 0.44 * drive + 0.36 * salience + 0.2 * prior;
-      if (raw > rawDominantScore) {
-        rawDominantScore = raw;
+      // Audit #148: focus used to include 0.44·drive and then boosted those same drives — an
+      // incumbent-plan positive feedback. Focus now comes from salience + state prior only; the
+      // drive still decides the reported dominant plan.
+      const raw = 0.64 * salience + 0.36 * prior;
+      const dominance = raw + 0.44 * drive;
+      if (dominance > rawDominantScore) {
+        rawDominantScore = dominance;
         rawDominant = i;
       }
       const next = (this.focus[i] ?? 0) + ATTENTION_TAU * (raw - (this.focus[i] ?? 0));

@@ -803,20 +803,7 @@ export class SuperCreature {
     if (mn > 0) {
       drives.DOMINATE += mn * 0.5 * this.dominance; // strong → posture toward the anticipated rival
     }
-    // POWER OF MATH (inline, legacy V31 path): number theory gcd resonance for combinatoric plan-limb alignment (Euclid)
-    function _gcd(x: number, y: number) {
-      while (y) {
-        const t = y;
-        y = x % y;
-        x = t;
-      }
-      return x || 1;
-    }
-    for (let ii = 0; ii < SUPER_PLANS.length; ii++) {
-      const pk = SUPER_PLANS[ii]!;
-      const res = (_gcd(ii + 1, ((s[0] * 10) | 0) + 1) % 3) * 0.02;
-      drives[pk] = (drives[pk] ?? 0) + res;
-    }
+    // Audit #137: the gcd "number theory resonance" plan bias (numerology, unrelated to state) is removed.
     let best: SuperPlan = 'REST';
     let bestScore = -Infinity;
     for (const k of SUPER_PLANS) {

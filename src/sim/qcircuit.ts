@@ -127,6 +127,8 @@ export class QuantumCircuitSystem {
    * Cadenced evolution (world.ts calls this every 30 frames): applies a chaos-scaled ry drift
    * gate to the round-robin qubit, measures (collapses) the register on every 8th update via
    * the injected seeded rng, then recomputes the cached entropy. O(2^n); allocation-free.
+   * Audit #213: because drift is ry ≤ π/8 between collapses, the entropy stays near 0 by design
+   * (mean ≈0.06 at chaos 5); read it as a small "recent drift" signal, not as rich superposition.
    */
   update(): void {
     const reg = this.reg;

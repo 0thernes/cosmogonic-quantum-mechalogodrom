@@ -7,8 +7,6 @@ import * as THREE from 'three';
 import { clamp } from '../math/scalar';
 import { creatureDrive } from './cognition';
 import {
-  ARENA_MID,
-  ARENA_Y,
   CHAOS_MAX,
   CHAOS_MIN,
   PLATFORM_HALF,
@@ -35,44 +33,28 @@ type PuppetAction = 'chaos' | 'weather' | 'mutate';
 interface PuppetConfig {
   readonly name: string;
   readonly hue: number;
-  /** Orbit radius. */
-  readonly orb: number;
-  /** Orbit angular speed (rad/s of sim time). */
-  readonly spd: number;
-  /** Base hover height. */
-  readonly y: number;
   readonly act: PuppetAction;
   /** Ticks between actions (timer advances at dt*30/frame). */
   readonly iv: number;
 }
 
-// Legacy orbits × ARENA_MID, hover heights × ARENA_Y (V3.1 — the trio patrols the
-// populated mid-field of the 5× arena instead of hugging the old 65u core).
+// Audit #63: the legacy orb/spd/y fields were never read (FREE ROAM derives paths from hue), so removed.
 const CONFIGS: readonly PuppetConfig[] = [
   {
     name: 'AETHON',
     hue: 0.08,
-    orb: 45 * ARENA_MID,
-    spd: 0.07,
-    y: 35 * ARENA_Y,
     act: 'chaos',
     iv: 400,
   },
   {
     name: 'SELENE',
     hue: 0.6,
-    orb: 55 * ARENA_MID,
-    spd: -0.05,
-    y: 42 * ARENA_Y,
     act: 'weather',
     iv: 600,
   },
   {
     name: 'KRONOS',
     hue: 0.3,
-    orb: 50 * ARENA_MID,
-    spd: 0.03,
-    y: 38 * ARENA_Y,
     act: 'mutate',
     iv: 500,
   },
@@ -119,9 +101,6 @@ function lesserConfig(i: number): PuppetConfig {
   return {
     name: `WRAITH-${i + 1}`,
     hue: (i * PHI) % 1,
-    orb: (38 + (i % 8) * 6) * ARENA_MID,
-    spd: (i % 2 === 0 ? 1 : -1) * (0.03 + (i % 5) * 0.012),
-    y: (26 + (i % 9) * 3) * ARENA_Y,
     // Lesser hands only RESHAPE — weather/chaos from 97 of them would strobe the world.
     act: 'mutate',
     iv: 1400 + (i % 13) * 110, // long, staggered intervals so meddling is steady, not a flood

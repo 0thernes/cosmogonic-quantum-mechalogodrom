@@ -4,6 +4,7 @@
  * their colors every 6th frame. Faithful port of legacy lines 433-439 + 823-838, with the
  * Known Bug 13 partial-upload fix applied to off-cadence color writes.
  */
+import { mulberry32 } from '../math/rng';
 import * as THREE from 'three';
 import { TAU, clamp } from '../math/scalar';
 import { HABITAT_MID, HABITAT_Y, MID_RADIUS2 } from './constants';
@@ -54,6 +55,8 @@ export class QuantumCloud {
   private quantumBands: Float32Array | null = null;
 
   /** Seeds particle positions, colors, and psi parameters (legacy 433-439). */
+  private readonly fxRng = mulberry32(0x9c10ad5e);
+
   constructor(ctx: SimContext) {
     this.ctx = ctx;
     const n = ctx.quality.quantumCount;
@@ -162,7 +165,9 @@ export class QuantumCloud {
    */
   update(dt: number, t: number): void {
     const ctx = this.ctx;
-    const rng = ctx.rng;
+    // Audit #212: render-only particle jitter/respawns draw from a private stream, so the cloud no
+    // longer consumes thousands of seeded simulation draws per frame.
+    const rng = this.fxRng;
     const cm = Math.min(ctx.state.chaos / 2, 3); // legacy cMul()
     const colorTick = ctx.state.frame % 6 === 0;
     const dt60 = dt * 60;

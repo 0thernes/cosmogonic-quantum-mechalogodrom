@@ -919,6 +919,9 @@ export class AudioEngine {
     this.musicInterval = setInterval(
       () => {
         if (!this._musicOn || document.hidden) return; // Known Bug 3: no queueing while hidden.
+        // Audit #295: muted (manual or sleep doze) ⇒ masterGain is 0, so skip synthesising voices
+        // into silence; the phrase counter still advances via the next audible beat.
+        if (this._muted) return;
         const t = ctx.currentTime;
         const ch = song.chords[ci % song.chords.length];
         if (!ch) return; // Unreachable: every song has at least one chord.

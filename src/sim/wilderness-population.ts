@@ -251,7 +251,7 @@ export class WildernessPopulation {
   private readonly baseSeed: number;
   private readonly chunkSize = 100; // World units per chunk
   private frameCounter = 0; // Frame counter for timestamps (determinism-safe)
-  private readonly maxChunks = 64; // Camera-streamed active chunks (ADR 0010 — not golden)
+  private readonly maxChunks = 81; // #200: ≥ the 9×9 unload box, so no wanted chunk is skipped // Camera-streamed active chunks (ADR 0010 — not golden)
   private readonly entitiesPerChunk = 128; // Entities per chunk
   private nextEntityId = 0;
   /** Pre-allocated worker task buffers — one per max active chunk (parallel-safe). */

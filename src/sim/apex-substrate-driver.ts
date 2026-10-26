@@ -109,7 +109,8 @@ export class ApexSubstrateDriver {
   }
 
   /**
-   * Fuse the substrate into a behavioural modulation. Each tier feeds a distinct channel; an
+   * Fuse the substrate into a behavioural modulation. Audit #114: this modulation is consumed by the
+   * architecture panel and the offworld score only; it does not reach the live ApexBrain. Each tier feeds a distinct channel; an
    * {@link AblationFlags} entry zeroes that tier's contribution so a harness can prove it is
    * load-bearing. O(nPlans + bounded).
    */

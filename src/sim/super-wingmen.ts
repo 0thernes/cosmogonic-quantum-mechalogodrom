@@ -170,8 +170,10 @@ export class WingmanSwarm {
       this.forward(i * WINGMAN_PARAMS_EACH);
       const o = this.out;
       // steer the orbit (bounded so the formation holds)
-      this.rad[i] = clamp(r + (o[0] ?? 0) * 0.5, BASE_R * 0.5, BASE_R * 1.7);
-      this.hgt[i] = clamp((this.hgt[i] ?? 0) + (o[1] ?? 0) * 0.4, -9, 13);
+      // Audit #236: radius/height steering is per SECOND (normalised to a 60 Hz frame), not per call.
+      const k60 = dt * 60;
+      this.rad[i] = clamp(r + (o[0] ?? 0) * 0.5 * k60, BASE_R * 0.5, BASE_R * 1.7);
+      this.hgt[i] = clamp((this.hgt[i] ?? 0) + (o[1] ?? 0) * 0.4 * k60, -9, 13);
       this.ang[i] = a + (this.spd[i]! + (o[2] ?? 0) * 0.5) * dt;
       assistSum += unit(o[3] ?? 0);
       // write the world position

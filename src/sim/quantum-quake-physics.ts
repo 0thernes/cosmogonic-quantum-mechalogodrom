@@ -325,7 +325,15 @@ export function fubiniStudyDistance(state1: QGEState, state2: QGEState): number 
  */
 export function qgeAlivenessProxy(curvature: number, phase: number, alivenessFactor = 1): number {
   // Build the packet (centered, momentum-free) and its overlap with the ground state |0⟩.
-  buildWavePacket([0, 0, 0], [0.6, 0.4, 0.5], phase, curvature, SCRATCH_RE_A, SCRATCH_IM_A);
+  // Audit #216: a global phase cannot change |⟨0|ψ⟩|, so the phase now rotates the packet's momentum.
+  buildWavePacket(
+    [0, 0, 0],
+    [0.6 * Math.cos(phase), 0.4 * Math.sin(phase) + 0.4, 0.5],
+    phase,
+    curvature,
+    SCRATCH_RE_A,
+    SCRATCH_IM_A,
+  );
   // ⟨0|ψ⟩ = ψ₀ (the |0⟩ amplitude); |⟨0|ψ⟩| is the fidelity with the trivial state.
   const fidelity = Math.hypot(SCRATCH_RE_A[0]!, SCRATCH_IM_A[0]!);
   const f = fidelity > 1 ? 1 : fidelity;

@@ -124,6 +124,7 @@ interface Construct {
 export class WasteEcology {
   private readonly waste: Float32Array;
   private readonly gas: Float32Array;
+  private readonly gasPrev: Float32Array;
   private readonly gridN = GRID_N;
   private readonly half = PLATFORM_HALF;
   private readonly constructs: Construct[] = [];
@@ -139,6 +140,7 @@ export class WasteEcology {
     this.scene = scene;
     this.waste = new Float32Array(GRID_N * GRID_N);
     this.gas = new Float32Array(GRID_N * GRID_N);
+    this.gasPrev = new Float32Array(GRID_N * GRID_N);
     this.baseMat = new THREE.MeshStandardMaterial({
       color: 0xffffff,
       roughness: 0.48,
@@ -223,29 +225,32 @@ export class WasteEcology {
     // Diffuse gas slightly (weird airborne pollution field) + decay both layers.
     const cells = this.waste.length;
     const gn = this.gridN;
+    // Audit #233: Jacobi update from a snapshot (was in-place Gauss-Seidel), and empty cells are no
+    // longer skipped, so gas genuinely spreads into clean neighbours.
+    const prev = this.gasPrev;
+    prev.set(this.gas);
     for (let i = 0; i < cells; i++) {
       let w = this.waste[i] ?? 0;
-      let g = this.gas[i] ?? 0;
-      if (w < 1e-5 && g < 1e-5) continue;
+      let g = prev[i] ?? 0;
       // Neighbor gas bleed (not full PDE — cheap halo).
       const ix = i % gn;
       const iz = (i / gn) | 0;
       let gSum = g;
       let gc = 1;
       if (ix > 0) {
-        gSum += this.gas[i - 1] ?? 0;
+        gSum += prev[i - 1] ?? 0;
         gc++;
       }
       if (ix < gn - 1) {
-        gSum += this.gas[i + 1] ?? 0;
+        gSum += prev[i + 1] ?? 0;
         gc++;
       }
       if (iz > 0) {
-        gSum += this.gas[i - gn] ?? 0;
+        gSum += prev[i - gn] ?? 0;
         gc++;
       }
       if (iz < gn - 1) {
-        gSum += this.gas[i + gn] ?? 0;
+        gSum += prev[i + gn] ?? 0;
         gc++;
       }
       const gMean = gSum / gc;

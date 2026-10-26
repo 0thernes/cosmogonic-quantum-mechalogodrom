@@ -927,7 +927,9 @@ export function stepOct2026WaveSubstrates(
     Math.sin(phase + 1.0471975511965976),
   );
   const bondDim = Math.max(4, Math.min(32, Math.round(coherence * 32)));
-  const bonsai = evaluateBonsaiFidelity(12, bondDim, 32, Math.max(1e-4, entropy * 0.02));
+  // Audit #170: bondDim was passed as DEPTH and 32 as χ, so the gate always passed. Fixed depth 6,
+  // coherence-derived χ.
+  const bonsai = evaluateBonsaiFidelity(12, 6, bondDim, Math.max(1e-4, entropy * 0.02));
   const moonlab = evaluateMoonlabIsingAnnealer(coherence, entropy, 2);
   const qwzMass = coherence >= entropy ? -1.0 : 1.0;
   const qwzChern = evaluateMoonlabQwzChernInsulator(qwzMass, 10);
