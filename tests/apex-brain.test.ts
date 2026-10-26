@@ -100,22 +100,20 @@ describe('organ 2 — AcousticMeatDrum (wave equation)', () => {
   });
 });
 
-describe('organ 3 — EntropicNecroMatrix (irreversible necrosis)', () => {
-  test('dead ↑, live ↓, budget ↓ monotone; reaches brain death', () => {
+describe('organ 3 — EntropicNecroMatrix (wear with slow repair, audit #102)', () => {
+  test('thinking burns edges but vitality settles above zero instead of brain death', () => {
     const necro = new EntropicNecroMatrix(48, mulberry32(11));
-    let dead = necro.deadCount();
-    let live = necro.liveFraction();
-    let budget = necro.budgetLeft();
-    for (let t = 0; t < 1000; t++) {
+    let minLive = 1;
+    for (let t = 0; t < 5000; t++) {
       necro.step(t * 7, t * 13 + 3);
-      expect(necro.deadCount()).toBeGreaterThanOrEqual(dead);
-      expect(necro.liveFraction()).toBeLessThanOrEqual(live + 1e-9);
-      expect(necro.budgetLeft()).toBeLessThanOrEqual(budget);
-      dead = necro.deadCount();
-      live = necro.liveFraction();
-      budget = necro.budgetLeft();
+      expect(necro.liveFraction()).toBeGreaterThanOrEqual(0);
+      expect(necro.liveFraction()).toBeLessThanOrEqual(1);
+      minLive = Math.min(minLive, necro.liveFraction());
     }
-    expect(necro.brainDead()).toBe(true);
+    expect(minLive).toBeLessThan(1); // it does wear
+    expect(necro.deadCount()).toBeGreaterThan(0);
+    expect(necro.brainDead()).toBe(false); // but repair keeps it alive
+    expect(necro.view().vitality).toBeGreaterThan(0);
   });
 });
 

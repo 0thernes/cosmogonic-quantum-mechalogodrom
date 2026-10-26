@@ -134,7 +134,8 @@ export class DarkEnergy {
 
     // quakePerturb: vacuum quantum fluctuations
     const qk = quakePerturb(this.lambda, this.beatCount % 53, 0.04);
-    this.phi *= qk;
+    // Audit #252: re-clamp after the multiplicative kick (it used to push φ past the ±2 bound).
+    this.phi = clamp(this.phi * qk, -2, 2);
   }
 
   get expansion(): number {

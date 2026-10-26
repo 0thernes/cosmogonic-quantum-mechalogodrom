@@ -91,12 +91,9 @@ function validateV1(r: Record<string, unknown>): PersistedStateV1 | null {
   if (sim !== 1 && sim !== 2) {
     return null;
   }
-  // Additive persisted fields: musicOn, muteOn, renderIdx, tier. Absence is allowed;
-  // presence with wrong type rejects the whole blob (tamper policy).
-  if (r.musicOn !== undefined && typeof r.musicOn !== 'boolean') return null;
-  if (r.muteOn !== undefined && typeof r.muteOn !== 'boolean') return null;
-  if (r.renderIdx !== undefined && !isIndexLike(r.renderIdx)) return null;
-  if (r.tier !== undefined && typeof r.tier !== 'string') return null;
+  // Additive persisted fields: musicOn, muteOn, renderIdx, tier. Audit #307: a malformed OPTIONAL
+  // field is dropped on its own (falls back to its default) instead of rejecting the whole blob,
+  // which silently reset every setting and the session count. Required fields stay strict.
   // Rebuilt field by field: strips unknown keys and normalizes seed to uint32.
   const out: PersistedStateV1 = {
     version: 1,
@@ -109,10 +106,10 @@ function validateV1(r: Record<string, unknown>): PersistedStateV1 | null {
     sessions,
     sim,
   };
-  if (r.musicOn !== undefined) out.musicOn = r.musicOn;
-  if (r.muteOn !== undefined) out.muteOn = r.muteOn;
-  if (r.renderIdx !== undefined) out.renderIdx = r.renderIdx;
-  if (r.tier !== undefined) out.tier = r.tier;
+  if (typeof r.musicOn === 'boolean') out.musicOn = r.musicOn;
+  if (typeof r.muteOn === 'boolean') out.muteOn = r.muteOn;
+  if (isIndexLike(r.renderIdx)) out.renderIdx = r.renderIdx;
+  if (typeof r.tier === 'string') out.tier = r.tier;
   return out;
 }
 

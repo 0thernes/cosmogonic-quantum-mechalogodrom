@@ -90,6 +90,9 @@ export interface EvoView {
   ascended: boolean;
 }
 
+/** Audit #230: hard level ceiling (power stays finite, ~1e72× LV1 is already absurd). */
+export const SUPER_EVOLUTION_MAX_LEVEL = 999;
+
 export class SuperEvolution {
   level = 1;
   xp = 0;
@@ -145,6 +148,11 @@ export class SuperEvolution {
     while (guard++ < 100000) {
       const need = this.xpForNext();
       if (!Number.isFinite(need) || need <= 0 || this.xp < need) break;
+      // Audit #230: cap the level so power() and xpForNext() stay finite on very long sessions.
+      if (this.level >= SUPER_EVOLUTION_MAX_LEVEL) {
+        this.xp = Math.min(this.xp, need);
+        break;
+      }
       this.xp -= need;
       this.level++;
       this.checkAscension();

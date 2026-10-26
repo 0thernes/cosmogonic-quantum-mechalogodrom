@@ -81,8 +81,12 @@ const REGROW_NEIGHBOR = 0.14;
 /** Overgraze residual decay (1/s) — debt clears so respawn is not blocked for long. */
 const PRESSURE_DECAY = 0.42;
 const PRESSURE_STAMP = 0.9;
-/** Continuous recovery time constant (s); exp form guarantees ~95% restore by ~5s. */
-const REGROW_TAU = 5 / 3;
+/**
+ * Continuous recovery time constant (s). Audit #98: 5/3 s refilled any grazing deficit in ~2 s, so
+ * food was never limiting; 6 s (~95% restore by ~18 s) lets heavy grazing locally deplete a patch
+ * while still guaranteeing recovery.
+ */
+const REGROW_TAU = 6;
 /** Max simultaneous local contact seeds (multi-point; kills the single giant-patch slide). */
 export const FLORA_CONTACT_SLOTS = 4;
 /** Local contact radius (world units). Tight enough for per-being thrash, not lawn slabs. */
@@ -2159,7 +2163,8 @@ export class AlienFlora {
         const wx = ix * cell - half + cell * 0.5;
         const wz = iz * cell - half + cell * 0.5;
         const f = fert(wx, wz);
-        fertBoost = f > 0.05 ? f : 1;
+        // Audit #99: monotone boost (it used to multiply growth by f < 1 for 0.05 < f < 1).
+        fertBoost = 1 + (f > 0 ? (f > 1 ? 1 : f) : 0);
       }
       // Dual recovery: logistic + exp approach. Calm climate ≈5s respawn; entropy/chaos stretch τ.
       const logistic =

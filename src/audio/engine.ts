@@ -341,7 +341,9 @@ export class AudioEngine {
     this.sfxGain.gain.value = 0;
     this.sfxGain.connect(this.masterGain);
     this.xenomimicBus = new XenomimicAudioBus(this.ctx, this.sfxGain, this.rng);
-    this.buildPortalHorrorBus();
+    // Audit #294: the portal-horror bus is RETIRED (V124) — no longer built at init, so its three
+    // oscillators no longer run forever at gain 0 bypassing the SFX toggle. setPortalNightmare no-ops.
+    void this.buildPortalHorrorBus;
     // Ambient auto-SFX (legacy 548): only ticks while SFX are on AND the tab is visible.
     this.ambientInterval = setInterval(
       () => {

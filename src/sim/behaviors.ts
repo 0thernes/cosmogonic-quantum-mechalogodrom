@@ -330,6 +330,8 @@ function quantum(_e: Entity, u: EntityData, env: BehaviorEnv): void {
  * strategy (legacy lines 735-739). O(k).
  */
 function nash(e: Entity, u: EntityData, env: BehaviorEnv): void {
+  let payoffSum = 0;
+  let payoffN = 0;
   if (!env.actorProtected) {
     const nb = nearby(e, SOCIAL_NASH_R, env);
     for (let i = 0; i < nb.length; i++) {
@@ -342,7 +344,9 @@ function nash(e: Entity, u: EntityData, env: BehaviorEnv): void {
         continue;
       if (dist2XZ(e.position.x, e.position.z, ne.position.x, ne.position.z) < NASH_R2) {
         const them = ne.userData.strategy;
-        u.payoff = u.strategy === 0 ? (them === 0 ? 3 : 0) : them === 0 ? 5 : 1;
+        // Audit #41: accumulate the round payoffs (mean below) instead of last-neighbour-wins.
+        payoffSum += u.strategy === 0 ? (them === 0 ? 3 : 0) : them === 0 ? 5 : 1;
+        payoffN++;
         V1.copy(ne.position)
           .sub(e.position)
           .normalize()
@@ -350,6 +354,8 @@ function nash(e: Entity, u: EntityData, env: BehaviorEnv): void {
         u.vel.add(V1);
       }
     }
+    // Mean payoff over this round's partners (no partners → the last round's payoff stands).
+    if (payoffN > 0) u.payoff = payoffSum / payoffN;
   }
   // Keep the legacy conditional draw for an already-low payoff, but a protected actor may not
   // mutate strategy while the Nash game is suspended. Outside a sanctuary this is byte-identical.
@@ -388,7 +394,8 @@ function market(e: Entity, u: EntityData, env: BehaviorEnv): void {
           .multiplyScalar(diff * 0.00005 * env.sp2);
         u.vel.add(V1);
         u.energy += diff * 0.01;
-        ne.userData.energy -= diff * 0.01;
+        // Audit #42: clamp the neighbour too, so a trade can never push it outside [0,100].
+        ne.userData.energy = clamp(ne.userData.energy - diff * 0.01, 0, 100);
       }
     }
   }

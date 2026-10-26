@@ -128,6 +128,9 @@ const clampSigned = (value: number): number => (value <= -1 ? -1 : value >= 1 ? 
 const logistic = (value: number): number => 1 / (1 + Math.exp(-value));
 
 /** One exclusive neural controller instance per tree-dwelling creature. */
+/** Audit #127: decisions to wait before re-trying the network after a non-finite output. */
+export const TREE_BRAIN_OUTPUT_RETRY = 240;
+
 export class TreeCreatureBrain {
   private readonly weights = new Float32Array(TREE_CREATURE_BRAIN_PARAMETERS);
   private readonly net: TinyMLP;
@@ -135,6 +138,8 @@ export class TreeCreatureBrain {
   private readonly hidden = new Float32Array(TREE_CREATURE_BRAIN_HIDDEN);
   private readonly outputs = new Float32Array(TREE_CREATURE_BRAIN_OUTPUTS);
   private modelReady = true;
+  /** Audit #127: decision index at which a transient invalid-output latch is re-tried. */
+  private outputRetryAt = 0;
   private decisions = 0;
   private fallbackCount = 0;
   private lastActivity: TreeCreatureActivity = TREE_CREATURE_ACTIVITY.REST;
@@ -183,6 +188,15 @@ export class TreeCreatureBrain {
    */
   decide(percept: TreeCreaturePercept, action: TreeCreatureAction): TreeCreatureAction {
     this.decisions++;
+    // Audit #127: one non-finite output used to latch the model off forever; weights are still
+    // valid, so re-try the network after TREE_BRAIN_OUTPUT_RETRY decisions.
+    if (
+      !this.modelReady &&
+      this.lastFallbackReason === 'invalid-output' &&
+      this.decisions >= this.outputRetryAt
+    ) {
+      this.modelReady = true;
+    }
     if (!this.modelReady) {
       const reason =
         this.lastFallbackReason === 'invalid-output' ? 'invalid-output' : 'invalid-weights';
@@ -229,6 +243,7 @@ export class TreeCreatureBrain {
       !Number.isFinite(rawSocial)
     ) {
       this.modelReady = false;
+      this.outputRetryAt = this.decisions + TREE_BRAIN_OUTPUT_RETRY;
       return this.fallback(action, 'invalid-output');
     }
 
@@ -299,6 +314,7 @@ export class TreeCreatureBrain {
     speed = clamp01(speed);
     if (!Number.isFinite(steerX + steerZ + speed)) {
       this.modelReady = false;
+      this.outputRetryAt = this.decisions + TREE_BRAIN_OUTPUT_RETRY;
       return this.fallback(action, 'invalid-output');
     }
 

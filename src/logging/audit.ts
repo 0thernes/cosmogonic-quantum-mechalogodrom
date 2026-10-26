@@ -65,6 +65,9 @@ function toEntry(v: unknown): AuditEntry | null {
  * mirroring. Construct once in the composition root and share via
  * `SimContext.audit`.
  */
+/** Audit #305: minimum spacing (ms) between localStorage writes of the audit ring. */
+const AUDIT_PERSIST_MS = 1000;
+
 export class AuditTrail {
   private readonly endpoint: string;
   private readonly max: number;
@@ -113,8 +116,39 @@ export class AuditTrail {
     if (this.buf.length > this.max) {
       this.buf.splice(0, this.buf.length - this.max);
     }
-    this.persist();
+    this.schedulePersist();
     this.post(entry);
+  }
+
+  private persistTimer: ReturnType<typeof setTimeout> | null = null;
+  private lastPersistMs = -Infinity;
+
+  /**
+   * Audit #305: record() used to JSON-stringify the whole ring into localStorage on every call (62
+   * world sites). Writes are now coalesced: at most one immediate write per AUDIT_PERSIST_MS, with a
+   * trailing timer so the newest entries always land. `flush()` forces a write.
+   */
+  private schedulePersist(): void {
+    const now = Date.now();
+    if (now - this.lastPersistMs >= AUDIT_PERSIST_MS || typeof setTimeout !== 'function') {
+      this.flush();
+      return;
+    }
+    if (this.persistTimer !== null) return;
+    this.persistTimer = setTimeout(() => {
+      this.persistTimer = null;
+      this.flush();
+    }, AUDIT_PERSIST_MS);
+  }
+
+  /** Write the ring to localStorage now (and cancel any pending coalesced write). */
+  flush(): void {
+    if (this.persistTimer !== null) {
+      clearTimeout(this.persistTimer);
+      this.persistTimer = null;
+    }
+    this.lastPersistMs = Date.now();
+    this.persist();
   }
 
   /**

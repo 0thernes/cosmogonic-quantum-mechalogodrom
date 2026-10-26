@@ -1227,6 +1227,10 @@ export class BigTreeFaunaVisitors {
       if (cancelVisit) {
         this.visits.cancelActor(binding.ownerKind, ownerId);
         this.trackedOwnerIds[bindingIndex]!.delete(ownerId);
+      } else if (this.visits.stateOf(binding.ownerKind, ownerId) === BigTreeVisitState.Outside) {
+        // Audit #160: a normally completed visit (canonical state already Outside) owns nothing
+        // more, so stop tracking it — the trackedFauna stat was monotone.
+        this.trackedOwnerIds[bindingIndex]!.delete(ownerId);
       }
     }
 

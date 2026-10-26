@@ -136,6 +136,8 @@ export interface EntityData {
   /** Set-theory group; boots 0..3, but GraphMind louvain rewrites it with raw
    *  community indices that may exceed 3 (behaviors only compare equality). */
   setGroup: number;
+  /** Persistent faction FSM state (Watchers), threaded across frames (audit #39). */
+  factionFsm?: number;
   /** Last Nash payoff. */
   payoff: number;
   /** Phylum index 0..9 (CONTRACTS V3.2); -1 = unaffiliated legacy morph. */

@@ -29,6 +29,8 @@ function emit(level: LogLevel, scope: string, msg: string, data?: unknown): void
     ring[writeIndex] = entry;
     writeIndex = (writeIndex + 1) % RING_CAPACITY;
   }
+  // Audit #305: debug lines stay in the ring but only reach the console when opted in.
+  if (level === 'debug' && !(globalThis as { CQM_DEBUG?: boolean }).CQM_DEBUG) return;
   const line = `[${scope}] ${msg}`;
   if (data === undefined) {
     console[level](line);

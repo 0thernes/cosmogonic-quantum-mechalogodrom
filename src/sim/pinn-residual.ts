@@ -17,7 +17,9 @@ export function grayScottResidual(
   du = 0.16,
 ): number {
   const lapU = uL + uR + uU + uD - 4 * u;
-  const f = -u * v * v + feed * (1 - u) - kill * v * 0.01;
+  // Audit #255: the Gray-Scott u-equation is -uv² + F(1-u); the kill term belongs to v, not u.
+  void kill;
+  const f = -u * v * v + feed * (1 - u);
   return du * lapU + f;
 }
 

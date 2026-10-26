@@ -312,6 +312,11 @@ export class ArchonWarfare {
     return clamp01(this.warCount / 50);
   }
 
+  /** Audit #241: leaky decay so war intensity reflects recent conflict, not a lifetime tally. */
+  relax(k: number): void {
+    this.warCount *= k;
+  }
+
   getDominanceEntropy(): number {
     if (this.archonPower.size < 2) return 0;
     const powers = Array.from(this.archonPower.values());
@@ -361,6 +366,11 @@ export class RealityFracture {
 
   getFractureDensity(): number {
     return clamp01(this.fractureCount / 20);
+  }
+
+  /** Audit #241: leaky decay of the fracture tally. */
+  relax(k: number): void {
+    this.fractureCount *= k;
   }
 
   getInstability(): number {
@@ -466,6 +476,11 @@ export class CosmicHarvest {
     return clamp01(this.totalHarvested / 1000);
   }
 
+  /** Audit #241: leaky decay of the harvest total. */
+  relax(k: number): void {
+    this.totalHarvested *= k;
+  }
+
   getSystemDiversity(): number {
     return clamp01(this.harvestedSystems.size / 30);
   }
@@ -517,6 +532,12 @@ export class Transcendence {
     return clamp01(this.currentPlane / 10);
   }
 
+  /** Audit #241: planes and ascensions slowly fall back so transcendence is not a one-way ratchet. */
+  relax(k: number): void {
+    this.transcendenceCount *= k;
+    this.currentPlane *= k;
+  }
+
   getAscensionCount(): number {
     return clamp01(this.transcendenceCount / 15);
   }
@@ -541,6 +562,19 @@ export class EmergenceAnglesController {
   private readonly chaosEntropy = new ChaosEntropy();
   private readonly cosmicHarvest = new CosmicHarvest();
   private readonly transcendence = new Transcendence();
+
+  /**
+   * Audit #241: every ratcheting counter (war, fracture, harvest, transcendence) decays by `k` per
+   * call, so aggregate emergence tracks recent activity instead of crossing the brutal-event gate once
+   * and staying above it forever. Deterministic (no rng). Call once per emergence cadence.
+   */
+  relax(k = 0.97): void {
+    const f = Number.isFinite(k) ? Math.min(1, Math.max(0, k)) : 1;
+    this.archonWarfare.relax(f);
+    this.realityFracture.relax(f);
+    this.cosmicHarvest.relax(f);
+    this.transcendence.relax(f);
+  }
 
   evolveEshkolProgram(programId: string, fitness: number, inputs: Float32Array): string {
     return this.eshkolEvolution.evolve(programId, fitness, inputs);

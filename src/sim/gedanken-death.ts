@@ -178,12 +178,16 @@ export class GedankenLedger {
   private bandSum = 0;
   private noveltyPeakSum = 0;
   private transferSum = 0;
+  private recentVivid = 0;
   private mindDistSum = 0;
 
   /** Record one death's measured dream. O(1). */
   recordDeath(d: DeathDream): void {
     this.deaths++;
     this.vividSum += d.vividness;
+    // Audit #234: a recent-window EMA so consumers can react to a CHANGE in dream vividness
+    // instead of a lifetime mean that saturates and freezes.
+    this.recentVivid = this.deaths === 1 ? d.vividness : this.recentVivid * 0.9 + d.vividness * 0.1;
     this.bandSum += d.lucidBand;
     let peak = 0;
     for (let i = 0; i < d.novelty.length; i++) peak = Math.max(peak, d.novelty[i] ?? 0);
@@ -197,6 +201,10 @@ export class GedankenLedger {
     this.mindDistSum += r.mindDistance;
   }
 
+  /** EMA (α=0.1) of recent death-dream vividness (0 until the first death). Audit #234. */
+  get recentVividness(): number {
+    return this.recentVivid;
+  }
   /** Mean lucid-death-dream vividness across all deaths (0 until the first death). */
   get meanVividness(): number {
     return this.deaths > 0 ? this.vividSum / this.deaths : 0;

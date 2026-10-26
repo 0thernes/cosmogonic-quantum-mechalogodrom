@@ -79,6 +79,8 @@ const BLACK_PREMIUM = 0.25;
 /** Ticks between windfall auctions of the scarcer commodity (ascending / second-price). */
 const AUCTION_PERIOD = 20;
 /** Units of the scarce commodity in an auctioned lot (a windfall, like production). */
+/** Audit #45: fraction of each agent's commodity holdings consumed per tick. */
+const CONSUMPTION_RATE = 0.02;
 const AUCTION_LOT = 8;
 /** An agent's bid = this fraction of its net worth × its appetite for the auctioned commodity. */
 const BID_FRACTION = 0.04;
@@ -421,6 +423,10 @@ export class Economy {
         (inCartel ? 1 - CARTEL_WITHHOLD : 1) * (a.sanctioned ? SANCTION_PRODUCTION : 1);
       a.quanta += a.weight * 0.05 * vigour * restrict;
       a.ichor += a.weight * 0.05 * vigour * restrict;
+      // Audit #45: holdings are consumed every tick (a sink), so stock reaches a steady state
+      // instead of growing without bound and driving prices to the floor.
+      a.quanta *= 1 - CONSUMPTION_RATE;
+      a.ichor *= 1 - CONSUMPTION_RATE;
     }
     this.cartelShare = totalNW > 0 ? clamp(cartelWealth / totalNW, 0, 1) : 0;
 
@@ -620,9 +626,20 @@ export class Economy {
         // full price while debiting less MINTED the shortfall, breaking "currency conserved exactly"
         // (same class as the Gini-guard mint, batch-12). Now credited == debited, exactly conservative.
         const paid = this.debit(w, price); // winner pays the SECOND price (capped at its purse)
-        w[field] += AUCTION_LOT; // and takes the windfall lot
-        const share = paid / (n - 1);
-        for (let i = 0; i < n; i++) if (i !== winner) this.credit(this.agents[i]!, share);
+        // Audit #45: the lot is no longer minted. It is drawn pro rata from the other agents' stock of
+        // that commodity, and each is paid in proportion to the goods it gave up (all of `paid` is
+        // distributed, so currency stays conserved; goods are conserved too).
+        let pool = 0;
+        for (let i = 0; i < n; i++) if (i !== winner) pool += this.agents[i]![field];
+        const lot = Math.min(AUCTION_LOT, pool);
+        for (let i = 0; i < n; i++) {
+          if (i === winner) continue;
+          const a = this.agents[i]!;
+          const part = pool > 0 ? a[field] / pool : 1 / (n - 1);
+          a[field] -= lot * part;
+          this.credit(a, paid * part);
+        }
+        w[field] += lot;
         this.auctions++;
         this.lastAuctionPrice = price;
         this.lastAuctionCom = com;
@@ -637,19 +654,34 @@ export class Economy {
     if (vol <= 0) return;
     const buyScale = vol / buy; // <= 1
     const sellScale = vol / sell; // <= 1
+    let delivered = 0;
+    let paidTotal = 0;
     for (let i = 0; i < n; i++) {
       const a = this.agents[i]!;
       const d = deltas[i] ?? 0;
       if (d > 0) {
         const qty = d * buyScale;
         const cost = qty * price;
-        // Pay in whichever currency the agent leans toward, falling back to the other.
-        this.debit(a, cost);
-        a[field] += qty;
-      } else if (d < 0) {
-        const qty = -d * sellScale;
+        // Pay in whichever currency the agent leans toward, falling back to the other. Audit #44: a
+        // buyer short of cash only receives the goods it actually paid for.
+        const paid = this.debit(a, cost);
+        const got = cost > 0 ? qty * (paid / cost) : 0;
+        a[field] += got;
+        delivered += got;
+        paidTotal += paid;
+      }
+    }
+    // Sellers give up only the goods that were actually paid for, and receive exactly what buyers
+    // paid, so no currency or goods are created by a short buyer.
+    const fill = delivered / vol;
+    const unitPaid = delivered > 0 ? paidTotal / delivered : 0;
+    for (let i = 0; i < n; i++) {
+      const a = this.agents[i]!;
+      const d = deltas[i] ?? 0;
+      if (d < 0) {
+        const qty = -d * sellScale * fill;
         a[field] = Math.max(0, a[field] - qty);
-        this.credit(a, qty * price);
+        this.credit(a, qty * unitPaid);
       }
     }
   }

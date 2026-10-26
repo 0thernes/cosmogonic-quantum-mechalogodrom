@@ -514,6 +514,8 @@ export class QuantumMind {
       metric: [g00, g01, g01, g11],
       determinant,
       trace,
+      // Audit #95: these are metric invariants, NOT Riemann curvature — `curvature` is det g and
+      // `scalar` is tr g. Kept under the legacy keys for consumers; see `determinant`/`trace`.
       curvature: determinant,
       scalar: trace,
       berry,

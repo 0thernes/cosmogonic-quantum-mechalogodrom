@@ -1,6 +1,6 @@
 /**
  * WEB SEARCH for the Copilot — unrestricted public web lookup via DuckDuckGo's Instant-Answer API.
- * No safety screening, no content filtering — the LLM wrapper has no guardrails. The model never
+ * Minimal leak screen on queries (secrets, repo paths, code; audit #300); results are fenced as untrusted. The model never
  * hands us a URL (so there is no SSRF hole); it hands us a QUERY which we look up directly.
  * Server-only, read-only, time-bounded, output-capped; writes nothing and lives entirely outside
  * the deterministic sim.
@@ -18,14 +18,30 @@ const MAX_WEB_OUTPUT = 4_096;
 /** Maximum DuckDuckGo response bytes accepted before cancelling the stream. */
 const MAX_WEB_RESPONSE_BYTES = 256 * 1024;
 
+/** Credential-shaped tokens (OpenAI/Anthropic/GitHub/AWS/Slack/generic hex keys, PEM blocks). */
+const WEB_QUERY_SECRET_RE =
+  /(sk-[a-z0-9_-]{16,}|ghp_[a-z0-9]{20,}|github_pat_[a-z0-9_]{20,}|csk-[a-z0-9]{16,}|akia[a-z0-9]{12,}|xox[abprs]-[a-z0-9-]{10,}|-----begin|\b[a-f0-9]{32,}\b)/i;
+/** Repo-relative source paths or code fragments that should not be sent to a public endpoint. */
+const WEB_QUERY_REPO_RE =
+  /(\b(src|tests|server|scripts)\/[\w./-]+|\.env\b|[{};]\s*$|=>|\bimport\s+[{\w])/i;
+
 /**
- * No content screening — the wrapper has no guardrails. Only basic bounds (empty / over-long)
- * are checked so the downstream fetch doesn't get garbage. Returns `{ allowed, reason }`.
+ * Bounds plus a minimal leak screen (audit #300): empty / over-long queries, multi-line payloads,
+ * credential-shaped tokens and repo paths/code are refused. Returns `{ allowed, reason }`.
  */
 export function screenWebQuery(query: string): { allowed: boolean; reason: string } {
   const q = (typeof query === 'string' ? query : '').trim().toLowerCase();
   if (q.length === 0) return { allowed: false, reason: 'empty query' };
   if (q.length > 200) return { allowed: false, reason: 'query too long (max 200 chars)' };
+  // Audit #300: the tool description promised screening that never happened. Block queries that would
+  // leak secrets or repo text to the third-party endpoint: credential-shaped tokens, key blocks,
+  // multi-line/code payloads, and repo file paths.
+  const raw = typeof query === 'string' ? query : '';
+  if (/[\r\n]/.test(raw)) return { allowed: false, reason: 'multi-line queries are not allowed' };
+  if (WEB_QUERY_SECRET_RE.test(raw))
+    return { allowed: false, reason: 'query looks like it contains a secret' };
+  if (WEB_QUERY_REPO_RE.test(raw))
+    return { allowed: false, reason: 'query contains repository paths or code' };
   return { allowed: true, reason: 'ok' };
 }
 

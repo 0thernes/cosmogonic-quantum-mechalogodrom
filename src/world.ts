@@ -335,6 +335,8 @@ function cyc<T>(arr: readonly T[], i: number): T {
   return v;
 }
 
+/** Audit #14: chaos mean-reversion rate (per second, per unit of excess above floor + 1). */
+const CHAOS_REVERSION_PER_S = 0.02;
 /** AUTO mode dwell: seconds on each sorting field before advancing to the next (V7.2). */
 const ALGO_AUTO_PERIOD = 2.5;
 
@@ -2817,7 +2819,14 @@ export class World {
     // Chaos decays toward its floor — raised in SIMULATION N(2) so the nightmare stays
     // permanently agitated (higher cm ⇒ wilder behaviour excursions). V7.6.
     const chaosFloor = s.sim === 2 ? CHAOS_NIGHTMARE_FLOOR : CHAOS_MIN;
-    s.chaos = Math.max(chaosFloor, s.chaos - dt * 0.005);
+    // Audit #14: the base decay was a flat 0.005/s against four positive feeds, so chaos saturated.
+    // Add a mean-reverting term proportional to the excess above floor+1 (0 near the floor, so the
+    // calm regime is unchanged) so the feeds reach an equilibrium instead of a ratchet to CHAOS_MAX.
+    const chaosExcess = s.chaos - chaosFloor - 1;
+    s.chaos = Math.max(
+      chaosFloor,
+      s.chaos - dt * (0.005 + (chaosExcess > 0 ? CHAOS_REVERSION_PER_S * chaosExcess : 0)),
+    );
     // F-CHAOS-ENTROPY: entropy (order / heat-death) relaxes back toward 0, and while it holds it
     // BLEEDS chaos away — the bipolar tug (order calms agitation). Pure deterministic float math,
     // no rng; at the default entropy 0 this whole block is a no-op, so existing replays are intact.
@@ -3395,8 +3404,8 @@ export class World {
     // V124: the portal is a clean VOID now (the megalith redesign retired the "hell wormhole"), so the
     // portal-nightmare bus — a HIGH SCREAM square wave (`360 + level*220` Hz) + a low drone + periodic
     // demonic samples — is RETIRED. Forcing ascension (e.g. the UwU box) used to make that high-pitched
-    // electronic pulse play forever; hard-silence the bus every frame and never trigger the demonic loops.
-    this.audio.setPortalNightmare?.(0);
+    // electronic pulse play forever. Audit #10/#294: the bus is no longer built at all, so the old
+    // per-frame setPortalNightmare(0) hard-silence is gone too.
 
     if (s.frame % 60 === 30) {
       // RD pattern energy: strided mean of the V field (offset 30 — never
@@ -4356,9 +4365,12 @@ export class World {
       // just read out to a panel (coupling>count). Deterministic (the ledger is deterministic); gated on
       // enough deaths to be a real population signal; bounded to a hair of chaos.
       if (this.gedankenLedger.deaths > 8) {
-        const dreamHeat = this.gedankenLedger.meanVividness; // ~0..1.3 across the population
-        if (dreamHeat > 0.6) {
-          s.chaos = Math.min(CHAOS_MAX, s.chaos + 0.02 * Math.min(1, dreamHeat - 0.6));
+        // Audit #234: the lifetime mean sat at ~1.03 > 0.6, so the nudge was permanently on. Gate
+        // on a recent SPIKE above the population's own baseline instead.
+        const L = this.gedankenLedger;
+        const dreamHeat = L.recentVividness - L.meanVividness;
+        if (dreamHeat > 0.05) {
+          s.chaos = Math.min(CHAOS_MAX, s.chaos + 0.02 * Math.min(1, dreamHeat * 4));
         }
       }
       // BRUTALISM: the dark-energy (quintessence Λ) cosmological field. Energy density ← apex vitality,
@@ -4401,8 +4413,11 @@ export class World {
           `archon-${rot}`,
           `archon-${(rot + 1) % ARCHON_CHANNELS}`,
         );
+        this.emergenceAngles.relax(); // audit #241: counters decay instead of ratcheting
         const em = this.emergenceAngles.getAggregateEmergence();
-        const chaos = s.chaos ?? 0.5;
+        // Audit #13: compare chaos to the active floor, so N(2)'s floor of 6 alone no longer fires
+        // every channel every 120 frames.
+        const chaos = (s.chaos ?? 0.5) - (s.sim === 2 ? CHAOS_NIGHTMARE_FLOOR : CHAOS_MIN);
         for (let a = 0; a < ARCHON_CHANNELS; a++) {
           let pwr = 0;
           let spinO = 0.4;

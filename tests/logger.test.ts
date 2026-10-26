@@ -48,6 +48,7 @@ describe('createLogger — append + console mirror', () => {
   });
 
   test('every level routes to its matching console method', () => {
+    (globalThis as { CQM_DEBUG?: boolean }).CQM_DEBUG = true; // debug console output is opt-in (#305)
     const log = createLogger('unit-c');
     for (const l of LEVELS) {
       const before = spies.get(l)!.mock.calls.length;

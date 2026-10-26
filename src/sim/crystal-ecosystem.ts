@@ -1955,7 +1955,8 @@ export class CrystalEcosystem {
       if (hasQuantum(creature.quantumMask, 'decoherence') && creature.decoherence > 0) {
         creature.decoherence -= dt * (0.5 + entropy);
         if (creature.decoherence <= 0) {
-          creature.quantumMask = quantumBit('decoherence');
+          // Audit #73: expiry used to overwrite the mask with ONLY the decoherence bit, permanently
+          // stripping the species' other trait (tunneling / waveCollapse). Keep the mask intact.
           creature.interference = 0;
         }
       }

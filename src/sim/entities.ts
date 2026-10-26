@@ -1881,7 +1881,20 @@ export class EntityManager {
     FACTION_PERCEPT.novelty = clamp01((frame % 97) / 97);
     if (!protectedHere) {
       factionRngReseed(((index * 0x9e3779b9) ^ (frame * 0x85ebca6b) ^ (myGroup * 17)) >>> 0);
-      const { intent } = decideFaction(myGroup % FACTION_COUNT, FACTION_PERCEPT, factionRngNext);
+      // Audit #38: setGroup spans only 0..3, so factions 4-7 (Leviathans, SwarmMinds, Oracles,
+      // Devourers) never ran. On the live genome path the heritable typeId parity selects the upper
+      // half, so all eight factions are populated; the legacy golden path keeps setGroup % 8.
+      const faction = this.ctx.genomeRng
+        ? (myGroup + 4 * ((u.typeId | 0) & 1)) % FACTION_COUNT
+        : myGroup % FACTION_COUNT;
+      // Audit #39: thread the Watchers FSM state across frames instead of restarting at 0.
+      const { intent, nextState } = decideFaction(
+        faction,
+        FACTION_PERCEPT,
+        factionRngNext,
+        u.factionFsm ?? 0,
+      );
+      u.factionFsm = nextState;
       const steer = intentSteerXZ(intent, toCrowdX, toCrowdZ, toKinX, toKinZ, awayX, awayZ);
       // Faction intent is a bias on the filament — never stronger than the chain spring. Inside the
       // sanctuary the same organisms retain friendly springs/trails but do not run a hostile intent.

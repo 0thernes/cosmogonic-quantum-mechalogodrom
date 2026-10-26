@@ -406,6 +406,13 @@ export interface NecroView {
   brainDead: boolean;
 }
 
+/** Audit #102: necro-matrix budget recovered per beat (units of one edge firing). */
+const NECRO_BUDGET_REGEN = 1.25;
+/** Audit #102: one burned necro edge heals every this many beats. */
+const NECRO_HEAL_EVERY = 1;
+/** Audit #102: beats a melted thermodynamic sector stays necrotic before it regrows. */
+const THERMO_HEAL_BEATS = 600;
+
 class EntropicNecroMatrix {
   private readonly n: number;
   private readonly adj: number[][]; // undirected adjacency (live edges only)
@@ -414,6 +421,9 @@ class EntropicNecroMatrix {
   private budget: number;
   private readonly budget0: number;
   private lastPath = 0;
+  /** Audit #102: burned edges in burn order, so the oldest can heal (FIFO, flat [a,b,...]). */
+  private readonly scars: number[] = [];
+  private beats = 0;
 
   constructor(n = 64, rng: Rng = mulberry32(1)) {
     this.n = n;
@@ -455,6 +465,26 @@ class EntropicNecroMatrix {
     this.adj[b]!.splice(ib, 1);
     this.dead++;
     this.budget = Math.max(0, this.budget - 1);
+    this.scars.push(a, b);
+  }
+
+  /**
+   * Audit #102: slow regeneration. The budget recovers NECRO_BUDGET_REGEN per beat and the oldest
+   * scar heals every NECRO_HEAL_EVERY beats, so vitality reaches a wear/repair balance instead of
+   * draining irreversibly to brain-death ~37 s after boot. Deterministic (no rng).
+   */
+  private regenerate(): void {
+    this.beats++;
+    this.budget = Math.min(this.budget0, this.budget + NECRO_BUDGET_REGEN);
+    if (this.beats % NECRO_HEAL_EVERY === 0 && this.scars.length >= 2) {
+      const a = this.scars.shift()!;
+      const b = this.scars.shift()!;
+      if (!this.adj[a]!.includes(b)) {
+        this.adj[a]!.push(b);
+        this.adj[b]!.push(a);
+        this.dead = Math.max(0, this.dead - 1);
+      }
+    }
   }
 
   /**
@@ -462,6 +492,7 @@ class EntropicNecroMatrix {
    * die the route lengthens/twists; brain-death = no route or no budget. Returns vitality 0..1.
    */
   step(src: number, dst: number): number {
+    this.regenerate();
     if (this.budget <= 0) return 0;
     const s = ((src % this.n) + this.n) % this.n;
     const d = ((dst % this.n) + this.n) % this.n;
@@ -965,12 +996,15 @@ class ThermodynamicEngine {
   private readonly tMelt = 6;
   private readonly vent = 0.08;
   private necrotic = 0;
+  /** Audit #102: beats until each necrotic sector heals (0 = alive). */
+  private healIn: Uint16Array;
 
   constructor(n = 64) {
     this.n = n;
     this.heat = new Float64Array(n);
     this.nextHeat = new Float64Array(n);
     this.dead = new Uint8Array(n);
+    this.healIn = new Uint16Array(n);
   }
 
   totalHeat(): number {
@@ -1008,6 +1042,11 @@ class ThermodynamicEngine {
         this.dead[i] = 1;
         this.heat[i] = 0;
         this.necrotic++;
+        this.healIn[i] = THERMO_HEAL_BEATS;
+      } else if (this.dead[i] && this.healIn[i]! > 0 && --this.healIn[i]! === 0) {
+        // Audit #102: a melted sector re-grows after THERMO_HEAL_BEATS instead of staying dead.
+        this.dead[i] = 0;
+        this.necrotic = Math.max(0, this.necrotic - 1);
       }
     }
     return this.totalHeat();

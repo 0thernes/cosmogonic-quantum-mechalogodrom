@@ -310,3 +310,14 @@ describe('MemoryStore', () => {
     }
   });
 });
+
+describe('MemoryStore optional-field tolerance (audit #307)', () => {
+  test('a malformed optional field is dropped, the rest of the blob survives', () => {
+    localStorage.setItem(KEY, JSON.stringify({ ...sample, musicOn: 'yes', tier: 5 }));
+    const st = new MemoryStore(KEY).load();
+    expect(st?.sessions).toBe(7);
+    expect(st?.seed).toBe(123456);
+    expect((st as { musicOn?: unknown }).musicOn).toBeUndefined();
+    localStorage.removeItem(KEY);
+  });
+});

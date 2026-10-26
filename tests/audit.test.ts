@@ -133,6 +133,7 @@ describe('AuditTrail', () => {
     const trail = new AuditTrail();
     trail.record('boot');
     trail.record('weather', { idx: 3 });
+    trail.flush(); // writes are coalesced (#305)
     const raw = localStorage.getItem(KEY);
     expect(raw).not.toBeNull();
     expect(JSON.parse(String(raw))).toHaveLength(2);

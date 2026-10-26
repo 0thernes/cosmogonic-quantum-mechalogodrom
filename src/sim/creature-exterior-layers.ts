@@ -130,6 +130,8 @@ function shellGeoForKind(kindIdx: number): THREE.BufferGeometry {
 // ── Apex ς exterior (mandala + tesseract + nebula + zebra void) ───────────────
 
 export class ApexExteriorAbomination {
+  /** Audit #190: last scaled time, so instanced spin advances by Δst (not st) per frame. */
+  private lastSpinSt = Number.NaN;
   readonly group = new THREE.Group();
   private readonly tesseract: THREE.LineSegments[] = [];
   private readonly nebula: THREE.Points;
@@ -457,6 +459,10 @@ export class ApexExteriorAbomination {
 
   update(t: number, transcendence: number, vitality: number, pulse: TsotchkeQuantumPulse): void {
     const st = t * CREATURE_EXTERIOR_TIME_SCALE;
+    // Audit #190: spin increments used `st*k` per frame, so angular velocity grew with run time and
+    // frame rate. Integrate a per-frame Δst instead (first frame: 0).
+    const dSt = Number.isFinite(this.lastSpinSt) ? Math.max(0, st - this.lastSpinSt) : 0;
+    this.lastSpinSt = st;
     const hue = tsotchkeExteriorHue(pulse, 0.55 + transcendence * 0.2);
     for (let i = 0; i < this.tesseract.length; i++) {
       const box = this.tesseract[i]!;
@@ -537,7 +543,7 @@ export class ApexExteriorAbomination {
       this.stellatedSwarm.getMatrixAt(i, sM);
       sM.decompose(sP, sQ, sS);
       sE.setFromQuaternion(sQ);
-      sE.y += st * (0.015 + (i % 3) * 0.004);
+      sE.y += dSt * (0.015 + (i % 3) * 0.004) * 60;
       sQ.setFromEuler(sE);
       sP.z = this.swarmBaseZ[i]! + Math.sin(st * 0.2 + i) * 0.04 * vitality;
       sM.compose(sP, sQ, sS);
@@ -589,6 +595,8 @@ export class ApexExteriorAbomination {
 // ── Mechalogodrom exterior (CRT + cube swarm + prismatic arcs) ────────────────
 
 export class MechaExteriorAbomination {
+  /** Audit #190: last scaled time, so instanced spin advances by Δst (not st) per frame. */
+  private lastSpinSt = Number.NaN;
   readonly group = new THREE.Group();
   private readonly crtColumns: THREE.LineSegments[] = [];
   private readonly tunnel: THREE.LineSegments[] = [];
@@ -888,6 +896,10 @@ export class MechaExteriorAbomination {
 
   update(t: number, fusion: number, drive: number, pulse: TsotchkeQuantumPulse): void {
     const st = t * CREATURE_EXTERIOR_TIME_SCALE;
+    // Audit #190: spin increments used `st*k` per frame, so angular velocity grew with run time and
+    // frame rate. Integrate a per-frame Δst instead (first frame: 0).
+    const dSt = Number.isFinite(this.lastSpinSt) ? Math.max(0, st - this.lastSpinSt) : 0;
+    this.lastSpinSt = st;
     const hue = tsotchkeExteriorHue(pulse, this.phenIndices[0]! / 1000 + this.activity * 0.05);
     const phen = CREATURE_EXTERIOR_PHENOMENA[this.phenIndices[0]!]!;
     const phen2 = CREATURE_EXTERIOR_PHENOMENA[this.phenIndices[1]!]!;
@@ -923,7 +935,7 @@ export class MechaExteriorAbomination {
       M.decompose(P, Q, S);
       E.setFromQuaternion(Q);
       E.x += Math.sin(st * 0.08 + i * 0.4) * 0.002;
-      E.y += st * 0.012 + i * 0.003;
+      E.y += (dSt * 0.012 + i * 0.003 * dSt) * 60;
       E.z += Math.cos(st * 0.06 + i * 0.35) * 0.002;
       Q.setFromEuler(E);
       // Recompute scale from the constant base (NOT the live decomposed scale) so it
@@ -966,7 +978,7 @@ export class MechaExteriorAbomination {
       this.fractalGold.getMatrixAt(i, M);
       M.decompose(P, Q, S);
       E.setFromQuaternion(Q);
-      E.y += st * 0.008 + i * 0.002;
+      E.y += (dSt * 0.008 + i * 0.002 * dSt) * 60;
       Q.setFromEuler(E);
       // Recompute from the constant base — multiplyScalar on the live scale decayed it to zero.
       S.setScalar(this.goldBase[i]! * (1 + 0.04 * Math.sin(st * 0.2 + i)));

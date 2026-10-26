@@ -169,6 +169,8 @@ import { vqeEnergyProxy } from './moonlab-vqe';
 // TSOTCHKE CORPUS (Z:\[Vibe Coded (AI)]\(Tsotchke)): full 20 repos + sites wired. See docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md.
 // AD primitive for HOT-1, arena discipline, symmetry, tensor. See audit + receipts.
 
+/** Audit #77: weight of the refined surprise chain in the rebuilt consciousness state. */
+const SURPRISE_CHAIN_BLEND = 0.25;
 const SENSE = 18; // perception inputs
 const LATENT = 16; // world-model embedding width
 const NOISE = 8; // Creativity-Machine perturbation width
@@ -1489,6 +1491,10 @@ export class SuperMind {
     // documented workspace mechanism, applied directly (not via the washed-out latent). Centred on 0.5.
     const novelty = peakNovelty;
     const bindGate = COUPLING_BIND_GAIN * (this.lastResOrder - 0.5);
+    // Audit #77: the AD/tensor/VQE/QNG/NQS/Izhikevich/PC chain refines cons.surprise above, but the
+    // rebuild used to discard it for the raw local `surprise`, so that whole chain was dead compute.
+    // Blend the refined value in so the chain is load-bearing (bounded, deterministic).
+    const chainSurprise = Number.isFinite(this.cons.surprise) ? this.cons.surprise : surprise;
     this.cons = {
       dreaming: clamp01(0.4 + 0.6 * novelty + bindGate),
       hallucinating: clamp01((novelty - 0.6) / 0.4 + bindGate),
@@ -1505,7 +1511,9 @@ export class SuperMind {
           EMBODIMENT_SELF_GAIN * this.lastEmbodimentContingency,
       ), // 4th GWT access-faculty; V1.3 AE-2 body-contingency lifts self-awareness
       novelty,
-      surprise,
+      surprise: clamp01(
+        SURPRISE_CHAIN_BLEND * chainSurprise + (1 - SURPRISE_CHAIN_BLEND) * surprise,
+      ),
       ignition: this.ignition, // carried; finalised after the plan argmax below
       phi: this.phi, // carried; finalised after the plan argmax below
       workspace: this.eshkolEngine.workspace || 0.5, // Eshkol GWT from corpus

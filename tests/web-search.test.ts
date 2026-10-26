@@ -84,3 +84,12 @@ describe('formatAnswer (DDG result → concise, source-cited block)', () => {
     expect(out).not.toContain('https://u'); // the text-less topic is dropped
   });
 });
+
+describe('screenWebQuery leak screen (audit #300)', () => {
+  test('refuses secrets, repo paths and multi-line payloads', () => {
+    expect(screenWebQuery('ghp_abcdefghijklmnopqrstuvwxyz0123').allowed).toBe(false);
+    expect(screenWebQuery('what does src/sim/entities.ts do').allowed).toBe(false);
+    expect(screenWebQuery('line one\nline two').allowed).toBe(false);
+    expect(screenWebQuery('speed of light in vacuum').allowed).toBe(true);
+  });
+});

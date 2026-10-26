@@ -29,6 +29,8 @@ export class MemoryOrchestra {
   private gLen = 0;
   private regime = 0.5;
   private lastConsol = 0;
+  /** Audit #226: monotone write count (len saturates at CAP, which froze the consolidation gate). */
+  private writes = 0;
   // 12 grounded-symbol confidence EMAs — a lightweight belief-state (NOT true sum-product belief propagation).
   private readonly fgBeliefs = new Float32Array(12);
   private fgEnergy = 0.5;
@@ -69,7 +71,10 @@ export class MemoryOrchestra {
     this.events[this.head] = rec;
     this.head = (this.head + 1) % this.CAP;
     if (this.len < this.CAP) this.len++;
-    if (cause != null && this.gLen < this.graph.length - 1) {
+    this.writes++;
+    // Audit #226: the cause graph recycles (oldest pair first) instead of filling after 32 links.
+    if (cause != null && this.graph.length >= 2) {
+      if (this.gLen >= this.graph.length - 1) this.gLen = 0;
       this.graph[this.gLen++] = cause;
       this.graph[this.gLen++] = (this.head + this.CAP - 1) % this.CAP;
     }
@@ -128,8 +133,8 @@ export class MemoryOrchestra {
     let energy = 0;
     for (let s = 0; s < 12; s++) energy += Math.abs((this.fgBeliefs[s] ?? 0) - 0.5);
     this.fgEnergy = (energy / 12) * 0.5 + surprise * 0.5;
-    if (this.regime > 0.7 && this.len - this.lastConsol > 12) {
-      this.lastConsol = this.len;
+    if (this.regime > 0.7 && this.writes - this.lastConsol > 12) {
+      this.lastConsol = this.writes;
       // consolidate high conf (scan ring)
       let narr = '';
       let cnt = 0;

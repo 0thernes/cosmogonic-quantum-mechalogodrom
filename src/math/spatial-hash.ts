@@ -91,8 +91,8 @@ export class SpatialHash<T extends { position: { x: number; z: number } }> {
    */
   insert(item: T): void {
     const cs = this.cellSize;
-    const kx = (item.position.x / cs) | 0;
-    const kz = (item.position.z / cs) | 0;
+    const kx = Math.floor(item.position.x / cs);
+    const kz = Math.floor(item.position.z / cs);
     const key = kx * 10007 + kz;
     let cell = this.cells.get(key);
     if (cell === undefined) {
@@ -117,8 +117,8 @@ export class SpatialHash<T extends { position: { x: number; z: number } }> {
     const out = this.result;
     out.length = 0;
     const cr = Math.ceil(radius / cs);
-    const cx = (x / cs) | 0;
-    const cz = (z / cs) | 0;
+    const cx = Math.floor(x / cs);
+    const cz = Math.floor(z / cs);
     for (let dx = -cr; dx <= cr; dx++) {
       for (let dz = -cr; dz <= cr; dz++) {
         const cell = this.cells.get((cx + dx) * 10007 + (cz + dz));
@@ -148,8 +148,8 @@ export class SpatialHash<T extends { position: { x: number; z: number } }> {
     const out = this.result;
     out.length = 0;
     const cr = Math.ceil(radius / cs);
-    const cx = (x / cs) | 0;
-    const cz = (z / cs) | 0;
+    const cx = Math.floor(x / cs);
+    const cz = Math.floor(z / cs);
     const s = salt >>> 0;
     if (this.takeCell(cx, cz, budget, s)) return out;
     for (let k = 1; k <= cr; k++) {
@@ -194,8 +194,8 @@ export class SpatialHash<T extends { position: { x: number; z: number } }> {
   queryCells(x: number, z: number, radius: number): readonly (readonly T[])[] {
     const cs = this.cellSize;
     const cr = Math.ceil(radius / cs);
-    const cx = (x / cs) | 0;
-    const cz = (z / cs) | 0;
+    const cx = Math.floor(x / cs);
+    const cz = Math.floor(z / cs);
     // Fast numeric key; every hit is validated against all three coordinates, so even an IEEE/key
     // collision only creates a tiny bucket and can never return the wrong view.
     const key = (cx * 10007 + cz) * 257 + cr;
