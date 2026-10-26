@@ -112,6 +112,18 @@ describe('redactSecrets — credential redaction in surfaced errors (RISK-10)', 
     expect(out).toContain('[redacted-key]');
   });
 
+  test('redacts GitHub and Cerebras tokens, including inside tool output (#302)', () => {
+    for (const tok of [
+      'ghp_AbCdEf0123456789xyz',
+      'gho_AbCdEf0123456789xyz',
+      'github_pat_11AbCdEf0123456789_xyz',
+      'csk-AbCdEf0123456789',
+    ]) {
+      expect(redactSecrets(`token ${tok} leaked`)).not.toContain(tok);
+      expect(fenceUntrusted('read_file', `KEY=${tok}`)).not.toContain(tok);
+    }
+  });
+
   test('leaves ordinary provider error text untouched', () => {
     const msg = 'model is overloaded, please retry in 20s';
     expect(redactSecrets(msg)).toBe(msg);
