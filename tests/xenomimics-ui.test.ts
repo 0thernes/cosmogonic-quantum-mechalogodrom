@@ -106,6 +106,6 @@ describe('GATE-XENOMIMIC-DOCS: the swarm is documented across the player-facing 
     expect(obs).toContain('${Math.round(this.xenomimicLivingLatest)} Xenomimics');
     // world.snapshot() already populates it (slice 2a) and pushes the same object to the Observatory.
     expect(src('src/world.ts')).toContain('sn.xenomimics = xenomimic.population');
-    expect(src('src/world.ts')).toContain('this.observatory.push(this.snapshot())');
+    expect(src('src/world.ts')).toContain('this.observatory.push(snap ?? this.snapshot())');
   });
 });

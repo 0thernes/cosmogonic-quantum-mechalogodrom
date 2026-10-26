@@ -216,12 +216,14 @@ export class TreeCreatureBrain {
     const foodLength = Math.hypot(percept.foodDirectionX, percept.foodDirectionZ);
     let foodX = 0;
     let foodZ = 0;
-    let foodBearing = 0;
     if (foodLength > 1e-8) {
       foodX = percept.foodDirectionX / foodLength;
       foodZ = percept.foodDirectionZ / foodLength;
-      foodBearing = Math.atan2(foodZ, foodX) / Math.PI;
     }
+    // #123: atan2/π wrapped ±1 directly behind the creature (a discontinuous input). cos(bearing) is
+    // continuous on the circle; exact direction still reaches steering via foodX/foodZ below. The
+    // weights are seeded random init (never trained offline), so no retraining is needed.
+    const foodBearing = foodX;
 
     const input = this.inputs;
     input[0] = energy * 2 - 1;

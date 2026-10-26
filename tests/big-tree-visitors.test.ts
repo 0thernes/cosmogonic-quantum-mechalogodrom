@@ -705,7 +705,8 @@ describe('BigTreeSpeciesVisitors', () => {
     visits.addSlot(BigTreeSlotKind.Socialize, -3, 0);
     visits.addSlot(BigTreeSlotKind.Socialize, 3, 0);
     const visitors = adapter(tree, visits);
-    const teacher = ordinary(35, -3, 100);
+    const teacher = ordinary(35, -3, 120);
+    // #157: payoff-biased imitation — the higher-energy (more successful) partner is the teacher.
     const learner = ordinary(36, 3, 100);
     teacher.userData.strategy = 0;
     learner.userData.strategy = 1;

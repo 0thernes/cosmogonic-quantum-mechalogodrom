@@ -265,6 +265,9 @@ function patchPoolMaterial(
   uniforms: ShaderUniforms,
   matClass: number,
 ): void {
+  // #265: the injected `#define RQ_MAT` differs per class but onBeforeCompile.toString() does not,
+  // so without a distinct cache key three.js reused ONE program for all six material classes.
+  mat.customProgramCacheKey = () => `rqPool-${matClass}`;
   mat.onBeforeCompile = (shader) => {
     shader.uniforms['uTime'] = uniforms.uTime;
     shader.uniforms['uNightmare'] = uniforms.uNightmare;
@@ -530,7 +533,7 @@ const RELIQUARY_FRAG_BODY = /* glsl */ `#include <emissivemap_fragment>
 	totalEmissiveRadiance += vec3(1.0, 0.85, 0.45) * rqSpk * vWealth * 0.28 * RQ_VITAL_EM;
 	totalEmissiveRadiance += vec3(1.0, 0.70, 1.0) * pow(rqFres, 0.6) * (vWealth * vNeu) * 0.3 * RQ_VITAL_EM;
 	float rqGlitch = floor((rqN0 + sin(uTime * 11.0) * 0.25) * 6.0) / 6.0;
-	totalEmissiveRadiance += vec3(0.10, 1.0, 0.40) * rqGlitch * uChaos * (0.25 + 0.75 * vSen) * 0.15 * RQ_VITAL_EM;
+	totalEmissiveRadiance += vec3(0.10, 1.0, 0.40) * max(rqGlitch, 0.0) * uChaos * (0.25 + 0.75 * vSen) * 0.15 * RQ_VITAL_EM;
 
 	// ══ V-VITALS2 SOCIAL + QUANTUM SUITE ══════════════════════════════════════════════════════════
 	// Bound to the second packed lane (vVit2: x=strategy coop/defect, y=payoff, z=community hue,

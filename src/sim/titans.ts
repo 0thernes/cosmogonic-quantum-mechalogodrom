@@ -1753,6 +1753,10 @@ export class TitanSystem implements DomeFeeder, BigTreeFaunaSource {
     // its rival, its wealth emboldens a raid (an extra logged defection by the richer side) while the
     // poorer appeases — so economic dominance, not just the PD strategy, decides who marches to war.
     // Reads the deterministic economy + one ctx.rng draw, ONLY when an economy is wired (tests skip).
+    // #53: a raid is a real played defection: it carries the PD payoff (temptation for the raider,
+    // sucker for the victim) instead of entering the history with no consequence.
+    let raidPayoffA = 0;
+    let raidPayoffB = 0;
     if (this.econWealth) {
       const wi = this.econWealth(i);
       const wj = this.econWealth(j);
@@ -1760,16 +1764,18 @@ export class TitanSystem implements DomeFeeder, BigTreeFaunaSource {
       if (tot > 0) {
         const dom = (wi - wj) / tot; // −1..+1; positive ⇒ titan i is the richer power
         if (Math.abs(dom) > 0.2 && rng() < Math.abs(dom) * WEALTH_AGGRESSION) {
-          if (dom > 0)
-            pushHistory(h, 1, 0); // i defects on j — a wealth-funded raid
-          else pushHistory(h, 0, 1); // j defects on i
+          const raidA: Move = dom > 0 ? 1 : 0; // i defects on j (wealth-funded raid), else j on i
+          const raidB: Move = raidA === 1 ? 0 : 1;
+          pushHistory(h, raidA, raidB);
+          raidPayoffA = payoff(PRISONERS_DILEMMA, raidA, raidB) - PD_MEAN;
+          raidPayoffB = payoff(PRISONERS_DILEMMA, raidB, raidA) - PD_MEAN;
         }
       }
     }
 
     const stake = PAYOFF_STAKE_BASE + PAYOFF_STAKE_SCALE * Math.min(a.energy, b.energy);
-    a.energy = clamp(a.energy + (round.payoffA - PD_MEAN) * stake, 0, RESOURCE_CAP);
-    b.energy = clamp(b.energy + (round.payoffB - PD_MEAN) * stake, 0, RESOURCE_CAP);
+    a.energy = clamp(a.energy + (round.payoffA - PD_MEAN + raidPayoffA) * stake, 0, RESOURCE_CAP);
+    b.energy = clamp(b.energy + (round.payoffB - PD_MEAN + raidPayoffB) * stake, 0, RESOURCE_CAP);
 
     const fit = this.stratFitness;
     fit[a.strategy] = (fit[a.strategy] ?? 0) * FITNESS_DECAY + round.payoffA * (1 - FITNESS_DECAY);

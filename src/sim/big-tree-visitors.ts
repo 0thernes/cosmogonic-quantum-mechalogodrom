@@ -1153,7 +1153,7 @@ export class BigTreeSpeciesVisitors {
 
   /**
    * A real, narrowly scoped knowledge transfer: when two willing ordinary organisms first pair,
-   * a defector may imitate its cooperative partner. `strategy` is not decorative metadata — the
+   * the less successful partner (lower energy) imitates the other's strategy (#157). `strategy` is not decorative metadata — the
    * canonical Nash behavior reads it after the visit, and heredity can pass it to descendants.
    * Existing leases take the branch above and therefore cannot repeat or inflate this event.
    */
@@ -1169,11 +1169,17 @@ export class BigTreeSpeciesVisitors {
     if (first === null || second === null) return;
     const firstStrategy = first.userData.strategy;
     const secondStrategy = second.userData.strategy;
-    if (firstStrategy === 0 && secondStrategy === 1) {
-      second.userData.strategy = 0;
+    if (firstStrategy === secondStrategy) return;
+    // #157: payoff-biased imitation (the less successful partner copies the more successful one),
+    // so cooperation and defection can both spread; the old rule only ever rewrote D→C, a monotone
+    // drift to all-cooperate. Energy is the realised payoff proxy; a tie transfers nothing.
+    const firstEnergy = first.userData.energy;
+    const secondEnergy = second.userData.energy;
+    if (firstEnergy > secondEnergy) {
+      second.userData.strategy = firstStrategy;
       this.policyTransfers++;
-    } else if (firstStrategy === 1 && secondStrategy === 0) {
-      first.userData.strategy = 0;
+    } else if (secondEnergy > firstEnergy) {
+      first.userData.strategy = secondStrategy;
       this.policyTransfers++;
     }
   }

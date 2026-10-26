@@ -77,7 +77,11 @@ export class TinyMLP {
     this.nHidden = nHidden;
     this.nOut = nOut;
     const size = nHidden * (nIn + 1) + nOut * (nHidden + 1);
-    this.weights = weights && weights.length === size ? weights : new Float32Array(size);
+    // #153: a wrong-length weight vector used to be silently replaced by zeros (all-zero outputs).
+    if (weights && weights.length !== size) {
+      throw new RangeError(`TinyMLP: expected ${size} weights, got ${weights.length}`);
+    }
+    this.weights = weights ?? new Float32Array(size);
   }
 
   /** Total weight count for `(nIn, nHidden, nOut)` — the gene length a genome must carry. */
@@ -371,7 +375,10 @@ export function iteratedMove(
     case GameStrategy.PROBER:
       if (round === 0) return 1;
       if (round <= 2) return 0;
-      return oppLast === 0 ? 1 : 0; // exploit a steady cooperator, else mirror
+      // #152 classic Prober (Axelrod): D,C,C opening; if the opponent never retaliated, keep
+      // exploiting it, otherwise fall back to Tit-for-Tat (mirror its last move).
+      if (!everBetrayed) return 1;
+      return oppLast === 1 ? 1 : 0;
     case GameStrategy.TIT_FOR_TAT:
     default:
       return oppLast === 1 ? 1 : 0; // cooperate first (oppLast -1), then mirror

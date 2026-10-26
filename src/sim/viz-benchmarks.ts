@@ -271,6 +271,9 @@ interface VizShaderMaterial extends MeshStandardMaterial {
 export function applyVizBenchmarks(material: VizShaderMaterial, index: number): void {
   const bench = ((index % VIZ_BENCHMARK_COUNT) + VIZ_BENCHMARK_COUNT) % VIZ_BENCHMARK_COUNT;
   material.userData.vizBenchIndex = bench;
+  // #250: every benchmark closure has the same toString(), so three.js shared one compiled program
+  // across all obelisks; key the program by benchmark index.
+  material.customProgramCacheKey = () => `vizBench-${bench}`;
   material.onBeforeCompile = (shader) => {
     shader.uniforms.u_entropy = { value: 0.35 };
     const shaderCode = VIZ_BENCHMARKS_GLSL[bench] ?? '';

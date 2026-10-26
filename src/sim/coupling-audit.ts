@@ -182,7 +182,9 @@ export function structuredCouplingModulationInto(
       }
     }
     if (contentSim && contentSim.length === n) {
-      for (let j = 0; j < n; j += 3) {
+      // #240: keep the 1/3 sampling budget but rotate its phase with i, so every faculty can be a
+      // content partner (j += 3 from 0 only ever reached indices ≡ 0 mod 3).
+      for (let j = (i + 1) % 3; j < n; j += 3) {
         if (j === i) continue;
         const sim = dotNorm(contentSim[i] || [], contentSim[j] || []);
         if (sim > 0.5) {

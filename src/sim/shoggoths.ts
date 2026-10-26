@@ -872,7 +872,6 @@ export class ShoggothSystem implements PortalCullable, BigTreeFaunaSource {
         list.length > 50
       ) {
         sg.feedTimer = 0;
-        sg.consumed++;
         // O(k) via spatial hash + one O(n) index recovery per kill — NOT the O(k + m·n) the previous
         // per-candidate `list.indexOf(e)` cost (a dense cluster with m in-reach prey did m full-list
         // scans, the exact frame spike the grid query exists to prevent). Same deterministic tie-break
@@ -927,8 +926,11 @@ export class ShoggothSystem implements PortalCullable, BigTreeFaunaSource {
         }
         if (bestI >= 0) {
           this.entities.disposeAt(bestI);
+          sg.consumed++; // #66: count actual kills, not feeding attempts
           sg.satiation = clamp(sg.satiation + SATIATION_BUMP, 0, 1); // remember the kill (gorged)
-          for (let sj = 0; sj < 2; sj++) {
+          // #55: one corrupted child per kill (was 2), so predation is population-neutral rather
+          // than net +1 per kill.
+          for (let sj = 0; sj < 1; sj++) {
             V3.set((rng() - 0.5) * 4, rng() * 2 - 1, (rng() - 0.5) * 4);
             V2.copy(p).add(V3);
             // Corrupted child draws over the LIVE morph table (250 in phylum mode).

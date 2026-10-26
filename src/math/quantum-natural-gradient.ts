@@ -47,6 +47,7 @@ export function solveSymmetric(
     row[n] = b[i] ?? 0;
     m.push(row);
   }
+  const singular: boolean[] = Array.from({ length: n }, () => false);
   for (let col = 0; col < n; col++) {
     // partial pivot: the row (at/below col) with the largest |entry| in this column
     let piv = col;
@@ -58,7 +59,10 @@ export function solveSymmetric(
         piv = r;
       }
     }
-    if (best < 1e-12) continue; // singular column even after ridge → leave x[col] = 0 (finite fallback)
+    if (best < 1e-12) {
+      singular[col] = true; // #89: singular even after ridge → x[col] = 0 (finite fallback)
+      continue;
+    }
     if (piv !== col) {
       const t = m[col]!;
       m[col] = m[piv]!;
@@ -76,7 +80,9 @@ export function solveSymmetric(
     }
   }
   const x = Array.from({ length: n }, () => 0);
-  for (let i = 0; i < n; i++) x[i] = m[i]?.[n] ?? 0;
+  // #89: a skipped (singular) pivot leaves its row unreduced; zero that unknown as documented
+  // instead of returning the stale right-hand side.
+  for (let i = 0; i < n; i++) x[i] = singular[i] ? 0 : (m[i]?.[n] ?? 0);
   return x;
 }
 

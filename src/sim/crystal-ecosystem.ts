@@ -2228,12 +2228,22 @@ export class CrystalEcosystem {
     if ((survivalHunger || neuralHunger) && this.simTime >= creature.foodCooldownUntil) {
       const ownerId = TREE_CREATURE_OWNER_BASE - creature.index;
       const preferred: EdibleResourceKind = creature.index % 2 === 0 ? 'fruit' : 'leaf';
+      // #125: target the nearest free food of the preferred kind, not the FIFO free-list head.
       const reservation =
-        this.edibleResources.reserveAny(ownerId, this.simTime, FOOD_LEASE_SECONDS, preferred) ??
-        this.edibleResources.reserveAny(
+        this.edibleResources.reserveNearest(
           ownerId,
           this.simTime,
           FOOD_LEASE_SECONDS,
+          this.root.position.x + creature.x,
+          this.root.position.z + creature.z,
+          preferred,
+        ) ??
+        this.edibleResources.reserveNearest(
+          ownerId,
+          this.simTime,
+          FOOD_LEASE_SECONDS,
+          this.root.position.x + creature.x,
+          this.root.position.z + creature.z,
           preferred === 'fruit' ? 'leaf' : 'fruit',
         );
       if (reservation) {

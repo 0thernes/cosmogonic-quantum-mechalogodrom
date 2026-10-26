@@ -1550,8 +1550,8 @@ export class SuperMind {
     let instinctPattern = -1;
     let instinctStrength = 0;
     for (let pIdx = 0; pIdx < SUPER_PLANS.length; pIdx++) {
-      const o = this.spin.overlapWith(pIdx);
-      const a = o < 0 ? -o : o;
+      // #81: an anti-aligned pattern (negative overlap) is the opposite plan, not a vote for it.
+      const a = this.spin.overlapWith(pIdx);
       if (a > instinctStrength) {
         instinctStrength = a;
         instinctPattern = pIdx;
@@ -1568,8 +1568,7 @@ export class SuperMind {
     const { state: hopState } = recall(this.hopfield, this.hopProbe);
     let hopPattern = -1;
     for (let pIdx = 0; pIdx < SUPER_PLANS.length; pIdx++) {
-      const o = overlap(hopState, SPIN_ARCHETYPES[pIdx] ?? []);
-      const a = o < 0 ? -o : o;
+      const a = overlap(hopState, SPIN_ARCHETYPES[pIdx] ?? []); // #81 signed overlap
       if (a > hopStrength) {
         hopStrength = a;
         hopPattern = pIdx;

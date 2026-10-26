@@ -218,7 +218,9 @@ describe('EdibleResourceRegistry', () => {
       lifecycleErrors: 1,
     });
 
-    expect(registry.update(5)).toBe(1);
+    // #126: the failed restore backs off instead of retrying on the very next update.
+    expect(registry.update(5)).toBe(0);
+    expect(registry.update(6)).toBe(1);
     expect(registry.get(10)?.state).toBe('available');
     expect(registry.stats().pendingRespawns).toBe(0);
   });
@@ -247,7 +249,8 @@ describe('EdibleResourceRegistry', () => {
     });
 
     failFirstFruit = false;
-    expect(registry.update(5)).toBe(1);
+    expect(registry.update(5)).toBe(0); // #126 backoff
+    expect(registry.update(6)).toBe(1);
     expect(restored).toEqual([20, 10]);
     expect(registry.stats()).toMatchObject({
       available: 3,

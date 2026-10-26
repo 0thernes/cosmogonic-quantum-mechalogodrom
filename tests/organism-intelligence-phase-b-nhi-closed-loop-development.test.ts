@@ -411,7 +411,7 @@ describe('Phase-B NHI closed-loop development harness', () => {
         '8acb60a51bbef06bbf238f8b365f8b9f2d61314850909ff109cbbf70514f617f',
       );
       expect(result.rowsSha256).toBe(
-        'd3d364fc2cba7ae4eb2ebfefb2819ceaa55dbe1b5edb201163a5aa08b8cdb3e0',
+        '13b901fee5a19f83653a14f593a50885b6c53fbb4112dfeb3579ae595d56ee69',
       );
       expect(result.faultProbesSha256).toBe(
         'e08e5609aaadd14186794a56f0bf027a788fa96f6ce3400bf3118c835a59e8ad',

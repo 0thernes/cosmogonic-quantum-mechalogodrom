@@ -396,6 +396,8 @@ export class LeviathanSystem implements PortalCullable, DomeFeeder, BigTreeActor
       if (dt > 0) {
         lv.nutrition = Math.max(0, lv.nutrition - LEVIATHAN_NUTRITION_DECAY_PER_SECOND * dt);
       }
+      // #67: a portal-downed (hidden) leviathan neither sails nor stirs the RD ground.
+      if (!g.visible) continue;
 
       // Sinusoidal sail: a wide lazy orbit whose radius and height breathe over time.
       const orbit = t * 0.04 + lv.ph;

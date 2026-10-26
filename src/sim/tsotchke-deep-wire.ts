@@ -493,9 +493,20 @@ function parseTokens(tokens: string[]): EshkolASTNode {
       };
     } else if (op === 'let') {
       const spans = splitSpans(inner.slice(1));
+      // #165: parse `((name value) ...)` instead of dropping every binding.
+      const bindings: Array<{ name: string; value: EshkolASTNode }> = [];
+      const list = spans.length > 1 ? spans[0] : undefined;
+      if (list && list[0] === '(' && list[list.length - 1] === ')') {
+        for (const b of splitSpans(list.slice(1, -1))) {
+          if (b[0] !== '(' || b.length < 3 || b[b.length - 1] !== ')') continue;
+          const name = b[1];
+          if (!name || name === '(' || name === ')') continue;
+          bindings.push({ name, value: parseTokens(b.slice(2, -1)) });
+        }
+      }
       return {
         type: 'let',
-        bindings: [],
+        bindings,
         body: parseTokens(spans[spans.length - 1] ?? ['0']),
       };
     } else {
@@ -526,6 +537,7 @@ function parseTokens(tokens: string[]): EshkolASTNode {
  */
 export function eshkolCompile(ast: EshkolASTNode): EshkolBytecode[] {
   const bytecode: EshkolBytecode[] = [];
+  let labelSeq = 0;
 
   function compileNode(node: EshkolASTNode): void {
     switch (node.type) {
@@ -554,17 +566,22 @@ export function eshkolCompile(ast: EshkolASTNode): EshkolBytecode[] {
       case 'symbol':
         bytecode.push({ op: 'LOAD', args: [node.name] });
         break;
-      case 'if':
+      case 'if': {
+        // #165: unique labels per `if` (fixed names made nested ifs jump to the first label and
+        // loop forever) and an implicit 0 alternate so the false path still yields a value.
+        const id = labelSeq++;
+        const elseLabel = `label_else_${id}`;
+        const endLabel = `label_end_${id}`;
         compileNode(node.condition);
-        bytecode.push({ op: 'JZ', args: ['label_else'] });
+        bytecode.push({ op: 'JZ', args: [elseLabel] });
         compileNode(node.consequent);
-        if (node.alternate) {
-          bytecode.push({ op: 'JMP', args: ['label_end'] });
-          bytecode.push({ op: 'LABEL', args: ['label_else'] });
-          compileNode(node.alternate);
-        }
-        bytecode.push({ op: 'LABEL', args: ['label_end'] });
+        bytecode.push({ op: 'JMP', args: [endLabel] });
+        bytecode.push({ op: 'LABEL', args: [elseLabel] });
+        if (node.alternate) compileNode(node.alternate);
+        else bytecode.push({ op: 'PUSH', args: [0] });
+        bytecode.push({ op: 'LABEL', args: [endLabel] });
         break;
+      }
       case 'let':
         for (const binding of node.bindings) {
           compileNode(binding.value);

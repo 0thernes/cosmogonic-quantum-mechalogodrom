@@ -51,7 +51,7 @@ export type CircuitOp =
 /**
  * A parametrized quantum circuit + a DIAGONAL Hamiltonian. `hamiltonian[i]` is the energy of computational
  * basis state |i⟩ (so ⟨H⟩ = Σ_i p_i·hamiltonian[i]); build it from Pauli-Z terms with {@link pauliZHamiltonian}.
- * `paramCount` = number of independent θ parameters (each must appear in exactly one `rot` op).
+ * `paramCount` = number of independent θ parameters (a parameter may drive several `rot` ops; gradients sum per occurrence, #260).
  */
 export interface QuantumCircuit {
   readonly qubits: number;
@@ -116,18 +116,42 @@ export function parameterShiftGradient(
   reg?: QuantumRegister,
 ): number[] {
   const r = reg ?? new QuantumRegister(circuit.qubits);
-  const shifted = theta.slice();
-  const grad: number[] = [];
-  for (let k = 0; k < circuit.paramCount; k++) {
-    const base = shifted[k] ?? 0;
-    shifted[k] = base + SHIFT;
-    const ep = circuitExpectation(circuit, shifted, r);
-    shifted[k] = base - SHIFT;
-    const em = circuitExpectation(circuit, shifted, r);
-    shifted[k] = base;
-    grad.push(0.5 * (ep - em));
+  const grad: number[] = Array.from({ length: circuit.paramCount }, () => 0);
+  // #260: a parameter may drive several rotation gates. The shift rule is exact per GATE, so the
+  // gradient of a shared parameter is the sum of per-occurrence shifts (product rule).
+  const ops = circuit.ops;
+  for (let g = 0; g < ops.length; g++) {
+    const op = ops[g]!;
+    if (op.kind !== 'rot' || op.param < 0 || op.param >= circuit.paramCount) continue;
+    const ep = shiftedExpectation(circuit, theta, g, SHIFT, r);
+    const em = shiftedExpectation(circuit, theta, g, -SHIFT, r);
+    grad[op.param] = (grad[op.param] ?? 0) + 0.5 * (ep - em);
   }
   return grad;
+}
+
+/** ⟨H⟩ with only the rotation at op index `shiftOp` offset by `delta` (other uses of its param unshifted). */
+function shiftedExpectation(
+  circuit: QuantumCircuit,
+  theta: ArrayLike<number>,
+  shiftOp: number,
+  delta: number,
+  r: QuantumRegister,
+): number {
+  r.reset();
+  const ops = circuit.ops;
+  for (let g = 0; g < ops.length; g++) {
+    const op = ops[g]!;
+    if (op.kind === 'rot') {
+      const a = (theta[op.param] ?? 0) + (g === shiftOp ? delta : 0);
+      r.apply(op.gate, op.target, undefined, a);
+    } else r.apply(op.gate, op.target, op.control);
+  }
+  const p = r.probabilities();
+  const h = circuit.hamiltonian;
+  let e = 0;
+  for (let i = 0; i < p.length; i++) e += (p[i] ?? 0) * (h[i] ?? 0);
+  return e;
 }
 
 /**

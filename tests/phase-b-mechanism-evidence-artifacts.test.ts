@@ -152,7 +152,7 @@ describe('Phase-B mechanism evidence artifacts', () => {
       configurationAndDeclaredLawsSha256:
         'bfff6581b8e3e032c596a114ef3bfc86c7d5067537efe24043d5d731a09e0f0c',
       scheduleSha256: '8acb60a51bbef06bbf238f8b365f8b9f2d61314850909ff109cbbf70514f617f',
-      rowsSha256: 'd3d364fc2cba7ae4eb2ebfefb2819ceaa55dbe1b5edb201163a5aa08b8cdb3e0',
+      rowsSha256: '13b901fee5a19f83653a14f593a50885b6c53fbb4112dfeb3579ae595d56ee69',
       faultProbesSha256: 'e08e5609aaadd14186794a56f0bf027a788fa96f6ce3400bf3118c835a59e8ad',
     });
     expect(nhi.rows).toEqual({ configured: 41_472, retained: 41_472, dropped: 0 });
@@ -263,7 +263,7 @@ describe('Phase-B mechanism evidence artifacts', () => {
 
   test('pins canonical artifact byte hashes and excludes ambient provenance APIs', async () => {
     expect(fileSha256(built.files.json)).toBe(
-      '609d47367c7b2731f62c70f769f2daeb496657698a342c3a736088c1354ea333',
+      'd7cbe40007f87bb6442786edd36a4ff49437295017efefc99f537a5685b0b520',
     );
     expect(fileSha256(built.files.csv)).toBe(
       '58cc6de6b5a542edb5a1c02093eaef99b89b8cbccb66d3fcfa63e4d51fa950ef',

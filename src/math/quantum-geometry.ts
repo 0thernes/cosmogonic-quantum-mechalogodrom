@@ -38,7 +38,10 @@ export interface QuantumGeometry {
   metric: number[][];
   /** Berry curvature Ω_ij = Im Q_ij (P×P, antisymmetric — the geometric phase). */
   berry: number[][];
-  /** "Quantum volume" = trace(g): total state sensitivity to its control parameters (≥ 0). */
+  /**
+   * "Quantum volume" = trace(g): total state sensitivity to its control parameters (≥ 0). Note (#88):
+   * this is the metric TRACE, not the Riemannian volume element √det g.
+   */
   volume: number;
   /** Quantum Fisher information (trace) = 4·volume. */
   fisher: number;
@@ -118,6 +121,12 @@ export function quantumGeometricTensor(
   // ⟨∂_iψ|ψ⟩ for every i (used in the connection-subtraction term).
   const diPsi: [number, number][] = [];
   const tmp: [number, number] = [0, 0];
+  // #88: the QGT of an UNnormalised ψ is Q_ij = ⟨∂iψ|∂jψ⟩/N − ⟨∂iψ|ψ⟩⟨ψ|∂jψ⟩/N² with N = ⟨ψ|ψ⟩;
+  // for a normalised state N = 1 and this is bit-identical to the old formula.
+  inner(baseRe, baseIm, baseRe, baseIm, dim, tmp);
+  const norm = tmp[0] > 1e-300 ? tmp[0] : 1;
+  const invN = 1 / norm;
+  const invN2 = invN * invN;
   for (let i = 0; i < P; i++) {
     inner(dRe[i]!, dIm[i]!, baseRe, baseIm, dim, tmp);
     diPsi.push([tmp[0], tmp[1]]);
@@ -144,8 +153,8 @@ export function quantumGeometricTensor(
       const bj = -diPsi[j]![1];
       const prodRe = ai * aj - bi * bj;
       const prodIm = ai * bj + bi * aj;
-      const re = qiqjRe - prodRe; // Re Q_ij → Fubini–Study metric
-      const im = qiqjIm - prodIm; // Im Q_ij → Berry curvature
+      const re = qiqjRe * invN - prodRe * invN2; // Re Q_ij → Fubini–Study metric
+      const im = qiqjIm * invN - prodIm * invN2; // Im Q_ij → Berry curvature
       metric[i]![j] = re;
       berry[i]![j] = im;
       if (i === j) volume += re;

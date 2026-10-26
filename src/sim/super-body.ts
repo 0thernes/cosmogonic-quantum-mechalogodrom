@@ -1161,7 +1161,7 @@ export class SuperBodySystem implements BigTreeActorSource {
     const hybridPulse = qp * (1 + (ulgMix - 0.5) * 0.1);
 
     // EYES: amp reactivity — global scale + per-eye pupil "focus" + iris shimmer + highlight glint
-    this.eyes.scale.setScalar(beat);
+    // #141: eyes.scale is set once, below (with the brutal morph); the early write here was dead.
     this.eyes.children.forEach((e, i) => {
       const on = i < effMaskEye ? 1.0 : 0.0;
       // actual libirrepWigner call + qge (Tsotchke mirrors/libirrep + quantum-quake) for eye jitter + scale

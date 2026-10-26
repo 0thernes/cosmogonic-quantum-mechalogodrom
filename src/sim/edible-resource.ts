@@ -7,6 +7,9 @@
  * world's scaled simulation clock; this module intentionally uses no wall clock or timer API.
  */
 
+/** #126: delay before re-trying a resource whose onRestore listener failed. */
+const RESTORE_RETRY_BACKOFF_SECONDS = 1;
+
 export const EDIBLE_RESOURCE_RESPAWN_SECONDS = 5;
 
 export type EdibleResourceKind = 'fruit' | 'leaf';
@@ -403,6 +406,37 @@ export class EdibleResourceRegistry {
     return index < 0 ? null : this.reserveIndex(index, ownerId, now + leaseSeconds);
   }
 
+  /**
+   * #125: reserve the NEAREST available resource (of `kind`, if given) (by item position) to (x, z). reserveAny returns
+   * the FIFO free-list head, which is unrelated to position. O(pool) scan, allocation-free; ties
+   * break on the lower resource id, so the choice is deterministic.
+   */
+  reserveNearest(
+    ownerId: number,
+    now: number,
+    leaseSeconds: number,
+    x: number,
+    z: number,
+    kind?: EdibleResourceKind,
+  ): EdibleReservation | null {
+    this.validateLeaseRequest(ownerId, now, leaseSeconds);
+    this.expireLeases(now);
+    let best = -1;
+    let bestD2 = Infinity;
+    for (let i = 0; i < this.items.length; i++) {
+      const r = this.items[i]!;
+      if (r.state !== 'available' || (kind !== undefined && r.kind !== kind)) continue;
+      const dx = r.x - x;
+      const dz = r.z - z;
+      const d2 = dx * dx + dz * dz;
+      if (d2 < bestD2 || (d2 === bestD2 && best >= 0 && r.id < this.items[best]!.id)) {
+        bestD2 = d2;
+        best = i;
+      }
+    }
+    return best < 0 ? null : this.reserveIndex(best, ownerId, now + leaseSeconds);
+  }
+
   /** Reserves a known resource without scanning the pool. */
   reserveById(
     resourceId: number,
@@ -560,6 +594,8 @@ export class EdibleResourceRegistry {
     for (let retry = 0; retry < retryCount; retry++) {
       const index = this.restoreRetryIndexes[retry]!;
       this.restoreRetryIndexes[retry] = -1;
+      // #126: back off a failing restore instead of retrying it on every update.
+      this.items[index]!.respawnAt = now + RESTORE_RETRY_BACKOFF_SECONDS;
       if (!this.respawnHeap.insert(index)) {
         throw new Error(`resource ${this.items[index]!.id} already has a respawn deadline`);
       }

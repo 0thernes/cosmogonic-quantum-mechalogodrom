@@ -2,6 +2,9 @@
 import type { XylosPercept, XylosView } from './xylos-mind';
 import type { ReactionDiffusionSystem } from './reaction-diffusion';
 
+const unit = (x: number): number => (x > 0 ? (x < 1 ? x : 1) : 0); // NaN → 0
+const signed = (x: number): number => (x > -1 ? (x < 1 ? x : 1) : x <= -1 ? -1 : 0);
+
 /** Owns the organism's field adapter, never the field itself. O(1) sensing and fixed-radius writes. */
 export class XylosHabitat {
   /** World weather/chaos pressure, supplied by the composition root in [0,1]. */
@@ -31,13 +34,17 @@ export class XylosHabitat {
     const col = ((x % size) + size) % size;
     const row = ((z % size) + size) % size;
     const index = row * size + col;
-    out.nutrient = u[index] ?? 0;
-    out.signal = v[index] ?? 0;
-    out.hazard = this.hazard;
-    out.gradientX =
-      (u[row * size + ((col + 1) % size)] ?? 0) - (u[row * size + ((col + size - 1) % size)] ?? 0);
-    out.gradientZ =
-      (u[((row + 1) % size) * size + col] ?? 0) - (u[((row + size - 1) % size) * size + col] ?? 0);
+    // #186: XylosMind.tick throws on any out-of-range/non-finite percept, which would abort
+    // world.step; sanitise at the habitat boundary so a bad field cell can never do that.
+    out.nutrient = unit(u[index] ?? 0);
+    out.signal = unit(v[index] ?? 0);
+    out.hazard = unit(this.hazard);
+    out.gradientX = signed(
+      (u[row * size + ((col + 1) % size)] ?? 0) - (u[row * size + ((col + size - 1) % size)] ?? 0),
+    );
+    out.gradientZ = signed(
+      (u[((row + 1) % size) * size + col] ?? 0) - (u[((row + size - 1) % size) * size + col] ?? 0),
+    );
   };
 
   /** Every half second at most, the organism changes the chemistry it will subsequently sense. */

@@ -742,6 +742,8 @@ export class XenomimicRenderer {
     COLOR.toArray(this.colorArrays[species]!, slot * COLOR_COMPONENTS);
   };
 
+  private lastSyncTime: number | null = null;
+
   constructor(scene: THREE.Scene) {
     this.geometries = buildXenomimicGeometries();
     this.material = new THREE.MeshStandardMaterial({
@@ -750,7 +752,9 @@ export class XenomimicRenderer {
       emissiveIntensity: 1.15,
       metalness: 0.68,
       roughness: 0.2,
-      vertexColors: true,
+      // #266: the geometries carry no `color` attribute, so vertexColors:true multiplied albedo by an
+      // unbound attribute (0 → black). Per-instance HSL arrives via instanceColor, which needs no flag.
+      vertexColors: false,
       transparent: false,
       opacity: 1,
       depthTest: true,
@@ -840,8 +844,12 @@ export class XenomimicRenderer {
   ): void {
     if (this.disposed) return;
     this.counts.fill(0);
-    this.timeUniform.value = finite(time);
-    if (this.morphWave > 0) this.morphWave = Math.max(0, this.morphWave - 0.008);
+    const syncTime = finite(time);
+    // #267: decay the morph wave per SECOND (0.008 per 60 Hz frame), not per sync call.
+    const syncDt = this.lastSyncTime === null ? 1 / 60 : Math.max(0, syncTime - this.lastSyncTime);
+    this.lastSyncTime = syncTime;
+    this.timeUniform.value = syncTime;
+    if (this.morphWave > 0) this.morphWave = Math.max(0, this.morphWave - 0.48 * syncDt);
     const chaos = clamp01(environment.chaos);
     const entropy = clamp01(environment.entropy);
     const weather = clamp01(environment.weather);

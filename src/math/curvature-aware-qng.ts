@@ -82,6 +82,7 @@ export function invertMetric(metric: ReadonlyArray<ReadonlyArray<number>>): numb
   }
 
   // Gauss-Jordan elimination
+  const singular: boolean[] = Array.from({ length: n }, () => false);
   for (let col = 0; col < n; col++) {
     let piv = col;
     let best = Math.abs(aug[col]?.[col] ?? 0);
@@ -92,7 +93,10 @@ export function invertMetric(metric: ReadonlyArray<ReadonlyArray<number>>): numb
         piv = r;
       }
     }
-    if (best < 1e-12) continue;
+    if (best < 1e-12) {
+      singular[col] = true; // #89
+      continue;
+    }
     if (piv !== col) {
       [aug[col], aug[piv]] = [aug[piv]!, aug[col]!];
     }
@@ -115,7 +119,8 @@ export function invertMetric(metric: ReadonlyArray<ReadonlyArray<number>>): numb
   // Extract inverse
   for (let i = 0; i < n; i++) {
     for (let j = 0; j < n; j++) {
-      gInv[i]![j] = aug[i]![n + j] ?? 0;
+      // #89: rows/cols of a singular pivot are zeroed (pseudo-inverse-style), not left unreduced.
+      gInv[i]![j] = singular[i] || singular[j] ? 0 : (aug[i]![n + j] ?? 0);
     }
   }
 
@@ -466,6 +471,7 @@ function solveSymmetric(
     row[n] = b[i] ?? 0;
     m.push(row);
   }
+  const singular: boolean[] = Array.from({ length: n }, () => false);
   for (let col = 0; col < n; col++) {
     let piv = col;
     let best = Math.abs(m[col]?.[col] ?? 0);
@@ -476,7 +482,10 @@ function solveSymmetric(
         piv = r;
       }
     }
-    if (best < 1e-12) continue;
+    if (best < 1e-12) {
+      singular[col] = true; // #89
+      continue;
+    }
     if (piv !== col) {
       [m[col], m[piv]] = [m[piv]!, m[col]!];
     }
@@ -492,7 +501,9 @@ function solveSymmetric(
     }
   }
   const x = Array.from({ length: n }, () => 0);
-  for (let i = 0; i < n; i++) x[i] = m[i]?.[n] ?? 0;
+  // #89: a skipped (singular) pivot leaves its row unreduced; zero that unknown as documented
+  // instead of returning the stale right-hand side.
+  for (let i = 0; i < n; i++) x[i] = singular[i] ? 0 : (m[i]?.[n] ?? 0);
   return x;
 }
 

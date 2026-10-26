@@ -74,7 +74,7 @@ function patchDroneBody(mat: THREE.MeshStandardMaterial, u: WingmanUniforms): vo
         totalEmissiveRadiance += vec3(0.3, 0.6, 1.0) * wIon * uGlow;
         // BIT-GLITCH (glow) — a dominant swarm quantizes into glitch blocks.
         float wGlitch = floor((sin(vWObjP.x * 7.0 + wPh) + sin(uTime * 10.0)) * 3.0) / 3.0;
-        totalEmissiveRadiance += vec3(0.2, 1.0, 0.5) * wGlitch * uGlow * 0.4;`,
+        totalEmissiveRadiance += vec3(0.2, 1.0, 0.5) * max(wGlitch, 0.0) * uGlow * 0.4;`,
       );
   };
   mat.customProgramCacheKey = () => 'wingmanExpandedV1';
@@ -106,19 +106,26 @@ export class WingmanRenderer {
     scene.add(this.mesh);
   }
 
+  private lastSyncT: number | null = null;
+
   /**
    * Write the swarm's positions into the instance matrices (each drone spins + pulses), and set the
    * glow from the escort's assist/dominance. `positions` is the swarm's flat XYZ buffer (count×3).
    */
   sync(positions: Float32Array, t: number, glow: number): void {
     const n = this.mesh.count;
+    // #267: droneSpeed is a per-call displacement; normalise it to a 60 Hz frame so the swell reads
+    // the same at any frame rate.
+    const frameDt = this.lastSyncT === null ? 1 / 60 : t - this.lastSyncT;
+    this.lastSyncT = t;
+    const rate = frameDt > 1e-4 ? 1 / 60 / frameDt : 1;
     for (let i = 0; i < n; i++) {
       const j = i * 3;
       this.dummy.position.set(positions[j] ?? 0, positions[j + 1] ?? 0, positions[j + 2] ?? 0);
       this.dummy.rotation.set(t * 1.3 + i, t * 0.9 + i * 0.7, t * 0.5);
       // De-decorated (was a sin(t) pulse): the drone's size now reads its REAL per-frame speed, so a
       // hard-maneuvering escort drone visibly swells while an idle one stays small. Falsifiable.
-      const s = droneSpeed(this.prevPositions, positions, j) * WINGMAN_SPEED_SCALE;
+      const s = droneSpeed(this.prevPositions, positions, j) * rate * WINGMAN_SPEED_SCALE;
       this.dummy.scale.setScalar(0.45 + (s > WINGMAN_SWELL ? WINGMAN_SWELL : s));
       this.dummy.updateMatrix();
       this.mesh.setMatrixAt(i, this.dummy.matrix);

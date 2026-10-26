@@ -409,6 +409,15 @@ export function vmcStep(
   };
 }
 
+/** Murmur3-style 32-bit finaliser of (seed, k) → a decorrelated positive 31-bit seed (#91). */
+function mixSeed(seed: number, k: number): number {
+  let h = (seed ^ Math.imul(k, 0x9e3779b9)) >>> 0;
+  h = Math.imul(h ^ (h >>> 16), 0x85ebca6b);
+  h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
+  h ^= h >>> 16;
+  return h & 0x7fffffff || 1;
+}
+
 /**
  * Simple seeded RNG for deterministic training.
  */
@@ -447,7 +456,8 @@ export class NQSLearningController {
    */
   step(): NQSTelemetry {
     this.stepCount++;
-    const stepSeed = this.seed + this.stepCount * 1000;
+    // #91: seed+1000·k fed an LCG gives strongly correlated streams across steps; hash it instead.
+    const stepSeed = mixSeed(this.seed, this.stepCount);
     return vmcStep(this.arch, this.state, this.config, stepSeed);
   }
 

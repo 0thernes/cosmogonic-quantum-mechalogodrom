@@ -731,6 +731,10 @@ export function adHvp(
         if (r !== 0) d = lvd / r - (lv * rvd) / (r * r);
         break;
       }
+      case AdOpType.AD_CUSTOM:
+        // #259: a custom node carries only a first-order VJP, so no exact second-order tangent exists;
+        // fail loudly instead of silently returning a zero Hessian contribution.
+        throw new Error('adHvp: AD_CUSTOM nodes have no second-order rule (Hessian unsupported)');
       case AdOpType.AD_SIN:
         d = Math.cos(lv) * lvd;
         break;

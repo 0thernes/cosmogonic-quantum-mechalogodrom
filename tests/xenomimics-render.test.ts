@@ -70,7 +70,7 @@ describe('XenomimicRenderer bounded GPU contract', () => {
     expect(material.opacity).toBe(1);
     expect(material.depthWrite).toBe(true);
     expect(material.depthTest).toBe(true);
-    expect(material.vertexColors).toBe(true);
+    expect(material.vertexColors).toBe(false); // #266: no `color` attribute — instanceColor tints instead
     renderer.dispose();
   });
 

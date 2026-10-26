@@ -1288,24 +1288,27 @@ export class World {
     const px = e.position.x;
     const py = e.position.y;
     const pz = e.position.z;
-    let best = -1;
+    // #15: search SPACE (the organism spatial hash, nearest cells first) instead of 64 list-adjacent
+    // indices, which were unrelated to position. Bounded budget keeps a mass die-off cheap.
+    const near = this.grid.queryNearFirst(px, pz, GEDANKEN_DEVOUR_R, GEDANKEN_DEVOUR_WINDOW, i);
+    let bestE: Entity | null = null;
     let bestD2 = GEDANKEN_DEVOUR_R * GEDANKEN_DEVOUR_R;
-    const span = n < GEDANKEN_DEVOUR_WINDOW ? n : GEDANKEN_DEVOUR_WINDOW;
-    for (let k = 1; k <= span; k++) {
-      const j = (i + k) % n;
-      if (j === i) continue;
-      const o = list[j];
-      if (!o) continue;
+    for (let k = 0; k < near.length; k++) {
+      const o = near[k]!;
+      if (o === e) continue;
       const dx = o.position.x - px;
       const dy = o.position.y - py;
       const dz = o.position.z - pz;
       const d2 = dx * dx + dy * dy + dz * dz;
       if (d2 < bestD2) {
         bestD2 = d2;
-        best = j;
+        bestE = o;
       }
     }
-    return best;
+    if (bestE === null) return -1;
+    // The grid is rebuilt on a cadence, so confirm the candidate is still in the live list.
+    const j = list.indexOf(bestE);
+    return j === i ? -1 : j;
   }
   /** V-ABC: the 100 Greek+Latin alphabet archetypes alive across the dome (instanced; no rng). */
   private readonly alphabetPantheon: AlphabetPantheonRender;
@@ -3656,9 +3659,12 @@ export class World {
    */
   private pushPanels(n: number): void {
     const s = this.state;
+    // #17: build the telemetry snapshot at most once per frame when both cadences coincide.
+    let snap: TelemetrySnapshot | null = null;
     if (s.frame % 8 === 0) {
       this.analytics.push(n, this.energy, this.connectome.links);
-      this.panel.update(this.snapshot());
+      snap = this.snapshot();
+      this.panel.update(snap);
       this.xenomimicPanel.update(this.syncXenomimicPanelData());
       this.xylosPanel.update(this.xylos.view, this.xylos.status);
       this.updateAlgoPicker(); // live progress on the active field's row
@@ -3669,7 +3675,7 @@ export class World {
     // snapshot refresh so its rings sample the same values the panel shows.
     const obsCadence = this.quality.isMobile ? 36 : 18;
     if (s.frame % obsCadence === 0) {
-      this.observatory.push(this.snapshot());
+      this.observatory.push(snap ?? this.snapshot());
       this.observatory.draw();
       // F-NHI V15: feed the neural observatory the focused NHI's live cognitive snapshot.
       const nids = this.nhi.ids();
@@ -4290,13 +4296,14 @@ export class World {
       ap.novelty = clamp(primeMindOut?.consciousness?.novelty ?? 0, 0, 1);
       ap.level = this.superEvos[0]!.view().level; // the Abomination reads the prime Archon's level
       this.lastApexThought = this.apexBrain.tick(ap);
+      // #109: one apex snapshot per frame (it builds every organ view, incl. a 16-bin DFT).
+      const apexSnap = this.apexBrain.snapshot();
       this.lastApexGrowth = apexGrowthStage(
         ap.level,
         this.lastApexThought.transcendence,
-        this.apexBrain.snapshot().beat,
+        apexSnap.beat,
       );
       // V-FND: tick Foundationals — deep interconnect between APEX organs (1B self-awareness path).
-      const apexSnap = this.apexBrain.snapshot();
       const fndOrganActivity = this.fndOrganScratch;
       fndOrganActivity[0] = clamp(apexSnap.loom.throughput, 0, 1);
       fndOrganActivity[1] = clamp(apexSnap.drum.energy, 0, 1);
@@ -5858,8 +5865,20 @@ export class World {
         z: 0,
         protected: false,
       };
+      // #159: visitor kinds and sanctuary kinds are separate namespaces (visitor LEVIATHAN=5 and
+      // PUPPET=6 vs sanctuary PUPPET=5); map explicitly instead of reusing the visitor kind.
       let sanctuaryKind =
-        kind >= BIG_TREE_SANCTUARY_ORDINARY && kind <= BIG_TREE_SANCTUARY_PUPPET ? kind : -1;
+        kind === BIG_TREE_OWNER_ORDINARY
+          ? BIG_TREE_SANCTUARY_ORDINARY
+          : kind === BIG_TREE_OWNER_XENOMIMIC
+            ? BIG_TREE_SANCTUARY_XENOMIMIC
+            : kind === BIG_TREE_OWNER_SHOGGOTH
+              ? BIG_TREE_SANCTUARY_SHOGGOTH
+              : kind === BIG_TREE_OWNER_TITAN
+                ? BIG_TREE_SANCTUARY_TITAN
+                : kind === BIG_TREE_OWNER_PUPPET
+                  ? BIG_TREE_SANCTUARY_PUPPET
+                  : -1;
       let sanctuaryOwnerId = id;
       if (kind === BIG_TREE_OWNER_NHI) {
         const ecologyId = this.nhiEntities.get(id)?.userData.ecologyId;
@@ -6797,8 +6816,10 @@ export class World {
     this.audio.play('split');
     const list = this.entities.list;
     let picked = 0;
-    for (let i = 0; i < list.length && picked < 5; i++) {
-      const e = list[i];
+    // #26: start the eligibility scan at a uiRng offset so it isn't always the first 5 list entries.
+    const start = list.length > 0 ? Math.floor(this.uiRng() * list.length) : 0;
+    for (let k = 0; k < list.length && picked < 5; k++) {
+      const e = list[(start + k) % list.length];
       if (!e || e.userData.age <= 50) continue;
       picked++;
       e.userData.belly = 60;
