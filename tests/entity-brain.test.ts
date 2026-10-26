@@ -242,3 +242,19 @@ describe('EntityBrainField (V42)', () => {
     }
   });
 });
+
+describe('vertical heredity (audit #1/#3)', () => {
+  test('inheritEntitySlot copies the parent genome with bounded mutation', () => {
+    const f = new EntityBrainField(8, mulberry32(9));
+    const parent = Array.from(f.genomeAt(1));
+    f.inheritEntitySlot(2, 1, mulberry32(4), 0, 0);
+    expect(Array.from(f.genomeAt(2))).toEqual(parent);
+    f.inheritEntitySlot(3, 1, mulberry32(4), 1, 0.05);
+    const child = f.genomeAt(3);
+    let maxd = 0;
+    for (let k = 0; k < child.length; k++) maxd = Math.max(maxd, Math.abs(child[k]! - parent[k]!));
+    expect(maxd).toBeGreaterThan(0);
+    expect(maxd).toBeLessThanOrEqual(0.05 + 1e-6);
+    expect(f.traitAt(3, 0)).toBeGreaterThanOrEqual(0);
+  });
+});

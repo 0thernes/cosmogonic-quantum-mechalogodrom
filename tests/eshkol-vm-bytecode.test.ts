@@ -62,4 +62,9 @@ describe('eshkol-vm: real bytecode execution', () => {
     const r = eshVMRun({ consts: [], code: [EshOp.JMP, 0] }, 100);
     expect(r.steps).toBeLessThanOrEqual(100);
   });
+  test('a jump past the end is not reported as a clean halt (audit #209)', () => {
+    const r = eshVMRun({ consts: [], code: [EshOp.JMP, 99] });
+    expect(r.halted).toBe(false);
+    expect(eshVMRun({ consts: [1], code: [EshOp.PUSH, 0] }).halted).toBe(true);
+  });
 });

@@ -24,6 +24,9 @@ describe('popcount', () => {
     expect(popcount(255, 8)).toBe(8);
     expect(popcount(0b1010, 8)).toBe(2);
     expect(popcount(7)).toBe(3);
+    // audit #264: a negative int32 counts its two's-complement bits, not its magnitude
+    expect(popcount(0x80000001 | 0)).toBe(2);
+    expect(popcount(-1)).toBe(32);
   });
 });
 

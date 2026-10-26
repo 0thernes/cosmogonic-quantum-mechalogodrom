@@ -185,4 +185,13 @@ describe('recombine (generic arbitrary-length heredity)', () => {
       expect(g).toBeLessThanOrEqual(1);
     }
   });
+
+  test('brain weights keep their sign under recombination (audit #32)', () => {
+    const n = GENOME_LEN;
+    const a = new Float32Array(n).fill(-0.8);
+    const b = new Float32Array(n).fill(-0.6);
+    const child = recombine(a, b, mulberry32(3), 0, 0);
+    for (let i = 0; i < n; i++) expect(child[i]).toBe(i < TRAIT_GENES ? 0 : (child[i] as number));
+    expect(child[TRAIT_GENES]! < 0).toBe(true);
+  });
 });

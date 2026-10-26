@@ -31,7 +31,10 @@
 /** Population-count of the low `bits` bits of a non-negative safe integer. O(bits). */
 export function popcount(value: number, bits = 32): number {
   // Work in two 26-bit halves to stay inside exact f64 integer range for bits>32.
-  let v = Math.trunc(Math.abs(value));
+  // Audit #264: a negative int32 (e.g. `0x80000001 | 0`) is read as its uint32 bit pattern,
+  // not its magnitude (Math.abs gave popcount(0x80000001|0) = 31).
+  let v = Math.trunc(value);
+  if (v < 0) v = v >= -0x80000000 ? v >>> 0 : Math.abs(v);
   let count = 0;
   for (let i = 0; i < bits && v > 0; i++) {
     count += v % 2;

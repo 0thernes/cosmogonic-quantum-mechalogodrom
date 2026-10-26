@@ -149,7 +149,10 @@ export function recombine(
   for (let i = 0; i < n; i++) {
     let v = (rng() < 0.5 ? a[i] : b[i]) ?? 0;
     if (rng() < rate) v += (rng() * 2 - 1) * scale;
-    child[i] = v < 0 ? 0 : v > 1 ? 1 : v;
+    // Audit #32: only the trait region is [0,1]; brain weights live in [-1,1] (as in `mutate`), so
+    // clamping them to [0,1] would silently erase every inhibitory weight.
+    const lo = i < TRAIT_GENES ? 0 : -1;
+    child[i] = v < lo ? lo : v > 1 ? 1 : v;
   }
   return child;
 }

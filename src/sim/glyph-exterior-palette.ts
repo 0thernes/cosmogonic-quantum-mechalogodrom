@@ -100,17 +100,19 @@ export function glyphExteriorPalette(a: AlphabetArchetype): GlyphExteriorPalette
   const id = glyphPaletteId(a);
   const row = PALETTE_TABLE[id];
   const s = a.seed;
+  // Audit #188: JS shifts are mod 32, so the old >>>31..39 windows aliased (>>>33 ≡ >>>1, and
+  // >>>31 is one bit). Each term now reads its own in-range window of the 32-bit seed.
   const fi = (n: number, mod: number) => ((s >>> n) % mod) / mod;
-  const hueJitter = fi(31, 360) * 0.06 - 0.03 + a.bias.narrative * 0.04;
+  const hueJitter = fi(20, 360) * 0.06 - 0.03 + a.bias.narrative * 0.04;
   const bodyHue = (row.baseHue + a.bias.hue * 0.15 + hueJitter + 1) % 1;
   return {
     id,
     bodyHue,
     bodySat: Math.min(1, row.bodySat + a.bias.quantum * 0.2),
-    bodyLit: row.bodyLit + a.bias.generative * 0.18 + fi(33, 20) * 0.08,
-    filamentHue: (row.filamentHue + fi(35, 100) * 0.05) % 1,
-    sporeHue: (row.sporeHue + fi(37, 80) * 0.06) % 1,
-    diagramHue: (row.diagramHue + fi(39, 60) * 0.04) % 1,
+    bodyLit: row.bodyLit + a.bias.generative * 0.18 + fi(4, 20) * 0.08,
+    filamentHue: (row.filamentHue + fi(9, 100) * 0.05) % 1,
+    sporeHue: (row.sporeHue + fi(14, 80) * 0.06) % 1,
+    diagramHue: (row.diagramHue + fi(26, 60) * 0.04) % 1,
     filamentLit: row.filamentLit + a.bias.empowerment * 0.12,
   };
 }

@@ -326,7 +326,19 @@ export interface EntityBrainSlotLifecycle {
   swapEntitySlots(a: number, b: number): void;
   clearEntitySlot(slot: number): void;
   resetEntitySlots(): void;
+  /** Optional vertical heredity (audit #1/#3): copy+mutate the parent's genome into the child slot. */
+  inheritEntitySlot?(childSlot: number, parentSlot: number, rng: Rng): void;
+  /** Optional trait read for metabolism-linked energy costs (audit #31/#40). */
+  traitAt?(slot: number, trait: number): number;
 }
+
+/** Ecology tunables (audit #28/#29/#40): basal energy drain per second, scaled by nW + metabolism. */
+export const ECOLOGY_METABOLISM_PER_S = 1.2;
+/** Minimum energy a parent needs to split, the cost it pays, and the energy its child starts with. */
+export const ECOLOGY_FISSION_MIN_ENERGY = 40;
+export const ECOLOGY_FISSION_COST = 25;
+export const ECOLOGY_CHILD_ENERGY = 25;
+const METABOLISM_TRAIT = 4; // genome TRAIT.metabolism
 
 /**
  * Owns the organism population: spawning, true morphogenesis, per-frame behavior + physics,
@@ -386,6 +398,12 @@ export class EntityManager {
     null;
   /** Optional persistent brain-identity owner; attached by World after both systems exist. */
   private brainSlots: EntityBrainSlotLifecycle | null = null;
+  /**
+   * Live ecology rules (audit #28/#29/#40/#1): metabolic drain, starvation death, energy-gated and
+   * energy-costed fission, and brain-genome inheritance. On by default but only active on the live
+   * genome path (`ctx.genomeRng` present), so the legacy seeded golden stays byte-identical.
+   */
+  ecologyRules = true;
   /** USER ecology: optional READ-ONLY flora biomass sampler — a hungry animal finite-differences it to
    *  climb the biomass gradient toward the RICHEST patch (chemotaxis), not just drift to nearest cover.
    *  Null (the default, e.g. tests) detaches it so the seeded golden is byte-identical. */
@@ -779,6 +797,10 @@ export class EntityManager {
       // the caller receives an error but no orphaned list/scene entity.
       this.clearOrganismGoal(slot);
       this.brainSlots?.clearEntitySlot(slot);
+      if (parent && ctx.genomeRng && this.ecologyRules && this.brainSlots?.inheritEntitySlot) {
+        const parentSlot = this.list.indexOf(parent);
+        if (parentSlot >= 0) this.brainSlots.inheritEntitySlot(slot, parentSlot, ctx.genomeRng);
+      }
       if (!ctx.quality.instanced) ctx.scene.add(mesh);
       this.list.push(mesh);
       if (spawnMi >= 0 && spawnMi < this.morphLive.length)
@@ -1146,6 +1168,7 @@ export class EntityManager {
       this.socialField = null;
     }
     env.neighborBudget = socialBudget;
+    const ecoLive = this.ecologyRules && ctx.genomeRng !== undefined;
 
     for (let i = list.length - 1; i >= 0; i--) {
       const e = list[i];
@@ -1153,6 +1176,14 @@ export class EntityManager {
       const u = e.userData;
       u.age += dt * 30;
       MORPHS_SEEN.add(u.mi);
+      const eco = ecoLive && !u.isNhi && !u.nhiMinion;
+      if (eco) {
+        // Metabolism (audit #40/#28): high-nW bodies live longer and split more, so they also burn
+        // more; the heritable metabolism trait scales the burn. No rng draws.
+        const met = this.brainSlots?.traitAt ? this.brainSlots.traitAt(i, METABOLISM_TRAIT) : 0.5;
+        u.energy -=
+          dt * cm * ECOLOGY_METABOLISM_PER_S * (0.6 + 0.8 * clamp01(u.nW)) * (0.6 + 0.8 * met);
+      }
       if (u.phylum >= 0 && u.phylum < PHYLUM_COUNT) {
         phylumCounts[u.phylum] = (phylumCounts[u.phylum] ?? 0) + 1;
       }
@@ -1343,6 +1374,7 @@ export class EntityManager {
       if (
         !u.nhiMinion &&
         u.sT <= 0 &&
+        (!eco || u.energy >= ECOLOGY_FISSION_MIN_ENERGY) &&
         list.length < target &&
         this.hasFrameSpawnCapacity() &&
         rng() < fissionP
@@ -1355,17 +1387,22 @@ export class EntityManager {
         );
         // Auto-split: the offspring INHERITS its parent's genome (passed as `e`) — the trait
         // heredity runs on ctx.genomeRng, so the main rng order here is unchanged.
-        this.spawnWithinFrameBudget(
+        const child = this.spawnWithinFrameBudget(
           SPAWN_AT,
           (u.mi + Math.floor(rng() * 5)) % ctx.morphs.length,
           0.7,
           e,
         );
+        if (eco && child) {
+          u.energy -= ECOLOGY_FISSION_COST;
+          child.userData.energy = ECOLOGY_CHILD_ENERGY;
+        }
       }
 
       // Temperature-modified death + respawn-when-sparse (legacy lines 790-795).
       // onDeath fires inside disposeAt — exactly once per death, never doubled here.
-      if (!u.isNhi && u.age > u.life * tMod) {
+      // Starvation (audit #29): on the live ecology path an organism whose energy hits 0 dies.
+      if (!u.isNhi && (u.age > u.life * tMod || (eco && u.energy <= 0))) {
         // F-NHI: launched beings are age-immortal (the `!u.isNhi` guard) — undefined on every
         // normal organism, so this is byte-identical until you launch one.
         const ex = e.position.x;

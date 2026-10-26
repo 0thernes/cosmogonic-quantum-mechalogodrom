@@ -165,11 +165,14 @@ export function sampleParallelCounter01(
   return counterHash32(effectiveSeed, tick, entityId, channel) / 4294967296;
 }
 
+/** Largest float32 strictly below 1 (1 − 2⁻²⁴), so Float32 storage keeps samples in [0,1). */
+export const FLOAT32_BELOW_ONE = 1 - 2 ** -24;
+
 /**
  * Fill a contiguous `Float32Array` slice for a shard `[startEntity, startEntity + count)`
  * using counter evaluation. Callers own disjoint output slices. For wild partition invariance,
- * prepare one shared batch seed first and pass `wild=false` to each shard. Float32 storage can
- * round a normalized value up to 1; the scalar sample above retains JavaScript-number precision.
+ * prepare one shared batch seed first and pass `wild=false` to each shard. Float32 storage would
+ * round u ≥ 2³²−128 up to exactly 1, so values are capped at the largest float32 below 1 (audit #262).
  */
 export function fillParallelCounterShard(
   out: Float32Array,
@@ -184,7 +187,10 @@ export function fillParallelCounterShard(
   if (n === 0) return out;
   const effectiveSeed = prepareParallelCounterSeed(seed, tick, wild);
   for (let i = 0; i < n; i++) {
-    out[i] = counterHash32(effectiveSeed, tick, startEntity + i, channel) / 4294967296;
+    out[i] = Math.min(
+      counterHash32(effectiveSeed, tick, startEntity + i, channel) / 4294967296,
+      FLOAT32_BELOW_ONE,
+    );
   }
   return out;
 }

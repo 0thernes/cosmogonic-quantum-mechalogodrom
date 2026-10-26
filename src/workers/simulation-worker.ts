@@ -15,7 +15,7 @@
 
 import { simulateWildernessData } from '../sim/wilderness-population';
 import { stepOct2026WaveSubstrates } from '../sim/tsotchke-oct2026-wave';
-import { sampleParallelCounter01 } from '../math/wild-entropy';
+import { FLOAT32_BELOW_ONE, sampleParallelCounter01 } from '../math/wild-entropy';
 import {
   executeHybridEntityBrainBatchWithReceipt,
   type HybridEntityBrainExecution,
@@ -147,7 +147,11 @@ export function executeHybridShardWorkerKernel(
     false,
   );
   for (let i = 0; i < safeCount; i++) {
-    entropyProbe[i] = sampleParallelCounter01(seed, frame, shardStartIndex + i, 0);
+    // Audit #262: Float32 storage would round the top 128 u32 values up to exactly 1.
+    entropyProbe[i] = Math.min(
+      sampleParallelCounter01(seed, frame, shardStartIndex + i, 0),
+      FLOAT32_BELOW_ONE,
+    );
   }
   return { ...receipt, entropyProbe };
 }

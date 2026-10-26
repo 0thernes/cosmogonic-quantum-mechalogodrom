@@ -154,7 +154,9 @@ export function eshVMRun(prog: EshProgram, maxSteps = 4096): EshVMResult {
   return {
     result: stack.length ? stack[stack.length - 1]! : 0,
     steps,
-    halted: pc >= code.length,
+    // Audit #209: only falling off the exact end counts as halting; a JMP/JZ past the end is a
+    // wild jump, not a clean halt.
+    halted: pc === code.length,
     stack,
   };
 }

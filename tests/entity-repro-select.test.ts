@@ -107,6 +107,10 @@ function runSelection(seed: number, frames: number, ablate: boolean): Run {
   const ctx = makeCtx(seed, 280);
   const entities = new EntityManager(ctx);
   entities.setReproAblated(ablate);
+  // This gate isolates the nW→fission-probability mechanism in a food-free harness, so the energy
+  // ecology (metabolic drain / starvation / fission cost, audit #28/#29/#40) is held off here; it is
+  // covered separately in tests/entity-ecology.test.ts.
+  entities.ecologyRules = false;
   entities.reset(100);
   let i = 0;
   for (const e of entities.list) {

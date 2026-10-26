@@ -2613,6 +2613,9 @@ export class World {
         this.entityBrains.clearEntitySlot(slot);
         this.organismBioPool.clearEntitySlot(slot);
       },
+      inheritEntitySlot: (child, parent, rng) =>
+        this.entityBrains.inheritEntitySlot(child, parent, rng),
+      traitAt: (slot, trait) => this.entityBrains.traitAt(slot, trait),
       resetEntitySlots: () => {
         this.entityBrains.resetEntitySlots();
         this.organismBioPool.resetEntitySlots();

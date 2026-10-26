@@ -283,6 +283,40 @@ export class EntityBrainField {
   }
 
   /**
+   * Vertical heredity (audit #1/#2/#3): a newborn in `childSlot` receives a mutated copy of the
+   * parent's whole genome (trait region clamped to [0,1], brain weights to [-1,1]) instead of keeping
+   * the random genome pre-rolled for its slot. All draws come from `rng` (the genome sub-stream), so
+   * the main entity stream is untouched. O(GENOME_LEN).
+   */
+  inheritEntitySlot(
+    childSlot: number,
+    parentSlot: number,
+    rng: Rng,
+    rate = 0.08,
+    scale = 0.12,
+  ): void {
+    this.assertSlot(childSlot);
+    this.assertSlot(parentSlot);
+    if (childSlot === parentSlot) return;
+    const pb = this.slotToBrain[parentSlot]! * GENOME_LEN;
+    const cb = this.slotToBrain[childSlot]! * GENOME_LEN;
+    for (let k = 0; k < GENOME_LEN; k++) {
+      let v = this.getGene(pb + k);
+      if (rng() < rate) v += (rng() * 2 - 1) * scale;
+      if (k < TRAIT_GENES) v = v < 0 ? 0 : v > 1 ? 1 : v;
+      else v = v < -1 ? -1 : v > 1 ? 1 : v;
+      this.setGene(cb + k, v);
+    }
+  }
+
+  /** Read one decoded-range trait gene ([0,1]) for a live slot (see {@link TRAIT}). O(1). */
+  traitAt(slot: number, trait: number): number {
+    if (slot < 0 || slot >= this.capacity) return 0.5;
+    const v = this.getGene(this.slotToBrain[slot]! * GENOME_LEN + trait);
+    return v < 0 ? 0 : v > 1 ? 1 : v;
+  }
+
+  /**
    * V122 (USER #9): a BRUTAL morph mutation nudges every organism's BRAIN WEIGHTS by a tiny seeded
    * jitter (±amp, uniform) — a real, live neurological shift, not decoration: the 70-param policies
    * measurably drift so post-morph steering behaviour differs. Trait genes (the personality region)
