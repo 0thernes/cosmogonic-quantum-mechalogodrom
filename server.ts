@@ -419,11 +419,13 @@ export function withSecurityHeaders(res: Response): Response {
 
 /**
  * Same-origin guard for POST /api/audit. Allows missing Origin (same-origin fetch from the app)
- * and rejects cross-origin POST floods. O(1).
+ * and rejects cross-origin POST floods. O(1). With `requireOrigin` (used by /api/tool, audit #298) a
+ * missing Origin is REJECTED too: browsers always send Origin on a fetch POST, so only non-browser
+ * clients (curl, scripts, other local processes) omit it, and they must not reach the repo sandbox.
  */
-export function auditPostOriginAllowed(req: Request): boolean {
+export function auditPostOriginAllowed(req: Request, requireOrigin = false): boolean {
   const origin = req.headers.get('Origin');
-  if (origin === null) return true;
+  if (origin === null) return !requireOrigin;
   if (origin === 'null') return false;
   try {
     const url = new URL(req.url);
@@ -627,11 +629,15 @@ function serveHtml(path: string): (req: Request) => Promise<Response> {
 if (import.meta.main) {
   const server = Bun.serve({
     port: Number(process.env.PORT) || 3000,
+    // Loopback only by default (audit #298): the dev server exposes /api/copilot and /api/tool, so it
+    // must not listen on every interface unless the operator opts in with HOST=0.0.0.0.
+    hostname: process.env.HOST || '127.0.0.1',
     development: developmentMode(process.env.NODE_ENV),
     routes: {
       [APP_SHELL_PATH]: index,
       // The app page, cross-origin isolated (see ISOLATION_HEADERS). Loopback to the HTML import:
-      // the server binds every interface (no `hostname`), so 127.0.0.1 always reaches it. If the
+      // the server binds 127.0.0.1 by default (or every interface with HOST=0.0.0.0), so 127.0.0.1
+      // reaches it in both cases. If the
       // loopback fails, redirect to the plain shell: the app still runs, on the copy path.
       '/': async (req, srv): Promise<Response> => {
         if (req.method !== 'GET' && req.method !== 'HEAD') {
@@ -928,8 +934,8 @@ if (import.meta.main) {
             return Response.json({ ok: false, error: 'copilot disabled' }, { status: 403 });
           }
           // Same-origin guard (mirrors /api/audit): block cross-site CSRF POSTs to the read-only
-          // tool endpoint.
-          if (!auditPostOriginAllowed(req)) {
+          // tool endpoint. Unlike /api/audit a missing Origin is denied too (audit #298).
+          if (!auditPostOriginAllowed(req, true)) {
             logRequest(req, 403);
             return Response.json({ ok: false, error: 'cross-origin POST denied' }, { status: 403 });
           }

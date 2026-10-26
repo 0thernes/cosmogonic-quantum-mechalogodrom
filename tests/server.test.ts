@@ -177,9 +177,27 @@ describe('makeRateLimiter — POST /api/audit flood seal (SERVER-RL)', () => {
 });
 
 describe('auditPostOriginAllowed — same-origin POST guard', () => {
-  test('allows missing Origin (same-origin fetch)', () => {
+  test('allows missing Origin for /api/audit (same-origin fetch)', () => {
     expect(
       auditPostOriginAllowed(new Request('http://localhost:3000/api/audit', { method: 'POST' })),
+    ).toBe(true);
+  });
+
+  test('rejects missing Origin when required (/api/tool, audit #298)', () => {
+    expect(
+      auditPostOriginAllowed(
+        new Request('http://localhost:3000/api/tool', { method: 'POST' }),
+        true,
+      ),
+    ).toBe(false);
+    expect(
+      auditPostOriginAllowed(
+        new Request('http://localhost:3000/api/tool', {
+          method: 'POST',
+          headers: { Origin: 'http://localhost:3000' },
+        }),
+        true,
+      ),
     ).toBe(true);
   });
 
