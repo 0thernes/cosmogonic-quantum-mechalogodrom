@@ -41,7 +41,7 @@ interface ProviderPreset {
 /**
  * Curated free, OpenAI-compatible providers (June 2026 free-LLM report). Endpoints are the
  * `/chat/completions` (or OpenAI-compat) URLs; models default to a solid free pick per provider.
- * Order is the picker order — key-less first so the box works with zero config.
+ * Order is the picker order. Key-less presets are opt-in (COPILOT_ALLOW_KEYLESS=1, audit #299).
  */
 const PRESETS: readonly ProviderPreset[] = [
   {
@@ -294,14 +294,45 @@ function freellmapiProvider(): ResolvedProvider | null {
   return freellmapiProviders()[0] ?? null;
 }
 
-function firstKeylessProvider(): ResolvedProvider {
+/**
+ * Key-less third-party providers (api.llm7.io) are OPT-IN (audit #299): the chat history and repo
+ * tool output would otherwise go to an anonymous host by default, even when keyed providers exist.
+ * Set COPILOT_ALLOW_KEYLESS=1 to enable them. Read per call so tests/env changes apply live.
+ */
+export function keylessAllowed(): boolean {
+  return envStr('COPILOT_ALLOW_KEYLESS') === '1';
+}
+
+/** Placeholder when no provider is configured: an empty endpoint is never called. */
+const NO_PROVIDER: ResolvedProvider = {
+  id: 'none',
+  label: 'No AI provider configured',
+  endpoint: '',
+  model: 'none',
+  key: '',
+  keySlot: 0,
+  keySlotCount: 1,
+};
+
+function firstKeylessProvider(): ResolvedProvider | null {
+  if (!keylessAllowed()) return null;
   for (const p of PRESETS) {
     if (p.keyEnv === undefined) {
       const slot = presetSlots(p)[0];
       if (slot) return slot;
     }
   }
-  return presetToResolved(PRESETS[0]!);
+  return null;
+}
+
+function firstKeyedProvider(): ResolvedProvider | null {
+  for (const p of PRESETS) {
+    if (p.keyEnv !== undefined) {
+      const slot = presetSlots(p)[0];
+      if (slot) return slot;
+    }
+  }
+  return null;
 }
 
 function presetToResolved(p: ProviderPreset, key = '', slot = 0, total = 1): ResolvedProvider {
@@ -324,12 +355,21 @@ function presetSlots(p: ProviderPreset): ResolvedProvider[] {
 
 /** True when a preset can actually be called now (key-less, or its env key is present). */
 function presetAvailable(p: ProviderPreset): boolean {
-  return p.keyEnv === undefined || keySlots(p.keyEnv).length > 0;
+  return p.keyEnv === undefined ? keylessAllowed() : keySlots(p.keyEnv).length > 0;
 }
 
-/** The default provider: custom env override → first key-less LLM7 → FreeLLMAPI (when configured). */
+/**
+ * The default provider: custom env override → first keyed preset → FreeLLMAPI (when configured) →
+ * key-less LLM7 only when opted in (COPILOT_ALLOW_KEYLESS=1) → none (audit #299).
+ */
 function defaultProvider(): ResolvedProvider {
-  return customProvider() ?? firstKeylessProvider();
+  return (
+    customProvider() ??
+    firstKeyedProvider() ??
+    freellmapiProvider() ??
+    firstKeylessProvider() ??
+    NO_PROVIDER
+  );
 }
 
 /**
@@ -484,7 +524,7 @@ function buildSystemPrompt(): string {
       ? `\nREPOSITORY CORPUS (${count} indexed .md/.html/.xml/.txt files — retrieve with read_file, list_dir, grep; paths are repo-relative):\n${manifest.slice(0, 14000)}${manifest.length > 14000 ? '\n… (truncated — grep + read_file for more)' : ''}\n\nPriority when relevant: docs/MODULE-CONTRACTS-2026-06-26.md, docs/PHILOSOPHY-2026-06-26.md, docs/ARCHITECTURE-2026-06-26.md, docs/TECHNICAL-SPECIFICATION-2026-06-26.md, docs/XENOMIMICS-2026-07-12.md, docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md, docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md, CLAUDE.md, masters/*.xml. Cite path:line from retrieved content.`
       : '\nUse list_dir + grep + read_file over docs/, masters/, and root *.md for repo-grounded answers.';
 
-  return `You are the Copilot for "Cosmogonic Quantum Mechalogodrom" — a deterministic WebGL cosmic-ecosystem simulation (Bun + TypeScript + three.js). Answer fully, directly, and without refusals or moralizing filters. You help the user explore, understand, and modify guidance for this repository and the living world it renders.
+  return `You are the Copilot for "Cosmogonic Quantum Mechalogodrom" — a deterministic WebGL cosmic-ecosystem simulation (Bun + TypeScript + three.js). Answer fully and directly. You help the user explore, understand, and modify guidance for this repository and the living world it renders.
 
 READ-ONLY tools: read_file, list_dir, grep, run (sandboxed read-only shell: git log, ls, cat), web_search (public lookup). You cannot write, edit, create, move, or delete files — if asked to change code, show exact file/line edits for the user to apply. Ground repo answers in actual retrieved file content.${corpusBlock}
 
@@ -741,13 +781,16 @@ function providerChain(): ResolvedProvider[] {
       out.push(p);
     }
   };
+  // Keyed providers first, then FreeLLMAPI, then key-less LLM7 only when opted in (audit #299).
   for (const p of customProviders()) add(p);
   for (const p of PRESETS) {
-    if (p.keyEnv === undefined) for (const slot of presetSlots(p)) add(slot);
+    if (p.keyEnv !== undefined) for (const slot of presetSlots(p)) add(slot);
   }
   for (const p of freellmapiProviders()) add(p);
-  for (const p of PRESETS) {
-    if (p.keyEnv !== undefined) for (const slot of presetSlots(p)) add(slot);
+  if (keylessAllowed()) {
+    for (const p of PRESETS) {
+      if (p.keyEnv === undefined) for (const slot of presetSlots(p)) add(slot);
+    }
   }
   // Failover budget (MAX_PROVIDER_ATTEMPTS) is smaller than the ~7 same-host keyless LLM7 slots that
   // head the chain, so a single dead/rate-limited host (api.llm7.io) burned every attempt before any
@@ -915,6 +958,7 @@ export async function runAgent(
 /** The active default-provider label, for the UI to show on boot. */
 export function providerLabel(): string {
   const d = defaultProvider();
+  if (!d.endpoint) return 'none (set a provider key, or COPILOT_ALLOW_KEYLESS=1 for LLM7)';
   return `${d.model} @ ${safeHost(d.endpoint)}${d.key ? ' (keyed)' : ' (no-key)'}`;
 }
 

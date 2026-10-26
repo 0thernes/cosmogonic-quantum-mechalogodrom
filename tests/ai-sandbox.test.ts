@@ -89,6 +89,16 @@ describe('ai-sandbox: command gate is default-deny and write-free', () => {
     'git grep -Oid world', // attached short form of the same pager option
     'git diff --output=leak.txt', // git writes a file (read-only violation)
     'sort -o out.txt package.json', // sort writes a file (read-only violation)
+    // audit #298 — paths hidden inside flag VALUES were never confined:
+    'wc --files0-from=.env', // echoes the file's contents in the error message
+    'sort --files0-from=.env',
+    'wc --files0-from=package.json', // the option itself is denied, even for a permitted file
+    'sort --files-from=package.json',
+    'grep --file=.env package.json', // reads patterns from a blocked file
+    'grep -f.env package.json', // attached short form
+    'grep --exclude-from=.env x package.json', // blocked path inside a flag value
+    'grep --exclude-from=legacy x package.json', // bare private name inside a flag value
+    'wc --some-flag=../../etc/passwd', // escapes the root via a flag value
     'cat .env', // `run` read of a blocked secret file (read_file blocks it; run did not — MEDIUM)
     'cat legacy/anything', // `run` read of a blocked legacy file
     'git show HEAD:.env', // read a blocked file via git <rev>:<path>

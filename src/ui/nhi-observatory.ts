@@ -1104,9 +1104,13 @@ export class NhiObservatory {
   /** Resize a canvas to `w`×`h` CSS px (DPR-backed) only when it actually changed, then set the DPR transform. */
   private size(ctx: CanvasRenderingContext2D, w: number, h: number): void {
     const cv = ctx.canvas;
-    if (cv.width !== w * this.dpr || cv.height !== h * this.dpr) {
-      cv.width = w * this.dpr;
-      cv.height = h * this.dpr;
+    // Compare against the ROUNDED backing size: with a fractional DPR the integer canvas width never
+    // equals w×dpr, so the old check reallocated every canvas on every paint (audit #281).
+    const bw = Math.round(w * this.dpr);
+    const bh = Math.round(h * this.dpr);
+    if (cv.width !== bw || cv.height !== bh) {
+      cv.width = bw;
+      cv.height = bh;
       cv.style.height = h + 'px';
     }
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);

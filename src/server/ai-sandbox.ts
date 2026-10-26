@@ -276,6 +276,13 @@ const isFlag = (a: string): boolean => a.startsWith('-');
 const EXEC_OR_WRITE_FLAG = /^-O|^--open-files-in-pager(=|$)|^--output(=|$)/;
 
 /**
+ * Options that make a tool READ an arbitrary file named in the option value (audit #298:
+ * `wc --files0-from=.env` / `sort --files0-from=.env` echo the file's contents in the error
+ * message, bypassing the .env/.git/legacy block). No read-only use needs them; deny universally.
+ */
+const FILE_LIST_FLAG = /^--files0-from(=|$)|^--files-from(=|$)/;
+
+/**
  * Per-binary forbidden flags whose danger is tool-specific. `sort -o<file>` / `--output` WRITES a
  * file (but `grep -o` is read-only "only-matching", so `-o` is NOT denied globally); `git grep`
  * `-f<file>` reads a pattern file and `-O` spawns a pager. Matched as prefixes to also catch the
@@ -284,6 +291,8 @@ const EXEC_OR_WRITE_FLAG = /^-O|^--open-files-in-pager(=|$)|^--output(=|$)/;
 const BIN_FORBIDDEN_FLAG: Record<string, RegExp> = {
   git: /^-[oOf]|^--(file|output|open-files-in-pager)(=|$)/,
   sort: /^-o|^--output(=|$)/,
+  // `grep -f<file>` / `--file=<file>` reads patterns from an arbitrary file (#298 family).
+  grep: /^-f|^--file(=|$)/,
 };
 
 // `-u` is a documented alias for `-p`/`--patch`, and `--patch-with-stat`/`--patch-with-raw` both still
@@ -314,6 +323,8 @@ function validateCommand(raw: string): { ok: true; argv: string[] } | { ok: fals
         ok: false,
         error: `option "${tok}" is forbidden (can execute a process or write a file)`,
       };
+    if (FILE_LIST_FLAG.test(tok))
+      return { ok: false, error: `option "${tok}" is forbidden (reads an arbitrary file)` };
     if (binForbidden && binForbidden.test(tok))
       return { ok: false, error: `option "${tok}" is forbidden for ${bin} (write/exec)` };
   }
@@ -425,7 +436,25 @@ function validateCommand(raw: string): { ok: true; argv: string[] } | { ok: fals
   let sawPattern = false;
   for (let i = 1; i < argv.length && !skipPaths; i++) {
     const a = argv[i] ?? '';
-    if (isFlag(a)) continue; // write/exec flags are denied above; remaining flags are read-only
+    if (isFlag(a)) {
+      // Write/exec flags are denied above. A path hidden inside a flag VALUE (`--x=path`) must be
+      // confined exactly like a positional (audit #298), so check path-shaped `=` values too.
+      const eq = a.indexOf('=');
+      if (eq > 0) {
+        const val = a.slice(eq + 1);
+        const valShaped =
+          val.includes('/') || val.includes('\\') || val.includes('.') || isAbsolute(val);
+        // grep's `--regexp=` value is a pattern, not a path; git option values (`--format=%H`) are
+        // confined only when path-shaped; every other tool's `=` value is confined outright so bare
+        // private names (`--exclude-from=legacy`) are caught as well.
+        const isPattern = bin === 'grep' && a.startsWith('--regexp=');
+        if (val.length > 0 && !isPattern && (bin !== 'git' || valShaped)) {
+          const c = confine(val);
+          if (!c.ok) return { ok: false, error: `argument "${a}" denied: ${c.error}` };
+        }
+      }
+      continue;
+    }
     if (patternTool && !sawPattern) {
       sawPattern = true; // the search regex/literal, not a path
       continue;

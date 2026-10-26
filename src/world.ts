@@ -1369,6 +1369,8 @@ export class World {
   private readonly heroIntent = new THREE.Vector3();
   private readonly heroF = new THREE.Vector3();
   private readonly heroR = new THREE.Vector3();
+  /** Count of driveSuper beats that threw (logged, throttled — audit #12). */
+  private apexBeatFailures = 0;
   /** Pre-allocated driveSuper scratch — eliminates per-call allocations (audit fix #2/#3). */
   private readonly superCollective = new Float32Array(FIELD_DIM);
   private readonly superBasePercept: SuperPercept = {
@@ -4637,8 +4639,15 @@ export class World {
         this.superheroState.tick(dt, hero0.mind.snapshot().emotion.dominance, basePercept.threat);
       }
     } catch (e) {
-      void e;
-      /* an apex beat misbehaved — skip it, keep the world running */
+      // An apex beat misbehaved — skip it and keep the world running, but never silently (audit #12).
+      // Throttled: the first failure, then every 600th, so a per-frame fault cannot flood the log.
+      this.apexBeatFailures++;
+      if (this.apexBeatFailures === 1 || this.apexBeatFailures % 600 === 0) {
+        this.log.warn('driveSuper apex beat threw; skipped', {
+          failures: this.apexBeatFailures,
+          error: e instanceof Error ? (e.stack ?? e.message) : String(e),
+        });
+      }
     }
   }
 
