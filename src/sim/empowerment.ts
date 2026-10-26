@@ -123,6 +123,8 @@ export class EmpowermentDrive {
   private readonly contrib: Float64Array; // K per-action contributions cₐ (reused buffer)
   private readonly qb: Float64Array; // M output-marginal scratch
   private readonly seen: Uint8Array; // M cell-occupancy bitmap
+  /** Audit #224: actions with at least one observed outcome (untried uniform rows are excluded). */
+  private readonly tried: Uint8Array;
   private lastAction = -1;
   private emp = 0;
   private capNats = 0;
@@ -153,6 +155,7 @@ export class EmpowermentDrive {
     this.contrib = new Float64Array(K);
     this.qb = new Float64Array(M);
     this.seen = new Uint8Array(M);
+    this.tried = new Uint8Array(K);
   }
 
   /** Hash a latent to a coarse cell by the sign bits of its projection onto the frozen hyperplanes. */
@@ -186,6 +189,7 @@ export class EmpowermentDrive {
     const lam = clamp01(this.lambda * (1 + this.surpriseGate * clamp01(surprise)));
     const prev = this.lastAction;
     if (prev >= 0 && prev < K) {
+      this.tried[prev] = 1;
       const base = prev * M;
       for (let j = 0; j < M; j++) {
         const cur = q[base + j] ?? 0;
@@ -194,7 +198,11 @@ export class EmpowermentDrive {
     }
     this.lastAction = planIndex >= 0 && planIndex < K ? planIndex : -1;
     // Blahut–Arimoto from a fresh uniform source each beat (robust to a non-stationary channel).
-    for (let a = 0; a < K; a++) r[a] = 1 / K;
+    // Audit #224: Blahut–Arimoto runs over TRIED actions only — an untried action's placeholder uniform
+    // row is not evidence of control, so a single-action (or no-action) history reads C = 0.
+    let nTried = 0;
+    for (let a = 0; a < K; a++) nTried += this.tried[a] ?? 0;
+    for (let a = 0; a < K; a++) r[a] = nTried > 0 && this.tried[a] ? 1 / nTried : 0;
     let cNow = 0;
     let cPrev = 0;
     for (let t = 0; t < this.iters; t++) {

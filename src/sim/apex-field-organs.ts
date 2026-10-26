@@ -18,6 +18,9 @@
 import { APEX_FIELDS, ApexFieldGrid } from './apex-field-substrate';
 
 /** The multi-physics read-out of the field organs — every value finite, magnitudes bounded ≥ 0. */
+/** Audit #111: per-step field leak for the driven organs. */
+const FIELD_LEAK = 0.97;
+
 export interface FieldSensorium {
   /** Acoustic standing-wave energy (Σ u², normalised 0..1). */
   readonly acousticEnergy: number;
@@ -70,6 +73,11 @@ export class ApexFieldOrgans {
     this.heat.step();
     this.klein.step();
     this.tunnel.step();
+    // Audit #111: leak each organ so continuous drive settles below tanh saturation.
+    this.acoustic.damp(FIELD_LEAK);
+    this.heat.damp(FIELD_LEAK);
+    this.klein.damp(FIELD_LEAK);
+    this.tunnel.damp(FIELD_LEAK);
   }
 
   /** Read the multi-physics sensorium off the current organ states. O(Σ w·h). */

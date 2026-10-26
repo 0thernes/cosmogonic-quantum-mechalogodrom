@@ -37,7 +37,6 @@ import {
   GRID_CELL,
   GROUND_EXTENT,
   HABITAT_MID,
-  HABITAT_XZ_SCALE,
   HABITAT_Y,
   LIVING_ZONE,
   PLATFORM_CEIL,
@@ -191,9 +190,8 @@ import {
   CRYSTAL_TREE_ORIGIN_X,
   CRYSTAL_TREE_ORIGIN_Z,
   type CrystalEcosystemFrame,
-  type CrystalTreeNeuralStatus,
 } from './sim/crystal-ecosystem';
-import type { EdibleResource, EdibleResourceStats } from './sim/edible-resource';
+import type { EdibleResource } from './sim/edible-resource';
 import { QuantumLattice } from './sim/quantum-lattice';
 import { AbominationArchitecture } from './sim/abomination-architecture';
 import { Mechalogodrom } from './sim/mechalogodrom';
@@ -327,6 +325,19 @@ import { XenomimicConnectome } from './sim/xenomimic-connectome';
 import { purgeLegacyXenomimicTethers } from './sim/xenomimic-tether-purge';
 import { baseTerrainHeightAt } from './sim/terrain-profile';
 import { terrainDisplacementAt } from './sim/terrain-deformation';
+import type {
+  BigTreeEcologyDiagnosticQuery,
+  BigTreeEcologyActorDiagnostic,
+  BigTreeEcologyFoodDiagnostic,
+  BigTreeEcologyDiagnosticSnapshot,
+} from './world-diagnostics';
+export type {
+  BigTreeEcologyDiagnosticQuery,
+  BigTreeEcologyActorDiagnostic,
+  BigTreeEcologyFoodDiagnostic,
+  BigTreeEcologyDiagnosticSnapshot,
+} from './world-diagnostics';
+import { BRUTAL_FOG, BRUTAL_FOG_DENSITY, BRUTAL_STYLES, SINGULARITY_LABEL } from './world-style';
 
 /** Cyclic element access into a non-empty readonly array. O(1). */
 function cyc<T>(arr: readonly T[], i: number): T {
@@ -342,6 +353,9 @@ const ALGO_AUTO_PERIOD = 2.5;
 
 /** V105: 101-glyph pantheon breeding is visual-only — no petri coupling until re-enabled. */
 const PANTHEON_BREEDING_LIVE = false;
+
+/** Audit #7: population above which organism brains alternate half cohorts per frame. */
+const BRAIN_COHORT_POP = 20000;
 
 /** Devour transfer strength: fraction the surviving neighbour's brain moves toward the devoured mind. */
 const GEDANKEN_DEVOUR_ALPHA = 0.2;
@@ -378,133 +392,6 @@ const SFX_ABYSSAL = SFX_EXTRA_BANDS['abyssal']?.start ?? SFX_STRANGE;
  * dedicated jitterGain in entities.update() carries the agitation PAST the clamp on top.
  */
 const CHAOS_NIGHTMARE_FLOOR = 6;
-/**
- * BRUTALISM: cool overcast concrete fog the cosmos fades into (module consts → no per-frame alloc).
- * Built via setRGB(…, LinearSRGBColorSpace) — NOT `new THREE.Color(0x4a4a52)`. This is a module-level
- * constant, so it is constructed at import-eval time, BEFORE main.ts's body runs
- * `THREE.ColorManagement.enabled = false` (ES modules evaluate imports before the importer's body). A
- * bare hex would therefore be sRGB→linear converted to ~0x111116 (near-black, ~4× too dark), making
- * BRUTALISM fade the cosmos to black instead of concrete grey. setRGB into the linear working space is
- * a no-op conversion regardless of the flag, matching the raw-hex convention every runtime-built scene
- * color already follows (the renderer runs ColorManagement-off + LinearSRGBColorSpace output).
- */
-const BRUTAL_FOG = new THREE.Color().setRGB(
-  0x4a / 255,
-  0x4a / 255,
-  0x52 / 255,
-  THREE.LinearSRGBColorSpace,
-);
-const BRUTAL_FOG_DENSITY = 0.0011 / HABITAT_XZ_SCALE;
-
-/** V57: singularity kind → telemetry display name (the chaos chooser cycles SINGULARITY_KINDS). */
-const SINGULARITY_LABEL: Record<string, string> = {
-  blackhole: 'BLACK HOLE',
-  whitehole: 'WHITE HOLE',
-  greyhole: 'GREY HOLE',
-  strangestar: 'STRANGE STAR',
-  entropy: 'ENTROPY FIELD',
-};
-
-const BRUTAL_STYLES = [
-  { name: 'BRUTALISM', glyph: '▦', title: 'poured concrete monolith skin' },
-  { name: 'NOUVEAUNESS', glyph: '❧', title: 'organic art-nouveau tendril skin' },
-  { name: 'ROCOCOGOLOGY', glyph: '✾', title: 'ornate pearl-gold overload skin' },
-  { name: 'COSMICMORPHISM', glyph: '☄', title: 'cosmic metamaterial nebula skin' },
-  { name: 'REPRESSIONISM', glyph: '▣', title: 'suppressed monochrome pressure skin' },
-] as const;
-
-/** Optional identity/resource selection for the pull-only localhost ecology inspector. */
-export interface BigTreeEcologyDiagnosticQuery {
-  ownerKind?: number;
-  ownerId?: number;
-  foodId?: number;
-}
-
-export interface BigTreeEcologyActorDiagnostic {
-  ownerKind: number;
-  ownerId: number;
-  adapter: 'core' | 'fauna' | null;
-  visit: {
-    recordId: number;
-    state: number;
-    stateName: string;
-    reason: number;
-    reasonName: string;
-    activity: number;
-    activityName: string;
-    slotId: number;
-    insideZone: boolean;
-    startedAt: number;
-    enteredAt: number | null;
-    stateDeadline: number | null;
-    remainingStateSeconds: number | null;
-    cooldownUntil: number | null;
-    remainingCooldownSeconds: number | null;
-    stuckRecoveries: number;
-    visitOrdinal: number;
-    partnerKind: number | null;
-    partnerId: number | null;
-    partnerLeaseExpiresAt: number | null;
-    lastTransitionCause: number;
-    lastTransitionCauseName: string;
-    lastTransitionAt: number | null;
-  } | null;
-  target: {
-    x: number;
-    y: number;
-    z: number;
-    foodId: number | null;
-    foodKind: string | null;
-    foodState: string | null;
-    foodReservationOwnerId: number | null;
-    foodGeneration: number | null;
-    foodLeaseExpiresAt: number | null;
-    eating: boolean | null;
-  } | null;
-  sanctuary: {
-    registered: boolean;
-    recordId: number | null;
-    protected: boolean | null;
-    aggressionSuppressed: boolean | null;
-    x: number | null;
-    z: number | null;
-  };
-}
-
-export interface BigTreeEcologyFoodDiagnostic {
-  id: number;
-  kind: string;
-  state: string;
-  ownerId: number | null;
-  generation: number;
-  nourishment: number;
-  position: { x: number; y: number; z: number };
-  interactionPoint: { x: number; y: number; z: number };
-  leaseUntil: number | null;
-  remainingLeaseSeconds: number | null;
-  respawnAt: number | null;
-  remainingRespawnSeconds: number | null;
-}
-
-export interface BigTreeEcologyDiagnosticSnapshot {
-  version: 1;
-  frame: number;
-  simulationTime: number;
-  zone: {
-    centerX: number;
-    centerZ: number;
-    entryRadius: number;
-    exitRadius: number;
-  };
-  visits: BigTreeZoneStats;
-  coreVisitors: BigTreeSpeciesVisitorStats;
-  faunaVisitors: BigTreeFaunaVisitorStats;
-  sanctuary: BigTreeSanctuaryIndexStats;
-  food: EdibleResourceStats;
-  neuralController: CrystalTreeNeuralStatus;
-  actor: BigTreeEcologyActorDiagnostic | null;
-  foodItem: BigTreeEcologyFoodDiagnostic | null;
-}
 
 export interface WorldOptions {
   engine: Engine;
@@ -3119,12 +3006,17 @@ export class World {
     this.sortStep(bands);
 
     // F-BRAIN V42: all organism brains perceive + steer BEFORE the integrator folds velocity
-    // into position — full 70-param evaluation every frame (quality contract: no neural LOD).
+    // into position — full 70-param evaluation (no reduced-quality brain). Audit #7: above
+    // BRAIN_COHORT_POP organisms the full brain runs on an alternating half cohort each frame
+    // (every brain still thinks every 2nd frame; steering persists in velocity between evaluations).
+    const brainStride = this.entities.list.length > BRAIN_COHORT_POP ? 2 : 1;
     this.entityBrains.thinkAll(
       this.entities.list,
       this.state.chaos,
       t,
       this.bigTreeOrdinaryProtectedAt,
+      brainStride,
+      this.state.frame,
     );
 
     const stats = this.entities.update(dt, t);

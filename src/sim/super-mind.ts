@@ -226,6 +226,23 @@ class Subnet {
   get params(): number {
     return this.mlp.weights.length;
   }
+  /**
+   * Audit #78: bounded online delta rule on the OUTPUT layer (input → target), so the subnet learns instead
+   * of staying at its random init. Δw = rate·(t−o)·(1−o²)·h, weights clamped to ±2. Deterministic, O(h·o).
+   */
+  trainOutput(inp: ArrayLike<number>, target: ArrayLike<number>, rate: number): void {
+    const { nIn, nHidden, nOut, weights } = this.mlp;
+    this.mlp.forward(inp, this.hid, this.out);
+    let w = nHidden * (nIn + 1);
+    for (let o = 0; o < nOut; o++) {
+      const y = this.out[o] ?? 0;
+      const g = rate * ((target[o] ?? 0) - y) * (1 - y * y);
+      weights[w] = Math.max(-2, Math.min(2, (weights[w] ?? 0) + g));
+      w++;
+      for (let h = 0; h < nHidden; h++, w++)
+        weights[w] = Math.max(-2, Math.min(2, (weights[w] ?? 0) + g * (this.hid[h] ?? 0)));
+    }
+  }
 }
 
 /** The live cognition/consciousness-metrics state (proxies + scalars from submodules) — every field a real internal variable, surfaced to telemetry. No phenomenal claim. */
@@ -802,6 +819,11 @@ export class SuperMind {
   private readonly cur = new Float32Array(LATENT);
   private readonly best = new Float32Array(LATENT);
   private readonly pred = new Float32Array(LATENT);
+  private readonly prevLatent = new Float32Array(LATENT);
+  private hasPrevLatent = false;
+  /** Audit #79: consequence credit — last beat's chosen plan and the reward it was chosen under. */
+  private lastPlanIdx = -1;
+  private lastPlanReward = 0;
   private readonly organSum = new Float32Array(4);
   private readonly metaIn = new Float32Array(LATENT * 3 + 4 + SUPER_QUANTUM + 3 + 4); // 69
   private readonly affIn = new Float32Array(12);
@@ -1107,6 +1129,12 @@ export class SuperMind {
     this.eshkolEngine.workspace = subs.workspace;
     const latent = this.cortex.forward(s);
     for (let i = 0; i < LATENT; i++) this.latent[i] = latent[i] ?? 0;
+    // Audit #78: the world-model predictor learns last latent → this latent (one-step prediction).
+    if (this.learnEnabled && this.hasPrevLatent) {
+      this.predictor.trainOutput(this.prevLatent, this.latent, 5 * this.learnRate);
+    }
+    this.prevLatent.set(this.latent);
+    this.hasPrevLatent = true;
     // ── #10/#58 · GWT BROADCAST RE-ENTRY ── blend LAST beat's workspace broadcast into the shared latent
     // (the workspace representation every faculty reads: the reservoir, the imagination loop that yields
     // novelty + reasoning, and the self-model that yields self-awareness). Here the ignition broadcast
@@ -1991,8 +2019,14 @@ export class SuperMind {
     // trace — temporal credit, so reward also reaches plans that recently set it up. Only when enabled;
     // otherwise planBias stays zero (no behavioural drift). Deterministic (no rng), bounded, O(plans).
     if (this.learnEnabled) {
-      for (let i = 0; i < SUPER_PLANS.length; i++) this.planOneHot[i] = i === bestIdx ? 1 : 0;
-      this.planLearner.step(this.planBias, this.planOneHot, reward - 0.5, {
+      // Audit #79: credit LAST beat's plan with the reward CHANGE it produced (consequence), not with the
+      // pre-action state quality — a well-off mind no longer reinforces whatever it happens to pick.
+      const credit = this.lastPlanIdx >= 0 ? reward - this.lastPlanReward : 0;
+      for (let i = 0; i < SUPER_PLANS.length; i++)
+        this.planOneHot[i] = i === this.lastPlanIdx ? 1 : 0;
+      this.lastPlanIdx = bestIdx;
+      this.lastPlanReward = reward;
+      this.planLearner.step(this.planBias, this.planOneHot, credit, {
         rate: this.learnRate,
         decay: PLAN_LEARN_DECAY,
         clamp: PLAN_LEARN_CLAMP,

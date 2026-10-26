@@ -128,7 +128,8 @@ export function invertMetric(metric: ReadonlyArray<ReadonlyArray<number>>): numb
 }
 
 /**
- * Compute Christoffel symbols Γ^k_ij from the metric g_ij.
+ * Christoffel symbols for a SINGLE metric sample. Audit #83: one matrix has no derivatives, so ∂g ≡ 0 and
+ * this always returns Γ ≡ 0. Use computeChristoffelSymbolsField for a metric field g(θ).
  * Γ^k_ij = ½ g^kl (∂_i g_jl + ∂_j g_il - ∂_l g_ij)
  *
  * For efficiency, we compute the Levi-Civita connection in the coordinate basis.
@@ -319,28 +320,27 @@ export function curvatureAwareNaturalGradientField(
 
   let curvatureWeight = cfg.curvatureWeight;
   if (cfg.adaptive) {
-    const rField = computeRicciScalarField(metricFn, theta);
-    const rConn = computeRicciScalar(g, Gamma);
-    curvatureWeight = cfg.curvatureWeight * (1 + Math.max(Math.abs(rField), Math.abs(rConn)));
+    // Audit #84: adapt on the exact field Ricci scalar only (the connection-only helper is not R).
+    curvatureWeight =
+      cfg.curvatureWeight * (1 + Math.abs(computeRicciScalarField(metricFn, theta)));
   }
-
-  const corrected: number[][] = [];
-  for (let i = 0; i < n; i++) {
-    const row: number[] = [];
-    for (let j = 0; j < n; j++) {
-      let tr = 0;
-      for (let k = 0; k < n; k++) tr += Gamma[k]![i]![j] ?? 0;
-      row.push((g[i]?.[j] ?? 0) + curvatureWeight * tr);
-    }
-    corrected.push(row);
+  // Audit #85: tensorial geodesic correction instead of adding Σ_k Γ^k_ij to the metric (non-tensorial,
+  // could break positive-definiteness). v = g⁻¹∇L, then d^k = v^k + ½·w·Γ^k_ij v^i v^j — the second-order
+  // geodesic step (Transtrum-style geodesic acceleration). θ_next = θ − d.
+  const v = solveSymmetric(g, grad, cfg.ridge);
+  const out: number[] = [];
+  for (let k = 0; k < n; k++) {
+    let acc = 0;
+    for (let i = 0; i < n; i++)
+      for (let j = 0; j < n; j++) acc += (Gamma[k]?.[i]?.[j] ?? 0) * (v[i] ?? 0) * (v[j] ?? 0);
+    out.push((v[k] ?? 0) + 0.5 * curvatureWeight * acc);
   }
-  return solveSymmetric(corrected, grad, cfg.ridge);
+  return out;
 }
 
 /**
- * Compute the Ricci curvature scalar R from the Christoffel symbols.
- * R = g^ij R_ij, where R_ij = R^k_ikj is the Ricci tensor.
- * This measures the local curvature of the manifold.
+ * Connection-only (ΓΓ) part of the Ricci contraction. Audit #84: the ∂Γ terms are omitted, so this is
+ * NOT the Ricci scalar; it is kept for API compatibility. Use computeRicciScalarField for the real R.
  */
 export function computeRicciScalar(
   metric: ReadonlyArray<ReadonlyArray<number>>,
@@ -399,8 +399,8 @@ export function computeRicciScalar(
 }
 
 /**
- * CURVATURE-AWARE QUANTUM NATURAL GRADIENT.
- * Computes the natural gradient direction accounting for manifold curvature.
+ * QUANTUM NATURAL GRADIENT on a fixed metric (audit #83: Γ ≡ 0 without a metric field, so this is
+ * plain regularised QNG; the "curvature-aware" name is legacy — see curvatureAwareNaturalGradientField).
  *
  * `metric` is the Fubini-Study metric g_ij (symmetric, positive-semidefinite).
  * `grad` is the Euclidean gradient ∇L.
@@ -416,42 +416,10 @@ export function curvatureAwareNaturalGradient(
   const cfg = { ...DEFAULT_CONFIG, ...config };
   const n = grad.length;
 
-  // Compute Christoffel symbols
-  const Gamma = computeChristoffelSymbols(metric);
-
-  // Compute Ricci scalar for adaptive weighting
-  let curvatureWeight = cfg.curvatureWeight;
-  if (cfg.adaptive) {
-    const R = computeRicciScalar(metric, Gamma);
-    // Adapt weight based on curvature: higher curvature → more weighting
-    curvatureWeight = cfg.curvatureWeight * (1 + Math.abs(R));
-  }
-
-  // Build curvature-aware metric: g_ij + λ Γ_ij
-  // We use the trace of Γ as a scalar correction for efficiency
-  const GammaTrace: number[][] = [];
-  for (let i = 0; i < n; i++) {
-    GammaTrace.push([]);
-    for (let j = 0; j < n; j++) {
-      let sum = 0;
-      for (let k = 0; k < n; k++) {
-        sum += Gamma[k]![i]![j] ?? 0;
-      }
-      GammaTrace[i]![j] = sum;
-    }
-  }
-
-  const curvatureAwareMetric: number[][] = [];
-  for (let i = 0; i < n; i++) {
-    curvatureAwareMetric.push([]);
-    for (let j = 0; j < n; j++) {
-      curvatureAwareMetric[i]![j] =
-        (metric[i]![j] ?? 0) + curvatureWeight * (GammaTrace[i]![j] ?? 0);
-    }
-  }
-
-  // Solve (g + λΓ) x = grad with Tikhonov regularization
-  return solveSymmetric(curvatureAwareMetric, grad, cfg.ridge);
+  void n;
+  // Audit #83: a single fixed metric matrix carries no ∂g, so Γ ≡ 0 and R ≡ 0 here — this is exactly
+  // plain (Tikhonov-regularised) QNG. Use {@link curvatureAwareNaturalGradientField} for real curvature.
+  return solveSymmetric(metric, grad, cfg.ridge);
 }
 
 /**
@@ -508,8 +476,8 @@ function solveSymmetric(
 }
 
 /**
- * Allocation-free 2×2 curvature-aware QNG for the per-beat HOT path.
- * Closed-form solution for the 2×2 case with curvature correction.
+ * Allocation-free 2×2 metric-blended QNG for the per-beat HOT path. Audit #86: despite the legacy name
+ * this uses no Christoffel symbols — it is a heuristic anisotropic blend of g with a rescaled copy of itself.
  */
 export function curvatureAwareNaturalGradient2x2(
   g00: number,

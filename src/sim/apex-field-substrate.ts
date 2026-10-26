@@ -161,6 +161,15 @@ export class ApexFieldGrid {
     this.front = !this.front;
   }
 
+  /** Audit #111: uniform leak (field and wave history × factor) so a driven organ reaches a steady state
+   *  instead of saturating. O(w·h). */
+  damp(factor: number): void {
+    const f = this.field();
+    for (let i = 0; i < f.length; i++) f[i] = (f[i] ?? 0) * factor;
+    const p = this.prev;
+    for (let i = 0; i < p.length; i++) p[i] = (p[i] ?? 0) * factor;
+  }
+
   /** The current field buffer (read-only view for hashing / telemetry). */
   field(): Float64Array {
     return this.front ? this.a : this.b;

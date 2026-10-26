@@ -2190,6 +2190,9 @@ export class ApexBrain {
     } else {
       this.quantum.step(drive, (this.seed ^ (this.beat * 0x9e3779b1)) >>> 0);
       qBias = this.quantum.planBias(APEX_PLANS.length);
+      // Audit #105: the register is actually measured (Born sampling on a private seeded stream) every
+      // 16th beat AFTER its plan-bias is read, so snapshot().quantum.collapsed/plan report real outcomes.
+      if ((this.beat & 15) === 15) this.quantum.measure(mulberry32((this.seed ^ this.beat) >>> 0));
     }
 
     // Aggregate per-plan signal for the meta layer (six plans); the quantum Born plan-bias is folded

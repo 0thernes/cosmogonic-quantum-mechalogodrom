@@ -256,7 +256,9 @@ export class MechalogodromBrain {
     for (let v = 0; v < VARIANT_COUNT; v++) {
       if (this.variantAct[v]! > actMean * STDP_PRE_REL) {
         // a variant fires NOW (pre): depress vs the most recent post (post-before-pre, Δt<0)
-        if (beat - this.lastPostBeat <= STDP_WINDOW) {
+        // Audit #119: a variant that was ALSO active on that post beat is part of a sustained co-active
+        // pattern (it drove the post), not a post-before-pre pairing — don't depress it.
+        if (beat - this.lastPostBeat <= STDP_WINDOW && this.lastPreBeat[v] !== this.lastPostBeat) {
           this.gain[v] = clampRange(
             this.gain[v]! + stdpWeightDelta(this.lastPostBeat - beat),
             STDP_GAIN_MIN,
@@ -270,8 +272,10 @@ export class MechalogodromBrain {
       // the cortex fires NOW (post): potentiate variants that led it (pre-before-post, Δt>0)
       for (let v = 0; v < VARIANT_COUNT; v++) {
         if (beat - this.lastPreBeat[v]! <= STDP_WINDOW) {
+          // Audit #119: same-beat pre feeds this beat's post (variant act → fusion), so it counts as one
+          // step before post (Δt = +1), not Δt = 0 (which gave no potentiation at all).
           this.gain[v] = clampRange(
-            this.gain[v]! + stdpWeightDelta(beat - this.lastPreBeat[v]!),
+            this.gain[v]! + stdpWeightDelta(beat - this.lastPreBeat[v]! + 1),
             STDP_GAIN_MIN,
             STDP_GAIN_MAX,
           );

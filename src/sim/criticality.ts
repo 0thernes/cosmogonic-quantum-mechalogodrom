@@ -58,6 +58,8 @@ export class Criticality {
   private sigma = 1; // branching-ratio estimate (starts at the critical value)
   private prevActive = 1; // a_{t−1}, seeded to 1 to avoid a divide-by-zero on the first beat
   private activeFrac = 0;
+  private emaNow = 0;
+  private emaPrev = 0;
   private size = 0;
 
   /**
@@ -72,8 +74,17 @@ export class Criticality {
     for (let i = 0; i < n; i++) {
       if (Math.abs((act[i] ?? 0) * this.gainV) > THRESHOLD) active++;
     }
-    const ratio = active / Math.max(1, this.prevActive); // local branching estimate a_t / a_{t−1}
-    this.sigma += SIGMA_TAU * (ratio - this.sigma);
+    // Audit #223: ratio-of-EMAs estimator σ̂ = E[a_t] / E[a_{t−1}] over beats with a live ancestor
+    // (a_{t−1} > 0), instead of an EMA of per-beat ratios (biased, and ÷1 on silent beats). Note: any
+    // stationary activity level reads σ̂ ≈ 1 — this is a homeostat for the level, not a proof of
+    // avalanche criticality.
+    if (this.prevActive > 0) {
+      this.emaNow += SIGMA_TAU * (active - this.emaNow);
+      this.emaPrev += SIGMA_TAU * (this.prevActive - this.emaPrev);
+      if (this.emaPrev > 1e-9) this.sigma = this.emaNow / this.emaPrev;
+    } else if (active === 0) {
+      this.sigma += SIGMA_TAU * (0 - this.sigma); // silence: the cascade died out (subcritical)
+    }
     // homeostasis: if subcritical (σ̂ < 1) excite (raise gain); if supercritical, damp.
     this.gainV += CONTROL_RATE * (1 - this.sigma);
     this.gainV = this.gainV < GAIN_MIN ? GAIN_MIN : this.gainV > GAIN_MAX ? GAIN_MAX : this.gainV;

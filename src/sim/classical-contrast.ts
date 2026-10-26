@@ -75,7 +75,9 @@ export function classicalShannonEntropy(seed: number, n: number): number {
       ent -= p * Math.log2(p);
     }
   }
-  const norm = ent / Math.log2(bins);
+  // Audit #249: normalise by the entropy actually reachable with `lim` samples (log2 min(bins, lim)),
+  // so a small sample no longer reads as a ≥0.25 "gap" purely from finite-sample bias.
+  const norm = ent / Math.log2(Math.min(bins, lim));
   return norm < 0 ? 0 : norm > 1 ? 1 : norm;
 }
 

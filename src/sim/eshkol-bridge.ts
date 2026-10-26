@@ -116,7 +116,13 @@ export class EshkolConsciousnessEngine {
   stepInference(surprise: number, freeEnergy: number): void {
     for (let i = 0; i < BELIEFS; i++) {
       const b = this.beliefs[i] ?? 0.5;
-      const msg = surprise * (0.5 + 0.5 * Math.sin(i)) * (1 - freeEnergy * 0.5);
+      // Audit #206: the message SHAPE now depends on the evidence (phase shifts with surprise and free
+      // energy), not just its scale, so belief entropy responds to input instead of converging to a
+      // fixed sin(i) profile.
+      const msg =
+        surprise *
+        (0.5 + 0.5 * Math.sin(i + 6 * surprise - 3 * freeEnergy)) *
+        (1 - freeEnergy * 0.5);
       this.beliefs[i] = clamp01(b * 0.75 + msg * 0.25);
     }
     const fe =

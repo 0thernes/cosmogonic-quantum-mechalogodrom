@@ -466,7 +466,9 @@ export class EntityManager {
     };
     this.env = {
       ctx,
-      spawn: (pos, mi, scale) => this.spawnWithinFrameBudget(pos, mi, scale),
+      // Audit #43: split offspring inherit the parent and respect the organic growth target.
+      spawn: (pos, mi, scale, parent) =>
+        this.belowOrganicTarget() ? this.spawnWithinFrameBudget(pos, mi, scale, parent) : null,
       sanctuaryAt: null,
       actorProtected: false,
       dt: 0,
@@ -912,6 +914,16 @@ export class EntityManager {
    * committed only when a material entity is returned; null and exceptional spawn paths release it.
    * This lets post-update NHI swarms share the same deterministic counter as organic mitosis.
    */
+  /** Live organic steady-state target (set each update; Infinity before the first update). */
+  private organicTarget = Infinity;
+  /** Audit #33: indices (descending) of organisms that died this update, compacted once at the end. */
+  private readonly pendingDeaths: number[] = [];
+
+  /** Audit #43/#50: true while the population is under the organic growth target. O(1). */
+  belowOrganicTarget(): boolean {
+    return this.list.length < this.organicTarget;
+  }
+
   spawnWithinFrameBudget(
     pos: THREE.Vector3 | null,
     mi: number,
@@ -1206,6 +1218,7 @@ export class EntityManager {
       liveTarget && liveTarget > 0 ? liveTarget : ctx.quality.targetEntities,
       maxEntities,
     );
+    this.organicTarget = target;
     MORPHS_SEEN.clear();
     this.phylumCounts.fill(0);
     const phylumCounts = this.phylumCounts;
@@ -1469,11 +1482,13 @@ export class EntityManager {
         // normal organism, so this is byte-identical until you launch one.
         const ex = e.position.x;
         const ez = e.position.z;
-        this.disposeAt(i);
+        // Audit #33: defer the removal — one stable O(n + d) compaction after the (descending) loop
+        // replaces d separate O(n) shifts. Survivor order is identical; death callbacks fire after it.
+        this.pendingDeaths.push(i);
         // Sparse floor scales with the adaptive target (legacy 100 of 1000 = 10%; = maxEntities
         // on tiers ≤ 5,000, so byte-identical there). Keeps "repopulate when sparse" proportional
         // to the steady-state target rather than the 10k ceiling.
-        if (list.length < Math.max(100, target * 0.1)) {
+        if (list.length - this.pendingDeaths.length < Math.max(100, target * 0.1)) {
           for (let r = 0; r < 3; r++) {
             if (!this.hasFrameSpawnCapacity()) break;
             SPAWN_AT.set(
@@ -1482,12 +1497,19 @@ export class EntityManager {
               PLATFORM_FLOOR + rng() * (PLATFORM_CEIL - PLATFORM_FLOOR) * SOCIAL_SPAWN_Y_FRAC,
               (rng() - 0.5) * SOCIAL_FLOCK_R * 1.5 + ez * 0.85,
             );
-            this.spawnWithinFrameBudget(SPAWN_AT, Math.floor(rng() * ctx.morphs.length));
+            // Audit #37: rescue births inherit from a surviving organism (rng-free pick) instead of
+            // being trait-less founders, so this path no longer bypasses heredity.
+            const heir = list.length > 0 ? list[(i + r) % list.length] : undefined;
+            this.spawnWithinFrameBudget(SPAWN_AT, Math.floor(rng() * ctx.morphs.length), 1, heir);
           }
         }
       }
     }
 
+    if (this.pendingDeaths.length > 0) {
+      this.disposeManyDescending(this.pendingDeaths);
+      this.pendingDeaths.length = 0;
+    }
     // The social field two updates ahead is packed from the population as this update leaves it.
     if (list.length > SOCIAL_BUDGET_MIN_POP) this.snapshotSocialField(list);
     else this.socialSlots[this.socialUpdateSeq & 1]!.ticket = 0;

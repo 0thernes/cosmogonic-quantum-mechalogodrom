@@ -63,7 +63,7 @@ export interface BehaviorEnv {
   /** Shared sim dependencies (grid, rng, state, quality, ...). */
   readonly ctx: SimContext;
   /** Spawn hook for the 'split' behavior — EntityManager.spawn (returns null at the cap). */
-  readonly spawn: (pos: THREE.Vector3, mi: number, scale: number) => Entity | null;
+  readonly spawn: (pos: THREE.Vector3, mi: number, scale: number, parent?: Entity) => Entity | null;
   /**
    * Authored neutral-zone query shared with the rest of the dome. `null` preserves the legacy
    * behavior exactly. A stable ecology ID lets the composition root apply entry/exit hysteresis;
@@ -207,7 +207,7 @@ function hunt(e: Entity, u: EntityData, env: BehaviorEnv): void {
 function split(e: Entity, u: EntityData, env: BehaviorEnv): void {
   const rng = env.ctx.rng;
   if (u.age > 100 && rng() < 0.001 * env.cm) {
-    const child = env.spawn(e.position, u.mi, 0.5);
+    const child = env.spawn(e.position, u.mi, 0.5, e); // audit #43: parented split
     if (child) {
       child.userData.vel.set((rng() - 0.5) * 0.2, (rng() - 0.5) * 0.2, (rng() - 0.5) * 0.2);
     }

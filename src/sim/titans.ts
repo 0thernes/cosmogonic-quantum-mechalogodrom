@@ -1852,7 +1852,9 @@ export class TitanSystem implements DomeFeeder, BigTreeFaunaSource {
       // A strike centred just outside the sanctuary must not seed hostile champion bodies through
       // the boundary. RNG is still consumed above, preserving the deterministic combat stream.
       if (this.isProtectedAt(VB.x, VB.z)) continue;
-      this.entities.spawn(VB, (agg.mi + s) % ctx.morphs.length, 0.7);
+      // Audit #50: strike births respect the organic growth target and the per-frame spawn budget.
+      if (!this.entities.belowOrganicTarget()) continue;
+      this.entities.spawnWithinFrameBudget(VB, (agg.mi + s) % ctx.morphs.length, 0.7);
     }
     ctx.audit.record('titan-strike', {
       aggressor: agg.name,

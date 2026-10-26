@@ -928,6 +928,7 @@ export class AlienFlora {
   private readonly hashOrigin: number;
   private readonly hashN: number;
   private collideAccum = 0;
+  private pushDirty = new Uint8Array(0);
   private collideWind = 0.4;
 
   constructor(ctx: SimContext) {
@@ -1371,17 +1372,27 @@ export class AlienFlora {
         }
       }
     }
+    // Audit #100: re-upload only meshes whose push values actually changed (most plants sit still).
+    const dirty = this.pushDirty;
+    if (dirty.length !== this.meshes.length) this.pushDirty = new Uint8Array(this.meshes.length);
+    this.pushDirty.fill(0);
     for (let i = 0; i < n; i++) {
       const mi = this.plantMeshIdx[i]!;
       const ii = this.plantInstIdx[i]!;
       const buf = this.pushAttrs[mi];
       if (!buf) continue;
       const o = ii * 2;
-      buf[o] = this.plantPush[i * 2] ?? 0;
-      buf[o + 1] = this.plantPush[i * 2 + 1] ?? 0;
+      const nx = this.plantPush[i * 2] ?? 0;
+      const nz = this.plantPush[i * 2 + 1] ?? 0;
+      if (buf[o] !== nx || buf[o + 1] !== nz) {
+        buf[o] = nx;
+        buf[o + 1] = nz;
+        this.pushDirty[mi] = 1;
+      }
     }
-    for (const mesh of this.meshes) {
-      const attr = mesh.geometry.getAttribute('aPush') as
+    for (let m = 0; m < this.meshes.length; m++) {
+      if (!this.pushDirty[m]) continue;
+      const attr = this.meshes[m]!.geometry.getAttribute('aPush') as
         THREE.InstancedBufferAttribute | undefined;
       if (attr) attr.needsUpdate = true;
     }

@@ -305,6 +305,7 @@ export class Mechalogodrom {
   private readonly tmpColor = new THREE.Color();
 
   private fusion = 0;
+  private fusedOnce = false;
   private power = 0;
   private warp = 0;
   private chaos = 0;
@@ -717,7 +718,19 @@ export class Mechalogodrom {
     this.localT += realDt * churn;
     const lt = this.localT;
     // Freeze fusion when paused (suspended animation = body alive, world progress halted).
-    if (this.worldTimeScale > 0) this.fusion = clamp(this.fusion + dt / CONVERGE_SECONDS, 0, 1);
+    // Audit #128: after the first full fusion the monster BREATHES — fusion eases toward a slow cycle in
+    // [0.6, 1] (period ≈ 5 min of sim time) instead of pinning at 1, so the fusion brain's fusion and
+    // dimension senses keep varying after boot.
+    if (this.worldTimeScale > 0) {
+      if (this.fusion >= 0.999) this.fusedOnce = true;
+      if (!this.fusedOnce) this.fusion = clamp(this.fusion + dt / CONVERGE_SECONDS, 0, 1);
+      else {
+        const target = 0.8 + 0.2 * Math.cos(_t * 0.02);
+        const step = dt / CONVERGE_SECONDS;
+        const d = target - this.fusion;
+        this.fusion = clamp(this.fusion + (Math.abs(d) < step ? d : Math.sign(d) * step), 0, 1);
+      }
+    }
     const f = this.fusion;
     const ease = f * f * f * (f * (f * 6 - 15) + 10);
 
@@ -1046,7 +1059,7 @@ export class Mechalogodrom {
       power: this.power,
       warp: this.warp,
       variants: live,
-      fused: this.fusion >= 0.999,
+      fused: this.fusedOnce || this.fusion >= 0.999, // audit #128: whole once converged (then breathes)
     };
   }
 

@@ -40,34 +40,51 @@ describe('Mechalogodrom — the fusion abomination', () => {
     m.dispose();
   });
 
-  test('fusion ramps monotonically 0 → 1 and converges to a whole monster', () => {
+  test('fusion ramps monotonically 0 → 1, then breathes in [0.6, 1] (audit #128)', () => {
     const scene = new THREE.Scene();
     const m = new Mechalogodrom(scene);
     const dt = 1 / 60;
     let t = 0;
     let prev = -1;
+    let reached = false;
     for (let i = 0; i < 60 * 30; i++) {
       t += dt;
       m.update(t, dt);
       const f = m.snapshot().fusion;
-      expect(f).toBeGreaterThanOrEqual(prev); // monotonic non-decreasing
+      if (!reached) expect(f).toBeGreaterThanOrEqual(prev); // monotonic until first full fusion
       expect(f).toBeLessThanOrEqual(1); // bounded
+      if (reached) expect(f).toBeGreaterThanOrEqual(0.6);
+      if (f >= 0.999) reached = true;
       prev = f;
     }
-    const s = m.snapshot();
-    expect(s.fusion).toBe(1);
-    expect(s.fused).toBe(true);
+    expect(reached).toBe(true);
+    expect(m.snapshot().fused).toBe(true);
+    // Long run: fusion keeps varying (not pinned at 1).
+    let lo = 1;
+    for (let i = 0; i < 400; i++) {
+      t += 0.5; // coarse half-second steps keep the long run cheap
+      m.update(t, 0.5);
+      lo = Math.min(lo, m.snapshot().fusion);
+    }
+    expect(lo).toBeLessThan(0.9);
     m.dispose();
-  });
+  }, 30_000);
 
   test('dioramagonic dimensionality sweeps 99 → under-Λ −10 as it fuses', () => {
     const scene = new THREE.Scene();
     const m = new Mechalogodrom(scene);
-    const s = run(m, 30);
-    expect(s.dimension).toBeCloseTo(-10, 2); // 99 − 1·109 = −10 at full fusion
-    expect(s.fused).toBe(true);
+    const dt = 1 / 60;
+    let t = 0;
+    let minDim = Infinity;
+    for (let i = 0; i < 60 * 30; i++) {
+      t += dt;
+      m.update(t, dt);
+      minDim = Math.min(minDim, m.snapshot().dimension);
+    }
+    expect(minDim).toBeCloseTo(-10, 2); // 99 − 1·109 = −10 at full fusion
+    expect(m.snapshot().fused).toBe(true);
     m.dispose();
-  });
+  }, 30_000);
 
   test('variant shells melt from 10 distinct toward the corona', () => {
     const scene = new THREE.Scene();
@@ -76,7 +93,7 @@ describe('Mechalogodrom — the fusion abomination', () => {
     const s = run(m, 30);
     expect(s.variants).toBeLessThan(10); // most have melted in once fused
     m.dispose();
-  });
+  }, 30_000);
 
   test(
     'every value + the warped geometry stays finite over a long run at max chaos',
