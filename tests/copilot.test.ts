@@ -52,6 +52,7 @@ const KEY_ENVS = [
   'TOGETHER_API_KEY',
   'TOGETHER_API_KEYS',
   'TOGETHER_API_KEY_2',
+  'COPILOT_ALLOW_KEYLESS',
 ];
 const saved = new Map<string, string | undefined>();
 const realFetch = globalThis.fetch;
@@ -61,6 +62,9 @@ beforeEach(() => {
     saved.set(k, process.env[k]);
     delete process.env[k];
   }
+  // Key-less LLM7 is opt-in since audit #299. The legacy suites below exercise the key-less chain, so
+  // they run opted in; the 'key-less opt-in' suite clears this to check the secure default.
+  process.env['COPILOT_ALLOW_KEYLESS'] = '1';
 });
 afterEach(() => {
   globalThis.fetch = realFetch;
@@ -269,7 +273,7 @@ describe('customProvider env override (CQM_LLM_ENDPOINT)', () => {
 });
 
 describe('resolveProvider — default-deny resolution (security)', () => {
-  test('no id resolves to the first key-less LLM7 provider (default chain head)', () => {
+  test('no id (opted in, no keys) resolves to the first key-less LLM7 provider', () => {
     expect(resolveProvider(undefined).id).toBe('llm7');
   });
 
@@ -311,6 +315,26 @@ describe('resolveProvider — default-deny resolution (security)', () => {
     expect(resolveProvider('custom').id).toBe('llm7'); // no CQM_LLM_ENDPOINT → default
     process.env['CQM_LLM_ENDPOINT'] = 'https://c.example/v1/chat/completions';
     expect(resolveProvider('custom').id).toBe('custom');
+  });
+});
+
+describe('key-less providers are opt-in (audit #299)', () => {
+  test('without COPILOT_ALLOW_KEYLESS nothing key-less is offered, resolved, or chained', () => {
+    delete process.env['COPILOT_ALLOW_KEYLESS'];
+    expect(availableProviders().some((p) => p.id.startsWith('llm7'))).toBe(false);
+    expect(resolveProvider(undefined).id).toBe('none');
+    expect(resolveProvider('llm7').id).toBe('none');
+    expect(providerRecoveryPlan().some((p) => p.id.startsWith('llm7'))).toBe(false);
+    expect(providerLabel().startsWith('none')).toBe(true);
+  });
+
+  test('a configured keyed provider is the default and heads the chain, ahead of LLM7', () => {
+    process.env['GROQ_API_KEY'] = 'k';
+    expect(resolveProvider(undefined).id).toBe('groq');
+    expect(providerRecoveryPlan()[0]!.id).toBe('groq');
+    delete process.env['COPILOT_ALLOW_KEYLESS'];
+    expect(resolveProvider(undefined).id).toBe('groq');
+    expect(providerRecoveryPlan().every((p) => !p.id.startsWith('llm7'))).toBe(true);
   });
 });
 
