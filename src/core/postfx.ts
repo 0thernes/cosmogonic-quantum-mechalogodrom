@@ -183,7 +183,8 @@ export class PostFx {
    * singularity NEVER loses its signature warp under load. O(1).
    */
   get lensActive(): boolean {
-    return this.uStrength.value !== 0;
+    // Audit #272: match the shader's identity cutoff (|s| < 0.0008 passes through unchanged).
+    return Math.abs(this.uStrength.value) >= 0.0008;
   }
 
   /**

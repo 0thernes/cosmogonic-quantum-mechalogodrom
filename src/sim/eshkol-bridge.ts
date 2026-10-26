@@ -186,22 +186,6 @@ export class EshkolConsciousnessEngine {
     };
   }
 
-  /** Eshkol KB + full inference + GWT broadcast for new biologics (all Tsotchke consciousness). */
-  fullEshkolTick(
-    narrative: number,
-    surprise: number,
-    ignition: number,
-  ): EshkolConsciousnessSnapshot {
-    this.kbAssert('soup:narrative:' + narrative.toFixed(3), narrative * 0.8 + 0.2);
-    return this.step({
-      surprise,
-      ignition,
-      narrative,
-      salience: this.moduleSalience,
-      freeEnergy: surprise * 0.6,
-    });
-  }
-
   snapshot(): EshkolConsciousnessSnapshot {
     const unified = clamp01((this.logic + this.inference + this.workspace) / 3);
     const sentience = clamp01(

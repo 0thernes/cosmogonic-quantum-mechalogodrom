@@ -72,7 +72,9 @@ export const LIVING_ZONE = PLATFORM_HALF * LIVING_ZONE_FRAC;
  *  rim-flung body (~600u out) creeps home over ~4–5s — a visible gathering, not a snap collapse. */
 export const CENTER_GRAVITY_K = 0.0005;
 
-/** Authored home of the giant Crystal Life Tree. Shared by rendering, ecology, and safe-zone policy. */
+/** Authored home of the giant Crystal Life Tree. Shared by rendering, ecology, and safe-zone policy.
+ *  Audit #71: r≈658 deliberately sits outside LIVING_ZONE and HABITAT_RADIUS — the tree is a rim landmark
+ *  with its own crystal ecology, not part of the central organism habitat. */
 export const CRYSTAL_TREE_ORIGIN_X = 220;
 export const CRYSTAL_TREE_ORIGIN_Z = 620;
 /** Root theatre kept clear of unrelated flora so interaction and approach points remain navigable. */
