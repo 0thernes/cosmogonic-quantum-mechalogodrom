@@ -202,8 +202,13 @@ export function buildManifold(
   // ── Resident bounds (all within the device float cap): the exact statevector is reserved first,
   //    then field organs fill GPU texels, then the dense state fills whatever RAM remains. ─────────
   const afterQuantum = Math.max(0, device.residentFloatCap - quantumResident);
+  const minDenseReserve = Math.min(denseDesigned, SHARD_FLOATS, Math.floor(afterQuantum * 0.25));
   const fieldTexelBudget = device.fieldTexelCap * 4; // up to 4 components (RGBA) per organ texture
-  const fieldResident = Math.min(fieldDesigned, fieldTexelBudget, afterQuantum);
+  const fieldResident = Math.min(
+    fieldDesigned,
+    fieldTexelBudget,
+    Math.max(0, afterQuantum - minDenseReserve),
+  );
   const denseBudget = Math.max(0, afterQuantum - fieldResident);
   const denseResident = Math.min(denseDesigned, denseBudget);
 
@@ -226,21 +231,20 @@ export function buildManifold(
     },
     {
       tier: 'resident-field',
-      designed: fieldDesigned,
+      designed: fieldResident,
       addressable: fieldResident,
       resident: fieldResident,
     },
     {
       tier: 'resident-dense',
-      designed: denseDesigned,
+      designed: denseResident,
       addressable: denseResident,
       resident: denseResident,
     },
     { tier: 'native-declared', designed: nativeDeclared, addressable: 0, resident: 0 },
   ];
 
-  const designedParams =
-    proceduralDesigned + quantumDesigned + fieldDesigned + denseDesigned + nativeDeclared;
+  const designedParams = proceduralDesigned + quantumDesigned + fieldDesigned + denseDesigned;
   const addressableParams = tiers.reduce((a, t) => a + t.addressable, 0);
   const residentParams = tiers.reduce((a, t) => a + t.resident, 0);
   const denseShardCount = Math.max(1, Math.ceil(denseResident / SHARD_FLOATS));

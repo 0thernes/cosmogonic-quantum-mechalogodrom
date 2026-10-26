@@ -412,12 +412,34 @@ export class MythRitual {
       symbol.users = Math.max(0, symbol.users * (1 - decay));
     }
 
-    // Remove fully-faded culture by the continuous fade metric, so culture now
-    // persists and turns over instead of vanishing the instant it is created.
-    this.culture.myths = this.culture.myths.filter((m) => m.strength > FADED);
-    this.culture.rituals = this.culture.rituals.filter((r) => r.frequency > FADED);
-    this.culture.taboos = this.culture.taboos.filter((t) => t.strength > FADED);
-    this.culture.symbols = this.culture.symbols.filter((s) => s.users > FADED);
+    // Remove fully-faded culture by the continuous fade metric in-place (zero array allocations).
+    let mw = 0;
+    for (let i = 0; i < this.culture.myths.length; i++) {
+      const m = this.culture.myths[i]!;
+      if (m.strength > FADED) this.culture.myths[mw++] = m;
+    }
+    this.culture.myths.length = mw;
+
+    let rw = 0;
+    for (let i = 0; i < this.culture.rituals.length; i++) {
+      const r = this.culture.rituals[i]!;
+      if (r.frequency > FADED) this.culture.rituals[rw++] = r;
+    }
+    this.culture.rituals.length = rw;
+
+    let tw = 0;
+    for (let i = 0; i < this.culture.taboos.length; i++) {
+      const t = this.culture.taboos[i]!;
+      if (t.strength > FADED) this.culture.taboos[tw++] = t;
+    }
+    this.culture.taboos.length = tw;
+
+    let sw = 0;
+    for (let i = 0; i < this.culture.symbols.length; i++) {
+      const s = this.culture.symbols[i]!;
+      if (s.users > FADED) this.culture.symbols[sw++] = s;
+    }
+    this.culture.symbols.length = sw;
   }
 
   /**

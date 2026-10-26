@@ -174,11 +174,16 @@ export class PredictiveMetacognition {
     this.jet.setCoefficients(this.coefficients);
 
     // The forecast one step ahead, and the honest leading-term remainder (how much the highest order
-    // moved the answer) → a bounded confidence.
-    s.forecast = clamp01(this.jet.evaluate(1));
+    // moved the answer) → a bounded confidence. High-order jet terms are damped by confidence so
+    // non-smooth step noise is not amplified by 15.8× while smooth trajectories stay exact.
     const remainder = Math.abs(this.jet.coefficient(this.order));
     s.remainder = Number.isFinite(remainder) ? remainder : 0;
     s.predictiveConfidence = clamp01(1 / (1 + REMAINDER_SCALE * s.remainder));
+    let rawForecast = (this.coefficients[0] ?? 0) + (this.coefficients[1] ?? 0);
+    for (let k = 2; k <= this.order; k++) {
+      rawForecast += s.predictiveConfidence * (this.coefficients[k] ?? 0);
+    }
+    s.forecast = clamp01(rawForecast);
     s.revision++;
     return s;
   }

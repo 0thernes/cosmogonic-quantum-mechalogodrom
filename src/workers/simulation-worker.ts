@@ -225,6 +225,9 @@ if (typeof self !== 'undefined' && typeof self.postMessage === 'function') {
       };
 
       if (message.useSharedArrayBuffer) {
+        if (message.data.length >= result.length) {
+          message.data.set(result);
+        }
         self.postMessage(response);
       } else {
         const transfer = result.buffer instanceof ArrayBuffer ? [result.buffer] : undefined;

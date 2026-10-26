@@ -567,7 +567,9 @@ export class PuppetMasterSystem implements PortalCullable, DomeFeeder, BigTreeFa
     const cfg = pm.cfg;
     switch (cfg.act) {
       case 'chaos': {
-        ctx.state.chaos = clamp(ctx.state.chaos + 0.5 + rng() * 2, CHAOS_MIN, CHAOS_MAX * 0.7);
+        const cap = CHAOS_MAX * 0.7;
+        const headroom = Math.max(0.15, 1 - ctx.state.chaos / cap);
+        ctx.state.chaos = clamp(ctx.state.chaos + (0.5 + rng() * 2) * headroom, CHAOS_MIN, cap);
         this.emit(cfg.name, CHAOS_MESSAGE);
         ctx.sfx('warp');
         break;
@@ -581,7 +583,8 @@ export class PuppetMasterSystem implements PortalCullable, DomeFeeder, BigTreeFa
       }
       case 'mutate': {
         const list = this.entities.list;
-        const mc = Math.min(30, list.length);
+        const batch = cfg.name === 'KRONOS' ? 30 : 3;
+        const mc = Math.min(batch, list.length);
         let mutated = 0;
         for (let mi = 0; mi < mc; mi++) {
           const target = list[Math.floor(rng() * list.length)];

@@ -250,8 +250,8 @@ export class MonolithTemple {
             t += d;
           }
 
-          // The caged point always bleeds through the cubic cavities — a white volumetric glow.
-          float star = exp(-coreMin * 0.16) * (0.3 + 2.8 * uIgnition);
+          // The caged point always bleeds through the cubic cavities — a white volumetric glow (#198: uReactivity wired).
+          float star = exp(-coreMin * (0.16 - 0.025 * uReactivity)) * (0.3 + 2.8 * uIgnition + 0.35 * uReactivity);
 
           if(!hit){
             if(star < 0.02) discard;                     // let the burst / background show through

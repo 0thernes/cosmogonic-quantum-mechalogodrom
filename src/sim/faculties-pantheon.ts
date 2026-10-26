@@ -443,6 +443,21 @@ export class FacultiesPantheon {
     for (let i = 0; i < n; i++) this.actScratch[i] = this.faculties[i]!.getActivation();
     this.couplingDensity = facultyCouplingDensity(this.actScratch);
 
+    // Always downsample the n activations into NHSI_GROUPS group means so downstream world couplings
+    // can consume distinct per-group signals even when online self-model learning is off.
+    const per = n / NHSI_GROUPS;
+    for (let gi = 0; gi < NHSI_GROUPS; gi++) {
+      const lo = Math.floor(gi * per);
+      const hi = Math.floor((gi + 1) * per);
+      let s = 0;
+      let cnt = 0;
+      for (let i = lo; i < hi; i++) {
+        s += this.actScratch[i] ?? 0;
+        cnt++;
+      }
+      this.groupInput[gi] = cnt > 0 ? s / cnt : 0;
+    }
+
     // ONLINE SELF-MODEL — the pantheon forecasts its OWN next-beat mean activation from a downsampled view
     // of its faculty state, and corrects itself by exact Eshkol-AD backprop. Its error (EMA) drives the
     // adaptive coupling above. Purely additive to the organs; seeded off a separate substream (no rng draw).
@@ -456,19 +471,6 @@ export class FacultiesPantheon {
           this.wmTarget[0] = agg;
           mlpTrainStep(this.worldModel, this.prevGroupInput, this.wmTarget, this.wmLr);
         }
-      }
-      // downsample the n activations into NHSI_GROUPS group means — the self-model's input.
-      const per = n / NHSI_GROUPS;
-      for (let gi = 0; gi < NHSI_GROUPS; gi++) {
-        const lo = Math.floor(gi * per);
-        const hi = Math.floor((gi + 1) * per);
-        let s = 0;
-        let cnt = 0;
-        for (let i = lo; i < hi; i++) {
-          s += this.actScratch[i] ?? 0;
-          cnt++;
-        }
-        this.groupInput[gi] = cnt > 0 ? s / cnt : 0;
       }
 
       // SPATIAL ATTENTION model: forecast the per-GROUP profile (not just the aggregate). Each group's
@@ -522,5 +524,10 @@ export class FacultiesPantheon {
     let total = 0;
     for (const faculty of this.faculties) total += faculty.getConfidence();
     return this.faculties.length > 0 ? total / this.faculties.length : 0;
+  }
+
+  /** Read-only view of the 8 downsampled faculty-group activations (0..1). */
+  getGroupActivations(): Readonly<Float64Array> {
+    return this.groupInput;
   }
 }

@@ -89,14 +89,16 @@ function buildWavePacket(
   const sigma = 1 / (0.35 + Math.abs(curvature) * 1.5);
   const twoSigma2 = 2 * sigma * sigma;
 
+  const half = GRID * 0.5;
+  const wrapDelta = (d: number): number => ((((d + half) % GRID) + GRID) % GRID) - half;
   let norm = 0;
   let idx = 0;
   for (let iz = 0; iz < GRID; iz++) {
-    const dz = iz - cz;
+    const dz = wrapDelta(iz - cz);
     for (let iy = 0; iy < GRID; iy++) {
-      const dy = iy - cy;
+      const dy = wrapDelta(iy - cy);
       for (let ix = 0; ix < GRID; ix++) {
-        const dx = ix - cx;
+        const dx = wrapDelta(ix - cx);
         const rSq = dx * dx + dy * dy + dz * dz;
         const amp = Math.exp(-rSq / twoSigma2); // Gaussian envelope
         // Momentum phase k·r (upstream: phase = (v·d)·0.1) plus a geometric chirp that couples the
@@ -250,7 +252,7 @@ export function qgePerturb(state: QGEState, parameters: number[], strength = 0.1
 
   // Quantum Fisher information = 4·trace(g); aliveness saturates it through tanh into [0,1].
   const fisher = 4 * (gxx + gyy + gzz);
-  const aliveness = Math.tanh(Math.abs(fisher) * 0.5);
+  const aliveness = Math.tanh(Math.abs(fisher) * 0.04);
 
   return { newPosition, newMomentum, phaseShift, aliveness };
 }

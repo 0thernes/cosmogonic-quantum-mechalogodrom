@@ -245,11 +245,16 @@ export function getFullTsotchkeBias(i: number): GodformBias & {
 } {
   const base = getGodformBias(i);
   const extra = getCorpusBias(i);
-  // use ulg + gwt + ad from corpus (Eshkol GWT + ulg + quake + Moonlab)
+  const alphaArch = alphabetArchetypeForGodform(i);
+  const progLenFactor = ((base.eshkolProgram.length % 23) / 23) * 0.04;
+  // use ulg + gwt + ad from corpus (Eshkol GWT + ulg + quake + Moonlab, #144/#175)
   const adG = eshkolApplyAD(extra.adDepth / 8, extra.eshkolWorkspace * 0.1);
-  // eshkolDual (Eshkol tape) for more AD in godform bias
-  const adDual = eshkolDual((x) => x, extra.adDepth / 8);
-  const adG2 = adG + adDual.derivative * 0.05;
+  // eshkolDual (Eshkol tape) on nonlinear potential (was identity x -> x, #144)
+  const adDual = eshkolDual(
+    (x) => Math.tanh(x * (0.8 + base.eshkolLogic) + 0.35 * x * x),
+    extra.adDepth / 8 + progLenFactor,
+  );
+  const adG2 = adG + adDual.derivative * 0.05 + alphaArch.bias.curiosity * 0.02;
   const qPert = quakePerturb(extra.quakeFactor, i * 13);
   const ulg = ulgHandoff(extra.quakeFactor, extra.eshkolLogic);
   const gwt = gwtBroadcast([extra.eshkolInference, extra.tensorChi / 10], [0.7, 0.5]);

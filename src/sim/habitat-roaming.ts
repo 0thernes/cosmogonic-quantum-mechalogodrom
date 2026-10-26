@@ -12,10 +12,16 @@ export interface MutableRoamPoint {
  * almost never met. Band is now a mid-field social core (≈12–38% of half-extent) with
  * modest vertical weave so beings share airspace, form packs, and still roam.
  */
-export function writeNhiRoamTarget<T extends MutableRoamPoint>(out: T, id: number, t: number): T {
+export function writeNhiRoamTarget<T extends MutableRoamPoint>(
+  out: T,
+  id: number,
+  t: number,
+  envelopeScale = 1,
+): T {
   const ph = id * 1.7;
-  // Inner social core: overlapping orbits so multiple NHIs share the same air volume.
-  const rad = PLATFORM_HALF * (0.12 + (id % 5) * 0.052);
+  const scale = Number.isFinite(envelopeScale) ? Math.max(0.5, Math.min(2.5, envelopeScale)) : 1;
+  // Inner social core: overlapping orbits so multiple NHIs share the same air volume (#204: scaled by habitat envelope).
+  const rad = PLATFORM_HALF * (0.12 + (id % 5) * 0.052) * scale;
   // Slow pack-phase so neighboring ids drift together rather than anti-phase forever.
   const pack = Math.floor(id / 3) * 0.41;
   out.x = Math.cos(t * 0.19 + ph + pack) * rad;

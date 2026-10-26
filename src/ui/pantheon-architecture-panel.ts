@@ -181,6 +181,7 @@ export class PantheonArchitecturePanel {
   private mode: VizMode = 'brain4d';
   /** When the apex ς is selected, its warmed Entropic-Tesseract-Hydra brain snapshot (else null). */
   private apexSnap: ApexBrainSnapshot | null = null;
+  private cachedApexSnap: ApexBrainSnapshot | null = null;
   /** Designed/addressable growth telemetry from the live world (can be a synthesized research scale). */
   private apexGrowth: ApexGrowthStage | null = null;
 
@@ -494,17 +495,20 @@ export class PantheonArchitecturePanel {
     // the cycler shows live organ telemetry (level ramps toward the Sim-3 transcendence threshold).
     this.apexSnap = null;
     if (this.view === 'lineage' && isApex(lineageAt(this.lineageIdx))) {
-      const brain = createApexBrain();
-      for (let i = 0; i < 64; i++) {
-        brain.tick({
-          threat: 0.4 + 0.3 * Math.sin(i * 0.2),
-          energy: 0.6,
-          chaos: 0.5 + 0.4 * Math.cos(i * 0.17),
-          novelty: 0.5 + 0.4 * Math.sin(i * 0.09),
-          level: i * 15,
-        });
+      if (!this.cachedApexSnap) {
+        const brain = createApexBrain();
+        for (let i = 0; i < 64; i++) {
+          brain.tick({
+            threat: 0.4 + 0.3 * Math.sin(i * 0.2),
+            energy: 0.6,
+            chaos: 0.5 + 0.4 * Math.cos(i * 0.17),
+            novelty: 0.5 + 0.4 * Math.sin(i * 0.09),
+            level: i * 15,
+          });
+        }
+        this.cachedApexSnap = brain.snapshot();
       }
-      this.apexSnap = brain.snapshot();
+      this.apexSnap = this.cachedApexSnap;
     }
     this.renderData(genome);
   }

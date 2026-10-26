@@ -32,6 +32,8 @@ export interface ArchonThought {
   decisive: boolean;
   /** VM opcodes executed (proves the program actually ran). */
   steps: number;
+  /** Continuous substrate-modulated bias around the VM branch commit (#143). */
+  continuousBias?: number;
 }
 
 /**
@@ -126,6 +128,12 @@ export function archonThink(substrate: Float32Array, beat: number): ArchonThough
   const prog = compileArchonProgram(substrate, beat);
   const r = eshVMRun(prog);
   const planBias = clamp01(r.result);
-  const decisive = Math.abs(planBias - ESHKOL_EXPLOIT) < Math.abs(planBias - ESHKOL_EXPLORE);
-  return { planBias, decisive, steps: r.steps };
+  // Continuous substrate modulation around the VM's 3-way branch decision (#143)
+  const s0 = clamp01(substrate[0] ?? 0.5);
+  const s1 = clamp01(substrate[1] ?? 0.5);
+  const s2 = clamp01(substrate[2] ?? 0.5);
+  const contDelta = ((s0 + s1 + s2) / 3 - 0.5) * 0.08;
+  const continuousBias = clamp01(planBias + contDelta);
+  const decisive = Math.abs(planBias - ESHKOL_EXPLOIT) < 1e-6;
+  return { planBias, decisive, steps: r.steps, continuousBias };
 }

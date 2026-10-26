@@ -120,7 +120,12 @@ export class ApexSubstrateDriver {
     const q = this.quantum.reach();
     const s = this.fields.sense();
 
-    const base = billionScale(m.addressableParams); // always present (the whole substrate)
+    const activeWeight =
+      (ablate.quantum ? 0 : 0.35) +
+      (ablate.field ? 0 : 0.35) +
+      (ablate.procedural ? 0 : 0.24) +
+      (ablate.resident ? 0 : 0.06);
+    const base = billionScale(m.addressableParams) * activeWeight; // always present (the whole substrate)
     const proc = ablate.procedural ? 0 : billionScale(this.proceduralAddressable);
     const res = ablate.resident ? 0 : c01(m.residentParams / Math.max(1, m.deviceBudgetParams));
     const qd = ablate.quantum

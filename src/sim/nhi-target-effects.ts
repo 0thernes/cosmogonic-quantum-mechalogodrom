@@ -322,7 +322,7 @@ export function resolveNhiMimicEffect(
   const ownVelocity = velocity(self.velocity);
   const ownStrategy = strategy(self.strategy);
   const ownSetGroup = integer(self.setGroup, -1_000_000, 1_000_000, 0);
-  const ownPhylum = integer(self.phylum, -1, 9, -1);
+  const ownPhylum = integer(self.phylum, -1, 1000, -1);
   const gain = unit(magnitude);
   if (!target || target.alive === false || gain <= 0) {
     return {
@@ -343,7 +343,7 @@ export function resolveNhiMimicEffect(
   });
   const targetStrategy = strategy(target.strategy);
   const targetSetGroup = integer(target.setGroup, -1_000_000, 1_000_000, 0);
-  const targetPhylum = integer(target.phylum, -1, 9, -1);
+  const targetPhylum = integer(target.phylum, -1, 1000, -1);
   return {
     applied:
       selfVelocity.x !== self.velocity.x ||

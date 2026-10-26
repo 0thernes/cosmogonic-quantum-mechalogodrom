@@ -1198,12 +1198,16 @@ export class NhiMind {
    * Returns whether the internal fact state actually transitioned; repeated evidence and unmet GOAP
    * preconditions can legitimately return false. Sampling an intent is never evidence by itself.
    */
-  acknowledge(action: NhiActionId, factSupported: boolean): boolean {
+  acknowledge(action: NhiActionId, factSupported: boolean, realizedPayoff?: number): boolean {
     if (!Number.isSafeInteger(action) || action < 0 || action >= ACTION_COUNT) {
       throw new RangeError(`NHI acknowledgement action is invalid: ${String(action)}`);
     }
     if (typeof factSupported !== 'boolean') {
       throw new TypeError('NHI factSupported acknowledgement must be boolean');
+    }
+    if (realizedPayoff !== undefined && Number.isFinite(realizedPayoff)) {
+      const rewardDelta = clamp(realizedPayoff, -2, 2);
+      this.mood = clamp(this.mood + rewardDelta * 0.04, -1, 1);
     }
     if (!factSupported) return false;
     const priorFacts = this.facts;

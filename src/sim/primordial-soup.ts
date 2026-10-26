@@ -1,4 +1,4 @@
-﻿/**
+/**
  * PRIMORDIAL SOUP — full Tsotchke-wired digital biologics birth layer.
  * Deterministic scaffold for emergent strains; not a claim of sentience.
  */
@@ -123,6 +123,7 @@ export class PrimordialSoup {
     this.tick++;
     const archonIdx = typeof input === 'number' ? input : Math.floor(((input[0] ?? 0) * 10) % 10);
     const beat = typeof input === 'number' ? beatOrDt : this.tick;
+    const entropy = typeof input === 'number' ? 0 : clamp01(beatOrDt);
     const inputCatalysis = typeof input === 'number' ? 0 : vectorMean(input);
     const corpus = clamp01(corpusBeatForArchon(archonIdx, beat) + inputCatalysis * 0.25);
     const repo = getTsotchkeRepoByIndex(archonIdx % 10);
@@ -204,7 +205,9 @@ export class PrimordialSoup {
       // (brutal-release), which the strictly-increasing internal loop never triggered anyway. Pure &
       // deterministic (no rng), so per-seed telemetry stays identical.
       const UPKEEP = 0.004;
-      this.vitality[i] = clamp01(v * (1 - UPKEEP) + growth + pinnFactor);
+      const upkeep = UPKEEP * (1 + entropy * 1.8);
+      const deathFloor = entropy > 0 ? 0.12 : 0.05;
+      this.vitality[i] = clamp01(v * (1 - upkeep) + growth + pinnFactor);
       this.consciousness[i] = clamp01(
         c * 0.98 +
           (corpus + (this.symmetry[i] ?? 0)) * 0.01 * wiring +
@@ -212,7 +215,10 @@ export class PrimordialSoup {
             ? (intelligence.socialDrive + intelligence.forecast) * 0.00035
             : 0),
       );
-      if ((this.vitality[i] ?? 0) < 0.05 && (this.generation[i] ?? 0) < 5) {
+      if (
+        (this.vitality[i] ?? 0) < deathFloor &&
+        ((this.generation[i] ?? 0) < 5 || entropy > 0.25)
+      ) {
         this.alive[i] = 0;
       }
     }

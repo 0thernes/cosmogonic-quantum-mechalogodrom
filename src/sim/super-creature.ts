@@ -730,6 +730,20 @@ export class SuperCreature {
       if (this.prevValid && this.wmLr > 0) {
         this.wmTarget[0] = salience;
         mlpTrainStep(this.worldModel, this.prevSense, this.wmTarget, this.wmLr);
+        // #135: reward-modulated Hebbian adaptation on actor output biases when online learning is active
+        const tdReward =
+          (s[0] ?? 0) - (this.prevSense[0] ?? 0) - 0.5 * ((s[1] ?? 0) - (this.prevSense[1] ?? 0));
+        const b2Base = ACTOR_HID * (LATENT + 1);
+        const stride = ACTOR_HID + 1;
+        const actorLr = this.wmLr * 0.02;
+        for (let o = 0; o < ACT; o++) {
+          const bIdx = b2Base + o * stride + ACTOR_HID;
+          this.actor.weights[bIdx] = clamp(
+            (this.actor.weights[bIdx] ?? 0) + actorLr * tdReward * (this.act[o] ?? 0),
+            -2,
+            2,
+          );
+        }
       }
       this.learnedPredErr += WM_TAU * (this.surprise - this.learnedPredErr); // realized error, smoothed
       this.predictedSalience = clamp01(mlpPredict(this.worldModel, s)[0] ?? 0);

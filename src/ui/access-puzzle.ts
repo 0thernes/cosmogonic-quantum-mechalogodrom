@@ -96,7 +96,7 @@ const DENIED = [
   'INNTRIGEADH DIÙLTAICHTE',
   'SARBIDEA UKATUTA',
   'ACCÉS DENEGAT',
-  'ACCESO DENEGADO',
+  'ACCESO DENEGADO (GL)',
   'AĊĊESS MIĊĦUD',
   'ZOUGRËFF VERWEIGERT',
   'TAGONG WEIGERE',
@@ -189,9 +189,12 @@ class AccessPuzzle {
     doc.getElementById('cqm-acc-toggle')?.remove();
     doc.getElementById('cqm-acc-modal')?.remove();
     injectPanelBaseCSS(doc);
-    const style = doc.createElement('style');
-    style.textContent = STYLE;
-    doc.head.appendChild(style);
+    if (!doc.getElementById('cqm-acc-style')) {
+      const style = doc.createElement('style');
+      style.id = 'cqm-acc-style';
+      style.textContent = STYLE;
+      doc.head.appendChild(style);
+    }
 
     this.toggle = doc.createElement('button');
     this.toggle.id = 'cqm-acc-toggle';

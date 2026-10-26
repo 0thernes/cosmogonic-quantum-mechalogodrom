@@ -181,7 +181,7 @@ export const TSOTCHKE_FULL_27_REPO_CATALOG: readonly TsotchkeCanonicalRepoCatalo
       name: 'eshkol',
       category: 'flagship',
       cqmModule:
-        'src/math/eshkol-ad.ts + src/sim/eshkol-bytecode-vm.ts + src/sim/tsotchke-oct2026-wave.ts',
+        'src/math/eshkol-ad.ts + src/sim/tsotchke-deep-wire.ts + src/sim/tsotchke-oct2026-wave.ts',
       zigKernel: 'cqm_eshkol_taylor_diff + cqm_eshkol_dbsp_delta_gemm + cqm_eshkol_cyclotomic8_mul',
     },
     {
@@ -190,7 +190,7 @@ export const TSOTCHKE_FULL_27_REPO_CATALOG: readonly TsotchkeCanonicalRepoCatalo
       name: 'quantum_geometric_tensor',
       category: 'flagship',
       cqmModule:
-        'src/math/fubini-study.ts + src/math/curvature-aware-qng.ts + src/sim/tsotchke-oct2026-wave.ts',
+        'src/math/quantum-geometry.ts + src/math/curvature-aware-qng.ts + src/sim/tsotchke-oct2026-wave.ts',
       zigKernel: 'cqm_qgtl_full_tensor_2d + cqm_moonlab_qwz_chern_fhs',
     },
     {
@@ -228,7 +228,7 @@ export const TSOTCHKE_FULL_27_REPO_CATALOG: readonly TsotchkeCanonicalRepoCatalo
       owner: 'tsotchke',
       name: 'tensorcore',
       category: 'substrate',
-      cqmModule: 'src/math/tensor-mps.ts + src/sim/entity-brain.ts',
+      cqmModule: 'src/sim/tensorcore-sim.ts + src/sim/entity-brain.ts',
       zigKernel: 'cqm_entity_brain_batch_forward',
     },
     {
@@ -236,14 +236,14 @@ export const TSOTCHKE_FULL_27_REPO_CATALOG: readonly TsotchkeCanonicalRepoCatalo
       owner: 'tsotchke',
       name: 'gpt2-basic',
       category: 'substrate',
-      cqmModule: 'src/sim/gpt2-attention.ts + src/sim/super-mind.ts',
+      cqmModule: 'src/sim/tsotchke-registry.ts + src/sim/super-mind.ts',
     },
     {
       index: 10,
       owner: 'tsotchke',
       name: 'libirrep',
       category: 'substrate',
-      cqmModule: 'src/math/point-group-irrep.ts + src/sim/tsotchke-oct2026-wave.ts',
+      cqmModule: 'src/sim/irrep-symmetry.ts + src/sim/tsotchke-oct2026-wave.ts',
       zigKernel: 'cqm_libirrep_bdg_skyrmion_mzm',
     },
     {
@@ -252,7 +252,7 @@ export const TSOTCHKE_FULL_27_REPO_CATALOG: readonly TsotchkeCanonicalRepoCatalo
       name: 'spin_based_neural_network',
       category: 'substrate',
       cqmModule:
-        'src/sim/spin-reservoir.ts + src/sim/glyph-brain.ts + src/sim/tsotchke-oct2026-wave.ts',
+        'src/sim/spin-glas-ising.ts + src/sim/glyph-brain.ts + src/sim/tsotchke-oct2026-wave.ts',
       zigKernel: 'cqm_glyph_hebbian_step + cqm_sbnn_minsr_step',
     },
     {
@@ -260,7 +260,7 @@ export const TSOTCHKE_FULL_27_REPO_CATALOG: readonly TsotchkeCanonicalRepoCatalo
       owner: 'tsotchke',
       name: 'llm-arbitrator',
       category: 'substrate',
-      cqmModule: 'src/sim/llm-arbitrator.ts',
+      cqmModule: 'src/sim/tsotchke-registry.ts',
     },
     {
       index: 13,
@@ -275,7 +275,7 @@ export const TSOTCHKE_FULL_27_REPO_CATALOG: readonly TsotchkeCanonicalRepoCatalo
       owner: 'tsotchke',
       name: 'asteroids',
       category: 'substrate',
-      cqmModule: 'src/sim/toroidal-kinematics.ts',
+      cqmModule: 'src/sim/asteroids-physics.ts',
     },
     {
       index: 15,
@@ -289,7 +289,7 @@ export const TSOTCHKE_FULL_27_REPO_CATALOG: readonly TsotchkeCanonicalRepoCatalo
       owner: 'tsotchke',
       name: 'PINN',
       category: 'substrate',
-      cqmModule: 'src/math/pinn-gray-scott.ts + src/sim/reaction-diffusion.ts',
+      cqmModule: 'src/sim/pinn-physics.ts + src/sim/reaction-diffusion.ts',
       zigKernel: 'cqm_gray_scott_step_rgba_f32',
     },
     {
@@ -297,7 +297,7 @@ export const TSOTCHKE_FULL_27_REPO_CATALOG: readonly TsotchkeCanonicalRepoCatalo
       owner: 'tsotchke',
       name: 'PIMC',
       category: 'substrate',
-      cqmModule: 'src/math/pimc-worldline.ts',
+      cqmModule: 'src/sim/pimc-paths.ts',
       zigKernel: 'cqm_tdse_step',
     },
     // --- 10 Corporate Repos (github.com/Tsotchke-Corporation) ---
@@ -345,14 +345,14 @@ export const TSOTCHKE_FULL_27_REPO_CATALOG: readonly TsotchkeCanonicalRepoCatalo
       owner: 'Tsotchke-Corporation',
       name: 'quantum-quake',
       category: 'substrate',
-      cqmModule: 'src/sim/quantum-quake-burst.ts',
+      cqmModule: 'src/sim/quantum-quake-physics.ts',
     },
     {
       index: 24,
       owner: 'Tsotchke-Corporation',
       name: 'ulg',
       category: 'substrate',
-      cqmModule: 'src/sim/ulg-semantic-compressor.ts',
+      cqmModule: 'src/sim/ulg-bridge.ts',
     },
     {
       index: 25,

@@ -184,6 +184,7 @@ export interface EntityResourceHeadConfig {
   readonly maxOutputOffset?: number;
   readonly onlineLearningEnabled?: boolean;
   readonly recurrenceEnabled?: boolean;
+  readonly tanhJacobian?: boolean;
 }
 
 export interface EntityResourceHeadSnapshot {
@@ -235,6 +236,7 @@ export class EntityResourceHead {
 
   private readonly learningRate: number;
   private readonly maxOutputOffset: number;
+  private readonly tanhJacobian: boolean;
   private onlineLearningEnabled: boolean;
   private recurrenceEnabled: boolean;
 
@@ -280,8 +282,10 @@ export class EntityResourceHead {
     this.tier = tier;
     this.learningRate = learningRate;
     this.maxOutputOffset = maxOutputOffset;
+    this.tanhJacobian = config.tanhJacobian ?? true;
     this.onlineLearningEnabled = config.onlineLearningEnabled ?? true;
     this.recurrenceEnabled = config.recurrenceEnabled ?? true;
+    assertBoolean(this.tanhJacobian, 'tanhJacobian');
     assertBoolean(this.onlineLearningEnabled, 'onlineLearningEnabled');
     assertBoolean(this.recurrenceEnabled, 'recurrenceEnabled');
 
@@ -421,8 +425,12 @@ export class EntityResourceHead {
     if (!this.onlineLearningEnabled) return;
 
     const advantage = boundedReward - this.cachedAction.value;
-    const actorGradientX = advantage * this.cachedAction.x;
-    const actorGradientZ = advantage * this.cachedAction.z;
+    const ax = this.cachedAction.x;
+    const az = this.cachedAction.z;
+    const jx = this.tanhJacobian ? 1 - ax * ax : 1;
+    const jz = this.tanhJacobian ? 1 - az * az : 1;
+    const actorGradientX = advantage * ax * jx;
+    const actorGradientZ = advantage * az * jz;
     for (let neuron = 0; neuron < this.tier; neuron++) {
       const activation = this.hidden[neuron] ?? 0;
       const base = neuron * OUTPUTS;

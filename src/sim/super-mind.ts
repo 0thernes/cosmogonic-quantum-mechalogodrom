@@ -1286,8 +1286,12 @@ export class SuperMind {
     this.tensorScratch1.set(this.pred.subarray(0, 4));
     this.tensorScratch2.set(this.imagined.subarray(0, 4));
     const tPred = moonlabTensorContract(this.tensorScratch1, this.tensorScratch2, 4);
-    // Wire Moonlab VQE energy proxy for quantum parameter optimization
-    const vqeEnergy = vqeEnergyProxy(this.pred[0] ?? 0, this.imagined[0] ?? 0, 1);
+    // Wire Moonlab VQE energy proxy for quantum parameter optimization (#215: scale [-1,1] outputs to [-π,π] rad)
+    const vqeEnergy = vqeEnergyProxy(
+      (this.pred[0] ?? 0) * Math.PI,
+      (this.imagined[0] ?? 0) * Math.PI,
+      1,
+    );
     this.cons.surprise = clamp01(
       adDual.primal + Math.abs(adTapeGrad) * 0.05 + Math.abs(tPred) * 0.02 + vqeEnergy * 0.03,
     );
@@ -1308,14 +1312,15 @@ export class SuperMind {
     const tapeGrad = Math.abs(adGradient(this.predTape, tapePred));
     this.cons.surprise = clamp01(this.cons.surprise + tapeGrad * 0.03 * this.eshkolEngine.logic);
 
-    // Quantum Natural Gradient: precondition cognitive gradient with QGT metric for self-optimization
+    // Quantum Natural Gradient: precondition cognitive gradient with QGT metric for self-optimization (#80)
     // Use 2x2 allocation-free QNG for the mind's two cognition knobs (superposition + entanglement)
     const qngRidge = 1e-3;
     const qngOut = [0, 0]; // Preallocated array for allocation-free QNG
-    // QGT metric components (simplified from quantum-geometry for 2D cognitive space)
-    const g00 = 1 + this.cons.surprise * 0.5;
-    const g01 = this.cons.workspace * 0.3;
-    const g11 = 1 + this.eshkolEngine.inference * 0.5;
+    // Read the actual Fubini–Study QGT metric components from QuantumMind (blended with cognitive state)
+    const [qmG00, qmG01, qmG11] = this.qmind.liveMetric2x2();
+    const g00 = 0.5 * qmG00 + 0.5 * (1 + this.cons.surprise * 0.5);
+    const g01 = 0.5 * qmG01 + 0.5 * (this.cons.workspace * 0.3);
+    const g11 = 0.5 * qmG11 + 0.5 * (1 + this.eshkolEngine.inference * 0.5);
     // Precondition the gradient with the CURVATURE-AWARE natural gradient: (g + λI + κ·Γ)⁻¹·∇L, where the
     // Christoffel trace Γ of the CP¹ cognitive manifold corrects the flat QGT metric so the step respects
     // the manifold's curvature (Riemannian, not just Fisher-flat). Wires the previously-unwired
@@ -1346,9 +1351,9 @@ export class SuperMind {
     this.predictedSalience = unit(this.pred[0] ?? 0);
     const lrErr = this.learnedRecurrence.step(this.latent, this.pred);
     this.learnedRecurrence.blendIntoLatent(this.imagined, clamp01(0.1 * (1 - lrErr)));
-    // NQS/VMC: step the quantum-state learner each beat. The energy variance (convergence metric)
-    // feeds surprise: high variance = the quantum state hasn't converged = more prediction uncertainty.
-    this.lastNqsTelemetry = this.nqsController.step();
+    // NQS/VMC: step the quantum-state learner each beat (#90: pass live transverse field hField).
+    // The energy variance (convergence metric) feeds surprise: high variance = more prediction uncertainty.
+    this.lastNqsTelemetry = this.nqsController.step(0.6 + 0.8 * this.cons.surprise);
     // P1-ablatable: the NQS/VMC (neural-quantum-state) energy-variance contribution to surprise (the learner
     // still steps + reports telemetry; only its influence on the uncertainty signal is gated).
     this.cons.surprise = clamp01(
@@ -1536,7 +1541,7 @@ export class SuperMind {
         // the BASE below the rail restores headroom in both directions, so the bind-gate's ± excursions
         // actually transmit. Semantics preserved: still the high reflexive signal, now varying.
         selfAware * SELF_BASE_SCALE +
-          bindGate +
+          1.8 * bindGate +
           EMBODIMENT_SELF_GAIN * this.lastEmbodimentContingency,
       ), // 4th GWT access-faculty; V1.3 AE-2 body-contingency lifts self-awareness
       novelty,

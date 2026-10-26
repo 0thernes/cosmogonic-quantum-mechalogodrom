@@ -94,9 +94,18 @@ export function couplingReport(
   }
   for (let i = 0; i < n; i++) {
     const row = correlation[i]!;
-    row[i] = pearson(series[i] ?? [], series[i] ?? []); // 1 for a varying faculty, 0 for a constant one
+    const si = series[i] ?? [];
+    let hasVar = false;
+    const first = si[0] ?? 0;
+    for (let k = 1; k < si.length; k++) {
+      if (Math.abs((si[k] ?? 0) - first) > 1e-12) {
+        hasVar = true;
+        break;
+      }
+    }
+    row[i] = hasVar ? 1 : 0; // 1 for a varying faculty, 0 for a constant one
     for (let j = i + 1; j < n; j++) {
-      const c = pearson(series[i] ?? [], series[j] ?? []);
+      const c = pearson(si, series[j] ?? []);
       row[j] = c;
       correlation[j]![i] = c;
     }

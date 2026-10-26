@@ -177,9 +177,11 @@ export class NarrativeMemory {
     const meanConf = hits > 0 ? sumConf / hits : 0.5;
     // graph strategic
     const gtrust = this.graph.trust.reduce((s, v) => s + v, 0) / GRAPH_NODES;
+    this.lastRelevance = Math.min(1, bestRel);
 
-    return { relevance: Math.min(1, bestRel), confidence: meanConf, trust: gtrust };
+    return { relevance: this.lastRelevance, confidence: meanConf, trust: gtrust };
   }
+  private lastRelevance = 0;
 
   /** Consolidation: episodes → durable semantic (reflection-to-skill + matrix). Called on ignition. */
   consolidate(ignition: number): void {
@@ -202,7 +204,7 @@ export class NarrativeMemory {
       eventCount: this.count,
       regimeShift: this.regime,
       beliefMeans: Array.from(this.belief),
-      routerRelevance: 0, // filled by last retrieve if desired
+      routerRelevance: this.lastRelevance,
       graphTrustMean: this.graph.trust.reduce((s, v) => s + v, 0) / GRAPH_NODES,
     };
   }

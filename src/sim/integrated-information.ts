@@ -153,7 +153,7 @@ export function classicalParticipationRatio(mods: ArrayLike<number>): number {
   let energy = 0;
   let sum = 0;
   for (let i = 0; i < M; i++) {
-    const x = mods[i] ?? 0;
+    const x = Math.abs(mods[i] ?? 0); // #151: magnitude participation so opposite-sign activations do not cancel
     energy += x * x;
     sum += x;
   }

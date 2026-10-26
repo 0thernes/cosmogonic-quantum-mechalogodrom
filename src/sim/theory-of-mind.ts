@@ -117,6 +117,22 @@ export class TheoryOfMind {
       this.belief[i] =
         (this.belief[i] ?? 0) + BELIEF_TAU * ((this.logits[i] ?? 0) * inv - (this.belief[i] ?? 0));
     }
+    // Online opponent-model plasticity: nudge output bias toward observed hostility regime
+    const targetIdx =
+      o[1]! > 0.6 && o[0]! > 0.4 && IDX_HUNT >= 0
+        ? IDX_HUNT
+        : o[1]! > 0.45 && IDX_DOMINATE >= 0
+          ? IDX_DOMINATE
+          : 0;
+    const lr = 0.015 * this.socialSurprise;
+    const outBiasBase = TOM_IN * TOM_HID + TOM_HID + TOM_HID * TOM_OUT;
+    for (let i = 0; i < TOM_OUT; i++) {
+      const idx = outBiasBase + i;
+      if (idx < this.net.weights.length) {
+        const err = (i === targetIdx ? 1 : 0) - (this.belief[i] ?? 0);
+        this.net.weights[idx] = Math.max(-2, Math.min(2, (this.net.weights[idx] ?? 0) + lr * err));
+      }
+    }
     // menace = P(rival is HUNT or DOMINATE, plus half its DECEIVE mass), gated by how close it is
     const hostile =
       (IDX_HUNT >= 0 ? (this.belief[IDX_HUNT] ?? 0) : 0) +

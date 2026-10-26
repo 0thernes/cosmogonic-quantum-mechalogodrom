@@ -1,10 +1,11 @@
 /**
  * THE SPIN-GLASS INSTINCT (V84) — a biomimetic Ising/Hopfield spin lattice ported from the Tsotchke
  * spin-based neural network. Where the Super Mind reasons with MLPs and the Quantum Mind evolves a
- * statevector, this is the apex creature's **instinct**: an associative-memory spin system that stores
+ * statevector, this is the apex creature's **instinct**: a classical Hopfield associative-memory spin
+ * network with Hebbian outer-product couplings `J_ij` and Glauber heat-bath relaxation that stores
  * behavioural archetypes as attractors and, each beat, settles under fields driven by the mind to fall
  * into whichever archetype best matches the moment. It is the "polymorphic" floor of the Biomimetic
- * Polymorphic Neural Intelligence — physics doing computation, not a network.
+ * Polymorphic Neural Intelligence.
  *
  * The model (classical statistical mechanics, the spin-NN's Ising/Heisenberg lineage):
  *   • Hopfield Hebbian imprint of P patterns ξᵖ:  J_ij = (1/N) Σ_p ξᵖ_i ξᵖ_j,  J_ii = 0  (symmetric).

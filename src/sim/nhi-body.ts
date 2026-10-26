@@ -7,10 +7,10 @@
  *
  * Additive + deterministic-by-index (no rng, no sim coupling): each body's world position is copied
  * from its NHI entity every frame; the morph (non-uniform scale wobble), spin, and glow pulse are
- * pure trig of the sim clock + an index-derived phase. The world owns it: {@link spawn} on launch,
+ * Pure trig of the sim clock + an index-derived phase. The world owns it: {@link spawn} on launch,
  * {@link update} each frame (which also disposes a body once its NHI dies), {@link clear} on reset.
- * Standard materials only (no hand-written GLSL), so it compiles clean and degrades to "invisible"
- * rather than "broken" if anything is off.
+ * Uses `MeshStandardMaterial` patched via `onBeforeCompile` (`patchNhiCore`, `patchNhiBatchedPartMaterial`)
+ * so standard PBR lighting and per-instance/state emissive shaders compose cleanly.
  */
 import * as THREE from 'three';
 import {

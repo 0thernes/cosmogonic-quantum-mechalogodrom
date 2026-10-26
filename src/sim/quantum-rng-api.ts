@@ -30,7 +30,8 @@ export function qrngApiDrawFrom(core: EshkolQrng): QrngApiReceipt {
   return { draw, battery, core: snap };
 }
 
-/** Convenience: one-shot client from seed (constructs a dedicated core). */
+/** Convenience: one-shot client from seed. */
 export function qrngApiDraw(seedRng: Rng): QrngApiReceipt {
-  return qrngApiDrawFrom(new EshkolQrng(seedRng));
+  const core = new EshkolQrng(seedRng);
+  return qrngApiDrawFrom(core);
 }

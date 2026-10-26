@@ -47,13 +47,14 @@ export class XylosHabitat {
     );
   };
 
-  /** Every half second at most, the organism changes the chemistry it will subsequently sense. */
+  /** Every half second at most, the organism changes the chemistry it will subsequently sense (#185: radius scales with pulse/action). */
   readonly effect = (view: XylosView): void => {
     if (view.tick % 10 !== 0 || view.pulse <= 0.25) return;
+    const rad = view.pulse > 0.68 ? 2 : 1;
     this.field.seedDeterministic(
       (view.x * this.radius) / this.extent + 0.5,
       (view.z * this.radius) / this.extent + 0.5,
-      1,
+      rad,
     );
     this.writes++;
   };

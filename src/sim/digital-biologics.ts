@@ -242,7 +242,10 @@ export function birthBiologic(archon: number, tick: number): Biologic {
     program,
     adFitness: 0.2 + cat * 0.5 * (form === 'ESHKOL_NATIVE' ? 1.2 : 0.8),
     gwtIgnition:
-      ws.broadcastGain * (form === 'ESHKOL_NATIVE' || form.includes('HYPER') ? 1.1 : 0.9),
+      ws.broadcastGain *
+      (form === 'ESHKOL_NATIVE' || form === 'BRUTAL_GOD_PANTHEON' || form.startsWith('SPIRAL_')
+        ? 1.1
+        : 0.9),
     spinOrder: beat * (form === 'SPIN_COLLECTIVE' ? 1.2 : 0.8),
     qgtCurvature: cat * 0.7 * (form === 'QGT_CURVED' ? 1.15 : 0.85),
     irrepSymmetry: substrateBias * (form === 'IRREP_SYM' ? 1.1 : 0.9),
@@ -275,7 +278,8 @@ export function fullCorpusSentience(archon: number, flux: number): number {
 
 export function stepBiologic(b: Biologic, flux: number, learn = false): void {
   // Substrate-specific evolution based on form
-  const formMultiplier = b.form.includes('HYPER') ? 1.15 : 1.0;
+  const formMultiplier =
+    b.form === 'BRUTAL_GOD_PANTHEON' || b.form.startsWith('SPIRAL_') ? 1.15 : 1.0;
 
   // SELF-MODEL (opt-in via `learn`, on in the live petri loop): capture the PRE-update substrate now so
   // the brain can be trained at the end to predict this beat's RESULTING consciousness from it — a genuine
@@ -390,11 +394,7 @@ export function stepBiologic(b: Biologic, flux: number, learn = false): void {
       // Knull / Azathoth / Shuma / AntiMonitor / Joker invisible: void drain + madness call. Drain neighboring "life", induce spin disorder.
       b.brutalGodPower = clamp01(basePower * 1.3 + (1 - b.consciousness) * 0.4); // void grows on low consciousness
       // Effect: high quake aliveness siphons "essence" (will use in petri/world for drain)
-    } else if (
-      b.form === 'PHOENIX_DARK' ||
-      (b.form as string).includes('EVA') ||
-      (b.form as string).includes('PHOENIX')
-    ) {
+    } else if (b.form === 'PHOENIX_DARK' || (b.form as string).includes('PHOENIX')) {
       // Jean Grey Dark Phoenix / Broly / EVA-01 berserk / Alucard / Griffith Femto: rage-rebirth cycle.
       b.brutalGodPower = clamp01(basePower * 1.4);
       if (b.brutalGodPower > 0.82 && b.generation % 17 === 0) {
@@ -440,14 +440,14 @@ export function stepBiologic(b: Biologic, flux: number, learn = false): void {
       b.form.includes('SPIRAL') ||
       b.form.includes('GURREN') ||
       b.form.includes('ZOD') ||
-      b.form.includes('BROLY')
+      b.form.includes('BRUTAL')
     ) {
       b.adFitness = Math.min(4, b.adFitness * (1 + r * 0.4)); // raw power scale (brutal, no elegance cap)
     }
     if (
       b.form.includes('VOID') ||
       b.form.includes('DEVOUR') ||
-      b.form.includes('KNUL') ||
+      b.form.includes('KNIGHT') ||
       b.form.includes('AZATHOTH')
     ) {
       b.consciousness = clamp01(b.consciousness - r * 0.25); // raw void siphon
@@ -479,8 +479,7 @@ export function stepBiologic(b: Biologic, flux: number, learn = false): void {
       b.form.includes('REALITY') ||
       b.form.includes('MXY') ||
       b.form.includes('WARHAMMER') ||
-      b.form.includes('JOKER') ||
-      b.form.includes('JASPERS')
+      b.form.includes('CHAOS')
     ) {
       // simulate mad draw for warp
       b.qgtCurvature = clamp01(b.qgtCurvature + 0.06);

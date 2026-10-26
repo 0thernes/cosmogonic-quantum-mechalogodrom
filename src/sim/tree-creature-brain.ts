@@ -71,6 +71,9 @@ export interface TreeCreaturePercept {
   phase: number;
   /** Stable individual personality normalized to [0,1]. */
   personality: number;
+  /** Optional relative XZ offset to a paired resident social partner (#124). */
+  socialPartnerX?: number;
+  socialPartnerZ?: number;
 }
 
 /**
@@ -221,10 +224,10 @@ export class TreeCreatureBrain {
       foodX = percept.foodDirectionX / foodLength;
       foodZ = percept.foodDirectionZ / foodLength;
     }
-    // #123: atan2/π wrapped ±1 directly behind the creature (a discontinuous input). cos(bearing) is
-    // continuous on the circle; exact direction still reaches steering via foodX/foodZ below. The
-    // weights are seeded random init (never trained offline), so no retraining is needed.
-    const foodBearing = foodX;
+    // #122/#123: atan2/π wrapped ±1 directly behind the creature (a discontinuous input). Combining
+    // foodX with a smaller orthogonal foodZ projection stays smooth on the circle while breaking the
+    // ±Z symmetry so north vs south food bearings produce distinct neural inputs.
+    const foodBearing = clampSigned(foodX + foodZ * 0.35);
 
     const input = this.inputs;
     input[0] = energy * 2 - 1;
@@ -255,14 +258,22 @@ export class TreeCreatureBrain {
     const metabolicDrive = clampSigned(rawMetabolic);
     const socialDrive = clampSigned(rawSocial);
 
-    // Direct neural axes remain load-bearing while bounded needs/context prevent absurd unsafe choices.
-    const eatDrive = logistic(metabolicDrive + hunger * 1.1 + foodProximity * 0.9 - threat * 0.7);
-    const restDrive = logistic(-metabolicDrive + hunger * 0.6 + calm * 0.7 - foodProximity * 0.25);
+    // Direct neural axes remain load-bearing while bounded needs/context prevent absurd unsafe choices (#76/#122).
+    const eatDrive = logistic(
+      metabolicDrive * 1.25 + hunger * 1.05 + foodProximity * 0.85 - threat * 0.7,
+    );
+    const restDrive = logistic(
+      -metabolicDrive * 1.25 + hunger * 0.55 + calm * 0.65 - foodProximity * 0.25,
+    );
     const socialActivityDrive = logistic(
-      socialDrive + socialDensity * 0.8 + calm * 0.5 - threat * 0.8,
+      socialDrive * 1.25 + socialDensity * 0.75 + calm * 0.45 - threat * 0.8,
     );
     const roamDrive = logistic(
-      -socialDrive + energy * 0.6 + (1 - socialDensity) * 0.45 + personality * 0.25 - threat * 0.4,
+      -socialDrive * 1.25 +
+        energy * 0.55 +
+        (1 - socialDensity) * 0.4 +
+        personality * 0.25 -
+        threat * 0.4,
     );
 
     let activity: TreeCreatureActivity = TREE_CREATURE_ACTIVITY.EAT;
@@ -281,8 +292,8 @@ export class TreeCreatureBrain {
     const phaseX = Math.cos(phaseHeading);
     const phaseZ = Math.sin(phaseHeading);
     const motorMagnitude = clamp01(Math.hypot(motorX, motorZ));
-    let steerX = motorX * 0.5;
-    let steerZ = motorZ * 0.5;
+    let steerX = motorX * 0.58;
+    let steerZ = motorZ * 0.58;
     let speed = 0;
     switch (activity) {
       case TREE_CREATURE_ACTIVITY.EAT: {
@@ -297,11 +308,23 @@ export class TreeCreatureBrain {
         steerZ *= 0.12;
         speed = 0.03 + motorMagnitude * 0.07;
         break;
-      case TREE_CREATURE_ACTIVITY.SOCIAL:
-        steerX += phaseX * (1 - socialDensity) * 0.2;
-        steerZ += phaseZ * (1 - socialDensity) * 0.2;
+      case TREE_CREATURE_ACTIVITY.SOCIAL: {
+        const px = percept.socialPartnerX;
+        const pz = percept.socialPartnerZ;
+        const plen =
+          px !== undefined && pz !== undefined && Number.isFinite(px) && Number.isFinite(pz)
+            ? Math.hypot(px, pz)
+            : 0;
+        if (plen > 1e-8) {
+          steerX += (px! / plen) * 0.32;
+          steerZ += (pz! / plen) * 0.32;
+        } else {
+          steerX += phaseX * (1 - socialDensity) * 0.2;
+          steerZ += phaseZ * (1 - socialDensity) * 0.2;
+        }
         speed = 0.14 + (1 - socialDensity) * 0.22 + motorMagnitude * 0.14;
         break;
+      }
       case TREE_CREATURE_ACTIVITY.ROAM:
         steerX += phaseX * 0.5;
         steerZ += phaseZ * 0.5;

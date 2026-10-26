@@ -82,7 +82,7 @@ export const TSOTCHKE_REPO_BINDINGS: readonly TsotchkeRepoBinding[] = [
   {
     id: 'SolanaQuantumFlux',
     mirrorPath: 'mirrors/SolanaQuantumFlux',
-    cosmogonicLeaf: 'math/eshkol-qrng.ts',
+    cosmogonicLeaf: '',
     paradigm: 'on-chain QRNG · statistical verification',
   },
   {
@@ -100,13 +100,13 @@ export const TSOTCHKE_REPO_BINDINGS: readonly TsotchkeRepoBinding[] = [
   {
     id: 'llm-arbitrator',
     mirrorPath: 'mirrors/llm-arbitrator',
-    cosmogonicLeaf: 'sim/quantum-deliberation.ts',
+    cosmogonicLeaf: '',
     paradigm: 'multi-model arbitration (sim only; not copilot)',
   },
   {
     id: 'gpt2-basic',
     mirrorPath: 'mirrors/gpt2-basic',
-    cosmogonicLeaf: 'sim/ai/brains.ts',
+    cosmogonicLeaf: '',
     paradigm: 'tiny MLP baseline (pre-transformer contrast)',
   },
   {

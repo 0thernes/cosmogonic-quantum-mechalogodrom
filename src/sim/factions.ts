@@ -316,12 +316,12 @@ export function intentSteerXZ(
       z = toCrowdZ * 0.9 + toKinZ * 0.25;
       break;
     case 'hunt':
-      x = toCrowdX * 1.05;
-      z = toCrowdZ * 1.05;
+      x = toCrowdX * 1.15 - toKinX * 0.25;
+      z = toCrowdZ * 1.15 - toKinZ * 0.25;
       break;
     case 'gather':
-      x = toCrowdX * 0.55 + toKinX * 0.2;
-      z = toCrowdZ * 0.55 + toKinZ * 0.2;
+      x = toKinX * 0.65 + toCrowdX * 0.35;
+      z = toKinZ * 0.65 + toCrowdZ * 0.35;
       break;
     case 'guard':
       x = toKinX * 0.5 - awayX * 0.15;

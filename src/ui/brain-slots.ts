@@ -360,7 +360,7 @@ function ingestMecha(slot: Slot, mecha: MechalogodromBrainSnapshot | null): void
 
 function ingestGlyph(slot: Slot, glyphs: GlyphBrainSnapshot[] | null): void {
   if (!glyphs || glyphs.length === 0) return;
-  slot.values = glyphs.map((g) => (g.activity + g.novelty + g.valence) / 3);
+  slot.values = glyphs.map((g) => clamp01((g.activity + g.novelty + (g.valence + 1) * 0.5) / 3));
   slot.booted = true;
   slot.label = `GLYPH · ${glyphs.length} minds`;
   slot.canvas.setAttribute('aria-label', `Glyph brain swarm visualizer, ${glyphs.length} minds`);

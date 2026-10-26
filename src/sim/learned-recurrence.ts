@@ -31,6 +31,7 @@ export class LearnedRecurrence {
   private readonly wRec: Float32Array;
   private readonly wIn: Float32Array;
   private readonly h: Float32Array;
+  private readonly prevH: Float32Array;
   private readonly hNext: Float32Array;
   private predictionError = 0;
   private steps = 0;
@@ -43,13 +44,14 @@ export class LearnedRecurrence {
     this.wRec = new Float32Array(hidden * hidden);
     this.wIn = new Float32Array(hidden * inDim);
     this.h = new Float32Array(hidden);
+    this.prevH = new Float32Array(hidden);
     this.hNext = new Float32Array(hidden);
     for (let i = 0; i < this.wRec.length; i++) this.wRec[i] = (rng() * 2 - 1) * 0.08;
     for (let i = 0; i < this.wIn.length; i++) this.wIn[i] = (rng() * 2 - 1) * 0.12;
   }
 
   /**
-   * Forward + one-step learn: predict `target` (typically next latent slice) from `input`.
+   * Forward + two-step eligibility truncated BPTT learn (#150): predict `target` from `input`.
    * Returns normalised prediction error [0,1].
    */
   step(input: ArrayLike<number>, target: ArrayLike<number>): number {
@@ -66,15 +68,24 @@ export class LearnedRecurrence {
       const delta = tgt - act;
       err += delta * delta;
       const lr = this.learnRate;
+      const dAct = 1 - act * act;
       for (let i = 0; i < IN; i++) {
         const idx = i * H + j;
-        this.wIn[idx] = (this.wIn[idx] ?? 0) + lr * delta * (1 - act * act) * (input[i] ?? 0);
+        this.wIn[idx] = Math.max(
+          -2,
+          Math.min(2, (this.wIn[idx] ?? 0) + lr * delta * dAct * (input[i] ?? 0)),
+        );
       }
       for (let k = 0; k < H; k++) {
         const idx = k * H + j;
-        this.wRec[idx] = (this.wRec[idx] ?? 0) + lr * delta * (1 - act * act) * (this.h[k] ?? 0);
+        const traceK = 0.75 * (this.h[k] ?? 0) + 0.25 * (this.prevH[k] ?? 0);
+        this.wRec[idx] = Math.max(
+          -2,
+          Math.min(2, (this.wRec[idx] ?? 0) + lr * delta * dAct * traceK),
+        );
       }
     }
+    this.prevH.set(this.h);
     this.h.set(this.hNext);
     this.predictionError = clamp01(Math.sqrt(err / H));
     this.steps++;

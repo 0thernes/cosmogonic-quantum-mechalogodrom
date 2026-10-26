@@ -35,8 +35,9 @@ export function asteroidThrust(b: AsteroidBody, power: number): void {
 
 /** O(1). Integrate with friction and toroidal wrap. */
 export function asteroidStep(b: AsteroidBody, dt: number, friction = 0.98): void {
-  b.vx *= friction;
-  b.vy *= friction;
+  const damp = Math.pow(friction, Math.max(0, dt) / 0.16);
+  b.vx *= damp;
+  b.vy *= damp;
   b.x += b.vx * dt;
   b.y += b.vy * dt;
   if (b.x > 1) b.x -= 2;

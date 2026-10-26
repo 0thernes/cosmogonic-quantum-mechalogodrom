@@ -52,8 +52,19 @@ export function moonlabContractNetwork(network: MoonlabTensorNetwork): Float32Ar
 function contractPair(a: Float32Array, b: Float32Array): Float32Array {
   const size = Math.min(a.length, b.length);
   const result = new Float32Array(size);
-  for (let i = 0; i < size; i++) {
-    result[i] = (a[i] ?? 0) * (b[i] ?? 0);
+  const d = Math.max(1, Math.floor(Math.sqrt(size)));
+  for (let r = 0; r < d; r++) {
+    for (let c = 0; c < d; c++) {
+      let acc = 0;
+      for (let k = 0; k < d; k++) {
+        acc += (a[r * d + k] ?? 0) * (b[k * d + c] ?? 0);
+      }
+      result[r * d + c] = acc;
+    }
+  }
+  for (let i = d * d; i < size; i++) {
+    const prev = i > 0 ? (a[i - 1] ?? 0) * (b[i] ?? 0) : 0;
+    result[i] = (a[i] ?? 0) * (b[i] ?? 0) + 0.5 * prev;
   }
   return result;
 }
@@ -70,21 +81,31 @@ export interface MoonlabMPO {
  * Based on Moonlab/moonlab_repo/mpo.cpp
  */
 export function moonlabMPOApply(mpo: MoonlabMPO, state: Float32Array): Float32Array {
-  const result = new Float32Array(state.length);
-  const bondDim = mpo.bondDimension;
-
-  for (let i = 0; i < state.length; i++) {
-    let sum = 0;
-    for (let b = 0; b < bondDim; b++) {
-      const mat = mpo.matrices[b];
-      if (mat) {
-        sum += (mat[i % mat.length] ?? 0) * (state[i] ?? 0);
+  let current = new Float32Array(state);
+  const d = current.length;
+  for (let b = 0; b < mpo.bondDimension; b++) {
+    const mat = mpo.matrices[b];
+    if (!mat) continue;
+    const next = new Float32Array(d);
+    const blk = Math.max(1, Math.floor(Math.sqrt(mat.length)));
+    if (blk <= 1) {
+      const s = mat[0] ?? 0;
+      for (let i = 0; i < d; i++) next[i] = s * (current[i] ?? 0);
+    } else {
+      for (let i = 0; i < d; i++) {
+        const row = i % blk;
+        const base = i - row;
+        let acc = 0;
+        for (let col = 0; col < blk; col++) {
+          const idx = base + col < d ? base + col : col % d;
+          acc += (mat[row * blk + col] ?? 0) * (current[idx] ?? 0);
+        }
+        next[i] = acc;
       }
     }
-    result[i] = sum;
+    current = next;
   }
-
-  return result;
+  return current;
 }
 
 /**
@@ -219,14 +240,22 @@ export function moonlabTTDecompose(tensor: Float32Array, maxRank: number = 8): T
  * Reconstruct tensor from TT format.
  */
 export function moonlabTTReconstruct(tt: TensorTrain): Float32Array {
-  let result: Float32Array = tt.cores[0] ?? new Float32Array(0);
+  if (tt.cores.length === 0) return new Float32Array(0);
+  let result: Float32Array = tt.cores[0]!;
   for (let i = 1; i < tt.cores.length; i++) {
     const core = tt.cores[i];
     if (!core) continue;
-    const newResult = new Float32Array(result.length * core.length);
-    for (let j = 0; j < result.length; j++) {
-      for (let k = 0; k < core.length; k++) {
-        newResult[j * core.length + k] = (result[j] ?? 0) * (core[k] ?? 0);
+    const rank = Math.max(1, tt.ranks[i - 1] ?? 1);
+    const rows = Math.max(1, Math.floor(result.length / rank));
+    const cols = Math.max(1, Math.floor(core.length / rank));
+    const newResult = new Float32Array(rows * cols);
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        let sum = 0;
+        for (let k = 0; k < rank; k++) {
+          sum += (result[r * rank + k] ?? 0) * (core[k * cols + c] ?? 0);
+        }
+        newResult[r * cols + c] = sum;
       }
     }
     result = newResult;
@@ -295,9 +324,9 @@ export function libirrepClebschFull(
 
 /**
  * Wigner D-matrix D^j_{m'm}(α,β,γ) = e^{-i m'α} d^j_{m'm}(β) e^{-i mγ}.
- * Returns the REAL part (cos of the Euler phase) times the genuine reduced
+ * Combines real and imaginary Euler-angle quadratures over the genuine reduced
  * rotation element `wignerSmallD` from math/irrep.ts, laid out row-major over
- * the (2j+1)² elements. Replaces the prior Legendre approximation.
+ * the (2j+1)² elements.
  */
 export function libirrepWignerD(
   j: number,
@@ -312,7 +341,9 @@ export function libirrepWignerD(
     for (let m2 = -j; m2 <= j; m2++) {
       const idx = (m1 + j) * dim + (m2 + j);
       const phase = -(m1 * alpha + m2 * gamma);
-      matrix[idx] = Math.cos(phase) * wignerSmallD(j, m1, m2, beta);
+      const dPos = wignerSmallD(j, m1, m2, beta);
+      const dNeg = wignerSmallD(j, -m1, m2, beta);
+      matrix[idx] = Math.cos(phase) * dPos - Math.sin(phase) * dNeg * (m1 === 0 ? 0 : 1);
     }
   }
 

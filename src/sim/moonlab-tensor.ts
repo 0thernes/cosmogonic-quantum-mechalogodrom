@@ -55,18 +55,38 @@ function transferOperator(d: number, bond: number): Mat {
  * rank-χ truncation of the product. Returns the retained Frobenius-energy ratio
  * in [0,1] — i.e. how much of the contraction survives bond dimension χ.
  */
+function liftShortVector(v: ArrayLike<number>): ArrayLike<number> {
+  if (v.length !== 3) return v;
+  const v0 = v[0] ?? 0;
+  const v1 = v[1] ?? 0;
+  const v2 = v[2] ?? 0;
+  return [
+    v0,
+    v1 - v0 * 0.5,
+    v2 - v1 * 0.5,
+    v1,
+    v2,
+    v0 - v2 * 0.5,
+    v2,
+    v0 - v1 * 0.5,
+    v1 - v2 * 0.5,
+  ];
+}
+
 export function moonlabTensorContract(
   a: number[] | Float32Array,
   b: number[] | Float32Array,
   chi = 4,
   bond = 2,
 ): number {
+  const aLifted = liftShortVector(a);
+  const bLifted = liftShortVector(b);
   // Floor d at 2 (the moonlabTensorQualia fix, line ~86): a length-2/3 input otherwise reshapes to a
   // 1×1 matrix that reads only a[0], discarding the rest — an inert constant.
-  const d = Math.max(2, squareSide(Math.min(a.length, b.length)));
+  const d = Math.max(2, squareSide(Math.min(aLifted.length, bLifted.length)));
   const bnd = Math.max(1, Math.min(bond, d));
-  const A = packMatrix(a, d, bnd);
-  const B = packMatrix(b, bnd, d);
+  const A = packMatrix(aLifted, d, bnd);
+  const B = packMatrix(bLifted, bnd, d);
   const C = matMul(A, B);
   const full = frobenius(C);
   if (full <= 1e-12) return 0;
@@ -87,14 +107,15 @@ export function moonlabTensorContract(
  * pₖ = σₖ²/Σσ² — 0 for a product (rank-1) state, 1 for a maximally entangled one.
  */
 export function moonlabTensorQualia(v: ArrayLike<number>, chi: number): number {
+  const lifted = liftShortVector(v);
   // Pack into at least a 2x2 (packMatrix zero-pads) so length-3 inputs form a real [[v0,v1],[v2,0]]
   // and yield genuine entropy. The old `if (d < 2) return 0` made every length-<4 call return 0 — and
   // all 5 production call sites pass length-3 arrays, so the 'qualia tensor' coupling was inert (always
   // 0), violating "real math under every effect" (audit). The all-zero case is still caught by the
   // `total <= 1e-12` guard below.
-  const d = Math.max(2, squareSide(v.length));
+  const d = Math.max(2, squareSide(lifted.length));
   const k = Math.max(2, Math.min(chi || 4, d));
-  const { S } = svd(packMatrix(v, d, d));
+  const { S } = svd(packMatrix(lifted, d, d));
   let total = 0;
   for (let i = 0; i < k; i++) total += S[i]! * S[i]!;
   if (total <= 1e-12) return 0;
@@ -112,12 +133,13 @@ export function moonlabTensorQualia(v: ArrayLike<number>, chi: number): number {
  * the retained Frobenius-energy ratio in [0,1].
  */
 export function moonlabMpoStep(state: Float32Array, bond: number, chi = 4): number {
+  const lifted = liftShortVector(state);
   // d≥2 (read past state[0]) + keep ≤ d−1 (force a real truncation) — same de-degeneracy as contract.
   // NOTE: a length-2 state still packs to a rank-1 M (the transfer column ⊗ state outer product), so its
   // ratio stays ~1 by construction; the two length-2 call sites (world.superMpoInput, godform) were
   // widened to length-3 with a cross-term so the packed matrix is genuinely rank-2.
-  const d = Math.max(2, squareSide(state.length));
-  const S = packMatrix(state, d, d);
+  const d = Math.max(2, squareSide(lifted.length));
+  const S = packMatrix(lifted, d, d);
   const M = matMul(transferOperator(d, bond), S);
   const full = frobenius(M);
   if (full <= 1e-12) return 0;

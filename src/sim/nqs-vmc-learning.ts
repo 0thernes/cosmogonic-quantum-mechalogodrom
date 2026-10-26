@@ -307,6 +307,7 @@ export function vmcStep(
   state: VMCState,
   config: VMCConfig,
   seed: number,
+  hField: number = 1,
 ): NQSTelemetry {
   // Thermalize samples
   const acceptanceRate = thermalize(arch, state, config, seed);
@@ -316,7 +317,7 @@ export function vmcStep(
   let totalEnergySq = 0;
   for (let s = 0; s < config.sampleCount; s++) {
     const sample = state.samples[s] ?? 0;
-    const E = localEnergy(arch, sample);
+    const E = localEnergy(arch, sample, 1, hField);
     state.energies[s] = E;
     totalEnergy += E;
     totalEnergySq += E * E;
@@ -330,10 +331,16 @@ export function vmcStep(
   state.visibleGradients.fill(0);
   state.hiddenGradients.fill(0);
 
-  // Accumulate gradients (stochastic reconfiguration)
+  // Accumulate gradients + diagonal Quantum Geometric Tensor (Stochastic Reconfiguration #90)
   const tempWeights = new Float32Array(arch.weights.length);
   const tempVisible = new Float32Array(arch.visibleCount);
   const tempHidden = new Float32Array(arch.hiddenCount);
+  const meanOWeights = new Float32Array(arch.weights.length);
+  const meanSqOWeights = new Float32Array(arch.weights.length);
+  const meanOVisible = new Float32Array(arch.visibleCount);
+  const meanSqOVisible = new Float32Array(arch.visibleCount);
+  const meanOHidden = new Float32Array(arch.hiddenCount);
+  const meanSqOHidden = new Float32Array(arch.hiddenCount);
 
   for (let s = 0; s < config.sampleCount; s++) {
     const sample = state.samples[s] ?? 0;
@@ -341,26 +348,42 @@ export function vmcStep(
 
     const EL = (state.energies[s] ?? 0) - meanEnergy;
     for (let i = 0; i < arch.weights.length; i++) {
-      state.weightGradients[i] = (state.weightGradients[i] ?? 0) + EL * (tempWeights[i] ?? 0);
+      const ok = tempWeights[i] ?? 0;
+      state.weightGradients[i] = (state.weightGradients[i] ?? 0) + EL * ok;
+      meanOWeights[i] = (meanOWeights[i] ?? 0) + ok;
+      meanSqOWeights[i] = (meanSqOWeights[i] ?? 0) + ok * ok;
     }
     for (let i = 0; i < arch.visibleCount; i++) {
-      state.visibleGradients[i] = (state.visibleGradients[i] ?? 0) + EL * (tempVisible[i] ?? 0);
+      const ok = tempVisible[i] ?? 0;
+      state.visibleGradients[i] = (state.visibleGradients[i] ?? 0) + EL * ok;
+      meanOVisible[i] = (meanOVisible[i] ?? 0) + ok;
+      meanSqOVisible[i] = (meanSqOVisible[i] ?? 0) + ok * ok;
     }
     for (let i = 0; i < arch.hiddenCount; i++) {
-      state.hiddenGradients[i] = (state.hiddenGradients[i] ?? 0) + EL * (tempHidden[i] ?? 0);
+      const ok = tempHidden[i] ?? 0;
+      state.hiddenGradients[i] = (state.hiddenGradients[i] ?? 0) + EL * ok;
+      meanOHidden[i] = (meanOHidden[i] ?? 0) + ok;
+      meanSqOHidden[i] = (meanSqOHidden[i] ?? 0) + ok * ok;
     }
   }
 
-  // Average gradients
+  // Average gradients and precondition by diagonal QGT S_kk = <O_k^2> - <O_k>^2 + diagShift
   const n = config.sampleCount;
+  const diagShift = Math.max(0.05, config.regularization);
   for (let i = 0; i < arch.weights.length; i++) {
-    state.weightGradients[i] = (state.weightGradients[i] ?? 0) / n;
+    const meanO = (meanOWeights[i] ?? 0) / n;
+    const varO = Math.max(0, (meanSqOWeights[i] ?? 0) / n - meanO * meanO);
+    state.weightGradients[i] = (state.weightGradients[i] ?? 0) / n / (varO + diagShift);
   }
   for (let i = 0; i < arch.visibleCount; i++) {
-    state.visibleGradients[i] = (state.visibleGradients[i] ?? 0) / n;
+    const meanO = (meanOVisible[i] ?? 0) / n;
+    const varO = Math.max(0, (meanSqOVisible[i] ?? 0) / n - meanO * meanO);
+    state.visibleGradients[i] = (state.visibleGradients[i] ?? 0) / n / (varO + diagShift);
   }
   for (let i = 0; i < arch.hiddenCount; i++) {
-    state.hiddenGradients[i] = (state.hiddenGradients[i] ?? 0) / n;
+    const meanO = (meanOHidden[i] ?? 0) / n;
+    const varO = Math.max(0, (meanSqOHidden[i] ?? 0) / n - meanO * meanO);
+    state.hiddenGradients[i] = (state.hiddenGradients[i] ?? 0) / n / (varO + diagShift);
   }
 
   // Compute gradient norm
@@ -455,11 +478,11 @@ export class NQSLearningController {
   /**
    * Perform one training step and return telemetry.
    */
-  step(): NQSTelemetry {
+  step(hField: number = 1): NQSTelemetry {
     this.stepCount++;
     // #91: seed+1000·k fed an LCG gives strongly correlated streams across steps; hash it instead.
     const stepSeed = mixSeed(this.seed, this.stepCount);
-    return vmcStep(this.arch, this.state, this.config, stepSeed);
+    return vmcStep(this.arch, this.state, this.config, stepSeed, hField);
   }
 
   /**

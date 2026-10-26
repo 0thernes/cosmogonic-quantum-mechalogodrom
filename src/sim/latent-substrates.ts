@@ -23,7 +23,6 @@ import {
   createSchrodingerWorkspace,
   type Wave,
 } from '../math/schrodinger';
-import { quatFromAxisAngle, geodesicDistance, type Quat } from '../math/so3';
 import { CausalGraph } from './causal-graph';
 
 export interface LatentSubstrateState {
@@ -43,7 +42,6 @@ const GRID = 24;
 const DX = 1;
 const DT = 0.05;
 const STEPS = 8;
-const Z_AXIS: readonly [number, number, number] = [0, 0, 1];
 
 const _V: number[] = Array.from({ length: GRID }, () => 0);
 const _PSI: Wave = { re: new Float64Array(GRID), im: new Float64Array(GRID) };
@@ -80,13 +78,15 @@ export function quantumUncertainty(drive: number): number {
 
 /** Geodesic coherence of `angles` mapped onto SO(3) z-rotations: 1 = aligned, 0 = maximally scattered. */
 export function orientationCoherence(angles: readonly number[]): number {
-  if (angles.length < 2) return 1;
-  const quats: Quat[] = angles.map((a) => quatFromAxisAngle(Z_AXIS, a));
+  const n = angles.length;
+  if (n < 2) return 1;
   let sum = 0;
   let pairs = 0;
-  for (let i = 0; i < quats.length; i++) {
-    for (let j = i + 1; j < quats.length; j++) {
-      sum += geodesicDistance(quats[i]!, quats[j]!);
+  for (let i = 0; i < n; i++) {
+    const ai = angles[i] ?? 0;
+    for (let j = i + 1; j < n; j++) {
+      const diff = ai - (angles[j] ?? 0);
+      sum += Math.abs(Math.atan2(Math.sin(diff), Math.cos(diff)));
       pairs++;
     }
   }
@@ -110,17 +110,19 @@ export interface LatentInputs {
 }
 
 /**
- * Shared causal graph: observe() fully overwrites all 8 node values each call and edges are immutable
- * (updateWeight is never invoked), so a single reused instance yields output identical to the old
- * per-call `new CausalGraph()` while eliminating the per-beat allocation of the graph + 9 edge objects
- * (×5 archons × every driveSuper frame). The 5 archon calls are sequential (single-threaded), so their
- * observe→do pairs never interleave.
+ * Shared causal graph: observe() overwrites all 8 node values each call and updateWeight adapts
+ * the surprise→workspace edge online, avoiding per-beat graph allocation.
  */
 const SHARED_CAUSAL_GRAPH = new CausalGraph();
 
 /** One deterministic per-beat read of all three substrates from live super-mind signals. */
 export function latentSubstrateStep(inp: LatentInputs): LatentSubstrateState {
   const g = SHARED_CAUSAL_GRAPH;
+  g.updateWeight(
+    'surprise',
+    'workspace',
+    clamp01(0.35 + 0.3 * clamp01(inp.surprise) * clamp01(inp.workspace)),
+  );
   g.observe(
     clamp01(inp.ignition),
     clamp01(inp.phi),

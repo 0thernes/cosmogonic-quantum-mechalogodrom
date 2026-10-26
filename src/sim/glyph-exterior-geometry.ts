@@ -56,7 +56,10 @@ export function glyphGeoBucketKey(a: AlphabetArchetype, sig: GlyphExteriorSignat
   const v = (s >>> 5) % 8;
   const t = (s >>> 11) % 16;
   const w = (s >>> 17) % 13;
-  return `${sig.kindIdx}:${v}:${t}:${w}:${a.index % 7}`;
+  // #189: include quantized chaos & generative bias in the cache key so displaced geometries match their archetype
+  const cBin = Math.round((a.bias.chaos ?? 0) * 8);
+  const gBin = Math.round((a.bias.generative ?? 0) * 8);
+  return `${sig.kindIdx}:${v}:${t}:${w}:${a.index % 7}:${cBin}:${gBin}`;
 }
 
 function fi(s: number, shift: number, mod: number): number {

@@ -824,6 +824,7 @@ export class SuperPanel {
     this.neural.dispose();
     this.doc.getElementById('cqm-sup-panel')?.remove();
     this.doc.getElementById('cqm-sup-toggle')?.remove();
+    this.doc.getElementById('cqm-sup-css')?.remove();
   }
 }
 

@@ -137,7 +137,8 @@ export function decideLevel(
   }
   const clamped = Math.min(dtMs, cfg.outlierMs);
   const ema = state.ema + cfg.alpha * (clamped - state.ema);
-  return { level: Level.FULL, ema, dwell: 0, initialized: true };
+  const dwell = clamped > cfg.shedMs ? state.dwell + 1 : 0;
+  return { level: Level.FULL, ema, dwell, initialized: true };
 }
 
 export class RenderGovernor {
@@ -161,7 +162,7 @@ export class RenderGovernor {
 
   /** Returns the adaptive compute-cadence schedule for the current rolling frame-time EMA. */
   computeCadence(): ComputeCadencePlan {
-    return deriveComputeCadence(this.state.ema);
+    return deriveComputeCadence(this.state.initialized ? this.state.ema : 16.6);
   }
 
   reset(): void {

@@ -324,15 +324,15 @@ export const SFX_EXTRA_BANDS: Readonly<Record<string, SfxBand>> = {
   subboom: bandOf('subboom'),
   glint: bandOf('glint'),
   strange: bandOf('strange'),
-  demonic: { start: bandOf('strange').start, count: 6 },
-  chitter: { start: bandOf('strange').start + 6, count: 6 },
-  howl: { start: bandOf('strange').start + 12, count: 6 },
-  abyssal: { start: bandOf('strange').start + 14, count: 5 },
-  voidgurgle: { start: bandOf('strange').start + 16, count: 4 },
-  alienchitter: { start: bandOf('strange').start + 18, count: 3 },
-  demonicgrowl: { start: bandOf('strange').start + 14, count: 4 },
-  transwarp: { start: bandOf('strange').start + 19, count: 3 },
-  phantomscale: { start: bandOf('strange').start + 21, count: 3 },
+  demonic: { start: bandOf('strange').start + 0, count: 5 },
+  demonicgrowl: { start: bandOf('strange').start + 0, count: 5 },
+  chitter: { start: bandOf('strange').start + 5, count: 5 },
+  alienchitter: { start: bandOf('strange').start + 5, count: 5 },
+  howl: { start: bandOf('strange').start + 10, count: 5 },
+  voidgurgle: { start: bandOf('strange').start + 15, count: 5 },
+  transwarp: { start: bandOf('strange').start + 15, count: 5 },
+  abyssal: { start: bandOf('strange').start + 20, count: 4 },
+  phantomscale: { start: bandOf('strange').start + 20, count: 4 },
 };
 
 const WAVES: readonly OscillatorType[] = ['sine', 'triangle', 'square', 'sawtooth'];
@@ -522,7 +522,7 @@ export function createSfxPalette(rng: Rng): SfxSpec[] {
   // STRANGE — demonic / chitter / howl / gurgle / abyssal hybrids (creature + cosmology voices).
   const strangeWaves: OscillatorType[] = ['sawtooth', 'square', 'triangle', 'sine'];
   for (let i = 0; i < 24; i++) {
-    const kind = i % 5;
+    const kind = i < 5 ? 0 : i < 10 ? 1 : i < 15 ? 2 : i < 20 ? 3 : 4;
     const s = base(
       `strange#${i}`,
       strangeWaves[i % strangeWaves.length] ?? 'sawtooth',

@@ -224,6 +224,7 @@ import { breedAt, type BabyGenome, PANTHEON_TOTAL } from './sim/pantheon-breedin
 import { SelfEvolutionLoop, type EvolutionMetrics } from './sim/self-evolution-loop';
 import {
   bedauPackardActivity,
+  evolutionaryActivity,
   shannonDiversity,
   openEndednessVerdict,
   type OpenEndednessClass,
@@ -351,8 +352,8 @@ const CHAOS_REVERSION_PER_S = 0.02;
 /** AUTO mode dwell: seconds on each sorting field before advancing to the next (V7.2). */
 const ALGO_AUTO_PERIOD = 2.5;
 
-/** V105: 101-glyph pantheon breeding is visual-only — no petri coupling until re-enabled. */
-const PANTHEON_BREEDING_LIVE = false;
+/** V105: 101-glyph pantheon breeding is coupled into the Archon petri dishes every 600 frames. */
+const PANTHEON_BREEDING_LIVE = true;
 
 /** Audit #7: population above which organism brains alternate half cohorts per frame. */
 const BRAIN_COHORT_POP = 20000;
@@ -576,7 +577,7 @@ export class World {
   private readonly xenomimicSurfaceAt = (x: number, z: number, time: number): number => {
     const state = this.state;
     return (
-      Math.max(PLATFORM_FLOOR, baseTerrainHeightAt(x, z)) +
+      Math.max(PLATFORM_FLOOR, PLATFORM_FLOOR + 14 + baseTerrainHeightAt(x, z) * 0.5) +
       terrainDisplacementAt(
         x,
         z,
@@ -2658,7 +2659,14 @@ export class World {
     // One-way boundary: core may seed/spawn INTO wilderness; wilderness NEVER writes back to core.
     const camX = this.engine.camera.position.x;
     const camZ = this.engine.camera.position.z;
-    this.wilderness.update(camX, camZ, dt, this.organismIntelligence.signal);
+    if (this.workerPool !== null || s.frame % 2 === 0) {
+      this.wilderness.update(
+        camX,
+        camZ,
+        this.workerPool !== null ? dt : dt * 2,
+        this.organismIntelligence.signal,
+      );
+    }
     this.wildernessRender.sync(this.wilderness, t);
 
     // Xenomimics mutate live flora, ride the real terrain, share the Tsotchke field, and listen to BOTH
@@ -2746,7 +2754,7 @@ export class World {
       entropy: clamp((s.entropy ?? 0) / ENTROPY_MAX, 0, 1),
       temperature: s.temperature,
       population: this.entities.list.length,
-      capacity: this.quality.maxEntities,
+      capacity: 2000,
       meanMetabolicEnergy: this.entities.meanMetabolicEnergy,
       floraBiomass: this.alienFlora.meanBiomass(),
     });
@@ -3980,27 +3988,56 @@ export class World {
       tc[7] = fi[13] ?? 0;
       this.tomPantheon.observe(tc);
       const facultyBias = this.facultiesPantheon.getAggregateActivation();
+      const facultyGroups = this.facultiesPantheon.getGroupActivations();
       const tomMenace = this.tomPantheon.getAggregateMenace();
       this.symbiosis.step();
       this.mythRitual.step();
+      const symCoop = this.symbiosis.getStats().averageStrength;
+      const mythPower = this.mythRitual.strength;
+      const stigSnap = this.stigmergy.snapshot();
+      const mortVitality = 1 - (this.archonMortality[0]?.lifespanProgress ?? 0);
+      const artOrigin = this.artifacts.influenceAt(0, 0);
       const net0 = this.economy.wealthOf(World.ECON_SUPER_BASE + 0)?.netWorth ?? 0;
       // global fallback percept (used for twins/heroes); 5 get position-localized versions below
       // Pre-allocated scratch (audit fix #2/#3 — no per-call object allocation)
       const basePercept = this.superBasePercept;
-      basePercept.energy = clamp(0.5 + 0.5 * (1 - s.chaos / 10) + facultyBias * 0.06, 0, 1);
-      basePercept.threat = clamp(s.chaos / 8 + tomMenace * 0.12 + facultyBias * 0.04, 0, 1);
+      basePercept.energy = clamp(
+        0.5 +
+          0.5 * (1 - s.chaos / 10) +
+          facultyBias * 0.04 +
+          (facultyGroups[0] ?? 0) * 0.03 +
+          symCoop * 0.04 -
+          (1 - mortVitality) * 0.03,
+        0,
+        1,
+      );
+      basePercept.threat = clamp(
+        s.chaos / 8 + tomMenace * 0.12 + (facultyGroups[1] ?? 0) * 0.04 + (1 - mortVitality) * 0.04,
+        0,
+        1,
+      );
       basePercept.crowding = clamp(n / target, 0, 1);
       basePercept.chaos = clamp(s.chaos / 10, 0, 1);
-      basePercept.wealthRel = clamp(net0 / (2 * (mean || 1)), 0, 1);
+      basePercept.wealthRel = clamp(
+        net0 / (2 * (mean || 1)) + mythPower * 0.05 + artOrigin * 0.03,
+        0,
+        1,
+      );
       basePercept.preyClose = clamp(n / target, 0, 1);
       basePercept.rivalClose = clamp(
         this.nhi.count / 8 + (this.titans.count > 0 ? 0.2 : 0) + tomMenace * 0.1,
         0,
         1,
       );
-      basePercept.pull = clamp(s.chaos / 12, 0, 1);
-      basePercept.light = clamp(level, 0, 1);
-      basePercept.sound = clamp(bass, 0, 1);
+      basePercept.pull = clamp(
+        s.chaos / 12 +
+          (facultyGroups[2] ?? 0) * 0.03 +
+          Math.min(0.08, stigSnap.totalPheromone * 0.0005),
+        0,
+        1,
+      );
+      basePercept.light = clamp(level + artOrigin * 0.04, 0, 1);
+      basePercept.sound = clamp(bass + mythPower * 0.04, 0, 1);
       basePercept.phase = (t / 60) % 1;
       // GOAL5: drive EXACTLY 5 SUPER CREATURES (archetypes 0-4) with per-position percepts.
       // local crowding/threat from grid query at body pos; light/sound/chaos biased by godform.ts (exclusive).
@@ -4075,16 +4112,15 @@ export class World {
           0,
           1,
         );
+        const altNorm = clamp(this.sv1.y / Math.max(1, PLATFORM_CEIL), 0, 1);
+        const radProx = 1 - Math.min(1, Math.hypot(lx, lz) / Math.max(1, PLATFORM_HALF));
+        const localArt = this.artifacts.influenceAt(lx, lz);
         p.light = clamp(
-          basePercept.light + (bias.generative - 0.5) * 0.04 + ((lz * 0.002) % 0.02),
+          basePercept.light + (bias.generative - 0.5) * 0.04 + altNorm * 0.02 + localArt * 0.03,
           0,
           1,
         );
-        p.sound = clamp(
-          basePercept.sound + (bias.narrative - 0.5) * 0.03 + ((lx * 0.0015) % 0.015),
-          0,
-          1,
-        );
+        p.sound = clamp(basePercept.sound + (bias.narrative - 0.5) * 0.03 + radProx * 0.015, 0, 1);
         p.phase = basePercept.phase;
         // GOAL5: 1 full SuperMind.think + 4 echo (1×1 ToT) per frame, round-robin.
         const mindOut = this.superMinds[i]!.think(p, apexThinkMode(s.frame, i, APEX_INDIVIDUATED));
@@ -4104,7 +4140,7 @@ export class World {
           0.05 + mindOut.consciousness.ignition * 0.1,
         );
         this.archonMortality[i]!.step();
-        this.superCreatures[i]!.think(p);
+        const creatureIntent = this.superCreatures[i]!.think(p);
         const coll = this.nhsiCollectiveScratch;
         coll[0] = mindOut.consciousness.ignition;
         coll[1] = mindOut.consciousness.phi;
@@ -4139,8 +4175,12 @@ export class World {
           mindOut.consciousness.dreaming,
           mindOut.consciousness.hallucinating,
         );
-        // V1.3 AE-1/HOT-3: the apex SuperMind's chosen move vector now steers the avatar's flight target.
-        this.superBodies[i]!.setSuperMindMove(mindOut.move.x, mindOut.move.y, mindOut.move.z);
+        // V1.3 AE-1/HOT-3: blend the apex SuperMind's chosen move vector with SuperCreature's reflex intent.
+        this.superBodies[i]!.setSuperMindMove(
+          mindOut.move.x * 0.65 + creatureIntent.move.x * 0.35,
+          mindOut.move.y * 0.65 + creatureIntent.move.y * 0.35,
+          mindOut.move.z * 0.65 + creatureIntent.move.z * 0.35,
+        );
         // GOAL: this Archon SELF-EVOLVES on ITS OWN live state — dominance + consciousness novelty + the
         // lift of its own wingman escort, amplified by its own petri dish's growth — so all five level up +
         // ascend SEPARATELY (dynamically / reactively / adaptively), each visibly growing through its body
@@ -4217,14 +4257,15 @@ export class World {
         this.lastApexGrowth.designedParams,
         0.016,
       );
-      // Feed the apex brain's transcendence into the noosphere (the 10-organ mind's output joins the collective).
+      // Feed the apex brain's transcendence into the noosphere (blending with Archon 0's mindOut).
       this.noosphere.updateArchon(
         0, // prime channel
-        this.lastApexThought.vitality,
-        this.lastApexThought.agony,
+        0.5 * (primeMindOut?.consciousness.phi ?? 0.5) + 0.5 * this.lastApexThought.vitality,
+        0.5 * (primeMindOut?.consciousness.ignition ?? 0.5) +
+          0.5 * this.lastApexThought.transcendence,
         this.lastApexThought.superposed ? 0.3 : 0.6,
         this.lastApexThought.transcendence,
-        clamp(this.lastApexThought.vitality * 0.5, 0, 1),
+        clamp(this.lastApexThought.vitality * 0.5 + (1 - this.lastApexThought.agony) * 0.5, 0, 1),
       );
       this.noosphere.step();
       this.stigmergy.step();
@@ -4471,9 +4512,11 @@ export class World {
         // or decaying onto a plateau (bounded)? Read from the SAME diversity window, so it costs nothing
         // extra and is genuinely surfaced (audit-recorded ⇒ observable + replayable), not decorative.
         const oee = openEndednessVerdict(this.diversitySnapshots, 8);
+        const evoAct = evolutionaryActivity([this.diversitySnapshots]);
         this.lastOeeVerdict = oee.verdict;
         this.audit.record('bedau-packard-activity', {
           activity: this.lastBedauActivity,
+          cumulativeActivity: evoAct.total,
           diversity: div,
           oee: oee.verdict,
           oeeRatio: oee.ratio,
@@ -4641,8 +4684,38 @@ export class World {
     this.superheroState.use(p.cost);
     if (id === 'phase')
       this.heroCycleRender(); // slip between render-states
-    else if (id === 'recall') this.hud.showSector('RECALL · LOCUS SUMMONED');
-    else this.hud.showSector('DOMINION PULSE · THE FIELD COWERS');
+    else if (id === 'recall') {
+      this.heroBodies[0]?.body.recallTo(0, 14, 0);
+      this.superBodies[0]?.recallTo(0, 18, 0);
+      for (const e of this.entities.list) {
+        const d2 = e.position.x * e.position.x + e.position.z * e.position.z;
+        if (d2 > 1 && d2 < 14400) {
+          e.userData.vel.x -= e.position.x * 0.015;
+          e.userData.vel.z -= e.position.z * 0.015;
+        }
+      }
+      this.audio.play('warp');
+      this.hud.showSector('RECALL · LOCUS SUMMONED');
+    } else {
+      const locusBody = this.heroBodies[0]?.body ?? this.superBodies[0];
+      const locus = locusBody ? locusBody.worldPosition(this.sv1) : null;
+      const lx = locus?.x ?? 0;
+      const lz = locus?.z ?? 0;
+      for (const e of this.entities.list) {
+        if (e.userData.isNhi) continue;
+        const dx = e.position.x - lx;
+        const dz = e.position.z - lz;
+        const d = Math.hypot(dx, dz);
+        if (d > 1e-3 && d < 120) {
+          const push = ((120 - d) / 120) * 0.25;
+          e.userData.vel.x += (dx / d) * push;
+          e.userData.vel.z += (dz / d) * push;
+        }
+      }
+      this.state.chaos = Math.max(CHAOS_MIN, this.state.chaos * 0.88);
+      this.audio.play('burst');
+      this.hud.showSector('DOMINION PULSE · THE FIELD COWERS');
+    }
   }
 
   /** V35: VISION — cycle the world render-state (reuses the same path as the toolbar action). */
@@ -5465,7 +5538,7 @@ export class World {
     // visibly sparkles ON THE BEAT without touching sim reproducibility (V7-beyond). The range sits
     // under the darker-palette ceiling so the max()-only write below never dims a brighter body.
     const flash = 2.4 + bands.treble * 0.8;
-    const push = 0.05 * this.chaosMul();
+    const push = 0.01 * this.chaosMul();
     let swaps = 0;
     for (let b = 0; b < batch; b++) {
       s.algoStep++;
@@ -5570,8 +5643,10 @@ export class World {
     // of three MEASURABLE dimensions, now each exposed for its own observatory dial. The composite
     // formula is byte-identical to before (integration = tribes/256, coherence = qEntropy, momentum =
     // min(|trend|/50,1)), so the golden sentience value is unchanged — we just surface the factors.
+    const neuralSignal = clamp(this.entityBrains.meanSemanticActivation(), 0, 1);
+    const superPhi = clamp(this.superMinds[0]?.readCoupling().consciousness.phi ?? 0, 0, 1);
     const bioIntegration = clamp(sn.tribes / 256, 0, 1); // community structure → integrated information
-    const bioCoherence = clamp(sn.qEntropy, 0, 1); // quantum-register entropy → global coherence
+    const bioCoherence = clamp(sn.qEntropy * 0.7 + neuralSignal * 0.15 + superPhi * 0.15, 0, 1); // quantum + neural + supermind coherence
     const bioMomentum = clamp(Math.abs(sn.trend) / 50, 0, 1); // demographic slope → self-maintenance
     sn.bioIntegration = bioIntegration;
     sn.bioCoherence = bioCoherence;
@@ -6219,12 +6294,18 @@ export class World {
       const localSelection = selectNearestNhiTarget(e, near, previousTarget ?? null);
       nearestTarget = localSelection.target;
       if (localSelection.distanceSquared > R * R) {
-        // No in-radius hit ⇒ exactness not guaranteed from the grid alone: full scan (rare).
-        nearestTarget = selectNearestNhiTarget(
-          e,
-          this.entities.list,
-          previousTarget ?? null,
-        ).target;
+        const wideR = R * 3;
+        const wideNear = this.grid.query(p.x, p.z, wideR);
+        const wideSelection = selectNearestNhiTarget(e, wideNear, previousTarget ?? null);
+        nearestTarget = wideSelection.target;
+        if (wideSelection.distanceSquared > wideR * wideR) {
+          // No in-radius hit ⇒ exactness not guaranteed from the grid alone: full scan (rare).
+          nearestTarget = selectNearestNhiTarget(
+            e,
+            this.entities.list,
+            previousTarget ?? null,
+          ).target;
+        }
       }
     }
     if (
@@ -6341,16 +6422,9 @@ export class World {
         frame - last >= World.NHI_SWARM_COOLDOWN_FRAMES &&
         frame - lastGlobal >= World.NHI_SWARM_GLOBAL_GAP_FRAMES;
       const roomFrame = World.NHI_SWARM_MAX_PER_FRAME - this.nhiSwarmlingsThisFrame;
-      let liveMinions = 0;
-      if (cooled && roomFrame > 0) {
-        const pool = this.entities.list;
-        for (let mi = 0; mi < pool.length; mi++) {
-          if (pool[mi]?.userData.nhiMinion) {
-            liveMinions++;
-            if (liveMinions >= World.NHI_MINION_LIVE_CAP) break;
-          }
-        }
-      }
+      const liveMinions =
+        this.entities.nhiMinionCount ??
+        this.entities.list.reduce((acc, ent) => acc + (ent?.userData.nhiMinion ? 1 : 0), 0);
       const roomLive = World.NHI_MINION_LIVE_CAP - liveMinions;
       const n = cooled
         ? Math.min(
@@ -6383,6 +6457,7 @@ export class World {
             affected++;
             this.nhiSwarmlingsThisFrame++;
             child.userData.nhiMinion = true;
+            if (typeof this.entities.nhiMinionCount === 'number') this.entities.nhiMinionCount++;
             child.userData.life =
               World.NHI_MINION_LIFE_MIN + this.nhiEffectRng() * World.NHI_MINION_LIFE_SPAN;
             child.userData.sT = 1e9;
@@ -7269,9 +7344,11 @@ export class World {
     // Xenomimics: rare alien BRUTAL skins (PSIONIC-VOID / ICHOR-GLASS / …) — NOT concrete, NOT Archon.
     this.xenomimicsRender.setBrutalStyle(this.brutalStyleIdx);
     this.xenomimicsRender.setMorphWave(1, this.brutalMorphSeed);
-    this.entityBrains.perturbBrains(this.genomeRng);
-    for (let i = 0; i < this.superCreatures.length; i++) {
-      this.superCreatures[i]!.perturbMind(this.uiRng);
+    if (this.isWildMode()) {
+      this.entityBrains.perturbBrains(this.genomeRng);
+      for (let i = 0; i < this.superCreatures.length; i++) {
+        this.superCreatures[i]!.perturbMind(this.uiRng);
+      }
     }
     // V123 (USER #4): the NEURAL box tints WITH the creature's BRUTAL style — broadcast the style +
     // on/off so the SuperNeural observatory crossfades its skin toward the same palette (UI-only).

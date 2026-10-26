@@ -499,7 +499,9 @@ export class OrganismBioStatePool {
       const entityId = entityIds?.[i];
       const counterId = Number.isSafeInteger(entityId) && entityId! >= 0 ? entityId! : i;
       const jitter01 = sampleParallelCounter01(batchSeed, tick, counterId, 0, false) - 0.5;
-      const buoyancy = stratumError * (0.018 + 0.014 * da) + jitter01 * 0.008 * (0.4 + na);
+      const buoyancy =
+        (stratumError * (0.018 + 0.014 * da) + jitter01 * 0.008 * (0.4 + na)) *
+        stageProfile.speedMultiplier;
 
       if (i < outVelocityYDelta.length) {
         outVelocityYDelta[i] = clamp(buoyancy * dt * 60, -0.08, 0.08);

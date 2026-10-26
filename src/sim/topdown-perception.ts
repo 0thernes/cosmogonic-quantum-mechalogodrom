@@ -50,11 +50,13 @@ export class TopDownPerception {
    */
   generate(imaginedLatent: ArrayLike<number>, novelty: number): void {
     // Simple deterministic mapping: use first few dims + novelty to bias senses
-    // Eshkol AD wire (from tape.esk + autodiff in corpus): use gradient of a "prediction error" func for bias strength
-    const predErr = (x: number) => Math.abs(x - (imaginedLatent[0] ?? 0)) + novelty * 0.1;
-    const adGrad = eshkolADGradient(predErr, (imaginedLatent[0] ?? 0) + novelty * 0.05); // derivative as control
+    // Eshkol AD wire (from tape.esk + autodiff in corpus): use gradient of a smooth prediction-error potential
+    const l0 = imaginedLatent[0] ?? 0;
+    const predErr = (x: number) => 0.5 * x * x - l0 * (1 - novelty * 0.5) * x + novelty * 0.1;
+    const probe = l0 + novelty * 0.25;
+    const adGrad = eshkolADGradient(predErr, probe); // derivative as control
     // Iteration 11: Eshkol forward dual from AUTODIFF (dual {val,d}) for better predict error
-    const dual = eshkolDual(predErr, (imaginedLatent[0] ?? 0) + novelty * 0.05);
+    const dual = eshkolDual(predErr, probe);
     // use makeEshkolDual + dualAdd for combined Eshkol forward AD (per AUTODIFF.md dual struct)
     const d1 = makeEshkolDual(adGrad, 0.5);
     const d2 = makeEshkolDual(dual.derivative, 0.2);

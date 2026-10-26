@@ -602,6 +602,7 @@ export class ConsciousnessKernel {
   private readonly seriesA: Float64Array;
   private readonly seriesB: Float64Array;
   private readonly surrA: Float64Array;
+  private readonly surrB: Float64Array;
 
   constructor(seed: number, opts: KernelOptions = {}) {
     this.W = Math.max(8, opts.windowSize ?? 32);
@@ -615,6 +616,7 @@ export class ConsciousnessKernel {
     this.seriesA = new Float64Array(this.W);
     this.seriesB = new Float64Array(this.W);
     this.surrA = new Float64Array(this.W);
+    this.surrB = new Float64Array(this.W);
   }
 
   /** Current blended index 0..1 (0 before the first ingest). */
@@ -733,7 +735,10 @@ export class ConsciousnessKernel {
         this.readSeries(fb, this.seriesB);
         cohSum += Math.abs(pearson(this.seriesA, this.seriesB, n));
         cohN++;
-        surrSum += Math.abs(pearson(this.surrA, this.seriesB, n));
+        // #176: rotate seriesB by a pair-specific deterministic offset so pairwise surrogate correlations are independent
+        const rotB = (rot + fb * 3 + 1) % Math.max(1, n - 1);
+        for (let k = 0; k < n; k++) this.surrB[k] = this.seriesB[(k + rotB) % n] ?? 0;
+        surrSum += Math.abs(pearson(this.surrA, this.surrB, n));
         surrN++;
       }
     }
@@ -803,8 +808,8 @@ export class ConsciousnessKernel {
       const present = res.present[i] ?? false;
       const ablationLoss = extra?.ablationLoss?.[i] ?? 0;
       const nullSeparation = extra?.nullSeparation?.[i] ?? 0;
-      const causalEffect = extra?.causalEffect?.[i] ?? 0;
-      const status = statusOf(present, score, ablationLoss, nullSeparation);
+      const causalEffect = extra?.causalEffect?.[i];
+      const status = statusOf(present, score, ablationLoss, nullSeparation, causalEffect);
       // confidence: how stable the framework's windowed series is (1 − normalized std), if any window exists.
       let confidence = present ? 0.5 : 0;
       if (present && this.filled >= 8) {
@@ -824,7 +829,7 @@ export class ConsciousnessKernel {
         score,
         raw,
         confidence,
-        causalEffect,
+        causalEffect: causalEffect ?? 0,
         ablationLoss,
         nullSeparation,
         status,
@@ -864,12 +869,18 @@ function statusOf(
   score: number,
   ablationLoss: number,
   nullSeparation: number,
+  causalEffect?: number,
 ): FrameworkStatus {
   if (!present) return 'absent';
   if (score < 0.15) return 'structural';
   if (score < 0.5) return 'partial';
   // loadBearing requires BOTH an ablation effect AND separation from the null — mechanism proven causal.
-  if (score >= 0.5 && ablationLoss > LOAD_BEARING_MIN_LOSS && nullSeparation > 0.05)
+  if (
+    score >= 0.5 &&
+    ablationLoss > LOAD_BEARING_MIN_LOSS &&
+    nullSeparation > 0.05 &&
+    (causalEffect === undefined || causalEffect > 0)
+  )
     return 'loadBearing';
   return 'met';
 }

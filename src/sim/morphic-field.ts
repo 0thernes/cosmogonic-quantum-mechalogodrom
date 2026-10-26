@@ -68,23 +68,25 @@ export class MorphicField {
    */
   imprint(latent: ArrayLike<number>, successScore: number): void {
     this.imprints++;
-    const gain = clamp01(successScore) * RESONANCE_GAIN;
+    const gain = Math.max(0.05, clamp01(successScore)) * (RESONANCE_GAIN * 4);
     for (let i = 0; i < FIELD_DIM; i++) {
-      const l = (latent[i % latent.length] ?? 0) as number;
+      const raw = (latent[i % latent.length] ?? 0) as number;
+      const l = clamp01(0.5 + 0.5 * raw);
       // Slow morphic EMA (τ = FIELD_TAU): decay the stored field and blend in the gain-weighted
-      // latent. The prior form added an extra `field*(1-gain)` term, giving field a coefficient of
-      // ~1.93 — it saturated to the clamp ceiling every imprint instead of accumulating patterns.
-      this.field[i] = (this.field[i] ?? 0) * (1 - FIELD_TAU) + l * gain * FIELD_TAU;
+      // normalized latent (#131: avoids clipping negative latent components to 0 or drowning in corr).
+      this.field[i] = clamp01(
+        (this.field[i] ?? 0) * (1 - FIELD_TAU) + l * (0.4 + 0.6 * gain) * FIELD_TAU,
+      );
     }
     // Moonlab MPO: compress field through the MPO. chi=2 (not chi=4, which for a d=4 packing is
     // full-rank → a lossless no-op giving a flat constant every imprint) so the compression truncates.
     const mpo = moonlabMpoStep(this.field, 4, 2);
     this.field[0] = clamp01((this.field[0] ?? 0) + Math.abs(mpo) * 0.005);
 
-    // libirrep SO(3) symmetry: enforce rotational equivariance on pairs
+    // libirrep SO(3) symmetry: enforce rotational equivariance on pairs proportional to field amplitude
     for (let i = 0; i < FIELD_DIM - 1; i += 2) {
       const sym = libirrepSymmetry(2, i + 1);
-      const corr = ((sym % 7) - 3) * 0.002;
+      const corr = ((sym % 7) - 3) * 0.0005 * ((this.field[i] ?? 0) + (this.field[i + 1] ?? 0));
       this.field[i] = clamp01((this.field[i] ?? 0) + corr);
       this.field[i + 1] = clamp01((this.field[i + 1] ?? 0) - corr);
     }

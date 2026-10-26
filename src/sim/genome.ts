@@ -116,16 +116,19 @@ export function mutate(g: Float32Array, rng: Rng, rate = 0.12, scale = 0.2): voi
  * which the code never did: `pa = i` is the dead slot itself (primordial-soup.ts, inside the
  * `!alive[i]` branch). Real heredity, but dead x living — do not cite it as live sexual selection.
  *
- * These fixed-`GENOME_LEN` `breed`/`crossover` exports remain reserved for the planned entity/NHI
- * spawn-path wiring (which needs a dedicated `genomeRng` + a deliberate golden re-baseline) — do NOT
- * delete them as "dead code" without reading ADR-0009. Being reserved, they are NOT grounding for a
- * reproduction capability score: nothing in src/ calls `breed`/`crossover`, and `decodeTraits` — the
- * sole reader of the 10-trait phenotype, fertility included — has no caller either. The heredity
- * that IS live on the base population is entities.ts `breedTraits` (:466, called :557).
+ * These fixed-`GENOME_LEN` `breed`/`crossover`/`mutate`/`decodeTraits`/`brainOf`/`geneDistance`
+ * exports back {@link EntityBrainField} heredity, two-parent slot breeding, phenotype decoding,
+ * and kinship distance queries alongside `PrimordialSoup` recombination.
  */
-export function breed(a: Float32Array, b: Float32Array, rng: Rng, rate?: number): Float32Array {
+export function breed(
+  a: Float32Array,
+  b: Float32Array,
+  rng: Rng,
+  rate?: number,
+  scale?: number,
+): Float32Array {
   const child = crossover(a, b, rng);
-  mutate(child, rng, rate);
+  mutate(child, rng, rate, scale);
   return child;
 }
 

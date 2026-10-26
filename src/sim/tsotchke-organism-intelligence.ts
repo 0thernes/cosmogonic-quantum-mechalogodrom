@@ -419,10 +419,14 @@ export class TsotchkeOrganismIntelligence {
     const y3 = this.pressureHistory[3]!;
     // Four-point backward differences at the latest sample. Coefficients are normalized derivatives
     // c[k]=f^(k)/k!, exactly the representation consumed by EshkolTaylorJet.
+    const c1 = (11 * y0 - 18 * y1 + 9 * y2 - 2 * y3) / 6;
+    const c2 = (2 * y0 - 5 * y1 + 4 * y2 - y3) / 2;
+    const c3 = (y0 - 3 * y1 + 3 * y2 - y3) / 6;
+    const damp = Math.exp(-Math.abs(c3) * 4);
     this.coefficients[0] = y0;
-    this.coefficients[1] = (11 * y0 - 18 * y1 + 9 * y2 - 2 * y3) / 6;
-    this.coefficients[2] = (2 * y0 - 5 * y1 + 4 * y2 - y3) / 2;
-    this.coefficients[3] = (y0 - 3 * y1 + 3 * y2 - y3) / 6;
+    this.coefficients[1] = c1 * (0.65 + 0.35 * damp);
+    this.coefficients[2] = c2 * 0.5 * damp;
+    this.coefficients[3] = c3 * 0.35 * damp;
     this.forecastJet.setCoefficients(this.coefficients);
     return clamp01(this.forecastJet.evaluate(1));
   }

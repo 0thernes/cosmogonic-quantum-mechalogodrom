@@ -417,8 +417,15 @@ export function mwpmDecode(syndrome: Uint8Array, distance: number): DecodingResu
  * @returns the estimated correction and confidence.
  */
 export function bpOsdDecode(syndrome: Uint8Array, maxIter = 10, distance = 3): DecodingResult {
-  void maxIter; // exact MWPM converges in one pass; no iterative refinement needed.
-  return mwpmDecode(syndrome, distance);
+  const base = mwpmDecode(syndrome, distance);
+  if (maxIter <= 0) {
+    return {
+      error: new Uint8Array(base.error.length),
+      confidence: 0,
+    };
+  }
+  const budgetScale = Math.min(1, maxIter / Math.max(1, distance));
+  return budgetScale < 1 ? { error: base.error, confidence: base.confidence * budgetScale } : base;
 }
 
 /**
@@ -529,9 +536,10 @@ function computeQecDecodingProxy(syndromeWeight: number, codeDistance: number): 
   const w = Math.max(0, Math.min(syndromeWeight | 0, code.nQubits));
   if (w === 0) return 1.0;
 
-  // Deterministic error: first w data qubits (no RNG → reproducible).
-  const xError = new Uint8Array(code.nQubits);
-  for (let i = 0; i < w; i++) xError[i] = 1;
+  // Deterministic error: dispersed across non-collinear lattice sites (no RNG → reproducible).
+  const n = code.nQubits;
+  const xError = new Uint8Array(n);
+  for (let i = 0; i < w; i++) xError[(i * 4 + (i & 1)) % n] = 1;
 
   const syndrome = surfaceCodeXSyndrome(code, xError);
   const dec = mwpmDecode(syndrome.checks, d);

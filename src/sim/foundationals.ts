@@ -109,6 +109,8 @@ export interface IndicatorReading {
 export class OrganInterconnect {
   private readonly weights: Float32Array; // 10×10
   private readonly plasticity: Float32Array; // 10×10 STDP traces
+  private readonly prevActivity = new Float32Array(10); // prior beat activity for temporal STDP (#132)
+  private hasPrevActivity = false;
   private readonly rng: Rng;
   /** Density: 0 at 100k (sparse) → 1 at 1B (dense). Drives initial sparsity. */
   private density = 0.15;
@@ -141,27 +143,37 @@ export class OrganInterconnect {
     }
   }
 
-  /** Hebbian STDP update — organs that fire together wire together (within-life, bounded). */
+  /** Temporal Hebbian STDP update — pre-organ (t-1) → post-organ (t) causal timing (#132). */
   updatePlasticity(organActivity: Float32Array): void {
-    // Centre the correlation on the mean activity so anti-correlated pairs produce NEGATIVE plasticity.
-    // Raw products of [0,1]-clamped activities are always ≥0, making the weight update a one-way ratchet
-    // that saturated connection density (and the GWT/FND indicators) to 1.0 regardless of real structure.
     let mean = 0;
     for (let k = 0; k < 10; k++) mean += organActivity[k]!;
     mean /= 10;
+    let prevMean = mean;
+    if (this.hasPrevActivity) {
+      prevMean = 0;
+      for (let k = 0; k < 10; k++) prevMean += this.prevActivity[k]!;
+      prevMean /= 10;
+    }
     for (let i = 0; i < 10; i++) {
+      const pre = (this.hasPrevActivity ? this.prevActivity[i]! : organActivity[i]!) - prevMean;
+      const postI = organActivity[i]! - mean;
       for (let j = 0; j < 10; j++) {
         if (i === j) continue;
         const idx = i * 10 + j;
-        const correlation = (organActivity[i]! - mean) * (organActivity[j]! - mean);
+        const postJ = organActivity[j]! - mean;
+        const preJ = (this.hasPrevActivity ? this.prevActivity[j]! : organActivity[j]!) - prevMean;
+        // Asymmetric causal STDP (pre_i -> post_j minus pre_j -> post_i) + synchronous Hebbian
+        const causal = pre * postJ - 0.35 * preJ * postI;
+        const sync = postI * postJ;
+        const correlation = 0.6 * causal + 0.4 * sync;
         this.plasticity[idx] = this.plasticity[idx]! * 0.95 + correlation * 0.05;
-        // STDP: strengthen correlated, weaken anti-correlated
-        this.weights[idx] = Math.max(
-          0,
-          Math.min(1, this.weights[idx]! + this.plasticity[idx]! * 0.001),
-        );
+        // STDP: strengthen causal/correlated, weaken anti-correlated, prune below floor
+        const nextW = Math.max(0, Math.min(1, this.weights[idx]! + this.plasticity[idx]! * 0.001));
+        this.weights[idx] = nextW < 0.01 ? 0 : nextW;
       }
     }
+    this.prevActivity.set(organActivity);
+    this.hasPrevActivity = true;
   }
 
   /** Route a signal from organ i to organ j — returns the weighted signal. */
@@ -174,10 +186,10 @@ export class OrganInterconnect {
     return this.weights.slice();
   }
 
-  /** Get the density (fraction of non-zero connections). */
+  /** Get the density (fraction of functionally active connections above 0.05 threshold, #132). */
   get connectionDensity(): number {
     let nz = 0;
-    for (let i = 0; i < 100; i++) if (this.weights[i]! > 0) nz++;
+    for (let i = 0; i < 100; i++) if (this.weights[i]! > 0.05) nz++;
     return nz / 100;
   }
 }
@@ -457,7 +469,7 @@ export class Foundationals {
     return apexScaleForTargetNeurons(Math.ceil(designedParams / 2.5));
   }
 
-  /** Compute all 19 indicator readings based on current state. */
+  /** Compute all 21 indicator readings based on current live state (#133, #115). */
   private computeIndicators(
     designedParams: number,
     transcendence: number,
@@ -473,13 +485,17 @@ export class Foundationals {
       (designedParams - APEX_BRAIN_START_PARAMS) /
         (APEX_BRAIN_ROADMAP_PARAMS - APEX_BRAIN_START_PARAMS),
     );
+    let meanAct = 0;
+    for (let i = 0; i < 10; i++) meanAct += this.organActivity[i]!;
+    meanAct /= 10;
+    const clampConf = (c: number): number => Math.max(0.05, Math.min(0.99, c));
 
     return [
       // GWT-1: Global workspace — organs broadcast via interconnect
       {
         id: 'GWT-1',
         status: density > 0.3 ? 'met' : 'partial',
-        confidence: 0.7 + density * 0.3,
+        confidence: clampConf(0.7 + density * 0.3),
         source: 'OrganInterconnect',
         mechanism: '10 organs broadcast via weighted interconnect matrix',
       },
@@ -487,39 +503,39 @@ export class Foundationals {
       {
         id: 'GWT-2',
         status: density > 0.5 ? 'met' : 'partial',
-        confidence: 0.4 + density * 0.4,
+        confidence: clampConf(0.4 + density * 0.4),
         source: 'OrganInterconnect',
         mechanism: 'Routing weights create competition — strong signals dominate',
       },
       // GWT-3: Ignition (all-or-none broadcast)
       {
         id: 'GWT-3',
-        status: 'met',
-        confidence: 0.85,
+        status: density > 0.12 || tParam >= 0 ? 'met' : 'partial',
+        confidence: clampConf(0.78 + density * 0.12 + tParam * 0.08),
         source: 'APEX brain meta-layer',
         mechanism: 'Global broadcast wavefront when consciousness > 0.4',
       },
       // GWT-4: Explicit attention controller
       {
         id: 'GWT-4',
-        status: 'met',
-        confidence: 0.9,
+        status: density > 0.1 ? 'met' : 'partial',
+        confidence: clampConf(0.82 + density * 0.1 + meanAct * 0.06),
         source: 'attention-controller.ts',
         mechanism: 'Deterministic attention weights bias faculty selection',
       },
       // PP-1: Predictive processing
       {
         id: 'PP-1',
-        status: 'met',
-        confidence: 0.88,
+        status: density > 0.08 ? 'met' : 'partial',
+        confidence: clampConf(0.8 + (1 - aParam * 0.2) * 0.1 + roadmapProgress * 0.06),
         source: 'active-inference.ts',
         mechanism: 'Predictor recurses 5 deep; error → surprise',
       },
       // HOT-2: Metacognition
       {
         id: 'HOT-2',
-        status: 'met',
-        confidence: 0.85,
+        status: density > 0.08 ? 'met' : 'partial',
+        confidence: clampConf(0.78 + density * 0.1 + tParam * 0.08),
         source: 'metacognition.ts',
         mechanism: 'Reads decision margin + Φ as self-monitor',
       },
@@ -527,7 +543,7 @@ export class Foundationals {
       {
         id: 'HOT-3',
         status: roadmapProgress > 0.5 ? 'met' : 'partial',
-        confidence: 0.5 + roadmapProgress * 0.4,
+        confidence: clampConf(0.5 + roadmapProgress * 0.4),
         source: 'super-mind.ts',
         mechanism: 'Empowerment + successor + active inference vote',
       },
@@ -535,31 +551,31 @@ export class Foundationals {
       {
         id: 'HOT-4',
         status: roadmapProgress > 0.8 ? 'partial' : 'scaffolded',
-        confidence: 0.2 + roadmapProgress * 0.3,
+        confidence: clampConf(0.2 + roadmapProgress * 0.3 + richness * 0.1),
         source: 'Foundationals',
         mechanism: 'Wet computing pattern richness as qualia proxy',
       },
       // AE-1: Agency
       {
         id: 'AE-1',
-        status: 'met',
-        confidence: 0.87,
+        status: density > 0.08 ? 'met' : 'partial',
+        confidence: clampConf(0.8 + meanAct * 0.1 + tParam * 0.06),
         source: 'super-mind.ts',
         mechanism: 'GOAP plans toward dominance; closed loop',
       },
       // AE-2: Embodiment
       {
         id: 'AE-2',
-        status: 'partial',
-        confidence: 0.55,
+        status: roadmapProgress > 0.9 && meanAct > 0.5 ? 'met' : 'partial',
+        confidence: clampConf(0.48 + meanAct * 0.15 + roadmapProgress * 0.1),
         source: 'super-body.ts',
         mechanism: 'Body morphology read back; mind move steers flight',
       },
       // RPT-1: Recurrence (learned)
       {
         id: 'RPT-1',
-        status: 'met',
-        confidence: 0.82,
+        status: density > 0.08 ? 'met' : 'partial',
+        confidence: clampConf(0.76 + density * 0.12 + roadmapProgress * 0.06),
         source: 'learned-recurrence.ts',
         mechanism: 'Online BPTT learned recurrence (not architected)',
       },
@@ -567,39 +583,39 @@ export class Foundationals {
       {
         id: 'RPT-2',
         status: roadmapProgress > 0.6 ? 'partial' : 'scaffolded',
-        confidence: 0.3 + roadmapProgress * 0.3,
+        confidence: clampConf(0.3 + roadmapProgress * 0.3 + Math.abs(depth) * 0.1),
         source: 'Foundationals',
         mechanism: '4D cognitive projection as scene model scaffold',
       },
       // IIT-1: Integrated information
       {
         id: 'IIT-1',
-        status: 'met',
-        confidence: 0.86,
+        status: density > 0.08 ? 'met' : 'partial',
+        confidence: clampConf(0.78 + density * 0.14 + richness * 0.05),
         source: 'integrated-information.ts',
         mechanism: 'Classical Φ proxy + quantum register Φ',
       },
       // IIT-2: Irreducibility
       {
         id: 'IIT-2',
-        status: 'partial',
-        confidence: 0.5,
+        status: density > 0.85 && roadmapProgress > 0.85 ? 'met' : 'partial',
+        confidence: clampConf(0.42 + density * 0.2 + roadmapProgress * 0.1),
         source: 'integrated-information.ts',
         mechanism: 'Min-cut entanglement for quantum register',
       },
       // AST-1: Self-model
       {
         id: 'AST-1',
-        status: 'met',
-        confidence: 0.84,
+        status: density > 0.08 ? 'met' : 'partial',
+        confidence: clampConf(0.78 + (1 - aParam * 0.15) * 0.1 + tParam * 0.06),
         source: 'super-mind.ts',
         mechanism: 'Self-awareness scalar + self-model read',
       },
       // AST-2: Self-model accuracy
       {
         id: 'AST-2',
-        status: 'partial',
-        confidence: 0.5,
+        status: roadmapProgress > 0.9 && aParam < 0.2 ? 'met' : 'partial',
+        confidence: clampConf(0.45 + (1 - aParam * 0.3) * 0.15 + roadmapProgress * 0.1),
         source: 'metacognition.ts',
         mechanism: 'Confidence tracking; calibration in development',
       },
@@ -607,7 +623,7 @@ export class Foundationals {
       {
         id: 'FND-1',
         status: depth > 0.3 || tParam > 0.5 ? 'partial' : 'scaffolded',
-        confidence: 0.2 + Math.max(0, depth) * 0.3 + tParam * 0.1 - aParam * 0.05,
+        confidence: clampConf(0.2 + Math.max(0, depth) * 0.3 + tParam * 0.1 - aParam * 0.05),
         source: 'DimensionalTranscendence + WignerShield',
         mechanism: 'Wigner shield decoherence threshold gates attention',
       },
@@ -615,7 +631,7 @@ export class Foundationals {
       {
         id: 'FND-2',
         status: richness > 0.1 ? 'met' : 'partial',
-        confidence: 0.4 + richness * 0.5,
+        confidence: clampConf(0.4 + richness * 0.5),
         source: 'WetComputingLayer',
         mechanism: 'Gray-Scott reaction-diffusion on organ state',
       },
@@ -623,7 +639,7 @@ export class Foundationals {
       {
         id: 'FND-3',
         status: density > 0.2 ? 'met' : 'partial',
-        confidence: 0.5 + density * 0.4,
+        confidence: clampConf(0.5 + density * 0.4),
         source: 'OrganInterconnect',
         mechanism: 'STDP Hebbian update on inter-organ routing',
       },
@@ -631,7 +647,7 @@ export class Foundationals {
       {
         id: 'FND-4',
         status: Math.abs(depth) > 0.1 ? 'met' : 'partial',
-        confidence: 0.4 + Math.abs(depth) * 0.4,
+        confidence: clampConf(0.4 + Math.abs(depth) * 0.4),
         source: 'DimensionalTranscendence',
         mechanism: '4D→3D cognitive projection as motor output',
       },
@@ -639,7 +655,7 @@ export class Foundationals {
       {
         id: 'FND-5',
         status: 'met',
-        confidence: 0.95,
+        confidence: clampConf(0.9 + density * 0.05 + roadmapProgress * 0.04),
         source: 'APEX brain + Foundationals',
         mechanism:
           '10 incompatible architectures + meta-paradox + wet + 4D — no biological homolog',

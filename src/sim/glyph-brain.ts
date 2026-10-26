@@ -304,7 +304,15 @@ export class GlyphBrain {
     forwardSubnet(this.imagitron, this.imgIn, this.scratch, this.outB);
 
     forwardSubnet(this.perceptor, this.outB.subarray(0, LATENT_DIM), this.scratch, this.organOut);
-    let novelty = Math.abs(this.organOut[0] ?? 0);
+    // #187: aggregate all 4 perceptor critic channels rather than discarding channels 1..3
+    let novelty = Math.min(
+      1,
+      Math.abs(this.organOut[0] ?? 0) * 0.7 +
+        (Math.abs(this.organOut[1] ?? 0) +
+          Math.abs(this.organOut[2] ?? 0) +
+          Math.abs(this.organOut[3] ?? 0)) *
+          0.1,
+    );
 
     forwardSubnet(this.reasoner, this.outB.subarray(0, LATENT_DIM), this.scratch, this.outA);
 
@@ -339,7 +347,7 @@ export class GlyphBrain {
     this.metaIn[LATENT_DIM + 6] = this.motorOut[3] ?? 0;
     forwardSubnet(this.meta, this.metaIn, this.scratch, this.metaOut);
 
-    // 9) Fused Hebbian plastic overlay update + fast-weight readback dot product (single 32×32 pass)
+    // 9) Fused Hebbian plastic overlay update + Oja decay (#187) + fast-weight readback dot product
     this.latentPrev.set(this.latent.subarray(0, LATENT_DIM));
     for (let i = 0; i < LATENT_DIM; i++) {
       const row = i * LATENT_DIM;
@@ -348,7 +356,7 @@ export class GlyphBrain {
       for (let j = 0; j < LATENT_DIM; j++) {
         const idx = row + j;
         const lj = this.latentPrev[j]!;
-        let pv = this.plastic[idx]! + 0.001 * ri * lj;
+        let pv = this.plastic[idx]! * 0.998 + 0.001 * ri * lj;
         if (pv > 0.5) pv = 0.5;
         else if (pv < -0.5) pv = -0.5;
         this.plastic[idx] = pv;

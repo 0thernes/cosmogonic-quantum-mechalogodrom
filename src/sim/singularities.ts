@@ -714,7 +714,13 @@ export class SingularitySystem {
       this.applyShaderTime(rig.primaryMat, 'uTime', t, fade);
     } else {
       rig.primary.scale.setScalar(pulse);
-      if (this._kind === 'strangestar') this.applyShaderTime(rig.primaryMat, 'uTime', t, fade);
+      if (
+        this._kind === 'strangestar' ||
+        this._kind === 'blackhole' ||
+        this._kind === 'whitehole'
+      ) {
+        this.applyShaderTime(rig.primaryMat, 'uTime', t, fade);
+      }
     }
     if (rig.ring) {
       // V99: the accretion disk rotates with differential Keplerian speed. rotation.x is set once in

@@ -30,6 +30,8 @@ export class XenomimicConnectome {
   private readonly antiByPair = new Int16Array(PAIR_CAP);
   private captured = 0;
   private links = 0;
+  private twinLinks = 0;
+  private entityBridges = 0;
   private disposed = false;
 
   /** Stable callback used by XenomimicPopulation.forEach without a per-sync closure. */
@@ -51,6 +53,16 @@ export class XenomimicConnectome {
 
   get linkCount(): number {
     return this.links;
+  }
+
+  /** Active psionic twin bonds counted in the most recent sync (#184). */
+  get twinLinkCount(): number {
+    return this.twinLinks;
+  }
+
+  /** Active proximity bridges between xenomimics and world entities (#184). */
+  get entityBridgeCount(): number {
+    return this.entityBridges;
   }
 
   /** No-op: lines never visible. Kept so world toggles compile. */
@@ -84,6 +96,7 @@ export class XenomimicConnectome {
     }
 
     let n = 0;
+    let twins = 0;
     for (let pair = 0; pair < PAIR_CAP && n < XENOMIMIC_CONNECTOME_MAX_LINKS; pair++) {
       const mimicIndex = this.mimicByPair[pair] ?? -1;
       const antiIndex = this.antiByPair[pair] ?? -1;
@@ -92,6 +105,7 @@ export class XenomimicConnectome {
       const anti = this.creatures[antiIndex];
       if (!mimic || !anti) continue;
       n++;
+      twins++;
     }
 
     const entityLimit = Math.min(
@@ -99,6 +113,7 @@ export class XenomimicConnectome {
       XENOMIMIC_CONNECTOME_MAX_ENTITY_BRIDGES,
     );
     const radius2 = 18 * 18;
+    let bridges = 0;
     for (
       let entityIndex = 0;
       entityIndex < entityLimit && n < XENOMIMIC_CONNECTOME_MAX_LINKS;
@@ -106,8 +121,9 @@ export class XenomimicConnectome {
     ) {
       const entity = entities[entityIndex];
       if (!entity) continue;
+      const actBoost = 1 + Math.max(0, Math.min(1, finite(entity.userData?.act ?? 0))) * 0.25;
       let best = -1;
-      let bestDistance = radius2;
+      let bestDistance = radius2 * actBoost;
       for (let i = 0; i < this.captured; i++) {
         const creature = this.creatures[i];
         if (!creature) continue;
@@ -122,15 +138,20 @@ export class XenomimicConnectome {
       }
       if (best < 0) continue;
       n++;
+      bridges++;
     }
 
     this.links = n;
+    this.twinLinks = twins;
+    this.entityBridges = bridges;
   }
 
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
     this.links = 0;
+    this.twinLinks = 0;
+    this.entityBridges = 0;
     this.captured = 0;
     this.creatures.fill(null);
   }

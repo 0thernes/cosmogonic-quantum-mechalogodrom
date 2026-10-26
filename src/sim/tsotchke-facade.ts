@@ -211,14 +211,27 @@ export interface TsotchkeQuantumPulse {
   adGradient: number;
 }
 
+const ARCHETYPE_BY_SUBSTRATE: Readonly<Record<string, number>> = {
+  'consciousness-engine': 0,
+  'clifford-tensor': 1,
+  'metal-sim': 2,
+  'equivariant-sym': 3,
+  'quantum-geometry': 4,
+  'browser-hybrid': 5,
+  'logo-turtle': 6,
+  'qrng-entropy': 7,
+  'qrng-api': 7,
+  'classical-rng': 7,
+};
+
 export function corpusPulse(
   seed: number,
   formIdx: number,
   corpusAblated?: ReadonlySet<TsotchkeRepoSlug>,
   frame: number = formIdx,
 ): TsotchkeQuantumPulse {
-  const b = getTsotchkeBias(formIdx);
   const repo = getTsotchkeRepoByIndex(formIdx);
+  const b = getTsotchkeBias(ARCHETYPE_BY_SUBSTRATE[repo.substrate] ?? formIdx);
   const s = (seed % 10000) / 10000;
   const scale = repo.wiring > 0 ? 0.5 + repo.wiring * 0.5 : 0.05;
   const c01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);

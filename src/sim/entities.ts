@@ -1009,8 +1009,12 @@ export class EntityManager {
     }
   }
 
+  /** Live count of NHI swarmling minions in `list` (#48). */
+  nhiMinionCount = 0;
+
   /** Apply per-organism accounting and release its owned render resources. O(1). */
   private retire(e: Entity, trackExtinction = true): void {
+    if (e.userData.nhiMinion && this.nhiMinionCount > 0) this.nhiMinionCount--;
     const dmi = e.userData.mi;
     const inRange = dmi >= 0 && dmi < this.morphLive.length;
     if (inRange) {
@@ -1142,6 +1146,7 @@ export class EntityManager {
     this.socialEnts = [];
     this.socialField = null;
     this.morphLive.fill(0); // whole-population reset; spawn() below re-counts as it repopulates
+    this.nhiMinionCount = 0;
     this.organismGoals.directionX.fill(0);
     this.organismGoals.directionZ.fill(0);
     this.organismGoals.desire.fill(0);

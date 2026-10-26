@@ -570,8 +570,8 @@ export class XenomimicPopulation {
           if (!child) break;
           alive += 2;
         }
-        m.energy -= 0.35;
-        pair.anti.energy -= 0.2;
+        m.energy = clamp01(m.energy - 0.35);
+        pair.anti.energy = clamp01(pair.anti.energy - 0.2);
       }
     }
   }

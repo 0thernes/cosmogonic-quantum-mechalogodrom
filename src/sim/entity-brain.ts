@@ -822,6 +822,27 @@ export class EntityBrainField {
     this.semanticReady[brainSlot] = 0;
   }
 
+  /** Mean magnitude of active semantic recurrent context lanes across ready brain slots (#111). */
+  meanSemanticActivation(): number {
+    let sum = 0;
+    let readyCount = 0;
+    const n = this.capacity;
+    const ready = this.semanticReady;
+    const ctx = this.semanticContext;
+    for (let i = 0; i < n; i++) {
+      if ((ready[i] ?? 0) === 0) continue;
+      const base = i * 4;
+      sum +=
+        (Math.abs(ctx[base] ?? 0) +
+          Math.abs(ctx[base + 1] ?? 0) +
+          Math.abs(ctx[base + 2] ?? 0) +
+          Math.abs(ctx[base + 3] ?? 0)) *
+        0.25;
+      readyCount++;
+    }
+    return readyCount > 0 ? clamp01(sum / readyCount) : 0;
+  }
+
   private prepareThinkTime(t: number): void {
     if (!Number.isFinite(t)) {
       this.learningStepScale = 1;

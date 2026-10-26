@@ -46,7 +46,8 @@ export function mixFast(x: number): number {
 
 /** Normalized [0,1] LCG sample. O(1). */
 export function classicalSample(state: number): { next: number; value: number } {
-  const next = classicalLcgStep(state);
+  const s0 = classicalLcgStep(state ^ 0x9e3779b9);
+  const next = classicalLcgStep(s0);
   return { next, value: (next >>> 0) / 0xffffffff };
 }
 
@@ -59,7 +60,7 @@ export function classicalMixSample(state: number): { next: number; value: number
 /** Normalized Shannon entropy H(p)/log2(bins) ∈ [0,1] of `n` mixed samples from `seed`. O(n). */
 export function classicalShannonEntropy(seed: number, n: number): number {
   const lim = Math.max(8, Math.min(256, n | 0));
-  const bins = 16;
+  const bins = Math.min(16, Math.max(4, lim >> 1));
   const hist = Array.from({ length: bins }, () => 0);
   let s = seed >>> 0 || 1;
   for (let i = 0; i < lim; i++) {

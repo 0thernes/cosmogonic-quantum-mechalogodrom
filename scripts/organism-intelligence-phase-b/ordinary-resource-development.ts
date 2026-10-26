@@ -796,7 +796,10 @@ export function runOrdinaryResourceDevelopment(
   const armSummaries: OrdinaryResourceDevelopmentArmSummary[] = [];
 
   for (const arm of ARM_DESCRIPTORS) {
-    const head = arm.tier === null ? null : new EntityResourceHead(modelSeed, arm.tier);
+    const head =
+      arm.tier === null
+        ? null
+        : new EntityResourceHead(modelSeed, arm.tier, { tanhJacobian: false });
     if (head !== null) {
       head.setRecurrenceEnabled(arm.recurrenceEnabled);
       head.setOnlineLearningEnabled(true);

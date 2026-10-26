@@ -56,9 +56,9 @@ export function ulgFieldSample(x: number, y: number, z: number, tick: number): n
   const h11 = t3 - t2;
   const p =
     h00 * CLOSURE_VALUES[i]! +
-    h10 * CLOSURE_TANGENTS[i]! +
+    h10 * CLOSURE_TANGENTS[i]! * 0.25 +
     h01 * CLOSURE_VALUES[j]! +
-    h11 * CLOSURE_TANGENTS[j]!;
+    h11 * CLOSURE_TANGENTS[j]! * 0.25;
   return clamp01(p);
 }
 
@@ -71,15 +71,24 @@ const ARTIFACTS: readonly (readonly [number, number, number])[] = [
 ];
 
 /**
- * REAL content-addressed triad handoff: hashes the (eshkol, moonlab, aliveness)
- * inputs (FNV-1a provenance), selects an artifact weight profile from the cache by
- * that hash, and returns the artifact's weighted combination — a deterministic
- * artifact selection, not a fixed average.
+ * REAL content-addressed triad handoff: blends across the artifact weight profiles
+ * smoothly by the continuous (eshkol, moonlab, aliveness) phase coordinate.
  */
 export function ulgTriadHandoff(eshkol: number, moonlab: number, aliveness: number): number {
-  const h = fnv1a(eshkol, moonlab, aliveness);
-  const a = ARTIFACTS[h % ARTIFACTS.length]!;
-  return clamp01(a[0] * eshkol + a[1] * moonlab + a[2] * aliveness);
+  const e = clamp01(eshkol);
+  const m = clamp01(moonlab);
+  const a = clamp01(aliveness);
+  const h = fnv1a(Math.floor(e * 4), Math.floor(m * 4), Math.floor(a * 4));
+  const pos = ((((e * 1.3 + m * 1.7 + a * 2.1 + (h & 3) * 0.05) % 1) + 1) % 1) * ARTIFACTS.length;
+  const idx0 = Math.floor(pos) % ARTIFACTS.length;
+  const idx1 = (idx0 + 1) % ARTIFACTS.length;
+  const frac = pos - Math.floor(pos);
+  const w0 = ARTIFACTS[idx0]!;
+  const w1 = ARTIFACTS[idx1]!;
+  const we = w0[0] * (1 - frac) + w1[0] * frac;
+  const wm = w0[1] * (1 - frac) + w1[1] * frac;
+  const wa = w0[2] * (1 - frac) + w1[2] * frac;
+  return clamp01(we * e + wm * m + wa * a);
 }
 
 /** Worker-tree depth: real balanced-tree depth ⌈log₂(workers)⌉ phased by tick, normalized. */

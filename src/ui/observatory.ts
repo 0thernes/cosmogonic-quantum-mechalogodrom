@@ -693,7 +693,20 @@ export class Observatory {
     this.accent = readToken(style, '--color-accent', ACCENT_FALLBACK);
     this.warnColor = readToken(style, '--color-warn', WARN_FALLBACK);
     this.danger = readToken(style, '--color-danger-line', DANGER_FALLBACK);
-    colors.push(this.accent, this.warnColor); // series 8 and 9
+    colors.push(
+      this.accent,
+      this.warnColor,
+      '#4df2ff',
+      '#ff6bd6',
+      '#a8ff60',
+      '#ffb347',
+      '#b18cff',
+      '#58ffd0',
+      '#ff667c',
+      '#ffe169',
+      '#7aa2ff',
+      '#ff8f52',
+    ); // series 8..19
     this.seriesColors = colors;
     // Indexed by the RAW war-matrix value (0 truce, 1 alliance, 2 war): alliance→teal(accent),
     // war→red(danger). (Was inverted — alliances rendered red-as-war and wars teal-as-ally.)
@@ -1463,15 +1476,19 @@ export class Observatory {
       x.beginPath();
       for (let k = 0; k < m; k++) {
         const i = k === m - 1 ? n - 1 : k * stride;
+        windowMeanStd(ring, s, i + 1, OBS_VARIANCE_WINDOW, this.statWindow, this.meanStd);
+        const sdK = this.meanStd.std;
         const px = (i / (n - 1)) * w;
-        const py = pTop + pH * 0.92 - ((ring.at(s, i) + sd - lo) / range) * pH * 0.84;
+        const py = pTop + pH * 0.92 - ((ring.at(s, i) + sdK - lo) / range) * pH * 0.84;
         if (k === 0) x.moveTo(px, py);
         else x.lineTo(px, py);
       }
       for (let k = m - 1; k >= 0; k--) {
         const i = k === m - 1 ? n - 1 : k * stride;
+        windowMeanStd(ring, s, i + 1, OBS_VARIANCE_WINDOW, this.statWindow, this.meanStd);
+        const sdK = this.meanStd.std;
         const px = (i / (n - 1)) * w;
-        const py = pTop + pH * 0.92 - ((ring.at(s, i) - sd - lo) / range) * pH * 0.84;
+        const py = pTop + pH * 0.92 - ((ring.at(s, i) - sdK - lo) / range) * pH * 0.84;
         x.lineTo(px, py);
       }
       x.closePath();

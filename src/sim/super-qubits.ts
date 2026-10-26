@@ -243,6 +243,10 @@ export class QuantumMind {
   private amplifyTarget = 0;
   /** V1.1: how many Grover oracle+diffuse rounds ran this beat (0..2, gated by focus). */
   private amplifyRounds = 0;
+  private lastMetricG00 = 1;
+  private lastMetricG01 = 0;
+  private lastMetricG11 = 1;
+  private phaseCarry = 0;
   /** Pre-allocated scratch for gwtBroadcast calls in evolve() — no per-beat array allocation. */
   private readonly gwtContent = [0, 0, 0, 0];
   private readonly gwtSalience = [0.7, 0.8, 0.5, 0.6];
@@ -295,7 +299,9 @@ export class QuantumMind {
     // the first beat (a single evolve is unchanged) and accrues only across beats as the mind self-tunes.
     const sup = clamp01(supRaw + this.optSup);
     const ent = clamp01(entRaw + this.optEnt);
-    const ftl = clamp01(aspects[2] ?? 0); // ftl → phase drive
+    const ftlRaw = clamp01(aspects[2] ?? 0);
+    const focusRaw = clamp01(aspects[4] ?? 0);
+    const ftl = focusRaw > 0 ? clamp01(ftlRaw + this.phaseCarry * 0.002) : ftlRaw; // ftl → phase drive + focused cross-beat phase carry (#93)
     const mut = clamp01(aspects[6] ?? 0); // mutation → rotation jitter
     const L = latent.length || 1;
     // Remember the drive params so snapshot()'s UI-cadence QGT replays the SAME circuit and takes its
@@ -471,6 +477,10 @@ export class QuantumMind {
     const g00 = ss - (sPsiRe * sPsiRe + sPsiIm * sPsiIm);
     const g11 = ee - (ePsiRe * ePsiRe + ePsiIm * ePsiIm);
     const g01 = seRe - (sPsiRe * ePsiRe + sPsiIm * ePsiIm);
+    this.lastMetricG00 = Math.max(1e-4, g00);
+    this.lastMetricG01 = g01;
+    this.lastMetricG11 = Math.max(1e-4, g11);
+    this.phaseCarry = Math.atan2(bi0, br0) / Math.PI;
     naturalGradient2x2(g00, g01, g11, gradS, gradE, SELFOPT_RIDGE, this.soOut);
     const ngS = this.soOut[0] ?? 0;
     const ngE = this.soOut[1] ?? 0;
@@ -486,6 +496,11 @@ export class QuantumMind {
     so.improve = clamp01(gradS * ngS + gradE * ngE);
     so.biasSup = this.optSup;
     so.biasEnt = this.optEnt;
+  }
+
+  /** Live 2×2 Fubini–Study metric components [g00, g01, g11] from the most recent beat's self-optimization step (#80). */
+  liveMetric2x2(): readonly [number, number, number] {
+    return [this.lastMetricG00, this.lastMetricG01, this.lastMetricG11];
   }
 
   /**

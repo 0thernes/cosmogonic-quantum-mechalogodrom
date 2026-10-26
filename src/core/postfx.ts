@@ -138,18 +138,16 @@ export class PostFx {
     // The gravitational lens — first effect, so bloom (cinematic) blooms the already-bent light.
     this.lens = new ShaderPass(GRAVITATIONAL_LENS_SHADER);
     composer.addPass(this.lens);
+    const sz = renderer.getSize(new THREE.Vector2());
+    const initW = sz.x > 0 ? sz.x : window.innerWidth;
+    const initH = sz.y > 0 ? sz.y : window.innerHeight;
     let bloom: UnrealBloomPass | null = null;
     if (cinematic) {
       // strength, radius, threshold — tuned conservatively for the dark, emissive palette.
       // Owner directive #11/#14: the bloom was the main source of the "blinding white shimmer".
       // Softer strength (0.7 → 0.45) + higher threshold (0.85 → 0.9) so ONLY genuinely bright
       // emitters (holes, APEX cores) glow, not every mid-tone — the halo stops washing the frame out.
-      bloom = new UnrealBloomPass(
-        new THREE.Vector2(window.innerWidth, window.innerHeight),
-        0.45,
-        0.5,
-        0.9,
-      );
+      bloom = new UnrealBloomPass(new THREE.Vector2(initW, initH), 0.45, 0.5, 0.9);
       composer.addPass(bloom);
     }
     this.bloom = bloom;
@@ -161,7 +159,7 @@ export class PostFx {
     this.uStrength = u.uStrength as THREE.IUniform<number>;
     this.uRadius = u.uRadius as THREE.IUniform<number>;
     this.uAspect = u.uAspect as THREE.IUniform<number>;
-    this.aspect = window.innerWidth / Math.max(1, window.innerHeight);
+    this.aspect = initW / Math.max(1, initH);
     this.uAspect.value = this.aspect;
   }
 

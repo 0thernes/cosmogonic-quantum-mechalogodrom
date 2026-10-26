@@ -190,16 +190,17 @@ export class SuperHunt {
         for (let b = 0; b < nb; b++) {
           if (this.bodyControlled[b]) continue;
           const bp = this.bodyPos[b]!;
+          const dx = p.x - bp.x;
+          const dy = p.y - bp.y;
+          const dz = p.z - bp.z;
+          const d2 = dx * dx + dy * dy + dz * dz;
+          if (d2 > EAT_R2 && d2 >= this.nearD2[b]!) continue;
           if (harmGate !== undefined) {
             if (this.bodyProt[b] || preyProt) {
               denied++;
               continue;
             }
           } else if (harmAllowed !== undefined && !harmAllowed(bp.x, bp.z, p.x, p.z)) continue;
-          const dx = p.x - bp.x;
-          const dy = p.y - bp.y;
-          const dz = p.z - bp.z;
-          const d2 = dx * dx + dy * dy + dz * dz;
           if (d2 <= EAT_R2) {
             this.puff(p.x, p.y, p.z);
             const mi = e.userData.mi ?? 0;

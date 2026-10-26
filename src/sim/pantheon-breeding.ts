@@ -356,13 +356,15 @@ function runRitual(a: LineageGlyph, b: LineageGlyph, rng: Rng): RitualOutcome {
   const ta = temperament(a.seed);
   const tb = temperament(b.seed);
   const F = inbreedingCoefficient(a, b);
-  // Blend the parents' temperaments, then sharpen the cooperative diagonal by the inbreeding
-  // coefficient (inbred rites coordinate; hybrids stay competitive).
+  // Blend the parents' temperaments; asexual self-rites coordinate strongly, while distinct pairings
+  // modulate the inbreeding shift by parental seed symmetry so Prisoner's Dilemma, Stag Hunt, and
+  // Hawk-Dove all remain reachable across the 101-glyph roster (#145).
+  const paritySign = a.index === b.index ? 1 : ((a.seed ^ b.seed) & 1) === 0 ? 1 : -0.65;
   const matrix: PayoffMatrix = {
     name: 'RITUAL',
-    cc: (ta.cc + tb.cc) / 2 + F * 1.5,
-    cd: (ta.cd + tb.cd) / 2 - F * 0.5,
-    dc: (ta.dc + tb.dc) / 2 - F * 1.0,
+    cc: (ta.cc + tb.cc) / 2 + F * 1.5 * paritySign,
+    cd: (ta.cd + tb.cd) / 2 - F * 0.5 * paritySign,
+    dc: (ta.dc + tb.dc) / 2 - F * 1.0 * paritySign,
     dd: (ta.dd + tb.dd) / 2,
   };
   const { x, converged, rounds } = solveReplicator(matrix, 0.1 + rng() * 0.8);

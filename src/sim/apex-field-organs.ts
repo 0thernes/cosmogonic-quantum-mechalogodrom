@@ -65,6 +65,10 @@ export class ApexFieldOrgans {
    */
   step(drive: number): void {
     const d = c01(drive);
+    this.acoustic.dissipate(0.05);
+    this.tunnel.dissipate(0.05);
+    this.heat.dissipate(0.06);
+    this.klein.dissipate(0.05);
     this.acoustic.excite(d * 0.8);
     this.tunnel.excite(d * 0.6);
     this.heat.excite(d * 0.5);

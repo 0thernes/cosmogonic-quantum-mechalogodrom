@@ -41,9 +41,10 @@ export class MindField {
   deposit(channel: number, vector: readonly number[], strength = 1): void {
     const c = ((channel % this.channels) + this.channels) % this.channels;
     const off = c * this.dim;
+    const alpha = clamp01(strength) * (1 - this.decay);
     for (let d = 0; d < this.dim; d++) {
       const i = off + d;
-      this.buf[i] = clamp01((this.buf[i] ?? 0) * this.decay + strength * (vector[d] ?? 0));
+      this.buf[i] = clamp01((this.buf[i] ?? 0) * this.decay + alpha * clamp01(vector[d] ?? 0));
     }
   }
 
@@ -67,14 +68,15 @@ export class MindField {
   step(): void {
     const n = this.channels;
     const d = this.dim;
+    const keep = Math.max(0, 1 - this.diffuse);
     for (let c = 0; c < n; c++) {
       const prev = (c + n - 1) % n;
       const next = (c + 1) % n;
       for (let k = 0; k < d; k++) {
         const i = c * d + k;
-        const mix =
-          ((this.buf[i] ?? 0) + (this.buf[prev * d + k] ?? 0) + (this.buf[next * d + k] ?? 0)) / 3;
-        this.scratch[i] = clamp01((this.buf[i] ?? 0) * this.decay + this.diffuse * mix);
+        const self = this.buf[i] ?? 0;
+        const mix = (self + (this.buf[prev * d + k] ?? 0) + (this.buf[next * d + k] ?? 0)) / 3;
+        this.scratch[i] = clamp01(this.decay * (keep * self + this.diffuse * mix));
       }
     }
     this.buf.set(this.scratch);
@@ -85,14 +87,18 @@ export class MindField {
     let peak = 0;
     let peakCh = 0;
     const chEnergy = Array.from({ length: this.channels }, () => 0);
+    const invDim = 1 / Math.max(1, this.dim);
     for (let c = 0; c < this.channels; c++) {
+      let chSum = 0;
       for (let k = 0; k < this.dim; k++) {
         const v = this.buf[c * this.dim + k] ?? 0;
         energy += Math.abs(v);
-        chEnergy[c] = (chEnergy[c] ?? 0) + v;
+        chSum += v;
       }
-      if ((chEnergy[c] ?? 0) > peak) {
-        peak = chEnergy[c] ?? 0;
+      const chMean = chSum * invDim;
+      chEnergy[c] = chMean;
+      if (chMean > peak) {
+        peak = chMean;
         peakCh = c;
       }
     }

@@ -183,8 +183,10 @@ export class QuantumRegister {
   }
 
   /**
-   * Normalized Shannon entropy of the Born-rule distribution: H(p)/n ∈ [0, 1] where the maximum
-   * n bits occurs at the uniform superposition. Computed directly from the amplitudes — does NOT
+   * Normalized classical Shannon entropy of the computational-basis Born-rule distribution:
+   * H(p)/n ∈ [0, 1] where the maximum n bits occurs at the uniform superposition (including
+   * unentangled product superpositions such as |+⟩^⊗n; for bipartite entanglement see
+   * {@link entanglementEntropyQubit0}). Computed directly from the amplitudes — does NOT
    * touch the shared {@link probabilities} buffer. O(2^n); allocation-free.
    */
   entropy(): number {
@@ -199,6 +201,37 @@ export class QuantumRegister {
     const norm = h / this.qubits;
     // Clamp the float lattice: rounding can land epsilon outside [0, 1].
     return norm < 0 ? 0 : norm > 1 ? 1 : norm;
+  }
+
+  /**
+   * Von Neumann entanglement entropy S(ρ₀) ∈ [0, 1] (in bits) of qubit 0's reduced density matrix
+   * ρ₀ = Tr_{1..n-1}(|ψ⟩⟨ψ|). Zero for any separable state |ψ₀⟩ ⊗ |ψ_{1..n-1}⟩ (including |+⟩^⊗n)
+   * and 1 for a maximally entangled Bell/GHZ pair. O(2^n); allocation-free.
+   */
+  entanglementEntropyQubit0(): number {
+    const { re, im, dim } = this;
+    let rho00 = 0;
+    let rho11 = 0;
+    let rho01Re = 0;
+    let rho01Im = 0;
+    for (let base = 0; base < dim; base += 2) {
+      const r0 = re[base] ?? 0;
+      const i0 = im[base] ?? 0;
+      const r1 = re[base + 1] ?? 0;
+      const i1 = im[base + 1] ?? 0;
+      rho00 += r0 * r0 + i0 * i0;
+      rho11 += r1 * r1 + i1 * i1;
+      rho01Re += r0 * r1 + i0 * i1;
+      rho01Im += i0 * r1 - r0 * i1;
+    }
+    const diff = rho00 - rho11;
+    const r = Math.sqrt(diff * diff + 4 * (rho01Re * rho01Re + rho01Im * rho01Im));
+    const l0 = Math.max(0, Math.min(1, 0.5 * (1 + r)));
+    const l1 = Math.max(0, Math.min(1, 0.5 * (1 - r)));
+    let s = 0;
+    if (l0 > ENTROPY_EPS) s -= l0 * Math.log2(l0);
+    if (l1 > ENTROPY_EPS) s -= l1 * Math.log2(l1);
+    return s < 0 ? 0 : s > 1 ? 1 : s;
   }
 
   /**

@@ -44,6 +44,7 @@ const LIGHT_MEM_TAU = 0.2;
 export class PantheonSociety {
   readonly field = new MindField();
   private readonly scratch = new Float32Array(FIELD_DIM);
+  private readonly fieldMeanScratch = new Float32Array(FIELD_DIM);
   /** V1.3: one persistent identity scalar per light Archon — each evolves across its OWN sub-beats, so the
    *  20 light echoes have continuity (distinct individuated minds) rather than stateless per-beat recomputes. */
   private readonly lightMemory = new Float32Array(LIGHT_COUNT);
@@ -55,6 +56,15 @@ export class PantheonSociety {
     const slot = frame % LIGHT_COUNT;
     const idx = LIGHT_FIRST + slot;
     const sub = substrateVectorForArchon(idx);
+    // Couple the shared MindField (which carries Apex deposits from the world) into the light Archon's substrate (#143)
+    this.field.mean(this.fieldMeanScratch);
+    this.field.sample(idx, this.scratch);
+    const priorMem = this.lightMemory[slot] ?? 0;
+    for (let k = 0; k < Math.min(sub.length, FIELD_DIM); k++) {
+      const baseVal = sub[k] ?? 0.5;
+      const fieldVal = 0.6 * (this.fieldMeanScratch[k] ?? 0) + 0.4 * (this.scratch[k] ?? 0);
+      sub[k] = baseVal * 0.7 + fieldVal * 0.2 + priorMem * 0.1;
+    }
     const thought = archonThink(sub, frame + idx * 17);
     this.scratch[0] = thought.planBias;
     this.scratch[1] = thought.decisive ? 1 : 0;

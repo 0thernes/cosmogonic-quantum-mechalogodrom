@@ -432,7 +432,9 @@ function modulated(
   salt: number,
 ): number {
   const phase = profile.seed * 0.00073 + salt * 1.618 + tick * (0.031 + salt * 0.0027);
-  const swing = Math.sin(phase) * 0.055 * profile.traits.plasticity;
+  // #178: two-harmonic incommensurate modulation + Optional live telemetry override in signalsFromEntityProfile
+  const wave = 0.7 * Math.sin(phase) + 0.3 * Math.cos(phase * 1.6180339887 + salt * 0.71);
+  const swing = wave * 0.055 * profile.traits.plasticity;
   return clamp01(base + swing);
 }
 
@@ -447,8 +449,9 @@ function setIfSupported(
 export function signalsFromEntityProfile(
   profile: EntityConsciousnessProfile,
   tick = 0,
+  liveTraits?: Partial<EntityConsciousnessTraits>,
 ): FrameworkSignals {
-  const t = profile.traits;
+  const t = liveTraits ? { ...profile.traits, ...liveTraits } : profile.traits;
   const bw = profile.bandwidth / 10;
   const butlin = 0.12 + bw * 0.22 + (t.workspace + t.attention + t.selfModel + t.embodiment) * 0.11;
   const thaler =

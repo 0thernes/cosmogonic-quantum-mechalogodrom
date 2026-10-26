@@ -250,7 +250,10 @@ class BigTreeActorSourceAdapter implements BigTreeFaunaSource {
     out.healthDeficit = 1 - normalizedHealth;
     out.stress = clamp01(actor.danger ?? 0);
     out.socialNeed = clamp01(actor.socialDrive ?? 0);
-    out.curiosity = actor.criticalNeed === true ? 0.15 : 0.45;
+    out.curiosity =
+      actor.criticalNeed === true
+        ? 0.15
+        : clamp01(0.28 + (((actor.ownerId * 31 + 7) >>> 0) % 35) / 100 + (1 - out.fatigue) * 0.12);
     return true;
   }
 
@@ -800,7 +803,7 @@ export class BigTreeFaunaVisitors {
     if (!this.sample.alive || visitState !== BigTreeVisitState.Outside) {
       return;
     }
-    this.fillContext(binding.ownerKind, ownerId, environment);
+    this.fillContext(binding.ownerKind, ownerId, now, environment);
     // Fixed fauna can wander into the sanctuary under their canonical controller without first
     // winning an optional utility draw. Adopt that real entry as a truthful Safety/Observe visit so
     // it receives the same bounded dwell, departure, and cooldown lifecycle as planned visitors.
@@ -816,6 +819,8 @@ export class BigTreeFaunaVisitors {
     );
     if (
       visitId === NO_BIG_TREE_VISIT &&
+      this.context.recentVisit < 0.5 &&
+      this.context.routeAvailable &&
       this.visits.zone.contains(this.sample.x, this.sample.z, false)
     ) {
       visitId = this.visits.requestVisit(
@@ -1268,14 +1273,29 @@ export class BigTreeFaunaVisitors {
   private fillContext(
     ownerKind: number,
     ownerId: number,
+    now: number,
     environment: Readonly<BigTreeVisitorEnvironment> | undefined,
   ): void {
     const dx = this.sample.x - this.visits.zone.centerX;
     const dy = this.sample.y;
     const dz = this.sample.z - this.visits.zone.centerZ;
+    let recentVisit = 0;
+    if (this.visits.readVisit(ownerKind, ownerId, this.visitView)) {
+      const elapsed = now - this.visitView.lastTransitionAt;
+      if (
+        Number.isFinite(this.visitView.lastTransitionAt) &&
+        this.visitView.lastTransitionAt > 0 &&
+        elapsed >= 0
+      ) {
+        recentVisit = this.clamp01(1 - elapsed / 30);
+      }
+    }
     this.context.hunger = this.clamp01(this.sample.hunger);
     this.context.fatigue = this.clamp01(this.sample.fatigue);
-    this.context.healthDeficit = this.clamp01(this.sample.healthDeficit);
+    this.context.healthDeficit = Math.max(
+      this.clamp01(this.sample.healthDeficit),
+      this.clamp01(this.context.hunger * 0.25 + this.context.fatigue * 0.2),
+    );
     this.context.stress = Math.max(
       this.clamp01(this.sample.stress),
       this.clamp01(environment?.stress ?? 0),
@@ -1292,7 +1312,7 @@ export class BigTreeFaunaVisitors {
     this.context.distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
     this.context.routeAvailable = true;
     this.context.foodAvailable = environment?.foodAvailable !== false;
-    this.context.recentVisit = 0;
+    this.context.recentVisit = recentVisit;
     this.context.personality = this.hashUnit(ownerKind, ownerId, 0x9e3779b9);
     this.context.simulationLoad = this.clamp01(environment?.simulationLoad ?? 0);
   }

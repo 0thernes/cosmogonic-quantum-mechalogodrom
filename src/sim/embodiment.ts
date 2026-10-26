@@ -61,15 +61,19 @@ export class Embodiment {
     const p = ((planIdx % this.nPlans) + this.nPlans) % this.nPlans;
     if (this.primed && this.lastPlan >= 0) {
       let err = 0;
+      let mag = 0;
       const base = this.lastPlan * d;
       for (let j = 0; j < d; j++) {
         const actualDelta = (sensory[j] ?? 0) - this.lastSensory[j]!;
         err += Math.abs(this.predDelta[j]! - actualDelta);
+        mag += Math.abs(actualDelta);
         // learn: move the action's expected effect toward the observed effect (within-life plasticity)
         this.w[base + j]! += LR * (actualDelta - this.w[base + j]!);
       }
       this.predictionError = err / d;
-      this.contingency += CONTINGENCY_TAU * (clamp01(1 - this.predictionError) - this.contingency);
+      const scale = Math.max(0.015, mag / d);
+      const normErr = this.predictionError / scale;
+      this.contingency += CONTINGENCY_TAU * (clamp01(1 - normErr * 0.5) - this.contingency);
     }
     const base = p * d;
     for (let j = 0; j < d; j++) {

@@ -8,6 +8,7 @@
  */
 import type { AlphabetArchetype } from './alphabet-pantheon';
 import { ARENA_RADIUS } from './constants';
+import { CREATURE_EXTERIOR_PHENOMENA } from './creature-exterior-phenomena';
 
 /** Dome shell radius where pantheon creatures anchor (matches alphabet-pantheon-render). */
 export const PANTHEON_DOME_R = ARENA_RADIUS * 0.72;
@@ -136,8 +137,11 @@ export function glyphWanderOffset(
   // Writes into `out` and returns it — zero allocation in the per-body render hot loop.
   // V116: bounded dome flight — incommensurate harmonics for organic drift, motor nudge from
   // glyph brains, hard clamp so nothing escapes the Mechalogodrom shell or dives under the ground.
-  const r = 14 + activity * 22 + chaos * 16;
-  const p = sig.wanderPhase;
+  // #191: couple the assigned 1000-phenomenon catalog entry (sig.phenId) into wander radius & cadence
+  const phen = CREATURE_EXTERIOR_PHENOMENA[sig.phenId % CREATURE_EXTERIOR_PHENOMENA.length];
+  const phenGain = 0.92 + (phen?.density ?? 0.4) * 0.14;
+  const r = (14 + activity * 22 + chaos * 16) * phenGain;
+  const p = sig.wanderPhase + (phen?.hue ?? 0) * 0.25;
   const q = (f: number, ph0: number): number =>
     Math.sin(ph * f + ph0) * 0.68 + Math.sin(ph * f * WANDER_PHI + ph0 * 1.7) * 0.32;
   const ax = sig.wanderAx;

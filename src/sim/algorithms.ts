@@ -104,9 +104,9 @@ export const ALGOS: readonly SortAlgo[] = [
       const l = 2 * j + 1;
       const r = 2 * j + 2;
       let g = j;
-      if (l < n && at(values, l) > at(values, g)) g = l;
-      if (r < n && at(values, r) > at(values, g)) g = r;
-      return g !== j ? [j, g] : null;
+      if (l < n && at(values, l) < at(values, g)) g = l;
+      if (r < n && at(values, r) < at(values, g)) g = r;
+      return g !== j && at(values, j) > at(values, g) ? [j, g] : null;
     },
   },
   {
@@ -144,8 +144,11 @@ export const ALGOS: readonly SortAlgo[] = [
     name: 'GNOME CRAWL',
     step(values, length, i) {
       if (length < 2) return null;
-      const j = i % length;
-      return j > 0 && at(values, j) < at(values, j - 1) ? [j - 1, j] : null;
+      const span = length - 1;
+      const cycle = span > 1 ? span * 2 - 2 : 1;
+      const pos = i % cycle;
+      const j = 1 + (pos < span ? pos : cycle - pos);
+      return j > 0 && j < length && at(values, j) < at(values, j - 1) ? [j - 1, j] : null;
     },
   },
   {
@@ -153,11 +156,16 @@ export const ALGOS: readonly SortAlgo[] = [
     step(values, length, i) {
       if (length < 2) return null;
       const c = i % length;
-      let p = 0;
-      for (let k = c + 1; k < length; k++) {
-        if (at(values, k) < at(values, c)) p++;
+      const vc = at(values, c);
+      let rank = 0;
+      for (let k = 0; k < length; k++) {
+        const vk = at(values, k);
+        if (vk < vc || (vk === vc && k < c)) rank++;
       }
-      return p > 0 && c !== p % length ? [c, p % length] : null;
+      if (rank === c) return null;
+      const lo = Math.min(c, rank);
+      const hi = Math.max(c, rank);
+      return at(values, lo) > at(values, hi) ? [lo, hi] : null;
     },
   },
   {
@@ -206,8 +214,8 @@ export const ALGOS: readonly SortAlgo[] = [
     name: 'COUNT PHASE',
     step(values, length, i) {
       if (length < 2) return null;
-      const j = i % length;
-      const t = (i + 1) % length;
+      const j = i % (length - 1);
+      const t = Math.min(length - 1, j + 1 + ((i >> 4) % 2));
       return j !== t && at(values, j) > at(values, t) ? [j, t] : null;
     },
   },
@@ -216,11 +224,14 @@ export const ALGOS: readonly SortAlgo[] = [
     step(values, length, i) {
       if (length < 2) return null;
       const d = Math.pow(10, i % 3);
-      const j = i % length;
-      const k = (j + 1) % length;
-      return Math.floor(at(values, j) / d) % 10 > Math.floor(at(values, k) / d) % 10
-        ? [j, k]
-        : null;
+      const j = i % (length - 1);
+      const k = j + 1;
+      const vj = at(values, j);
+      const vk = at(values, k);
+      const scale = Math.max(Math.abs(vj), Math.abs(vk)) <= 1 ? 1000 : 1;
+      const dj = Math.floor((vj * scale) / d) % 10;
+      const dk = Math.floor((vk * scale) / d) % 10;
+      return dj > dk || (dj === dk && vj > vk) ? [j, k] : null;
     },
   },
   {
@@ -241,7 +252,10 @@ export const ALGOS: readonly SortAlgo[] = [
       if (length < 2) return null;
       const j = i % length;
       const k = (j + 3) % length;
-      return at(values, j) > at(values, k) ? [j, k] : null;
+      if (j === k) return null;
+      const lo = Math.min(j, k);
+      const hi = Math.max(j, k);
+      return at(values, lo) > at(values, hi) ? [lo, hi] : null;
     },
   },
   {
@@ -290,8 +304,8 @@ export const ALGOS: readonly SortAlgo[] = [
       if (p >= length || p === j) return null;
       const lo = j < p ? j : p;
       const hi = j < p ? p : j;
-      // Ascending block ⇒ keep min low; descending block ⇒ keep max low.
-      const ascending = ((lo / (stride << 1)) & 1) === 0;
+      // Ascending block ⇒ keep min low; final merge pass forces ascending convergence.
+      const ascending = stride === 1 || ((lo / (stride << 1)) & 1) === 0;
       const outOfOrder = ascending
         ? at(values, lo) > at(values, hi)
         : at(values, lo) < at(values, hi);

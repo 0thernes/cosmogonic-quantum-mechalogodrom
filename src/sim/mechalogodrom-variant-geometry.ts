@@ -83,16 +83,19 @@ function mobiusPoint(
   stairLevels: number,
   stairAmp: number,
   out: { x: number; y: number; z: number },
+  halfTwists = 1,
 ): void {
   // Standard half-twist ruled Möbius band, plus an Escher staircase: the centreline height is
   // QUANTIZED into `stairLevels` discrete steps of a sine climb — stairs that ascend forever
   // around a loop that has only one side.
-  const half = u / 2;
+  const half = (u * halfTwists) / 2;
   const r = 1 + w * Math.cos(half);
-  const raw = Math.sin(u * 3) * stairAmp;
-  const stepped = Math.round((raw / stairAmp) * stairLevels) * (stairAmp / stairLevels);
+  const safeAmp = Math.max(1e-6, stairAmp);
+  const raw = Math.sin(u * 3) * safeAmp;
+  const stepped =
+    stairLevels > 0 ? Math.round((raw / safeAmp) * stairLevels) * (safeAmp / stairLevels) : raw;
   out.x = r * Math.cos(u);
-  out.y = w * Math.sin(half) + (stairLevels > 0 ? stepped : raw);
+  out.y = w * Math.sin(half) + stepped;
   out.z = r * Math.sin(u);
 }
 
@@ -204,15 +207,15 @@ function makeMobiusEscher(): VariantShellGeometry {
 
 /**
  * FALSIFIABLE TOPOLOGY (test surface): transport the ruling direction around the Möbius loop —
- * the band is non-orientable, so the returned direction is the NEGATIVE of the start. Returns the
- * dot product of the start/end transported ruling (−1 for a true half-twist band).
+ * the band is non-orientable for odd `halfTwists`, so the returned direction is the NEGATIVE of
+ * the start (−1 for a true half-twist band, +1 for an orientable full-twist band; #130).
  */
-export function mobiusHolonomyDot(): number {
+export function mobiusHolonomyDot(halfTwists = 1, stairAmp = 0.0001): number {
   const P0 = { x: 0, y: 0, z: 0 };
   const P1 = { x: 0, y: 0, z: 0 };
   const dir = (u: number, o: { x: number; y: number; z: number }): void => {
-    mobiusPoint(u, -0.5, 0, 0.0001, P0);
-    mobiusPoint(u, 0.5, 0, 0.0001, P1);
+    mobiusPoint(u, -0.5, 0, stairAmp, P0, halfTwists);
+    mobiusPoint(u, 0.5, 0, stairAmp, P1, halfTwists);
     const l = Math.hypot(P1.x - P0.x, P1.y - P0.y, P1.z - P0.z) || 1;
     o.x = (P1.x - P0.x) / l;
     o.y = (P1.y - P0.y) / l;
@@ -221,7 +224,7 @@ export function mobiusHolonomyDot(): number {
   const start = { x: 0, y: 0, z: 0 };
   const end = { x: 0, y: 0, z: 0 };
   dir(0, start);
-  dir(TAU, end); // u = 2π returns to the SAME centreline point with the ruling reversed
+  dir(TAU, end); // u = 2π returns to the SAME centreline point with the ruling reversed for odd twists
   return start.x * end.x + start.y * end.y + start.z * end.z;
 }
 

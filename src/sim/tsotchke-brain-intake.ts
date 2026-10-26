@@ -92,11 +92,17 @@ export function substrateScalar(
       break;
     }
     case 'metal-sim': // tensorcore — deterministic local GEMM morph-bias facade
-      raw = tensorcoreMorphBias(4 + repo.hue * 12, 1 + (idx % 8));
+      raw = tensorcoreMorphBias(4 + repo.hue * 12 + s * 4, 1 + ((idx + f) % 8));
       break;
-    case 'equivariant-sym': // libirrep — SU(2) dimension + symmetry mode count
-      raw = su2Dimension((idx % 5) * 0.5) + libirrepSymmetry(2 + (idx % 4), 8) * 0.01;
+    case 'equivariant-sym': {
+      // libirrep — SU(2) dimension + Wigner rotation + symmetry mode count
+      const j = 0.5 + (idx % 4) * 0.5;
+      raw =
+        (su2Dimension(j) - 3) * 0.35 +
+        (s - 0.5) * 0.8 +
+        libirrepSymmetry(2 + ((idx + f) % 4), 8) * 0.1;
       break;
+    }
     case 'quantum-geometry': // QGT — bounded aliveness proxy over curvature/phase
       raw = qgeAlivenessProxy(s, f * 0.017 + repo.hue * 6.2832);
       break;
@@ -112,10 +118,19 @@ export function substrateScalar(
       raw = Math.sin((s + repo.hue) * Math.PI + f * 0.013) ** 2;
       break;
     case 'classical-rng': // classical_rng
-      raw = classicalEntropyGap((seed ^ (idx * 0x9e37)) >>> 0, 16);
+      raw = classicalEntropyGap(
+        (seed ^ Math.imul(idx + 1, 0x9e37) ^ Math.imul(f + 1, 0x85eb)) >>> 0,
+        16,
+      );
       break;
     case 'qrng-api': // Quantum-RNG-API: harvested API contract around the deterministic model
-      raw = classicalEntropyGap((seed ^ (idx * 0x45d9)) >>> 0, 12) * 0.75 + repo.hue * 0.25;
+      raw =
+        classicalEntropyGap(
+          (seed ^ Math.imul(idx + 1, 0x45d9) ^ Math.imul(f + 1, 0xc2b2)) >>> 0,
+          12,
+        ) *
+          0.75 +
+        repo.hue * 0.25;
       break;
     case 'classical-baseline': // simple_mnist learner/classifier baseline
       PERC_INPUT[0] = s;
@@ -161,7 +176,7 @@ export function substrateScalar(
       break;
     case 'game-physics': {
       const body = asteroidSpawn((seed ^ Math.imul(idx + 1, 0x9e37_79b1)) >>> 0);
-      asteroidThrust(body, 0.05 + s * 0.08);
+      asteroidThrust(body, 0.05 + s * 0.08 + (f % 7) * 0.01);
       asteroidStep(body, 0.2 + ((f % 7) + 1) * 0.03);
       raw = asteroidEnergy(body);
       break;
@@ -334,7 +349,7 @@ export interface CorpusBrainReport {
   allLoadBearing: boolean;
 }
 
-const LOAD_TOL = 1e-9;
+const LOAD_TOL = 1e-4;
 
 /**
  * Ablate each wired repo in turn and measure how far the brain intake moves — the honest form of

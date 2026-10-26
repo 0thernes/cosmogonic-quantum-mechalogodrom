@@ -1033,7 +1033,6 @@ export class AlphabetPantheonRender implements PortalImmune {
     this.apexCore.scale.setScalar(22 * pulse);
     this.apexHalo.scale.setScalar(14 * (1 + 0.12 * Math.sin(ph * 2.9)));
     this.apexSpikes.scale.setScalar(18 * (1 + 0.15 * Math.cos(ph * 5.1)));
-    C.setHSL((0.92 + Math.sin(ph * 0.7) * 0.08) % 1, 1, 0.52);
     // apexCore is now a ShaderMaterial so we don't copy color directly
     C.setHSL((0.72 + Math.cos(ph * 0.5) * 0.12) % 1, 1, 0.34);
     (this.apexHalo.material as THREE.MeshBasicMaterial).color.copy(C);

@@ -156,7 +156,7 @@ export class PortalDeath {
       this.deathIndices.length = 0;
       for (let i = list.length - 1; i >= 0; i--) {
         const e = list[i];
-        if (!e) continue;
+        if (!e || e.userData.isNhi) continue;
         const p = e.position;
         if (isProtected?.(p.x, p.z)) continue;
         const dx = p.x - PORTAL_X;

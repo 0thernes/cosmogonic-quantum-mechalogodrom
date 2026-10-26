@@ -78,6 +78,40 @@ function hermitianInner(
   return [re, im];
 }
 
+/** Compute Tr(ρ A B) for d×d Hermitian matrices ρ, A, B stored in row-major flattened buffers. */
+function computeRhoWeightedTrace(
+  rhoRe: Float64Array,
+  rhoIm: Float64Array,
+  aRe: Float64Array,
+  aIm: Float64Array,
+  bRe: Float64Array,
+  bIm: Float64Array,
+  dim: number,
+): [number, number] {
+  let re = 0;
+  let im = 0;
+  for (let i = 0; i < dim; i++) {
+    for (let k = 0; k < dim; k++) {
+      const rik = i * dim + k;
+      const rr = rhoRe[rik] ?? 0;
+      const ri = rhoIm[rik] ?? 0;
+      for (let j = 0; j < dim; j++) {
+        const akj = k * dim + j;
+        const bji = j * dim + i;
+        const ar = aRe[akj] ?? 0;
+        const ai = aIm[akj] ?? 0;
+        const br = bRe[bji] ?? 0;
+        const bi = bIm[bji] ?? 0;
+        const abr = ar * br - ai * bi;
+        const abi = ar * bi + ai * br;
+        re += rr * abr - ri * abi;
+        im += rr * abi + ri * abr;
+      }
+    }
+  }
+  return [re, im];
+}
+
 /** Compute purity Tr(ρ²) from flattened density matrix. */
 export function computePurity(rhoRe: Float64Array, rhoIm: Float64Array, dim: number): number {
   const [re, _im] = hermitianInner(rhoRe, rhoIm, rhoRe, rhoIm, dim);
@@ -166,9 +200,18 @@ export function mixedStateQuantumGeometricTensor(
 
   for (let i = 0; i < P; i++) {
     for (let j = 0; j < P; j++) {
-      // Tr(ρ ∂_i ρ ∂_j ρ) — we approximate this as Tr(∂_i ρ ∂_j ρ) for efficiency
-      // The full expression involves the Moore-Penrose pseudoinverse of ρ
-      const [qiqjRe, qiqjIm] = hermitianInner(dRe[i]!, dIm[i]!, dRe[j]!, dIm[j]!, d2);
+      // Tr(ρ ∂_i ρ ∂_j ρ) carries the genuine antisymmetric Uhlmann/SLD imaginary part Im Tr(ρ [∂_i ρ, ∂_j ρ])
+      // (whereas Tr(∂_i ρ ∂_j ρ) of two Hermitian tangents is strictly real).
+      const [qiqjRe, _qiqjIm] = hermitianInner(dRe[i]!, dIm[i]!, dRe[j]!, dIm[j]!, d2);
+      const [_wRe, wIm] = computeRhoWeightedTrace(
+        baseRe,
+        baseIm,
+        dRe[i]!,
+        dIm[i]!,
+        dRe[j]!,
+        dIm[j]!,
+        dim,
+      );
 
       const ai = rhoDi[i]![0];
       const bi = rhoDi[i]![1];
@@ -178,7 +221,7 @@ export function mixedStateQuantumGeometricTensor(
       const prodIm = ai * bj + bi * aj;
 
       const re = qiqjRe - prodRe;
-      const im = qiqjIm - prodIm;
+      const im = -2 * (wIm - prodIm);
 
       metric[i]![j] = re;
       berry[i]![j] = im;

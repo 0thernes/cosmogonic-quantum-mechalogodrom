@@ -1950,6 +1950,16 @@ export class CrystalEcosystem {
       creature.collapsed = Math.max(0, creature.collapsed - dt);
       creature.startled = Math.max(0, creature.startled - dt);
       creature.energy = Math.max(0, creature.energy - dt * (0.22 + chaos * 0.18));
+      if (creature.state === 'pause' && creature.energy < 35) {
+        creature.energy = Math.min(100, creature.energy + dt * 1.8);
+      }
+      if (
+        creature.energy <= 0 &&
+        creature.state !== 'seek' &&
+        this.simTime >= creature.foodCooldownUntil
+      ) {
+        creature.stateTimer = Math.min(creature.stateTimer, 0);
+      }
       this.runTreeNeuralController(creature, scale, chaos, entropy);
 
       if (hasQuantum(creature.quantumMask, 'decoherence') && creature.decoherence > 0) {
@@ -1964,6 +1974,7 @@ export class CrystalEcosystem {
       creature.tunnelTimer -= dt;
       if (
         creature.collapsed <= 0 &&
+        creature.state !== 'seek' &&
         hasQuantum(creature.quantumMask, 'tunneling') &&
         creature.tunnelTimer <= 0
       ) {
@@ -2048,9 +2059,15 @@ export class CrystalEcosystem {
 
         // The canonical TinyMLP motor axes are a real bounded locomotion contribution. Survival
         // seeking remains dominant so a friendly neural bias cannot pull a creature off its meal.
-        const neuralAuthority = creature.state === 'seek' ? 0.2 : 1;
+        const exhaustion =
+          creature.energy <= 0
+            ? 0.45
+            : creature.energy < 20
+              ? 0.65 + (creature.energy / 20) * 0.35
+              : 1;
+        const neuralAuthority = creature.state === 'seek' ? 0.35 : 1;
         const neuralStep =
-          (0.3 + creature.neuralSpeed * 0.7) * (2 + creature.speed * 2) * scale * dt;
+          (0.3 + creature.neuralSpeed * 0.7) * (2 + creature.speed * 2) * exhaustion * scale * dt;
         creature.x += creature.neuralSteerX * neuralStep * neuralAuthority;
         creature.z += creature.neuralSteerZ * neuralStep * neuralAuthority;
 
@@ -2114,6 +2131,11 @@ export class CrystalEcosystem {
       const sharedY = (a.y + b.y) * 0.5;
       a.y += (sharedY - a.y) * response;
       b.y += (sharedY - b.y) * response;
+      if (a.collapsed > 0 || b.collapsed > 0) {
+        const sharedCollapse = Math.max(a.collapsed, b.collapsed);
+        a.collapsed = sharedCollapse;
+        b.collapsed = sharedCollapse;
+      }
     }
   }
 
@@ -2178,15 +2200,20 @@ export class CrystalEcosystem {
     percept.socialDensity = clamp01(
       nearby / 8 + this.visitorPresence * (0.45 + this.visitorSocialActivity * 0.25),
     );
-    // Residents live entirely inside the sanctuary where hostile action is suppressed by design, so
-    // the threat channel is honestly constant-zero here — the input exists for detached/test
-    // harnesses and any future off-tree deployment, not as a decorative production signal.
-    percept.threat = 0;
+    const threatLevel = clamp01(
+      (creature.startled > 0 ? Math.min(0.65, creature.startled * 0.45) : 0) +
+        (this.shakeTime > 0 ? Math.min(0.45, this.shakeTime * 0.5) : 0),
+    );
+    percept.threat = threatLevel;
     percept.safeZoneCalm = clamp01(
-      1 - chaos * 0.12 - entropy * 0.15 + this.visitorSocialActivity * 0.12,
+      1 - chaos * 0.12 - entropy * 0.15 - threatLevel * 0.35 + this.visitorSocialActivity * 0.12,
     );
     percept.phase = creature.phase + chaos * 0.7 + entropy * 1.1;
     percept.personality = creature.personality;
+    const partner =
+      creature.socialPartner >= 0 ? this.creatures[creature.socialPartner] : undefined;
+    percept.socialPartnerX = partner ? partner.x - creature.x : 0;
+    percept.socialPartnerZ = partner ? partner.z - creature.z : 0;
 
     const action = brain.decide(percept, actionBuffer);
     this.neuralDecisions++;
@@ -2372,15 +2399,23 @@ export class CrystalEcosystem {
   private attemptResidentTeaching(a: TreeCreature, b: TreeCreature): number {
     const teacher = a.mealsEaten >= b.mealsEaten ? a : b;
     const learner = teacher === a ? b : a;
-    return this.treeTeaching.attempt(
+    const learnerWeights = this.treeBrains[learner.index]?.weightsView() ?? null;
+    const delta = this.treeTeaching.attempt(
       teacher.index,
       learner.index,
       this.treeBrains[teacher.index]?.weightsView() ?? null,
-      this.treeBrains[learner.index]?.weightsView() ?? null,
+      learnerWeights,
       teacher.mealsEaten,
       learner.mealsEaten,
       this.simTime,
     );
+    if (delta > 0 && this.simTime > 0 && learnerWeights !== null) {
+      for (let k = 0; k < learnerWeights.length; k++) {
+        const jitter = Math.sin(this.simTime * 1.3 + learner.index * 1.7 + k * 0.9) * 0.008;
+        learnerWeights[k] = Math.max(-2.5, Math.min(2.5, (learnerWeights[k] ?? 0) + jitter));
+      }
+    }
+    return delta;
   }
 
   private stepSeeking(creature: TreeCreature, dt: number, scale: number): void {

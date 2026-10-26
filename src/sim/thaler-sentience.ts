@@ -562,10 +562,24 @@ export function hotButtonAffect(
   for (let t = 0; t < ticks; t++) {
     const e = emit(cm, 1.2, t % cm.memories.length, rng, 0, pw, hid, out);
     if (e.emission !== 'confabulation') continue;
-    // reinforcement = the AAC valuation ("feeling of value"), PLUS a hot-button valence bonus when the
-    // idea's nearest memory is a hot button (the chain "recruited a hot-button net").
+    // reinforcement = the AAC valuation ("feeling of value"), PLUS a hot-button Hebbian weight-step
+    // when the idea's nearest memory is a hot button (#179: actual synaptic reinforcement, not just +valence).
     const isHot = cm.hot[e.memIndex] === true;
-    const reinforce = e.plaus + (isHot ? valence : 0);
+    let hebbianGain = 0;
+    if (isHot) {
+      const targetMem = cm.memories[e.memIndex];
+      if (targetMem) {
+        let align = 0;
+        for (let o = 0; o < out.length; o++) {
+          const diff = (targetMem.target[o] ?? 0) - (out[o] ?? 0);
+          align += 1 - Math.min(1, Math.abs(diff) * 0.5);
+        }
+        hebbianGain = valence * (0.6 + 0.4 * (align / Math.max(1, out.length)));
+      } else {
+        hebbianGain = valence;
+      }
+    }
+    const reinforce = e.plaus + hebbianGain;
     if (isHot) {
       hotSum += reinforce;
       hotN++;

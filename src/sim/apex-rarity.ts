@@ -177,13 +177,13 @@ export const BASELINES: readonly BaselineSystem[] = [
   },
 ];
 
-/** The full rarity report — the machine-checkable form of the 1-of-1-by-combination claim. */
+/** The full rarity report — the machine-checkable form of the 1-of-1-by-combination claim (author-curated architectural feature comparison, #118). */
 export interface RarityReport {
   /** Number of axes in the signature (8). */
   axisCount: number;
   /** How many axes the APEX design satisfies (target: all 8). */
   apexAxisCount: number;
-  /** Per-baseline overlap with the eight axes. */
+  /** Per-baseline overlap with the eight axes (self-declared architectural matrix). */
   baselines: { name: string; overlap: number; satisfies: RarityAxis[] }[];
   /** The best any prior system does — the "closest challenger" overlap. */
   maxBaselineOverlap: number;
@@ -191,6 +191,8 @@ export interface RarityReport {
   oneOfOneByCombination: boolean;
   /** Completeness: organs not backing ANY axis (should be empty — every organ is load-bearing). */
   organsWithoutAxis: ApexOrganKey[];
+  /** Explicit provenance note (#118): author-curated architectural feature matrix, not an external empirical benchmark. */
+  methodologyNote?: string;
 }
 
 /** Compute the rarity report. Deterministic (pure function of the module's constant data). */
@@ -216,5 +218,7 @@ export function rarityReport(): RarityReport {
     maxBaselineOverlap,
     oneOfOneByCombination,
     organsWithoutAxis,
+    methodologyNote:
+      'author-curated architectural feature matrix (self-declared taxonomy comparison)',
   };
 }

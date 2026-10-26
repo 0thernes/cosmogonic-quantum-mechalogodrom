@@ -276,8 +276,8 @@ export class ReactionDiffusionSystem {
     if (weather === 'STORM') feed += FEED_STORM_BOOST;
     else if (weather === 'VOID') kill += KILL_VOID_BOOST;
     else if (weather === 'AURORA') diffusion = AURORA_DIFFUSION_BOOST;
-    const du = DIFFUSION_U * 0.16 * diffusion;
-    const dv = DIFFUSION_V * 0.16 * diffusion;
+    const du = DIFFUSION_U * diffusion;
+    const dv = DIFFUSION_V * diffusion;
     const res = zigGrayScottStepRgbaF32(
       this.u,
       this.v,

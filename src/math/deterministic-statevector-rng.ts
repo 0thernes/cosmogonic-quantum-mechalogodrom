@@ -281,15 +281,18 @@ export class DeterministicStatevectorRng {
   x(qubit: number): void {
     this.assertQubit(qubit);
     const bit = 1 << qubit;
-    for (let i0 = 0; i0 < this.dimension; i0++) {
-      if ((i0 & bit) !== 0) continue;
-      const i1 = i0 | bit;
-      const r = this.real[i0] ?? 0;
-      const j = this.imag[i0] ?? 0;
-      this.real[i0] = this.real[i1] ?? 0;
-      this.imag[i0] = this.imag[i1] ?? 0;
-      this.real[i1] = r;
-      this.imag[i1] = j;
+    const stride = bit << 1;
+    for (let base = 0; base < this.dimension; base += stride) {
+      for (let offset = 0; offset < bit; offset++) {
+        const i0 = base + offset;
+        const i1 = i0 + bit;
+        const r = this.real[i0] ?? 0;
+        const j = this.imag[i0] ?? 0;
+        this.real[i0] = this.real[i1] ?? 0;
+        this.imag[i0] = this.imag[i1] ?? 0;
+        this.real[i1] = r;
+        this.imag[i1] = j;
+      }
     }
   }
 
@@ -297,10 +300,13 @@ export class DeterministicStatevectorRng {
   z(qubit: number): void {
     this.assertQubit(qubit);
     const bit = 1 << qubit;
-    for (let i = 0; i < this.dimension; i++) {
-      if ((i & bit) === 0) continue;
-      this.real[i] = -(this.real[i] ?? 0);
-      this.imag[i] = -(this.imag[i] ?? 0);
+    const stride = bit << 1;
+    for (let base = bit; base < this.dimension; base += stride) {
+      for (let offset = 0; offset < bit; offset++) {
+        const i = base + offset;
+        this.real[i] = -(this.real[i] ?? 0);
+        this.imag[i] = -(this.imag[i] ?? 0);
+      }
     }
   }
 
@@ -308,11 +314,14 @@ export class DeterministicStatevectorRng {
   s(qubit: number): void {
     this.assertQubit(qubit);
     const bit = 1 << qubit;
-    for (let i = 0; i < this.dimension; i++) {
-      if ((i & bit) === 0) continue;
-      const r = this.real[i] ?? 0;
-      this.real[i] = -(this.imag[i] ?? 0);
-      this.imag[i] = r;
+    const stride = bit << 1;
+    for (let base = bit; base < this.dimension; base += stride) {
+      for (let offset = 0; offset < bit; offset++) {
+        const i = base + offset;
+        const r = this.real[i] ?? 0;
+        this.real[i] = -(this.imag[i] ?? 0);
+        this.imag[i] = r;
+      }
     }
   }
 
@@ -347,15 +356,19 @@ export class DeterministicStatevectorRng {
     const c = Math.cos(angle * 0.5);
     const s = Math.sin(angle * 0.5);
     const bit = 1 << qubit;
-    for (let i = 0; i < this.dimension; i++) {
-      const r = this.real[i] ?? 0;
-      const j = this.imag[i] ?? 0;
-      if ((i & bit) === 0) {
-        this.real[i] = c * r + s * j;
-        this.imag[i] = c * j - s * r;
-      } else {
-        this.real[i] = c * r - s * j;
-        this.imag[i] = c * j + s * r;
+    const stride = bit << 1;
+    for (let base = 0; base < this.dimension; base += stride) {
+      for (let offset = 0; offset < bit; offset++) {
+        const i0 = base + offset;
+        const i1 = i0 + bit;
+        const r0 = this.real[i0] ?? 0;
+        const j0 = this.imag[i0] ?? 0;
+        this.real[i0] = c * r0 + s * j0;
+        this.imag[i0] = c * j0 - s * r0;
+        const r1 = this.real[i1] ?? 0;
+        const j1 = this.imag[i1] ?? 0;
+        this.real[i1] = c * r1 - s * j1;
+        this.imag[i1] = c * j1 + s * r1;
       }
     }
   }
@@ -452,11 +465,24 @@ export class DeterministicStatevectorRng {
   }
 
   private recordHealthWord(word: bigint): void {
-    for (let bit = 0; bit < 64; bit++) {
-      this.healthWindow[this.healthCursor] = Number((word >> BigInt(bit)) & 1n);
-      this.healthCursor = (this.healthCursor + 1) % this.healthWindow.length;
-      if (this.healthCount < this.healthWindow.length) this.healthCount++;
+    const lo = Number(word & 0xffff_ffffn) >>> 0;
+    const hi = Number((word >> 32n) & 0xffff_ffffn) >>> 0;
+    const win = this.healthWindow;
+    const cap = win.length;
+    let cur = this.healthCursor;
+    let cnt = this.healthCount;
+    for (let bit = 0; bit < 32; bit++) {
+      win[cur] = (lo >>> bit) & 1;
+      cur = cur + 1 === cap ? 0 : cur + 1;
+      if (cnt < cap) cnt++;
     }
+    for (let bit = 0; bit < 32; bit++) {
+      win[cur] = (hi >>> bit) & 1;
+      cur = cur + 1 === cap ? 0 : cur + 1;
+      if (cnt < cap) cnt++;
+    }
+    this.healthCursor = cur;
+    this.healthCount = cnt;
   }
 
   /**

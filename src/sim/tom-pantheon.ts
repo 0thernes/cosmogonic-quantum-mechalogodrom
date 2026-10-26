@@ -149,6 +149,7 @@ class ParametricTom {
   private readonly belief: Float32Array;
   private readonly prior: Float32Array;
   private readonly scratch: Float32Array;
+  private readonly coalScratch: Float32Array; // #174: pre-allocated scratch for coalition smoothing (zero per-beat alloc)
   private readonly lastCue: Float32Array; // TEMPORAL family: previous beat's per-plan cue (trend term)
   private menace = 0;
   private surprise = 0;
@@ -164,6 +165,7 @@ class ParametricTom {
     this.belief = new Float32Array(n).fill(1 / n);
     this.prior = new Float32Array(n).fill(1 / n);
     this.scratch = new Float32Array(n);
+    this.coalScratch = new Float32Array(n);
     this.lastCue = new Float32Array(n);
   }
 
@@ -242,17 +244,16 @@ class ParametricTom {
         break;
       }
       case 'coalition': {
-        // Neighbour-coupled: compute a base then smooth across adjacent plans so group intent clusters.
+        // Neighbour-coupled: compute a base then smooth across adjacent plans so group intent clusters (#174: pre-allocated coalScratch).
         for (let plan = 0; plan < n; plan++) {
-          this.scratch[plan] =
+          this.coalScratch[plan] =
             this.profile.decay * at(this.prior, plan) + this.profile.gain * this.cueFor(plan, cues);
         }
-        const base = Float32Array.from(this.scratch);
         const k = 0.3 + 0.4 * this.profile.hostility;
         for (let plan = 0; plan < n; plan++) {
-          const left = at(base, (plan - 1 + n) % n);
-          const right = at(base, (plan + 1) % n);
-          this.scratch[plan] = at(base, plan) + k * 0.5 * (left + right);
+          const left = at(this.coalScratch, (plan - 1 + n) % n);
+          const right = at(this.coalScratch, (plan + 1) % n);
+          this.scratch[plan] = at(this.coalScratch, plan) + k * 0.5 * (left + right);
         }
         break;
       }

@@ -182,10 +182,11 @@ export class Noosphere {
       this.field[d] = clamp01((this.field[d] ?? 0) + symCorr * (d % 2 === 0 ? 1 : -1));
     }
 
-    // quakePerturb: sustains creative diversity (prevents trivial fixed point)
+    // quakePerturb: sustains creative diversity (prevents trivial fixed point, #134 additive phase shift)
     const qk = quakePerturb(this.kuramotoOrder, this.beatCount % 47, 0.06);
-    this.archonPhases[this.beatCount % N_ARCHONS] =
-      ((this.archonPhases[this.beatCount % N_ARCHONS] ?? 0) * qk) % (2 * Math.PI);
+    const aIdx = this.beatCount % N_ARCHONS;
+    this.archonPhases[aIdx] =
+      ((this.archonPhases[aIdx] ?? 0) + (qk - 1) * 0.25 + 2 * Math.PI) % (2 * Math.PI);
 
     // Collective coherence: combination of Kuramoto order + field coherence
     const fieldMean = this.field.reduce((s, v) => s + v, 0) / FIELD_DIM;

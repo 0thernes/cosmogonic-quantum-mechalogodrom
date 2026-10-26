@@ -183,13 +183,23 @@ export class NhiSystem {
   private beat = 0;
 
   /** Birth a mind for a newly-launched NHI `id` from the seeded rng. Idempotent per id. */
-  register(id: number, rng: Rng): void {
+  register(id: number, rng: Rng, lineage = false): void {
     if (!Number.isSafeInteger(id) || id < 0) {
       throw new RangeError('NHI system id must be a non-negative safe integer');
     }
     if (this.minds.has(id)) return;
     if (this.minds.size >= NHI_SYSTEM_MIND_CAP) {
       throw new RangeError(`NHI system mind cap ${NHI_SYSTEM_MIND_CAP} exceeded`);
+    }
+    if (lineage && this.minds.size > 0) {
+      const ids = this.ids();
+      const parentA = this.minds.get(ids[Math.floor(rng() * ids.length)]!);
+      const parentB =
+        ids.length > 1 ? this.minds.get(ids[Math.floor(rng() * ids.length)]!) : undefined;
+      if (parentA) {
+        this.minds.set(id, parentA.spawnChild(rng, parentB !== parentA ? parentB : undefined));
+        return;
+      }
     }
     this.minds.set(id, new NhiMind(rng));
   }
@@ -345,7 +355,12 @@ export class NhiSystem {
           world.apply(id, intent, renderUtterance(intent.utterance)),
         );
         phase = 'acknowledge';
-        mind.acknowledge(intent.action, outcome.factSupported);
+        const realizedPayoff =
+          (outcome.effectApplied ? 0.35 : -0.25) +
+          (outcome.factSupported ? 0.45 : 0) +
+          Math.min(1, outcome.energyTransferred * 0.1) +
+          Math.min(0.4, outcome.affected * 0.08);
+        mind.acknowledge(intent.action, outcome.factSupported, realizedPayoff);
       } catch (error) {
         if (onFailure === undefined) throw error;
         report({ id, beat: this.beat, phase, error });

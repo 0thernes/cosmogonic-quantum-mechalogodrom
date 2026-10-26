@@ -557,7 +557,8 @@ export function tsotchkeSimWiringFraction(threshold = 0.7): number {
   for (const e of ENTRIES) {
     if (e.wiring > 0) {
       sim += 1;
-      if (e.wiring >= threshold) full += 1;
+      const depthWeight = e.depth === 'deep' ? 1.0 : e.depth === 'wired' ? 0.85 : 0.55;
+      if (e.wiring * depthWeight >= threshold) full += 1;
     }
   }
   return sim === 0 ? 0 : full / sim;

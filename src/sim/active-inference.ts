@@ -214,9 +214,16 @@ export class ActiveInference {
         z += e;
       }
       const inv = z > 0 ? 1 / z : 0;
-      for (let k = 0; k < K; k++) this.qNext[k] = (this.qNext[k] ?? 0) * inv;
+      let kl = 0;
+      for (let k = 0; k < K; k++) {
+        const qk = (this.qNext[k] ?? 0) * inv;
+        this.qNext[k] = qk;
+        const pk = Math.max(1e-9, this.belief[k] ?? 1 / K);
+        if (qk > 1e-12) kl += qk * Math.log(qk / pk);
+      }
       const hNext = this.entropyOf(this.qNext, K);
-      const epistemic = hNow - hNext; // one-sample info-gain surrogate (CAN be negative for a blurring ô)
+      // #147: blend posterior entropy reduction with non-negative KL information gain D_KL(q(s|ô) ‖ q(s))
+      const epistemic = 0.5 * (hNow - hNext) + 0.5 * Math.max(0, kl);
       let pragmatic = 0; // alignment of the expected observation with preferences C
       for (let m = 0; m < this.obsDim; m++) pragmatic += (this.pref[m] ?? 0) * (o[m] ?? 0);
       const g = -epistemic - pragmatic; // minimise G ⇒ maximise info gain + preference

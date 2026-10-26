@@ -199,28 +199,25 @@ export class DomeFeeding {
           // NHI backing bodies are consumption-immune; explicit lethal hazards are handled elsewhere.
           if (!e || e.userData.isNhi) continue;
           const p = e.position;
-          // Decomposed gate fast path: every feeder in xyz[] already passed the attacker-side probe
-          // above, so the pairwise verdict for this row is `!isProtected(prey)` for ALL fc feeders.
-          // One probe replaces fc pairwise calls; a protected prey suppresses exactly fc pairs (the
-          // per-pair increments the pairwise form produced) and skips the row.
-          if (harmGate !== undefined && harmGate.isProtected(p.x, p.z)) {
-            harmGate.suppressed(fc);
-            continue;
-          }
+          const preyProt = harmGate !== undefined && harmGate.isProtected(p.x, p.z);
           let caughtFeeder = -1;
           for (let g = 0; g < fc; g++) {
             const o = g * 3;
-            if (
-              harmGate === undefined &&
-              harmAllowed !== undefined &&
-              !harmAllowed(xyz[o]!, xyz[o + 2]!, p.x, p.z)
-            ) {
-              continue;
-            }
             const dx = p.x - xyz[o]!;
             const dy = p.y - xyz[o + 1]!;
             const dz = p.z - xyz[o + 2]!;
             if (dx * dx + dy * dy + dz * dz <= EAT_R2) {
+              if (harmGate !== undefined) {
+                if (preyProt) {
+                  harmGate.suppressed(1);
+                  continue;
+                }
+              } else if (
+                harmAllowed !== undefined &&
+                !harmAllowed(xyz[o]!, xyz[o + 2]!, p.x, p.z)
+              ) {
+                continue;
+              }
               this.puff(p.x, p.y, p.z);
               const mi = e.userData.mi ?? 0;
               onKill?.(e, i); // measure the devoured mind BEFORE disposal (weights + senses still live)

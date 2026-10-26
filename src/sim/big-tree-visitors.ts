@@ -693,13 +693,17 @@ export class BigTreeSpeciesVisitors {
     ) {
       return;
     }
+    const ageFatigue =
+      body.userData.life > 0 ? this.clamp01(body.userData.age / body.userData.life) : 0;
+    const speedFatigue = this.clamp01(Math.hypot(body.userData.vel.x, body.userData.vel.z) * 0.08);
     this.fillContext(
       BIG_TREE_OWNER_ORDINARY,
       ownerId,
       body.position.x,
       body.position.z,
       1 - this.clamp01(body.userData.energy / 100),
-      body.userData.life > 0 ? this.clamp01(body.userData.age / body.userData.life) : 0,
+      Math.max(ageFatigue, speedFatigue * 0.5 + ageFatigue * 0.5),
+      now,
       environment,
     );
     // A being that arrived under its ordinary ecosystem controller is already a real sanctuary
@@ -718,6 +722,8 @@ export class BigTreeSpeciesVisitors {
     );
     if (
       visitId === NO_BIG_TREE_VISIT &&
+      this.context.recentVisit < 0.5 &&
+      this.context.routeAvailable &&
       this.visits.zone.contains(body.position.x, body.position.z, false)
     ) {
       visitId = this.visits.requestVisit(
@@ -763,6 +769,7 @@ export class BigTreeSpeciesVisitors {
       body.z,
       1 - this.clamp01(body.energy),
       this.clamp01(body.age / 300),
+      now,
       environment,
     );
     let visitId = this.visits.requestContextualVisit(
@@ -775,7 +782,12 @@ export class BigTreeSpeciesVisitors {
       body.x,
       body.z,
     );
-    if (visitId === NO_BIG_TREE_VISIT && this.visits.zone.contains(body.x, body.z, false)) {
+    if (
+      visitId === NO_BIG_TREE_VISIT &&
+      this.context.recentVisit < 0.5 &&
+      this.context.routeAvailable &&
+      this.visits.zone.contains(body.x, body.z, false)
+    ) {
       visitId = this.visits.requestVisit(
         BIG_TREE_OWNER_XENOMIMIC,
         ownerId,
@@ -797,13 +809,25 @@ export class BigTreeSpeciesVisitors {
     z: number,
     hunger: number,
     fatigue: number,
+    now: number,
     environment: Readonly<BigTreeVisitorEnvironment> | undefined,
   ): void {
     const dx = x - this.visits.zone.centerX;
     const dz = z - this.visits.zone.centerZ;
+    let recentVisit = 0;
+    if (this.visits.readVisit(ownerKind, ownerId, this.visitView)) {
+      const elapsed = now - this.visitView.lastTransitionAt;
+      if (
+        Number.isFinite(this.visitView.lastTransitionAt) &&
+        this.visitView.lastTransitionAt > 0 &&
+        elapsed >= 0
+      ) {
+        recentVisit = this.clamp01(1 - elapsed / 30);
+      }
+    }
     this.context.hunger = hunger;
     this.context.fatigue = fatigue;
-    this.context.healthDeficit = 0;
+    this.context.healthDeficit = this.clamp01(hunger * 0.25 + fatigue * 0.2);
     this.context.stress = this.clamp01(environment?.stress ?? 0);
     this.context.socialNeed = Math.max(
       this.clamp01(environment?.socialNeed ?? 0),
@@ -817,7 +841,7 @@ export class BigTreeSpeciesVisitors {
     this.context.distance = Math.sqrt(dx * dx + dz * dz);
     this.context.routeAvailable = true;
     this.context.foodAvailable = environment?.foodAvailable !== false;
-    this.context.recentVisit = 0;
+    this.context.recentVisit = recentVisit;
     this.context.personality = this.hashUnit(ownerKind, ownerId, 0x9e3779b9);
     this.context.simulationLoad = this.clamp01(environment?.simulationLoad ?? 0);
   }
@@ -1080,12 +1104,14 @@ export class BigTreeSpeciesVisitors {
         100,
         ordinary.userData.energy + this.ordinaryRestPerSecond * dt,
       );
+      ordinary.userData.age = Math.max(0, ordinary.userData.age - 1.5 * dt);
       if (ordinary.userData.energy >= this.ordinaryRestTarget) {
         this.visits.finishActivity(ownerKind, this.activeOwnerIds[index] ?? NO_OWNER, now);
       }
     } else {
       const xenomimic = body as BigTreeXenomimicBody;
       xenomimic.energy = Math.min(1, xenomimic.energy + this.xenomimicRestPerSecond * dt);
+      xenomimic.age = Math.max(0, xenomimic.age - 4 * dt);
       if (xenomimic.energy >= this.xenomimicRestTarget) {
         this.visits.finishActivity(ownerKind, this.activeOwnerIds[index] ?? NO_OWNER, now);
       }

@@ -1339,6 +1339,13 @@ export class SuperBodySystem implements BigTreeActorSource {
     return out.copy(this.root.position);
   }
 
+  /** Reposition the avatar to a finite world coordinate and damp velocity (#138). */
+  recallTo(x: number, y: number, z: number): void {
+    if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) return;
+    this.root.position.set(x, y, z);
+    this.vel.multiplyScalar(0.15);
+  }
+
   /** V41: the avatar's unit heading (velocity direction; falls back to +Z when still). Writes `out`. */
   heading(out: THREE.Vector3): THREE.Vector3 {
     out.copy(this.vel);

@@ -853,8 +853,8 @@ function trainPairedModel(
   trials: readonly OrdinaryResourceDevelopmentV2Trial[],
   surrogateSeeds: readonly number[],
 ): PairedTrainingReceipt {
-  const identity = new EntityResourceHead(modelSeed, HEAD_TIER);
-  const corrupted = new EntityResourceHead(modelSeed, HEAD_TIER);
+  const identity = new EntityResourceHead(modelSeed, HEAD_TIER, { tanhJacobian: false });
+  const corrupted = new EntityResourceHead(modelSeed, HEAD_TIER, { tanhJacobian: false });
   const identityRevision: RevisionCounter = { value: 0 };
   const corruptedRevision: RevisionCounter = { value: 0 };
   const baseline = new LegacyBrainRuntime(modelSeed);

@@ -142,14 +142,16 @@ export class ApexQuantumSubstrate {
     //    Quantum Brain is a first-class behavioural channel, not decoration (owner mandate).
     const s = this.stabilizerQubits;
     const half = s >> 1;
+    const priorEnt = this.beat > 1 && s > 0 ? this.stab.snapshot().entanglementNorm : 0.5;
     this.stab.reset();
     const pairs = half < 1 ? 0 : Math.max(1, Math.min(half, Math.round(d * half) || 1));
     for (let i = 0; i < pairs && i + half < s; i++) {
       this.stab.h(i);
+      if (priorEnt > 0.5 && (i & 1) === 1) this.stab.s(i);
       this.stab.cnot(i, i + half);
     }
     // a beat-dependent phase for texture; a seeded stochastic collapse of one pair (entanglement dips).
-    this.stab.s((this.beat * 7) % s);
+    this.stab.s((this.beat * 7 + (priorEnt > 0.5 ? 1 : 0)) % s);
     if (this.beat % 4 === 0 && pairs > 0) this.stab.measure((this.beat * 13) % pairs, this.rStab);
 
     // ── Tsotchke corpus coupling — refresh the QGT/clifford/AD pulse from the real corpus. ─────────

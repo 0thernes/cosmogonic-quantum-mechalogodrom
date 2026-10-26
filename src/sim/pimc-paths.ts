@@ -7,7 +7,8 @@ import type { Rng } from '../math/rng';
 
 /** Single path action S = Σ (Δx²/2 + V(x)) for harmonic-ish potential. O(steps). */
 export function pathAction(path: Float32Array, potential: (x: number) => number): number {
-  let s = 0;
+  if (path.length === 0) return 0;
+  let s = potential(path[0] ?? 0);
   for (let i = 1; i < path.length; i++) {
     const dx = (path[i] ?? 0) - (path[i - 1] ?? 0);
     s += dx * dx * 0.5 + potential(path[i] ?? 0);

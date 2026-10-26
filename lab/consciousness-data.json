@@ -233,11 +233,11 @@
         "adapterReceipt": "src/sim/consciousness-adapters.ts#plant-low-bandwidth"
       },
       "lastSignals": {
-        "butlinCoverage": 0.271820789679,
-        "freeEnergyDescent": 0.389802631574,
-        "fieldCoherence": 0.498205392165,
-        "ualDepth": 0.402684926455,
-        "sensorimotorMastery": 0.368640789023
+        "butlinCoverage": 0.278116753751,
+        "freeEnergyDescent": 0.400280085982,
+        "fieldCoherence": 0.495802061503,
+        "ualDepth": 0.407069978622,
+        "sensorimotorMastery": 0.367632584922
       },
       "snapshot": {
         "entityId": "plant-grove-000",
@@ -247,9 +247,9 @@
         "frameworks": [
           {
             "id": "butlin14",
-            "score": 0.319442607159,
-            "raw": 0.271820789679,
-            "confidence": 0.998362805223,
+            "score": 0.326111347204,
+            "raw": 0.278116753751,
+            "confidence": 0.998149421928,
             "causalEffect": 0.00614355477901,
             "ablationLoss": 0.00658852610075,
             "nullSeparation": 0.177104330897,
@@ -286,9 +286,9 @@
           },
           {
             "id": "activeInference",
-            "score": 0.419640972431,
-            "raw": 0.389802631574,
-            "confidence": 0.993713719415,
+            "score": 0.430067779958,
+            "raw": 0.400280085982,
+            "confidence": 0.999207780064,
             "causalEffect": 0.0060691509823,
             "ablationLoss": 0.00639210931066,
             "nullSeparation": 0.234050661905,
@@ -312,9 +312,9 @@
           },
           {
             "id": "fieldIntegration",
-            "score": 0.498205396018,
-            "raw": 0.498205392165,
-            "confidence": 0.998033270835,
+            "score": 0.495802110821,
+            "raw": 0.495802061503,
+            "confidence": 0.997133314027,
             "causalEffect": 0.00961307346301,
             "ablationLoss": 0.00953041804624,
             "nullSeparation": 0.255900720124,
@@ -325,9 +325,9 @@
           },
           {
             "id": "ual",
-            "score": 0.448651307089,
-            "raw": 0.402684926455,
-            "confidence": 0.986372473837,
+            "score": 0.453603997986,
+            "raw": 0.407069978622,
+            "confidence": 0.994879946344,
             "causalEffect": 0.000126672377751,
             "ablationLoss": 0,
             "nullSeparation": 0.249921433059,
@@ -338,9 +338,9 @@
           },
           {
             "id": "sensorimotor",
-            "score": 0.416110032573,
-            "raw": 0.368640789023,
-            "confidence": 0.993759326437,
+            "score": 0.416005829203,
+            "raw": 0.367632584922,
+            "confidence": 0.99764546969,
             "causalEffect": 0.00121515904353,
             "ablationLoss": 0.00136514735089,
             "nullSeparation": 0.197656788092,
@@ -376,9 +376,9 @@
             "testReceipt": "tests/consciousness-kernel.test.ts"
           }
         ],
-        "index": 0.420410063054,
-        "convergence": 0.350240272949,
-        "emergence": 0.034179157275,
+        "index": 0.424318213034,
+        "convergence": 0.356352983087,
+        "emergence": 0.0345379200785,
         "eventWindow": null,
         "eventCount": 0,
         "claim": "indicatorOnly"
@@ -388,7 +388,7 @@
       "loadBearingFrameworks": [],
       "dominantFramework": "fieldIntegration",
       "weakestPresentFramework": "butlin14",
-      "meanFrameworkScore": 0.420410063054
+      "meanFrameworkScore": 0.424318213034
     },
     {
       "profile": {
@@ -417,16 +417,16 @@
         "adapterReceipt": "src/sim/consciousness-adapters.ts#creature-adapter"
       },
       "lastSignals": {
-        "butlinCoverage": 0.545046997662,
-        "thalerFraction": 0.574825171309,
-        "phi": 0.478279079343,
-        "partitionLoss": 0.373344649335,
-        "freeEnergyDescent": 0.679745631857,
-        "attentionSchemaAccuracy": 0.503189294759,
-        "fieldCoherence": 0.464461156058,
-        "ualDepth": 0.655594115703,
-        "sensorimotorMastery": 0.70557783426,
-        "streamCompetition": 0.505452180123
+        "butlinCoverage": 0.545394315928,
+        "thalerFraction": 0.567426654444,
+        "phi": 0.489935360636,
+        "partitionLoss": 0.382443542513,
+        "freeEnergyDescent": 0.678238601426,
+        "attentionSchemaAccuracy": 0.488044877217,
+        "fieldCoherence": 0.484198664821,
+        "ualDepth": 0.648196798385,
+        "sensorimotorMastery": 0.698797604297,
+        "streamCompetition": 0.504343566369
       },
       "snapshot": {
         "entityId": "creature-strain-017",
@@ -436,9 +436,9 @@
         "frameworks": [
           {
             "id": "butlin14",
-            "score": 0.69623878625,
-            "raw": 0.545046997662,
-            "confidence": 0.990639550161,
+            "score": 0.696281282588,
+            "raw": 0.545394315928,
+            "confidence": 0.99161586079,
             "causalEffect": 0.00766675017877,
             "ablationLoss": 0.0082220449687,
             "nullSeparation": 0.221014495582,
@@ -449,9 +449,9 @@
           },
           {
             "id": "thaler9",
-            "score": 0.630479610308,
-            "raw": 0.574825171309,
-            "confidence": 0.983206704081,
+            "score": 0.62428172499,
+            "raw": 0.567426654444,
+            "confidence": 0.98977717948,
             "causalEffect": 0.0037187885612,
             "ablationLoss": 0.00439721127473,
             "nullSeparation": 0.200345118079,
@@ -462,9 +462,9 @@
           },
           {
             "id": "iit4",
-            "score": 0.613000786277,
-            "raw": 0.518540612242,
-            "confidence": 0.995632433951,
+            "score": 0.625772957325,
+            "raw": 0.531178119295,
+            "confidence": 0.991487644616,
             "causalEffect": 0.0129830850239,
             "ablationLoss": 0.0138473094848,
             "nullSeparation": 0.293858698064,
@@ -475,9 +475,9 @@
           },
           {
             "id": "activeInference",
-            "score": 0.737618230177,
-            "raw": 0.679745631857,
-            "confidence": 0.981093009946,
+            "score": 0.735687903429,
+            "raw": 0.678238601426,
+            "confidence": 0.978720841842,
             "causalEffect": 0.00757389915972,
             "ablationLoss": 0.00797692980091,
             "nullSeparation": 0.292079751634,
@@ -488,9 +488,9 @@
           },
           {
             "id": "attentionSchema",
-            "score": 0.583117145291,
-            "raw": 0.503189294759,
-            "confidence": 0.991618906041,
+            "score": 0.568632217823,
+            "raw": 0.488044877217,
+            "confidence": 0.983353807057,
             "causalEffect": 0.00529040691391,
             "ablationLoss": 0.00568064159045,
             "nullSeparation": 0.263483269646,
@@ -501,9 +501,9 @@
           },
           {
             "id": "fieldIntegration",
-            "score": 0.522012447643,
-            "raw": 0.464461156058,
-            "confidence": 0.979698409476,
+            "score": 0.541980905867,
+            "raw": 0.484198664821,
+            "confidence": 0.993739740342,
             "causalEffect": 0.0119964801067,
             "ablationLoss": 0.0118933316114,
             "nullSeparation": 0.319347179659,
@@ -514,9 +514,9 @@
           },
           {
             "id": "ual",
-            "score": 0.719094861501,
-            "raw": 0.655594115703,
-            "confidence": 0.980014961574,
+            "score": 0.712566103585,
+            "raw": 0.648196798385,
+            "confidence": 0.987642402694,
             "causalEffect": 0.0001580787524,
             "ablationLoss": 0,
             "nullSeparation": 0.311885424726,
@@ -527,9 +527,9 @@
           },
           {
             "id": "sensorimotor",
-            "score": 0.758929007183,
-            "raw": 0.70557783426,
-            "confidence": 0.990373559834,
+            "score": 0.753196174538,
+            "raw": 0.698797604297,
+            "confidence": 0.99419828941,
             "causalEffect": 0.00151643814523,
             "ablationLoss": 0.00170361363624,
             "nullSeparation": 0.246662603321,
@@ -553,9 +553,9 @@
           },
           {
             "id": "ctm",
-            "score": 0.612872858269,
-            "raw": 0.505452180123,
-            "confidence": 0.993481626893,
+            "score": 0.612833667193,
+            "raw": 0.504343566369,
+            "confidence": 0.989877673098,
             "causalEffect": 0.0104325496838,
             "ablationLoss": 0.0105131735023,
             "nullSeparation": 0.347457891782,
@@ -565,11 +565,11 @@
             "testReceipt": "tests/consciousness-kernel.test.ts"
           }
         ],
-        "index": 0.652595970322,
-        "convergence": 0.513097618197,
-        "emergence": 0.0801034154363,
-        "eventWindow": [93, 95],
-        "eventCount": 2,
+        "index": 0.65235921526,
+        "convergence": 0.520684638801,
+        "emergence": 0.0806015261286,
+        "eventWindow": null,
+        "eventCount": 0,
         "claim": "indicatorOnly"
       },
       "activeFrameworks": 9,
@@ -577,7 +577,7 @@
       "loadBearingFrameworks": [],
       "dominantFramework": "sensorimotor",
       "weakestPresentFramework": "fieldIntegration",
-      "meanFrameworkScore": 0.652595970322
+      "meanFrameworkScore": 0.65235921526
     },
     {
       "profile": {
@@ -606,16 +606,16 @@
         "adapterReceipt": "src/sim/consciousness-adapters.ts#shoggoth-adapter"
       },
       "lastSignals": {
-        "butlinCoverage": 0.547310897451,
-        "thalerFraction": 0.835398250431,
-        "phi": 0.631336191635,
-        "partitionLoss": 0.515422866851,
-        "freeEnergyDescent": 0.676923295954,
-        "fieldCoherence": 0.761319750859,
-        "ualDepth": 0.757019806635,
-        "sensorimotorMastery": 0.724518585596,
-        "projectiveFrame": 0.547945506585,
-        "streamCompetition": 0.49533815557
+        "butlinCoverage": 0.547841787045,
+        "thalerFraction": 0.826554261618,
+        "phi": 0.64103927107,
+        "partitionLoss": 0.523344460901,
+        "freeEnergyDescent": 0.682587015988,
+        "fieldCoherence": 0.781694382827,
+        "ualDepth": 0.75558061438,
+        "sensorimotorMastery": 0.711492605178,
+        "projectiveFrame": 0.558090467542,
+        "streamCompetition": 0.494299940505
       },
       "snapshot": {
         "entityId": "shoggoth-choir-004",
@@ -625,9 +625,9 @@
         "frameworks": [
           {
             "id": "butlin14",
-            "score": 0.701410538726,
-            "raw": 0.547310897451,
-            "confidence": 0.986269676847,
+            "score": 0.702206090629,
+            "raw": 0.547841787045,
+            "confidence": 0.990529931654,
             "causalEffect": 0.00817448197868,
             "ablationLoss": 0.00876655125802,
             "nullSeparation": 0.235651217144,
@@ -638,9 +638,9 @@
           },
           {
             "id": "thaler9",
-            "score": 0.856783131375,
-            "raw": 0.835398250431,
-            "confidence": 0.987492895801,
+            "score": 0.850798094024,
+            "raw": 0.826554261618,
+            "confidence": 0.99538575725,
             "causalEffect": 0.00396506594936,
             "ablationLoss": 0.00468841731941,
             "nullSeparation": 0.213613006694,
@@ -651,9 +651,9 @@
           },
           {
             "id": "iit4",
-            "score": 0.771374048267,
-            "raw": 0.691262622945,
-            "confidence": 0.989934098245,
+            "score": 0.780046490356,
+            "raw": 0.70188671868,
+            "confidence": 0.984722674047,
             "causalEffect": 0.0138428919792,
             "ablationLoss": 0.014764349848,
             "nullSeparation": 0.313319538995,
@@ -664,9 +664,9 @@
           },
           {
             "id": "activeInference",
-            "score": 0.718327029604,
-            "raw": 0.676923295954,
-            "confidence": 0.975738085141,
+            "score": 0.72268843261,
+            "raw": 0.682587015988,
+            "confidence": 0.972434585586,
             "causalEffect": 0.00807548188553,
             "ablationLoss": 0.00850520329766,
             "nullSeparation": 0.311422781543,
@@ -690,9 +690,9 @@
           },
           {
             "id": "fieldIntegration",
-            "score": 0.799754381801,
-            "raw": 0.761319750859,
-            "confidence": 0.977843208115,
+            "score": 0.815484986288,
+            "raw": 0.781694382827,
+            "confidence": 0.988438489065,
             "causalEffect": 0.012790948988,
             "ablationLoss": 0.0126809694665,
             "nullSeparation": 0.340495999504,
@@ -703,9 +703,9 @@
           },
           {
             "id": "ual",
-            "score": 0.800312782912,
-            "raw": 0.757019806635,
-            "confidence": 0.983743659484,
+            "score": 0.799042978276,
+            "raw": 0.75558061438,
+            "confidence": 0.986044294231,
             "causalEffect": 0.00016854754395,
             "ablationLoss": 0,
             "nullSeparation": 0.332540088615,
@@ -716,9 +716,9 @@
           },
           {
             "id": "sensorimotor",
-            "score": 0.775368584825,
-            "raw": 0.724518585596,
-            "confidence": 0.981545313209,
+            "score": 0.765188917124,
+            "raw": 0.711492605178,
+            "confidence": 0.993138196826,
             "causalEffect": 0.00161686451247,
             "ablationLoss": 0.00181643573135,
             "nullSeparation": 0.262997875064,
@@ -729,9 +729,9 @@
           },
           {
             "id": "projective",
-            "score": 0.617819638316,
-            "raw": 0.547945506585,
-            "confidence": 0.970163571188,
+            "score": 0.628003427104,
+            "raw": 0.558090467542,
+            "confidence": 0.993882478814,
             "causalEffect": 0.00380194561662,
             "ablationLoss": 0.00419187986985,
             "nullSeparation": 0.347681176493,
@@ -742,9 +742,9 @@
           },
           {
             "id": "ctm",
-            "score": 0.599484286946,
-            "raw": 0.49533815557,
-            "confidence": 0.991839232055,
+            "score": 0.599805520854,
+            "raw": 0.494299940505,
+            "confidence": 0.980604990246,
             "causalEffect": 0.0111234470138,
             "ablationLoss": 0.0112094101581,
             "nullSeparation": 0.370468348191,
@@ -754,11 +754,11 @@
             "testReceipt": "tests/consciousness-kernel.test.ts"
           }
         ],
-        "index": 0.737848269197,
-        "convergence": 0.566191110442,
-        "emergence": 0.0670663945275,
+        "index": 0.740362770807,
+        "convergence": 0.571103084023,
+        "emergence": 0.0670263492783,
         "eventWindow": null,
-        "eventCount": 2,
+        "eventCount": 0,
         "claim": "indicatorOnly"
       },
       "activeFrameworks": 9,
@@ -766,7 +766,7 @@
       "loadBearingFrameworks": [],
       "dominantFramework": "thaler9",
       "weakestPresentFramework": "ctm",
-      "meanFrameworkScore": 0.737848269197
+      "meanFrameworkScore": 0.740362770807
     },
     {
       "profile": {
@@ -795,17 +795,17 @@
         "adapterReceipt": "src/sim/consciousness-adapters.ts#puppeteer-adapter"
       },
       "lastSignals": {
-        "butlinCoverage": 0.654628474428,
-        "thalerFraction": 0.590493606908,
-        "phi": 0.59788384153,
-        "partitionLoss": 0.514658410789,
-        "freeEnergyDescent": 0.678468686488,
-        "attentionSchemaAccuracy": 0.82042678029,
-        "fieldCoherence": 0.532603606872,
-        "ualDepth": 0.618430296221,
-        "sensorimotorMastery": 0.656806194821,
-        "projectiveFrame": 0.668833935915,
-        "streamCompetition": 0.757464823019
+        "butlinCoverage": 0.636573484267,
+        "thalerFraction": 0.599951586118,
+        "phi": 0.598925131733,
+        "partitionLoss": 0.515554753395,
+        "freeEnergyDescent": 0.678554440523,
+        "attentionSchemaAccuracy": 0.813925570116,
+        "fieldCoherence": 0.535159003221,
+        "ualDepth": 0.630868623083,
+        "sensorimotorMastery": 0.635747360202,
+        "projectiveFrame": 0.679770862071,
+        "streamCompetition": 0.765269534124
       },
       "snapshot": {
         "entityId": "puppeteer-hand-003",
@@ -815,9 +815,9 @@
         "frameworks": [
           {
             "id": "butlin14",
-            "score": 0.796913156941,
-            "raw": 0.654628474428,
-            "confidence": 0.991530038381,
+            "score": 0.785671938437,
+            "raw": 0.636573484267,
+            "confidence": 0.999438545623,
             "causalEffect": 0.00817448197868,
             "ablationLoss": 0.00876655125802,
             "nullSeparation": 0.235651217144,
@@ -828,9 +828,9 @@
           },
           {
             "id": "thaler9",
-            "score": 0.647178301607,
-            "raw": 0.590493606908,
-            "confidence": 0.983229859942,
+            "score": 0.656306119001,
+            "raw": 0.599951586118,
+            "confidence": 0.993979615683,
             "causalEffect": 0.00396506594936,
             "ablationLoss": 0.00468841731941,
             "nullSeparation": 0.213613006694,
@@ -841,9 +841,9 @@
           },
           {
             "id": "iit4",
-            "score": 0.747610802008,
-            "raw": 0.662598788537,
-            "confidence": 0.994345881596,
+            "score": 0.748778272496,
+            "raw": 0.663752787991,
+            "confidence": 0.993298557136,
             "causalEffect": 0.0138428919792,
             "ablationLoss": 0.014764349848,
             "nullSeparation": 0.313319538995,
@@ -854,9 +854,9 @@
           },
           {
             "id": "activeInference",
-            "score": 0.742339278187,
-            "raw": 0.678468686488,
-            "confidence": 0.979735116603,
+            "score": 0.741495900238,
+            "raw": 0.678554440523,
+            "confidence": 0.989019174929,
             "causalEffect": 0.00807548188553,
             "ablationLoss": 0.00850520329766,
             "nullSeparation": 0.311422781543,
@@ -867,9 +867,9 @@
           },
           {
             "id": "attentionSchema",
-            "score": 0.855158948024,
-            "raw": 0.82042678029,
-            "confidence": 0.994622742909,
+            "score": 0.850777725243,
+            "raw": 0.813925570116,
+            "confidence": 0.996816008217,
             "causalEffect": 0.00564076498767,
             "ablationLoss": 0.00605684302028,
             "nullSeparation": 0.280932492802,
@@ -880,9 +880,9 @@
           },
           {
             "id": "fieldIntegration",
-            "score": 0.596281465471,
-            "raw": 0.532603606872,
-            "confidence": 0.977776552874,
+            "score": 0.59903674395,
+            "raw": 0.535159003221,
+            "confidence": 0.972908608153,
             "causalEffect": 0.012790948988,
             "ablationLoss": 0.0126809694665,
             "nullSeparation": 0.340495999504,
@@ -893,9 +893,9 @@
           },
           {
             "id": "ual",
-            "score": 0.685861968653,
-            "raw": 0.618430296221,
-            "confidence": 0.97937209053,
+            "score": 0.695906506923,
+            "raw": 0.630868623083,
+            "confidence": 0.975625127966,
             "causalEffect": 0.00016854754395,
             "ablationLoss": 0,
             "nullSeparation": 0.332540088615,
@@ -906,9 +906,9 @@
           },
           {
             "id": "sensorimotor",
-            "score": 0.717968063835,
-            "raw": 0.656806194821,
-            "confidence": 0.986801109573,
+            "score": 0.700298871623,
+            "raw": 0.635747360202,
+            "confidence": 0.997415974229,
             "causalEffect": 0.00161686451247,
             "ablationLoss": 0.00181643573135,
             "nullSeparation": 0.262997875064,
@@ -919,9 +919,9 @@
           },
           {
             "id": "projective",
-            "score": 0.757250061454,
-            "raw": 0.668833935915,
-            "confidence": 0.976545469898,
+            "score": 0.765409609711,
+            "raw": 0.679770862071,
+            "confidence": 0.983578934583,
             "causalEffect": 0.00380194561662,
             "ablationLoss": 0.00419187986985,
             "nullSeparation": 0.347681176493,
@@ -932,9 +932,9 @@
           },
           {
             "id": "ctm",
-            "score": 0.82821058401,
-            "raw": 0.757464823019,
-            "confidence": 0.995751773059,
+            "score": 0.833406222486,
+            "raw": 0.765269534124,
+            "confidence": 0.992041071785,
             "causalEffect": 0.0111234470138,
             "ablationLoss": 0.0112094101581,
             "nullSeparation": 0.370468348191,
@@ -944,9 +944,9 @@
             "testReceipt": "tests/consciousness-kernel.test.ts"
           }
         ],
-        "index": 0.737477263019,
-        "convergence": 0.57802514816,
-        "emergence": 0.0734017436692,
+        "index": 0.737708791011,
+        "convergence": 0.582606491738,
+        "emergence": 0.073751465839,
         "eventWindow": null,
         "eventCount": 1,
         "claim": "indicatorOnly"
@@ -956,7 +956,7 @@
       "loadBearingFrameworks": [],
       "dominantFramework": "attentionSchema",
       "weakestPresentFramework": "fieldIntegration",
-      "meanFrameworkScore": 0.737477263019
+      "meanFrameworkScore": 0.737708791011
     },
     {
       "profile": {
@@ -985,17 +985,17 @@
         "adapterReceipt": "src/sim/consciousness-adapters.ts#mechalogodrom-adapter"
       },
       "lastSignals": {
-        "butlinCoverage": 0.649324414367,
-        "thalerFraction": 0.797708218014,
-        "phi": 0.895084072857,
-        "partitionLoss": 0.843706247075,
-        "freeEnergyDescent": 0.7577860374,
-        "attentionSchemaAccuracy": 0.753772189291,
-        "fieldCoherence": 0.879049083053,
-        "ualDepth": 0.764483375176,
-        "sensorimotorMastery": 0.73943160967,
-        "projectiveFrame": 0.855310158767,
-        "streamCompetition": 0.862491950011
+        "butlinCoverage": 0.649419781357,
+        "thalerFraction": 0.804601200224,
+        "phi": 0.878038461559,
+        "partitionLoss": 0.827639053866,
+        "freeEnergyDescent": 0.768193167571,
+        "attentionSchemaAccuracy": 0.765704090837,
+        "fieldCoherence": 0.852568411555,
+        "ualDepth": 0.782016622243,
+        "sensorimotorMastery": 0.741890857773,
+        "projectiveFrame": 0.844998794177,
+        "streamCompetition": 0.865399561568
       },
       "snapshot": {
         "entityId": "mechalogodrom-core-001",
@@ -1005,9 +1005,9 @@
         "frameworks": [
           {
             "id": "butlin14",
-            "score": 0.800079458344,
-            "raw": 0.649324414367,
-            "confidence": 0.996187634727,
+            "score": 0.800262509202,
+            "raw": 0.649419781357,
+            "confidence": 0.992898318342,
             "causalEffect": 0.00913917239853,
             "ablationLoss": 0.00980111320773,
             "nullSeparation": 0.263460988112,
@@ -1018,9 +1018,9 @@
           },
           {
             "id": "thaler9",
-            "score": 0.831921301246,
-            "raw": 0.797708218014,
-            "confidence": 0.98105144346,
+            "score": 0.836762012644,
+            "raw": 0.804601200224,
+            "confidence": 0.98527054105,
             "causalEffect": 0.00443299298686,
             "ablationLoss": 0.00524170880431,
             "nullSeparation": 0.238821995061,
@@ -1031,9 +1031,9 @@
           },
           {
             "id": "iit4",
-            "score": 0.980376543326,
-            "raw": 1,
-            "confidence": 0.999904069344,
+            "score": 0.977101820402,
+            "raw": 0.994624408485,
+            "confidence": 0.999333893873,
             "causalEffect": 0.0154765251941,
             "ablationLoss": 0.0165067265381,
             "nullSeparation": 0.350295136765,
@@ -1044,9 +1044,9 @@
           },
           {
             "id": "activeInference",
-            "score": 0.806053819808,
-            "raw": 0.7577860374,
-            "confidence": 0.981640558963,
+            "score": 0.814082846515,
+            "raw": 0.768193167571,
+            "confidence": 0.97944565104,
             "causalEffect": 0.00902848906457,
             "ablationLoss": 0.00950892294148,
             "nullSeparation": 0.348174538371,
@@ -1057,9 +1057,9 @@
           },
           {
             "id": "attentionSchema",
-            "score": 0.811558575304,
-            "raw": 0.753772189291,
-            "confidence": 0.983469631021,
+            "score": 0.82039860838,
+            "raw": 0.765704090837,
+            "confidence": 0.977499133666,
             "causalEffect": 0.00630644532784,
             "ablationLoss": 0.00677162573696,
             "nullSeparation": 0.314086016797,
@@ -1070,9 +1070,9 @@
           },
           {
             "id": "fieldIntegration",
-            "score": 0.890111014648,
-            "raw": 0.879049083053,
-            "confidence": 0.989058137287,
+            "score": 0.871934536012,
+            "raw": 0.852568411555,
+            "confidence": 0.997547997201,
             "causalEffect": 0.0143004398623,
             "ablationLoss": 0.0141774813911,
             "nullSeparation": 0.380678757209,
@@ -1083,9 +1083,9 @@
           },
           {
             "id": "ual",
-            "score": 0.80886914657,
-            "raw": 0.764483375176,
-            "confidence": 0.973851139078,
+            "score": 0.822193333616,
+            "raw": 0.782016622243,
+            "confidence": 0.987731839126,
             "causalEffect": 0.000188438247894,
             "ablationLoss": 0,
             "nullSeparation": 0.371783950005,
@@ -1096,9 +1096,9 @@
           },
           {
             "id": "sensorimotor",
-            "score": 0.790373287137,
-            "raw": 0.73943160967,
-            "confidence": 0.995352834318,
+            "score": 0.792847600102,
+            "raw": 0.741890857773,
+            "confidence": 0.993547646434,
             "causalEffect": 0.00180767461021,
             "ablationLoss": 0.00203079771207,
             "nullSeparation": 0.294034891376,
@@ -1109,9 +1109,9 @@
           },
           {
             "id": "projective",
-            "score": 0.891557046491,
-            "raw": 0.855310158767,
-            "confidence": 0.975879101185,
+            "score": 0.885071308448,
+            "raw": 0.844998794177,
+            "confidence": 0.988510543251,
             "causalEffect": 0.00425062242852,
             "ablationLoss": 0.00468657376753,
             "nullSeparation": 0.38871187434,
@@ -1122,9 +1122,9 @@
           },
           {
             "id": "ctm",
-            "score": 0.903575399544,
-            "raw": 0.862491950011,
-            "confidence": 0.985385094889,
+            "score": 0.905133854866,
+            "raw": 0.865399561568,
+            "confidence": 0.999005170341,
             "causalEffect": 0.0124361519409,
             "ablationLoss": 0.012532259804,
             "nullSeparation": 0.414188215369,
@@ -1134,11 +1134,11 @@
             "testReceipt": "tests/consciousness-kernel.test.ts"
           }
         ],
-        "index": 0.851447559242,
-        "convergence": 0.708230925759,
-        "emergence": 0.045511855667,
-        "eventWindow": [95, 95],
-        "eventCount": 2,
+        "index": 0.852578843019,
+        "convergence": 0.719838721082,
+        "emergence": 0.0456371534396,
+        "eventWindow": null,
+        "eventCount": 1,
         "claim": "indicatorOnly"
       },
       "activeFrameworks": 10,
@@ -1146,7 +1146,7 @@
       "loadBearingFrameworks": [],
       "dominantFramework": "iit4",
       "weakestPresentFramework": "sensorimotor",
-      "meanFrameworkScore": 0.851447559242
+      "meanFrameworkScore": 0.852578843019
     },
     {
       "profile": {
@@ -1175,17 +1175,17 @@
         "adapterReceipt": "src/sim/consciousness-adapters.ts#apex-adapter"
       },
       "lastSignals": {
-        "butlinCoverage": 0.714020181726,
-        "thalerFraction": 0.786871243588,
-        "phi": 0.908136436623,
-        "partitionLoss": 0.867270296975,
-        "freeEnergyDescent": 0.880307540658,
-        "attentionSchemaAccuracy": 0.779003401196,
-        "fieldCoherence": 0.828923238794,
-        "ualDepth": 0.89253043669,
-        "sensorimotorMastery": 0.823721025009,
-        "projectiveFrame": 0.79517980739,
-        "streamCompetition": 0.937202741456
+        "butlinCoverage": 0.729021536014,
+        "thalerFraction": 0.785765512031,
+        "phi": 0.908430407855,
+        "partitionLoss": 0.867551039502,
+        "freeEnergyDescent": 0.870796238377,
+        "attentionSchemaAccuracy": 0.786982620068,
+        "fieldCoherence": 0.839841473546,
+        "ualDepth": 0.865246219856,
+        "sensorimotorMastery": 0.844008799582,
+        "projectiveFrame": 0.798554579704,
+        "streamCompetition": 0.919427469894
       },
       "snapshot": {
         "entityId": "apex-abomination-000",
@@ -1195,9 +1195,9 @@
         "frameworks": [
           {
             "id": "butlin14",
-            "score": 0.839363161032,
-            "raw": 0.714020181726,
-            "confidence": 0.98610419283,
+            "score": 0.847862264858,
+            "raw": 0.729021536014,
+            "confidence": 0.995724926725,
             "causalEffect": 0.00913917239853,
             "ablationLoss": 0.00980111320773,
             "nullSeparation": 0.263460988112,
@@ -1208,9 +1208,9 @@
           },
           {
             "id": "thaler9",
-            "score": 0.824995264033,
-            "raw": 0.786871243588,
-            "confidence": 0.997273247399,
+            "score": 0.824004047701,
+            "raw": 0.785765512031,
+            "confidence": 0.996088924265,
             "causalEffect": 0.00443299298686,
             "ablationLoss": 0.00524170880431,
             "nullSeparation": 0.238821995061,
@@ -1221,9 +1221,9 @@
           },
           {
             "id": "iit4",
-            "score": 0.980747802907,
+            "score": 0.980729777518,
             "raw": 1,
-            "confidence": 0.996091925797,
+            "confidence": 0.999623588614,
             "causalEffect": 0.0154765251941,
             "ablationLoss": 0.0165067265381,
             "nullSeparation": 0.350295136765,
@@ -1234,9 +1234,9 @@
           },
           {
             "id": "activeInference",
-            "score": 0.894771624393,
-            "raw": 0.880307540658,
-            "confidence": 0.987404368176,
+            "score": 0.888827298375,
+            "raw": 0.870796238377,
+            "confidence": 0.997138918298,
             "causalEffect": 0.00902848906457,
             "ablationLoss": 0.00950892294148,
             "nullSeparation": 0.348174538371,
@@ -1247,9 +1247,9 @@
           },
           {
             "id": "attentionSchema",
-            "score": 0.832802330306,
-            "raw": 0.779003401196,
-            "confidence": 0.98540336716,
+            "score": 0.83794328922,
+            "raw": 0.786982620068,
+            "confidence": 0.979798573358,
             "causalEffect": 0.00630644532784,
             "ablationLoss": 0.00677162573696,
             "nullSeparation": 0.314086016797,
@@ -1260,9 +1260,9 @@
           },
           {
             "id": "fieldIntegration",
-            "score": 0.855287914529,
-            "raw": 0.828923238794,
-            "confidence": 0.976528258969,
+            "score": 0.862974129514,
+            "raw": 0.839841473546,
+            "confidence": 0.972261023604,
             "causalEffect": 0.0143004398623,
             "ablationLoss": 0.0141774813911,
             "nullSeparation": 0.380678757209,
@@ -1273,9 +1273,9 @@
           },
           {
             "id": "ual",
-            "score": 0.902361903123,
-            "raw": 0.89253043669,
-            "confidence": 0.995274792498,
+            "score": 0.884294598837,
+            "raw": 0.865246219856,
+            "confidence": 0.993825203684,
             "causalEffect": 0.000188438247894,
             "ablationLoss": 0,
             "nullSeparation": 0.371783950005,
@@ -1286,9 +1286,9 @@
           },
           {
             "id": "sensorimotor",
-            "score": 0.856576638619,
-            "raw": 0.823721025009,
-            "confidence": 0.973103733771,
+            "score": 0.870146714725,
+            "raw": 0.844008799582,
+            "confidence": 0.98431315813,
             "causalEffect": 0.00180767461021,
             "ablationLoss": 0.00203079771207,
             "nullSeparation": 0.294034891376,
@@ -1299,9 +1299,9 @@
           },
           {
             "id": "projective",
-            "score": 0.854130208291,
-            "raw": 0.79517980739,
-            "confidence": 0.988852671459,
+            "score": 0.85646906867,
+            "raw": 0.798554579704,
+            "confidence": 0.987606669206,
             "causalEffect": 0.00425062242852,
             "ablationLoss": 0.00468657376753,
             "nullSeparation": 0.38871187434,
@@ -1312,9 +1312,9 @@
           },
           {
             "id": "ctm",
-            "score": 0.947745216758,
-            "raw": 0.937202741456,
-            "confidence": 0.979732309942,
+            "score": 0.937570366748,
+            "raw": 0.919427469894,
+            "confidence": 0.9930486616,
             "causalEffect": 0.0124361519409,
             "ablationLoss": 0.012532259804,
             "nullSeparation": 0.414188215369,
@@ -1324,11 +1324,11 @@
             "testReceipt": "tests/consciousness-kernel.test.ts"
           }
         ],
-        "index": 0.878878206399,
-        "convergence": 0.755404805617,
-        "emergence": 0.0351022447484,
+        "index": 0.879082155617,
+        "convergence": 0.765565545414,
+        "emergence": 0.0351177107095,
         "eventWindow": null,
-        "eventCount": 0,
+        "eventCount": 1,
         "claim": "indicatorOnly"
       },
       "activeFrameworks": 10,
@@ -1336,7 +1336,7 @@
       "loadBearingFrameworks": [],
       "dominantFramework": "iit4",
       "weakestPresentFramework": "thaler9",
-      "meanFrameworkScore": 0.878878206399
+      "meanFrameworkScore": 0.879082155617
     },
     {
       "profile": {
@@ -1365,17 +1365,17 @@
         "adapterReceipt": "src/sim/consciousness-adapters.ts#pantheon-adapter"
       },
       "lastSignals": {
-        "butlinCoverage": 0.681931879194,
-        "thalerFraction": 0.754578432366,
-        "phi": 0.901390822541,
-        "partitionLoss": 0.853797387111,
-        "freeEnergyDescent": 0.797865184727,
-        "attentionSchemaAccuracy": 0.825893586502,
-        "fieldCoherence": 0.848758447468,
-        "ualDepth": 0.8192158033,
-        "sensorimotorMastery": 0.722245695386,
-        "projectiveFrame": 0.842240247484,
-        "streamCompetition": 0.930642306054
+        "butlinCoverage": 0.678253487789,
+        "thalerFraction": 0.768055033644,
+        "phi": 0.891238765839,
+        "partitionLoss": 0.844181359002,
+        "freeEnergyDescent": 0.788080030094,
+        "attentionSchemaAccuracy": 0.851594025227,
+        "fieldCoherence": 0.82956344101,
+        "ualDepth": 0.817741658501,
+        "sensorimotorMastery": 0.734912497296,
+        "projectiveFrame": 0.835612197668,
+        "streamCompetition": 0.930217177878
       },
       "snapshot": {
         "entityId": "pantheon-chorus-025",
@@ -1385,9 +1385,9 @@
         "frameworks": [
           {
             "id": "butlin14",
-            "score": 0.820313569956,
-            "raw": 0.681931879194,
-            "confidence": 0.98693375472,
+            "score": 0.818307170877,
+            "raw": 0.678253487789,
+            "confidence": 0.9906794163,
             "causalEffect": 0.00913917239853,
             "ablationLoss": 0.00980111320773,
             "nullSeparation": 0.263460988112,
@@ -1398,9 +1398,9 @@
           },
           {
             "id": "thaler9",
-            "score": 0.800030401538,
-            "raw": 0.754578432366,
-            "confidence": 0.989512828032,
+            "score": 0.809832131431,
+            "raw": 0.768055033644,
+            "confidence": 0.997470150478,
             "causalEffect": 0.00443299298686,
             "ablationLoss": 0.00524170880431,
             "nullSeparation": 0.238821995061,
@@ -1411,9 +1411,9 @@
           },
           {
             "id": "iit4",
-            "score": 0.980598953952,
+            "score": 0.98039965562,
             "raw": 1,
-            "confidence": 0.997731992402,
+            "confidence": 0.987141509774,
             "causalEffect": 0.0154765251941,
             "ablationLoss": 0.0165067265381,
             "nullSeparation": 0.350295136765,
@@ -1424,9 +1424,9 @@
           },
           {
             "id": "activeInference",
-            "score": 0.836178869949,
-            "raw": 0.797865184727,
-            "confidence": 0.981033318998,
+            "score": 0.829751113577,
+            "raw": 0.788080030094,
+            "confidence": 0.977367534106,
             "causalEffect": 0.00902848906457,
             "ablationLoss": 0.00950892294148,
             "nullSeparation": 0.348174538371,
@@ -1437,9 +1437,9 @@
           },
           {
             "id": "attentionSchema",
-            "score": 0.864012624125,
-            "raw": 0.825893586502,
-            "confidence": 0.994781846916,
+            "score": 0.881118262787,
+            "raw": 0.851594025227,
+            "confidence": 0.995003417128,
             "causalEffect": 0.00630644532784,
             "ablationLoss": 0.00677162573696,
             "nullSeparation": 0.314086016797,
@@ -1450,9 +1450,9 @@
           },
           {
             "id": "fieldIntegration",
-            "score": 0.868893267765,
-            "raw": 0.848758447468,
-            "confidence": 0.976425864788,
+            "score": 0.855523929378,
+            "raw": 0.82956344101,
+            "confidence": 0.987441178337,
             "causalEffect": 0.0143004398623,
             "ablationLoss": 0.0141774813911,
             "nullSeparation": 0.380678757209,
@@ -1463,9 +1463,9 @@
           },
           {
             "id": "ual",
-            "score": 0.849353297525,
-            "raw": 0.8192158033,
-            "confidence": 0.990553625354,
+            "score": 0.848374929842,
+            "raw": 0.817741658501,
+            "confidence": 0.990819462398,
             "causalEffect": 0.000188438247894,
             "ablationLoss": 0,
             "nullSeparation": 0.371783950005,
@@ -1476,9 +1476,9 @@
           },
           {
             "id": "sensorimotor",
-            "score": 0.779170506865,
-            "raw": 0.722245695386,
-            "confidence": 0.976061962238,
+            "score": 0.788668976959,
+            "raw": 0.734912497296,
+            "confidence": 0.990072909953,
             "causalEffect": 0.00180767461021,
             "ablationLoss": 0.00203079771207,
             "nullSeparation": 0.294034891376,
@@ -1489,9 +1489,9 @@
           },
           {
             "id": "projective",
-            "score": 0.884465913896,
-            "raw": 0.842240247484,
-            "confidence": 0.980902776214,
+            "score": 0.880319198797,
+            "raw": 0.835612197668,
+            "confidence": 0.997314136532,
             "causalEffect": 0.00425062242852,
             "ablationLoss": 0.00468657376753,
             "nullSeparation": 0.38871187434,
@@ -1502,9 +1502,9 @@
           },
           {
             "id": "ctm",
-            "score": 0.94428497885,
-            "raw": 0.930642306054,
-            "confidence": 0.989403767143,
+            "score": 0.944025354863,
+            "raw": 0.930217177878,
+            "confidence": 0.982158754747,
             "causalEffect": 0.0124361519409,
             "ablationLoss": 0.012532259804,
             "nullSeparation": 0.414188215369,
@@ -1514,11 +1514,11 @@
             "testReceipt": "tests/consciousness-kernel.test.ts"
           }
         ],
-        "index": 0.862730238442,
-        "convergence": 0.717627182467,
-        "emergence": 0.0403930801938,
+        "index": 0.863632072413,
+        "convergence": 0.722536809031,
+        "emergence": 0.0402291175023,
         "eventWindow": null,
-        "eventCount": 0,
+        "eventCount": 1,
         "claim": "indicatorOnly"
       },
       "activeFrameworks": 10,
@@ -1526,7 +1526,7 @@
       "loadBearingFrameworks": [],
       "dominantFramework": "iit4",
       "weakestPresentFramework": "sensorimotor",
-      "meanFrameworkScore": 0.862730238442
+      "meanFrameworkScore": 0.863632072413
     },
     {
       "profile": {
@@ -1555,15 +1555,15 @@
         "adapterReceipt": "src/sim/consciousness-adapters.ts#glyph-adapter"
       },
       "lastSignals": {
-        "butlinCoverage": 0.50560690422,
-        "thalerFraction": 0.691773993554,
-        "phi": 0.709750148974,
-        "partitionLoss": 0.599454975824,
-        "freeEnergyDescent": 0.548595819214,
-        "fieldCoherence": 0.796412310368,
-        "ualDepth": 0.679092336752,
-        "projectiveFrame": 0.727426049706,
-        "streamCompetition": 0.61024514114
+        "butlinCoverage": 0.486623479814,
+        "thalerFraction": 0.712127871136,
+        "phi": 0.70495065057,
+        "partitionLoss": 0.595401319471,
+        "freeEnergyDescent": 0.539514451306,
+        "fieldCoherence": 0.796020274373,
+        "ualDepth": 0.68133484858,
+        "projectiveFrame": 0.742233645447,
+        "streamCompetition": 0.610340635614
       },
       "snapshot": {
         "entityId": "glyph-resonator-011",
@@ -1573,9 +1573,9 @@
         "frameworks": [
           {
             "id": "butlin14",
-            "score": 0.65139524917,
-            "raw": 0.50560690422,
-            "confidence": 0.996299654059,
+            "score": 0.635475216185,
+            "raw": 0.486623479814,
+            "confidence": 0.991003260891,
             "causalEffect": 0.00766675017877,
             "ablationLoss": 0.0082220449687,
             "nullSeparation": 0.221014495582,
@@ -1586,9 +1586,9 @@
           },
           {
             "id": "thaler9",
-            "score": 0.745180963578,
-            "raw": 0.691773993554,
-            "confidence": 0.98623990942,
+            "score": 0.761785794179,
+            "raw": 0.712127871136,
+            "confidence": 0.993967304887,
             "causalEffect": 0.0037187885612,
             "ablationLoss": 0.00439721127473,
             "nullSeparation": 0.200345118079,
@@ -1599,9 +1599,9 @@
           },
           {
             "id": "iit4",
-            "score": 0.838543704631,
-            "raw": 0.783124119375,
-            "confidence": 0.985550872199,
+            "score": 0.834757094675,
+            "raw": 0.777828448826,
+            "confidence": 0.988971146415,
             "causalEffect": 0.0129830850239,
             "ablationLoss": 0.0138473094848,
             "nullSeparation": 0.293858698064,
@@ -1612,9 +1612,9 @@
           },
           {
             "id": "activeInference",
-            "score": 0.548519599441,
-            "raw": 0.548595819214,
-            "confidence": 0.989261941815,
+            "score": 0.539473422109,
+            "raw": 0.539514451306,
+            "confidence": 0.996260916911,
             "causalEffect": 0.00757389915972,
             "ablationLoss": 0.00797692980091,
             "nullSeparation": 0.292079751634,
@@ -1638,9 +1638,9 @@
           },
           {
             "id": "fieldIntegration",
-            "score": 0.826561353239,
-            "raw": 0.796412310368,
-            "confidence": 0.996124444067,
+            "score": 0.826425637923,
+            "raw": 0.796020274373,
+            "confidence": 0.991968917603,
             "causalEffect": 0.0119964801067,
             "ablationLoss": 0.0118933316114,
             "nullSeparation": 0.319347179659,
@@ -1651,9 +1651,9 @@
           },
           {
             "id": "ual",
-            "score": 0.700878504522,
-            "raw": 0.679092336752,
-            "confidence": 0.974409903316,
+            "score": 0.702499226354,
+            "raw": 0.68133484858,
+            "confidence": 0.973033765167,
             "causalEffect": 0.0001580787524,
             "ablationLoss": 0,
             "nullSeparation": 0.311885424726,
@@ -1677,9 +1677,9 @@
           },
           {
             "id": "projective",
-            "score": 0.768095297264,
-            "raw": 0.727426049706,
-            "confidence": 0.984327414567,
+            "score": 0.779695421537,
+            "raw": 0.742233645447,
+            "confidence": 0.985871906478,
             "causalEffect": 0.00356579992614,
             "ablationLoss": 0.00393151466054,
             "nullSeparation": 0.326086072363,
@@ -1690,9 +1690,9 @@
           },
           {
             "id": "ctm",
-            "score": 0.702371019976,
-            "raw": 0.61024514114,
-            "confidence": 0.972485603567,
+            "score": 0.702048386153,
+            "raw": 0.610340635614,
+            "confidence": 0.971518348707,
             "causalEffect": 0.0104325496838,
             "ablationLoss": 0.0105131735023,
             "nullSeparation": 0.347457891782,
@@ -1702,11 +1702,11 @@
             "testReceipt": "tests/consciousness-kernel.test.ts"
           }
         ],
-        "index": 0.722693211478,
-        "convergence": 0.539332457939,
-        "emergence": 0.0549086271863,
-        "eventWindow": [93, 95],
-        "eventCount": 2,
+        "index": 0.722770024889,
+        "convergence": 0.529454526239,
+        "emergence": 0.0545170680021,
+        "eventWindow": null,
+        "eventCount": 0,
         "claim": "indicatorOnly"
       },
       "activeFrameworks": 8,
@@ -1714,7 +1714,7 @@
       "loadBearingFrameworks": [],
       "dominantFramework": "iit4",
       "weakestPresentFramework": "activeInference",
-      "meanFrameworkScore": 0.722693211478
+      "meanFrameworkScore": 0.722770024889
     },
     {
       "profile": {
@@ -1743,17 +1743,17 @@
         "adapterReceipt": "src/sim/xenomimic-brain.ts#classical-statevector-iit-gwt"
       },
       "lastSignals": {
-        "butlinCoverage": 0.577057576625,
-        "thalerFraction": 0.761762624094,
-        "phi": 0.781960619116,
-        "partitionLoss": 0.684215541727,
-        "freeEnergyDescent": 0.787454151471,
-        "attentionSchemaAccuracy": 0.631087369623,
-        "fieldCoherence": 0.782619992853,
-        "ualDepth": 0.759944076804,
-        "sensorimotorMastery": 0.768341011664,
-        "projectiveFrame": 0.781619493244,
-        "streamCompetition": 0.73908280002
+        "butlinCoverage": 0.577233788359,
+        "thalerFraction": 0.780329111964,
+        "phi": 0.758556415239,
+        "partitionLoss": 0.663736863334,
+        "freeEnergyDescent": 0.79526216768,
+        "attentionSchemaAccuracy": 0.641535438345,
+        "fieldCoherence": 0.769851038162,
+        "ualDepth": 0.763295029513,
+        "sensorimotorMastery": 0.767656352468,
+        "projectiveFrame": 0.791397161363,
+        "streamCompetition": 0.724393898196
       },
       "snapshot": {
         "entityId": "xenomimic-twin-000",
@@ -1763,9 +1763,9 @@
         "frameworks": [
           {
             "id": "butlin14",
-            "score": 0.752177072187,
-            "raw": 0.577057576625,
-            "confidence": 0.987052442338,
+            "score": 0.75213343726,
+            "raw": 0.577233788359,
+            "confidence": 0.984549626001,
             "causalEffect": 0.00817448197868,
             "ablationLoss": 0.00876655125802,
             "nullSeparation": 0.235651217144,
@@ -1776,9 +1776,9 @@
           },
           {
             "id": "thaler9",
-            "score": 0.803083745801,
-            "raw": 0.761762624094,
-            "confidence": 0.989716545476,
+            "score": 0.816908716357,
+            "raw": 0.780329111964,
+            "confidence": 0.986170648788,
             "causalEffect": 0.00396506594936,
             "ablationLoss": 0.00468841731941,
             "nullSeparation": 0.213613006694,
@@ -1789,9 +1789,9 @@
           },
           {
             "id": "iit4",
-            "score": 0.900384052893,
-            "raw": 0.869931188767,
-            "confidence": 0.987547046886,
+            "score": 0.883521522593,
+            "raw": 0.843894011953,
+            "confidence": 0.994776021561,
             "causalEffect": 0.0138428919792,
             "ablationLoss": 0.014764349848,
             "nullSeparation": 0.313319538995,
@@ -1802,9 +1802,9 @@
           },
           {
             "id": "activeInference",
-            "score": 0.826713693914,
-            "raw": 0.787454151471,
-            "confidence": 0.981825301717,
+            "score": 0.832564594417,
+            "raw": 0.79526216768,
+            "confidence": 0.985783001445,
             "causalEffect": 0.00807548188553,
             "ablationLoss": 0.00850520329766,
             "nullSeparation": 0.311422781543,
@@ -1815,9 +1815,9 @@
           },
           {
             "id": "attentionSchema",
-            "score": 0.713175506365,
-            "raw": 0.631087369623,
-            "confidence": 0.994899361645,
+            "score": 0.721379343174,
+            "raw": 0.641535438345,
+            "confidence": 0.994304173577,
             "causalEffect": 0.00564076498767,
             "ablationLoss": 0.00605684302028,
             "nullSeparation": 0.280932492802,
@@ -1828,9 +1828,9 @@
           },
           {
             "id": "fieldIntegration",
-            "score": 0.819052168433,
-            "raw": 0.782619992853,
-            "confidence": 0.97629650373,
+            "score": 0.809163177135,
+            "raw": 0.769851038162,
+            "confidence": 0.993524777979,
             "causalEffect": 0.012790948988,
             "ablationLoss": 0.0126809694665,
             "nullSeparation": 0.340495999504,
@@ -1841,9 +1841,9 @@
           },
           {
             "id": "ual",
-            "score": 0.806651478976,
-            "raw": 0.759944076804,
-            "confidence": 0.989954583443,
+            "score": 0.809313881374,
+            "raw": 0.763295029513,
+            "confidence": 0.995184568488,
             "causalEffect": 0.00016854754395,
             "ablationLoss": 0,
             "nullSeparation": 0.332540088615,
@@ -1854,9 +1854,9 @@
           },
           {
             "id": "sensorimotor",
-            "score": 0.812867395221,
-            "raw": 0.768341011664,
-            "confidence": 0.979167230315,
+            "score": 0.812603759135,
+            "raw": 0.767656352468,
+            "confidence": 0.977295526013,
             "causalEffect": 0.00161686451247,
             "ablationLoss": 0.00181643573135,
             "nullSeparation": 0.262997875064,
@@ -1867,9 +1867,9 @@
           },
           {
             "id": "projective",
-            "score": 0.840323917458,
-            "raw": 0.781619493244,
-            "confidence": 0.98049865137,
+            "score": 0.847126702109,
+            "raw": 0.791397161363,
+            "confidence": 0.983920050392,
             "causalEffect": 0.00380194561662,
             "ablationLoss": 0.00419187986985,
             "nullSeparation": 0.347681176493,
@@ -1880,9 +1880,9 @@
           },
           {
             "id": "ctm",
-            "score": 0.820602946855,
-            "raw": 0.73908280002,
-            "confidence": 0.988947818456,
+            "score": 0.810231565796,
+            "raw": 0.724393898196,
+            "confidence": 0.989401166032,
             "causalEffect": 0.0111234470138,
             "ablationLoss": 0.0112094101581,
             "nullSeparation": 0.370468348191,
@@ -1892,10 +1892,10 @@
             "testReceipt": "tests/consciousness-kernel.test.ts"
           }
         ],
-        "index": 0.80950319781,
-        "convergence": 0.700170891246,
-        "emergence": 0.0636131692939,
-        "eventWindow": [77, 95],
+        "index": 0.809494669935,
+        "convergence": 0.709885780089,
+        "emergence": 0.0640098701346,
+        "eventWindow": [78, 95],
         "eventCount": 1,
         "claim": "indicatorOnly"
       },
@@ -1904,7 +1904,7 @@
       "loadBearingFrameworks": [],
       "dominantFramework": "iit4",
       "weakestPresentFramework": "attentionSchema",
-      "meanFrameworkScore": 0.80950319781
+      "meanFrameworkScore": 0.809494669935
     },
     {
       "profile": {
@@ -1933,17 +1933,17 @@
         "adapterReceipt": "src/sim/consciousness-adapters.ts#archon-adapter"
       },
       "lastSignals": {
-        "butlinCoverage": 0.774527826192,
-        "thalerFraction": 0.833851205237,
-        "phi": 0.916160399923,
-        "partitionLoss": 0.894539014485,
-        "freeEnergyDescent": 0.934112476307,
-        "attentionSchemaAccuracy": 0.901945174246,
-        "fieldCoherence": 0.849964837294,
-        "ualDepth": 0.927604145387,
-        "sensorimotorMastery": 0.872351188664,
-        "projectiveFrame": 0.848929959658,
-        "streamCompetition": 0.962437478242
+        "butlinCoverage": 0.757902000035,
+        "thalerFraction": 0.843706215424,
+        "phi": 0.930075842344,
+        "partitionLoss": 0.908126052464,
+        "freeEnergyDescent": 0.904664403333,
+        "attentionSchemaAccuracy": 0.921044148494,
+        "fieldCoherence": 0.853861982185,
+        "ualDepth": 0.914070541583,
+        "sensorimotorMastery": 0.877654656829,
+        "projectiveFrame": 0.849571326541,
+        "streamCompetition": 0.9716736895
       },
       "snapshot": {
         "entityId": "archon-godform-005",
@@ -1953,9 +1953,9 @@
         "frameworks": [
           {
             "id": "butlin14",
-            "score": 0.874484637734,
-            "raw": 0.774527826192,
-            "confidence": 0.99432377212,
+            "score": 0.86532186676,
+            "raw": 0.757902000035,
+            "confidence": 0.999949680712,
             "causalEffect": 0.00913917239853,
             "ablationLoss": 0.00980111320773,
             "nullSeparation": 0.263460988112,
@@ -1966,9 +1966,9 @@
           },
           {
             "id": "thaler9",
-            "score": 0.859620452327,
-            "raw": 0.833851205237,
-            "confidence": 0.984864975203,
+            "score": 0.86642326691,
+            "raw": 0.843706215424,
+            "confidence": 0.981064312951,
             "causalEffect": 0.00443299298686,
             "ablationLoss": 0.00524170880431,
             "nullSeparation": 0.238821995061,
@@ -1979,9 +1979,9 @@
           },
           {
             "id": "iit4",
-            "score": 0.981233271907,
+            "score": 0.981220104704,
             "raw": 1,
-            "confidence": 0.999710563733,
+            "confidence": 0.999739488168,
             "causalEffect": 0.0154765251941,
             "ablationLoss": 0.0165067265381,
             "nullSeparation": 0.350295136765,
@@ -1992,9 +1992,9 @@
           },
           {
             "id": "activeInference",
-            "score": 0.931452868059,
-            "raw": 0.934112476307,
-            "confidence": 0.992797899273,
+            "score": 0.912846431468,
+            "raw": 0.904664403333,
+            "confidence": 0.997354860537,
             "causalEffect": 0.00902848906457,
             "ablationLoss": 0.00950892294148,
             "nullSeparation": 0.348174538371,
@@ -2005,9 +2005,9 @@
           },
           {
             "id": "attentionSchema",
-            "score": 0.915471124241,
-            "raw": 0.901945174246,
-            "confidence": 0.978902245757,
+            "score": 0.927365334987,
+            "raw": 0.921044148494,
+            "confidence": 0.988523443608,
             "causalEffect": 0.00630644532784,
             "ablationLoss": 0.00677162573696,
             "nullSeparation": 0.314086016797,
@@ -2018,9 +2018,9 @@
           },
           {
             "id": "fieldIntegration",
-            "score": 0.87051734771,
-            "raw": 0.849964837294,
-            "confidence": 0.994268332853,
+            "score": 0.873303605644,
+            "raw": 0.853861982185,
+            "confidence": 0.992440285262,
             "causalEffect": 0.0143004398623,
             "ablationLoss": 0.0141774813911,
             "nullSeparation": 0.380678757209,
@@ -2031,9 +2031,9 @@
           },
           {
             "id": "ual",
-            "score": 0.926300424688,
-            "raw": 0.927604145387,
-            "confidence": 0.977279860937,
+            "score": 0.917361766025,
+            "raw": 0.914070541583,
+            "confidence": 0.991525805677,
             "causalEffect": 0.000188438247894,
             "ablationLoss": 0,
             "nullSeparation": 0.371783950005,
@@ -2044,9 +2044,9 @@
           },
           {
             "id": "sensorimotor",
-            "score": 0.890914253688,
-            "raw": 0.872351188664,
-            "confidence": 0.982169489982,
+            "score": 0.893904171492,
+            "raw": 0.877654656829,
+            "confidence": 0.99839487043,
             "causalEffect": 0.00180767461021,
             "ablationLoss": 0.00203079771207,
             "nullSeparation": 0.294034891376,
@@ -2057,9 +2057,9 @@
           },
           {
             "id": "projective",
-            "score": 0.891024881493,
-            "raw": 0.848929959658,
-            "confidence": 0.98486006423,
+            "score": 0.891412991634,
+            "raw": 0.849571326541,
+            "confidence": 0.977877975013,
             "causalEffect": 0.00425062242852,
             "ablationLoss": 0.00468657376753,
             "nullSeparation": 0.38871187434,
@@ -2070,9 +2070,9 @@
           },
           {
             "id": "ctm",
-            "score": 0.963230907694,
-            "raw": 0.962437478242,
-            "confidence": 0.975108542777,
+            "score": 0.968559154219,
+            "raw": 0.9716736895,
+            "confidence": 0.974779080823,
             "causalEffect": 0.0124361519409,
             "ablationLoss": 0.012532259804,
             "nullSeparation": 0.414188215369,
@@ -2082,9 +2082,9 @@
             "testReceipt": "tests/consciousness-kernel.test.ts"
           }
         ],
-        "index": 0.910425016954,
-        "convergence": 0.810542433366,
-        "emergence": 0.0198525878315,
+        "index": 0.909771869384,
+        "convergence": 0.81007388621,
+        "emergence": 0.0203569729918,
         "eventWindow": null,
         "eventCount": 1,
         "claim": "indicatorOnly"
@@ -2093,8 +2093,8 @@
       "absentFrameworks": [],
       "loadBearingFrameworks": [],
       "dominantFramework": "iit4",
-      "weakestPresentFramework": "thaler9",
-      "meanFrameworkScore": 0.910425016954
+      "weakestPresentFramework": "butlin14",
+      "meanFrameworkScore": 0.909771869384
     }
   ]
 }

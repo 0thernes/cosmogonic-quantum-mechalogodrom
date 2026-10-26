@@ -201,6 +201,16 @@ export class ApexFieldGrid {
     f[cy * w + cx] = (f[cy * w + cx] ?? 0) + amount;
   }
 
+  /** Radiative boundary/bulk dissipation so continuously driven organs reach a finite equilibrium (#111). */
+  dissipate(rate = 0.04): void {
+    const scale = Math.max(0, Math.min(1, 1 - rate));
+    for (let i = 0; i < this.a.length; i++) {
+      this.a[i] = (this.a[i] ?? 0) * scale;
+      this.b[i] = (this.b[i] ?? 0) * scale;
+      this.prev[i] = (this.prev[i] ?? 0) * scale;
+    }
+  }
+
   /** Spatial variance of the field about its mean — the interference/structure strength. O(w·h). */
   variance(): number {
     const f = this.field();

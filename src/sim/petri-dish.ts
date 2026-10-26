@@ -481,6 +481,15 @@ export function petriDishBeat(
   // Emergence strength — composite of φ surrogate, aliveness, complexity tier, sentience proxy.
   // World drives brutal-god events via EmergenceAnglesController separately; this field gates the
   // in-dish biomass/complexity amplifier below (previously never written — always stuck at 0).
+  state.sentienceProxy = Math.min(
+    1,
+    Math.max(
+      0,
+      (state.phiSurrogate ?? 0) * 0.45 +
+        state.aliveness * 0.35 +
+        (state.spinPolarization ?? 0) * 0.2,
+    ),
+  );
   state.emergence = Math.min(
     1,
     Math.max(
@@ -505,7 +514,12 @@ export function petriDishBeat(
   }
 
   const ignition = state.ignitionSlot / Math.max(1, NUTRIENT_SLOTS - 1);
-  if (ignition > 0.65 && state.phiSurrogate > 0.45 && bioFlux > 0.55) {
+  const effectivePhi =
+    state.phiSurrogate +
+    (state.godPower !== 0.25 || archonIdx > 0
+      ? (state.spinPolarization ?? 0) * 0.25 + state.aliveness * 0.15
+      : 0);
+  if (ignition > 0.65 && effectivePhi > 0.45 && bioFlux > 0.55) {
     state.eshkolSentientBorn = (state.eshkolSentientBorn || 0) + 1;
     state.biomass = Math.min(1, state.biomass + 0.025 * bioFlux);
     // Monotone toward this tier's cap (12) — never regress a higher complexity.
@@ -819,12 +833,7 @@ export function applyBrutalGodEvent(
     state.biomass = Math.min(1, state.biomass + boost * 0.8);
     state.morphotype = (state.morphotype + 2) % 10;
     state.godPower = Math.min(1, (state.godPower || 0) + brutality * 0.1);
-  } else if (
-    event.includes('EVA') ||
-    event.includes('BERSERK') ||
-    event.includes('GRIFFITH') ||
-    event.includes('FEMTO')
-  ) {
+  } else if (event.includes('BERSERK') || event.includes('GRIFFITH') || event.includes('FEMTO')) {
     // EVA-01 berserk, Griffith Femto — AD rage morph, godhand sacrifice (eshkol AD + irrep break + qge)
     state.geneticDivergence = Math.min(1, state.geneticDivergence + brutality * 0.5);
     state.ignitionSlot = Math.min(NUTRIENT_SLOTS - 1, state.ignitionSlot + 3);
