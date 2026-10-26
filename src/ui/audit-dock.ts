@@ -330,6 +330,7 @@ function renderDashboard(doc: Document, list: unknown[]): void {
 
     // 2. [BIO] Organic Metamorphics
     activeEntities = world.entities?.list?.length ?? world.state?.population ?? 0;
+    // Audit #283: an estimate (entities × 12.5), not a measured mass, so no physical unit is shown.
     biomass = (activeEntities * 12.5).toFixed(1);
     // world.state.mutations is a CUMULATIVE integer counter (hundreds→thousands), NOT a 0..1 fraction —
     // rendering it raw as `${x*100}%` printed nonsense like "Mut: 372900.0%". Normalize to a bounded
@@ -399,7 +400,7 @@ function renderDashboard(doc: Document, list: unknown[]): void {
       scope: 'Bio',
       title: '[BIO] METAMORPHICS',
       num: `${activeEntities} ORGS`,
-      last: `Mass: ${biomass}kg | Mut: ${(mutationQuotient * 100).toFixed(1)}%`,
+      last: `Mass≈ ${biomass} (est. 12.5/entity) | Mut: ${(mutationQuotient * 100).toFixed(1)}%`,
       sub: '',
       sub2: '',
       labelClass: 'cqm-aud-scope-bio',
@@ -408,7 +409,7 @@ function renderDashboard(doc: Document, list: unknown[]): void {
       scope: 'Neuro',
       title: '[NEU] NEURO-SYNAPSE',
       num: `${synapsesCount} LINKS`,
-      last: `Spikes: ${spikeRate}Hz | Sent: ${(sentience * 100).toFixed(1)}%`,
+      last: `Spike idx≈ ${spikeRate} (links×chaos est.) | Sent: ${(sentience * 100).toFixed(1)}%`,
       // Thaler death-dream: minds measured as they die on any vector — dream = final confabulation
       // vividness, lucid = the moderate-damage band where hallucination peaks, novel = peak novelty.
       // Devour: a devoured mind's policy imprints into a survivor — ⇌N with mean transfer magnitude.

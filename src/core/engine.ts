@@ -8,7 +8,7 @@ import { PostFx, postFxMode } from './postfx';
  * (legacy lines 182-194).
  *
  * Faithful constants: antialias on, `high-performance` power preference,
- * ACES filmic tone mapping at exposure 0.95, `FogExp2(0x020310, 0.003 · FOG_SCALE)`,
+ * ACES filmic tone mapping (boot exposure 0.72; weather then drives it per frame), `FogExp2(0x020310, 0.003 · FOG_SCALE)`,
  * 68° FOV camera with near/far 0.1..CAMERA_FAR. Its boot vantage and fog carry
  * the habitat scale so the enlarged biosphere opens with the same relative framing.
  *
@@ -17,7 +17,7 @@ import { PostFx, postFxMode } from './postfx';
  * (no sRGB output encode), so every emissive/HSL color value was authored
  * against a linear-out pipeline. Modern three defaults to `SRGBColorSpace`,
  * which double-encodes those already-tuned values and shifts the whole palette
- * brighter/desaturated. Keeping ACES tone mapping + exposure 0.95 on top of a
+ * brighter/desaturated. Keeping ACES tone mapping + exposure on top of a
  * linear output buffer reproduces the legacy look exactly. NOTE: this pairs
  * with `THREE.ColorManagement.enabled = false`, which the integrator sets in
  * main.ts BEFORE constructing this Engine (ordering matters — see notes).
@@ -185,8 +185,15 @@ export class Engine {
   /** Master scene exposure (ACES filmic). O(1); does not touch sim state. */
   setExposure(exposure: number): void {
     // USER #11: clamped upper bound lowered so the scene never re-blows out at high exposure.
-    this.renderer.toneMappingExposure = Math.max(0.35, Math.min(0.95, exposure));
+    const e = Math.max(0.35, Math.min(0.95, exposure));
+    this.renderer.toneMappingExposure = e;
+    // Audit #269: weather rewrites the exposure every frame, so the HUD level is kept as a gain
+    // relative to the 0.72 boot exposure and applied on top of the weather target.
+    this.exposureGain = e / 0.72;
   }
+
+  /** HUD EXPOSURE gain (1 at the 0.72 default) that weather multiplies into its target. */
+  exposureGain = 1;
 
   getExposure(): number {
     return this.renderer.toneMappingExposure;

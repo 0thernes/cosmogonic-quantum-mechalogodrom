@@ -160,8 +160,9 @@ function drawMeasurement(
     ctx.fillText('No completed sample', 9, h / 2);
     return;
   }
-  let lo = card.range?.[0] ?? 0;
-  let hi = card.range?.[1] ?? 0;
+  // Audit #293: auto-range starts empty (not at 0) so 0 is only inside the range when the data is.
+  let lo = card.range?.[0] ?? Infinity;
+  let hi = card.range?.[1] ?? -Infinity;
   let invalid = 0;
   for (const v of values) {
     if (!Number.isFinite(v)) {
@@ -172,6 +173,10 @@ function drawMeasurement(
       lo = Math.min(lo, v);
       hi = Math.max(hi, v);
     }
+  }
+  if (!Number.isFinite(lo) || !Number.isFinite(hi)) {
+    lo = 0;
+    hi = 1;
   }
   if (hi === lo) hi = lo + 1;
   const left = 38,

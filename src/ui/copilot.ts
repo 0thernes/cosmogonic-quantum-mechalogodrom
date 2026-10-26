@@ -63,6 +63,15 @@ export const COPILOT_REQUEST_TIMEOUT_MS = 80_000;
 const COPILOT_AUX_REQUEST_TIMEOUT_MS = 20_000;
 const COPILOT_STATIC_MODEL_TIMEOUT_MS = 12_000;
 const COPILOT_STATIC_RESPONSE_BYTES = 512 * 1024;
+/** Cap for /api/* JSON bodies (chat replies with tool steps, tool output, health). Audit #280. */
+const COPILOT_API_RESPONSE_BYTES = 2 * 1024 * 1024;
+
+/** Audit #280: drop the user turn a failed request left at the end of history. */
+export function dropDanglingUserTurn(history: CopilotMessage[], text: string): void {
+  const last = history[history.length - 1];
+  if (last && last.role === 'user' && last.content === text.slice(0, COPILOT_MAX_MESSAGE_CHARS))
+    history.pop();
+}
 
 /** Append one bounded history entry, evicting oldest context by both message count and total size. */
 export function appendCopilotHistory(history: CopilotMessage[], message: CopilotMessage): void {
@@ -256,7 +265,10 @@ async function askStaticAi(history: readonly Msg[], preferredModel?: string): Pr
   const messages = [{ role: 'system' as const, content: STATIC_AI_SYSTEM }, ...history];
   let lastErr = 'no provider';
   const order: string[] = [];
-  if (preferredModel) order.push(preferredModel);
+  // Audit #280: the picker holds a server preset id ('llm7', 'groq', …) in server mode; only a real
+  // LLM7 model string may be sent as the browser-direct model.
+  if (preferredModel && (STATIC_AI_MODELS as readonly string[]).includes(preferredModel))
+    order.push(preferredModel);
   for (const m of STATIC_AI_MODELS) if (!order.includes(m)) order.push(m);
   for (const model of order) {
     try {
@@ -445,6 +457,28 @@ function populateStaticProviderCatalog(sel: HTMLSelectElement, prov: HTMLElement
   prov.textContent = `static · ${STATIC_AI_MODELS.length} browser providers · live probe on open`;
 }
 
+/**
+ * Audit #279: the mount pre-population and the first open both asked the server for
+ * /api/copilot and /api/copilot/health, so every page load probed providers twice. One
+ * in-flight-or-recent answer is shared for a short window; the 🩺 diagnostics button still
+ * probes fresh. A failed request is dropped so the next caller retries.
+ */
+const AUX_MEMO_MS = 30_000;
+const auxMemo = new Map<string, { at: number; p: Promise<unknown> }>();
+function memoAuxJson<T>(path: string): Promise<T> {
+  const hit = auxMemo.get(path);
+  if (hit && Date.now() - hit.at < AUX_MEMO_MS) return hit.p as Promise<T>;
+  const p = copilotFetch(path, {}, COPILOT_AUX_REQUEST_TIMEOUT_MS).then((r) => {
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return readResponseJsonBounded(r, COPILOT_API_RESPONSE_BYTES, path) as Promise<T>;
+  });
+  auxMemo.set(path, { at: Date.now(), p });
+  p.catch(() => {
+    if (auxMemo.get(path)?.p === p) auxMemo.delete(path);
+  });
+  return p;
+}
+
 async function enrichServerProviders(
   sel: HTMLSelectElement,
   prov: HTMLElement,
@@ -454,8 +488,7 @@ async function enrichServerProviders(
   let healthMap = new Map<string, ProviderHealth>();
   let healthDefault = '';
   try {
-    const res = await copilotFetch('/api/copilot/health', {}, COPILOT_AUX_REQUEST_TIMEOUT_MS);
-    const d = (await res.json()) as HealthResult;
+    const d = await memoAuxJson<HealthResult>('/api/copilot/health');
     if (d.providers?.length) {
       healthMap = new Map(d.providers.map((p) => [p.id, p]));
       healthDefault = d.default ?? '';
@@ -804,9 +837,10 @@ function mount(): void {
   };
 
   /** Resolve one chat turn through the browser-direct static provider without touching `/api/*`. */
-  async function answerFromStaticAi(thinking: HTMLElement): Promise<void> {
+  async function answerFromStaticAi(thinking: HTMLElement, text: string): Promise<void> {
     if (!staticAiConsent()) {
       thinking.remove();
+      dropDanglingUserTurn(history, text);
       addMsg(
         'cqm-cop-sys',
         'Nothing was sent. The static chat needs your OK to use the third-party api.llm7.io; for a ' +
@@ -823,6 +857,7 @@ function mount(): void {
         prov.textContent = `llm7 · ${sel.value || 'static'}`;
     } catch {
       thinking.remove();
+      dropDanglingUserTurn(history, text);
       addMsg(
         'cqm-cop-sys',
         'The free static AI (LLM7) was unreachable just now — try again in a moment. For the ' +
@@ -884,7 +919,11 @@ function mount(): void {
         );
         return;
       }
-      const data = (await res.json()) as ToolResult;
+      const data = (await readResponseJsonBounded(
+        res,
+        COPILOT_API_RESPONSE_BYTES,
+        'tool response',
+      )) as ToolResult;
       addTool({
         tool: m.tool,
         args: { [m.key]: rest },
@@ -903,7 +942,7 @@ function mount(): void {
     setBusy(true);
     const thinking = addMsg('cqm-cop-sys', 'thinking…');
     if (!serverApi) {
-      await answerFromStaticAi(thinking);
+      await answerFromStaticAi(thinking, text);
       setBusy(false);
       return;
     }
@@ -920,10 +959,14 @@ function mount(): void {
       if (!res.ok || !ctype.includes('application/json')) {
         // No Bun server (static GitHub Pages) → call the free, key-less LLM7 DIRECTLY from the browser
         // so the chat still works. The repo-command tools stay dev-only (they need /api/tool).
-        await answerFromStaticAi(thinking);
+        await answerFromStaticAi(thinking, text);
         return;
       }
-      const data = (await res.json()) as AgentResult;
+      const data = (await readResponseJsonBounded(
+        res,
+        COPILOT_API_RESPONSE_BYTES,
+        'chat response',
+      )) as AgentResult;
       thinking.remove();
       for (const step of data.steps ?? []) addTool(step);
       addMsg('cqm-cop-ai', data.reply || '(no answer)');
@@ -935,6 +978,7 @@ function mount(): void {
         addMsg('cqm-cop-sys', 'All providers failed this turn — click 🩺 to diagnose + restart.');
     } catch (e) {
       thinking.remove();
+      dropDanglingUserTurn(history, text);
       addMsg(
         'cqm-cop-sys',
         `chat error: ${e instanceof Error ? e.message : String(e)} — click 🩺 to run diagnostics.`,
@@ -964,7 +1008,11 @@ function mount(): void {
     try {
       if (!serverApi) throw new Error('static host has no server diagnostics endpoint');
       const res = await copilotFetch('/api/copilot/health', {}, COPILOT_AUX_REQUEST_TIMEOUT_MS);
-      const d = (await res.json()) as HealthResult;
+      const d = (await readResponseJsonBounded(
+        res,
+        COPILOT_API_RESPONSE_BYTES,
+        'health response',
+      )) as HealthResult;
       card.replaceChildren();
       const h2 = document.createElement('h4');
       h2.textContent = d.enabled ? '🩺 AI DIAGNOSTICS' : '🩺 AI DIAGNOSTICS — disabled';
@@ -1101,15 +1149,11 @@ function mount(): void {
         );
         return;
       }
-      copilotFetch('/api/copilot', {}, COPILOT_AUX_REQUEST_TIMEOUT_MS)
-        .then((r) => {
-          if (!r.ok) throw new Error(`HTTP ${r.status}`);
-          return r.json() as Promise<{
-            enabled?: boolean;
-            provider?: string;
-            providers?: { id: string; label: string; def: boolean }[];
-          }>;
-        })
+      memoAuxJson<{
+        enabled?: boolean;
+        provider?: string;
+        providers?: { id: string; label: string; def: boolean }[];
+      }>('/api/copilot')
         .then(async (d) => {
           // Copilot is opt-in and off by default in production (server gate) so a public deploy
           // never exposes source. When disabled, present a clear notice and lock the input.
@@ -1195,14 +1239,10 @@ function mount(): void {
     populateStaticProviderCatalog(sel, prov);
     return;
   }
-  void copilotFetch('/api/copilot', {}, COPILOT_AUX_REQUEST_TIMEOUT_MS)
-    .then(
-      (r) =>
-        r.json() as Promise<{
-          enabled?: boolean;
-          providers?: { id: string; label: string; def: boolean }[];
-        }>,
-    )
+  void memoAuxJson<{
+    enabled?: boolean;
+    providers?: { id: string; label: string; def: boolean }[];
+  }>('/api/copilot')
     .then(async (d) => {
       if (d.enabled !== false && d.providers?.length) {
         await enrichServerProviders(sel, prov, d.providers);

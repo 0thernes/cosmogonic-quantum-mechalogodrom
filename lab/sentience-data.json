@@ -519,7 +519,7 @@
       "meanCausalEffect": 0.008371,
       "meanNullSeparation": 0.41032,
       "connectedness": 0.1,
-      "loadBearingRate": 1
+      "loadBearingRate": 0
     },
     {
       "id": "thaler9",
@@ -530,7 +530,7 @@
       "meanCausalEffect": 0.006221,
       "meanNullSeparation": 0.41278,
       "connectedness": 0.12,
-      "loadBearingRate": 1
+      "loadBearingRate": 0
     },
     {
       "id": "iit4",
@@ -541,7 +541,7 @@
       "meanCausalEffect": 0.013695,
       "meanNullSeparation": 0.429964,
       "connectedness": 0.6,
-      "loadBearingRate": 1
+      "loadBearingRate": 0
     },
     {
       "id": "activeInference",
@@ -552,7 +552,7 @@
       "meanCausalEffect": 0.013458,
       "meanNullSeparation": 0.441418,
       "connectedness": 1.14,
-      "loadBearingRate": 1
+      "loadBearingRate": 0
     },
     {
       "id": "attentionSchema",
@@ -563,7 +563,7 @@
       "meanCausalEffect": 0.007222,
       "meanNullSeparation": 0.392779,
       "connectedness": 0.82,
-      "loadBearingRate": 1
+      "loadBearingRate": 0
     },
     {
       "id": "fieldIntegration",
@@ -574,7 +574,7 @@
       "meanCausalEffect": 0.009828,
       "meanNullSeparation": 0.413349,
       "connectedness": 0.92,
-      "loadBearingRate": 1
+      "loadBearingRate": 0
     },
     {
       "id": "ual",
@@ -585,7 +585,7 @@
       "meanCausalEffect": 0.00209,
       "meanNullSeparation": 0.43997,
       "connectedness": 0.32,
-      "loadBearingRate": 0.6875
+      "loadBearingRate": 0
     },
     {
       "id": "sensorimotor",
@@ -596,7 +596,7 @@
       "meanCausalEffect": 0.006517,
       "meanNullSeparation": 0.42464,
       "connectedness": 0.64,
-      "loadBearingRate": 1
+      "loadBearingRate": 0
     },
     {
       "id": "projective",
@@ -607,7 +607,7 @@
       "meanCausalEffect": 0.001341,
       "meanNullSeparation": 0.442065,
       "connectedness": 0.18,
-      "loadBearingRate": 0.59375
+      "loadBearingRate": 0
     },
     {
       "id": "ctm",
@@ -618,7 +618,7 @@
       "meanCausalEffect": 0.011263,
       "meanNullSeparation": 0.409553,
       "connectedness": 0.74,
-      "loadBearingRate": 1
+      "loadBearingRate": 0
     }
   ],
   "entityTelemetry": [

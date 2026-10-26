@@ -219,6 +219,16 @@ export class SuperheroHud {
   private readonly resizeObservers: ResizeObserver[] = [];
   private readonly onKeydown = (e: KeyboardEvent): void => {
     if (!this.active || this.root.classList.contains('closed')) return;
+    // Audit #291: an Escape meant for a text field or already handled by another panel
+    // (copilot, dialogs) must not also minimize the hero HUD.
+    if (e.defaultPrevented) return;
+    const t = e.target as HTMLElement | null;
+    if (
+      t &&
+      typeof t.tagName === 'string' &&
+      (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)
+    )
+      return;
     if (e.key === 'Escape') {
       e.preventDefault();
       if (e.shiftKey) this.close();

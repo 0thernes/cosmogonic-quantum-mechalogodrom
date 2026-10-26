@@ -31,6 +31,7 @@ import {
   PLATFORM_FLOOR,
   PLATFORM_HEIGHT,
   WEATHERS,
+  CHAOS_MAX,
 } from './constants';
 import type { Weather } from './constants';
 import type { SimContext } from '../types';
@@ -501,7 +502,7 @@ export class AtmosphereSystem {
   ): void {
     const s = this.ctx.state;
     const weather: Weather = WEATHERS[s.weatherIdx % WEATHERS.length] ?? 'CLEAR';
-    const chaosNorm = clamp(s.chaos / 10, 0, 1);
+    const chaosNorm = clamp(s.chaos / CHAOS_MAX, 0, 1); // audit #163: was a literal /10
 
     // A sky is an observer-centred background, not habitat geometry. Keeping both shells centred on
     // the active camera prevents a high portrait/narrow-FOV TOP survey from leaving the BackSide

@@ -20,14 +20,17 @@ export const XENOMIMIC_BRAIN_PARAMETERS =
   XENO_BRAIN_OUTPUTS * XENO_BRAIN_HIDDEN +
   XENO_BRAIN_OUTPUTS;
 
-/** Ten bounded operational lanes drawn by the inspector radar. Asterisks denote explicit proxies. */
+/**
+ * Ten bounded operational lanes drawn by the inspector radar. Audit #289: INTG is the bodies'
+ * integration and BCST is tension × integration; they were labelled IIT* and GWT*, which they are not.
+ */
 export const XENOMIMIC_INDICATOR_CHANNELS = [
   'POP',
   'ENER',
   'COH',
   'TWIN',
-  'IIT*',
-  'GWT*',
+  'INTG',
+  'BCST',
   'DIV',
   'LIFE',
   'BIRTH',

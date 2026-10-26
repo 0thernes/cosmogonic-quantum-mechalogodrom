@@ -167,6 +167,8 @@ export class InputSystem {
 
   private readonly actions: UiActions;
   private readonly keyState: Record<string, boolean> = {};
+  /** Physical key code → lowercase key it latched on keydown (audit #277). */
+  private readonly codeKey = new Map<string, string>();
   /** Identifier of the touch steering the joystick; null when idle (Known Bug 8). */
   private joyId: number | null = null;
   /** pointerId of the pointer dragging the camera look; null when idle. */
@@ -217,7 +219,11 @@ export class InputSystem {
       'keydown',
       (e) => {
         if (inField(e.target)) return;
-        this.keyState[e.key.toLowerCase()] = true;
+        const k = e.key.toLowerCase();
+        this.keyState[k] = true;
+        // Audit #277: remember which key a physical code latched, so the keyup
+        // clears it even when e.key differs (Shift released first, Meta chords).
+        if (e.code) this.codeKey.set(e.code, k);
         if (e.key === 'Tab' || e.key === ' ') e.preventDefault();
       },
       { signal: this.ac.signal },
@@ -226,6 +232,11 @@ export class InputSystem {
       'keyup',
       (e) => {
         this.keyState[e.key.toLowerCase()] = false;
+        const latched = e.code ? this.codeKey.get(e.code) : undefined;
+        if (latched !== undefined) {
+          this.keyState[latched] = false;
+          this.codeKey.delete(e.code);
+        }
       },
       { signal: this.ac.signal },
     );
@@ -566,6 +577,7 @@ export class InputSystem {
    */
   private clearHeldInput(): void {
     for (const k of Object.keys(this.keyState)) this.keyState[k] = false;
+    this.codeKey.clear();
     this.camVel.x = 0;
     this.camVel.y = 0;
     this.camVel.z = 0;

@@ -9,6 +9,7 @@ import {
   ConsciousnessKernel,
   FRAMEWORK_IDS,
   FRAMEWORKS,
+  LOAD_BEARING_MIN_LOSS,
   type ConsciousnessFrameworkId,
 } from './consciousness-kernel';
 import {
@@ -168,7 +169,8 @@ function aggregateFrameworks(
       meanNullSeparation: round(mean(stats.map((s) => s.nullSeparation))),
       connectedness: round(mean(stats.map((s) => s.connectedness))),
       loadBearingRate: round(
-        stats.filter((s) => s.ablationLoss > 0).length / Math.max(1, stats.length),
+        stats.filter((s) => s.ablationLoss > LOAD_BEARING_MIN_LOSS).length /
+          Math.max(1, stats.length),
       ),
     };
   });

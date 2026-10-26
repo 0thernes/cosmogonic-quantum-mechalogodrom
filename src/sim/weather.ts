@@ -137,6 +137,9 @@ export class WeatherSystem {
       const b = Math.max(0, Math.sin(t * 5.7 + 1.3));
       exposure += (Math.pow(a, 30) + Math.pow(b, 60)) * 2.2;
     }
-    this.engine.renderer.toneMappingExposure = exposure;
+    // Audit #269: honour the HUD EXPOSURE control (a gain; absent on headless fakes).
+    const gain = (this.engine as { exposureGain?: number }).exposureGain;
+    this.engine.renderer.toneMappingExposure =
+      typeof gain === 'number' && Number.isFinite(gain) ? exposure * gain : exposure;
   }
 }

@@ -545,6 +545,9 @@ export class Observatory {
   private page: ObsPage = 0;
   /** Hidden aria-live region that announces the latest snapshot summary to screen readers. */
   private readonly liveEl: HTMLElement | null;
+  /** Screen-reader summary cadence (audit #284) and the time it was last written. */
+  private static readonly LIVE_SUMMARY_MS = 10_000;
+  private liveAtMs = -Infinity;
 
   /** 10 series colors: tribe tokens 0..7 then accent and warn (resolved once). */
   private readonly seriesColors: readonly string[];
@@ -867,8 +870,11 @@ export class Observatory {
       this.push(snapshot);
     }
 
-    // V81: surface a terse summary for screen readers. Throttled naturally by the push cadence.
-    if (this.liveEl && this.primed) {
+    // V81: surface a terse summary for screen readers. Audit #284: pushes arrive ~3×/s, which
+    // floods a polite live region, so the summary is rewritten at most once per LIVE_SUMMARY_MS.
+    const nowMs = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    if (this.liveEl && this.primed && nowMs - this.liveAtMs >= Observatory.LIVE_SUMMARY_MS) {
+      this.liveAtMs = nowMs;
       const pageNames = ['Overview', 'Variance', 'Ecology', 'Conflict'];
       const pageName = pageNames[this.page] ?? 'Observatory';
       const total =

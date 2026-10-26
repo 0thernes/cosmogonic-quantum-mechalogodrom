@@ -552,7 +552,7 @@ export const HELP_KB: readonly HelpEntry[] = [
     id: 'determinism',
     title: 'Is it the same every time? (determinism)',
     keywords: ['determinism', 'random', 'seed', 'reproducible', 'rng', 'same'],
-    body: "Yes — one seed reproduces a whole run, byte for byte. All simulation randomness flows through a seeded mulberry32 PRNG; Math.random and Date.now are banned in sim logic. New systems (economy, super creature) draw from isolated sub-streams so they never perturb the core golden. This is the repo's #1 law.",
+    body: "Mostly. Sim randomness flows through a seeded mulberry32 PRNG, and Math.random and Date.now are banned in sim logic; new systems (economy, super creature) draw from isolated sub-streams so they don't perturb the core golden. But a run is only reproducible from its seed in the seeded headless sim: a page reload picks a fresh seed unless you pass ?seed=, wild mode uses unseeded entropy, and UI actions (mutate, collapse) and some render effects draw from the sim RNG, so interacting changes the run.",
     see: ['src/math/rng.ts', 'docs/adr/0004-deterministic-rng-2026-06-26.md'],
   },
   {
@@ -774,7 +774,7 @@ export const HELP_KB: readonly HelpEntry[] = [
       'slow',
       'speed',
     ],
-    body: 'Creatures render through GPU-instanced pools (one draw call per geometry), a spatial hash for neighbour queries, and cadenced heavy work (the connectome, economy and graph passes run on slow frames that scale with population). Quality auto-detects the device tier. Telemetry tracks it all live in the ⊞ panels.',
+    body: 'Creatures render through GPU-instanced pools (one draw call per geometry), a spatial hash for neighbour queries, and cadenced heavy work (economy and graph passes run on slower cadences; organism brains still run every frame and the connectome and spatial grid rebuild every 2 frames). Quality auto-detects the device tier. Telemetry tracks it all live in the ⊞ panels.',
     see: ['docs/BENCHMARKS-2026-06-26.md'],
   },
 ];

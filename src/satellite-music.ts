@@ -65,10 +65,13 @@ function mountSatelliteMusic(doc: Document = document): void {
   label.className = 'cqm-sat-music-lab';
   label.textContent = SONGS[state.songIdx]?.name ?? 'Song';
 
+  // Audit #297: re-read the store before saving so a dome open in another tab doesn't have its
+  // newer state overwritten by the snapshot this page loaded at mount; only the music fields change.
   const persist = (): void => {
-    persisted.musicOn = audio.musicOn;
-    persisted.songIdx = state.songIdx;
-    store.save(persisted);
+    const latest = store.load() ?? persisted;
+    latest.musicOn = audio.musicOn;
+    latest.songIdx = state.songIdx;
+    store.save(latest);
   };
 
   const unlock = (): void => {

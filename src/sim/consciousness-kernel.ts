@@ -38,7 +38,11 @@
 import type { Rng } from '../math/rng';
 import { mulberry32 } from '../math/rng';
 
+/** Minimum ablation loss for a load-bearing verdict (shared with the sentience lab, audit #180). */
+export const LOAD_BEARING_MIN_LOSS = 0.05;
+
 /** The ten canonical frameworks, in fixed order (index 0..9). */
+
 export type ConsciousnessFrameworkId =
   | 'butlin14'
   | 'thaler9'
@@ -865,6 +869,7 @@ function statusOf(
   if (score < 0.15) return 'structural';
   if (score < 0.5) return 'partial';
   // loadBearing requires BOTH an ablation effect AND separation from the null — mechanism proven causal.
-  if (score >= 0.5 && ablationLoss > 0.05 && nullSeparation > 0.05) return 'loadBearing';
+  if (score >= 0.5 && ablationLoss > LOAD_BEARING_MIN_LOSS && nullSeparation > 0.05)
+    return 'loadBearing';
   return 'met';
 }

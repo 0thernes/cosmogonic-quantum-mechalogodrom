@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test } from 'bun:test';
 import {
   appendCopilotHistory,
   copilotFetch,
+  dropDanglingUserTurn,
   COPILOT_MAX_HISTORY_CHARS,
   COPILOT_MAX_HISTORY_MESSAGES,
   COPILOT_MAX_MESSAGE_CHARS,
@@ -19,6 +20,20 @@ afterEach(() => {
 });
 
 describe('Copilot client resource bounds', () => {
+  test('a failed turn removes only its own trailing user message (audit #280)', () => {
+    const history: CopilotMessage[] = [
+      { role: 'user', content: 'a' },
+      { role: 'assistant', content: 'b' },
+      { role: 'user', content: 'c' },
+    ];
+    dropDanglingUserTurn(history, 'zzz');
+    expect(history).toHaveLength(3);
+    dropDanglingUserTurn(history, 'c');
+    expect(history.map((m) => m.content)).toEqual(['a', 'b']);
+    dropDanglingUserTurn(history, 'b');
+    expect(history).toHaveLength(2);
+  });
+
   test('history bounds each message, total characters, and message count', () => {
     const history: CopilotMessage[] = [];
     appendCopilotHistory(history, { role: 'user', content: 'x'.repeat(100_000) });
