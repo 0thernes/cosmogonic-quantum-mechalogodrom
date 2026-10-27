@@ -46,7 +46,7 @@ function at(values: Float32Array, idx: number): number {
  * `SimState.algoIdx`; legacy 0..19 keep their exact order and names so the
  * frozen-reference determinism tests stay pinned, the 5 new fields follow.
  */
-export const ALGOS: readonly SortAlgo[] = [
+const RAW_ALGOS: readonly SortAlgo[] = [
   {
     name: 'BUBBLE FIELD',
     step(values, length, i) {
@@ -231,7 +231,8 @@ export const ALGOS: readonly SortAlgo[] = [
       const scale = Math.max(Math.abs(vj), Math.abs(vk)) <= 1 ? 1000 : 1;
       const dj = Math.floor((vj * scale) / d) % 10;
       const dk = Math.floor((vk * scale) / d) % 10;
-      return dj > dk || (dj === dk && vj > vk) ? [j, k] : null;
+      // Audit #251: digit order only prioritises real inversions — never un-sort sorted input.
+      return vj > vk && dj >= dk ? [j, k] : vj > vk && (i & 7) === 0 ? [j, k] : null;
     },
   },
   {
@@ -305,11 +306,9 @@ export const ALGOS: readonly SortAlgo[] = [
       const lo = j < p ? j : p;
       const hi = j < p ? p : j;
       // Ascending block ⇒ keep min low; final merge pass forces ascending convergence.
-      const ascending = stride === 1 || ((lo / (stride << 1)) & 1) === 0;
-      const outOfOrder = ascending
-        ? at(values, lo) > at(values, hi)
-        : at(values, lo) < at(values, hi);
-      return outOfOrder ? [lo, hi] : null;
+      // Audit #251: ascending compare-exchange only — the descending bitonic half-blocks un-sorted
+      // already-sorted input, so the field could never settle.
+      return at(values, lo) > at(values, hi) ? [lo, hi] : null;
     },
   },
   {
@@ -382,6 +381,38 @@ export const ALGOS: readonly SortAlgo[] = [
     },
   },
 ];
+
+/**
+ * Audit #251: fields whose comparators only reach a fixed partner (stride/gap/block) stalled near
+ * 0.5 sortedness. When their own proposal is null they fall back to one adjacent compare-exchange
+ * at a cycling index, so every terminating field now converges. HEAP SIFT (heap order) and PATIENCE
+ * BUCKET (documented perpetual) keep their own semantics.
+ */
+const ADJACENT_FALLBACK = new Set([
+  'MERGE IMPULSE',
+  'PIVOT FIELD',
+  'COMB SWEEP',
+  'BITONIC MESH',
+  'STOOGE DRIFT',
+  'RUN MERGE',
+  'HOLE SCATTER',
+  'BITONIC NETWORK',
+  'PREFIX PANCAKE',
+]);
+
+export const ALGOS: readonly SortAlgo[] = RAW_ALGOS.map((algo) =>
+  ADJACENT_FALLBACK.has(algo.name)
+    ? {
+        ...algo,
+        step(values: Float32Array, length: number, i: number) {
+          const own = algo.step(values, length, i);
+          if (own || length < 2) return own;
+          const j = i % (length - 1);
+          return at(values, j) > at(values, j + 1) ? [j, j + 1] : null;
+        },
+      }
+    : algo,
+);
 
 /**
  * A distinct display glyph per sorting field (CONTRACTS V7.2), in ALGOS order, so each
