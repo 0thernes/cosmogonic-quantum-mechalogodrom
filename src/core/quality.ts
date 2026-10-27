@@ -126,12 +126,11 @@ const ADAPTIVE_CADENCE: Record<QualityTier, { neuralRate: number; connectomeRate
  * Pure tier resolution from the probed capabilities — exported so the ladder is
  * testable without a DOM. `memGB` defaults to 8 when the platform hides it. O(1).
  */
-export function resolveTier(isMobile: boolean, cores: number, memGB: number): QualityTier {
+export function resolveTier(isMobile: boolean, cores: number, _memGB: number): QualityTier {
   if (isMobile) return 'phone';
-  if (memGB > 0 && memGB <= 2) return 'tablet';
   // Hardware-concurrency and device-memory counts do not measure the composite CPU/GPU budget.
   // Auto-selection therefore stops at the measured 10k production rung; ultra/mega remain explicit.
-  if (cores >= 10 && (memGB <= 0 || memGB >= 4)) return 'desktop';
+  if (cores >= 10) return 'desktop';
   if (cores >= 8) return 'laptop';
   return 'tablet';
 }

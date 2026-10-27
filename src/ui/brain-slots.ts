@@ -439,9 +439,9 @@ export function initBrainSlotVisualizers(doc: Document = document): () => void {
     if (disposed) return;
     rafId = requestAnimationFrame(loop);
     if (doc.hidden) return;
-    // Audit #288: ~20 fps and only slots whose canvas is actually laid out (collapsed/hidden panels
-    // skip their O(n²) curve + gradient pass entirely).
-    if (++tick % 3 !== 0) return;
+    // Audit #288: full ~30 fps cadence; slots whose canvas is not laid out (collapsed/hidden panels)
+    // skip their O(n²) curve + gradient pass entirely.
+    if (++tick % 2 !== 0) return;
     const pulse = nowPulse();
     for (const s of slots) {
       if (s.canvas.isConnected && s.canvas.getClientRects().length === 0) continue;

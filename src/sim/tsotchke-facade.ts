@@ -280,6 +280,34 @@ export type {
 
 /** Extended NHSI cognitive, resonance, hyperbolic, and telos substrates. */
 export {
+  EmergentLanguage,
+  computeLanguageDiversity,
+  computeLanguageStructure,
+  type Sign,
+  type SignalToSignMapping,
+  type SignToSignalMapping,
+  type EmergentLanguageConfig,
+} from './emergent-language';
+export { OmegaPoint, type OmegaPointSnapshot } from './omega-point';
+export {
+  ResonanceIntegrator,
+  facultyPhaseFromActivation,
+  computeCoherence,
+  findCoalition,
+  computePhaseVariance,
+  type FacultyPhase,
+  type IntegratorSnapshot,
+  type ResonanceConfig,
+} from './resonance-integrator';
+export {
+  ValenceSteering,
+  computeValence,
+  computeValenceSteeringStrength,
+  type ValenceState,
+  type ValenceSteeringConfig,
+} from './valence-steering';
+export { Xenomind, type XenomindSnapshot } from './xenomind';
+export {
   beliefPropagation,
   beliefEntropy,
   type Factor,

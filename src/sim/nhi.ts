@@ -30,8 +30,11 @@ import {
 } from './ai/brains';
 
 /** What an NHI decides to do this beat. The integrator turns each into an actual world effect. */
-/** Audit #61: cap on remembered rival factions per NHI mind. */
-const MAX_RIVALS = 64;
+/**
+ * Audit #61: generous LRU bound on remembered rival factions per NHI mind — far above any live
+ * faction count, so no rival memory is ever lost in practice, yet it cannot grow without bound.
+ */
+const MAX_RIVALS = 65536;
 
 export const NhiAction = {
   /** Whisper false goals into a rival faction (belief-state manipulation / gaslighting). */
@@ -1415,7 +1418,11 @@ export class NhiMind {
   /** Lazily assign a repeated-game persona to a newly-met faction (deterministic from traits + rng). */
   private rivalOf(id: number, rng: Rng): Rival {
     let rv = this.rivals.get(id);
-    if (!rv) {
+    if (rv) {
+      // LRU touch: a re-met rival becomes most-recent, so eviction only drops the longest-unmet.
+      this.rivals.delete(id);
+      this.rivals.set(id, rv);
+    } else {
       const roll = rng();
       const strategy =
         this.deceit > 0.7
@@ -1430,7 +1437,7 @@ export class NhiMind {
                   ? GameStrategy.ALWAYS_DEFECT
                   : GameStrategy.TIT_FOR_TAT;
       rv = { strategy, everBetrayed: false, lastOpp: -1, round: 0 };
-      // Audit #61: bound the rival memory (oldest-met evicted first) so it cannot grow forever.
+      // Audit #61: bound the rival memory (least-recently-met evicted first) so it cannot grow forever.
       if (this.rivals.size >= MAX_RIVALS) {
         const oldest = this.rivals.keys().next().value;
         if (oldest !== undefined) this.rivals.delete(oldest);

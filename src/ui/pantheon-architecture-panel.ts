@@ -574,9 +574,8 @@ export class PantheonArchitecturePanel {
   private startAnim(): void {
     if (this.raf) return;
     const tick = (ts: number): void => {
-      // Audit #288: the MEGA 4D view (12.6k strokes + gradients) repaints at ~20 fps, and not at all
-      // while the document is hidden.
-      if (ts - this.lastPaint >= 50 && !document.hidden) {
+      // Audit #288: full ~30 fps repaint; skipped only while the document is hidden.
+      if (ts - this.lastPaint >= 33 && !document.hidden) {
         this.lastPaint = ts;
         this.frame();
       }

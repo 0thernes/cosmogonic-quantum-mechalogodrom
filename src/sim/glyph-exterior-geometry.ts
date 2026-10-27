@@ -54,10 +54,12 @@ function displaceGlyphGeometry(geo: THREE.BufferGeometry, seed: number, intensit
 export function glyphGeoBucketKey(a: AlphabetArchetype, sig: GlyphExteriorSignature): string {
   const s = a.seed;
   const v = (s >>> 5) % 8;
-  // Audit #189: a coarse key (kind × 3 seed variants) so archetypes SHARE instanced geometry — the
-  // near-unique key built ~100 single-instance InstancedMeshes (~1M verts). Per-glyph identity is
-  // carried by palette/emissive/scale, not by a private mesh.
-  return `${sig.kindIdx}:${v % 3}`;
+  const t = (s >>> 11) % 16;
+  const w = (s >>> 17) % 13;
+  // #189: include quantized chaos & generative bias in the cache key so displaced geometries match their archetype
+  const cBin = Math.round((a.bias.chaos ?? 0) * 8);
+  const gBin = Math.round((a.bias.generative ?? 0) * 8);
+  return `${sig.kindIdx}:${v}:${t}:${w}:${a.index % 7}:${cBin}:${gBin}`;
 }
 
 function fi(s: number, shift: number, mod: number): number {

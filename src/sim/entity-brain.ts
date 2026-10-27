@@ -454,17 +454,13 @@ export class EntityBrainField {
     chaos: number,
     t: number,
     sanctuaryAt: ((x: number, z: number, ecologyId?: number) => boolean) | null = null,
-    stride = 1,
-    phase = 0,
   ): number {
     this.prepareThinkTime(t);
     this.prepareControllerContext(t);
     const chaosN = clamp01(chaos / 10);
     const n = Math.min(list.length, this.capacity);
     let thought = 0;
-    // Audit #7: optional interleaved cohort (stride/phase) for very large populations; stride 1 = all.
-    const st = stride >= 1 ? Math.floor(stride) : 1;
-    for (let i = st > 1 ? phase % st : 0; i < n; i += st) {
+    for (let i = 0; i < n; i++) {
       const e = list[i];
       if (!e) continue;
       const protectedHere =

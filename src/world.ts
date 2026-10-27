@@ -355,9 +355,6 @@ const ALGO_AUTO_PERIOD = 2.5;
 /** V105: 101-glyph pantheon breeding is coupled into the Archon petri dishes every 600 frames. */
 const PANTHEON_BREEDING_LIVE = true;
 
-/** Audit #7: population above which organism brains alternate half cohorts per frame. */
-const BRAIN_COHORT_POP = 20000;
-
 /** Devour transfer strength: fraction the surviving neighbour's brain moves toward the devoured mind. */
 const GEDANKEN_DEVOUR_ALPHA = 0.2;
 /** Max distance a devoured mind can imprint into a neighbour (world units) — beyond this it just dies. */
@@ -2660,13 +2657,11 @@ export class World {
     // One-way boundary: core may seed/spawn INTO wilderness; wilderness NEVER writes back to core.
     const camX = this.engine.camera.position.x;
     const camZ = this.engine.camera.position.z;
-    // Audit #201: the wilderness has no renderer (owner rule: no decorative sprites) and only its
-    // counts/telemetry are read, so main-thread simulation runs every 8th frame with an 8× step.
-    if (this.workerPool !== null || s.frame % 8 === 0) {
+    if (this.workerPool !== null || s.frame % 2 === 0) {
       this.wilderness.update(
         camX,
         camZ,
-        this.workerPool !== null ? dt : dt * 8,
+        this.workerPool !== null ? dt : dt * 2,
         this.organismIntelligence.signal,
       );
     }
@@ -2757,7 +2752,7 @@ export class World {
       entropy: clamp((s.entropy ?? 0) / ENTROPY_MAX, 0, 1),
       temperature: s.temperature,
       population: this.entities.list.length,
-      capacity: 2000,
+      capacity: this.quality.maxEntities,
       meanMetabolicEnergy: this.entities.meanMetabolicEnergy,
       floraBiomass: this.alienFlora.meanBiomass(),
     });
@@ -3017,17 +3012,13 @@ export class World {
     this.sortStep(bands);
 
     // F-BRAIN V42: all organism brains perceive + steer BEFORE the integrator folds velocity
-    // into position — full 70-param evaluation (no reduced-quality brain). Audit #7: above
-    // BRAIN_COHORT_POP organisms the full brain runs on an alternating half cohort each frame
-    // (every brain still thinks every 2nd frame; steering persists in velocity between evaluations).
-    const brainStride = this.entities.list.length > BRAIN_COHORT_POP ? 2 : 1;
+    // into position — full 70-param evaluation every frame for every organism (quality contract:
+    // no neural LOD, no cohort striding — owner rule, audit #7 reverted).
     this.entityBrains.thinkAll(
       this.entities.list,
       this.state.chaos,
       t,
       this.bigTreeOrdinaryProtectedAt,
-      brainStride,
-      this.state.frame,
     );
 
     const stats = this.entities.update(dt, t);
@@ -5591,14 +5582,11 @@ export class World {
     // pairs already in order (O(n), cheap; reaches 1 as a terminating field
     // settles, hovers for the perpetual fields). The sortVals view is current
     // after the batch above.
-    // Audit #23: the progress proxy is HUD-only, so the O(n) ordered scan runs every 8th frame.
-    if ((s.frame & 7) === 0) {
-      let ordered = 0;
-      const sv = this.sortVals;
-      // i ∈ [1, n) and n = list.length ≤ sortVals.length, so both reads are in bounds.
-      for (let i = 1; i < n; i++) if (sv[i - 1]! <= sv[i]!) ordered++;
-      this.sortedFraction = n > 1 ? ordered / (n - 1) : 1;
-    }
+    let ordered = 0;
+    const sv = this.sortVals;
+    // i ∈ [1, n) and n = list.length ≤ sortVals.length, so both reads are in bounds.
+    for (let i = 1; i < n; i++) if (sv[i - 1]! <= sv[i]!) ordered++;
+    this.sortedFraction = n > 1 ? ordered / (n - 1) : 1;
     this.hud.setAlgo(displayName, s.algoStep, swaps);
   }
 
