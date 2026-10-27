@@ -2284,6 +2284,8 @@ export class Observatory {
       if (v < lo) lo = v;
       if (v > hi) hi = v;
     }
+    // Audit #285: zero-based bars — min-normalising made the poorest titan read as an empty bar.
+    lo = Math.min(0, lo);
     if (!(hi > lo)) hi = lo + 1;
     const range = hi - lo;
     const region = plotRect(w, h);

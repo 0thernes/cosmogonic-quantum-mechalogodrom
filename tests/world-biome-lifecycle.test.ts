@@ -213,7 +213,7 @@ describe('World organism biology lifecycle and execution truth', () => {
     h.coordinator.advanceOrganismBiome(0.01, 1);
     expect(h.world.getBiomeSummary()?.population).toBe(2);
     expect(h.world.getBiomeSummary()?.habitatEnvelope.verticalScale).toBe(1);
-    expect(h.world.getBiomeSummary()?.stratumCounts).toEqual([0, 0, 0, 2, 0]);
+    expect(h.world.getBiomeSummary()?.stratumCounts).toEqual([2, 0, 0, 0, 0]); // audit #202: platform-scale bands
   });
 
   test('GPU/NPU proposals do not masquerade as execution: one actual CPU range and zero accelerator entities', () => {

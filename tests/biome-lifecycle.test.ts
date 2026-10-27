@@ -138,7 +138,7 @@ describe('organism bio-state identity and duration', () => {
     const small = new OrganismBioStatePool(1);
     const padded = fixture(20_000);
     const compact = fixture(1);
-    padded.y[0] = compact.y[0] = 12;
+    padded.y[0] = compact.y[0] = 350; // audit #202: platform-scale canopy band
     padded.velocity.fill(123);
     step(big, padded, 0.016, 0, 20_000, 1);
     step(small, compact);
@@ -186,7 +186,7 @@ describe('organism bio-state identity and duration', () => {
     expect(batched.memoryTrace[3]).toBeCloseTo(incremental.memoryTrace[3]!, 6);
     const da = batched.dopamine[0]!;
     const na = batched.noradrenaline[0]!;
-    const expectedEnergy = (0.48 * (0.7 + 0.6 * da) - 0.22 * (1 + 0.4 * na)) * 0.192;
+    const expectedEnergy = (0.42 * (0.7 + 0.6 * da) - 0.22 * (1 + 0.4 * na)) * 0.192;
     expect(batchInput.energyDelta[0]).toBeCloseTo(expectedEnergy, 7);
     expect(batchInput.energyDelta[0]).toBeGreaterThan(frameInput.energyDelta[0]! * 10);
   });

@@ -48,8 +48,9 @@ describe('AlphabetPantheonRender — 100 archetypes alive in the dome', () => {
     const r = new AlphabetPantheonRender(scene);
     expect(r.count).toBe(ALPHABET_PANTHEON_SIZE);
     const cores = coreBodyMeshes(scene);
-    expect(cores.length).toBeGreaterThanOrEqual(80);
-    expect(cores.length).toBeLessThanOrEqual(100);
+    // Audit #189: archetypes now share a bounded set of instanced geometry buckets.
+    expect(cores.length).toBeGreaterThanOrEqual(10);
+    expect(cores.length).toBeLessThanOrEqual(45);
     let coreTotal = 0;
     for (const m of cores) coreTotal += m.count;
     expect(coreTotal).toBe(100);
@@ -61,7 +62,7 @@ describe('AlphabetPantheonRender — 100 archetypes alive in the dome', () => {
   test('geometry buckets spread — not one recoloured bucket', () => {
     const scene = new THREE.Scene();
     const r = new AlphabetPantheonRender(scene);
-    expect(coreBodyMeshes(scene).length).toBeGreaterThanOrEqual(80);
+    expect(coreBodyMeshes(scene).length).toBeGreaterThanOrEqual(10);
     r.dispose();
   });
 

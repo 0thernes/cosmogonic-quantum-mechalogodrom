@@ -401,7 +401,7 @@ describe('Phase-B temporal-identifiability development harness', () => {
     ).toBe(0.71026);
     expect(sealed.summary.advancementGate.observed.meanTwinMargin).toBe(0.000118);
     expect(sealed.summary.advancementGate.observed.orderingRate).toBe(0.5);
-  }, 30_000);
+  }, 120_000); // heavy 46k-row run; 30s timed out under the parallel pre-commit hook on Windows
 
   test('rejects unsealed seed substitutions and unsafe workload controls', () => {
     const taskTrainSeed = PHASE_B_DEVELOPMENT_SEEDS.predictorV3TaskTrain[0] as number;

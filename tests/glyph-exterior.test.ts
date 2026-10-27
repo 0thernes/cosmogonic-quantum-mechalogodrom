@@ -60,14 +60,14 @@ describe('glyph exterior palette', () => {
 });
 
 describe('glyph exterior geometry buckets', () => {
-  test('100 letters → ≥80 unique wild-geometry buckets', () => {
+  test('100 letters share a bounded set of wild-geometry buckets (audit #189)', () => {
     const keys = new Set<string>();
     for (const a of ALPHABET_ROSTER) {
       const sig = glyphExteriorSignature(a);
       keys.add(glyphGeoBucketKey(a, sig));
     }
-    expect(keys.size).toBeGreaterThanOrEqual(80);
-    expect(keys.size).toBeLessThanOrEqual(100);
+    expect(keys.size).toBeGreaterThanOrEqual(10);
+    expect(keys.size).toBeLessThanOrEqual(45);
   });
 
   test('every kind index 0..14 has its own switch branch — none silently reuse the default fallback', () => {

@@ -33,14 +33,17 @@ export interface BiomeStratumSpec {
   readonly quantumCoupling: number;
 }
 
+// Audit #202: bands span the real habitat platform (PLATFORM_FLOOR 6 .. PLATFORM_CEIL 720) so every
+// stratum is reachable and stage yCenters sit above the floor (the old -48..64 bands left ~97.5 % of
+// the volume in the crown and pulled non-elder stages constantly downward).
 export const BIOME_STRATA: readonly BiomeStratumSpec[] = [
   {
     id: 'hadal_abyss',
     index: 0,
     label: 'Hadal Geothermal Abyss',
-    yMin: -48,
-    yMax: -14,
-    yCenter: -26,
+    yMin: 6,
+    yMax: 60,
+    yCenter: 30,
     nutrientFlux: 0.42,
     dragFactor: 0.94,
     symbiosisGain: 1.05,
@@ -50,9 +53,9 @@ export const BIOME_STRATA: readonly BiomeStratumSpec[] = [
     id: 'benthic_reef',
     index: 1,
     label: 'Benthic Biomorphic Reef',
-    yMin: -14,
-    yMax: -3,
-    yCenter: -8,
+    yMin: 60,
+    yMax: 140,
+    yCenter: 100,
     nutrientFlux: 0.58,
     dragFactor: 0.96,
     symbiosisGain: 1.35,
@@ -62,9 +65,9 @@ export const BIOME_STRATA: readonly BiomeStratumSpec[] = [
     id: 'quantum_thermocline',
     index: 2,
     label: 'Quantum Thermocline Mixing Layer',
-    yMin: -3,
-    yMax: 8,
-    yCenter: 2.5,
+    yMin: 140,
+    yMax: 260,
+    yCenter: 200,
     nutrientFlux: 0.48,
     dragFactor: 0.98,
     symbiosisGain: 1.18,
@@ -74,9 +77,9 @@ export const BIOME_STRATA: readonly BiomeStratumSpec[] = [
     id: 'photonic_canopy',
     index: 3,
     label: 'Photonic Solar Canopy',
-    yMin: 8,
-    yMax: 24,
-    yCenter: 15,
+    yMin: 260,
+    yMax: 440,
+    yCenter: 350,
     nutrientFlux: 0.66,
     dragFactor: 0.985,
     symbiosisGain: 1.08,
@@ -86,9 +89,9 @@ export const BIOME_STRATA: readonly BiomeStratumSpec[] = [
     id: 'aetherial_crown',
     index: 4,
     label: 'Aetherial Ionosphere Crown',
-    yMin: 24,
-    yMax: 64,
-    yCenter: 38,
+    yMin: 440,
+    yMax: 720,
+    yCenter: 560,
     nutrientFlux: 0.36,
     dragFactor: 0.992,
     symbiosisGain: 1.28,
@@ -147,10 +150,10 @@ export function computeHabitatEnvelope(
 export function resolveBiomeStratum(y: number, verticalScale = 1): BiomeStratumSpec {
   const scale = Number.isFinite(verticalScale) && verticalScale > 0 ? verticalScale : 1;
   const normalizedY = Number.isFinite(y) ? y / scale : 0;
-  if (normalizedY < -14) return BIOME_STRATA[0]!;
-  if (normalizedY < -3) return BIOME_STRATA[1]!;
-  if (normalizedY < 8) return BIOME_STRATA[2]!;
-  if (normalizedY < 24) return BIOME_STRATA[3]!;
+  if (normalizedY < 60) return BIOME_STRATA[0]!;
+  if (normalizedY < 140) return BIOME_STRATA[1]!;
+  if (normalizedY < 260) return BIOME_STRATA[2]!;
+  if (normalizedY < 440) return BIOME_STRATA[3]!;
   return BIOME_STRATA[4]!;
 }
 

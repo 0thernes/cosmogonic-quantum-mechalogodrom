@@ -2660,11 +2660,13 @@ export class World {
     // One-way boundary: core may seed/spawn INTO wilderness; wilderness NEVER writes back to core.
     const camX = this.engine.camera.position.x;
     const camZ = this.engine.camera.position.z;
-    if (this.workerPool !== null || s.frame % 2 === 0) {
+    // Audit #201: the wilderness has no renderer (owner rule: no decorative sprites) and only its
+    // counts/telemetry are read, so main-thread simulation runs every 8th frame with an 8× step.
+    if (this.workerPool !== null || s.frame % 8 === 0) {
       this.wilderness.update(
         camX,
         camZ,
-        this.workerPool !== null ? dt : dt * 2,
+        this.workerPool !== null ? dt : dt * 8,
         this.organismIntelligence.signal,
       );
     }
@@ -3117,8 +3119,10 @@ export class World {
 
     const rdStride = this.computeCadence?.reactionDiffusionStride ?? 1;
     if (this.computeCadence) {
+      // Audit #246: the JS 9-point step (with the chaos reaction gain) is the single reference path;
+      // the WASM kernel lacks the gain and uses a 5-point Laplacian, so it is no longer used live.
       if (s.frame % rdStride === 0) {
-        this.rd.stepZigFast(1);
+        this.rd.step();
       }
     } else {
       this.rd.step();
@@ -5587,11 +5591,14 @@ export class World {
     // pairs already in order (O(n), cheap; reaches 1 as a terminating field
     // settles, hovers for the perpetual fields). The sortVals view is current
     // after the batch above.
-    let ordered = 0;
-    const sv = this.sortVals;
-    // i ∈ [1, n) and n = list.length ≤ sortVals.length, so both reads are in bounds.
-    for (let i = 1; i < n; i++) if (sv[i - 1]! <= sv[i]!) ordered++;
-    this.sortedFraction = n > 1 ? ordered / (n - 1) : 1;
+    // Audit #23: the progress proxy is HUD-only, so the O(n) ordered scan runs every 8th frame.
+    if ((s.frame & 7) === 0) {
+      let ordered = 0;
+      const sv = this.sortVals;
+      // i ∈ [1, n) and n = list.length ≤ sortVals.length, so both reads are in bounds.
+      for (let i = 1; i < n; i++) if (sv[i - 1]! <= sv[i]!) ordered++;
+      this.sortedFraction = n > 1 ? ordered / (n - 1) : 1;
+    }
     this.hud.setAlgo(displayName, s.algoStep, swaps);
   }
 

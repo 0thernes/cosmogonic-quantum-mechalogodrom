@@ -182,11 +182,11 @@ describe('Track 4: Expanded 3D Multi-Biome Strata & Deep Organism Bio-State', ()
   });
 
   test('resolveBiomeStratum maps vertical altitudes across all 5 ecological strata and evaluateOrganismLifeStage covers all 4 stages', () => {
-    const abyss = resolveBiomeStratum(-20);
-    const benthic = resolveBiomeStratum(-8);
-    const thermocline = resolveBiomeStratum(2);
-    const canopy = resolveBiomeStratum(15);
-    const crown = resolveBiomeStratum(38);
+    const abyss = resolveBiomeStratum(30);
+    const benthic = resolveBiomeStratum(100);
+    const thermocline = resolveBiomeStratum(200);
+    const canopy = resolveBiomeStratum(350);
+    const crown = resolveBiomeStratum(560);
 
     expect(abyss.id).toBe('hadal_abyss');
     expect(benthic.id).toBe('benthic_reef');
