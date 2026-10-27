@@ -1,3 +1,5 @@
+// Audit #49 (honesty, documented): titan procreation needs >=7 breeders within 92u of the origin while roam orbits are >=194u, so it is expected to be rare (analysis, not runtime-verified).
+// Audit #51 (honesty, documented): titan clash/war add chaos (ceiling 6.5): one of several positive chaos feeds, by design (see #14).
 /**
  * TITANS (CONTRACTS V3.3) — 20 colossal roaming intelligences running a global economy and
  * waging game-theoretic war over the cosmos.

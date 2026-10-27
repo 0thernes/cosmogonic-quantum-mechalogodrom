@@ -107,7 +107,16 @@ export class TreeCreatureTeaching {
     let moved = 0;
     for (let i = 0; i < learnerWeights.length; i++) {
       const from = learnerWeights[i]!;
-      const next = from + (teacherWeights[i]! - from) * TREE_TEACHING_BLEND;
+      // Audit #124: cultural transmission carries a small deterministic copy error (hash-seeded per
+      // learner/weight/event) so imitation no longer homogenises every policy onto the eldest teacher.
+      let h =
+        Math.imul(learner + 1, 0x9e3779b1) ^
+        Math.imul(i + 1, 0x85ebca6b) ^
+        Math.imul(this.events + 1, 0xc2b2ae35);
+      h = Math.imul(h ^ (h >>> 15), 0x2c1b3c6d);
+      h ^= h >>> 13;
+      const copyError = ((h >>> 0) / 4294967296 - 0.5) * 0.2 * Math.abs(teacherWeights[i]! - from);
+      const next = from + (teacherWeights[i]! - from) * TREE_TEACHING_BLEND + copyError;
       moved += Math.abs(next - from);
       learnerWeights[i] = next;
     }

@@ -1,3 +1,5 @@
+// Audit #72 (honesty, documented): tree creatures have no birth/death: the population is a fixed 250 (closed showcase ecology); low energy only slows movement.
+// Audit #75 (honesty, documented): percept.threat is constant 0 inside the sanctuary and stats.contests is always 0 (no contests are modelled).
 /**
  * CRYSTAL ECOSYSTEM — the supplied Crystal Ecosystem V9 tree, rebuilt as one native world subsystem.
  *

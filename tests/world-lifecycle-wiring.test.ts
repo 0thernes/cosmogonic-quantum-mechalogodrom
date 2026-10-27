@@ -100,7 +100,7 @@ describe('World lifecycle wiring', () => {
     expect(idAt).toBeLessThan(effectAt);
     expect(body.indexOf('try {', idAt)).toBeLessThan(cameraAt);
     expect(body.indexOf('try {', idAt)).toBeLessThan(effectAt);
-    expect(body).toContain('this.nhi.register(nid, this.nhiBirthRng);');
+    expect(body).toContain('this.nhi.register(nid, this.nhiBirthRng, true);');
     expect(body).toContain("this.audit.record('nhi-launch-failed'");
     expect(body).not.toContain('this.uiRng()');
     expect(body).not.toContain('this.nhi.register(nid, this.rng)');

@@ -801,7 +801,8 @@ describe('BigTreeSpeciesVisitors', () => {
     visits.addSlot(BigTreeSlotKind.Rest, -5, 0);
     visits.addSlot(BigTreeSlotKind.Rest, 5, 0);
     const visitors = adapter(tree, visits);
-    const entity = ordinary(20, -5, 80, 17);
+    // Audit #156: ordinary fatigue now needs a real energy deficit (age only amplifies it).
+    const entity = ordinary(20, -5, 30, 17);
     entity.userData.age = entity.userData.life;
     const xeno = xenomimic(9, 0, 5, 0.8);
     xeno.age = 300;
@@ -811,7 +812,7 @@ describe('BigTreeSpeciesVisitors', () => {
     expect(visitors.readVisitor(BIG_TREE_OWNER_ORDINARY, entity.id, 0, view)).toBe(true);
     expect(view.targetY).toBe(17);
     tick(tree, visitors, 0.1, 0.5, [entity], [xeno]);
-    expect(entity.userData.energy).toBe(82);
+    expect(entity.userData.energy).toBe(32);
     expect(xeno.energy).toBeCloseTo(0.82, 8);
     expect(entity.userData.energy).toBeLessThanOrEqual(100);
     expect(xeno.energy).toBeLessThanOrEqual(1);

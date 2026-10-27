@@ -1,3 +1,4 @@
+// Audit #268 (honesty, documented): fresnel is computed in object space against fixed +Z (not view-dependent); the apex torus knot is ~65k triangles.
 /**
  * ALPHABET PANTHEON RENDER (V-ABC) — brings the 100 Greek+Latin archetypes to life in the dome.
  *

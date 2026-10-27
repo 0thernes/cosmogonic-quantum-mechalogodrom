@@ -97,9 +97,11 @@ describe('TreeCreatureTeaching — bounded peer policy transfer', () => {
     expect(moved).toBeGreaterThan(0);
     for (let i = 0; i < lw.length; i++) {
       const expected = preLearner[i]! + (tw[i]! - preLearner[i]!) * TREE_TEACHING_BLEND;
-      expect(lw[i]!).toBeCloseTo(expected, 6);
+      // Audit #124: a bounded copy error (≤10 % of the gap) rides on top of the blend.
+      const gap = Math.abs(tw[i]! - preLearner[i]!);
+      expect(Math.abs(lw[i]! - expected)).toBeLessThanOrEqual(0.1 * gap + 1e-6);
     }
-    expect(l2(tw, lw)).toBeCloseTo(preDistance * (1 - TREE_TEACHING_BLEND), 4);
+    expect(l2(tw, lw)).toBeLessThan(preDistance);
     // The teacher is never mutated by teaching.
     expect(Array.from(teacher.weightsView())).toEqual(Array.from(tw));
     const status = teaching.status();

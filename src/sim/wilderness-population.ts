@@ -1,3 +1,4 @@
+// Audit #201 (honesty, documented): the wilderness population is simulated every frame but WildernessRenderer is a stub; only counts/telemetry are consumed.
 /**
  * Wilderness Population System (ADR 0010)
  *

@@ -1,3 +1,4 @@
+// Audit #48 (honesty, documented): "hunt" targets monoliths and faction hunt/gather target the nearest neighbour/crowd: the names are flavour, not resource-seeking.
 /**
  * The 26 per-entity behavior fields, ported faithfully from the legacy entity update loop
  * (legacy/cosmogonic-quantum-mechalogodrom.html lines 709-763) — same constants, same magic

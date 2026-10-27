@@ -1,3 +1,4 @@
+// Audit #129 (honesty, documented): the body->brain geometry sense is a function of the brain's own previous variantActivity (closed loop), not an independent percept.
 /**
  * MECHALOGODROM VARIANT SHELL GEOMETRY — ten NAMED mathematical constructions, one per bipolar
  * variant sub-brain (owner directive 2026-07-14: "not just decorative bullshit — real math, real

@@ -702,7 +702,10 @@ export class BigTreeSpeciesVisitors {
       body.position.x,
       body.position.z,
       1 - this.clamp01(body.userData.energy / 100),
-      Math.max(ageFatigue, speedFatigue * 0.5 + ageFatigue * 0.5),
+      // Audit #156: fatigue = energy deficit × age/speed wear, so healthy
+      // old organisms are no longer sent to Rest for free energy.
+      (1 - this.clamp01(body.userData.energy / 100)) *
+        Math.max(ageFatigue, speedFatigue * 0.5 + ageFatigue * 0.5),
       now,
       environment,
     );

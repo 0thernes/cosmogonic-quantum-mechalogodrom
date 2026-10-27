@@ -1,3 +1,4 @@
+// Audit #35 (honesty, documented): each entity owns its MeshStandardMaterial because colour/emissive are mutated per entity (NHI glow, tribe tint); sharing would couple them.
 /**
  * Entity lifecycle and per-frame simulation for the organism population.
  *

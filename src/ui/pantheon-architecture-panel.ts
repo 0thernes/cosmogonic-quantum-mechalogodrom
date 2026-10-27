@@ -182,6 +182,13 @@ export class PantheonArchitecturePanel {
   /** When the apex ς is selected, its warmed Entropic-Tesseract-Hydra brain snapshot (else null). */
   private apexSnap: ApexBrainSnapshot | null = null;
   private cachedApexSnap: ApexBrainSnapshot | null = null;
+  /** Audit #287: the LIVE world apex brain, when wired; the warmed stand-in is only a headless fallback. */
+  private apexSource: (() => ApexBrainSnapshot) | null = null;
+
+  /** Wire the live apex brain so APEX rows show real telemetry instead of a fresh synthetic brain. */
+  setApexSource(source: (() => ApexBrainSnapshot) | null): void {
+    this.apexSource = source;
+  }
   /** Designed/addressable growth telemetry from the live world (can be a synthesized research scale). */
   private apexGrowth: ApexGrowthStage | null = null;
 
@@ -495,6 +502,11 @@ export class PantheonArchitecturePanel {
     // the cycler shows live organ telemetry (level ramps toward the Sim-3 transcendence threshold).
     this.apexSnap = null;
     if (this.view === 'lineage' && isApex(lineageAt(this.lineageIdx))) {
+      if (this.apexSource) {
+        this.apexSnap = this.apexSource();
+        this.renderData(genome);
+        return;
+      }
       if (!this.cachedApexSnap) {
         const brain = createApexBrain();
         for (let i = 0; i < 64; i++) {

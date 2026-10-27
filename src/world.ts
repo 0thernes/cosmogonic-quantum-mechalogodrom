@@ -1851,6 +1851,7 @@ export class World {
     this.portalShield = new PortalShield(ctx); // USER: the god-tier Super/APEX bodies shimmer at the void
     this.superPanel = new SuperPanel();
     this.pantheonArchitecturePanel = new PantheonArchitecturePanel();
+    this.pantheonArchitecturePanel.setApexSource(() => this.apexBrain.snapshot());
     // NOTE: legacy single register removed; 5 SUPER CREATURES register their own purses below (ECON 9000+i).
     // F-SUPER V32: the masterful many-eyed apex BODY (god-jewel shader) — additive, draws no rng.
     // F-BRAIN V42: every organism's compact 70-param genome brain, on its OWN seeded sub-stream (so the
@@ -6113,7 +6114,8 @@ export class World {
       e.material.emissiveIntensity = 3.2;
       // V10: birth a deterministic super-mind for this NHI and register it so it ACTS on the world
       // each beat (spawns swarms, dominates the local field, broadcasts hallucinated utterances).
-      this.nhi.register(nid, this.nhiBirthRng);
+      // Audit #59: lineage=true — the newborn inherits (spawnChild) from live NHI parents when any exist.
+      this.nhi.register(nid, this.nhiBirthRng, true);
       this.nhiEntities.set(nid, e);
       this.nhiIdsByEntity.set(e, nid);
       if (this.bigTreeNhiSource?.register(nid, e) === false) {

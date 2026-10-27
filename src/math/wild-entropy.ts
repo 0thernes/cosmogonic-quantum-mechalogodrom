@@ -1,3 +1,4 @@
+// Audit #11 (honesty, documented): wild mode is the explicit opt-in NON-deterministic mode; Math.random here is intentional and never used on the seeded path.
 /**
  * Dual-Mode Wild Quantum-Chaos Entropy Substrate (`src/math/wild-entropy.ts`).
  *
