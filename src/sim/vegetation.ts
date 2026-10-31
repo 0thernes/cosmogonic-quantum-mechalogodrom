@@ -342,7 +342,14 @@ export class Vegetation {
       p.leanZ = contactZ * (0.9 + stiff * 0.05);
     }
     for (const s of this.species) {
-      s.mesh.instanceMatrix.needsUpdate = true;
+      // Perf: upload only the live slots [0, count) instead of the full maxCount capacity
+      // (each species buffer holds PLANT_COUNT matrices; the full re-upload dominated frame CPU).
+      // Same pattern as connectome/viz3d — the GPU sees identical matrices for every drawn plant.
+      if (s.count === 0) continue;
+      const im = s.mesh.instanceMatrix;
+      im.clearUpdateRanges();
+      im.addUpdateRange(0, s.count * 16);
+      im.needsUpdate = true;
     }
   }
 
