@@ -29,7 +29,7 @@ import { EshkolQrng } from '../math/eshkol-qrng';
 import { mulberry32 } from '../math/rng';
 
 /** LCG step (classical_rng style). O(1). */
-export function classicalLcgStep(state: number): number {
+function classicalLcgStep(state: number): number {
   return (Math.imul(state, 1664525) + 1013904223) >>> 0;
 }
 
@@ -52,7 +52,7 @@ export function classicalSample(state: number): { next: number; value: number } 
 }
 
 /** Higher-quality sample: LCG advanced, then avalanche-mixed. O(1). */
-export function classicalMixSample(state: number): { next: number; value: number } {
+function classicalMixSample(state: number): { next: number; value: number } {
   const next = classicalLcgStep(state);
   return { next, value: mixFast(next) / 0xffffffff };
 }
@@ -100,7 +100,7 @@ export function classicalQuantumContrast(seed: number, n: number, quantumEntropy
 }
 
 /** A randomness signature of one [0,1) stream: lag-1 serial correlation + normalized χ² uniformity. */
-export interface RandomnessSignature {
+interface RandomnessSignature {
   /** Lag-1 serial correlation r₁ ∈ [-1, 1]; 0 = independent samples (degenerate ⇒ 1 = maximally bad). */
   serialCorrelation: number;
   /** χ²/(K−1) uniformity ratio ≥ 0; ~1 = uniform, ≫1 = clumped. */
@@ -193,7 +193,7 @@ function quantumStream(seed: number, n: number): number[] {
 }
 
 /** Statistical contrast report for the LCG and deterministic state-vector adapter. */
-export interface RngContrast {
+interface RngContrast {
   /** Classical LCG stream signature. */
   classical: RandomnessSignature;
   /** Eshkol deterministic state-vector-adapter stream signature (legacy field name). */

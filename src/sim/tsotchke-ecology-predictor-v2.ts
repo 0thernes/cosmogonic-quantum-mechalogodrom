@@ -12,9 +12,9 @@
 
 import { mulberry32 } from '../math/rng';
 
-export const TSOTCHKE_ECOLOGY_V2_CURRENT_INPUTS = 5;
+const TSOTCHKE_ECOLOGY_V2_CURRENT_INPUTS = 5;
 export const TSOTCHKE_ECOLOGY_V2_TEMPORAL_INPUTS = 4;
-export const TSOTCHKE_ECOLOGY_V2_INPUTS = 9;
+const TSOTCHKE_ECOLOGY_V2_INPUTS = 9;
 export const TSOTCHKE_ECOLOGY_V2_PARAMETER_LIMIT = 8;
 
 export type TsotchkeEcologyPredictorV2Tier = 4 | 8 | 16;
@@ -131,13 +131,13 @@ export interface TsotchkeEcologyPredictorV2Options {
   driftAlpha?: number;
 }
 
-export interface TsotchkeEcologyForecastV2 {
+interface TsotchkeEcologyForecastV2 {
   token: number;
   prediction: number;
   forecastCount: number;
 }
 
-export interface TsotchkeEcologyObservationV2 {
+interface TsotchkeEcologyObservationV2 {
   token: number;
   outcome: number;
   gradientTarget: number;

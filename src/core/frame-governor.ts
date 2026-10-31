@@ -16,7 +16,7 @@ export enum Level {
   SHADOWS_OFF = 4,
 }
 
-export interface GovernorConfig {
+interface GovernorConfig {
   readonly alpha: number;
   readonly shedMs: number;
   readonly restoreMs: number;
@@ -40,7 +40,7 @@ export const DEFAULT_CONFIG: GovernorConfig = {
   dprScale: [1.0, 1.0, 1.0, 1.0, 1.0],
 };
 
-export interface GovernorState {
+interface GovernorState {
   readonly level: Level;
   readonly ema: number;
   readonly dwell: number;
@@ -101,7 +101,7 @@ export function deriveMaxLevel(_bootShadows: boolean): Level {
   return Level.FULL;
 }
 
-export interface LevelPlan {
+interface LevelPlan {
   readonly dprScale: number;
   readonly fxOn: boolean;
   readonly shadowsOn: boolean;

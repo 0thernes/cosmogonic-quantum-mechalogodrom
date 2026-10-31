@@ -225,7 +225,7 @@ export function productCorrelation(values: ArrayLike<number>, scale: number): nu
 }
 
 /** Full randomness-quality report over a sample buffer. */
-export interface RandomnessReport {
+interface RandomnessReport {
   readonly n: number;
   /** Shannon entropy in bits over `symbols` (ideal = log2(symbols)). */
   readonly entropy: number;

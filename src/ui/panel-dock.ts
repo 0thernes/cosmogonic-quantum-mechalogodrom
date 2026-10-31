@@ -44,7 +44,7 @@ const STYLE = `
 `;
 
 /** Lazily build (or fetch) the dock bar, adopting the standalone Docs + Spec nav links the first time. */
-export function getDock(doc: Document = document): HTMLElement {
+function getDock(doc: Document = document): HTMLElement {
   const styleId = DOCK_ID + '-style';
   let style = doc.getElementById(styleId) as HTMLStyleElement | null;
   if (!style) {

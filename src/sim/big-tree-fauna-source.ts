@@ -22,7 +22,7 @@ export type BigTreeFaunaOwnerKind =
   | typeof BIG_TREE_OWNER_APEX;
 
 export type BigTreeFaunaCategory = 'shoggoth' | 'titan' | 'leviathan' | 'puppet' | 'apex';
-export type BigTreeFaunaLocomotion = 'ground' | 'flight';
+type BigTreeFaunaLocomotion = 'ground' | 'flight';
 
 /** Legacy fauna velocity is integrated by `dt * 60 * 0.14`; adapters expose world-units/second. */
 export const BIG_TREE_FAUNA_VELOCITY_SCALE = 60 * 0.14;

@@ -20,7 +20,7 @@
 import type { Complex } from '../math/quantum'; // added export for Tsotchke spin NQS/VMC (advanced from spin_based + Moonlab)
 
 /** Simple RBM-style NQS architecture for representing quantum amplitudes. */
-export interface NQSArchitecture {
+interface NQSArchitecture {
   /** Number of visible units (qubits). */
   visibleCount: number;
   /** Number of hidden units. */
@@ -46,7 +46,7 @@ export interface VMCConfig {
 }
 
 /** VMC training state. */
-export interface VMCState {
+interface VMCState {
   /** Current samples (bitstrings as integers). */
   samples: Uint32Array;
   /** Sample amplitudes (complex). */
@@ -131,7 +131,7 @@ export function initVMC(arch: NQSArchitecture, config: VMCConfig, seed = 0x51f15
  *
  * For an RBM: log ψ(s) = Σ_i a_i s_i + Σ_j log(2 cosh(b_j + Σ_i W_ij s_i))
  */
-export function logAmplitude(arch: NQSArchitecture, bitstring: number): number {
+function logAmplitude(arch: NQSArchitecture, bitstring: number): number {
   let logAmp = 0;
 
   // Visible bias contribution
@@ -168,7 +168,7 @@ export function amplitude(arch: NQSArchitecture, bitstring: number): Complex {
 /**
  * Metropolis-Hastings proposal: flip a random qubit.
  */
-export function proposeFlip(bitstring: number, visibleCount: number, rng: () => number): number {
+function proposeFlip(bitstring: number, visibleCount: number, rng: () => number): number {
   const flipBit = Math.floor(rng() * visibleCount);
   return bitstring ^ (1 << flipBit);
 }
@@ -176,7 +176,7 @@ export function proposeFlip(bitstring: number, visibleCount: number, rng: () => 
 /**
  * Metropolis-Hastings acceptance probability.
  */
-export function acceptanceProbability(
+function acceptanceProbability(
   arch: NQSArchitecture,
   current: number,
   proposed: number,
@@ -267,7 +267,7 @@ export function localEnergy(
 /**
  * Compute gradient of log ψ with respect to parameters.
  */
-export function logPsiGradient(
+function logPsiGradient(
   arch: NQSArchitecture,
   bitstring: number,
   outWeights: Float32Array,

@@ -67,14 +67,14 @@ export interface TsotchkeEcologyInput {
   chaosThermalStress: number;
 }
 
-export interface TsotchkeEcologyPredictorOptions {
+interface TsotchkeEcologyPredictorOptions {
   /** Frozen mode still predicts and scores lagged outcomes, but never changes parameters. */
   adaptive?: boolean;
   /** Fixed deterministic SGD rate. Must be finite and in (0, 1]. */
   learningRate?: number;
 }
 
-export interface TsotchkeEcologyPrediction {
+interface TsotchkeEcologyPrediction {
   /** Predicted next-cadence ecological pressure in [0,1]. */
   prediction: number;
   /** Brier loss for the previous cadence, or null when no valid lagged label was available. */

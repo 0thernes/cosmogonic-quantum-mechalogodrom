@@ -12,7 +12,7 @@ export const FIELD_DIM = 8;
 
 const clamp01 = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v);
 
-export interface MindFieldSnapshot {
+interface MindFieldSnapshot {
   readonly channels: number;
   readonly dim: number;
   readonly energy: number;

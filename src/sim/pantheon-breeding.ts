@@ -56,7 +56,7 @@ import {
 /** Sister = uppercase, Brother = lowercase, Apex = the lone final-sigma ς outlier. */
 export type Kin = 'sister' | 'brother' | 'apex';
 /** Which script the glyph hails from (the apex is its own category). */
-export type LineScript = 'greek' | 'latin' | 'apex';
+type LineScript = 'greek' | 'latin' | 'apex';
 
 /** A creature's structural identity in the breeding lineage (NOT its behavioural bias). */
 export interface LineageGlyph {
@@ -201,7 +201,7 @@ export function isApex(g: LineageGlyph): boolean {
 }
 
 /** The apex's roadmap state at a given evolution level — honest target tracking, not a claim. */
-export interface ApexTranscendence {
+interface ApexTranscendence {
   level: number;
   /** Which staged simulation the apex inhabits: 1/2 below the threshold, 3 at/above it. */
   simulation: 1 | 2 | 3;
@@ -261,7 +261,7 @@ function cxAbs(a: Cx): number {
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
 /** Outcome of the mating rite — the resolved evolutionary game. */
-export interface RitualOutcome {
+interface RitualOutcome {
   /** The blended payoff matrix actually played. */
   readonly matrix: PayoffMatrix;
   /** Equilibrium cooperate-fraction x* the replicator converged to (0..1). */
@@ -399,7 +399,7 @@ const STIRLING2: number[][] = (() => {
 })();
 
 /** The child's umbral signature — its Touchard polynomial Tₙ(x)=Σₖ S(n,k)xᵏ. */
-export interface UmbralSignature {
+interface UmbralSignature {
   /** Polynomial degree n (3..7). */
   readonly degree: number;
   /** Bell number B(n) = Tₙ(1) = Σₖ S(n,k). */
@@ -432,7 +432,7 @@ function umbralSignature(a: LineageGlyph, b: LineageGlyph, blend: number): Umbra
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
 /** The child's homotopy genome. */
-export interface HomotopyGenome {
+interface HomotopyGenome {
   /** Winding number of the child's epicyclic loop about the origin — the π₁(ℝ²∖0)=ℤ class. */
   readonly winding: number;
   /** Rounded Gauss linking number of the two parents' lifted 3-space loops (a ℤ link invariant). */
@@ -590,7 +590,7 @@ function homotopyGenome(a: LineageGlyph, b: LineageGlyph, rng: Rng): HomotopyGen
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
 /** The child's chaos genome — a de Jong attractor and its measured Lyapunov exponent. */
-export interface ChaosGenome {
+interface ChaosGenome {
   readonly a: number;
   readonly b: number;
   readonly c: number;
@@ -657,7 +657,7 @@ function clampRange(v: number, lo: number, hi: number): number {
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
 /** The child's "blasean" — a finite Blaschke product B(z)=e^{iθ}∏(z−aₖ)/(1−āₖz). */
-export interface BlaschkeGenome {
+interface BlaschkeGenome {
   /** Degree d = number of zeros = topological degree of B|_{S¹}. */
   readonly degree: number;
   /** Zeros aₖ in the open unit disk (|aₖ|<1). */
@@ -706,7 +706,7 @@ function blaschkeGenome(a: LineageGlyph, b: LineageGlyph, rng: Rng): BlaschkeGen
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
 /** Rarity tiers — the rarer the child, the stranger and more dangerous. */
-export type BabyRank = 'COMMON' | 'RARE' | 'MYTHIC' | 'FORBIDDEN';
+type BabyRank = 'COMMON' | 'RARE' | 'MYTHIC' | 'FORBIDDEN';
 
 /** A bred super-creature child — the freak structure the ritual begot. */
 export interface BabyGenome {

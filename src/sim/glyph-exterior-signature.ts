@@ -22,7 +22,7 @@ export const PANTHEON_FLIGHT_MAX = PANTHEON_DOME_R * 0.5;
 const PANTHEON_MOTOR_SCALE = PANTHEON_FLIGHT_MAX * 0.55;
 
 /** Fifteen distinct exterior shell topologies (each instanced by kind for draw-call budget). */
-export const GLYPH_EXTERIOR_KINDS = [
+const GLYPH_EXTERIOR_KINDS = [
   'tesseract_cage',
   'crystal_shard',
   'dodeca_tunnel',
@@ -40,12 +40,12 @@ export const GLYPH_EXTERIOR_KINDS = [
   'portal_frame',
 ] as const;
 
-export type GlyphExteriorKind = (typeof GLYPH_EXTERIOR_KINDS)[number];
+type GlyphExteriorKind = (typeof GLYPH_EXTERIOR_KINDS)[number];
 
 export const GLYPH_EXTERIOR_KIND_COUNT = GLYPH_EXTERIOR_KINDS.length;
 
 /** How the body wanders — avoids lockstep racing loops. */
-export type GlyphMotionStyle = 'hover' | 'lissajous' | 'breathe' | 'drift' | 'pulse';
+type GlyphMotionStyle = 'hover' | 'lissajous' | 'breathe' | 'drift' | 'pulse';
 
 export interface GlyphExteriorSignature {
   readonly kind: GlyphExteriorKind;
@@ -184,7 +184,7 @@ export function glyphWanderOffset(
 }
 
 /** Hard clamp wander offset inside the dome biome (XZ radial + Y band). */
-export function clampPantheonWander(out: { x: number; y: number; z: number }): {
+function clampPantheonWander(out: { x: number; y: number; z: number }): {
   x: number;
   y: number;
   z: number;

@@ -129,7 +129,7 @@ function naiveConfig(drives: DriveVector): number {
   return config;
 }
 
-export interface VqeDriveResolverOptions {
+interface VqeDriveResolverOptions {
   enabled?: boolean;
   /** Frames between resolves; consumers read the held signal in between. */
   cadenceFrames?: number;

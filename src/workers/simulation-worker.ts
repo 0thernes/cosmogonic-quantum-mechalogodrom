@@ -25,7 +25,7 @@ const workerSelf = self as unknown as {
   postMessage(message: WorkerResponse, transfer?: Transferable[]): void;
 };
 
-export interface WorkerMessage {
+interface WorkerMessage {
   id: string;
   type: 'simulation' | 'wilderness';
   data: Float32Array;
@@ -39,7 +39,7 @@ export interface WorkerMessage {
   useSharedArrayBuffer: boolean;
 }
 
-export interface WorkerResponse {
+interface WorkerResponse {
   id: string;
   type: 'simulation' | 'wilderness';
   data: Float32Array;

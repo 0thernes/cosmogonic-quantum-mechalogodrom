@@ -13,7 +13,7 @@ import { hashSeed } from '../math/rng';
 /** World units per wilderness chunk edge (square chunks on the XZ plane). */
 export const CHUNK_SIZE = 256;
 
-export interface ChunkCoord {
+interface ChunkCoord {
   cx: number;
   cz: number;
 }
@@ -49,7 +49,7 @@ export function chunksInRadius(camCx: number, camCz: number, radius: number): Ch
   return out;
 }
 
-export interface StreamPlan {
+interface StreamPlan {
   load: ChunkCoord[];
   unload: ChunkCoord[];
 }

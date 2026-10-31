@@ -43,7 +43,7 @@ export interface SchrodingerWorkspace {
 }
 
 /** Largest grid supported (keeps the O(N) tridiagonal solve bounded). */
-export const SCHRODINGER_MAX_N = 1024;
+const SCHRODINGER_MAX_N = 1024;
 
 /** Allocate the six O(N) Thomas-sweep buffers once for repeated CN steps. */
 export function createSchrodingerWorkspace(n: number): SchrodingerWorkspace {

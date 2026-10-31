@@ -15,7 +15,7 @@
 import { EmergentLanguage, computeLanguageDiversity } from './emergent-language';
 import { mulberry32, type Rng } from '../math/rng';
 
-export const ARCHON_SIGNALS = 8;
+const ARCHON_SIGNALS = 8;
 const MAX_SIGNS = 64;
 const EVOLVE_EVERY = 32;
 

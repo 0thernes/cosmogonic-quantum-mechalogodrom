@@ -9,9 +9,9 @@
  */
 import type { Rng } from '../math/rng';
 
-export type MemKind = 'obs' | 'plan' | 'commit' | 'insight' | 'failure' | 'skill' | 'narrative';
+type MemKind = 'obs' | 'plan' | 'commit' | 'insight' | 'failure' | 'skill' | 'narrative';
 
-export interface MemRecord {
+interface MemRecord {
   kind: MemKind;
   t: number; // sim time
   conf: number;

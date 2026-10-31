@@ -20,7 +20,7 @@ import { chunkSeed as coordinateChunkSeed } from './wilderness-chunks';
 import type { OrganismIntelligenceSignal } from '../types';
 
 /** Packed wilderness entity layout: xyz, velocity xyz, type, seed. */
-export const WILDERNESS_ENTITY_STRIDE = 8;
+const WILDERNESS_ENTITY_STRIDE = 8;
 const WILDERNESS_DAMPING_60HZ = 0.985;
 
 /** Optional complete-batch accelerator. Inputs remain caller-owned and must never be modified. */
@@ -37,7 +37,7 @@ export interface WildernessBatchExecutor {
 export type WildernessBackend = 'webgpu' | 'cpu-workers' | 'cpu-main';
 
 /** Bounded execution telemetry; acceptedFrame refers to completed ambient work, not render FPS. */
-export interface WildernessComputeStatus {
+interface WildernessComputeStatus {
   backend: WildernessBackend;
   acceptedBackend: WildernessBackend | null;
   acceptedFrame: number;
@@ -203,7 +203,7 @@ export function simulateWildernessData(
   return data;
 }
 
-export interface WildernessEntity {
+interface WildernessEntity {
   id: number;
   x: number;
   y: number;
@@ -215,14 +215,14 @@ export interface WildernessEntity {
   seed: number;
 }
 
-export interface WildernessChunk {
+interface WildernessChunk {
   chunkId: string;
   entities: Array<WildernessEntity>;
   lastUpdate: number;
   active: boolean;
 }
 
-export interface WildernessSnapshot {
+interface WildernessSnapshot {
   chunkId: string;
   positions: Float32Array; // [x, y, z, vx, vy, vz, type, seed] per entity
   count: number;

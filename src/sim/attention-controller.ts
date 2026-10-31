@@ -15,7 +15,7 @@ const ATTENTION_TAU = 0.35;
 const ATTENTION_GAIN = 0.16;
 
 /** State cues that bias attention allocation. All fields are clamped to [0,1]. */
-export interface AttentionControllerCues {
+interface AttentionControllerCues {
   energy: number;
   threat: number;
   novelty: number;
@@ -182,7 +182,7 @@ export class AttentionController {
 }
 
 /** Per-faculty gain after attention biasing (length = `facultyCount`). */
-export interface AttentionGains {
+interface AttentionGains {
   readonly gains: readonly number[];
   /** Mean gain — telemetry for coupling audit. */
   readonly mean: number;
@@ -194,7 +194,7 @@ export interface AttentionGains {
  * Map an 8-dim attention-schema focus onto `facultyCount` faculty gains.
  * Faculties 0..3 track percept clusters; 4 plans; 5 memory; 6–7 quantum/clifford.
  */
-export function facultyGainsFromFocus(
+function facultyGainsFromFocus(
   focus: readonly number[],
   facultyCount: number,
   surprise: number,

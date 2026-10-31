@@ -49,7 +49,7 @@ import {
 } from './consciousness-kernel';
 
 /** One condition's aggregate outcome over a run. */
-export interface ConditionResult {
+interface ConditionResult {
   label: string;
   /** Mean blended index over the run (0..1). */
   meanIndex: number;
@@ -103,7 +103,7 @@ export interface LabReport {
 }
 
 /** Lab configuration. */
-export interface LabConfig {
+interface LabConfig {
   /** Ticks per run (default 176). */
   ticks?: number;
   /** Peak Kuramoto coupling at the pulse crest (default 4.0, super-critical for 10 oscillators). */
@@ -419,7 +419,7 @@ export function runConsciousnessLab(seed: number, cfg: LabConfig = {}): LabRepor
 }
 
 /** Aggregate report over a sweep of seeds — the cross-seed robustness receipt. */
-export interface LabSweep {
+interface LabSweep {
   seeds: number[];
   reports: LabReport[];
   /** Fraction of seeds where the singularity separated from the null (0..1). */

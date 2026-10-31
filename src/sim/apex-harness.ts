@@ -123,7 +123,7 @@ export function behaviorDistance(a: readonly BeatRecord[], b: readonly BeatRecor
 }
 
 /** The kill-test result for one organ. */
-export interface OrganAblation {
+interface OrganAblation {
   organ: ApexOrganKey;
   /** Behavioural distance from the all-organs-on baseline. */
   distance: number;
@@ -134,7 +134,7 @@ export interface OrganAblation {
 }
 
 /** The full scientific report. */
-export interface HarnessReport {
+interface HarnessReport {
   seed: number;
   beats: number;
   /** Determinism fingerprint of the full (no-ablation) run. */
@@ -158,7 +158,7 @@ const LOAD_TOL = 1e-6;
  * Run the full ablation study: the all-on baseline, then each organ removed in turn, plus the
  * offworld-dependence proxy. Deterministic. O(organs × beats).
  */
-export function ablationStudy(
+function ablationStudy(
   seed: number,
   percepts: readonly ApexPercept[],
   scale?: ApexScale,

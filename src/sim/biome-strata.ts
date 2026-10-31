@@ -10,13 +10,12 @@
 import { clamp, clamp01 } from '../math/scalar';
 import { prepareParallelCounterSeed, sampleParallelCounter01 } from '../math/wild-entropy';
 
-export type BiomeStratumId =
+type BiomeStratumId =
   'hadal_abyss' | 'benthic_reef' | 'quantum_thermocline' | 'photonic_canopy' | 'aetherial_crown';
 
-export type OrganismLifeStage =
-  'larval_spore' | 'juvenile_forager' | 'mature_symbiont' | 'elder_apex';
+type OrganismLifeStage = 'larval_spore' | 'juvenile_forager' | 'mature_symbiont' | 'elder_apex';
 
-export interface BiomeStratumSpec {
+interface BiomeStratumSpec {
   readonly id: BiomeStratumId;
   readonly index: 0 | 1 | 2 | 3 | 4;
   readonly label: string;
@@ -107,7 +106,7 @@ const STRATUM_INDEX: Readonly<Record<BiomeStratumId, number>> = {
   aetherial_crown: 4,
 };
 
-export interface HabitatEnvelope {
+interface HabitatEnvelope {
   /** Horizontal radius multiplier (1.0 at <= 10,000 entities; √(N/10000) above 10,000). */
   readonly horizontalScale: number;
   /** Vertical column multiplier (expands 3D strata depth at high populations). */
@@ -157,7 +156,7 @@ export function resolveBiomeStratum(y: number, verticalScale = 1): BiomeStratumS
   return BIOME_STRATA[4]!;
 }
 
-export interface OrganismLifeStageProfile {
+interface OrganismLifeStageProfile {
   readonly stage: OrganismLifeStage;
   readonly stageIndex: 0 | 1 | 2 | 3;
   readonly maturity: number;

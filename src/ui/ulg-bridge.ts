@@ -12,14 +12,14 @@ import { clamp } from '../math/scalar';
 const clamp01 = (v: number): number => clamp(v, 0, 1);
 
 /** ULG browser triad state for web handoff. */
-export interface UlgTriadState {
+interface UlgTriadState {
   aliveness: number;
   hybrid: number;
   resonance: number;
 }
 
 /** ULG web worker message payload. */
-export interface UlgWorkerMessage {
+interface UlgWorkerMessage {
   type: 'pulse' | 'sync' | 'handoff';
   aliveness: number;
   timestamp: number;

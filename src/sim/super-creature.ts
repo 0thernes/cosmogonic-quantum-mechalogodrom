@@ -134,7 +134,7 @@ export interface SuperPercept {
 }
 
 /** The Super Creature's decision this beat — consumed by the world to move/animate/spawn it. */
-export interface SuperIntent {
+interface SuperIntent {
   move: { x: number; y: number; z: number }; // −1..1 per axis
   aggression: number; // 0..1
   deception: number; // 0..1 (feign-weakness / misdirect)

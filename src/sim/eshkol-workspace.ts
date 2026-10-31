@@ -20,7 +20,7 @@ const clamp01 = (v: number): number => clamp(v, 0, 1);
 /** Competing specialist modules in the workspace (one per Tsotchke archetype). */
 const WS_MODULES = 8;
 
-export interface WorkspaceTick {
+interface WorkspaceTick {
   broadcastGain: number;
   phiCoupling: number;
   logicWeight: number;

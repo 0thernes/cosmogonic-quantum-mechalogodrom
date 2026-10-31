@@ -25,13 +25,13 @@
  */
 
 /** Syndrome measurement result (parity checks). */
-export interface Syndrome {
+interface Syndrome {
   checks: Uint8Array; /* Binary syndrome vector s = H·e (mod 2). */
   nChecks: number; /* Number of parity checks (stabilizer rows). */
 }
 
 /** Decoding result with the estimated error and a confidence in [0,1]. */
-export interface DecodingResult {
+interface DecodingResult {
   error: Uint8Array; /* Estimated error vector (correction support, length n_qubits). */
   confidence: number; /* Decoding confidence in [0,1]. */
 }
@@ -48,7 +48,7 @@ export interface DecodingResult {
  * support lists, plus the row/col grid coordinates of each stabilizer for the
  * decoder's lattice metric.
  */
-export interface SurfaceCode {
+interface SurfaceCode {
   /** Code distance d. */
   distance: number;
   /** Number of data qubits = d². */

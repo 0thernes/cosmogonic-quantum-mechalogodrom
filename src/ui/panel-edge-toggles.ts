@@ -142,7 +142,7 @@ const STYLE = `
  * Mount the edge toggle buttons. Idempotent + hot-reload-safe.
  * Call after the #ui grid and its children exist (end of boot).
  */
-export function mountPanelEdgeToggles(doc: Document = document): void {
+function mountPanelEdgeToggles(doc: Document = document): void {
   doc.getElementById(STYLE_ID)?.remove();
   const style = doc.createElement('style');
   style.id = STYLE_ID;

@@ -357,7 +357,7 @@ const LOXO_CURVES = 12;
 const LOXO_SEGS = 88;
 
 /** Loxodrome point at latitude φ for bearing β: lon = tan(β)·(inverse Gudermannian of φ). */
-export function loxodromePoint(
+function loxodromePoint(
   phi: number,
   beta: number,
   lon0: number,
@@ -859,7 +859,7 @@ const ENNEPER_RAD = 24;
 const ENNEPER_ANG = 44;
 
 /** Enneper's minimal surface — the classical Weierstrass–Enneper parametrization. */
-export function enneperPoint(u: number, v: number, out: { x: number; y: number; z: number }): void {
+function enneperPoint(u: number, v: number, out: { x: number; y: number; z: number }): void {
   out.x = u - (u * u * u) / 3 + u * v * v;
   out.y = v - (v * v * v) / 3 + v * u * u;
   out.z = u * u - v * v;
@@ -1059,12 +1059,7 @@ const WEIER_B = 3.1;
 const WEIER_ALPHA = 0.62;
 
 /** Weierstrass-type radial modulation: r = 1 + A·Σ b^(−αk)·cos(bᵏ·θ + phase). */
-export function weierstrassRadius(
-  theta: number,
-  octaves: number,
-  amp: number,
-  phase: number,
-): number {
+function weierstrassRadius(theta: number, octaves: number, amp: number, phase: number): number {
   let r = 1;
   for (let k = 0; k < octaves; k++) {
     r += amp * Math.pow(WEIER_B, -WEIER_ALPHA * k) * Math.cos(Math.pow(WEIER_B, k) * theta + phase);

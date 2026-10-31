@@ -5,7 +5,7 @@ import { mountToggle } from './panel-dock';
 import { dockToggle, injectCSS, injectPanelBaseCSS, panelHeader } from './panel-shell';
 
 /** Actions are owned by World and its Xylos session; the inspector never mutates the brain. */
-export interface XylosPanelActions {
+interface XylosPanelActions {
   focus: () => void;
   setMode: (mode: 'live' | 'seeded') => void;
   startRecording: () => void;

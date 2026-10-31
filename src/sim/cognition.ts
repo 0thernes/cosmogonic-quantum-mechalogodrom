@@ -7,7 +7,7 @@
 import { clamp } from '../math/scalar';
 
 /** What a creature senses + remembers this beat (all normalized to roughly 0..1, except boldness). */
-export interface CreaturePercept {
+interface CreaturePercept {
   /** Local danger 0..1 — crowding by rivals + an active singularity's pull. */
   threat: number;
   /** Local prey/food density 0..1 — exploitable neighbors within reach. */
@@ -25,7 +25,7 @@ export interface CreaturePercept {
 }
 
 /** The drives the kernel emits; the caller maps them onto motion, feeding cadence, and display. */
-export interface CreatureDrive {
+interface CreatureDrive {
   /** Urge to flee the threat 0..1 — scales an away-from-danger impulse + suppresses feeding. */
   flee: number;
   /** Urge to hunt 0..2 — scales feeding readiness (shorter effective interval, stronger tendrils). */

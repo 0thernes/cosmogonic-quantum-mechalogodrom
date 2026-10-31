@@ -10,7 +10,7 @@ import { XENOMIMIC_MAX, type Xenomimic, type XenomimicPopulation } from './xenom
 export const XENOMIMIC_CONNECTOME_MAX_LINKS = 2500;
 export const XENOMIMIC_CONNECTOME_MAX_ENTITY_BRIDGES = 48;
 
-export interface XenomimicConnectomeEntity {
+interface XenomimicConnectomeEntity {
   readonly position: { readonly x: number; readonly y: number; readonly z: number };
   readonly userData?: { readonly act?: number };
 }

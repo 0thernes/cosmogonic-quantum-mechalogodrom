@@ -25,7 +25,7 @@ export const ESHKOL_BALANCED = 0.55;
 export const ESHKOL_EXPLORE = 0.3;
 
 /** Result of an Archon executing its Eshkol thought-program. */
-export interface ArchonThought {
+interface ArchonThought {
   /** Plan bias in [0,1] — the value the program HALTed with (EXPLOIT / BALANCED / EXPLORE). */
   planBias: number;
   /** True when the program took the strong EXPLOIT branch (drive cleared the high threshold). */

@@ -63,7 +63,7 @@ export function brainForward(
 }
 
 /** The measured signature of one gedanken death — a being's final neural dissolution, quantified. */
-export interface DeathDream {
+interface DeathDream {
   /** Per-step confabulation drift ‖out(d) − out(0)‖ across the damage ramp (length {@link DEATH_STEPS}). */
   novelty: Float32Array;
   /** Per-step tanh-saturation 0..1 (the net locking to ±1 — noise-death). */
@@ -132,7 +132,7 @@ export function gedankenDeath(
 }
 
 /** The measured outcome of one being devouring another mid-firing. */
-export interface DevourResult {
+interface DevourResult {
   /** Pre-collision weight-space distance ‖predator − prey‖ — how alien the two minds were. */
   mindDistance: number;
   /** ‖Δpredator‖ — how far the predator's policy shifted by absorbing the prey (weight transfer). */

@@ -33,7 +33,7 @@ export interface NhiBigTreeSignals {
   curiosity: number;
 }
 
-export type NhiBigTreeSignalReader = (ownerId: number, out: NhiBigTreeSignals) => boolean;
+type NhiBigTreeSignalReader = (ownerId: number, out: NhiBigTreeSignals) => boolean;
 
 /** Caller-owned locomotion view consumed by the World after ordinary integration. */
 export interface NhiBigTreeIntentView {

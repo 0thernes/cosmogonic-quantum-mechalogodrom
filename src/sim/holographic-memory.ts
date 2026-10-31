@@ -30,7 +30,7 @@ import type { Rng } from '../math/rng';
 /** Hypervector dimensionality — high enough that random atoms are near-orthogonal (σ⟨a,b⟩/D ≈ 1/√D ≈ 0.044). */
 export const HRR_DIM = 512;
 /** Number of situational FEATURE roles bound into the context hypervector. */
-export const HRR_FEATURES = 8;
+const HRR_FEATURES = 8;
 /** Trace forgetting: M ← HRR_DECAY·M + experience. Slow enough that many distinct associations coexist as a
  *  superposition (effective capacity ≈ 1/(1−decay) bindings) rather than collapsing to a recency memory. */
 const HRR_DECAY = 0.96;
@@ -271,7 +271,7 @@ export const NARRATIVE_EVENT = {
   INSIGHT: 4 as const,
   REGIME: 5 as const,
 };
-export type NarrativeEvent = (typeof NARRATIVE_EVENT)[keyof typeof NARRATIVE_EVENT];
+type NarrativeEvent = (typeof NARRATIVE_EVENT)[keyof typeof NARRATIVE_EVENT];
 
 /** Snapshot of the narrative + symbol layer (alloc only at UI cadence). */
 export interface NarrativeSnapshot {

@@ -1,6 +1,6 @@
 import { PLATFORM_HALF, PLATFORM_HEIGHT, PLATFORM_MID_Y } from './constants';
 
-export interface MutableRoamPoint {
+interface MutableRoamPoint {
   x: number;
   y: number;
   z: number;

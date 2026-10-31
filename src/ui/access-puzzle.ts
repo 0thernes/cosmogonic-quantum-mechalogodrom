@@ -341,7 +341,7 @@ class AccessPuzzle {
 }
 
 /** Self-mount the access terminal (idempotent). Called from the client entry. */
-export function mountAccessPuzzle(doc: Document = document): void {
+function mountAccessPuzzle(doc: Document = document): void {
   new AccessPuzzle(doc);
 }
 

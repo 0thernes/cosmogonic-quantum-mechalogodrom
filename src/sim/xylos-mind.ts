@@ -18,7 +18,7 @@ export interface XylosPercept {
 }
 
 /** Controlled interventions; false disables use of a mechanism, not unrelated random draws. */
-export interface XylosOptions {
+interface XylosOptions {
   recurrence?: boolean;
   broadcast?: boolean;
   plasticity?: boolean;

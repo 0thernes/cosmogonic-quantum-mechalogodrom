@@ -122,7 +122,7 @@ export function apexGrowthStage(
 }
 
 /** Computational consciousness indicators (NOT sentience — falsifiable correlates only). */
-export interface ConsciousnessIndicatorSnapshot {
+interface ConsciousnessIndicatorSnapshot {
   readonly workspaceIgnition: number;
   readonly integratedPhiProxy: number;
   readonly selfModelGap: number;

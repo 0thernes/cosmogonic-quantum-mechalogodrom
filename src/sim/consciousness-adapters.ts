@@ -20,7 +20,7 @@ import { runConsciousnessLab, type FrameworkLabStat, type LabReport } from './co
 
 const clamp01 = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v);
 
-export type ConsciousnessEntityKind =
+type ConsciousnessEntityKind =
   | 'plant'
   | 'creature'
   | 'shoggoth'
@@ -45,7 +45,7 @@ export const CONSCIOUSNESS_ENTITY_KINDS: readonly ConsciousnessEntityKind[] = Ob
   'archon',
 ]);
 
-export interface EntityConsciousnessTraits {
+interface EntityConsciousnessTraits {
   vitality: number;
   sensorium: number;
   embodiment: number;
@@ -74,7 +74,7 @@ export interface EntityConsciousnessProfile {
   adapterReceipt: string;
 }
 
-export interface EntityConsciousnessRecord {
+interface EntityConsciousnessRecord {
   profile: EntityConsciousnessProfile;
   lastSignals: FrameworkSignals;
   snapshot: ConsciousnessLabSnapshot;
@@ -86,7 +86,7 @@ export interface EntityConsciousnessRecord {
   meanFrameworkScore: number;
 }
 
-export interface ConsciousnessDashboardData {
+interface ConsciousnessDashboardData {
   version: 'consciousness-lab-v1';
   generatedAt: '2026-07-07T00:00:00.000Z';
   seed: number;

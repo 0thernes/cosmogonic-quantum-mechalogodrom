@@ -26,7 +26,7 @@ const NE_TAU = 0.3;
 const ACH_TAU = 0.2;
 
 /** Read-only telemetry of the four neuromodulators for the BRAIN / SuperCreature boards (UI cadence). */
-export interface NeuromodulationSnapshot {
+interface NeuromodulationSnapshot {
   /** 0..1 — dopamine: the reward-prediction error, centred at 0.5 (above = better than expected). */
   dopamine: number;
   /** 0..1 — serotonin: tonic mood / patience (the discount-factor analogue). */

@@ -37,7 +37,7 @@ function storage(): Storage | null {
   }
 }
 
-export class OnboardingOverlay {
+class OnboardingOverlay {
   private readonly root: HTMLElement;
   private readonly visible: boolean;
 
@@ -119,7 +119,7 @@ export class OnboardingOverlay {
 }
 
 /** Self-mount the onboarding overlay once. Safe to import in non-browser contexts. */
-export function mountOnboarding(doc: Document = document): void {
+function mountOnboarding(doc: Document = document): void {
   new OnboardingOverlay(doc);
 }
 

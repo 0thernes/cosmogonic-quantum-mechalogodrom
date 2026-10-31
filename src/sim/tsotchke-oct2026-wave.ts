@@ -66,7 +66,7 @@ export interface TsotchkeWebSurface {
   readonly status: 'live' | 'api-gateway';
 }
 
-export interface TsotchkeSocialSurface {
+interface TsotchkeSocialSurface {
   readonly handle: string;
   readonly url: string;
   readonly accountType: 'personal' | 'corporate';
@@ -379,7 +379,7 @@ export const TSOTCHKE_FULL_27_REPO_CATALOG: readonly TsotchkeCanonicalRepoCatalo
 
 export const TSOTCHKE_HOMEBREW_TAP_REPO = 'homebrew-moonlab' as const;
 
-export interface TsotchkeOct2026WaveRepoEntry {
+interface TsotchkeOct2026WaveRepoEntry {
   readonly name: string;
   readonly owner: 'tsotchke' | 'Tsotchke-Corporation';
   readonly url: string;
@@ -508,7 +508,7 @@ export function encodeRosetteWireEnvelope(
   };
 }
 
-export interface PqConsensusReport {
+interface PqConsensusReport {
   readonly validators: number;
   readonly scheme: 'ML-DSA-65' | 'Falcon-512' | 'SLH-DSA-128f';
   readonly batchSize: number;
@@ -559,7 +559,7 @@ export function evaluatePqConsensusRound(
   };
 }
 
-export interface GeoRefineReport {
+interface GeoRefineReport {
   readonly determinant: number;
   readonly signedArea: number;
   readonly orientation: 'ccw' | 'cw' | 'collinear';
@@ -603,7 +603,7 @@ export function refineGeometricSimplex(
   };
 }
 
-export interface BonsaiFidelityReport {
+interface BonsaiFidelityReport {
   readonly depth: number;
   readonly bondDimension: number;
   readonly retainedFidelity: number;

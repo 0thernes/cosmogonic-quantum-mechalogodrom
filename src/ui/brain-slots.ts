@@ -14,7 +14,7 @@ import type { ApexBrainSnapshot } from '../sim/apex-brain';
 import type { MechalogodromBrainSnapshot } from '../sim/mechalogodrom-brain';
 import type { GlyphBrainSnapshot } from '../sim/glyph-brain';
 
-export interface BrainSlotPayload {
+interface BrainSlotPayload {
   apex: ApexBrainSnapshot | null;
   mecha: MechalogodromBrainSnapshot | null;
   glyphs: GlyphBrainSnapshot[] | null;

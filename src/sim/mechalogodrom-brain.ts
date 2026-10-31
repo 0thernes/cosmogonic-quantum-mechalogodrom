@@ -106,7 +106,7 @@ function forward(net: Subnet, inp: Float32Array, scratch: Float32Array, out: Flo
   }
 }
 
-export interface MechalogodromBrainPercept {
+interface MechalogodromBrainPercept {
   fusion: number;
   dimension: number;
   power: number;
@@ -151,7 +151,7 @@ export interface MechalogodromBrainSnapshot {
   honesty: 'computational-indicator-not-sentience';
 }
 
-export interface MechalogodromIndicator {
+interface MechalogodromIndicator {
   readonly id: string;
   readonly status: 'met' | 'partial' | 'scaffolded';
   readonly confidence: number;

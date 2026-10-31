@@ -6,7 +6,7 @@
  */
 import type { SuperMindSnapshot } from '../sim/super-mind';
 
-export type BrainModuleId =
+type BrainModuleId =
   | 'senses'
   | 'cortex'
   | 'organs'
@@ -24,7 +24,7 @@ export type BrainModuleId =
   | 'meta'
   | 'plan';
 
-export interface BrainModule {
+interface BrainModule {
   readonly id: BrainModuleId;
   readonly label: string;
   /** Snapshot path the values are copied from. */
@@ -40,7 +40,7 @@ export interface BrainModule {
   readonly maxAbs: number;
 }
 
-export interface BrainEdge {
+interface BrainEdge {
   readonly from: BrainModuleId;
   readonly to: BrainModuleId;
   /** Complete payload, selected formula operands, or an unavailable structural relationship. */

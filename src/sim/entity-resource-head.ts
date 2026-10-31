@@ -19,8 +19,8 @@
 
 export type EntityResourceHeadTier = 2 | 4 | 8;
 
-export const ENTITY_RESOURCE_HEAD_INPUTS = 8;
-export const LEGACY_ENTITY_BRAIN_PARAMETERS = 70;
+const ENTITY_RESOURCE_HEAD_INPUTS = 8;
+const LEGACY_ENTITY_BRAIN_PARAMETERS = 70;
 
 /**
  * Effective simulation-time half-lives for the common-prefix reservoir units. The exponential leak
@@ -161,7 +161,7 @@ export interface EntityResourceHeadObservation {
   readonly speed: number;
 }
 
-export interface EntityResourceHeadAction {
+interface EntityResourceHeadAction {
   /** Bounded steering suggestion in [-1, 1]. */
   readonly x: number;
   /** Bounded steering suggestion in [-1, 1]. */
@@ -179,7 +179,7 @@ interface MutableEntityResourceHeadAction {
   revision: number;
 }
 
-export interface EntityResourceHeadConfig {
+interface EntityResourceHeadConfig {
   readonly learningRate?: number;
   readonly maxOutputOffset?: number;
   readonly onlineLearningEnabled?: boolean;

@@ -268,7 +268,7 @@ export interface Consciousness {
  * its typed-array lanes are owned by the mind and mutate on the next cognitive beat; callers that need an
  * immutable/UI record must use {@link SuperMind.snapshot} on their telemetry cadence instead.
  */
-export interface SuperMindCouplingView {
+interface SuperMindCouplingView {
   dominance: number;
   consciousness: Consciousness;
   quantum: Float32Array;
@@ -327,7 +327,7 @@ const OBSERVATORY_PERCEPT_KEYS = [
 ] as const;
 
 /** Completed cognition sample for presentation. All arrays/objects are owned copies, never scratch views. */
-export interface SuperMindObservatorySnapshot {
+interface SuperMindObservatorySnapshot {
   /** Advances once per completed think(), never on snapshot reads or browser paints. */
   tick: number;
   /** No sample exists before the first think; full/echo describes the last completed beat. */

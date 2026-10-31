@@ -53,7 +53,7 @@ export const NhiAction = {
   RETREAT: 6,
 } as const;
 export type NhiActionId = (typeof NhiAction)[keyof typeof NhiAction];
-export type NhiSelectionMode = 'uninitialized' | 'softmax' | 'regret-positive' | 'regret-uniform';
+type NhiSelectionMode = 'uninitialized' | 'softmax' | 'regret-positive' | 'regret-uniform';
 const ACTION_COUNT = 7;
 
 // ── GOAP strategic layer ─────────────────────────────────────────────────────
@@ -239,7 +239,7 @@ interface InternalNhiMindOptions extends NhiMindOptions {
 }
 
 /** Supported NHI intuition-gene capacities. The default remains the historical six hidden units. */
-export type NhiGeneHidden = 3 | 6 | 12;
+type NhiGeneHidden = 3 | 6 | 12;
 
 /** Birth-time controls used by causal/scaling experiments without changing ordinary runtime calls. */
 export interface NhiMindOptions {

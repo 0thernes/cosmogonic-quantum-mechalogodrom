@@ -50,7 +50,7 @@ export interface SocialWorkerLike {
 }
 
 /** Live receipt of what the pool has done (shown in the perf HUD). */
-export interface SocialScanPoolStats {
+interface SocialScanPoolStats {
   readonly workers: number;
   readonly dispatched: number;
   readonly served: number;

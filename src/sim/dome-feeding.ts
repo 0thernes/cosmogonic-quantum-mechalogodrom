@@ -34,7 +34,7 @@ export interface DomeFeeder {
 const DOME_FOOD_NUTRITION = 0.15;
 
 /** Allocation-free policy gate for predator/prey interactions (for example, authored safe zones). */
-export type DomeFeedingHarmAllowed = (
+type DomeFeedingHarmAllowed = (
   attackerX: number,
   attackerZ: number,
   targetX: number,
@@ -56,7 +56,7 @@ const PER_EAT = 16;
 const LIFE = 0.7;
 const TMP = new THREE.Color();
 
-export interface DomeFeedingStats {
+interface DomeFeedingStats {
   /** Cumulative organisms eaten by the dome fauna. */
   eaten: number;
   /** Organisms awaiting their 5-second respawn. */

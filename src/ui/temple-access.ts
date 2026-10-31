@@ -187,7 +187,7 @@ class TempleAccess {
 }
 
 /** Self-mount the trans-dimensional temple access box (idempotent). Called from the client entry. */
-export function mountTempleAccess(doc: Document = document): void {
+function mountTempleAccess(doc: Document = document): void {
   new TempleAccess(doc);
 }
 

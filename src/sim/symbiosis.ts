@@ -33,7 +33,7 @@
  */
 
 /** Relationship type between minds. */
-export type RelationshipType = 'mutualistic' | 'commensal' | 'parasitic' | 'competitive';
+type RelationshipType = 'mutualistic' | 'commensal' | 'parasitic' | 'competitive';
 
 /** Relationship state between two minds. */
 export interface Relationship {
@@ -58,7 +58,7 @@ export interface Relationship {
 }
 
 /** Symbiosis configuration. */
-export interface SymbiosisConfig {
+interface SymbiosisConfig {
   /** Maximum number of relationships per mind. */
   maxRelationships: number;
   /** Relationship formation rate (probability per beat). */

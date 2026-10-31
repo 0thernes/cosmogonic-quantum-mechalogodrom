@@ -47,13 +47,13 @@ import { APEX_BRAIN_TARGET_NEURONS, apexDesignedNeurons, type ApexScale } from '
 export const APEX_BILLION = APEX_BRAIN_TARGET_NEURONS; // 1_000_000_000
 
 /** Designed parameters per neuron (matches {@link ../sim/apex-brain.apexScaleParams}: neurons × 2.5). */
-export const PARAMS_PER_NEURON = 2.5;
+const PARAMS_PER_NEURON = 2.5;
 
 /** Floats in one materialised dense shard (4 MB @ 4 bytes/float). Streaming granularity. */
 export const SHARD_FLOATS = 1 << 20; // 1,048,576
 
 /** The five substrate tiers a designed parameter can live in. */
-export type ParamTier =
+type ParamTier =
   'procedural' | 'quantum-effective' | 'resident-field' | 'resident-dense' | 'native-declared';
 
 /** A device's memory/compute envelope — bounds what the manifold materialises as *resident*. */
@@ -100,7 +100,7 @@ export const DEVICE_RESEARCH_CLUSTER: DeviceProfile = {
 };
 
 /** Per-tier accounting: designed budget, what is addressable, and what is actually resident. */
-export interface TierBudget {
+interface TierBudget {
   readonly tier: ParamTier;
   /** Designed/architecture parameter count contributed by this tier (may be in the hundreds of M). */
   readonly designed: number;

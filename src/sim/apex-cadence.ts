@@ -10,7 +10,7 @@
  * pantheon no longer burns ~9.77 ms / 5× full on a single rAF.
  */
 
-export type ApexThinkMode = 'full' | 'echo';
+type ApexThinkMode = 'full' | 'echo';
 
 /** Resolve full vs echo for archon `i` on simulation `frame`. */
 export function apexThinkMode(frame: number, archonIdx: number, count: number): ApexThinkMode {

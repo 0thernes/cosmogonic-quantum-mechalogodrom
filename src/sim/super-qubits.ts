@@ -70,7 +70,7 @@ const SELFOPT_DECAY = 0.9;
 const SELFOPT_MAX = 0.35;
 
 /** A single qubit's Bloch vector and length; reduced purity is (1+r²)/2, not r. */
-export interface BlochVec {
+interface BlochVec {
   x: number;
   y: number;
   z: number;
@@ -84,7 +84,7 @@ export interface BlochVec {
  * circuit drives, superposition and entanglement. This describes the pre-amplification circuit
  * family, not a measurement of experience. A stencil crossing a discrete gate switch is flagged.
  */
-export interface QGeometry {
+interface QGeometry {
   /** Row-major 2×2 Fubini–Study metric g_μν over (superposition, entanglement), 0..~. */
   metric: [number, number, number, number];
   /** det(g): squared metric area factor in these coordinates; not a curvature invariant. */
@@ -109,7 +109,7 @@ export interface QGeometry {
  * spirit of Stokes, Izaac, Killoran & Carleo, "Quantum Natural Gradient", _Quantum_ 4, 269 (2020). The mind
  * update is a bounded numerical adaptation, not a cognitive-performance or consciousness result.
  */
-export interface SelfOptReadout {
+interface SelfOptReadout {
   /** The intended-thought basis index the optimization targets (= the Grover amplify target). */
   target: number;
   /** {@link target} as a qubit bitstring. */

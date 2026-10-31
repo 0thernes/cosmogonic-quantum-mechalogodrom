@@ -42,7 +42,7 @@ function idx(x: number, y: number): number {
   return (((y % GRID) + GRID) % GRID) * GRID + (((x % GRID) + GRID) % GRID);
 }
 
-export interface StigmergySnapshot {
+interface StigmergySnapshot {
   trailStrength: number;
   alarmLevel: number;
   recruitmentLevel: number;

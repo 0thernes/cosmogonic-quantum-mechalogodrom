@@ -19,11 +19,11 @@
  */
 import { mulberry32, hashSeed } from '../math/rng';
 
-export type AlphabetScript = 'greek' | 'latin';
-export type LetterCase = 'upper' | 'lower';
+type AlphabetScript = 'greek' | 'latin';
+type LetterCase = 'upper' | 'lower';
 
 /** A creature archetype's behavioural bias — each axis maps to a real apex faculty/substrate. */
-export interface ArchetypeBias {
+interface ArchetypeBias {
   /** Stabilizer / measurement-reflex weight (Clifford). */
   clifford: number;
   /** Generative top-down / hallucination weight (HOT-1). */

@@ -8,7 +8,7 @@
 import type { QualityTier } from '../types';
 
 /** Maximum clock delta accepted by the ambient worker protocol. */
-export const MAX_WORKER_DT = 0.05;
+const MAX_WORKER_DT = 0.05;
 
 /** Normalize an untrusted frame delta before it crosses the worker boundary. */
 export function normalizeWorkerDt(dt: number): number {
@@ -38,7 +38,7 @@ export interface WorkerResult {
   error?: string;
 }
 
-export interface WorkerPoolConfig {
+interface WorkerPoolConfig {
   /** Upper bound for spawned workers. The pool caps this to available hardware cores and at least one. */
   maxWorkers: number;
   useSharedArrayBuffer: boolean;

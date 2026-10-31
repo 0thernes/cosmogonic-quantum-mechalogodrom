@@ -1,6 +1,6 @@
 /** Band-limited four-octave detail base; 600 ground segments resolve its 5.35-sample wavelength. */
 export const TERRAIN_DETAIL_BASE_FREQUENCY = 0.035;
-export const TERRAIN_DETAIL_LACUNARITY = 2.03;
+const TERRAIN_DETAIL_LACUNARITY = 2.03;
 
 /**
  * CPU counterpart of the living-ground displacement. It shares the octave constants with the GLSL

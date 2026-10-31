@@ -17,7 +17,7 @@ import { GODFORMS, getArchonTier, APEX_INDIVIDUATED, type ArchonTier } from './g
 export { ARCHON_CHANNELS, FIELD_DIM };
 export { MindField };
 
-export interface LightArchonSnapshot {
+interface LightArchonSnapshot {
   readonly index: number;
   readonly name: string;
   readonly tier: ArchonTier;
@@ -27,7 +27,7 @@ export interface LightArchonSnapshot {
   readonly memory: number;
 }
 
-export interface PantheonSnapshot {
+interface PantheonSnapshot {
   readonly lightCount: number;
   readonly field: ReturnType<MindField['snapshot']>;
   readonly lastLight: LightArchonSnapshot | null;

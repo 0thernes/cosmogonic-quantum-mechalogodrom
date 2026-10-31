@@ -187,10 +187,10 @@ export const FACULTY_NAMES = [
   'RIDDICK_FURYX',
 ] as const;
 
-export type FacultyName = (typeof FACULTY_NAMES)[number];
+type FacultyName = (typeof FACULTY_NAMES)[number];
 export const FACULTY_COUNT = FACULTY_NAMES.length;
 
-export interface FacultySnapshot {
+interface FacultySnapshot {
   faculty: FacultyName;
   activation: number;
   confidence: number;

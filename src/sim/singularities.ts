@@ -45,7 +45,7 @@ export const SINGULARITY_KINDS = [
 ] as const;
 
 /** One cosmological effect. */
-export type SingularityKind = (typeof SINGULARITY_KINDS)[number];
+type SingularityKind = (typeof SINGULARITY_KINDS)[number];
 
 /** Lifetime of a summoned singularity (seconds). */
 const DURATION = 9;

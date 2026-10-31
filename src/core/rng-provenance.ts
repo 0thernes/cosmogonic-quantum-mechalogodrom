@@ -34,7 +34,7 @@ export interface RngProvenance {
 }
 
 /** Default battery sample size — enough for a stable byte-histogram (256 bins) without construction cost. */
-export const RNG_PROVENANCE_SAMPLES = 4096;
+const RNG_PROVENANCE_SAMPLES = 4096;
 
 /**
  * Measure the statistical quality of the `mulberry32` generator at `seed` by running the {@link randomnessReport}

@@ -14,9 +14,9 @@ export const EDIBLE_RESOURCE_RESPAWN_SECONDS = 5;
 
 export type EdibleResourceKind = 'fruit' | 'leaf';
 
-export type EdibleResourceState = 'available' | 'reserved' | 'consuming' | 'respawning';
+type EdibleResourceState = 'available' | 'reserved' | 'consuming' | 'respawning';
 
-export interface EdibleResourcePoint {
+interface EdibleResourcePoint {
   readonly x: number;
   readonly y: number;
   readonly z: number;
@@ -59,7 +59,7 @@ export interface EdibleReservation {
   readonly leaseUntil: number;
 }
 
-export type EdibleResourceLifecyclePhase = 'unavailable' | 'restore' | 'available';
+type EdibleResourceLifecyclePhase = 'unavailable' | 'restore' | 'available';
 
 /**
  * Optional bridge for render/collision state.

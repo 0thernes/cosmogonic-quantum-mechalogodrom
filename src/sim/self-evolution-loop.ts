@@ -56,7 +56,7 @@ export interface EvolutionMetrics {
 }
 
 /** Modification proposal for self-evolution. */
-export interface ModificationProposal {
+interface ModificationProposal {
   /** Type of modification. */
   type: 'parameter' | 'architecture' | 'faculty' | 'connection';
   /** Target component (faculty ID, parameter name, etc.). */

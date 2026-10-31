@@ -16,7 +16,7 @@ export const GLYPH_PALETTE_IDS = [
   'gold_fractal',
 ] as const;
 
-export type GlyphPaletteId = (typeof GLYPH_PALETTE_IDS)[number];
+type GlyphPaletteId = (typeof GLYPH_PALETTE_IDS)[number];
 
 export interface GlyphExteriorPalette {
   readonly id: GlyphPaletteId;
@@ -84,7 +84,7 @@ const PALETTE_TABLE: Record<
   },
 };
 
-export function glyphPaletteId(a: AlphabetArchetype): GlyphPaletteId {
+function glyphPaletteId(a: AlphabetArchetype): GlyphPaletteId {
   const mix =
     (a.index * 3 +
       (a.seed % 5) +

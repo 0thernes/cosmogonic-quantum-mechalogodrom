@@ -95,7 +95,7 @@ const ALTITUDE = 252 * HABITAT_Y_SCALE * WORLD_SCALE; // = 756 — 3× higher (7
 const BULB_ITERS = 4;
 
 /** Read-only telemetry of the fusion abomination (built fresh each call — UI cadence only). */
-export interface MechalogodromSnapshot {
+interface MechalogodromSnapshot {
   /** Convergence/fusion progress 0 (ten apart on the ring) → 1 (fully fused monster). */
   readonly fusion: number;
   /** The dioramagonic dimensionality readout: sweeps 99 → −10 as power climbs. */

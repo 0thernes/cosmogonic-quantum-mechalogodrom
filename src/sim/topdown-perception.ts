@@ -24,7 +24,7 @@ import {
   libirrepSymmetry,
 } from './tsotchke-facade'; // + quakePerturb + libirrepSym from Tsotchke (Eshkol AD/tape, Moonlab, libirrep, quantum-quake) into topdown HOT-1
 
-export interface TopDownSnapshot {
+interface TopDownSnapshot {
   bias: number[]; // 4-d bias applied to [energy, threat, light, sound]
   error: number; // |imagined - actual| last step
 }

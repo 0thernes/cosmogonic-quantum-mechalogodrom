@@ -33,7 +33,7 @@ export type Pauli = 'I' | 'X' | 'Y' | 'Z';
  * One weighted Pauli term cᵢ·Pᵢ of a Hamiltonian. `paulis[k]` is the Pauli acting
  * on qubit k (LSB convention, matching QuantumRegister); its length is the qubit count.
  */
-export interface PauliTerm {
+interface PauliTerm {
   /** Real coefficient cᵢ (Hamiltonian is Hermitian ⇒ coefficients are real). */
   coefficient: number;
   /** Pauli string, one letter per qubit, index k = qubit k. */
@@ -41,7 +41,7 @@ export interface PauliTerm {
 }
 
 /** A Pauli-sum Hamiltonian H = Σ cᵢ Pᵢ over `qubits` qubits. */
-export interface PauliHamiltonian {
+interface PauliHamiltonian {
   /** Register width this Hamiltonian acts on (1..8, the QuantumRegister cap). */
   qubits: number;
   /** Weighted Pauli terms; every term's string has length === qubits. */
@@ -55,7 +55,7 @@ export interface VQEParams {
 }
 
 /** VQE result with energy and per-parameter gradients. */
-export interface VQEResult {
+interface VQEResult {
   energy: number;
   gradients: { theta: number; phi: number };
 }

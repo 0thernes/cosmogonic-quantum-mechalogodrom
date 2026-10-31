@@ -177,7 +177,7 @@ export function adaptiveProportionCutoff(
 }
 
 /** Streaming counter state that snapshots and restores exactly. */
-export interface RepetitionCountTestState {
+interface RepetitionCountTestState {
   cutoff: number;
   referenceValue: number | null;
   runLength: number;
@@ -269,7 +269,7 @@ export class RepetitionCountTest {
 }
 
 /** Streaming APT state that snapshots and restores exactly. */
-export interface AdaptiveProportionTestState {
+interface AdaptiveProportionTestState {
   windowSize: number;
   cutoff: number;
   referenceValue: number | null;
@@ -381,7 +381,7 @@ export class AdaptiveProportionTest {
 }
 
 /** Verdict of a windowed (bounded-buffer) application of the RCT algorithm. */
-export interface WindowedRepetitionVerdict {
+interface WindowedRepetitionVerdict {
   cutoff: number;
   longestRun: number;
   alarm: boolean;
@@ -412,7 +412,7 @@ export function repetitionCountOverBuffer(
 }
 
 /** Verdict of a windowed (bounded-buffer) application of the APT algorithm. */
-export interface WindowedAdaptiveProportionVerdict {
+interface WindowedAdaptiveProportionVerdict {
   windowSize: number;
   cutoff: number;
   windowsScanned: number;

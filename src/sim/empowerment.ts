@@ -38,13 +38,13 @@
 import type { Rng } from '../math/rng';
 
 /** Default action alphabet K — the seven GOAP plans the apex mind chooses among. */
-export const EMP_ACTIONS = 7;
+const EMP_ACTIONS = 7;
 /** Coarse latent cells M (a power of two ⇒ H = log₂M frozen hyperplanes tile it exactly). */
-export const EMP_BINS = 64;
+const EMP_BINS = 64;
 /** World-model latent width D read by the binner (the apex mind's latent is 16-D). */
-export const EMP_LATENT_DIM = 16;
+const EMP_LATENT_DIM = 16;
 /** Fixed Blahut–Arimoto iterations per beat (constant cost AND deterministic — no threshold early-exit). */
-export const EMP_BA_ITERS = 12;
+const EMP_BA_ITERS = 12;
 /** Base exponential-forgetting rate of the online channel estimate. */
 const EMP_LAMBDA = 0.05;
 /** How strongly the surprise scalar raises the forgetting rate (faster re-learning under model error). */

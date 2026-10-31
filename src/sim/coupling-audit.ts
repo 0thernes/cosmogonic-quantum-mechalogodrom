@@ -62,7 +62,7 @@ export function laggedInfluence(a: readonly number[], b: readonly number[], lag 
 }
 
 /** A measured report on how interdependent a faculty assembly is over a recorded run. */
-export interface CouplingReport {
+interface CouplingReport {
   /** Number of faculties audited. */
   readonly n: number;
   /** N×N Pearson correlation matrix (diagonal = 1 for non-constant faculties, else 0). */

@@ -22,10 +22,10 @@ import { mulberry32 } from '../math/rng';
 import { type DeviceProfile, DEVICE_BROWSER } from './apex-parameter-manifold';
 
 /** The two continuum-field update laws the organs use. */
-export type FieldKind = 'wave' | 'diffusion';
+type FieldKind = 'wave' | 'diffusion';
 
 /** A field organ: a `w`×`h` texture with `components` channels evolving by `kind`. */
-export interface FieldOrgan {
+interface FieldOrgan {
   readonly name: 'acoustic' | 'heat' | 'klein' | 'tunnel';
   readonly w: number;
   readonly h: number;
@@ -104,7 +104,7 @@ export function heatDiffuseStep(
  * bounded for `c² ≤ 0.5`; the interference of standing waves IS the organ's computation. The GPU
  * reproduces this. O(w·h). Writes the new field into `next`.
  */
-export function waveLeapfrogStep(
+function waveLeapfrogStep(
   u: Float64Array,
   uPrev: Float64Array,
   next: Float64Array,
@@ -229,7 +229,7 @@ export class ApexFieldGrid {
 }
 
 /** GLSL fragment stencil for the diffusion organs (ping-pong DataTexture; reproduces heatDiffuseStep). */
-export const APEX_FIELD_HEAT_FRAG = /* glsl */ `
+const APEX_FIELD_HEAT_FRAG = /* glsl */ `
 precision highp float;
 uniform sampler2D uField;   // R channel = scalar field
 uniform vec2 uTexel;        // 1.0 / resolution
@@ -247,7 +247,7 @@ void main() {
 `;
 
 /** GLSL fragment stencil for the wave organs (R = u, G = uPrev; reproduces waveLeapfrogStep). */
-export const APEX_FIELD_WAVE_FRAG = /* glsl */ `
+const APEX_FIELD_WAVE_FRAG = /* glsl */ `
 precision highp float;
 uniform sampler2D uField;   // R = u(t), G = u(t-1)
 uniform vec2 uTexel;

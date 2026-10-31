@@ -41,7 +41,7 @@ const NULL_ABLATION: AblationFlags = {
 };
 
 /** The Offworld Umwelt read-out. */
-export interface OffworldScore {
+interface OffworldScore {
   /** 0..1 — fraction of substrate-driven behaviour attributable to the alien/offworld channels. */
   readonly score: number;
   /** 1 − score — how Earth-like (mundane) the behaviour is. */

@@ -45,7 +45,7 @@
  */
 
 /** Curvature-aware QNG configuration. */
-export interface CurvatureAwareConfig {
+interface CurvatureAwareConfig {
   /** Curvature weighting factor λ (higher = more influence of curvature). */
   curvatureWeight: number;
   /** Regularization for ill-conditioned metric. */

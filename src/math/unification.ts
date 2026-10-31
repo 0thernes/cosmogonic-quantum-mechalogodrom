@@ -22,7 +22,7 @@ export type Term =
   | { readonly tag: 'compound'; readonly functor: string; readonly args: readonly Term[] };
 
 /** A binding environment: variable name → bound term (possibly another variable). */
-export type Substitution = ReadonlyMap<string, Term>;
+type Substitution = ReadonlyMap<string, Term>;
 
 /** Construct a logic variable `?name`. */
 export const lvar = (name: string): Term => ({ tag: 'var', name });
@@ -102,7 +102,7 @@ export function applySubst(t: Term, s: Substitution): Term {
 }
 
 /** A knowledge base: an ordered list of facts (ground or non-ground terms). */
-export type KnowledgeBase = readonly Term[];
+type KnowledgeBase = readonly Term[];
 
 /** Query a goal against the KB; returns every substitution under which the goal unifies a fact. */
 export function query(goal: Term, kb: KnowledgeBase): Substitution[] {

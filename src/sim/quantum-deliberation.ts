@@ -43,7 +43,7 @@ const clamp01 = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v);
 const clamp11 = (v: number): number => (v < -1 ? -1 : v > 1 ? 1 : v);
 
 /** Optional construction overrides (defaults are the module constants). */
-export interface DeliberationConfig {
+interface DeliberationConfig {
   /** Amplitude-damping rate Γ₁ (≥ 0). Default 0.05. Set 0 for a purely dephasing / unitary test. */
   gamma1?: number;
   /** Always-on baseline dephasing γ_φ floor (≥ 0). Default 0.04. Set 0 for a perfectly closed system. */

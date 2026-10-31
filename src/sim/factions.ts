@@ -38,11 +38,11 @@ export const INTENTS = [
 export type Intent = (typeof INTENTS)[number];
 
 /** The classical-AI technique a faction's mind is built on. */
-export type FactionTechnique =
+type FactionTechnique =
   'fsm' | 'behaviortree' | 'utility' | 'goap' | 'rule' | 'boids' | 'markov' | 'mlp';
 
 /** A faction's economy posture in the social web (extends the titan {energy,matter,entropy}). */
-export type EconomyRole = 'producer' | 'consumer' | 'predator' | 'broker' | 'catalyst';
+type EconomyRole = 'producer' | 'consumer' | 'predator' | 'broker' | 'catalyst';
 
 /** Normalized [0,1] world readings an organism's mind reacts to. */
 export interface FactionPercept {
@@ -60,7 +60,7 @@ export interface FactionPercept {
   novelty: number;
 }
 
-export interface FactionArchetype {
+interface FactionArchetype {
   id: number;
   name: string;
   technique: FactionTechnique;

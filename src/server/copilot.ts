@@ -299,7 +299,7 @@ function freellmapiProvider(): ResolvedProvider | null {
  * tool output would otherwise go to an anonymous host by default, even when keyed providers exist.
  * Set COPILOT_ALLOW_KEYLESS=1 to enable them. Read per call so tests/env changes apply live.
  */
-export function keylessAllowed(): boolean {
+function keylessAllowed(): boolean {
   return envStr('COPILOT_ALLOW_KEYLESS') === '1';
 }
 
@@ -440,8 +440,8 @@ const MAX_PROVIDER_RESPONSE_BYTES = 512 * 1024;
 /** Error bodies are diagnostic only and need a much smaller ceiling. */
 const MAX_PROVIDER_ERROR_BYTES = 4 * 1024;
 /** Bound message/tool-call fanout independently of model round-trip count. */
-export const MAX_TOOL_CALLS_PER_MESSAGE = 4;
-export const MAX_TOOL_CALLS_PER_TURN = 16;
+const MAX_TOOL_CALLS_PER_MESSAGE = 4;
+const MAX_TOOL_CALLS_PER_TURN = 16;
 const MAX_ASSISTANT_CONTENT_LENGTH = 128 * 1024;
 const MAX_TOOL_CALL_ARGUMENTS_LENGTH = 16 * 1024;
 const MAX_TOOL_CALL_ID_LENGTH = 256;
@@ -450,7 +450,7 @@ const MAX_TOOL_NAME_LENGTH = 80;
 const RATE_LIMIT_COOLDOWN_MS = 800;
 
 /** Whole-turn wall-clock ceiling across provider failover and model/tool round-trips. */
-export const AGENT_TURN_DEADLINE_MS = 75_000;
+const AGENT_TURN_DEADLINE_MS = 75_000;
 
 /** Maximum provider slots attempted by one user turn. */
 export const MAX_PROVIDER_ATTEMPTS = 3;
@@ -507,7 +507,7 @@ export interface AgentResult {
 }
 
 /** Optional cancellation/test bounds for one {@link runAgent} call. */
-export interface RunAgentOptions {
+interface RunAgentOptions {
   /** Caller cancellation, normally the incoming HTTP request signal. */
   signal?: AbortSignal;
   /** Whole-turn deadline; clamped to {@link AGENT_TURN_DEADLINE_MS}. */

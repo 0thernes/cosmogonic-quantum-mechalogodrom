@@ -34,7 +34,7 @@ function clamp(x: number, lo: number, hi: number): number {
 export const RESONANCE_IGNITION_THRESHOLD = 0.7;
 
 /** The Kuramoto order parameter: collective coherence `r` and collective phase `psi`. */
-export interface OrderParameter {
+interface OrderParameter {
   /** r ∈ [0,1] — 1 = perfect phase-lock (standing wave), 0 = incoherent (uniformly spread). */
   readonly r: number;
   /** psi ∈ (−π, π] — the mean/collective phase the assembly is locking toward (0 when empty). */
@@ -135,7 +135,7 @@ export function resonantConsensus(
 }
 
 /** The full integrated state of one resonance tick. */
-export interface ResonanceState {
+interface ResonanceState {
   /** Collective coherence r ∈ [0,1] — the standing-wave amplitude. */
   readonly order: number;
   /** Collective phase ψ the assembly is locked toward. */
@@ -170,7 +170,7 @@ export function integrate(
 }
 
 /** Telemetry for the {@link AdaptiveCouplingHomeostat} — the self-tuned operating point of the binding. */
-export interface CouplingSnapshot {
+interface CouplingSnapshot {
   /** The current coupling K the homeostat has settled on. */
   readonly coupling: number;
   /** Slow EMA of the order parameter (the baseline the homeostat regulates toward the setpoint). */

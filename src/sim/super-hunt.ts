@@ -35,7 +35,7 @@ const PER_EAT = 18;
 const LIFE = 0.7;
 const TMP = new THREE.Color();
 
-export interface SuperHuntStats {
+interface SuperHuntStats {
   /** Cumulative organisms eaten across all apexes. */
   eaten: number;
   /** Organisms awaiting their 5-second respawn. */
@@ -43,7 +43,7 @@ export interface SuperHuntStats {
 }
 
 /** Allocation-free policy gate for predator/prey interactions (for example, authored safe zones). */
-export type SuperHuntHarmAllowed = (
+type SuperHuntHarmAllowed = (
   attackerX: number,
   attackerZ: number,
   targetX: number,

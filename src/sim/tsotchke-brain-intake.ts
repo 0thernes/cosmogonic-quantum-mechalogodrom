@@ -226,7 +226,7 @@ export interface MutableCorpusBrainVector {
 }
 
 /** Live adaptive values that replace a repository's fixed facade without changing registry semantics. */
-export interface CorpusBrainRuntimeOverrides {
+interface CorpusBrainRuntimeOverrides {
   /** Trainable simple_mnist next-cadence ecological-pressure prediction, already bounded to [0,1]. */
   simpleMnistRisk?: number;
 }

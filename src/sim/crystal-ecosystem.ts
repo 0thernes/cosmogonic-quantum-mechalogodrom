@@ -55,14 +55,14 @@ export { CRYSTAL_TREE_ORIGIN_X, CRYSTAL_TREE_ORIGIN_Z } from './constants';
 
 // The source's highest bonsai tips reach 1.02× its nominal trunk height. At the platform floor this
 // puts the crown at ~566u, matching the God-Colossus' authoritative ~565.5u skyline.
-export const CRYSTAL_TREE_HEIGHT = ARENA_RADIUS * 1.69;
+const CRYSTAL_TREE_HEIGHT = ARENA_RADIUS * 1.69;
 export const CRYSTAL_TREE_DOME_BRANCHES = 500;
 export const CRYSTAL_TREE_BONSAI_BRANCHES = 1000;
 export const CRYSTAL_TREE_MAIN_BRANCHES = CRYSTAL_TREE_DOME_BRANCHES + CRYSTAL_TREE_BONSAI_BRANCHES;
 export const CRYSTAL_TREE_LEAVES = 10_000;
 export const CRYSTAL_TREE_FRUITS = 10_000;
 export const CRYSTAL_TREE_FLOWERS = 10_000;
-export const CRYSTAL_TREE_SPECIES = 10;
+const CRYSTAL_TREE_SPECIES = 10;
 export const CRYSTAL_TREE_CREATURES_PER_SPECIES = 25;
 export const CRYSTAL_TREE_CREATURES = CRYSTAL_TREE_SPECIES * CRYSTAL_TREE_CREATURES_PER_SPECIES;
 export const CRYSTAL_TREE_AMBIENT_CREATURES = 99;
@@ -128,7 +128,7 @@ const FLOWER_COLORS = [
 ] as const;
 const BRANCH_COLORS = [P.crystalBlue, P.neonPurple, P.deepBlue, P.neuralGlow, P.iceBlue] as const;
 
-export const CRYSTAL_QUANTUM_ATTRIBUTES = [
+const CRYSTAL_QUANTUM_ATTRIBUTES = [
   'superposition',
   'entanglement',
   'tunneling',
@@ -140,10 +140,10 @@ export const CRYSTAL_QUANTUM_ATTRIBUTES = [
   'phaseShift',
   'zeroPoint',
 ] as const;
-export type CrystalQuantumAttribute = (typeof CRYSTAL_QUANTUM_ATTRIBUTES)[number];
+type CrystalQuantumAttribute = (typeof CRYSTAL_QUANTUM_ATTRIBUTES)[number];
 type CreatureBehavior = 'orbit' | 'climb' | 'swarm' | 'flutter' | 'pause' | 'seek';
 
-export interface CrystalSpecies {
+interface CrystalSpecies {
   readonly name: string;
   readonly geometry:
     | 'ico'
@@ -298,7 +298,7 @@ export interface CrystalEcosystemFrame {
  */
 export const CRYSTAL_ECOLOGY_MAX_FRAME_DELTA_SECONDS = 10;
 
-export interface CrystalEcosystemStats {
+interface CrystalEcosystemStats {
   readonly mainBranches: number;
   readonly subBranches: number;
   readonly leaves: number;
@@ -350,7 +350,7 @@ export interface CrystalTreeNeuralStatus {
   readonly lastTeachingWeightDelta: number;
 }
 
-export interface CrystalInteraction {
+interface CrystalInteraction {
   readonly kind: 'creature' | 'tree';
   readonly audio: 'observe' | 'shake';
   readonly message: string;

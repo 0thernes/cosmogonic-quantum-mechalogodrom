@@ -39,7 +39,7 @@ const LIFE = 0.9;
 const TMP_COL = new THREE.Color();
 
 /** Live stats for telemetry / tests. */
-export interface PortalDeathStats {
+interface PortalDeathStats {
   /** Cumulative organisms consumed by the portal. */
   kills: number;
   /** Deaths awaiting their 5-second respawn. */

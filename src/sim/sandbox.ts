@@ -11,15 +11,15 @@ import type * as THREE from 'three';
 export const SANDBOX_PCT_MIN = 0;
 export const SANDBOX_PCT_MAX = 300;
 export const SANDBOX_PCT_STEP = 10;
-export const SANDBOX_STORAGE_KEY = 'cqm.sandbox.v1';
+const SANDBOX_STORAGE_KEY = 'cqm.sandbox.v1';
 
-export interface SandboxLevel {
+interface SandboxLevel {
   on: boolean;
   pct: number;
 }
 export type SandboxSettings = Record<string, SandboxLevel>;
 
-export type SandboxKind = 'system' | 'pool' | 'population' | 'phylum';
+type SandboxKind = 'system' | 'pool' | 'population' | 'phylum';
 export interface SandboxEntry {
   id: string;
   label: string;
@@ -44,7 +44,7 @@ export function factorOf(settings: SandboxSettings, id: string): number {
   return l.on ? l.pct / 100 : 0;
 }
 
-export function isDefault(l: SandboxLevel): boolean {
+function isDefault(l: SandboxLevel): boolean {
   return l.on && l.pct === 100;
 }
 
@@ -130,7 +130,7 @@ interface Bound {
 }
 
 /** Hooks a World exposes for the population + phylum levels (optional — tests may omit). */
-export interface SandboxWorldHooks {
+interface SandboxWorldHooks {
   setPopulationScale?(f: number): void;
   setPhylumScale?(phylum: number, f: number): void;
   phylumCount?: number;
@@ -300,6 +300,6 @@ export class SandboxController {
 }
 
 /** Returned by a suspended system's update()/step(): does nothing and reports nothing. */
-export function SANDBOX_NOOP(): undefined {
+function SANDBOX_NOOP(): undefined {
   return undefined;
 }

@@ -86,7 +86,7 @@ const SCHRO_RECOMPUTE = 6;
  * ping-pong through all CN steps; the potential and Thomas scratch never
  * allocate again after brain construction.
  */
-export interface SchrodingerSpreadWorkspace {
+interface SchrodingerSpreadWorkspace {
   readonly potential: number[];
   readonly waveA: Wave;
   readonly waveB: Wave;

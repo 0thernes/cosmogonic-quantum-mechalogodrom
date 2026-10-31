@@ -149,7 +149,7 @@ const STYLE = `
 }
 `;
 
-export class HelpSystem {
+class HelpSystem {
   private readonly panel: HTMLElement;
   private readonly ansEl: HTMLElement;
   private readonly input: HTMLInputElement;
@@ -268,7 +268,7 @@ export class HelpSystem {
 }
 
 /** Self-mount the help system (idempotent). Called from the client entry. */
-export function mountHelpSystem(doc: Document = document): void {
+function mountHelpSystem(doc: Document = document): void {
   new HelpSystem(doc);
 }
 

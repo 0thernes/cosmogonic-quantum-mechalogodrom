@@ -18,13 +18,13 @@ export function turtleNew(seed: number): TurtleState {
 }
 
 /** O(1). Forward step along heading. */
-export function turtleForward(t: TurtleState, dist: number): void {
+function turtleForward(t: TurtleState, dist: number): void {
   t.x += Math.cos(t.heading) * dist;
   t.y += Math.sin(t.heading) * dist;
 }
 
 /** O(1). Turn by delta radians. */
-export function turtleTurn(t: TurtleState, delta: number): void {
+function turtleTurn(t: TurtleState, delta: number): void {
   t.heading = (t.heading + delta) % 6.2831853;
 }
 

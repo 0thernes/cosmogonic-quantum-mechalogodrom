@@ -154,7 +154,7 @@ export function bigTreeTransitionCauseName(cause: BigTreeTransitionCause): strin
   }
 }
 
-export interface BigTreeZoneConfig {
+interface BigTreeZoneConfig {
   centerX?: number;
   centerZ?: number;
   enterRadius?: number;
@@ -234,7 +234,7 @@ export class BigTreeZone {
   }
 }
 
-export interface BigTreeVisitConfig {
+interface BigTreeVisitConfig {
   /** Maximum actor records, including actors waiting through a revisit cooldown. */
   maxActors: number;
   /** Maximum concurrent travelling, active, or leaving visitors. */
@@ -340,7 +340,7 @@ export interface BigTreeZoneStats {
  * JSON-safe primitive state. Null deadlines represent an inactive timer. Transition diagnostics
  * are optional additive v1 fields so checkpoints created before observability was added still load.
  */
-export interface BigTreeVisitorState {
+interface BigTreeVisitorState {
   ownerKind: number;
   ownerId: number;
   state: BigTreeVisitState;
@@ -364,7 +364,7 @@ export interface BigTreeVisitorState {
   lastTransitionAt?: number | null;
 }
 
-export interface BigTreeVisitManagerSnapshot {
+interface BigTreeVisitManagerSnapshot {
   version: 1;
   visitors: BigTreeVisitorState[];
   completedVisits: number;

@@ -42,7 +42,7 @@ function clamp01(v: number): number {
   return v < 0 ? 0 : v > 1 ? 1 : v;
 }
 
-export interface NoosphereSnapshot {
+interface NoosphereSnapshot {
   collectiveCoherence: number;
   field: number[];
   archonPhases: number[];

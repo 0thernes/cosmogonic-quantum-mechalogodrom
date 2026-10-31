@@ -22,7 +22,7 @@
  */
 
 /** Largest network size supported (keeps the O(n²) weight matrix bounded). */
-export const HOPFIELD_MAX_N = 256;
+const HOPFIELD_MAX_N = 256;
 
 /** A trained network: n neurons and a symmetric n×n weight matrix (row-major). */
 export interface HopfieldNet {

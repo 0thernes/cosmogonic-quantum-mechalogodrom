@@ -114,7 +114,7 @@ function twinPrimeDistances(maxD: number): boolean[] {
 // ORGAN 1 — PrimeSieveLoom (Math-Vampire): twin-prime connectivity + allergy purge
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
-export interface LoomView {
+interface LoomView {
   activeEdges: number;
   builtEdges: number;
   allergy: number;
@@ -277,7 +277,7 @@ class PrimeSieveLoom {
 // ORGAN 2 — AcousticMeatDrum (Sound-Eater): discrete wave equation, standing-wave interference
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
-export interface DrumView {
+interface DrumView {
   energy: number;
   dominantMode: number;
   motor: number;
@@ -402,7 +402,7 @@ class AcousticMeatDrum {
 // ORGAN 3 — EntropicNecroMatrix (Dying Thinker): finite budget, edges burn out permanently
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
-export interface NecroView {
+interface NecroView {
   liveFraction: number;
   budget: number;
   lastPathLength: number;
@@ -554,7 +554,7 @@ class EntropicNecroMatrix {
 // ORGAN 4 — KleinBottleCortex (Inside-Out Loom): Klein-bottle adjacency, tail→head fold
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
-export interface KleinView {
+interface KleinView {
   energy: number;
   seamFlux: number;
   headTailCorr: number;
@@ -644,7 +644,7 @@ class KleinBottleCortex {
 // ORGAN 5 — PendulumHive (Gravity Clock): coupled kicked rotors (Chirikov standard map), +Lyapunov
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
-export interface HiveView {
+interface HiveView {
   order: number;
   meanMomentum: number;
   lyapunov: number;
@@ -753,7 +753,7 @@ class PendulumHive {
 // ORGAN 6 — SlimeMoldHydra (Brain-Shedder): split into k heads, compute, fuse (node-conserving)
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
-export interface HydraView {
+interface HydraView {
   heads: number;
   conflict: number;
   coherence: number;
@@ -834,7 +834,7 @@ class SlimeMoldHydra {
 // ORGAN 7 — ChronoWraith (Time-Echoer): concentric rings with delay-line buffers
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
-export interface WraithView {
+interface WraithView {
   outer: number;
   mid: number;
   core: number;
@@ -890,7 +890,7 @@ class ChronoWraith {
 // ORGAN 8 — QuantumTunnelLattice (Teleporting Static): Born-rule manifested edges
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
-export interface TunnelView {
+interface TunnelView {
   manifested: number;
   entropy: number;
   displacement: number;
@@ -984,7 +984,7 @@ class QuantumTunnelLattice {
 // ORGAN 9 — ThermodynamicEngine (Heat Boiler): heat deposit + diffusion + venting + necrosis
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
-export interface ThermoView {
+interface ThermoView {
   totalHeat: number;
   hottest: number;
   necrotic: number;
@@ -1072,7 +1072,7 @@ class ThermodynamicEngine {
 // ORGAN 10 — CancerousOuroboros (Self-Devourer): antagonistic A (grow) vs B (immune cull)
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
-export interface OuroborosView {
+interface OuroborosView {
   limbs: number;
   cap: number;
   births: number;
@@ -1162,7 +1162,7 @@ export function cantorDustAddresses(levels: number): number[] {
   return out;
 }
 
-export interface MetaView {
+interface MetaView {
   distanceToTarget: number;
   godelResidual: number;
   phantom: number;
@@ -1174,7 +1174,7 @@ export interface MetaView {
 }
 
 const APEX_PLANS = ['ASCEND', 'CONSUME', 'FRACTURE', 'DREAM', 'HUNT', 'TRANSCEND'] as const;
-export type ApexPlan = (typeof APEX_PLANS)[number];
+type ApexPlan = (typeof APEX_PLANS)[number];
 export const APEX_PLAN_NAMES: readonly ApexPlan[] = APEX_PLANS;
 
 class MetaParadoxLayer {
@@ -1373,7 +1373,7 @@ class MetaParadoxLayer {
  * meta layer) — it is load-bearing, not decoration. This is exact classical *simulation* of quantum
  * dynamics (no QPU, no speedup claim — the honest frame from the corpus).
  */
-export interface QuantumView {
+interface QuantumView {
   qubits: number;
   norm: number; // ⟨ψ|ψ⟩, must be ≈1
   coherence: number; // l1-coherence (0..1)
@@ -1699,7 +1699,7 @@ export const SCALE_MEDIUM: ApexScale = {
 };
 
 /** Designed ~250k-parameter APEX scale (first expansion tier). */
-export const SCALE_APEX_250K: ApexScale = {
+const SCALE_APEX_250K: ApexScale = {
   name: 'APEX-250K',
   loom: 30_000,
   acoustic: 30_000,
@@ -1717,7 +1717,7 @@ export const SCALE_APEX_250K: ApexScale = {
 };
 
 /** Designed ~500k-parameter APEX scale (second expansion tier). */
-export const SCALE_APEX_500K: ApexScale = {
+const SCALE_APEX_500K: ApexScale = {
   name: 'APEX-500K',
   loom: 60_000,
   acoustic: 60_000,
@@ -1735,7 +1735,7 @@ export const SCALE_APEX_500K: ApexScale = {
 };
 
 /** Designed ~1M-parameter APEX scale (third expansion tier). */
-export const SCALE_APEX_1M: ApexScale = {
+const SCALE_APEX_1M: ApexScale = {
   name: 'APEX-1M',
   loom: 120_000,
   acoustic: 120_000,
@@ -1753,7 +1753,7 @@ export const SCALE_APEX_1M: ApexScale = {
 };
 
 /** Designed ~2.5M-parameter APEX scale (fourth expansion tier). */
-export const SCALE_APEX_2_5M: ApexScale = {
+const SCALE_APEX_2_5M: ApexScale = {
   name: 'APEX-2.5M',
   loom: 300_000,
   acoustic: 300_000,

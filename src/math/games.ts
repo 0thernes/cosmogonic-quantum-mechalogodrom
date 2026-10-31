@@ -123,7 +123,7 @@ export function defections(moves: number, rounds: number, window = HISTORY_WINDO
  * `rounds` is the observable depth (0 ⇒ opening round), `u` is a caller-supplied uniform
  * sample in [0, 1) consumed only by stochastic strategies. O(1) each.
  */
-export type StrategyFn = (own: number, opp: number, rounds: number, u: number) => Move;
+type StrategyFn = (own: number, opp: number, rounds: number, u: number) => Move;
 
 /** Open with cooperation, then mirror the opponent's last move. O(1). */
 export const titForTat: StrategyFn = (_own, opp, rounds, _u) => {
@@ -167,7 +167,7 @@ export const generousTitForTat: StrategyFn = (_own, opp, rounds, u) => {
 };
 
 /** Named strategy registry entry (index doubles as the titan strategy id). */
-export interface StrategySpec {
+interface StrategySpec {
   readonly name: string;
   readonly move: StrategyFn;
 }
@@ -185,7 +185,7 @@ export const STRATEGIES: readonly StrategySpec[] = [
 ];
 
 /** Result of one played round. REUSED by {@link playRound} — copy fields to retain. */
-export interface RoundResult {
+interface RoundResult {
   a: Move;
   b: Move;
   payoffA: number;

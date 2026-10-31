@@ -13,7 +13,7 @@ const UV = `
 `;
 
 /** 25 distinct benchmark fragment bodies (mainImageN). */
-export const VIZ_BENCHMARKS_GLSL: string[] = [
+const VIZ_BENCHMARKS_GLSL: string[] = [
   // 1 — Entropy gauge (radial needle)
   // NOTE: u_entropy is declared once at global scope by applyVizBenchmarks' <common> injection.
   // Declaring it here too made this one benchmark's program fail GLSL redefinition and render black.

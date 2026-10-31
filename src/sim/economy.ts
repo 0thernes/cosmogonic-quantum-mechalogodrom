@@ -32,7 +32,7 @@ export type Currency = (typeof CURRENCIES)[number];
 
 /** The two traded commodities. */
 export const COMMODITIES = ['QUANTA', 'ICHOR'] as const;
-export type Commodity = (typeof COMMODITIES)[number];
+type Commodity = (typeof COMMODITIES)[number];
 
 /** Glyphs for UI (kept beside the names so consumers never hard-code them). */
 export const CURRENCY_GLYPH: Record<Currency, string> = { AURUM: '☉', UMBRA: '☾' };
@@ -86,7 +86,7 @@ const AUCTION_LOT = 8;
 const BID_FRACTION = 0.04;
 
 /** A registered economic agent's public summary (read-only view for telemetry/UI). */
-export interface AgentWealth {
+interface AgentWealth {
   id: number;
   title: string;
   /** Total net worth valued in AURUM (currencies + commodities at current prices). */

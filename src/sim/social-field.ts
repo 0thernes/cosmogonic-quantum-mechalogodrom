@@ -73,7 +73,7 @@ export interface SocialFieldParams {
 }
 
 /** Cells per side of the field grid. */
-export function gridDim(p: SocialFieldParams): number {
+function gridDim(p: SocialFieldParams): number {
   return Math.max(1, Math.ceil((2 * p.extent) / p.cell));
 }
 
@@ -326,7 +326,7 @@ export interface SocialScanExecutor {
 }
 
 /** The snapshot a scan job reads: input arrays trimmed to the `n` packed organisms. */
-export interface SocialScanInputs {
+interface SocialScanInputs {
   n: number;
   px: Float32Array;
   py: Float32Array;
@@ -588,7 +588,7 @@ export function sharedWord(ticket: number, phase: number): number {
 export const SHARED_MAX_BOUND = 4;
 
 /** A field as a core sees it: the shared arrays and the field's control block. */
-export interface SocialSharedBinding {
+interface SocialSharedBinding {
   field: SocialFieldBuffers;
   control: Int32Array;
 }

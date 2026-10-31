@@ -25,7 +25,7 @@
 import type { Rng } from './rng';
 
 /** Outcome of a single-qubit Z-basis measurement. */
-export interface CliffordMeasure {
+interface CliffordMeasure {
   /** 0 or 1 (the Z eigenvalue: 0 ⇒ |0⟩, 1 ⇒ |1⟩). */
   outcome: 0 | 1;
   /** True if the stabilisers fixed the outcome (no RNG draw); false if a stabiliser anticommuted (random). */

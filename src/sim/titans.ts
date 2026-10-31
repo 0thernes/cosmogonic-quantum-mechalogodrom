@@ -562,7 +562,7 @@ export interface TitanRd {
 }
 
 /** Pending waste-scar request. REUSED — see {@link TitanSystem.drainPerturb}. */
-export interface PerturbRequest {
+interface PerturbRequest {
   u: number;
   v: number;
   r: number;

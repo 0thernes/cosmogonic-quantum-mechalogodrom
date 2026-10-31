@@ -34,7 +34,7 @@ import { APEX_BILLION } from './apex-parameter-manifold';
 export const APEX_DENSE_QUBITS_CAP = 8;
 
 /** Default stabilizer qubits — 2³⁰ ≈ 1.07e9-dimensional reflex (the billion anchor). */
-export const APEX_STABILIZER_QUBITS_DEFAULT = 30;
+const APEX_STABILIZER_QUBITS_DEFAULT = 30;
 
 /** Max stabilizer qubits the substrate will build (tableau stays cheap; this bounds telemetry cost). */
 export const APEX_STABILIZER_QUBITS_MAX = 40;

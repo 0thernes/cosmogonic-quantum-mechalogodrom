@@ -33,7 +33,7 @@ function std(values: readonly number[]): number {
   return Math.sqrt(values.reduce((sum, v) => sum + (v - m) ** 2, 0) / values.length);
 }
 
-export interface SentienceRunSummary {
+interface SentienceRunSummary {
   seed: number;
   structuredIndex: number;
   nullIndex: number;
@@ -49,7 +49,7 @@ export interface SentienceRunSummary {
   emergenceProven: boolean;
 }
 
-export interface SentienceFrameworkAggregate {
+interface SentienceFrameworkAggregate {
   id: ConsciousnessFrameworkId;
   name: string;
   bucket: string;
@@ -61,7 +61,7 @@ export interface SentienceFrameworkAggregate {
   loadBearingRate: number;
 }
 
-export interface SentienceTelemetryPoint {
+interface SentienceTelemetryPoint {
   tick: number;
   index: number;
   convergence: number;
@@ -72,7 +72,7 @@ export interface SentienceTelemetryPoint {
   eventCount: number;
 }
 
-export interface SentienceEntityTelemetry {
+interface SentienceEntityTelemetry {
   id: string;
   kind: string;
   label: string;
@@ -89,14 +89,14 @@ export interface SentienceEntityTelemetry {
   trace: readonly SentienceTelemetryPoint[];
 }
 
-export interface SentienceEntityFrameworkEdge {
+interface SentienceEntityFrameworkEdge {
   entityId: string;
   frameworkId: ConsciousnessFrameworkId;
   weight: number;
   status: string;
 }
 
-export interface SentienceLabData {
+interface SentienceLabData {
   version: 'sentience-lab-v1';
   generatedAt: '2026-07-07T00:00:00.000Z';
   claim: 'indicatorOnly';

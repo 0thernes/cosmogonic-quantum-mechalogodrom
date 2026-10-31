@@ -35,7 +35,7 @@ import {
 import { IS_MINI_WORLD } from '../sim/constants';
 
 /** The slice of World the panel drives (World exposes these; see world.ts). */
-export interface SandboxHost {
+interface SandboxHost {
   getSandbox(): { entries: readonly SandboxEntry[] };
   applySandbox(s: SandboxSettings): void;
   sandboxStats(): { organisms: number; target: number; capacity: number };
@@ -100,7 +100,7 @@ function host(): SandboxHost | null {
   return w && typeof w.getSandbox === 'function' ? (w as SandboxHost) : null;
 }
 
-export class SandboxPanel {
+class SandboxPanel {
   private readonly modal: HTMLElement;
   private readonly list: HTMLElement;
   private readonly perf: HTMLElement;
@@ -257,7 +257,7 @@ export class SandboxPanel {
 }
 
 /** The always-visible Mini World entry / exit pill. */
-export function mountMiniWorldEntry(doc: Document = document): HTMLAnchorElement {
+function mountMiniWorldEntry(doc: Document = document): HTMLAnchorElement {
   const a = doc.createElement('a');
   a.id = 'cqm-mini-entry';
   a.href = miniWorldHref(doc.location.href, !IS_MINI_WORLD);

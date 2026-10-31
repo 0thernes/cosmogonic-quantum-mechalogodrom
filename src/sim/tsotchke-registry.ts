@@ -49,8 +49,8 @@ export const TSOTCHKE_ORG_REPOS = [
   '.github',
 ] as const;
 
-export type TsotchkeUserRepo = (typeof TSOTCHKE_USER_REPOS)[number];
-export type TsotchkeOrgRepo = (typeof TSOTCHKE_ORG_REPOS)[number];
+type TsotchkeUserRepo = (typeof TSOTCHKE_USER_REPOS)[number];
+type TsotchkeOrgRepo = (typeof TSOTCHKE_ORG_REPOS)[number];
 export type TsotchkeRepoSlug = TsotchkeUserRepo | TsotchkeOrgRepo;
 
 /** Depth of integration for the public integration map. */
@@ -131,7 +131,7 @@ export interface TsotchkeRepoEntry {
  * Keeping a separate type and ledger prevents them from entering external counts, coverage, or
  * registry-driven catalysis while retaining explicit provenance for the live control path.
  */
-export interface TsotchkeInternalControlEntry {
+interface TsotchkeInternalControlEntry {
   id: 'classical-contrast';
   substrate: 'classical-baseline';
   cosmogonicLeaf: 'sim/classical-contrast.ts';

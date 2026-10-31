@@ -19,7 +19,7 @@ import type { Rng } from '../math/rng';
 
 /** The five transformation stages (Dragon-Ball-style ascensions). */
 export const EVO_STAGES = ['BASE', 'ASCENDED', 'SUPER', 'ULTRA', 'LEGENDARY'] as const;
-export type EvoStage = (typeof EVO_STAGES)[number];
+type EvoStage = (typeof EVO_STAGES)[number];
 /**
  * First ascension summit (V63). Level 100 unlocks LEGENDARY + the MONOLITH TEMPLE, but research
  * growth continues beyond it; this is no longer a hard cap.
@@ -33,7 +33,7 @@ const STAGE_MULT = [1, 2, 4, 10, 50];
  * The TEN godlike powers (V63) — one is granted **automatically every 10 levels** (L10…L100), so
  * the apex wears `floor(level/10)` of them. The last, GODHEAD HALO, lands at the level-100 ascension.
  */
-export const GODLIKE_POWERS = [
+const GODLIKE_POWERS = [
   'KAIO AURA',
   'PHASE STEP',
   'GRAVITY WELL',
@@ -63,7 +63,7 @@ export interface EvoAppearance {
 }
 
 /** One entry in the evolutionary tale. */
-export interface EvoEvent {
+interface EvoEvent {
   day: number;
   level: number;
   stage: EvoStage;
@@ -91,7 +91,7 @@ export interface EvoView {
 }
 
 /** Audit #230: hard level ceiling (power stays finite, ~1e72× LV1 is already absurd). */
-export const SUPER_EVOLUTION_MAX_LEVEL = 999;
+const SUPER_EVOLUTION_MAX_LEVEL = 999;
 
 export class SuperEvolution {
   level = 1;

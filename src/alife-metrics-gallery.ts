@@ -5,7 +5,7 @@
 import { ALIFE_SVG_EMBED } from './generated/alife-svg-embed';
 
 /** A canonical profile or a historical comparison retained with its original rubric. */
-export interface AlifeMetric {
+interface AlifeMetric {
   id: string;
   label: string;
   file: string;

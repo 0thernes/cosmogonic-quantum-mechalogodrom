@@ -90,15 +90,15 @@ interface Pair {
 }
 
 /** Injected world-surface sampler. Non-finite results fall back to the canonical xeno wave. */
-export type XenomimicSurfaceAt = (x: number, z: number, time: number) => number;
+type XenomimicSurfaceAt = (x: number, z: number, time: number) => number;
 
 /**
  * Real flora-consumption boundary. `appetite` and `dt` are bounded requests; the return value is the
  * amount of food actually removed and made available to the creature.
  */
-export type XenomimicGrazeAt = (x: number, z: number, appetite: number, dt: number) => number;
+type XenomimicGrazeAt = (x: number, z: number, appetite: number, dt: number) => number;
 
-export type XenomimicLifecycleKind = 'none' | 'birth' | 'death' | 'eaten' | 'respawn' | 'teleport';
+type XenomimicLifecycleKind = 'none' | 'birth' | 'death' | 'eaten' | 'respawn' | 'teleport';
 
 /** Ephemeral, allocation-free lifecycle view. A sink must copy fields it needs to retain. */
 export interface XenomimicLifecycleEvent {
@@ -114,9 +114,9 @@ export interface XenomimicLifecycleEvent {
   energy: number;
 }
 
-export type XenomimicLifecycleSink = (event: Readonly<XenomimicLifecycleEvent>) => void;
+type XenomimicLifecycleSink = (event: Readonly<XenomimicLifecycleEvent>) => void;
 
-export interface XenomimicOptions {
+interface XenomimicOptions {
   /** Per-axis half-extent of the canonical square habitat (world units). */
   habitatHalfExtent?: number;
   /**
@@ -198,7 +198,7 @@ const clampLean = (v: number): number =>
   !Number.isFinite(v) ? 0 : v < -0.7 ? -0.7 : v > 0.7 ? 0.7 : v;
 
 /** Gentle deterministic ground-wave height at a world point (creatures ride this; never above its crest). */
-export function xenoGroundHeight(x: number, z: number, t: number): number {
+function xenoGroundHeight(x: number, z: number, t: number): number {
   return (
     Math.sin(x * 0.013 + t * 0.15) * 3.2 +
     Math.cos(z * 0.017 - t * 0.11) * 2.6 +

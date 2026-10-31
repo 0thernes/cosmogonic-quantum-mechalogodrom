@@ -34,7 +34,7 @@
  */
 
 /** Mortality state of an Archon. */
-export interface MortalityState {
+interface MortalityState {
   /** Whether the Archon is alive. */
   alive: boolean;
   /** Current age (in beats/generations). */
@@ -50,7 +50,7 @@ export interface MortalityState {
 }
 
 /** Legacy traits passed to offspring. */
-export interface LegacyTraits {
+interface LegacyTraits {
   /** Inherited knowledge (from parent's memory). */
   knowledge: number[];
   /** Inherited biases (from parent's godform). */
@@ -60,7 +60,7 @@ export interface LegacyTraits {
 }
 
 /** Configuration for mortality system. */
-export interface MortalityConfig {
+interface MortalityConfig {
   /** Base lifespan (in beats). */
   baseLifespan: number;
   /** Lifespan variance (random factor). */
@@ -242,7 +242,7 @@ export class Mortality {
 /**
  * Compute population mortality statistics.
  */
-export interface PopulationMortalityStats {
+interface PopulationMortalityStats {
   /** Total population. */
   total: number;
   /** Number alive. */

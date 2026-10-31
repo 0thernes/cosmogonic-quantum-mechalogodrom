@@ -55,10 +55,10 @@ export const COPILOT_MAX_HISTORY_CHARS = 40 * 1024;
 export const COPILOT_MAX_TRANSCRIPT_NODES = 200;
 
 /** Maximum text rendered into one transcript message node. */
-export const COPILOT_MAX_RENDERED_CHARS = 64 * 1024;
+const COPILOT_MAX_RENDERED_CHARS = 64 * 1024;
 
 /** Hard ceiling for a browser request; the server agent has a slightly shorter whole-turn deadline. */
-export const COPILOT_REQUEST_TIMEOUT_MS = 80_000;
+const COPILOT_REQUEST_TIMEOUT_MS = 80_000;
 
 const COPILOT_AUX_REQUEST_TIMEOUT_MS = 20_000;
 const COPILOT_STATIC_MODEL_TIMEOUT_MS = 12_000;

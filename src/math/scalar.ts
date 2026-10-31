@@ -53,7 +53,7 @@ export function dist2XZ(ax: number, az: number, bx: number, bz: number): number 
 export const SENTIENCE_TIERS = ['DORMANT', 'STIRRING', 'AWARE', 'LUCID', 'TRANSCENDENT'] as const;
 
 /** One of the named sentience tiers. */
-export type SentienceTier = (typeof SENTIENCE_TIERS)[number];
+type SentienceTier = (typeof SENTIENCE_TIERS)[number];
 
 /**
  * Classify a 0..1 sentience index into a named {@link SentienceTier} (input clamped). Pure, O(1):

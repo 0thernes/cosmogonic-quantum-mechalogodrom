@@ -690,7 +690,7 @@ export function petriGrowthMultiplier(state: PetriDishState): number {
  * it is not evidence of sentience or phenomenal consciousness.
  * Grow What Thou Wilt.
  */
-export interface EshkolLifeProgram {
+interface EshkolLifeProgram {
   fingerprint: number; // hash from .esk example (consciousness.esk, gradient_descent_demo.esk, tensors.esk...)
   code: number[]; // simple "opcodes" distilled: AD, GWT, MPO, symmetry
   vitality: number;

@@ -115,7 +115,7 @@ export function createTreeCreatureAction(): TreeCreatureAction {
   };
 }
 
-export interface TreeCreatureBrainStatus {
+interface TreeCreatureBrainStatus {
   inputCount: number;
   hiddenCount: number;
   outputCount: number;
@@ -133,7 +133,7 @@ const logistic = (value: number): number => 1 / (1 + Math.exp(-value));
 
 /** One exclusive neural controller instance per tree-dwelling creature. */
 /** Audit #127: decisions to wait before re-trying the network after a non-finite output. */
-export const TREE_BRAIN_OUTPUT_RETRY = 240;
+const TREE_BRAIN_OUTPUT_RETRY = 240;
 
 export class TreeCreatureBrain {
   private readonly weights = new Float32Array(TREE_CREATURE_BRAIN_PARAMETERS);

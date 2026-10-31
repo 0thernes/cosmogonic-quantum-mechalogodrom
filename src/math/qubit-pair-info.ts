@@ -167,7 +167,7 @@ function blochLength(re: Float64Array, im: Float64Array, q: number): number {
 }
 
 /** Reduced-state entropies and total pairwise correlations of a normalized pure register. */
-export interface PairInformation {
+interface PairInformation {
   /** Qubit count n. */
   qubits: number;
   /** S(ρ_k) per qubit in bits, 0..1 (0 = unentangled with the rest, 1 = maximally entangled). */

@@ -6,7 +6,7 @@
  * alone establishes neither an active compute backend nor a performance gain.
  */
 
-export interface WebGpuCapabilities {
+interface WebGpuCapabilities {
   /** A WebGPU adapter was obtained; device/workload support remains untested. */
   available: boolean;
   /** Adapter information (if available) */
@@ -16,7 +16,7 @@ export interface WebGpuCapabilities {
 }
 
 /** Maximum time boot waits for an optional WebGPU adapter before continuing with WebGL. */
-export const WEBGPU_ADAPTER_TIMEOUT_MS = 1_500;
+const WEBGPU_ADAPTER_TIMEOUT_MS = 1_500;
 
 /** Audit #274: one in-flight/settled probe per `navigator.gpu` object (boot probed it twice). */
 const PROBES = new WeakMap<object, Promise<WebGpuCapabilities>>();

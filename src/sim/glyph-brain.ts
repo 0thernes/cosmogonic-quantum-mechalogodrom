@@ -29,7 +29,7 @@ import { clamp } from '../math/scalar';
 import type { OrganismIntelligenceSignal } from '../types';
 import { PANTHEON_GLYPH_BRAIN_PARAMS } from './apex-brain';
 
-export interface GlyphEnvironmentalPerceptInput {
+interface GlyphEnvironmentalPerceptInput {
   weatherHue: number;
   quantumEntropy: number;
   reactionDiffusion: number;

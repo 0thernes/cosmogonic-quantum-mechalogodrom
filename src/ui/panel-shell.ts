@@ -12,7 +12,7 @@
  * - dockToggle: the standard bottom-dock toggle button used by access-puzzle, settings, etc.
  */
 
-export interface GlassPanelOptions {
+interface GlassPanelOptions {
   id: string;
   className?: string;
   width?: string;
@@ -21,7 +21,7 @@ export interface GlassPanelOptions {
   doc?: Document;
 }
 
-export interface PanelHeaderOptions {
+interface PanelHeaderOptions {
   title: string;
   closeLabel?: string;
   onClose: () => void;
@@ -31,7 +31,7 @@ export interface PanelHeaderOptions {
   doc?: Document;
 }
 
-export interface DockToggleOptions {
+interface DockToggleOptions {
   id: string;
   label: string;
   title: string;

@@ -85,7 +85,7 @@ export const PLATFORM_MID_Y = PLATFORM_FLOOR + PLATFORM_HEIGHT * 0.5;
 // untouched and only self-heals the scatter case.
 
 /** Radius of the central living zone (fraction of PLATFORM_HALF). Inside: no centre-gravity. */
-export const LIVING_ZONE_FRAC = 0.45;
+const LIVING_ZONE_FRAC = 0.45;
 /** Central living-zone radius in world units (≈486 of 1,080). */
 export const LIVING_ZONE = PLATFORM_HALF * LIVING_ZONE_FRAC;
 /** Proportional centre-gravity gain per world-unit a body sits OUTSIDE the living zone. Tuned so a
@@ -340,7 +340,7 @@ export type RenderMode = (typeof RENDER_MODES)[number];
  * one mode `update()` reads — `1` everywhere else keeps the per-frame emissive identical).
  * Pure leaf data (no THREE import) so `sim/constants.ts` stays a DOM-free leaf.
  */
-export interface RenderModeFx {
+interface RenderModeFx {
   wireframe: boolean;
   metalness: number | null;
   roughness: number | null;
@@ -459,7 +459,7 @@ export const RENDER_MODE_FX: Readonly<Record<RenderMode, RenderModeFx>> = {
  * the style is a user input recorded in the audit trail, so replays reproduce a mode-change
  * script exactly. Pure leaf data (no THREE import).
  */
-export interface RenderModeDyn {
+interface RenderModeDyn {
   /** Velocity / speed-cap scale (how fast the field moves). */
   speed: number;
   /** Neighbor query-radius scale (how far organisms perceive each other). */
@@ -507,7 +507,7 @@ export const ENTROPY_STEP = ENTROPY_MAX / 4;
 export const MORPH_COUNT = 100;
 
 /** Monolith silhouette kind — selects the decorative crown built per monolith. */
-export type MonolithKind = 'spire' | 'obelisk' | 'arch' | 'ring';
+type MonolithKind = 'spire' | 'obelisk' | 'arch' | 'ring';
 
 /**
  * LEGACY monolith layout, legacy `mCfg` (line 400). Tuple layout:

@@ -8,7 +8,7 @@
  */
 
 /** A quantum-themed power: an energy cost + flavour. Activating one dispatches a `cqm:hero-power`. */
-export interface HeroPower {
+interface HeroPower {
   id: 'phase' | 'dominion' | 'fork' | 'recall';
   name: string;
   cost: number; // energy in 0..1
@@ -39,7 +39,7 @@ export const HERO_POWERS: readonly HeroPower[] = [
  * - `assist`   — it roams autonomously, but the player's nav input nudges its heading.
  * - `manual`   — the player flies it directly (WASD / touch / D-pad), full control.
  */
-export type HeroControlMode = 'autopilot' | 'assist' | 'manual';
+type HeroControlMode = 'autopilot' | 'assist' | 'manual';
 export const HERO_CONTROL_MODES: readonly HeroControlMode[] = [
   'autopilot',
   'assist',
@@ -47,7 +47,7 @@ export const HERO_CONTROL_MODES: readonly HeroControlMode[] = [
 ] as const;
 
 /** The three camera rigs (V41): the free world cam, a chase cam, and the creature's own eyes. */
-export type HeroCamMode = 'orbit' | 'third' | 'first';
+type HeroCamMode = 'orbit' | 'third' | 'first';
 export const HERO_CAM_MODES: readonly HeroCamMode[] = ['orbit', 'third', 'first'] as const;
 
 /** A read-only view of the hero's game-state for the HUD. */

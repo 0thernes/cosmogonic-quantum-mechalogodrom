@@ -32,7 +32,7 @@ export interface GwtModule {
 }
 
 /** Outcome of one Global-Workspace competition cycle. */
-export interface GwtResult {
+interface GwtResult {
   /** Index of the igniting (winning) module; -1 only when there are no modules. */
   winner: number;
   /** True when the winner's competition weight ≥ ignitionThreshold (conscious access / ignition). */
@@ -50,7 +50,7 @@ export interface GwtResult {
 }
 
 /** Scalar outcome (no proposals / broadcast) for cheap per-faculty competition. */
-export interface GwtScalarResult {
+interface GwtScalarResult {
   winner: number;
   ignited: boolean;
   access: number;

@@ -8,14 +8,14 @@ import {
 import { mulberry32 } from '../math/rng';
 
 /** Declared FP32 error allowance; identity lanes must remain exactly unchanged. */
-export const WILDERNESS_GPU_TOLERANCE = Object.freeze({
+const WILDERNESS_GPU_TOLERANCE = Object.freeze({
   positionAbsolute: 2e-4,
   velocityAbsolute: 2e-5,
   relative: 2e-6,
 });
 
 /** Complete awaited batch latency including upload, dispatch, readback and message delivery. */
-export interface WildernessBatchTiming {
+interface WildernessBatchTiming {
   samplesMs: number[];
   medianMs: number;
   p95Ms: number;
@@ -44,7 +44,7 @@ export interface WildernessComputeCalibration {
 }
 
 /** Testable bounds and monotonic clock; defaults represent the actual 49-chunk ambient workload. */
-export interface WildernessCalibrationOptions {
+interface WildernessCalibrationOptions {
   now?: () => number;
   /** Stop between awaited batches if the owning World/main lifecycle ended. */
   isActive?: () => boolean;

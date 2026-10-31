@@ -332,7 +332,7 @@ interface FloraComfortReadout {
 }
 
 /** O(1) brain-identity lifecycle used when EntityManager compacts or recycles list slots. */
-export interface EntityBrainSlotLifecycle {
+interface EntityBrainSlotLifecycle {
   swapEntitySlots(a: number, b: number): void;
   clearEntitySlot(slot: number): void;
   resetEntitySlots(): void;
@@ -347,11 +347,11 @@ export interface EntityBrainSlotLifecycle {
 }
 
 /** Ecology tunables (audit #28/#29/#40): basal energy drain per second, scaled by nW + metabolism. */
-export const ECOLOGY_METABOLISM_PER_S = 1.2;
+const ECOLOGY_METABOLISM_PER_S = 1.2;
 /** Minimum energy a parent needs to split, the cost it pays, and the energy its child starts with. */
-export const ECOLOGY_FISSION_MIN_ENERGY = 40;
-export const ECOLOGY_FISSION_COST = 25;
-export const ECOLOGY_CHILD_ENERGY = 25;
+const ECOLOGY_FISSION_MIN_ENERGY = 40;
+const ECOLOGY_FISSION_COST = 25;
+const ECOLOGY_CHILD_ENERGY = 25;
 const METABOLISM_TRAIT = 4; // genome TRAIT.metabolism
 
 /**

@@ -203,7 +203,7 @@ function clampBias(v: number): number {
  * Full corpus study: Z:\[Vibe Coded (AI)]\(Tsotchke)\mirrors\libirrep + Eshkol etc.
  * Eshkol AD/tape, Moonlab tensor, libirrep, quantum-quake continue wired into super-mind/body/world/topdown/quality/godform.
  */
-export const ARCHON_FORMS = ['TENSOR', 'ESHKOL', 'MOONQUAKE', 'ULG', 'CHAOS'] as const;
+const ARCHON_FORMS = ['TENSOR', 'ESHKOL', 'MOONQUAKE', 'ULG', 'CHAOS'] as const;
 export type ArchonForm = (typeof ARCHON_FORMS)[number];
 
 /** Per-index archetype form for body constructor (exclusive godform source per contract). */
@@ -321,7 +321,7 @@ export type { AlphabetArchetype };
  * pantheon; live-spawning all 100 as stepped creatures is perf-gated follow-up (like full Archon
  * individuation), but every Archon already resolves to its archetype here.
  */
-export function alphabetArchetypeForGodform(i: number): AlphabetArchetype {
+function alphabetArchetypeForGodform(i: number): AlphabetArchetype {
   const name = GODFORMS[((i % PANTHEON_SIZE) + PANTHEON_SIZE) % PANTHEON_SIZE] ?? GODFORMS[0];
   const glyph = name.slice(-1);
   return alphabetArchetypeByGlyph(glyph) ?? alphabetArchetypeAt(i);

@@ -73,7 +73,7 @@ function backwardTaylorInverse(order: number): number[][] {
   return inv;
 }
 
-export interface PredictiveMetacognitionOptions {
+interface PredictiveMetacognitionOptions {
   enabled?: boolean;
   cadenceFrames?: number;
   /** Taylor order of the fit; 2..8. Higher = models faster-varying structure before flagging it. */

@@ -3,7 +3,7 @@
  * World samples unit draws and this returns velocity; no three.js dependency.
  */
 
-export interface NhiLaunchVelocity {
+interface NhiLaunchVelocity {
   x: number;
   y: number;
   z: number;

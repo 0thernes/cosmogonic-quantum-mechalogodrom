@@ -27,7 +27,7 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
 /** Post-FX tiers. See the module header. */
-export type PostFxMode = 'off' | 'lens' | 'cinematic';
+type PostFxMode = 'off' | 'lens' | 'cinematic';
 
 /**
  * Resolve the post-FX tier from the URL once. `?fx=0|off|no` ⇒ 'off' (plain pipeline);

@@ -159,7 +159,7 @@ export function mlpTrain(
 // ─────────────────────────────────────────────────────────────────────────────────────────────────────
 
 /** Config for a mini Creativity Machine. Small on purpose — Thaler's scale. */
-export interface CMConfig {
+interface CMConfig {
   memories: number; // stored experiences K
   nin: number;
   nhid: number;
@@ -180,7 +180,7 @@ export const DEFAULT_CM: CMConfig = {
 };
 
 /** A trained mini Creativity Machine ready to dream, confabulate, and be measured. */
-export interface CreativityMachine {
+interface CreativityMachine {
   ie: MiniMLP; // imagination engine (imagitron): cue → target autoassociator
   aac: MiniMLP; // alert associative center (perceptron): output → plausibility∈[0,1]
   memories: Memory[]; // stored experiences (attractors)
@@ -235,7 +235,7 @@ export function critique(cm: CreativityMachine, out: ArrayLike<number>): number 
 }
 
 /** Distance from `out` to the NEAREST stored memory target (how far off-attractor the confabulation is). */
-export function nearestMemoryDist(
+function nearestMemoryDist(
   cm: CreativityMachine,
   out: ArrayLike<number>,
 ): { dist: number; index: number } {
@@ -258,7 +258,7 @@ export function nearestMemoryDist(
 }
 
 /** How Thaler classifies each emitted pattern along the death/creativity curve. */
-export type Emission = 'recall' | 'confabulation' | 'noise';
+type Emission = 'recall' | 'confabulation' | 'noise';
 
 /** Mean tanh-saturation of an output (0 = structured, 1 = every unit locked to ±1 = neural noise-death,
  *  Thaler's lock-up). */
@@ -287,7 +287,7 @@ export function classify(
 /** Perturb `src` weights into `dst` by seeded additive noise of amplitude `eta` (Thaler "synaptic
  *  perturbation"). `pruneInputBias` (0..1) skews damage toward the INPUT-layer weights — the asymmetry
  *  that produces "virtual inputs" (1995). Deterministic given the injected Rng. */
-export function perturbWeights(
+function perturbWeights(
   dst: Float32Array,
   net: MiniMLP,
   eta: number,
@@ -344,7 +344,7 @@ function ZERO_CUE(n: number): Float32Array {
 /** M1 — GLORY REGIME (the confabulation sweet-spot / critical Ξ). Sweep perturbation η; the confabulation
  *  rate must be an INVERTED-U with an interior peak (rote recall below, noise above). This is Thaler's
  *  central empirical claim (memory-turnover peaks at a critical mean perturbation). */
-export interface GloryResult {
+interface GloryResult {
   etas: number[];
   recallRate: number[];
   confabRate: number[];
@@ -397,14 +397,14 @@ export function gloryRegimeSweep(cm: CreativityMachine, rng: Rng, trials = 120):
 
 /** M2 — NEAR-DEATH LIFE-REVIEW cascade. As damage ramps 0→1, the ordering must be: distinct-memory
  *  COVERAGE peaks (life review) BEFORE novelty (confabulation) peaks BEFORE collapse to noise. */
-export interface LifeReviewResult {
+interface LifeReviewResult {
   coveragePeakDamage: number;
   noveltyPeakDamage: number;
   collapseDamage: number;
   /** true iff coverage-peak < novelty-peak < collapse — Thaler's three-phase death signature. */
   orderingHolds: boolean;
 }
-export function lifeReviewCascade(
+function lifeReviewCascade(
   cm: CreativityMachine,
   rng: Rng,
   steps = 16,
@@ -465,7 +465,7 @@ function cvOf(intervals: number[]): number {
  *  rapid clip" while confabulations arrive "sporadic and slow" (Thaler 2014). So the CV of confabulation
  *  inter-arrival intervals must exceed the CV of memory inter-arrival intervals — a direct within-run test
  *  of his prosody claim (no rare-event artifact from comparing separate bands). */
-export interface RhythmResult {
+interface RhythmResult {
   memoryCV: number;
   confabCV: number;
   rhythmShifts: boolean;
@@ -499,12 +499,12 @@ export function emissionRhythm(cm: CreativityMachine, rng: Rng, ticks = 800): Rh
 /** M4 — VIRTUAL INPUT / cognitive tunneling. With input clamped to ZERO, biasing damage toward the
  *  input-layer weights makes full stored memories appear from nothing (the intact hidden/output layers
  *  pattern-complete the zeros). Virtual-recall frequency must RISE with the input-prune bias (1995). */
-export interface VirtualInputResult {
+interface VirtualInputResult {
   biases: number[];
   virtualRecall: number[];
   rises: boolean;
 }
-export function virtualInput(cm: CreativityMachine, rng: Rng, trials = 400): VirtualInputResult {
+function virtualInput(cm: CreativityMachine, rng: Rng, trials = 400): VirtualInputResult {
   const biases = [0, 0.5, 1.0, 1.5, 2.0];
   const pw = new Float32Array(cm.ie.w.length);
   const hid = new Float32Array(cm.ie.nhid);
@@ -538,7 +538,7 @@ export function virtualInput(cm: CreativityMachine, rng: Rng, trials = 400): Vir
  *  memory receive a valence bonus that must give them measurably HIGHER reinforcement than valence-neutral
  *  confabulations of comparable plausibility — "affect provably steers what is learned" (Thaler's feeling
  *  as chain-reinforcement, not a posited quale). */
-export interface HotButtonResult {
+interface HotButtonResult {
   hotReinforce: number;
   neutralReinforce: number;
   /** true iff hot-resonant ideas are reinforced more than neutral ones (a reinforcement asymmetry). */
@@ -603,16 +603,12 @@ export function hotButtonAffect(
  *  lower η when a good vein is found). The closed loop must sustain a HIGHER mean confabulation rate than
  *  the average fixed-η open loop — self-modulation finds and dwells in the glory band ("one net governs the
  *  synaptic noise injected into another based upon its appraisal"). */
-export interface ReentrantResult {
+interface ReentrantResult {
   closedLoopConfab: number;
   openLoopMeanConfab: number;
   feedbackHelps: boolean;
 }
-export function reentrantContemplation(
-  cm: CreativityMachine,
-  rng: Rng,
-  ticks = 500,
-): ReentrantResult {
+function reentrantContemplation(cm: CreativityMachine, rng: Rng, ticks = 500): ReentrantResult {
   const pw = new Float32Array(cm.ie.w.length);
   const hid = new Float32Array(cm.ie.nhid);
   const out = new Float32Array(cm.ie.nout);
@@ -703,7 +699,7 @@ export function hurstExponent(series: readonly number[]): number {
 /** M7 — FRACTAL RHYTHM (Thaler's quantitative "proof"): the ideation stream's inter-emission intervals are
  *  fractal (long-range-correlated), NOT Poisson white — the fingerprint he claims matches a human stream of
  *  consciousness. Measured by the Hurst exponent of the novel-emission interval series. */
-export interface FractalResult {
+interface FractalResult {
   hurst: number;
   /** true iff H departs from 0.5 (structured temporal clustering, not memoryless). */
   isFractal: boolean;
@@ -738,7 +734,7 @@ export function fractalRhythm(cm: CreativityMachine, rng: Rng, ticks = 2048): Fr
 /** M8 — BOOTSTRAPPING (US 7,454,388): with critic feedback ON, an accepted confabulation is absorbed as a
  *  new memory and the mean critic score of the stream TRENDS UP over epochs; with feedback OFF it does not.
  *  Self-improvement = the loop is generative, not a static noise source. */
-export interface BootstrapResult {
+interface BootstrapResult {
   scoreTrendOn: number;
   scoreTrendOff: number;
   bootstraps: boolean;
@@ -804,7 +800,7 @@ export function bootstrapping(
  *  diversity — a single net's self-feedback fixates on a rich fixed point while a mini swarm's hops stay
  *  short; DABUS's rich chains genuinely need TRUE swarm scale, dozens-to-hundreds of nets, not a handful.
  *  A negative result kept as a caveat rather than shipping a demo that doesn't demonstrate.) Deterministic. */
-export interface ChainResult {
+interface ChainResult {
   /** Mean coherent-cascade length with associative feedback (output → next cue). */
   chainedLen: number;
   /** Mean coherent-cascade length with RANDOM cueing each step (no associative link — the null). */
@@ -873,7 +869,7 @@ export function chaining(
 
 /** One constitutive marker's verdict, aggregated over an ENSEMBLE of mini brains (a single 70-param net is
  *  noisy; the phenomenon is a population regularity — and this world runs a whole population of them). */
-export interface ThalerMarker {
+interface ThalerMarker {
   id: string;
   name: string;
   /** true iff the phenomenon held in the MAJORITY of the ensemble. */

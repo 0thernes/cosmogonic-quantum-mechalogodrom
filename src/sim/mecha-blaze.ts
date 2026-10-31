@@ -54,7 +54,7 @@ const LIFE = 1.1;
 const TMP = new THREE.Color();
 
 /** Live stats for telemetry / tests. */
-export interface MechaBlazeStats {
+interface MechaBlazeStats {
   /** Cumulative organisms incinerated by the mecha. */
   kills: number;
   /** Deaths awaiting their 5-second respawn. */

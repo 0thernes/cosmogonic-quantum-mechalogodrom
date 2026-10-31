@@ -27,7 +27,7 @@ export interface HybridHardwareCapabilities {
   readonly webNnDeviceType: 'npu' | 'gpu' | 'cpu' | 'unavailable';
 }
 
-export interface WorkerShardRange {
+interface WorkerShardRange {
   readonly shardIndex: number;
   readonly startSlot: number;
   readonly endSlot: number;

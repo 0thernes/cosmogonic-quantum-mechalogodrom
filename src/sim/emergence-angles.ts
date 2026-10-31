@@ -42,9 +42,9 @@ export const EMERGENCE_ANGLES = [
   'TRANSCENDENCE',
 ] as const;
 
-export type EmergenceAngle = (typeof EMERGENCE_ANGLES)[number];
+type EmergenceAngle = (typeof EMERGENCE_ANGLES)[number];
 
-export interface EmergenceSnapshot {
+interface EmergenceSnapshot {
   angle: EmergenceAngle;
   strength: number;
   complexity: number;
@@ -120,7 +120,7 @@ export class EshkolProgramEvolution {
 }
 
 /** 9. Cross-Strain Recombination — Biologics exchange genetic material */
-export class CrossStrainRecombination {
+class CrossStrainRecombination {
   private readonly strainGenomes = new Map<string, Float32Array>();
   // Only the running TALLY of exchanges is ever read (seed mix + saturation metric);
   // the per-event payloads were never consumed, so an unbounded array was a pure leak.
@@ -340,7 +340,7 @@ export class ArchonWarfare {
 }
 
 /** 12. Reality Fracture — When god-scale power breaks spacetime (Dr Manhattan, Mxyzptlk, Jaspers) */
-export class RealityFracture {
+class RealityFracture {
   // Only the fracture tally feeds the density metric; per-point records were unused.
   private fractureCount = 0;
   private currentFractureLevel = 0;
@@ -442,7 +442,7 @@ export class ChaosEntropy {
 }
 
 /** 14. Cosmic Harvest — Galactus-style system consumption (devour, trophic cascade) */
-export class CosmicHarvest {
+class CosmicHarvest {
   private readonly harvestedSystems = new Map<
     string,
     { biomass: number; energy: number; timestamp: number }

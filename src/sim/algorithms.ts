@@ -459,7 +459,7 @@ export const ALGO_GLYPHS: readonly string[] = [
  * - `radial` — the default outward burst (bubble / pivot / stooge / scatter).
  * Parallel to {@link ALGOS} (same order, length 25); the integrator reads `ALGO_IGNITE[algoIdx]`.
  */
-export type IgnitePattern = 'sweep' | 'parity' | 'butterfly' | 'bucket' | 'radial';
+type IgnitePattern = 'sweep' | 'parity' | 'butterfly' | 'bucket' | 'radial';
 
 /** Per-field ignition signature, in ALGOS order. */
 export const ALGO_IGNITE: readonly IgnitePattern[] = [

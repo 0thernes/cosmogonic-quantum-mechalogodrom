@@ -6,7 +6,7 @@
  * state participates, so HUNT/MIMIC are directly unit-testable and replayable.
  */
 
-export interface NhiEffectVector {
+interface NhiEffectVector {
   readonly x: number;
   readonly y: number;
   readonly z: number;
@@ -24,7 +24,7 @@ export interface NhiEffectBody {
 }
 
 /** Minimal structural surface used by the world's executable nearest-target selection. */
-export interface NhiTargetCandidate {
+interface NhiTargetCandidate {
   readonly position: NhiEffectVector;
   readonly userData: {
     readonly isNhi?: boolean;
@@ -34,19 +34,19 @@ export interface NhiTargetCandidate {
 }
 
 /** Minimal ordinary-organism identity surface used by targeted MANIPULATE. */
-export interface NhiManipulationCandidate {
+interface NhiManipulationCandidate {
   readonly setGroup: number;
   readonly isNhi?: boolean;
   /** Missing means live, matching lightweight entity mocks and legacy entities. */
   readonly alive?: boolean;
 }
 
-export interface NhiTargetSelection<T extends NhiTargetCandidate> {
+interface NhiTargetSelection<T extends NhiTargetCandidate> {
   readonly target: T | null;
   readonly distanceSquared: number;
 }
 
-export interface NhiHuntEffect {
+interface NhiHuntEffect {
   readonly applied: boolean;
   readonly selfChanged: boolean;
   readonly targetChanged: boolean;
@@ -58,7 +58,7 @@ export interface NhiHuntEffect {
   readonly selfVelocity: NhiEffectVector;
 }
 
-export interface NhiMimicEffect {
+interface NhiMimicEffect {
   readonly applied: boolean;
   readonly selfVelocity: NhiEffectVector;
   readonly strategy: 0 | 1;
@@ -66,7 +66,7 @@ export interface NhiMimicEffect {
   readonly phylum: number;
 }
 
-export interface NhiVelocityImpulseEffect {
+interface NhiVelocityImpulseEffect {
   /** Any finite-sanitization or bounded impulse changed the stored velocity. */
   readonly applied: boolean;
   /** The requested directional impulse itself changed the sanitized baseline. */
@@ -76,7 +76,7 @@ export interface NhiVelocityImpulseEffect {
 
 export const NHI_ENERGY_CAP = 100;
 export const NHI_HUNT_CAPTURE_RADIUS = 5;
-export const NHI_HUNT_MAX_TRANSFER = 8;
+const NHI_HUNT_MAX_TRANSFER = 8;
 export const NHI_EFFECT_MAX_SPEED = 12;
 const NHI_HUNT_STEER = 0.18;
 const NHI_MIMIC_MAX_BLEND = 0.65;

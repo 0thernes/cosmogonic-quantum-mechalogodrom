@@ -17,7 +17,7 @@
  */
 
 /** Read-only balanced-cut diagnostic; legacy field names are retained for API compatibility. */
-export interface PhiSnapshot {
+interface PhiSnapshot {
   /** Qubit count the measure was taken over. */
   qubits: number;
   /** Minimum normalized linear entropy over the evaluated balanced cuts, 0..1; not IIT Φ. */
@@ -162,7 +162,7 @@ export function classicalParticipationRatio(mods: ArrayLike<number>): number {
 }
 
 /** Activation-weighted graph-flow heuristic; compatibility names do not denote IIT quantities. */
-export interface ClassicalPhiSnapshot {
+interface ClassicalPhiSnapshot {
   /** Minimum directional cross-cut flow fraction over balanced cuts, clamped to [0,1]. */
   phi: number;
   /** Normalized outgoing activation-weighted flow shares per module. */

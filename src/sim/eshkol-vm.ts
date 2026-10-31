@@ -67,7 +67,7 @@ export interface EshProgram {
 }
 
 /** Result of running an EshProgram. */
-export interface EshVMResult {
+interface EshVMResult {
   result: number; // top of stack at halt (0 if empty)
   steps: number; // opcodes executed
   halted: boolean; // true if HALT/end reached within the step budget

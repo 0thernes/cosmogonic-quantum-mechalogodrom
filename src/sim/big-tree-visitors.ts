@@ -75,7 +75,7 @@ export interface BigTreeXenomimicBody {
   shimmer: number;
 }
 
-export interface BigTreeFoodRegistryView {
+interface BigTreeFoodRegistryView {
   get(resourceId: number): EdibleResource | undefined;
 }
 

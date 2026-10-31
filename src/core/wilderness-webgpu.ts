@@ -8,13 +8,13 @@ import { normalizeWorkerDt, type WorkerResult, type WorkerTask } from './worker-
 /** Hard allocation/dispatch bounds; each chunk owns 128 packed eight-float organisms. */
 export const WILDERNESS_GPU_MAX_TASKS = 128;
 /** Maximum packed entity payload per task, in floats. */
-export const WILDERNESS_GPU_TASK_FLOATS = 1024;
+const WILDERNESS_GPU_TASK_FLOATS = 1024;
 const PARAM_WORDS = 12;
 const TIMEOUT_MS = 5_000;
 const DATA_BYTES = WILDERNESS_GPU_MAX_TASKS * WILDERNESS_GPU_TASK_FLOATS * 4;
 
 /** WGSL reference is intentionally public for browser compilation/parity evidence. */
-export const WILDERNESS_WGSL = /* wgsl */ `
+const WILDERNESS_WGSL = /* wgsl */ `
 struct Params {
   count: u32, seed: u32, chunkX: f32, chunkZ: f32,
   dt: f32, frameScale: f32, damping: f32, resourceDrive: f32,

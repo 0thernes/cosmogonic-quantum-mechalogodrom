@@ -6,9 +6,9 @@
 import { ResonanceIntegrator, type IntegratorSnapshot } from './resonance-integrator';
 import { ValenceSteering } from './valence-steering';
 
-export const NHSI_AFFECT_GROUPS = 8;
+const NHSI_AFFECT_GROUPS = 8;
 
-export interface NhsiAffectInput {
+interface NhsiAffectInput {
   padPleasure: number;
   padArousal: number;
   padDominance: number;

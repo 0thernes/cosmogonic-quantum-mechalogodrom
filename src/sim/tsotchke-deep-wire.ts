@@ -25,7 +25,7 @@ import { fromRows, svd, type Mat } from '../math/mps-svd';
 // === MOONLAB FULL INTEGRATION ===
 
 /** Moonlab tensor network contraction (full TN engine). */
-export interface MoonlabTensorNetwork {
+interface MoonlabTensorNetwork {
   tensors: Float32Array[];
   indices: number[][];
   bonds: number[][];
@@ -70,7 +70,7 @@ function contractPair(a: Float32Array, b: Float32Array): Float32Array {
 }
 
 /** Moonlab Matrix Product Operator (MPO) full operations. */
-export interface MoonlabMPO {
+interface MoonlabMPO {
   matrices: Float32Array[];
   bondDimension: number;
   physicalDimension: number;
@@ -135,7 +135,7 @@ export function moonlabMPOCompose(a: MoonlabMPO, b: MoonlabMPO): MoonlabMPO {
 }
 
 /** Moonlab Bloch sphere operations (full quantum state visualization). */
-export interface BlochVector {
+interface BlochVector {
   x: number;
   y: number;
   z: number;
@@ -145,7 +145,7 @@ export interface BlochVector {
  * Convert statevector to Bloch sphere coordinates.
  * Based on Moonlab/moonlab_repo/bloch.cpp
  */
-export function moonlabStateToBloch(state: Complex[]): BlochVector {
+function moonlabStateToBloch(state: Complex[]): BlochVector {
   if (state.length < 2) {
     return { x: 0, y: 0, z: 1 };
   }
@@ -179,7 +179,7 @@ export function moonlabBlochToState(bloch: BlochVector): Complex[] {
 }
 
 /** Moonlab tensor train decomposition (TT-SVD). */
-export interface TensorTrain {
+interface TensorTrain {
   cores: Float32Array[];
   ranks: number[];
   /** Relative Frobenius error introduced by the rank-χ truncation, in [0,1]. */
@@ -194,7 +194,7 @@ export interface TensorTrain {
  * the rank-χ approximant. `truncationError` is the real discarded-energy ratio.
  * Replaces the prior array-slice placeholder.
  */
-export function moonlabTTDecompose(tensor: Float32Array, maxRank: number = 8): TensorTrain {
+function moonlabTTDecompose(tensor: Float32Array, maxRank: number = 8): TensorTrain {
   const len = tensor.length;
   if (len <= 1) return { cores: [tensor.slice()], ranks: [1], truncationError: 0 };
 
@@ -266,7 +266,7 @@ export function moonlabTTReconstruct(tt: TensorTrain): Float32Array {
 // === LIBIRREP FULL INTEGRATION ===
 
 /** Character table for a group (full representation theory). */
-export interface CharacterTable {
+interface CharacterTable {
   group: string;
   classes: string[];
   characters: number[][];
@@ -277,7 +277,7 @@ export interface CharacterTable {
  * Get character table for SU(2) (full libirrep integration).
  * Based on libirrep/mirrors/libirrep/character.cpp
  */
-export function libirrepSU2CharacterTable(jMax: number = 4): CharacterTable {
+function libirrepSU2CharacterTable(jMax: number = 4): CharacterTable {
   const classes: string[] = [];
   const characters: number[][] = [];
   const dimensions: number[] = [];
@@ -328,12 +328,7 @@ export function libirrepClebschFull(
  * rotation element `wignerSmallD` from math/irrep.ts, laid out row-major over
  * the (2j+1)² elements.
  */
-export function libirrepWignerD(
-  j: number,
-  alpha: number,
-  beta: number,
-  gamma: number,
-): Float32Array {
+function libirrepWignerD(j: number, alpha: number, beta: number, gamma: number): Float32Array {
   const dim = 2 * j + 1;
   const matrix = new Float32Array(dim * dim);
 
@@ -353,7 +348,7 @@ export function libirrepWignerD(
 /**
  * Wigner 6j recoupling symbol — genuine Racah W-formula (delegates to math/irrep.ts).
  */
-export function libirrepSixJ(
+function libirrepSixJ(
   j1: number,
   j2: number,
   j3: number,
@@ -385,7 +380,7 @@ export function libirrepNineJ(
  * Get irreducible representations for a point group.
  * Based on libirrep/mirrors/libirrep/point_group.cpp
  */
-export function libirrepPointGroupIrreps(group: string): string[] {
+function libirrepPointGroupIrreps(group: string): string[] {
   const groups: Record<string, string[]> = {
     C1: ['A'],
     C2: ['A', 'B'],
@@ -403,7 +398,7 @@ export function libirrepPointGroupIrreps(group: string): string[] {
 // === ESHKOL COMPILER FULL INTEGRATION ===
 
 /** Eshkol AST node types. */
-export type EshkolASTNode =
+type EshkolASTNode =
   | { type: 'program'; body: EshkolASTNode[] }
   | { type: 'define'; name: string; params: string[]; body: EshkolASTNode }
   | { type: 'call'; func: string; args: EshkolASTNode[] }
@@ -414,7 +409,7 @@ export type EshkolASTNode =
   | { type: 'lambda'; params: string[]; body: EshkolASTNode };
 
 /** Eshkol bytecode instruction. */
-export interface EshkolBytecode {
+interface EshkolBytecode {
   op: string;
   args: (number | string)[];
 }
@@ -714,7 +709,7 @@ export function eshkolExecute(bytecode: EshkolBytecode[], input: number): number
  * Optimize Eshkol bytecode (full compiler optimizer).
  * Based on Eshkol/eshkol_repo/optimizer.cpp
  */
-export function eshkolOptimize(bytecode: EshkolBytecode[]): EshkolBytecode[] {
+function eshkolOptimize(bytecode: EshkolBytecode[]): EshkolBytecode[] {
   const optimized: EshkolBytecode[] = [];
 
   for (let i = 0; i < bytecode.length; i++) {
@@ -753,7 +748,7 @@ export function eshkolOptimize(bytecode: EshkolBytecode[]): EshkolBytecode[] {
  * Type-check Eshkol program (full type checker).
  * Based on Eshkol/eshkol_repo/typecheck.cpp
  */
-export function eshkolTypeCheck(ast: EshkolASTNode): { ok: boolean; errors: string[] } {
+function eshkolTypeCheck(ast: EshkolASTNode): { ok: boolean; errors: string[] } {
   const errors: string[] = [];
 
   function checkNode(node: EshkolASTNode): string {
@@ -790,7 +785,7 @@ export function eshkolTypeCheck(ast: EshkolASTNode): { ok: boolean; errors: stri
 
 // === DEEP WIRING CONTROLLER ===
 
-export interface TsotchkeDeepWireSnapshot {
+interface TsotchkeDeepWireSnapshot {
   moonlab: {
     tensorNetworks: number;
     mpoOperations: number;

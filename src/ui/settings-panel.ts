@@ -210,7 +210,7 @@ class SettingsPanel {
 }
 
 /** Self-mount the settings panel. Safe to import in non-browser contexts. */
-export function mountSettingsPanel(doc: Document = document): void {
+function mountSettingsPanel(doc: Document = document): void {
   new SettingsPanel(doc);
 }
 

@@ -18,7 +18,7 @@ import * as THREE from 'three';
 import { WORLD_SCALE } from './constants';
 
 /** What left the mark — selects the relic's tint. */
-export type ArtifactKind = 'scar' | 'relic' | 'mote';
+type ArtifactKind = 'scar' | 'relic' | 'mote';
 
 /** Default pool size: plenty of simultaneous relics, still one instanced draw call. */
 const DEFAULT_CAP = 64;

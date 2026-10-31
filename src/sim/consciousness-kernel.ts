@@ -73,7 +73,7 @@ export const FRAMEWORK_IDS: readonly ConsciousnessFrameworkId[] = Object.freeze(
 export const FRAMEWORK_COUNT = 10;
 
 /** The substrate family a framework probes — the "diversity axis" so the stack does not collapse to one idea. */
-export type FrameworkBucket =
+type FrameworkBucket =
   | 'rubric'
   | 'perturbational'
   | 'information'
@@ -86,7 +86,7 @@ export type FrameworkBucket =
   | 'computational';
 
 /** Static, provenance-carrying description of one framework (the source is a real, checkable anchor). */
-export interface FrameworkMeta {
+interface FrameworkMeta {
   id: ConsciousnessFrameworkId;
   /** Short human label. */
   name: string;
@@ -230,10 +230,10 @@ export interface FrameworkSignals {
 }
 
 /** Claim status of one framework for one entity — never inflates past what the evidence supports. */
-export type FrameworkStatus = 'absent' | 'structural' | 'partial' | 'met' | 'loadBearing';
+type FrameworkStatus = 'absent' | 'structural' | 'partial' | 'met' | 'loadBearing';
 
 /** A single framework's score for one entity at one tick, with receipts (source/code/test provenance). */
-export interface FrameworkScore {
+interface FrameworkScore {
   id: ConsciousnessFrameworkId;
   /** Normalized indicator value 0..1 (the coupled score used in the web). */
   score: number;
@@ -254,7 +254,7 @@ export interface FrameworkScore {
 }
 
 /** A "singularity moment": a bounded window where rival frameworks converged beyond a surrogate threshold. */
-export interface SingularityEvent {
+interface SingularityEvent {
   /** Tick the event opened. */
   start: number;
   /** Tick the event most recently held (updated while it persists). */
@@ -419,7 +419,7 @@ function rawScoreOf(
 }
 
 /** Result of relaxing the raw scores through the coupling web. */
-export interface SynergyResult {
+interface SynergyResult {
   /** Raw independent scores 0..1 (length 10). */
   raw: number[];
   /** Coupled scores after fixed-point relaxation 0..1 (length 10). */

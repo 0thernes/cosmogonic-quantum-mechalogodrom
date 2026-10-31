@@ -215,7 +215,7 @@ export function warPaletteIndex(v: number): 0 | 1 | 2 {
 }
 
 /** Minimal structural slice of CSSStyleDeclaration that token reads need (DOM-free testable). */
-export interface TokenSource {
+interface TokenSource {
   getPropertyValue(name: string): string;
 }
 
@@ -453,7 +453,7 @@ export function plotRect(w: number, h: number): PlotRect {
  * plot region — either a single column or a compact 2-column grid when rows would otherwise be too
  * short to read. All coordinates are backing px relative to the canvas origin.
  */
-export interface RosterLayout {
+interface RosterLayout {
   /** Columns of cells (1 single-file, 2 compact grid). */
   cols: 1 | 2;
   /** Rows of cells per column (`ceil(n / cols)`). */
@@ -526,7 +526,7 @@ export function truncateToWidth(
 }
 
 /** Active page index (which quad of canvases `draw()` renders). */
-export type ObsPage = 0 | 1 | 2 | 3;
+type ObsPage = 0 | 1 | 2 | 3;
 
 /**
  * Live observatory bound to the 16 canvases `#obs-c0..#obs-c15`, four per page. See the module

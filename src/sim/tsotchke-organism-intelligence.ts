@@ -44,7 +44,7 @@ export interface TsotchkeOrganismInput {
   floraBiomass: number;
 }
 
-export interface TsotchkeOrganismIntelligenceOptions {
+interface TsotchkeOrganismIntelligenceOptions {
   enabled?: boolean;
   cadenceFrames?: number;
   /** Fixed at 2..8 by the state-vector model; four qubits keep the shared cadence inexpensive. */

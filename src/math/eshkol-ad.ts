@@ -69,7 +69,7 @@ export enum AdOpType {
  * contribution to EACH input (aligned to `inputs`). This is the hook a black-box differentiable
  * op plugs into — e.g. the exact parameter-shift gradient of a quantum-circuit expectation.
  */
-export type CustomVjpBackward = (gradOut: number, inputValues: number[]) => number[];
+type CustomVjpBackward = (gradOut: number, inputValues: number[]) => number[];
 
 /** Bookkeeping for one {@link adCustom} node: its input node indices + its VJP closure. */
 interface CustomVjpEntry {
@@ -658,7 +658,7 @@ export function adTapeLen(tape: AdTape): number {
  * =========================================================================================== */
 
 /** Reusable scratch for {@link adHvp}: forward tangent + adjoint + adjoint-tangent, one slot/node. */
-export interface HvpScratch {
+interface HvpScratch {
   /** valueDot[i] = Rᵥ{value[i]} — forward directional derivative of each node. */
   valueDot: Float64Array;
   /** adj[i] = ∂output/∂value[i] — the ordinary reverse-mode adjoint (gradient at the leaves). */
@@ -668,7 +668,7 @@ export interface HvpScratch {
 }
 
 /** Allocate HVP scratch for a tape of up to `cap` nodes (grow with the tape as needed). */
-export function adHvpScratch(cap: number): HvpScratch {
+function adHvpScratch(cap: number): HvpScratch {
   const n = cap > 0 ? cap : 1;
   return { valueDot: new Float64Array(n), adj: new Float64Array(n), adjDot: new Float64Array(n) };
 }

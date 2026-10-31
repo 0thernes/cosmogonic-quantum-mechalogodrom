@@ -16,7 +16,7 @@ const QS_FIXED_D4 = 0.008 * libirrepSymmetry(4, 1) + 0.004 * (quakePerturb(0.5, 
 const QS_FIXED_D5 = 0.01 * libirrepSymmetry(2, 1) + 0.005 * (quakePerturb(0.7, 9, 0.05) - 1);
 const QS_FIXED_D1 = 0.015 * libirrepSymmetry(3, 2) + 0.01 * (quakePerturb(0.6, 8, 0.1) - 1);
 
-export interface QualitySnapshot {
+interface QualitySnapshot {
   tone: number; // scalar "how it feels" 0..1
   code: number[]; // 6D sparse-smooth code
 }

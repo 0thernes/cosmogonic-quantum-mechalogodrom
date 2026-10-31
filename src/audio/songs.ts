@@ -263,7 +263,7 @@ export interface SfxSpec {
 export const SFX_PALETTE_SIZE = 110;
 
 /** A contiguous `[start, count)` slice of the palette. */
-export interface SfxBand {
+interface SfxBand {
   start: number;
   count: number;
 }

@@ -35,7 +35,7 @@ export const BRUTAL_ARCHETYPES = [
   'VALKORION_TENEBRAE',
 ] as const;
 
-export type BrutalArchetype = (typeof BRUTAL_ARCHETYPES)[number];
+type BrutalArchetype = (typeof BRUTAL_ARCHETYPES)[number];
 
 export interface BrutalRelease {
   archetype: BrutalArchetype;

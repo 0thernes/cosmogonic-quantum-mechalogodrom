@@ -9,7 +9,7 @@
  * @see docs/ARCHITECTURE-2026-06-26.md §Brain parameter scale
  */
 
-export const PHENOMENON_KINDS = [
+const PHENOMENON_KINDS = [
   'glitch_moire',
   'fractal_void',
   'neural_lattice',
@@ -27,7 +27,7 @@ export const PHENOMENON_KINDS = [
   'mandel_warp',
 ] as const;
 
-export type PhenomenonKind = (typeof PHENOMENON_KINDS)[number];
+type PhenomenonKind = (typeof PHENOMENON_KINDS)[number];
 
 export interface CreatureExteriorPhenomenon {
   readonly id: number;

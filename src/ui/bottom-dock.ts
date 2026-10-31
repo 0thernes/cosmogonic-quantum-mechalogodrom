@@ -4,7 +4,7 @@
  */
 const STACK_ID = 'cqm-bottom-stack';
 
-export function mountBottomDock(doc: Document = document): HTMLElement {
+function mountBottomDock(doc: Document = document): HTMLElement {
   let stack = doc.getElementById(STACK_ID);
   if (!stack) {
     stack = doc.createElement('div');

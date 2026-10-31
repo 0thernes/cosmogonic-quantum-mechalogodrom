@@ -79,11 +79,11 @@ export const ALL_INDICATOR_IDS = [
   'FND-5', // Alien novelty (1/1 unique substrate — no biological homolog)
 ] as const;
 
-export type IndicatorId = (typeof ALL_INDICATOR_IDS)[number];
+type IndicatorId = (typeof ALL_INDICATOR_IDS)[number];
 
-export type IndicatorStatus = 'met' | 'partial' | 'scaffolded' | 'absent';
+type IndicatorStatus = 'met' | 'partial' | 'scaffolded' | 'absent';
 
-export interface IndicatorReading {
+interface IndicatorReading {
   readonly id: IndicatorId;
   readonly status: IndicatorStatus;
   /** 0..1 confidence in the reading (how strongly the mechanism is wired). */

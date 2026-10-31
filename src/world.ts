@@ -403,7 +403,7 @@ const SFX_ABYSSAL = SFX_EXTRA_BANDS['abyssal']?.start ?? SFX_STRANGE;
  */
 const CHAOS_NIGHTMARE_FLOOR = 6;
 
-export interface WorldOptions {
+interface WorldOptions {
   engine: Engine;
   quality: QualityProfile;
   persisted: PersistedState;
@@ -416,7 +416,7 @@ export interface WorldOptions {
 }
 
 /** Observed biology execution, deliberately separate from an accelerator routing proposal. */
-export interface OrganismBiomeExecution {
+interface OrganismBiomeExecution {
   readonly kind: 'execution';
   readonly backend: 'cpu-main';
   readonly frame: number;

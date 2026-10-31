@@ -51,7 +51,7 @@ export interface XenomimicAudioMetrics {
 }
 
 /** Caller-reusable result of {@link mapXenomimicAudioMetrics}. */
-export interface XenomimicAudioParameters {
+interface XenomimicAudioParameters {
   outputGain: number;
   baseHz: number;
   minorSecondHz: number;
@@ -69,7 +69,7 @@ export interface XenomimicAudioParameters {
   pan: number;
 }
 
-export interface XenomimicEventParameters {
+interface XenomimicEventParameters {
   wave: OscillatorType;
   startHz: number;
   endHz: number;

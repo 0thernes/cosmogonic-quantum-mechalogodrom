@@ -90,7 +90,7 @@ const PRESSURE_STAMP = 0.9;
  */
 const REGROW_TAU = 6;
 /** Max simultaneous local contact seeds (multi-point; kills the single giant-patch slide). */
-export const FLORA_CONTACT_SLOTS = 4;
+const FLORA_CONTACT_SLOTS = 4;
 /** Local contact radius (world units). Tight enough for per-being thrash, not lawn slabs. */
 const CONTACT_RADIUS = 15 * WORLD_SCALE;
 /** Squared radius for GPU falloff — must match `smoothstep` edge in the vertex shader. */
@@ -850,7 +850,7 @@ const flora_frag = /* glsl */ `
   }
 `;
 
-export interface FloraComfort {
+interface FloraComfort {
   /** World position of the densest nearby grove cell centre. */
   x: number;
   y: number;

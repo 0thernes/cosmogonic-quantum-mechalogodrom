@@ -39,7 +39,7 @@ export interface NhiSystemStateSnapshot {
   }[];
 }
 
-export type NhiTickPhase = 'lifecycle' | 'percept' | 'think' | 'apply' | 'acknowledge';
+type NhiTickPhase = 'lifecycle' | 'percept' | 'think' | 'apply' | 'acknowledge';
 
 /** Structured exceptional path; allocated only when one mind boundary actually fails. */
 export interface NhiTickFailure {
@@ -52,7 +52,7 @@ export interface NhiTickFailure {
   readonly reportingError?: unknown;
 }
 
-export type NhiTickFailureHandler = (failure: NhiTickFailure) => void;
+type NhiTickFailureHandler = (failure: NhiTickFailure) => void;
 const NO_TICK_FAILURES: readonly NhiTickFailure[] = Object.freeze([]);
 
 /** Separates any material effect from evidence that may support a narrower GOAP fact. */

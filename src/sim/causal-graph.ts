@@ -39,7 +39,7 @@ export const CAUSAL_VARS = [
   'reasoning',
   'qualiaTone',
 ] as const;
-export type CausalVar = (typeof CAUSAL_VARS)[number];
+type CausalVar = (typeof CAUSAL_VARS)[number];
 const N = CAUSAL_VARS.length;
 const idx = (v: CausalVar): number => CAUSAL_VARS.indexOf(v);
 
@@ -51,7 +51,7 @@ interface CausalEdge {
 }
 
 /** Result of a do-calculus query. */
-export interface DoResult {
+interface DoResult {
   /** E[Y | do(X=x)] estimated from structural equations. */
   effect: number;
   /** Eshkol AD gradient dEffect/dWeight on the X->Y path (if direct edge exists). */
@@ -60,7 +60,7 @@ export interface DoResult {
   counterfactual: number;
 }
 
-export interface CausalSnapshot {
+interface CausalSnapshot {
   values: number[];
   effects: Record<string, number>;
   interventionCount: number;

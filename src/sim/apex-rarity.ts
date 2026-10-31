@@ -31,7 +31,7 @@ export type RarityAxis = (typeof RARITY_AXES)[number];
 
 /** One axis of the signature: what the field baseline usually does vs the APEX target, plus the
  *  organs whose measured load-bearing behaviour BACKS the APEX claim on this axis. */
-export interface AxisSpec {
+interface AxisSpec {
   axis: RarityAxis;
   /** The common field baseline for this axis (isolation, not conjunction). */
   baseline: string;
@@ -102,7 +102,7 @@ export const APEX_AXES: readonly AxisSpec[] = [
 ];
 
 /** A prior ALife/AI system and the axes it genuinely satisfies (honest, conservative assessment). */
-export interface BaselineSystem {
+interface BaselineSystem {
   name: string;
   satisfies: readonly RarityAxis[];
   note: string;

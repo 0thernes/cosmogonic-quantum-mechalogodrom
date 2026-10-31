@@ -68,7 +68,7 @@ export function historicalNovelty(
   return Math.sqrt(best);
 }
 
-export interface EvolutionaryActivity {
+interface EvolutionaryActivity {
   /** Per-component cumulative activity counter (sum of usage across the whole history). */
   readonly cumulative: number[];
   /** Total cumulative activity across all components. */
@@ -149,7 +149,7 @@ export function bedauPackardActivity(
 /** The three long-term dynamics classes Bedau-Packard distinguish, plus a no-innovation floor. */
 export type OpenEndednessClass = 'unbounded' | 'bounded' | 'inactive';
 
-export interface OpenEndednessVerdict {
+interface OpenEndednessVerdict {
   /** Mean new-activity over the FIRST half of the post-warmup series (early innovation rate). */
   readonly newEarly: number;
   /** Mean new-activity over the SECOND half (late innovation rate — the tell). */

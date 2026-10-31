@@ -114,7 +114,7 @@ export class FrameTimeTracker {
  * Memory usage tracker.
  * Provides visibility into memory consumption.
  */
-export class MemoryTracker {
+class MemoryTracker {
   private lastMeasurement: number = 0;
   private readonly measurementInterval: number;
 

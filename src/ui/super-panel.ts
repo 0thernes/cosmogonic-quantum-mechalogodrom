@@ -16,7 +16,7 @@ import { injectPanelBaseCSS } from './panel-shell';
 import { type NeuralRuntimeState, SuperNeural } from './super-neural';
 
 /** Primordial petri dish telemetry — digital biologics soup, not chat. */
-export interface PetriTelemetry {
+interface PetriTelemetry {
   soupLive: number;
   soupCatalysis: number;
   petriBiomass: number;

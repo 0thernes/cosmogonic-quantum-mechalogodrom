@@ -26,12 +26,12 @@
 
 import type { Rng } from '../math/rng';
 
-export const NARRATIVE_CAP = 64; // bounded lifelong ring (promoted to durable semantic on consolidation)
-export const GRAPH_NODES = 8; // self + key rivals/resources (small fixed graph for provenance)
+const NARRATIVE_CAP = 64; // bounded lifelong ring (promoted to durable semantic on consolidation)
+const GRAPH_NODES = 8; // self + key rivals/resources (small fixed graph for provenance)
 
-export type MemoryKind = 'OBS' | 'PREF' | 'COMMIT' | 'PLAN' | 'FAIL' | 'INSIGHT' | 'REPUTATION';
+type MemoryKind = 'OBS' | 'PREF' | 'COMMIT' | 'PLAN' | 'FAIL' | 'INSIGHT' | 'REPUTATION';
 
-export interface TypedEvent {
+interface TypedEvent {
   kind: MemoryKind;
   // wrapped time (monotonic but bounded for determinism)
   t: number;
@@ -43,7 +43,7 @@ export interface TypedEvent {
 }
 
 /** Small fixed graph for provenance (caused-by, contradicts, same-as etc as bitmasks). */
-export interface ProvenanceGraph {
+interface ProvenanceGraph {
   // adj bitmask: bit j means edge from i to j (caused-by etc)
   edges: Uint8Array; // GRAPH_NODES x GRAPH_NODES / 8 packed, but simple Uint8 for tiny
   trust: Float32Array; // per node strategic trust/reputation

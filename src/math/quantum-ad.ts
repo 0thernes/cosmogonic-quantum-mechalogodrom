@@ -177,7 +177,7 @@ export function adQuantumExpectation(
 }
 
 /** Result of a VQE run: optimised parameters, final energy, and the per-step energy trace. */
-export interface VqeResult {
+interface VqeResult {
   theta: number[];
   energy: number;
   energyHistory: number[];

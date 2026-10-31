@@ -11,7 +11,7 @@
 export type ThoughtFamily =
   'psychology' | 'neuroscience' | 'quantum' | 'neuromorphic' | 'wet' | 'alife' | 'empowerment';
 
-export type ApexOrganRef =
+type ApexOrganRef =
   | 'loom'
   | 'drum'
   | 'necro'

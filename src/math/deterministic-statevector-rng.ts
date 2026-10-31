@@ -45,7 +45,7 @@ export const STATEVECTOR_RNG_PROVENANCE = Object.freeze({
 export const STATEVECTOR_RNG_SECURITY_BOUNDARY =
   'Classical deterministic simulation only: not a CSPRNG, not physical entropy, and not Bell evidence.';
 
-export interface DeterministicStatevectorRngOptions {
+interface DeterministicStatevectorRngOptions {
   /** Number of simulated qubits. Fixed for an instance; integer in [2, 8]. */
   qubits?: number;
   /** Circuit rounds before each full-register measurement; integer in [1, 8]. */
@@ -91,7 +91,7 @@ export interface StatevectorOutputHealth {
   alert: boolean;
 }
 
-export interface DeterministicStatevectorRngSnapshot {
+interface DeterministicStatevectorRngSnapshot {
   schemaVersion: 1;
   model: 'deterministic-classical-statevector-rng';
   provenance: typeof STATEVECTOR_RNG_PROVENANCE;

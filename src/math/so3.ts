@@ -43,7 +43,7 @@ export function quatConj(q: Quat): Quat {
 }
 
 /** Normalise to a unit quaternion. The zero quaternion maps to identity. */
-export function quatNormalize(q: Quat): Quat {
+function quatNormalize(q: Quat): Quat {
   const n = Math.hypot(q[0], q[1], q[2], q[3]);
   if (n < 1e-300) return QUAT_IDENTITY;
   return [q[0] / n, q[1] / n, q[2] / n, q[3] / n];

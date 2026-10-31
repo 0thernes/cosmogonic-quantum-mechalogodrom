@@ -126,7 +126,7 @@ export interface TsotchkeEcologyPredictorV3Input {
   thermalStress?: number;
 }
 
-export interface TsotchkeEcologyPredictorV3Options {
+interface TsotchkeEcologyPredictorV3Options {
   tier?: TsotchkeEcologyPredictorV3Tier;
   /** Frozen controls still forecast, score, and advance the history clock. */
   adaptive?: boolean;
@@ -138,14 +138,14 @@ export interface TsotchkeEcologyPredictorV3Options {
   gradientClip?: number;
 }
 
-export interface TsotchkeEcologyForecastV3 {
+interface TsotchkeEcologyForecastV3 {
   token: number;
   prediction: number;
   forecastCount: number;
   historyDepth: number;
 }
 
-export interface TsotchkeEcologyObservationV3 {
+interface TsotchkeEcologyObservationV3 {
   token: number;
   outcome: number;
   prediction: number;

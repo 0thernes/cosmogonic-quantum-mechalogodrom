@@ -68,7 +68,7 @@ export interface Ritual {
 }
 
 /** A taboo (forbidden action). */
-export interface Taboo {
+interface Taboo {
   /** Unique taboo ID. */
   id: number;
   /** Taboo name. */
@@ -98,7 +98,7 @@ export interface Symbol {
 }
 
 /** Culture state (all myths, rituals, taboos, symbols). */
-export interface CultureState {
+interface CultureState {
   myths: Myth[];
   rituals: Ritual[];
   taboos: Taboo[];
@@ -106,7 +106,7 @@ export interface CultureState {
 }
 
 /** Configuration for myth & ritual system. */
-export interface MythRitualConfig {
+interface MythRitualConfig {
   /** Maximum number of myths. */
   maxMyths: number;
   /** Maximum number of rituals. */

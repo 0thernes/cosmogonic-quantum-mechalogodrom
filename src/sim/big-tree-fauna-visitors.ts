@@ -379,7 +379,7 @@ export function bigTreeFaunaFoodOwnerId(ownerKind: number, ownerId: number): num
   return Number.isSafeInteger(packed) ? -packed : Number.NaN;
 }
 
-export interface BigTreeFaunaVisitorConfig {
+interface BigTreeFaunaVisitorConfig {
   /** Maximum candidate snapshots read per poll, regardless of total fauna population. */
   pollBudget?: number;
   pollIntervalSeconds?: number;

@@ -70,7 +70,7 @@ export function harvestHardwareJitter64(salt = 0): bigint {
  * the Zig 0.17.0 `cqm_qrng_quantum_chaos_step` WASM kernel and hardware CSPRNG + timer jitter.
  * Replenishes a 64-sample batch at a time for O(1) amortized zero-GC draws.
  */
-export function createWildQuantumRng(baseSeed = 0x517cc1b7): Rng {
+function createWildQuantumRng(baseSeed = 0x517cc1b7): Rng {
   const s = baseSeed >>> 0;
   const stateWords = new BigUint64Array([
     BigInt(s) ^ 0x6a09e667f3bcc908n,

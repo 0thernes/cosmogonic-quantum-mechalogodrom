@@ -12,7 +12,7 @@
 import { HERO_POWERS, type SuperheroView } from './superhero-state';
 
 /** Everything the HUD paints each beat — the world assembles it from the hero creature + its state. */
-export interface HeroHudView extends SuperheroView {
+interface HeroHudView extends SuperheroView {
   name: string;
   power: number; // ×Titan
   plan: string;

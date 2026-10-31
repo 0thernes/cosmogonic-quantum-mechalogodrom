@@ -241,7 +241,7 @@ export const XENOMIMIC_FX_DRAW_CALLS = 0;
 export const XENOMIMIC_DRAW_CALL_BUDGET = 10;
 export const XENOMIMIC_TRIANGLE_BUDGET_AT_CAP = 800_000;
 export const XENOMIMIC_MAX_TRIANGLES_PER_BODY = XENOMIMIC_TRIANGLE_BUDGET_AT_CAP / XENOMIMIC_MAX;
-export const XENOMIMIC_BODY_SCALE = 2.2;
+const XENOMIMIC_BODY_SCALE = 2.2;
 
 const LANE_COMPONENTS = 4;
 const COLOR_COMPONENTS = 3;
@@ -254,7 +254,7 @@ const POSITION = new THREE.Vector3();
 const SCALE = new THREE.Vector3();
 const COLOR = new THREE.Color();
 
-export interface XenomimicRenderEnvironment {
+interface XenomimicRenderEnvironment {
   chaos: number;
   entropy: number;
   weather: number;
@@ -265,7 +265,7 @@ export interface XenomimicRenderEnvironment {
   twinTension?: number;
 }
 
-export interface XenomimicRenderStats {
+interface XenomimicRenderStats {
   coreDrawCalls: number;
   fxDrawCalls: number;
   livingInstances: number;

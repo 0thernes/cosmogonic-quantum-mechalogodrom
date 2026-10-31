@@ -30,7 +30,7 @@ function wireScrollButtons(
 }
 
 /** Wrap #bar once in a scroll shell with prev/next buttons. Idempotent. */
-export function initToolbarScroll(doc: Document = document): void {
+function initToolbarScroll(doc: Document = document): void {
   const bar = doc.getElementById('bar');
   if (!bar) return;
 

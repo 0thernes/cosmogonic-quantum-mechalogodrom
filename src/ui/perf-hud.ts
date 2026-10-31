@@ -47,7 +47,7 @@ export interface PerfHudWorldMetrics {
 }
 
 /** Full HUD update payload — pure formatters consume this. */
-export interface PerfHudSnapshot {
+interface PerfHudSnapshot {
   fps: number;
   level: Level;
   frameMs: number;
@@ -92,7 +92,7 @@ export function formatComputeLine(w: PerfHudWorldMetrics, social?: string): stri
   return `ambient: ${w.ambientCompute ?? 'pending'}${field} · core brains: CPU`;
 }
 
-export interface PerfHud {
+interface PerfHud {
   /** Update the readout. O(1) text writes only. */
   update(snapshot: PerfHudSnapshot): void;
 }

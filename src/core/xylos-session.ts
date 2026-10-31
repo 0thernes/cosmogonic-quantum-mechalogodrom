@@ -4,7 +4,7 @@ import { XylosMind, type XylosPercept, type XylosView } from '../sim/xylos-mind'
 /** About three minutes of complete numeric input at the fixed cognitive cadence. */
 export const XYLOS_RECORDING_CAPACITY = 4096;
 /** Cognitive integration interval in simulation seconds. */
-export const XYLOS_STEP = 0.05;
+const XYLOS_STEP = 0.05;
 const CHANNELS = 6;
 
 /** Stable inspector view; recording replays this organism, not the entire surrounding world. */

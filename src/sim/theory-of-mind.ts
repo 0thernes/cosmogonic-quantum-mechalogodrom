@@ -36,7 +36,7 @@ const IDX_DECEIVE = SUPER_PLANS.indexOf('DECEIVE');
 const clamp01 = (v: number): number => (v > 0 ? (v < 1 ? v : 1) : 0);
 
 /** Read-only telemetry of the opponent model for the BRAIN / SuperCreature boards (UI cadence). */
-export interface TheoryOfMindSnapshot {
+interface TheoryOfMindSnapshot {
   /** argmax of the belief — the plan the creature thinks the nearest rival is pursuing. */
   predictedRivalPlan: SuperPlan;
   /** The full belief distribution over the 7 plans. */
