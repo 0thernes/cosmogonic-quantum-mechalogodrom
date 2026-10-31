@@ -90,6 +90,10 @@ jobs:
         timeout-minutes: 10
         run: bun run evidence:phase-b:mechanisms:check
 
+      - name: 'Apex open-endedness health (novelty archive: not monoculture/frozen, bounded, reproducible)'
+        timeout-minutes: 3
+        run: bun run report:apex-novelty
+
       - name: Generated file-map freshness
         run: bun run filemap:check
 
@@ -178,6 +182,10 @@ jobs:
       - name: Golden / seeded-determinism evidence (Phase-B mechanisms must reproduce byte-for-byte)
         timeout-minutes: 10
         run: bun run evidence:phase-b:mechanisms:check
+
+      - name: 'Apex open-endedness health (novelty archive: not monoculture/frozen, bounded, reproducible)'
+        timeout-minutes: 3
+        run: bun run report:apex-novelty
 
       - name: Generated file-map freshness
         run: bun run filemap:check

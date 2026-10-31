@@ -71,6 +71,7 @@
     "sync:check": "bun scripts/sync-surfaces.ts --check",
     "gen:bible": "bun scripts/gen-bible-corpus.ts",
     "gen:alife": "bun scripts/alife-comparison-stats.ts && bun scripts/alife-comparison-geometry.ts && bun scripts/alife-codeground-sensitivity.ts && bun scripts/gen-alife-landscape-report.ts && bun scripts/gen-capability-profile.ts && bun scripts/gen-alife-embed.ts",
+    "report:apex-novelty": "bun scripts/apex-novelty-report.ts",
     "report:alife-landscape": "bun run gen:alife && bun scripts/gen-alife-landscape-report.ts --pdf output/alife-landscape/cosmogonic-alife-landscape-index.pdf",
     "bench:organism-intelligence": "bun scripts/organism-intelligence-benchmark.ts",
     "evidence:phase-b:mechanisms": "bun scripts/organism-intelligence-phase-b/mechanism-evidence-artifacts.ts",
