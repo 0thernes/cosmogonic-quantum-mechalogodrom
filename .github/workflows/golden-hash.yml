@@ -35,7 +35,8 @@ jobs:
   browser-e2e:
     name: Browser e2e (sandbox panel + Mini World, headless Chromium)
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # Software-GL (swiftshader) boot of the full world takes ~10 min per viewport; 30 min timed out.
+    timeout-minutes: 60
     # Non-blocking while its runtime on hosted runners (software WebGL) is measured.
     continue-on-error: true
     steps:
@@ -59,7 +60,9 @@ jobs:
         run: bun run build
 
       - name: Serve dist/ and run the e2e smoke
-        timeout-minutes: 25
+        timeout-minutes: 55
+        env:
+          E2E_BOOT_MS: '1200000'
         run: |
           (cd dist && python3 -m http.server 8765 >/tmp/serve.log 2>&1 &)
           sleep 2
