@@ -53,3 +53,4 @@ coverage-current.txt
 fails.txt
 receipts_print*.txt
 smokeout.txt
+e2e-shots/
