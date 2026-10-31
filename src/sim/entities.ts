@@ -55,6 +55,7 @@ import type { BehaviorEnv } from './behaviors';
 import { resolverCommitFactor } from './vqe-drive-resolver';
 import type { Entity, OrganismGoalField, SimContext, UpdateStats } from '../types';
 import type { Rng } from '../math/rng';
+import { NO_PARENT, type Lineage } from './lineage';
 import type { SpatialHash } from '../math/spatial-hash';
 
 /**
@@ -369,6 +370,12 @@ export class EntityManager {
   readonly phylumCounts = new Float32Array(PHYLUM_COUNT);
   /** SANDBOX: per-phylum population caps (null ⇒ uncapped, the default — spawn path untouched). */
   phylumCap: Float32Array | null = null;
+  /**
+   * LINEAGE (restored lineage.ts): when attached, every birth is recorded with its parent's lineage
+   * id, so each organism carries `userData.lineageId` and a generation depth. No rng, no clock —
+   * the birth "tick" is the monotonic ecology id — so attaching it never perturbs determinism.
+   */
+  lineage: Lineage | null = null;
   /**
    * Stable ecology-goal field consumed by EntityBrainField on the following frame. This closes the
    * perception→goal→action loop without running the flora neighborhood query twice per organism.
@@ -846,6 +853,13 @@ export class EntityManager {
       beh2: m.beh2 ?? null,
       alive: true,
     };
+    if (this.lineage) {
+      mesh.userData.lineageId = this.lineage.birth(
+        parent?.userData.lineageId ?? NO_PARENT,
+        NO_PARENT,
+        this.nextEcologyId,
+      );
+    }
     const spawnMi = mi % morphCount;
     try {
       const slot = this.list.length;

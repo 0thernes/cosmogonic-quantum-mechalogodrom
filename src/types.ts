@@ -83,6 +83,8 @@ export interface EntityData {
    * independent of Three.js Object3D ids and optional on lightweight test/external mocks.
    */
   ecologyId?: number;
+  /** Lineage record id (src/sim/lineage.ts) when the World attached a Lineage; absent otherwise. */
+  lineageId?: number;
   /**
    * This organism's index in the two social-field snapshots (even / odd update parity), written when
    * a snapshot is packed; -1 or absent = not in it. Lets a snapshot taken two updates ago find the

@@ -254,6 +254,7 @@ import {
 import { PantheonSociety, FIELD_DIM, ARCHON_CHANNELS } from './sim/pantheon';
 import { FacultiesPantheon } from './sim/faculties-pantheon';
 import { ArchonLanguage, type ArchonLanguageState } from './sim/archon-language';
+import { Lineage } from './sim/lineage';
 import { NhsiAffectBinding, type NhsiAffectOut } from './sim/nhsi-affect-binding';
 import { TomPantheon } from './sim/tom-pantheon';
 import { applyBrutalGodEvent } from './sim/petri-dish';
@@ -1537,6 +1538,8 @@ export class World {
     this.vegetation = new Vegetation(ctx.scene);
     this.vegetation.attachGround((x, z) => this.xenomimicSurfaceAt(x, z, this.vegGroundT));
     this.entities = new EntityManager(ctx);
+    // LINEAGE: a rolling 4× population window of who begat whom (generation depth, kinship).
+    this.entities.lineage = new Lineage(Math.max(1024, this.quality.maxEntities * 4));
     // Covers the largest authored organism tier plus every fixed fauna roster without growing or
     // reallocating at runtime. Tree residents are born peaceful and never enter hostile targeting.
     this.bigTreeSanctuary = new BigTreeSanctuaryMembershipRegistry(
@@ -6020,6 +6023,12 @@ export class World {
   /** Live resonance-integrator + valence-steering state (restored modules; apex-beat cadence). */
   getNhsiAffect(): NhsiAffectOut {
     return this.nhsiAffect.snapshot();
+  }
+
+  /** Lineage telemetry: total births recorded and the deepest generation reached. */
+  getLineageStats(): { births: number; maxGeneration: number } {
+    const l = this.entities.lineage;
+    return { births: l?.total ?? 0, maxGeneration: l?.maxGeneration ?? 0 };
   }
 
   /** Emergent archon language telemetry (fluency, lexicon size, diversity). */
