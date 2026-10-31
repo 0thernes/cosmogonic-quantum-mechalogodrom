@@ -50,6 +50,7 @@ import {
   ULTRA_GRID_CELL,
   VIEW_MODES,
   WEATHERS,
+  WORLD_SCALE,
   SOCIAL_APEX_SENSE_R,
   SOCIAL_NHI_ACTION_R,
   SOCIAL_NHI_KIN_R,
@@ -1750,7 +1751,7 @@ export class World {
       maxActors: bigTreeActorCapacity,
       capacity: Math.min(72, bigTreeActorCapacity),
       maxSlots: 104,
-      arriveRadius: 8,
+      arriveRadius: Math.max(1, 8 * WORLD_SCALE),
       minDwellSeconds: 7,
       maxDwellSeconds: 24,
       minCooldownSeconds: 35,
@@ -1763,11 +1764,13 @@ export class World {
       maxStuckRecoveries: 2,
       hashSeed: (this.persisted.seed ^ 0x51b7ee13) >>> 0,
     });
-    this.bigTreeVisits.addRadialSlots(BigTreeSlotKind.Eat, 32, 78, Math.PI / 32);
-    this.bigTreeVisits.addRadialSlots(BigTreeSlotKind.Rest, 24, 132, Math.PI / 24);
-    this.bigTreeVisits.addRadialSlots(BigTreeSlotKind.Socialize, 24, 178, Math.PI / 48);
-    this.bigTreeVisits.addRadialSlots(BigTreeSlotKind.Observe, 16, 218, Math.PI / 16);
-    this.bigTreeVisits.addRadialSlots(BigTreeSlotKind.Any, 8, 205, Math.PI / 8);
+    // Ring radii scale with the zone (×WORLD_SCALE) so Mini World keeps every slot in-zone.
+    const ring = (r: number): number => r * WORLD_SCALE;
+    this.bigTreeVisits.addRadialSlots(BigTreeSlotKind.Eat, 32, ring(78), Math.PI / 32);
+    this.bigTreeVisits.addRadialSlots(BigTreeSlotKind.Rest, 24, ring(132), Math.PI / 24);
+    this.bigTreeVisits.addRadialSlots(BigTreeSlotKind.Socialize, 24, ring(178), Math.PI / 48);
+    this.bigTreeVisits.addRadialSlots(BigTreeSlotKind.Observe, 16, ring(218), Math.PI / 16);
+    this.bigTreeVisits.addRadialSlots(BigTreeSlotKind.Any, 8, ring(205), Math.PI / 8);
     this.bigTreeVisitors = new BigTreeSpeciesVisitors(
       this.crystalEcosystem,
       this.bigTreeVisits,

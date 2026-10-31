@@ -64,3 +64,15 @@ describe('Mini World — structures scale through WORLD_SCALE (audit)', () => {
     expect(src).toContain('const half = ARENA_RADIUS * 0.82;');
   });
 });
+
+describe('Mini World — Big Tree visit rings stay inside the scaled sanctuary', () => {
+  test('every authored ring radius is ×WORLD_SCALE and inside the entry radius at 1/10', () => {
+    const src = readFileSync('src/world.ts', 'utf8');
+    const radii = [
+      ...src.matchAll(/addRadialSlots\(\s*BigTreeSlotKind\.\w+,\s*\d+,\s*ring\((\d+)\)/g),
+    ].map((m) => Number(m[1]));
+    expect(radii).toEqual([78, 132, 178, 218, 205]);
+    for (const r of radii) expect(r * MINI_WORLD_SCALE).toBeLessThan(240 * MINI_WORLD_SCALE);
+    expect(src).not.toMatch(/addRadialSlots\(\s*BigTreeSlotKind\.\w+,\s*\d+,\s*\d+,/);
+  });
+});
