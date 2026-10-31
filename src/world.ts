@@ -247,6 +247,7 @@ import {
 } from './sim/godform'; // GOAL5 + TSOTCHKE depth-ledger corpus (ralph 10x: Eshkol AD, Moonlab tensor, quake, irrep from (Tsotchke))
 import { PantheonSociety, FIELD_DIM, ARCHON_CHANNELS } from './sim/pantheon';
 import { FacultiesPantheon } from './sim/faculties-pantheon';
+import { NhsiAffectBinding, type NhsiAffectOut } from './sim/nhsi-affect-binding';
 import { TomPantheon } from './sim/tom-pantheon';
 import { applyBrutalGodEvent } from './sim/petri-dish';
 import { triggerBrutalRelease, applyBrutalRelease, getBrutalLore } from './sim/brutal-god-releases';
@@ -817,6 +818,8 @@ export class World {
   private readonly pantheon = new PantheonSociety();
   /** NHSI · 100-faculty pantheon — live telemetry + world percept bias (emergence #6). */
   private readonly facultiesPantheon: FacultiesPantheon;
+  /** Restored resonance-integrator + valence-steering, bound to the pantheon each apex beat. */
+  private readonly nhsiAffect = new NhsiAffectBinding();
   /** NHSI · 25 theory-of-mind organs — social cue field over apex percepts. */
   private readonly tomPantheon: TomPantheon;
   /** NHSI · emergence angles 8–10 (Eshkol evolution, cross-strain, collective). */
@@ -3992,6 +3995,15 @@ export class World {
       const mythPower = this.mythRitual.strength;
       const stigSnap = this.stigmergy.snapshot();
       const mortVitality = 1 - (this.archonMortality[0]?.lifespanProgress ?? 0);
+      // RESONANCE + VALENCE: the pantheon's faculty groups phase-lock into a coalition; world affect
+      // (cooperation/myth vs menace/mortality) is the valence that bends the lock and the explore bias.
+      const aff = this.nhsiAffect.step(this.facultiesPantheon.getActivations(), {
+        padPleasure: clamp(symCoop + mythPower * 0.5 - tomMenace * 0.5, -1, 1),
+        padArousal: clamp(s.chaos / CHAOS_MAX, 0, 1),
+        padDominance: clamp(facultyBias * 2 - 1, -1, 1),
+        pain: clamp(1 - mortVitality, 0, 1),
+        pleasure: clamp(pantheonSnap.field.coherence * 0.5, 0, 1),
+      });
       const artOrigin = this.artifacts.influenceAt(0, 0);
       const net0 = this.economy.wealthOf(World.ECON_SUPER_BASE + 0)?.netWorth ?? 0;
       // global fallback percept (used for twins/heroes); 5 get position-localized versions below
@@ -4003,12 +4015,17 @@ export class World {
           facultyBias * 0.04 +
           (facultyGroups[0] ?? 0) * 0.03 +
           symCoop * 0.04 -
-          (1 - mortVitality) * 0.03,
+          (1 - mortVitality) * 0.03 +
+          aff.resonance * 0.04,
         0,
         1,
       );
       basePercept.threat = clamp(
-        s.chaos / 8 + tomMenace * 0.12 + (facultyGroups[1] ?? 0) * 0.04 + (1 - mortVitality) * 0.04,
+        s.chaos / 8 +
+          tomMenace * 0.12 +
+          (facultyGroups[1] ?? 0) * 0.04 +
+          (1 - mortVitality) * 0.04 +
+          (aff.painUrgent ? 0.03 : 0),
         0,
         1,
       );
@@ -4028,7 +4045,8 @@ export class World {
       basePercept.pull = clamp(
         s.chaos / 12 +
           (facultyGroups[2] ?? 0) * 0.03 +
-          Math.min(0.08, stigSnap.totalPheromone * 0.0005),
+          Math.min(0.08, stigSnap.totalPheromone * 0.0005) +
+          (aff.exploration - 0.5) * 0.06,
         0,
         1,
       );
@@ -5954,6 +5972,11 @@ export class World {
    * Read-only perf telemetry for the render-layer HUD. Draws no rng; allocation-free.
    * Wilderness + worker pool stats are best-effort (ADR 0010 — not in the golden).
    */
+  /** Live resonance-integrator + valence-steering state (restored modules; apex-beat cadence). */
+  getNhsiAffect(): NhsiAffectOut {
+    return this.nhsiAffect.snapshot();
+  }
+
   getPerfSnapshot(): {
     entities: number;
     maxEntities: number;

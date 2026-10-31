@@ -527,6 +527,11 @@ export class FacultiesPantheon {
   }
 
   /** Read-only view of the 8 downsampled faculty-group activations (0..1). */
+  /** Post-coupling per-faculty activations from the last update() (live view; do not mutate). */
+  getActivations(): Readonly<Float32Array> {
+    return this.actScratch;
+  }
+
   getGroupActivations(): Readonly<Float64Array> {
     return this.groupInput;
   }
