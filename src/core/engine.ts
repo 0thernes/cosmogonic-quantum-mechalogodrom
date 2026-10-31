@@ -1,5 +1,11 @@
 import * as THREE from 'three';
-import { CAMERA_FAR, FOG_SCALE, HABITAT_XZ_SCALE, HABITAT_Y_SCALE } from '../sim/constants';
+import {
+  CAMERA_FAR,
+  FOG_SCALE,
+  HABITAT_XZ_SCALE,
+  HABITAT_Y_SCALE,
+  WORLD_LINEAR,
+} from '../sim/constants';
 import type { QualityProfile } from '../types';
 import { PostFx, postFxMode } from './postfx';
 
@@ -86,7 +92,12 @@ export class Engine {
       0.1,
       CAMERA_FAR,
     );
-    this.camera.position.set(0, 50 * HABITAT_Y_SCALE, 140 * HABITAT_XZ_SCALE);
+    // Mini World: the start stand-off follows the √(1/10) layout so the miniature fills the frame.
+    this.camera.position.set(
+      0,
+      50 * HABITAT_Y_SCALE * WORLD_LINEAR,
+      140 * HABITAT_XZ_SCALE * WORLD_LINEAR,
+    );
 
     // WebGL context-loss resilience. Mobile GPUs, driver resets, and tab
     // backgrounding can drop the GL context; calling render() on a lost context

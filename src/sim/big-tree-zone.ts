@@ -6,7 +6,7 @@
  * existing controllers. All per-step storage is fixed at construction and `step()` allocates nothing.
  */
 
-import { CRYSTAL_TREE_ORIGIN_X, CRYSTAL_TREE_ORIGIN_Z, WORLD_SCALE } from './constants';
+import { CRYSTAL_TREE_ORIGIN_X, CRYSTAL_TREE_ORIGIN_Z, WORLD_LINEAR } from './constants';
 
 export const NO_BIG_TREE_SLOT = -1;
 export const NO_BIG_TREE_VISIT = -1;
@@ -15,9 +15,9 @@ const NO_OWNER = -1;
 const NO_DEADLINE = Number.POSITIVE_INFINITY;
 
 /** Smaller threshold used for first entry. */
-export const BIG_TREE_ZONE_ENTRY_RADIUS = 240 * WORLD_SCALE;
+export const BIG_TREE_ZONE_ENTRY_RADIUS = 240 * WORLD_LINEAR;
 /** Larger threshold used for exit so boundary noise cannot flap membership. */
-export const BIG_TREE_ZONE_EXIT_RADIUS = 270 * WORLD_SCALE;
+export const BIG_TREE_ZONE_EXIT_RADIUS = 270 * WORLD_LINEAR;
 
 export const BigTreeVisitReason = {
   Food: 1,

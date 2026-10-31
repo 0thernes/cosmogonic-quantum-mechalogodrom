@@ -6,7 +6,7 @@
  * prevents the visible soil and the vegetation collision/comfort surface from drifting.
  * The animated shader layers additional waves over this base at render time.
  */
-import { ARENA, ARENA_Y, HABITAT_XZ_SCALE } from './constants';
+import { ARENA_BODY as ARENA, ARENA_Y, HABITAT_XZ_SCALE } from './constants';
 
 /** World-space Y of the ground mesh origin before its local displacement. */
 export const GROUND_BASE_Y = -10;

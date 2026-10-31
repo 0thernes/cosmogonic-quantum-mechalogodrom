@@ -7,6 +7,9 @@ import {
   MINI_WORLD_SCALE,
   PLATFORM_CEIL,
   WORLD_SCALE,
+  WORLD_LINEAR,
+  ARENA_BODY,
+  FOG_SCALE,
   scaleCount,
   worldScaleFromSearch,
 } from '../src/sim/constants';
@@ -46,13 +49,12 @@ describe('Mini World — one central world-scale factor', () => {
 describe('Mini World — structures scale through WORLD_SCALE (audit)', () => {
   const read = (f: string): string => readFileSync(f, 'utf8');
   test.each([
-    ['src/sim/mechalogodrom.ts', /DIAMETER_SCALE = HABITAT_XZ_SCALE \* WORLD_SCALE/],
-    ['src/sim/mechalogodrom.ts', /ALTITUDE = 252 \* HABITAT_Y_SCALE \* WORLD_SCALE/],
+    ['src/sim/mechalogodrom.ts', /DIAMETER_SCALE = HABITAT_XZ_SCALE \* WORLD_LINEAR/],
     ['src/sim/mechalogodrom.ts', /MECHA_SATELLITE_COUNT = scaleCount\(400\)/],
     ['src/sim/titans.ts', /TITAN_COUNT = scaleCount\(20\)/],
-    ['src/sim/titans.ts', /COLOSSAL = 3 \* WORLD_SCALE/],
+    ['src/sim/titans.ts', /BREED_CENTER_R = 92 \* WORLD_LINEAR/],
     ['src/sim/abomination-architecture.ts', /ARCH_COUNT = scaleCount\(72\)/],
-    ['src/sim/cosmic-web.ts', /RADIUS = 680 \* WORLD_SCALE/],
+    ['src/sim/cosmic-web.ts', /RADIUS = 680 \* WORLD_LINEAR/],
     ['src/sim/shoggoths.ts', /SHOG_COUNT_DESKTOP = scaleCount\(100\)/],
     ['src/sim/puppet-masters.ts', /PUPPET_COUNT_DESKTOP = scaleCount\(100\)/],
     ['src/sim/super-wingmen.ts', /WINGMAN_COUNT = scaleCount\(100\)/],
@@ -65,14 +67,32 @@ describe('Mini World — structures scale through WORLD_SCALE (audit)', () => {
   });
 });
 
+describe('Mini World — true miniature: area × WORLD_SCALE, bodies unscaled', () => {
+  test('layout is √WORLD_SCALE (area tracks every count), bodies/heights/fog never scale', () => {
+    expect(WORLD_LINEAR).toBe(1);
+    expect(ARENA_BODY).toBe(5);
+    expect(FOG_SCALE).toBe(1 / 10);
+    const lin = Math.sqrt(MINI_WORLD_SCALE);
+    expect(lin * lin).toBeCloseTo(MINI_WORLD_SCALE, 12); // density = counts / area is unchanged
+    const read = (f: string): string => readFileSync(f, 'utf8');
+    expect(read('src/sim/constants.ts')).toMatch(/export const ARENA_Y = 2;/);
+    expect(read('src/sim/titans.ts')).toMatch(/const COLOSSAL = 3;/);
+    expect(read('src/sim/alien-flora.ts')).toMatch(/CONTACT_RADIUS = 15;/);
+    expect(read('src/sim/constants.ts')).toMatch(
+      /FOG_SCALE = 1 \/ \(ARENA_BODY \* HABITAT_XZ_SCALE\)/,
+    );
+  });
+});
+
 describe('Mini World — Big Tree visit rings stay inside the scaled sanctuary', () => {
-  test('every authored ring radius is ×WORLD_SCALE and inside the entry radius at 1/10', () => {
+  test('every authored ring radius is ×WORLD_LINEAR and inside the entry radius in Mini World', () => {
     const src = readFileSync('src/world.ts', 'utf8');
     const radii = [
       ...src.matchAll(/addRadialSlots\(\s*BigTreeSlotKind\.\w+,\s*\d+,\s*ring\((\d+)\)/g),
     ].map((m) => Number(m[1]));
     expect(radii).toEqual([78, 132, 178, 218, 205]);
-    for (const r of radii) expect(r * MINI_WORLD_SCALE).toBeLessThan(240 * MINI_WORLD_SCALE);
+    const lin = Math.sqrt(MINI_WORLD_SCALE);
+    for (const r of radii) expect(r * lin).toBeLessThan(240 * lin);
     expect(src).not.toMatch(/addRadialSlots\(\s*BigTreeSlotKind\.\w+,\s*\d+,\s*\d+,/);
   });
 });

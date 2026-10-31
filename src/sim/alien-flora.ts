@@ -35,7 +35,6 @@ import {
   HABITAT_XZ_SCALE,
   PLATFORM_HALF,
   scaleCount,
-  WORLD_SCALE,
 } from './constants';
 import { baseTerrainHeightAt } from './terrain-profile';
 import { TERRAIN_DEFORMATION_GLSL } from './terrain-deformation';
@@ -92,7 +91,7 @@ const REGROW_TAU = 6;
 /** Max simultaneous local contact seeds (multi-point; kills the single giant-patch slide). */
 const FLORA_CONTACT_SLOTS = 4;
 /** Local contact radius (world units). Tight enough for per-being thrash, not lawn slabs. */
-const CONTACT_RADIUS = 15 * WORLD_SCALE;
+const CONTACT_RADIUS = 15;
 /** Squared radius for GPU falloff — must match `smoothstep` edge in the vertex shader. */
 const CONTACT_RADIUS2 = CONTACT_RADIUS * CONTACT_RADIUS;
 /**

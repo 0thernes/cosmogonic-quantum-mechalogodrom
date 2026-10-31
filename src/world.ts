@@ -50,7 +50,7 @@ import {
   ULTRA_GRID_CELL,
   VIEW_MODES,
   WEATHERS,
-  WORLD_SCALE,
+  WORLD_LINEAR,
   SOCIAL_APEX_SENSE_R,
   SOCIAL_NHI_ACTION_R,
   SOCIAL_NHI_KIN_R,
@@ -1751,7 +1751,7 @@ export class World {
       maxActors: bigTreeActorCapacity,
       capacity: Math.min(72, bigTreeActorCapacity),
       maxSlots: 104,
-      arriveRadius: Math.max(1, 8 * WORLD_SCALE),
+      arriveRadius: 8,
       minDwellSeconds: 7,
       maxDwellSeconds: 24,
       minCooldownSeconds: 35,
@@ -1764,8 +1764,8 @@ export class World {
       maxStuckRecoveries: 2,
       hashSeed: (this.persisted.seed ^ 0x51b7ee13) >>> 0,
     });
-    // Ring radii scale with the zone (×WORLD_SCALE) so Mini World keeps every slot in-zone.
-    const ring = (r: number): number => r * WORLD_SCALE;
+    // Ring radii scale with the zone (×WORLD_LINEAR) so Mini World keeps every slot in-zone.
+    const ring = (r: number): number => r * WORLD_LINEAR;
     this.bigTreeVisits.addRadialSlots(BigTreeSlotKind.Eat, 32, ring(78), Math.PI / 32);
     this.bigTreeVisits.addRadialSlots(BigTreeSlotKind.Rest, 24, ring(132), Math.PI / 24);
     this.bigTreeVisits.addRadialSlots(BigTreeSlotKind.Socialize, 24, ring(178), Math.PI / 48);

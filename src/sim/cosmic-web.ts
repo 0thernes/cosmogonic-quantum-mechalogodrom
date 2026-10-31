@@ -15,12 +15,12 @@
  * Points/Lines materials only (no hand-written GLSL) — it degrades to "faint" rather than "broken".
  */
 import * as THREE from 'three';
-import { WORLD_SCALE } from './constants';
+import { WORLD_LINEAR } from './constants';
 
 /** Node count of the web (telemetry-friendly; cheap — one Points draw + one LineSegments draw). */
 const NODES = 280;
 /** Shell radius — far beyond the play space so it reads as a backdrop, never an obstacle. */
-const RADIUS = 680 * WORLD_SCALE;
+const RADIUS = 680 * WORLD_LINEAR;
 /** Filament fan-out: each node links to these index-neighbours (deterministic web topology). */
 const LINKS = [3, 8, 21] as const;
 

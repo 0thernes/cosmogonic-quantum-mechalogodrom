@@ -47,7 +47,7 @@ import {
   ARENA_RADIUS,
   HABITAT_XZ_SCALE,
   HABITAT_Y_SCALE,
-  WORLD_SCALE,
+  WORLD_LINEAR,
   scaleCount,
 } from './constants';
 import { MechaExteriorAbomination } from './creature-exterior-layers';
@@ -73,8 +73,8 @@ const WARP_DETAIL = 4;
 /** Radius of the fused mass at the world centre. */
 const CORE_R = 30;
 /** Spawn-ring radius for the ten variants (mid-far, framing the centre). */
-// Group-local (the group scale below carries WORLD_SCALE) — so use the unscaled arena radius.
-const RING_R = (ARENA_RADIUS / WORLD_SCALE) * 0.72;
+// Group-local (the group scale below carries WORLD_LINEAR) — so use the unscaled arena radius.
+const RING_R = (ARENA_RADIUS / WORLD_LINEAR) * 0.72;
 /** Intrinsic churn rate of the god's body, DOME-INDEPENDENT (localT advances at this × real time).
  *  V109: calibrated down from 60 to 38 so the orbiting satellites and body writhe read as stately,
  *  god-tier motion rather than a frantic buzz, while still staying unmistakably alive. */
@@ -85,12 +85,12 @@ const MECHA_CORE_SEGMENTS = 128;
 /** Diameter multiplier for the whole abomination — matches the world's 2× HORIZONTAL expansion
  *  (HABITAT_XZ_SCALE) so the shiny spinning center-star grows WITH the enlarged world. Applied as a
  *  uniform group scale in the constructor (owner: "make it twice as big in diameter, the world expanded 2×2"). */
-const DIAMETER_SCALE = HABITAT_XZ_SCALE * WORLD_SCALE; // ×2 (×0.2 in Mini World)
+const DIAMETER_SCALE = HABITAT_XZ_SCALE * WORLD_LINEAR; // ×2 (×0.63 in Mini World: a landmark, it fits the arena)
 /** Elevation of the whole abomination above the arena floor. Raised to 3× the original authored 252 =
  *  756, matching the world's 3× VERTICAL expansion (HABITAT_Y_SCALE) — owner: "the center star should be
  *  3× higher." The god now scales WITH the world on both axes (3× up, 2× wide) instead of sitting at its
  *  old authored height (this supersedes the brief God-Colossus mid-height alignment). */
-const ALTITUDE = 252 * HABITAT_Y_SCALE * WORLD_SCALE; // = 756 — 3× higher (75.6 in Mini World)
+const ALTITUDE = 252 * HABITAT_Y_SCALE; // = 756 — 3× higher (column unscaled in Mini World)
 /** Mandelbulb iteration budget for the per-vertex escape proxy (power-8 lobes; NaN-guarded). */
 const BULB_ITERS = 4;
 

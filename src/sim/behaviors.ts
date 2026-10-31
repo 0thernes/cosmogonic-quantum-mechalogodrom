@@ -14,6 +14,7 @@ import * as THREE from 'three';
 import { clamp, dist2, dist2XZ } from '../math/scalar';
 import {
   ARENA,
+  ARENA_BODY,
   HABITAT_XZ_SCALE,
   HABITAT_Y_SCALE,
   MONOLITH_CONFIG,
@@ -161,12 +162,12 @@ function swarm(e: Entity, u: EntityData, env: BehaviorEnv): void {
  * froze every flee organism (audit fix, 0.6.x). dist² units.
  */
 const FLEE_DAMP_XZ = 55 * ARENA * HABITAT_XZ_SCALE;
-const FLEE_DAMP_Y = 55 * ARENA * HABITAT_Y_SCALE;
+const FLEE_DAMP_Y = 55 * ARENA_BODY * HABITAT_Y_SCALE; // vertical column is unscaled
 /**
  * hunt's arrive radius, ARENA-scaled: legacy stopped inside radius 5 (25 in dist² units) of
  * a 65u arena; the monolith ring now sits ×5 farther out. dist² units.
  */
-const HUNT_STOP_R2 = 25 * ARENA * ARENA;
+const HUNT_STOP_R2 = 25 * ARENA_BODY * ARENA_BODY; // body-relative
 
 /** Run outward, damped outside the habitat-scaled ellipsoid (2× XZ, 3× Y). O(1). */
 function flee(e: Entity, u: EntityData, env: BehaviorEnv): void {
