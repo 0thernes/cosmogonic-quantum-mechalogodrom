@@ -51,6 +51,7 @@ import {
   VIEW_MODES,
   WEATHERS,
   WORLD_LINEAR,
+  IS_MINI_WORLD,
   SOCIAL_APEX_SENSE_R,
   SOCIAL_NHI_ACTION_R,
   SOCIAL_NHI_KIN_R,
@@ -2179,7 +2180,10 @@ export class World {
     });
     if (typeof window !== 'undefined') {
       window.world = this;
-      const saved = loadSettings(typeof localStorage === 'undefined' ? null : localStorage);
+      // Mini World always boots from sandbox defaults; only the main world restores saved tweaks.
+      const saved = IS_MINI_WORLD
+        ? {}
+        : loadSettings(typeof localStorage === 'undefined' ? null : localStorage);
       if (Object.keys(saved).length > 0) this.applySandbox(saved);
     }
   }

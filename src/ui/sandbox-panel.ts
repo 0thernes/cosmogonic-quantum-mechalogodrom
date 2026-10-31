@@ -85,7 +85,18 @@ const STYLE = `#cqm-sandbox-modal{pointer-events:auto;align-items:center;justify
 #cqm-mini-entry{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:240;pointer-events:auto;cursor:pointer;
   border:1px solid rgba(255,210,120,.6);border-radius:999px;padding:7px 16px;font:800 13px var(--font-ui,system-ui,sans-serif);
   letter-spacing:.04em;color:#fff4d6;background:linear-gradient(90deg,rgba(90,40,140,.85),rgba(160,90,20,.85));box-shadow:0 0 18px rgba(255,190,90,.45)}
-#cqm-mini-entry:hover{box-shadow:0 0 28px rgba(255,210,120,.75)}`;
+#cqm-mini-entry:hover{box-shadow:0 0 28px rgba(255,210,120,.75)}
+#cqm-mini-entry{white-space:nowrap}
+#cqm-mini-entry .cqm-mini-s{display:none}
+#cqm-sb-badge{position:fixed;top:48px;left:50%;transform:translateX(-50%);z-index:240;pointer-events:auto;cursor:pointer;display:none;
+  border:1px solid rgba(120,255,200,.55);border-radius:999px;padding:3px 11px;font:700 11px var(--font-ui,system-ui,sans-serif);
+  letter-spacing:.04em;color:#d9fff0;background:rgba(10,60,50,.85);box-shadow:0 0 12px rgba(80,255,190,.35);white-space:nowrap}
+@media (max-width:560px){
+  #cqm-mini-entry{top:max(4px,env(safe-area-inset-top));padding:3px 10px;font-size:11px;letter-spacing:.02em}
+  #cqm-mini-entry .cqm-mini-l{display:none}
+  #cqm-mini-entry .cqm-mini-s{display:inline}
+  #cqm-sb-badge{top:calc(max(4px,env(safe-area-inset-top)) + 26px);font-size:10px;padding:2px 8px}
+}`;
 
 function storage(): Storage | null {
   try {
@@ -110,11 +121,22 @@ class SandboxPanel {
   private lastT = 0;
   private fps = 0;
   private perfTimer: number | null = null;
+  private readonly badge: HTMLElement;
+
+  /** Show the 'custom sandbox active' badge whenever any entry deviates from default. */
+  private syncBadge(): void {
+    const n = Object.keys(this.settings).length;
+    this.badge.style.display = n > 0 ? 'block' : 'none';
+    this.badge.textContent = `🧪 Custom sandbox active · ${n} change${n === 1 ? '' : 's'}`;
+  }
 
   constructor(doc: Document = document) {
     injectPanelBaseCSS(doc);
     injectCSS(STYLE, 'cqm-sandbox-css', doc);
-    this.settings = loadSettings(storage());
+    // Mini World always starts from defaults (session-only tweaks); the main world restores its own.
+    this.settings = IS_MINI_WORLD ? {} : loadSettings(storage());
+    this.badge = mountSandboxBadge(doc, () => this.open());
+    this.syncBadge();
     mountToggle(
       dockToggle({
         id: 'cqm-sandbox-toggle',
@@ -164,7 +186,8 @@ class SandboxPanel {
 
   private commit(next: SandboxSettings): void {
     this.settings = normalizeSettings(next);
-    saveSettings(storage(), this.settings);
+    if (!IS_MINI_WORLD) saveSettings(storage(), this.settings);
+    this.syncBadge();
     host()?.applySandbox(this.settings);
     this.render();
   }
@@ -256,14 +279,32 @@ class SandboxPanel {
   }
 }
 
+/** The 'custom sandbox active' badge (hidden at defaults); clicking it opens the panel. */
+function mountSandboxBadge(doc: Document, onOpen: () => void): HTMLElement {
+  const b = doc.createElement('button');
+  b.id = 'cqm-sb-badge';
+  b.type = 'button';
+  b.title = 'Some world systems are not at their defaults - open the Sandbox to review or reset';
+  b.addEventListener('click', onOpen);
+  doc.body.appendChild(b);
+  return b;
+}
+
 /** The always-visible Mini World entry / exit pill. */
 function mountMiniWorldEntry(doc: Document = document): HTMLAnchorElement {
   const a = doc.createElement('a');
   a.id = 'cqm-mini-entry';
   a.href = miniWorldHref(doc.location.href, !IS_MINI_WORLD);
-  a.textContent = IS_MINI_WORLD
+  // Long label on wide screens, compact one-liner on phones (CSS picks; no overlap at 390 px).
+  const long = doc.createElement('span');
+  long.className = 'cqm-mini-l';
+  long.textContent = IS_MINI_WORLD
     ? '← Back to the full-size world'
     : '✦ Enter Mini World — full glory';
+  const short = doc.createElement('span');
+  short.className = 'cqm-mini-s';
+  short.textContent = IS_MINI_WORLD ? '← Full world' : '✦ Mini World';
+  a.append(long, short);
   a.title = IS_MINI_WORLD
     ? 'Leave Mini World and return to the full-size cosmos'
     : 'Everything at 1/10 scale with maximum intelligence and maximum visuals';
