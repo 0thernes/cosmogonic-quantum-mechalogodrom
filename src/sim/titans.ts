@@ -37,6 +37,8 @@ import {
   PLATFORM_CEIL,
   PLATFORM_FLOOR,
   PLATFORM_HEIGHT,
+  WORLD_SCALE,
+  scaleCount,
 } from './constants';
 import {
   HISTORY_WINDOW,
@@ -66,7 +68,7 @@ import {
 } from './big-tree-fauna-visitors';
 
 /** Number of titans: 10 territorial colossi + 10 central social/procreative colossi. */
-const TITAN_COUNT = 20;
+const TITAN_COUNT = scaleCount(20);
 /** Unordered titan pairs: C(TITAN_COUNT, 2). */
 const PAIR_COUNT = (TITAN_COUNT * (TITAN_COUNT - 1)) / 2;
 
@@ -74,7 +76,7 @@ const PAIR_COUNT = (TITAN_COUNT * (TITAN_COUNT - 1)) / 2;
  * Colossal-scale multiplier on the silhouette size (V3.6 integration): the drafted rigs
  * were authored against the 1× world; ×3 lifts them to 40-60u against 100-220u monoliths.
  */
-const COLOSSAL = 3;
+const COLOSSAL = 3 * WORLD_SCALE;
 /**
  * Local light gain for the per-titan PointLight (decay 0). environment.ts was being reworked
  * by the audit swarm at write time, so this is NOT calibrated against the final light rig —
@@ -110,7 +112,7 @@ const ENTROPY_PER_HARVEST = 1.5;
 const ENTROPY_RELIEF = 8;
 const ENTROPY_WASTE_THRESHOLD = 60;
 const ENTROPY_WASTE_RETAIN = 0.35;
-const WASTE_SCAR_RADIUS = 6;
+const WASTE_SCAR_RADIUS = 6 * WORLD_SCALE;
 /** Native entropy recovery while a bounded Big Tree Rest activity is active. */
 const BIG_TREE_REST_ENTROPY_RELIEF_PER_SECOND = 4;
 /** Energy granted per witnessed quantum collapse (PRODUCE). */
@@ -139,7 +141,7 @@ const BANKRUPT_SEED_ENERGY = 25;
 const STRIKE_COST = 12;
 const RAID_LOSS = 9;
 const LOOT_MATTER = 6;
-const STRIKE_RADIUS = 18;
+const STRIKE_RADIUS = 18 * WORLD_SCALE;
 const STRIKE_REACH2 = STRIKE_RADIUS * STRIKE_RADIUS;
 const SCATTER_KICK = 0.5;
 const CONSCRIPT_MAX = 4;
@@ -173,7 +175,7 @@ const HOLE_F = new THREE.Vector3();
 /** Subdivisions of the writhing fractal CORE icosahedron (enough verts for smooth 4D writhe). */
 const CORE_DETAIL = 4;
 /** Aura field: organisms within this reach are eddied + hue-stained (titan↔organism interaction). */
-const AURA_R = 36;
+const AURA_R = 36 * WORLD_SCALE;
 const AURA_R2 = AURA_R * AURA_R;
 const AURA_G = 120; // r⁻² eddy gain (capped) — social/electromagnetic wake, not a gravity well.
 const AURA_CAP = 1.4;
@@ -187,7 +189,7 @@ const WAR_CHAOS = 0.0016; // chaos added per active war (summed warCount) per fr
  *  leaving headroom for the dedicated storm controls (Chaos Mode, singularities) to push higher. */
 const TITAN_CHAOS_CEIL = 6.5;
 /** Extra breeder titans must gather inside this center radius before procreation fires. */
-const BREED_CENTER_R = 92;
+const BREED_CENTER_R = 92 * WORLD_SCALE;
 const BREED_CENTER_R2 = BREED_CENTER_R * BREED_CENTER_R;
 /** Frames between center procreation checks. */
 const BREED_PERIOD = 180;
@@ -1311,7 +1313,11 @@ export class TitanSystem implements DomeFeeder, BigTreeFaunaSource {
     // weak restore only to OWN homeY. XZ stays social-core so war/alliance still meet.
     const stratum = ti.mi % 10;
     const tph = ti.mi * 0.37 + ti.ph;
-    const homeY = PLATFORM_FLOOR + 36 + stratum * (PLATFORM_HEIGHT * 0.082) + Math.sin(ti.ph) * 18;
+    const homeY =
+      PLATFORM_FLOOR +
+      36 * WORLD_SCALE +
+      stratum * (PLATFORM_HEIGHT * 0.082) +
+      Math.sin(ti.ph) * 18 * WORLD_SCALE;
     // Social-core horizontal band — not full rim isolation fog, not a tiny pin.
     const trad = PLATFORM_HALF * (0.18 + (ti.mi % 5) * 0.05);
     // Dual-frequency vertical path: primary + slow secondary (Super-Creature style full column use).

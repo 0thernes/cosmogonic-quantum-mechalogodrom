@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'bun:test';
+import { readFileSync } from 'node:fs';
 import {
   ARENA,
   ARENA_Y,
@@ -39,5 +40,27 @@ describe('Mini World — one central world-scale factor', () => {
     // scaleCount is identity under test; the profile shape uses it, so assert via the pure factor.
     expect(p.maxEntities).toBe(scaleCount(top.maxEntities));
     expect(Math.round(top.maxEntities * MINI_WORLD_SCALE)).toBe(5000);
+  });
+});
+
+describe('Mini World — structures scale through WORLD_SCALE (audit)', () => {
+  const read = (f: string): string => readFileSync(f, 'utf8');
+  test.each([
+    ['src/sim/mechalogodrom.ts', /DIAMETER_SCALE = HABITAT_XZ_SCALE \* WORLD_SCALE/],
+    ['src/sim/mechalogodrom.ts', /ALTITUDE = 252 \* HABITAT_Y_SCALE \* WORLD_SCALE/],
+    ['src/sim/mechalogodrom.ts', /MECHA_SATELLITE_COUNT = scaleCount\(400\)/],
+    ['src/sim/titans.ts', /TITAN_COUNT = scaleCount\(20\)/],
+    ['src/sim/titans.ts', /COLOSSAL = 3 \* WORLD_SCALE/],
+    ['src/sim/abomination-architecture.ts', /ARCH_COUNT = scaleCount\(72\)/],
+    ['src/sim/cosmic-web.ts', /RADIUS = 680 \* WORLD_SCALE/],
+    ['src/sim/shoggoths.ts', /SHOG_COUNT_DESKTOP = scaleCount\(100\)/],
+    ['src/sim/puppet-masters.ts', /PUPPET_COUNT_DESKTOP = scaleCount\(100\)/],
+    ['src/sim/super-wingmen.ts', /WINGMAN_COUNT = scaleCount\(100\)/],
+  ])('%s routes through the central factor', (file, re) => {
+    expect(read(file)).toMatch(re);
+  });
+  test('god-colossus (Mandelbrot deity) is sized purely from ARENA_RADIUS (already ×WORLD_SCALE)', () => {
+    const src = read('src/sim/god-colossus.ts');
+    expect(src).toContain('const half = ARENA_RADIUS * 0.82;');
   });
 });

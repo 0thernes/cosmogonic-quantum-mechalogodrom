@@ -37,7 +37,7 @@
  */
 import * as THREE from 'three';
 import { clamp } from '../math/scalar';
-import { ARENA_MID } from './constants';
+import { ARENA_MID, scaleCount } from './constants';
 import { TempleGreeble } from './temple-greeble';
 
 /** Seconds the megalith takes to rise into place once revealed. */
@@ -100,7 +100,7 @@ const RAY_LINES = 320;
 const SHELL_CIRCLES = 16;
 const SHELL_SEG = 44;
 /** Star-dust point count seeded through the lattice volume. */
-const STAR_COUNT = 900;
+const STAR_COUNT = scaleCount(900);
 /** Maze-block count (direct children — also guarantees visualNodes ≥ 25). */
 const MAZE_BLOCKS = 24;
 /** Coral dendrite node cap; visible count scales with crowding. */

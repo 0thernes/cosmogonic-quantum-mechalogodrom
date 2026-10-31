@@ -25,9 +25,9 @@
  */
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { ARENA_RADIUS } from './constants';
+import { ARENA_RADIUS, scaleCount } from './constants';
 
-const COUNT = 16;
+const COUNT = scaleCount(16);
 const PANELS_PER = 180;
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 

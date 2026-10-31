@@ -9,9 +9,10 @@
  * in {@link update} are pure trig.
  */
 import * as THREE from 'three';
+import { scaleCount } from './constants';
 
 /** How many floating gold forms hang in the void. */
-const COUNT = 7;
+const COUNT = scaleCount(7);
 /** Placement ring radius — mid-far, framing the space without obstructing the play field. */
 const RING = 360;
 

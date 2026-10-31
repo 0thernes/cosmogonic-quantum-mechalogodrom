@@ -14,7 +14,14 @@
  * disturbance into the RD ground — neither draws rng, so bit-reproducibility is preserved.
  */
 import * as THREE from 'three';
-import { ARENA_MID, GROUND_EXTENT, HABITAT_MID, HABITAT_Y_SCALE, MID_RADIUS2 } from './constants';
+import {
+  ARENA_MID,
+  GROUND_EXTENT,
+  HABITAT_MID,
+  HABITAT_Y_SCALE,
+  MID_RADIUS2,
+  scaleCount,
+} from './constants';
 import { POINT_LIGHT_GAIN } from './environment';
 import type { OrganismIntelligenceSignal, SimContext } from '../types';
 import type { SingularitySystem } from './singularities';
@@ -32,7 +39,7 @@ import {
 } from './big-tree-fauna-source';
 
 /** How many leviathans sail the world (fixed — telemetry-friendly, cheap). */
-const COUNT = 4;
+const COUNT = scaleCount(4);
 /** Silhouette scale — large enough to read as colossal against the monoliths. */
 const COLOSSAL = 4;
 /** Roam ring radius (mid-field, inside the shoggoth/quantum containment). */

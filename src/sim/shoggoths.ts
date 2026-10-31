@@ -15,6 +15,7 @@ import {
   SOCIAL_CONSUME_R,
   SOCIAL_TENDRIL_R,
   casteR2,
+  scaleCount,
 } from './constants';
 import { POINT_LIGHT_GAIN } from './environment';
 import type { SimContext } from '../types';
@@ -46,8 +47,8 @@ const CONSUME_RADIUS = SOCIAL_CONSUME_R;
 /** Population targets (CONTRACTS V14 — "100 Shoggoths"). Desktop+ gets the full century; the phone
  *  tier stays light for fill rate. Determinism is unaffected — no test constructs this system, and
  *  the world stays one-seed-one-cosmos (the same seed always builds the same 100). */
-const SHOG_COUNT_DESKTOP = 100;
-const SHOG_COUNT_MOBILE = 16;
+const SHOG_COUNT_DESKTOP = scaleCount(100);
+const SHOG_COUNT_MOBILE = scaleCount(16);
 /** Only the first few shoggoths carry aura PointLights — WebGL compiles the lighting loop per light,
  *  so 200 dynamic lights would explode the fragment shader. The rest read via emissive (+ bloom). */
 const LIT_SHOGGOTHS = 4;

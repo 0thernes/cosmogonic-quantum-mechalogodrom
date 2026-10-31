@@ -15,6 +15,7 @@
  * never feeds it back into the sim itself. Per-frame `update` is allocation-free (module scratch).
  */
 import * as THREE from 'three';
+import { WORLD_SCALE } from './constants';
 
 /** What left the mark — selects the relic's tint. */
 export type ArtifactKind = 'scar' | 'relic' | 'mote';
@@ -26,7 +27,7 @@ const DEFAULT_CAP = 64;
 const ARTIFACT_LIFE = 22;
 
 /** Influence radius (world units) used by {@link influenceAt}. */
-const INFLUENCE_RADIUS = 30;
+const INFLUENCE_RADIUS = 30 * WORLD_SCALE;
 
 /** Per-kind base tint (HSL hue, sat, light) + base scale. */
 const KIND_STYLE: Readonly<

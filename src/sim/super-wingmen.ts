@@ -17,8 +17,9 @@ import type { Rng } from '../math/rng';
 import { mulberry32 } from '../math/rng';
 import { TinyMLP } from './ai/brains';
 import { createMlp, mlpPredict, mlpTrainStep, type Mlp } from './ad-mlp';
+import { scaleCount } from './constants';
 
-export const WINGMAN_COUNT = 100; // robots per super creature ("swarms of 100")
+export const WINGMAN_COUNT = scaleCount(100); // robots per super creature ("swarms of 100")
 const WIN_IN = 8;
 const WIN_HID = 18;
 const WIN_OUT = 5;

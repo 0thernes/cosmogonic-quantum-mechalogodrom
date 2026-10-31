@@ -12,10 +12,10 @@
  */
 import * as THREE from 'three';
 import { clamp } from '../math/scalar';
-import { ARENA_RADIUS } from './constants';
+import { ARENA_RADIUS, scaleCount } from './constants';
 
-const ARCH_COUNT = 72;
-const BRIDGE_COUNT = 96;
+const ARCH_COUNT = scaleCount(72);
+const BRIDGE_COUNT = scaleCount(96);
 const RING_R = ARENA_RADIUS * 1.42;
 
 interface ArchSeed {
