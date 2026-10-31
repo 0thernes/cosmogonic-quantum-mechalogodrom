@@ -199,6 +199,9 @@ import { Mechalogodrom } from './sim/mechalogodrom';
 import { WasteEcology } from './sim/waste-ecology';
 import { MechalogodromBrain, type MechalogodromBrainSnapshot } from './sim/mechalogodrom-brain';
 import { AlphabetPantheonRender } from './sim/alphabet-pantheon-render';
+import { ApexSubstrateDriver } from './sim/apex-substrate-driver';
+import { substrateUniforms } from './sim/apex-substrate-visual';
+import { SCALE_MASSIVE } from './sim/apex-brain';
 import { corpusPulse } from './sim/tsotchke-facade';
 import { TsotchkeOrganismIntelligence } from './sim/tsotchke-organism-intelligence';
 import { VqeDriveResolver } from './sim/vqe-drive-resolver';
@@ -1204,6 +1207,8 @@ export class World {
   }
   /** V-ABC: the 100 Greek+Latin alphabet archetypes alive across the dome (instanced; no rng). */
   private readonly alphabetPantheon: AlphabetPantheonRender;
+  /** Live 1B-substrate (quantum brain + field organs) whose telemetry paints the apex core shader. */
+  private readonly apexSubstrate: ApexSubstrateDriver;
   /** V-GLYPH: 100 × 25k-parameter brains driving the letter creatures' visual activity (visual-only). */
   private readonly glyphBrains: GlyphBrainBatch;
   /** V-FND: Foundationals — deep interconnect between APEX organs (1B self-awareness path). */
@@ -1781,6 +1786,11 @@ export class World {
     this.mechalogodromBrain = new MechalogodromBrain((this.persisted.seed ^ 0x8e4ac471) >>> 0 || 1);
     // V-ABC: the 100 Greek+Latin alphabet archetypes, alive across the dome (instanced; no rng).
     this.alphabetPantheon = new AlphabetPantheonRender(ctx.scene);
+    this.apexSubstrate = new ApexSubstrateDriver(
+      SCALE_MASSIVE,
+      (this.persisted.seed ^ 0x41505853) >>> 0 || 1,
+    );
+    this.stepApexSubstrate(0.5);
     this.alphabetPantheon.setWireHalosVisible(this.state.renderMode === 'wire');
     // V-GLYPH: 100 × 25k-parameter brains (visual-only; drives pantheon appearance, not world state).
     this.glyphBrains = new GlyphBrainBatch(this.persisted.seed);
@@ -2989,6 +2999,8 @@ export class World {
       this.alphabetPantheon.setBrainActivity(act, nov, val);
       this.alphabetPantheon.setBrainMotors(snaps);
     }
+    if (this.state.frame % 30 === 0)
+      this.stepApexSubstrate(clamp(this.state.chaos / CHAOS_MAX, 0, 1));
     this.alphabetPantheon.update(t, dt); // V110: Pantheon obeys pause + time scale through scaled dt
     // F-NHI V10: alien bodies follow + morph their NHI every frame (guarded; additive viz only).
     if (this.nhiBody.count > 0) {
@@ -5987,6 +5999,13 @@ export class World {
   /** Live resonance-integrator + valence-steering state (restored modules; apex-beat cadence). */
   getNhsiAffect(): NhsiAffectOut {
     return this.nhsiAffect.snapshot();
+  }
+
+  /** Advance the live apex substrate one beat and repaint the apex core from its telemetry. ~1 ms. */
+  private stepApexSubstrate(drive: number): void {
+    this.apexSubstrate.step(drive);
+    const tel = this.apexSubstrate.telemetry();
+    this.alphabetPantheon.setSubstrate(substrateUniforms(tel.manifold, tel.quantum));
   }
 
   getPerfSnapshot(): {

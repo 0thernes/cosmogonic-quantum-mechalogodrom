@@ -28,6 +28,7 @@
  * per-frame work is 100 matrix composes — fixed, population-independent, allocation-free (module
  * scratch only).
  */
+import type { ApexSubstrateUniforms } from './apex-substrate-visual';
 import * as THREE from 'three';
 import { clamp } from '../math/scalar';
 import {
@@ -559,6 +560,15 @@ export class AlphabetPantheonRender implements PortalImmune {
       varying vec3 vNormal;
       varying vec3 vViewPos;
       uniform float uTime;
+      // APEX SUBSTRATE (restored apex-substrate-visual): the 1B-parameter manifold + quantum reach.
+      uniform float uBillionReach;
+      uniform float uQuantumDim;
+      uniform float uResidentLoad;
+      uniform float uCoherence;
+      uniform float uEntanglement;
+      uniform float uQgt;
+      uniform float uThermal;
+      uniform float uTierSpread;
 
       float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
       float noise(vec2 p) {
@@ -590,7 +600,7 @@ export class AlphabetPantheonRender implements PortalImmune {
         vec3 n = normalize(vNormal);
         vec3 v = normalize(-vViewPos);
         float fresnel = pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 2.5);
-        vec3 oil = hsv2rgb(vec3(fract(t * 0.04 + vPos.z * 0.2), 0.85, 0.55)) * fresnel;
+        vec3 oil = hsv2rgb(vec3(fract(t * 0.04 + vPos.z * 0.2 + uQgt * 0.5), 0.85, 0.55)) * fresnel;
 
         // Noise grain shimmer.
         float n0 = noise(vUv * 40.0 + t * 3.0);
@@ -603,7 +613,8 @@ export class AlphabetPantheonRender implements PortalImmune {
         vec3 sparks = vec3(1.0, 0.9, 0.7) * spark + vec3(1.0, 0.2, 0.5) * spark2;
 
         // Dark dimensional cracks.
-        float crack = smoothstep(0.35, 0.0, sin(vPos.x * 25.0 + t) * cos(vPos.y * 25.0 - t * 1.3));
+        float cf = 25.0 + 15.0 * uBillionReach;
+        float crack = smoothstep(0.35, 0.0, sin(vPos.x * cf + t) * cos(vPos.y * cf - t * 1.3));
 
         // USER: THIS is the "101st apex still white" — the lava core summed (lava + oil + bright-blue
         // shimmer + white sparks), ADDITIVE at 0.96 alpha, on a mesh scaled 22× → a blinding white/yellow
@@ -611,6 +622,17 @@ export class AlphabetPantheonRender implements PortalImmune {
         // additive output + alpha down HARD → a rich coloured core, not a white sear.
         vec3 finalColor = lavaColor + oil * 0.6 + shimmer * 0.3 + sparks * 0.4;
         finalColor *= 1.0 - crack * 0.45;
+        // Substrate-driven layers: resident load densifies the lava, entanglement tethers the oil rim,
+        // coherence flickers the shimmer, the AD/thermal gradient vents a maroon→ember rim, the quantum
+        // dimension lights twin cobweb nuclei, and tier spread marbles the mass. Coloured, never white.
+        float nuclei = smoothstep(0.75, 1.0, sin(vPos.x * 6.0) * sin(vPos.y * 6.0 + t * 0.7));
+        float marble = noise(vPos.xz * 3.0 + vec2(t * 0.1)) * uTierSpread;
+        finalColor = finalColor * (0.85 + 0.3 * uResidentLoad)
+          + oil * 0.25 * uEntanglement
+          + shimmer * 0.12 * uCoherence * step(0.5, fract(t * 3.0 + n0))
+          + vec3(0.55, 0.06, 0.03) * fresnel * uThermal
+          + vec3(0.35, 0.1, 0.6) * nuclei * uQuantumDim * 0.35
+          + vec3(0.25, 0.05, 0.12) * marble;
 
         gl_FragColor = vec4(finalColor * 0.5, 0.55);
       }
@@ -619,7 +641,17 @@ export class AlphabetPantheonRender implements PortalImmune {
     const apexMat = new THREE.ShaderMaterial({
       vertexShader: apexVert,
       fragmentShader: apexFrag,
-      uniforms: { uTime: { value: 0 } },
+      uniforms: {
+        uTime: { value: 0 },
+        uBillionReach: { value: 0 },
+        uQuantumDim: { value: 0 },
+        uResidentLoad: { value: 0 },
+        uCoherence: { value: 0 },
+        uEntanglement: { value: 0 },
+        uQgt: { value: 0 },
+        uThermal: { value: 0 },
+        uTierSpread: { value: 0 },
+      },
       transparent: true,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
@@ -721,6 +753,23 @@ export class AlphabetPantheonRender implements PortalImmune {
   }
 
   /** Toggle diagnostic wire halos (solid skins are the default; wire mode only). */
+  /** Feed the restored apex-substrate-visual uniforms (1B manifold + quantum reach) to the apex core. */
+  setSubstrate(u: ApexSubstrateUniforms): void {
+    const un = (this.apexCore.material as THREE.ShaderMaterial).uniforms;
+    for (const k of Object.keys(u) as (keyof ApexSubstrateUniforms)[]) {
+      const slot = un[k];
+      if (slot) slot.value = u[k];
+    }
+  }
+
+  /** Current substrate uniform values on the apex core (telemetry/tests). */
+  substrateUniformValues(): Record<string, number> {
+    const un = (this.apexCore.material as THREE.ShaderMaterial).uniforms;
+    const out: Record<string, number> = {};
+    for (const k of Object.keys(un)) if (k !== 'uTime') out[k] = un[k]!.value as number;
+    return out;
+  }
+
   setWireHalosVisible(show: boolean): void {
     for (const h of this.wireHalos) h.visible = show;
   }
