@@ -91,6 +91,7 @@ import { QuantumCloud } from './sim/quantum';
 import { Connectome } from './sim/connectome';
 import { EnvironmentSystem } from './sim/environment';
 import { AlienFlora } from './sim/alien-flora';
+import { Vegetation } from './sim/vegetation';
 import {
   BigTreeActivity,
   BigTreeSlotKind,
@@ -786,6 +787,9 @@ export class World {
   private readonly environment: EnvironmentSystem;
   /** Alien vegetal ground ecology — 10k plants / 50 species seated on the dunes (read-only coupling). */
   private readonly alienFlora: AlienFlora;
+  /** V-VEG (restored): 10k wind-swept alien plants in 50 instanced species, seated on the live ground. */
+  private readonly vegetation: Vegetation;
+  private vegGroundT = 0;
   /** Metabolic waste → fertilizer + self-building xeno constructs. */
   private readonly wasteEcology: WasteEcology;
   private readonly hud: Hud;
@@ -1517,6 +1521,8 @@ export class World {
     this.alienFlora = new AlienFlora(ctx); // 60k-plant alien ecology, 50 species, GPU-instanced sway
     this.wasteEcology = new WasteEcology(ctx.scene);
     this.alienFlora.attachFertilizer((x, z) => this.wasteEcology.regrowBoost(x, z));
+    this.vegetation = new Vegetation(ctx.scene);
+    this.vegetation.attachGround((x, z) => this.xenomimicSurfaceAt(x, z, this.vegGroundT));
     this.entities = new EntityManager(ctx);
     // Covers the largest authored organism tier plus every fixed fauna roster without growing or
     // reallocating at runtime. Tree residents are born peaceful and never enter hostile targeting.
@@ -2216,6 +2222,7 @@ export class World {
     this.godColossus.dispose(); // free the colossal god monument
     this.bigTreeSanctuary.reset(); // release stable identity membership and boundary history
     this.crystalEcosystem.dispose(); // free the complete tree-home ecology and owned GPU resources
+    this.vegetation.dispose(); // V-VEG: free the 10k alien plant instanced pools
     this.alienFlora.dispose(); // free the 60k-plant instanced alien-flora field
     this.wasteEcology.dispose(); // free sludge constructs + waste/gas grids
     this.alphabetPantheon.dispose(); // V-ABC: free the 100-archetype instanced pools
@@ -3191,6 +3198,10 @@ export class World {
       this.state.wind.x,
       this.state.wind.z,
     );
+    this.vegGroundT = t;
+    this.vegetation.setChaos(this.state.chaos / CHAOS_MAX);
+    this.vegetation.setWindStrength(0.35 + 0.65 * (this.state.chaos / CHAOS_MAX));
+    this.vegetation.update(t, dt);
     this.updateCrystalEcosystem(dt, uiDt, t, false);
     this.updateBigTreeVisitors(dt, t);
     // Crossfade the rest of the cosmos — apex bodies, instanced/per-mesh organisms, ground + light rig
@@ -3858,6 +3869,7 @@ export class World {
     // Hot spring targets — one creature thrashs local flora hard (not hollow decorative tap).
     for (const s of seeds) s.strength = Math.min(1, s.strength / 1.85);
     this.alienFlora.setContacts(seeds);
+    for (const sd of seeds) this.vegetation.applyContact(sd.x, sd.z, sd.strength);
     // Waste constructs thrash near the hottest being seed (DAR — not decorative).
     let best = seeds[0]!;
     for (let i = 1; i < seeds.length; i++) {
