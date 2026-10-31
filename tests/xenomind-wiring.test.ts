@@ -17,9 +17,14 @@ describe('xenomind wiring', () => {
     for (const v of a) expect(v >= 0 && v <= 1).toBe(true);
     expect(a).toEqual(run());
   });
-  test('World feeds the archon percept through it and bends pull + light', () => {
+  test('World feeds the archon percept through it and bends pull + light only through the trust gate', () => {
     const src = readFileSync('src/world.ts', 'utf8');
     expect(src).toContain('this.xenomind.think(xs)');
-    expect(src).toMatch(/xIntent\[0\] \?\? 0\.5\) - 0\.5\) \* 0\.04/);
+    expect(src).toContain('this.xenoGate.observe(xPull, basePercept.pull)');
+    expect(src).toMatch(/this\.xenoGate\.nudge\(xPull, basePercept\.pull, 0\.04\)/);
+    expect(src).toMatch(
+      /this\.xenoGate\.nudge\(xIntent\[1\] \?\? 0\.5, basePercept\.light, 0\.02\)/,
+    );
+    expect(src).not.toMatch(/xIntent\[0\] \?\? 0\.5\) - 0\.5\) \* 0\.04/);
   });
 });

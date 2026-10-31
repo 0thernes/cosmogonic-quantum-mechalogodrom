@@ -257,6 +257,7 @@ import { FacultiesPantheon } from './sim/faculties-pantheon';
 import { ArchonLanguage, type ArchonLanguageState } from './sim/archon-language';
 import { Lineage } from './sim/lineage';
 import { Xenomind, type XenomindSnapshot } from './sim/xenomind';
+import { XenomindTrustGate } from './sim/xenomind-gate';
 import { OmegaPoint, type OmegaPointSnapshot } from './sim/omega-point';
 import { NhsiAffectBinding, type NhsiAffectOut } from './sim/nhsi-affect-binding';
 import { TomPantheon } from './sim/tom-pantheon';
@@ -842,6 +843,8 @@ export class World {
   private xenomind!: Xenomind;
   private readonly omegaPoint = new OmegaPoint();
   private readonly xenoSenses = new Float32Array(8);
+  /** Online trust gate: the untrained xenomind may only sharpen a brain's own lean once it predicts it. */
+  private readonly xenoGate = new XenomindTrustGate();
   /** NHSI · 25 theory-of-mind organs — social cue field over apex percepts. */
   private readonly tomPantheon: TomPantheon;
   /** NHSI · emergence angles 8–10 (Eshkol evolution, cross-strain, collective). */
@@ -4122,8 +4125,19 @@ export class World {
       xs[6] = basePercept.rivalClose;
       xs[7] = basePercept.pull;
       const xIntent = this.xenomind.think(xs);
-      basePercept.pull = clamp(basePercept.pull + ((xIntent[0] ?? 0.5) - 0.5) * 0.04, 0, 1);
-      basePercept.light = clamp(basePercept.light + ((xIntent[1] ?? 0.5) - 0.5) * 0.02, 0, 1);
+      // Gated: zero nudge until the xenomind reliably predicts the brains' own pull (no noise in).
+      const xPull = xIntent[0] ?? 0.5;
+      this.xenoGate.observe(xPull, basePercept.pull);
+      basePercept.pull = clamp(
+        basePercept.pull + this.xenoGate.nudge(xPull, basePercept.pull, 0.04),
+        0,
+        1,
+      );
+      basePercept.light = clamp(
+        basePercept.light + this.xenoGate.nudge(xIntent[1] ?? 0.5, basePercept.light, 0.02),
+        0,
+        1,
+      );
       // GOAL5: drive EXACTLY 5 SUPER CREATURES (archetypes 0-4) with per-position percepts.
       // local crowding/threat from grid query at body pos; light/sound/chaos biased by godform.ts (exclusive).
       let primeMindOut: SuperMindIntent | null = null; // typed; avoid any per contract
@@ -6079,8 +6093,9 @@ export class World {
   }
 
   /** Xenomind (alien hyperbolic substrate) telemetry. */
-  getXenomind(): XenomindSnapshot | null {
-    return this.xenomind?.snapshot() ?? null;
+  getXenomind(): (XenomindSnapshot & { gate: ReturnType<XenomindTrustGate['snapshot']> }) | null {
+    const s = this.xenomind?.snapshot();
+    return s ? { ...s, gate: this.xenoGate.snapshot() } : null;
   }
 
   /** Emergent archon language telemetry (fluency, lexicon size, diversity). */
