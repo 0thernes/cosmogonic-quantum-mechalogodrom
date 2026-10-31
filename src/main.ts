@@ -78,6 +78,7 @@ type DeferredUiModule =
   | 'audit-dock'
   | 'onboarding'
   | 'settings-panel'
+  | 'sandbox-panel'
   | 'panel-edge-toggles';
 
 const deferredUiPending = new Set<DeferredUiModule>([
@@ -88,6 +89,7 @@ const deferredUiPending = new Set<DeferredUiModule>([
   'audit-dock',
   'onboarding',
   'settings-panel',
+  'sandbox-panel',
   'panel-edge-toggles',
 ]);
 const DEFERRED_UI_RETRY_MS = 2_000;
@@ -148,6 +150,7 @@ function loadDeferredUi(): void {
     track('audit-dock', () => import('./ui/audit-dock'));
     track('onboarding', () => import('./ui/onboarding'));
     track('settings-panel', () => import('./ui/settings-panel'));
+    track('sandbox-panel', () => import('./ui/sandbox-panel'));
     track('panel-edge-toggles', () => import('./ui/panel-edge-toggles'));
     void Promise.allSettled(tasks).finally(() => {
       deferredUiLoading = false;

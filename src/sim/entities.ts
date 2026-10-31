@@ -367,6 +367,8 @@ export class EntityManager {
    * Unaffiliated (legacy, phylum -1) organisms are not counted.
    */
   readonly phylumCounts = new Float32Array(PHYLUM_COUNT);
+  /** SANDBOX: per-phylum population caps (null ⇒ uncapped, the default — spawn path untouched). */
+  phylumCap: Float32Array | null = null;
   /**
    * Stable ecology-goal field consumed by EntityBrainField on the following frame. This closes the
    * perception→goal→action loop without running the flora neighborhood query twice per organism.
@@ -752,6 +754,9 @@ export class EntityManager {
     if (morphCount === 0) return null; // defensive: empty taxonomy
     const m: PhylumMorphType | undefined = ctx.morphs[mi % morphCount];
     if (!m) return null; // invariant: morphs is dense — defensive only
+    const cap = this.phylumCap;
+    if (cap && (m.phylum ?? -1) >= 0 && this.phylumCounts[m.phylum!]! >= cap[m.phylum!]!)
+      return null;
     const geo = ctx.geos[m.gi];
     if (!geo) return null; // invariant: gi < geos.length by construction
     const rng = ctx.rng;

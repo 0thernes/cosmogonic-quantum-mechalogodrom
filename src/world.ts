@@ -92,6 +92,8 @@ import { Connectome } from './sim/connectome';
 import { EnvironmentSystem } from './sim/environment';
 import { AlienFlora } from './sim/alien-flora';
 import { Vegetation } from './sim/vegetation';
+import { SandboxController, loadSettings, type SandboxSettings } from './sim/sandbox';
+import { PHYLUM_COUNT } from './sim/phyla';
 import {
   BigTreeActivity,
   BigTreeSlotKind,
@@ -793,6 +795,10 @@ export class World {
   /** V-VEG (restored): 10k wind-swept alien plants in 50 instanced species, seated on the live ground. */
   private readonly vegetation: Vegetation;
   private vegGroundT = 0;
+  /** SANDBOX: organism population multiplier (1 = default growth ceiling) + per-phylum multipliers. */
+  private sandboxPop = 1;
+  private sandboxPhylum: Float32Array | null = null;
+  private sandbox: SandboxController | null = null;
   /** Metabolic waste → fertilizer + self-building xeno constructs. */
   private readonly wasteEcology: WasteEcology;
   private readonly hud: Hud;
@@ -2157,6 +2163,8 @@ export class World {
     });
     if (typeof window !== 'undefined') {
       window.world = this;
+      const saved = loadSettings(typeof localStorage === 'undefined' ? null : localStorage);
+      if (Object.keys(saved).length > 0) this.applySandbox(saved);
     }
   }
 
@@ -2269,7 +2277,13 @@ export class World {
    */
   private updateGrowthTarget(): void {
     const s = this.state;
-    const ceiling = Math.min(this.quality.targetEntities, this.quality.maxEntities);
+    const ceiling =
+      this.sandboxPop === 1
+        ? Math.min(this.quality.targetEntities, this.quality.maxEntities)
+        : Math.min(
+            Math.round(this.quality.targetEntities * this.sandboxPop),
+            this.quality.maxEntities,
+          );
     const base = this.growthBase > 0 ? this.growthBase : World.BOOT_POP;
     s.growthTarget = growthTargetAt(s.elapsed - this.growthAnchor, base, ceiling);
   }
@@ -2999,6 +3013,7 @@ export class World {
       this.alphabetPantheon.setBrainActivity(act, nov, val);
       this.alphabetPantheon.setBrainMotors(snaps);
     }
+    if (this.sandbox) this.sandboxTick();
     if (this.state.frame % 30 === 0)
       this.stepApexSubstrate(clamp(this.state.chaos / CHAOS_MAX, 0, 1));
     this.alphabetPantheon.update(t, dt); // V110: Pantheon obeys pause + time scale through scaled dt
@@ -6006,6 +6021,73 @@ export class World {
     this.apexSubstrate.step(drive);
     const tel = this.apexSubstrate.telemetry();
     this.alphabetPantheon.setSubstrate(substrateUniforms(tel.manifold, tel.quantum));
+  }
+
+  readonly phylumCount = PHYLUM_COUNT;
+
+  /** SANDBOX: scale the organism growth ceiling (0..3; above the boot capacity it clamps at maxEntities). */
+  setPopulationScale(f: number): void {
+    this.sandboxPop = Math.max(0, f);
+    this.updateGrowthTarget();
+  }
+
+  /** SANDBOX: cap one phylum at f × its even share of the growth target (1 = uncapped default). */
+  setPhylumScale(phylum: number, f: number): void {
+    if (phylum < 0 || phylum >= PHYLUM_COUNT) return;
+    this.sandboxPhylum ??= new Float32Array(PHYLUM_COUNT).fill(1);
+    this.sandboxPhylum[phylum] = Math.max(0, f);
+    if (this.sandboxPhylum.every((v) => v === 1)) {
+      this.sandboxPhylum = null;
+      this.entities.phylumCap = null;
+    }
+  }
+
+  /** The live sandbox controller (built lazily by reflecting over every World system). */
+  getSandbox(): SandboxController {
+    this.sandbox ??= new SandboxController(this);
+    return this.sandbox;
+  }
+
+  /** Apply sandbox settings live (persisting is the panel's job). */
+  applySandbox(settings: SandboxSettings): void {
+    this.getSandbox().apply(settings);
+  }
+
+  /** Cheap live readout for the sandbox panel. */
+  sandboxStats(): { organisms: number; target: number; capacity: number } {
+    return {
+      organisms: this.entities.list.length,
+      target: Math.round(this.state.growthTarget ?? 0),
+      capacity: this.quality.maxEntities,
+    };
+  }
+
+  /** Smoothly enforce sandbox population levels: per-phylum caps + trim ≤ 32 organisms per frame. */
+  private sandboxTick(): void {
+    const list = this.entities.list;
+    const ph = this.sandboxPhylum;
+    const share = Math.max(1, (this.state.growthTarget ?? list.length) / PHYLUM_COUNT);
+    if (ph) {
+      const cap = (this.entities.phylumCap ??= new Float32Array(PHYLUM_COUNT));
+      for (let p = 0; p < PHYLUM_COUNT; p++)
+        cap[p] = ph[p]! >= 1 ? Infinity : Math.floor(share * ph[p]!);
+    }
+    const over = this.sandboxPop < 1 ? list.length - Math.ceil(this.state.growthTarget ?? 0) : 0;
+    const kill: number[] = [];
+    const seen = new Float32Array(PHYLUM_COUNT);
+    for (let i = list.length - 1; i >= 0 && kill.length < 32; i--) {
+      const p = list[i]!.userData.phylum ?? -1;
+      if (p >= 0 && ph && ph[p]! < 1) {
+        seen[p]!++;
+        if (seen[p]! > Math.floor(share * ph[p]!)) {
+          kill.push(i);
+          continue;
+        }
+      }
+      if (kill.length < over) kill.push(i);
+    }
+    if (kill.length) this.entities.disposeManyDescending(kill);
+    if (this.state.frame % 30 === 0) this.sandbox?.tick();
   }
 
   getPerfSnapshot(): {

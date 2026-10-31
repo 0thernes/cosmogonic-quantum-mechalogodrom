@@ -2,11 +2,11 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { clamp } from '../math/scalar';
 import { mulberry32 } from '../math/rng';
-import { GROUND_EXTENT } from './constants';
+import { GROUND_EXTENT, WORLD_SCALE, scaleCount } from './constants';
 
 const SPECIES_COUNT = 50;
-const PLANT_COUNT = 10000;
-const GRID_RES = 100;
+const PLANT_COUNT = scaleCount(10000);
+const GRID_RES = Math.round(100 * Math.sqrt(WORLD_SCALE)); // 100 (32 in Mini World ⇒ 1/10 the plants)
 const CELL_SIZE = GROUND_EXTENT / GRID_RES;
 const GROUND_CLEAR_RADIUS = 55;
 const GROUND_CLEAR_RADIUS2 = GROUND_CLEAR_RADIUS * GROUND_CLEAR_RADIUS;

@@ -34,6 +34,7 @@ import {
   CRYSTAL_TREE_ORIGIN_Z,
   HABITAT_XZ_SCALE,
   PLATFORM_HALF,
+  scaleCount,
 } from './constants';
 import { baseTerrainHeightAt } from './terrain-profile';
 import { TERRAIN_DEFORMATION_GLSL } from './terrain-deformation';
@@ -47,9 +48,9 @@ const SPECIES_COUNT = 50;
 /** Smooth biome field resolution: how many edaphic zones the palette/species cluster into. */
 const BIOME_COUNT = 7;
 /** Exact desktop plant population: 4× the former 15,000 for 4× the land area. */
-export const ALIEN_FLORA_TARGET_DESKTOP = 60_000;
+export const ALIEN_FLORA_TARGET_DESKTOP = scaleCount(60_000);
 /** Phone population also scales 4×, preserving its former density without forcing desktop load. */
-export const ALIEN_FLORA_TARGET_MOBILE = 20_800;
+export const ALIEN_FLORA_TARGET_MOBILE = scaleCount(20_800);
 /** Plant square half-extent follows the authoritative invisible platform wall. */
 export const ALIEN_FLORA_FIELD_HALF = PLATFORM_HALF;
 /** Enough deterministic candidates to fill the requested population after paths/glades are carved. */

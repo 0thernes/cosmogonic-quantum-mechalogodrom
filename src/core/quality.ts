@@ -1,6 +1,7 @@
 import type { QualityProfile, QualityTier } from '../types';
 import { getQuantizationConfig } from '../math/quantization';
 import { detectWebGpu } from './webgpu-detect';
+import { IS_MINI_WORLD, scaleCount } from '../sim/constants';
 
 /**
  * Quality tier ladder (CONTRACTS V3.1, PANTHEON).
@@ -146,7 +147,34 @@ export function resolveTier(isMobile: boolean, cores: number, _memGB: number): Q
  *
  * Also detects WebGPU capabilities for progressive enhancement (Phase 2).
  */
+/**
+ * MINI WORLD profile: the top (mega) rung with every population cap × WORLD_SCALE (50k → 5k entities,
+ * 600k → 60k links, 10k → 1k quantum particles) and every fidelity knob at maximum regardless of the
+ * device (unbounded DPR, shadows, instancing, full-precision weights, every-frame cadence). Pure.
+ */
+export function miniWorldProfile(webGpu: QualityProfile['webGpu']): QualityProfile {
+  const top = QUALITY_LADDER.mega;
+  return {
+    tier: 'mega',
+    isMobile: false,
+    ...top,
+    dprCap: Number.POSITIVE_INFINITY,
+    shadows: true,
+    instanced: true,
+    maxEntities: scaleCount(top.maxEntities),
+    targetEntities: scaleCount(top.targetEntities),
+    quantumCount: scaleCount(top.quantumCount),
+    maxLinks: scaleCount(top.maxLinks),
+    quantization: getQuantizationConfig('mega'),
+    simRate: 60,
+    neuralRate: ADAPTIVE_CADENCE.mega.neuralRate,
+    connectomeRate: ADAPTIVE_CADENCE.mega.connectomeRate,
+    webGpu,
+  };
+}
+
 export async function detectQuality(): Promise<QualityProfile> {
+  if (IS_MINI_WORLD) return miniWorldProfile(await detectWebGpu());
   // Dev/QA override: `?tier=phone|laptop|desktop|ultra` forces a tier at boot (decided once, like
   // the auto path). Lets a desktop browser preview the phone path — and a touch-emulating preview
   // (which auto-detects 'phone') exercise the full desktop/ultra population. Absent → auto-detect.

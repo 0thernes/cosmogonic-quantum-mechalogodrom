@@ -11,14 +11,34 @@
 // Legacy tuple tables below stay authored in LEGACY units and are scaled once
 // at module init — one source of truth, no drifting magic numbers.
 
-/** Horizontal world multiplier vs the legacy monolith (CONTRACTS V3.1). */
-export const ARENA = 5;
+// ── WORLD SCALE (Mini World) ─────────────────────────────────────────────────
+// The ONE central factor for the Mini World showcase (`?world=mini`): every world dimension below and
+// every population cap that derives from it scales by WORLD_SCALE (0.1 ⇒ 1/10 the size and the counts).
+// Per-object visual fidelity is never scaled. Absent the URL flag (and always under `bun test`, which
+// has no `location`) it is exactly 1, so the main world, goldens and seeded determinism are untouched.
+export const MINI_WORLD_SCALE = 0.1;
+/** Pure: the world scale a URL query string selects (`world=mini` ⇒ {@link MINI_WORLD_SCALE}). */
+export function worldScaleFromSearch(search: string): number {
+  return /(?:^|[?&])world=mini(?:&|$)/.test(search) ? MINI_WORLD_SCALE : 1;
+}
+export const WORLD_SCALE: number =
+  typeof globalThis.location?.search === 'string'
+    ? worldScaleFromSearch(globalThis.location.search)
+    : 1;
+export const IS_MINI_WORLD = WORLD_SCALE !== 1;
+/** Scale a count/cap by the world scale (identity in the main world; ≥ 1 in Mini World). */
+export function scaleCount(n: number): number {
+  return WORLD_SCALE === 1 ? n : Math.max(1, Math.round(n * WORLD_SCALE));
+}
+
+/** Horizontal world multiplier vs the legacy monolith (CONTRACTS V3.1). × WORLD_SCALE. */
+export const ARENA = 5 * WORLD_SCALE;
 
 /** Vertical world multiplier (heights, sky planes, ceiling clamps). */
-export const ARENA_Y = 2;
+export const ARENA_Y = 2 * WORLD_SCALE;
 
 /** Mid-field multiplier for actors that must stay near the populated core. */
-export const ARENA_MID = 2.5;
+export const ARENA_MID = 2.5 * WORLD_SCALE;
 
 /** User-directed habitat expansion: 2× width and 2× length (4× land area). */
 export const HABITAT_XZ_SCALE = 2;
@@ -49,8 +69,8 @@ export const GROUND_EXTENT = 240 * ARENA * HABITAT_XZ_SCALE;
  *  the world expansion: ALTITUDE = 252·HABITAT_Y_SCALE (3× higher = 756) and a ×HABITAT_XZ_SCALE group
  *  scale (2× diameter) — see mechalogodrom.ts — so the god grows 3× up and 2× wide with the 2×2×3 world. */
 export const PLATFORM_HALF = (GROUND_EXTENT / 2) * 0.9; // 1,080
-export const PLATFORM_CEIL = 240 * HABITAT_Y_SCALE; // 720
-export const PLATFORM_FLOOR = 6;
+export const PLATFORM_CEIL = 240 * HABITAT_Y_SCALE * WORLD_SCALE; // 720 (72 in Mini World)
+export const PLATFORM_FLOOR = 6 * WORLD_SCALE;
 export const PLATFORM_HEIGHT = PLATFORM_CEIL - PLATFORM_FLOOR;
 export const PLATFORM_MID_Y = PLATFORM_FLOOR + PLATFORM_HEIGHT * 0.5;
 
@@ -75,10 +95,10 @@ export const CENTER_GRAVITY_K = 0.0005;
 /** Authored home of the giant Crystal Life Tree. Shared by rendering, ecology, and safe-zone policy.
  *  Audit #71: r≈658 deliberately sits outside LIVING_ZONE and HABITAT_RADIUS — the tree is a rim landmark
  *  with its own crystal ecology, not part of the central organism habitat. */
-export const CRYSTAL_TREE_ORIGIN_X = 220;
-export const CRYSTAL_TREE_ORIGIN_Z = 620;
+export const CRYSTAL_TREE_ORIGIN_X = 220 * WORLD_SCALE;
+export const CRYSTAL_TREE_ORIGIN_Z = 620 * WORLD_SCALE;
 /** Root theatre kept clear of unrelated flora so interaction and approach points remain navigable. */
-export const CRYSTAL_TREE_FLORA_CLEAR_RADIUS = 300;
+export const CRYSTAL_TREE_FLORA_CLEAR_RADIUS = 300 * WORLD_SCALE;
 
 /** Expanded mid-field containment radius: leviathans and the quantum cloud. */
 export const MID_RADIUS = 60 * HABITAT_MID;
