@@ -255,6 +255,7 @@ import { PantheonSociety, FIELD_DIM, ARCHON_CHANNELS } from './sim/pantheon';
 import { FacultiesPantheon } from './sim/faculties-pantheon';
 import { ArchonLanguage, type ArchonLanguageState } from './sim/archon-language';
 import { Lineage } from './sim/lineage';
+import { Xenomind, type XenomindSnapshot } from './sim/xenomind';
 import { NhsiAffectBinding, type NhsiAffectOut } from './sim/nhsi-affect-binding';
 import { TomPantheon } from './sim/tom-pantheon';
 import { applyBrutalGodEvent } from './sim/petri-dish';
@@ -836,6 +837,8 @@ export class World {
   /** Restored resonance-integrator + valence-steering, bound to the pantheon each apex beat. */
   private readonly nhsiAffect = new NhsiAffectBinding();
   private archonLanguage!: ArchonLanguage;
+  private xenomind!: Xenomind;
+  private readonly xenoSenses = new Float32Array(8);
   /** NHSI · 25 theory-of-mind organs — social cue field over apex percepts. */
   private readonly tomPantheon: TomPantheon;
   /** NHSI · emergence angles 8–10 (Eshkol evolution, cross-strain, collective). */
@@ -4101,6 +4104,21 @@ export class World {
       basePercept.light = clamp(level + artOrigin * 0.04, 0, 1);
       basePercept.sound = clamp(bass + mythPower * 0.04, 0, 1);
       basePercept.phase = (t / 60) % 1;
+      // XENOMIND: the alien hyperbolic (Poincaré-disk) substrate reads the same percept and offers an
+      // alternative drive; its intent bends the archons' pull and light-seeking a little.
+      this.xenomind ??= new Xenomind(mulberry32((this.persisted.seed ^ 0x58454e4f) >>> 0 || 1));
+      const xs = this.xenoSenses;
+      xs[0] = basePercept.energy;
+      xs[1] = basePercept.threat;
+      xs[2] = basePercept.crowding;
+      xs[3] = basePercept.chaos;
+      xs[4] = basePercept.wealthRel;
+      xs[5] = basePercept.preyClose;
+      xs[6] = basePercept.rivalClose;
+      xs[7] = basePercept.pull;
+      const xIntent = this.xenomind.think(xs);
+      basePercept.pull = clamp(basePercept.pull + ((xIntent[0] ?? 0.5) - 0.5) * 0.04, 0, 1);
+      basePercept.light = clamp(basePercept.light + ((xIntent[1] ?? 0.5) - 0.5) * 0.02, 0, 1);
       // GOAL5: drive EXACTLY 5 SUPER CREATURES (archetypes 0-4) with per-position percepts.
       // local crowding/threat from grid query at body pos; light/sound/chaos biased by godform.ts (exclusive).
       let primeMindOut: SuperMindIntent | null = null; // typed; avoid any per contract
@@ -6029,6 +6047,11 @@ export class World {
   getLineageStats(): { births: number; maxGeneration: number } {
     const l = this.entities.lineage;
     return { births: l?.total ?? 0, maxGeneration: l?.maxGeneration ?? 0 };
+  }
+
+  /** Xenomind (alien hyperbolic substrate) telemetry. */
+  getXenomind(): XenomindSnapshot | null {
+    return this.xenomind?.snapshot() ?? null;
   }
 
   /** Emergent archon language telemetry (fluency, lexicon size, diversity). */
