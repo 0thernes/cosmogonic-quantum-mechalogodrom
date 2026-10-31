@@ -103,6 +103,29 @@ export class Hud {
    * Writes the DOM only when the name actually changes, so world.ts may call this every
    * telemetry tick without layout churn. O(1), allocation-free on the unchanged path.
    */
+  /** Ω readout element, created lazily beside `#lore` (no index.html change needed). */
+  private omegaEl: HTMLElement | null = null;
+  private omegaText = '';
+
+  /**
+   * OMEGA POINT readout: Ω ∈ [0,1] with a ▲/▼ convergence arrow. Skips the DOM write when the
+   * rounded text is unchanged, so calling it every apex beat is O(1).
+   */
+  setOmega(score: number, converging: boolean): void {
+    const text = `Ω ${score.toFixed(3)} ${converging ? '▲' : '▼'}`;
+    if (text === this.omegaText) return;
+    this.omegaText = text;
+    if (!this.omegaEl) {
+      const el = this.lore.ownerDocument.createElement('span');
+      el.id = 'omega';
+      el.title = 'Omega Point — whole-simulation convergence metric (not a sentience claim)';
+      el.style.cssText = 'margin-left:.6em;color:#ffd98a;font-variant-numeric:tabular-nums';
+      this.lore.insertAdjacentElement('afterend', el);
+      this.omegaEl = el;
+    }
+    this.omegaEl.textContent = text;
+  }
+
   setLore(name: string): void {
     if (name === this.loreName) return;
     this.loreName = name;

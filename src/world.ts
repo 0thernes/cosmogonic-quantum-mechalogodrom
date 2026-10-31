@@ -256,6 +256,7 @@ import { FacultiesPantheon } from './sim/faculties-pantheon';
 import { ArchonLanguage, type ArchonLanguageState } from './sim/archon-language';
 import { Lineage } from './sim/lineage';
 import { Xenomind, type XenomindSnapshot } from './sim/xenomind';
+import { OmegaPoint, type OmegaPointSnapshot } from './sim/omega-point';
 import { NhsiAffectBinding, type NhsiAffectOut } from './sim/nhsi-affect-binding';
 import { TomPantheon } from './sim/tom-pantheon';
 import { applyBrutalGodEvent } from './sim/petri-dish';
@@ -838,6 +839,7 @@ export class World {
   private readonly nhsiAffect = new NhsiAffectBinding();
   private archonLanguage!: ArchonLanguage;
   private xenomind!: Xenomind;
+  private readonly omegaPoint = new OmegaPoint();
   private readonly xenoSenses = new Float32Array(8);
   /** NHSI · 25 theory-of-mind organs — social cue field over apex percepts. */
   private readonly tomPantheon: TomPantheon;
@@ -4408,6 +4410,25 @@ export class World {
       );
       this.darkEnergy.step(clamp(this.lastApexThought.vitality, 0, 1), matterDensity);
       this.darkEnergySnap = this.darkEnergy.snapshot();
+      // OMEGA POINT: the whole-simulation convergence metric Ω (HUD readout). Channels: consciousness
+      // (pantheon coherence, resonance, faculty drive), evolution (language diversity, lineage depth),
+      // noosphere, negentropy (1 − chaos), quantum-ish coherence (resonance coalition), symbolic order
+      // (language fluency stands in for the absent time-crystal order), dark-energy w.
+      const lin = this.entities.lineage;
+      this.omegaPoint.update(
+        [
+          clamp(pantheonSnap.field.coherence, 0, 1),
+          clamp(aff.coherence, 0, 1),
+          clamp(facultyBias, 0, 1),
+        ],
+        [clamp(lang.diversity / 6, 0, 1), clamp((lin?.maxGeneration ?? 0) / 64, 0, 1)],
+        clamp(this.noosphere.coherence, 0, 1),
+        clamp(1 - s.chaos / CHAOS_MAX, 0, 1),
+        clamp(aff.coherence, 0, 1),
+        clamp(lang.fluency, 0, 1),
+        this.darkEnergy.equationOfState,
+      );
+      this.hud.setOmega(this.omegaPoint.score, this.omegaPoint.converging);
       if (this.darkEnergy.expansion > 0.85) {
         s.chaos = Math.min(CHAOS_MAX, s.chaos + 0.02 * (this.darkEnergy.expansion - 0.85));
       }
@@ -6047,6 +6068,11 @@ export class World {
   getLineageStats(): { births: number; maxGeneration: number } {
     const l = this.entities.lineage;
     return { births: l?.total ?? 0, maxGeneration: l?.maxGeneration ?? 0 };
+  }
+
+  /** Omega Point convergence telemetry (Ω, channels, broadcast). */
+  getOmegaPoint(): OmegaPointSnapshot {
+    return this.omegaPoint.snapshot();
   }
 
   /** Xenomind (alien hyperbolic substrate) telemetry. */
