@@ -253,6 +253,7 @@ import {
 } from './sim/godform'; // GOAL5 + TSOTCHKE depth-ledger corpus (ralph 10x: Eshkol AD, Moonlab tensor, quake, irrep from (Tsotchke))
 import { PantheonSociety, FIELD_DIM, ARCHON_CHANNELS } from './sim/pantheon';
 import { FacultiesPantheon } from './sim/faculties-pantheon';
+import { ArchonLanguage, type ArchonLanguageState } from './sim/archon-language';
 import { NhsiAffectBinding, type NhsiAffectOut } from './sim/nhsi-affect-binding';
 import { TomPantheon } from './sim/tom-pantheon';
 import { applyBrutalGodEvent } from './sim/petri-dish';
@@ -833,6 +834,7 @@ export class World {
   private readonly facultiesPantheon: FacultiesPantheon;
   /** Restored resonance-integrator + valence-steering, bound to the pantheon each apex beat. */
   private readonly nhsiAffect = new NhsiAffectBinding();
+  private archonLanguage!: ArchonLanguage;
   /** NHSI · 25 theory-of-mind organs — social cue field over apex percepts. */
   private readonly tomPantheon: TomPantheon;
   /** NHSI · emergence angles 8–10 (Eshkol evolution, cross-strain, collective). */
@@ -4043,6 +4045,9 @@ export class World {
         pain: clamp(1 - mortVitality, 0, 1),
         pleasure: clamp(pantheonSnap.field.coherence * 0.5, 0, 1),
       });
+      // EMERGENT LANGUAGE: the archon communities play a seeded naming game over the dominant faculty.
+      this.archonLanguage ??= new ArchonLanguage((this.persisted.seed ^ 0x4c414e47) >>> 0);
+      const lang = this.archonLanguage.step(facultyGroups);
       const artOrigin = this.artifacts.influenceAt(0, 0);
       const net0 = this.economy.wealthOf(World.ECON_SUPER_BASE + 0)?.netWorth ?? 0;
       // global fallback percept (used for twins/heroes); 5 get position-localized versions below
@@ -4055,7 +4060,8 @@ export class World {
           (facultyGroups[0] ?? 0) * 0.03 +
           symCoop * 0.04 -
           (1 - mortVitality) * 0.03 +
-          aff.resonance * 0.04,
+          aff.resonance * 0.04 +
+          lang.fluency * 0.02,
         0,
         1,
       );
@@ -6014,6 +6020,11 @@ export class World {
   /** Live resonance-integrator + valence-steering state (restored modules; apex-beat cadence). */
   getNhsiAffect(): NhsiAffectOut {
     return this.nhsiAffect.snapshot();
+  }
+
+  /** Emergent archon language telemetry (fluency, lexicon size, diversity). */
+  getArchonLanguage(): ArchonLanguageState | null {
+    return this.archonLanguage?.snapshot() ?? null;
   }
 
   /** Advance the live apex substrate one beat and repaint the apex core from its telemetry. ~1 ms. */
