@@ -147,6 +147,10 @@ class PrimeSieveLoom {
   private readonly bucketCursor: Int32Array;
   private allergy = 0;
   private throughput = 0;
+  /** step() scratch: per-node product w·(state+inj), the twin distances < n ascending, and each one's dead prefix. */
+  private readonly contrib: Float64Array;
+  private readonly twinDists: Int32Array;
+  private readonly deadPrefix: Int32Array;
 
   constructor(n = 96) {
     this.n = n;
@@ -184,6 +188,11 @@ class PrimeSieveLoom {
     this.builtEdges = count;
     this.liveEdges = count;
     this.alive = new Uint8Array(count).fill(1);
+    this.contrib = new Float64Array(n);
+    const ds: number[] = [];
+    for (let d = 1; d < n; d++) if (this.twin[d]) ds.push(d);
+    this.twinDists = Int32Array.from(ds);
+    this.deadPrefix = new Int32Array(ds.length);
   }
 
   /** True iff `d` is a twin-prime distance — exposed so the test asserts the membership law. */
@@ -210,18 +219,58 @@ class PrimeSieveLoom {
   step(drive: number, rng: Rng): number {
     const next = this.next;
     const state = this.state;
-    const edgeI = this.edgeI;
-    const edgeJ = this.edgeJ;
-    const alive = this.alive;
-    next.fill(0);
     const w = 0.12;
     const inj = drive * 0.1;
-    for (let e = 0, m = this.builtEdges; e < m; e++) {
-      if (alive[e] === 0) continue;
-      const i = edgeI[e]!;
-      const j = edgeJ[e]!;
-      next[i]! += w * (state[j]! + inj);
-      next[j]! += w * (state[i]! + inj);
+    // Gather form of the edge scatter (perf): every edge (i,j) adds w·(state[j]+inj) to next[i] and
+    // w·(state[i]+inj) to next[j]. Edges run i-ascending then j-ascending, so node x first receives its
+    // "as j" terms from i = x−d in i order (d descending), then its "as i" terms in d order — summed here in
+    // exactly that order, from the same per-node products, so every next[x] is bit-identical. Liveness is
+    // read from the per-distance purge cursors: each distance bucket only ever loses a prefix in i.
+    const v = this.contrib;
+    const n = this.n;
+    for (let i = 0; i < n; i++) v[i] = w * (state[i]! + inj);
+    const dists = this.twinDists;
+    const K = dists.length;
+    const dead = this.deadPrefix;
+    for (let k = 0; k < K; k++) {
+      const d = dists[k]!;
+      dead[k] = this.bucketCursor[d]! - this.bucketStart[d]!;
+    }
+    // Four nodes per pass with independent accumulators (each keeps its own exact term order): the
+    // adds are latency-bound, so interleaving four dependency chains is where the speed comes from.
+    let kDown = -1; // largest k with dists[k] <= x + 3
+    for (let x = 0; x < n; x += 4) {
+      const x1 = x + 1;
+      const x2 = x + 2;
+      const x3 = x + 3;
+      while (kDown + 1 < K && dists[kDown + 1]! <= x3) kDown++;
+      let a0 = 0;
+      let a1 = 0;
+      let a2 = 0;
+      let a3 = 0;
+      for (let k = kDown; k >= 0; k--) {
+        const d = dists[k]!;
+        const dk = dead[k]!;
+        const i0 = x - d;
+        if (i0 >= dk) a0 += v[i0]!;
+        if (i0 + 1 >= dk) a1 += v[i0 + 1]!;
+        if (i0 + 2 >= dk) a2 += v[i0 + 2]!;
+        if (i0 + 3 >= dk) a3 += v[i0 + 3]!;
+      }
+      for (let k = 0; k < K; k++) {
+        const d = dists[k]!;
+        const j0 = x + d;
+        if (j0 >= n) break;
+        const dk = dead[k]!;
+        if (x >= dk) a0 += v[j0]!;
+        if (j0 + 1 < n && x1 >= dk) a1 += v[j0 + 1]!;
+        if (j0 + 2 < n && x2 >= dk) a2 += v[j0 + 2]!;
+        if (j0 + 3 < n && x3 >= dk) a3 += v[j0 + 3]!;
+      }
+      next[x] = a0;
+      if (x1 < n) next[x1] = a1;
+      if (x2 < n) next[x2] = a2;
+      if (x3 < n) next[x3] = a3;
     }
     let tp = 0;
     for (let i = 0; i < this.n; i++) {
