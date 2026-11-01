@@ -18,6 +18,7 @@ import {
 } from '../core/worker-pool';
 import { chunkSeed as coordinateChunkSeed } from './wilderness-chunks';
 import type { OrganismIntelligenceSignal } from '../types';
+import { scaleCount } from './constants';
 
 /** Packed wilderness entity layout: xyz, velocity xyz, type, seed. */
 const WILDERNESS_ENTITY_STRIDE = 8;
@@ -253,7 +254,7 @@ export class WildernessPopulation {
   private readonly chunkSize = 100; // World units per chunk
   private frameCounter = 0; // Frame counter for timestamps (determinism-safe)
   private readonly maxChunks = 81; // #200: ≥ the 9×9 unload box, so no wanted chunk is skipped // Camera-streamed active chunks (ADR 0010 — not golden)
-  private readonly entitiesPerChunk = 128; // Entities per chunk
+  private readonly entitiesPerChunk = scaleCount(128); // Entities per chunk (Mini World: 13)
   private nextEntityId = 0;
   /** Pre-allocated worker task buffers — one per max active chunk (parallel-safe). */
   private readonly taskBuffers: Float32Array[];

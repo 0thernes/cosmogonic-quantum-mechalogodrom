@@ -55,7 +55,7 @@ export const PANTHEON_SIZE = 25;
  * published surfaces — note the dated handoffs/reports legitimately record the historical count and must
  * NOT be blanket-rewritten (that is an owner doc-curation pass, not a mechanical find-replace).
  */
-export const APEX_INDIVIDUATED = 5;
+export const APEX_INDIVIDUATED = scaleCount(5); // Mini World: 1 super creature
 
 export function getArchonTier(i: number): ArchonTier {
   const idx = ((i % PANTHEON_SIZE) + PANTHEON_SIZE) % PANTHEON_SIZE;
@@ -235,6 +235,7 @@ import {
   alphabetArchetypeAt,
   type AlphabetArchetype,
 } from './alphabet-pantheon';
+import { scaleCount } from './constants';
 
 const GODFORM_MPO_INPUT = new Float32Array(3);
 

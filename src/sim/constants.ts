@@ -89,6 +89,11 @@ export function columnY(y: number): number {
   return WORLD_LINEAR === 1 ? y : PLATFORM_FLOOR + (y - PLATFORM_FLOOR) * WORLD_LINEAR;
 }
 export const PLATFORM_CEIL = columnY(720); // 720 (Mini World ≈ 231.8: same shape as the full world)
+/** Mechalogodrom (centre god) altitude: 252·HABITAT_Y_SCALE = 756 in the full world (unchanged). In Mini World
+ *  the god and its orbiting corona (±~20 u) would poke through the 231.8 ceiling at ≈239, so it hangs 24 u
+ *  below the ceiling instead (≈207.8) — whole group, orbit and fire column stay inside the Mini World box. */
+export const MECHA_ALTITUDE =
+  WORLD_SCALE === 1 ? 252 * HABITAT_Y_SCALE : Math.min(252 * HABITAT_Y_SCALE, PLATFORM_CEIL - 24);
 export const PLATFORM_HEIGHT = PLATFORM_CEIL - PLATFORM_FLOOR;
 export const PLATFORM_MID_Y = PLATFORM_FLOOR + PLATFORM_HEIGHT * 0.5;
 

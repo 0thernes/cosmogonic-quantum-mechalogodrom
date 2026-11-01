@@ -13,10 +13,10 @@
  * DETERMINISM (ADR 0004): animated purely from a `uTime` uniform; no `Math.random`, no `Date.now`.
  */
 import * as THREE from 'three';
-import { ARENA_MID, HABITAT_XZ_SCALE, HABITAT_Y_SCALE } from './constants';
+import { ARENA_MID, HABITAT_XZ_SCALE, HABITAT_Y_SCALE, MECHA_ALTITUDE } from './constants';
 
 // ── Mirror mecha-blaze.ts's burn cone so the visible flames == the kill volume. ──
-const MECHA_Y = 252 * HABITAT_Y_SCALE; // Mechalogodrom altitude 756 (3× higher with the taller world)
+const MECHA_Y = MECHA_ALTITUDE; // Mechalogodrom altitude 756 (3× higher with the taller world)
 const BASE_R = 36 * ARENA_MID * HABITAT_XZ_SCALE; // cone radius at the god 180 (×2 with the 2×-bigger body)
 const CONE_SPREAD = 0.34; // extra radius per world-unit of descent
 const BLAZE_FLOOR = 150 * HABITAT_Y_SCALE; // 450 — the cone bottoms out here, sparing the ground swarm

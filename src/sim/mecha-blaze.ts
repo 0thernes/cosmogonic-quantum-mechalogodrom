@@ -18,13 +18,13 @@
  * based (frame-deterministic), never Date.now. One additive `THREE.Points` ember pool, owned + disposed.
  */
 import * as THREE from 'three';
-import { ARENA_MID, HABITAT_XZ_SCALE, HABITAT_Y_SCALE } from './constants';
+import { ARENA_MID, HABITAT_XZ_SCALE, HABITAT_Y_SCALE, MECHA_ALTITUDE } from './constants';
 import type { EntityManager } from './entities';
 import type { Entity, SimContext } from '../types';
 
 /** Mechalogodrom altitude — mirrors mechalogodrom.ts ALTITUDE = 252·HABITAT_Y_SCALE (3× higher = 756).
  *  The group sits at (0, MECHA_Y, 0). */
-export const MECHA_Y = 252 * HABITAT_Y_SCALE; // 756
+export const MECHA_Y = MECHA_ALTITUDE; // 756
 const MECHA_X = 0;
 const MECHA_Z = 0;
 // USER V127: the blaze REACHES DOWN — a widening fiery CONE hanging from the mecha into the central

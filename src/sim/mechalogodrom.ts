@@ -46,8 +46,8 @@ import { TAU, clamp, lerp } from '../math/scalar';
 import {
   ARENA_RADIUS,
   HABITAT_XZ_SCALE,
-  HABITAT_Y_SCALE,
   WORLD_LINEAR,
+  MECHA_ALTITUDE,
   scaleCount,
 } from './constants';
 import { MechaExteriorAbomination } from './creature-exterior-layers';
@@ -90,7 +90,7 @@ const DIAMETER_SCALE = HABITAT_XZ_SCALE * WORLD_LINEAR; // ×2 (×0.63 in Mini W
  *  756, matching the world's 3× VERTICAL expansion (HABITAT_Y_SCALE) — owner: "the center star should be
  *  3× higher." The god now scales WITH the world on both axes (3× up, 2× wide) instead of sitting at its
  *  old authored height (this supersedes the brief God-Colossus mid-height alignment). */
-const ALTITUDE = 252 * HABITAT_Y_SCALE; // = 756 — 3× higher (Mini World ≈ 239: shrinks with the column)
+const ALTITUDE = MECHA_ALTITUDE; // = 756 — 3× higher (Mini World ≈ 207.8: kept under the 231.8 ceiling)
 /** Mandelbulb iteration budget for the per-vertex escape proxy (power-8 lobes; NaN-guarded). */
 const BULB_ITERS = 4;
 

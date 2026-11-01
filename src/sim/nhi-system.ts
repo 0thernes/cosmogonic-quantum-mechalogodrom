@@ -20,13 +20,14 @@ import {
   type NhiPercept,
   type NhiSnapshot,
 } from './nhi';
+import { scaleCount } from './constants';
 
 const NHI_SYSTEM_STATE_VERSION = 1 as const;
 /** Matches the composition-root live NHI cap and bounds checkpoint validation/allocation.
  *  OWNER 2026-07-15: raised 32 → 1000 ("NHI CAP should be 1000 maximum"). The cap is a CEILING on
  *  the launched population, not an allocation — minds are Map entries created per launch, and the
  *  body system's pairwise social scan is stagger-budgeted so cost stays bounded at full cap. */
-export const NHI_SYSTEM_MIND_CAP = 1000;
+export const NHI_SYSTEM_MIND_CAP = scaleCount(1000); // Mini World: 100
 
 /** Exact JSON-safe orchestration checkpoint. The shared decision RNG remains caller-owned. */
 export interface NhiSystemStateSnapshot {

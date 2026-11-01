@@ -34,12 +34,16 @@ import { clamp } from '../math/scalar';
 import {
   ARENA_RADIUS,
   HABITAT_XZ_SCALE,
-  HABITAT_Y_SCALE,
+  MECHA_ALTITUDE,
   PLATFORM_CEIL,
   PLATFORM_FLOOR,
   PLATFORM_HALF,
 } from './constants';
-import { ALPHABET_ROSTER, type AlphabetArchetype } from './alphabet-pantheon';
+import {
+  ALPHABET_ROSTER,
+  PANTHEON_ACTIVE_INDICES,
+  type AlphabetArchetype,
+} from './alphabet-pantheon';
 import {
   ApexExteriorAbomination,
   attachGlyphWireHalos,
@@ -125,7 +129,7 @@ const NAV_SPEED = 320;
  */
 const PANTHEON_HAZARDS: readonly { x: number; y: number; z: number; r: number; push: number }[] = [
   { x: 0, y: 60, z: -101.25, r: 95, push: 48 }, // the ascension DEATH portal
-  { x: 0, y: 252 * HABITAT_Y_SCALE, z: 0, r: 135 * HABITAT_XZ_SCALE, push: 42 }, // the fiery Mechalogodrom (3× higher, 2× wider)
+  { x: 0, y: MECHA_ALTITUDE, z: 0, r: 135 * HABITAT_XZ_SCALE, push: 42 }, // the fiery Mechalogodrom (3× higher, 2× wider)
 ];
 /** Fractional part in [0,1) — a deterministic pseudo-random when fed `counter · irrational`. */
 const nfrac = (x: number): number => x - Math.floor(x);
@@ -188,6 +192,13 @@ interface Body {
   readonly geoKey: string;
   readonly poolSlot: number;
 }
+
+/** Roster index → compact live slot (identity in the full world). */
+const PANTHEON_SLOT_OF: Int16Array = (() => {
+  const m = new Int16Array(100).fill(-1);
+  PANTHEON_ACTIVE_INDICES.forEach((gi, k) => (m[gi] = k));
+  return m;
+})();
 
 export class AlphabetPantheonRender implements PortalImmune {
   private readonly group = new THREE.Group();
@@ -426,7 +437,8 @@ export class AlphabetPantheonRender implements PortalImmune {
 
     // First pass: bucket archetypes by unique wild-geometry key (≈100 distinct silhouettes).
     const bucketMap = new Map<string, AlphabetArchetype[]>();
-    for (const a of ALPHABET_ROSTER) {
+    for (const gi of PANTHEON_ACTIVE_INDICES) {
+      const a = ALPHABET_ROSTER[gi]!;
       const sig = glyphExteriorSignature(a);
       const key = glyphGeoBucketKey(a, sig);
       const list = bucketMap.get(key);
@@ -513,9 +525,11 @@ export class AlphabetPantheonRender implements PortalImmune {
 
     this.wireHalos.push(...attachGlyphWireHalos(this.group, this.meshes));
     this.setWireHalosVisible(false); // USER #10: skins only — wire halos for VISION·wire debug
-    this.glyphAccents = new GlyphAccentMotes(this.group, 100);
-    this.glyphFilaments = new GlyphFilamentBurst(this.group, 100);
-    this.glyphSpores = new GlyphSporeAura(this.group, 100);
+    // One accent / filament / spore slot per LIVE glyph (100 full world, 10 Mini World).
+    const live = PANTHEON_ACTIVE_INDICES.length;
+    this.glyphAccents = new GlyphAccentMotes(this.group, live);
+    this.glyphFilaments = new GlyphFilamentBurst(this.group, live);
+    this.glyphSpores = new GlyphSporeAura(this.group, live);
 
     // #101 APEX ABOMINATION — physical exterior: tesseract cage + nebula + filaments.
     const apexVert = `
@@ -1028,9 +1042,10 @@ export class AlphabetPantheonRender implements PortalImmune {
           clamp(lit, 0.22, 0.62),
         );
         mesh.setColorAt(s, C);
-        this.glyphAccents.setAt(b.gIdx, M, b.sig, ba, clock);
-        this.glyphFilaments.setAt(b.gIdx, M, b.pal.filamentHue, b.sig, ba, clock);
-        this.glyphSpores.setAt(b.gIdx, M, b.pal.sporeHue, b.sig, ba, clock);
+        const fx = PANTHEON_SLOT_OF[b.gIdx]!; // === gIdx in the full world
+        this.glyphAccents.setAt(fx, M, b.sig, ba, clock);
+        this.glyphFilaments.setAt(fx, M, b.pal.filamentHue, b.sig, ba, clock);
+        this.glyphSpores.setAt(fx, M, b.pal.sporeHue, b.sig, ba, clock);
       }
       mesh.instanceMatrix.needsUpdate = true;
       if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
@@ -1119,7 +1134,7 @@ export class AlphabetPantheonRender implements PortalImmune {
     onBounce: (x: number, y: number, z: number) => void,
   ): void {
     const R = Math.sqrt(r2);
-    for (let gi = 0; gi < 100; gi++) {
+    for (const gi of PANTHEON_ACTIVE_INDICES) {
       const dx = this.navPX[gi]! - ax;
       const dz = this.navPZ[gi]! - az;
       const d2 = dx * dx + dz * dz;

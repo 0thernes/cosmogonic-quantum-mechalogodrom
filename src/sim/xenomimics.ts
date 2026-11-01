@@ -23,13 +23,13 @@
 import { mulberry32, hashSeed, type Rng } from '../math/rng';
 import { measureRngProvenance, type RngProvenance } from '../core/rng-provenance';
 import { XenomimicBrain, type XenomimicBeat, type XenomimicThought } from './xenomimic-brain';
-import { PLATFORM_HALF } from './constants';
+import { PLATFORM_HALF, scaleCount } from './constants';
 import type { OrganismIntelligenceSignal } from '../types';
 
 /** Number of visually + behaviourally distinct xenomimic species. */
 export const XENOMIMIC_SPECIES = 10;
 /** Hard cap on live creatures (owner: "population grows to 1000 total"). */
-export const XENOMIMIC_MAX = 1000;
+export const XENOMIMIC_MAX = scaleCount(1000); // Mini World: 100
 
 /** Stable composition-root intent values for temporary Big Tree visits. */
 export const XenomimicVisitMode = {

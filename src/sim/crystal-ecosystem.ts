@@ -27,6 +27,7 @@ import {
   CRYSTAL_TREE_ORIGIN_X,
   CRYSTAL_TREE_ORIGIN_Z,
   PLATFORM_FLOOR,
+  scaleCount,
 } from './constants';
 import {
   EdibleResourceRegistry,
@@ -373,18 +374,25 @@ export interface CrystalEcosystemConfig {
   readonly height: number;
 }
 
+// Mini World: every authored census count below runs at 1/10 (min 1) via scaleCount — identity in the
+// full world. Branch structure and height stay authored (tree shape and fidelity are never reduced).
 const PRODUCTION_CONFIG: CrystalEcosystemConfig = {
   domeBranches: CRYSTAL_TREE_DOME_BRANCHES,
   bonsaiBranches: CRYSTAL_TREE_BONSAI_BRANCHES,
-  leaves: CRYSTAL_TREE_LEAVES,
-  fruits: CRYSTAL_TREE_FRUITS,
-  flowers: CRYSTAL_TREE_FLOWERS,
-  creaturesPerSpecies: CRYSTAL_TREE_CREATURES_PER_SPECIES,
-  ambientCreatures: CRYSTAL_TREE_AMBIENT_CREATURES,
-  motes: CRYSTAL_TREE_MOTES,
-  relics: CRYSTAL_TREE_RELICS,
+  leaves: scaleCount(CRYSTAL_TREE_LEAVES),
+  fruits: scaleCount(CRYSTAL_TREE_FRUITS),
+  flowers: scaleCount(CRYSTAL_TREE_FLOWERS),
+  creaturesPerSpecies: scaleCount(CRYSTAL_TREE_CREATURES_PER_SPECIES),
+  ambientCreatures: scaleCount(CRYSTAL_TREE_AMBIENT_CREATURES),
+  motes: scaleCount(CRYSTAL_TREE_MOTES),
+  relics: scaleCount(CRYSTAL_TREE_RELICS),
   height: CRYSTAL_TREE_HEIGHT,
 };
+
+/** The live census this world builds (authored values in the full world, ×1/10 in Mini World). */
+export function crystalProductionConfig(): Readonly<CrystalEcosystemConfig> {
+  return PRODUCTION_CONFIG;
+}
 
 function hash(n: number): number {
   const s = Math.sin(n) * 43758.5453;

@@ -28,6 +28,7 @@ import { mulberry32, type Rng } from '../math/rng';
 import { clamp } from '../math/scalar';
 import type { OrganismIntelligenceSignal } from '../types';
 import { PANTHEON_GLYPH_BRAIN_PARAMS } from './apex-brain';
+import { PANTHEON_ACTIVE_INDICES } from './alphabet-pantheon';
 
 interface GlyphEnvironmentalPerceptInput {
   weatherHue: number;
@@ -399,22 +400,31 @@ export class GlyphBrain {
  * snapshots in `scratch` fresh.
  */
 export class GlyphBrainBatch {
+  /** Live brains, in {@link PANTHEON_ACTIVE_INDICES} order (all 100 in the full world, 10 in Mini World). */
   private readonly brains: GlyphBrain[] = [];
+  /** Roster index of each live brain (snapshots stay indexed by roster slot 0..99). */
+  private readonly slots: readonly number[];
   /** Reused result vector — avoids per-beat `map()` allocation. */
   private readonly scratch: GlyphBrainSnapshot[] = Array.from({ length: 100 });
   private cohortCursor = 0;
 
-  constructor(worldSeed: number) {
-    for (let i = 0; i < 100; i++) {
-      this.brains.push(new GlyphBrain(i, worldSeed));
-      this.scratch[i] = this.brains[i]!.initialSnapshot();
+  constructor(worldSeed: number, active: readonly number[] = PANTHEON_ACTIVE_INDICES) {
+    this.slots = active;
+    for (const i of active) {
+      const b = new GlyphBrain(i, worldSeed);
+      this.brains.push(b);
+      this.scratch[i] = b.initialSnapshot();
     }
+    // Slots with no live glyph (Mini World only) hold a frozen copy of the first live snapshot so
+    // every consumer can still read 100 entries; no body renders for them.
+    const fill = this.scratch[active[0]!]!;
+    for (let i = 0; i < 100; i++) this.scratch[i] ??= fill;
   }
 
   /** Think all 100 brains and return snapshots. Visual-only — no world writes. */
   thinkAll(percept: Float32Array): GlyphBrainSnapshot[] {
-    for (let i = 0; i < this.brains.length; i++) {
-      this.scratch[i] = this.brains[i]!.think(percept);
+    for (let k = 0; k < this.brains.length; k++) {
+      this.scratch[this.slots[k]!] = this.brains[k]!.think(percept);
     }
     return this.scratch;
   }
@@ -429,15 +439,16 @@ export class GlyphBrainBatch {
     const s = Math.max(1, Math.min(10, Math.floor(stride)));
     const offset = this.cohortCursor % s;
     this.cohortCursor = (this.cohortCursor + 1) % s;
-    for (let i = offset; i < this.brains.length; i += s) {
-      this.scratch[i] = this.brains[i]!.think(percept);
+    for (let k = offset; k < this.brains.length; k += s) {
+      this.scratch[this.slots[k]!] = this.brains[k]!.think(percept);
     }
     return this.scratch;
   }
 
   /** Think a single brain by index. */
   thinkOne(index: number, percept: Float32Array): GlyphBrainSnapshot | null {
-    return this.brains[index]?.think(percept) ?? null;
+    const k = this.slots.indexOf(index);
+    return k < 0 ? null : this.brains[k]!.think(percept);
   }
 
   get count(): number {

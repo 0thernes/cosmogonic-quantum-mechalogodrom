@@ -104,7 +104,7 @@ const STAR_COUNT = scaleCount(900);
 /** Maze-block count (direct children — also guarantees visualNodes ≥ 25). */
 const MAZE_BLOCKS = 24;
 /** Coral dendrite node cap; visible count scales with crowding. */
-const CORAL_CAP = 300;
+const CORAL_CAP = scaleCount(300);
 /** Filament-web line count fanning from the void throat. */
 const WEB_LINES = 72;
 

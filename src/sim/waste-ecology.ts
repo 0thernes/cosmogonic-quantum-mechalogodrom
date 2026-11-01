@@ -15,12 +15,12 @@
  */
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { PLATFORM_HALF } from './constants';
+import { PLATFORM_HALF, scaleCount } from './constants';
 import { baseTerrainHeightAt } from './terrain-profile';
 
 const GRID_N = 56;
 const CELL = (PLATFORM_HALF * 2) / GRID_N;
-const MAX_CONSTRUCTS = 72;
+const MAX_CONSTRUCTS = scaleCount(72);
 
 function hash(n: number): number {
   const s = Math.sin(n * 91.7 + 17.3 + 0x5eede001 * 0.00001) * 43758.5453;

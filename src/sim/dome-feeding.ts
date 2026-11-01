@@ -16,7 +16,7 @@
  * are never prey). One additive puff Points pool, owned + disposed here.
  */
 import * as THREE from 'three';
-import { ARENA_MID } from './constants';
+import { ARENA_MID, scaleCount } from './constants';
 import type { EntityManager } from './entities';
 import type { Entity, SanctuaryHarmGate, SimContext } from '../types';
 
@@ -49,7 +49,7 @@ const GRAZE_PRESSURE = 0.7;
 /** "respawn in 5 seconds." */
 const RESPAWN_DELAY = 5;
 /** Max feeders tracked per frame (10 titans + 4 leviathans + ~14 puppeteers ≈ 28; headroom to 64). */
-const MAX_FEEDERS = 64;
+const MAX_FEEDERS = scaleCount(64);
 
 const POOL = 720;
 const PER_EAT = 16;

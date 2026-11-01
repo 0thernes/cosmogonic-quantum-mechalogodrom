@@ -18,6 +18,7 @@
  * NOT sentient — 100 functional, parameterized creature archetypes.
  */
 import { mulberry32, hashSeed } from '../math/rng';
+import { scaleCount } from './constants';
 
 type AlphabetScript = 'greek' | 'latin';
 type LetterCase = 'upper' | 'lower';
@@ -243,6 +244,16 @@ export const ALPHABET_ROSTER: readonly AlphabetArchetype[] = Object.freeze(build
 
 /** Total roster size (100). */
 export const ALPHABET_PANTHEON_SIZE = ALPHABET_ROSTER.length;
+
+/**
+ * Roster indices that are LIVE in this world: all 100 in the full world; in Mini World one tenth
+ * (10), sampled at an even stride so every alphabet (greek/latin, upper/lower) stays represented.
+ * Each live glyph keeps its full brain, body and shaders; there are simply fewer of them.
+ */
+export const PANTHEON_ACTIVE_INDICES: readonly number[] = (() => {
+  const n = scaleCount(ALPHABET_PANTHEON_SIZE);
+  return Array.from({ length: n }, (_, k) => Math.floor((k * ALPHABET_PANTHEON_SIZE) / n));
+})();
 
 const BY_GLYPH = new Map<string, AlphabetArchetype>(ALPHABET_ROSTER.map((a) => [a.glyph, a]));
 
