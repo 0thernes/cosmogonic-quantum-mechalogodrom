@@ -159,7 +159,6 @@ import { LearnedRecurrence, type LearnedRecurrenceSnapshot } from './learned-rec
 import { NQSLearningController, type NQSTelemetry } from './nqs-vmc-learning';
 import { grayScottResidual, pinnLoss } from './pinn-residual';
 import { pathWeight } from './pimc-paths';
-import { qrngApiDrawFrom } from './quantum-rng-api';
 import { homebrewEshkolBeat } from './homebrew-eshkol';
 import { TSOTCHKE_HARVEST } from './generated-tsotchke-seeds';
 import { TopDownPerception } from './topdown-perception';
@@ -1758,7 +1757,9 @@ export class SuperMind {
       this.pimcPath[pi] = clamp01((this.pimcPath[pi - 1] ?? 0) * 0.7 + novelty * 0.3);
     const pimcW = pathWeight(this.pimcPath, 2.5 + surprise, (x) => (x - 0.5) * (x - 0.5));
     const hb = homebrewEshkolBeat(TSOTCHKE_HARVEST.eskCount, this.cliffordBeat, this.noiseSeed);
-    const apiDraw = qrngApiDrawFrom(this.eshkol);
+    // Only the draw is used; qrngApiDrawFrom's receipt also built a full statevector snapshot + health
+    // report (read-only) each think — ~100 KB of garbage per call. Same draw, same stream position.
+    const apiDraw = { draw: this.eshkol.next01() };
     drives.REST += 0.06 * pinnHealth * (1 - s[1]);
     drives.EXPLORE += 0.08 * pimcW * (1 - (s[1] ?? 0));
     drives.SPAWN += 0.04 * hb.vitality * s[0];
