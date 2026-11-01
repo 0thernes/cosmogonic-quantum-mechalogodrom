@@ -54,6 +54,10 @@ export interface CliffordSnapshot {
  * (each O(n)); {@link measure} a qubit (O(n²), seeded); read {@link entanglementEntropy} / {@link snapshot}.
  * Scales far beyond the dense register's qubit ceiling.
  */
+/** Reused GF(2) elimination workspace for entanglementEntropy (fully rewritten per call). */
+let eeMat = new Uint8Array(64);
+let eeRow = new Int32Array(16);
+
 export class CliffordTableau {
   /** Qubit count. */
   readonly n: number;
@@ -297,37 +301,39 @@ export class CliffordTableau {
     const { x, z } = this;
     // Build the n × 2·cut binary matrix: each stabiliser row restricted to (x_j, z_j) for j ∈ [0,cut).
     const cols = 2 * cut;
-    const mat: Uint8Array[] = [];
+    // Flat reused n × cols matrix plus a row permutation (swapping indices = the old row-reference swap).
+    if (eeMat.length < n * cols) eeMat = new Uint8Array(n * cols * 2);
+    if (eeRow.length < n) eeRow = new Int32Array(n * 2);
+    const mat = eeMat;
+    const rowOf = eeRow;
     for (let s = 0; s < n; s++) {
-      const row = new Uint8Array(cols);
+      const off = s * cols;
+      rowOf[s] = off;
       const base = (n + s) * n;
       for (let j = 0; j < cut; j++) {
-        row[j] = x[base + j] ?? 0;
-        row[cut + j] = z[base + j] ?? 0;
+        mat[off + j] = x[base + j] ?? 0;
+        mat[off + cut + j] = z[base + j] ?? 0;
       }
-      mat.push(row);
     }
     // GF(2) rank by Gaussian elimination.
     let rank = 0;
-    for (let col = 0; col < cols && rank < mat.length; col++) {
+    for (let col = 0; col < cols && rank < n; col++) {
       let pivot = -1;
-      for (let i = rank; i < mat.length; i++) {
-        if ((mat[i]?.[col] ?? 0) === 1) {
+      for (let i = rank; i < n; i++) {
+        if (mat[rowOf[i]! + col] === 1) {
           pivot = i;
           break;
         }
       }
       if (pivot < 0) continue;
-      const tmp = mat[rank];
-      mat[rank] = mat[pivot] ?? new Uint8Array(cols);
-      if (tmp) mat[pivot] = tmp;
-      const pr = mat[rank];
-      if (!pr) continue;
-      for (let i = 0; i < mat.length; i++) {
-        if (i !== rank && (mat[i]?.[col] ?? 0) === 1) {
-          const ri = mat[i];
-          if (!ri) continue;
-          for (let c = 0; c < cols; c++) ri[c] = (ri[c] ?? 0) ^ (pr[c] ?? 0);
+      const tmp = rowOf[rank]!;
+      rowOf[rank] = rowOf[pivot]!;
+      rowOf[pivot] = tmp;
+      const pr = rowOf[rank]!;
+      for (let i = 0; i < n; i++) {
+        const ri = rowOf[i]!;
+        if (i !== rank && mat[ri + col] === 1) {
+          for (let c = 0; c < cols; c++) mat[ri + c] = mat[ri + c]! ^ mat[pr + c]!;
         }
       }
       rank++;
