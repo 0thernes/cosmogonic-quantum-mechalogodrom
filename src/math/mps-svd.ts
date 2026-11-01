@@ -84,6 +84,22 @@ export function matMul(A: Mat, B: Mat): Mat {
   return out;
 }
 
+/** Matrix product A·B written into `out` (rows/cols must match); same arithmetic as {@link matMul}. */
+export function matMulInto(A: Mat, B: Mat, out: Mat): Mat {
+  out.data.fill(0);
+  for (let i = 0; i < A.rows; i++) {
+    for (let k = 0; k < A.cols; k++) {
+      const a = A.data[i * A.cols + k]!;
+      if (a === 0) continue;
+      for (let j = 0; j < B.cols; j++) {
+        const oi = i * out.cols + j;
+        out.data[oi] = (out.data[oi] ?? 0) + a * (B.data[k * B.cols + j] ?? 0);
+      }
+    }
+  }
+  return out;
+}
+
 /**
  * Deterministic thin SVD A = U·diag(S)·Vᵀ via one-sided Jacobi, with singular
  * values sorted descending and a fixed sign convention. U is rows×n, S has
@@ -204,6 +220,32 @@ export function svd(A: Mat): { U: Mat; S: number[]; V: Mat } {
     }
   }
   return { U, S, V: Vs };
+}
+
+/**
+ * The rank-χ Eckart–Young approximation of A written into `out` (same shape as A), with the same
+ * accumulation order as {@link lowRankApprox}. For hot callers that only need the approximation.
+ */
+export function lowRankApproxInto(A: Mat, chi: number, out: Mat): Mat {
+  const { U, S, V } = svd(A);
+  const uCols = U.cols;
+  const vCols = V.cols;
+  const k = Math.max(0, Math.min(chi, S.length));
+  const approx = out;
+  approx.data.fill(0);
+  for (let t = 0; t < k; t++) {
+    const sigma = S[t]!;
+    if (sigma <= SVD_TOL) continue;
+    for (let i = 0; i < A.rows; i++) {
+      const ui = U.data[i * uCols + t]! * sigma;
+      if (ui === 0) continue;
+      for (let j = 0; j < A.cols; j++) {
+        const ai = i * A.cols + j;
+        approx.data[ai] = (approx.data[ai] ?? 0) + ui * (V.data[j * vCols + t] ?? 0);
+      }
+    }
+  }
+  return approx;
 }
 
 /**

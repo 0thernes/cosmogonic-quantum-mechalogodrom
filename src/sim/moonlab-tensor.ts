@@ -18,7 +18,17 @@
  */
 
 import { clamp } from '../math/scalar';
-import { type Mat, mat, matMul, svd, lowRankApprox, frobenius, MPS_MAX_DIM } from '../math/mps-svd';
+import {
+  type Mat,
+  mat,
+  matMul,
+  matMulInto,
+  svd,
+  lowRankApprox,
+  lowRankApproxInto,
+  frobenius,
+  MPS_MAX_DIM,
+} from '../math/mps-svd';
 
 const clamp01 = (v: number): number => clamp(v, 0, 1);
 
@@ -32,6 +42,26 @@ function squareSide(len: number): number {
 /** Pack the first rows·cols values of `a` into a fresh row-major matrix. */
 function packMatrix(a: ArrayLike<number>, rows: number, cols: number): Mat {
   const m = mat(rows, cols);
+  const lim = rows * cols;
+  for (let k = 0; k < lim; k++) m.data[k] = a[k] ?? 0;
+  return m;
+}
+
+/** Reused matrices for the contraction hot path, one per (slot, shape); every cell is rewritten per call. */
+const contractScratch = new Map<number, Mat>();
+function scratchMat(slot: number, rows: number, cols: number): Mat {
+  const key = (slot * 128 + rows) * 128 + cols;
+  let m = contractScratch.get(key);
+  if (!m) {
+    m = mat(rows, cols);
+    contractScratch.set(key, m);
+  }
+  return m;
+}
+
+/** {@link packMatrix} into a reused matrix (writes all rows·cols cells). */
+function packMatrixScratch(slot: number, a: ArrayLike<number>, rows: number, cols: number): Mat {
+  const m = scratchMat(slot, rows, cols);
   const lim = rows * cols;
   for (let k = 0; k < lim; k++) m.data[k] = a[k] ?? 0;
   return m;
@@ -85,9 +115,9 @@ export function moonlabTensorContract(
   // 1×1 matrix that reads only a[0], discarding the rest — an inert constant.
   const d = Math.max(2, squareSide(Math.min(aLifted.length, bLifted.length)));
   const bnd = Math.max(1, Math.min(bond, d));
-  const A = packMatrix(aLifted, d, bnd);
-  const B = packMatrix(bLifted, bnd, d);
-  const C = matMul(A, B);
+  const A = packMatrixScratch(0, aLifted, d, bnd);
+  const B = packMatrixScratch(1, bLifted, bnd, d);
+  const C = matMulInto(A, B, scratchMat(2, d, d));
   const full = frobenius(C);
   if (full <= 1e-12) return 0;
   // Keep STRICTLY below the matrix side. `min(chi, d)` was a no-op whenever chi ≥ d (every production
@@ -96,7 +126,7 @@ export function moonlabTensorContract(
   // that violated "real math under every effect" (audit). Forcing keep ≤ d−1 guarantees at least one
   // singular value is dropped, so the ratio genuinely tracks the input's spectral structure. For calls
   // that already truncate (chi < d, e.g. the length-9 test inputs, chi=1) this is unchanged.
-  const { approx } = lowRankApprox(C, Math.max(1, Math.min(chi, d - 1)));
+  const approx = lowRankApproxInto(C, Math.max(1, Math.min(chi, d - 1)), scratchMat(3, d, d));
   return clamp01(frobenius(approx) / (full + 1e-12));
 }
 
