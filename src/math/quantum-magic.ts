@@ -39,11 +39,21 @@ export interface MagicSnapshot {
 const clamp01 = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v);
 const MAGIC_EPS = 1e-9;
 
+/** Reused copies of the amplitudes as doubles (the exact same values the reads produced). */
+let scratchRe = new Float64Array(64);
+let scratchIm = new Float64Array(64);
+
+function popcount(v: number): number {
+  let x = v - ((v >>> 1) & 0x55555555);
+  x = (x & 0x33333333) + ((x >>> 2) & 0x33333333);
+  return (((x + (x >>> 4)) & 0x0f0f0f0f) * 0x01010101) >>> 24;
+}
+
 /**
  * Stabilizer 2-Rényi entropy (quantum "magic") of the pure state given by the `re`/`im` amplitudes over
  * `1<<nQubits` basis states (assumed normalized). Sums ⟨ψ|P|ψ⟩⁴ over all 4ⁿ Pauli strings by applying
- * each string to a reused work buffer (X = bit-swap, Y = swap+phase, Z = phase). Deterministic; allocates
- * the two work buffers once per call (UI cadence). For n < 1, magic = 0.
+ * each string to a reused work buffer (X = bit-swap, Y = swap+phase, Z = phase). Deterministic and allocation-free
+ * apart from the returned snapshot. For n < 1, magic = 0.
  */
 export function quantumMagic(
   re: ArrayLike<number>,
@@ -52,52 +62,60 @@ export function quantumMagic(
 ): MagicSnapshot {
   const dim = 1 << nQubits;
   if (nQubits < 1) return { qubits: nQubits, magic: 0, magicNorm: 0, stabilizer: true };
-  const wr = new Float64Array(dim);
-  const wi = new Float64Array(dim);
   const total = 4 ** nQubits; // number of Pauli strings
+  if (scratchRe.length < dim) {
+    scratchRe = new Float64Array(dim);
+    scratchIm = new Float64Array(dim);
+  }
+  const sr = scratchRe;
+  const si = scratchIm;
+  for (let i = 0; i < dim; i++) {
+    sr[i] = re[i] ?? 0;
+    si[i] = im[i] ?? 0;
+  }
+  // (Pψ)_i = phase(i)·ψ_{i⊕x}: each factor only swaps (X/Y) or multiplies by ±1/±i (Y/Z) the bit it acts on,
+  // so the applied string is read straight off the masks — the same exact values the old in-place
+  // application produced (sign flips and swaps are exact), summed in the same order: bit-identical.
   let sum4 = 0; // Σ_P ⟨ψ|P|ψ⟩⁴
   for (let s = 0; s < total; s++) {
-    // work ← |ψ⟩
-    for (let i = 0; i < dim; i++) {
-      wr[i] = re[i] ?? 0;
-      wi[i] = im[i] ?? 0;
-    }
-    // apply P = ⊗_q P_q (2 bits per qubit: 0=I, 1=X, 2=Y, 3=Z) in place — the factors commute
+    let xm = 0;
+    let ym = 0;
+    let zm = 0;
     for (let q = 0; q < nQubits; q++) {
       const p = (s >> (2 * q)) & 3;
-      if (p === 0) continue;
-      const m = 1 << q;
-      for (let base = 0; base < dim; base += m << 1) {
-        for (let off = 0; off < m; off++) {
-          const i0 = base + off;
-          const i1 = i0 + m;
-          const r0 = wr[i0] ?? 0;
-          const q0 = wi[i0] ?? 0;
-          const r1 = wr[i1] ?? 0;
-          const q1 = wi[i1] ?? 0;
-          if (p === 1) {
-            // X = [[0,1],[1,0]] — swap the |0⟩/|1⟩ amplitudes of qubit q
-            wr[i0] = r1;
-            wi[i0] = q1;
-            wr[i1] = r0;
-            wi[i1] = q0;
-          } else if (p === 2) {
-            // Y = [[0,-i],[i,0]] — out0 = -i·a1, out1 = i·a0
-            wr[i0] = q1;
-            wi[i0] = -r1;
-            wr[i1] = -q0;
-            wi[i1] = r0;
-          } else {
-            // Z = [[1,0],[0,-1]] — negate the |1⟩ amplitude
-            wr[i1] = -r1;
-            wi[i1] = -q1;
-          }
-        }
-      }
+      if (p === 1) xm |= 1 << q;
+      else if (p === 2) {
+        xm |= 1 << q;
+        ym |= 1 << q;
+      } else if (p === 3) zm |= 1 << q;
     }
-    // ⟨ψ|P|ψ⟩ = Σ_i conj(ψ_i)·(Pψ)_i ; real for Hermitian P
+    // Y on bit 1 → ·i, on bit 0 → ·(−i) ≡ ·i³; Z on bit 1 → ·(−1) ≡ ·i². Summed mod 4 that is a constant
+    // i^(3·|Y|) times (−1)^parity(i & (Y⊕Z)) — exact rotations and sign flips only.
+    const k0 = (3 * popcount(ym)) & 3;
+    const pm = ym ^ zm;
     let exp = 0;
-    for (let i = 0; i < dim; i++) exp += (re[i] ?? 0) * (wr[i] ?? 0) + (im[i] ?? 0) * (wi[i] ?? 0);
+    for (let i = 0; i < dim; i++) {
+      const j = i ^ xm;
+      const r = sr[j]!;
+      const c = si[j]!;
+      const k = (k0 + 2 * (popcount(pm & i) & 1)) & 3;
+      let wr: number;
+      let wi: number;
+      if (k === 0) {
+        wr = r;
+        wi = c;
+      } else if (k === 1) {
+        wr = -c;
+        wi = r;
+      } else if (k === 2) {
+        wr = -r;
+        wi = -c;
+      } else {
+        wr = c;
+        wi = -r;
+      }
+      exp += sr[i]! * wr + si[i]! * wi;
+    }
     sum4 += exp * exp * exp * exp;
   }
   // M₂ = −log₂( (1/d) Σ ⟨P⟩⁴ ); a stabilizer state has Σ⟨P⟩⁴ = d ⇒ M₂ = 0.
