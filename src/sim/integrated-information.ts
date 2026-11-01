@@ -41,6 +41,8 @@ const clamp01 = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v);
 // bijection onto dimA·dimB = 2^nQubits), so reuse cannot leak values between calls.
 let sleRe = new Float64Array(64);
 let sleIm = new Float64Array(64);
+const sleABits = new Int32Array(32);
+const sleBBits = new Int32Array(32);
 
 export function subsystemLinearEntropy(
   re: ArrayLike<number>,
@@ -48,14 +50,16 @@ export function subsystemLinearEntropy(
   nQubits: number,
   aMask: number,
 ): number {
-  const aBits: number[] = [];
-  const bBits: number[] = [];
+  const aBits = sleABits;
+  const bBits = sleBBits;
+  let nA = 0;
+  let nB = 0;
   for (let q = 0; q < nQubits; q++) {
-    if ((aMask & (1 << q)) !== 0) aBits.push(q);
-    else bBits.push(q);
+    if ((aMask & (1 << q)) !== 0) aBits[nA++] = q;
+    else bBits[nB++] = q;
   }
-  const dimA = 1 << aBits.length;
-  const dimB = 1 << bBits.length;
+  const dimA = 1 << nA;
+  const dimB = 1 << nB;
   if (dimA < 2) return 0; // empty A side carries no entanglement
   // Relabel amplitudes into M[a][b] = ψ_{a,b} (a indexes A, b indexes B).
   const dim = 1 << nQubits;
@@ -67,9 +71,9 @@ export function subsystemLinearEntropy(
   const mIm = sleIm;
   for (let g = 0; g < dim; g++) {
     let a = 0;
-    for (let t = 0; t < aBits.length; t++) if ((g & (1 << (aBits[t] ?? 0))) !== 0) a |= 1 << t;
+    for (let t = 0; t < nA; t++) if ((g & (1 << aBits[t]!)) !== 0) a |= 1 << t;
     let b = 0;
-    for (let t = 0; t < bBits.length; t++) if ((g & (1 << (bBits[t] ?? 0))) !== 0) b |= 1 << t;
+    for (let t = 0; t < nB; t++) if ((g & (1 << bBits[t]!)) !== 0) b |= 1 << t;
     mRe[a * dimB + b] = re[g] ?? 0;
     mIm[a * dimB + b] = im[g] ?? 0;
   }
