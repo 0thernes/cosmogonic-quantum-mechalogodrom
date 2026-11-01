@@ -107,6 +107,8 @@ export function matMulInto(A: Mat, B: Mat, out: Mat): Mat {
  */
 let svdVals = new Float64Array(16);
 let svdOrder = new Int32Array(16);
+let svdW = new Float64Array(64);
+let svdV = new Float64Array(64);
 
 export function svd(A: Mat): { U: Mat; S: number[]; V: Mat } {
   const m = A.rows;
@@ -127,8 +129,14 @@ export function svd(A: Mat): { U: Mat; S: number[]; V: Mat } {
     return { U: Vt, S, V: Ut };
   }
   // Working copy whose columns are rotated toward mutual orthogonality.
-  const W = A.data.slice();
-  const V = mat(n, n);
+  // Working copies live in reused module buffers: W (m×n) and the accumulated rotations V (n×n) are
+  // internal only (the result copies out of them below), so nothing aliases across calls.
+  if (svdW.length < m * n) svdW = new Float64Array(m * n * 2);
+  if (svdV.length < n * n) svdV = new Float64Array(n * n * 2);
+  const W = svdW;
+  W.set(A.data);
+  const V = { data: svdV };
+  V.data.fill(0, 0, n * n);
   for (let i = 0; i < n; i++) V.data[i * n + i] = 1;
 
   const col = (M: Float64Array, ld: number, r: number, j: number): number => M[r * ld + j]!;
