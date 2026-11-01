@@ -229,7 +229,7 @@ export class ApexFieldGrid {
 }
 
 /** GLSL fragment stencil for the diffusion organs (ping-pong DataTexture; reproduces heatDiffuseStep). */
-const APEX_FIELD_HEAT_FRAG = /* glsl */ `
+export const APEX_FIELD_HEAT_FRAG = /* glsl */ `
 precision highp float;
 uniform sampler2D uField;   // R channel = scalar field
 uniform vec2 uTexel;        // 1.0 / resolution
@@ -247,7 +247,7 @@ void main() {
 `;
 
 /** GLSL fragment stencil for the wave organs (R = u, G = uPrev; reproduces waveLeapfrogStep). */
-const APEX_FIELD_WAVE_FRAG = /* glsl */ `
+export const APEX_FIELD_WAVE_FRAG = /* glsl */ `
 precision highp float;
 uniform sampler2D uField;   // R = u(t), G = u(t-1)
 uniform vec2 uTexel;
