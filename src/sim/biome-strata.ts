@@ -9,6 +9,7 @@
 
 import { clamp, clamp01 } from '../math/scalar';
 import { prepareParallelCounterSeed, sampleParallelCounter01 } from '../math/wild-entropy';
+import { columnY, WORLD_LINEAR } from './constants';
 
 type BiomeStratumId =
   'hadal_abyss' | 'benthic_reef' | 'quantum_thermocline' | 'photonic_canopy' | 'aetherial_crown';
@@ -35,7 +36,7 @@ interface BiomeStratumSpec {
 // Audit #202: bands span the real habitat platform (PLATFORM_FLOOR 6 .. PLATFORM_CEIL 720) so every
 // stratum is reachable and stage yCenters sit above the floor (the old -48..64 bands left ~97.5 % of
 // the volume in the crown and pulled non-elder stages constantly downward).
-export const BIOME_STRATA: readonly BiomeStratumSpec[] = [
+const BIOME_STRATA_FULL: readonly BiomeStratumSpec[] = [
   {
     id: 'hadal_abyss',
     index: 0,
@@ -97,6 +98,18 @@ export const BIOME_STRATA: readonly BiomeStratumSpec[] = [
     quantumCoupling: 1.6,
   },
 ] as const;
+
+/** The strata in this world's column (identical in the full world; Mini World squeezes the bands
+ *  with its shorter column so every stratum stays reachable under the lower ceiling). */
+export const BIOME_STRATA: readonly BiomeStratumSpec[] =
+  WORLD_LINEAR === 1
+    ? BIOME_STRATA_FULL
+    : BIOME_STRATA_FULL.map((b) => ({
+        ...b,
+        yMin: columnY(b.yMin),
+        yMax: columnY(b.yMax),
+        yCenter: columnY(b.yCenter),
+      }));
 
 const STRATUM_INDEX: Readonly<Record<BiomeStratumId, number>> = {
   hadal_abyss: 0,

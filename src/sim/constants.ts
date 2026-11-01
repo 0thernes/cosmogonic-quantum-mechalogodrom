@@ -29,8 +29,9 @@ export const IS_MINI_WORLD = WORLD_SCALE !== 1;
 /**
  * Mini World LAYOUT factor (horizontal extents, radii, positions): √WORLD_SCALE, so the ground AREA is
  * × WORLD_SCALE — exactly the factor every population count takes — and density stays the main world's.
- * BODIES (creatures, plants, flora, particles, effect radii), heights and the vertical column are NOT
- * scaled: every inhabitant keeps its true size and aspect ratio relative to its neighbours and the
+ * The vertical COLUMN (ceiling, landmark altitudes, strata, camera heights) shrinks by the same factor
+ * so Mini World keeps the full world's width:height shape. BODIES (creatures, plants, flora, particles,
+ * effect radii) are NOT scaled: every inhabitant keeps its true size and aspect ratio relative to its neighbours and the
  * terrain. (A uniform ×0.1 of bodies + layout + camera is pixel-identical to this, so this is the true
  * miniature; scaling layout but not bodies — the first cut — made everything 10× oversized and crowded.)
  */
@@ -55,7 +56,7 @@ export const ARENA_MID = 2.5 * WORLD_LINEAR;
 export const HABITAT_XZ_SCALE = 2;
 
 /** User-directed habitat expansion: 3× the former vertical ceiling. */
-export const HABITAT_Y_SCALE = 3;
+export const HABITAT_Y_SCALE = 3 * WORLD_LINEAR; // Mini World: the column shrinks with the layout (3 in the full world)
 
 /** Expanded mid-field coordinate multiplier for world-scale paths and cameras. */
 export const HABITAT_MID = ARENA_MID * HABITAT_XZ_SCALE;
@@ -80,8 +81,14 @@ export const GROUND_EXTENT = 240 * ARENA * HABITAT_XZ_SCALE;
  *  the world expansion: ALTITUDE = 252·HABITAT_Y_SCALE (3× higher = 756) and a ×HABITAT_XZ_SCALE group
  *  scale (2× diameter) — see mechalogodrom.ts — so the god grows 3× up and 2× wide with the 2×2×3 world. */
 export const PLATFORM_HALF = (GROUND_EXTENT / 2) * 0.9; // 1,080
-export const PLATFORM_CEIL = 240 * HABITAT_Y_SCALE; // 720 (vertical column unscaled in Mini World)
 export const PLATFORM_FLOOR = 6;
+/** Map a full-world altitude into this world's column: the floor stays put and everything above it
+ *  scales by WORLD_LINEAR, so Mini World keeps the full world's width:height shape (2160:714).
+ *  Exact identity in the full world. */
+export function columnY(y: number): number {
+  return WORLD_LINEAR === 1 ? y : PLATFORM_FLOOR + (y - PLATFORM_FLOOR) * WORLD_LINEAR;
+}
+export const PLATFORM_CEIL = columnY(720); // 720 (Mini World ≈ 231.8: same shape as the full world)
 export const PLATFORM_HEIGHT = PLATFORM_CEIL - PLATFORM_FLOOR;
 export const PLATFORM_MID_Y = PLATFORM_FLOOR + PLATFORM_HEIGHT * 0.5;
 

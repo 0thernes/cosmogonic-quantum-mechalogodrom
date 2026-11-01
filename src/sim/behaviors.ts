@@ -162,7 +162,7 @@ function swarm(e: Entity, u: EntityData, env: BehaviorEnv): void {
  * froze every flee organism (audit fix, 0.6.x). dist² units.
  */
 const FLEE_DAMP_XZ = 55 * ARENA * HABITAT_XZ_SCALE;
-const FLEE_DAMP_Y = 55 * ARENA_BODY * HABITAT_Y_SCALE; // vertical column is unscaled
+const FLEE_DAMP_Y = 55 * ARENA_BODY * HABITAT_Y_SCALE; // scales with the column (Mini World: ×WORLD_LINEAR)
 /**
  * hunt's arrive radius, ARENA-scaled: legacy stopped inside radius 5 (25 in dist² units) of
  * a 65u arena; the monolith ring now sits ×5 farther out. dist² units.

@@ -95,7 +95,7 @@ export class Engine {
     // Mini World: the start stand-off follows the √(1/10) layout so the miniature fills the frame.
     this.camera.position.set(
       0,
-      50 * HABITAT_Y_SCALE * WORLD_LINEAR,
+      50 * HABITAT_Y_SCALE, // HABITAT_Y_SCALE already carries WORLD_LINEAR
       140 * HABITAT_XZ_SCALE * WORLD_LINEAR,
     );
 

@@ -7,13 +7,18 @@ Open it from the top-centre pill (on phones: "✦ Mini World") or by adding `?wo
 
 It is a true miniature of the full world:
 
-| Quantity                                                                  | Factor                        | Why                                                                  |
-| ------------------------------------------------------------------------- | ----------------------------- | -------------------------------------------------------------------- |
-| Entity counts and capacities                                              | `WORLD_SCALE` = 0.1           | one tenth of everything                                              |
-| Horizontal layout (arena, rings, landmark positions, landmark footprints) | `WORLD_LINEAR` = √0.1 ≈ 0.316 | area × 0.1, so **density matches the full world**                    |
-| Creature bodies, heights, effect and contact radii                        | 1 (unscaled)                  | creatures look and behave at full size                               |
-| Fog density                                                               | 1 (unscaled)                  | same atmosphere and visibility as the full world                     |
-| Camera start                                                              | `WORLD_LINEAR`                | frames the smaller arena the way the full camera frames the full one |
+| Quantity                                                                    | Factor                        | Why                                                                  |
+| --------------------------------------------------------------------------- | ----------------------------- | -------------------------------------------------------------------- |
+| Entity counts and capacities                                                | `WORLD_SCALE` = 0.1           | one tenth of everything                                              |
+| Horizontal layout (arena, rings, landmark positions, landmark footprints)   | `WORLD_LINEAR` = √0.1 ≈ 0.316 | area × 0.1, so **density matches the full world**                    |
+| Vertical column (ceiling, landmark altitudes, biome strata, camera heights) | `WORLD_LINEAR` = √0.1 ≈ 0.316 | width:height matches the full world (683 × 226 vs 2160 × 714)        |
+| Creature bodies, effect and contact radii                                   | 1 (unscaled)                  | creatures look and behave at full size                               |
+| Fog density                                                                 | 1 (unscaled)                  | same atmosphere and visibility as the full world                     |
+| Camera start                                                                | `WORLD_LINEAR`                | frames the smaller arena the way the full camera frames the full one |
+
+Shape: the floor stays at 6 and the ceiling drops from 720 to about 231.8 (`columnY` in
+`src/sim/constants.ts`), so Mini World is a flat slab with the full world's proportions, not a tall
+column. Creatures clamp to the new ceiling; the biome strata squeeze into it.
 
 Trade-off: landmarks (crystal tree, mechalogodrom, god-colossus, cosmic web) scale with the layout,
 so they are about 3.2× smaller relative to creatures than in the full world. A 1/10-area world

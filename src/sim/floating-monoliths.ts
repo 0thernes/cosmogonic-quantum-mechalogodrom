@@ -25,7 +25,7 @@
  */
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { ARENA_RADIUS, scaleCount } from './constants';
+import { ARENA_RADIUS, scaleCount, WORLD_LINEAR } from './constants';
 
 const COUNT = scaleCount(16);
 const PANELS_PER = 180;
@@ -135,7 +135,7 @@ export class FloatingMonoliths {
       const r = ARENA_RADIUS * (0.36 + 0.52 * hash(i * 3 + 2));
       const baseX = Math.cos(th) * r;
       const baseZ = Math.sin(th) * r;
-      const baseY = 60 + hash(i * 7 + 3) * 175; // float between the canopy and the crown
+      const baseY = (60 + hash(i * 7 + 3) * 175) * WORLD_LINEAR; // float between the canopy and the crown
       const size = 1.4 + hash(i * 11 + 4) * 3.0;
       group.position.set(baseX, baseY, baseZ);
       group.scale.setScalar(size);
