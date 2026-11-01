@@ -44,6 +44,7 @@ import { initToolbarKeyboard } from './ui/toolbar';
 import { bootStage, bootPaint, bootDone, bootAbort } from './ui/boot-loader';
 import { APEX_INDIVIDUATED } from './sim/godform';
 import { ALPHABET_PANTHEON_SIZE } from './sim/alphabet-pantheon';
+import { PerfProbe, perfProbeRequested } from './ui/perf-probe';
 
 // Legacy r128 color fidelity: the original rendered without color management;
 // disable it BEFORE any THREE.Color is constructed (audit finding, 0.2.1).
@@ -227,6 +228,7 @@ function showWebglRecovery(err: unknown, gpu = true): void {
 
 let engine: Engine | null = null;
 let world: World | null = null;
+let perfProbe: PerfProbe | null = null;
 let rafId = 0;
 let resizeHandler: (() => void) | null = null;
 let socialScanPool: SocialScanCores | null = null;
@@ -362,6 +364,20 @@ async function boot(): Promise<void> {
     developmentDiagnostics,
   });
   if (!continueMainLifecycle()) return;
+  // `?perf=1`: opt-in per-system frame breakdown overlay + console table (timing only; off by default).
+  if (perfProbeRequested(location.search)) {
+    perfProbe = new PerfProbe();
+    const anyWorld = world as unknown as Record<string, unknown>;
+    perfProbe.instrument(anyWorld, 'world', 1);
+    perfProbe.wrap(anyWorld, 'step', 'FRAME world.step (total, incl. render)');
+    const eng = activeEngine as unknown as Record<string, unknown>;
+    perfProbe.wrap(eng, 'render', 'FRAME engine.render (post-FX + scene)');
+    const fx = eng['fx'] as Record<string, unknown> | null;
+    if (fx) perfProbe.instrument(fx, 'postfx', 1);
+    const r = activeEngine.renderer as unknown as Record<string, unknown>;
+    perfProbe.wrap(r, 'render', 'gl renderer.render (all passes)');
+    activeEngine.renderer.info.autoReset = false;
+  }
   bootStage('world', `${Math.round(performance.now() - tWorld)} ms`);
   bootStage('entities', `grows → ${quality.targetEntities.toLocaleString()}`);
   bootStage('pantheon', `${APEX_INDIVIDUATED} apex · ${ALPHABET_PANTHEON_SIZE} glyphs`);
@@ -477,6 +493,10 @@ async function boot(): Promise<void> {
     world?.setComputeCadence(governor.computeCadence());
     perfMonitor.recordFrame();
     world?.step(dt);
+    if (perfProbe && engine) {
+      perfProbe.frameDone(engine.renderer);
+      engine.renderer.info.reset();
+    }
     // V121: the first rendered world frame retires the boot loader (FIRST LIGHT = total ms from
     // script start to a presented cosmos — the honest end-to-end boot figure).
     if (!firstLight) {
