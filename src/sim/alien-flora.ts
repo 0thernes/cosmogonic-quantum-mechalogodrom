@@ -933,6 +933,12 @@ export class AlienFlora {
   /** Per-mesh aPush buffers (same order as meshes). */
   private readonly pushAttrs: Float32Array[] = [];
   private readonly hashBuckets: number[][];
+  /**
+   * Static collision candidates (plants never move their base): for plant i, every j > i in its 3×3 hash
+   * neighbourhood, in the exact order resolvePlantCollisions used to visit them (dz, dx, bucket order).
+   */
+  private readonly pairStart: Int32Array;
+  private readonly pairJ: Int32Array;
   private readonly hashOrigin: number;
   private readonly hashN: number;
   private collideAccum = 0;
@@ -1130,6 +1136,31 @@ export class AlienFlora {
       const hz = Math.floor((this.plantZ[i]! - this.hashOrigin) / COLLIDE_HASH_CELL);
       if (hx < 0 || hz < 0 || hx >= this.hashN || hz >= this.hashN) continue;
       this.hashBuckets[hz * this.hashN + hx]!.push(i);
+    }
+    {
+      const starts = new Int32Array(placed + 1);
+      const js: number[] = [];
+      const hn = this.hashN;
+      for (let i = 0; i < placed; i++) {
+        starts[i] = js.length;
+        const hx = Math.floor((this.plantX[i]! - this.hashOrigin) / COLLIDE_HASH_CELL);
+        const hz = Math.floor((this.plantZ[i]! - this.hashOrigin) / COLLIDE_HASH_CELL);
+        for (let dz = -1; dz <= 1; dz++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            const cx = hx + dx;
+            const cz = hz + dz;
+            if (cx < 0 || cz < 0 || cx >= hn || cz >= hn) continue;
+            const bucket = this.hashBuckets[cz * hn + cx]!;
+            for (let b = 0; b < bucket.length; b++) {
+              const j = bucket[b]!;
+              if (j > i) js.push(j);
+            }
+          }
+        }
+      }
+      starts[placed] = js.length;
+      this.pairStart = starts;
+      this.pairJ = Int32Array.from(js);
     }
 
     // Operational grids: capacity/quality from edaphics; biomass starts at capacity.
@@ -1370,55 +1401,51 @@ export class AlienFlora {
       }
       touch[i] = tch;
     }
-    const hn = this.hashN;
-    const origin = this.hashOrigin;
-    const cell = COLLIDE_HASH_CELL;
-    const buckets = this.hashBuckets;
+    // Precomputed candidate list (same pairs, same order as the former 3×3 bucket scan). push[i] only
+    // changes inside plant i's own pass (every pair has j > i), so it is accumulated locally with the same
+    // float32 rounding per add — bit-identical to the in-place writes.
+    const starts = this.pairStart;
+    const pairJ = this.pairJ;
+    const fr = Math.fround;
     for (let i = 0; i < n; i++) {
-      const xi = this.plantX[i]!;
-      const zi = this.plantZ[i]!;
+      const p0 = starts[i]!;
+      const p1 = starts[i + 1]!;
+      if (p0 === p1) continue;
       const ri = rr[i]!;
       const pxi = px[i]!;
       const pzi = pz[i]!;
       const oxi = ox[i]!;
       const ozi = oz[i]!;
       const touchI = touch[i]!;
-      const hx = Math.floor((xi - origin) / cell);
-      const hz = Math.floor((zi - origin) / cell);
-      for (let dz = -1; dz <= 1; dz++) {
-        for (let dx = -1; dx <= 1; dx++) {
-          const cx = hx + dx;
-          const cz = hz + dz;
-          if (cx < 0 || cz < 0 || cx >= hn || cz >= hn) continue;
-          const bucket = buckets[cz * hn + cx]!;
-          for (let b = 0; b < bucket.length; b++) {
-            const j = bucket[b]!;
-            if (j <= i) continue;
-            const rj = rr[j]!;
-            let ddx = pxi - px[j]!;
-            let ddz = pzi - pz[j]!;
-            const d2 = ddx * ddx + ddz * ddz;
-            const minDist = ri + rj;
-            if (d2 >= minDist * minDist || d2 < 1e-8) continue;
-            const d = Math.sqrt(d2);
-            const overlap = 1 - d / minDist;
-            const inv = 1 / d;
-            ddx *= inv;
-            ddz *= inv;
-            const closing = (oxi - ox[j]!) * -ddx + (ozi - oz[j]!) * -ddz > 0 ? 1.15 : 1;
-            let mag = overlap * overlap * minDist * 0.72 * closing * Math.max(touchI, touch[j]!);
-            if (mag > COLLIDE_PUSH_MAX) mag = COLLIDE_PUSH_MAX;
-            const fx = ddx * mag;
-            const fz = ddz * mag;
-            const i2 = i * 2;
-            const j2 = j * 2;
-            push[i2] = (push[i2] ?? 0) + fx;
-            push[i2 + 1] = (push[i2 + 1] ?? 0) + fz;
-            push[j2] = (push[j2] ?? 0) - fx;
-            push[j2 + 1] = (push[j2 + 1] ?? 0) - fz;
-          }
-        }
+      const i2 = i * 2;
+      let accX = push[i2]!;
+      let accZ = push[i2 + 1]!;
+      for (let p = p0; p < p1; p++) {
+        const j = pairJ[p]!;
+        const rj = rr[j]!;
+        let ddx = pxi - px[j]!;
+        let ddz = pzi - pz[j]!;
+        const d2 = ddx * ddx + ddz * ddz;
+        const minDist = ri + rj;
+        if (d2 >= minDist * minDist || d2 < 1e-8) continue;
+        const d = Math.sqrt(d2);
+        const overlap = 1 - d / minDist;
+        const inv = 1 / d;
+        ddx *= inv;
+        ddz *= inv;
+        const closing = (oxi - ox[j]!) * -ddx + (ozi - oz[j]!) * -ddz > 0 ? 1.15 : 1;
+        let mag = overlap * overlap * minDist * 0.72 * closing * Math.max(touchI, touch[j]!);
+        if (mag > COLLIDE_PUSH_MAX) mag = COLLIDE_PUSH_MAX;
+        const fx = ddx * mag;
+        const fz = ddz * mag;
+        accX = fr(accX + fx);
+        accZ = fr(accZ + fz);
+        const j2 = j * 2;
+        push[j2] = push[j2]! - fx;
+        push[j2 + 1] = push[j2 + 1]! - fz;
       }
+      push[i2] = accX;
+      push[i2 + 1] = accZ;
     }
     // Audit #100: re-upload only meshes whose push values actually changed (most plants sit still).
     const dirty = this.pushDirty;
