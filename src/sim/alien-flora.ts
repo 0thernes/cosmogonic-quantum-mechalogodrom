@@ -110,6 +110,8 @@ const COLLIDE_HASH_CELL = 5.5;
 const COLLIDE_RADIUS_MUL = 2.55;
 /** Max soft separation push (world units) per pair — keeps solve stable. */
 const COLLIDE_PUSH_MAX = 3.2;
+/** Closing-contact push boost by [opening, closing]; read by index in the collision pair loop. */
+const CLOSING_BOOST = new Float64Array([1, 1.15]);
 /** Global soft-solve cadence (s). Scalable O(N·k) ~8Hz cold / faster when beings touch. */
 const COLLIDE_PERIOD = 0.11;
 /** Thrash-offset amp (world units) for dynamic crown collision proxies. */
@@ -1433,7 +1435,9 @@ export class AlienFlora {
         const inv = 1 / d;
         ddx *= inv;
         ddz *= inv;
-        const closing = (oxi - ox[j]!) * -ddx + (ozi - oz[j]!) * -ddz > 0 ? 1.15 : 1;
+        // Branch-free pick of the closing boost (same two constants): the sign of the closing speed is
+        // ~50/50 across pairs, so a conditional mispredicts constantly in this ~200k-pair loop.
+        const closing = CLOSING_BOOST[+((oxi - ox[j]!) * -ddx + (ozi - oz[j]!) * -ddz > 0)]!;
         let mag = overlap * overlap * minDist * 0.72 * closing * Math.max(touchI, touch[j]!);
         if (mag > COLLIDE_PUSH_MAX) mag = COLLIDE_PUSH_MAX;
         const fx = ddx * mag;
