@@ -35,6 +35,7 @@ import {
   HABITAT_XZ_SCALE,
   PLATFORM_HALF,
   scaleCount,
+  WORLD_LINEAR,
 } from './constants';
 import { baseTerrainHeightAt } from './terrain-profile';
 import { TERRAIN_DEFORMATION_GLSL } from './terrain-deformation';
@@ -54,7 +55,9 @@ export const ALIEN_FLORA_TARGET_MOBILE = scaleCount(20_800);
 /** Plant square half-extent follows the authoritative invisible platform wall. */
 export const ALIEN_FLORA_FIELD_HALF = PLATFORM_HALF;
 /** Enough deterministic candidates to fill the requested population after paths/glades are carved. */
-const PLACEMENT_CANDIDATE_FACTOR = 4;
+// Mini World keeps full-size structure clearings on 1/10 the land, so it needs a deeper candidate pool
+// to reach its exact target (the full world always fills well inside 4×, so it is unchanged).
+const PLACEMENT_CANDIDATE_FACTOR = 4 / WORLD_LINEAR;
 /** Preserve clearing density over 4× land instead of leaving the expanded outskirts overgrown. */
 const GLADE_COUNT = 7 * HABITAT_XZ_SCALE * HABITAT_XZ_SCALE;
 /** Keep a clear circle at the centre (temple base + cosmic crown column). */
@@ -1020,7 +1023,9 @@ export class AlienFlora {
       for (let g = 0; g < GLADE_COUNT; g++) {
         const gx = (hash(g * 7 + 3) - 0.5) * ALIEN_FLORA_FIELD_HALF * 1.9;
         const gz = (hash(g * 7 + 5) - 0.5) * ALIEN_FLORA_FIELD_HALF * 1.9;
-        const gr = 40 + hash(g * 7 + 9) * 70;
+        // Glade radii follow the Mini World layout (×1 in the full world) so clearings keep the same
+        // share of the land; unscaled they covered the whole 1/10-area field and starved it of plants.
+        const gr = (40 + hash(g * 7 + 9) * 70) * WORLD_LINEAR;
         const dx = x - gx;
         const dz = z - gz;
         if (dx * dx + dz * dz < gr * gr) {
