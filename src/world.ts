@@ -1234,6 +1234,8 @@ export class World {
   private readonly foundationals: Foundationals;
   /** Scratch organ activity vector for Foundationals ticks (reused, alloc-free). */
   private readonly fndOrganScratch = new Float32Array(10);
+  /** Raw apex organ readings (organActivityInto) — replaces a full per-frame apex snapshot. */
+  private readonly apexOrganRaw = new Float64Array(10);
   /** Last Foundationals snapshot (for architect panel telemetry). */
   private lastFoundationals: FoundationalsSnapshot | null = null;
   /** Scratch activity/novelty/valence arrays for pantheon handoff (reused, alloc-free). */
@@ -4334,24 +4336,21 @@ export class World {
       ap.level = this.superEvos[0]!.view().level; // the Abomination reads the prime Archon's level
       this.lastApexThought = this.apexBrain.tick(ap);
       // #109: one apex snapshot per frame (it builds every organ view, incl. a 16-bin DFT).
-      const apexSnap = this.apexBrain.snapshot();
-      this.lastApexGrowth = apexGrowthStage(
-        ap.level,
-        this.lastApexThought.transcendence,
-        apexSnap.beat,
-      );
+      const raw = this.apexOrganRaw;
+      const apexBeat = this.apexBrain.organActivityInto(raw);
+      this.lastApexGrowth = apexGrowthStage(ap.level, this.lastApexThought.transcendence, apexBeat);
       // V-FND: tick Foundationals — deep interconnect between APEX organs (1B self-awareness path).
       const fndOrganActivity = this.fndOrganScratch;
-      fndOrganActivity[0] = clamp(apexSnap.loom.throughput, 0, 1);
-      fndOrganActivity[1] = clamp(apexSnap.drum.energy, 0, 1);
-      fndOrganActivity[2] = apexSnap.necro.liveFraction;
-      fndOrganActivity[3] = clamp(apexSnap.klein.energy, 0, 1);
-      fndOrganActivity[4] = clamp(apexSnap.hive.order, 0, 1);
-      fndOrganActivity[5] = clamp(apexSnap.hydra.coherence, 0, 1);
-      fndOrganActivity[6] = clamp(Math.abs(apexSnap.wraith.core), 0, 1);
-      fndOrganActivity[7] = clamp(apexSnap.tunnel.manifested / 100, 0, 1);
-      fndOrganActivity[8] = clamp(apexSnap.thermo.totalHeat, 0, 1);
-      fndOrganActivity[9] = clamp(apexSnap.ouroboros.births / 100, 0, 1);
+      fndOrganActivity[0] = clamp(raw[0]!, 0, 1);
+      fndOrganActivity[1] = clamp(raw[1]!, 0, 1);
+      fndOrganActivity[2] = raw[2]!;
+      fndOrganActivity[3] = clamp(raw[3]!, 0, 1);
+      fndOrganActivity[4] = clamp(raw[4]!, 0, 1);
+      fndOrganActivity[5] = clamp(raw[5]!, 0, 1);
+      fndOrganActivity[6] = clamp(Math.abs(raw[6]!), 0, 1);
+      fndOrganActivity[7] = clamp(raw[7]! / 100, 0, 1);
+      fndOrganActivity[8] = clamp(raw[8]!, 0, 1);
+      fndOrganActivity[9] = clamp(raw[9]! / 100, 0, 1);
       this.lastFoundationals = this.foundationals.tickAndStore(
         fndOrganActivity,
         this.lastApexThought.transcendence,

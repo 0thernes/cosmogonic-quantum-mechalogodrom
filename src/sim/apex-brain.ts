@@ -680,6 +680,11 @@ class KleinBottleCortex {
     return f / this.h;
   }
 
+  /** view().energy alone (skips seam flux / head-tail correlation). */
+  energyView(): number {
+    return round4(this.energy());
+  }
+
   view(): KleinView {
     return {
       energy: round4(this.energy()),
@@ -1016,6 +1021,13 @@ class QuantumTunnelLattice {
       if (t >= 0) d += Math.abs(t - i);
     }
     return d / (this.n * this.n);
+  }
+
+  /** view().manifested alone (skips entropy / displacement). */
+  manifestedCount(): number {
+    let m = 0;
+    for (let i = 0; i < this.n; i++) if (this.manifest[i]! >= 0 && this.manifest[i]! !== i) m++;
+    return m;
   }
 
   view(): TunnelView {
@@ -2371,6 +2383,25 @@ export class ApexBrain {
       thermo: this.thermo.view(),
       ouroboros: this.ouroboros.view(),
     };
+  }
+
+  /**
+   * The ten raw organ readings world.driveSuper feeds the Foundationals, read straight off the same
+   * (side-effect-free) organ views snapshot() uses — without building the thought, meta, quantum and
+   * the rest of the snapshot every frame. Returns the beat. Values are identical to the snapshot's.
+   */
+  organActivityInto(out: Float64Array | number[]): number {
+    out[0] = this.loom.view().throughput;
+    out[1] = round4(this.drum.energy()); // == drum.view().energy, without the dominant-mode DFT
+    out[2] = this.necro.view().liveFraction;
+    out[3] = this.klein.energyView();
+    out[4] = this.hive.view().order;
+    out[5] = this.hydra.view().coherence;
+    out[6] = this.wraith.view().core;
+    out[7] = this.tunnel.manifestedCount();
+    out[8] = this.thermo.view().totalHeat;
+    out[9] = this.ouroboros.view().births;
+    return this.beat;
   }
 
   private lastLevel = 0;
