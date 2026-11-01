@@ -45,6 +45,22 @@ export class SpatialHash<T extends { position: { x: number; z: number } }> {
   private readonly usedCellQueries: CellQueryRecord<T>[] = [];
   private cellQueryGeneration = 1;
 
+  /**
+   * Key of the query whose answer is in `result` (0 = none). query()/queryNearFirst() depend only on the
+   * grid contents and (cell, ring count, budget, salt), so an identical back-to-back query — e.g. an
+   * organism's behaviour and its ambient social pass sharing a ring count — returns the same buffer
+   * untouched instead of rebuilding it. Any insert/clear forgets it.
+   */
+  private memoMode = 0;
+  /** Source-cell (dx, dz) tag of each item in `result` for the last query(), and the filtered sub-answer. */
+  private resultCell = new Int32Array(64);
+  private readonly subResult: T[] = [];
+  private memoCx = 0;
+  private memoCz = 0;
+  private memoCr = 0;
+  private memoBudget = 0;
+  private memoSalt = 0;
+
   constructor(cellSize = 8) {
     this.cellSize = cellSize;
   }
@@ -61,6 +77,7 @@ export class SpatialHash<T extends { position: { x: number; z: number } }> {
     }
     this.cells.clear();
     this.result.length = 0;
+    this.memoMode = 0;
     for (
       let record = this.usedCellQueries.pop();
       record !== undefined;
@@ -90,6 +107,7 @@ export class SpatialHash<T extends { position: { x: number; z: number } }> {
    * behavior — callers must rebuild at the cadence required by their exactness contract).
    */
   insert(item: T): void {
+    this.memoMode = 0;
     const cs = this.cellSize;
     const kx = Math.floor(item.position.x / cs);
     const kz = Math.floor(item.position.z / cs);
@@ -115,16 +133,46 @@ export class SpatialHash<T extends { position: { x: number; z: number } }> {
   query(x: number, z: number, radius: number): readonly T[] {
     const cs = this.cellSize;
     const out = this.result;
-    out.length = 0;
     const cr = Math.ceil(radius / cs);
     const cx = Math.floor(x / cs);
     const cz = Math.floor(z / cs);
+    if (this.memoMode === 1 && this.memoCx === cx && this.memoCz === cz && this.memoCr >= cr) {
+      if (this.memoCr === cr) return out;
+      // A smaller square around the same cell: its cells are visited in the same (dx, dz) order inside the
+      // larger scan, so filtering the larger answer by each item's source cell is the identical sequence.
+      const sub = this.subResult;
+      sub.length = 0;
+      const tags = this.resultCell;
+      for (let i = 0; i < out.length; i++) {
+        const tag = tags[i]!;
+        const dx = (tag >> 8) - 128;
+        const dz = (tag & 255) - 128;
+        if (dx >= -cr && dx <= cr && dz >= -cr && dz <= cr) sub.push(out[i]!);
+      }
+      return sub;
+    }
+    out.length = 0;
+    const tagged = cr <= 127;
+    this.memoMode = tagged ? 1 : 0;
+    this.memoCx = cx;
+    this.memoCz = cz;
+    this.memoCr = cr;
+    let tags = this.resultCell;
     for (let dx = -cr; dx <= cr; dx++) {
       for (let dz = -cr; dz <= cr; dz++) {
         const cell = this.cells.get((cx + dx) * 10007 + (cz + dz));
         if (cell !== undefined) {
+          const tag = ((dx + 128) << 8) | (dz + 128);
           for (let i = 0; i < cell.length; i++) {
             // Invariant: i < cell.length and cells are dense arrays of T — index is in range.
+            if (tagged) {
+              if (out.length >= tags.length) {
+                const grown = new Int32Array(Math.max(64, tags.length * 2));
+                grown.set(tags);
+                tags = this.resultCell = grown;
+              }
+              tags[out.length] = tag;
+            }
             out.push(cell[i]!);
           }
         }
@@ -146,11 +194,26 @@ export class SpatialHash<T extends { position: { x: number; z: number } }> {
   queryNearFirst(x: number, z: number, radius: number, budget: number, salt = 0): readonly T[] {
     const cs = this.cellSize;
     const out = this.result;
-    out.length = 0;
     const cr = Math.ceil(radius / cs);
     const cx = Math.floor(x / cs);
     const cz = Math.floor(z / cs);
     const s = salt >>> 0;
+    if (
+      this.memoMode === 2 &&
+      this.memoCx === cx &&
+      this.memoCz === cz &&
+      this.memoCr === cr &&
+      this.memoBudget === budget &&
+      this.memoSalt === s
+    )
+      return out;
+    this.memoMode = 2;
+    this.memoCx = cx;
+    this.memoCz = cz;
+    this.memoCr = cr;
+    this.memoBudget = budget;
+    this.memoSalt = s;
+    out.length = 0;
     if (this.takeCell(cx, cz, budget, s)) return out;
     for (let k = 1; k <= cr; k++) {
       for (let d = -k; d <= k; d++) {
