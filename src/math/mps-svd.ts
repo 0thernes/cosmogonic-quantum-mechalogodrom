@@ -128,6 +128,36 @@ export function svd(A: Mat): { U: Mat; S: number[]; V: Mat } {
     const { U: Ut, S, V: Vt } = svd(AT);
     return { U: Vt, S, V: Ut };
   }
+  const U = mat(m, n);
+  const S: number[] = new Array<number>(n).fill(0);
+  const Vs = mat(n, n);
+  svdTallInto(A, U, S, Vs);
+  return { U, S, V: Vs };
+}
+
+/**
+ * {@link svd} of a tall or square A (rows ≥ cols) written into caller-supplied buffers: U (rows×cols),
+ * S (length ≥ cols) and V (cols×cols). Same arithmetic and sign convention as svd(); for hot callers
+ * that reuse their buffers. Throws on a wide matrix (svd() transposes those; use it instead).
+ */
+export function svdInto(A: Mat, U: Mat, S: { [k: number]: number; length: number }, V: Mat): void {
+  const m = A.rows;
+  const n = A.cols;
+  if (m > MPS_MAX_DIM || n > MPS_MAX_DIM) {
+    throw new Error(`svd: dimension exceeds MPS_MAX_DIM=${MPS_MAX_DIM} (${m}×${n})`);
+  }
+  if (m < n || U.rows !== m || U.cols !== n || V.rows !== n || V.cols !== n || S.length < n) {
+    throw new Error('svdInto: needs rows ≥ cols and U m×n, S ≥ n, V n×n');
+  }
+  U.data.fill(0);
+  V.data.fill(0);
+  svdTallInto(A, U, S, V);
+}
+
+/** Core one-sided Jacobi for rows ≥ cols; U and Vs must arrive zeroed. */
+function svdTallInto(A: Mat, U: Mat, S: { [k: number]: number }, Vs: Mat): void {
+  const m = A.rows;
+  const n = A.cols;
   // Working copy whose columns are rotated toward mutual orthogonality.
   // Working copies live in reused module buffers: W (m×n) and the accumulated rotations V (n×n) are
   // internal only (the result copies out of them below), so nothing aliases across calls.
@@ -203,9 +233,6 @@ export function svd(A: Mat): { U: Mat; S: number[]; V: Mat } {
     order[k] = j;
   }
 
-  const U = mat(m, n);
-  const S: number[] = new Array<number>(n).fill(0);
-  const Vs = mat(n, n);
   for (let k = 0; k < n; k++) {
     const idx = order[k]!;
     const val = vals[idx]!;
@@ -227,15 +254,31 @@ export function svd(A: Mat): { U: Mat; S: number[]; V: Mat } {
       for (let r = 0; r < n; r++) Vs.data[r * n + k] = -Vs.data[r * n + k]!;
     }
   }
-  return { U, S, V: Vs };
 }
 
 /**
  * The rank-χ Eckart–Young approximation of A written into `out` (same shape as A), with the same
  * accumulation order as {@link lowRankApprox}. For hot callers that only need the approximation.
  */
+let lraU: Mat = mat(0, 0);
+let lraV: Mat = mat(0, 0);
+let lraS = new Float64Array(0);
+
 export function lowRankApproxInto(A: Mat, chi: number, out: Mat): Mat {
-  const { U, S, V } = svd(A);
+  let U: Mat;
+  let S: ArrayLike<number>;
+  let V: Mat;
+  if (A.rows >= A.cols) {
+    if (lraU.rows !== A.rows || lraU.cols !== A.cols) lraU = mat(A.rows, A.cols);
+    if (lraV.rows !== A.cols) lraV = mat(A.cols, A.cols);
+    if (lraS.length !== A.cols) lraS = new Float64Array(A.cols);
+    svdInto(A, lraU, lraS, lraV);
+    U = lraU;
+    S = lraS;
+    V = lraV;
+  } else {
+    ({ U, S, V } = svd(A));
+  }
   const uCols = U.cols;
   const vCols = V.cols;
   const k = Math.max(0, Math.min(chi, S.length));
