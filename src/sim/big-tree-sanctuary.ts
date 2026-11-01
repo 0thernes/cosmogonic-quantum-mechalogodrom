@@ -149,6 +149,28 @@ export class BigTreeSanctuaryMembershipRegistry {
     return recordId;
   }
 
+  /**
+   * Register-or-update and read protection in ONE key lookup (the hot path: every harm/targeting check
+   * asks this for both endpoints, tens of thousands of times a frame). Identical result to
+   * `register(...) >= 0 ? protects(...) : fallback`; returns -1 when the identity could not be tracked.
+   * A member that has not moved since its last observation keeps its stored state without re-testing
+   * (the hysteresis test is idempotent at a fixed point, so the answer is the same).
+   */
+  observe(ownerKind: number, ownerId: number, x: number, z: number): -1 | 0 | 1 {
+    const keySlot = this.findKey(ownerKind, ownerId);
+    if (keySlot >= 0) {
+      const recordId = this.keyRecordIds[keySlot] ?? NO_BIG_TREE_SANCTUARY_MEMBER;
+      if (recordId < 0 || this.recordUsed[recordId] === 0) return -1;
+      if (this.recordXs[recordId] !== x || this.recordZs[recordId] !== z) {
+        this.updateRecord(recordId, x, z);
+      }
+      return this.recordProtected[recordId] !== 0 ? 1 : 0;
+    }
+    const recordId = this.register(ownerKind, ownerId, x, z);
+    if (recordId < 0) return -1;
+    return this.recordProtected[recordId] !== 0 ? 1 : 0;
+  }
+
   /** Update a registered member through `BigTreeZone.contains(current, previous)`. */
   update(ownerKind: number, ownerId: number, x: number, z: number): boolean {
     const keySlot = this.findKey(ownerKind, ownerId);

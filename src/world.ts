@@ -5102,10 +5102,10 @@ export class World {
     if (!registry || ownerId === undefined || !Number.isInteger(ownerId) || ownerId < 0) {
       return this.isBigTreeProtected(x, z);
     }
-    if (registry.register(ownerKind, ownerId, x, z) < 0) {
-      return this.isBigTreeProtected(x, z);
-    }
-    return registry.protects(ownerKind, ownerId);
+    // One lookup per check; unmoved members keep their stored hysteresis state (same answer).
+    const observed = registry.observe(ownerKind, ownerId, x, z);
+    if (observed < 0) return this.isBigTreeProtected(x, z);
+    return observed === 1;
   }
 
   /** Hostile actions are legal only when neither endpoint is inside the neutral sanctuary. */

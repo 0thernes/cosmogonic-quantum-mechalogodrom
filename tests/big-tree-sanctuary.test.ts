@@ -252,4 +252,35 @@ describe('BigTreeSanctuaryMembershipRegistry', () => {
       /positive fixed capacity/,
     );
   });
+
+  test('observe() == register()+protects() on a seeded random walk, in one lookup', () => {
+    const zone = new BigTreeZone({ centerX: 0, centerZ: 0 });
+    const a = new BigTreeSanctuaryMembershipRegistry(zone, 64);
+    const b = new BigTreeSanctuaryMembershipRegistry(zone, 64);
+    let seed = 12345;
+    const rnd = (): number => (seed = (seed * 1103515245 + 12345) >>> 0) / 4294967296;
+    const xs = new Float64Array(80);
+    const zs = new Float64Array(80);
+    for (let i = 0; i < 80; i++) {
+      xs[i] = (rnd() - 0.5) * 700;
+      zs[i] = (rnd() - 0.5) * 700;
+    }
+    for (let step = 0; step < 4000; step++) {
+      const id = Math.floor(rnd() * 80);
+      // Half the queries repeat an unmoved position (the hot case), half move the member.
+      if (rnd() < 0.5) {
+        xs[id] = xs[id]! + (rnd() - 0.5) * 40;
+        zs[id] = zs[id]! + (rnd() - 0.5) * 40;
+      }
+      const x = xs[id]!;
+      const z = zs[id]!;
+      const expected = a.register(1, id, x, z) < 0 ? -1 : a.protects(1, id) ? 1 : 0;
+      expect(b.observe(1, id, x, z)).toBe(expected);
+      if (rnd() < 0.01) {
+        expect(b.remove(1, id)).toBe(a.remove(1, id));
+      }
+    }
+    expect(b.protectedMembers).toBe(a.protectedMembers);
+    expect(b.size).toBe(a.size);
+  });
 });
