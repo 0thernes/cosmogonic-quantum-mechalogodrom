@@ -636,8 +636,14 @@ class KleinBottleCortex {
     return [uu, vv];
   }
 
+  /** Flat index of klein(u, v), computed without the tuple (same arithmetic). */
   private idx(u: number, v: number): number {
-    const [uu, vv] = this.klein(u, v);
+    let uu = u;
+    let vv = ((v % this.h) + this.h) % this.h;
+    if (u < 0 || u >= this.w) {
+      uu = ((u % this.w) + this.w) % this.w;
+      vv = this.h - 1 - vv;
+    }
     return uu * this.h + vv;
   }
 
@@ -979,6 +985,22 @@ class QuantumTunnelLattice {
     return row.map((p) => p / z);
   }
 
+  /** rowProbabilities(i) written into `out` (same values), for the per-step sampling loop. */
+  private rowProbabilitiesInto(i: number, out: Float64Array): void {
+    const n = this.n;
+    let z = 0;
+    for (let j = 0; j < n; j++) {
+      const a = this.amp[i * n + j]!;
+      const p = a * a;
+      out[j] = p;
+      z += p;
+    }
+    if (z <= 0) out.fill(1 / n, 0, n);
+    else for (let j = 0; j < n; j++) out[j] = out[j]! / z;
+  }
+
+  private probScratch = new Float64Array(0);
+
   /** Evolve the amplitude field (deterministic phase rotation) and sample one manifested edge per node. */
   step(drive: number, rng: Rng): number {
     this.phase += 0.07 + 0.01 * drive;
@@ -990,7 +1012,9 @@ class QuantumTunnelLattice {
     }
     let manifested = 0;
     for (let i = 0; i < this.n; i++) {
-      const probs = this.rowProbabilities(i);
+      if (this.probScratch.length < this.n) this.probScratch = new Float64Array(this.n);
+      const probs = this.probScratch;
+      this.rowProbabilitiesInto(i, probs);
       const r = rng();
       let cum = 0;
       let pick = -1;
