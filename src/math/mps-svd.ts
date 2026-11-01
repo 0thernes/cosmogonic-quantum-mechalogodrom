@@ -89,6 +89,9 @@ export function matMul(A: Mat, B: Mat): Mat {
  * values sorted descending and a fixed sign convention. U is rows×n, S has
  * length n, V is n×n (n = A.cols). O(sweeps · m · n²); converges quadratically.
  */
+let svdVals = new Float64Array(16);
+let svdOrder = new Int32Array(16);
+
 export function svd(A: Mat): { U: Mat; S: number[]; V: Mat } {
   const m = A.rows;
   const n = A.cols;
@@ -108,7 +111,7 @@ export function svd(A: Mat): { U: Mat; S: number[]; V: Mat } {
     return { U: Vt, S, V: Ut };
   }
   // Working copy whose columns are rotated toward mutual orthogonality.
-  const W = Float64Array.from(A.data);
+  const W = A.data.slice();
   const V = mat(n, n);
   for (let i = 0; i < n; i++) V.data[i * n + i] = 1;
 
@@ -153,23 +156,35 @@ export function svd(A: Mat): { U: Mat; S: number[]; V: Mat } {
   }
 
   // Singular values = column norms of W; left vectors = normalized columns.
-  const sigma: { val: number; idx: number }[] = [];
+  // Column norms, then a deterministic descending order (tie-break on original column index) — a
+  // total order, so this allocation-free insertion sort yields exactly the order Array#sort did.
+  const vals = svdVals.length >= n ? svdVals : (svdVals = new Float64Array(n * 2));
+  const order = svdOrder.length >= n ? svdOrder : (svdOrder = new Int32Array(n * 2));
   for (let j = 0; j < n; j++) {
     let nrm = 0;
     for (let r = 0; r < m; r++) {
       const w = col(W, n, r, j);
       nrm += w * w;
     }
-    sigma.push({ val: Math.sqrt(nrm), idx: j });
+    vals[j] = Math.sqrt(nrm);
+    let k = j;
+    while (k > 0) {
+      const prev = order[k - 1]!;
+      // Same comparator as before: (b.val - a.val) || (a.idx - b.idx) with a = prev, b = j.
+      const cmp = vals[j]! - vals[prev]! || prev - j;
+      if (!(cmp > 0)) break;
+      order[k] = prev;
+      k--;
+    }
+    order[k] = j;
   }
-  // Deterministic descending sort (tie-break on original column index).
-  sigma.sort((a, b) => b.val - a.val || a.idx - b.idx);
 
   const U = mat(m, n);
-  const S: number[] = Array.from({ length: n }, () => 0);
+  const S: number[] = new Array<number>(n).fill(0);
   const Vs = mat(n, n);
   for (let k = 0; k < n; k++) {
-    const { val, idx } = sigma[k]!;
+    const idx = order[k]!;
+    const val = vals[idx]!;
     S[k] = val;
     if (val > SVD_TOL) {
       for (let r = 0; r < m; r++) U.data[r * n + k] = col(W, n, r, idx) / val;
