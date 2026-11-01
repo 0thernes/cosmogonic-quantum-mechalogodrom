@@ -94,6 +94,168 @@ const ALTITUDE = MECHA_ALTITUDE; // = 756 — 3× higher (Mini World ≈ 207.8: 
 /** Mandelbulb iteration budget for the per-vertex escape proxy (power-8 lobes; NaN-guarded). */
 const BULB_ITERS = 4;
 
+/**
+ * Reference (CPU) form of the mass warp — the exact maths the vertex shader runs per vertex.
+ * Kept as the readable source of truth and for tests; the shader port is MECHA_WARP_GLSL below.
+ */
+export function mechaWarpVertex(
+  bx: number,
+  by: number,
+  bz: number,
+  st: number,
+  w: number,
+  out: Float32Array | number[],
+  o = 0,
+): void {
+  // Layered trig of the direction → a de-Jong/implicit-field non-uniform writhe (deterministic).
+  const d =
+    Math.sin(bx * 0.22 + st * 1.3) +
+    Math.sin(by * 0.19 - st * 0.9) +
+    Math.sin(bz * 0.25 + st * 1.7) +
+    0.6 * Math.sin((bx + by + bz) * 0.13 + st * 2.1) +
+    0.45 * Math.sin(bx * by * 0.11 + bz * 0.09 + st * 1.1);
+  // Triply-periodic minimal-surface terms (gyroid + Neovius proxy): grown, not smoothed noise.
+  const gx = bx * 0.105 + st * 0.43;
+  const gy = by * 0.097 - st * 0.37;
+  const gz = bz * 0.113 + st * 0.31;
+  const gyroid =
+    Math.sin(gx) * Math.cos(gy) + Math.sin(gy) * Math.cos(gz) + Math.sin(gz) * Math.cos(gx);
+  const neovius =
+    3 * (Math.cos(gx) + Math.cos(gy) + Math.cos(gz)) +
+    4 * Math.cos(gx) * Math.cos(gy) * Math.cos(gz);
+  // 3D MANDELBULB escape field (power-8, NaN-guarded): bounded verts bulge into lobes, escapees recede.
+  const inv = 1 / CORE_R;
+  const sc = 1.05 + 0.18 * Math.sin(st * 0.06);
+  const cbx = bx * inv * sc;
+  const cby = by * inv * sc + 0.22 * Math.sin(st * 0.05);
+  const cbz = bz * inv * sc;
+  let zxb = cbx;
+  let zyb = cby;
+  let zzb = cbz;
+  let escB = 1;
+  for (let it = 0; it < BULB_ITERS; it++) {
+    const r = Math.sqrt(zxb * zxb + zyb * zyb + zzb * zzb);
+    if (r > 2) {
+      escB = it / BULB_ITERS;
+      break;
+    }
+    const rr = r > 1e-6 ? r : 1e-6;
+    const theta = 8 * Math.acos(clamp(zzb / rr, -1, 1));
+    const phi = 8 * Math.atan2(zyb, zxb);
+    const zr = Math.pow(rr, 8);
+    const sth = Math.sin(theta);
+    zxb = zr * sth * Math.cos(phi) + cbx;
+    zyb = zr * sth * Math.sin(phi) + cby;
+    zzb = zr * Math.cos(theta) + cbz;
+  }
+  const mb = escB * 0.55 * w;
+  const implicit = (gyroid * 0.19 + neovius * 0.025) * w;
+  const s = 1 + w * 0.32 * d + mb + implicit;
+  out[o] = bx * s + Math.sin(by * 3.1 + st) * mb * 12 + gyroid * w * 5;
+  out[o + 1] = by * s + Math.cos(bx * 2.7 - st * 1.2) * mb * 10 + neovius * w * 0.7;
+  out[o + 2] = bz * s + Math.sin(bx * bz * 0.08 + st * 0.8) * mb * 12 - gyroid * w * 5;
+}
+
+/** GLSL port of {@link mechaWarpVertex} (same constants, same order of operations). */
+export const MECHA_WARP_GLSL = /* glsl */ `
+uniform float uWarpSt;
+uniform float uWarpW;
+attribute vec3 aWarpB;
+attribute vec3 aWarpC;
+vec3 cqmMechaWarp(vec3 b) {
+  float st = uWarpSt;
+  float w = uWarpW;
+  float d = sin(b.x * 0.22 + st * 1.3) + sin(b.y * 0.19 - st * 0.9) + sin(b.z * 0.25 + st * 1.7)
+    + 0.6 * sin((b.x + b.y + b.z) * 0.13 + st * 2.1)
+    + 0.45 * sin(b.x * b.y * 0.11 + b.z * 0.09 + st * 1.1);
+  float gx = b.x * 0.105 + st * 0.43;
+  float gy = b.y * 0.097 - st * 0.37;
+  float gz = b.z * 0.113 + st * 0.31;
+  float gyroid = sin(gx) * cos(gy) + sin(gy) * cos(gz) + sin(gz) * cos(gx);
+  float neovius = 3.0 * (cos(gx) + cos(gy) + cos(gz)) + 4.0 * cos(gx) * cos(gy) * cos(gz);
+  float sc = 1.05 + 0.18 * sin(st * 0.06);
+  vec3 cb = vec3(b.x * ${(1 / CORE_R).toFixed(10)} * sc, b.y * ${(1 / CORE_R).toFixed(10)} * sc + 0.22 * sin(st * 0.05), b.z * ${(1 / CORE_R).toFixed(10)} * sc);
+  vec3 z = cb;
+  float escB = 1.0;
+  for (int it = 0; it < ${BULB_ITERS}; it++) {
+    float r = length(z);
+    if (r > 2.0) { escB = float(it) / ${BULB_ITERS.toFixed(1)}; break; }
+    float rr = r > 1e-6 ? r : 1e-6;
+    float theta = 8.0 * acos(clamp(z.z / rr, -1.0, 1.0));
+    float phi = 8.0 * atan(z.y, z.x);
+    float zr = pow(rr, 8.0);
+    float sth = sin(theta);
+    z = vec3(zr * sth * cos(phi), zr * sth * sin(phi), zr * cos(theta)) + cb;
+  }
+  float mb = escB * 0.55 * w;
+  float implicitW = (gyroid * 0.19 + neovius * 0.025) * w;
+  float s = 1.0 + w * 0.32 * d + mb + implicitW;
+  return vec3(
+    b.x * s + sin(b.y * 3.1 + st) * mb * 12.0 + gyroid * w * 5.0,
+    b.y * s + cos(b.x * 2.7 - st * 1.2) * mb * 10.0 + neovius * w * 0.7,
+    b.z * s + sin(b.x * b.z * 0.08 + st * 0.8) * mb * 12.0 - gyroid * w * 5.0
+  );
+}
+`;
+
+/** Per-vertex copies of the other two corners of each (non-indexed) triangle, so the shader can rebuild
+ *  the warped flat face normal exactly as `computeVertexNormals` did on the CPU. */
+function addWarpTriangleAttributes(geo: THREE.BufferGeometry): void {
+  const p = geo.getAttribute('position').array as ArrayLike<number>;
+  const n = p.length / 3;
+  const b = new Float32Array(n * 3);
+  const c = new Float32Array(n * 3);
+  for (let tri = 0; tri < n; tri += 3) {
+    for (let k = 0; k < 3; k++) {
+      const self = tri + k;
+      const nb = tri + ((k + 1) % 3);
+      const nc = tri + ((k + 2) % 3);
+      for (let a = 0; a < 3; a++) {
+        b[self * 3 + a] = p[nb * 3 + a] ?? 0;
+        c[self * 3 + a] = p[nc * 3 + a] ?? 0;
+      }
+    }
+  }
+  geo.setAttribute('aWarpB', new THREE.BufferAttribute(b, 3));
+  geo.setAttribute('aWarpC', new THREE.BufferAttribute(c, 3));
+}
+
+/** Route a built-in material's vertex position (and, when lit, its flat face normal) through the warp. */
+function installMechaWarp(
+  mat: THREE.Material,
+  uniforms: { uWarpSt: { value: number }; uWarpW: { value: number } },
+  lit: boolean,
+): void {
+  mat.onBeforeCompile = (shader) => {
+    shader.uniforms['uWarpSt'] = uniforms.uWarpSt;
+    shader.uniforms['uWarpW'] = uniforms.uWarpW;
+    shader.vertexShader = MECHA_WARP_GLSL + shader.vertexShader;
+    if (lit) {
+      shader.vertexShader = shader.vertexShader.replace(
+        '#include <beginnormal_vertex>',
+        `vec3 cqmWA = cqmMechaWarp(position);
+  vec3 cqmWB = cqmMechaWarp(aWarpB);
+  vec3 cqmWC = cqmMechaWarp(aWarpC);
+  vec3 cqmWN = cross(cqmWB - cqmWA, cqmWC - cqmWA);
+  vec3 objectNormal = length(cqmWN) > 0.0 ? normalize(cqmWN) : normal;
+  #ifdef USE_TANGENT
+  vec3 objectTangent = vec3( tangent.xyz );
+  #endif`,
+      );
+      shader.vertexShader = shader.vertexShader.replace(
+        '#include <begin_vertex>',
+        'vec3 transformed = cqmWA;',
+      );
+    } else {
+      shader.vertexShader = shader.vertexShader.replace(
+        '#include <begin_vertex>',
+        'vec3 transformed = cqmMechaWarp(position);',
+      );
+    }
+  };
+  mat.customProgramCacheKey = () => (lit ? 'cqm-mecha-warp-lit' : 'cqm-mecha-warp');
+}
+
 /** Read-only telemetry of the fusion abomination (built fresh each call — UI cadence only). */
 interface MechalogodromSnapshot {
   /** Convergence/fusion progress 0 (ten apart on the ring) → 1 (fully fused monster). */
@@ -301,7 +463,6 @@ export class Mechalogodrom {
   private readonly exoMat: THREE.LineBasicMaterial;
 
   private readonly warpGeo: THREE.IcosahedronGeometry;
-  private readonly basePos: Float32Array; // pristine icosa vertices (warp source of truth)
   private readonly rimMat: THREE.MeshBasicMaterial;
   private readonly massMat: THREE.MeshStandardMaterial;
   private readonly wireMat: THREE.MeshBasicMaterial;
@@ -343,7 +504,8 @@ export class Mechalogodrom {
   private drive = 0;
   private localT = 0;
   private worldTimeScale = 1;
-  private normalsTick = 0;
+  /** Shared warp drivers for the mass + wire shaders (time in exterior units, warp amplitude). */
+  private readonly warpUniforms = { uWarpSt: { value: 0 }, uWarpW: { value: 0 } };
   /** CRT canyon + tesseract tunnel — physical exterior shell (1000-phenomenon vocabulary). */
   private readonly mechaExterior: MechaExteriorAbomination;
   private tsotchkePulse: TsotchkeQuantumPulse = {
@@ -383,8 +545,7 @@ export class Mechalogodrom {
     // ── Warped mass: ONE icosahedron geometry, displaced on the CPU each frame, shown twice —
     //    a translucent emissive solid + an additive wireframe — so it reads as a meshy freakshow. ─
     this.warpGeo = new THREE.IcosahedronGeometry(CORE_R, WARP_DETAIL);
-    const pos = this.warpGeo.getAttribute('position') as THREE.BufferAttribute;
-    this.basePos = new Float32Array(pos.array as ArrayLike<number>);
+    addWarpTriangleAttributes(this.warpGeo);
     this.massMat = new THREE.MeshStandardMaterial({
       color: 0x120016,
       emissive: 0x6a0030,
@@ -395,6 +556,7 @@ export class Mechalogodrom {
       opacity: 0.55,
       depthWrite: false,
     });
+    installMechaWarp(this.massMat, this.warpUniforms, true);
     this.mass = new THREE.Mesh(this.warpGeo, this.massMat);
     this.group.add(this.mass);
     this.wireMat = new THREE.MeshBasicMaterial({
@@ -405,6 +567,7 @@ export class Mechalogodrom {
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
+    installMechaWarp(this.wireMat, this.warpUniforms, false);
     this.wire = new THREE.Mesh(this.warpGeo, this.wireMat);
     this.group.add(this.wire);
 
@@ -774,74 +937,12 @@ export class Mechalogodrom {
     this.driveVariants(lt, ease);
   }
 
-  /** Per-frame CPU vertex displacement of the shared mass geometry (writhing alien morph, no GLSL). */
+  /** Per-frame displacement of the shared mass geometry (writhing alien morph). The maths runs in the
+   *  vertex shader (MECHA_WARP_GLSL, a line-for-line port of {@link mechaWarpVertex}); the CPU only
+   *  publishes the two drivers, so nothing is re-uploaded each frame. */
   private warpMass(t: number): void {
-    const st = t * MECHA_EXTERIOR_TIME_SCALE;
-    const pos = this.warpGeo.getAttribute('position') as THREE.BufferAttribute;
-    const arr = pos.array as Float32Array;
-    const base = this.basePos;
-    const w = this.warp;
-    const n = arr.length;
-    for (let i = 0; i < n; i += 3) {
-      const bx = base[i] ?? 0;
-      const by = base[i + 1] ?? 0;
-      const bz = base[i + 2] ?? 0;
-      // Layered trig of the direction → a de-Jong/implicit-field non-uniform writhe (deterministic).
-      const d =
-        Math.sin(bx * 0.22 + st * 1.3) +
-        Math.sin(by * 0.19 - st * 0.9) +
-        Math.sin(bz * 0.25 + st * 1.7) +
-        0.6 * Math.sin((bx + by + bz) * 0.13 + st * 2.1) +
-        0.45 * Math.sin(bx * by * 0.11 + bz * 0.09 + st * 1.1);
-      // Triply-periodic minimal-surface terms (gyroid + Neovius proxy) make the surface look grown
-      // from an alien spatial sense rather than smoothed noise. Pure f(position,time), bounded.
-      const gx = bx * 0.105 + st * 0.43;
-      const gy = by * 0.097 - st * 0.37;
-      const gz = bz * 0.113 + st * 0.31;
-      const gyroid =
-        Math.sin(gx) * Math.cos(gy) + Math.sin(gy) * Math.cos(gz) + Math.sin(gz) * Math.cos(gx);
-      const neovius =
-        3 * (Math.cos(gx) + Math.cos(gy) + Math.cos(gz)) +
-        4 * Math.cos(gx) * Math.cos(gy) * Math.cos(gz);
-      // 3D MANDELBULB escape field (power-8, deterministic, NaN-guarded). The base vertex direction
-      // (a point on the CORE_R sphere) seeds `c`; a slow `t` breathe drifts the set so the lobes
-      // crawl. Vertices that stay BOUNDED (deep in the bulb) bulge OUT into fractal lobes; those that
-      // escape recede — neighbouring verts land on opposite sides of the fractal boundary, creasing
-      // the mass into the iconic bulbous mandelbulb freakshow. Iterations capped at BULB_ITERS.
-      const inv = 1 / CORE_R;
-      const sc = 1.05 + 0.18 * Math.sin(st * 0.06);
-      const cbx = bx * inv * sc;
-      const cby = by * inv * sc + 0.22 * Math.sin(st * 0.05);
-      const cbz = bz * inv * sc;
-      let zxb = cbx;
-      let zyb = cby;
-      let zzb = cbz;
-      let escB = 1; // stays 1 ⇒ bounded (in-set) ⇒ a lobe; drops toward 0 the earlier it escapes
-      for (let it = 0; it < BULB_ITERS; it++) {
-        const r = Math.sqrt(zxb * zxb + zyb * zyb + zzb * zzb);
-        if (r > 2) {
-          escB = it / BULB_ITERS;
-          break;
-        }
-        const rr = r > 1e-6 ? r : 1e-6;
-        const theta = 8 * Math.acos(clamp(zzb / rr, -1, 1));
-        const phi = 8 * Math.atan2(zyb, zxb);
-        const zr = Math.pow(rr, 8); // rr ≤ 2 here ⇒ zr ≤ 256, finite
-        const st = Math.sin(theta);
-        zxb = zr * st * Math.cos(phi) + cbx;
-        zyb = zr * st * Math.sin(phi) + cby;
-        zzb = zr * Math.cos(theta) + cbz;
-      }
-      const mb = escB * 0.55 * w;
-      const implicit = (gyroid * 0.19 + neovius * 0.025) * w;
-      const s = 1 + w * 0.32 * d + mb + implicit;
-      arr[i] = bx * s + Math.sin(by * 3.1 + st) * mb * 12 + gyroid * w * 5;
-      arr[i + 1] = by * s + Math.cos(bx * 2.7 - st * 1.2) * mb * 10 + neovius * w * 0.7;
-      arr[i + 2] = bz * s + Math.sin(bx * bz * 0.08 + st * 0.8) * mb * 12 - gyroid * w * 5;
-    }
-    pos.needsUpdate = true;
-    // Recompute normals on a cadence so the emissive solid still catches a little scene light.
-    if ((this.normalsTick = (this.normalsTick + 1) % 6) === 0) this.warpGeo.computeVertexNormals();
+    this.warpUniforms.uWarpSt.value = t * MECHA_EXTERIOR_TIME_SCALE;
+    this.warpUniforms.uWarpW.value = this.warp;
   }
 
   /** Spin/colour/flash the fused centre rig (core, rim, mass, wire, spikes, rings). */
