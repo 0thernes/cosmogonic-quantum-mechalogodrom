@@ -148,7 +148,9 @@ export class DeterministicStatevectorRng {
   private draws = 0;
   private measurements = 0;
   private lastMeasurement = 0;
-  private lastWord = 0n;
+  /** Last 64-bit output word as two unsigned 32-bit halves (no BigInt per draw). */
+  private lastLo = 0;
+  private lastHi = 0;
   private healthCursor = 0;
   private healthCount = 0;
 
@@ -464,9 +466,7 @@ export class DeterministicStatevectorRng {
     this.cursor++;
   }
 
-  private recordHealthWord(word: bigint): void {
-    const lo = Number(word & 0xffff_ffffn) >>> 0;
-    const hi = Number((word >> 32n) & 0xffff_ffffn) >>> 0;
+  private recordHealthWord(lo: number, hi: number): void {
     const win = this.healthWindow;
     const cap = win.length;
     let cur = this.healthCursor;
@@ -489,26 +489,36 @@ export class DeterministicStatevectorRng {
    * Generate 64 bits by packing repeated full-register Born measurements. This preserves the
    * state-vector semantics instead of pretending an amplitude array itself is an entropy source.
    */
-  nextU64(): bigint {
-    let word = 0n;
+  /** Draw the next 64-bit word into lastLo/lastHi (same measurements, same bit order as before). */
+  private nextWord(): void {
+    let lo = 0;
+    let hi = 0;
     let filled = 0;
     while (filled < 64) {
       this.evolve();
       const basis = this.measureRegister();
       for (let q = 0; q < this.qubits && filled < 64; q++, filled++) {
         const bit = (basis >>> q) & 1;
-        word |= BigInt(bit) << BigInt(filled);
+        if (filled < 32) lo |= bit << filled;
+        else hi |= bit << (filled - 32);
       }
     }
-    this.lastWord = BigInt.asUintN(64, word);
+    this.lastLo = lo >>> 0;
+    this.lastHi = hi >>> 0;
     this.draws++;
-    this.recordHealthWord(this.lastWord);
-    return this.lastWord;
+    this.recordHealthWord(this.lastLo, this.lastHi);
+  }
+
+  nextU64(): bigint {
+    this.nextWord();
+    return (BigInt(this.lastHi) << 32n) | BigInt(this.lastLo);
   }
 
   /** Uniform-like deterministic double in [0, 1), built from the high 53 bits of {@link nextU64}. */
   next01(): number {
-    return Number(this.nextU64() >> 11n) / TWO_POW_53;
+    this.nextWord();
+    // == Number(word >> 11n) / 2^53, exactly: hi·2^21 + (lo >>> 11) < 2^53 is an exact double.
+    return (this.lastHi * 2097152 + (this.lastLo >>> 11)) / TWO_POW_53;
   }
 
   /**
@@ -591,7 +601,8 @@ export class DeterministicStatevectorRng {
       draws: this.draws,
       measurements: this.measurements,
       lastMeasurement: this.lastMeasurement,
-      lastWord: this.lastWord.toString(16).padStart(16, '0'),
+      lastWord:
+        this.lastHi.toString(16).padStart(8, '0') + this.lastLo.toString(16).padStart(8, '0'),
       healthWindow: Array.from(this.healthWindow),
       healthCursor: this.healthCursor,
       healthCount: this.healthCount,
@@ -701,7 +712,8 @@ export class DeterministicStatevectorRng {
     this.draws = snapshot.draws;
     this.measurements = snapshot.measurements;
     this.lastMeasurement = snapshot.lastMeasurement;
-    this.lastWord = BigInt(`0x${snapshot.lastWord}`);
+    this.lastHi = parseInt(snapshot.lastWord.slice(0, 8), 16) >>> 0;
+    this.lastLo = parseInt(snapshot.lastWord.slice(8), 16) >>> 0;
     this.healthCursor = snapshot.healthCursor;
     this.healthCount = snapshot.healthCount;
   }
