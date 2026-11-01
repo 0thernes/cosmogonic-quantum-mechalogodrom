@@ -37,6 +37,11 @@ const clamp01 = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v);
  * state given by the `re`/`im` amplitudes over `1<<nQubits` basis states. 0 ⇒ A separable from B;
  * 1 ⇒ A maximally mixed (maximally entangled with B). Eigensolver-free (purity from the amplitudes).
  */
+// Reused relabel buffers for subsystemLinearEntropy. Every cell is overwritten each call (g ↦ (a, b) is a
+// bijection onto dimA·dimB = 2^nQubits), so reuse cannot leak values between calls.
+let sleRe = new Float64Array(64);
+let sleIm = new Float64Array(64);
+
 export function subsystemLinearEntropy(
   re: ArrayLike<number>,
   im: ArrayLike<number>,
@@ -53,9 +58,13 @@ export function subsystemLinearEntropy(
   const dimB = 1 << bBits.length;
   if (dimA < 2) return 0; // empty A side carries no entanglement
   // Relabel amplitudes into M[a][b] = ψ_{a,b} (a indexes A, b indexes B).
-  const mRe = new Float64Array(dimA * dimB);
-  const mIm = new Float64Array(dimA * dimB);
   const dim = 1 << nQubits;
+  if (sleRe.length < dim) {
+    sleRe = new Float64Array(dim);
+    sleIm = new Float64Array(dim);
+  }
+  const mRe = sleRe;
+  const mIm = sleIm;
   for (let g = 0; g < dim; g++) {
     let a = 0;
     for (let t = 0; t < aBits.length; t++) if ((g & (1 << (aBits[t] ?? 0))) !== 0) a |= 1 << t;
