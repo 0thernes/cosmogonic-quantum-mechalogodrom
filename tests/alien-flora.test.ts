@@ -12,6 +12,7 @@
 import { describe, expect, test } from 'bun:test';
 import * as THREE from 'three';
 import {
+  FLORA_TILES,
   ALIEN_FLORA_FIELD_HALF,
   ALIEN_FLORA_TARGET_DESKTOP,
   ALIEN_FLORA_TARGET_MOBILE,
@@ -60,6 +61,28 @@ function matrixArrays(scene: THREE.Scene): Float32Array[] {
 }
 
 describe('AlienFlora — the vegetal ground ecology', () => {
+  test('frustum tiles: every plant sits inside its tile mesh bounds (nothing visible is culled)', () => {
+    const ctx = makeCtx();
+    const f = new AlienFlora(ctx);
+    const m = new THREE.Matrix4();
+    const v = new THREE.Vector3();
+    let checked = 0;
+    ctx.scene.traverse((o) => {
+      if (!(o instanceof THREE.InstancedMesh)) return;
+      expect(o.frustumCulled).toBe(true);
+      const sphere = o.boundingSphere!;
+      for (let i = 0; i < o.count; i++) {
+        o.getMatrixAt(i, m);
+        v.setFromMatrixPosition(m);
+        // ≥ 30 world units of slack beyond each plant's base for GPU sway / push / contact.
+        expect(sphere.center.distanceTo(v) + 30).toBeLessThan(sphere.radius);
+        checked++;
+      }
+    });
+    expect(checked).toBe(f.instanceCount);
+    f.dispose();
+  });
+
   test('boots headless and plants a substantial field across family meshes', () => {
     const ctx = makeCtx();
     const f = new AlienFlora(ctx);
@@ -74,7 +97,8 @@ describe('AlienFlora — the vegetal ground ecology', () => {
       }
     });
     expect(meshes).toBeGreaterThanOrEqual(1);
-    expect(meshes).toBeLessThanOrEqual(9); // V109: expanded to 9 structural family silhouettes
+    // V109: 9 structural family silhouettes, each split into FLORA_TILES² frustum tiles (render-only culling).
+    expect(meshes).toBeLessThanOrEqual(9 * FLORA_TILES * FLORA_TILES);
     expect(total).toBe(f.instanceCount); // every placed plant is in some family mesh
     f.dispose();
   });

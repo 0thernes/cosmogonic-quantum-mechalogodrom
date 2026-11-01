@@ -54,6 +54,10 @@ export const ALIEN_FLORA_TARGET_DESKTOP = scaleCount(60_000);
 export const ALIEN_FLORA_TARGET_MOBILE = scaleCount(20_800);
 /** Plant square half-extent follows the authoritative invisible platform wall. */
 export const ALIEN_FLORA_FIELD_HALF = PLATFORM_HALF;
+/** Per-family frustum tiles per side (render-only culling; plant set and look unchanged). */
+export const FLORA_TILES = 4;
+/** Bounding-sphere pad (world units) for GPU-side plant displacement, so no visible plant is culled. */
+const FLORA_TILE_CULL_PAD = 40;
 /** Enough deterministic candidates to fill the requested population after paths/glades are carved. */
 // Mini World keeps full-size structure clearings on 1/10 the land, so it needs a deeper candidate pool
 // to reach its exact target (the full world always fills well inside 4×, so it is unchanged).
@@ -1182,93 +1186,131 @@ export class AlienFlora {
       const list = perFamily[fam]!;
       if (list.length === 0) continue;
       const fmly = this.families[fam]!;
-      const geo = fmly.geo.clone();
-      const n = list.length;
-      const params = new Float32Array(n * 4);
-      const meta = new Float32Array(n * 4);
-      const skinArr = new Float32Array(n * 4); // aSkin: per-species shader program + metal/pattern
-      const colors = new Float32Array(n * 3);
-      const pushArr = new Float32Array(n * 2); // aPush: soft plant↔plant separation
-      const mesh = new THREE.InstancedMesh(geo, this.material, n);
-      mesh.frustumCulled = false;
-      const meshIdx = this.meshes.length;
-      for (let i = 0; i < n; i++) {
+      // FRUSTUM TILES (perf, render-only): each family is split into FLORA_TILES² spatial tiles, one
+      // InstancedMesh each with a padded bounding sphere, so the GPU skips the off-screen part of the
+      // field instead of vertex-shading every plant every frame. Every plant keeps its family-global
+      // index `i` for all hashes/attributes, so each plant looks and moves exactly as before.
+      const tiles: number[][] = Array.from({ length: FLORA_TILES * FLORA_TILES }, () => []);
+      for (let i = 0; i < list.length; i++) {
         const pl = list[i]!;
-        const s = species[pl.sp]!;
-        // Wire spatial-hash plant id → this instance.
-        if (globalPlant < this.plantMeshIdx.length) {
-          this.plantMeshIdx[globalPlant] = meshIdx;
-          this.plantInstIdx[globalPlant] = i;
-          globalPlant++;
-        }
-        // Seat origin into the soil so curved roots bury; GPU adds the same living-ground displacement.
-        const gy = baseTerrainHeightAt(pl.x, pl.z) - ROOT_SINK;
-        pos.set(pl.x, gy, pl.z);
-        // Soft terrain-slope align only — collar follows land tilt, never laid flat.
-        const dhx = baseTerrainHeightAt(pl.x + 1, pl.z) - baseTerrainHeightAt(pl.x - 1, pl.z);
-        const dhz = baseTerrainHeightAt(pl.x, pl.z + 1) - baseTerrainHeightAt(pl.x, pl.z - 1);
-        const groundTiltX = Math.max(-0.14, Math.min(0.14, -dhz * 0.18));
-        const groundTiltZ = Math.max(-0.14, Math.min(0.14, dhx * 0.18));
-        e.set(
-          groundTiltX + Math.sin(pl.yaw) * pl.tilt * 0.65,
-          pl.yaw,
-          groundTiltZ + Math.cos(pl.yaw) * pl.tilt * 0.65,
+        const tx = Math.min(
+          FLORA_TILES - 1,
+          Math.max(
+            0,
+            Math.floor(
+              ((pl.x + ALIEN_FLORA_FIELD_HALF) / (2 * ALIEN_FLORA_FIELD_HALF)) * FLORA_TILES,
+            ),
+          ),
         );
-        q.setFromEuler(e);
-        // Taller than wide: bigger presence without fat slabs or spaghetti poles.
-        const s0 = pl.scale;
-        scl.set(s0 * 0.94, s0 * 1.28, s0 * 0.94);
-        m.compose(pos, q, scl);
-        mesh.setMatrixAt(i, m);
-
-        // SPECIES IDENTITY: exact species hue/sat/light — tiny plant jitter only (not a re-roll).
-        const hueJit = (s.hue + (hash(pl.sp * 31 + i) - 0.5) * 0.012 + pl.rarity * 0.015 + 1) % 1;
-        const sat = Math.min(1, Math.max(0.22, s.sat + (hash(i * 97 + pl.sp) - 0.5) * 0.04));
-        const light = Math.min(
-          0.42,
-          Math.max(0.07, s.light + (hash(i * 101 + pl.sp) - 0.5) * 0.025),
+        const tz = Math.min(
+          FLORA_TILES - 1,
+          Math.max(
+            0,
+            Math.floor(
+              ((pl.z + ALIEN_FLORA_FIELD_HALF) / (2 * ALIEN_FLORA_FIELD_HALF)) * FLORA_TILES,
+            ),
+          ),
         );
-        col.setHSL(hueJit, sat, light);
-
-        const o4 = i * 4;
-        // Spatial salt so neighbors never lockstep thrash (crossover ↓ at source).
-        params[o4] =
-          hash(pl.sp * 13 + i * 7) * TAU +
-          pl.x * 0.041 +
-          pl.z * 0.037 +
-          Math.sin(pl.x * 0.09 - pl.z * 0.07) * 1.7 +
-          Math.cos(pl.x * 0.05 + pl.z * 0.06) * 1.1;
-        params[o4 + 1] = s.swayFreq * (0.55 + hash(i * 73 + pl.sp) * 1.9);
-        params[o4 + 2] = Math.min(1, s.glow + hash(i * 79 + pl.sp) * 0.25 + pl.rarity * 0.2);
-        params[o4 + 3] = fmly.height;
-
-        // aMeta: rarity, stiffness, secondaryHue (species-locked), reactGain
-        meta[o4] = pl.rarity;
-        meta[o4 + 1] = 0.18 + hash(i * 83 + pl.sp) * 1.0;
-        // Secondary hue stays near species primary (±0.08) — identity, not random rainbow.
-        meta[o4 + 2] = (hueJit + 0.04 + (hash(pl.sp * 7) - 0.5) * 0.08 + pl.rarity * 0.03 + 1) % 1;
-        meta[o4 + 3] = 0.55 + hash(i * 91 + pl.sp) * 0.9 + pl.rarity * 0.7;
-
-        // aSkin: per-SPECIES shader program (same for every plant of that species).
-        skinArr[o4] = s.skinMode;
-        skinArr[o4 + 1] = s.metal;
-        skinArr[o4 + 2] = s.pattern;
-        skinArr[o4 + 3] = pl.sp / SPECIES_COUNT;
-
-        const o3 = i * 3;
-        colors[o3] = col.r;
-        colors[o3 + 1] = col.g;
-        colors[o3 + 2] = col.b;
+        tiles[tz * FLORA_TILES + tx]!.push(i);
       }
-      geo.setAttribute('aParams', new THREE.InstancedBufferAttribute(params, 4));
-      geo.setAttribute('aMeta', new THREE.InstancedBufferAttribute(meta, 4));
-      geo.setAttribute('aSkin', new THREE.InstancedBufferAttribute(skinArr, 4));
-      geo.setAttribute('aColor', new THREE.InstancedBufferAttribute(colors, 3));
-      geo.setAttribute('aPush', new THREE.InstancedBufferAttribute(pushArr, 2));
-      this.pushAttrs.push(pushArr);
-      mesh.instanceMatrix.needsUpdate = true;
-      this.scene.add(mesh);
-      this.meshes.push(mesh);
+      const famBase = globalPlant;
+      for (const tile of tiles) {
+        if (tile.length === 0) continue;
+        const geo = fmly.geo.clone();
+        const n = tile.length;
+        const params = new Float32Array(n * 4);
+        const meta = new Float32Array(n * 4);
+        const skinArr = new Float32Array(n * 4); // aSkin: per-species shader program + metal/pattern
+        const colors = new Float32Array(n * 3);
+        const pushArr = new Float32Array(n * 2); // aPush: soft plant↔plant separation
+        const mesh = new THREE.InstancedMesh(geo, this.material, n);
+        const meshIdx = this.meshes.length;
+        for (let k = 0; k < n; k++) {
+          const i = tile[k]!;
+          const pl = list[i]!;
+          const s = species[pl.sp]!;
+          // Wire spatial-hash plant id (same fam→list order as plantX/Z) → this tile instance.
+          const gp = famBase + i;
+          if (gp < this.plantMeshIdx.length) {
+            this.plantMeshIdx[gp] = meshIdx;
+            this.plantInstIdx[gp] = k;
+          }
+          // Seat origin into the soil so curved roots bury; GPU adds the same living-ground displacement.
+          const gy = baseTerrainHeightAt(pl.x, pl.z) - ROOT_SINK;
+          pos.set(pl.x, gy, pl.z);
+          // Soft terrain-slope align only — collar follows land tilt, never laid flat.
+          const dhx = baseTerrainHeightAt(pl.x + 1, pl.z) - baseTerrainHeightAt(pl.x - 1, pl.z);
+          const dhz = baseTerrainHeightAt(pl.x, pl.z + 1) - baseTerrainHeightAt(pl.x, pl.z - 1);
+          const groundTiltX = Math.max(-0.14, Math.min(0.14, -dhz * 0.18));
+          const groundTiltZ = Math.max(-0.14, Math.min(0.14, dhx * 0.18));
+          e.set(
+            groundTiltX + Math.sin(pl.yaw) * pl.tilt * 0.65,
+            pl.yaw,
+            groundTiltZ + Math.cos(pl.yaw) * pl.tilt * 0.65,
+          );
+          q.setFromEuler(e);
+          // Taller than wide: bigger presence without fat slabs or spaghetti poles.
+          const s0 = pl.scale;
+          scl.set(s0 * 0.94, s0 * 1.28, s0 * 0.94);
+          m.compose(pos, q, scl);
+          mesh.setMatrixAt(k, m);
+
+          // SPECIES IDENTITY: exact species hue/sat/light — tiny plant jitter only (not a re-roll).
+          const hueJit = (s.hue + (hash(pl.sp * 31 + i) - 0.5) * 0.012 + pl.rarity * 0.015 + 1) % 1;
+          const sat = Math.min(1, Math.max(0.22, s.sat + (hash(i * 97 + pl.sp) - 0.5) * 0.04));
+          const light = Math.min(
+            0.42,
+            Math.max(0.07, s.light + (hash(i * 101 + pl.sp) - 0.5) * 0.025),
+          );
+          col.setHSL(hueJit, sat, light);
+
+          const o4 = k * 4;
+          // Spatial salt so neighbors never lockstep thrash (crossover ↓ at source).
+          params[o4] =
+            hash(pl.sp * 13 + i * 7) * TAU +
+            pl.x * 0.041 +
+            pl.z * 0.037 +
+            Math.sin(pl.x * 0.09 - pl.z * 0.07) * 1.7 +
+            Math.cos(pl.x * 0.05 + pl.z * 0.06) * 1.1;
+          params[o4 + 1] = s.swayFreq * (0.55 + hash(i * 73 + pl.sp) * 1.9);
+          params[o4 + 2] = Math.min(1, s.glow + hash(i * 79 + pl.sp) * 0.25 + pl.rarity * 0.2);
+          params[o4 + 3] = fmly.height;
+
+          // aMeta: rarity, stiffness, secondaryHue (species-locked), reactGain
+          meta[o4] = pl.rarity;
+          meta[o4 + 1] = 0.18 + hash(i * 83 + pl.sp) * 1.0;
+          // Secondary hue stays near species primary (±0.08) — identity, not random rainbow.
+          meta[o4 + 2] =
+            (hueJit + 0.04 + (hash(pl.sp * 7) - 0.5) * 0.08 + pl.rarity * 0.03 + 1) % 1;
+          meta[o4 + 3] = 0.55 + hash(i * 91 + pl.sp) * 0.9 + pl.rarity * 0.7;
+
+          // aSkin: per-SPECIES shader program (same for every plant of that species).
+          skinArr[o4] = s.skinMode;
+          skinArr[o4 + 1] = s.metal;
+          skinArr[o4 + 2] = s.pattern;
+          skinArr[o4 + 3] = pl.sp / SPECIES_COUNT;
+
+          const o3 = k * 3;
+          colors[o3] = col.r;
+          colors[o3 + 1] = col.g;
+          colors[o3 + 2] = col.b;
+        }
+        geo.setAttribute('aParams', new THREE.InstancedBufferAttribute(params, 4));
+        geo.setAttribute('aMeta', new THREE.InstancedBufferAttribute(meta, 4));
+        geo.setAttribute('aSkin', new THREE.InstancedBufferAttribute(skinArr, 4));
+        geo.setAttribute('aColor', new THREE.InstancedBufferAttribute(colors, 3));
+        geo.setAttribute('aPush', new THREE.InstancedBufferAttribute(pushArr, 2));
+        this.pushAttrs.push(pushArr);
+        mesh.instanceMatrix.needsUpdate = true;
+        // Conservative bounds: instance-transformed geometry bounds + a pad covering every GPU-side
+        // displacement (sway, crowd flee, CPU push, contact bend, ground heave) so nothing visible is culled.
+        mesh.computeBoundingSphere();
+        if (mesh.boundingSphere) mesh.boundingSphere.radius += FLORA_TILE_CULL_PAD;
+        mesh.frustumCulled = true;
+        this.scene.add(mesh);
+        this.meshes.push(mesh);
+      }
+      globalPlant = famBase + list.length;
     }
     // Boot packing solve (dynamic thrash/biomass/contact continue in update).
     this.resolvePlantCollisions(0, 0, 0.4);
