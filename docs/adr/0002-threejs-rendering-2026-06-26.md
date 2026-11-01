@@ -33,6 +33,13 @@ Use **`three@0.185.1` from npm as ES modules** with `@types/three`:
   exposure 1.15, `FogExp2(0x020310, 0.003)`, camera 68° / 0.1–900 at
   (0, 25, 55), DPR capped at 1.25 (mobile) / 2 (desktop), shadows per quality
   profile.
+
+  > **Superseded values (2026-11-01, code is authoritative and higher):** the renderer
+  > boots at exposure 0.72 and the weather system drives it (1.15 at runtime); fog
+  > density is 0.003 ÷ the habitat scale (0.0003 at runtime); the camera far plane is
+  > `CAMERA_FAR` = 5200 (ADR 0012 / MODULE-CONTRACTS); every quality tier renders at
+  > the device's native pixel ratio (`dprCap: Infinity`) instead of the 1.25 / 2 cap.
+
 - Partial GPU uploads use the 0.185.1 API:
   `attr.clearUpdateRanges(); attr.addUpdateRange(0, links * 6);` before
   `needsUpdate = true` (this is also the Known Bug 13 fix — the legacy code

@@ -289,7 +289,9 @@ The arena grows 5× and the ecosystem becomes a civilization
 - **10,000 entities** on the ultra tier through InstancedMesh pools — ≤80
   draw calls for the whole population, per-instance color/emissive/alpha,
   with a four-rung quality ladder (phone 650 / laptop 2,000 / desktop 5,000 /
-  ultra 10,000) resolved once at boot.
+  ultra 10,000) resolved once at boot. _(Superseded: the ladder in
+  `src/core/quality.ts` is now phone 1,000 / tablet 2,000 / laptop 5,000 /
+  desktop 10,000 / ultra 25,000 / mega 50,000; Mini World uses mega × 0.1.)_
 - **10 creature phyla**, lore-named at mint, each a template distribution
   (hue band, geometry family, behavior pool, size/speed ranges, home wedge)
   — plus seeded wildcard OUTLIERS with impossible palettes, blended behavior
