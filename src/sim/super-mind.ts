@@ -1349,8 +1349,8 @@ export class SuperMind {
       (x) => Math.abs(x - (this.imagined[0] ?? 0.5)),
       this.pred[0] ?? 0,
     );
-    this.tensorScratch1.set(this.pred.subarray(0, 4));
-    this.tensorScratch2.set(this.imagined.subarray(0, 4));
+    copyRangeInto(this.tensorScratch1, this.pred, 0, 4);
+    copyRangeInto(this.tensorScratch2, this.imagined, 0, 4);
     const tPred = moonlabTensorContract(this.tensorScratch1, this.tensorScratch2, 4);
     // Wire Moonlab VQE energy proxy for quantum parameter optimization (#215: scale [-1,1] outputs to [-π,π] rad)
     const vqeEnergy = vqeEnergyProxy(
@@ -1552,8 +1552,8 @@ export class SuperMind {
     const q = this.quantum.forward(this.latent);
     for (let i = 0; i < SUPER_QUANTUM; i++) this.quantumOut[i] = unit(q[i] ?? 0);
     // Moonlab tensor contract on quantum aspects (VQE-like optimization proxy from corpus tensor/MPO) for 5 Archons
-    this.tensorScratch1.set(this.quantumOut.subarray(0, 4));
-    this.tensorScratch2.set(this.quantumOut.subarray(4, 8));
+    copyRangeInto(this.tensorScratch1, this.quantumOut, 0, 4);
+    copyRangeInto(this.tensorScratch2, this.quantumOut, 4, 8);
     const tQ = moonlabTensorContract(this.tensorScratch1, this.tensorScratch2, 4);
     if (tQ > 0) {
       const q0 = this.quantumOut[0] ?? 0;
@@ -1566,8 +1566,8 @@ export class SuperMind {
     const ulgQ = ulgHandoff(this.quantumOut[8] ?? 0.5, this.quantumOut[9] ?? 0.5);
     this.quantumOut[8] = clamp01((this.quantumOut[8] ?? 0) + ulgQ * 0.01);
     // additional Moonlab tensor on quantum aspects + Eshkol AD for "tape" in delib (more corpus everywhere in mind)
-    this.tensorScratch1.set(this.quantumOut.subarray(2, 6));
-    this.tensorScratch2.set(this.quantumOut.subarray(6, 10));
+    copyRangeInto(this.tensorScratch1, this.quantumOut, 2, 6);
+    copyRangeInto(this.tensorScratch2, this.quantumOut, 6, 10);
     const tQ2 = moonlabTensorContract(this.tensorScratch1, this.tensorScratch2, 3);
     const adQ2 = eshkolADGradient((x) => Math.abs(x), this.quantumOut[5] ?? 0.5);
     this.quantumOut[5] = clamp01((this.quantumOut[5] ?? 0) + tQ2 * 0.005 + adQ2 * 0.01);
@@ -1870,8 +1870,8 @@ export class SuperMind {
     }
     this.successor.lookahead(this.srReward, this.srValue);
     // more tensor/AD in successor for Tsotchke (Moonlab/Eshkol)
-    this.tensorScratch1.set(this.srValue.subarray(0, 4));
-    this.tensorScratch2.set(this.quantumOut.subarray(0, 4));
+    copyRangeInto(this.tensorScratch1, this.srValue, 0, 4);
+    copyRangeInto(this.tensorScratch2, this.quantumOut, 0, 4);
     const srT = moonlabTensorContract(this.tensorScratch1, this.tensorScratch2, 3);
     const srAd = eshkolADGradient((x) => x, this.srValue[0] ?? 0);
     // blend lightly
@@ -1897,7 +1897,7 @@ export class SuperMind {
       const empPlan = SUPER_PLANS[empBest];
       if (empPlan) {
         // use moonlabTensorContract (Tsotchke Moonlab) + eshkolAD for more tensor/AD in empowerment vote (deeper wiring into mind)
-        this.tensorScratch1.set(this.quantumOut.subarray(0, 3));
+        copyRangeInto(this.tensorScratch1, this.quantumOut, 0, 3);
         const empT = moonlabTensorContract(
           this.tensorScratch1,
           [this.empowerment.empowerment, 0.5, 0.3],
@@ -1921,7 +1921,7 @@ export class SuperMind {
       if (hp) drives[hp] += HRR_GAIN * this.holographic.confidence;
     }
     // Moonlab tensor + AD on holographic for more corpus in recall (Tsotchke wiring deeper)
-    this.tensorScratch1.set(this.quantumOut.subarray(0, 2));
+    copyRangeInto(this.tensorScratch1, this.quantumOut, 0, 2);
     // Length-3 first arg (was [conf,0.5]): a length-2 operand packs to a matrix with a ZERO second row,
     // forcing the contraction product to rank-1 so its truncation ratio is a constant ~1 regardless of
     // the quantum-state operand. The conf·0.5 cross term fills the row so both operands move hrrT.
@@ -2414,4 +2414,13 @@ export class SuperMind {
       embodiment: this.embodiment.snapshot(),
     };
   }
+}
+
+/**
+ * `dst.set(src.subarray(from, to))` without the temporary view: copies src[from, min(to, src.length))
+ * into dst[0…] by element assignment (same float conversion as TypedArray#set).
+ */
+function copyRangeInto(dst: Float32Array, src: ArrayLike<number>, from: number, to: number): void {
+  const end = to < src.length ? to : src.length;
+  for (let i = from; i < end; i++) dst[i - from] = src[i]!;
 }
