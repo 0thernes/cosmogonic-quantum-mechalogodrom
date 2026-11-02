@@ -103,13 +103,43 @@ export class Reservoir {
       expect[k] = e + EXPECT_TAU * d;
     }
     this.nov = clamp01(Math.sqrt(nov / IN));
-    for (let i = 0; i < N; i++) {
+    // Four neurons per pass: each keeps its own 0-start, input-then-recurrent add order (bit-identical),
+    // but every input / previous-state value is read once per four rows. Weight and state reads are in
+    // bounds (N, IN fixed at construction), so only `input` keeps its `?? 0` guard.
+    let i = 0;
+    for (; i + 3 < N; i += 4) {
+      let a0 = 0;
+      let a1 = 0;
+      let a2 = 0;
+      let a3 = 0;
+      const i0 = i * IN;
+      for (let k = 0; k < IN; k++) {
+        const u = input[k] ?? 0;
+        a0 += win[i0 + k]! * u;
+        a1 += win[i0 + IN + k]! * u;
+        a2 += win[i0 + 2 * IN + k]! * u;
+        a3 += win[i0 + 3 * IN + k]! * u;
+      }
+      const r0 = i * N;
+      for (let j = 0; j < N; j++) {
+        const xp = xPrev[j]!;
+        a0 += w[r0 + j]! * xp;
+        a1 += w[r0 + N + j]! * xp;
+        a2 += w[r0 + 2 * N + j]! * xp;
+        a3 += w[r0 + 3 * N + j]! * xp;
+      }
+      x[i] = (1 - LEAK) * xPrev[i]! + LEAK * Math.tanh(a0);
+      x[i + 1] = (1 - LEAK) * xPrev[i + 1]! + LEAK * Math.tanh(a1);
+      x[i + 2] = (1 - LEAK) * xPrev[i + 2]! + LEAK * Math.tanh(a2);
+      x[i + 3] = (1 - LEAK) * xPrev[i + 3]! + LEAK * Math.tanh(a3);
+    }
+    for (; i < N; i++) {
       let acc = 0;
       const wiBase = i * IN;
-      for (let k = 0; k < IN; k++) acc += (win[wiBase + k] ?? 0) * (input[k] ?? 0);
+      for (let k = 0; k < IN; k++) acc += win[wiBase + k]! * (input[k] ?? 0);
       const wBase = i * N;
-      for (let j = 0; j < N; j++) acc += (w[wBase + j] ?? 0) * (xPrev[j] ?? 0);
-      x[i] = (1 - LEAK) * (xPrev[i] ?? 0) + LEAK * Math.tanh(acc);
+      for (let j = 0; j < N; j++) acc += w[wBase + j]! * xPrev[j]!;
+      x[i] = (1 - LEAK) * xPrev[i]! + LEAK * Math.tanh(acc);
     }
   }
 
