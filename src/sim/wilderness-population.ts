@@ -714,8 +714,21 @@ export class WildernessPopulation {
       result.type === task.type &&
       result.data instanceof Float32Array &&
       this.isValidData(result.data, task.data.length) &&
-      result.data.every((value, i) => i % 8 < 6 || Object.is(value, task.data[i]))
+      this.passthroughLanesMatch(result.data, task.data)
     );
+  }
+
+  /**
+   * Lanes 6 and 7 of every 8-float record must come back unchanged (SameValue, as `Object.is`). Indexed
+   * loop over just those lanes: same verdict as the old `every` callback without boxing each float.
+   */
+  private passthroughLanesMatch(out: Float32Array, sent: ArrayLike<number>): boolean {
+    const n = out.length;
+    for (let i = 6; i < n; i += 8) {
+      if (!sameValue(out[i]!, sent[i])) return false;
+      if (i + 1 < n && !sameValue(out[i + 1]!, sent[i + 1])) return false;
+    }
+    return true;
   }
 
   private isValidData(data: Float32Array, expectedLength: number): boolean {
@@ -821,4 +834,10 @@ export class WildernessPopulation {
     this.batchExecutor = null;
     this.chunks.clear();
   }
+}
+
+/** SameValue (`Object.is`) for a float against a possibly-missing number, written out for the hot loop. */
+function sameValue(a: number, b: number | undefined): boolean {
+  if (a === b) return a !== 0 || 1 / a === 1 / (b as number);
+  return a !== a && b !== b && typeof b === 'number';
 }
