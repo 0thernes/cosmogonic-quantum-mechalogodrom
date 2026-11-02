@@ -77,7 +77,7 @@ export function quantumUncertainty(drive: number): number {
 }
 
 /** Geodesic coherence of `angles` mapped onto SO(3) z-rotations: 1 = aligned, 0 = maximally scattered. */
-export function orientationCoherence(angles: readonly number[]): number {
+export function orientationCoherence(angles: ArrayLike<number>): number {
   const n = angles.length;
   if (n < 2) return 1;
   let sum = 0;
@@ -98,7 +98,7 @@ export interface LatentInputs {
   /** Drive for the wavepacket well (e.g. arousal). */
   drive: number;
   /** Latent vector mapped onto rotation angles for the coherence probe. */
-  angles: readonly number[];
+  angles: ArrayLike<number>;
   ignition: number;
   phi: number;
   workspace: number;

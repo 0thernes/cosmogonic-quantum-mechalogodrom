@@ -1689,7 +1689,7 @@ export class SuperMind {
     // effect ride as measured substrates (surfaced in snapshot). Deterministic + bounded.
     const ls = latentSubstrateStep({
       drive: this.arousal,
-      angles: Array.from(this.latent),
+      angles: this.latent, // read synchronously and not kept
       ignition: this.ignition,
       phi: this.phi,
       workspace: this.ignition,

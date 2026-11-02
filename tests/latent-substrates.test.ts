@@ -79,3 +79,13 @@ describe('latent substrates — combined per-beat step', () => {
     expect(low).not.toBe(high);
   });
 });
+
+describe('orientationCoherence on a typed latent', () => {
+  test('a Float32Array gives exactly the value of its Array.from copy', () => {
+    const x = new Float32Array(16);
+    for (let k = 0; k < 20; k++) {
+      for (let i = 0; i < 16; i++) x[i] = Math.sin(k * 7.3 + i * 1.9) * 4;
+      expect(Object.is(orientationCoherence(x), orientationCoherence(Array.from(x)))).toBe(true);
+    }
+  });
+});
