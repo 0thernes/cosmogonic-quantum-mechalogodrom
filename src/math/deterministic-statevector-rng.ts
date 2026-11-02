@@ -387,15 +387,25 @@ export class DeterministicStatevectorRng {
     this.assertPair(control, target);
     const controlBit = 1 << control;
     const targetBit = 1 << target;
-    for (let i0 = 0; i0 < this.dimension; i0++) {
-      if ((i0 & controlBit) === 0 || (i0 & targetBit) !== 0) continue;
+    // Visit only the dimension/4 indices with control set and target clear (pure swaps, same pairs).
+    const lowBit = controlBit < targetBit ? controlBit : targetBit;
+    const highBit = controlBit ^ targetBit ^ lowBit;
+    const lowMask = lowBit - 1;
+    const highMask = highBit - 1;
+    const re = this.real;
+    const im = this.imag;
+    const quarter = this.dimension >>> 2;
+    for (let k = 0; k < quarter; k++) {
+      // Insert a zero bit at lowBit, then at highBit, then set the control bit.
+      const a = ((k & ~lowMask) << 1) | (k & lowMask);
+      const i0 = ((a & ~highMask) << 1) | (a & highMask) | controlBit;
       const i1 = i0 | targetBit;
-      const r = this.real[i0] ?? 0;
-      const j = this.imag[i0] ?? 0;
-      this.real[i0] = this.real[i1] ?? 0;
-      this.imag[i0] = this.imag[i1] ?? 0;
-      this.real[i1] = r;
-      this.imag[i1] = j;
+      const r = re[i0]!;
+      const j = im[i0]!;
+      re[i0] = re[i1]!;
+      im[i0] = im[i1]!;
+      re[i1] = r;
+      im[i1] = j;
     }
   }
 
