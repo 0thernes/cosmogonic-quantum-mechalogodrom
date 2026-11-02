@@ -157,6 +157,8 @@ class PrimeSieveLoom {
   private readonly contrib: Float64Array;
   private readonly twinDists: Int32Array;
   private readonly deadPrefix: Int32Array;
+  /** step() scratch: the twin distances that still have a live edge, ascending. */
+  private readonly liveDists: Int32Array;
 
   constructor(n = 96) {
     this.n = n;
@@ -199,6 +201,7 @@ class PrimeSieveLoom {
     for (let d = 1; d < n; d++) if (this.twin[d]) ds.push(d);
     this.twinDists = Int32Array.from(ds);
     this.deadPrefix = new Int32Array(ds.length);
+    this.liveDists = new Int32Array(ds.length);
   }
 
   /** True iff `d` is a twin-prime distance — exposed so the test asserts the membership law. */
@@ -235,13 +238,22 @@ class PrimeSieveLoom {
     const v = this.contrib;
     const n = this.n;
     for (let i = 0; i < n; i++) v[i] = w * (state[i]! + inj);
-    const dists = this.twinDists;
-    const K = dists.length;
+    const allDists = this.twinDists;
     const dead = this.deadPrefix;
-    for (let k = 0; k < K; k++) {
-      const d = dists[k]!;
-      dead[k] = this.bucketCursor[d]! - this.bucketStart[d]!;
+    // Compact to the distances that still have a live edge (a bucket of distance d holds n − d edges;
+    // a fully purged one adds nothing in either loop below). Order is preserved, so every node keeps
+    // its exact term order. Purges are monotone, so late in a run this list is often empty.
+    const liveD = this.liveDists;
+    let K = 0;
+    for (let k = 0; k < allDists.length; k++) {
+      const d = allDists[k]!;
+      const dk = this.bucketCursor[d]! - this.bucketStart[d]!;
+      if (dk >= n - d) continue;
+      liveD[K] = d;
+      dead[K] = dk;
+      K++;
     }
+    const dists = liveD;
     // Four nodes per pass with independent accumulators (each keeps its own exact term order): the
     // adds are latency-bound, so interleaving four dependency chains is where the speed comes from.
     let kDown = -1; // largest k with dists[k] <= x + 3
