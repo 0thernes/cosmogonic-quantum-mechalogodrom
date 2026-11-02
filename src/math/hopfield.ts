@@ -109,6 +109,32 @@ export function recall(
   return { state: s, sweeps: maxSweeps, converged: false };
 }
 
+/**
+ * {@link recall}'s attractor written into `s` (a plain array the caller reuses; it is resized to
+ * `probe.length`), with the same sweep order and arithmetic. Returns the sweep count. Reads `probe` only.
+ */
+export function recallStateInto(
+  net: HopfieldNet,
+  probe: readonly number[] | Float32Array,
+  s: number[],
+  maxSweeps = 50,
+): number {
+  s.length = probe.length;
+  for (let i = 0; i < probe.length; i++) s[i] = probe[i]!;
+  for (let sweep = 1; sweep <= maxSweeps; sweep++) {
+    let changed = false;
+    for (let i = 0; i < net.n; i++) {
+      const next = bsign(localField(net, s, i), s[i]!);
+      if (next !== s[i]) {
+        s[i] = next;
+        changed = true;
+      }
+    }
+    if (!changed) return sweep;
+  }
+  return maxSweeps;
+}
+
 /** Normalized overlap (cosine for bipolar) mₐᵦ = (1/n) Σ aᵢbᵢ ∈ [−1,1]; 1 ⇔ identical. */
 export function overlap(a: readonly number[], b: readonly number[]): number {
   const n = Math.min(a.length, b.length);

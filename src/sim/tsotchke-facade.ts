@@ -71,6 +71,7 @@ export {
   energy,
   stepSync,
   recall,
+  recallStateInto,
   overlap,
   type HopfieldNet,
 } from '../math/hopfield';
