@@ -148,6 +148,11 @@ export class DeterministicStatevectorRng {
   private draws = 0;
   private measurements = 0;
   private lastMeasurement = 0;
+  /** Cached magnitude of an n-fold Hadamard amplitude (−1 until first use). */
+  private hadamardMag = -1;
+  /** 32-bit word views of real/imag (little-endian: [lo, hi] per double) for the exact basis test. */
+  private readonly realWords: Int32Array;
+  private readonly imagWords: Int32Array;
   /** Last 64-bit output word as two unsigned 32-bit halves (no BigInt per draw). */
   private lastLo = 0;
   private lastHi = 0;
@@ -189,6 +194,8 @@ export class DeterministicStatevectorRng {
     this.healthWindow = new Uint8Array(healthWindowBits);
     this.orderedWindow = new Uint8Array(healthWindowBits);
     this.real[0] = 1;
+    this.realWords = new Int32Array(this.real.buffer);
+    this.imagWords = new Int32Array(this.imag.buffer);
 
     // The project's Rng supplies deterministic seed material. From this point onward, the complete
     // entropy schedule is represented by entropyState and is therefore snapshot/restore capable.
@@ -439,11 +446,59 @@ export class DeterministicStatevectorRng {
     return selected;
   }
 
+  /**
+   * Index k when the register is exactly |k⟩ (real[k] === 1, every other real and every imag is +0),
+   * else −1. That is the state measureRegister() and the constructor leave behind.
+   */
+  private exactBasisIndex(): number {
+    // Bit-level test on 32-bit words: +0 is all-zero bits (rejects −0), 1.0 is 0x3ff00000:00000000.
+    const rw = this.realWords;
+    const iw = this.imagWords;
+    const n = this.dimension * 2;
+    let sel = -1;
+    for (let w = 0; w < n; w += 2) {
+      if ((iw[w]! | iw[w + 1]!) !== 0) return -1;
+      const lo = rw[w]!;
+      const hi = rw[w + 1]!;
+      if ((lo | hi) === 0) continue;
+      if (lo !== 0 || hi !== 0x3ff00000 || sel >= 0) return -1;
+      sel = w >> 1;
+    }
+    return sel;
+  }
+
+  /**
+   * H on qubits 0..n−1 in order, applied to |sel⟩, written directly. In each gate every pair holds one
+   * nonzero v and one +0, so the outputs are (v ± 0)·c and (0 − v)·c = ±(v·c) exactly, zero pairs stay
+   * +0, and imag stays +0. Hence amplitude i = (−1)^popcount(i & sel) · m with m = (((1·c)·c)…·c), n
+   * factors: bit-identical to the sequential gates.
+   */
+  private hadamardAllFromBasis(sel: number): void {
+    let m = this.hadamardMag;
+    if (m < 0) {
+      m = 1;
+      for (let q = 0; q < this.qubits; q++) m = (m + 0) * INV_SQRT_2;
+      this.hadamardMag = m;
+    }
+    const re = this.real;
+    for (let i = 0; i < this.dimension; i++) {
+      let x = i & sel;
+      x ^= x >>> 16;
+      x ^= x >>> 8;
+      x ^= x >>> 4;
+      x ^= x >>> 2;
+      x ^= x >>> 1;
+      re[i] = (x & 1) === 0 ? m : -m;
+    }
+  }
+
   /** Deterministic, seed-driven circuit applied before each measurement. */
   private evolve(): void {
     for (let round = 0; round < this.evolutionRounds; round++) {
       // H on every qubit prevents a collapsed basis state from becoming an absorbing output state.
-      for (let q = 0; q < this.qubits; q++) this.h(q);
+      const sel = this.exactBasisIndex();
+      if (sel >= 0) this.hadamardAllFromBasis(sel);
+      else for (let q = 0; q < this.qubits; q++) this.h(q);
 
       const q0 = this.nextEntropyU32() % this.qubits;
       const q1 = this.nextEntropyU32() % this.qubits;
