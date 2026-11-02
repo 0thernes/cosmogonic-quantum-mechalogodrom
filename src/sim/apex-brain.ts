@@ -96,6 +96,12 @@ function primeSieve(n: number): boolean[] {
   }
   return is;
 }
+/** Perf: primality of small q from one module-level sieve (step() used to rebuild a sieve every call). */
+const SMALL_PRIME_MAX = 256;
+const SMALL_PRIMES = primeSieve(SMALL_PRIME_MAX);
+function isPrimeQ(q: number): boolean {
+  return q <= SMALL_PRIME_MAX ? SMALL_PRIMES[q]! : primeSieve(q)[q]!;
+}
 /**
  * A "twin prime distance" `d`: `d` is prime AND it belongs to a twin pair, i.e. `d−2` or `d+2` is
  * also prime. The smallest is 3 (from the pair 3,5); 2 is excluded (no twin), 23 is excluded
@@ -281,8 +287,7 @@ class PrimeSieveLoom {
 
     // Allergy: a composite quantised drive is a "non-prime intrusion" → purge longest live edges.
     const q = Math.abs(Math.floor(drive * 7)) + 4; // ≥4 so it can be composite
-    const sieve = primeSieve(q);
-    if (!sieve[q]) {
+    if (!isPrimeQ(q)) {
       this.allergy = clamp01(this.allergy + 0.15);
       this.purgeLongest(1 + Math.floor(rng() * 3));
     } else {
