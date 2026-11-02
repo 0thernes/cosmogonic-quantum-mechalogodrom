@@ -114,10 +114,29 @@ function recordForward(tape: AdTape, net: Mlp, input: ArrayLike<number>): Forwar
 
 /** Forward-only prediction. Pure (no weight change, no rng); reuses the exact same code path as training. */
 export function mlpPredict(net: Mlp, input: ArrayLike<number>): number[] {
-  const tape = MLP_TAPE;
-  adTapeReset(tape);
-  const t = recordForward(tape, net, input);
-  return t.outNodes.map((n) => adValue(tape, n));
+  // Same forward expression trees the tape records (bias, then `+ w·x` left to right; tanh; linear out),
+  // evaluated directly — bit-identical values without recording tape nodes.
+  const { din, h, dout } = net;
+  ensureTrainScratch(din, h, dout);
+  const x = TS_X;
+  const hid = TS_HID;
+  const w1 = net.w1;
+  const w2 = net.w2;
+  for (let i = 0; i < din; i++) x[i] = input[i] ?? 0;
+  for (let j = 0; j < h; j++) {
+    let pre = net.b1[j] ?? 0;
+    const row = j * din;
+    for (let i = 0; i < din; i++) pre = pre + (w1[row + i] ?? 0) * x[i]!;
+    hid[j] = Math.tanh(pre);
+  }
+  const out: number[] = new Array(dout);
+  for (let k = 0; k < dout; k++) {
+    let o = net.b2[k] ?? 0;
+    const row = k * h;
+    for (let j = 0; j < h; j++) o = o + (w2[row + j] ?? 0) * hid[j]!;
+    out[k] = o;
+  }
+  return out;
 }
 
 /**
