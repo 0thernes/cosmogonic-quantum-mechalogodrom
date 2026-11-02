@@ -361,9 +361,21 @@ export interface EshkolProgramEffect {
 }
 
 /** Evaluate an Eshkol .esk-inspired program against a scalar state probe. O(1). */
-export function eshkolEvalProgram(program: string, state: number): EshkolProgramEffect {
-  const s = clamp01(state);
-  const fp = eshkolProgramFingerprint(program);
+interface EshkolProgramTraits {
+  fp: number;
+  logic: number;
+  inference: number;
+  workspace: number;
+  reasoning: number;
+}
+
+/** Program-only part of {@link eshkolEvalProgram}, memoized per program text (pure in `program`). */
+const PROGRAM_TRAITS = new Map<string, EshkolProgramTraits>();
+const PROGRAM_TRAITS_MAX = 256;
+
+function eshkolProgramTraits(program: string): EshkolProgramTraits {
+  const hit = PROGRAM_TRAITS.get(program);
+  if (hit !== undefined) return hit;
   const p = program.toLowerCase();
   let logic = 0;
   let inference = 0;
@@ -374,6 +386,15 @@ export function eshkolEvalProgram(program: string, state: number): EshkolProgram
     inference += 0.35;
   if (p.includes('gwt') || p.includes('broadcast') || p.includes("'prophecy")) workspace += 0.35;
   if (p.includes('ad ') || p.includes("'hallucinate") || p.includes('sim ')) reasoning += 0.3;
+  const traits = { fp: eshkolProgramFingerprint(program), logic, inference, workspace, reasoning };
+  if (PROGRAM_TRAITS.size >= PROGRAM_TRAITS_MAX) PROGRAM_TRAITS.clear();
+  PROGRAM_TRAITS.set(program, traits);
+  return traits;
+}
+
+export function eshkolEvalProgram(program: string, state: number): EshkolProgramEffect {
+  const s = clamp01(state);
+  const { fp, logic, inference, workspace, reasoning } = eshkolProgramTraits(program);
   const mix = fp * 0.15 + s * 0.1;
   return {
     logic: clamp01(logic + mix * (logic > 0 ? 1 : 0.5)),
