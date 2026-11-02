@@ -287,17 +287,15 @@ export function lowRankApproxInto(A: Mat, chi: number, out: Mat): Mat {
   let U: Mat;
   let S: ArrayLike<number>;
   let V: Mat;
-  if (A.rows >= A.cols) {
-    if (lraU.rows !== A.rows || lraU.cols !== A.cols) lraU = mat(A.rows, A.cols);
-    if (lraV.rows !== A.cols) lraV = mat(A.cols, A.cols);
-    if (lraS.length !== A.cols) lraS = new Float64Array(A.cols);
-    svdInto(A, lraU, lraS, lraV);
-    U = lraU;
-    S = lraS;
-    V = lraV;
-  } else {
-    ({ U, S, V } = svd(A));
-  }
+  // Same shapes svd() returns: tall U m×n, V n×n; wide U m×m, V n×m; S has min(m, n) entries.
+  const k0 = Math.min(A.rows, A.cols);
+  if (lraU.rows !== A.rows || lraU.cols !== k0) lraU = mat(A.rows, k0);
+  if (lraV.rows !== A.cols || lraV.cols !== k0) lraV = mat(A.cols, k0);
+  if (lraS.length !== k0) lraS = new Float64Array(k0);
+  svdInto(A, lraU, lraS, lraV);
+  U = lraU;
+  S = lraS;
+  V = lraV;
   const uCols = U.cols;
   const vCols = V.cols;
   const k = Math.max(0, Math.min(chi, S.length));

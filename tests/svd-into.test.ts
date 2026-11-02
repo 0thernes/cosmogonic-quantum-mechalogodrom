@@ -49,3 +49,30 @@ describe('svdInto / lowRankApproxInto write the same numbers as svd / lowRankApp
     expect(() => svdInto(mat(2, 3), mat(2, 3), new Float64Array(3), mat(3, 3))).toThrow();
   });
 });
+
+describe('lowRankApproxInto on wide matrices', () => {
+  test('matches lowRankApprox bit for bit, interleaved with tall shapes and dirty output', () => {
+    let s = 17;
+    const rnd = () => ((s = (Math.imul(s, 1664525) + 1013904223) >>> 0) / 4294967296) * 2 - 1;
+    for (let rep = 0; rep < 5; rep++)
+      for (const [m, n] of [
+        [2, 5],
+        [3, 3],
+        [3, 8],
+        [6, 2],
+        [1, 4],
+        [4, 9],
+      ]) {
+        const A = mat(m!, n!);
+        for (let k = 0; k < A.data.length; k++) A.data[k] = rep === 0 ? 0 : rnd();
+        for (const chi of [1, 2, 3, 9]) {
+          const out = mat(m!, n!);
+          out.data.fill(-3);
+          lowRankApproxInto(A, chi, out);
+          const r = lowRankApprox(A, chi).approx;
+          for (let k = 0; k < r.data.length; k++)
+            expect(Object.is(out.data[k], r.data[k])).toBe(true);
+        }
+      }
+  });
+});
