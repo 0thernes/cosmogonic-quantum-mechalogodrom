@@ -890,6 +890,7 @@ export class SuperMind {
   /** Bipolar probe buffer for Hopfield recall (no per-beat allocation). */
   private readonly hopProbe = new Float32Array(SPIN_SIZE);
   private readonly phiMods = new Float32Array(8); // V89: the 8 named module-summary scalars for the Φ proxy
+  private readonly pcObsArr: number[] = [0, 0, 0, 0];
   private readonly pcObs = new Float32Array(4); // V103: clamped sensory layer for hierarchical PC
   private readonly aifObs = new Float32Array(AIF_OBS); // V1.1: observation vector fed to the free-energy core
   private readonly aifG = new Float32Array(SUPER_PLANS.length); // per-plan EFE
@@ -1436,7 +1437,12 @@ export class SuperMind {
     this.pcObs[1] = s[1] ?? 0;
     this.pcObs[2] = surprise;
     this.pcObs[3] = peakNovelty;
-    const pcObsArr = [this.pcObs[0]!, this.pcObs[1]!, this.pcObs[2]!, this.pcObs[3]!];
+    // Reused plain-number observation (inferStep slices it, errors maps it; neither keeps it).
+    const pcObsArr = this.pcObsArr;
+    pcObsArr[0] = this.pcObs[0]!;
+    pcObsArr[1] = this.pcObs[1]!;
+    pcObsArr[2] = this.pcObs[2]!;
+    pcObsArr[3] = this.pcObs[3]!;
     this.pcBeliefs = inferStep(MIND_PC_NET, this.pcBeliefs, pcObsArr, 0.08);
     const pcF = freeEnergy(MIND_PC_NET, this.pcBeliefs, pcObsArr);
     this.cons.surprise = clamp01(this.cons.surprise + Math.min(1, pcF * 0.008) * PC_SURPRISE_GAIN);
