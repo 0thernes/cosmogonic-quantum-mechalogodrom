@@ -892,6 +892,7 @@ export class SuperMind {
   private readonly phiMods = new Float32Array(8); // V89: the 8 named module-summary scalars for the Φ proxy
   private readonly pcObsArr: number[] = [0, 0, 0, 0];
   private readonly qualIn = new Float64Array(3);
+  private readonly selfActual = new Float64Array(4);
   private readonly pcObs = new Float32Array(4); // V103: clamped sensory layer for hierarchical PC
   private readonly aifObs = new Float32Array(AIF_OBS); // V1.1: observation vector fed to the free-energy core
   private readonly aifG = new Float32Array(SUPER_PLANS.length); // per-plan EFE
@@ -1538,7 +1539,13 @@ export class SuperMind {
     );
     const self = this.selfModel.forward(this.imagined);
     const selfAware = unit(self[0] ?? 0);
-    this.metacog.updateSelfModel(self, [this.valence, this.arousal, this.dominance, surprise]);
+    // Reused "actual" vector (updateSelfModel only reads it).
+    const selfActual = this.selfActual;
+    selfActual[0] = this.valence;
+    selfActual[1] = this.arousal;
+    selfActual[2] = this.dominance;
+    selfActual[3] = surprise;
+    this.metacog.updateSelfModel(self, selfActual);
 
     // ── STAGE 5 · ACT · quantum aspects + meta-controller integration → drives ───────────────────
     const q = this.quantum.forward(this.latent);
