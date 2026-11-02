@@ -143,17 +143,47 @@ function forwardSubnet(
   const hid = b1.length;
   const outLen = b2.length;
   const inpLen = inp.length;
-  for (let j = 0; j < hid; j++) {
+  // Two rows per pass: each row's sum keeps its own left-to-right order (bit-identical), but the input
+  // element is loaded once and the two independent add chains overlap in the FPU pipeline.
+  let j = 0;
+  for (; j + 1 < hid; j += 2) {
+    let s0 = b1[j]!;
+    let s1 = b1[j + 1]!;
+    const r0 = j * inpLen;
+    const r1 = r0 + inpLen;
+    for (let i = 0; i < inpLen; i++) {
+      const x = inp[i]!;
+      s0 += w1[r0 + i]! * x;
+      s1 += w1[r1 + i]! * x;
+    }
+    scratch[j] = Math.tanh(s0);
+    scratch[j + 1] = Math.tanh(s1);
+  }
+  for (; j < hid; j++) {
     let sum = b1[j]!;
     const row = j * inpLen;
     for (let i = 0; i < inpLen; i++) sum += w1[row + i]! * inp[i]!;
     scratch[j] = Math.tanh(sum);
   }
-  for (let j = 0; j < outLen; j++) {
-    let sum = b2[j]!;
-    const row = j * hid;
+  let k = 0;
+  for (; k + 1 < outLen; k += 2) {
+    let s0 = b2[k]!;
+    let s1 = b2[k + 1]!;
+    const r0 = k * hid;
+    const r1 = r0 + hid;
+    for (let i = 0; i < hid; i++) {
+      const x = scratch[i]!;
+      s0 += w2[r0 + i]! * x;
+      s1 += w2[r1 + i]! * x;
+    }
+    out[k] = Math.tanh(s0);
+    out[k + 1] = Math.tanh(s1);
+  }
+  for (; k < outLen; k++) {
+    let sum = b2[k]!;
+    const row = k * hid;
     for (let i = 0; i < hid; i++) sum += w2[row + i]! * scratch[i]!;
-    out[j] = Math.tanh(sum);
+    out[k] = Math.tanh(sum);
   }
 }
 
