@@ -842,6 +842,20 @@ export class SuperMind {
 
   // ── Reusable scratch (no per-beat allocation) ──
   private readonly senses = new Float32Array(SENSE);
+  /** This beat's working percept (topdown.apply mutates it; nothing keeps a reference past think). */
+  private readonly wpBuf: SuperPercept = {
+    energy: 0,
+    threat: 0,
+    crowding: 0,
+    chaos: 0,
+    wealthRel: 0,
+    preyClose: 0,
+    rivalClose: 0,
+    pull: 0,
+    light: 0,
+    sound: 0,
+    phase: 0,
+  };
   private readonly imgIn = new Float32Array(LATENT + NOISE);
   private readonly noise = new Float32Array(NOISE);
   private readonly cur = new Float32Array(LATENT);
@@ -1115,7 +1129,19 @@ export class SuperMind {
    */
   think(p: SuperPercept, mode: 'full' | 'echo' = 'full'): SuperMindIntent {
     // Shallow copy so twin minds / reused percept literals stay bit-identical (topdown.apply mutates).
-    const wp: SuperPercept = { ...p };
+    // Copied field by field into a per-mind buffer (think reads only these eleven fields of it).
+    const wp = this.wpBuf;
+    wp.energy = p.energy;
+    wp.threat = p.threat;
+    wp.crowding = p.crowding;
+    wp.chaos = p.chaos;
+    wp.wealthRel = p.wealthRel;
+    wp.preyClose = p.preyClose;
+    wp.rivalClose = p.rivalClose;
+    wp.pull = p.pull;
+    wp.light = p.light;
+    wp.sound = p.sound;
+    wp.phase = p.phase;
     const thinkDepths = mode === 'echo' ? 1 : SUPER_DEPTHS;
     const thinkVariants = mode === 'echo' ? 1 : SUPER_VARIANTS;
     // HOT-1: close the generative loop — last beat's top-down bias shapes this beat's percept.
