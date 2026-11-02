@@ -891,6 +891,7 @@ export class SuperMind {
   private readonly hopProbe = new Float32Array(SPIN_SIZE);
   private readonly phiMods = new Float32Array(8); // V89: the 8 named module-summary scalars for the Φ proxy
   private readonly pcObsArr: number[] = [0, 0, 0, 0];
+  private readonly qualIn = new Float64Array(3);
   private readonly pcObs = new Float32Array(4); // V103: clamped sensory layer for hierarchical PC
   private readonly aifObs = new Float32Array(AIF_OBS); // V1.1: observation vector fed to the free-energy core
   private readonly aifG = new Float32Array(SUPER_PLANS.length); // per-plan EFE
@@ -1518,7 +1519,12 @@ export class SuperMind {
     // period-doubling order is leaky-pulled into the workspace AFTER the workspace is finalised below (this
     // beat's `this.cons` is reassigned at the STAGE-5 block, so coupling here would be a dead store).
     this.temporalCrystal.step(this.arousal);
-    const qualTensor = moonlabTensorQualia([this.valence, this.arousal, peakNovelty], 5);
+    // Reused input (moonlabTensorQualia lifts it into its own array and keeps nothing).
+    const qualIn = this.qualIn;
+    qualIn[0] = this.valence;
+    qualIn[1] = this.arousal;
+    qualIn[2] = peakNovelty;
+    const qualTensor = moonlabTensorQualia(qualIn, 5);
     this.cons.qualiaTone = clamp01(0.5 + 0.5 * qualTensor); // qualia from tensor (Tsotchke Moonlab)
     // more GWT + MPO from corpus in mind cons/qualia
     this.gwtC2[0] = surprise;

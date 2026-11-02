@@ -107,6 +107,26 @@ function liftShortVector(v: ArrayLike<number>): ArrayLike<number> {
   ];
 }
 
+/** {@link liftShortVector} for qualia, lifting a length-3 input into a reused 9-slot scratch. */
+const qualiaLift = new Float64Array(9);
+function liftShortVectorScratch(v: ArrayLike<number>): ArrayLike<number> {
+  if (v.length !== 3) return v;
+  const v0 = v[0] ?? 0;
+  const v1 = v[1] ?? 0;
+  const v2 = v[2] ?? 0;
+  const o = qualiaLift;
+  o[0] = v0;
+  o[1] = v1 - v0 * 0.5;
+  o[2] = v2 - v1 * 0.5;
+  o[3] = v1;
+  o[4] = v2;
+  o[5] = v0 - v2 * 0.5;
+  o[6] = v2;
+  o[7] = v0 - v1 * 0.5;
+  o[8] = v1 - v2 * 0.5;
+  return o;
+}
+
 export function moonlabTensorContract(
   a: number[] | Float32Array,
   b: number[] | Float32Array,
@@ -141,7 +161,7 @@ export function moonlabTensorContract(
  * pₖ = σₖ²/Σσ² — 0 for a product (rank-1) state, 1 for a maximally entangled one.
  */
 export function moonlabTensorQualia(v: ArrayLike<number>, chi: number): number {
-  const lifted = liftShortVector(v);
+  const lifted = liftShortVectorScratch(v); // consumed by packMatrixScratch below, before any reuse
   // Pack into at least a 2x2 (packMatrix zero-pads) so length-3 inputs form a real [[v0,v1],[v2,0]]
   // and yield genuine entropy. The old `if (d < 2) return 0` made every length-<4 call return 0 — and
   // all 5 production call sites pass length-3 arrays, so the 'qualia tensor' coupling was inert (always
