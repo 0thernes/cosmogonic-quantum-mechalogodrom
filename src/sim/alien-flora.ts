@@ -111,6 +111,7 @@ const COLLIDE_RADIUS_MUL = 2.55;
 /** Max soft separation push (world units) per pair — keeps solve stable. */
 const COLLIDE_PUSH_MAX = 3.2;
 /** Closing-contact push boost by [opening, closing]; read by index in the collision pair loop. */
+const KIN_STRIDE = 8;
 const CLOSING_BOOST = new Float64Array([1, 1.15]);
 /** Global soft-solve cadence (s). Scalable O(N·k) ~8Hz cold / faster when beings touch. */
 const COLLIDE_PERIOD = 0.11;
@@ -930,12 +931,9 @@ export class AlienFlora {
   /** Accumulated soft push (xz interleaved). */
   private readonly plantPush: Float32Array;
   /** Scratch for thrash proxies (preallocated — no per-solve GC). */
-  private readonly plantPX: Float32Array;
-  private readonly plantPZ: Float32Array;
-  private readonly plantRR: Float32Array;
-  private readonly plantOX: Float32Array;
-  private readonly plantOZ: Float32Array;
-  private readonly plantTouch: Float32Array;
+  /** Per-step collision kinematics, packed [px, pz, rr, ox, oz, touch, -, -] per plant (stride 8 = one
+   *  32-byte block) so each random neighbour read in the pair loop touches one cache line, not six. */
+  private readonly plantKin: Float32Array;
   /** Per-mesh aPush buffers (same order as meshes). */
   private readonly pushAttrs: Float32Array[] = [];
   private readonly hashBuckets: number[][];
@@ -1107,12 +1105,7 @@ export class AlienFlora {
     this.plantMeshIdx = new Uint16Array(placed);
     this.plantInstIdx = new Uint32Array(placed);
     this.plantPush = new Float32Array(placed * 2);
-    this.plantPX = new Float32Array(placed);
-    this.plantPZ = new Float32Array(placed);
-    this.plantRR = new Float32Array(placed);
-    this.plantOX = new Float32Array(placed);
-    this.plantOZ = new Float32Array(placed);
-    this.plantTouch = new Float32Array(placed);
+    this.plantKin = new Float32Array(placed * KIN_STRIDE);
     let pi = 0;
     for (let fam = 0; fam < FAMILY_COUNT; fam++) {
       const list = perFamily[fam]!;
@@ -1374,12 +1367,7 @@ export class AlienFlora {
     const push = this.plantPush;
     push.fill(0);
     // Precompute thrash proxies + biomass-scaled radii once (O(N), pair loop stays hot).
-    const px = this.plantPX;
-    const pz = this.plantPZ;
-    const rr = this.plantRR;
-    const ox = this.plantOX;
-    const oz = this.plantOZ;
-    const touch = this.plantTouch;
+    const kin = this.plantKin;
     const thrashScale = COLLIDE_THRASH_AMP * (0.55 + chaos * 0.9 + wind * 0.35);
     const boostR2 = CONTACT_RADIUS * 1.15 * (CONTACT_RADIUS * 1.15);
     const cpx = this.contactPX;
@@ -1398,16 +1386,17 @@ export class AlienFlora {
       const b = gi < 0 ? 0 : (biomass[gi] ?? 0);
       const bm = b < 0 ? 0 : b > 1 ? 1 : b;
       const grow = 0.28 + 0.72 * bm;
-      rr[i] = this.plantR[i]! * grow;
+      const k = i * KIN_STRIDE;
+      kin[k + 2] = this.plantR[i]! * grow;
       const ph = this.plantPhase[i]!;
       const fq = this.plantFreq[i]!;
       const amp = thrashScale * (0.65 + 0.35 * grow);
       const oxi = Math.cos(t * fq + ph) * amp;
       const ozi = Math.sin(t * fq * 0.82 + ph * 1.3) * amp;
-      ox[i] = oxi;
-      oz[i] = ozi;
-      px[i] = xi + oxi;
-      pz[i] = zi + ozi;
+      kin[k + 3] = oxi;
+      kin[k + 4] = ozi;
+      kin[k] = xi + oxi;
+      kin[k + 1] = zi + ozi;
       let tch = 1;
       for (let a = 0; a < nAct; a++) {
         const s = act[a]!;
@@ -1416,7 +1405,7 @@ export class AlienFlora {
         const dz = zi - cpz[s]!;
         if (dx * dx + dz * dz < boostR2) tch = Math.max(tch, 1 + cs * 1.55);
       }
-      touch[i] = tch;
+      kin[k + 5] = tch;
     }
     // Precomputed candidate list (same pairs, same order as the former 3×3 bucket scan). push[i] only
     // changes inside plant i's own pass (every pair has j > i), so it is accumulated locally with the same
@@ -1428,20 +1417,22 @@ export class AlienFlora {
       const p0 = starts[i]!;
       const p1 = starts[i + 1]!;
       if (p0 === p1) continue;
-      const ri = rr[i]!;
-      const pxi = px[i]!;
-      const pzi = pz[i]!;
-      const oxi = ox[i]!;
-      const ozi = oz[i]!;
-      const touchI = touch[i]!;
+      const ki = i * KIN_STRIDE;
+      const pxi = kin[ki]!;
+      const pzi = kin[ki + 1]!;
+      const ri = kin[ki + 2]!;
+      const oxi = kin[ki + 3]!;
+      const ozi = kin[ki + 4]!;
+      const touchI = kin[ki + 5]!;
       const i2 = i * 2;
       let accX = push[i2]!;
       let accZ = push[i2 + 1]!;
       for (let p = p0; p < p1; p++) {
         const j = pairJ[p]!;
-        const rj = rr[j]!;
-        let ddx = pxi - px[j]!;
-        let ddz = pzi - pz[j]!;
+        const kj = j * KIN_STRIDE;
+        let ddx = pxi - kin[kj]!;
+        let ddz = pzi - kin[kj + 1]!;
+        const rj = kin[kj + 2]!;
         const d2 = ddx * ddx + ddz * ddz;
         const minDist = ri + rj;
         if (d2 >= minDist * minDist || d2 < 1e-8) continue;
@@ -1452,8 +1443,9 @@ export class AlienFlora {
         ddz *= inv;
         // Branch-free pick of the closing boost (same two constants): the sign of the closing speed is
         // ~50/50 across pairs, so a conditional mispredicts constantly in this ~200k-pair loop.
-        const closing = CLOSING_BOOST[+((oxi - ox[j]!) * -ddx + (ozi - oz[j]!) * -ddz > 0)]!;
-        let mag = overlap * overlap * minDist * 0.72 * closing * Math.max(touchI, touch[j]!);
+        const closing =
+          CLOSING_BOOST[+((oxi - kin[kj + 3]!) * -ddx + (ozi - kin[kj + 4]!) * -ddz > 0)]!;
+        let mag = overlap * overlap * minDist * 0.72 * closing * Math.max(touchI, kin[kj + 5]!);
         if (mag > COLLIDE_PUSH_MAX) mag = COLLIDE_PUSH_MAX;
         const fx = ddx * mag;
         const fz = ddz * mag;

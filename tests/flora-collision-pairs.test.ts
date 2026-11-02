@@ -8,7 +8,14 @@ import type { SimContext } from '../src/types';
 function referencePush(f: any): Float32Array {
   const n = f.plantX.length;
   const push = new Float32Array(n * 2);
-  const { plantPX: px, plantPZ: pz, plantRR: rr, plantOX: ox, plantOZ: oz, plantTouch: touch } = f;
+  const kin: Float32Array = f.plantKin;
+  const col = (o: number): any => Array.from({ length: n }, (_, i) => kin[i * 8 + o]!);
+  const px = col(0);
+  const pz = col(1);
+  const rr = col(2);
+  const ox = col(3);
+  const oz = col(4);
+  const touch = col(5);
   const hn = f.hashN;
   for (let i = 0; i < n; i++) {
     const hx = Math.floor((f.plantX[i] - f.hashOrigin) / 5.5);
