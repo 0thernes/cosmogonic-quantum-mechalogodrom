@@ -132,30 +132,91 @@ export function mlpTrainStep(
   target: ArrayLike<number>,
   lr = 0.1,
 ): number {
-  const tape = MLP_TAPE;
-  adTapeReset(tape);
+  // Closed-form replay of exactly what the reverse-mode tape computes for this graph (see recordForward
+  // + adBackward): the same forward expression trees, the same per-node `0 + …` gradient accumulation in
+  // the tape's reverse-index order, and the same zero-gradient skips — so every weight update and the
+  // returned loss are bit-identical to the tape path, without recording ~(din+dout)·h tape nodes.
   const { din, h, dout } = net;
-  const t = recordForward(tape, net, input);
-
-  let loss = adConst(tape, 0);
-  for (let k = 0; k < dout; k++) {
-    const d = adSub(tape, t.outNodes[k]!, adConst(tape, target[k] ?? 0));
-    loss = adAdd(tape, loss, adMul(tape, d, d));
+  ensureTrainScratch(din, h, dout);
+  const x = TS_X;
+  const hid = TS_HID;
+  const go = TS_GO;
+  const gh = TS_GH;
+  const w1 = net.w1;
+  const b1 = net.b1;
+  const w2 = net.w2;
+  const b2 = net.b2;
+  for (let i = 0; i < din; i++) x[i] = input[i] ?? 0;
+  for (let j = 0; j < h; j++) {
+    let pre = b1[j] ?? 0;
+    const row = j * din;
+    for (let i = 0; i < din; i++) pre = pre + (w1[row + i] ?? 0) * x[i]!;
+    TS_PRE[j] = pre;
+    hid[j] = Math.tanh(pre);
   }
-  const lossValue = adValue(tape, loss);
-  adBackward(tape, loss);
+  let loss = 0;
+  for (let k = 0; k < dout; k++) {
+    let out = b2[k] ?? 0;
+    const row = k * h;
+    for (let j = 0; j < h; j++) out = out + (w2[row + j] ?? 0) * hid[j]!;
+    const d = out - (target[k] ?? 0);
+    loss = loss + d * d;
+    // d·d node (seed 1 through the add chain): d.grad = (0 + 1·d) + 1·d; then sub → out.grad = 0 + gd.
+    const gd = 0 + d + d;
+    go[k] = gd === 0 ? 0 : 0 + gd;
+  }
+  // Hidden adjoints: products visited k = dout−1 … 0 (descending tape index), skipping zero-grad outputs.
+  for (let j = 0; j < h; j++) gh[j] = 0;
+  for (let k = dout - 1; k >= 0; k--) {
+    const g = go[k]!;
+    if (g === 0) continue;
+    const row = k * h;
+    for (let j = h - 1; j >= 0; j--) gh[j] = gh[j]! + g * (w2[row + j] ?? 0);
+  }
+  // Updates use the pre-step weights' gradients; w2 is read above before any write below.
+  for (let j = 0; j < h; j++) {
+    const g = gh[j]!;
+    const gp = g === 0 ? 0 : 0 + g * (1.0 - hid[j]! * hid[j]!);
+    TS_GP[j] = gp;
+  }
+  for (let j = 0; j < h; j++) {
+    const gp = TS_GP[j]!;
+    b1[j] = (b1[j] ?? 0) - lr * (gp === 0 ? 0 : 0 + gp);
+  }
+  for (let j = 0; j < h; j++) {
+    const gp = TS_GP[j]!;
+    const row = j * din;
+    for (let i = 0; i < din; i++)
+      w1[row + i] = (w1[row + i] ?? 0) - lr * (gp === 0 ? 0 : 0 + gp * x[i]!);
+  }
+  for (let k = 0; k < dout; k++) {
+    const g = go[k]!;
+    b2[k] = (b2[k] ?? 0) - lr * (g === 0 ? 0 : 0 + g);
+  }
+  for (let k = 0; k < dout; k++) {
+    const g = go[k]!;
+    const row = k * h;
+    for (let j = 0; j < h; j++)
+      w2[row + j] = (w2[row + j] ?? 0) - lr * (g === 0 ? 0 : 0 + g * hid[j]!);
+  }
+  return 0 + loss;
+}
 
-  // Gradient descent on every parameter. Node arrays were pushed in the SAME index order the weights are
-  // laid out (b1 then its w1 row; b2 then its w2 row), so a single running cursor per matrix realigns them.
-  for (let j = 0; j < h; j++) net.b1[j] = (net.b1[j] ?? 0) - lr * adGradient(tape, t.b1Nodes[j]!);
-  for (let idx = 0; idx < h * din; idx++)
-    net.w1[idx] = (net.w1[idx] ?? 0) - lr * adGradient(tape, t.w1Nodes[idx]!);
-  for (let k = 0; k < dout; k++)
-    net.b2[k] = (net.b2[k] ?? 0) - lr * adGradient(tape, t.b2Nodes[k]!);
-  for (let idx = 0; idx < dout * h; idx++)
-    net.w2[idx] = (net.w2[idx] ?? 0) - lr * adGradient(tape, t.w2Nodes[idx]!);
-
-  return lossValue;
+let TS_X = new Float64Array(0);
+let TS_PRE = new Float64Array(0);
+let TS_HID = new Float64Array(0);
+let TS_GH = new Float64Array(0);
+let TS_GP = new Float64Array(0);
+let TS_GO = new Float64Array(0);
+function ensureTrainScratch(din: number, h: number, dout: number): void {
+  if (TS_X.length < din) TS_X = new Float64Array(din);
+  if (TS_HID.length < h) {
+    TS_PRE = new Float64Array(h);
+    TS_HID = new Float64Array(h);
+    TS_GH = new Float64Array(h);
+    TS_GP = new Float64Array(h);
+  }
+  if (TS_GO.length < dout) TS_GO = new Float64Array(dout);
 }
 
 /** Total trainable parameter count — for telemetry / the "expanded network scale" claim. */
