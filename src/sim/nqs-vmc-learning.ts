@@ -299,6 +299,54 @@ function logPsiGradient(
   }
 }
 
+interface VmcScratch {
+  w: number;
+  v: number;
+  h: number;
+  tw: Float32Array;
+  tv: Float32Array;
+  th: Float32Array;
+  mw: Float32Array;
+  sw: Float32Array;
+  mv: Float32Array;
+  sv: Float32Array;
+  mh: Float32Array;
+  sh: Float32Array;
+}
+let vmcScratch: VmcScratch | null = null;
+function vmcScratchFor(w: number, v: number, h: number): VmcScratch {
+  let sc = vmcScratch;
+  if (!sc || sc.w !== w || sc.v !== v || sc.h !== h) {
+    const f = (k: number) => new Float32Array(k);
+    sc = {
+      w,
+      v,
+      h,
+      tw: f(w),
+      tv: f(v),
+      th: f(h),
+      mw: f(w),
+      sw: f(w),
+      mv: f(v),
+      sv: f(v),
+      mh: f(h),
+      sh: f(h),
+    };
+    vmcScratch = sc;
+    return sc;
+  }
+  sc.tw.fill(0);
+  sc.tv.fill(0);
+  sc.th.fill(0);
+  sc.mw.fill(0);
+  sc.sw.fill(0);
+  sc.mv.fill(0);
+  sc.sv.fill(0);
+  sc.mh.fill(0);
+  sc.sh.fill(0);
+  return sc;
+}
+
 /**
  * Perform one VMC training step (gradient descent on energy).
  */
@@ -332,15 +380,17 @@ export function vmcStep(
   state.hiddenGradients.fill(0);
 
   // Accumulate gradients + diagonal Quantum Geometric Tensor (Stochastic Reconfiguration #90)
-  const tempWeights = new Float32Array(arch.weights.length);
-  const tempVisible = new Float32Array(arch.visibleCount);
-  const tempHidden = new Float32Array(arch.hiddenCount);
-  const meanOWeights = new Float32Array(arch.weights.length);
-  const meanSqOWeights = new Float32Array(arch.weights.length);
-  const meanOVisible = new Float32Array(arch.visibleCount);
-  const meanSqOVisible = new Float32Array(arch.visibleCount);
-  const meanOHidden = new Float32Array(arch.hiddenCount);
-  const meanSqOHidden = new Float32Array(arch.hiddenCount);
+  // Pooled per shape and zeroed each step (vmcStep keeps no reference past return): same values as fresh arrays.
+  const sc = vmcScratchFor(arch.weights.length, arch.visibleCount, arch.hiddenCount);
+  const tempWeights = sc.tw;
+  const tempVisible = sc.tv;
+  const tempHidden = sc.th;
+  const meanOWeights = sc.mw;
+  const meanSqOWeights = sc.sw;
+  const meanOVisible = sc.mv;
+  const meanSqOVisible = sc.sv;
+  const meanOHidden = sc.mh;
+  const meanSqOHidden = sc.sh;
 
   for (let s = 0; s < config.sampleCount; s++) {
     const sample = state.samples[s] ?? 0;

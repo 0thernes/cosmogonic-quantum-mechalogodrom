@@ -82,3 +82,26 @@ describe('nqs-vmc: localEnergy survives an exp() overflow (batch-9 guard)', () =
     for (let i = 1; i < before.length; i++) expect(arch.weights[i]).toBe(before[i]);
   });
 });
+
+describe('nqs-vmc: pooled step scratch', () => {
+  test('interleaving shapes and repeated steps matches an uninterrupted run bit-for-bit', () => {
+    const run = (interleave: boolean) => {
+      const arch = initNQS(6, 8, 0x5eed);
+      const state = initVMC(arch, CONFIG, 0x77);
+      const out: number[] = [];
+      for (let k = 0; k < 6; k++) {
+        if (interleave) {
+          const other = initNQS(4, 5, k + 1);
+          vmcStep(other, initVMC(other, CONFIG, k), CONFIG, k);
+        }
+        const t = vmcStep(arch, state, CONFIG, 0x77 + k);
+        out.push(t.energy, t.energyVariance, t.gradientNorm);
+      }
+      return [...out, ...arch.weights, ...arch.visibleBiases, ...arch.hiddenBiases];
+    };
+    const a = run(false);
+    const b = run(true);
+    expect(b.length).toBe(a.length);
+    for (let i = 0; i < a.length; i++) expect(Object.is(a[i], b[i])).toBe(true);
+  });
+});
