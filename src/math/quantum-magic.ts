@@ -43,6 +43,9 @@ const MAGIC_EPS = 1e-9;
 let scratchRe = new Float64Array(64);
 let scratchIm = new Float64Array(64);
 
+/** parity(i) = popcount(i) & 1 for i < its length (grown on demand). */
+let parityTable = new Uint8Array(0);
+
 function popcount(v: number): number {
   let x = v - ((v >>> 1) & 0x55555555);
   x = (x & 0x33333333) + ((x >>> 2) & 0x33333333);
@@ -67,6 +70,11 @@ export function quantumMagic(
     scratchRe = new Float64Array(dim);
     scratchIm = new Float64Array(dim);
   }
+  if (parityTable.length < dim) {
+    parityTable = new Uint8Array(dim);
+    for (let i = 0; i < dim; i++) parityTable[i] = popcount(i) & 1;
+  }
+  const parity = parityTable;
   const sr = scratchRe;
   const si = scratchIm;
   for (let i = 0; i < dim; i++) {
@@ -93,28 +101,23 @@ export function quantumMagic(
     // i^(3·|Y|) times (−1)^parity(i & (Y⊕Z)) — exact rotations and sign flips only.
     const k0 = (3 * popcount(ym)) & 3;
     const pm = ym ^ zm;
+    // k = k0 + 2·parity(pm & i) (mod 4). For even k0 the factor is ±1 on (r, c); for odd k0 it is ±1 on
+    // (−c, r). Multiplying by ±1 is exact (same value, same signed zero as unary minus), so a per-i sign
+    // read from a parity table replaces the 4-way branch: bit-identical.
+    const base = k0 === 0 || k0 === 1 ? 1 : -1;
     let exp = 0;
-    for (let i = 0; i < dim; i++) {
-      const j = i ^ xm;
-      const r = sr[j]!;
-      const c = si[j]!;
-      const k = (k0 + 2 * (popcount(pm & i) & 1)) & 3;
-      let wr: number;
-      let wi: number;
-      if (k === 0) {
-        wr = r;
-        wi = c;
-      } else if (k === 1) {
-        wr = -c;
-        wi = r;
-      } else if (k === 2) {
-        wr = -r;
-        wi = -c;
-      } else {
-        wr = c;
-        wi = -r;
+    if ((k0 & 1) === 0) {
+      for (let i = 0; i < dim; i++) {
+        const j = i ^ xm;
+        const g = parity[pm & i] === 0 ? base : -base;
+        exp += sr[i]! * (g * sr[j]!) + si[i]! * (g * si[j]!);
       }
-      exp += sr[i]! * wr + si[i]! * wi;
+    } else {
+      for (let i = 0; i < dim; i++) {
+        const j = i ^ xm;
+        const g = parity[pm & i] === 0 ? base : -base;
+        exp += sr[i]! * (g * -si[j]!) + si[i]! * (g * sr[j]!);
+      }
     }
     sum4 += exp * exp * exp * exp;
   }
