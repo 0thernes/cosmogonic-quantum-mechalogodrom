@@ -28,6 +28,9 @@ export function isWildEntropyMode(): boolean {
   return _wildEntropyMode;
 }
 
+// Reused 2-word destination for getRandomValues (filled in full on every call, so no state carries over).
+const JITTER_BUF = new Uint32Array(2);
+
 /**
  * Harvests a 64-bit non-deterministic hardware & timing jitter word.
  * Combines Web Crypto CSPRNG (`crypto.getRandomValues`), microsecond timer jitter,
@@ -41,7 +44,7 @@ export function harvestHardwareJitter64(salt = 0): bigint {
     typeof globalThis.crypto !== 'undefined' &&
     typeof globalThis.crypto.getRandomValues === 'function'
   ) {
-    const buf = new Uint32Array(2);
+    const buf = JITTER_BUF;
     globalThis.crypto.getRandomValues(buf);
     hi ^= buf[0]!;
     lo ^= buf[1]!;
