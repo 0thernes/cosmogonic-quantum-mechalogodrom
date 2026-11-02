@@ -43,6 +43,16 @@ const MAGIC_EPS = 1e-9;
 let scratchRe = new Float64Array(64);
 let scratchIm = new Float64Array(64);
 
+/**
+ * Per-shift pair products for small registers (dim ≤ PAIR_TABLE_MAX_DIM): for xm and i, with j = i ⊕ xm,
+ * pairT[xm·dim + i] = sr_i·sr_j + si_i·si_j and pairU[xm·dim + i] = −(sr_i·si_j) + si_i·sr_j. Since g = ±1
+ * and round-to-nearest is sign-symmetric, sr_i·(g·sr_j) + si_i·(g·si_j) === g·pairT exactly (same for the
+ * odd-phase form and pairU), so each Pauli string's term is ±pairT/±pairU: bit-identical, 2 fewer muls.
+ */
+const PAIR_TABLE_MAX_DIM = 256;
+let pairT = new Float64Array(0);
+let pairU = new Float64Array(0);
+
 /** parity(i) = popcount(i) & 1 for i < its length (grown on demand). */
 let parityTable = new Uint8Array(0);
 
@@ -84,6 +94,53 @@ export function quantumMagic(
   // (Pψ)_i = phase(i)·ψ_{i⊕x}: each factor only swaps (X/Y) or multiplies by ±1/±i (Y/Z) the bit it acts on,
   // so the applied string is read straight off the masks — the same exact values the old in-place
   // application produced (sign flips and swaps are exact), summed in the same order: bit-identical.
+  if (dim <= PAIR_TABLE_MAX_DIM) {
+    const need = dim * dim;
+    if (pairT.length < need) {
+      pairT = new Float64Array(need);
+      pairU = new Float64Array(need);
+    }
+    const pt = pairT;
+    const pu = pairU;
+    for (let xm = 0; xm < dim; xm++) {
+      const row = xm * dim;
+      for (let i = 0; i < dim; i++) {
+        const j = i ^ xm;
+        const ri = sr[i]!;
+        const ii = si[i]!;
+        const rj = sr[j]!;
+        const ij = si[j]!;
+        pt[row + i] = ri * rj + ii * ij;
+        pu[row + i] = -(ri * ij) + ii * rj;
+      }
+    }
+    let sum4 = 0;
+    for (let s = 0; s < total; s++) {
+      let xm = 0;
+      let ym = 0;
+      let zm = 0;
+      for (let q = 0; q < nQubits; q++) {
+        const p = (s >> (2 * q)) & 3;
+        if (p === 1) xm |= 1 << q;
+        else if (p === 2) {
+          xm |= 1 << q;
+          ym |= 1 << q;
+        } else if (p === 3) zm |= 1 << q;
+      }
+      const k0 = (3 * popcount(ym)) & 3;
+      const pm = ym ^ zm;
+      const flip = k0 === 0 || k0 === 1 ? 0 : 1; // base = −1 ⇔ flip
+      const tab = (k0 & 1) === 0 ? pt : pu;
+      const row = xm * dim;
+      let exp = 0;
+      for (let i = 0; i < dim; i++) {
+        const v = tab[row + i]!;
+        exp += (parity[pm & i]! ^ flip) === 0 ? v : -v;
+      }
+      sum4 += exp * exp * exp * exp;
+    }
+    return magicSnapshot(nQubits, sum4, dim);
+  }
   let sum4 = 0; // Σ_P ⟨ψ|P|ψ⟩⁴
   for (let s = 0; s < total; s++) {
     let xm = 0;
@@ -121,6 +178,10 @@ export function quantumMagic(
     }
     sum4 += exp * exp * exp * exp;
   }
+  return magicSnapshot(nQubits, sum4, dim);
+}
+
+function magicSnapshot(nQubits: number, sum4: number, dim: number): MagicSnapshot {
   // M₂ = −log₂( (1/d) Σ ⟨P⟩⁴ ); a stabilizer state has Σ⟨P⟩⁴ = d ⇒ M₂ = 0.
   const ratio = sum4 / dim;
   let magic = ratio > 0 ? -Math.log2(ratio) : 0;
