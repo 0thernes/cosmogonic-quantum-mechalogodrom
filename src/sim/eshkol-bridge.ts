@@ -279,6 +279,31 @@ export function dualMul(a: EshkolDual, b: EshkolDual): EshkolDual {
   };
 }
 
+/**
+ * `gwtBroadcast(content, salience)[0]` without building the output array: the same arithmetic in the
+ * same order (NaN when the broadcast is empty, where the array form yields undefined; callers `|| 0`
+ * both alike). Reads its inputs only.
+ */
+export function gwtBroadcastFirst(content: ArrayLike<number>, salience: ArrayLike<number>): number {
+  const n = Math.min(content.length, salience.length, 8);
+  if (!n) return Number.NaN;
+  let sum = 0;
+  for (let i = 0; i < n; i++) sum += Math.max(0, salience[i] ?? 0);
+  let out0 = 0;
+  let maxS = -1;
+  let win = 0;
+  for (let i = 0; i < n; i++) {
+    const s = Math.max(0, salience[i] ?? 0) / (sum || 1);
+    if (i === 0) out0 = (content[0] ?? 0) * s;
+    if (s > maxS) {
+      maxS = s;
+      win = i;
+    }
+  }
+  if (win === 0) out0 = out0 + 0.1;
+  return out0;
+}
+
 /** GWT broadcast (workspace.cpp step proxy). */
 export function gwtBroadcast(content: number[], salience: number[]): number[] {
   const n = Math.min(content.length, salience.length, 8);

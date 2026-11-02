@@ -23,6 +23,7 @@ export {
   dualAdd,
   dualMul,
   gwtBroadcast,
+  gwtBroadcastFirst,
   eshkolProgramFingerprint,
   eshkolEvalProgram,
   eshkolApplyProgramEffect,

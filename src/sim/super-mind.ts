@@ -99,7 +99,7 @@ import {
   eshkolApplyAD,
   moonlabTensorQualia,
   quakePerturb,
-  gwtBroadcast,
+  gwtBroadcastFirst,
   moonlabMpoStep,
   makeEshkolDual,
   dualAdd,
@@ -597,6 +597,9 @@ const NARRATIVE_TRUST_GAIN = 0.04;
  * 0.9 damping (1 − 0.1·1); unmet instincts leave novelty higher ⇒ more exploration. Built once at load
  * (deterministic, no rng), so the per-beat cost is only the <8-fact KB + query.
  */
+const GWT_SAL_SURPRISE = new Float64Array([0.6, 0.5]);
+const GWT_SAL_PLANS = new Float64Array([0.5, 0.6, 0.4]);
+
 export const INSTINCT_GOALS: readonly Term[] = [
   compound('drive', atom('explore'), atom('high')),
   compound('drive', atom('dominate'), atom('high')),
@@ -844,6 +847,10 @@ export class SuperMind {
 
   // ── Reusable scratch (no per-beat allocation) ──
   private readonly senses = new Float32Array(SENSE);
+  /** GWT broadcast inputs, refilled at each use (the broadcast only reads them). */
+  private readonly gwtC2 = new Float64Array(2);
+  private readonly gwtW2 = new Float64Array(2);
+  private readonly gwtC3 = new Float64Array(3);
   /** This beat's working percept (topdown.apply mutates it; nothing keeps a reference past think). */
   private readonly wpBuf: SuperPercept = {
     energy: 0,
@@ -1355,8 +1362,11 @@ export class SuperMind {
     const dPred = makeEshkolDual((this.pred[0] ?? 0) * 0.1, 0.5);
     const dComb = dualAdd(dSurp, dualMul(dPred, makeEshkolDual(0.8)));
     // re-wire gwtBroadcast for Eshkol GWT workspace effect in surprise (from CONSCIOUSNESS_ENGINE.md + workspace.cpp)
-    const gwtS = gwtBroadcast([surprise, peakNovelty], [0.6, 0.5]);
-    this.cons.surprise = clamp01(dComb.value + (gwtS[0] || 0) * 0.05 + Math.abs(tPred) * 0.02);
+    const gwtC2 = this.gwtC2;
+    gwtC2[0] = surprise;
+    gwtC2[1] = peakNovelty;
+    const gwtS0 = gwtBroadcastFirst(gwtC2, GWT_SAL_SURPRISE);
+    this.cons.surprise = clamp01(dComb.value + (gwtS0 || 0) * 0.05 + Math.abs(tPred) * 0.02);
     // Eshkol full reverse-mode tape: d/dpred of (pred - imagined)^2 for exact surprise sensitivity
     adTapeReset(this.predTape);
     const tapePred = adVar(this.predTape, this.pred[0] ?? 0);
@@ -1505,10 +1515,14 @@ export class SuperMind {
     const qualTensor = moonlabTensorQualia([this.valence, this.arousal, peakNovelty], 5);
     this.cons.qualiaTone = clamp01(0.5 + 0.5 * qualTensor); // qualia from tensor (Tsotchke Moonlab)
     // more GWT + MPO from corpus in mind cons/qualia
-    const gwtRes = gwtBroadcast([surprise, peakNovelty], [this.eshkolEngine.workspace || 0.6, 0.5]);
+    this.gwtC2[0] = surprise;
+    this.gwtC2[1] = peakNovelty;
+    this.gwtW2[0] = this.eshkolEngine.workspace || 0.6;
+    this.gwtW2[1] = 0.5;
+    const gwtRes0 = gwtBroadcastFirst(this.gwtC2, this.gwtW2);
     const mpoRes = moonlabMpoStep(this.imagined, 2);
     this.cons.qualiaTone = clamp01(
-      this.cons.qualiaTone + ((gwtRes[0] || 0) + Math.abs(mpoRes)) * 0.01,
+      this.cons.qualiaTone + ((gwtRes0 || 0) + Math.abs(mpoRes)) * 0.01,
     );
     const self = this.selfModel.forward(this.imagined);
     const selfAware = unit(self[0] ?? 0);
@@ -1623,8 +1637,11 @@ export class SuperMind {
     };
     biasPlanSalience(sal, this.attnSchema.snapshot(), surprise, SUPER_PLANS);
     // gwtBroadcast (Tsotchke Eshkol GWT) for more workspace effect on sal drives
-    const gwtSal = gwtBroadcast([sal.HUNT, sal.EXPLORE, sal.DOMINATE], [0.5, 0.6, 0.4]);
-    sal.HUNT = clamp01(sal.HUNT + (gwtSal[0] || 0) * 0.05);
+    this.gwtC3[0] = sal.HUNT;
+    this.gwtC3[1] = sal.EXPLORE;
+    this.gwtC3[2] = sal.DOMINATE;
+    const gwtSal0 = gwtBroadcastFirst(this.gwtC3, GWT_SAL_PLANS);
+    sal.HUNT = clamp01(sal.HUNT + (gwtSal0 || 0) * 0.05);
     for (let i = 0; i < SPIN_SIZE; i++) {
       let f = 0;
       for (let pIdx = 0; pIdx < SUPER_PLANS.length; pIdx++) {
