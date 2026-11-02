@@ -915,6 +915,10 @@ export class AlienFlora {
 
   // ── Spatial-hash soft plant↔plant collision — O(N·k), scales with N & field size. ──
   private readonly plantX: Float32Array;
+  /** Density-grid cell of each (static) plant base, or −1 outside: gridIndex(plantX[i], plantZ[i]). */
+  private readonly plantGrid: Int32Array;
+  /** Contact slots strong enough to matter this collision pass (filled per pass, ascending). */
+  private readonly activeContact = new Int32Array(FLORA_CONTACT_SLOTS);
   private readonly plantZ: Float32Array;
   private readonly plantR: Float32Array;
   private readonly plantPhase: Float32Array;
@@ -1129,6 +1133,9 @@ export class AlienFlora {
         pi++;
       }
     }
+    this.plantGrid = new Int32Array(placed);
+    for (let i = 0; i < placed; i++)
+      this.plantGrid[i] = this.gridIndex(this.plantX[i]!, this.plantZ[i]!);
     this.hashOrigin = -ALIEN_FLORA_FIELD_HALF - COLLIDE_HASH_CELL;
     this.hashN =
       Math.ceil((ALIEN_FLORA_FIELD_HALF * 2 + COLLIDE_HASH_CELL * 2) / COLLIDE_HASH_CELL) + 1;
@@ -1378,10 +1385,18 @@ export class AlienFlora {
     const cpx = this.contactPX;
     const cpz = this.contactPZ;
     const cstr = this.contactDisp;
+    // Plants never move, so their grid cell is fixed; only slots past the strength gate can raise touch.
+    const grid = this.plantGrid;
+    const biomass = this.biomass;
+    const act = this.activeContact;
+    let nAct = 0;
+    for (let s = 0; s < FLORA_CONTACT_SLOTS; s++) if (!(cstr[s]! < 0.04)) act[nAct++] = s;
     for (let i = 0; i < n; i++) {
       const xi = this.plantX[i]!;
       const zi = this.plantZ[i]!;
-      const bm = this.biomassNear(xi, zi);
+      const gi = grid[i]!;
+      const b = gi < 0 ? 0 : (biomass[gi] ?? 0);
+      const bm = b < 0 ? 0 : b > 1 ? 1 : b;
       const grow = 0.28 + 0.72 * bm;
       rr[i] = this.plantR[i]! * grow;
       const ph = this.plantPhase[i]!;
@@ -1394,9 +1409,9 @@ export class AlienFlora {
       px[i] = xi + oxi;
       pz[i] = zi + ozi;
       let tch = 1;
-      for (let s = 0; s < FLORA_CONTACT_SLOTS; s++) {
+      for (let a = 0; a < nAct; a++) {
+        const s = act[a]!;
         const cs = cstr[s]!;
-        if (cs < 0.04) continue;
         const dx = xi - cpx[s]!;
         const dz = zi - cpz[s]!;
         if (dx * dx + dz * dz < boostR2) tch = Math.max(tch, 1 + cs * 1.55);
@@ -1475,14 +1490,6 @@ export class AlienFlora {
         THREE.InstancedBufferAttribute | undefined;
       if (attr) attr.needsUpdate = true;
     }
-  }
-
-  /** Nearest-cell biomass for collision radius scaling (O(1)). */
-  private biomassNear(x: number, z: number): number {
-    const gi = this.gridIndex(x, z);
-    if (gi < 0) return 0;
-    const b = this.biomass[gi] ?? 0;
-    return b < 0 ? 0 : b > 1 ? 1 : b;
   }
 
   /** Map world (x,z) → density-grid index, or −1 if outside. */
