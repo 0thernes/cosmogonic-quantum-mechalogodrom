@@ -327,6 +327,9 @@ export class QuantumMind {
     const supMod = clamp01(dSup.value + (gwt[1] || 0) * 0.01);
     this.dSup = supMod;
     this.gateCount = this.applyCircuit(supMod, ent, ftl, mut, latent, L);
+    // The live register now holds exactly the circuit selfOptimizeStep's base probe would rebuild (same
+    // deterministic gates from reset), so capture it here instead of re-running the circuit a fifth time.
+    this.reg.amplitudesInto(this.soBaseRe, this.soBaseIm);
     // Oracle/diffuser rounds mark the basis state whose bits are the latent's signs. The
     // 'qudit-compute' aspect selects 0..2 rounds; their actual probability change is state-dependent.
     // Bounded to 2 unitary rounds; a general input state can still overshoot or lose target probability.
@@ -429,7 +432,8 @@ export class QuantumMind {
     L: number,
   ): void {
     const eps = SELFOPT_EPS;
-    this.buildInto(sup, ent, ftl, mut, latent, L, this.soBaseRe, this.soBaseIm);
+    // soBaseRe/soBaseIm = ψ(sup, ent): captured by evolve() from the live register right after
+    // applyCircuit(sup, …) and before amplification (identical to buildInto at the same drives).
     const br0 = this.soBaseRe[target] ?? 0;
     const bi0 = this.soBaseIm[target] ?? 0;
     const pBase = br0 * br0 + bi0 * bi0;
