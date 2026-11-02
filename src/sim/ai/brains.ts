@@ -96,15 +96,66 @@ export class TinyMLP {
    */
   forward(inputs: ArrayLike<number>, hiddenScratch: Float32Array, out: Float32Array): void {
     const { nIn, nHidden, nOut, weights } = this;
-    let w = 0;
-    for (let h = 0; h < nHidden; h++) {
-      let acc = weights[w++] ?? 0; // bias
-      for (let i = 0; i < nIn; i++) acc += (weights[w++] ?? 0) * (inputs[i] ?? 0);
+    // Four rows per pass: every row keeps its own bias-first, left-to-right add order (bit-identical),
+    // but each input is read once per four rows and the independent add chains overlap. All weight
+    // reads are in bounds (length checked in the constructor), so the former `?? 0` there was a no-op.
+    const s1 = nIn + 1;
+    let h = 0;
+    for (; h + 3 < nHidden; h += 4) {
+      const w0 = h * s1;
+      const w1 = w0 + s1;
+      const w2 = w1 + s1;
+      const w3 = w2 + s1;
+      let a0 = weights[w0]!;
+      let a1 = weights[w1]!;
+      let a2 = weights[w2]!;
+      let a3 = weights[w3]!;
+      for (let i = 0; i < nIn; i++) {
+        const x = inputs[i] ?? 0;
+        a0 += weights[w0 + 1 + i]! * x;
+        a1 += weights[w1 + 1 + i]! * x;
+        a2 += weights[w2 + 1 + i]! * x;
+        a3 += weights[w3 + 1 + i]! * x;
+      }
+      hiddenScratch[h] = Math.tanh(a0);
+      hiddenScratch[h + 1] = Math.tanh(a1);
+      hiddenScratch[h + 2] = Math.tanh(a2);
+      hiddenScratch[h + 3] = Math.tanh(a3);
+    }
+    for (; h < nHidden; h++) {
+      const w0 = h * s1;
+      let acc = weights[w0]!;
+      for (let i = 0; i < nIn; i++) acc += weights[w0 + 1 + i]! * (inputs[i] ?? 0);
       hiddenScratch[h] = Math.tanh(acc);
     }
-    for (let o = 0; o < nOut; o++) {
-      let acc = weights[w++] ?? 0; // bias
-      for (let h = 0; h < nHidden; h++) acc += (weights[w++] ?? 0) * (hiddenScratch[h] ?? 0);
+    const base = nHidden * s1;
+    const s2 = nHidden + 1;
+    let o = 0;
+    for (; o + 3 < nOut; o += 4) {
+      const w0 = base + o * s2;
+      const w1 = w0 + s2;
+      const w2 = w1 + s2;
+      const w3 = w2 + s2;
+      let a0 = weights[w0]!;
+      let a1 = weights[w1]!;
+      let a2 = weights[w2]!;
+      let a3 = weights[w3]!;
+      for (let k = 0; k < nHidden; k++) {
+        const x = hiddenScratch[k]!;
+        a0 += weights[w0 + 1 + k]! * x;
+        a1 += weights[w1 + 1 + k]! * x;
+        a2 += weights[w2 + 1 + k]! * x;
+        a3 += weights[w3 + 1 + k]! * x;
+      }
+      out[o] = Math.tanh(a0);
+      out[o + 1] = Math.tanh(a1);
+      out[o + 2] = Math.tanh(a2);
+      out[o + 3] = Math.tanh(a3);
+    }
+    for (; o < nOut; o++) {
+      const w0 = base + o * s2;
+      let acc = weights[w0]!;
+      for (let k = 0; k < nHidden; k++) acc += weights[w0 + 1 + k]! * hiddenScratch[k]!;
       out[o] = Math.tanh(acc);
     }
   }
