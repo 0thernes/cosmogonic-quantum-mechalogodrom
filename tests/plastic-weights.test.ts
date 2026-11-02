@@ -85,3 +85,22 @@ describe('FastWeights — Hebbian within-life plasticity', () => {
     expect(s.strongest).toBeLessThanOrEqual(s.energy);
   });
 });
+
+describe('FastWeights.recallInto', () => {
+  test('matches recall() bit for bit and imprint accepts a Float32Array like its Array.from copy', () => {
+    const a = new FastWeights(8, 0.3, 0.12, 3);
+    const b = new FastWeights(8, 0.3, 0.12, 3);
+    const out = new Float64Array(8).fill(7);
+    let s = 3;
+    const x = new Float32Array(8);
+    for (let beat = 0; beat < 50; beat++) {
+      for (let i = 0; i < 8; i++)
+        x[i] = ((s = (Math.imul(s, 1103515245) + 12345) >>> 0) / 2 ** 31 - 1) * 4;
+      const want = a.recall(Array.from(x));
+      b.recallInto(x, out);
+      expect(Array.from(out)).toEqual(want);
+      a.imprint(Array.from(x));
+      b.imprint(x);
+    }
+  });
+});

@@ -51,7 +51,7 @@ export class FastWeights {
    * One plasticity step: decay the fast weights and imprint the outer product of `x` (Hebbian
    * `W ← clip((1−decay)·W + η·xᵢxⱼ)`). Mutates the matrix (that IS the learning); `x` is not mutated.
    */
-  imprint(x: readonly number[]): void {
+  imprint(x: ArrayLike<number>): void {
     const n = this.n;
     const keep = 1 - this.decay;
     for (let i = 0; i < n; i++) {
@@ -77,6 +77,18 @@ export class FastWeights {
       y[i] = s;
     }
     return y;
+  }
+
+  /** {@link recall} written into `out` (length ≥ n) with the same arithmetic; reads `x` only. */
+  recallInto(x: ArrayLike<number>, out: Float64Array): Float64Array {
+    const n = this.n;
+    for (let i = 0; i < n; i++) {
+      const row = i * n;
+      let s = 0;
+      for (let j = 0; j < n; j++) s += (this.w[row + j] ?? 0) * (x[j] ?? 0);
+      out[i] = s;
+    }
+    return out;
   }
 
   /**

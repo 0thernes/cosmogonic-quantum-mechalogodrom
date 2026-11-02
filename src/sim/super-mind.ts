@@ -792,6 +792,8 @@ export class SuperMind {
   private readonly eshkolSalience = new Float32Array(6);
   /** #87/#91: Hebbian fast weights — within-life plastic overlay (Butlin RPT). */
   private readonly plastic = new FastWeights(LATENT, 0.3, 0.12, 3);
+  /** Recall scratch for the plastic fast weights (LATENT long, read only within the beat). */
+  private readonly plasticRecallBuf = new Float64Array(LATENT);
   private readonly organActs = new Float32Array(SUPER_ORGANS);
   // Observatory captures are bounded, preallocated, and never feed computation back into the model.
   private observationTick = 0;
@@ -1219,9 +1221,9 @@ export class SuperMind {
     // fast memory of recent latents (READ), imprint this beat (WRITE), then blend a bounded 0.15 fraction of
     // the recall into the workspace latent — so the mind's OWN recent experience reshapes what every
     // downstream faculty reads. Online plasticity (not training); deterministic; bounded by decay + clip.
-    const plasticLat = Array.from(this.latent);
-    const plasticRecall = this.plastic.recall(plasticLat);
-    this.plastic.imprint(plasticLat);
+    // recall/imprint only read the latent (neither keeps it), and it is not written until both are done.
+    const plasticRecall = this.plastic.recallInto(this.latent, this.plasticRecallBuf);
+    this.plastic.imprint(this.latent);
     for (let i = 0; i < this.latent.length; i++) {
       this.latent[i] = clamp((this.latent[i] ?? 0) + 0.15 * (plasticRecall[i] ?? 0), -4, 4);
     }
