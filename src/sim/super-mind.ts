@@ -597,11 +597,39 @@ const NARRATIVE_TRUST_GAIN = 0.04;
  * 0.9 damping (1 − 0.1·1); unmet instincts leave novelty higher ⇒ more exploration. Built once at load
  * (deterministic, no rng), so the per-beat cost is only the <8-fact KB + query.
  */
-const INSTINCT_GOALS: readonly Term[] = [
+export const INSTINCT_GOALS: readonly Term[] = [
   compound('drive', atom('explore'), atom('high')),
   compound('drive', atom('dominate'), atom('high')),
   compound('state', atom('surprise'), atom('low')),
 ];
+
+/**
+ * The KB above has only four high/low facts, so its satisfaction against the fixed goals takes one of 16
+ * values. Each is computed once, by the same unification over the same terms, and then reused: the
+ * per-beat unify (a fresh Map per goal × fact) was pure but allocating. NaN cannot reach a key (the
+ * comparisons yield booleans), so the cache returns exactly what the inline call returned.
+ */
+const instinctSatCache = new Float64Array(16).fill(Number.NaN);
+export function instinctSatisfactionFor(
+  explore: boolean,
+  rest: boolean,
+  dominate: boolean,
+  surprise: boolean,
+): number {
+  const key = (explore ? 1 : 0) | (rest ? 2 : 0) | (dominate ? 4 : 0) | (surprise ? 8 : 0);
+  let sat = instinctSatCache[key]!;
+  if (Number.isNaN(sat)) {
+    const kb: Term[] = [
+      compound('drive', atom('explore'), atom(explore ? 'high' : 'low')),
+      compound('drive', atom('rest'), atom(rest ? 'high' : 'low')),
+      compound('drive', atom('dominate'), atom(dominate ? 'high' : 'low')),
+      compound('state', atom('surprise'), atom(surprise ? 'high' : 'low')),
+    ];
+    sat = instinctSatisfaction(INSTINCT_GOALS, kb);
+    instinctSatCache[key] = sat;
+  }
+  return sat;
+}
 /** V1.3: how strongly the evolved-wavepacket positional uncertainty (Schrödinger) lifts curiosity. */
 const LATENT_CURIOSITY_GAIN = 0.1;
 /** V1.3 · GWT-2: the limited-capacity workspace size (Cowan's ~4 ± 1 conscious slots). */
@@ -1895,13 +1923,12 @@ export class SuperMind {
     // tiny deterministic KB from the mind's own quantized state and measure how many fixed instinct goals it
     // satisfies; the satisfied fraction damps novelty. Full satisfaction reproduces the historical 0.9.
     if (this.eshkolEngine.logic > 0.6) {
-      const kb: Term[] = [
-        compound('drive', atom('explore'), atom(drives.EXPLORE > 0.5 ? 'high' : 'low')),
-        compound('drive', atom('rest'), atom(drives.REST > 0.5 ? 'high' : 'low')),
-        compound('drive', atom('dominate'), atom(drives.DOMINATE > 0.5 ? 'high' : 'low')),
-        compound('state', atom('surprise'), atom(this.cons.surprise > 0.5 ? 'high' : 'low')),
-      ];
-      const sat = instinctSatisfaction(INSTINCT_GOALS, kb);
+      const sat = instinctSatisfactionFor(
+        drives.EXPLORE > 0.5,
+        drives.REST > 0.5,
+        drives.DOMINATE > 0.5,
+        this.cons.surprise > 0.5,
+      );
       this.cons.novelty = clamp01(this.cons.novelty * (1 - 0.1 * sat));
     }
     let m1 = -Infinity;
