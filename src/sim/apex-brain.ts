@@ -486,6 +486,10 @@ const THERMO_HEAL_BEATS = 600;
 class EntropicNecroMatrix {
   private readonly n: number;
   private readonly adj: number[][]; // undirected adjacency (live edges only)
+  private readonly bfsPrev: Int32Array;
+  private readonly bfsSeen: Uint8Array;
+  private readonly bfsQueue: Int32Array;
+  private readonly bfsPath: Int32Array;
   private dead = 0;
   private readonly built: number;
   private budget: number;
@@ -498,6 +502,10 @@ class EntropicNecroMatrix {
   constructor(n = 64, rng: Rng = mulberry32(1)) {
     this.n = n;
     this.adj = Array.from({ length: n }, () => [] as number[]);
+    this.bfsPrev = new Int32Array(n);
+    this.bfsSeen = new Uint8Array(n);
+    this.bfsQueue = new Int32Array(n);
+    this.bfsPath = new Int32Array(n);
     let edges = 0;
     const link = (a: number, b: number): void => {
       if (a === b || this.adj[a]!.includes(b)) return;
@@ -566,13 +574,16 @@ class EntropicNecroMatrix {
     if (this.budget <= 0) return 0;
     const s = ((src % this.n) + this.n) % this.n;
     const d = ((dst % this.n) + this.n) % this.n;
-    const prev = new Int32Array(this.n).fill(-1);
-    const seen = new Uint8Array(this.n);
-    const queue = [s];
+    // Perf: BFS scratch is reused (was four fresh arrays per beat); same visit order, same path.
+    const prev = this.bfsPrev.fill(-1);
+    const seen = this.bfsSeen.fill(0);
+    const queue = this.bfsQueue;
+    let qLen = 0;
+    queue[qLen++] = s;
     seen[s] = 1;
     let found = false;
-    for (let qi = 0; qi < queue.length && !found; qi++) {
-      const u = queue[qi]!;
+    for (let qi = 0; qi < qLen && !found; qi++) {
+      const u = qi === 0 ? s : queue[qi]!; // s unboxed: keeps a non-integer src throwing as before
       for (const w of this.adj[u]!) {
         if (seen[w]) continue;
         seen[w] = 1;
@@ -581,14 +592,15 @@ class EntropicNecroMatrix {
           found = true;
           break;
         }
-        queue.push(w);
+        queue[qLen++] = w;
       }
     }
     if (found) {
-      const path: number[] = [];
-      for (let cur = d; cur !== -1; cur = prev[cur]!) path.push(cur);
-      this.lastPath = path.length - 1;
-      for (let p = 0; p + 1 < path.length; p++) this.burn(path[p]!, path[p + 1]!);
+      const path = this.bfsPath;
+      let pLen = 0;
+      for (let cur = d; cur !== -1; cur = prev[cur]!) path[pLen++] = cur;
+      this.lastPath = pLen - 1;
+      for (let p = 0; p + 1 < pLen; p++) this.burn(path[p]!, path[p + 1]!);
     } else {
       // No live route: the desperate search still spends finite energy (a wasted thought), so the
       // mind marches toward brain-death even once it fragments. Keeps budget monotone ↓.
