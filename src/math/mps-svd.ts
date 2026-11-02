@@ -136,18 +136,37 @@ export function svd(A: Mat): { U: Mat; S: number[]; V: Mat } {
 }
 
 /**
- * {@link svd} of a tall or square A (rows ≥ cols) written into caller-supplied buffers: U (rows×cols),
- * S (length ≥ cols) and V (cols×cols). Same arithmetic and sign convention as svd(); for hot callers
- * that reuse their buffers. Throws on a wide matrix (svd() transposes those; use it instead).
+ * {@link svd} written into caller-supplied buffers, same arithmetic and sign convention as svd().
+ * Tall or square A (m ≥ n): U m×n, S length ≥ n, V n×n. Wide A (m < n): like svd(), it decomposes
+ * Aᵀ, so U is m×m, S length ≥ m and V n×m. For hot callers that reuse their buffers.
  */
+let svdAT: Mat = mat(0, 0);
+
 export function svdInto(A: Mat, U: Mat, S: { [k: number]: number; length: number }, V: Mat): void {
   const m = A.rows;
   const n = A.cols;
   if (m > MPS_MAX_DIM || n > MPS_MAX_DIM) {
     throw new Error(`svd: dimension exceeds MPS_MAX_DIM=${MPS_MAX_DIM} (${m}×${n})`);
   }
-  if (m < n || U.rows !== m || U.cols !== n || V.rows !== n || V.cols !== n || S.length < n) {
-    throw new Error('svdInto: needs rows ≥ cols and U m×n, S ≥ n, V n×n');
+  if (m < n) {
+    if (U.rows !== m || U.cols !== m || V.rows !== n || V.cols !== m || S.length < m) {
+      throw new Error('svdInto: a wide A needs U m×m, S ≥ m, V n×m');
+    }
+    // Aᵀ goes into a reused exact-size scratch (the core copies its data wholesale).
+    if (svdAT.rows !== n || svdAT.cols !== m) svdAT = mat(n, m);
+    const AT = svdAT;
+    for (let i = 0; i < m; i++) {
+      for (let j = 0; j < n; j++) {
+        AT.data[j * m + i] = A.data[i * n + j]!;
+      }
+    }
+    U.data.fill(0);
+    V.data.fill(0);
+    svdTallInto(AT, V, S, U);
+    return;
+  }
+  if (U.rows !== m || U.cols !== n || V.rows !== n || V.cols !== n || S.length < n) {
+    throw new Error('svdInto: a tall A needs U m×n, S ≥ n, V n×n');
   }
   U.data.fill(0);
   V.data.fill(0);

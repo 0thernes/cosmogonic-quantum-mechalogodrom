@@ -20,7 +20,7 @@
 
 import type { Complex } from '../math/quantum';
 import { clebschGordan, wignerSmallD, wigner6j, wigner9j } from '../math/irrep';
-import { fromRows, svd, type Mat } from '../math/mps-svd';
+import { mat, svdInto, type Mat } from '../math/mps-svd';
 
 // === MOONLAB FULL INTEGRATION ===
 
@@ -194,6 +194,28 @@ interface TensorTrain {
  * the rank-χ approximant. `truncationError` is the real discarded-energy ratio.
  * Replaces the prior array-slice placeholder.
  */
+interface TTWorkspace {
+  readonly A: Mat;
+  readonly U: Mat;
+  readonly S: Float64Array;
+  readonly V: Mat;
+}
+let ttWs: TTWorkspace | null = null;
+function ttWorkspace(r: number, c: number): TTWorkspace {
+  let ws = ttWs;
+  if (ws === null || ws.A.rows !== r || ws.A.cols !== c) {
+    const k = Math.min(r, c);
+    ws = {
+      A: mat(r, c),
+      U: r >= c ? mat(r, c) : mat(r, r),
+      S: new Float64Array(k),
+      V: r >= c ? mat(c, c) : mat(c, r),
+    };
+    ttWs = ws;
+  }
+  return ws;
+}
+
 function moonlabTTDecompose(tensor: Float32Array, maxRank: number = 8): TensorTrain {
   const len = tensor.length;
   if (len <= 1) return { cores: [tensor.slice()], ranks: [1], truncationError: 0 };
@@ -202,17 +224,19 @@ function moonlabTTDecompose(tensor: Float32Array, maxRank: number = 8): TensorTr
   let r = Math.min(Math.floor(Math.sqrt(len)), 64);
   if (r < 1) r = 1;
   const c = Math.ceil(len / r);
-  const rows: number[][] = [];
+  // Zero-padded r×c matrix and the SVD outputs live in reused buffers (r ≤ c, so svdInto takes
+  // the wide path exactly as svd() did: U r×r, S length r, V c×r). Nothing escapes: the cores are
+  // fresh arrays built from them below.
+  const ws = ttWorkspace(r, c);
+  const A = ws.A;
   for (let i = 0; i < r; i++) {
-    const row: number[] = Array.from({ length: c }, () => 0);
     for (let j = 0; j < c; j++) {
       const idx = i * c + j;
-      row[j] = idx < len ? (tensor[idx] ?? 0) : 0;
+      A.data[i * c + j] = idx < len ? (tensor[idx] ?? 0) : 0;
     }
-    rows.push(row);
   }
-  const A: Mat = fromRows(rows);
-  const { U, S, V } = svd(A);
+  const { U, S, V } = ws;
+  svdInto(A, U, S, V);
   const chi = Math.max(1, Math.min(maxRank, S.length));
 
   const core0 = new Float32Array(r * chi); // U·√Σ
