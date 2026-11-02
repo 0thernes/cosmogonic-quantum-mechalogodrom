@@ -21,10 +21,8 @@ import { clamp } from '../math/scalar';
 import {
   type Mat,
   mat,
-  matMul,
   matMulInto,
-  svd,
-  lowRankApprox,
+  svdInto,
   lowRankApproxInto,
   frobenius,
   MPS_MAX_DIM,
@@ -39,14 +37,6 @@ function squareSide(len: number): number {
   return d > MPS_MAX_DIM ? MPS_MAX_DIM : d;
 }
 
-/** Pack the first rows·cols values of `a` into a fresh row-major matrix. */
-function packMatrix(a: ArrayLike<number>, rows: number, cols: number): Mat {
-  const m = mat(rows, cols);
-  const lim = rows * cols;
-  for (let k = 0; k < lim; k++) m.data[k] = a[k] ?? 0;
-  return m;
-}
-
 /** Reused matrices for the contraction hot path, one per (slot, shape); every cell is rewritten per call. */
 const contractScratch = new Map<number, Mat>();
 function scratchMat(slot: number, rows: number, cols: number): Mat {
@@ -59,12 +49,26 @@ function scratchMat(slot: number, rows: number, cols: number): Mat {
   return m;
 }
 
-/** {@link packMatrix} into a reused matrix (writes all rows·cols cells). */
+/** Pack the first rows·cols values of `a` (zero-padded) into a reused row-major matrix; writes every cell. */
 function packMatrixScratch(slot: number, a: ArrayLike<number>, rows: number, cols: number): Mat {
   const m = scratchMat(slot, rows, cols);
   const lim = rows * cols;
   for (let k = 0; k < lim; k++) m.data[k] = a[k] ?? 0;
   return m;
+}
+
+let qualiaS = new Float64Array(0);
+let lastTransfer: Mat | null = null;
+let lastTransferD = -1;
+let lastTransferBond = Number.NaN;
+/** {@link transferOperator}, rebuilt only when (d, bond) changes; callers only read it. */
+function transferOperatorCached(d: number, bond: number): Mat {
+  if (lastTransfer === null || lastTransferD !== d || !Object.is(lastTransferBond, bond)) {
+    lastTransfer = transferOperator(d, bond);
+    lastTransferD = d;
+    lastTransferBond = bond;
+  }
+  return lastTransfer;
 }
 
 /** Tridiagonal 1-D hopping MPO transfer operator (diagonal 0.5, off-diagonals 1/(bond+1)). */
@@ -145,7 +149,8 @@ export function moonlabTensorQualia(v: ArrayLike<number>, chi: number): number {
   // `total <= 1e-12` guard below.
   const d = Math.max(2, squareSide(lifted.length));
   const k = Math.max(2, Math.min(chi || 4, d));
-  const { S } = svd(packMatrix(lifted, d, d));
+  const S = qualiaS.length === d ? qualiaS : (qualiaS = new Float64Array(d));
+  svdInto(packMatrixScratch(4, lifted, d, d), scratchMat(5, d, d), S, scratchMat(6, d, d));
   let total = 0;
   for (let i = 0; i < k; i++) total += S[i]! * S[i]!;
   if (total <= 1e-12) return 0;
@@ -169,11 +174,11 @@ export function moonlabMpoStep(state: Float32Array, bond: number, chi = 4): numb
   // ratio stays ~1 by construction; the two length-2 call sites (world.superMpoInput, godform) were
   // widened to length-3 with a cross-term so the packed matrix is genuinely rank-2.
   const d = Math.max(2, squareSide(lifted.length));
-  const S = packMatrix(lifted, d, d);
-  const M = matMul(transferOperator(d, bond), S);
+  const S = packMatrixScratch(0, lifted, d, d);
+  const M = matMulInto(transferOperatorCached(d, bond), S, scratchMat(2, d, d));
   const full = frobenius(M);
   if (full <= 1e-12) return 0;
-  const { approx } = lowRankApprox(M, Math.max(1, Math.min(chi, d - 1)));
+  const approx = lowRankApproxInto(M, Math.max(1, Math.min(chi, d - 1)), scratchMat(3, d, d));
   return clamp01(frobenius(approx) / (full + 1e-12));
 }
 
@@ -186,8 +191,12 @@ export function moonlabMpoApply(state: Float32Array, bond: number, chi = 4): Flo
   const out = new Float32Array(state.length);
   // d≥2 + keep ≤ d−1: same de-degeneracy — a full-rank keep left the transformed block unchanged.
   const d = Math.max(2, squareSide(state.length));
-  const M = matMul(transferOperator(d, bond), packMatrix(state, d, d));
-  const { approx } = lowRankApprox(M, Math.max(1, Math.min(chi, d - 1)));
+  const M = matMulInto(
+    transferOperatorCached(d, bond),
+    packMatrixScratch(0, state, d, d),
+    scratchMat(2, d, d),
+  );
+  const approx = lowRankApproxInto(M, Math.max(1, Math.min(chi, d - 1)), scratchMat(3, d, d));
   const block = d * d;
   for (let i = 0; i < state.length; i++) {
     out[i] = clamp01(i < block ? approx.data[i]! : (state[i] ?? 0));
