@@ -105,3 +105,24 @@ describe('nqs-vmc: pooled step scratch', () => {
     for (let i = 0; i < a.length; i++) expect(Object.is(a[i], b[i])).toBe(true);
   });
 });
+
+describe('nqs-vmc: per-step logAmplitude memo', () => {
+  test('memo never outlives a step: amplitudes track parameter edits made between steps', () => {
+    const arch = initNQS(6, 8, 0xfeed);
+    const state = initVMC(arch, CONFIG, 3);
+    vmcStep(arch, state, CONFIG, 3);
+    const twin = initNQS(6, 8, 0xfeed);
+    twin.weights.set(arch.weights);
+    twin.visibleBiases.set(arch.visibleBiases);
+    twin.hiddenBiases.set(arch.hiddenBiases);
+    for (let b = 0; b < 64; b++)
+      expect(Object.is(amplitude(arch, b).re, amplitude(twin, b).re)).toBe(true);
+    arch.weights[0] = (arch.weights[0] ?? 0) + 0.25;
+    twin.weights[0] = arch.weights[0]!;
+    for (let b = 0; b < 64; b++)
+      expect(Object.is(amplitude(arch, b).re, amplitude(twin, b).re)).toBe(true);
+    const t1 = vmcStep(arch, state, CONFIG, 4);
+    const t2 = vmcStep(twin, initVMC(twin, CONFIG, 3), CONFIG, 4);
+    expect(Number.isFinite(t1.energy) && Number.isFinite(t2.energy)).toBe(true);
+  });
+});

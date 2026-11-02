@@ -131,7 +131,37 @@ export function initVMC(arch: NQSArchitecture, config: VMCConfig, seed = 0x51f15
  *
  * For an RBM: log ψ(s) = Σ_i a_i s_i + Σ_j log(2 cosh(b_j + Σ_i W_ij s_i))
  */
+/**
+ * Per-step memo of logAmplitude. Only live inside vmcStep's sampling + local-energy phase, where the
+ * parameters are fixed, so a cached value is exactly what a fresh evaluation would return; it is
+ * dropped before any parameter changes. Bitstrings index directly (visibleCount ≤ 12).
+ */
+let memoArch: NQSArchitecture | null = null;
+let memoVal = new Float64Array(64);
+let memoOk = new Uint8Array(64);
+
+function beginLogAmpMemo(arch: NQSArchitecture): void {
+  if (arch.visibleCount > 12) return;
+  const size = 1 << arch.visibleCount;
+  if (memoVal.length < size) {
+    memoVal = new Float64Array(size);
+    memoOk = new Uint8Array(size);
+  } else memoOk.fill(0, 0, size);
+  memoArch = arch;
+}
+
 function logAmplitude(arch: NQSArchitecture, bitstring: number): number {
+  if (memoArch === arch && bitstring >= 0 && bitstring < memoOk.length) {
+    if (memoOk[bitstring] === 1) return memoVal[bitstring]!;
+    const v = logAmplitudeRaw(arch, bitstring);
+    memoVal[bitstring] = v;
+    memoOk[bitstring] = 1;
+    return v;
+  }
+  return logAmplitudeRaw(arch, bitstring);
+}
+
+function logAmplitudeRaw(arch: NQSArchitecture, bitstring: number): number {
   let logAmp = 0;
 
   // Visible bias contribution
@@ -357,18 +387,25 @@ export function vmcStep(
   seed: number,
   hField: number = 1,
 ): NQSTelemetry {
-  // Thermalize samples
-  const acceptanceRate = thermalize(arch, state, config, seed);
-
-  // Compute local energies
+  // Parameters are fixed until the update below, so logAmplitude is memoised per bitstring here.
+  beginLogAmpMemo(arch);
+  let acceptanceRate: number;
   let totalEnergy = 0;
   let totalEnergySq = 0;
-  for (let s = 0; s < config.sampleCount; s++) {
-    const sample = state.samples[s] ?? 0;
-    const E = localEnergy(arch, sample, 1, hField);
-    state.energies[s] = E;
-    totalEnergy += E;
-    totalEnergySq += E * E;
+  try {
+    // Thermalize samples
+    acceptanceRate = thermalize(arch, state, config, seed);
+
+    // Compute local energies
+    for (let s = 0; s < config.sampleCount; s++) {
+      const sample = state.samples[s] ?? 0;
+      const E = localEnergy(arch, sample, 1, hField);
+      state.energies[s] = E;
+      totalEnergy += E;
+      totalEnergySq += E * E;
+    }
+  } finally {
+    memoArch = null;
   }
 
   const meanEnergy = totalEnergy / config.sampleCount;
