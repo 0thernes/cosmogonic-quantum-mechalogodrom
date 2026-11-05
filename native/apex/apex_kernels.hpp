@@ -46,7 +46,7 @@ inline uint32_t fnv_float(uint32_t h, double v) {
     double scaled = v * QUANT;
     if (scaled > 2147483647.0) scaled = 2147483647.0;
     else if (scaled < -2147483648.0) scaled = -2147483648.0;
-    int32_t qi = static_cast<int32_t>(std::llround(scaled));
+    int32_t qi = static_cast<int32_t>(std::floor(scaled + 0.5));
     uint32_t q = static_cast<uint32_t>(qi);
     uint32_t x = h ^ (q & 0xffu);
     x = x * 0x01000193u;

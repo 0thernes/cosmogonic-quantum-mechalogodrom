@@ -198,6 +198,7 @@ const WATCHER_EDGES: readonly FsmEdge<WatchSignal>[] = [
   { from: 0, to: 3, guard: (s) => s.energy < 0.3 }, // watch → rest
   { from: 2, to: 0, guard: (s) => s.threat <= 0.4 }, // guard → watch
   { from: 1, to: 0, guard: (s) => s.novelty <= 0.4 }, // seek → watch
+  { from: 3, to: 0, guard: (s) => s.energy > 0.55 }, // rest → watch
 ];
 /** Watcher FSM state → intent. */
 const WATCH_STATE_INTENT: readonly Intent[] = ['guard', 'seek', 'guard', 'rest'];

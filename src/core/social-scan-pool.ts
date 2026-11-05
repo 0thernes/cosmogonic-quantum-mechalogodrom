@@ -100,6 +100,7 @@ export class SocialScanPool implements SocialScanCores {
   /** Jobs posted to each worker and not yet answered (workers answer in FIFO order). */
   private readonly inFlight: number[];
   private readonly pending = new Map<number, PendingScan>();
+  private readonly skippedTickets = new Set<number>();
   private retired = false;
   private counts = { dispatched: 0, served: 0, late: 0, skippedBusy: 0 };
 
@@ -121,6 +122,7 @@ export class SocialScanPool implements SocialScanCores {
     if (this.retired || w === 0 || f.n === 0) return;
     if (this.inFlight.some((k) => k >= MAX_IN_FLIGHT)) {
       this.counts.skippedBusy++;
+      this.skippedTickets.add(ticket);
       return;
     }
     const inputs = copySocialInputs(f, p);
@@ -130,20 +132,26 @@ export class SocialScanPool implements SocialScanCores {
       const from = Math.floor((n * k) / w);
       const to = Math.floor((n * (k + 1)) / w);
       ranges.push([from, to]);
+    }
+    // Register pending ticket before postMessage so synchronous worker replies never miss the entry.
+    this.pending.set(ticket, { ranges, outputs: ranges.map(() => null), received: 0 });
+    this.counts.dispatched++;
+    for (let k = 0; k < w; k++) {
+      const [from, to] = ranges[k]!;
       this.inFlight[k]!++;
       // Structured clone copies the snapshot per worker, so main-thread repacking is always safe.
       this.workers[k]!.postMessage({ ticket, from, to, params: p, inputs });
     }
-    this.pending.set(ticket, { ranges, outputs: ranges.map(() => null), received: 0 });
-    this.counts.dispatched++;
   }
 
   collect(f: SocialFieldBuffers, ticket: number): boolean {
+    const wasSkipped = this.skippedTickets.has(ticket);
+    for (const t of this.skippedTickets) if (t <= ticket) this.skippedTickets.delete(t);
     const scan = this.pending.get(ticket);
     // Anything older than this ticket can never be collected now: drop it (late replies ignored).
     for (const t of this.pending.keys()) if (t <= ticket) this.pending.delete(t);
     if (this.retired || scan === undefined || scan.received < scan.ranges.length) {
-      if (!this.retired && this.workers.length > 0) this.counts.late++;
+      if (!this.retired && this.workers.length > 0 && !wasSkipped) this.counts.late++;
       return false;
     }
     for (let k = 0; k < scan.ranges.length; k++)
@@ -190,6 +198,7 @@ export class SocialScanPool implements SocialScanCores {
     if (this.retired) return;
     this.retired = true;
     this.pending.clear();
+    this.skippedTickets.clear();
     for (const w of this.workers) {
       w.onmessage = null;
       w.onerror = null;
@@ -226,6 +235,7 @@ export class SharedSocialScanPool implements SocialScanCores {
   /** Field ids each core holds, oldest first — mirrors the core's own binding order. */
   private readonly bound: number[][] = [];
   private readonly fields = new WeakMap<SocialFieldBuffers, SharedFieldState>();
+  private readonly skippedTickets = new Set<number>();
   private fieldSeq = 0;
   private retired = false;
   private counts = { dispatched: 0, served: 0, late: 0, skippedBusy: 0 };
@@ -259,6 +269,7 @@ export class SharedSocialScanPool implements SocialScanCores {
     for (let k = 0; k < w; k++) {
       if (this.posted[k]! - Atomics.load(this.progress, k) >= MAX_IN_FLIGHT) {
         this.counts.skippedBusy++;
+        this.skippedTickets.add(ticket);
         return;
       }
     }
@@ -295,11 +306,13 @@ export class SharedSocialScanPool implements SocialScanCores {
   }
 
   collect(f: SocialFieldBuffers, ticket: number): boolean {
+    const wasSkipped = this.skippedTickets.has(ticket);
+    for (const t of this.skippedTickets) if (t <= ticket) this.skippedTickets.delete(t);
     const s = this.fields.get(f);
     const w = this.workers.length;
     if (this.retired || w === 0) return false;
     if (s === undefined || s.ticket !== ticket) {
-      this.counts.late++;
+      if (!wasSkipped) this.counts.late++;
       return false;
     }
     s.ticket = 0;
@@ -365,6 +378,7 @@ export class SharedSocialScanPool implements SocialScanCores {
   private retire(): void {
     if (this.retired) return;
     this.retired = true;
+    this.skippedTickets.clear();
     for (const w of this.workers) {
       w.onmessage = null;
       w.onerror = null;

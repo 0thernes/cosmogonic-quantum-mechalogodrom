@@ -78,6 +78,20 @@ const EDGES: CausalEdge[] = [
   { from: idx('phi'), to: idx('qualiaTone'), weight: 0.45 },
 ];
 
+/** Topological ordering of the 8-node DAG: roots (surprise, novelty) -> leaves. */
+const TOPO_ORDER = [
+  idx('surprise'),
+  idx('novelty'),
+  idx('ignition'),
+  idx('phi'),
+  idx('workspace'),
+  idx('reasoning'),
+  idx('qualiaTone'),
+  idx('selfAware'),
+] as const;
+
+const MAX_LAST_EFFECTS = 64;
+
 function clamp01(v: number): number {
   return v < 0 ? 0 : v > 1 ? 1 : v;
 }
@@ -87,9 +101,14 @@ export class CausalGraph {
   private readonly edges: CausalEdge[];
   private interventionCount = 0;
   private readonly lastEffects: Record<string, number> = {};
+  private readonly lastEffectKeys: string[] = [];
   /** Moonlab tensor scratch (alloc-free). */
   private readonly tA = new Float32Array(4);
   private readonly tB = new Float32Array(4);
+  private readonly mutatedScratch = new Float32Array(N);
+  private readonly twinScratch = new Float32Array(N);
+  private readonly adScratch = new Float64Array(N);
+  private readonly descMask = new Uint8Array(N);
 
   constructor() {
     this.edges = EDGES.map((e) => ({ ...e }));
@@ -118,6 +137,44 @@ export class CausalGraph {
   }
 
   /**
+   * Propagate do(X = xVal) in topological order only to descendants of xIdx,
+   * leaving upstream ancestors and disconnected nodes untouched and summing
+   * all parent contributions per descendant node.
+   */
+  private propagateIntervention(
+    xIdx: number,
+    xVal: number,
+    out: Float32Array | Float64Array,
+  ): void {
+    for (let i = 0; i < N; i++) {
+      out[i] = this.values[i] ?? 0;
+    }
+    this.descMask.fill(0);
+    out[xIdx] = clamp01(xVal);
+    this.descMask[xIdx] = 1;
+
+    for (let t = 0; t < TOPO_ORDER.length; t++) {
+      const node = TOPO_ORDER[t]!;
+      if (node === xIdx) continue; // surgery: cut all incoming edges into X
+      let hasDescendantParent = false;
+      let contribSum = 0;
+      for (let i = 0; i < this.edges.length; i++) {
+        const e = this.edges[i]!;
+        if (e.to !== node) continue;
+        if (this.descMask[e.from] !== 0) {
+          hasDescendantParent = true;
+        }
+        contribSum += (out[e.from] ?? 0) * e.weight;
+      }
+      if (hasDescendantParent) {
+        this.descMask[node] = 1;
+        const base = this.values[node] ?? 0;
+        out[node] = clamp01(base * 0.4 + contribSum * 0.6);
+      }
+    }
+  }
+
+  /**
    * do(X=x): graph-surgery intervention. Cut all edges into X, set X=x,
    * propagate forward through topological order, return E[Y | do(X=x)].
    */
@@ -125,48 +182,41 @@ export class CausalGraph {
     this.interventionCount++;
     const xIdx = idx(x);
     const yIdx = idx(y);
-    const mutated = Float32Array.from(this.values);
-    mutated[xIdx] = clamp01(xVal);
-
-    // Forward propagation (DAG is shallow, 3 levels max). Graph surgery: cut every edge
-    // INTO x on EVERY pass so the intervened value mutated[xIdx] is never overwritten by x's
-    // parents — that is what makes do(X=x) actually hold X at x (Pearl, do-operator).
-    for (let pass = 0; pass < 3; pass++) {
-      for (const e of this.edges) {
-        if (e.to === xIdx) continue; // surgery: skip edges INTO x
-        const cur = mutated[e.to] ?? 0;
-        const contrib = (mutated[e.from] ?? 0) * e.weight;
-        mutated[e.to] = clamp01(cur * 0.4 + contrib * 0.6);
-      }
-    }
+    const mutated = this.mutatedScratch;
+    this.propagateIntervention(xIdx, xVal, mutated);
 
     const effect = mutated[yIdx] ?? 0;
 
-    // Eshkol AD: gradient of effect w.r.t. the direct x->y edge weight (if exists)
+    // Eshkol AD: gradient of effect w.r.t. the direct x->y edge weight (if exists),
+    // or w.r.t. the intervened value xVal along the structural causal path x -> ... -> y.
     let grad = 0;
     const directEdge = this.edges.find((e) => e.from === xIdx && e.to === yIdx);
     if (directEdge) {
+      let otherContrib = 0;
+      for (let i = 0; i < this.edges.length; i++) {
+        const e = this.edges[i]!;
+        if (e.to === yIdx && e.from !== xIdx) {
+          otherContrib += (mutated[e.from] ?? 0) * e.weight;
+        }
+      }
+      const clampedX = clamp01(xVal);
+      const baseY = this.values[yIdx] ?? 0;
       grad = eshkolADGradient(
-        (w: number) => clamp01(xVal * w * 0.6 + (this.values[yIdx] ?? 0) * 0.4),
+        (w: number) => clamp01(baseY * 0.4 + (clampedX * w + otherContrib) * 0.6),
         directEdge.weight,
       );
     } else {
-      // Indirect: Eshkol dual estimate through chain
-      const d = eshkolDual((v: number) => clamp01(v * 0.5 + effect * 0.5), xVal);
+      const d = eshkolDual((v: number) => {
+        this.propagateIntervention(xIdx, v, this.adScratch);
+        return this.adScratch[yIdx] ?? 0;
+      }, xVal);
       grad = d.derivative;
     }
 
     // Counterfactual: twin-network with x_cf = 1 - xVal
     const xCf = 1 - clamp01(xVal);
-    const twin = Float32Array.from(this.values);
-    twin[xIdx] = xCf;
-    for (let pass = 0; pass < 3; pass++) {
-      for (const e of this.edges) {
-        if (e.to === xIdx) continue; // surgery: cut edges INTO x in the twin world too
-        const cur = twin[e.to] ?? 0;
-        twin[e.to] = clamp01(cur * 0.4 + (twin[e.from] ?? 0) * e.weight * 0.6);
-      }
-    }
+    const twin = this.twinScratch;
+    this.propagateIntervention(xIdx, xCf, twin);
     const counterfactual = twin[yIdx] ?? 0;
 
     // Moonlab tensor: joint intervention summary over first 4 vars
@@ -179,9 +229,15 @@ export class CausalGraph {
     this.tB[2] = mutated[6] ?? 0;
     this.tB[3] = mutated[7] ?? 0;
     const jointEffect = moonlabTensorContract(this.tA, this.tB, 4);
-    this.lastEffects[`do(${x}=${xVal.toFixed(2)})->${y}`] = clamp01(
-      effect + Math.abs(jointEffect) * 0.02,
-    );
+    const key = `do(${x}=${xVal.toFixed(2)})->${y}`;
+    if (!(key in this.lastEffects)) {
+      if (this.lastEffectKeys.length >= MAX_LAST_EFFECTS) {
+        const oldest = this.lastEffectKeys.shift();
+        if (oldest !== undefined) delete this.lastEffects[oldest];
+      }
+      this.lastEffectKeys.push(key);
+    }
+    this.lastEffects[key] = clamp01(effect + Math.abs(jointEffect) * 0.02);
 
     return { effect, grad, counterfactual };
   }

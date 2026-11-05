@@ -251,6 +251,7 @@ export class ApexExteriorAbomination {
       this.cornerOrbs.push(orb);
       this.group.add(orb);
     }
+    orbMat.dispose();
     const N = 640;
     const pos = new Float32Array(N * 3);
     for (let i = 0; i < N; i++) {
@@ -584,6 +585,7 @@ export class ApexExteriorAbomination {
     (this.godRays.material as THREE.Material).dispose();
     this.stellatedSwarm.geometry.dispose();
     (this.stellatedSwarm.material as THREE.Material).dispose();
+    this.stellatedSwarm.dispose();
     this.neuralTethers.geometry.dispose();
     (this.neuralTethers.material as THREE.Material).dispose();
     this.zigguratStack.geometry.dispose();
@@ -1042,6 +1044,7 @@ export class MechaExteriorAbomination {
     }
     this.cubeSwarm.geometry.dispose();
     (this.cubeSwarm.material as THREE.Material).dispose();
+    this.cubeSwarm.dispose();
     this.prismaticArcs.geometry.dispose();
     (this.prismaticArcs.material as THREE.Material).dispose();
     this.beamVortex.geometry.dispose();
@@ -1054,10 +1057,12 @@ export class MechaExteriorAbomination {
     (this.nebulaMeat.material as THREE.Material).dispose();
     this.fractalGold.geometry.dispose();
     (this.fractalGold.material as THREE.Material).dispose();
+    this.fractalGold.dispose();
     this.crystalField.geometry.dispose();
     (this.crystalField.material as THREE.Material).dispose();
     this.senseOrgans.geometry.dispose();
     (this.senseOrgans.material as THREE.Material).dispose();
+    this.senseOrgans.dispose();
     this.shardMat.dispose();
   }
 }
@@ -1098,6 +1103,7 @@ export function attachGlyphExteriorShells(
     parent.add(mesh);
     shells.push(mesh);
   }
+  baseMat.dispose();
   return shells;
 }
 
@@ -1226,6 +1232,7 @@ export class GlyphAccentMotes {
   dispose(): void {
     this.mesh.geometry.dispose();
     (this.mesh.material as THREE.Material).dispose();
+    this.mesh.dispose();
   }
 }
 
@@ -1289,6 +1296,7 @@ export class GlyphFilamentBurst {
   dispose(): void {
     this.mesh.geometry.dispose();
     (this.mesh.material as THREE.Material).dispose();
+    this.mesh.dispose();
   }
 }
 
@@ -1348,6 +1356,7 @@ export class GlyphSporeAura {
   dispose(): void {
     this.mesh.geometry.dispose();
     (this.mesh.material as THREE.Material).dispose();
+    this.mesh.dispose();
   }
 }
 
@@ -1372,6 +1381,7 @@ export function attachGlyphWireHalos(
     halo.visible = false;
     halos.push(halo);
   }
+  haloMat.dispose();
   return halos;
 }
 

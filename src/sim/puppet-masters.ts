@@ -425,15 +425,20 @@ export class PuppetMasterSystem implements PortalCullable, DomeFeeder, BigTreeFa
 
   dispose(): void {
     for (const pm of this.pms) {
+      if (pm.light) {
+        pm.light.removeFromParent();
+        this.ctx.scene.remove(pm.light);
+      }
+      pm.ring.removeFromParent();
+      pm.mesh.removeFromParent();
+      this.ctx.scene.remove(pm.mesh);
       pm.mesh.geometry.dispose();
       pm.mat.dispose();
       pm.ring.geometry.dispose();
       (pm.ring.material as THREE.Material).dispose();
-      pm.mesh.removeFromParent();
-      pm.ring.removeFromParent();
-      pm.light?.removeFromParent();
     }
     this.pms.length = 0;
+    this.portalDowned.length = 0;
   }
 
   /**
@@ -542,7 +547,7 @@ export class PuppetMasterSystem implements PortalCullable, DomeFeeder, BigTreeFa
       const pu = pm.u;
       pu.uTime.value = t;
       pu.uSatiation.value = pm.satiation;
-      pu.uBoldness.value = clamp(boldness, 0, 1);
+      pu.uBoldness.value = clamp((boldness - PUP_BOLD_MIN) / (PUP_BOLD_MAX - PUP_BOLD_MIN), 0, 1);
       pu.uAgitation.value = clamp(agitation, 0, 1);
       pu.uHunt.value = clamp(hunt, 0, 1);
       if (!protectedHere) pm.ti += dt * 30;
@@ -594,9 +599,9 @@ export class PuppetMasterSystem implements PortalCullable, DomeFeeder, BigTreeFa
           // when no sanctuary is attached.
           const morph = Math.floor(rng() * ctx.morphs.length);
           if (!target) continue;
-          if (this.isProtectedAt(target.position.x, target.position.z)) {
-            // EntityManager.remorph consumes two draws for wf/wa. Mirror them when sanctuary blocks
-            // the write so later actors see the same seeded stream without touching the protected body.
+          if (target.userData.isNhi || this.isProtectedAt(target.position.x, target.position.z)) {
+            // EntityManager.remorph consumes two draws for wf/wa. Mirror them when NHI immunity or sanctuary
+            // blocks the write so later actors see the same seeded stream without touching the protected body.
             rng();
             rng();
             continue;

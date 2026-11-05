@@ -920,12 +920,14 @@ export class NhiObservatory {
     // single live toggle/panel exists and the click handler always targets THIS instance.
     doc.getElementById('cqm-nhi-toggle')?.remove();
     doc.getElementById('cqm-nhi-panel')?.remove();
-    doc.getElementById('cqm-nhi-style')?.remove(); // drop a prior <style> too, else it accumulates per re-mount
     injectPanelBaseCSS(doc);
-    const style = doc.createElement('style');
-    style.id = 'cqm-nhi-style';
+    let style = doc.getElementById('cqm-nhi-style') as HTMLStyleElement | null;
+    if (!style) {
+      style = doc.createElement('style');
+      style.id = 'cqm-nhi-style';
+      doc.head.appendChild(style);
+    }
     style.textContent = STYLE;
-    doc.head.appendChild(style);
 
     const toggle = doc.createElement('button');
     toggle.id = 'cqm-nhi-toggle';
@@ -970,6 +972,8 @@ export class NhiObservatory {
       const cell = doc.createElement('div');
       cell.className = 'cqm-nhi-cell';
       cell.title = VIEW_TITLES[i] ?? '';
+      cell.setAttribute('role', 'tab');
+      cell.setAttribute('aria-selected', 'false');
       // Click a view to expand it to the whole panel; click the expanded view to return to the grid.
       cell.addEventListener('click', () => this.toggleExpand(i));
       const cv = doc.createElement('canvas');
@@ -989,7 +993,11 @@ export class NhiObservatory {
   /** Expand view `i` to fill the panel, or collapse back to the 3×3 grid if it's already expanded. */
   private toggleExpand(i: number): void {
     this.expanded = this.expanded === i ? -1 : i;
-    this.cells.forEach((c, k) => c.classList.toggle('exp', k === this.expanded));
+    this.cells.forEach((c, k) => {
+      const isSelected = k === this.expanded;
+      c.classList.toggle('exp', isSelected);
+      c.setAttribute('aria-selected', String(isSelected));
+    });
     this.gridEl.classList.toggle('expanded', this.expanded >= 0);
     this.refreshLegend();
   }

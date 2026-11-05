@@ -462,6 +462,7 @@ export class EntityManager {
   /** Reserved material-organism births THIS frame, reset by {@link update}. Auto-split, behavior
    *  mitosis, sparse recovery, and post-update NHI swarms share it at the ultra tier. */
   private spawnsThisFrame = 0;
+  private readonly deathsScratch: Entity[] = [];
 
   constructor(ctx: SimContext) {
     this.ctx = ctx;
@@ -1107,7 +1108,8 @@ export class EntityManager {
       previous = index;
     }
 
-    const deaths: Entity[] = [];
+    const deaths = this.deathsScratch;
+    deaths.length = 0;
     for (let i = 0; i < count; i++) {
       const entity = list[indices[i]!];
       if (!entity) throw new RangeError('disposeManyDescending encountered an empty live slot');
@@ -1147,6 +1149,7 @@ export class EntityManager {
         onDeath(entity.position.x, entity.position.z, entity);
       }
     }
+    deaths.length = 0;
     return count;
   }
 
@@ -1509,6 +1512,7 @@ export class EntityManager {
         const ez = e.position.z;
         // Audit #33: defer the removal — one stable O(n + d) compaction after the (descending) loop
         // replaces d separate O(n) shifts. Survivor order is identical; death callbacks fire after it.
+        u.alive = false;
         this.pendingDeaths.push(i);
         // Sparse floor scales with the adaptive target (legacy 100 of 1000 = 10%; = maxEntities
         // on tiers ≤ 5,000, so byte-identical there). Keeps "repopulate when sparse" proportional
@@ -1524,7 +1528,7 @@ export class EntityManager {
             );
             // Audit #37: rescue births inherit from a surviving organism (rng-free pick) instead of
             // being trait-less founders, so this path no longer bypasses heredity.
-            const heir = list.length > 0 ? list[(i + r) % list.length] : undefined;
+            const heir = list.length > 0 ? list[(i + 1 + r) % list.length] : undefined;
             this.spawnWithinFrameBudget(SPAWN_AT, Math.floor(rng() * ctx.morphs.length), 1, heir);
           }
         }

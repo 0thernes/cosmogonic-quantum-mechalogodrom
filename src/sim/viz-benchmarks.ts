@@ -264,18 +264,20 @@ const VIZ_BENCHMARKS_GLSL: string[] = [
 export const VIZ_BENCHMARK_COUNT = VIZ_BENCHMARKS_GLSL.length;
 
 interface VizShaderMaterial extends MeshStandardMaterial {
-  userData: { vizBenchIndex?: number };
+  userData: { vizBenchIndex?: number; uEntropy?: { value: number } };
 }
 
 /** Inject benchmark `index` (0..24) GLSL into a mesh material's fragment pass. */
 export function applyVizBenchmarks(material: VizShaderMaterial, index: number): void {
   const bench = ((index % VIZ_BENCHMARK_COUNT) + VIZ_BENCHMARK_COUNT) % VIZ_BENCHMARK_COUNT;
+  const uEntropy = { value: 0.35 };
   material.userData.vizBenchIndex = bench;
+  material.userData.uEntropy = uEntropy;
   // #250: every benchmark closure has the same toString(), so three.js shared one compiled program
   // across all obelisks; key the program by benchmark index.
   material.customProgramCacheKey = () => `vizBench-${bench}`;
   material.onBeforeCompile = (shader) => {
-    shader.uniforms.u_entropy = { value: 0.35 };
+    shader.uniforms.u_entropy = uEntropy;
     const shaderCode = VIZ_BENCHMARKS_GLSL[bench] ?? '';
     const fn = bench + 1;
     shader.fragmentShader = shader.fragmentShader

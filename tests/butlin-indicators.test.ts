@@ -193,6 +193,11 @@ describe('Butlin 14/14 consciousness indicator receipts', () => {
     const im = [0, 0, 0, 0, 0, 0, 0, 0];
     const qphi = integratedInformation(re, im, 3);
     expect(qphi.phi).toBeGreaterThanOrEqual(0);
+    const invSqrt2 = Math.SQRT1_2;
+    const ghzRe = [invSqrt2, 0, 0, 0, 0, 0, 0, invSqrt2];
+    const ghzIm = [0, 0, 0, 0, 0, 0, 0, 0];
+    const ghzPhi = integratedInformation(ghzRe, ghzIm, 3);
+    expect(ghzPhi.phi).toBeGreaterThan(0);
     const activations = [0.8, 0.2, 0.3, 0.4];
     const adjacency = new Float32Array(16).fill(0.1);
     adjacency[0] = 0.5;

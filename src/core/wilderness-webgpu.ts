@@ -179,7 +179,8 @@ export class WildernessWebGpu {
       gpu.requestAdapter({ powerPreference: 'high-performance' }),
       timeoutMs,
     );
-    if (!adapter || adapter.info.isFallbackAdapter) throw new Error('No hardware WebGPU adapter');
+    if (!adapter || Boolean(adapter.info?.isFallbackAdapter))
+      throw new Error('No hardware WebGPU adapter');
     const device = await bounded(adapter.requestDevice(), timeoutMs, (late) => late.destroy());
     try {
       const module = device.createShaderModule({
@@ -195,7 +196,7 @@ export class WildernessWebGpu {
       );
       const info = adapter.info;
       const description =
-        [info.description, info.vendor, info.architecture, info.device]
+        [info?.description, info?.vendor, info?.architecture, info?.device]
           .filter(Boolean)
           .join(' / ') || 'Hardware WebGPU adapter (details withheld)';
       return new WildernessWebGpu(device, pipeline, description, timeoutMs);

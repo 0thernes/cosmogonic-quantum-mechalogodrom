@@ -17,13 +17,16 @@ import { readFileSync } from 'node:fs';
 /** Tracked, authored files (excludes node_modules via git; we also drop generated/worktree noise). */
 function trackedFiles(): string[] {
   const out = execSync('git ls-files', { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
-  return out
-    .split('\n')
-    .map((s) => s.trim())
-    .filter(Boolean)
-    .filter((p) => !/^(dist|coverage|native\/build)\//.test(p))
-    .filter((p) => !p.startsWith('.claude/worktrees/'))
-    .sort();
+  return Array.from(
+    new Set(
+      out
+        .split('\n')
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .filter((p) => !/^(dist|coverage|native\/build)\//.test(p))
+        .filter((p) => !p.startsWith('.claude/worktrees/')),
+    ),
+  ).sort();
 }
 
 function lineCount(path: string): number {

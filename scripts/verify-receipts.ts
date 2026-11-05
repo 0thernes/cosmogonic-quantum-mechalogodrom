@@ -76,7 +76,12 @@ async function coverageOutput(): Promise<CoverageTranscript> {
   // sporadically trips Bun's 5 s default and reds the gate on load, NOT on any correctness fault (they
   // pass in isolation). A generous 120 s ceiling makes the gate robust to contention while still catching
   // a genuine hang (which runs unbounded). It is a MAXIMUM, so fast tests are unaffected.
-  const transcript = run(['test', '--coverage', `--timeout=${GATE_COVERAGE_TEST_TIMEOUT_MS}`]);
+  const transcript = run([
+    'test',
+    'tests',
+    '--coverage',
+    `--timeout=${GATE_COVERAGE_TEST_TIMEOUT_MS}`,
+  ]);
   process.stdout.write(transcript.text);
   return transcript;
 }

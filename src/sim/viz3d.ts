@@ -345,7 +345,10 @@ export class Viz3DSystem {
       if (!ob || !row) continue; // invariant: dense ring; snapshot length ≥ TITANS
       const matter = Number.isFinite(row.matter) ? clamp(row.matter, 0, RESOURCE_REF) : 0;
       const energy = Number.isFinite(row.energy) ? clamp(row.energy, 0, RESOURCE_REF) : 0;
+      const entropy = Number.isFinite(row.entropy) ? clamp(row.entropy, 0, RESOURCE_REF) : 0;
       const war = Number.isFinite(row.war) ? clamp(row.war, 0, TITANS - 1) : 0;
+      const uEntropy = (ob.mat.userData as { uEntropy?: { value: number } }).uEntropy;
+      if (uEntropy) uEntropy.value = entropy / RESOURCE_REF;
 
       const target = OBELISK_H_MIN + (matter / RESOURCE_REF) * OBELISK_H_SPAN;
       // Tower smoothing runs every frame; obelisks ease on the slow cadence — widen α to keep a

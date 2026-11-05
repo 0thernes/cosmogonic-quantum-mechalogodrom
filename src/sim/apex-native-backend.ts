@@ -150,7 +150,7 @@ export class ReferenceApexBackend implements ApexKernelBackend {
     const W = Math.max(2, Math.min(256, Math.floor(w)));
     const H = Math.max(2, Math.min(256, Math.floor(h0)));
     let grid = new Float64Array(W * H);
-    const next = new Float64Array(W * H);
+    let next = new Float64Array(W * H);
     const rng = mulberry32(seed >>> 0 || 1);
     for (let i = 0; i < grid.length; i++) grid[i] = rng();
     const k = 0.2;
@@ -165,9 +165,7 @@ export class ReferenceApexBackend implements ApexKernelBackend {
           next[y * W + x] = c + k * (l + r + u + dn - 4 * c);
         }
       }
-      const tmp = grid;
-      grid = next.slice();
-      tmp.fill(0);
+      [grid, next] = [next, grid];
     }
     let hh = (0x811c9dc5 ^ (seed >>> 0)) >>> 0;
     for (let i = 0; i < grid.length; i++) hh = fnvFloat(hh, grid[i] ?? 0);

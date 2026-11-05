@@ -147,9 +147,10 @@ export function longestRunBits(values: ArrayLike<number>, bits = 8): number {
   let run = 0;
   let prev = -1;
   for (let i = 0; i < n; i++) {
-    const v = Math.trunc(values[i]!) >>> 0;
+    let v = Math.trunc(values[i]!);
+    if (v < 0) v = v >= -0x80000000 ? v >>> 0 : Math.abs(v);
     for (let b = bits - 1; b >= 0; b--) {
-      const bit = b < 32 ? (v >>> b) & 1 : Math.floor(v / 2 ** b) & 1;
+      const bit = b < 32 ? ((v >>> 0) >>> b) & 1 : Math.floor(v / 2 ** b) % 2;
       if (bit === prev) {
         run += 1;
       } else {
@@ -162,6 +163,23 @@ export function longestRunBits(values: ArrayLike<number>, bits = 8): number {
   return longest;
 }
 
+/** Wide-integer XOR popcount across up to 53 bits (avoids 32-bit `^` truncation when `bits > 32`). */
+function xorPopcount(a: number, b: number, bits: number): number {
+  let va = Math.trunc(a);
+  let vb = Math.trunc(b);
+  if (va < 0) va = va >= -0x80000000 ? va >>> 0 : Math.abs(va);
+  if (vb < 0) vb = vb >= -0x80000000 ? vb >>> 0 : Math.abs(vb);
+  if (bits <= 32) {
+    return popcount((va ^ vb) >>> 0, bits);
+  }
+  const lowBits = 32;
+  const highBits = Math.min(21, bits - 32);
+  const lowXor = ((va >>> 0) ^ (vb >>> 0)) >>> 0;
+  const highA = Math.floor(va / 0x100000000) >>> 0;
+  const highB = Math.floor(vb / 0x100000000) >>> 0;
+  return popcount(lowXor, lowBits) + popcount((highA ^ highB) >>> 0, highBits);
+}
+
 /**
  * Mean normalised Hamming distance between consecutive samples:
  * `mean(popcount(xᵢ ⊕ xᵢ₊₁) / bits)`. This is the upstream
@@ -171,13 +189,11 @@ export function longestRunBits(values: ArrayLike<number>, bits = 8): number {
  */
 export function hammingFlow(values: ArrayLike<number>, bits = 8): number {
   const n = values.length;
-  if (n < 2) return 0;
+  if (n < 2 || bits <= 0) return 0;
   let acc = 0;
   const m = n - 1;
   for (let i = 0; i < m; i++) {
-    const x = Math.trunc(values[i]!);
-    const y = Math.trunc(values[i + 1]!);
-    acc += popcount(x ^ y, bits) / bits;
+    acc += xorPopcount(values[i]!, values[i + 1]!, bits) / bits;
   }
   return acc / m;
 }
@@ -192,14 +208,12 @@ export function hammingFlow(values: ArrayLike<number>, bits = 8): number {
  */
 export function windowedXorEntropy(values: ArrayLike<number>, bits = 8): number {
   const n = values.length;
-  if (n < 2) return 0;
+  if (n < 2 || bits <= 0) return 0;
   let acc = 0;
   let used = 0;
   const m = n - 1;
   for (let i = 0; i < m; i++) {
-    const x = Math.trunc(values[i]!);
-    const y = Math.trunc(values[i + 1]!);
-    const frac = popcount(x ^ y, bits) / bits;
+    const frac = xorPopcount(values[i]!, values[i + 1]!, bits) / bits;
     if (frac > 0) {
       acc += -Math.log2(frac);
       used += 1;
@@ -273,9 +287,9 @@ export function randomnessReport(
   // Normalised sub-scores in [0, 1].
   const sEntropy = entropyMax > 0 ? Math.min(1, entropy / entropyMax) : 0;
   const sMonobit = 1 - Math.min(1, Math.abs(monobit - 0.5) / 0.5);
-  const sSerial = 1 - Math.min(1, Math.abs(serial));
+  const sSerial = n >= 2 && entropy > 0 ? 1 - Math.min(1, Math.abs(serial)) : 0;
   const sFlow = 1 - Math.min(1, Math.abs(flow - 0.5) / 0.5);
-  const quality = (sEntropy + sMonobit + sSerial + sFlow) / 4;
+  const quality = n < 2 || entropy === 0 ? 0 : (sEntropy + sMonobit + sSerial + sFlow) / 4;
 
   return {
     n,

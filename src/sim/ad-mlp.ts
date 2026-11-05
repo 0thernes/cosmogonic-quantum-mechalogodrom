@@ -75,41 +75,56 @@ interface ForwardTrace {
   w2Nodes: number[];
   b2Nodes: number[];
 }
+let FWD_X = new Int32Array(0);
+let FWD_HID = new Int32Array(0);
+const FWD_TRACE: ForwardTrace = {
+  outNodes: [],
+  w1Nodes: [],
+  b1Nodes: [],
+  w2Nodes: [],
+  b2Nodes: [],
+};
 function recordForward(tape: AdTape, net: Mlp, input: ArrayLike<number>): ForwardTrace {
   const { din, h, dout } = net;
-  const xNodes: number[] = []; // inputs are DATA (constants) — no gradient flows to them
-  for (let i = 0; i < din; i++) xNodes.push(adConst(tape, input[i] ?? 0));
+  if (FWD_X.length < din) FWD_X = new Int32Array(din);
+  if (FWD_HID.length < h) FWD_HID = new Int32Array(h);
+  const xNodes = FWD_X; // inputs are DATA (constants) — no gradient flows to them
+  const hidNodes = FWD_HID;
+  const { outNodes, w1Nodes, b1Nodes, w2Nodes, b2Nodes } = FWD_TRACE;
+  b1Nodes.length = h;
+  w1Nodes.length = h * din;
+  b2Nodes.length = dout;
+  w2Nodes.length = dout * h;
+  outNodes.length = dout;
 
-  const w1Nodes: number[] = [];
-  const b1Nodes: number[] = [];
-  const hidNodes: number[] = [];
+  for (let i = 0; i < din; i++) xNodes[i] = adConst(tape, input[i] ?? 0);
+
+  let w1Idx = 0;
   for (let j = 0; j < h; j++) {
     const bj = adVar(tape, net.b1[j] ?? 0);
-    b1Nodes.push(bj);
+    b1Nodes[j] = bj;
     let pre = bj;
     for (let i = 0; i < din; i++) {
       const w = adVar(tape, net.w1[j * din + i] ?? 0);
-      w1Nodes.push(w);
+      w1Nodes[w1Idx++] = w;
       pre = adAdd(tape, pre, adMul(tape, w, xNodes[i]!));
     }
-    hidNodes.push(adTanh(tape, pre)); // nonlinearity — the reason an MLP > a linear unit
+    hidNodes[j] = adTanh(tape, pre); // nonlinearity — the reason an MLP > a linear unit
   }
 
-  const w2Nodes: number[] = [];
-  const b2Nodes: number[] = [];
-  const outNodes: number[] = [];
+  let w2Idx = 0;
   for (let k = 0; k < dout; k++) {
     const bk = adVar(tape, net.b2[k] ?? 0);
-    b2Nodes.push(bk);
+    b2Nodes[k] = bk;
     let out = bk;
     for (let j = 0; j < h; j++) {
       const w = adVar(tape, net.w2[k * h + j] ?? 0);
-      w2Nodes.push(w);
+      w2Nodes[w2Idx++] = w;
       out = adAdd(tape, out, adMul(tape, w, hidNodes[j]!));
     }
-    outNodes.push(out); // linear output (regression / logit)
+    outNodes[k] = out; // linear output (regression / logit)
   }
-  return { outNodes, w1Nodes, b1Nodes, w2Nodes, b2Nodes };
+  return FWD_TRACE;
 }
 
 /** Forward-only prediction. Pure (no weight change, no rng); reuses the exact same code path as training. */

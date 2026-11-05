@@ -669,6 +669,7 @@ export class TitanSystem implements DomeFeeder, BigTreeFaunaSource {
   readonly warMatrix = new Uint8Array(TITAN_COUNT * TITAN_COUNT);
 
   private readonly ctx: SimContext;
+  private readonly root: THREE.Group;
   private readonly entities: EntityManager;
   /** F-HOLES: singularity system attached by the composition root; an active hole tugs the titans. */
   private singularity: SingularitySystem | null = null;
@@ -713,6 +714,7 @@ export class TitanSystem implements DomeFeeder, BigTreeFaunaSource {
     this.entities = entities;
     this.rd = rd;
     const root = new THREE.Group();
+    this.root = root;
     ctx.scene.add(root);
     for (let i = 0; i < TITAN_COUNT; i++) {
       const t = this.buildTitan(i, lore);
@@ -852,6 +854,9 @@ export class TitanSystem implements DomeFeeder, BigTreeFaunaSource {
       const d = this.portalDowned[k]!;
       if (t < d.at) continue;
       portalReappearSpot(this.portalCullSeq++, d.ti.group.position);
+      const stratum = d.ti.mi % 10;
+      d.ti.group.position.y =
+        PLATFORM_FLOOR + 36 + stratum * (PLATFORM_HEIGHT * 0.082) + Math.sin(d.ti.ph) * 18;
       d.ti.vel.set(0, 0, 0);
       d.ti.group.visible = true;
       d.ti.light.visible = true;
@@ -896,6 +901,8 @@ export class TitanSystem implements DomeFeeder, BigTreeFaunaSource {
     for (const geo of this.titanGeoCache.values()) geo.dispose();
     this.titanGeoCache.clear();
     this.titans.length = 0;
+    this.portalDowned.length = 0;
+    this.root.removeFromParent();
   }
 
   /** F-HOLES: wire in the singularity system so an active hole tugs the titans (or null to detach). */
@@ -1318,15 +1325,16 @@ export class TitanSystem implements DomeFeeder, BigTreeFaunaSource {
     const trad = PLATFORM_HALF * (0.18 + (ti.mi % 5) * 0.05);
     // Dual-frequency vertical path: primary + slow secondary (Super-Creature style full column use).
     const yAmp = PLATFORM_HEIGHT * (0.2 + (ti.mi % 4) * 0.055);
+    const stepScale = dt * 60;
     if (visitMode === BigTreeFaunaIntentMode.Travel) {
       const dx = (this.bigTreeTargetXs[ti.id] ?? p.x) - p.x;
       const dy = (this.bigTreeTargetYs[ti.id] ?? p.y) - p.y;
       const dz = (this.bigTreeTargetZs[ti.id] ?? p.z) - p.z;
-      const inv = 0.5 / (Math.sqrt(dx * dx + dy * dy + dz * dz) + 1e-6);
+      const inv = (0.5 * stepScale) / (Math.sqrt(dx * dx + dy * dy + dz * dz) + 1e-6);
       vel.x += dx * inv;
       vel.y += dy * inv;
       vel.z += dz * inv;
-      vel.multiplyScalar(0.9);
+      vel.multiplyScalar(Math.pow(0.9, stepScale));
     } else if (
       visitMode === BigTreeFaunaIntentMode.Calm ||
       visitMode === BigTreeFaunaIntentMode.Social
@@ -1371,16 +1379,16 @@ export class TitanSystem implements DomeFeeder, BigTreeFaunaSource {
           : 1;
       const tInv = (0.055 * intentGain) / (Math.sqrt(tdx * tdx + tdy * tdy + tdz * tdz) + 1e-6); // USER: faster (0.02→0.055) — visibly roams
       const wanderGain = protectedBeforeMove ? 0.25 : 1;
-      vel.x += tdx * tInv + Math.sin(t * 0.5 + ti.mi * 1.3) * 0.012 * wanderGain;
-      vel.y += tdy * tInv + Math.sin(t * 0.37 + ti.mi * 2.1) * 0.008 * wanderGain;
-      vel.z += tdz * tInv + Math.cos(t * 0.43 + ti.mi * 0.7) * 0.012 * wanderGain;
+      vel.x += (tdx * tInv + Math.sin(t * 0.5 + ti.mi * 1.3) * 0.012 * wanderGain) * stepScale;
+      vel.y += (tdy * tInv + Math.sin(t * 0.37 + ti.mi * 2.1) * 0.008 * wanderGain) * stepScale;
+      vel.z += (tdz * tInv + Math.cos(t * 0.43 + ti.mi * 0.7) * 0.012 * wanderGain) * stepScale;
       // Weak restore to OWN stratum only — never yank every titan to PLATFORM_MID_Y.
-      vel.y += (homeY - p.y) * 0.00055;
-      if (p.x > PLATFORM_HALF) vel.x -= 0.06;
-      else if (p.x < -PLATFORM_HALF) vel.x += 0.06;
-      if (p.z > PLATFORM_HALF) vel.z -= 0.06;
-      else if (p.z < -PLATFORM_HALF) vel.z += 0.06;
-      vel.multiplyScalar(protectedBeforeMove ? 0.9 : 0.97); // sanctuary settles rather than anchors
+      vel.y += (homeY - p.y) * 0.00055 * stepScale;
+      if (p.x > PLATFORM_HALF) vel.x -= 0.06 * stepScale;
+      else if (p.x < -PLATFORM_HALF) vel.x += 0.06 * stepScale;
+      if (p.z > PLATFORM_HALF) vel.z -= 0.06 * stepScale;
+      else if (p.z < -PLATFORM_HALF) vel.z += 0.06 * stepScale;
+      vel.multiplyScalar(Math.pow(protectedBeforeMove ? 0.9 : 0.97, stepScale)); // sanctuary settles rather than anchors
     }
     VA.copy(vel).multiplyScalar(dt * 60 * 0.14);
     p.add(VA);

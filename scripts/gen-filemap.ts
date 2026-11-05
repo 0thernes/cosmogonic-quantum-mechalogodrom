@@ -21,14 +21,17 @@ function summarize(text: string): string {
   return line ? (line[1] ?? '—').trim() : '—';
 }
 
-const rels = execFileSync('git', ['ls-files', '-z', '--', ROOT], {
-  encoding: 'utf8',
-  maxBuffer: 16 * 1024 * 1024,
-})
-  .split('\0')
-  .filter((path) => path.startsWith(`${ROOT}/`) && path.endsWith('.ts'))
-  .map((path) => path.slice(ROOT.length + 1).replace(/\\/g, '/'))
-  .sort();
+const rels = Array.from(
+  new Set(
+    execFileSync('git', ['ls-files', '-z', '--', ROOT], {
+      encoding: 'utf8',
+      maxBuffer: 16 * 1024 * 1024,
+    })
+      .split('\0')
+      .filter((path) => path.startsWith(`${ROOT}/`) && path.endsWith('.ts'))
+      .map((path) => path.slice(ROOT.length + 1).replace(/\\/g, '/')),
+  ),
+).sort();
 
 const groups = new Map<string, { file: string; sum: string }[]>();
 for (const rel of rels) {

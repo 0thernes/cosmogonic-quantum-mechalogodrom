@@ -306,7 +306,7 @@ export class AlphabetPantheonRender implements PortalImmune {
       void main() {
         vUv = uv;
         vColor = instanceColor;
-        vNormal = normal;
+        vNormal = normalize(normalMatrix * mat3(instanceMatrix) * normal);
         vRefBand = refBand;
         vPersona = instPersona;
 
@@ -550,7 +550,7 @@ export class AlphabetPantheonRender implements PortalImmune {
 
       void main() {
         vUv = uv;
-        vNormal = normal;
+        vNormal = normalize(normalMatrix * normal);
 
         // Tesseract / cage-like spatial warping: the apex is a folding 4D shadow.
         vec3 displaced = position;
@@ -1049,14 +1049,14 @@ export class AlphabetPantheonRender implements PortalImmune {
       }
       mesh.instanceMatrix.needsUpdate = true;
       if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-      this.glyphAccents.finish();
-      this.glyphFilaments.finish();
-      this.glyphSpores.finish();
       // Wire halos are a debug-only overlay, hidden by default (setWireHalosVisible(false)). Skip the
       // ~100 per-frame Matrix4.decompose/compose when they're invisible; update() runs every frame, so
       // they're correct within one frame of being toggled on.
       if (halo && halo.visible) syncGlyphWireHalos(mesh, halo, this.brainActivity, list);
     }
+    this.glyphAccents.finish();
+    this.glyphFilaments.finish();
+    this.glyphSpores.finish();
     // USER: the apex BODY was glacially slow (rotation ~minutes) — it should be VERY MOBILE. V121:
     // the body phase is the RATE-integrated apexAnim clock (chaos/apex/Tsotchke modulate its SPEED,
     // 3.2× base — faster + more dynamic than the old 2.4×) so live-signal steps no longer jerk it.

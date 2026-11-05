@@ -253,6 +253,7 @@ export async function calibrateWildernessCompute(
   const runWorkers = async (measured: boolean): Promise<void> => {
     checkActive();
     if (!pool || workerFailure) return;
+    let elapsed = 0;
     try {
       const inputs = cloneTasks(tasks);
       const start = now();
@@ -260,17 +261,19 @@ export async function calibrateWildernessCompute(
         Promise.all(inputs.map((task) => pool.executeAsync(task))),
         timeoutMs,
       );
-      checkActive();
-      const elapsed = now() - start;
-      if (!Number.isFinite(elapsed) || elapsed < 0) throw new Error('Invalid calibration clock');
+      elapsed = now() - start;
       checkResults(tasks, inputs, expected, results, receipt, true);
-      receipt.workerParityPassed = true;
-      if (measured) workerSamples.push(elapsed);
     } catch (error) {
+      checkActive();
       receipt.workerParityPassed = false;
       receipt.selected = 'cpu-main';
       workerFailure = String(error).slice(0, 300);
+      return;
     }
+    checkActive();
+    if (!Number.isFinite(elapsed) || elapsed < 0) throw new Error('Invalid calibration clock');
+    receipt.workerParityPassed = true;
+    if (measured) workerSamples.push(elapsed);
   };
   try {
     for (let round = 0; round < warmupRounds + sampleRounds; round++) {

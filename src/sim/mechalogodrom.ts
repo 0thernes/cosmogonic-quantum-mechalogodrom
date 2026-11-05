@@ -933,7 +933,7 @@ export class Mechalogodrom {
     }
 
     this.warpMass(lt);
-    this.driveCentre(lt, ease);
+    this.driveCentre(lt, ease, dt);
     this.driveVariants(lt, ease);
   }
 
@@ -946,7 +946,7 @@ export class Mechalogodrom {
   }
 
   /** Spin/colour/flash the fused centre rig (core, rim, mass, wire, spikes, rings). */
-  private driveCentre(t: number, ease: number): void {
+  private driveCentre(t: number, ease: number, dt = 1 / 60): void {
     const st = t * MECHA_EXTERIOR_TIME_SCALE;
     // Neutral dark-star skin: mostly black/ultraviolet, with poisonous chroma bursts from Tsotchke
     // pulse and apex vitality. The black core remains true absence; the body around it bleeds color.
@@ -1009,13 +1009,14 @@ export class Mechalogodrom {
     this.ringMat.color.setHSL((hue + 0.66) % 1, 0.9, 0.28);
 
     // Lab lattice: counter-rotating nested shells + orbiting probe nodes.
+    const stepScale = dt * 60;
     for (let i = 0; i < this.labShells.length; i++) {
       const sh = this.labShells[i];
       if (!sh) continue;
       const dir = i % 2 === 0 ? 1 : -1;
-      sh.rotation.x += dir * 0.004 * (1 + ease);
-      sh.rotation.y += dir * 0.006 * (1 + 0.5 * this.chaos);
-      sh.rotation.z += dir * 0.003;
+      sh.rotation.x += dir * 0.004 * (1 + ease) * stepScale;
+      sh.rotation.y += dir * 0.006 * (1 + 0.5 * this.chaos) * stepScale;
+      sh.rotation.z += dir * 0.003 * stepScale;
       sh.scale.setScalar(0.85 + 0.22 * ease + 0.04 * Math.sin(st * 1.1 + i));
     }
     this.labMat.opacity = 0.06 + 0.12 * ease + 0.05 * flash;

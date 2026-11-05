@@ -137,12 +137,34 @@ export function eshVMRun(prog: EshProgram, maxSteps = 4096): EshVMResult {
         stack.push(pop() > b ? 1 : 0);
         break;
       }
-      case EshOp.JMP:
-        pc = code[pc]!;
+      case EshOp.JMP: {
+        const target = code[pc]!;
+        if (target >= 0 && target < code.length) {
+          pc = target;
+        } else {
+          return {
+            result: stack.length ? stack[stack.length - 1]! : 0,
+            steps,
+            halted: false,
+            stack,
+          };
+        }
         break;
+      }
       case EshOp.JZ: {
         const addr = code[pc++]!;
-        if (pop() === 0) pc = addr;
+        if (pop() === 0) {
+          if (addr >= 0 && addr < code.length) {
+            pc = addr;
+          } else {
+            return {
+              result: stack.length ? stack[stack.length - 1]! : 0,
+              steps,
+              halted: false,
+              stack,
+            };
+          }
+        }
         break;
       }
       case EshOp.HALT:

@@ -68,14 +68,22 @@ export function triggerBrutalRelease(
   let substrate = 'Eshkol + FullCorpus';
   let effect = 'emperor-drain-possess-snap';
 
-  if (arch.includes('BROLY') || arch.includes('ASURA')) {
+  if (
+    arch.includes('BROLY') ||
+    arch.includes('ASURA') ||
+    arch.includes('SEPHIROTH') ||
+    arch.includes('STARKILLER') ||
+    arch.includes('RIDDICK')
+  ) {
     substrate = 'SpinGlass + Chaos + IrrepSym + NQS';
     effect = 'legendary-rage-planet-buster';
   } else if (
     arch.includes('VOID') ||
     arch.includes('KNUL') ||
     arch.includes('AZATHOTH') ||
-    arch.includes('ANTI')
+    arch.includes('ANTI') ||
+    arch.includes('GALACTUS') ||
+    arch.includes('DEVOUR')
   ) {
     substrate = 'QGT + QuantumQuake + DarkEnergy + PIMC + ULG';
     effect = 'void-consume-anti-matter-dream';
@@ -126,14 +134,15 @@ export function applyBrutalRelease(
   let reborn = 0;
   let warp = 0;
   const p = release.power;
+  const uSeed = rngSeed >>> 0;
   void quantumFlux;
 
   if (release.effect.includes('rage') || release.effect.includes('buster')) {
     // BROLY / ASURA: spin + irrep rage buster (full spin subs)
-    const sym = libirrepSymmetry(p, Math.max(1, (rngSeed % 4) + 1));
+    const sym = libirrepSymmetry(p, Math.max(1, (uSeed % 4) + 1));
     for (let i = 0; i < entities.length; i += 3) {
       const ent = entities[i];
-      if (ent && rngSeed % (i + 2) < p * 5) {
+      if (ent && uSeed % (i + 2) < p * 5) {
         ent.vitality *= 1 - p * 0.7 + (sym % 5) * 0.001;
         consumed++;
       }
@@ -206,8 +215,8 @@ export function applyBrutalRelease(
     release.effect.includes('transcend')
   ) {
     // GURREN / SIMON / TTGL: spiral drill transcendence (logo morph + eshkol evolution + coupling).
-    const turtle = turtleNew(rngSeed);
-    const morph = logoMorphScalar(turtle, rngSeed % 120, (p * 10) | 0);
+    const turtle = turtleNew(uSeed);
+    const morph = logoMorphScalar(turtle, uSeed % 120, (p * 10) | 0);
     for (let i = 0; i < entities.length; i += 2) {
       const ent = entities[i];
       if (ent) {
@@ -224,7 +233,7 @@ export function applyBrutalRelease(
     for (let i = 0; i < entities.length; i += 2) {
       const ent = entities[i];
       if (ent) {
-        const s = ((rngSeed + i * 7919) % 1000) / 1000;
+        const s = (((uSeed + i * 7919) >>> 0) % 1000) / 1000;
         ent.vitality = clamp(ent.vitality * (0.5 + s * p * 1.5), 0.01, 3.0);
         consumed++;
       }

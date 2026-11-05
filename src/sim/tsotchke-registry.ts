@@ -585,5 +585,6 @@ export function biologicProgramFingerprint(archonIdx: number, seed: number): num
   const e0 = getTsotchkeRepoByIndex(archonIdx);
   const e1 = getTsotchkeRepoByIndex(archonIdx + 3);
   const e2 = getTsotchkeRepoByIndex(archonIdx + 9);
-  return ((e0.wiring * 1000 + e1.wiring * e1.hue * 100 + e2.wiring) ^ seed) % 0xffffff;
+  const acc = e0.wiring * 1000 + e1.wiring * e1.hue * 100 + e2.wiring;
+  return ((acc ^ seed) >>> 0) % 0xffffff;
 }

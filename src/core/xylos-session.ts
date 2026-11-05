@@ -75,6 +75,15 @@ export class XylosSession {
     this.accumulator = 0;
   }
 
+  /** Synchronize entropy mode with World wild/deterministic toggle without disrupting active replay. */
+  setWildMode(wild: boolean): void {
+    if (!wild) {
+      this.setMode('seeded');
+    } else if (this.status.mode !== 'replay') {
+      this.setMode('live');
+    }
+  }
+
   /** Begin a bounded fresh life; its complete initial-to-final input sequence is retained. */
   startRecording(): void {
     if (this.status.mode === 'replay') this.setMode('seeded');

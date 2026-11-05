@@ -503,6 +503,8 @@
 
       const pct = (value) => `${Math.round(value * 100)}%`;
       const num = (value) => Number(value || 0).toFixed(3);
+      const HTML_ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+      const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => HTML_ESCAPES[c] || c);
 
       async function loadData() {
         const candidates = [
@@ -523,7 +525,7 @@
       }
 
       function kpi(label, value, note) {
-        return `<article class="tile"><div class="metric">${label}</div><div class="value">${value}</div><p class="muted">${note}</p></article>`;
+        return `<article class="tile"><div class="metric">${escapeHtml(label)}</div><div class="value">${escapeHtml(value)}</div><p class="muted">${escapeHtml(note)}</p></article>`;
       }
 
       function renderKpis(data) {
@@ -543,8 +545,8 @@
             const s = record.snapshot;
             return `<article class="entity">
               <div>
-                <h3>${record.profile.label}</h3>
-                <div class="entity-meta">${record.profile.kind} · ${record.activeFrameworks}/10 active · dominant ${record.dominantFramework}</div>
+                <h3>${escapeHtml(record.profile.label)}</h3>
+                <div class="entity-meta">${escapeHtml(record.profile.kind)} · ${escapeHtml(record.activeFrameworks)}/10 active · dominant ${escapeHtml(record.dominantFramework)}</div>
                 <div class="bar" aria-hidden="true"><span style="width:${pct(s.index)}"></span></div>
               </div>
               <div class="score">${num(s.index)}</div>
@@ -559,7 +561,10 @@
 
       function renderMatrix(data) {
         const head = `<div class="label-cell">entity</div>${data.frameworks
-          .map((f) => `<div class="label-cell" title="${f.name}">${f.id.slice(0, 3)}</div>`)
+          .map(
+            (f) =>
+              `<div class="label-cell" title="${escapeHtml(f.name)}">${escapeHtml(String(f.id ?? '').slice(0, 3))}</div>`,
+          )
           .join('')}`;
         const rows = data.entityRecords
           .map((record) => {
@@ -567,7 +572,7 @@
               .map((f, i) => {
                 const c = COLORS[i % COLORS.length];
                 const alpha = f.status === 'absent' ? 0 : Math.max(0.16, f.score);
-                return `<div class="cell" data-status="${f.status}" title="${f.id}: ${f.status} ${num(
+                return `<div class="cell" data-status="${escapeHtml(f.status)}" title="${escapeHtml(f.id)}: ${escapeHtml(f.status)} ${num(
                   f.score,
                 )}" style="background-color: color-mix(in srgb, ${c} ${Math.round(
                   alpha * 82,
@@ -576,7 +581,7 @@
                 </div>`;
               })
               .join('');
-            return `<div class="label-cell">${record.profile.kind}</div>${cells}`;
+            return `<div class="label-cell">${escapeHtml(record.profile.kind)}</div>${cells}`;
           })
           .join('');
         return `<section class="panel">
@@ -589,13 +594,13 @@
         const rows = data.frameworks
           .map(
             (f) => `<div class="source-row">
-              <strong>${f.id}</strong>
-              <span>${f.name} · grade ${f.grade} · ${f.falsifier}</span>
+              <strong>${escapeHtml(f.id)}</strong>
+              <span>${escapeHtml(f.name)} · grade ${escapeHtml(f.grade)} · ${escapeHtml(f.falsifier)}</span>
             </div>`,
           )
           .join('');
         return `<section class="panel">
-          <div class="panel-head"><h2>Falsifier Ledger</h2><span class="muted">${data.frameworks.length} frameworks</span></div>
+          <div class="panel-head"><h2>Falsifier Ledger</h2><span class="muted">${escapeHtml(data.frameworks.length)} frameworks</span></div>
           <div class="sources">${rows}</div>
         </section>`;
       }
@@ -700,7 +705,7 @@
             .getElementById('app')
             .insertAdjacentHTML(
               'beforeend',
-              `<section class="error"><strong>Data feed unavailable.</strong><p>${error.message}</p></section>`,
+              `<section class="error"><strong>Data feed unavailable.</strong><p>${escapeHtml(error.message)}</p></section>`,
             );
         });
     </script>

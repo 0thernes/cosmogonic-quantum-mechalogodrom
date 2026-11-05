@@ -194,6 +194,7 @@ interface Shoggoth {
  */
 export class ShoggothSystem implements PortalCullable, BigTreeFaunaSource {
   private readonly ctx: SimContext;
+  private readonly root: THREE.Group;
   /** PORTAL DEATH (USER): shoggoths blasted by the portal, awaiting their 5 s respawn ELSEWHERE. */
   private readonly portalDowned: { sg: Shoggoth; at: number }[] = [];
   private portalCullSeq = 0;
@@ -227,6 +228,7 @@ export class ShoggothSystem implements PortalCullable, BigTreeFaunaSource {
     this.ctx = ctx;
     this.entities = entities;
     const root = new THREE.Group();
+    this.root = root;
     ctx.scene.add(root);
     const rng = ctx.rng;
     const count = ctx.quality.isMobile ? SHOG_COUNT_MOBILE : SHOG_COUNT_DESKTOP;
@@ -380,6 +382,8 @@ export class ShoggothSystem implements PortalCullable, BigTreeFaunaSource {
       sg.group.removeFromParent();
     }
     this.shogs.length = 0;
+    this.portalDowned.length = 0;
+    this.root.removeFromParent();
   }
 
   /** F-HOLES: wire in the singularity system so an active hole tugs the shoggoths (or null to detach). */

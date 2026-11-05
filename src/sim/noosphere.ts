@@ -37,9 +37,14 @@ const FIELD_DIM = 8;
 const NOOSPHERE_TAU = 0.08;
 const COHERENCE_THRESHOLD = 0.72;
 const KURAMOTO_K = 1.2;
+const TAU = Math.PI * 2;
 
 function clamp01(v: number): number {
   return v < 0 ? 0 : v > 1 ? 1 : v;
+}
+
+function wrapPhase(p: number): number {
+  return ((p % TAU) + TAU) % TAU;
 }
 
 interface NoosphereSnapshot {
@@ -58,6 +63,7 @@ export class Noosphere {
     () => new Float32Array(FIELD_DIM),
   );
   private readonly archonPhases = new Float32Array(N_ARCHONS);
+  private readonly newPhases = new Float32Array(N_ARCHONS);
   private readonly field = new Float32Array(FIELD_DIM);
   private collectiveCoherence = 0;
   private kuramotoOrder = 0;
@@ -106,9 +112,9 @@ export class Noosphere {
 
     // Update Kuramoto phase: driven by ignition and novelty
     const naturalFreq = 0.1 + archonIdx * 0.02; // Hz (natural frequency spread)
-    this.archonPhases[archonIdx] =
-      ((this.archonPhases[archonIdx] ?? 0) + naturalFreq * 0.1 + ignition * 0.3 + novelty * 0.2) %
-      (2 * Math.PI);
+    this.archonPhases[archonIdx] = wrapPhase(
+      (this.archonPhases[archonIdx] ?? 0) + naturalFreq * 0.1 + ignition * 0.3 + novelty * 0.2,
+    );
   }
 
   /** Step the noospheric field one beat: aggregate all Archons. */
@@ -116,7 +122,7 @@ export class Noosphere {
     this.beatCount++;
 
     // Kuramoto coupling: ∂θᵢ/∂t = ωᵢ + (K/N)Σⱼ sin(θⱼ - θᵢ)
-    const newPhases = new Float32Array(N_ARCHONS);
+    const newPhases = this.newPhases;
     let sinSum = 0;
     let cosSum = 0;
     for (let i = 0; i < N_ARCHONS; i++) {
@@ -126,19 +132,20 @@ export class Noosphere {
           coupling += Math.sin((this.archonPhases[j] ?? 0) - (this.archonPhases[i] ?? 0));
         }
       }
-      newPhases[i] =
-        ((this.archonPhases[i] ?? 0) + (this.couplingK / N_ARCHONS) * coupling * 0.05) %
-        (2 * Math.PI);
+      newPhases[i] = wrapPhase(
+        (this.archonPhases[i] ?? 0) + (this.couplingK / N_ARCHONS) * coupling * 0.05,
+      );
       sinSum += Math.sin(newPhases[i] ?? 0);
       cosSum += Math.cos(newPhases[i] ?? 0);
     }
     this.archonPhases.set(newPhases);
     this.kuramotoOrder = clamp01(Math.sqrt(sinSum ** 2 + cosSum ** 2) / N_ARCHONS);
+    const meanPhase = Math.atan2(sinSum, cosSum);
 
-    // Field aggregation: mean + Kuramoto-weighted Hopfield recall
+    // Field aggregation: mean + relative Kuramoto phase-aligned Hopfield recall
     this.field.fill(0);
     for (let a = 0; a < N_ARCHONS; a++) {
-      const phaseWeight = clamp01(0.5 + 0.5 * Math.cos(this.archonPhases[a] ?? 0));
+      const phaseWeight = clamp01(0.5 * (1 + Math.cos((this.archonPhases[a] ?? 0) - meanPhase)));
       for (let d = 0; d < FIELD_DIM; d++) {
         this.field[d] =
           (this.field[d] ?? 0) + ((this.archonStates[a]?.[d] ?? 0) * phaseWeight) / N_ARCHONS;
@@ -163,9 +170,16 @@ export class Noosphere {
     }
     const tensorCoh = moonlabTensorContract(this.tA, this.tB, 4);
 
-    // Eshkol AD: adaptive coupling gain (∂coherence/∂K)
+    // Eshkol AD: adaptive coupling gain (∂coherence/∂K from actual Kuramoto phase alignment)
+    let pairAlign = 0;
+    for (let i = 0; i < N_ARCHONS; i++) {
+      for (let j = i + 1; j < N_ARCHONS; j++) {
+        pairAlign += Math.cos((this.archonPhases[j] ?? 0) - (this.archonPhases[i] ?? 0));
+      }
+    }
+    const normAlign = Math.max(0.05, (pairAlign / ((N_ARCHONS * (N_ARCHONS - 1)) / 2) + 1) * 0.5);
     const adGrad = eshkolADGradient(
-      (k: number) => clamp01(k / (k + 1)), // saturation function
+      (k: number) => clamp01((k * normAlign) / (k * normAlign + 1)),
       this.couplingK,
     );
     // Adaptive K: increase when below-critical, decrease when overcoupled
@@ -185,13 +199,14 @@ export class Noosphere {
     // quakePerturb: sustains creative diversity (prevents trivial fixed point, #134 additive phase shift)
     const qk = quakePerturb(this.kuramotoOrder, this.beatCount % 47, 0.06);
     const aIdx = this.beatCount % N_ARCHONS;
-    this.archonPhases[aIdx] =
-      ((this.archonPhases[aIdx] ?? 0) + (qk - 1) * 0.25 + 2 * Math.PI) % (2 * Math.PI);
+    this.archonPhases[aIdx] = wrapPhase((this.archonPhases[aIdx] ?? 0) + (qk - 1) * 0.25);
 
     // Collective coherence: combination of Kuramoto order + field coherence
+    let fieldEnergy = 0;
+    for (let d = 0; d < FIELD_DIM; d++) fieldEnergy += Math.abs(this.field[d] ?? 0);
     const fieldMean = this.field.reduce((s, v) => s + v, 0) / FIELD_DIM;
     const fieldVar = this.field.reduce((s, v) => s + (v - fieldMean) ** 2, 0) / FIELD_DIM;
-    const fieldCoherence = clamp01(1 - Math.sqrt(fieldVar));
+    const fieldCoherence = fieldEnergy < 1e-9 ? 0 : clamp01(1 - Math.sqrt(fieldVar));
     this.collectiveCoherence +=
       NOOSPHERE_TAU *
       (clamp01(0.5 * this.kuramotoOrder + 0.3 * fieldCoherence + 0.2 * Math.abs(tensorCoh)) -

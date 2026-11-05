@@ -302,6 +302,21 @@ export class AudioEngine {
   }
 
   /**
+   * Unlock / resume the AudioContext on a user gesture, even if `init()` or `setMusicOn(true)`
+   * was already called earlier before the first gesture (leaving `this.ctx` in `'suspended'`).
+   */
+  unlock(): void {
+    if (this.disposed) return;
+    this.init();
+    if (this.ctx && this.ctx.state === 'suspended') {
+      void Promise.resolve(this.ctx.resume()).catch(() => {});
+    }
+    if (this._musicOn && this.musicInterval === null) {
+      this.startScheduler();
+    }
+  }
+
+  /**
    * Lazy AudioContext init (legacy `initA`, lines 543-549). Safe to call repeatedly:
    * re-entry just resumes a suspended context. Call from the first user gesture.
    * Also installs the ambient auto-SFX interval and the visibilitychange
@@ -310,7 +325,9 @@ export class AudioEngine {
   init(): void {
     if (this.disposed) return;
     if (this.ctx) {
-      if (this.ctx.state === 'suspended') void this.ctx.resume();
+      if (this.ctx.state === 'suspended') {
+        void Promise.resolve(this.ctx.resume()).catch(() => {});
+      }
       return;
     }
     if (typeof window === 'undefined') return; // No browser context (e.g. unit tests): keep inert.

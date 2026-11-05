@@ -129,6 +129,16 @@ class ReliquaryPhysics {
     system_.SetGravity(JPH::Vec3::sZero());  // we apply a central harmonic well ourselves
   }
 
+  ~ReliquaryPhysics() {
+    JPH::BodyInterface& bi = system_.GetBodyInterface();
+    for (JPH::BodyID id : ids_) {
+      bi.RemoveBody(id);
+      bi.DestroyBody(id);
+    }
+    ids_.clear();
+    bodies_.clear();
+  }
+
   /** Seed `n` specimen bodies at the shared deterministic shell layout as Jolt rigid bodies. */
   void init(int n) {
     JPH::BodyInterface& bi = system_.GetBodyInterface();
@@ -224,7 +234,10 @@ class ReliquaryPhysics {
         const glm::vec3 rv = (i < prevVel_.size() && j < prevVel_.size())
                                  ? prevVel_[j] - prevVel_[i]
                                  : glm::vec3(0.0f);
-        const float speed = glm::length(rv);
+        const glm::vec3 nrm = d / dist;
+        const float vn = glm::dot(rv, nrm);
+        if (vn >= 0.0f) continue;  // separating or purely tangential slip
+        const float speed = -vn;
         if (speed > maxClose_) maxClose_ = speed;  // measurement (PHYSICIST: measure, don't guess)
         if (speed <= bestSpeed) continue;  // keep only the hardest hit this step
         const size_t s = bodies_[i].radius <= bodies_[j].radius ? i : j;  // the smaller cracks

@@ -74,7 +74,8 @@ export class Neuromodulation {
     this.rpe = r - this.rewardExpect; // ∈ (−1..1): better (+) or worse (−) than expected
     this.rewardExpect += REWARD_TAU * this.rpe; // move the baseline toward the realised reward
     this.da += DA_TAU * (clamp01(0.5 + 0.5 * this.rpe) - this.da); // RPE → dopamine (centred 0.5)
-    const v = valence < -1 ? -1 : valence > 1 ? 1 : valence; // tolerate out-of-range valence
+    const rawValence = Number.isFinite(valence) ? valence : 0;
+    const v = rawValence < -1 ? -1 : rawValence > 1 ? 1 : rawValence; // tolerate out-of-range or NaN valence
     this.sero += SERO_TAU * (clamp01(0.5 + 0.5 * v) - this.sero); // mood → serotonin
     this.ne += NE_TAU * (clamp01(0.4 * arousal + 0.4 * surprise + 0.2 * threat) - this.ne); // gain/alarm
     this.ach += ACH_TAU * (clamp01(0.5 * novelty + 0.5 * surprise) - this.ach); // expected uncertainty

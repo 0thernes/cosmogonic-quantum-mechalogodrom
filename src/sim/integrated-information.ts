@@ -283,7 +283,7 @@ function computeCutIntegration(
 
       const iInA = (aMask & (1 << i)) !== 0;
       const jInB = (bMask & (1 << j)) !== 0;
-      if (iInA && jInB) {
+      if ((iInA && jInB) || (!iInA && !jInB)) {
         crossFlow += flow;
       }
     }

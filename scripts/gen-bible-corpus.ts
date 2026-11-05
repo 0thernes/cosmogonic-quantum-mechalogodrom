@@ -147,14 +147,21 @@ function render(entries: Entry[]): string {
   return parts.join('\n');
 }
 
-const book = readFileSync(BOOK, 'utf8');
-const html = render(parseBook(book));
-let bible = readFileSync(BIBLE, 'utf8');
-if (!bible.includes(START) || !bible.includes(END)) {
-  throw new Error(`gen-bible-corpus: markers missing in ${BIBLE}`);
+function main(): void {
+  const book = readFileSync(BOOK, 'utf8');
+  const html = render(parseBook(book));
+  let bible = readFileSync(BIBLE, 'utf8');
+  if (!bible.includes(START) || !bible.includes(END)) {
+    throw new Error(`gen-bible-corpus: markers missing in ${BIBLE}`);
+  }
+  const before = bible.slice(0, bible.indexOf(START) + START.length);
+  const after = bible.slice(bible.indexOf(END));
+  writeFileSync(BIBLE, `${before}\n${html}\n${after}`);
+  const fmt = spawnSync('bunx', ['prettier', '--write', BIBLE], { stdio: 'inherit' });
+  if (fmt.status !== 0 && fmt.status !== null) {
+    throw new Error(`gen-bible-corpus: prettier failed on ${BIBLE} (exit ${fmt.status})`);
+  }
+  console.log(`gen-bible-corpus: injected ${html.split('<dt>').length - 1} entries into ${BIBLE}`);
 }
-const before = bible.slice(0, bible.indexOf(START) + START.length);
-const after = bible.slice(bible.indexOf(END));
-writeFileSync(BIBLE, `${before}\n${html}\n${after}`);
-spawnSync('bunx', ['prettier', '--write', BIBLE], { stdio: 'inherit' });
-console.log(`gen-bible-corpus: injected ${html.split('<dt>').length - 1} entries into ${BIBLE}`);
+
+if (import.meta.main) main();

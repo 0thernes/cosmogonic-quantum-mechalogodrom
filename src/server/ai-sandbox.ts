@@ -492,8 +492,18 @@ function validateCommand(raw: string): { ok: true; argv: string[] } | { ok: fals
       sawPattern = true; // the search regex/literal, not a path
       continue;
     }
-    const pathPart = bin === 'git' && a.includes(':') ? (a.split(':').pop() ?? a) : a;
+    if (bin === 'git' && a.startsWith(':')) {
+      return { ok: false, error: `argument "${a}" denied: git pathspec magic is not allowed` };
+    }
+    const hasGitRevColon = bin === 'git' && a.includes(':');
+    const pathPart = hasGitRevColon ? a.slice(a.indexOf(':') + 1) : a;
+    if (hasGitRevColon && (pathPart === '' || pathPart === '.' || pathPart === './')) {
+      return { ok: false, error: `argument "${a}" denied: git <rev>:<path> requires a file path` };
+    }
+    const alwaysPathGitSub = bin === 'git' && (argv[1] === 'ls-files' || argv[1] === 'status');
     const pathShaped =
+      hasGitRevColon ||
+      alwaysPathGitSub ||
       pathPart.includes('/') ||
       pathPart.includes('\\') ||
       pathPart.includes('.') ||
@@ -502,6 +512,9 @@ function validateCommand(raw: string): { ok: true; argv: string[] } | { ok: fals
     if (bin === 'git' && !pathShaped && !afterDoubleDash) continue; // git revs/patterns are not paths
     const c = confine(pathPart);
     if (!c.ok) return { ok: false, error: `argument "${a}" denied: ${c.error}` };
+    if (hasGitRevColon && relative(ROOT, c.abs) === '') {
+      return { ok: false, error: `argument "${a}" denied: git <rev>:<path> cannot target root` };
+    }
   }
   return { ok: true, argv };
 }

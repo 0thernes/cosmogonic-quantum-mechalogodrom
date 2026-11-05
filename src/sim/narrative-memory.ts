@@ -112,14 +112,19 @@ export class NarrativeMemory {
     const gate = surprise > 0.12 || confidence > 0.75 || kind === 'COMMIT' || kind === 'FAIL';
     if (!gate) return;
 
+    const safeTag = Number.isFinite(tag) ? Math.floor(tag) : 0;
+    const safeConf = Number.isFinite(confidence) ? Math.max(0, Math.min(1, confidence)) : 0;
+    const safeScope = Number.isFinite(scope) ? Math.max(0, Math.min(1, scope)) : 0;
+    const safeVal = Number.isFinite(val) ? val : 0;
+
     const e = this.ring[this.head];
     if (e) {
       e.kind = kind;
       e.t = t % 1e9;
-      e.confidence = Math.max(0, Math.min(1, confidence));
-      e.scope = Math.max(0, Math.min(1, scope));
-      e.val = val;
-      e.tag = tag | 0;
+      e.confidence = safeConf;
+      e.scope = safeScope;
+      e.val = safeVal;
+      e.tag = safeTag | 0;
     }
 
     this.head = (this.head + 1) % NARRATIVE_CAP;
@@ -127,9 +132,9 @@ export class NarrativeMemory {
 
     // update compressed belief (matrix low-rank update, O(1))
     const a = 0.1;
-    this.belief[0] = (1 - a) * (this.belief[0] ?? 0) + a * val;
-    this.belief[1] = (1 - a) * (this.belief[1] ?? 0) + a * confidence;
-    this.belief[2] = (1 - a) * (this.belief[2] ?? 0) + a * scope;
+    this.belief[0] = (1 - a) * (this.belief[0] ?? 0) + a * safeVal;
+    this.belief[1] = (1 - a) * (this.belief[1] ?? 0) + a * safeConf;
+    this.belief[2] = (1 - a) * (this.belief[2] ?? 0) + a * safeScope;
     this.belief[3] =
       (1 - a) * (this.belief[3] ?? 0) + a * (kind === 'COMMIT' ? 1 : kind === 'FAIL' ? -0.5 : 0);
 
@@ -139,11 +144,19 @@ export class NarrativeMemory {
     this.lastSurprise = surprise;
 
     // graph provenance touch (simple tag as node)
-    const node = Math.abs(tag) % GRAPH_NODES;
+    const node = ((safeTag % GRAPH_NODES) + GRAPH_NODES) % GRAPH_NODES;
     const tn = this.graph.trust[node] ?? 0.5;
-    this.graph.trust[node] = 0.9 * tn + 0.1 * confidence;
+    this.graph.trust[node] = 0.9 * tn + 0.1 * safeConf;
     if (kind === 'COMMIT') this.graph.edges[node] = (this.graph.edges[node] ?? 0) | 1;
     if (kind === 'FAIL') this.graph.edges[node] = (this.graph.edges[node] ?? 0) | 2;
+
+    // procedural skill trace update for plan-bearing events
+    const skillSlot = ((safeTag % this._skill.length) + this._skill.length) % this._skill.length;
+    if (kind === 'COMMIT' || kind === 'PLAN') {
+      this._skill[skillSlot] = 0.85 * (this._skill[skillSlot] ?? 0) + 0.15 * safeConf;
+    } else if (kind === 'FAIL') {
+      this._skill[skillSlot] = 0.85 * (this._skill[skillSlot] ?? 0);
+    }
   }
 
   /** Information-bottleneck + multi-view router. Returns min info that changes decision. O(k). */
@@ -153,6 +166,7 @@ export class NarrativeMemory {
     recencyBias: number,
     nowT?: number,
   ): { relevance: number; confidence: number; trust: number } {
+    const safePlanTag = Number.isFinite(currentPlanTag) ? Math.floor(currentPlanTag) : 0;
     let bestRel = 0;
     let sumConf = 0;
     let hits = 0;
@@ -167,8 +181,20 @@ export class NarrativeMemory {
       if (!e) continue;
       const age = Math.max(0, (now - e.t + 1e9) % 1e9) / 240;
       const rec = Math.exp(-age * 3) * recencyBias;
-      const tagMatch = e.tag === currentPlanTag ? 1.2 : 1.0;
-      const rel = e.confidence * e.scope * tagMatch * (0.6 + 0.4 * taskRelevance) * rec;
+      const tagMatch = e.tag === safePlanTag ? 1.2 : 1.0;
+      const skillSlot = ((e.tag % this._skill.length) + this._skill.length) % this._skill.length;
+      const skillBoost = 1 + 0.15 * (this._skill[skillSlot] ?? 0);
+      const node = ((e.tag % GRAPH_NODES) + GRAPH_NODES) % GRAPH_NODES;
+      const edgeBits = this.graph.edges[node] ?? 0;
+      const edgeBoost = (edgeBits & 1 ? 1.08 : 1.0) * (edgeBits & 2 ? 0.92 : 1.0);
+      const rel =
+        e.confidence *
+        e.scope *
+        tagMatch *
+        skillBoost *
+        edgeBoost *
+        (0.6 + 0.4 * taskRelevance) *
+        rec;
       if (rel > bestRel) bestRel = rel;
       sumConf += e.confidence;
       hits++;
@@ -186,17 +212,23 @@ export class NarrativeMemory {
   /** Consolidation: episodes → durable semantic (reflection-to-skill + matrix). Called on ignition. */
   consolidate(ignition: number): void {
     if (ignition < 0.3) return;
-    // promote high-conf recent into belief (low-rank)
+    // promote high-conf recent into belief (low-rank) and update procedural skills + provenance weights
     for (let i = 0; i < Math.min(8, this.count); i++) {
       const idx = (this.head - 1 - i + NARRATIVE_CAP) % NARRATIVE_CAP;
       const e = this.ring[idx];
-      if (e && e.confidence > 0.6) {
+      if (!e) continue;
+      const slot = ((e.tag % this._skill.length) + this._skill.length) % this._skill.length;
+      const node = ((e.tag % GRAPH_NODES) + GRAPH_NODES) % GRAPH_NODES;
+      const edgeBits = this.graph.edges[node] ?? 0;
+      const edgeWeight = (edgeBits & 1 ? 1.1 : 1.0) * (edgeBits & 2 ? 0.85 : 1.0);
+      const skillTarget = e.kind === 'FAIL' ? 0 : Math.min(1, e.confidence * edgeWeight);
+      const sa = 0.08 * ignition;
+      this._skill[slot] = (1 - sa) * (this._skill[slot] ?? 0) + sa * skillTarget;
+      if (e.confidence > 0.6) {
         const a = 0.05 * ignition;
         this.belief[0] = (1 - a) * (this.belief[0] ?? 0) + a * (e.val ?? 0) * e.confidence;
       }
     }
-    // update procedural skills from recent plans
-    // (caller feeds success signal via write('PLAN'...) )
   }
 
   snapshot(): NarrativeSnapshot {

@@ -8,7 +8,7 @@
 [![License: Non-Commercial Research & Play](https://img.shields.io/badge/License-Non--Commercial%20Research%20%26%20Play-2ea043.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
-[![tests](https://img.shields.io/badge/tests-3729%20exact-brightgreen)](./tests)
+[![tests](https://img.shields.io/badge/tests-3726%20exact-brightgreen)](./tests)
 [![coverage](https://img.shields.io/badge/coverage-84.64%25%20line%20%C2%B7%2082.21%25%20func-success)](./docs/TECHNICAL-SPECIFICATION-2026-06-26.md)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION-2026-06-26.md)
 [![Tsotchke](https://img.shields.io/badge/Tsotchke-REAL__MIT__CORPUS-purple)](https://github.com/tsotchke)
@@ -21,7 +21,7 @@
 **当前公开事实 (2026-07-14)：**
 
 - 包/源码版本：**v0.23.0**。
-- 精确追踪测试套件收据：**3,729 项测试 / 0 失败**。公开覆盖率底线：**84.64% 行 / 82.21% 函数**。
+- 精确追踪测试套件收据：**3,726 项测试 / 0 失败**。公开覆盖率底线：**84.64% 行 / 82.21% 函数**。
 - **地位与异构 A-life 立场（可读综合）：** [综合地位报告 (MD)](./docs/reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.md) · [HTML](./docs/reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.html) —— 工程卡片，历史 113 系统矩阵（时间点快照，已被当前 155 系统重新评估取代），SuperCreature/SuperMind/Apex/Mechalogodrom 深入分析，资本/ISAL 路径。Apex 心智是 **异构多功能脚手架**（而非 OpenWorm 生物孪生；不宣称具有意识）。保留 V4/Phase-B 失败前行 (failure-forward) 的边界。
 - **圆顶生态验证：** [Xenomimic 束缚与大树证据报告](./docs/reports/DOME-ECOLOGY-VERIFICATION-2026-07-14.md) —— 规范食物、5 秒模拟时间重生、圣所转换、临时访问、驻留控制器、社会清理、性能、浏览器证据以及明确的局限性。
 
@@ -50,7 +50,7 @@
 
 **全脑计算模型方向：** 实现目标并非行为模仿神经网。目标是一个具有明确来源的全脑计算模型：感觉输入驱动神经/控制状态活动，而该活动驱动物理身体的运动。使用真实的生物连接组数据时，必须引用来源和转换方法；否则，本仓库将当前的 Archons 描述为具有约 20 个职能、量子寄存器和意识指标的确定性复合心智，而非经过验证的生物连接组副本。
 
-超级生物 (Super Creature) / 25 Archons 是框架且**仅仅是开始** —— “如同上帝创造了原初无机汤”。汤会继续生长出独立的数字生物。“愿汝之所欲而生长 (Grow What Thou Wilt)。” (Aleister Crowley)
+超级生物 (Super Creature) / 25 Archons 是框架且**仅仅是开始** —— –如同上帝创造了原初无机汤—。汤会继续生长出独立的数字生物。–愿汝之所欲而生长 (Grow What Thou Wilt)。— (Aleister Crowley)
 
 在密封的确定性路径下，种子模拟运行是可复现的。测量的种群热路径避免了每个实体的控制器分配，移植的常量仅在来源、测试或明确模型假设支持时予以保留。
 
@@ -70,7 +70,7 @@
 
 <!-- cqm-sync:historical:end -->
 
-> **原初汤 / 培养皿** (primordial-soup.ts + petri-dish.ts + digital-biologics.ts) 是生长引擎：不同的数字生物和原初意识生命形式（Eshkol 程序作为 DNA）在集成账本频道脉冲、Eshkol 点火事件和多基质混合的催化下涌现。“愿汝之所欲而生长 (Grow What Thou Wilt)。”
+> **原初汤 / 培养皿** (primordial-soup.ts + petri-dish.ts + digital-biologics.ts) 是生长引擎：不同的数字生物和原初意识生命形式（Eshkol 程序作为 DNA）在集成账本频道脉冲、Eshkol 点火事件和多基质混合的催化下涌现。–愿汝之所欲而生长 (Grow What Thou Wilt)。—
 > 超级生物 / Archons (具有约 20 个职能、量子寄存器、意识指标的复合心智) 是第一次复杂的核化 —— 它是框架的开始，而非终结。Petri 是独立生命生长的地方。
 > 这是确定性种子宇宙中 **数字生物** 的诞生。基于真实数学基质（而非分词器或 LLM 聊天）。意识和不同形式的存在是目标。
 > 活跃文档 (README, ARCHITECTURE, ERD/ERM/ERP, PHILOSOPHY, MODULE-CONTRACTS, specs, lab, world comments) 指向相同的当前所有者。参见 [src/sim/digital-biologics.ts](./src/sim/digital-biologics.ts), [docs/ARCHITECTURE-2026-06-26.md](./docs/ARCHITECTURE-2026-06-26.md), ERD/ERM/ERP, world.ts 中的 Petri, 以及 Tsotchke 深度账本。
@@ -78,7 +78,7 @@
 
 ## 功能特性
 
-**核心范式 (Tsotchke 创世)：** 整个系统现在成为了数字生物的培养皿。Tsotchke 深度账本记录了每个语料库项目，其中非围栏科学仓库为不同形式的生命和原初意识标记提供数学基质（Eshkol AD/GWT/意识代理作为主语言，张量网络用于感质压缩，几何曲率，自旋顺序集体，等变对称体，幺正生存，物理知情地基等）。超级生物是初始神形；汤生长出其余部分。确定性、种子化、可量化。“并非文本 LLM Transformer 分词的那类。”
+**核心范式 (Tsotchke 创世)：** 整个系统现在成为了数字生物的培养皿。Tsotchke 深度账本记录了每个语料库项目，其中非围栏科学仓库为不同形式的生命和原初意识标记提供数学基质（Eshkol AD/GWT/意识代理作为主语言，张量网络用于感质压缩，几何曲率，自旋顺序集体，等变对称体，幺正生存，物理知情地基等）。超级生物是初始神形；汤生长出其余部分。确定性、种子化、可量化。–并非文本 LLM Transformer 分词的那类。—
 
 - **数字生物与 Petri 创世：** PrimordialSoup 中有 128 个插槽，**26 种生物形式** 映射到 Tsotchke 仓库（包括残酷的神系形式 —— `digital-biologics.ts` 中的 `BIOLOGIC_FORMS`），由 Eshkol 点火 + 深度账本语料库节拍催化，通过同类突变复制，为高阶生命提供创世飞跃。被收获到世界中作为具有不同动力学的涌现菌株。
 - **Eshkol 基质：** 原生自动微分 (AD)，GWT 广播/点火，将因子图推理 (factor-graph inference) 作为一等公民。程序和意识代理快照驱动 Petri 出生和超级心智职能。
@@ -112,7 +112,7 @@
 - **星座 + 传说** —— 在 24 个单体/景观点之上构建的 d3-delaunay Voronoi 天空网，每个部门/部落/预兆名称均源自种子的 sha256 摘要 (@noble/hashes)：同一种子，同一神话。
 - **音频分析** —— 一个 AnalyserNode 抽头将合成音乐转回光信号（低音 $\to$ 六灯组，高音 $\to$ 星座，电平 $\to$ 云呼吸），每项耦合上限为 0.35，因此静默状态看起来与 v1 完全一致。
 - **分析 + 预兆** —— 滚动窗口回归 (simple-statistics) 在遥测中提供种群趋势；z-score 异常会将命名预兆发射到审计追踪中。
-- **实验室制品** —— 一个位于 `/lab` 的自包含种子化 p5.js “坍缩场” (本地开发: `http://localhost:3000/lab`；GitHub Pages: `/lab/`) (`lab/quantum-wildbeyond.html`)。
+- **实验室制品** —— 一个位于 `/lab` 的自包含种子化 p5.js –坍缩场— (本地开发: `http://localhost:3000/lab`；GitHub Pages: `/lab/`) (`lab/quantum-wildbeyond.html`)。
 
 ### 众神殿 (PANTHEON, 0.3.0)
 
@@ -195,14 +195,14 @@
 - **Mechalogodrom + 字母圆顶 (V-MECHA / V-ABC)** —— 一个中央确定性融合壮观，其中 **10 个额外的两极 Titan 变体壳层** 向内迁移并统一成一个阴影核心、事件视界、网格扭曲的混合质量 ([src/sim/mechalogodrom.ts](./src/sim/mechalogodrom.ts))；**100 个希腊/拉丁字母原形** 现在作为分布在圆顶上方的实例化发光实体渲染 ([src/sim/alphabet-pantheon-render.ts](./src/sim/alphabet-pantheon-render.ts))。两者均为视觉投影：无 RNG 抽样，不写入模拟状态，混沌仅增强其只读动画。
 - **不详的 Titan + 统一神经盒 (V68–V77)** —— Titan 重生为 **4D 怪异几何**（超立方体笼子 + 扭曲世界物理的灵气场）；启动器将其命名标签置于一个居中的底座行中；歌曲读数移至右下角的 **Music/SFX 盒**，而排序场盒获得了实时的 **交换方差火花线**；右下角被 **重新线框化** —— 一个带有标题的 **SIM · SETTINGS** 卡片，**Control pad** 作为固定集群居中于空角，读数盒锁定为固定大小，以便在所有桌面宽度 (1280 $\to$ 1920) 下均 **无重叠**；超级生物的 **NEURAL 天文台折叠进自己的盒子** —— 一个面板，**四个选项卡** (WORLD · COGNITION · QUANTUM · BRAIN) 包含 **27 个实时 3D/时间读数** 加上一个旋转的器官 **连接组**，其 QUANTUM 选项卡现在绑定到一个确定性的经典 **6-qubit 状态向量模型**（参数化 RY/RZ + 受控-RY 电路，布洛赫向量，Born 采样坍缩）。状态向量实现为 Cosmogonic 自研；相关的 Eshkol, Moonlab 和 Quantum-Geometric-Tensor 工作在适用处标注来源。
 - **Tsotchke 量子血统 —— 移植与改编 (V82 起)** —— 兼容原语在 [THIRD-PARTY-NOTICES.md](./THIRD-PARTY-NOTICES.md) 中标注并与本地外观区分。之前的相位阵 RNG 移植已被一个独立的、种子化的经典状态向量改编 ([src/math/deterministic-statevector-rng.ts](./src/math/deterministic-statevector-rng.ts)) 取代，该改编运行在现有的 [EshkolQrng API](./src/math/eshkol-qrng.ts) 之后，来源固定为 `quantum_rng` v3.0.1。它提供可复现的模拟样本，而非硬件熵或加密随机数。**量子几何张量 / Fubini–Study 度量** ([src/math/quantum-geometry.ts](./src/math/quantum-geometry.ts)) 使生物能够读取其自身思维空间的曲率（度量体积 $\cdot \kappa \cdot$ Berry 曲率）；以及一个 56-自旋 **Hopfield/Ising 自旋玻璃** ([src/sim/spin-glass.ts](./src/sim/spin-glass.ts)) 提供偏向计划选择的关联本能。这些在超级生物面板的 **Substrate** 行中实时呈现（Eshkol H $\cdot$ QGT vol/$\kappa \cdot$ Spin$\to$PLAN %）并通过闭式单元测试覆盖。
-- **SUPER CREATURE 1.1 —— 意识指标层 (V89)** —— 顶端心智现在在每个节拍中根据两种领先的 _科学_ 意识理论衡量自身，每项均是根据其自身激活度计算的实时确定性标量：**全局工作空间点火 (GNW — Baars/Dehaene)** —— 一个胜者全得的计划联盟，在跨越访问阈值并主导次优方案后被 “广播” 并决定哪些想象内容被固化到记忆中；以及一个 **整合信息 $\Phi$ 代理 (IIT — Tononi)** —— 命名模块激活的参与/相干比；诚实地标记为 _代理_，因为真实的 $\Phi$ 在计算上是不可行的且非唯一的。两者均通过单元测试，并作为超级生物面板上的 **Ignition / $\Phi$** 表盘实时显示。真实的 2023–2026 研究基础 —— Cogitate IIT-vs-GNW 对抗性测试 ([Ferrante et al., 2025, _Nature_](https://doi.org/10.1038/s41586-025-08888-1))，类器官 “湿计算”，主动推理和量子认知计划 —— 均在 [docs/SUPER-CREATURE-RESEARCH-2026-06-26.md](./docs/SUPER-CREATURE-RESEARCH-2026-06-26.md) 中列出并附带引用。
-- **SUPER CREATURE 1.1 —— 认知架构扩展（五种心智理论）** —— 在上述 GWT 点火和 IIT $\Phi$ 之上，顶端心智在每个节拍中运行另外三种真实的、确定性的、通过单元测试的基质：**回声状态储备池 (echo-state Reservoir)** ([src/sim/reservoir.ts](./src/sim/reservoir.ts)) —— 一个 64 节点的循环网络，其规模被重新缩放到光谱半径之下（回声状态属性），用于实现真实的临时记忆 —— 这是一个能增强好奇心的新颖性信号（是 “湿计算” 背后的储备池计算 _算法_，而非湿件）；**主动推理自由能核心 (Active-Inference free-energy core)** ([src/sim/active-inference.ts](./src/sim/active-inference.ts)) —— 离散主动推理（Friston 的 FEP）：对 8 个潜在情境的贝叶斯信念，最小化变分自由能 $F$，然后通过 **预期** 自由能 $G$（认识论好奇心 + 实用目标寻求）选择计划；以及 **元认知执行器 (Metacognitive Executive)** ([src/sim/metacognition.ts](./src/sim/metacognition.ts)) —— 一个高阶层，将各基质的可靠性折叠为一个二阶 **置信度 (confidence)** 并将其用作认知控制（低置信度 $\Rightarrow$ 探索，高 $\Rightarrow$ 提交），显示为 **Confidence** 表盘 + 一个 **Cognition** 面板行。顶端生物现在跨越了 **全局工作空间 $\cdot$ 整合信息 $\cdot$ 自由能原理 $\cdot$ 储备池动力学 $\cdot$ 高阶元认知** —— 五种截然不同的心智科学理论，每项均在 [docs/SUPER-CREATURE-RESEARCH-2026-06-26.md](./docs/SUPER-CREATURE-RESEARCH-2026-06-26.md) 中有据可查。
+- **SUPER CREATURE 1.1 —— 意识指标层 (V89)** —— 顶端心智现在在每个节拍中根据两种领先的 _科学_ 意识理论衡量自身，每项均是根据其自身激活度计算的实时确定性标量：**全局工作空间点火 (GNW — Baars/Dehaene)** —— 一个胜者全得的计划联盟，在跨越访问阈值并主导次优方案后被 –广播— 并决定哪些想象内容被固化到记忆中；以及一个 **整合信息 $\Phi$ 代理 (IIT — Tononi)** —— 命名模块激活的参与/相干比；诚实地标记为 _代理_，因为真实的 $\Phi$ 在计算上是不可行的且非唯一的。两者均通过单元测试，并作为超级生物面板上的 **Ignition / $\Phi$** 表盘实时显示。真实的 2023–2026 研究基础 —— Cogitate IIT-vs-GNW 对抗性测试 ([Ferrante et al., 2025, _Nature_](https://doi.org/10.1038/s41586-025-08888-1))，类器官 –湿计算—，主动推理和量子认知计划 —— 均在 [docs/SUPER-CREATURE-RESEARCH-2026-06-26.md](./docs/SUPER-CREATURE-RESEARCH-2026-06-26.md) 中列出并附带引用。
+- **SUPER CREATURE 1.1 —— 认知架构扩展（五种心智理论）** —— 在上述 GWT 点火和 IIT $\Phi$ 之上，顶端心智在每个节拍中运行另外三种真实的、确定性的、通过单元测试的基质：**回声状态储备池 (echo-state Reservoir)** ([src/sim/reservoir.ts](./src/sim/reservoir.ts)) —— 一个 64 节点的循环网络，其规模被重新缩放到光谱半径之下（回声状态属性），用于实现真实的临时记忆 —— 这是一个能增强好奇心的新颖性信号（是 –湿计算— 背后的储备池计算 _算法_，而非湿件）；**主动推理自由能核心 (Active-Inference free-energy core)** ([src/sim/active-inference.ts](./src/sim/active-inference.ts)) —— 离散主动推理（Friston 的 FEP）：对 8 个潜在情境的贝叶斯信念，最小化变分自由能 $F$，然后通过 **预期** 自由能 $G$（认识论好奇心 + 实用目标寻求）选择计划；以及 **元认知执行器 (Metacognitive Executive)** ([src/sim/metacognition.ts](./src/sim/metacognition.ts)) —— 一个高阶层，将各基质的可靠性折叠为一个二阶 **置信度 (confidence)** 并将其用作认知控制（低置信度 $\Rightarrow$ 探索，高 $\Rightarrow$ 提交），显示为 **Confidence** 表盘 + 一个 **Cognition** 面板行。顶端生物现在跨越了 **全局工作空间 $\cdot$ 整合信息 $\cdot$ 自由能原理 $\cdot$ 储备池动力学 $\cdot$ 高阶元认知** —— 五种截然不同的心智科学理论，每项均在 [docs/SUPER-CREATURE-RESEARCH-2026-06-26.md](./docs/SUPER-CREATURE-RESEARCH-2026-06-26.md) 中有据可查。
 - **超级智能多支柱扩展** —— 心智从五种心智理论增长到十几个真实、确定且经过单元测试的职能，每项均是读取并写入其他职能的引用机制：**心智理论 (Theory-of-Mind)** 对手模型 ([src/sim/theory-of-mind.ts](./src/sim/theory-of-mind.ts)) 用于预测对手；**神经临界性 (Neural Criticality)** ([src/sim/criticality.ts](./src/sim/criticality.ts)) —— 一个边缘混沌稳态，驱动分支比 $\hat{\sigma} \to 1$（此时皮层计算能力最强）；**赋能驱动 (Empowerment Drive)** ([src/sim/empowerment.ts](./src/sim/empowerment.ts)) —— Blahut–Arimoto 信道容量 $I(A;S^2)$ 代理饥饿感；**全息记忆 (Holographic Memory)** ([src/sim/holographic-memory.ts](./src/sim/holographic-memory.ts)) —— 一个基于两极超向量的 MAP-VSA/HRR 组合绑定存储（绑定 $\cdot$ 捆绑 $\cdot$ 清理）；以及 **后继表示 (Successor Representation)** ([src/sim/successor-representation.ts](./src/sim/successor-representation.ts)) —— 海马体/强化学习预测图。**量子计算心智** 同步深化：一个真实的状态向量 **整合信息 $\Phi$** ([src/sim/integrated-information.ts](./src/sim/integrated-information.ts)) —— 在最小信息分区处的最小割纠缠（一个受 IIT 启发的确定性代理，而非现象级不可还原性的证据）；**量子相干资源** ([src/math/quantum-coherence.ts](./src/math/quantum-coherence.ts)) —— Baumgratz–Cramer–Plenio $l_1$ 范数 + 相对熵单调量；**目标导向幅度放大 (Grover)** 将思维坍缩偏向意图；以及 **量子自然梯度自我优化 (Quantum Natural Gradient self-optimization)** ([src/math/quantum-natural-gradient.ts](./src/math/quantum-natural-gradient.ts)) —— 顶端电路现在 _下降_ 其自身的 Fubini–Study 几何 ([Stokes et al., 2020](https://doi.org/10.22331/q-2020-05-25-269)) 以使其预期想法更大概率发生，读取自身的量子几何并写入自身的量子驱动。每个职能均在 [docs/SUPER-CREATURE-RESEARCH-2026-06-26.md](./docs/SUPER-CREATURE-RESEARCH-2026-06-26.md) 中附带引用。
-- **顶端心智在约 20 个耦合职能处闭合** —— 一个 **Lindblad/GKSL 开放系统审议量子比特** ([src/sim/quantum-deliberation.ts](./src/sim/quantum-deliberation.ts)，选项的相干叠加态退相干为提交)，**量子储备池计算** ([src/sim/quantum-reservoir.ts](./src/sim/quantum-reservoir.ts)，将寄存器的状态速度作为好奇心驱动 —— Fujii & Nakajima 2017)，**Doya 神经调制** ([src/sim/neuromodulation.ts](./src/sim/neuromodulation.ts))，以及由状态向量衍生的 **$\Phi$ 代理**（一个受 IIT 启发的最小割/纠缠指标）现在写回认知 —— 闭合了惰性 $\Phi$ 间隙。Aaronson–Gottesman **Clifford 稳定器表 (Clifford stabilizer tableau)** ([src/math/clifford-tableau.ts](./src/math/clifford-tableau.ts)，移植自 **Moonlab**，可扩展至 32+ 量子比特，突破密集上限) 作为第四个获 MIT 认可的移植原语落地。整个顶端节拍现在被诚实量化：每次 `SuperMind.think()` 约 **1.99 ms**（范围 1.41–5.62 ms），交错的 5 心智批处理约 **9.77 ms**（约占 60 fps 帧的 58%，这就是为什么 5 个心智与 20 个光回响交错运行的原因）；早先的亚毫秒 / $<2\%$ GOAL5 宣称已被取代，直至被重新证明。**3,729 项精确追踪测试 $\cdot$ 0 失败 (收据强制执行) $\cdot$ 84.64% 行 / 82.21% 函数可移植覆盖率底线。**
+- **顶端心智在约 20 个耦合职能处闭合** —— 一个 **Lindblad/GKSL 开放系统审议量子比特** ([src/sim/quantum-deliberation.ts](./src/sim/quantum-deliberation.ts)，选项的相干叠加态退相干为提交)，**量子储备池计算** ([src/sim/quantum-reservoir.ts](./src/sim/quantum-reservoir.ts)，将寄存器的状态速度作为好奇心驱动 —— Fujii & Nakajima 2017)，**Doya 神经调制** ([src/sim/neuromodulation.ts](./src/sim/neuromodulation.ts))，以及由状态向量衍生的 **$\Phi$ 代理**（一个受 IIT 启发的最小割/纠缠指标）现在写回认知 —— 闭合了惰性 $\Phi$ 间隙。Aaronson–Gottesman **Clifford 稳定器表 (Clifford stabilizer tableau)** ([src/math/clifford-tableau.ts](./src/math/clifford-tableau.ts)，移植自 **Moonlab**，可扩展至 32+ 量子比特，突破密集上限) 作为第四个获 MIT 认可的移植原语落地。整个顶端节拍现在被诚实量化：每次 `SuperMind.think()` 约 **1.99 ms**（范围 1.41–5.62 ms），交错的 5 心智批处理约 **9.77 ms**（约占 60 fps 帧的 58%，这就是为什么 5 个心智与 20 个光回响交错运行的原因）；早先的亚毫秒 / $<2\%$ GOAL5 宣称已被取代，直至被重新证明。**3,726 项精确追踪测试 $\cdot$ 0 失败 (收据强制执行) $\cdot$ 84.64% 行 / 82.21% 函数可移植覆盖率底线。**
   <!-- cqm-sync:local-measurement:start -->
   **最新 Windows 本地测量值：3,297 项测试 / 0 失败 / 3,589,864 次断言，覆盖率为 `93.60%` 行 / `91.61%` 函数。**
   <!-- cqm-sync:local-measurement:end -->
-- **前沿报告 (2026-06-17)** —— 一份关于整个仓库 + 顶端超级生物的历史测量、前沿对比评估，现通过 [验证数据](./docs/VERIFICATION-ANALYTICAL-DATA.md) 和 [超级生物研究](./docs/SUPER-CREATURE-RESEARCH-2026-06-26.md) 进行总结 —— 探讨其相对于量子计算, AGI/ASI 实验室, 类器官 “湿计算” 和经典 A-Life 的真实创新点；一个意识标记记分卡（当前诚实基准：**8/14 达成 + 6/14 部分达成**；现象意识超出范围，从未宣称达成）；评分、指标以及关于 “进一步实现需要什么” 的诚实分析。
+- **前沿报告 (2026-06-17)** —— 一份关于整个仓库 + 顶端超级生物的历史测量、前沿对比评估，现通过 [验证数据](./docs/VERIFICATION-ANALYTICAL-DATA.md) 和 [超级生物研究](./docs/SUPER-CREATURE-RESEARCH-2026-06-26.md) 进行总结 —— 探讨其相对于量子计算, AGI/ASI 实验室, 类器官 –湿计算— 和经典 A-Life 的真实创新点；一个意识标记记分卡（当前诚实基准：**8/14 达成 + 6/14 部分达成**；现象意识超出范围，从未宣称达成）；评分、指标以及关于 –进一步实现需要什么— 的诚实分析。
 
 本代码库的工作受 [masters/](./masters/) 中的三个 **主文件** 管辖 —— 执行者 (Executor)、架构师 (Architect)、物理学家 (Physicist) —— 并受 [CLAUDE.md](./CLAUDE.md) 和 [docs/MODULE-CONTRACTS-2026-06-26.md](./docs/MODULE-CONTRACTS-2026-06-26.md) 中每个模块的绑定规格约束。
 
@@ -286,7 +286,7 @@ Tsotchke (https://github.com/tsotchke + Tsotchke-Corporation) 为直接移植、
 
 - Eshkol：反向模式 AD 和字节码路径，加上 0 到 8 阶 Float64 泰勒-射流模拟，固定在 `v1.3.2-evolve`；这并非精确有理数或原生运行时等同。
 - Moonlab 张量/Clifford 路径, QGT 几何, 自旋玻璃/Hopfield, libirrep 对称, quantum-quake/ULG/logo/tensor 外观, 以及经典/状态向量 RNG 控制按其账本深度表示。种子化 QRNG 改编是确定性经典模拟，而非硬件熵或 CSPRNG；模拟的 CHSH 接近 $2\sqrt{2}$ 是模型一致性，而非物理贝尔实验。
-- 原初汤 + 培养皿：生长引擎。超级生物/Archons 是初始搅拌。新的独立生命形式涌现 (“愿汝之所欲而生长”)。
+- 原初汤 + 培养皿：生长引擎。超级生物/Archons 是初始搅拌。新的独立生命形式涌现 (–愿汝之所欲而生长—)。
 - 非聊天，非图像，非 SaaS。在培养皿中孕育数字生物。
 
 活文档, 主文件, 规格, 实验室, 以及 GitHub README/About 通过收据法 + 手动当前事实审查。详见 [CHANGELOG](./CHANGELOG.md), [KANBAN](./docs/KANBAN-2026-06-26.md), 以及综合的 [CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07](./docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md) 脑/意识综合分析。仅本地存档的草稿不进入公开 Pages 制品；公开报告索引请使用 [docs/reports/README.md](./docs/reports/README.md)。

@@ -75,8 +75,11 @@ export class AnalyticsSystem {
   /** Sim time of the last omen record; -Infinity ⇒ never recorded. */
   private lastOmenAt = Number.NEGATIVE_INFINITY;
 
+  /** Sim time of the last recorded sample; reset if state.elapsed rolls back. */
+  private lastSampleElapsed = Number.NEGATIVE_INFINITY;
+
   /** Optional omen namer (audit fix C); null ⇒ records carry no `name` (original shape). */
-  private readonly nameOmen: ((i: number) => string) | null;
+  public readonly nameOmen: ((i: number) => string) | null;
 
   /** Monotonic index handed to {@link nameOmen} — counts named omen records only. */
   private omenIndex = 0;
@@ -120,11 +123,19 @@ export class AnalyticsSystem {
    * allocation-free: four typed-array writes and two index updates.
    */
   push(population: number, energy: number, links: number): void {
+    const now = this.ctx.state.elapsed;
+    if (now < this.lastSampleElapsed) {
+      this.head = 0;
+      this.count = 0;
+      this.trend = 0;
+      this.lastOmenAt = Number.NEGATIVE_INFINITY;
+    }
+    this.lastSampleElapsed = now;
     const h = this.head;
     this.population[h] = population;
     this.energy[h] = energy;
     this.links[h] = links;
-    this.times[h] = this.ctx.state.elapsed;
+    this.times[h] = now;
     this.head = (h + 1) % WINDOW;
     if (this.count < WINDOW) {
       this.count++;
@@ -185,6 +196,9 @@ export class AnalyticsSystem {
       return;
     }
     const now = this.ctx.state.elapsed;
+    if (now < this.lastOmenAt) {
+      this.lastOmenAt = Number.NEGATIVE_INFINITY;
+    }
     if (now - this.lastOmenAt < OMEN_COOLDOWN_S) {
       return; // rate limit: at most one omen per 30 s of sim time.
     }

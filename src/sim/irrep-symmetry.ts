@@ -40,10 +40,11 @@ function snapProjection(j: number, x: number): number {
 export function libirrepClebsch(j1: number, j2: number, m: number): number {
   const J1 = clampJ(j1);
   const J2 = clampJ(j2);
-  const m1 = snapProjection(J1, m);
-  const m2 = snapProjection(J2, m - m1);
   const J = Math.min(J1 + J2, IRREP_J_MAX);
-  const M = m1 + m2;
+  const targetM = Math.max(-J, Math.min(J, m));
+  const m1 = snapProjection(J1, targetM);
+  const m2 = snapProjection(J2, targetM - m1);
+  const M = Math.max(-J, Math.min(J, m1 + m2));
   return Math.abs(clebschGordan(J1, m1, J2, m2, J, M));
 }
 

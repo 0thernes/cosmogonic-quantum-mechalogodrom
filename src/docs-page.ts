@@ -101,12 +101,23 @@ function makeZoomable(pre: HTMLElement, svg: SVGSVGElement): void {
     ty = (vp.height - h * scale) / 2;
     apply();
   };
+  const fitTimers: ReturnType<typeof setTimeout>[] = [];
+  const clearFitTimers = (): void => {
+    while (fitTimers.length > 0) clearTimeout(fitTimers.pop()!);
+    if (fitRaf !== 0) {
+      cancelAnimationFrame(fitRaf);
+      fitRaf = 0;
+    }
+  };
   const fitSoon = (): void => {
+    clearFitTimers();
     fit();
-    setTimeout(fit, 60);
-    setTimeout(fit, 250);
-    setTimeout(fit, 600);
-    setTimeout(fit, 1200);
+    fitTimers.push(
+      setTimeout(fit, 60),
+      setTimeout(fit, 250),
+      setTimeout(fit, 600),
+      setTimeout(fit, 1200),
+    );
   };
   const zoomAt = (px: number, py: number, factor: number): void => {
     const ns = clamp(scale * factor);
@@ -131,6 +142,7 @@ function makeZoomable(pre: HTMLElement, svg: SVGSVGElement): void {
   let lx = 0;
   let ly = 0;
   viewport.addEventListener('pointerdown', (e) => {
+    if ((e.target as Element | null)?.closest?.('.diagram-ctrls')) return;
     drag = true;
     lx = e.clientX;
     ly = e.clientY;
@@ -200,7 +212,14 @@ function makeZoomable(pre: HTMLElement, svg: SVGSVGElement): void {
   viewport.append(stage, ctrls, hint);
   pre.replaceWith(viewport);
   fitSoon();
-  document.addEventListener('fullscreenchange', () => fitSoon());
+  let wasFullscreen = false;
+  document.addEventListener('fullscreenchange', () => {
+    const isFullscreen = document.fullscreenElement === viewport;
+    if (isFullscreen || wasFullscreen) {
+      wasFullscreen = isFullscreen;
+      fitSoon();
+    }
+  });
   if (typeof ResizeObserver !== 'undefined') {
     const ro = new ResizeObserver(() => fitSoon());
     ro.observe(viewport);

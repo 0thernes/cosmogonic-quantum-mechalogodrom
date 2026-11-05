@@ -127,7 +127,8 @@ export function fp16ToFp32(value: number): number {
  * @returns INT8 value (0-255)
  */
 export function fp32ToInt8(value: number, min: number, max: number): number {
-  if (max <= min) return 0;
+  if (!Number.isFinite(value) || !Number.isFinite(min) || !Number.isFinite(max) || max <= min)
+    return 0;
   const clamped = Math.max(min, Math.min(max, value));
   const normalized = (clamped - min) / (max - min);
   return Math.round(normalized * 255);
@@ -307,6 +308,7 @@ export function getRange(array: Float32Array): [number, number] {
   let max = -Infinity;
   for (let i = 0; i < array.length; i++) {
     const val = array[i] ?? 0;
+    if (!Number.isFinite(val)) continue;
     if (val < min) min = val;
     if (val > max) max = val;
   }

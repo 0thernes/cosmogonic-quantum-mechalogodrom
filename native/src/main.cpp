@@ -80,6 +80,10 @@ void onKey(GLFWwindow* w, int key, int /*sc*/, int action, int /*mods*/) {
     case GLFW_KEY_P: if (action == GLFW_PRESS) gWantShot = true; break;
     case GLFW_KEY_W: gCam.radius = glm::clamp(gCam.radius - 0.3f, 1.5f, 40.0f); break;
     case GLFW_KEY_S: gCam.radius = glm::clamp(gCam.radius + 0.3f, 1.5f, 40.0f); break;
+    case GLFW_KEY_LEFT: gCam.azimuth += 0.06f; break;
+    case GLFW_KEY_RIGHT: gCam.azimuth -= 0.06f; break;
+    case GLFW_KEY_UP: gCam.elevation = glm::clamp(gCam.elevation + 0.05f, -1.45f, 1.45f); break;
+    case GLFW_KEY_DOWN: gCam.elevation = glm::clamp(gCam.elevation - 0.05f, -1.45f, 1.45f); break;
     case GLFW_KEY_F:
       if (action == GLFW_PRESS) {
         if (glfwGetWindowAttrib(w, GLFW_MAXIMIZED)) glfwRestoreWindow(w);
@@ -323,14 +327,21 @@ int main(int argc, char** argv) {
   glfwSetKeyCallback(win, onKey);
 
   gPrevTime = glfwGetTime();
+  float physAccum = 0.0f;
+  constexpr float kFixedSubstep = 1.0f / 120.0f;
   while (!glfwWindowShouldClose(win)) {
     double now = glfwGetTime();
-    float dt = static_cast<float>(now - gPrevTime);
+    float dt = std::clamp(static_cast<float>(now - gPrevTime), 0.0f, 0.1f);
     gPrevTime = now;
     if (!gPaused) {
       gSpinClock += dt;
-      // Two fixed substeps/frame keeps the rigid-body solver stable independent of frame rate.
-      for (int k = 0; k < 2; ++k) gPhys.step(1.0f / 120.0f);
+      physAccum += dt;
+      int steps = 0;
+      while (physAccum >= kFixedSubstep && steps < 8) {
+        gPhys.step(kFixedSubstep);
+        physAccum -= kFixedSubstep;
+        ++steps;
+      }
     }
 
     int fbw, fbh;
@@ -338,13 +349,15 @@ int main(int argc, char** argv) {
 
     if (gWantShot) { renderToBMP(prog, vao, 3840, 2160, gSpinClock, "reliquary_4k.bmp"); gWantShot = false; }
 
-    glViewport(0, 0, fbw, fbh);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-    glUseProgram(prog);
-    setCommonUniforms(prog, fbw, fbh, gSpinClock);
-    glBindVertexArray(vao);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    if (fbw > 0 && fbh > 0) {
+      glViewport(0, 0, fbw, fbh);
+      glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+      glClear(GL_COLOR_BUFFER_BIT);
+      glUseProgram(prog);
+      setCommonUniforms(prog, fbw, fbh, gSpinClock);
+      glBindVertexArray(vao);
+      glDrawArrays(GL_TRIANGLES, 0, 3);
+    }
 
     glfwSwapBuffers(win);
     glfwPollEvents();

@@ -140,4 +140,12 @@ export class Hud {
   update(_dt: number, _snap: unknown): void {
     // No-op: individual HUD elements are driven by dedicated systems.
   }
+
+  /** Clear pending banner/toast timers on teardown. */
+  dispose(): void {
+    clearTimeout(this.secTimer);
+    clearTimeout(this.nmTimer);
+    this.secTimer = 0;
+    this.nmTimer = 0;
+  }
 }

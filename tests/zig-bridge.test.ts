@@ -242,8 +242,9 @@ describe('Zig 0.17.0 WASM Kernel Bridge (src/math/zig-bridge.ts)', () => {
     const bdgTrivial = zigLibirrepBdgSkyrmionMzm(12, 1, -3.0, 0.5, 1.0);
     expect(bdgQ1.mzmCount).toBe(2);
     expect(bdgQ1.topologicalProtected).toBe(true);
-    expect(Math.abs(bdgQ1.topologicalCharge)).toBeGreaterThan(0.5);
+    expect(bdgQ1.topologicalCharge).toBeGreaterThan(0.5);
     expect(bdgQ2.mzmCount).toBe(4);
+    expect(bdgQ2.topologicalCharge).toBeLessThan(-1.0);
     expect(bdgTrivial.mzmCount).toBe(0);
     expect(bdgTrivial.topologicalProtected).toBe(false);
 

@@ -305,27 +305,23 @@ function logPsiGradient(
   outHidden: Float32Array,
 ): void {
   for (let i = 0; i < arch.visibleCount; i++) {
-    const s = (bitstring >> i) & 1 ? 1 : -1;
-    outVisible[i] = s;
-
-    for (let j = 0; j < arch.hiddenCount; j++) {
-      let activation = arch.hiddenBiases[j] ?? 0;
-      for (let k = 0; k < arch.visibleCount; k++) {
-        const s_k = (bitstring >> k) & 1 ? 1 : -1;
-        activation += (arch.weights[k * arch.hiddenCount + j] ?? 0) * s_k;
-      }
-      const tanhAct = Math.tanh(activation);
-      outWeights[i * arch.hiddenCount + j] = s * tanhAct;
-    }
+    outVisible[i] = (bitstring >> i) & 1 ? 1 : -1;
   }
 
   for (let j = 0; j < arch.hiddenCount; j++) {
     let activation = arch.hiddenBiases[j] ?? 0;
     for (let i = 0; i < arch.visibleCount; i++) {
-      const s = (bitstring >> i) & 1 ? 1 : -1;
-      activation += (arch.weights[i * arch.hiddenCount + j] ?? 0) * s;
+      activation += (arch.weights[i * arch.hiddenCount + j] ?? 0) * (outVisible[i] ?? 0);
     }
     outHidden[j] = Math.tanh(activation);
+  }
+
+  for (let i = 0; i < arch.visibleCount; i++) {
+    const s = outVisible[i] ?? 0;
+    const row = i * arch.hiddenCount;
+    for (let j = 0; j < arch.hiddenCount; j++) {
+      outWeights[row + j] = s * (outHidden[j] ?? 0);
+    }
   }
 }
 
@@ -473,10 +469,18 @@ export function vmcStep(
     state.hiddenGradients[i] = (state.hiddenGradients[i] ?? 0) / n / (varO + diagShift);
   }
 
-  // Compute gradient norm
+  // Compute gradient norm across weights and both bias gradient vectors so non-finite bias gradients cannot bypass the guard
   let gradNorm = 0;
   for (let i = 0; i < arch.weights.length; i++) {
     const g = state.weightGradients[i] ?? 0;
+    gradNorm += g * g;
+  }
+  for (let i = 0; i < arch.visibleCount; i++) {
+    const g = state.visibleGradients[i] ?? 0;
+    gradNorm += g * g;
+  }
+  for (let i = 0; i < arch.hiddenCount; i++) {
+    const g = state.hiddenGradients[i] ?? 0;
     gradNorm += g * g;
   }
   gradNorm = Math.sqrt(gradNorm);

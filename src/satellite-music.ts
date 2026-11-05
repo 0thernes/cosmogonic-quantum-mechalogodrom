@@ -71,16 +71,25 @@ function mountSatelliteMusic(doc: Document = document): void {
     const latest = store.load() ?? persisted;
     latest.musicOn = audio.musicOn;
     latest.songIdx = state.songIdx;
+    persisted.musicOn = audio.musicOn;
+    persisted.songIdx = state.songIdx;
     store.save(latest);
   };
 
+  const removeUnlockListeners = (): void => {
+    doc.removeEventListener('pointerdown', unlock);
+    doc.removeEventListener('keydown', unlock);
+  };
+
   const unlock = (): void => {
+    removeUnlockListeners();
     audio.init();
     if (persisted.musicOn) audio.setMusicOn(true);
     label.textContent = SONGS[state.songIdx]?.name ?? 'Song';
   };
 
   toggle.addEventListener('click', () => {
+    removeUnlockListeners();
     audio.init();
     audio.toggleMusic();
     toggle.classList.toggle('on', audio.musicOn);
@@ -89,6 +98,7 @@ function mountSatelliteMusic(doc: Document = document): void {
   });
 
   cycle.addEventListener('click', () => {
+    removeUnlockListeners();
     audio.init();
     audio.cycleSong();
     label.textContent = SONGS[state.songIdx]?.name ?? 'Song';

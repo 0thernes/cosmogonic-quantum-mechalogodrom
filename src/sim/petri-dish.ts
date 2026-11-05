@@ -159,7 +159,7 @@ export interface PetriDishView {
 /** O(n) init, n=8. */
 export function createPetriDish(seed: number): PetriDishState {
   const nutrients = new Float32Array(NUTRIENT_SLOTS);
-  const s = (seed % 997) / 997;
+  const s = (((seed % 997) + 997) % 997) / 997;
   for (let i = 0; i < NUTRIENT_SLOTS; i++) {
     nutrients[i] = 0.2 + ((s + i * 0.13) % 1) * 0.5;
   }
@@ -399,6 +399,20 @@ export function petriDishBeat(
   }
   state.spinPolarization = Math.min(1, Math.abs(spinM / NUTRIENT_SLOTS));
 
+  // Evaluate Gray-Scott reaction-diffusion PDE residual across the live nutrient/salience ring at the active ignition slot.
+  const uIdx = state.ignitionSlot;
+  const uPrev = state.nutrients[(uIdx - 1 + NUTRIENT_SLOTS) % NUTRIENT_SLOTS] ?? mean;
+  const uCurr = state.nutrients[uIdx] ?? mean;
+  const uNext = state.nutrients[(uIdx + 1) % NUTRIENT_SLOTS] ?? mean;
+  const vCurr = SCRATCH_SALIENCE[uIdx] ?? 0.3;
+  const vPrev = SCRATCH_SALIENCE[(uIdx - 1 + NUTRIENT_SLOTS) % NUTRIENT_SLOTS] ?? vCurr;
+  const vNext = SCRATCH_SALIENCE[(uIdx + 1) % NUTRIENT_SLOTS] ?? vCurr;
+  const lapU = uPrev - 2 * uCurr + uNext;
+  const lapV = vPrev - 2 * vCurr + vNext;
+  const duDt = uCurr - (SCRATCH_NUTRIENTS[uIdx] ?? uCurr);
+  const dvDt = vCurr - (SCRATCH_SAL[uIdx] ?? vCurr);
+  const gsResidual = grayScottResidual(uCurr, vCurr, lapU, lapV, duDt, dvDt, 0.055, 0.062);
+
   const growth =
     (ws.broadcastGain + state.aliveness) *
       0.01 *
@@ -406,7 +420,7 @@ export function petriDishBeat(
       (0.5 + corpusBeat * 0.5) *
       (0.6 + tsotchkeSimWiringFraction() * 0.4) +
     metal * 0.003 +
-    pinnLoss(grayScottResidual(0.5, 0.3, 0.4, 0.6, 0.5, 0.4, 0.055, 0.062)) * 0.005 +
+    pinnLoss(gsResidual) * 0.005 +
     pimc * 0.004 +
     motility * 0.003 +
     logoMorph * 0.002 +
@@ -485,9 +499,10 @@ export function petriDishBeat(
     1,
     Math.max(
       0,
-      (state.phiSurrogate ?? 0) * 0.45 +
+      (state.phiSurrogate ?? 0) * 0.4 +
         state.aliveness * 0.35 +
-        (state.spinPolarization ?? 0) * 0.2,
+        (corpusBeat || 0) * 0.15 +
+        (state.spinPolarization ?? 0) * 0.1,
     ),
   );
   state.emergence = Math.min(
@@ -657,9 +672,13 @@ export function petriDishView(state: PetriDishState): PetriDishView {
     beats: state.beats,
     sentienceProxy: Math.min(
       1,
-      state.phiSurrogate * 0.4 +
-        state.aliveness * 0.35 +
-        corpusBeatForArchon(0, state.beats) * 0.25,
+      Math.max(
+        0,
+        state.phiSurrogate * 0.4 +
+          state.aliveness * 0.35 +
+          corpusBeatForArchon(0, state.beats) * 0.15 +
+          (state.spinPolarization ?? 0) * 0.1,
+      ),
     ),
     spinPolarization: state.spinPolarization,
     morphotype: state.morphotype,
@@ -704,12 +723,13 @@ const ESHKOL_PROGRAMS: number[][] = [
 ];
 
 export function birthEshkolLife(seed: number, substrate: number): EshkolLifeProgram {
-  const progIdx = Math.floor(seed * 4) % ESHKOL_PROGRAMS.length;
+  const len = ESHKOL_PROGRAMS.length;
+  const progIdx = ((Math.floor(seed * 4) % len) + len) % len;
   const base = ESHKOL_PROGRAMS[progIdx]!;
   return {
-    fingerprint: (seed * 9973 + substrate * 13) % 99991,
+    fingerprint: (((seed * 9973 + substrate * 13) % 99991) + 99991) % 99991,
     code: base.map((v, i) => v * (0.5 + ((seed >> i) & 1))),
-    vitality: 0.1 + (seed % 7) / 20,
+    vitality: 0.1 + (((seed % 7) + 7) % 7) / 20,
   };
 }
 

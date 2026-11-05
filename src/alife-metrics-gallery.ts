@@ -83,36 +83,51 @@ function imgFromUrl(img: HTMLImageElement, url: string): Promise<boolean> {
   });
 }
 
+const imgLoadTokens = new WeakMap<HTMLImageElement, number>();
+
 /** Load an SVG — embedded bundle first, then fetch fallbacks for dev without rebuild. */
 async function loadMetricImg(
   img: HTMLImageElement,
   file: string,
   onAllFailed?: () => void,
-): Promise<void> {
+): Promise<boolean> {
+  const token = (imgLoadTokens.get(img) ?? 0) + 1;
+  imgLoadTokens.set(img, token);
+  const isCurrent = (): boolean => imgLoadTokens.get(img) === token;
+
   const embedded = ALIFE_SVG_EMBED[file];
   if (embedded) {
     const blob = new Blob([embedded], { type: 'image/svg+xml;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     try {
-      if (await imgFromUrl(img, url)) {
+      const ok = await imgFromUrl(img, url);
+      if (!isCurrent()) return false;
+      if (ok) {
         img.classList.remove('error');
+        return true;
       }
     } finally {
       URL.revokeObjectURL(url); // the image is decoded once loaded; free the blob URL (was leaked per chart switch)
     }
-    return;
+    if (isCurrent()) onAllFailed?.();
+    return false;
   }
   const cands = alifeMetricCandidates(file);
   for (const url of cands) {
+    if (!isCurrent()) return false;
     try {
       const res = await fetch(url, { cache: 'force-cache' });
+      if (!isCurrent()) return false;
       if (res.ok) {
         const blob = await res.blob();
+        if (!isCurrent()) return false;
         const blobUrl = URL.createObjectURL(blob);
         try {
-          if (await imgFromUrl(img, blobUrl)) {
+          const ok = await imgFromUrl(img, blobUrl);
+          if (!isCurrent()) return false;
+          if (ok) {
             img.classList.remove('error');
-            return;
+            return true;
           }
         } finally {
           URL.revokeObjectURL(blobUrl); // free the blob URL whether the load succeeded or fell through
@@ -121,12 +136,16 @@ async function loadMetricImg(
     } catch {
       /* try img tag next */
     }
-    if (await imgFromUrl(img, url)) {
+    if (!isCurrent()) return false;
+    const ok = await imgFromUrl(img, url);
+    if (!isCurrent()) return false;
+    if (ok) {
       img.classList.remove('error');
-      return;
+      return true;
     }
   }
-  onAllFailed?.();
+  if (isCurrent()) onAllFailed?.();
+  return false;
 }
 
 /** Display order keeps the canonical CQM-25 profile ahead of every historical comparison. */
@@ -284,6 +303,10 @@ interface ZoomView {
   drag: boolean;
   lx: number;
   ly: number;
+  initialized: boolean;
+  fitTimers: ReturnType<typeof setTimeout>[];
+  fitRaf1: number;
+  fitRaf2: number;
   fit: () => void;
   apply: () => void;
 }
@@ -292,19 +315,50 @@ function clampScale(s: number): number {
   return Math.min(12, Math.max(0.08, s));
 }
 
+function parseSvgIntrinsicSize(svgText: string): { width: number; height: number } | null {
+  const vbMatch = svgText.match(
+    /viewBox=["']\s*([+-]?(?:\d+\.?\d*|\.\d+))[\s,]+([+-]?(?:\d+\.?\d*|\.\d+))[\s,]+([+-]?(?:\d+\.?\d*|\.\d+))[\s,]+([+-]?(?:\d+\.?\d*|\.\d+))\s*["']/i,
+  );
+  if (!vbMatch) return null;
+  const width = Number(vbMatch[3]);
+  const height = Number(vbMatch[4]);
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) return null;
+  return { width, height };
+}
+
+function clearZoomFitSchedule(view: ZoomView): void {
+  while (view.fitTimers.length > 0) clearTimeout(view.fitTimers.pop()!);
+  if (view.fitRaf1 !== 0) {
+    cancelAnimationFrame(view.fitRaf1);
+    view.fitRaf1 = 0;
+  }
+  if (view.fitRaf2 !== 0) {
+    cancelAnimationFrame(view.fitRaf2);
+    view.fitRaf2 = 0;
+  }
+}
+
 function scheduleZoomFit(view: ZoomView): void {
+  clearZoomFitSchedule(view);
   const run = (): void => {
     const vp = view.stage.getBoundingClientRect();
     if (vp.width > 4 && vp.height > 4) {
       view.fit();
+      view.initialized = true;
       view.img.style.opacity = '1';
     }
   };
-  view.img.style.opacity = '0';
-  requestAnimationFrame(() => requestAnimationFrame(run));
-  setTimeout(run, 50);
-  setTimeout(run, 250);
-  setTimeout(run, 600);
+  if (!view.initialized) {
+    view.img.style.opacity = '0';
+  }
+  view.fitRaf1 = requestAnimationFrame(() => {
+    view.fitRaf1 = 0;
+    view.fitRaf2 = requestAnimationFrame(() => {
+      view.fitRaf2 = 0;
+      run();
+    });
+  });
+  view.fitTimers.push(setTimeout(run, 50), setTimeout(run, 250), setTimeout(run, 600));
 }
 
 /** Wire pan/zoom on a stage; returns controls for toolbar buttons. */
@@ -334,6 +388,10 @@ function mountZoomView(stage: HTMLElement, onTap?: () => void, file?: string): Z
     drag: false,
     lx: 0,
     ly: 0,
+    initialized: false,
+    fitTimers: [],
+    fitRaf1: 0,
+    fitRaf2: 0,
     apply: () => {
       img.style.transform = `translate(${view.tx}px, ${view.ty}px) scale(${view.scale})`;
     },
@@ -346,10 +404,10 @@ function mountZoomView(stage: HTMLElement, onTap?: () => void, file?: string): Z
         if (mf) {
           const m = ALIFE_SVG_EMBED[mf];
           if (m) {
-            const vbMatch = m.match(/viewBox=["'](\d+)\s+(\d+)\s+(\d+)\s+(\d+)["']/i);
-            if (vbMatch) {
-              iw = Number(vbMatch[3]);
-              ih = Number(vbMatch[4]);
+            const parsed = parseSvgIntrinsicSize(m);
+            if (parsed) {
+              iw = parsed.width;
+              ih = parsed.height;
             }
           }
         }
@@ -400,6 +458,7 @@ function mountZoomView(stage: HTMLElement, onTap?: () => void, file?: string): Z
     view.apply();
   });
   stage.addEventListener('pointerup', () => stage.classList.remove('dragging'));
+  stage.addEventListener('pointercancel', () => stage.classList.remove('dragging'));
   stage.addEventListener(
     'wheel',
     (e) => {
@@ -422,16 +481,26 @@ function mountZoomView(stage: HTMLElement, onTap?: () => void, file?: string): Z
   return view;
 }
 
+function zoomViewAboutCenter(view: ZoomView, factor: number): void {
+  const rect = view.stage.getBoundingClientRect();
+  const cx = (view.stage.clientWidth || rect.width) / 2;
+  const cy = (view.stage.clientHeight || rect.height) / 2;
+  const ns = clampScale(view.scale * factor);
+  const k = ns / view.scale;
+  view.tx = cx - k * (cx - view.tx);
+  view.ty = cy - k * (cy - view.ty);
+  view.scale = ns;
+  view.apply();
+}
+
 function wireToolbar(root: ParentNode, sel: string, view: ZoomView, stopProp = true): void {
   root.querySelector(`${sel}[data-zoom-in]`)?.addEventListener('click', (e) => {
     if (stopProp) e.stopPropagation();
-    view.scale = clampScale(view.scale * 1.2);
-    view.apply();
+    zoomViewAboutCenter(view, 1.2);
   });
   root.querySelector(`${sel}[data-zoom-out]`)?.addEventListener('click', (e) => {
     if (stopProp) e.stopPropagation();
-    view.scale = clampScale(view.scale / 1.2);
-    view.apply();
+    zoomViewAboutCenter(view, 1 / 1.2);
   });
   root.querySelector(`${sel}[data-fit]`)?.addEventListener('click', (e) => {
     if (stopProp) e.stopPropagation();
@@ -506,8 +575,8 @@ export function mountAlifeMetricsGallery(root: HTMLElement | null): void {
       heroView.img.classList.add('error');
       const err = heroStage.querySelector('.alife-loaderr') as HTMLElement | null;
       if (err) err.style.display = 'grid';
-    }).then(() => {
-      if (ALIFE_METRICS[idx] !== m) return;
+    }).then((loaded) => {
+      if (!loaded || ALIFE_METRICS[idx] !== m) return;
       heroView.metricFile = m.file;
       if (m.context === 'canonical' && heroView.img.naturalWidth && heroView.img.naturalHeight) {
         hero.style.aspectRatio = `${heroView.img.naturalWidth} / ${heroView.img.naturalHeight}`;
@@ -570,7 +639,9 @@ export function mountAlifeMetricsGallery(root: HTMLElement | null): void {
       tv.img.classList.add('error');
       const err = thumbStage.querySelector('.alife-thumb-loaderr') as HTMLElement | null;
       if (err) err.style.display = 'grid';
-    }).then(() => tv.fit());
+    }).then((loaded) => {
+      if (loaded) tv.fit();
+    });
     tv.img.alt = m.alt;
     wireToolbar(card, '.alife-thumb-tool', tv);
     thumbViews.push(tv);

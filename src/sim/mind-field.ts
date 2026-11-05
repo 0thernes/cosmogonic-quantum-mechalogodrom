@@ -38,7 +38,7 @@ export class MindField {
   }
 
   /** Deposit Archon `channel`'s vector (length ≤ dim) into the field. */
-  deposit(channel: number, vector: readonly number[], strength = 1): void {
+  deposit(channel: number, vector: ArrayLike<number>, strength = 1): void {
     const c = ((channel % this.channels) + this.channels) % this.channels;
     const off = c * this.dim;
     const alpha = clamp01(strength) * (1 - this.decay);

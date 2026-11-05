@@ -250,6 +250,9 @@ function buildSyndromeGraph(code: SurfaceCode): SyndromeGraph {
     let head = 0;
     while (head < queue.length) {
       const u = queue[head++]!;
+      // Do not expand neighbors out of the virtual boundary node so opposite-boundary
+      // stabilizers cannot short-circuit to distance 2 through the boundary.
+      if (u === boundary && s !== boundary) continue;
       for (const e of adjacency[u]!) {
         if (dRow[e.to] === Infinity) {
           dRow[e.to] = dRow[u]! + 1;
@@ -298,6 +301,47 @@ function applyPathCorrection(
  * bounded for small k.
  */
 function exactMatch(k: number, pairCost: number[][], boundaryCost: number[]): number[] {
+  if (k > 8) {
+    // Deterministic greedy minimum-weight matching fallback for large defect sets (k > 8),
+    // preventing O((k-1)!!) combinatorial explosion.
+    const assign = new Int32Array(k).fill(-2);
+    const used = new Uint8Array(k);
+    for (let step = 0; step < k; step++) {
+      let bestI = -1;
+      let bestJ = -1; // -1 means boundary
+      let bestCost = Infinity;
+      for (let i = 0; i < k; i++) {
+        if (used[i]) continue;
+        const bCost = boundaryCost[i]!;
+        if (bCost < bestCost) {
+          bestCost = bCost;
+          bestI = i;
+          bestJ = -1;
+        }
+        for (let j = i + 1; j < k; j++) {
+          if (used[j]) continue;
+          // Compare per-defect amortized pair cost against boundary cost
+          const pCost = pairCost[i]![j]! * 0.5;
+          if (pCost < bestCost) {
+            bestCost = pCost;
+            bestI = i;
+            bestJ = j;
+          }
+        }
+      }
+      if (bestI === -1) break;
+      if (bestJ === -1) {
+        used[bestI] = 1;
+        assign[bestI] = -1;
+      } else {
+        used[bestI] = 1;
+        used[bestJ] = 1;
+        assign[bestI] = bestJ;
+        assign[bestJ] = bestI;
+      }
+    }
+    return Array.from(assign);
+  }
   const partner = new Int32Array(k).fill(-2);
   const best = { cost: Infinity, assign: new Int32Array(k).fill(-1) };
   const used = new Uint8Array(k);
@@ -441,6 +485,11 @@ export function bpOsdDecode(syndrome: Uint8Array, maxIter = 10, distance = 3): D
  * @returns the Z-stabilizer syndrome.
  */
 export function surfaceCodeSyndrome(lattice: Uint8Array, rows: number, cols: number): Syndrome {
+  if (cols !== rows) {
+    throw new RangeError(
+      `surfaceCodeSyndrome requires square lattice (cols === rows), got ${rows}x${cols}`,
+    );
+  }
   const d = rows;
   const code = buildSurfaceCode(d);
   const err = new Uint8Array(code.nQubits);
@@ -539,7 +588,11 @@ function computeQecDecodingProxy(syndromeWeight: number, codeDistance: number): 
   // Deterministic error: dispersed across non-collinear lattice sites (no RNG → reproducible).
   const n = code.nQubits;
   const xError = new Uint8Array(n);
-  for (let i = 0; i < w; i++) xError[(i * 4 + (i & 1)) % n] = 1;
+  for (let i = 0; i < w; i++) {
+    let q = (i * 4 + (i & 1)) % n;
+    while (xError[q] === 1) q = (q + 1) % n;
+    xError[q] = 1;
+  }
 
   const syndrome = surfaceCodeXSyndrome(code, xError);
   const dec = mwpmDecode(syndrome.checks, d);

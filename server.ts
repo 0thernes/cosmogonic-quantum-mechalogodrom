@@ -26,6 +26,7 @@
  * Tailwind is applied to the HTML bundles via `bun-plugin-tailwind` (see bunfig.toml).
  */
 import index from './index.html';
+import { resolve, sep } from 'node:path';
 import { createLogger } from './src/logging/logger';
 import {
   runAgent,
@@ -627,10 +628,14 @@ function serveHtml(path: string): (req: Request) => Promise<Response> {
     }
     logRequest(req, 200);
     return withSecurityHeaders(
-      new Response(file, { headers: { 'Content-Type': 'text/html; charset=utf-8' } }),
+      new Response(file, {
+        headers: { 'Content-Type': 'text/html; charset=utf-8', ...ISOLATION_HEADERS },
+      }),
     );
   };
 }
+
+const TEXTURES_DIR = resolve(Bun.fileURLToPath(new URL('./public/textures/', import.meta.url)));
 
 if (import.meta.main) {
   const server = Bun.serve({
@@ -648,10 +653,12 @@ if (import.meta.main) {
       '/': async (req, srv): Promise<Response> => {
         if (req.method !== 'GET' && req.method !== 'HEAD') {
           logRequest(req, 405);
-          return new Response('Method Not Allowed', {
-            status: 405,
-            headers: { Allow: 'GET, HEAD' },
-          });
+          return withSecurityHeaders(
+            new Response('Method Not Allowed', {
+              status: 405,
+              headers: { Allow: 'GET, HEAD' },
+            }),
+          );
         }
         try {
           const inner = await fetch(`http://127.0.0.1:${srv.port}${APP_SHELL_PATH}`, {
@@ -992,9 +999,10 @@ if (import.meta.main) {
           return withSecurityHeaders(new Response('Not Found', { status: 404 }));
         }
         logRequest(req, 200);
-        return withSecurityHeaders(
-          new Response(docsFile.file, { headers: { 'Content-Type': docsFile.type } }),
-        );
+        const docHeaders: Record<string, string> = docsFile.type.startsWith('text/html')
+          ? { 'Content-Type': docsFile.type, ...ISOLATION_HEADERS }
+          : { 'Content-Type': docsFile.type };
+        return withSecurityHeaders(new Response(docsFile.file, { headers: docHeaders }));
       }
       if (p.startsWith('/assets/alife/') && p.endsWith('.svg')) {
         const file = svgAssetFromPath(p, '/assets/alife/');
@@ -1074,13 +1082,12 @@ if (import.meta.main) {
           logRequest(req, 404);
           return withSecurityHeaders(new Response('Not Found', { status: 404 }));
         }
-        const texturesRoot = new URL('./public/textures/', import.meta.url);
-        const texUrl = new URL(`./public/textures/${rel}`, import.meta.url);
-        if (!texUrl.href.startsWith(texturesRoot.href)) {
+        const full = resolve(TEXTURES_DIR, rel);
+        if (!full.startsWith(TEXTURES_DIR + sep)) {
           logRequest(req, 404);
           return withSecurityHeaders(new Response('Not Found', { status: 404 }));
         }
-        const file = Bun.file(texUrl);
+        const file = Bun.file(full);
         if (await file.exists()) {
           const ext = rel.split('.').pop()?.toLowerCase() ?? '';
           const ct =

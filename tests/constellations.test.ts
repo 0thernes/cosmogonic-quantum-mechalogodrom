@@ -161,13 +161,15 @@ describe('ConstellationSystem — dispose frees GPU resources (no leak on teardo
     const sys = new ConstellationSystem(ctx, new LoreEngine(0x0c05));
     const group = ctx.scene.children.find((o) => o.name === 'constellations') as THREE.Group;
     expect(group).toBeDefined();
-    const geos = group.children
-      .filter((o): o is THREE.LineSegments => o instanceof THREE.LineSegments)
-      .map((l) => l.geometry);
-    expect(geos.length).toBe(2);
-    const geoSpies = geos.map((g) => spyOn(g, 'dispose'));
+    const lines = group.children.filter(
+      (o): o is THREE.LineSegments => o instanceof THREE.LineSegments,
+    );
+    expect(lines.length).toBe(2);
+    const geoSpies = lines.map((l) => spyOn(l.geometry, 'dispose'));
+    const matSpies = lines.map((l) => spyOn(l.material as THREE.Material, 'dispose'));
     sys.dispose();
     for (const s of geoSpies) expect(s).toHaveBeenCalledTimes(1); // both geometries freed
+    for (const s of matSpies) expect(s).toHaveBeenCalledTimes(1); // both materials freed
     expect(ctx.scene.children.some((o) => o.name === 'constellations')).toBe(false); // group unparented
   });
 });

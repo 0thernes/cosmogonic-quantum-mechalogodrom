@@ -115,10 +115,11 @@ export function matrixToQuat(m: readonly (readonly number[])[]): Quat {
   return quatNormalize(q);
 }
 
-/** Rotate a 3-vector by a unit quaternion. */
+/** Rotate a 3-vector by a unit quaternion (normalizing `q` defensively if needed). */
 export function rotateVector(q: Quat, v: Vec3): Vec3 {
+  const uq = quatNormalize(q);
   const qv: Quat = [0, v[0], v[1], v[2]];
-  const r = quatMul(quatMul(q, qv), quatConj(q));
+  const r = quatMul(quatMul(uq, qv), quatConj(uq));
   return [r[1], r[2], r[3]];
 }
 

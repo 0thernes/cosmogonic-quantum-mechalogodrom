@@ -74,8 +74,20 @@ export function kuramotoStep(
   K: number,
   dt: number,
 ): number[] {
+  const next = Array.from<number>({ length: phases.length });
+  kuramotoStepInto(phases, omega, K, dt, next);
+  return next;
+}
+
+function kuramotoStepInto(
+  phases: readonly number[],
+  omega: readonly number[],
+  K: number,
+  dt: number,
+  out: number[],
+): void {
   const n = phases.length;
-  const next = Array.from<number>({ length: n });
+  out.length = n;
   for (let i = 0; i < n; i++) {
     const thetaI = phases[i] ?? 0;
     let coupling = 0;
@@ -83,9 +95,8 @@ export function kuramotoStep(
       coupling += Math.sin((phases[j] ?? 0) - thetaI);
     }
     const dtheta = (omega[i] ?? 0) + (n > 0 ? (K / n) * coupling : 0);
-    next[i] = wrapPhase(thetaI + dt * dtheta);
+    out[i] = wrapPhase(thetaI + dt * dtheta);
   }
-  return next;
 }
 
 /** Wrap an angle into (−π, π]. Pure. */
@@ -275,6 +286,8 @@ export class AdaptiveCouplingHomeostat {
  */
 export class ResonanceField {
   private phases: number[];
+  private phasesBack: number[];
+  private readonly omegaScratch: number[];
   /** When adaptive, owns the coupling and self-tunes it to the responsive regime; else `null` (fixed K). */
   private readonly homeostat: AdaptiveCouplingHomeostat | null;
 
@@ -306,6 +319,8 @@ export class ResonanceField {
     this.phases = Array.from({ length: m }, (_, i) =>
       wrapPhase(((((i + 1) * 2654435761) >>> 0) / 0xffffffff) * TWO_PI),
     );
+    this.phasesBack = Array.from({ length: m }, () => 0);
+    this.omegaScratch = Array.from({ length: m }, () => 0);
     this.homeostat = adaptive ? new AdaptiveCouplingHomeostat(setpoint, K) : null;
   }
 
@@ -316,9 +331,16 @@ export class ResonanceField {
    */
   step(activations: readonly number[]): ResonanceState {
     const K = this.homeostat ? this.homeostat.coupling : this.K;
-    const omega = this.phases.map((_, i) => ((activations[i] ?? 0.5) - 0.5) * this.omegaScale);
+    const n = this.phases.length;
+    const omega = this.omegaScratch;
+    for (let i = 0; i < n; i++) {
+      omega[i] = ((activations[i] ?? 0.5) - 0.5) * this.omegaScale;
+    }
     for (let s = 0; s < this.substeps; s++) {
-      this.phases = kuramotoStep(this.phases, omega, K, this.dt);
+      kuramotoStepInto(this.phases, omega, K, this.dt, this.phasesBack);
+      const tmp = this.phases;
+      this.phases = this.phasesBack;
+      this.phasesBack = tmp;
     }
     const state = integrate(this.phases);
     if (this.homeostat) this.homeostat.observe(state.order);

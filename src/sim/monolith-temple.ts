@@ -237,7 +237,9 @@ export class MonolithTemple {
           vec3 ro = cameraPosition;
           vec3 rd = normalize(vWorldPos - ro);
 
-          float t = 0.0, maxD = 360.0;
+          // Start raymarching near the proxy bounding sphere entry and allow up to 2000 units
+          // so the Menger Core never clips out when the camera is > 360 units away in the ±675 arena.
+          float t = max(0.0, length(uCenter - ro) - 55.0), maxD = 2000.0;
           float coreMin = 1e9;                          // closest approach to the caged point
           vec3 p = ro;
           bool hit = false;
@@ -279,7 +281,7 @@ export class MonolithTemple {
         }
       `,
       transparent: true,
-      side: THREE.DoubleSide,
+      side: THREE.BackSide,
       depthWrite: false,
     });
     this.mats.push(this.coreMat);

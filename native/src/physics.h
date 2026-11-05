@@ -153,7 +153,7 @@ class ReliquaryPhysics {
     // Friction at the contact converts tangential slip into spin (a crude but lively coupling).
     const glm::vec3 vt = rv - vn * nrm;
     const glm::vec3 torque = glm::cross(nrm, vt) * 0.35f;
-    a.angVel -= torque * invA;
+    a.angVel += torque * invA;
     b.angVel += torque * invB;
   }
 };

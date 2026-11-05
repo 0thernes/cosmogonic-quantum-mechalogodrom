@@ -176,17 +176,20 @@ export class PortalDeath {
       entities.disposeManyDescending(this.deathIndices);
     }
     // Due deaths re-enter the world ELSEWHERE — spawn(null) = a fresh random platform spot (rng-seeded).
-    while ((this.respawns[this.respawnHead]?.at ?? Infinity) <= t) {
-      const r = this.respawns[this.respawnHead++];
-      if (r) entities.spawn(null, r.mi);
-    }
-    if (this.respawnHead === this.respawns.length) {
-      this.respawns.length = 0;
-      this.respawnHead = 0;
-    } else if (this.respawnHead >= 64 && this.respawnHead * 2 >= this.respawns.length) {
-      this.respawns.copyWithin(0, this.respawnHead);
-      this.respawns.length -= this.respawnHead;
-      this.respawnHead = 0;
+    // Guarded on dt > 0 so frozen/paused frames never trigger respawns or consume RNG.
+    if (dt > 0) {
+      while ((this.respawns[this.respawnHead]?.at ?? Infinity) <= t) {
+        const r = this.respawns[this.respawnHead++];
+        if (r) entities.spawn(null, r.mi);
+      }
+      if (this.respawnHead === this.respawns.length) {
+        this.respawns.length = 0;
+        this.respawnHead = 0;
+      } else if (this.respawnHead >= 64 && this.respawnHead * 2 >= this.respawns.length) {
+        this.respawns.copyWithin(0, this.respawnHead);
+        this.respawns.length -= this.respawnHead;
+        this.respawnHead = 0;
+      }
     }
     // Advance + fade the burst (drag + gravity + a chaotic warp swirl; fade base colour by life fraction).
     let anyAlive = false;
@@ -198,7 +201,7 @@ export class PortalDeath {
       this.life[i] = nL > 0 ? nL : 0;
       const f = nL > 0 ? nL / LIFE : 0; // 1 → 0 over LIFE
       const o = i * 3;
-      const sw = Math.sin(t * 6 + i) * 9 * ARENA_MID * dt; // deterministic warp swirl
+      const sw = Math.sin(t * 6 + i) * 9 * ARENA_MID; // deterministic warp swirl velocity
       this.vel[o + 1] = (this.vel[o + 1] ?? 0) - 16 * ARENA_MID * dt; // gravity
       this.posArr[o] = (this.posArr[o] ?? 0) + ((this.vel[o] ?? 0) + sw) * dt;
       this.posArr[o + 1] = (this.posArr[o + 1] ?? 0) + (this.vel[o + 1] ?? 0) * dt;

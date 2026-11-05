@@ -121,7 +121,10 @@ export class PrimordialSoup {
     intelligence?: OrganismIntelligenceSignal,
   ): void {
     this.tick++;
-    const archonIdx = typeof input === 'number' ? input : Math.floor(((input[0] ?? 0) * 10) % 10);
+    const archonIdx =
+      typeof input === 'number'
+        ? ((Math.floor(input) % 25) + 25) % 25
+        : ((Math.floor((input[0] ?? 0) * 25) % 25) + 25) % 25;
     const beat = typeof input === 'number' ? beatOrDt : this.tick;
     const entropy = typeof input === 'number' ? 0 : clamp01(beatOrDt);
     const inputCatalysis = typeof input === 'number' ? 0 : vectorMean(input);

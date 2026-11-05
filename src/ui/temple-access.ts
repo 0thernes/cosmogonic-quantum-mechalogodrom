@@ -95,9 +95,12 @@ class TempleAccess {
     doc.getElementById('cqm-tka-toggle')?.remove();
     doc.getElementById('cqm-tka-modal')?.remove();
     injectPanelBaseCSS(doc);
-    const style = doc.createElement('style');
-    style.textContent = STYLE;
-    doc.head.appendChild(style);
+    if (!doc.getElementById('cqm-tka-style')) {
+      const style = doc.createElement('style');
+      style.id = 'cqm-tka-style';
+      style.textContent = STYLE;
+      doc.head.appendChild(style);
+    }
 
     this.toggle = doc.createElement('button');
     this.toggle.id = 'cqm-tka-toggle';
@@ -183,6 +186,13 @@ class TempleAccess {
         window.dispatchEvent(new CustomEvent('cqm:force-ascension', { detail: { via: 'uwu' } }));
       }
     }
+  }
+
+  dispose(doc: Document = document): void {
+    this.close();
+    this.modal.remove();
+    this.toggle.remove();
+    doc.getElementById('cqm-tka-style')?.remove();
   }
 }
 

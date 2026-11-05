@@ -8,11 +8,23 @@
  */
 import type { Engine } from './engine';
 
+/**
+ * Render-fidelity governor levels.
+ *
+ * Under the full-fidelity law, runtime governance always pins rendering to {@link Level.FULL}
+ * (100% DPR, post-FX active, shadows preserved) and adapts simulation cadence via
+ * {@link ComputeCadencePlan} instead. `DPR_85` through `SHADOWS_OFF` are retained as frozen
+ * contract enum constants for telemetry, snapshots, and explicit manual/test callers.
+ */
 export enum Level {
   FULL = 0,
+  /** Frozen legacy contract constant (0.85 DPR tier; unused by active full-fidelity governor). */
   DPR_85 = 1,
+  /** Frozen legacy contract constant (0.65 DPR tier; unused by active full-fidelity governor). */
   DPR_65 = 2,
+  /** Frozen legacy contract constant (post-FX suspended tier; unused by active full-fidelity governor). */
   FX_OFF = 3,
+  /** Frozen legacy contract constant (shadows disabled tier; unused by active full-fidelity governor). */
   SHADOWS_OFF = 4,
 }
 

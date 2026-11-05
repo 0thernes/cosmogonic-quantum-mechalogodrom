@@ -80,11 +80,13 @@ function buildWavePacket(
   outRe: Float64Array,
   outIm: Float64Array,
 ): void {
-  // Map position into lattice-cell offsets (wrap into [0,GRID) by the fractional part so the
-  // encoding stays bounded for arbitrary world coordinates).
-  const cx = CENTER + (((pos[0] % 1) + 1) % 1) * GRID - GRID / 2;
-  const cy = CENTER + (((pos[1] % 1) + 1) % 1) * GRID - GRID / 2;
-  const cz = CENTER + (((pos[2] % 1) + 1) % 1) * GRID - GRID / 2;
+  // Map position into lattice-cell offsets using a smooth C^∞ periodic curve (period 1) so
+  // central finite differences at integer coordinates (e.g. pos = [0,0,0]) never straddle a
+  // modulo sawtooth jump discontinuity.
+  const TAU = Math.PI * 2;
+  const cx = CENTER + 0.5 * GRID * (1 - Math.cos(TAU * pos[0] + 0.7)) - GRID / 2;
+  const cy = CENTER + 0.5 * GRID * (1 - Math.cos(TAU * pos[1] + 0.7)) - GRID / 2;
+  const cz = CENTER + 0.5 * GRID * (1 - Math.cos(TAU * pos[2] + 0.7)) - GRID / 2;
   // Inverse spread: |curvature| sharpens the packet; floor keeps σ finite and the packet smooth.
   const sigma = 1 / (0.35 + Math.abs(curvature) * 1.5);
   const twoSigma2 = 2 * sigma * sigma;
@@ -336,8 +338,16 @@ export function qgeAlivenessProxy(curvature: number, phase: number, alivenessFac
     SCRATCH_RE_A,
     SCRATCH_IM_A,
   );
-  // ⟨0|ψ⟩ = ψ₀ (the |0⟩ amplitude); |⟨0|ψ⟩| is the fidelity with the trivial state.
-  const fidelity = Math.hypot(SCRATCH_RE_A[0]!, SCRATCH_IM_A[0]!);
+  // ⟨k=0|ψ⟩ = (1/√DIM) Σᵢ ψᵢ — coherent overlap across all lattice sites with the uniform
+  // zero-momentum ground state, capturing both curvature-driven spatial spread and phase/momentum
+  // interference across the wave packet.
+  let sumRe = 0;
+  let sumIm = 0;
+  for (let i = 0; i < DIM; i++) {
+    sumRe += SCRATCH_RE_A[i]!;
+    sumIm += SCRATCH_IM_A[i]!;
+  }
+  const fidelity = Math.hypot(sumRe, sumIm) / Math.sqrt(DIM);
   const f = fidelity > 1 ? 1 : fidelity;
   const fsDistance = Math.acos(f); // [0, π/2]
   const normalized = fsDistance / (Math.PI / 2); // [0,1]

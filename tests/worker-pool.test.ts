@@ -22,6 +22,10 @@ describe('Phase 3.1: Worker Pool', () => {
     for (const tier of tiers) {
       const pool = createWorkerPool(tier);
       expect(pool).toBeDefined();
+      const stats = pool.getStats();
+      expect(stats.totalWorkers).toBe(0);
+      expect(stats.activeTasks).toBe(0);
+      expect(stats.pendingResults).toBe(0);
       pool.dispose();
     }
   });

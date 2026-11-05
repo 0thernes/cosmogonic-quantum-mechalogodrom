@@ -553,12 +553,15 @@ export class XenomimicPopulation {
       for (const pair of this.pairs) {
         if (alive >= target || this.pairs.length >= XENOMIMIC_MAX / 2) break;
         const m = pair.mimic;
+        const anti = pair.anti;
         const canMate =
           m.alive &&
-          pair.anti.alive &&
+          anti.alive &&
           m.energy > 0.7 &&
+          anti.energy > 0.35 &&
           (pair.beat?.mimic.mate ?? 0) > 0.3 &&
-          m.age > 6;
+          m.age > 6 &&
+          anti.age > 6;
         if (!canMate) continue;
         const litter = 1 + Math.floor(this.rng() * 3);
         for (let k = 0; k < litter && alive < target; k++) {
@@ -571,7 +574,7 @@ export class XenomimicPopulation {
           alive += 2;
         }
         m.energy = clamp01(m.energy - 0.35);
-        pair.anti.energy = clamp01(pair.anti.energy - 0.2);
+        anti.energy = Math.max(0.05, clamp01(anti.energy - 0.2));
       }
     }
   }

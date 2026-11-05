@@ -153,17 +153,22 @@ class HelpSystem {
   private readonly panel: HTMLElement;
   private readonly ansEl: HTMLElement;
   private readonly input: HTMLInputElement;
+  private readonly toggle: HTMLButtonElement;
+  private previousFocus: HTMLElement | null = null;
   private open = false;
 
   constructor(doc: Document = document) {
     doc.getElementById('cqm-help-toggle')?.remove();
     doc.getElementById('cqm-help-panel')?.remove();
     injectPanelBaseCSS(doc);
-    const style = doc.createElement('style');
-    style.textContent = STYLE;
-    doc.head.appendChild(style);
+    if (!doc.getElementById('cqm-help-style')) {
+      const style = doc.createElement('style');
+      style.id = 'cqm-help-style';
+      style.textContent = STYLE;
+      doc.head.appendChild(style);
+    }
 
-    const toggle = dockToggle({
+    this.toggle = dockToggle({
       id: 'cqm-help-toggle',
       label: '❓ HELP ME NOW',
       title: 'Repo-grounded help — ask anything about this world',
@@ -171,11 +176,15 @@ class HelpSystem {
       onClick: () => this.setOpen(!this.open),
       doc,
     });
-    mountToggle(toggle, doc);
+    mountToggle(this.toggle, doc);
 
     this.panel = doc.createElement('section');
     this.panel.id = 'cqm-help-panel';
+    this.panel.setAttribute('role', 'dialog');
+    this.panel.setAttribute('aria-modal', 'true');
     this.panel.setAttribute('aria-label', 'Help me now');
+    this.panel.tabIndex = -1;
+    this.panel.addEventListener('keydown', (e) => this.handleKeydown(e as KeyboardEvent));
     const head = panelHeader({ title: '❓ HELP ME NOW', onClose: () => this.setOpen(false), doc });
     head.classList.add('cqm-help-head');
     this.panel.appendChild(head);
@@ -232,10 +241,53 @@ class HelpSystem {
     }
   }
 
+  private handleKeydown(e: KeyboardEvent): void {
+    if (!this.open) return;
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      this.setOpen(false);
+      return;
+    }
+    if (e.key !== 'Tab') return;
+    const focusables = Array.from(
+      this.panel.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ),
+    );
+    if (focusables.length === 0) return;
+    const first = focusables[0]!;
+    const last = focusables[focusables.length - 1]!;
+    const active = this.panel.ownerDocument.activeElement;
+    if (e.shiftKey && active === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && active === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+
   private setOpen(v: boolean): void {
+    const wasOpen = this.open;
     this.open = v;
     this.panel.classList.toggle('open', v);
-    if (v && this.ansEl.childElementCount === 0) this.render(HELP_KB.slice(0, 1)); // seed with the overview
+    if (v) {
+      if (this.ansEl.childElementCount === 0) this.render(HELP_KB.slice(0, 1)); // seed with the overview
+      const active = this.panel.ownerDocument.activeElement;
+      this.previousFocus = active instanceof HTMLElement ? active : this.toggle;
+      this.input.focus();
+    } else if (wasOpen) {
+      const target = this.previousFocus ?? this.toggle;
+      this.previousFocus = null;
+      target.focus();
+    }
+  }
+
+  dispose(doc: Document = document): void {
+    this.setOpen(false);
+    this.panel.remove();
+    this.toggle.remove();
+    doc.getElementById('cqm-help-style')?.remove();
   }
 
   /** Run a query through the grounded retriever and render the answer cards (overview on no match). */

@@ -23,6 +23,7 @@ import {
   createSchrodingerWorkspace,
   type Wave,
 } from '../math/schrodinger';
+import { geodesicDistance, quatFromAxisAngle } from '../math/so3';
 import { CausalGraph } from './causal-graph';
 
 export interface LatentSubstrateState {
@@ -40,7 +41,6 @@ const clamp01 = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v);
 
 const GRID = 24;
 const DX = 1;
-const DT = 0.05;
 const STEPS = 8;
 
 const _V: number[] = Array.from({ length: GRID }, () => 0);
@@ -56,10 +56,12 @@ export function quantumUncertainty(drive: number): number {
   const mid = (GRID - 1) / 2;
   for (let j = 0; j < GRID; j++) {
     const dxm = j - mid;
-    _V[j] = -d * Math.exp(-(dxm * dxm) / 18); // attractive well, depth ∝ drive
+    _V[j] = -4 * d * Math.exp(-(dxm * dxm) / 14); // attractive well, depth ∝ drive
   }
-  gaussianPacketInto(_PSI, DX, mid * DX, 2 + 2 * (1 - d), 1.0);
-  for (let s = 0; s < STEPS; s++) cnStepInto(_PSI, _V, DT, DX, _PSI, _WS);
+  // Fixed initial wavepacket width so the resulting spatial variance √(⟨x²⟩−⟨x⟩²) reflects
+  // the actual Crank–Nicolson Schrödinger evolution under the drive-dependent potential well.
+  gaussianPacketInto(_PSI, DX, mid * DX, 2.5, 1.0);
+  for (let s = 0; s < STEPS; s++) cnStepInto(_PSI, _V, 0.12, DX, _PSI, _WS);
   let num = 0;
   let num2 = 0;
   let den = 0;
@@ -83,10 +85,10 @@ export function orientationCoherence(angles: ArrayLike<number>): number {
   let sum = 0;
   let pairs = 0;
   for (let i = 0; i < n; i++) {
-    const ai = angles[i] ?? 0;
+    const qi = quatFromAxisAngle([0, 0, 1], angles[i] ?? 0);
     for (let j = i + 1; j < n; j++) {
-      const diff = ai - (angles[j] ?? 0);
-      sum += Math.abs(Math.atan2(Math.sin(diff), Math.cos(diff)));
+      const qj = quatFromAxisAngle([0, 0, 1], angles[j] ?? 0);
+      sum += geodesicDistance(qi, qj);
       pairs++;
     }
   }
@@ -109,15 +111,10 @@ export interface LatentInputs {
   qualiaTone: number;
 }
 
-/**
- * Shared causal graph: observe() overwrites all 8 node values each call and updateWeight adapts
- * the surprise→workspace edge online, avoiding per-beat graph allocation.
- */
-const SHARED_CAUSAL_GRAPH = new CausalGraph();
-
 /** One deterministic per-beat read of all three substrates from live super-mind signals. */
 export function latentSubstrateStep(inp: LatentInputs): LatentSubstrateState {
-  const g = SHARED_CAUSAL_GRAPH;
+  // Fresh causal graph per evaluation so cross-instance calls cannot mutate shared edge state.
+  const g = new CausalGraph();
   g.updateWeight(
     'surprise',
     'workspace',

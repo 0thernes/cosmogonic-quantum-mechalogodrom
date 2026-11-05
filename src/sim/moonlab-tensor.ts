@@ -89,32 +89,15 @@ function transferOperator(d: number, bond: number): Mat {
  * rank-χ truncation of the product. Returns the retained Frobenius-energy ratio
  * in [0,1] — i.e. how much of the contraction survives bond dimension χ.
  */
-function liftShortVector(v: ArrayLike<number>): ArrayLike<number> {
+/** {@link liftShortVectorScratch} for contraction + qualia, lifting a length-3 input into a reused 9-slot scratch. */
+const liftScratch0 = new Float64Array(9);
+const liftScratch1 = new Float64Array(9);
+function liftShortVectorScratch(v: ArrayLike<number>, slot = 0): ArrayLike<number> {
   if (v.length !== 3) return v;
   const v0 = v[0] ?? 0;
   const v1 = v[1] ?? 0;
   const v2 = v[2] ?? 0;
-  return [
-    v0,
-    v1 - v0 * 0.5,
-    v2 - v1 * 0.5,
-    v1,
-    v2,
-    v0 - v2 * 0.5,
-    v2,
-    v0 - v1 * 0.5,
-    v1 - v2 * 0.5,
-  ];
-}
-
-/** {@link liftShortVector} for qualia, lifting a length-3 input into a reused 9-slot scratch. */
-const qualiaLift = new Float64Array(9);
-function liftShortVectorScratch(v: ArrayLike<number>): ArrayLike<number> {
-  if (v.length !== 3) return v;
-  const v0 = v[0] ?? 0;
-  const v1 = v[1] ?? 0;
-  const v2 = v[2] ?? 0;
-  const o = qualiaLift;
+  const o = slot === 0 ? liftScratch0 : liftScratch1;
   o[0] = v0;
   o[1] = v1 - v0 * 0.5;
   o[2] = v2 - v1 * 0.5;
@@ -133,8 +116,8 @@ export function moonlabTensorContract(
   chi = 4,
   bond = 2,
 ): number {
-  const aLifted = liftShortVector(a);
-  const bLifted = liftShortVector(b);
+  const aLifted = liftShortVectorScratch(a, 0);
+  const bLifted = liftShortVectorScratch(b, 1);
   // Floor d at 2 (the moonlabTensorQualia fix, line ~86): a length-2/3 input otherwise reshapes to a
   // 1×1 matrix that reads only a[0], discarding the rest — an inert constant.
   const d = Math.max(2, squareSide(Math.min(aLifted.length, bLifted.length)));
@@ -188,7 +171,7 @@ export function moonlabTensorQualia(v: ArrayLike<number>, chi: number): number {
  * the retained Frobenius-energy ratio in [0,1].
  */
 export function moonlabMpoStep(state: Float32Array, bond: number, chi = 4): number {
-  const lifted = liftShortVector(state);
+  const lifted = liftShortVectorScratch(state, 0);
   // d≥2 (read past state[0]) + keep ≤ d−1 (force a real truncation) — same de-degeneracy as contract.
   // NOTE: a length-2 state still packs to a rank-1 M (the transfer column ⊗ state outer product), so its
   // ratio stays ~1 by construction; the two length-2 call sites (world.superMpoInput, godform) were

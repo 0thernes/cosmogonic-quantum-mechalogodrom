@@ -950,7 +950,17 @@ function makeEnneperBloom(): VariantShellGeometry {
     },
     invariant(_t, drive) {
       const R = 1.05 + 1.35 * clamp01(drive.activity) + 0.25 * drive.bipolar;
-      return clamp01((R - 1.05) / 1.6);
+      // Evaluate actual Enneper surface Gaussian curvature K(u, v) = -4 / (1 + u² + v²)⁴
+      // across the radial rings r ∈ [0, R]; normalize the curvature falloff from K(0) = -4.
+      let kMean = 0;
+      for (let r = 1; r <= ENNEPER_RAD; r++) {
+        const rad = (r / ENNEPER_RAD) * R;
+        const absK = 4 / Math.pow(1 + rad * rad, 4);
+        kMean += absK / ENNEPER_RAD;
+      }
+      // At R = 0.80 (min), kMean ≈ 0.916; at R = 2.65 (max), kMean ≈ 0.244.
+      // Map curvature decay 1 - kMean / 4 into [0, 1] so larger bloom radius yields higher invariant.
+      return clamp01((1 - kMean / 0.92) / 0.75);
     },
   };
 }

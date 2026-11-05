@@ -34,6 +34,7 @@ const BIAS_DIMS = 4;
 export class TopDownPerception {
   private readonly bias = new Float32Array(BIAS_DIMS);
   private readonly mpoInput = new Float32Array(3); // len-3: slot[2]=cross term so novelty is read (a len-2 input packs to a rank-1 constant)
+  private readonly tqInput = new Float32Array(3);
   private readonly gwtContent = [0, 0];
   private readonly gwtSalience = [0.5, 0.6];
   private lastError = 0;
@@ -52,42 +53,49 @@ export class TopDownPerception {
     // Simple deterministic mapping: use first few dims + novelty to bias senses
     // Eshkol AD wire (from tape.esk + autodiff in corpus): use gradient of a smooth prediction-error potential
     const l0 = imaginedLatent[0] ?? 0;
+    const l1 = imaginedLatent[1] ?? 0;
+    const l2 = imaginedLatent[2] ?? 0;
+    const l3 = imaginedLatent[3] ?? 0;
     const predErr = (x: number) => 0.5 * x * x - l0 * (1 - novelty * 0.5) * x + novelty * 0.1;
     const probe = l0 + novelty * 0.25;
     const adGrad = eshkolADGradient(predErr, probe); // derivative as control
     // Iteration 11: Eshkol forward dual from AUTODIFF (dual {val,d}) for better predict error
     const dual = eshkolDual(predErr, probe);
     // use makeEshkolDual + dualAdd for combined Eshkol forward AD (per AUTODIFF.md dual struct)
-    const d1 = makeEshkolDual(adGrad, 0.5);
-    const d2 = makeEshkolDual(dual.derivative, 0.2);
+    const d1 = makeEshkolDual(adGrad, 0.5 * (1 + l0 * 0.5));
+    const d2 = makeEshkolDual(dual.derivative, 0.2 + novelty * 0.3 + l1 * 0.1);
     const dTape = dualAdd(d1, d2);
     // additional AD tape-style (grad * dual as combined error signal for topdown into world/super)
     const tapeErr = adGrad * (dTape.derivative + 0.001);
     this.bias[0] =
-      0.1 * (imaginedLatent[0] ?? 0) +
-      0.05 * novelty +
-      0.02 * adGrad +
-      0.01 * dTape.derivative +
-      0.005 * tapeErr; // energy + dual + tape (Eshkol)
+      0.1 * l0 + 0.05 * novelty + 0.02 * adGrad + 0.01 * dTape.derivative + 0.005 * tapeErr; // energy + dual + tape (Eshkol)
     // eshkolApplyAD (Eshkol tape) + moonlabTensorQualia for bias[1/2] richer topdown
-    this.bias[1] = eshkolApplyAD(0.08 * (imaginedLatent[1] ?? 0), adGrad, 0.05); // threat + AD
-    const tq = moonlabTensorQualia([imaginedLatent[0] ?? 0, novelty, imaginedLatent[2] ?? 0], 6);
-    this.bias[2] = 0.12 * (imaginedLatent[2] ?? 0) + 0.02 * tq; // light + tensor
+    this.bias[1] = eshkolApplyAD(0.08 * l1, adGrad, 0.05); // threat + AD
+    this.tqInput[0] = l0;
+    this.tqInput[1] = novelty;
+    this.tqInput[2] = l2;
+    const tq = moonlabTensorQualia(this.tqInput, 6);
+    this.bias[2] = 0.12 * l2 + 0.02 * tq; // light + tensor
     // gwtBroadcast + moonlabMpoStep (Tsotchke Eshkol GWT + Moonlab) for richer HOT-1 bias
     this.gwtContent[0] = this.bias[0] || 0;
     this.gwtContent[1] = novelty;
     const gwtB = gwtBroadcast(this.gwtContent, this.gwtSalience);
-    this.mpoInput[0] = imaginedLatent[0] || 0;
+    this.mpoInput[0] = l0;
     this.mpoInput[1] = novelty;
-    this.mpoInput[2] = (imaginedLatent[0] || 0) * novelty;
+    this.mpoInput[2] = l0 * novelty;
     const mpoB = moonlabMpoStep(this.mpoInput, 2);
     this.bias[0] += ((gwtB[0] || 0) + Math.abs(mpoB)) * 0.005;
-    this.bias[3] = eshkolApplyAD(0.06 * (imaginedLatent[3] ?? 0) + 0.03 * novelty, adGrad, 0.02); // sound + more AD/tape from Eshkol
+    this.bias[3] = eshkolApplyAD(0.06 * l3 + 0.03 * novelty, adGrad, 0.02); // sound + more AD/tape from Eshkol
     // mpoB + gwt for Moonlab/Eshkol in sound bias too
     this.bias[3] += Math.abs(mpoB) * 0.01 + (gwtB[0] || 0) * 0.005;
-    // wire quantum-quake + libirrepSym into topdown (aliveness + symmetry modulate bias for corpus effect)
-    const qp = quakePerturb(0.5, 42, 0.1);
-    const irSym = libirrepSymmetry(2, 3);
+    // wire quantum-quake + libirrepSym into topdown (live state-dependent aliveness + symmetry modulate bias)
+    const qFactor = Math.max(0, Math.min(1, 0.5 + 0.35 * l0 + 0.15 * novelty));
+    const qSeed = 17 + Math.abs(Math.round(l1 * 19 + novelty * 25));
+    const qAmp = 0.05 + 0.1 * Math.max(0, Math.min(1, novelty));
+    const qp = quakePerturb(qFactor, qSeed, qAmp);
+    const irOrder = 2 + (Math.abs(Math.round(l2 * 4 + novelty * 3)) % 4);
+    const irDim = 2 + (Math.abs(Math.round(l3 * 4 + l0 * 3)) % 4);
+    const irSym = libirrepSymmetry(irOrder, irDim);
     this.bias[2] = (this.bias[2] ?? 0) + (qp - 1) * 0.01 + (irSym % 2) * 0.005; // Moonlab/Quake + irrep in HOT-1 bias
     for (let i = 0; i < BIAS_DIMS; i++) {
       this.bias[i] = Math.max(-0.3, Math.min(0.3, this.bias[i] ?? 0));

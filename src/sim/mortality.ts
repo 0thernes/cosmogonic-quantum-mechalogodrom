@@ -266,18 +266,23 @@ export function computePopulationMortalityStats(
   individuals: Mortality[],
 ): PopulationMortalityStats {
   const total = individuals.length;
-  const alive = individuals.filter((m) => m.isAlive).length;
+  let alive = 0;
+  let totalBeats = 0;
+  let totalLifespan = 0;
+  let totalBirths = 0;
+  for (let i = 0; i < total; i++) {
+    const m = individuals[i]!;
+    if (m.isAlive) alive++;
+    const st = m.currentState;
+    totalBeats += st.age;
+    totalLifespan += st.lifespan;
+    totalBirths += st.offspringCount;
+  }
   const dead = total - alive;
 
-  const ages = individuals.map((m) => m.currentState.age);
-  const lifespans = individuals.map((m) => m.currentState.lifespan);
+  const averageAge = total > 0 ? totalBeats / total : 0;
+  const averageLifespan = total > 0 ? totalLifespan / total : 0;
 
-  const averageAge = ages.length > 0 ? ages.reduce((sum, a) => sum + a, 0) / ages.length : 0;
-  const averageLifespan =
-    lifespans.length > 0 ? lifespans.reduce((sum, l) => sum + l, 0) / lifespans.length : 0;
-
-  const totalBeats = ages.reduce((sum, a) => sum + a, 0);
-  const totalBirths = individuals.reduce((sum, m) => sum + m.currentState.offspringCount, 0);
   const deathRate = totalBeats > 0 ? dead / totalBeats : 0;
   const birthRate = totalBeats > 0 ? totalBirths / totalBeats : 0;
 

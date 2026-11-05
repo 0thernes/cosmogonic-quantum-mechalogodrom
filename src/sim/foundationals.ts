@@ -114,6 +114,7 @@ export class OrganInterconnect {
   private readonly rng: Rng;
   /** Density: 0 at 100k (sparse) → 1 at 1B (dense). Drives initial sparsity. */
   private density = 0.15;
+  private currentScale = -1;
 
   constructor(seed: number) {
     this.rng = mulberry32((seed ^ 0xf0da710) >>> 0 || 1);
@@ -129,6 +130,8 @@ export class OrganInterconnect {
 
   /** Update density based on designed parameter count (scales with APEX growth). */
   setScale(designedParams: number): void {
+    if (designedParams === this.currentScale) return;
+    this.currentScale = designedParams;
     const t = Math.min(
       1,
       (designedParams - APEX_BRAIN_START_PARAMS) /
@@ -210,6 +213,8 @@ export class OrganInterconnect {
 export class WetComputingLayer {
   private readonly u = new Float32Array(10); // activator
   private readonly v = new Float32Array(10); // inhibitor
+  private readonly nextU = new Float32Array(10);
+  private readonly nextV = new Float32Array(10);
   private readonly du = 0.1;
   private readonly dv = 0.4;
   private f = 0.037;
@@ -225,8 +230,8 @@ export class WetComputingLayer {
 
   /** Step the reaction-diffusion system. organActivity feeds the activator. */
   step(organActivity: Float32Array, dt: number): void {
-    const nextU = new Float32Array(10);
-    const nextV = new Float32Array(10);
+    const nextU = this.nextU;
+    const nextV = this.nextV;
     for (let i = 0; i < 10; i++) {
       // Laplacian (ring topology — neighbors are (i-1) and (i+1) mod 10)
       const prev = (i + 9) % 10;
@@ -310,8 +315,8 @@ export class DimensionalTranscendence {
 
   /** Project a 4D cognitive vector to 3D motor output. */
   project(x: number, y: number, z: number, w: number): [number, number, number] {
-    // Stereographic-style projection from 4D to 3D
-    const denom = 1 + w * 0.5;
+    // Stereographic-style projection from 4D to 3D (clamped away from 0)
+    const denom = Math.max(0.1, 1 + w * 0.5);
     return [x / denom, y / denom, z / denom];
   }
 }

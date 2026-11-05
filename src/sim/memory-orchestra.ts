@@ -64,8 +64,10 @@ export class MemoryOrchestra {
     for (let j = 0; j < 8; j++) dst[j] = data[j] ?? 0;
     const rec: MemRecord = { kind, t, conf, src, data: dst, cause };
     // Update the per-symbol confidence EMAs from this record's data (lightweight belief-state, not sum-product).
+    // Indices 0..7 track direct features; 8..11 track distinct pairwise macro-beliefs instead of duplicating 0..3.
     for (let s = 0; s < 12; s++) {
-      const d = dst[s % 8] ?? 0;
+      const d =
+        s < 8 ? (dst[s] ?? 0) : 0.5 * ((dst[(s - 8) * 2] ?? 0) + (dst[(s - 8) * 2 + 1] ?? 0));
       this.fgBeliefs[s] = (this.fgBeliefs[s] ?? 0) * 0.8 + (d > 0.5 ? conf * 0.2 : 0);
     }
     this.events[this.head] = rec;
@@ -95,22 +97,30 @@ export class MemoryOrchestra {
       // k=0 is the MOST RECENT record (loop walks head-1 backwards), so recency weight must DECREASE
       // with k. The old `(k+1)/len` inverted it — newest scored lowest, oldest highest.
       const age = 0.01 + (this.len - k) / (this.len || 1);
-      const score = rel * (e.conf || 0) * age;
-      // insert into top (small max, no sort)
-      if (numScored < max) {
-        this.scored[numScored]!.i = idx;
-        this.scored[numScored]!.score = score;
-        numScored++;
-      } else {
-        // find min in current top
-        let minIdx = 0;
-        for (let m = 1; m < numScored; m++)
-          if (this.scored[m]!.score < this.scored[minIdx]!.score) minIdx = m;
-        if (score > this.scored[minIdx]!.score) {
-          this.scored[minIdx]!.i = idx;
-          this.scored[minIdx]!.score = score;
+      // Boost candidate score using associative causal edges in `this.graph`.
+      let graphBoost = 1;
+      for (let g = 0; g + 1 < this.gLen; g += 2) {
+        if (this.graph[g] === idx || this.graph[g + 1] === idx) {
+          graphBoost += 0.15;
         }
       }
+      const score = rel * (e.conf || 0) * age * graphBoost;
+      this.scored[numScored]!.i = idx;
+      this.scored[numScored]!.score = score;
+      numScored++;
+    }
+    // In-place descending sort over all `numScored` candidates BEFORE taking top `cap = Math.min(max, 4)`.
+    for (let i = 1; i < numScored; i++) {
+      const curI = this.scored[i]!.i;
+      const curScore = this.scored[i]!.score;
+      let j = i - 1;
+      while (j >= 0 && this.scored[j]!.score < curScore) {
+        this.scored[j + 1]!.i = this.scored[j]!.i;
+        this.scored[j + 1]!.score = this.scored[j]!.score;
+        j--;
+      }
+      this.scored[j + 1]!.i = curI;
+      this.scored[j + 1]!.score = curScore;
     }
     // collect top into prealloc buffer (no new/push/slice in hot path)
     // cap MUST come from a constant, not this.recallOut.length: that field is mutated below to the
@@ -162,6 +172,7 @@ export class MemoryOrchestra {
       // TSOTCHKE Eshkol fg from corpus.
       fgEnergy: this.fgEnergy,
       fgBeliefMean: this.fgBeliefs.reduce((a, b) => a + b, 0) / 12,
+      fgBeliefs: Array.from(this.fgBeliefs),
     };
   }
 }

@@ -125,12 +125,16 @@ export class TheoryOfMind {
           ? IDX_DOMINATE
           : 0;
     const lr = 0.015 * this.socialSurprise;
-    const outBiasBase = TOM_IN * TOM_HID + TOM_HID + TOM_HID * TOM_OUT;
+    const outLayerBase = TOM_HID * (1 + TOM_IN); // 12 * 7 = 84 (TinyMLP packs [bias, w_0..w_{in-1}] per neuron)
+    const outNeuronStride = 1 + TOM_HID; // 1 + 12 = 13
     for (let i = 0; i < TOM_OUT; i++) {
-      const idx = outBiasBase + i;
-      if (idx < this.net.weights.length) {
+      const biasIdx = outLayerBase + i * outNeuronStride;
+      if (biasIdx < this.net.weights.length) {
         const err = (i === targetIdx ? 1 : 0) - (this.belief[i] ?? 0);
-        this.net.weights[idx] = Math.max(-2, Math.min(2, (this.net.weights[idx] ?? 0) + lr * err));
+        this.net.weights[biasIdx] = Math.max(
+          -2,
+          Math.min(2, (this.net.weights[biasIdx] ?? 0) + lr * err),
+        );
       }
     }
     // menace = P(rival is HUNT or DOMINATE, plus half its DECEIVE mass), gated by how close it is

@@ -176,6 +176,7 @@ interface Leviathan {
  * attached). `count` feeds optional telemetry.
  */
 export class LeviathanSystem implements PortalCullable, DomeFeeder, BigTreeActorSource {
+  private readonly root = new THREE.Group();
   private readonly levs: Leviathan[] = [];
   private readonly intelligence: OrganismIntelligenceSignal | null;
   /** PORTAL DEATH (USER): leviathans blasted by the portal, awaiting their 5 s respawn ELSEWHERE. */
@@ -191,7 +192,7 @@ export class LeviathanSystem implements PortalCullable, DomeFeeder, BigTreeActor
   // by design — leviathans draw no rng and touch no organism state (F-BEINGS additive contract).
   constructor(ctx: SimContext) {
     this.intelligence = ctx.organismIntelligence ?? null;
-    const root = new THREE.Group();
+    const root = this.root;
     ctx.scene.add(root);
     // A capsule body reads as a sea-serpent/whale silhouette; built once, deterministically.
     const geo = new THREE.CapsuleGeometry(1.6 * COLOSSAL, 9 * COLOSSAL, 5, 14);
@@ -371,9 +372,14 @@ export class LeviathanSystem implements PortalCullable, DomeFeeder, BigTreeActor
         geoDisposed = true;
       }
       lv.mat.dispose();
+      lv.aura.dispose();
+      lv.aura.removeFromParent();
       lv.group.removeFromParent();
     }
+    this.root.removeFromParent();
     this.levs.length = 0;
+    this.portalDowned.length = 0;
+    this.portalCullSeq = 0;
   }
 
   /** F-HOLES: wire in the singularity system so an active hole tugs the leviathans (or null to detach). */
@@ -394,7 +400,7 @@ export class LeviathanSystem implements PortalCullable, DomeFeeder, BigTreeActor
     // V1.3 ECOLOGY: every STIR_EVERY frames the colossi seed the RD substrate at their position — a real
     // reciprocal effect on the world (no longer pure scenery), done deterministically so they stay
     // stream-neutral; the RD ground's own Gray-Scott decay means this can never diverge.
-    const doStir = this.rd !== null && this.stirTick++ % STIR_EVERY === 0;
+    const doStir = dt > 0 && this.rd !== null && this.stirTick++ % STIR_EVERY === 0;
     for (let i = 0; i < this.levs.length; i++) {
       const lv = this.levs[i];
       if (!lv) continue; // noUncheckedIndexedAccess: i < length
@@ -414,24 +420,28 @@ export class LeviathanSystem implements PortalCullable, DomeFeeder, BigTreeActor
         ? 0.88 + intelligence.forecast * 0.12 + intelligence.confidence * 0.1
         : 1;
       if (!lv.bigTreeControlled) {
-        lv.vel.x += (Math.cos(orbit) * r - p.x) * 0.0006 * navigationGain * dt * 60;
-        lv.vel.z += (Math.sin(orbit) * r - p.z) * 0.0006 * navigationGain * dt * 60;
-        lv.vel.y +=
-          (18 * HABITAT_Y_SCALE + Math.sin(t * 0.07 + lv.ph) * 12 * HABITAT_Y_SCALE - p.y) *
-          0.0005 *
-          dt *
-          60;
-        lv.vel.multiplyScalar(0.96);
+        if (dt > 0) {
+          lv.vel.x += (Math.cos(orbit) * r - p.x) * 0.0006 * navigationGain * dt * 60;
+          lv.vel.z += (Math.sin(orbit) * r - p.z) * 0.0006 * navigationGain * dt * 60;
+          lv.vel.y +=
+            (18 * HABITAT_Y_SCALE + Math.sin(t * 0.07 + lv.ph) * 12 * HABITAT_Y_SCALE - p.y) *
+            0.0005 *
+            dt *
+            60;
+          lv.vel.multiplyScalar(Math.pow(0.96, dt * 60));
 
-        // F-HOLES: an active singularity drags the colossus too (no-op when unattached/inactive).
-        if (this.singularity && this.singularity.bodyForce(p.x, p.y, p.z, dt, HOLE_F)) {
-          lv.vel.add(HOLE_F);
-        }
-        // Mid-field containment applies to autonomous roaming only; the tree route is authored inside
-        // the platform and must not be pulled back toward an unrelated home orbit.
-        if (p.lengthSq() > MID_RADIUS2) {
-          V1.copy(p).normalize().multiplyScalar(-0.02);
-          lv.vel.add(V1);
+          // F-HOLES: an active singularity drags the colossus too (no-op when unattached/inactive).
+          if (this.singularity && this.singularity.bodyForce(p.x, p.y, p.z, dt, HOLE_F)) {
+            lv.vel.add(HOLE_F);
+          }
+          // Mid-field containment applies to autonomous roaming only; the tree route is authored inside
+          // the platform and must not be pulled back toward an unrelated home orbit.
+          if (p.lengthSq() > MID_RADIUS2) {
+            V1.copy(p)
+              .normalize()
+              .multiplyScalar(-0.02 * dt * 60);
+            lv.vel.add(V1);
+          }
         }
       }
 

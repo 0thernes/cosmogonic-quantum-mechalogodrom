@@ -43,10 +43,12 @@ export interface TemporalCrystalSnapshot {
   periodDoublingStrength: number;
   floquetCycle: number;
   z2Symmetry: number;
+  correlator: number[];
 }
 
 export class TemporalCrystal {
   private readonly spins = new Float32Array(N_SPINS); // ±1
+  private readonly prevSpins = new Float32Array(N_SPINS);
   private crystalPhase = 0;
   private orderParameter = 0.5;
   private periodDoublingStrength = 0;
@@ -70,29 +72,28 @@ export class TemporalCrystal {
     for (let cycle = 0; cycle < FLOQUET_CYCLES; cycle++) {
       this.floquetCycle++;
 
-      // H_Ising · Δt: nearest-neighbour ZZ interaction
+      // H_Ising · Δt: synchronous nearest-neighbour ZZ interaction from previous-step copy
+      this.prevSpins.set(this.spins);
       for (let i = 0; i < N_SPINS; i++) {
         const j = (i + 1) % N_SPINS;
-        const sI = this.spins[i] ?? 1;
-        const sJ = this.spins[j] ?? 1;
+        const sI = this.prevSpins[i] ?? 1;
+        const sJ = this.prevSpins[j] ?? 1;
         const isingField = J_ISING * sJ + (this.disorder[i] ?? 0);
-        // Probabilistic update: flip if energy decreases
-        if (sI * isingField < 0) {
-          // Anti-aligned with field: flip with probability ~ |isingField|
-          if (Math.abs(isingField) > 0.3) {
-            this.spins[i] = -sI;
-          }
+        // Flip if anti-aligned with neighbour field
+        if (sI * isingField < 0 && Math.abs(isingField) > 0.3) {
+          this.spins[i] = -sI;
         }
       }
 
       // H_drive: π pulse (X rotation) ± disorder ε — the DTC drive
       const driveAngle = Math.PI + externalField * 0.2;
+      const thermalScale = 0.003 + Math.min(0.04, Math.abs(externalField) * 0.02);
       for (let i = 0; i < N_SPINS; i++) {
         const eps = this.disorder[i] ?? 0;
-        // Effective: spin flips with probability cos²((π+ε)/2)
+        // Effective pulse error sin²((driveAngle - π)/2 + ε) = cos²(driveAngle/2 + ε)
         const flipProb = Math.cos(driveAngle / 2 + eps) ** 2;
-        if (flipProb < 0.3) {
-          // flip (≈ π pulse → near-deterministic flip)
+        if (flipProb < thermalScale) {
+          // flip (≈ π pulse within thermal/disorder threshold → Floquet flip)
           this.spins[i] = -(this.spins[i] ?? 1);
         }
       }
@@ -102,8 +103,11 @@ export class TemporalCrystal {
       let oddSum = 0;
       for (let i = 0; i < N_SPINS; i++) {
         const sym = libirrepSymmetry(1, i + (this.floquetCycle % 7)); // Z₂ irrep
-        const corr = ((sym % 3) - 1) * 0.01;
-        this.spins[i] = Math.sign((this.spins[i] ?? 1) + corr);
+        const corr = (sym % 3) - 1;
+        const curSpin = this.spins[i] ?? 1;
+        if (corr * curSpin < 0 && Math.abs(this.disorder[i] ?? 0) > DISORDER_EPS * 0.85) {
+          this.spins[i] = -curSpin;
+        }
         if (i % 2 === 0) evenSum += this.spins[i] ?? 0;
         else oddSum += this.spins[i] ?? 0;
       }
@@ -128,6 +132,7 @@ export class TemporalCrystal {
     for (let i = 0; i < 4; i++) {
       this.tA[i] = clamp01((this.spins[i * 2] ?? 0) * 0.5 + 0.5);
       this.tB[i] = clamp01((this.spins[i * 2 + 1] ?? 0) * 0.5 + 0.5);
+      this._correlator[i] = (this.spins[i * 2] ?? 0) * (this.spins[i * 2 + 1] ?? 0);
     }
     const zzzzCorr = moonlabTensorContract(this.tA, this.tB, 4);
     this._correlator[0] = zzzzCorr;
@@ -135,9 +140,10 @@ export class TemporalCrystal {
 
     // quakePerturb: QGE injects quantum noise (models decoherence)
     const qk = quakePerturb(this.orderParameter, this.floquetCycle % 41, 0.05);
-    this.spins[this.floquetCycle % N_SPINS] = Math.sign(
-      (this.spins[this.floquetCycle % N_SPINS] ?? 1) * qk + 0.001,
-    );
+    if (Math.abs(qk - 1) > 0.035) {
+      const targetSpin = this.floquetCycle % N_SPINS;
+      this.spins[targetSpin] = -(this.spins[targetSpin] ?? 1);
+    }
 
     // Eshkol AD: gradient of order parameter w.r.t. disorder
     const adGrad = eshkolADGradient((eps: number) => clamp01(1 - Math.abs(eps) * 2), DISORDER_EPS);
@@ -150,6 +156,9 @@ export class TemporalCrystal {
   get phase(): number {
     return this.crystalPhase;
   }
+  get correlator(): Float32Array {
+    return this._correlator;
+  }
 
   snapshot(): TemporalCrystalSnapshot {
     return {
@@ -159,6 +168,7 @@ export class TemporalCrystal {
       periodDoublingStrength: this.periodDoublingStrength,
       floquetCycle: this.floquetCycle,
       z2Symmetry: this.z2Symmetry,
+      correlator: Array.from(this._correlator),
     };
   }
 }

@@ -259,12 +259,19 @@ const BINARY_EXT =
 const ROOT = resolve(import.meta.dir, '..');
 const FALLBACK_SKIP_DIRS = new Set([
   '.agents',
+  '.claude',
   '.codex',
   '.git',
+  '.playwright-cli',
+  'agent-tools',
   'coverage',
   'dist',
   'legacy',
   'node_modules',
+  'output',
+  'site',
+  'terminals',
+  'verify',
 ]);
 
 function repoRel(abs: string): string {

@@ -953,7 +953,7 @@ export class EnvironmentSystem {
       if (m instanceof THREE.MeshStandardMaterial) {
         m.color.copy(base.bc).lerp(BRUTAL_LIGHT, g);
         m.emissive.copy(base.be ?? BRUTAL_GROUND_EMISSIVE).lerp(BRUTAL_GROUND_EMISSIVE, g);
-      } else if (m instanceof THREE.MeshBasicMaterial) {
+      } else if (m instanceof THREE.MeshBasicMaterial || m instanceof THREE.LineBasicMaterial) {
         m.color.copy(base.bc).lerp(BRUTAL_LIGHT, g);
       }
     }
@@ -974,7 +974,7 @@ export class EnvironmentSystem {
         out.push(m);
         if (m instanceof THREE.MeshStandardMaterial) {
           this.brutalBase.set(m, { bc: m.color.clone(), be: m.emissive.clone() });
-        } else if (m instanceof THREE.MeshBasicMaterial) {
+        } else if (m instanceof THREE.MeshBasicMaterial || m instanceof THREE.LineBasicMaterial) {
           this.brutalBase.set(m, { bc: m.color.clone(), be: null });
         }
       }

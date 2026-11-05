@@ -36,7 +36,11 @@ export interface QuantumGeometry {
   params: number;
   /** Fubini–Study metric g_ij = Re Q_ij (P×P, symmetric, positive-semidefinite). */
   metric: number[][];
-  /** Berry curvature Ω_ij = Im Q_ij (P×P, antisymmetric — the geometric phase). */
+  /**
+   * Unscaled Berry geometric-phase tensor Im Q_ij = -½ Ω_ij (P×P, antisymmetric).
+   * Note: the canonical Berry curvature 2-form is Ω_ij = -2 Im Q_ij (as reported by
+   * `cqm_qgtl_full_tensor_2d` and `mixedStateQgt`); this field stores Im Q_ij directly.
+   */
   berry: number[][];
   /**
    * "Quantum volume" = trace(g): total state sensitivity to its control parameters (≥ 0). Note (#88):

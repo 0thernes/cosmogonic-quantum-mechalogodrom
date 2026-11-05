@@ -86,6 +86,7 @@ export class HolographicMemory {
   // Persistent lifelong narrative + grounded symbol (extension inside this module). Preallocated; hot updates alloc-free.
   private readonly narrative = new PersistentNarrative();
   private lastNarrRel = 0;
+  private lastNarrEventType: NarrativeEvent = NARRATIVE_EVENT.OBSERVE;
 
   constructor(rng: Rng, plans = 7, dim = HRR_DIM, features = HRR_FEATURES) {
     const K = Math.max(2, Math.floor(plans));
@@ -205,11 +206,20 @@ export class HolographicMemory {
   routeRecall(drives: ArrayLike<number>): number {
     const r = this.narrative.routeRecall(drives);
     this.lastNarrRel = r.relevance; // hot internal for vote (snapshot pulls from narr)
+    this.lastNarrEventType = r.eventType;
     return r.plan;
   }
   /** Last router relevance (for bounded vote scaling; 0..1). */
   get lastRouterRelevance(): number {
     return this.lastNarrRel;
+  }
+  /** Last router recalled event type (preserved from narrative routeRecall). */
+  get lastRouterEventType(): NarrativeEvent {
+    return this.lastNarrEventType;
+  }
+  /** Consolidated semantic + causal provenance bias for a candidate plan (−1..1). */
+  narrativeBias(planIndex = 0): number {
+    return this.narrative.narrativeBias(planIndex);
   }
 
   /** The plan the trace last recalled (−1 before the first {@link recall}). */
@@ -390,13 +400,40 @@ class PersistentNarrative {
     this.regime = clamp01(0.5 + trend * 3.5);
   }
 
-  /** Consolidation: high-salience episode bundled into semantic trace (via decay + superposition, reuses HRR spirit). O(D). */
+  /** Consolidation: high-salience episode bundled into semantic trace (via decay + phase-modulated superposition). O(D). */
   private consolidate(sal: number, planIdx: number): void {
     if (sal < 0.65) return;
-    const contrib = (planIdx >= 0 ? (((planIdx % 7) - 3) | 0) * 0.11 : 0.02) * sal;
+    const weight = (planIdx >= 0 ? ((planIdx % 7) + 1) * 0.04 : 0.02) * sal;
+    const phaseOff = planIdx >= 0 ? planIdx : 0;
     for (let i = 0; i < HRR_DIM; i++) {
-      this.semTrace[i] = 0.94 * (this.semTrace[i] ?? 0) + contrib; // multi-res semantic accumulation
+      const basis = Math.cos(i * 0.13 + phaseOff);
+      this.semTrace[i] = 0.94 * (this.semTrace[i] ?? 0) + weight * basis; // multi-res semantic accumulation
     }
+  }
+
+  /**
+   * Read consolidated semantic trace + causal/contradiction provenance bias for a candidate plan.
+   */
+  narrativeBias(planIdx = 0): number {
+    const phaseOff = planIdx >= 0 ? planIdx : 0;
+    let proj = 0;
+    for (let i = 0; i < HRR_DIM; i++) {
+      proj += (this.semTrace[i] ?? 0) * Math.cos(i * 0.13 + phaseOff);
+    }
+    let causalNet = 0;
+    const n = Math.min(this.count, this.cap);
+    for (let k = 0; k < n; k++) {
+      const i = (this.head - 1 - k + this.cap * 100) % this.cap;
+      if (planIdx >= 0 && this.plans[i] !== planIdx) continue;
+      const causeIdx = this.causedBy[i] ?? -1;
+      const contraIdx = this.contradicts[i] ?? -1;
+      if (contraIdx >= 0 && contraIdx < this.cap) {
+        causalNet -= (this.saliences[contraIdx] ?? 0) * 0.15;
+      } else if (causeIdx >= 0 && causeIdx < this.cap) {
+        causalNet += (this.saliences[causeIdx] ?? 0) * 0.1;
+      }
+    }
+    return Math.max(-1, Math.min(1, (proj / HRR_DIM) * 0.5 + causalNet));
   }
 
   /**
@@ -458,6 +495,13 @@ class PersistentNarrative {
       const sym = (p >= 0 ? p % SYMBOL_COUNT : 6) | 0;
       rel += (this.bConf[sym] ?? 0) * 0.35 * (1 - (this.bUncert[sym] ?? 0.5));
       rel += semBoost * 0.12; // multi-res semantic contribution
+      const causeIdx = this.causedBy[i] ?? -1;
+      const contraIdx = this.contradicts[i] ?? -1;
+      if (contraIdx >= 0 && contraIdx < this.cap) {
+        rel -= (this.saliences[contraIdx] ?? 0) * 0.15;
+      } else if (causeIdx >= 0 && causeIdx < this.cap) {
+        rel += (this.saliences[causeIdx] ?? 0) * 0.08;
+      }
       const sc = rel * rec;
       this.scores[k] = sc;
       if (sc > bestSc) {

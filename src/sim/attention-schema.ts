@@ -19,14 +19,19 @@ const DIMS = 8; // e.g. 0-3 percept clusters, 4 plans, 5 mem, 6-7 quantum/cliff
 
 export class AttentionSchema {
   private readonly focus = new Float32Array(DIMS);
+  private readonly prevFocus = new Float32Array(DIMS);
   private readonly hist = new Float32Array(16); // ring for shift history
   private hIdx = 0;
+  private hCount = 0;
   private conf = 0.5;
   private meanShift = 0;
 
   constructor(_rng?: Rng) {
     // seeded init optional; default neutral
-    for (let i = 0; i < DIMS; i++) this.focus[i] = 1 / DIMS;
+    for (let i = 0; i < DIMS; i++) {
+      this.focus[i] = 1 / DIMS;
+      this.prevFocus[i] = 1 / DIMS;
+    }
   }
 
   /** Update from current signals (salience vector, surprise, ignition, cliff reflex etc). O(D) */
@@ -51,13 +56,22 @@ export class AttentionSchema {
     }
     this.conf = 1 - Math.min(1, ent / Math.log(DIMS));
 
-    // history shift
-    const prev = this.hist[(this.hIdx + 15) % 16] || 0;
-    const f0 = (this.focus[0] ?? 0) as number;
-    const shift = Math.abs(f0 - prev);
-    this.hist[this.hIdx] = f0;
+    // history shift: L^2 shift across all DIMS focus dimensions + ring-buffer history average
+    let shiftSq = 0;
+    for (let i = 0; i < DIMS; i++) {
+      const cur = (this.focus[i] ?? 0) as number;
+      const d = cur - (this.prevFocus[i] ?? 0);
+      shiftSq += d * d;
+      this.prevFocus[i] = cur;
+    }
+    const shift = Math.sqrt(shiftSq);
+    this.hist[this.hIdx] = shift;
     this.hIdx = (this.hIdx + 1) % 16;
-    this.meanShift = this.meanShift * 0.85 + shift * 0.15;
+    if (this.hCount < 16) this.hCount++;
+    let histSum = 0;
+    for (let i = 0; i < this.hCount; i++) histSum += this.hist[i] ?? 0;
+    const ringMean = this.hCount > 0 ? histSum / this.hCount : shift;
+    this.meanShift = this.meanShift * 0.85 + (0.5 * shift + 0.5 * ringMean) * 0.15;
   }
 
   /** Alloc-free read of current attention confidence (for cons.attention wiring in SuperMind). */

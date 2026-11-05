@@ -315,7 +315,7 @@ import {
 } from './ui/xenomimic-panel';
 import { SuperheroState, HERO_POWERS } from './ui/superhero-state';
 import { SuperheroHud } from './ui/superhero-hud';
-import { TelemetryPanel, bindPanelToggles } from './ui/panels';
+import { TelemetryPanel } from './ui/panels';
 import { InputSystem } from './ui/input';
 import type { AuditTrail } from './logging/audit';
 import { createLogger } from './logging/logger';
@@ -473,9 +473,9 @@ export class World {
   private brutalMorphWave = 0;
   private brutalMorphSeed = 0;
   private brutalMorphCursor = -1;
-  /** Master exposure ladder (ACES filmic); index 1 = boot default 0.62 (USER #11 dimmed). */
+  /** Master exposure ladder (ACES filmic); index 2 = boot default 0.72 (matches Engine.renderer.toneMappingExposure). */
   private readonly exposureLevels = [0.52, 0.62, 0.72, 0.82, 0.92] as const;
-  private exposureIdx = 1;
+  private exposureIdx = 2;
   private readonly grid: SpatialHash<Entity>;
   /** NHI-only mirror of the current entity grid; rebuilt in the same list-order pass for exact kin order. */
   private readonly nhiGrid: SpatialHash<Entity>;
@@ -484,6 +484,7 @@ export class World {
    *  one set per dev hot-reload, each firing against a dead World (the HMR hook calls dispose()). */
   private readonly disposeAbort = new AbortController();
   private readonly entities: EntityManager;
+  private readonly geos: THREE.BufferGeometry[];
   /** Worker pool for offloading simulation to multiple CPU cores (ADR 0010) */
   /** Browser-owned pool; absent or failed initialization retains CPU fallback. */
   public workerPool: WorkerPool | null = null;
@@ -1326,6 +1327,15 @@ export class World {
   // truncation ratio is a constant, discarding the 2nd feature. Slot[2] holds the cross term so the
   // packed 2×2 is rank-2 and BOTH features move the result.
   private readonly superMpoInput = new Float32Array(3);
+  private readonly superTensorA: [number, number, number] = [0, 0, 0];
+  private readonly superTensorB: [number, number, number] = [0, 0, 0];
+  private readonly floraContactSeedPool = [
+    { x: 0, z: 0, strength: 0 },
+    { x: 0, z: 0, strength: 0 },
+    { x: 0, z: 0, strength: 0 },
+    { x: 0, z: 0, strength: 0 },
+  ];
+  private readonly floraContactSeeds: { x: number; z: number; strength: number }[] = [];
   /** V-APEX: the Entropic Tesseract Hydra brain (10 organs + quantum + meta-paradox). Wired into the apex beat. */
   private readonly apexBrain: ApexBrain;
   private lastApexThought: ApexThought | null = null;
@@ -1492,6 +1502,7 @@ export class World {
     // Lore precedes the taxonomy: phyla are lore-named at mint (CONTRACTS V3.2).
     this.lore = new LoreEngine(this.persisted.seed);
     const geos = createGeometryCache();
+    this.geos = geos;
     const phyla = createPhyla(this.rng, (i) => this.lore.name('tribe', i), geos.length);
     const morphs = createMorphotypes(this.rng, geos.length, phyla);
     this.morphTotal = morphs.length;
@@ -1823,9 +1834,16 @@ export class World {
     this.foundationals = new Foundationals(this.persisted.seed);
 
     this.hud = new Hud();
+    const xylosParams =
+      typeof location !== 'undefined' ? new URLSearchParams(location.search) : null;
+    const xylosSeeded =
+      !isWildEntropyMode() ||
+      xylosParams?.get('xylos') === 'seeded' ||
+      xylosParams?.get('deterministic') === '1' ||
+      Boolean(xylosParams?.has('seed'));
     this.xylos = new XylosSession(
       (this.persisted.seed ^ 0x78796c6f) >>> 0,
-      new URLSearchParams(location.search).get('xylos') === 'seeded' ? 'seeded' : 'live',
+      xylosSeeded ? 'seeded' : 'live',
     );
     this.xylosHabitat = new XylosHabitat(this.rd, XYLOS_WORLD_RADIUS, GROUND_EXTENT);
     this.xylosBody = new XylosBody(ctx.scene);
@@ -2104,7 +2122,7 @@ export class World {
         { signal },
       );
     }
-    bindPanelToggles();
+    this.bindPanelToggles();
     this.bindObservatoryTabs();
     this.bindAlgoPicker();
     this.input = new InputSystem(this.buildActions());
@@ -2270,6 +2288,29 @@ export class World {
     this.nhiBody.dispose(); // shared core/spike/ring/eye + per-body tendril geometries/materials
     this.rd.dispose(); // the Gray–Scott GPU DataTexture
     this.instanced?.dispose(); // free every live instance pool — clones + materials (null in per-mesh mode)
+    try {
+      (this.environment as { dispose?: () => void }).dispose?.();
+    } catch {
+      /* best-effort */
+    }
+    try {
+      const ent = this.entities as { clear?: () => void };
+      if (typeof ent.clear === 'function') {
+        ent.clear();
+      } else {
+        for (const e of this.entities.list) {
+          if (e) this.entities.dispose(e);
+        }
+        this.entities.list.length = 0;
+      }
+    } catch {
+      /* best-effort */
+    }
+    try {
+      for (const g of this.geos) g.dispose();
+    } catch {
+      /* best-effort */
+    }
     this.connectome.dispose(); // free the axon-web BufferGeometry + LineBasicMaterial
     this.cosmicWeb.dispose(); // free the cosmic-web points/lines geometries + PointsMaterial/LineBasicMaterial
     this.constellations.dispose(); // free the 2 constellation line-layer geometries + shared LineBasicMaterials
@@ -2479,11 +2520,19 @@ export class World {
     if (enabled !== isWildEntropyMode()) this.bioElapsed = 0;
     setWildEntropyMode(enabled);
     if (!enabled) {
+      this.xylos?.setWildMode(false);
       this.browserComputeGeneration++;
       this.browserComputeCalibrating = false;
       this.wilderness.setBatchExecutor(null);
       this.wilderness.setPaused(this.state.timeScale === 0);
       this.browserComputeReason = 'Seeded reference mode';
+    } else {
+      const forceSeededXylos =
+        typeof location !== 'undefined' &&
+        new URLSearchParams(location.search).get('xylos') === 'seeded';
+      if (!forceSeededXylos) {
+        this.xylos?.setWildMode(true);
+      }
     }
     this.audit.record('wild-quantum-chaos-mode', { enabled });
   }
@@ -3019,8 +3068,9 @@ export class World {
         },
         lifeSignal,
       );
-      this.lastGlyphSnaps = this.computeCadence
-        ? this.glyphBrains.thinkCohort(percept, this.computeCadence.glyphCohortStride)
+      const activeCadence = this.isWildMode() ? this.computeCadence : null;
+      this.lastGlyphSnaps = activeCadence
+        ? this.glyphBrains.thinkCohort(percept, activeCadence.glyphCohortStride)
         : this.glyphBrains.thinkAll(percept);
       const snaps = this.lastGlyphSnaps;
       const act = this.glyphActivity;
@@ -3129,9 +3179,10 @@ export class World {
     // NHI SPAWN_SWARM can add ordinary minions above. Capture population only after that material
     // effect so every same-frame density, super-creature, telemetry, and panel consumer sees them.
     const n = this.entities.list.length;
+    const activeCadence = this.isWildMode() ? this.computeCadence : null;
     // Full 60 Hz connectome in headless mode; adaptive cadence in live browser mode keeps GPU
     // shader wave/color running at 60 FPS via tickShaderTime(t) on off-frames.
-    const connStride = this.computeCadence?.connectomeRebuildStride ?? 1;
+    const connStride = activeCadence?.connectomeRebuildStride ?? 1;
     if (connStride <= 1 || s.frame % connStride === 0) {
       this.connectome.update(dt, t);
     } else {
@@ -3167,8 +3218,8 @@ export class World {
 
     this.quantum.update(dt, t);
 
-    const rdStride = this.computeCadence?.reactionDiffusionStride ?? 1;
-    if (this.computeCadence) {
+    const rdStride = activeCadence?.reactionDiffusionStride ?? 1;
+    if (activeCadence) {
       // Audit #246: the JS 9-point step (with the chaos reaction gain) is the single reference path;
       // the WASM kernel lacks the gain and uses a 5-point Laplacian, so it is no longer used live.
       if (s.frame % rdStride === 0) {
@@ -3182,7 +3233,7 @@ export class World {
     // Tsotchke October 2026 Flagship (Moonlab Ising Annealer, QGTL full 2D metric + O(eps^2) suppression,
     // QRNG chaotic Bell-Toeplitz stream, Eshkol 4th-order Taylor tower + 3D divergence/curl) + Wave-2
     // (rosette-wire, pq-consensus-bandwidth, GeoRefine, bonsai-fidelity-study) Zig WASM cadence.
-    const waveStride = this.computeCadence?.tsotchkeWaveStride ?? 12;
+    const waveStride = activeCadence?.tsotchkeWaveStride ?? 12;
     this.advanceOrganismBiome(dt, waveStride);
     if (s.frame % waveStride === 0) {
       const coh = clamp(1 - s.chaos / CHAOS_MAX, 0, 1);
@@ -3288,12 +3339,19 @@ export class World {
     }
     if (this.brutalMorphCursor >= 0) {
       const list = this.entities.list;
+      if (this.brutalMorphCursor > list.length) {
+        this.brutalMorphCursor = list.length;
+      }
       const slice = Math.max(4, Math.ceil(list.length / 150));
       const end = Math.min(list.length, this.brutalMorphCursor + slice);
       let changed = 0;
+      const waveSeed = this.brutalMorphSeed;
       for (let i = this.brutalMorphCursor; i < end; i++) {
         const e = list[i];
         if (!e || e.userData.isNhi) continue; // NHI bodies keep their form
+        const ud = e.userData as Entity['userData'] & { brutalMorphWave?: number };
+        if (ud.brutalMorphWave === waveSeed) continue;
+        ud.brutalMorphWave = waveSeed;
         const offset = 1 + Math.floor(this.uiRng() * 7);
         // Keep the gesture RNG cadence, but the morph wave may not transform a protected visitor.
         if (this.isBigTreeProtected(e.position.x, e.position.z)) continue;
@@ -3301,7 +3359,21 @@ export class World {
         changed++;
       }
       this.state.mutations += changed;
-      this.brutalMorphCursor = end >= list.length ? -1 : end;
+      if (end >= list.length) {
+        let nextUnmorphed = -1;
+        for (let i = 0; i < list.length; i++) {
+          const e = list[i];
+          if (!e || e.userData.isNhi) continue;
+          const ud = e.userData as Entity['userData'] & { brutalMorphWave?: number };
+          if (ud.brutalMorphWave !== waveSeed) {
+            nextUnmorphed = i;
+            break;
+          }
+        }
+        this.brutalMorphCursor = nextUnmorphed;
+      } else {
+        this.brutalMorphCursor = end;
+      }
     }
     this.artifacts.update(dt, t); // F-ARTIFACTS (V9): animate + fade the relic pool (visual-only)
     this.monolithTemple.setEnvironment({
@@ -3837,7 +3909,9 @@ export class World {
     // Denser round-robin sample — more beings write local thrash pockets per frame.
     const stride = Math.max(1, Math.floor(n / 280));
     const start = this.state.frame % stride;
-    const seeds: { x: number; z: number; strength: number }[] = [];
+    const pool = this.floraContactSeedPool;
+    const seeds = this.floraContactSeeds;
+    seeds.length = 0;
     const minSep2 = 10 * 10; // tighter pockets so single beings own local thrash
     for (let i = start; i < n; i += stride) {
       const e = list[i];
@@ -3872,7 +3946,11 @@ export class World {
         s.z = (s.z * s.strength + pz * w) / nw;
         s.strength = nw;
       } else if (seeds.length < 4) {
-        seeds.push({ x: px, z: pz, strength: w });
+        const slot = pool[seeds.length]!;
+        slot.x = px;
+        slot.z = pz;
+        slot.strength = w;
+        seeds.push(slot);
       } else {
         // Replace weakest seed if this activity is stronger and far enough from all.
         let weak = 0;
@@ -3880,7 +3958,10 @@ export class World {
           if (seeds[s]!.strength < seeds[weak]!.strength) weak = s;
         }
         if (w > seeds[weak]!.strength && bestD2 >= minSep2) {
-          seeds[weak] = { x: px, z: pz, strength: w };
+          const slot = seeds[weak]!;
+          slot.x = px;
+          slot.z = pz;
+          slot.strength = w;
         }
       }
     }
@@ -3904,13 +3985,23 @@ export class World {
         }
       }
       if (!merged) {
-        if (seeds.length < 4) seeds.push({ x: sx, z: sz, strength: sw });
-        else {
+        if (seeds.length < 4) {
+          const slot = pool[seeds.length]!;
+          slot.x = sx;
+          slot.z = sz;
+          slot.strength = sw;
+          seeds.push(slot);
+        } else {
           let weak = 0;
           for (let s = 1; s < seeds.length; s++) {
             if (seeds[s]!.strength < seeds[weak]!.strength) weak = s;
           }
-          if (sw > seeds[weak]!.strength) seeds[weak] = { x: sx, z: sz, strength: sw };
+          if (sw > seeds[weak]!.strength) {
+            const slot = seeds[weak]!;
+            slot.x = sx;
+            slot.z = sz;
+            slot.strength = sw;
+          }
         }
       }
     }
@@ -4175,12 +4266,16 @@ export class World {
         const qgeF = quakeQgeFactor(pulseForArchon.quakeAliveness, 0.15);
         // Wire QGE aliveness proxy for enhanced chaos modulation
         const qgeAlive = qgeAlivenessProxy(pulseForArchon.quakeAliveness ?? 0.5, localD, 1);
-        // Wire Moonlab tensor contract for percept coupling
-        const tensorPulse = moonlabTensorContract(
-          [basePercept.chaos, basePercept.crowding, basePercept.threat ?? 0],
-          [localD, this.state.chaos ?? 0, this.state.entropy ?? 0],
-          3,
-        );
+        // Wire Moonlab tensor contract for percept coupling (reused scratch tuples, zero per-frame alloc)
+        const ta = this.superTensorA;
+        const tb = this.superTensorB;
+        ta[0] = basePercept.chaos;
+        ta[1] = basePercept.crowding;
+        ta[2] = basePercept.threat ?? 0;
+        tb[0] = localD;
+        tb[1] = this.state.chaos ?? 0;
+        tb[2] = this.state.entropy ?? 0;
+        const tensorPulse = moonlabTensorContract(ta, tb, 3);
         // Wire QEC decoding proxy for stability in interactions
         const qecStability = qecDecodingProxy(Math.floor(basePercept.chaos * 10), 5);
         // Apply new math to chaos
@@ -4247,29 +4342,19 @@ export class World {
         this.archonMortality[i]!.step();
         const creatureIntent = this.superCreatures[i]!.think(p);
         const coll = this.nhsiCollectiveScratch;
+        const curClamped = clamp(mindOut.curiosity, 0, 1);
         coll[0] = mindOut.consciousness.ignition;
         coll[1] = mindOut.consciousness.phi;
         coll[2] = mindOut.consciousness.surprise;
         coll[3] = mindOut.consciousness.novelty;
         coll[4] = mindOut.consciousness.selfAware;
         coll[5] = mindOut.consciousness.workspace;
-        coll[6] = clamp(mindOut.curiosity, 0, 1);
+        coll[6] = curClamped;
         coll[7] = mindOut.consciousness.qualiaTone;
         this.emergenceAngles.aggregateCollective(`archon-${i}`, coll);
-        this.pantheon.depositApex(
-          i,
-          [
-            mindOut.consciousness.ignition,
-            mindOut.consciousness.phi,
-            mindOut.consciousness.surprise,
-            mindOut.consciousness.novelty,
-            mindOut.consciousness.selfAware,
-            mindOut.consciousness.workspace,
-            mindOut.consciousness.qualiaTone,
-            clamp(mindOut.curiosity, 0, 1),
-          ],
-          0.35 + mindOut.consciousness.ignition * 0.5,
-        );
+        coll[6] = mindOut.consciousness.qualiaTone;
+        coll[7] = curClamped;
+        this.pantheon.depositApex(i, coll, 0.35 + mindOut.consciousness.ignition * 0.5);
         // Registry-driven soup update; only the 17 represented entries contribute, while fences/meta are inert.
         this.primordialSoup.update(i, s.frame, this.petriRng, this.organismIntelligence.signal);
         const dish = this.petriDishes[i];
@@ -5032,8 +5117,10 @@ export class World {
   /** Frame the living manifold from a close three-quarter vantage. */
   private focusXylos(): void {
     const freeIdx = VIEW_MODES.indexOf('free');
-    this.state.viewIdx = freeIdx;
-    this.persisted.viewIdx = freeIdx;
+    if (freeIdx >= 0) {
+      this.state.viewIdx = freeIdx;
+      this.persisted.viewIdx = freeIdx;
+    }
     const p = this.xylosBody.group.position;
     const camera = this.engine.camera;
     camera.up.set(0, 1, 0);
@@ -7205,6 +7292,9 @@ export class World {
     this.state.chaos = 0.5;
     this.state.mutations = 0;
     this.state.algoStep = 0;
+    this.brutalMorphCursor = -1;
+    this.brutalMorphWave = 0;
+    this.instanced?.setMorphWave(0, this.brutalMorphSeed);
     this.hud.showSector('GENESIS RESET · 1 PROGENITOR');
   }
 
@@ -7235,6 +7325,26 @@ export class World {
   }
 
   /** UiActions implementation handed to InputSystem. */
+  private bindPanelToggles(): void {
+    if (typeof document === 'undefined') return;
+    const signal = this.disposeAbort.signal;
+    for (const btn of document.querySelectorAll<HTMLButtonElement>('[data-panel-toggle]')) {
+      btn.addEventListener(
+        'click',
+        () => {
+          const id = btn.dataset['panelToggle'];
+          if (!id) return;
+          const panel = document.getElementById(id);
+          if (!panel) return;
+          const collapsed = panel.classList.toggle('collapsed');
+          btn.textContent = collapsed ? '+' : '−';
+          btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+        },
+        { signal },
+      );
+    }
+  }
+
   /**
    * Wire the observatory's four page tabs (`[data-obs-page="0..3"]`) to
    * `observatory.setPage`, toggling the active pane + `aria-selected`. Degrades
@@ -7255,8 +7365,9 @@ export class World {
       panes.forEach((pane, i) => pane.classList.toggle('active', i === p));
       this.observatory.draw(); // immediate repaint so the switch feels instant
     };
+    const signal = this.disposeAbort.signal;
     for (const tab of tabs) {
-      tab.addEventListener('click', () => select(Number(tab.dataset['obsPage'])));
+      tab.addEventListener('click', () => select(Number(tab.dataset['obsPage'])), { signal });
     }
   }
 
@@ -7271,6 +7382,7 @@ export class World {
     if (!listEl) return;
     // The ui-shell ships #algo-active as a container with an inner name span.
     this.algoActiveEl = document.getElementById('algo-active-name');
+    const signal = this.disposeAbort.signal;
 
     const existing = listEl.querySelectorAll<HTMLElement>('.algo-row');
     if (existing.length > 0) {
@@ -7278,13 +7390,17 @@ export class World {
         const idx = Number(row.dataset['algo']);
         if (!Number.isFinite(idx)) continue;
         this.algoRows.push(row);
-        row.addEventListener('click', () => this.selectAlgo(idx, true));
-        row.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            this.selectAlgo(idx, true);
-          }
-        });
+        row.addEventListener('click', () => this.selectAlgo(idx, true), { signal });
+        row.addEventListener(
+          'keydown',
+          (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              this.selectAlgo(idx, true);
+            }
+          },
+          { signal },
+        );
       }
     } else {
       const n = ALGOS.length;
@@ -7311,13 +7427,17 @@ export class World {
         const prog = document.createElement('div');
         prog.className = 'algo-prog';
         row.append(glyph, name, prog);
-        row.addEventListener('click', () => this.selectAlgo(i, true));
-        row.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            this.selectAlgo(i, true);
-          }
-        });
+        row.addEventListener('click', () => this.selectAlgo(i, true), { signal });
+        row.addEventListener(
+          'keydown',
+          (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              this.selectAlgo(i, true);
+            }
+          },
+          { signal },
+        );
         frag.appendChild(row);
         this.algoRows.push(row);
       }
@@ -7326,8 +7446,8 @@ export class World {
     // V7.2 RUN ALL / AUTO controls (degrade silently if the ui-shell omits them).
     this.algoAllBtn = document.getElementById('algo-all');
     this.algoAutoBtn = document.getElementById('algo-auto');
-    this.algoAllBtn?.addEventListener('click', () => this.setAlgoMode('all'));
-    this.algoAutoBtn?.addEventListener('click', () => this.setAlgoMode('auto'));
+    this.algoAllBtn?.addEventListener('click', () => this.setAlgoMode('all'), { signal });
+    this.algoAutoBtn?.addEventListener('click', () => this.setAlgoMode('auto'), { signal });
     this.refreshAlgoActive();
   }
 

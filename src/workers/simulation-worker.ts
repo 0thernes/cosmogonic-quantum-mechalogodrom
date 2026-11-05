@@ -186,6 +186,21 @@ function isWorkerMessage(value: unknown): value is WorkerMessage {
 }
 
 /**
+ * Copy kernel result floats into the caller-provided SharedArrayBuffer view,
+ * supporting result arrays of any length >= 1 (including 2-element quantum or
+ * 3-element pathology buffers as well as padded 12-float kernel outputs).
+ */
+export function writeToSharedBuffer(target: Float32Array, result: Float32Array): boolean {
+  if (result.length < 1 || target.length < 1) return false;
+  if (target.length >= result.length) {
+    target.set(result);
+    return true;
+  }
+  target.set(result.subarray(0, target.length));
+  return true;
+}
+
+/**
  * Handle worker messages
  */
 if (typeof self !== 'undefined' && typeof self.postMessage === 'function') {
@@ -225,9 +240,7 @@ if (typeof self !== 'undefined' && typeof self.postMessage === 'function') {
       };
 
       if (message.useSharedArrayBuffer) {
-        if (message.data.length >= result.length) {
-          message.data.set(result);
-        }
+        writeToSharedBuffer(message.data, result);
         self.postMessage(response);
       } else {
         const transfer = result.buffer instanceof ArrayBuffer ? [result.buffer] : undefined;

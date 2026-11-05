@@ -78,6 +78,8 @@ export class ActiveInference {
   private readonly a: Float64Array; // K×M observation prototypes (the likelihood means)
   private readonly belief: Float64Array; // posterior q over K situations
   private readonly prior: Float64Array; // per-beat prior (leaky belief)
+  private readonly logPrior: Float64Array; // scratch log(prior)
+  private readonly logLikBuf: Float64Array; // scratch logLik(k, obs)
   private readonly logPost: Float64Array; // scratch
   private readonly qNext: Float64Array; // scratch for the look-ahead posterior in EFE
   private readonly pref: Float64Array; // preference vector C over observations
@@ -94,6 +96,8 @@ export class ActiveInference {
     for (let i = 0; i < this.a.length; i++) this.a[i] = rng() * 2 - 1;
     this.belief = new Float64Array(K).fill(1 / K);
     this.prior = new Float64Array(K).fill(1 / K);
+    this.logPrior = new Float64Array(K);
+    this.logLikBuf = new Float64Array(K);
     this.logPost = new Float64Array(K);
     this.qNext = new Float64Array(K);
     this.pref = new Float64Array(M);
@@ -130,12 +134,16 @@ export class ActiveInference {
     // prior = leaky previous belief (a filter that does not lock onto one situation forever)
     const u = 1 / K;
     for (let k = 0; k < K; k++) {
-      this.prior[k] = (1 - BELIEF_LEAK) * (this.belief[k] ?? u) + BELIEF_LEAK * u;
+      const pk = (1 - BELIEF_LEAK) * (this.belief[k] ?? u) + BELIEF_LEAK * u;
+      this.prior[k] = pk;
+      this.logPrior[k] = Math.log(pk);
     }
     // unnormalised log-posterior = log prior + log-likelihood
     let maxLp = -Infinity;
     for (let k = 0; k < K; k++) {
-      const lp = Math.log(this.prior[k] ?? u) + this.logLik(k, obs);
+      const ll = this.logLik(k, obs);
+      this.logLikBuf[k] = ll;
+      const lp = (this.logPrior[k] ?? 0) + ll;
       this.logPost[k] = lp;
       if (lp > maxLp) maxLp = lp;
     }
@@ -154,8 +162,8 @@ export class ActiveInference {
     for (let k = 0; k < K; k++) {
       const qk = this.belief[k] ?? 0;
       if (qk <= 0) continue;
-      f += qk * -this.logLik(k, obs);
-      f += qk * Math.log(qk / (this.prior[k] ?? u));
+      f += qk * -(this.logLikBuf[k] ?? 0);
+      f += qk * (Math.log(qk) - (this.logPrior[k] ?? 0));
     }
     this.freeEnergy = f;
     this.surprise = -logEvidence;
@@ -194,16 +202,22 @@ export class ActiveInference {
     out: number[] | Float32Array,
   ): void {
     const K = this.situations;
+    const u = 1 / K;
+    for (let k = 0; k < K; k++) {
+      const pk = (1 - BELIEF_LEAK) * (this.belief[k] ?? u) + BELIEF_LEAK * u;
+      this.prior[k] = pk;
+      this.logPrior[k] = Math.log(Math.max(1e-9, pk));
+    }
     const hNow = this.entropyOf(this.belief, K);
     let bestG = Infinity;
     let bestEpi = 0;
     let bestPrag = 0;
     for (let a = 0; a < predicted.length; a++) {
       const o = predicted[a] ?? [];
-      // look-ahead posterior if ô were observed (from the CURRENT belief as prior)
+      // look-ahead posterior if ô were observed (from the CURRENT leaked belief as prior)
       let maxLp = -Infinity;
       for (let k = 0; k < K; k++) {
-        const lp = Math.log((this.belief[k] ?? 0) + 1e-9) + this.logLik(k, o);
+        const lp = (this.logPrior[k] ?? 0) + this.logLik(k, o);
         this.logPost[k] = lp;
         if (lp > maxLp) maxLp = lp;
       }
@@ -218,8 +232,7 @@ export class ActiveInference {
       for (let k = 0; k < K; k++) {
         const qk = (this.qNext[k] ?? 0) * inv;
         this.qNext[k] = qk;
-        const pk = Math.max(1e-9, this.belief[k] ?? 1 / K);
-        if (qk > 1e-12) kl += qk * Math.log(qk / pk);
+        if (qk > 1e-12) kl += qk * (Math.log(qk) - (this.logPrior[k] ?? 0));
       }
       const hNext = this.entropyOf(this.qNext, K);
       // #147: blend posterior entropy reduction with non-negative KL information gain D_KL(q(s|ô) ‖ q(s))

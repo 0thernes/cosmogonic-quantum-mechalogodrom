@@ -26,16 +26,14 @@ const DIST = new URL('dist/', ROOT);
 const SITE = new URL('site/', ROOT);
 
 const LOCAL_ONLY_DOC_ARTIFACTS = [
-  '2026-06-17-STATE-OF-THE-ART-COMBINED.md',
-  '2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md',
-  '2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md',
-  '2026-06-20-RESEARCH-BEDROCK.md',
-  '2026-06-20-ROADMAP-TO-NHSI-AND-SENTIENCE.xml',
-  '2026-06-20-SUPER-REPORT-PATH-TO-NHSI-AND-SENTIENCE.md',
-  '2026-06-21-NHSI-HONESTY-AUDIT.md',
-  '2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md',
-  '2026-06-26-ALIFE-COMPARATIVE-AUDIT.md',
-  '2026-06-26-alife-comparison-matrix.csv',
+  'reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md',
+  'reports/2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md',
+  'reports/2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md',
+  'reports/2026-06-20-RESEARCH-BEDROCK.md',
+  'reports/2026-06-20-SUPER-REPORT-PATH-TO-NHSI-AND-SENTIENCE.md',
+  'reports/2026-06-21-NHSI-HONESTY-AUDIT.md',
+  'reports/2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md',
+  'reports/2026-06-26-ALIFE-COMPARATIVE-AUDIT.md',
   'FILE-AUDIT-16-FILES-2026-07-07.md',
   'MASTER-ASSESSMENT-2026-07-07.md',
   'MASTER-ASSESSMENT-2026-07-07.html',
@@ -259,10 +257,7 @@ await rewrite('index.html', [
   ...navRoot,
   ['hx-get="/api/audit"', ''], // no server on Pages — stop the 5 s 404 poll; panel stays empty
 ]);
-await rewrite('docs.html', [
-  ...navRoot,
-  ['</body>', '    <script type="module" src="./alife-gallery.js"></script>\n  </body>'],
-]);
+await rewrite('docs.html', navRoot);
 await rewrite('specs.html', [
   ...navRoot,
   ['</body>', '    <script type="module" src="./alife-gallery.js"></script>\n  </body>'],

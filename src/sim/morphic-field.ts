@@ -110,11 +110,15 @@ export class MorphicField {
     let dot = 0;
     let na = 0;
     let nb = 0;
-    for (let i = 0; i < 4; i++) {
-      const a = (latent[i] ?? 0) as number;
+    this.tA.fill(0);
+    this.tB.fill(0);
+    const latLen = Math.max(1, latent.length);
+    for (let i = 0; i < FIELD_DIM; i++) {
+      const a = (latent[i % latLen] ?? 0) as number;
       const b = this.field[i] ?? 0;
-      this.tA[i] = a;
-      this.tB[i] = b;
+      const bucket = i & 3;
+      this.tA[bucket] = (this.tA[bucket] ?? 0) + a * 0.25;
+      this.tB[bucket] = (this.tB[bucket] ?? 0) + b * 0.25;
       dot += a * b;
       na += a * a;
       nb += b * b;

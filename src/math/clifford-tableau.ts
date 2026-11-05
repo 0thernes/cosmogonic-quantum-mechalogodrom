@@ -218,8 +218,7 @@ export class CliffordTableau {
    * fixes it. Mutates the state (collapse). O(n²).
    */
   measure(a: number, rng: Rng): CliffordMeasure {
-    if (a < 0 || a >= this.n)
-      throw new RangeError(`CliffordTableau: qubit ${a} out of [0, ${this.n})`);
+    this.checkQubit(a);
     const { x, z, r, n } = this;
     let p = -1;
     for (let i = n; i < 2 * n; i++) {
@@ -286,6 +285,8 @@ export class CliffordTableau {
     c.x.set(this.x);
     c.z.set(this.z);
     c.r.set(this.r);
+    c.lastSample = this.lastSample;
+    c._caMpsCurrentBond = this._caMpsCurrentBond;
     return c;
   }
 

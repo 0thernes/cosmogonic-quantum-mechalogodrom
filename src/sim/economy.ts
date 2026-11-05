@@ -203,6 +203,14 @@ export function clearVolume(desiredDeltas: ArrayLike<number>): {
   return { buy, sell, vol: Math.min(buy, sell) };
 }
 
+let _sortScratch = new Float64Array(256);
+function getSortScratch(n: number): Float64Array {
+  if (_sortScratch.length < n) {
+    _sortScratch = new Float64Array(Math.max(n, _sortScratch.length * 2));
+  }
+  return _sortScratch.subarray(0, n);
+}
+
 /**
  * Gini coefficient of a non-negative value array (0 = perfect equality, →1 = total concentration).
  * Uses the sorted relative-mean-difference form. Pure; unit-tested. O(n log n).
@@ -210,7 +218,12 @@ export function clearVolume(desiredDeltas: ArrayLike<number>): {
 export function gini(values: ArrayLike<number>): number {
   const n = values.length;
   if (n === 0) return 0;
-  const a = Array.from(values, (v) => (Number.isFinite(v) && v > 0 ? v : 0)).sort((x, y) => x - y);
+  const a = getSortScratch(n);
+  for (let i = 0; i < n; i++) {
+    const v = values[i] ?? 0;
+    a[i] = Number.isFinite(v) && v > 0 ? v : 0;
+  }
+  a.sort();
   let sum = 0;
   let cum = 0;
   for (let i = 0; i < n; i++) sum += a[i] ?? 0;
@@ -229,8 +242,10 @@ export function topKThreshold(values: ArrayLike<number>, k: number): number {
   const n = values.length;
   if (k <= 0) return Infinity;
   if (k >= n) return -Infinity;
-  const a = Array.from(values).sort((x, y) => y - x); // descending
-  return a[k - 1] ?? -Infinity;
+  const a = getSortScratch(n);
+  for (let i = 0; i < n; i++) a[i] = values[i] ?? -Infinity;
+  a.sort(); // ascending
+  return a[n - k] ?? -Infinity;
 }
 
 /**
@@ -288,6 +303,10 @@ export class Economy {
   private pQuanta = 1;
   private pIchor = 1;
   private fx = 1; // AURUM per UMBRA
+  private prevFx = 1;
+  private prevBasket = 2;
+  /** Commons pool accumulating collected Tobin taxes before per-tick redistribution. */
+  private commons = 0;
   /** Scratch reused by tick() — kept index-aligned with agents across register/unregister. */
   private dQ: number[] = [];
   private dI: number[] = [];
@@ -473,6 +492,7 @@ export class Economy {
     // currency conserved across the book to floating-point tolerance).
     this.clear(this.dQ, this.pQuanta, 'quanta');
     this.clear(this.dI, this.pIchor, 'ichor');
+    totalNW = this.refreshNetWorths();
 
     // (4a) Gini guard — progressive skim from ultra-rich to tail agents when wealth concentrates.
     // Uses GINI_GUARD threshold (0.38, lowered from 0.48 for earlier intervention) and GINI_SKIM_RATE
@@ -567,14 +587,21 @@ export class Economy {
     }
 
     // (5) Currency-adoption game — each agent best-responds (softmax) toward the money with the
-    // better recent carry. AURUM's "return" is its purchasing power vs the commodity book; UMBRA's
-    // is that scaled by fx. Net flow toward UMBRA appreciates it (fx rises).
-    const rAurum = 1 / (this.pQuanta + this.pIchor); // purchasing power proxy
-    const rUmbra = this.fx * rAurum;
+    // better recent carry/return (purchasing power + FX log-return with PPP anchor, avoiding runaway
+    // positive-feedback on the raw fx level). Tobin tax is credited to commons and redistributed.
+    const basket = Math.max(1e-6, this.pQuanta + this.pIchor);
+    const baseYield = 1 / basket;
+    const basketReturn = Math.log(this.prevBasket / basket);
+    const fxReturn = Math.log(this.fx / this.prevFx);
+    const rAurum = baseYield + basketReturn;
+    const rUmbra = baseYield + fxReturn - 0.15 * Math.log(this.fx);
+    this.prevBasket = basket;
+    this.prevFx = this.fx;
     const eA = Math.exp(ADOPT_BETA * rAurum);
     const eU = Math.exp(ADOPT_BETA * rUmbra);
     const pickUmbra = eU / (eA + eU); // shared softmax target (0..1)
     let netUmbra = 0;
+    let tobinTaxAurum = 0;
     for (let i = 0; i < n; i++) {
       const a = this.agents[i]!;
       // Agent's loyalty drifts toward the herd target plus its own idiosyncratic lean + noise.
@@ -592,17 +619,28 @@ export class Economy {
         const tax = umbraSpent * TOBIN_TAX;
         a.umbra -= umbraSpent;
         a.aurum += (umbraSpent - tax) * this.fx;
+        tobinTaxAurum += tax * this.fx;
         netUmbra -= umbraSpent; // UMBRA being sold → downward pressure
       } else {
         const aurumSpent = Math.min(a.aurum, -move);
         const tax = aurumSpent * TOBIN_TAX;
         a.aurum -= aurumSpent;
         a.umbra += (aurumSpent - tax) / this.fx;
+        tobinTaxAurum += tax;
         netUmbra += aurumSpent / this.fx; // UMBRA being bought → upward pressure
       }
     }
+    if (tobinTaxAurum > 0) {
+      this.commons += tobinTaxAurum;
+      const rebate = this.commons / n;
+      for (let i = 0; i < n; i++) {
+        this.agents[i]!.aurum += rebate;
+      }
+      this.commons = 0;
+    }
     // fx tracks net UMBRA demand (more buyers → UMBRA appreciates → fx up).
     this.fx = clamp(this.fx * Math.exp(FX_GAIN * Math.tanh(netUmbra / (n * 20))), FX_MIN, FX_MAX);
+    this.refreshNetWorths();
 
     // (6) AUCTION — every AUCTION_PERIOD ticks a windfall LOT of the SCARCER commodity (higher price)
     // is sold by second-price (ascending-English) auction: bids = net worth × appetite, the highest
@@ -722,6 +760,18 @@ export class Economy {
   /** Per-agent net worth valued in AURUM (currencies + commodities at current prices). O(1). */
   private netWorth(a: Agent): number {
     return a.aurum + a.umbra * this.fx + a.quanta * this.pQuanta + a.ichor * this.pIchor;
+  }
+
+  /** Refresh cached net-worth vector `this.nw` across all registered agents and return total net worth. */
+  private refreshNetWorths(): number {
+    const n = this.agents.length;
+    let total = 0;
+    for (let i = 0; i < n; i++) {
+      const w = this.netWorth(this.agents[i]!);
+      this.nw[i] = w;
+      total += w;
+    }
+    return total;
   }
 
   /** Read one agent's purse + net worth, or null if unknown. O(1). */

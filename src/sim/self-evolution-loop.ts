@@ -193,15 +193,37 @@ export function applyModification(
 ): EvolutionMetrics {
   const newMetrics = { ..._currentMetrics };
 
-  // Simulate the effect of the modification
-  const actualImpact = proposal.impact * (0.8 + rng() * 0.4); // Add some noise
+  // Simulate the effect of the modification, incorporating proposal.target and proposal.change
+  const changeScalar =
+    typeof proposal.change === 'number'
+      ? (proposal.change - 0.5) * 0.02
+      : typeof proposal.change === 'object' &&
+          proposal.change !== null &&
+          'weight' in proposal.change &&
+          typeof (proposal.change as { weight?: unknown }).weight === 'number'
+        ? ((proposal.change as { weight: number }).weight - 0.5) * 0.02
+        : 0;
+  const actualImpact = proposal.impact * (0.8 + rng() * 0.4) + changeScalar; // Add some noise
 
-  newMetrics.fitness = clamp01(_currentMetrics.fitness + actualImpact);
-  newMetrics.emergence = clamp01(_currentMetrics.emergence + actualImpact * 0.5);
-  newMetrics.consciousness = clamp01(_currentMetrics.consciousness + actualImpact * 0.3);
+  const targetMatch = /(\d+)$/.exec(proposal.target);
+  const targetSlot = targetMatch ? Number(targetMatch[1]) % 3 : -1;
+  const fitBoost = proposal.target === 'fitness' || targetSlot === 0 ? 1.15 : 1.0;
+  const emgBoost = proposal.target === 'emergence' || targetSlot === 1 ? 1.15 : 1.0;
+  const conBoost = proposal.target === 'consciousness' || targetSlot === 2 ? 1.15 : 1.0;
+
+  newMetrics.fitness = clamp01(_currentMetrics.fitness + actualImpact * fitBoost);
+  newMetrics.emergence = clamp01(_currentMetrics.emergence + actualImpact * 0.5 * emgBoost);
+  newMetrics.consciousness = clamp01(_currentMetrics.consciousness + actualImpact * 0.3 * conBoost);
 
   if (proposal.type === 'architecture' || proposal.type === 'faculty') {
-    newMetrics.complexity *= 1.1;
+    const proposedComplexity =
+      typeof proposal.change === 'object' &&
+      proposal.change !== null &&
+      'complexity' in proposal.change &&
+      typeof (proposal.change as { complexity?: unknown }).complexity === 'number'
+        ? (proposal.change as { complexity: number }).complexity
+        : _currentMetrics.complexity * 1.1;
+    newMetrics.complexity = proposedComplexity;
     newMetrics.stability *= 0.95; // More complex = less stable
   }
 
@@ -215,27 +237,61 @@ export function applyModification(
 export class SelfEvolutionLoop {
   private config: SelfEvolutionConfig;
   private metrics: EvolutionMetrics;
+  private baselineMetrics: EvolutionMetrics;
+  private readonly parameters = new Map<string, unknown>();
   private history: EvolutionMetrics[] = [];
   private generation = 0;
   private modificationsApplied = 0;
   private rollbacks = 0;
 
   constructor(initialMetrics: EvolutionMetrics, config: Partial<SelfEvolutionConfig> = {}) {
-    this.metrics = initialMetrics;
+    this.metrics = { ...initialMetrics };
+    this.baselineMetrics = { ...initialMetrics };
     this.config = { ...DEFAULT_CONFIG, ...config };
     this.history.push({ ...initialMetrics });
   }
 
   /**
    * Ingest live sim metrics before {@link step} (world feeds dominance, emergence, Φ, etc. each cadence).
-   * Merges into the current metrics without resetting modification history.
+   * Merges into the current metrics while preserving accumulated self-evolution deltas across steps.
    */
   ingestLive(live: Partial<EvolutionMetrics>): void {
-    if (live.fitness !== undefined) this.metrics.fitness = live.fitness;
-    if (live.emergence !== undefined) this.metrics.emergence = live.emergence;
-    if (live.complexity !== undefined) this.metrics.complexity = live.complexity;
-    if (live.consciousness !== undefined) this.metrics.consciousness = live.consciousness;
-    if (live.stability !== undefined) this.metrics.stability = live.stability;
+    const preserveDelta = this.modificationsApplied > 0;
+    if (live.fitness !== undefined) {
+      const delta = preserveDelta ? this.metrics.fitness - this.baselineMetrics.fitness : 0;
+      this.baselineMetrics.fitness = live.fitness;
+      this.metrics.fitness = clamp01(live.fitness + delta);
+    }
+    if (live.emergence !== undefined) {
+      const delta = preserveDelta ? this.metrics.emergence - this.baselineMetrics.emergence : 0;
+      this.baselineMetrics.emergence = live.emergence;
+      this.metrics.emergence = clamp01(live.emergence + delta);
+    }
+    if (live.complexity !== undefined) {
+      const ratio =
+        preserveDelta && this.baselineMetrics.complexity > 0
+          ? this.metrics.complexity / this.baselineMetrics.complexity
+          : 1;
+      this.baselineMetrics.complexity = live.complexity;
+      this.metrics.complexity = live.complexity * ratio;
+    }
+    if (live.consciousness !== undefined) {
+      const delta = preserveDelta
+        ? this.metrics.consciousness - this.baselineMetrics.consciousness
+        : 0;
+      this.baselineMetrics.consciousness = live.consciousness;
+      this.metrics.consciousness = clamp01(live.consciousness + delta);
+    }
+    if (live.stability !== undefined) {
+      const delta = preserveDelta ? this.metrics.stability - this.baselineMetrics.stability : 0;
+      this.baselineMetrics.stability = live.stability;
+      this.metrics.stability = clamp01(live.stability + delta);
+    }
+  }
+
+  private pushHistory(): void {
+    this.history.push({ ...this.metrics });
+    if (this.history.length > 500) this.history.shift(); // bounded history (no unbounded growth)
   }
 
   /**
@@ -250,10 +306,16 @@ export class SelfEvolutionLoop {
 
     // Generate modification proposal
     const proposal = generateModification(this.metrics, rng, this.config);
-    if (!proposal) return false;
+    if (!proposal) {
+      this.pushHistory();
+      return false;
+    }
 
     // Validate safety
-    if (!validateModification(proposal, this.metrics, this.config)) return false;
+    if (!validateModification(proposal, this.metrics, this.config)) {
+      this.pushHistory();
+      return false;
+    }
 
     // Apply modification
     const newMetrics = applyModification(proposal, this.metrics, rng);
@@ -265,17 +327,19 @@ export class SelfEvolutionLoop {
     // Select: keep if improved, rollback if degraded
     if (improvement >= this.config.minImprovement) {
       this.metrics = newMetrics;
+      this.parameters.set(proposal.target, proposal.change);
       this.modificationsApplied++;
-      this.history.push({ ...newMetrics });
-      if (this.history.length > 500) this.history.shift(); // bounded history (no unbounded growth)
+      this.pushHistory();
       return true;
     } else if (newScore < this.config.rollbackThreshold * currentScore) {
       // Rollback: fitness dropped too much
       this.rollbacks++;
+      this.pushHistory();
       return false;
     } else {
       // Audit #229: a marginal degradation used to be ACCEPTED "for exploration", so about half the
       // accepted steps lowered the score. It is now rejected (no metrics change, not a rollback).
+      this.pushHistory();
       return false;
     }
   }
@@ -339,6 +403,8 @@ export class SelfEvolutionLoop {
    */
   reset(): void {
     this.metrics = { ...this.history[0]! };
+    this.baselineMetrics = { ...this.history[0]! };
+    this.parameters.clear();
     this.history = [{ ...this.history[0]! }];
     this.generation = 0;
     this.modificationsApplied = 0;

@@ -364,7 +364,8 @@ export class EntityBrainField {
    */
   perturbBrains(rng: Rng, amp = 0.015): void {
     for (let slot = 0; slot < this.capacity; slot++) {
-      const base = slot * GENOME_LEN;
+      const brainSlot = this.slotToBrain[slot] ?? slot;
+      const base = brainSlot * GENOME_LEN;
       for (let k = base + TRAIT_GENES; k < base + GENOME_LEN; k++) {
         this.setGene(k, this.getGene(k) + (rng() * 2 - 1) * amp);
       }
@@ -645,15 +646,15 @@ export class EntityBrainField {
       let explorationX = 0;
       let explorationZ = 0;
       if (signal) {
-        let ca = this.corpusAngleCos[slot] ?? 0;
-        let sa = this.corpusAngleSin[slot] ?? 0;
-        if (this.corpusAnglePhase[slot] !== ud.ph) {
-          const angle = slot * 2.399963229728653 + ud.ph;
+        let ca = this.corpusAngleCos[brainSlot] ?? 0;
+        let sa = this.corpusAngleSin[brainSlot] ?? 0;
+        if (this.corpusAnglePhase[brainSlot] !== ud.ph) {
+          const angle = brainSlot * 2.399963229728653 + ud.ph;
           ca = Math.cos(angle);
           sa = Math.sin(angle);
-          this.corpusAnglePhase[slot] = ud.ph;
-          this.corpusAngleCos[slot] = ca;
-          this.corpusAngleSin[slot] = sa;
+          this.corpusAnglePhase[brainSlot] = ud.ph;
+          this.corpusAngleCos[brainSlot] = ca;
+          this.corpusAngleSin[brainSlot] = sa;
         }
         const threatNudge = protectedHere ? 0 : semanticThreat * 0.055 * this.signalConfidence;
         threatX = ca * threatNudge;
@@ -816,6 +817,7 @@ export class EntityBrainField {
     this.semanticContext[semanticBase + 2] = 0;
     this.semanticContext[semanticBase + 3] = 0;
     this.semanticReady[brainSlot] = 0;
+    this.corpusAnglePhase[brainSlot] = Number.NaN;
   }
 
   /** Mean magnitude of active semantic recurrent context lanes across ready brain slots (#111). */

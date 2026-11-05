@@ -324,12 +324,14 @@ export class SuperPanel {
     this.doc = doc;
     doc.getElementById('cqm-sup-toggle')?.remove();
     doc.getElementById('cqm-sup-panel')?.remove();
-    doc.getElementById('cqm-sup-css')?.remove();
     injectPanelBaseCSS(doc);
-    const style = doc.createElement('style');
-    style.id = 'cqm-sup-css';
+    let style = doc.getElementById('cqm-sup-css') as HTMLStyleElement | null;
+    if (!style) {
+      style = doc.createElement('style');
+      style.id = 'cqm-sup-css';
+      doc.head.appendChild(style);
+    }
     style.textContent = STYLE;
-    doc.head.appendChild(style);
 
     const toggle = doc.createElement('button');
     toggle.id = 'cqm-sup-toggle';
@@ -345,8 +347,8 @@ export class SuperPanel {
     panel.setAttribute('aria-label', 'Super Creatures (5 Archons/Godforms) telemetry');
     panel.innerHTML =
       `<div class="cqm-sup-head"><b>⬢ 5 ARCHONS / GODFORMS</b><span class="plan" data-plan>—</span>` +
-      `<button class="cqm-sup-neu" data-neu aria-label="Toggle the Archon neural observatories" title="Toggle neural for focused Archon">⊞ NEURAL</button>` +
-      `<button class="cqm-sup-min" data-min aria-label="Minimize">MINIMIZE</button>` +
+      `<button class="cqm-sup-neu" data-neu aria-label="Toggle the Archon neural observatories" aria-selected="false" aria-pressed="false" title="Toggle neural for focused Archon">⊞ NEURAL</button>` +
+      `<button class="cqm-sup-min" data-min aria-label="Minimize" aria-pressed="false">MINIMIZE</button>` +
       `<button class="cqm-sup-x" data-close aria-label="Close">EXIT</button></div>` +
       `<div class="cqm-sup-body"><div class="cqm-sup-id" data-id></div>` +
       `<div class="cqm-sup-bars" data-bars></div></div>` +
@@ -540,6 +542,7 @@ export class SuperPanel {
     const minBtn = this.panel.querySelector('[data-min]');
     if (minBtn) {
       minBtn.textContent = this.minimized ? 'RESTORE' : 'MINIMIZE';
+      minBtn.setAttribute('aria-pressed', String(this.minimized));
     }
   }
 
@@ -550,6 +553,11 @@ export class SuperPanel {
   private setNeural(v: boolean): void {
     this.neuralOn = v;
     this.panel.classList.toggle('neural', v);
+    const neuBtn = this.panel.querySelector('[data-neu]');
+    if (neuBtn) {
+      neuBtn.setAttribute('aria-selected', String(v));
+      neuBtn.setAttribute('aria-pressed', String(v));
+    }
     this.neural.setActive(v);
   }
 

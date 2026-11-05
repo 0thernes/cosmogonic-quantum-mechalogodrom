@@ -12,10 +12,16 @@
 [ "$(git config --bool hooks.autopush 2>/dev/null)" = "false" ] && exit 0
 [ "$CQM_NO_AUTOPUSH" = "1" ] && exit 0
 git rev-parse --verify -q HEAD >/dev/null 2>&1 || exit 0
+git_dir="$(git rev-parse --git-dir 2>/dev/null)" || exit 0
+if [ -d "$git_dir/rebase-merge" ] || [ -d "$git_dir/rebase-apply" ] || [ -f "$git_dir/MERGE_HEAD" ] || [ -f "$git_dir/CHERRY_PICK_HEAD" ]; then
+  exit 0
+fi
 
 if git push origin HEAD:main >/dev/null 2>&1; then
   exit 0
 fi
+# Only attempt pull --rebase if origin/main is actually reachable and non-fast-forward.
+git fetch origin main --quiet >/dev/null 2>&1 || exit 0
 # Rejected (origin/main moved). Rebase onto it and retry once; abort cleanly on conflict.
 if git pull --rebase --autostash origin main >/dev/null 2>&1; then
   if bun scripts/sync-surfaces.ts --check >/dev/null 2>&1 && bun scripts/gen-filemap.ts --check >/dev/null 2>&1; then

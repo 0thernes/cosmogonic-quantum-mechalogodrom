@@ -338,6 +338,20 @@ class AccessPuzzle {
       new CustomEvent('cqm:superhero-unlock', { detail: { seed: ACCESS_SEED } }),
     );
   }
+
+  dispose(doc: Document = document): void {
+    if (this.langTimer) {
+      clearInterval(this.langTimer);
+      this.langTimer = null;
+    }
+    if (this.scrambleTimer) {
+      clearInterval(this.scrambleTimer);
+      this.scrambleTimer = null;
+    }
+    this.modal.remove();
+    this.toggle.remove();
+    doc.getElementById('cqm-acc-style')?.remove();
+  }
 }
 
 /** Self-mount the access terminal (idempotent). Called from the client entry. */

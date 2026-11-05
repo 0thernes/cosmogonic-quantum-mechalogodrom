@@ -397,9 +397,10 @@ async function boot(): Promise<void> {
         : 'auto';
 
   // Multi-threaded Web Worker Pool (ADR 0010): offload wilderness chunks and Tsotchke Zig WASM
-  // substrate simulation to background CPU cores when available. Explicit ?workers=0 keeps
-  // deterministic visual fixtures on the main thread without changing behavior for a test harness.
-  if (typeof Worker !== 'undefined' && searchParams.get('workers') !== '0') {
+  // substrate simulation to background CPU cores when available. Explicit ?workers=0 or deterministic
+  // seeded mode (?deterministic=1 / ?seed=) keeps simulation on the main thread so async pool attach
+  // timing never introduces mid-run execution-route variation.
+  if (!forceDeterministic && typeof Worker !== 'undefined' && searchParams.get('workers') !== '0') {
     const requestedWorkers = searchParams.has('workers')
       ? Number(searchParams.get('workers'))
       : undefined;
@@ -490,7 +491,7 @@ async function boot(): Promise<void> {
     last = now;
     governor.observe(dt);
     if (engine) governor.apply(engine);
-    world?.setComputeCadence(governor.computeCadence());
+    if (!forceDeterministic) world?.setComputeCadence(governor.computeCadence());
     perfMonitor.recordFrame();
     world?.step(dt);
     if (perfProbe && engine) {

@@ -234,6 +234,7 @@ export class GedankenLedger {
     this.bandSum = 0;
     this.noveltyPeakSum = 0;
     this.transferSum = 0;
+    this.recentVivid = 0;
     this.mindDistSum = 0;
   }
 }

@@ -43,6 +43,11 @@ export class FrameTimeTracker {
     this.frameTimes[this.nextSample] = frameTime;
     this.frameTimeSum += frameTime;
     this.nextSample = (this.nextSample + 1) % this.maxSamples;
+    if (this.nextSample === 0) {
+      let sum = 0;
+      for (let i = 0; i < this.sampleCount; i++) sum += this.frameTimes[i] ?? 0;
+      this.frameTimeSum = sum;
+    }
   }
 
   /**
@@ -178,6 +183,10 @@ export class PerformanceMonitor {
   private readonly frameTracker: FrameTimeTracker;
   private readonly memoryTracker: MemoryTracker;
   private enabled = true;
+  private cachedMemoryMB = 0;
+  private cachedMemoryLimitMB = 0;
+  private cachedMemoryPercent = 0;
+  private hasMemorySample = false;
 
   constructor(maxFrameSamples = 60, memoryInterval = 1000) {
     this.frameTracker = new FrameTimeTracker(maxFrameSamples);
@@ -196,15 +205,22 @@ export class PerformanceMonitor {
    * Get current performance metrics.
    */
   getMetrics() {
+    if (!this.hasMemorySample || this.memoryTracker.shouldMeasure()) {
+      this.cachedMemoryMB = this.memoryTracker.getCurrentMemoryMB();
+      this.cachedMemoryLimitMB = this.memoryTracker.getMemoryLimitMB();
+      this.cachedMemoryPercent =
+        this.cachedMemoryLimitMB > 0 ? (this.cachedMemoryMB / this.cachedMemoryLimitMB) * 100 : 0;
+      this.hasMemorySample = true;
+    }
     return {
       fps: this.frameTracker.getFPS(),
       avgFrameTime: this.frameTracker.getAverageFrameTime(),
       minFrameTime: this.frameTracker.getMinFrameTime(),
       maxFrameTime: this.frameTracker.getMaxFrameTime(),
       p95FrameTime: this.frameTracker.getPercentile95FrameTime(),
-      memoryMB: this.memoryTracker.getCurrentMemoryMB(),
-      memoryLimitMB: this.memoryTracker.getMemoryLimitMB(),
-      memoryPercent: this.memoryTracker.getMemoryUsagePercent(),
+      memoryMB: this.cachedMemoryMB,
+      memoryLimitMB: this.cachedMemoryLimitMB,
+      memoryPercent: this.cachedMemoryPercent,
       sampleCount: this.frameTracker.getSampleCount(),
     };
   }
@@ -221,6 +237,7 @@ export class PerformanceMonitor {
    */
   reset(): void {
     this.frameTracker.reset();
+    this.hasMemorySample = false;
   }
 
   /**

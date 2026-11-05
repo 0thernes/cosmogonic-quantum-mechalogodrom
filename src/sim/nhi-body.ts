@@ -635,24 +635,49 @@ export class NhiBodySystem {
     // Deterministic: the cursor advances per call, no rng.
     const bodiesArr = this.pairScratch;
     const n = bodiesArr.length;
-    const anchorsPerFrame = n <= 64 ? n : Math.ceil(n / 8);
-    const start = n > 0 ? this.pairCursor % n : 0;
-    this.pairCursor = n > 0 ? (this.pairCursor + anchorsPerFrame) % n : 0;
-    for (let k = 0; k < anchorsPerFrame; k++) {
-      const i = (start + k) % n;
-      const b = bodiesArr[i]!;
-      const p = b.group.position;
-      for (let j = i + 1; j < n; j++) {
-        const other = bodiesArr[j]!;
-        const op = other.group.position;
-        const dx = p.x - op.x;
-        const dy = p.y - op.y;
-        const dz = p.z - op.z;
-        const d2 = dx * dx + dy * dy + dz * dz;
-        if (d2 < SOCIAL_NHI_BODY_R * SOCIAL_NHI_BODY_R) {
-          const proximity = 1 - Math.sqrt(d2) / SOCIAL_NHI_BODY_R;
-          if (proximity > b.social) b.social = proximity;
-          if (proximity > other.social) other.social = proximity;
+    if (n <= 64) {
+      this.pairCursor = 0;
+      for (let i = 0; i < n; i++) {
+        const b = bodiesArr[i]!;
+        const p = b.group.position;
+        for (let j = i + 1; j < n; j++) {
+          const other = bodiesArr[j]!;
+          const op = other.group.position;
+          const dx = p.x - op.x;
+          const dy = p.y - op.y;
+          const dz = p.z - op.z;
+          const d2 = dx * dx + dy * dy + dz * dz;
+          if (d2 < SOCIAL_NHI_BODY_R * SOCIAL_NHI_BODY_R) {
+            const proximity = 1 - Math.sqrt(d2) / SOCIAL_NHI_BODY_R;
+            if (proximity > b.social) b.social = proximity;
+            if (proximity > other.social) other.social = proximity;
+          }
+        }
+      }
+    } else {
+      const anchorsPerFrame = Math.ceil(n / 8);
+      const start = this.pairCursor % n;
+      this.pairCursor = (this.pairCursor + anchorsPerFrame) % n;
+      const half = n >> 1;
+      const isEven = (n & 1) === 0;
+      for (let k = 0; k < anchorsPerFrame; k++) {
+        const i = (start + k) % n;
+        const b = bodiesArr[i]!;
+        const p = b.group.position;
+        const maxOffset = isEven && i >= half ? half - 1 : half;
+        for (let offset = 1; offset <= maxOffset; offset++) {
+          const j = (i + offset) % n;
+          const other = bodiesArr[j]!;
+          const op = other.group.position;
+          const dx = p.x - op.x;
+          const dy = p.y - op.y;
+          const dz = p.z - op.z;
+          const d2 = dx * dx + dy * dy + dz * dz;
+          if (d2 < SOCIAL_NHI_BODY_R * SOCIAL_NHI_BODY_R) {
+            const proximity = 1 - Math.sqrt(d2) / SOCIAL_NHI_BODY_R;
+            if (proximity > b.social) b.social = proximity;
+            if (proximity > other.social) other.social = proximity;
+          }
         }
       }
     }
@@ -750,6 +775,9 @@ export class NhiBodySystem {
   clear(): void {
     const bodies = [...this.bodies.values()];
     this.bodies.clear();
+    this.pairScratch.length = 0;
+    this.spawnIndex = 0;
+    this.pairCursor = 0;
     for (const b of bodies) this.disposeBody(b);
     this.resetPartPool(this.ringPool);
     for (const pool of this.spikePools) this.resetPartPool(pool);

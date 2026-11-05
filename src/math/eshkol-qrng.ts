@@ -48,6 +48,7 @@ export class EshkolQrng {
   private readonly model: DeterministicStatevectorRng;
   private readonly zigState: BigUint64Array;
   private readonly zigScratch: Float64Array;
+  private lastWildWord: bigint | null = null;
 
   constructor(seed: Rng) {
     this.model = new DeterministicStatevectorRng(seed, {
@@ -73,8 +74,11 @@ export class EshkolQrng {
     if (isWildEntropyMode()) {
       const jitter = harvestHardwareJitter64(Number(base & 0xffffffffn));
       const chaos = zigQrngQuantumChaosStep(this.zigState, this.zigScratch, jitter);
-      return BigInt.asUintN(64, base ^ chaos);
+      const mixed = BigInt.asUintN(64, base ^ chaos);
+      this.lastWildWord = mixed;
+      return mixed;
     }
+    this.lastWildWord = null;
     return base;
   }
 
@@ -128,7 +132,8 @@ export class EshkolQrng {
       health.sampleBits === 0 || p <= 0 || p >= 1
         ? 0
         : Math.max(0, Math.min(1, -p * Math.log2(p) - (1 - p) * Math.log2(1 - p)));
-    const lastBits = BigInt(`0x${snapshot.lastWord}`).toString(2).padStart(64, '0');
+    const activeWord = this.lastWildWord ?? BigInt(`0x${snapshot.lastWord}`);
+    const lastBits = activeWord.toString(2).padStart(64, '0');
     return {
       qubits: ESHKOL_QUBITS,
       steps: snapshot.cursor,

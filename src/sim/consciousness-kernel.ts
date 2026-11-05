@@ -455,6 +455,16 @@ export function synergyBlend(
   iters = 6,
   a = 0.5,
   b = 0.55,
+  out?: {
+    raw: number[];
+    coupled: number[];
+    present: boolean[];
+    index: number;
+    independentMean: number;
+    emergence: number;
+    convergence: number;
+    activeCount: number;
+  },
 ): SynergyResult {
   let activeCount = 0;
   let rawSum = 0;
@@ -511,6 +521,19 @@ export function synergyBlend(
   }
   const convergence = clamp01(index * agreement);
   const emergence = clamp01(index - independentMean);
+  if (out) {
+    for (let i = 0; i < FRAMEWORK_COUNT; i++) {
+      out.raw[i] = _raw[i] ?? 0;
+      out.coupled[i] = _x[i] ?? 0;
+      out.present[i] = _present[i] ?? false;
+    }
+    out.index = index;
+    out.independentMean = independentMean;
+    out.emergence = emergence;
+    out.convergence = convergence;
+    out.activeCount = activeCount;
+    return out;
+  }
   return {
     raw: Array.from(_raw),
     coupled: Array.from(_x),
@@ -591,6 +614,16 @@ export class ConsciousnessKernel {
 
   // latest relaxation result (kept for cheap getters and snapshot building).
   private last: SynergyResult | null = null;
+  private readonly lastScratch = {
+    raw: Array.from({ length: FRAMEWORK_COUNT }, () => 0),
+    coupled: Array.from({ length: FRAMEWORK_COUNT }, () => 0),
+    present: Array.from({ length: FRAMEWORK_COUNT }, () => false),
+    index: 0,
+    independentMean: 0,
+    emergence: 0,
+    convergence: 0,
+    activeCount: 0,
+  };
   private lastMoving = 0;
   private lastCoherence = 0;
   private lastNullMargin = 0;
@@ -601,7 +634,6 @@ export class ConsciousnessKernel {
   // scratch reused by detection (allocation-free per ingest).
   private readonly seriesA: Float64Array;
   private readonly seriesB: Float64Array;
-  private readonly surrA: Float64Array;
   private readonly surrB: Float64Array;
 
   constructor(seed: number, opts: KernelOptions = {}) {
@@ -615,7 +647,6 @@ export class ConsciousnessKernel {
     this.idxRing = new Float64Array(this.W);
     this.seriesA = new Float64Array(this.W);
     this.seriesB = new Float64Array(this.W);
-    this.surrA = new Float64Array(this.W);
     this.surrB = new Float64Array(this.W);
   }
 
@@ -654,7 +685,7 @@ export class ConsciousnessKernel {
    * O(iters·100 + window·100) — cadence-gated for heavy entities, NOT run for every organism every frame.
    */
   ingest(signals: FrameworkSignals): void {
-    const res = synergyBlend(signals, this.iters);
+    const res = synergyBlend(signals, this.iters, 0.5, 0.55, this.lastScratch);
     this.last = res;
     // write coupled scores + index into the ring.
     const slot = this.head * FRAMEWORK_COUNT;
@@ -727,18 +758,17 @@ export class ConsciousnessKernel {
     for (let fa = 0; fa < FRAMEWORK_COUNT; fa++) {
       if (!res.present[fa]) continue;
       this.readSeries(fa, this.seriesA);
-      // (3) build a seeded phase-shuffled surrogate of series A: circular rotation by a random offset.
+      // (3) leave seriesA unshifted (rotA = 0) and circularly shift seriesB by a guaranteed non-zero
+      // relative lag in [1, n - 1] that varies with both fa and fb so relative shift is never 0.
       const rot = 1 + Math.floor(this.rng() * (n - 2));
-      for (let k = 0; k < n; k++) this.surrA[k] = this.seriesA[(k + rot) % n] ?? 0;
       for (let fb = fa + 1; fb < FRAMEWORK_COUNT; fb++) {
         if (!res.present[fb]) continue;
         this.readSeries(fb, this.seriesB);
         cohSum += Math.abs(pearson(this.seriesA, this.seriesB, n));
         cohN++;
-        // #176: rotate seriesB by a pair-specific deterministic offset so pairwise surrogate correlations are independent
-        const rotB = (rot + fb * 3 + 1) % Math.max(1, n - 1);
+        const rotB = ((rot - 1 + fa * 7 + fb * 3) % Math.max(1, n - 1)) + 1;
         for (let k = 0; k < n; k++) this.surrB[k] = this.seriesB[(k + rotB) % n] ?? 0;
-        surrSum += Math.abs(pearson(this.surrA, this.surrB, n));
+        surrSum += Math.abs(pearson(this.seriesA, this.surrB, n));
         surrN++;
       }
     }

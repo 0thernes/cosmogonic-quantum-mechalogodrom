@@ -204,8 +204,53 @@ export class MythRitual {
       this.createSymbol();
     }
 
+    // Reinforce active myths when rituals are practiced before applying generational decay
+    this.reinforcePracticedCulture();
+
     // Decay culture
     this.decayCulture();
+  }
+
+  /**
+   * Practice active rituals: ritual participation reinforces shared myths and symbol usage
+   * so actively practiced culture can endure beyond the raw unpracticed decay horizon.
+   */
+  practiceRitual(ritualId?: number): void {
+    if (this.culture.rituals.length === 0) return;
+    for (const ritual of this.culture.rituals) {
+      if (ritualId !== undefined && ritual.id !== ritualId) continue;
+      ritual.frequency = clamp01(ritual.frequency + 0.05);
+      ritual.practitioners += 1;
+    }
+    for (const myth of this.culture.myths) {
+      myth.strength = clamp01(myth.strength + 0.04);
+      myth.believers += 0.5;
+    }
+  }
+
+  /**
+   * Coupling between rituals and myths: active rituals reinforce the myths they enact.
+   * Pure and RNG-free so seeded generation streams are untouched.
+   */
+  private reinforcePracticedCulture(): void {
+    const rituals = this.culture.rituals;
+    const myths = this.culture.myths;
+    if (rituals.length === 0 || myths.length === 0) return;
+
+    // Reinforcement scales with ritualFormationRate so high-decay / zero-formation ablations still decay cleanly.
+    const baseReinforce = this.config.ritualFormationRate * 0.12;
+    if (baseReinforce <= 0) return;
+
+    for (let i = 0; i < rituals.length; i++) {
+      const ritual = rituals[i]!;
+      if (ritual.frequency <= 0.1) continue;
+      const myth = myths[i % myths.length]!;
+      const boost = baseReinforce * ritual.frequency;
+      myth.strength = clamp01(myth.strength + boost);
+      myth.believers += boost * 1.5;
+      ritual.frequency = clamp01(ritual.frequency + boost * 0.75);
+      ritual.practitioners += boost;
+    }
   }
 
   /**
@@ -257,14 +302,14 @@ export class MythRitual {
       values[Math.floor(this.rng() * values.length)] ?? values[0] ?? '';
     const template = pick(templates);
     return template
-      .replace('{entity}', pick(entities)!)
-      .replace('{realm}', pick(realms)!)
-      .replace('{hero}', pick(heroes)!)
-      .replace('{villain}', pick(villains)!)
-      .replace('{event}', pick(events)!)
-      .replace('{origin}', pick(origins)!)
-      .replace('{consequence}', pick(consequences)!)
-      .replace('{treasure}', pick(treasures)!);
+      .replace('{entity}', () => pick(entities))
+      .replace('{realm}', () => pick(realms))
+      .replace('{hero}', () => pick(heroes))
+      .replace('{villain}', () => pick(villains))
+      .replace('{event}', () => pick(events))
+      .replace('{origin}', () => pick(origins))
+      .replace('{consequence}', () => pick(consequences))
+      .replace('{treasure}', () => pick(treasures));
   }
 
   /**

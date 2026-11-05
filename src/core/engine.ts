@@ -124,6 +124,7 @@ export class Engine {
         // always stretches it to fill the WHOLE window (no letterbox / aspect-ratio "encasing" if a resize
         // is ever missed). The drawing buffer is still sized to the viewport for a pixel-perfect render.
         this.renderer.setSize(window.innerWidth, window.innerHeight, false);
+        this.fx?.setSize(window.innerWidth, window.innerHeight);
         if (this.renderer.shadowMap.enabled) this.renderer.shadowMap.needsUpdate = true;
         if (this.scene.environment) {
           try {
@@ -186,6 +187,11 @@ export class Engine {
         fx.render();
         return;
       } catch {
+        try {
+          fx.dispose();
+        } catch {
+          /* best-effort */
+        }
         this.fx = null; // effect graph failed at runtime — fall back to the plain pipeline for good
       }
     }

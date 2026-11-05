@@ -521,6 +521,12 @@ export class Connectome {
           // 11 instance floats — every derived term (nd, fire, retract, waves, HSL) moves to the
           // vertex shader. actPulse reads act AFTER this frame's propagation write, exactly like
           // the retired CPU bake did.
+          const rawActA = ea.userData.act + (mutateAct && bi >= 0 ? (actDelta[ni] ?? 0) : 0);
+          const rawActB = eb.userData.act + (mutateAct && bi >= 0 ? (actDelta[bi] ?? 0) : 0);
+          const actA = !(rawActA < ACT_MAX) ? ACT_MAX : rawActA > -ACT_MAX ? rawActA : -ACT_MAX;
+          const actB = !(rawActB < ACT_MAX) ? ACT_MAX : rawActB > -ACT_MAX ? rawActB : -ACT_MAX;
+          const idA = ea.userData.ecologyId ?? ea.id;
+          const idB = eb.userData.ecologyId ?? eb.id;
           const o = linkIndex * INSTANCE_FLOATS;
           data[o] = ap.x;
           data[o + 1] = ap.y;
@@ -529,8 +535,8 @@ export class Connectome {
           data[o + 4] = bp.y;
           data[o + 5] = bp.z;
           data[o + 6] = nw;
-          data[o + 7] = (ea.userData.act + eb.userData.act) * 0.5;
-          data[o + 8] = ap.x * 0.13 + bp.z * 0.17 + ea.id * 7e-4 + eb.id * 1.1e-3;
+          data[o + 7] = (actA + actB) * 0.5;
+          data[o + 8] = ap.x * 0.13 + bp.z * 0.17 + idA * 7e-4 + idB * 1.1e-3;
           data[o + 9] = ni;
           data[o + 10] = communityOf ? (communityOf(ni) & 7) * TRIBE_HUE_STEP : -1;
         }

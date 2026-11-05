@@ -42,9 +42,14 @@ function encode(a: number[], card: number[]): number {
 /** Normalise a vector in place to sum 1 (uniform if it sums to ~0). Returns it. */
 function normalize(v: Float64Array): Float64Array {
   let s = 0;
-  for (let i = 0; i < v.length; i++) s += v[i]!;
+  for (let i = 0; i < v.length; i++) {
+    const val = v[i]!;
+    const clean = Number.isFinite(val) && val > 0 ? val : 0;
+    v[i] = clean;
+    s += clean;
+  }
   if (s < EPS) {
-    v.fill(1 / v.length);
+    if (v.length > 0) v.fill(1 / v.length);
     return v;
   }
   const inv = 1 / s;

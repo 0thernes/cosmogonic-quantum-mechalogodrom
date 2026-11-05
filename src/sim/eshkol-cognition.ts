@@ -48,6 +48,56 @@ interface ArchonThought {
  * program therefore exercises PUSH/ADD/MUL/GT/JZ/HALT across nested branches — a deeper Eshkol
  * computation than the old sum-3-and-compare. Pure; returns a fresh program.
  */
+/** Static pre-linked Eshkol bytecode for the 3-way Archon decision tree. */
+const ARCHON_DRIVE_BLOCK: readonly number[] = [
+  EshOp.PUSH,
+  0,
+  EshOp.PUSH,
+  1,
+  EshOp.ADD, // s0 + s1
+  EshOp.PUSH,
+  2,
+  EshOp.ADD, //               + s2
+  EshOp.PUSH,
+  3,
+  EshOp.PUSH,
+  4,
+  EshOp.MUL,
+  EshOp.ADD, // + s3*s4  → drive
+];
+
+const ARCHON_PROGRAM_CODE: readonly number[] = (() => {
+  const head = [
+    ...ARCHON_DRIVE_BLOCK,
+    EshOp.PUSH,
+    5,
+    EshOp.GT,
+    EshOp.JZ,
+    0,
+    EshOp.PUSH,
+    7,
+    EshOp.HALT,
+  ];
+  const llow = head.length;
+  const mid = [
+    ...ARCHON_DRIVE_BLOCK,
+    EshOp.PUSH,
+    6,
+    EshOp.GT,
+    EshOp.JZ,
+    0,
+    EshOp.PUSH,
+    8,
+    EshOp.HALT,
+  ];
+  const lexplore = llow + mid.length;
+  const tail = [EshOp.PUSH, 9, EshOp.HALT];
+  const code = [...head, ...mid, ...tail];
+  code[head.indexOf(EshOp.JZ) + 1] = llow;
+  code[llow + mid.indexOf(EshOp.JZ) + 1] = lexplore;
+  return Object.freeze(code);
+})();
+
 export function compileArchonProgram(substrate: Float32Array, beat: number): EshProgram {
   const s0 = clamp01(substrate[0] ?? 0.5);
   const s1 = clamp01(substrate[1] ?? 0.5);
@@ -70,54 +120,7 @@ export function compileArchonProgram(substrate: Float32Array, beat: number): Esh
     ESHKOL_BALANCED,
     ESHKOL_EXPLORE,
   ];
-  // Reusable block that leaves `drive = s0 + s1 + s2 + s3*s4` on the stack top.
-  const DRIVE = [
-    EshOp.PUSH,
-    0,
-    EshOp.PUSH,
-    1,
-    EshOp.ADD, // s0 + s1
-    EshOp.PUSH,
-    2,
-    EshOp.ADD, //               + s2
-    EshOp.PUSH,
-    3,
-    EshOp.PUSH,
-    4,
-    EshOp.MUL,
-    EshOp.ADD, // + s3*s4  → drive
-  ];
-  // Level 1: drive > thrHigh ? EXPLOIT : fall through to the low check. (The drive is recomputed for
-  // the second comparison — the VM has no local slots — which also keeps each branch self-contained.)
-  const head = [
-    ...DRIVE,
-    EshOp.PUSH,
-    5,
-    EshOp.GT,
-    EshOp.JZ,
-    /*→Llow, patched*/ 0,
-    EshOp.PUSH,
-    7,
-    EshOp.HALT,
-  ];
-  const llow = head.length; // address where the low-check block begins
-  const mid = [
-    ...DRIVE,
-    EshOp.PUSH,
-    6,
-    EshOp.GT,
-    EshOp.JZ,
-    /*→Lexplore, patched*/ 0,
-    EshOp.PUSH,
-    8,
-    EshOp.HALT,
-  ];
-  const lexplore = llow + mid.length; // address of the EXPLORE tail
-  const tail = [EshOp.PUSH, 9, EshOp.HALT];
-  const code = [...head, ...mid, ...tail];
-  code[head.indexOf(EshOp.JZ) + 1] = llow; // patch level-1 JZ target
-  code[llow + mid.indexOf(EshOp.JZ) + 1] = lexplore; // patch level-2 JZ target
-  return { code, consts };
+  return { code: ARCHON_PROGRAM_CODE, consts };
 }
 
 /**

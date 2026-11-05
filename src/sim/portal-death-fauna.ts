@@ -165,7 +165,7 @@ export class PortalDeathFauna {
       this.life[i] = nL > 0 ? nL : 0;
       const f = nL > 0 ? nL / LIFE : 0; // 1 → 0 over LIFE
       const o = i * 3;
-      const sw = Math.sin(t * 6 + i) * 11 * ARENA_MID * dt; // deterministic warp swirl
+      const sw = Math.sin(t * 6 + i) * 11 * ARENA_MID; // deterministic warp swirl velocity
       this.vel[o + 1] = (this.vel[o + 1] ?? 0) - 17 * ARENA_MID * dt; // gravity
       this.posArr[o] = (this.posArr[o] ?? 0) + ((this.vel[o] ?? 0) + sw) * dt;
       this.posArr[o + 1] = (this.posArr[o + 1] ?? 0) + (this.vel[o + 1] ?? 0) * dt;

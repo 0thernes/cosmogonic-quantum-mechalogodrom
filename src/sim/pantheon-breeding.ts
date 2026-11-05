@@ -601,15 +601,6 @@ interface ChaosGenome {
   readonly chaotic: boolean;
 }
 
-/** One de Jong step: x'=sin(a·y)−cos(b·x), y'=sin(c·x)−cos(d·y). Bounded in [−2,2]². */
-function deJong(
-  p: { a: number; b: number; c: number; d: number },
-  x: number,
-  y: number,
-): [number, number] {
-  return [Math.sin(p.a * y) - Math.cos(p.b * x), Math.sin(p.c * x) - Math.cos(p.d * y)];
-}
-
 /** Benettin largest-Lyapunov estimate for the de Jong map: log-divergence of a renormalised twin. */
 function lyapunovExponent(p: { a: number; b: number; c: number; d: number }): number {
   const d0 = 1e-8;
@@ -622,8 +613,14 @@ function lyapunovExponent(p: { a: number; b: number; c: number; d: number }): nu
   const TRANSIENT = 120;
   const STEPS = 900;
   for (let i = 0; i < TRANSIENT + STEPS; i++) {
-    [x, y] = deJong(p, x, y);
-    [xp, yp] = deJong(p, xp, yp);
+    const nx = Math.sin(p.a * y) - Math.cos(p.b * x);
+    const ny = Math.sin(p.c * x) - Math.cos(p.d * y);
+    x = nx;
+    y = ny;
+    const nxp = Math.sin(p.a * yp) - Math.cos(p.b * xp);
+    const nyp = Math.sin(p.c * xp) - Math.cos(p.d * yp);
+    xp = nxp;
+    yp = nyp;
     const dx = xp - x;
     const dy = yp - y;
     const dist = Math.hypot(dx, dy) || 1e-12;
@@ -805,9 +802,10 @@ export function breedAt(i: number, j: number, nonce = 0): BabyGenome {
  */
 export function randomBreeding(rng: Rng): BabyGenome {
   const roll = rng();
+  const isSelf = roll < 0.12;
   let i = Math.floor(rng() * BROTHER_COUNT * 2); // 0..99 (a non-apex parent)
   let j: number;
-  if (roll < 0.12) {
+  if (isSelf) {
     j = i; // asexual self-rite
   } else if (roll < 0.4) {
     // inbred — same kin. Draw j from glyph i's ACTUAL kin cohort. The roster is interleaved, so the old
@@ -818,7 +816,10 @@ export function randomBreeding(rng: Rng): BabyGenome {
   } else {
     j = Math.floor(rng() * 100);
   }
-  if (rng() < 0.06) i = 100; // the apex's blood enters the pool, rarely
+  if (rng() < 0.06) {
+    i = 100; // the apex's blood enters the pool, rarely
+    if (isSelf) j = 100; // preserve asexual self-rite when apex is selected
+  }
   const nonce = 1 + Math.floor(rng() * 0xffff);
   return breedAt(i, j, nonce);
 }
@@ -832,9 +833,18 @@ export function babyAttractorPath(g: BabyGenome, steps = 4000): Float64Array {
   const out = new Float64Array(steps * 2);
   let x = 0.1;
   let y = 0.1;
-  for (let i = 0; i < 80; i++) [x, y] = deJong(g.chaos, x, y); // burn transient
+  const p = g.chaos;
+  for (let i = 0; i < 80; i++) {
+    const nx = Math.sin(p.a * y) - Math.cos(p.b * x);
+    const ny = Math.sin(p.c * x) - Math.cos(p.d * y);
+    x = nx;
+    y = ny;
+  }
   for (let i = 0; i < steps; i++) {
-    [x, y] = deJong(g.chaos, x, y);
+    const nx = Math.sin(p.a * y) - Math.cos(p.b * x);
+    const ny = Math.sin(p.c * x) - Math.cos(p.d * y);
+    x = nx;
+    y = ny;
     out[2 * i] = x;
     out[2 * i + 1] = y;
   }

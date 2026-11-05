@@ -288,7 +288,7 @@ jobs:
   bench:
     name: Benchmarks (informational)
     runs-on: ubuntu-latest
-    needs: gate
+    needs: gate-linux
     timeout-minutes: 10
     # Non-blocking: a perf regression should surface in the log, not fail the gate
     # (CI runners are noisier than the reference machine — see docs/BENCHMARKS-2026-06-26.md).

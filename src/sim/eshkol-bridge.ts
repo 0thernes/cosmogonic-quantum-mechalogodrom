@@ -246,9 +246,9 @@ export function eshkolDualReal(val: number): { node: number; tape: AdTape } {
   return { node, tape };
 }
 
-export function eshkolGradientReal(node: number, tape: AdTape): number {
+export function eshkolGradientReal(node: number, tape: AdTape, inputNode = 0): number {
   adBackward(tape, node);
-  return adGradient(tape, node);
+  return adGradient(tape, inputNode);
 }
 
 export interface EshkolDual {

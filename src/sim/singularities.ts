@@ -73,7 +73,9 @@ const ACCRETION_DISK_VERT = /* glsl */ `
     vDiskUv = uv;
     vec3 pos = position;
     float r = length(pos.xy);
-    vRadius = r / ${DISK_R.toFixed(1)};
+    const float rMin = ${(HORIZON * 1.15).toFixed(2)};
+    const float rMax = ${(DISK_R * 1.5).toFixed(2)};
+    vRadius = clamp((r - rMin) / (rMax - rMin), 0.0, 1.0);
     // Vertical warp: inner edge curves UP and OVER the black hole (Interstellar effect).
     // The disk wraps around the shadow sphere — the back of the disk appears above the hole.
     float warpAmt = smoothstep(1.0, 0.0, vRadius) * ${HORIZON.toFixed(1)} * 0.9;
@@ -642,8 +644,9 @@ export class SingularitySystem {
       if (r < HORIZON * WARP_R_MULT) {
         let k = 1 - (r - HORIZON) / (HORIZON * (WARP_R_MULT - 1)); // 1 at horizon → 0 at the edge
         k = k < 0 ? 0 : k > 1 ? 1 : k;
-        e.userData.vel.multiplyScalar(1 - 0.42 * k); // dilation: down to ~0.58× near the horizon
-        e.material.color.lerp(sign > 0 ? REDSHIFT : BLUESHIFT, 0.05 * k);
+        const dtScale = Math.min(2, Math.max(0, dt * 60));
+        e.userData.vel.multiplyScalar(1 - 0.42 * k * dtScale); // dilation: down to ~0.58× near the horizon
+        e.material.color.lerp(sign > 0 ? REDSHIFT : BLUESHIFT, 0.05 * k * dtScale);
       }
     }
     // Dispose the collected horizon-crossers in a SINGLE reverse scan (O(n) once + the disposeAt
@@ -722,10 +725,11 @@ export class SingularitySystem {
         this.applyShaderTime(rig.primaryMat, 'uTime', t, fade);
       }
     }
+    const dt60 = Math.max(0, dt * 60);
     if (rig.ring) {
       // V99: the accretion disk rotates with differential Keplerian speed. rotation.x is set once in
       // buildRig (constant Math.PI*0.42) and nothing else mutates it, so it isn't re-written per frame.
-      rig.ring.rotation.z += 0.06;
+      rig.ring.rotation.z += 0.06 * dt60;
       if (rig.ringMat) this.applyShaderTime(rig.ringMat, 'uTime', t, fade);
     }
     // V59: shimmer the photon ring + breathe the glow halo.
@@ -733,7 +737,7 @@ export class SingularitySystem {
       const shimmer = 0.85 + Math.sin(t * 6) * 0.15;
       const breathe = 0.8 + Math.sin(t * 2.3) * 0.2;
       const ph = rig.extras[0];
-      if (ph) ph.rotation.z += 0.03;
+      if (ph) ph.rotation.z += 0.03 * dt60;
       for (let i = 0; i < rig.extraMats.length; i++) {
         const m = rig.extraMats[i];
         // V99: update shader-based extras (volumetric glow shells)

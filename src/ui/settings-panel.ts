@@ -136,10 +136,15 @@ class SettingsPanel {
   private readonly modal: HTMLElement;
 
   constructor(doc: Document = document) {
+    doc.getElementById('cqm-settings-toggle')?.remove();
+    doc.getElementById('cqm-settings-modal')?.remove();
     injectPanelBaseCSS(doc);
-    const style = doc.createElement('style');
-    style.textContent = STYLE;
-    doc.head.appendChild(style);
+    if (!doc.getElementById('cqm-settings-style')) {
+      const style = doc.createElement('style');
+      style.id = 'cqm-settings-style';
+      style.textContent = STYLE;
+      doc.head.appendChild(style);
+    }
 
     const toggle = dockToggle({
       id: 'cqm-settings-toggle',
@@ -206,6 +211,13 @@ class SettingsPanel {
 
   close(): void {
     this.modal.style.display = 'none';
+  }
+
+  dispose(doc: Document = document): void {
+    this.close();
+    this.modal.remove();
+    doc.getElementById('cqm-settings-toggle')?.remove();
+    doc.getElementById('cqm-settings-style')?.remove();
   }
 }
 

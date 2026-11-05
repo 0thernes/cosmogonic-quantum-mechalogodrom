@@ -185,13 +185,16 @@ function fallbackSurfaces(): string[] {
 
 function surfaces(): string[] {
   try {
-    return execSync('git ls-files', { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
-      .split('\n')
-      .map((s) => s.trim())
-      .filter(Boolean)
-      .filter((p) => /\.(md|html|xml)$/i.test(p))
-      .filter((p) => !EXCLUDE.test(p))
-      .sort();
+    return Array.from(
+      new Set(
+        execSync('git ls-files', { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
+          .split('\n')
+          .map((s) => s.trim())
+          .filter(Boolean)
+          .filter((p) => /\.(md|html|xml)$/i.test(p))
+          .filter((p) => !EXCLUDE.test(p)),
+      ),
+    ).sort();
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.warn(`verify:facts — git ls-files unavailable (${message}); using repo-walk fallback.`);

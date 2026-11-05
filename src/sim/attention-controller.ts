@@ -212,8 +212,10 @@ function facultyGainsFromFocus(
     gains[i] = g;
     sum += g;
   }
-  if (sum > 1e-9) for (let i = 0; i < n; i++) gains[i] = (gains[i] ?? 0) / sum;
-  return { gains, mean: sum / n, spread };
+  if (sum > 1e-9) {
+    for (let i = 0; i < n; i++) gains[i] = (gains[i] ?? 0) / sum;
+  }
+  return { gains, mean: sum > 1e-9 ? 1 / n : 0, spread };
 }
 
 /**

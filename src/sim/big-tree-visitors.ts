@@ -1121,13 +1121,18 @@ export class BigTreeSpeciesVisitors {
     }
   }
 
-  /** One-pass matching queue; never scans all possible pairs. */
+  /** Pair willing active socializers within reach across the bounded active capacity. */
   private matchSocialPartners(now: number): void {
-    let waiting = -1;
+    let pendingSlot = -1;
+    let pendingKind = 0;
+    let pendingOwner = NO_OWNER;
+    let prevPendingSlot = -1;
+    let prevPendingKind = 0;
+    let prevPendingOwner = NO_OWNER;
     for (let index = 0; index < this.activeCount; index++) {
-      const ownerKind = this.activeKinds[index] ?? 0;
+      const kind = this.activeKinds[index] ?? 0;
       const ownerId = this.activeOwnerIds[index] ?? NO_OWNER;
-      if (!this.visits.readVisit(ownerKind, ownerId, this.visitView)) continue;
+      if (!this.visits.readVisit(kind, ownerId, this.visitView)) continue;
       if (
         this.visitView.state !== BigTreeVisitState.Active ||
         this.visitView.activity !== BigTreeActivity.Socialize
@@ -1137,11 +1142,11 @@ export class BigTreeSpeciesVisitors {
       if (this.visitView.partnerKind !== NO_OWNER) {
         const partnerIndex = this.findActive(this.visitView.partnerKind, this.visitView.partnerId);
         if (partnerIndex < 0 || !this.socialPairWithinReach(index, partnerIndex)) {
-          this.visits.releasePartner(ownerKind, ownerId);
+          this.visits.releasePartner(kind, ownerId);
           continue;
         }
         this.visits.reservePartner(
-          ownerKind,
+          kind,
           ownerId,
           this.visitView.partnerKind,
           this.visitView.partnerId,
@@ -1151,32 +1156,54 @@ export class BigTreeSpeciesVisitors {
         );
         continue;
       }
-      if (waiting < 0) {
-        waiting = index;
+      if (pendingSlot < 0) {
+        pendingSlot = index;
+        pendingKind = kind;
+        pendingOwner = ownerId;
         continue;
       }
-      const waitingKind = this.activeKinds[waiting] ?? 0;
-      const waitingOwner = this.activeOwnerIds[waiting] ?? NO_OWNER;
-      if (!this.socialPairWithinReach(waiting, index)) {
-        waiting = index;
+      let matchSlot = -1;
+      let matchKind = 0;
+      let matchOwner = NO_OWNER;
+      if (this.socialPairWithinReach(pendingSlot, index)) {
+        matchSlot = pendingSlot;
+        matchKind = pendingKind;
+        matchOwner = pendingOwner;
+      } else if (prevPendingSlot >= 0 && this.socialPairWithinReach(prevPendingSlot, index)) {
+        matchSlot = prevPendingSlot;
+        matchKind = prevPendingKind;
+        matchOwner = prevPendingOwner;
+      }
+      if (matchSlot < 0) {
+        prevPendingSlot = pendingSlot;
+        prevPendingKind = pendingKind;
+        prevPendingOwner = pendingOwner;
+        pendingSlot = index;
+        pendingKind = kind;
+        pendingOwner = ownerId;
         continue;
       }
       if (
         this.visits.reservePartner(
-          waitingKind,
-          waitingOwner,
-          ownerKind,
+          matchKind,
+          matchOwner,
+          kind,
           ownerId,
           now,
           true,
           this.socialLeaseSeconds,
         )
       ) {
-        this.transferCooperativePolicy(waiting, index);
-        waiting = -1;
-      } else {
-        waiting = index;
+        this.transferCooperativePolicy(matchSlot, index);
       }
+      if (matchSlot === pendingSlot) {
+        pendingSlot = prevPendingSlot;
+        pendingKind = prevPendingKind;
+        pendingOwner = prevPendingOwner;
+      }
+      prevPendingSlot = -1;
+      prevPendingKind = 0;
+      prevPendingOwner = NO_OWNER;
     }
   }
 

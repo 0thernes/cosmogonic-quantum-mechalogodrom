@@ -167,24 +167,28 @@ async function docFiles(): Promise<string[]> {
   return out;
 }
 
-const checkOnly = process.argv.includes('--check');
-let dirty = 0;
-for (const rel of await docFiles()) {
-  const file = Bun.file(rel);
-  if (!(await file.exists())) continue;
-  const original = await file.text();
-  const fixed = stripBom(fixLossy(fixMojibake(original)));
-  if (fixed !== original) {
-    dirty++;
-    if (checkOnly) console.log(`mojibake: ${rel}`);
-    else {
-      await Bun.write(rel, fixed);
-      console.log(`fixed: ${rel}`);
+async function main(): Promise<void> {
+  const checkOnly = process.argv.includes('--check');
+  let dirty = 0;
+  for (const rel of await docFiles()) {
+    const file = Bun.file(rel);
+    if (!(await file.exists())) continue;
+    const original = await file.text();
+    const fixed = stripBom(fixLossy(fixMojibake(original)));
+    if (fixed !== original) {
+      dirty++;
+      if (checkOnly) console.log(`mojibake: ${rel}`);
+      else {
+        await Bun.write(rel, fixed);
+        console.log(`fixed: ${rel}`);
+      }
     }
   }
+  if (checkOnly && dirty > 0) {
+    console.error(`${dirty} file(s) contain mojibake — run: bun scripts/normalize-docs.ts`);
+    process.exit(1);
+  }
+  console.log(dirty === 0 ? 'docs clean (no mojibake)' : `normalized ${dirty} file(s)`);
 }
-if (checkOnly && dirty > 0) {
-  console.error(`${dirty} file(s) contain mojibake — run: bun scripts/normalize-docs.ts`);
-  process.exit(1);
-}
-console.log(dirty === 0 ? 'docs clean (no mojibake)' : `normalized ${dirty} file(s)`);
+
+if (import.meta.main) await main();

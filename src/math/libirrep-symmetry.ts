@@ -85,7 +85,7 @@ function factorialRatio(a: number, b: number): number {
  * and Y₁⁰ = √(3/4π)·cosθ exactly.
  */
 export function sphericalHarmonic(l: number, m: number, theta: number, phi: number): number {
-  if (!Number.isInteger(l) || l < 0) return 0;
+  if (!Number.isInteger(l) || !Number.isInteger(m) || l < 0) return 0;
   const am = Math.abs(m);
   if (am > l) return 0;
   const plm = associatedLegendre(l, am, Math.cos(theta));

@@ -136,14 +136,14 @@ export class WorkerPool {
       const lifecycle = this.lifecycleGeneration;
       const workerCount = this.getWorkerCount();
       for (let i = 0; i < workerCount; i++) {
-        const worker = await this.spawnWorker(0);
+        const worker = this.spawnWorker(0);
         if (this.disposed || lifecycle !== this.lifecycleGeneration) {
           this.replacementDepthByWorker.delete(worker);
           worker.terminate();
           return;
         }
-        // A test worker may report a queued startup failure before this await continuation. Never
-        // resurrect a worker that its error handler already retired.
+        // A test worker may report a startup failure synchronously. Never resurrect a worker that
+        // its error handler already retired.
         if (!this.replacementDepthByWorker.has(worker)) continue;
         if (!this.workers.includes(worker)) this.workers.push(worker);
         if (!this.availableWorkers.includes(worker)) this.availableWorkers.push(worker);
@@ -162,8 +162,8 @@ export class WorkerPool {
     return Math.max(1, Math.min(requested, cores));
   }
 
-  /** Spawn one worker and bind its replies to that worker identity. */
-  private async spawnWorker(replacementDepth: number): Promise<Worker> {
+  /** Spawn one worker synchronously and bind its replies to that worker identity. */
+  private spawnWorker(replacementDepth: number): Worker {
     if (!this.workerScriptUrl) throw new Error('Worker pool not initialized');
 
     const worker = new Worker(this.workerScriptUrl, { type: 'module' });
@@ -271,24 +271,23 @@ export class WorkerPool {
       return;
     }
     const lifecycle = this.lifecycleGeneration;
-    void this.spawnWorker(replacementDepth)
-      .then((replacement) => {
-        if (this.disposed || lifecycle !== this.lifecycleGeneration) {
-          this.replacementDepthByWorker.delete(replacement);
-          replacement.terminate();
-          return;
-        }
-        // An asynchronously reported startup failure may retire the worker before this continuation.
-        if (!this.replacementDepthByWorker.has(replacement)) return;
-        this.workers.push(replacement);
-        this.releaseWorker(replacement);
-      })
-      .catch(() => {
-        // If the pool has no remaining capacity, settle queued acquisitions instead of hanging them.
-        if (this.workers.length === 0 && this.activeTasks.size === 0) {
-          this.settleWorkerWaiters(null);
-        }
-      });
+    try {
+      const replacement = this.spawnWorker(replacementDepth);
+      if (this.disposed || lifecycle !== this.lifecycleGeneration) {
+        this.replacementDepthByWorker.delete(replacement);
+        replacement.terminate();
+        return;
+      }
+      // A synchronously reported startup failure may retire the worker before registration.
+      if (!this.replacementDepthByWorker.has(replacement)) return;
+      if (!this.workers.includes(replacement)) this.workers.push(replacement);
+      this.releaseWorker(replacement);
+    } catch {
+      // If the pool has no remaining capacity, settle queued acquisitions instead of hanging them.
+      if (this.workers.length === 0 && this.activeTasks.size === 0) {
+        this.settleWorkerWaiters(null);
+      }
+    }
   }
 
   /** Hand a healthy worker directly to one waiter, or return it to the idle stack. */
@@ -452,6 +451,16 @@ export class WorkerPool {
         );
       }
     });
+  }
+
+  /** Update the pool's active quality tier metadata. */
+  setQuality(qualityTier: QualityTier): void {
+    this.config.qualityTier = qualityTier;
+  }
+
+  /** Read the pool's configured quality tier. */
+  getQuality(): QualityTier {
+    return this.config.qualityTier;
   }
 
   /** Worker-pool telemetry. `pendingResults` remains for API compatibility; delivery is now direct. */

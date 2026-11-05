@@ -316,6 +316,8 @@ class ZigKernelBridge {
   ): number {
     const cells = width * height;
     if (
+      !Number.isInteger(width) ||
+      !Number.isInteger(height) ||
       width <= 0 ||
       height <= 0 ||
       cells <= 0 ||
@@ -370,6 +372,8 @@ class ZigKernelBridge {
   ): { meanV: number; peakV: number } {
     const cells = width * height;
     if (
+      !Number.isInteger(width) ||
+      !Number.isInteger(height) ||
       width <= 0 ||
       height <= 0 ||
       cells <= 0 ||
@@ -618,7 +622,11 @@ class ZigKernelBridge {
     const statePtr = SCRATCH_BASE_OFFSET;
     const samplesPtr = statePtr + stateBytes;
 
-    this.u64View.set(stateWords.subarray(0, Math.min(4, stateWords.length)), statePtr >> 3);
+    const stateBase = statePtr >> 3;
+    if (stateWords.length < 4) {
+      this.u64View.fill(0n, stateBase, stateBase + 4);
+    }
+    this.u64View.set(stateWords.subarray(0, Math.min(4, stateWords.length)), stateBase);
     const word = this.exports.cqm_qrng_quantum_chaos_step(
       statePtr,
       BigInt.asUintN(64, jitterEntropy),

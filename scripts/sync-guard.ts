@@ -302,14 +302,11 @@ function run(): void {
     }
   }
 
-  // 2. Preserve the AT-RISK tip before any history-rewrite/reset — FAIL-CLOSED. For a stuck op the
-  //    pre-op tip is ORIG_HEAD; otherwise the work at risk is HEAD (a diverged branch's local-ahead
-  //    commits live at HEAD, never a stale ORIG_HEAD).
-  // Create a recovery ref ONLY when about to act destructively (force-reset / rebase-rewrite). The
-  // report-only paths (stuck-no-force, diverged-no-flags) touch nothing, so git's own reflog/ORIG_HEAD
-  // already hold the state — this avoids ref litter on the frequently-run (predev) path.
+  // 2. Preserve the AT-RISK tip before any history-rewrite/reset or when decide() flags preserve — FAIL-CLOSED.
+  //    For a stuck op the pre-op tip is ORIG_HEAD; otherwise the work at risk is HEAD (a diverged branch's
+  //    local-ahead commits live at HEAD, never a stale ORIG_HEAD).
   let recovery: string | null = null;
-  if (plan.forceReset || plan.rebasePush) {
+  if (plan.preserve || plan.forceReset || plan.rebasePush) {
     const stuck = state.op !== 'none';
     const tip = stuck
       ? (tryGit(['rev-parse', '-q', '--verify', 'ORIG_HEAD']) ?? tryGit(['rev-parse', 'HEAD']))

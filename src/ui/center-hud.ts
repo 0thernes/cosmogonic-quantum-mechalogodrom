@@ -818,7 +818,25 @@ function adoptFrontControls(doc: Document): boolean {
  * AND a MutationObserver that catches late arrivals whenever they mount, with NO time limit — then
  * disconnects the instant everything is present, so it only ever churns during the brief startup window.
  */
+const navHealTimers: number[] = [];
+let navHealObs: MutationObserver | null = null;
+
+function clearNavHeal(): void {
+  if (typeof window !== 'undefined') {
+    while (navHealTimers.length > 0) {
+      window.clearTimeout(navHealTimers.pop());
+    }
+  } else {
+    navHealTimers.length = 0;
+  }
+  if (navHealObs) {
+    navHealObs.disconnect();
+    navHealObs = null;
+  }
+}
+
 function scheduleNavHeal(doc: Document): void {
+  clearNavHeal();
   if (typeof window === 'undefined') return;
   // Adopt what's available + wire toggles; returns true once every front control AND slot toggle is in.
   const heal = (): boolean => {
@@ -832,9 +850,9 @@ function scheduleNavHeal(doc: Document): void {
   let i = 0;
   const tick = (): void => {
     if (heal() || i >= delays.length) return;
-    window.setTimeout(tick, delays[i++]);
+    navHealTimers.push(window.setTimeout(tick, delays[i++]));
   };
-  window.setTimeout(tick, delays[i++]);
+  navHealTimers.push(window.setTimeout(tick, delays[i++]));
   // Robust path: adopt the instant a late source mounts, however long that takes; disconnect once done.
   if (typeof MutationObserver === 'undefined') return;
   const obs = new MutationObserver((records) => {
@@ -844,10 +862,11 @@ function scheduleNavHeal(doc: Document): void {
         Array.from(r.removedNodes).some((n) => n.nodeType === 1),
     );
     if (!hasElementChange) return;
-    if (heal()) obs.disconnect();
+    if (heal()) clearNavHeal();
   });
+  navHealObs = obs;
   obs.observe(doc.body, { childList: true, subtree: true });
-  window.setTimeout(() => obs.disconnect(), 30000); // hard safety cap — never linger
+  navHealTimers.push(window.setTimeout(() => clearNavHeal(), 30000)); // hard safety cap — never linger
 }
 
 function buildPersistentNav(doc: Document): void {
@@ -1038,11 +1057,13 @@ function onOpenMasterPanel(): void {
  * Call after the six panels have mounted (end of main.ts boot).
  */
 export function initCenterHud(doc: Document = document): void {
-  doc.getElementById('cqm-hud-style')?.remove();
-  const style = doc.createElement('style');
-  style.id = 'cqm-hud-style';
+  let style = doc.getElementById('cqm-hud-style') as HTMLStyleElement | null;
+  if (!style) {
+    style = doc.createElement('style');
+    style.id = 'cqm-hud-style';
+    doc.head.appendChild(style);
+  }
   style.textContent = STYLE;
-  doc.head.appendChild(style);
   buildNav(doc);
   buildPersistentNav(doc);
   reorderBottomDock(doc);
@@ -1079,6 +1100,7 @@ export function initCenterHud(doc: Document = document): void {
 // `import.meta.hot` a getter that throws if aliased, so it is touched INLINE here.
 if (import.meta.hot) {
   import.meta.hot.dispose(() => {
+    clearNavHeal();
     if (typeof window !== 'undefined') {
       window.removeEventListener('cqm:open-master-panel', onOpenMasterPanel);
       window.removeEventListener('resize', scheduleFit);

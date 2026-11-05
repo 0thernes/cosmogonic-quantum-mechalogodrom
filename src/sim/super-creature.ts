@@ -236,6 +236,13 @@ export class SuperCreature {
   private surprise = 0; // |predicted − actual| last beat
   private plan: SuperPlan = 'REST';
   private offspring = 0;
+  private readonly lastIntent = {
+    aggression: 0.5,
+    deception: 0.5,
+    dominance: 0.5,
+    spawn: 0.5,
+    curiosity: 0.5,
+  };
 
   // ── ONLINE WORLD-MODEL (the one part of the apex mind that LEARNS during life) ────────────────────
   // A real 18→8→1 MLP trained by exact Eshkol-AD backprop to forecast next-beat salience. Null until
@@ -344,6 +351,7 @@ export class SuperCreature {
     opts?: { name?: string; generation?: number; cortexW?: Float32Array; actorW?: Float32Array },
   ) {
     this.generation = opts?.generation ?? 0;
+    if (this.generation === 0 && !opts?.name) SUPER_SERIAL = 0;
     this.name =
       opts?.name ?? (this.generation === 0 ? 'ARCHITECT-Ω' : `ARCHITECT-Ω·${++SUPER_SERIAL}`);
     const cw = opts?.cortexW ?? SuperCreature.rollWeights(SENSE, CORTEX_HID, LATENT, rng);
@@ -850,13 +858,22 @@ export class SuperCreature {
     // EVASION OVERLAY: anticipated world-chaos RAISES deception (camouflage under the coming disorder) — a
     // continuous, always-consumed effect. 0 unless learning AND the evasion bias is on ⇒ byte-identical baseline.
     const ev = this.evasionBias ? this.evasion : 0;
+    const aggOut = guard > 0 ? clamp01(aggression + guard * 0.5) : aggression;
+    const decOut = ev > 0 ? clamp01(deception + ev * 0.5) : deception;
+    const domOut = guard > 0 ? clamp01(domProject + guard * 0.4) : domProject;
+    const curOut = fo > 0 ? clamp01(curiosity + fo * 0.4) : curiosity;
+    this.lastIntent.aggression = aggOut;
+    this.lastIntent.deception = decOut;
+    this.lastIntent.dominance = domOut;
+    this.lastIntent.spawn = spawnOut;
+    this.lastIntent.curiosity = curOut;
     return {
       move: { x: mx * disperse, y: my * disperse, z: mz * disperse },
-      aggression: guard > 0 ? clamp01(aggression + guard * 0.5) : aggression,
-      deception: ev > 0 ? clamp01(deception + ev * 0.5) : deception,
-      dominance: guard > 0 ? clamp01(domProject + guard * 0.4) : domProject,
+      aggression: aggOut,
+      deception: decOut,
+      dominance: domOut,
       spawn: spawnOut,
-      curiosity: fo > 0 ? clamp01(curiosity + fo * 0.4) : curiosity,
+      curiosity: curOut,
       wantsSpawn,
       plan: best,
     };
@@ -943,11 +960,11 @@ export class SuperCreature {
       offspring: this.offspring,
       plan: this.plan,
       intent: {
-        aggression: unit(this.act[3] ?? 0),
-        deception: unit(this.act[4] ?? 0),
-        dominance: unit(this.act[5] ?? 0),
-        spawn: unit(this.act[6] ?? 0),
-        curiosity: unit(this.act[7] ?? 0),
+        aggression: this.lastIntent.aggression,
+        deception: this.lastIntent.deception,
+        dominance: this.lastIntent.dominance,
+        spawn: this.lastIntent.spawn,
+        curiosity: this.lastIntent.curiosity,
       },
       sense: Array.from(this.sense),
       latent: Array.from(this.latent),

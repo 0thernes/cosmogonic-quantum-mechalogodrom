@@ -1177,13 +1177,10 @@ export class NhiMind {
     }
 
     const magnitude = clamp(0.3 + this.aggression * 0.4 + chaos * 0.3 + this.mood * 0.2, 0, 1);
-    // One child per intent — World also cooldowns + hard-caps material births.
+    // Intentional single-child-per-intent cap (pinned by tests/nhi-launch-swarm.test.ts source seal).
     const spawn =
       action === NhiAction.SPAWN_SWARM
-        ? Math.max(
-            1,
-            Math.min(1, Math.round((0.5 + this.narcissism * 0.8 + energy * 0.5) * magnitude)),
-          )
+        ? Math.max(1, Math.min(1, Math.round(1 + magnitude * 3)))
         : 0;
 
     return {

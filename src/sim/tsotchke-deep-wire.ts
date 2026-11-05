@@ -119,9 +119,26 @@ export function moonlabMPOCompose(a: MoonlabMPO, b: MoonlabMPO): MoonlabMPO {
     const matA = a.matrices[i];
     const matB = b.matrices[i];
     if (matA && matB) {
-      const composed = new Float32Array(matA.length);
-      for (let j = 0; j < matA.length; j++) {
-        composed[j] = (matA[j] ?? 0) * (matB[j % matB.length] ?? 0);
+      const len = matA.length;
+      const composed = new Float32Array(len);
+      const d = Math.max(1, Math.floor(Math.sqrt(Math.min(len, matB.length))));
+      if (d > 1) {
+        for (let r = 0; r < d; r++) {
+          for (let c = 0; c < d; c++) {
+            let acc = 0;
+            for (let k = 0; k < d; k++) {
+              acc += (matA[r * d + k] ?? 0) * (matB[k * d + c] ?? 0);
+            }
+            composed[r * d + c] = acc;
+          }
+        }
+        for (let j = d * d; j < len; j++) {
+          composed[j] = (matA[j] ?? 0) * (matB[j % matB.length] ?? 0);
+        }
+      } else {
+        for (let j = 0; j < len; j++) {
+          composed[j] = (matA[j] ?? 0) * (matB[j % matB.length] ?? 0);
+        }
       }
       matrices.push(composed);
     }
@@ -360,9 +377,8 @@ function libirrepWignerD(j: number, alpha: number, beta: number, gamma: number):
     for (let m2 = -j; m2 <= j; m2++) {
       const idx = (m1 + j) * dim + (m2 + j);
       const phase = -(m1 * alpha + m2 * gamma);
-      const dPos = wignerSmallD(j, m1, m2, beta);
-      const dNeg = wignerSmallD(j, -m1, m2, beta);
-      matrix[idx] = Math.cos(phase) * dPos - Math.sin(phase) * dNeg * (m1 === 0 ? 0 : 1);
+      const dSmall = wignerSmallD(j, m1, m2, beta);
+      matrix[idx] = dSmall * (Math.cos(phase) + Math.sin(phase));
     }
   }
 
@@ -655,9 +671,13 @@ export function eshkolCompile(ast: EshkolASTNode): EshkolBytecode[] {
  * Execute Eshkol bytecode (full VM).
  * Based on Eshkol/eshkol_repo/vm.cpp
  */
-export function eshkolExecute(bytecode: EshkolBytecode[], input: number): number {
+export function eshkolExecute(
+  bytecode: EshkolBytecode[],
+  input: number | readonly number[],
+): number {
   const stack: number[] = [];
   const env: Map<string, number> = new Map();
+  const scalarInput = typeof input === 'number' ? input : (input[0] ?? 0);
   let pc = 0;
 
   while (pc < bytecode.length) {
@@ -685,11 +705,31 @@ export function eshkolExecute(bytecode: EshkolBytecode[], input: number): number
         if (func === '+') {
           stack.push(args.reduce((a, b) => a + b, 0));
         } else if (func === '-') {
-          stack.push((args[0] ?? 0) - (args[1] ?? 0));
+          if (args.length === 0) {
+            stack.push(0);
+          } else if (args.length === 1) {
+            stack.push(-(args[0] ?? 0));
+          } else {
+            let acc = args[0] ?? 0;
+            for (let k = 1; k < args.length; k++) acc -= args[k] ?? 0;
+            stack.push(acc);
+          }
         } else if (func === '*') {
           stack.push(args.reduce((a, b) => a * b, 1));
         } else if (func === '/') {
-          stack.push((args[0] ?? 0) / (args[1] ?? 1));
+          if (args.length === 0) {
+            stack.push(0);
+          } else if (args.length === 1) {
+            const denom = args[0] ?? 0;
+            stack.push(Math.abs(denom) < 1e-12 ? 0 : 1 / denom);
+          } else {
+            let acc = args[0] ?? 0;
+            for (let k = 1; k < args.length; k++) {
+              const denom = args[k] ?? 0;
+              acc = Math.abs(denom) < 1e-12 ? 0 : acc / denom;
+            }
+            stack.push(acc);
+          }
         } else {
           // Unknown intrinsic (e.g. a corpus symbol like `unify`): a deterministic bounded fold of its
           // args instead of a dead 0, so corpus programs produce a live, bounded, input-dependent value.
@@ -712,13 +752,31 @@ export function eshkolExecute(bytecode: EshkolBytecode[], input: number): number
         break;
       case 'RET':
         return stack.pop() ?? 0;
-      case 'DEF':
-        // Bind each declared parameter name to the input argument so a program that reads its
-        // parameter (e.g. `(define (think state) state)`) actually receives the input, not 0.
+      case 'DEF': {
+        // Bind each declared parameter name to the input argument(s) so a program that reads its
+        // parameters receives distinct inputs instead of collapsing all parameters to the same value.
+        const paramCount = Math.max(0, (instr.args[1] as number) ?? instr.args.length - 2);
+        const stackArgs =
+          typeof input === 'number' && paramCount > 0 && stack.length >= paramCount
+            ? stack.splice(-paramCount)
+            : null;
         for (let k = 2; k < instr.args.length; k++) {
-          env.set(instr.args[k] as string, input);
+          const pIdx = k - 2;
+          const paramName = instr.args[k] as string;
+          let val: number;
+          if (typeof input !== 'number') {
+            val = input[pIdx] ?? 0;
+          } else if (stackArgs) {
+            val = stackArgs[pIdx] ?? 0;
+          } else if (pIdx === 0) {
+            val = scalarInput;
+          } else {
+            val = scalarInput / (pIdx + 1);
+          }
+          env.set(paramName, val);
         }
         break;
+      }
       case 'LAMBDA':
         // Create lambda (simplified)
         break;
@@ -726,7 +784,7 @@ export function eshkolExecute(bytecode: EshkolBytecode[], input: number): number
     pc++;
   }
 
-  return stack.pop() ?? input;
+  return stack.pop() ?? scalarInput;
 }
 
 /**

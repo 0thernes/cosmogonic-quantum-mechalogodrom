@@ -47,11 +47,17 @@ export function deltaRuleUpdate(
   error: number,
   cfg: LearnConfig,
 ): number {
+  if (!Number.isFinite(error) || !Number.isFinite(cfg.rate)) return 0;
   const n = weights.length < input.length ? weights.length : input.length;
   const step = cfg.rate * error;
+  const decay = Number.isFinite(cfg.decay) ? cfg.decay : 0;
   for (let i = 0; i < n; i++) {
     const w = weights[i] ?? 0;
-    weights[i] = bound(w * (1 - cfg.decay) + step * (input[i] ?? 0), cfg.clamp);
+    const x = input[i] ?? 0;
+    weights[i] = bound(
+      (Number.isFinite(w) ? w : 0) * (1 - decay) + step * (Number.isFinite(x) ? x : 0),
+      cfg.clamp,
+    );
   }
   return error < 0 ? -error : error;
 }
@@ -68,11 +74,17 @@ export function hebbianUpdate(
   post: number,
   cfg: LearnConfig,
 ): number {
+  if (!Number.isFinite(post) || !Number.isFinite(cfg.rate)) return 0;
   const n = weights.length < pre.length ? weights.length : pre.length;
   const step = cfg.rate * post;
+  const decay = Number.isFinite(cfg.decay) ? cfg.decay : 0;
   for (let i = 0; i < n; i++) {
     const w = weights[i] ?? 0;
-    weights[i] = bound(w * (1 - cfg.decay) + step * (pre[i] ?? 0), cfg.clamp);
+    const x = pre[i] ?? 0;
+    weights[i] = bound(
+      (Number.isFinite(w) ? w : 0) * (1 - decay) + step * (Number.isFinite(x) ? x : 0),
+      cfg.clamp,
+    );
   }
   return post < 0 ? -post : post;
 }
@@ -113,9 +125,9 @@ export class EligibilityLearner {
     reward: number,
     cfg: LearnConfig,
   ): number {
+    if (!Number.isFinite(reward) || !Number.isFinite(cfg.rate)) return 0;
     const n = weights.length < this.trace.length ? weights.length : this.trace.length;
-    const r = Number.isFinite(reward) ? reward : 0;
-    const step = cfg.rate * r;
+    const step = cfg.rate * reward;
     const decay = Number.isFinite(cfg.decay) ? cfg.decay : 0;
     let traceNorm = 0;
     for (let i = 0; i < n; i++) {

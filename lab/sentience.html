@@ -476,6 +476,8 @@
         return `${Math.round(v * 100)}%`;
       };
       const num = (value, digits = 3) => Number(value || 0).toFixed(digits);
+      const HTML_ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+      const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => HTML_ESCAPES[c] || c);
 
       async function loadData() {
         const candidates = [
@@ -496,7 +498,7 @@
       }
 
       function kpi(label, value, note) {
-        return `<article class="tile"><div class="metric">${label}</div><div class="value">${value}</div><p class="muted">${note}</p></article>`;
+        return `<article class="tile"><div class="metric">${escapeHtml(label)}</div><div class="value">${escapeHtml(value)}</div><p class="muted">${escapeHtml(note)}</p></article>`;
       }
 
       function bestEntity(data) {
@@ -520,11 +522,11 @@
         const rows = data.entityTelemetry
           .map(
             (e) => `<div class="row">
-              <strong>${e.label}<span class="muted"> - ${e.kind}</span></strong>
+              <strong>${escapeHtml(e.label)}<span class="muted"> - ${escapeHtml(e.kind)}</span></strong>
               <span class="mono">${num(e.meanIndex)}</span>
               <span class="mono">${num(e.peakIndex)}</span>
               <span class="mono">${num(e.slope)}</span>
-              <span>${e.dominantFramework}</span>
+              <span>${escapeHtml(e.dominantFramework)}</span>
               <div class="bar" aria-hidden="true"><span style="width:${pct(e.meanIndex)}"></span></div>
             </div>`,
           )
@@ -539,7 +541,7 @@
         const rows = data.frameworkAggregates
           .map(
             (f) => `<div class="row">
-              <strong>${f.id}<span class="muted"> - ${f.bucket}</span></strong>
+              <strong>${escapeHtml(f.id)}<span class="muted"> - ${escapeHtml(f.bucket)}</span></strong>
               <span class="mono">${num(f.meanAblationLoss)}</span>
               <span class="mono">${num(f.meanNullSeparation)}</span>
               <span class="mono">${num(f.meanCausalEffect)}</span>
@@ -723,7 +725,7 @@
           `${renderKpis(data)}
           ${renderCharts()}
           <section class="grid">${renderEntityTable(data)}${renderFrameworkTable(data)}</section>
-          <section class="band"><p class="muted">${data.proofBoundary}</p><span class="mono muted">${data.version}</span></section>`,
+          <section class="band"><p class="muted">${escapeHtml(data.proofBoundary)}</p><span class="mono muted">${escapeHtml(data.version)}</span></section>`,
         );
         const paint = () => {
           drawSweep(document.getElementById('sweep'), data);
@@ -747,7 +749,7 @@
             .getElementById('app')
             .insertAdjacentHTML(
               'beforeend',
-              `<section class="error"><strong>Data feed unavailable.</strong><p>${error.message}</p></section>`,
+              `<section class="error"><strong>Data feed unavailable.</strong><p>${escapeHtml(error.message)}</p></section>`,
             );
         });
     </script>

@@ -58,7 +58,7 @@ export function historicalNovelty(
   let best = Number.POSITIVE_INFINITY;
   for (const past of archive) {
     let d2 = 0;
-    const n = Math.min(signature.length, past.length);
+    const n = Math.max(signature.length, past.length);
     for (let i = 0; i < n; i++) {
       const diff = (signature[i] ?? 0) - (past[i] ?? 0);
       d2 += diff * diff;

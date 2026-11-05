@@ -181,18 +181,9 @@ export class QuantumCloud {
       const a = this.amp[qi] ?? 0;
       let ph = this.phase[qi] ?? 0;
       const psi = Math.sin(ph + t * f) * a;
-      let px =
-        (pos[i3] ?? 0) +
-        (this.velX[qi] ?? 0) * cm * dt60 +
-        psi * cm * Math.sin(t * 0.7 + qi * 0.01);
-      let py =
-        (pos[i3 + 1] ?? 0) +
-        (this.velY[qi] ?? 0) * cm * dt60 +
-        Math.cos(t * 0.5 + qi * 0.003) * a * cm * 0.5;
-      let pz =
-        (pos[i3 + 2] ?? 0) +
-        (this.velZ[qi] ?? 0) * cm * dt60 +
-        psi * cm * Math.cos(t * 0.3 + qi * 0.02);
+      let px = pos[i3] ?? 0;
+      let py = pos[i3 + 1] ?? 0;
+      let pz = pos[i3 + 2] ?? 0;
       if (this.collapsed[qi]) {
         const ct = (this.collapseT[qi] ?? 0) + dt;
         if (ct > 2) {
@@ -210,9 +201,14 @@ export class QuantumCloud {
         } else {
           this.collapseT[qi] = ct;
         }
-      } else if (rng() < 0.0005 * cm) {
-        this.collapsed[qi] = 1;
-        this.collapseT[qi] = 0;
+      } else {
+        px += (this.velX[qi] ?? 0) * cm * dt60 + psi * cm * Math.sin(t * 0.7 + qi * 0.01);
+        py += (this.velY[qi] ?? 0) * cm * dt60 + Math.cos(t * 0.5 + qi * 0.003) * a * cm * 0.5;
+        pz += (this.velZ[qi] ?? 0) * cm * dt60 + psi * cm * Math.cos(t * 0.3 + qi * 0.02);
+        if (rng() < 0.0005 * cm) {
+          this.collapsed[qi] = 1;
+          this.collapseT[qi] = 0;
+        }
       }
       ph += dt * f;
       this.phase[qi] = ph;

@@ -224,14 +224,85 @@ export class MechalogodromBrain {
   /** Reused variant outputs — zero alloc per `tick()`. */
   private readonly variantOuts: Float32Array[];
   private readonly variantAct = new Float32Array(VARIANT_COUNT);
+  private readonly variantActNorm = new Float32Array(VARIANT_COUNT);
   private readonly fusionIn = new Float32Array(LATENT_DIM * VARIANT_COUNT);
   private readonly fusionOut = new Float32Array(FUSION_DIM);
+  private readonly gainSnap = new Float32Array(VARIANT_COUNT);
+  private readonly latentSnap = new Float32Array(FUSION_DIM);
   private beat = 0;
   // STDP state: a plastic gain per variant→fusion synapse, + nearest-neighbour spike times (beats).
   private readonly gain = new Float32Array(VARIANT_COUNT).fill(1);
   private readonly lastPreBeat = new Int32Array(VARIANT_COUNT).fill(-1_000_000);
   private lastPostBeat = -1_000_000;
   private plasticity = 0;
+  private readonly indicators: {
+    readonly id: string;
+    status: 'met' | 'partial' | 'scaffolded';
+    confidence: number;
+    readonly mechanism: string;
+  }[] = [
+    {
+      id: 'FUSE-1',
+      status: 'met',
+      confidence: 0.85,
+      mechanism: '10 variant subnets fuse through central cortex',
+    },
+    {
+      id: 'FUSE-2',
+      status: 'partial',
+      confidence: 0.5,
+      mechanism: 'Dominant variant selection = workspace competition',
+    },
+    {
+      id: 'FUSE-3',
+      status: 'met',
+      confidence: 0.8,
+      mechanism: 'Fusion cortex broadcasts to all variants',
+    },
+    {
+      id: 'FUSE-4',
+      status: 'partial',
+      confidence: 0.5,
+      mechanism: 'Consciousness proxy from activity + apex coupling',
+    },
+    {
+      id: 'FUSE-5',
+      status: 'scaffolded',
+      confidence: 0.3,
+      mechanism: 'Latent persistence = recurrent processing scaffold',
+    },
+    {
+      id: 'FUSE-6',
+      status: 'met',
+      confidence: 0.75,
+      mechanism: 'Apex vitality/transcendence feed fusion mind',
+    },
+    {
+      id: 'FUSE-7',
+      status: 'partial',
+      confidence: 0.4,
+      mechanism: 'Dimensional strangeness as alien-novelty indicator',
+    },
+    {
+      id: 'FUSE-8',
+      status: 'partial',
+      confidence: 0.4,
+      mechanism:
+        'STDP wired: pair-based spike-timing plasticity (Bi–Poo window) on the variant→fusion gains',
+    },
+    {
+      id: 'FUSE-9',
+      status: 'met',
+      confidence: 0.7,
+      mechanism: 'Deterministic seeded mulberry32 — replayable psyche',
+    },
+    {
+      id: 'FUSE-10',
+      status: 'met',
+      confidence: 0.9,
+      mechanism: '5M designed params = same roadmap as APEX',
+    },
+  ];
 
   constructor(seed: number) {
     const rng = mulberry32(seed >>> 0 || 1);
@@ -244,11 +315,12 @@ export class MechalogodromBrain {
     this.variantOuts = Array.from({ length: VARIANT_COUNT }, () => new Float32Array(LATENT_DIM));
   }
 
-  /** Per-variant activity normalized to 0..1 (sum of |tanh| outputs / LATENT_DIM). Snapshot-cadence copy. */
+  /** Per-variant activity normalized to 0..1 (sum of |tanh| outputs / LATENT_DIM). Reuses preallocated scratch. */
   private variantActivityNorm(): Float32Array {
-    const out = new Float32Array(VARIANT_COUNT);
-    for (let v = 0; v < VARIANT_COUNT; v++) out[v] = clamp01(this.variantAct[v]! / LATENT_DIM);
-    return out;
+    for (let v = 0; v < VARIANT_COUNT; v++) {
+      this.variantActNorm[v] = clamp01(this.variantAct[v]! / LATENT_DIM);
+    }
+    return this.variantActNorm;
   }
 
   tick(p: MechalogodromBrainPercept): MechalogodromBrainSnapshot {
@@ -305,12 +377,18 @@ export class MechalogodromBrain {
     // the fusion mind igniting. Nearest-neighbour pairing against the last opposite spike, exponential
     // Bi–Poo window, gains clamped. Deterministic (no rng) → same seed + percepts ⇒ identical gains.
     const beat = this.beat;
+    const postSpiked = activity > STDP_POST_THRESH;
     for (let v = 0; v < VARIANT_COUNT; v++) {
       if (this.variantAct[v]! > actMean * STDP_PRE_REL) {
-        // a variant fires NOW (pre): depress vs the most recent post (post-before-pre, Δt<0)
-        // Audit #119: a variant that was ALSO active on that post beat is part of a sustained co-active
-        // pattern (it drove the post), not a post-before-pre pairing — don't depress it.
-        if (beat - this.lastPostBeat <= STDP_WINDOW && this.lastPreBeat[v] !== this.lastPostBeat) {
+        // a variant fires NOW (pre): depress vs the most recent post (post-before-pre, Δt<0) when
+        // the cortex is NOT co-firing on this beat (!postSpiked) and the post spike has not already
+        // been paired with an intermediate pre spike (lastPreBeat[v] <= lastPostBeat).
+        if (
+          !postSpiked &&
+          this.lastPostBeat >= 0 &&
+          beat - this.lastPostBeat <= STDP_WINDOW &&
+          this.lastPreBeat[v]! <= this.lastPostBeat
+        ) {
           this.gain[v] = clampRange(
             this.gain[v]! + stdpWeightDelta(this.lastPostBeat - beat),
             STDP_GAIN_MIN,
@@ -320,7 +398,7 @@ export class MechalogodromBrain {
         this.lastPreBeat[v] = beat;
       }
     }
-    if (activity > STDP_POST_THRESH) {
+    if (postSpiked) {
       // the cortex fires NOW (post): potentiate variants that led it (pre-before-post, Δt>0)
       for (let v = 0; v < VARIANT_COUNT; v++) {
         if (beat - this.lastPreBeat[v]! <= STDP_WINDOW) {
@@ -352,69 +430,14 @@ export class MechalogodromBrain {
     // at line 128). Dividing by START (250k) overstated progress ~20x against a 5M roadmap.
     const roadmapProgress = clamp01(this.liveParams / MECHALOGODROM_BRAIN_DESIGNED_PARAMS);
 
-    const indicators: MechalogodromIndicator[] = [
-      {
-        id: 'FUSE-1',
-        status: 'met',
-        confidence: 0.85,
-        mechanism: '10 variant subnets fuse through central cortex',
-      },
-      {
-        id: 'FUSE-2',
-        status: 'partial',
-        confidence: 0.5 + activity * 0.3,
-        mechanism: 'Dominant variant selection = workspace competition',
-      },
-      {
-        id: 'FUSE-3',
-        status: 'met',
-        confidence: 0.8,
-        mechanism: 'Fusion cortex broadcasts to all variants',
-      },
-      {
-        id: 'FUSE-4',
-        status: 'partial',
-        confidence: consciousnessProxy,
-        mechanism: 'Consciousness proxy from activity + apex coupling',
-      },
-      {
-        id: 'FUSE-5',
-        status: 'scaffolded',
-        confidence: 0.3,
-        mechanism: 'Latent persistence = recurrent processing scaffold',
-      },
-      {
-        id: 'FUSE-6',
-        status: 'met',
-        confidence: 0.75,
-        mechanism: 'Apex vitality/transcendence feed fusion mind',
-      },
-      {
-        id: 'FUSE-7',
-        status: 'partial',
-        confidence: 0.4 + strangeness * 0.3,
-        mechanism: 'Dimensional strangeness as alien-novelty indicator',
-      },
-      {
-        id: 'FUSE-8',
-        status: this.plasticity > 0.02 ? 'met' : 'partial',
-        confidence: clamp01(0.4 + this.plasticity * 2.5),
-        mechanism:
-          'STDP wired: pair-based spike-timing plasticity (Bi–Poo window) on the variant→fusion gains',
-      },
-      {
-        id: 'FUSE-9',
-        status: 'met',
-        confidence: 0.7,
-        mechanism: 'Deterministic seeded mulberry32 — replayable psyche',
-      },
-      {
-        id: 'FUSE-10',
-        status: 'met',
-        confidence: 0.9,
-        mechanism: '5M designed params = same roadmap as APEX',
-      },
-    ];
+    this.indicators[1]!.confidence = 0.5 + activity * 0.3;
+    this.indicators[3]!.confidence = consciousnessProxy;
+    this.indicators[6]!.confidence = 0.4 + strangeness * 0.3;
+    this.indicators[7]!.status = this.plasticity > 0.02 ? 'met' : 'partial';
+    this.indicators[7]!.confidence = clamp01(0.4 + this.plasticity * 2.5);
+
+    this.gainSnap.set(this.gain);
+    this.latentSnap.set(this.latent);
 
     return {
       beat: this.beat,
@@ -426,12 +449,12 @@ export class MechalogodromBrain {
       consciousnessProxy,
       dominantVariant: dom,
       variantActivity: this.variantActivityNorm(),
-      variantGains: this.gain.slice(),
+      variantGains: this.gainSnap,
       plasticity: this.plasticity,
-      latent: this.latent.slice(),
+      latent: this.latentSnap,
       roadmapParams: this.designedParams,
       roadmapProgress,
-      indicators,
+      indicators: this.indicators,
       honesty: 'computational-indicator-not-sentience',
     };
   }

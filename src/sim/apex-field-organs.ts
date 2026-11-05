@@ -48,6 +48,21 @@ export class ApexFieldOrgans {
   private readonly heat: ApexFieldGrid;
   private readonly klein: ApexFieldGrid;
   private readonly tunnel: ApexFieldGrid;
+  private readonly sensoriumOut: {
+    acousticEnergy: number;
+    acousticInterference: number;
+    heatLoad: number;
+    kleinFold: number;
+    tunnelAmplitude: number;
+    richness: number;
+  } = {
+    acousticEnergy: 0,
+    acousticInterference: 0,
+    heatLoad: 0,
+    kleinFold: 0,
+    tunnelAmplitude: 0,
+    richness: 0,
+  };
 
   constructor(seed: number) {
     const byName = (name: string) => APEX_FIELDS.find((f) => f.name === name) ?? APEX_FIELDS[0]!;
@@ -98,14 +113,14 @@ export class ApexFieldOrgans {
         0.15 * acousticEnergy +
         0.1 * heatLoad,
     );
-    return {
-      acousticEnergy,
-      acousticInterference,
-      heatLoad,
-      kleinFold,
-      tunnelAmplitude,
-      richness,
-    };
+    const out = this.sensoriumOut;
+    out.acousticEnergy = acousticEnergy;
+    out.acousticInterference = acousticInterference;
+    out.heatLoad = heatLoad;
+    out.kleinFold = kleinFold;
+    out.tunnelAmplitude = tunnelAmplitude;
+    out.richness = richness;
+    return out;
   }
 
   /** Mean field energy Σ f² / N of a grid. O(w·h). */

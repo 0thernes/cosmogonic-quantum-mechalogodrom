@@ -92,7 +92,7 @@ export class EshkolProgramEvolution {
       const trail = tok.match(/\)+$/)?.[0] ?? '';
       const core = tok.slice(lead.length, tok.length - trail.length);
       if (det01(seed + i * 17) < mutationStrength) {
-        if (core === 'state') tokens[i] = `${lead}(+ state 0.01)${trail}`;
+        if (core === 'state' && program.length < 256) tokens[i] = `${lead}(+ state 0.01)${trail}`;
         else if (core === 'think') tokens[i] = `${lead}compute${trail}`;
       }
     }
@@ -427,6 +427,13 @@ export class ChaosEntropy {
     return clamp01(sum / this.entropyField.length);
   }
 
+  /** Leaky decay of the chaos entropy field so it does not ratchet monotonically to 1.0. */
+  relax(k: number): void {
+    for (let i = 0; i < this.entropyField.length; i++) {
+      this.entropyField[i] = (this.entropyField[i] ?? 0) * k;
+    }
+  }
+
   getChaosDiversity(): number {
     return clamp01(this.chaosTypes.size / 5);
   }
@@ -572,6 +579,7 @@ export class EmergenceAnglesController {
     const f = Number.isFinite(k) ? Math.min(1, Math.max(0, k)) : 1;
     this.archonWarfare.relax(f);
     this.realityFracture.relax(f);
+    this.chaosEntropy.relax(f);
     this.cosmicHarvest.relax(f);
     this.transcendence.relax(f);
   }
@@ -655,11 +663,10 @@ export class EmergenceAnglesController {
 
   getAggregateEmergence(): number {
     const snapshots = this.getAllSnapshots();
-    const godScale = this.getGodScaleSnapshots();
+    if (snapshots.length === 0) return 0;
     let totalStrength = 0;
     for (const snap of snapshots) totalStrength += snap.strength;
-    for (const snap of godScale) totalStrength += snap.strength * 0.25;
-    return totalStrength / (snapshots.length + godScale.length * 0.25);
+    return totalStrength / snapshots.length;
   }
 
   /**

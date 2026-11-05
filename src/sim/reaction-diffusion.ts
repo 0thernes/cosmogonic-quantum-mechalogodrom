@@ -278,6 +278,8 @@ export class ReactionDiffusionSystem {
     else if (weather === 'AURORA') diffusion = AURORA_DIFFUSION_BOOST;
     const du = DIFFUSION_U * diffusion;
     const dv = DIFFUSION_V * diffusion;
+    const react = REACTION_FLOOR + REACTION_CHAOS_GAIN * Math.min(state.chaos / 2, 3);
+    const invReact = 1 / react;
     const res = zigGrayScottStepRgbaF32(
       this.u,
       this.v,
@@ -285,11 +287,11 @@ export class ReactionDiffusionSystem {
       s,
       s,
       steps,
-      du,
-      dv,
-      feed,
-      kill,
-      DT,
+      du * invReact,
+      dv * invReact,
+      feed * invReact,
+      kill * invReact,
+      DT * react,
     );
     this.texture.needsUpdate = true;
     return res;

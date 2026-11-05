@@ -44,6 +44,7 @@ const LIGHT_MEM_TAU = 0.2;
 export class PantheonSociety {
   readonly field = new MindField();
   private readonly scratch = new Float32Array(FIELD_DIM);
+  private readonly depositScratch: number[] = Array.from({ length: FIELD_DIM }, () => 0);
   private readonly fieldMeanScratch = new Float32Array(FIELD_DIM);
   /** V1.3: one persistent identity scalar per light Archon — each evolves across its OWN sub-beats, so the
    *  20 light echoes have continuity (distinct individuated minds) rather than stateless per-beat recomputes. */
@@ -66,14 +67,14 @@ export class PantheonSociety {
       sub[k] = baseVal * 0.7 + fieldVal * 0.2 + priorMem * 0.1;
     }
     const thought = archonThink(sub, frame + idx * 17);
-    this.scratch[0] = thought.planBias;
-    this.scratch[1] = thought.decisive ? 1 : 0;
-    this.scratch[2] = sub[0] ?? 0;
-    this.scratch[3] = sub[1] ?? 0;
-    this.scratch[4] = (frame % 360) / 360;
-    this.scratch[5] = idx / ARCHON_CHANNELS;
-    this.scratch[6] = thought.steps / 32;
-    this.scratch[7] = thought.planBias;
+    this.depositScratch[0] = thought.planBias;
+    this.depositScratch[1] = thought.decisive ? 1 : 0;
+    this.depositScratch[2] = sub[0] ?? 0;
+    this.depositScratch[3] = sub[1] ?? 0;
+    this.depositScratch[4] = (frame % 360) / 360;
+    this.depositScratch[5] = idx / ARCHON_CHANNELS;
+    this.depositScratch[6] = thought.steps / 32;
+    this.depositScratch[7] = thought.planBias;
     // V1.3 INDIVIDUATION: the active light Archon updates its PERSISTENT identity memory (EMA of its
     // planBias) and that memory shapes its ongoing field contribution — so its history, not just this
     // beat, drives its deposit. Deterministic (no rng), bounded; reproducibility + field.energy>0 hold.
@@ -83,7 +84,7 @@ export class PantheonSociety {
     this.lightMemory[slot] = mem;
     this.field.deposit(
       idx,
-      Array.from(this.scratch),
+      this.depositScratch,
       0.35 + 0.65 * (0.5 * thought.planBias + 0.5 * mem),
     );
     this.lastLight = {
@@ -94,10 +95,19 @@ export class PantheonSociety {
       confidence: thought.decisive ? thought.planBias : 1 - thought.planBias,
       memory: mem,
     };
-    return this.snapshot();
+    const mindField = this.field;
+    let cachedField: ReturnType<MindField['snapshot']> | undefined;
+    return {
+      lightCount: LIGHT_COUNT,
+      get field() {
+        if (cachedField === undefined) cachedField = mindField.snapshot();
+        return cachedField;
+      },
+      lastLight: this.lastLight,
+    };
   }
 
-  depositApex(apexIdx: number, vector: readonly number[], strength: number): void {
+  depositApex(apexIdx: number, vector: ArrayLike<number>, strength: number): void {
     this.field.deposit(apexIdx, vector, strength);
   }
 

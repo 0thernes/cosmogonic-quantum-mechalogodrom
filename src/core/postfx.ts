@@ -161,6 +161,7 @@ export class PostFx {
     this.uAspect = u.uAspect as THREE.IUniform<number>;
     this.aspect = initW / Math.max(1, initH);
     this.uAspect.value = this.aspect;
+    this.setSize(initW, initH);
   }
 
   /**

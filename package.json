@@ -53,7 +53,7 @@
     "lint": "oxlint --deny-warnings src server.ts tests bench scripts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "bun test",
+    "test": "bun test tests",
     "test:coverage": "bun scripts/verify-receipts.ts",
     "sbom": "bun scripts/sbom.ts",
     "bench": "bun bench/index.ts",

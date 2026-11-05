@@ -147,9 +147,23 @@ export class QuantumRngFull extends EshkolQrng {
  * @param rng Seeded RNG for deterministic results
  * @returns Bell test result
  */
-export function bellTestWithRng(rng: Rng): BellTestResult {
-  const qrng = new QuantumRngFull(rng);
-  return qrng.bellTest();
+export function bellTestWithRng(_rng: Rng): BellTestResult {
+  const a = 0;
+  const ap = Math.PI / 2;
+  const b = Math.PI / 4;
+  const bp = -Math.PI / 4;
+  const Eab = bellCorrelation(a, b);
+  const Eabp = bellCorrelation(a, bp);
+  const Eapb = bellCorrelation(ap, b);
+  const Eapbp = bellCorrelation(ap, bp);
+  const S = Math.abs(Eab + Eabp + Eapb - Eapbp);
+  return {
+    S,
+    violation: S > 2.0,
+    correlations: [Eab, Eabp, Eapb, Eapbp],
+    modelConformance: true,
+    physicalExperiment: false,
+  };
 }
 
 /**

@@ -85,10 +85,10 @@ export function createHistory(): PairHistory {
  * encoding, relied on by the titan diplomacy cycle. O(1), allocation-free.
  */
 export function pushHistory(h: PairHistory, a: Move, b: Move, window = HISTORY_WINDOW): void {
-  // Enforce the documented "window ≤ 30" bit-encoding cap (audit fix): JS shift counts are
+  // Enforce the documented "0 <= window <= 30" bit-encoding cap (audit fix): JS shift counts are
   // taken mod 32, so an unclamped window = 32 would make `1 << 32` = 1 ⇒ mask = 0 and every
   // push would silently ERASE both move rings while `rounds` still saturated.
-  const w = window < 30 ? window : 30;
+  const w = Math.max(0, window < 30 ? Math.trunc(window) : 30);
   const mask = (1 << w) - 1;
   h.movesA = ((h.movesA << 1) | a) & mask;
   h.movesB = ((h.movesB << 1) | b) & mask;
@@ -109,11 +109,11 @@ function popcount32(x: number): number {
  * O(1), allocation-free — safe on diplomacy cadences.
  */
 export function defections(moves: number, rounds: number, window = HISTORY_WINDOW): number {
-  // Mirror pushHistory's "window ≤ 30" bit-encoding cap so a stray window ≥ 32 can't make
-  // `1 << depth` wrap (shift counts are mod 32) into mask = 0 and silently report ZERO
-  // defections. No effect on the live path — every caller uses the default HISTORY_WINDOW.
-  const w = window < 30 ? window : 30;
-  const depth = rounds < w ? rounds : w;
+  // Mirror pushHistory's "0 <= window <= 30" bit-encoding cap so a stray window >= 32 or negative
+  // rounds/window can't make `1 << depth` wrap (shift counts are mod 32) into mask = 0.
+  const w = Math.max(0, window < 30 ? Math.trunc(window) : 30);
+  const r = Math.max(0, Math.trunc(rounds));
+  const depth = r < w ? r : w;
   return popcount32(moves & ((1 << depth) - 1));
 }
 

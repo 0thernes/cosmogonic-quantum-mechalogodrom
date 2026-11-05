@@ -716,25 +716,35 @@ async function runLoop(
     if (toolBudget.used + calls.length > MAX_TOOL_CALLS_PER_TURN) {
       throw new Error('provider exceeded the per-turn tool-call limit');
     }
-    toolBudget.used += calls.length;
-    messages.push({ role: 'assistant', content: msg.content ?? '', tool_calls: calls });
-    for (const call of calls) {
-      if (signal.aborted) throw new Error('agent turn cancelled');
-      const args = parseArgs(call.function.arguments);
-      // Forward the turn signal so a deadline/disconnect mid-tool kills the child process / aborts the
-      // web fetch NOW, instead of the tool running out its own internal timeout after we've given up.
-      const result = await dispatchTool(call.function.name, args, signal);
-      const output = result.ok ? result.output : `ERROR: ${result.error}`;
-      // Forensic trail of what the (untrusted) model invoked through the sandbox (RISK-06): the
-      // tool + ok-status + arg keys, never the (potentially large) output body.
-      log.info(`tool ${call.function.name} ok=${result.ok}`, { args: Object.keys(args) });
-      steps.push({ tool: call.function.name, args, ok: result.ok, output }); // raw output → UI
-      messages.push({
-        role: 'tool',
-        tool_call_id: call.id,
-        name: call.function.name,
-        content: fenceUntrusted(call.function.name, output), // fenced as untrusted DATA → model
-      });
+    const stepBaseLen = messages.length;
+    const stepToolsBaseLen = steps.length;
+    const stepBudgetBase = toolBudget.used;
+    try {
+      toolBudget.used += calls.length;
+      messages.push({ role: 'assistant', content: msg.content ?? '', tool_calls: calls });
+      for (const call of calls) {
+        if (signal.aborted) throw new Error('agent turn cancelled');
+        const args = parseArgs(call.function.arguments);
+        // Forward the turn signal so a deadline/disconnect mid-tool kills the child process / aborts the
+        // web fetch NOW, instead of the tool running out its own internal timeout after we've given up.
+        const result = await dispatchTool(call.function.name, args, signal);
+        const output = result.ok ? result.output : `ERROR: ${result.error}`;
+        // Forensic trail of what the (untrusted) model invoked through the sandbox (RISK-06): the
+        // tool + ok-status + arg keys, never the (potentially large) output body.
+        log.info(`tool ${call.function.name} ok=${result.ok}`, { args: Object.keys(args) });
+        steps.push({ tool: call.function.name, args, ok: result.ok, output }); // raw output → UI
+        messages.push({
+          role: 'tool',
+          tool_call_id: call.id,
+          name: call.function.name,
+          content: fenceUntrusted(call.function.name, output), // fenced as untrusted DATA → model
+        });
+      }
+    } catch (stepErr) {
+      messages.length = stepBaseLen;
+      steps.length = stepToolsBaseLen;
+      toolBudget.used = stepBudgetBase;
+      throw stepErr;
     }
   }
   const fin = await chatCompletion(
@@ -867,6 +877,9 @@ async function runAgentWithinBounds(
     // This gives the rate-limit window a moment to reset — without it, rapid-fire attempts cascade
     // 429s across providers that share IP-based limits. Connection-refused (FreeLLMAPI not running)
     // does NOT trigger the delay (lastWas429 stays false).
+    const baseLen = turn.messages.length;
+    const baseStep = turn.step;
+    const baseStepsLen = steps.length;
     try {
       if (lastWas429) await sleep(RATE_LIMIT_COOLDOWN_MS, signal);
       lastWas429 = false;
@@ -888,6 +901,9 @@ async function runAgentWithinBounds(
         provider: `${prov.model} @ ${safeHost(prov.endpoint)}${i > 0 ? ' (fallback)' : ''}`,
       };
     } catch (e) {
+      turn.messages.length = baseLen;
+      turn.step = baseStep;
+      steps.length = baseStepsLen;
       lastErr = e;
       if (signal.aborted) break;
       const msg = e instanceof Error ? e.message : String(e);

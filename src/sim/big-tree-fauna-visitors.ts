@@ -301,13 +301,16 @@ class BigTreeActorSourceAdapter implements BigTreeFaunaSource {
     if (slot === undefined) return false;
     const source = this.sources[this.sourceBySlot[slot] ?? -1];
     const actorIndex = this.sourceIndexBySlot[slot] ?? -1;
-    return (
+    const ok =
       source !== undefined &&
       actorIndex >= 0 &&
       Number.isFinite(nourishment) &&
       nourishment > 0 &&
-      source.nourishBigTreeActor(actorIndex, nourishment / 100)
-    );
+      source.nourishBigTreeActor(actorIndex, nourishment / 100);
+    if (ok && source) {
+      source.readBigTreeActor(actorIndex, this.actors[slot]!);
+    }
+    return ok;
   }
 
   restBigTreeVisitor(ownerId: number, dt: number): boolean {
@@ -315,12 +318,15 @@ class BigTreeActorSourceAdapter implements BigTreeFaunaSource {
     if (slot === undefined) return false;
     const source = this.sources[this.sourceBySlot[slot] ?? -1];
     const actorIndex = this.sourceIndexBySlot[slot] ?? -1;
-    return (
+    const ok =
       source !== undefined &&
       actorIndex >= 0 &&
       source.restBigTreeActor !== undefined &&
-      source.restBigTreeActor(actorIndex, dt)
-    );
+      source.restBigTreeActor(actorIndex, dt);
+    if (ok && source) {
+      source.readBigTreeActor(actorIndex, this.actors[slot]!);
+    }
+    return ok;
   }
 
   clearBigTreeVisitorIntent(ownerId: number): boolean {
@@ -398,6 +404,8 @@ interface BigTreeFaunaVisitorConfig {
   restTarget?: number;
   /** Compatibility-only: canonical flight actors retain their authored Y targets. */
   flightVisitY?: number;
+  /** Optional deterministic hash seed for visitor personality and tie-breaking. */
+  hashSeed?: number;
 }
 
 export interface BigTreeFaunaVisitorStats {
@@ -456,6 +464,7 @@ export class BigTreeFaunaVisitors {
   private readonly foodReachRadiusSquared: number;
   private readonly socialLeaseSeconds: number;
   private readonly socialReachRadiusSquared: number;
+  private hashSeedValue = 0;
 
   private readonly sourceCursors: Int32Array;
   private readonly sourcePollRemaining: Int32Array;
@@ -611,6 +620,9 @@ export class BigTreeFaunaVisitors {
     this.socialLeaseSeconds = this.positive(config.socialLeaseSeconds, 2, 'socialLeaseSeconds');
     const socialReachRadius = this.positive(config.socialReachRadius, 72, 'socialReachRadius');
     this.socialReachRadiusSquared = socialReachRadius * socialReachRadius;
+    if (config.hashSeed !== undefined) {
+      this.setHashSeed(config.hashSeed);
+    }
 
     this.sourceCursors = new Int32Array(bindings.length);
     this.sourcePollRemaining = new Int32Array(bindings.length);
@@ -636,6 +648,10 @@ export class BigTreeFaunaVisitors {
 
   get activeVisitors(): number {
     return this.activeCount;
+  }
+
+  setHashSeed(seed: number): void {
+    this.hashSeedValue = Number.isFinite(seed) ? seed >>> 0 : 0;
   }
 
   /** Advance from the same scaled simulation clock used by the Crystal food source. */
@@ -952,7 +968,9 @@ export class BigTreeFaunaVisitors {
     if (this.visitView.activity === BigTreeActivity.Eat) {
       this.updateFoodActivity(index, now);
     } else if (this.visitView.activity === BigTreeActivity.Rest) {
-      binding.source.restBigTreeVisitor?.(ownerId, dt);
+      if (binding.source.restBigTreeVisitor?.(ownerId, dt)) {
+        binding.source.readBigTreeVisitor(slot, this.sample);
+      }
       this.setIntent(
         index,
         BigTreeFaunaIntentMode.Calm,
@@ -1356,7 +1374,7 @@ export class BigTreeFaunaVisitors {
   }
 
   private hashUnit(ownerKind: number, ownerId: number, salt: number): number {
-    let hash = (salt ^ Math.imul(ownerKind + 1, 0x85ebca6b)) >>> 0;
+    let hash = (salt ^ this.hashSeedValue ^ Math.imul(ownerKind + 1, 0x85ebca6b)) >>> 0;
     hash = Math.imul(hash ^ ownerId, 0xc2b2ae35) >>> 0;
     hash ^= hash >>> 15;
     hash = Math.imul(hash, 0x2c1b3c6d) >>> 0;

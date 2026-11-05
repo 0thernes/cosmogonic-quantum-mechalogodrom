@@ -534,6 +534,9 @@ export class SuperBodySystem implements BigTreeActorSource {
 
   // live quantum vec (10 aspects) + extra reflex/qualia for setMind combinatronics + pulses. Stored, reused.
   private readonly quantum = new Float32Array(10);
+  private readonly _maskScratch: [number, number, number] = [0, 0, 0];
+  private readonly _mindScratch: [number, number, number] = [0, 0, 0];
+  private static readonly GWT_WEIGHTS: [number, number, number] = [0.5, 0.6, 0.4];
   private reflex = 0;
   private qualia = 0;
   private cliffEnt = 0; // proxy ent from quantum for clifford-ish wave (deterministic, no rng)
@@ -1137,17 +1140,21 @@ export class SuperBodySystem implements BigTreeActorSource {
     // Wire QGE aliveness proxy for enhanced aliveness metric
     const qgeAlive = qgeAlivenessProxy(this.quakeFactor, this.arousal, 1);
     // Wire Moonlab tensor contract for morph feature coupling
-    const tensorPulse = moonlabTensorContract(
-      [maskEye, maskMouth, maskLeg],
-      [this.surprise, this.arousal, this.dominance],
-      3,
-    );
+    const maskScratch = this._maskScratch;
+    maskScratch[0] = maskEye;
+    maskScratch[1] = maskMouth;
+    maskScratch[2] = maskLeg;
+    const mindScratch = this._mindScratch;
+    mindScratch[0] = this.surprise;
+    mindScratch[1] = this.arousal;
+    mindScratch[2] = this.dominance;
+    const tensorPulse = moonlabTensorContract(maskScratch, mindScratch, 3);
     // Wire QEC decoding proxy for stability metric
     const qecStability = qecDecodingProxy(Math.floor(this.surprise * 10), 5);
     // Apply new math to morph masks
     const qgeMod = qgeAlive * 0.2 + tensorPulse * 0.1 + qecStability * 0.1;
     // gwtBroadcast for more GWT in morph masks
-    const gwtM = gwtBroadcast([maskEye, maskMouth, maskLeg], [0.5, 0.6, 0.4]);
+    const gwtM = gwtBroadcast(maskScratch, SuperBodySystem.GWT_WEIGHTS);
     // use libirrepSymmetry + quakeQgeFactor (Tsotchke libirrep + quake) + wigner for more morph distinctness in body
     const effMaskArm = Math.floor(
       maskLeg * (1 + libirrepSymmetry(sym, 1) * 0.03 + qgeMod) + (gwtM[1] || 0) * 0.5,
@@ -1164,7 +1171,9 @@ export class SuperBodySystem implements BigTreeActorSource {
 
     // EYES: amp reactivity — global scale + per-eye pupil "focus" + iris shimmer + highlight glint
     // #141: eyes.scale is set once, below (with the brutal morph); the early write here was dead.
-    this.eyes.children.forEach((e, i) => {
+    const eyeChildren = this.eyes.children;
+    for (let i = 0; i < eyeChildren.length; i++) {
+      const e = eyeChildren[i]!;
       const on = i < effMaskEye ? 1.0 : 0.0;
       // actual libirrepWigner call + qge (Tsotchke mirrors/libirrep + quantum-quake) for eye jitter + scale
       const wAng = libirrepWigner(sym, i, 0.1 * Math.sin(t * 3 + i));
@@ -1194,14 +1203,16 @@ export class SuperBodySystem implements BigTreeActorSource {
         hi.position.y = R * 0.035 + Math.cos(t * 1.7 + i) * 0.015 * on;
         hi.scale.setScalar(0.9 + 0.2 * Math.sin(t * 4 + i) * on);
       }
-    });
+    }
 
     // GOAL5/EXTREME: wings flap with fourier + chaos + quantum (4-8 animated strips w/ wave)
     const flapBase =
       Math.sin(t * (2.2 + this.arousal * 1.8) + this.variant) * (0.6 + 0.7 * this.arousal) +
       qPulse * 0.3;
     const chFlap = 0.3 * (1.0 - Math.abs(2.0 * ((t * 0.7 + this.variant) % 1.0) - 1.0));
-    this.wings.children.forEach((w, wi) => {
+    const wingChildren = this.wings.children;
+    for (let wi = 0; wi < wingChildren.length; wi++) {
+      const w = wingChildren[wi]!;
       const on = wi < effMaskWing ? 1 : 0;
       const ph = wi * 0.7 + this.variant * 0.2 + qe * 2.1;
       const wS = on * (0.82 + 0.22 * Math.sin(t * 1.9 + wi + this.surprise * 4.0 + breath));
@@ -1211,21 +1222,25 @@ export class SuperBodySystem implements BigTreeActorSource {
         flapBase * (0.75 + 0.45 * Math.sin(t * 3.1 + ph)) * (1.0 + chFlap * 0.5) * on;
       // extra wave from quantum
       w.rotation.x = on * 0.1 * Math.sin(t * 4.2 + wi * 0.5 + qWaveU * 3);
-    });
+    }
 
     // extra mouths (pulsing sub spheres or cones)
-    this.mouths.children.forEach((m, mi) => {
+    const mouthChildren = this.mouths.children;
+    for (let mi = 0; mi < mouthChildren.length; mi++) {
+      const m = mouthChildren[mi]!;
       const on = mi < maskMouth ? 1 : 0;
       const mp =
         on *
         (0.65 + 0.55 * Math.sin(t * 3.7 + mi * 1.3 + this.u.uWave.value * 2.0 + alivePulse * 1.5));
       m.scale.setScalar(mp);
       (m as THREE.Mesh).rotation.y = t * (0.8 + mi * 0.3) + qPulse * 0.4 * on;
-    });
+    }
 
     // LEGS: downward 4-6 tentacle lines/thin meshes that "step" via phase (deterministic)
     // quantum-quake + libirrep sym modulated final counts (Eshkol/Quake corpus into body morph)
-    this.legs.children.forEach((leg, li) => {
+    const legChildren = this.legs.children;
+    for (let li = 0; li < legChildren.length; li++) {
+      const leg = legChildren[li]!;
       const on = li < finalEffLeg ? 1 : 0;
       // libirrepWigner + quakePerturb (Tsotchke corpus) for leg phase/rot + quake aliveness
       const wLeg = libirrepWigner(sym, li, 0.2);
@@ -1246,7 +1261,7 @@ export class SuperBodySystem implements BigTreeActorSource {
         ((li % 2) - 0.5) * 0.06 +
         mfx * Math.sin(t * 41 + li * 1.9) * 0.2 * on;
       leg.rotation.y = Math.sin(phase * 0.4) * 0.07 * on;
-    });
+    }
 
     // Arm-writhe ∝ aggression + quantum (amped counts reactivity)
     // finalEffArm (libirrep+quake) influences effective splay count proxy for arms
@@ -1342,6 +1357,7 @@ export class SuperBodySystem implements BigTreeActorSource {
   /** Reposition the avatar to a finite world coordinate and damp velocity (#138). */
   recallTo(x: number, y: number, z: number): void {
     if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) return;
+    this.pos.set(x, y, z);
     this.root.position.set(x, y, z);
     this.vel.multiplyScalar(0.15);
   }

@@ -30,9 +30,7 @@ function markdownFiles(): string[] {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`doc-links: could not enumerate tracked Markdown with git (${message})`);
   }
-  return output
-    .split('\0')
-    .filter(Boolean)
+  return Array.from(new Set(output.split('\0').filter(Boolean)))
     .sort()
     .map((rel) => join(ROOT, rel));
 }

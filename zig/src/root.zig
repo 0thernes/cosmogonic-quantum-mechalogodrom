@@ -1139,8 +1139,9 @@ export fn cqm_libirrep_bdg_skyrmion_mzm(
         }
     }
 
-    const q_lat = solid_angle_sum / (4.0 * pi);
-    const abs_q: i32 = if (q_clamped < 0) -q_clamped else q_clamped;
+    const q_lat = -solid_angle_sum / (4.0 * pi);
+    const abs_q_lat: i32 = @intFromFloat(@round(@abs(q_lat)));
+    const abs_q: i32 = if (q_clamped == 0) 0 else @max(@as(i32, 1), abs_q_lat);
     const mzm_count: i32 = if (top_margin > 0.0 and delta_0 > 1e-9 and abs_q > 0) 2 * abs_q else 0;
 
     out_metrics[0] = @floatFromInt(mzm_count);
@@ -1426,7 +1427,9 @@ test "eshkol cyclotomic8 mul and moonlab qwz chern fhs" {
 
     var qwz_metrics = [_]f64{ 0.0, 0.0, 0.0, 0.0 };
     const chern_pos = cqm_moonlab_qwz_chern_fhs(1.0, 12, &qwz_metrics);
-    try std.testing.expectApproxEqAbs(@as(f64, -1.0), @abs(chern_pos) * -1.0, 1e-6);
+    try std.testing.expectApproxEqAbs(@as(f64, 1.0), chern_pos, 1e-6);
+    const chern_neg = cqm_moonlab_qwz_chern_fhs(-1.0, 12, &qwz_metrics);
+    try std.testing.expectApproxEqAbs(@as(f64, -1.0), chern_neg, 1e-6);
     const chern_triv = cqm_moonlab_qwz_chern_fhs(3.0, 12, &qwz_metrics);
     try std.testing.expectApproxEqAbs(@as(f64, 0.0), chern_triv, 1e-6);
 }
@@ -1435,10 +1438,11 @@ test "libirrep bdg skyrmion 2|Q| mzm and sbnn minsr step" {
     var bdg_metrics = [_]f64{ 0.0, 0.0, 0.0, 0.0 };
     const mzm_q1 = cqm_libirrep_bdg_skyrmion_mzm(12, 1, -3.0, 4.0, 1.0, &bdg_metrics);
     try std.testing.expectEqual(@as(i32, 2), mzm_q1);
-    try std.testing.expect(@abs(bdg_metrics[1]) > 0.5);
+    try std.testing.expect(bdg_metrics[1] > 0.5);
 
     const mzm_q2 = cqm_libirrep_bdg_skyrmion_mzm(12, -2, -3.0, 4.0, 1.0, &bdg_metrics);
     try std.testing.expectEqual(@as(i32, 4), mzm_q2);
+    try std.testing.expect(bdg_metrics[1] < -1.0);
 
     const mzm_triv = cqm_libirrep_bdg_skyrmion_mzm(12, 1, -3.0, 0.5, 1.0, &bdg_metrics);
     try std.testing.expectEqual(@as(i32, 0), mzm_triv);

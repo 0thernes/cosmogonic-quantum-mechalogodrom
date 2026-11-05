@@ -16,7 +16,7 @@ import {
   type WorkerResult,
   type WorkerTask,
 } from '../core/worker-pool';
-import { chunkSeed as coordinateChunkSeed } from './wilderness-chunks';
+import { chunkCoord, chunkKey, chunkSeed as coordinateChunkSeed } from './wilderness-chunks';
 import type { OrganismIntelligenceSignal } from '../types';
 import { scaleCount } from './constants';
 
@@ -218,6 +218,8 @@ interface WildernessEntity {
 
 interface WildernessChunk {
   chunkId: string;
+  cx: number;
+  cz: number;
   entities: Array<WildernessEntity>;
   lastUpdate: number;
   active: boolean;
@@ -361,8 +363,7 @@ export class WildernessPopulation {
     this.frameCounter++;
 
     // Calculate current chunk
-    const chunkX = Math.floor(cameraX / this.chunkSize);
-    const chunkZ = Math.floor(cameraZ / this.chunkSize);
+    const { cx: chunkX, cz: chunkZ } = chunkCoord(cameraX, cameraZ, this.chunkSize);
 
     // Load nearby chunks
     const loadRadius = 3; // Load chunks within 3 chunks of camera (denser ambient field)
@@ -370,7 +371,7 @@ export class WildernessPopulation {
       for (let dz = -loadRadius; dz <= loadRadius; dz++) {
         const cx = chunkX + dx;
         const cz = chunkZ + dz;
-        const chunkId = `${cx},${cz}`;
+        const chunkId = chunkKey(cx, cz);
         this.loadChunk(chunkId, cx, cz);
       }
     }
@@ -417,6 +418,8 @@ export class WildernessPopulation {
 
     this.chunks.set(chunkId, {
       chunkId,
+      cx,
+      cz,
       entities,
       lastUpdate: 0,
       active: true,
@@ -428,11 +431,8 @@ export class WildernessPopulation {
    */
   private unloadDistantChunks(chunkX: number, chunkZ: number, unloadRadius: number): void {
     for (const [chunkId, chunk] of this.chunks) {
-      const parts = chunkId.split(',').map(Number);
-      const cx = parts[0] ?? 0;
-      const cz = parts[1] ?? 0;
-      const dx = Math.abs(cx - chunkX);
-      const dz = Math.abs(cz - chunkZ);
+      const dx = Math.abs(chunk.cx - chunkX);
+      const dz = Math.abs(chunk.cz - chunkZ);
 
       if (dx > unloadRadius || dz > unloadRadius) {
         chunk.active = false;

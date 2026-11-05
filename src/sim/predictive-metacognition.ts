@@ -179,9 +179,15 @@ export class PredictiveMetacognition {
     const remainder = Math.abs(this.jet.coefficient(this.order));
     s.remainder = Number.isFinite(remainder) ? remainder : 0;
     s.predictiveConfidence = clamp01(1 / (1 + REMAINDER_SCALE * s.remainder));
-    let rawForecast = (this.coefficients[0] ?? 0) + (this.coefficients[1] ?? 0);
+    const conf = s.predictiveConfidence;
+    const y0 = this.coefficients[0] ?? 0;
+    const yPrev = this.history[1] ?? y0;
+    // Blend the 5-point backward stencil derivative c₁ toward a damped 2-point linear trend as
+    // predictiveConfidence → 0, preventing the 11.67× high-frequency noise amplification of c₁ alone.
+    const dampedSlope = conf * (this.coefficients[1] ?? 0) + (1 - conf) * 0.5 * (y0 - yPrev);
+    let rawForecast = y0 + dampedSlope;
     for (let k = 2; k <= this.order; k++) {
-      rawForecast += s.predictiveConfidence * (this.coefficients[k] ?? 0);
+      rawForecast += conf * (this.coefficients[k] ?? 0);
     }
     s.forecast = clamp01(rawForecast);
     s.revision++;

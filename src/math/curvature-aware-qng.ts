@@ -71,7 +71,9 @@ export function invertMetric(metric: ReadonlyArray<ReadonlyArray<number>>): numb
     gInv.push(Array.from({ length: n }, () => 0));
   }
 
-  // Augmented matrix [g | I]
+  // Symmetric diagonal/full-pivoted Gauss-Jordan elimination on P g P^T so rank-deficient
+  // symmetric metrics preserve a reflexive generalized inverse on the non-singular subspace.
+  const perm: number[] = Array.from({ length: n }, (_, i) => i);
   const aug: number[][] = [];
   for (let i = 0; i < n; i++) {
     const row = [...g[i]!];
@@ -81,16 +83,26 @@ export function invertMetric(metric: ReadonlyArray<ReadonlyArray<number>>): numb
     aug.push(row);
   }
 
-  // Gauss-Jordan elimination
   const singular: boolean[] = Array.from({ length: n }, () => false);
   for (let col = 0; col < n; col++) {
+    // Prefer largest diagonal pivot (SPD/PSD matrices always attain max on diagonal);
+    // fall back to largest column entry if diagonal is zero.
     let piv = col;
     let best = Math.abs(aug[col]?.[col] ?? 0);
     for (let r = col + 1; r < n; r++) {
-      const v = Math.abs(aug[r]?.[col] ?? 0);
+      const v = Math.abs(aug[r]?.[r] ?? 0);
       if (v > best) {
         best = v;
         piv = r;
+      }
+    }
+    if (best < 1e-12) {
+      for (let r = col + 1; r < n; r++) {
+        const v = Math.abs(aug[r]?.[col] ?? 0);
+        if (v > best) {
+          best = v;
+          piv = r;
+        }
       }
     }
     if (best < 1e-12) {
@@ -99,6 +111,19 @@ export function invertMetric(metric: ReadonlyArray<ReadonlyArray<number>>): numb
     }
     if (piv !== col) {
       [aug[col], aug[piv]] = [aug[piv]!, aug[col]!];
+      // Symmetric column permutation on both left (A) and right (I) blocks if we pivoted on diagonal
+      if (Math.abs(aug[col]?.[piv] ?? 0) >= best * 0.999999) {
+        for (let r = 0; r < n; r++) {
+          const row = aug[r]!;
+          const tmpL = row[col] ?? 0;
+          row[col] = row[piv] ?? 0;
+          row[piv] = tmpL;
+          const tmpR = row[n + col] ?? 0;
+          row[n + col] = row[n + piv] ?? 0;
+          row[n + piv] = tmpR;
+        }
+        [perm[col], perm[piv]] = [perm[piv]!, perm[col]!];
+      }
     }
     const pivRow = aug[col]!;
     const pivVal = pivRow[col] ?? 1;
@@ -116,11 +141,13 @@ export function invertMetric(metric: ReadonlyArray<ReadonlyArray<number>>): numb
     }
   }
 
-  // Extract inverse
+  // Extract inverse and unpermute back to original basis
   for (let i = 0; i < n; i++) {
+    const oi = perm[i]!;
     for (let j = 0; j < n; j++) {
+      const oj = perm[j]!;
       // #89: rows/cols of a singular pivot are zeroed (pseudo-inverse-style), not left unreduced.
-      gInv[i]![j] = singular[i] || singular[j] ? 0 : (aug[i]![n + j] ?? 0);
+      gInv[oi]![oj] = singular[i] || singular[j] ? 0 : (aug[i]![n + j] ?? 0);
     }
   }
 
@@ -249,11 +276,15 @@ export function computeRicciScalarField(
   metricFn: (theta: ReadonlyArray<number>) => ReadonlyArray<ReadonlyArray<number>>,
   theta: ReadonlyArray<number>,
   epsilon = 1e-4,
+  precomputed?: {
+    g?: ReadonlyArray<ReadonlyArray<number>>;
+    Gamma?: number[][][];
+  },
 ): number {
   const n = theta.length;
-  const g = metricFn(theta);
+  const g = precomputed?.g ?? metricFn(theta);
   const gInv = invertMetric(g);
-  const Gamma = computeChristoffelSymbolsField(metricFn, theta, epsilon);
+  const Gamma = precomputed?.Gamma ?? computeChristoffelSymbolsField(metricFn, theta, epsilon);
 
   // dGamma[i][k][l][j] = ∂_i Γ^k_lj via central differences
   const dGamma: number[][][][] = [];
@@ -322,18 +353,34 @@ export function curvatureAwareNaturalGradientField(
   if (cfg.adaptive) {
     // Audit #84: adapt on the exact field Ricci scalar only (the connection-only helper is not R).
     curvatureWeight =
-      cfg.curvatureWeight * (1 + Math.abs(computeRicciScalarField(metricFn, theta)));
+      cfg.curvatureWeight *
+      (1 + Math.abs(computeRicciScalarField(metricFn, theta, 1e-4, { g, Gamma })));
   }
   // Audit #85: tensorial geodesic correction instead of adding Σ_k Γ^k_ij to the metric (non-tensorial,
   // could break positive-definiteness). v = g⁻¹∇L, then d^k = v^k + ½·w·Γ^k_ij v^i v^j — the second-order
-  // geodesic step (Transtrum-style geodesic acceleration). θ_next = θ − d.
+  // geodesic step (Transtrum-style geodesic acceleration) with trust-region ratio clamp ||a|| <= 0.75 ||v||.
   const v = solveSymmetric(g, grad, cfg.ridge);
-  const out: number[] = [];
+  let vNormSq = 0;
+  for (let k = 0; k < n; k++) {
+    const vk = v[k] ?? 0;
+    vNormSq += vk * vk;
+  }
+  const accel: number[] = [];
+  let aNormSq = 0;
   for (let k = 0; k < n; k++) {
     let acc = 0;
     for (let i = 0; i < n; i++)
       for (let j = 0; j < n; j++) acc += (Gamma[k]?.[i]?.[j] ?? 0) * (v[i] ?? 0) * (v[j] ?? 0);
-    out.push((v[k] ?? 0) + 0.5 * curvatureWeight * acc);
+    const ak = 0.5 * curvatureWeight * acc;
+    accel.push(ak);
+    aNormSq += ak * ak;
+  }
+  const maxAccelNorm = 0.75 * Math.sqrt(vNormSq);
+  const aNorm = Math.sqrt(aNormSq);
+  const scale = aNorm > maxAccelNorm && aNorm > 1e-12 ? maxAccelNorm / aNorm : 1;
+  const out: number[] = [];
+  for (let k = 0; k < n; k++) {
+    out.push((v[k] ?? 0) + scale * (accel[k] ?? 0));
   }
   return out;
 }

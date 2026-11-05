@@ -226,17 +226,17 @@ export class XenomimicBrain {
    */
   beat(sensesMimic: readonly number[], sensesAnti: readonly number[], rng: Rng): XenomimicBeat {
     const reg = this.reg;
+    // Environmental tilt: a rousing world (high mean drive) rotates the pair toward the mimic basin
+    // before entanglement so qubit 0's reduced state is tilted while twin bits remain anti-correlated.
+    const tilt = clamp01((meanDrive(sensesMimic) + meanDrive(sensesAnti)) * 0.5);
+    const theta = (tilt - 0.5) * 0.45;
     reg.reset();
     reg.apply('h', 0);
+    reg.apply('ry', 0, undefined, theta);
     reg.apply('cx', 1, 0);
     reg.apply('x', 1);
     reg.apply('h', 2);
     reg.apply('cz', 0, 2);
-    // Environmental tilt: a rousing world (high mean drive) rotates the pair toward the mimic basin.
-    const tilt = clamp01((meanDrive(sensesMimic) + meanDrive(sensesAnti)) * 0.5);
-    const theta = (tilt - 0.5) * Math.PI; // [-π/2, π/2]
-    reg.apply('ry', 0, undefined, theta);
-    reg.apply('ry', 1, undefined, -theta);
 
     reg.amplitudesInto(this.re, this.im);
     const coherence = clamp01(quantumCoherence(this.re, this.im).l1Norm);

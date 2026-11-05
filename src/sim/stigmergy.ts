@@ -32,8 +32,23 @@ import {
 const GRID = 8; // 8×8 pheromone lattice
 const CHANNELS = 4;
 const EVAP_TAU = 0.05;
-const DIFFUSE_SIGMA = 0.3;
+const DIFFUSE_SIGMA = 1.5;
 const N = GRID * GRID;
+
+const KERNEL_3X3 = (() => {
+  const k = new Float32Array(9);
+  let sum = 0;
+  let i = 0;
+  for (let dy = -1; dy <= 1; dy++) {
+    for (let dx = -1; dx <= 1; dx++) {
+      const w = Math.exp(-(dx * dx + dy * dy) / (2 * DIFFUSE_SIGMA * DIFFUSE_SIGMA));
+      k[i++] = w;
+      sum += w;
+    }
+  }
+  for (let j = 0; j < 9; j++) k[j]! /= sum;
+  return k;
+})();
 
 function clamp01(v: number): number {
   return v < 0 ? 0 : v > 1 ? 1 : v;
@@ -60,6 +75,9 @@ export class Stigmergy {
   private beatCount = 0;
   private readonly tA = new Float32Array(4);
   private readonly tB = new Float32Array(4);
+  private readonly foodCol = new Float32Array(GRID);
+  private readonly gwtIn: [number, number] = [0, 0];
+  private static readonly GWT_WEIGHTS: [number, number] = [0.8, 0.4];
 
   private cell(x: number, y: number, ch: number): number {
     return this.grid[idx(x, y) * CHANNELS + ch] ?? 0;
@@ -103,21 +121,19 @@ export class Stigmergy {
   step(): void {
     this.beatCount++;
 
-    // Gaussian diffusion (3×3 kernel)
+    // Gaussian diffusion (precomputed 3×3 kernel)
     this.scratch.fill(0);
     for (let y = 0; y < GRID; y++) {
       for (let x = 0; x < GRID; x++) {
         for (let ch = 0; ch < CHANNELS; ch++) {
           let acc = 0;
-          let wSum = 0;
+          let ki = 0;
           for (let dy = -1; dy <= 1; dy++) {
             for (let dx = -1; dx <= 1; dx++) {
-              const w = Math.exp(-(dx * dx + dy * dy) / (2 * DIFFUSE_SIGMA * DIFFUSE_SIGMA));
-              acc += this.cell(x + dx, y + dy, ch) * w;
-              wSum += w;
+              acc += this.cell(x + dx, y + dy, ch) * KERNEL_3X3[ki++]!;
             }
           }
-          this.scratch[idx(x, y) * CHANNELS + ch] = clamp01(acc / wSum);
+          this.scratch[idx(x, y) * CHANNELS + ch] = clamp01(acc);
         }
       }
     }
@@ -128,12 +144,13 @@ export class Stigmergy {
     }
 
     // libirrep D₄ symmetry: enforce 4-fold rotational symmetry on food channel
-    for (let i = 0; i < GRID; i++) {
-      const sym = libirrepSymmetry(2, (i + this.beatCount) % 7); // D₄ irrep
-      const corr = ((sym % 3) - 1) * 0.002;
-      this.grid[idx(i, 0) * CHANNELS + 0] = clamp01(
-        (this.grid[idx(i, 0) * CHANNELS + 0] ?? 0) + corr,
-      );
+    for (let y = 0; y < GRID; y++) {
+      for (let i = 0; i < GRID; i++) {
+        const sym = libirrepSymmetry(2, (i + y + this.beatCount) % 7); // D₄ irrep
+        const corr = ((sym % 3) - 1) * 0.002;
+        const cellIdx = idx(i, y) * CHANNELS + 0;
+        this.grid[cellIdx] = clamp01((this.grid[cellIdx] ?? 0) + corr);
+      }
     }
 
     // quakePerturb: stochastic noise (random-walk component)
@@ -157,20 +174,13 @@ export class Stigmergy {
     const tensorAgg = moonlabTensorContract(this.tA, this.tB, 4);
 
     // MPO: bond-compress the food channel signal
-    const foodCol = new Float32Array(GRID);
-    for (let y = 0; y < GRID; y++) foodCol[y] = this.cell(GRID / 2, y, 0);
-    const mpoOut = moonlabMpoStep(foodCol, 2, 4);
+    for (let y = 0; y < GRID; y++) this.foodCol[y] = this.cell(GRID / 2, y, 0);
+    const mpoOut = moonlabMpoStep(this.foodCol, 2, 4);
 
     // Summary scalars
-    let total = 0;
     let alarmTotal = 0;
     let trailTotal = 0;
     for (let i = 0; i < N; i++) {
-      total +=
-        (this.grid[i * CHANNELS + 0] ?? 0) +
-        (this.grid[i * CHANNELS + 1] ?? 0) +
-        (this.grid[i * CHANNELS + 2] ?? 0) +
-        (this.grid[i * CHANNELS + 3] ?? 0);
       alarmTotal += this.grid[i * CHANNELS + 1] ?? 0;
       trailTotal += this.grid[i * CHANNELS + 0] ?? 0;
     }
@@ -180,7 +190,9 @@ export class Stigmergy {
     this.alarmLevel = clamp01(alarmTotal / N);
 
     // GWT alarm broadcast
-    const gwtOut = gwtBroadcast([this.alarmLevel, this.trailStrength], [0.8, 0.4]);
+    this.gwtIn[0] = this.alarmLevel;
+    this.gwtIn[1] = this.trailStrength;
+    const gwtOut = gwtBroadcast(this.gwtIn, Stigmergy.GWT_WEIGHTS);
     this.broadcastAlarm = clamp01(gwtOut[0] ?? 0);
   }
 
@@ -196,15 +208,15 @@ export class Stigmergy {
 
   snapshot(): StigmergySnapshot {
     const [gx, gy] = this.readGradient(0, 0, 0);
-    const total = this.grid.reduce((s, v) => s + v, 0) / N;
+    let totalSum = 0;
+    for (let i = 0; i < this.grid.length; i++) totalSum += this.grid[i] ?? 0;
+    const total = totalSum / this.grid.length;
+    let recruitSum = 0;
+    for (let i = 0; i < N; i++) recruitSum += this.grid[i * CHANNELS + 2] ?? 0;
     return {
       trailStrength: this.trailStrength,
       alarmLevel: this.alarmLevel,
-      recruitmentLevel: (() => {
-        let s = 0;
-        for (let i = 0; i < N; i++) s += this.grid[i * CHANNELS + 2] ?? 0;
-        return clamp01(s / N);
-      })(),
+      recruitmentLevel: clamp01(recruitSum / N),
       gradient: [gx, gy],
       totalPheromone: clamp01(total),
       broadcastAlarm: this.broadcastAlarm,

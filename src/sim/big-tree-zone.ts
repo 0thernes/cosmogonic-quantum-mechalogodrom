@@ -437,6 +437,10 @@ export class BigTreeVisitManager {
   /** Deterministic O(1) record allocation/reuse; avoids a growing first-free scan. */
   private readonly freeRecordIds: Int32Array;
   private freeRecordCount: number;
+  /** Dense O(1) pool of completed Outside records eligible for reclamation when freeRecordCount === 0. */
+  private readonly idleRecordIds: Int32Array;
+  private readonly idleRecordPositions: Int32Array;
+  private idleRecordCount = 0;
 
   private readonly slotKinds: Uint8Array;
   private readonly slotXs: Float64Array;
@@ -531,6 +535,10 @@ export class BigTreeVisitManager {
     this.scheduledRecordPositions = new Int32Array(n);
     this.freeRecordIds = new Int32Array(n);
     this.freeRecordCount = n;
+    this.idleRecordIds = new Int32Array(n);
+    this.idleRecordPositions = new Int32Array(n);
+    this.idleRecordIds.fill(NO_BIG_TREE_VISIT);
+    this.idleRecordPositions.fill(NO_BIG_TREE_VISIT);
     this.actorOwnerKinds.fill(NO_OWNER);
     this.actorOwnerIds.fill(NO_OWNER);
     this.actorSlots.fill(NO_BIG_TREE_SLOT);
@@ -809,6 +817,7 @@ export class BigTreeVisitManager {
     }
 
     this.reserveSlot(slotId, ownerKind, ownerId, now);
+    this.unmarkIdleRecord(recordId);
     const ordinal = ((this.actorVisitOrdinals[recordId] ?? 0) + 1) >>> 0;
     this.actorVisitOrdinals[recordId] = ordinal === 0 ? 1 : ordinal;
     this.actorStates[recordId] = BigTreeVisitState.Travelling;
@@ -939,6 +948,7 @@ export class BigTreeVisitManager {
     ) {
       this.actorStates[recordId] = BigTreeVisitState.Outside;
       this.recordTransition(recordId, BigTreeTransitionCause.CooldownComplete, now);
+      this.markIdleRecord(recordId);
       return BigTreeVisitState.Outside;
     }
     return state;
@@ -1123,10 +1133,12 @@ export class BigTreeVisitManager {
         if (this.actorInsideZone[recordId] === 0) {
           this.actorStates[recordId] = BigTreeVisitState.Outside;
           this.recordTransition(recordId, BigTreeTransitionCause.CooldownComplete, now);
+          this.markIdleRecord(recordId);
         }
         this.unscheduleRecord(recordId);
         continue;
       } else if (state === BigTreeVisitState.Outside) {
+        this.markIdleRecord(recordId);
         this.unscheduleRecord(recordId);
         continue;
       }
@@ -1151,6 +1163,9 @@ export class BigTreeVisitManager {
     this.scheduledRecordIds.fill(NO_BIG_TREE_VISIT);
     this.scheduledRecordPositions.fill(NO_BIG_TREE_VISIT);
     this.scheduledRecordCount = 0;
+    this.idleRecordIds.fill(NO_BIG_TREE_VISIT);
+    this.idleRecordPositions.fill(NO_BIG_TREE_VISIT);
+    this.idleRecordCount = 0;
     this.freeRecordCount = this.maxActors;
     for (let index = 0; index < this.maxActors; index++) {
       this.freeRecordIds[index] = this.maxActors - 1 - index;
@@ -1376,6 +1391,7 @@ export class BigTreeVisitManager {
         visitor.lastTransitionCause ?? BigTreeTransitionCause.None;
       this.actorLastTransitionAt[recordId] = this.restoreDeadline(visitor.lastTransitionAt ?? null);
       if (visitor.state !== BigTreeVisitState.Outside) this.scheduleRecord(recordId);
+      else this.markIdleRecord(recordId);
       if (visitor.slotId !== NO_BIG_TREE_SLOT) {
         this.slotOwnerKinds[visitor.slotId] = visitor.ownerKind;
         this.slotOwnerIds[visitor.slotId] = visitor.ownerId;
@@ -1449,6 +1465,7 @@ export class BigTreeVisitManager {
   }
 
   private acquireActorRecord(ownerKind: number, ownerId: number): number {
+    if (this.freeRecordCount === 0) this.reclaimIdleRecord();
     if (this.freeRecordCount === 0) return NO_BIG_TREE_VISIT;
     const recordId = this.freeRecordIds[--this.freeRecordCount] ?? NO_BIG_TREE_VISIT;
     if (recordId === NO_BIG_TREE_VISIT) return NO_BIG_TREE_VISIT;
@@ -1471,6 +1488,7 @@ export class BigTreeVisitManager {
 
   private clearActorRecord(recordId: number): void {
     this.unscheduleRecord(recordId);
+    this.unmarkIdleRecord(recordId);
     const wasUsed = this.actorUsed[recordId] !== 0;
     if (wasUsed) {
       const ownerKind = this.actorOwnerKinds[recordId] ?? NO_OWNER;
@@ -1513,6 +1531,34 @@ export class BigTreeVisitManager {
     const position = this.scheduledRecordCount++;
     this.scheduledRecordIds[position] = recordId;
     this.scheduledRecordPositions[recordId] = position;
+  }
+
+  private markIdleRecord(recordId: number): void {
+    if ((this.idleRecordPositions[recordId] ?? NO_BIG_TREE_VISIT) !== NO_BIG_TREE_VISIT) return;
+    const position = this.idleRecordCount++;
+    this.idleRecordIds[position] = recordId;
+    this.idleRecordPositions[recordId] = position;
+  }
+
+  private unmarkIdleRecord(recordId: number): void {
+    const position = this.idleRecordPositions[recordId] ?? NO_BIG_TREE_VISIT;
+    if (position === NO_BIG_TREE_VISIT) return;
+    const lastPosition = --this.idleRecordCount;
+    const tailRecordId = this.idleRecordIds[lastPosition] ?? NO_BIG_TREE_VISIT;
+    if (position !== lastPosition && tailRecordId !== NO_BIG_TREE_VISIT) {
+      this.idleRecordIds[position] = tailRecordId;
+      this.idleRecordPositions[tailRecordId] = position;
+    }
+    this.idleRecordIds[lastPosition] = NO_BIG_TREE_VISIT;
+    this.idleRecordPositions[recordId] = NO_BIG_TREE_VISIT;
+  }
+
+  private reclaimIdleRecord(): void {
+    if (this.idleRecordCount === 0) return;
+    const recordId = this.idleRecordIds[this.idleRecordCount - 1] ?? NO_BIG_TREE_VISIT;
+    if (recordId === NO_BIG_TREE_VISIT) return;
+    this.clearActorRecord(recordId);
+    this.usedActors--;
   }
 
   private unscheduleRecord(recordId: number): void {

@@ -37,6 +37,7 @@ export interface PlasticSnapshot {
  */
 export class FastWeights {
   private readonly w: Float64Array;
+  private readonly xScratch: Float64Array;
 
   constructor(
     private readonly n: number,
@@ -44,7 +45,9 @@ export class FastWeights {
     private readonly decay = 0.1,
     private readonly clip = 4,
   ) {
-    this.w = new Float64Array(Math.max(0, n) * Math.max(0, n));
+    const dim = Math.max(0, n);
+    this.w = new Float64Array(dim * dim);
+    this.xScratch = new Float64Array(dim);
   }
 
   /**
@@ -99,20 +102,23 @@ export class FastWeights {
    */
   step(x: readonly number[], gain = 1): number[] {
     const recalled = this.recall(x);
-    this.imprint(Array.from(x));
+    this.imprint(x);
     return x.map((xi, i) => (xi ?? 0) + gain * (recalled[i] ?? 0));
   }
 
-  /** Recall + imprint in one beat; writes overlay into `out` (length ≥ n). Allocation-free. */
+  /** Recall + imprint in one beat; writes overlay into `out` (length ≥ n). Allocation-free and safe when `out === x`. */
   overlayInPlace(x: ArrayLike<number>, out: Float32Array | number[], gain = 1): void {
     const n = this.n;
     for (let i = 0; i < n; i++) {
+      this.xScratch[i] = x[i] ?? 0;
+    }
+    for (let i = 0; i < n; i++) {
       const row = i * n;
       let s = 0;
-      for (let j = 0; j < n; j++) s += (this.w[row + j] ?? 0) * (x[j] ?? 0);
-      out[i] = (x[i] ?? 0) + gain * s;
+      for (let j = 0; j < n; j++) s += (this.w[row + j] ?? 0) * (this.xScratch[j] ?? 0);
+      out[i] = (this.xScratch[i] ?? 0) + gain * s;
     }
-    this.imprint(Array.from(x));
+    this.imprint(this.xScratch);
   }
 
   snapshot(): PlasticSnapshot {

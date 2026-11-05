@@ -320,12 +320,33 @@ class PrimeSieveLoom {
       const cur = this.bucketCursor[d]!;
       if (cur < this.bucketStart[d + 1]!) {
         const e = this.bucketEdges[cur]!;
-        this.alive[e] = 0;
+        if (this.alive[e]! > 0) {
+          this.alive[e] = 0;
+          this.liveEdges--;
+        }
         this.bucketCursor[d] = cur + 1;
-        this.liveEdges--;
         removed++;
       }
       d--; // strictly shrink so we always make progress
+    }
+  }
+
+  /** Restore up to `k` purged twin-prime edges in shortest-distance bucket order (preserving bucket suffix invariant). */
+  healShortest(k = 2): void {
+    let healed = 0;
+    for (let i = 0; i < this.twinDists.length && healed < k; i++) {
+      const d = this.twinDists[i]!;
+      const cur = this.bucketCursor[d]!;
+      if (cur > this.bucketStart[d]!) {
+        const nextCur = cur - 1;
+        const e = this.bucketEdges[nextCur]!;
+        if (this.alive[e] === 0) {
+          this.alive[e] = 1;
+          this.liveEdges++;
+        }
+        this.bucketCursor[d] = nextCur;
+        healed++;
+      }
     }
   }
 
@@ -553,14 +574,20 @@ class EntropicNecroMatrix {
    */
   private regenerate(): void {
     this.beats++;
-    this.budget = Math.min(this.budget0, this.budget + NECRO_BUDGET_REGEN);
-    if (this.beats % NECRO_HEAL_EVERY === 0 && this.scars.length >= 2) {
-      const a = this.scars.shift()!;
-      const b = this.scars.shift()!;
-      if (!this.adj[a]!.includes(b)) {
-        this.adj[a]!.push(b);
-        this.adj[b]!.push(a);
-        this.dead = Math.max(0, this.dead - 1);
+    const healTarget = Math.max(1, this.lastPath);
+    this.budget = Math.min(
+      this.budget0,
+      this.budget + Math.max(NECRO_BUDGET_REGEN, healTarget + 0.25),
+    );
+    if (this.beats % NECRO_HEAL_EVERY === 0) {
+      for (let h = 0; h < healTarget && this.scars.length > 2; h++) {
+        const a = this.scars.shift()!;
+        const b = this.scars.shift()!;
+        if (!this.adj[a]!.includes(b)) {
+          this.adj[a]!.push(b);
+          this.adj[b]!.push(a);
+          this.dead = Math.max(0, this.dead - 1);
+        }
       }
     }
   }
@@ -852,12 +879,14 @@ interface HydraView {
 class SlimeMoldHydra {
   private readonly n: number;
   private readonly state: Float64Array;
+  private readonly meansScratch: Float64Array;
   private heads = 1;
   private conflict = 0;
 
   constructor(n = 60) {
     this.n = n;
     this.state = new Float64Array(n);
+    this.meansScratch = new Float64Array(n);
     for (let i = 0; i < n; i++) this.state[i] = Math.sin(i * 0.7);
   }
 
@@ -874,7 +903,8 @@ class SlimeMoldHydra {
     const kk = Math.max(1, Math.min(this.n, Math.floor(k)));
     this.heads = kk;
     const size = Math.floor(this.n / kk);
-    const means: number[] = [];
+    const means = this.meansScratch;
+    let sumMeans = 0;
     for (let head = 0; head < kk; head++) {
       const lo = head * size;
       const hi = head === kk - 1 ? this.n : lo + size;
@@ -883,12 +913,17 @@ class SlimeMoldHydra {
         this.state[i] = Math.tanh(0.8 * this.state[i]! + 0.1 * drive + 0.05 * (rng() - 0.5));
         mean += this.state[i]!;
       }
-      means.push(hi > lo ? mean / (hi - lo) : 0);
+      const m = hi > lo ? mean / (hi - lo) : 0;
+      means[head] = m;
+      sumMeans += m;
     }
     // Conflict = variance of head means; fuse = nudge every node toward the global mean + conflict noise.
-    const gMean = means.reduce((s, m) => s + m, 0) / kk;
+    const gMean = sumMeans / kk;
     let varSum = 0;
-    for (const m of means) varSum += (m - gMean) * (m - gMean);
+    for (let head = 0; head < kk; head++) {
+      const m = means[head]!;
+      varSum += (m - gMean) * (m - gMean);
+    }
     this.conflict = clamp01(Math.sqrt(varSum / kk));
     for (let i = 0; i < this.n; i++) {
       this.state[i] = clampFinite(
@@ -1062,9 +1097,13 @@ class QuantumTunnelLattice {
 
   private entropy(): number {
     // Shannon entropy of node 0's distribution (normalised to [0,1] by log n).
-    const p = this.rowProbabilities(0);
+    if (this.probScratch.length < this.n) this.probScratch = new Float64Array(this.n);
+    this.rowProbabilitiesInto(0, this.probScratch);
     let h = 0;
-    for (const pi of p) if (pi > 0) h -= pi * Math.log(pi);
+    for (let j = 0; j < this.n; j++) {
+      const pi = this.probScratch[j]!;
+      if (pi > 0) h -= pi * Math.log(pi);
+    }
     return h / Math.log(this.n);
   }
   private displacement(): number {
@@ -1602,6 +1641,9 @@ class QuantumBrainOrgan {
     const bias = getTsotchkeBias(this.formIdx);
     this.qgtVolume = pulse.qgtVolume;
     this.magic = pulse.cliffordEnt;
+    if (this.collapsed) {
+      for (let q = 0; q < this.nQ; q++) this.hadamard(q);
+    }
     this.collapsed = false;
     this.collapseIdx = -1;
     for (let q = 0; q < this.nQ; q++) {
@@ -1610,8 +1652,7 @@ class QuantumBrainOrgan {
       this.rz(q, ang);
     }
     for (let q = 0; q < this.nQ; q++) this.cnot(q, (q + 1) % this.nQ); // entangling ring
-    this.hadamard(this.nQ - 1); // turn accumulated phase into amplitude interference
-    this.hadamard(0);
+    for (let q = 0; q < this.nQ; q++) this.hadamard(q); // turn accumulated phase into amplitude interference across all qubits
   }
 
   /** Collapse the register by Born sampling (Wigner measurement); sets a definite basis state. */
@@ -2371,17 +2412,16 @@ export class ApexBrain {
       conflict: number;
     },
     metaAche = 0,
+    thermoParalysis = this.thermo.view().paralysis,
+    ouroDeaths = this.ouroboros.view().deaths,
+    loomAllergy = this.loom.view().allergy,
   ): ApexThought {
-    const thermo = this.thermo.view();
-    const vitality = clamp01(m.necroVit * (1 - thermo.paralysis));
+    const vitality = clamp01(m.necroVit * (1 - thermoParalysis));
     // Agony = self-consumption (ouroboros culls) + prime-allergy + the hydra's internal civil-war
     // disagreement (SlimeMoldHydra is load-bearing on a quantised output, the harness kill test) + a
     // bounded metacognitive ache when the online self-model mis-forecasts the brain's own vitality.
     const agony = clamp01(
-      this.ouroboros.view().deaths / 8 +
-        this.loom.view().allergy +
-        0.25 * m.conflict +
-        APEX_ACHE_WEIGHT * metaAche,
+      ouroDeaths / 8 + loomAllergy + 0.25 * m.conflict + APEX_ACHE_WEIGHT * metaAche,
     );
     const transcendence = clamp01(p.level / 1000);
     const simulation: 1 | 2 | 3 = transcendence >= 1 ? 3 : transcendence >= 0.5 ? 2 : 1;
@@ -2401,17 +2441,30 @@ export class ApexBrain {
   }
 
   snapshot(): ApexBrainSnapshot {
+    const loom = this.loom.view();
+    const drum = this.drum.view();
+    const necro = this.necro.view();
+    const klein = this.klein.view();
+    const hive = this.hive.view();
+    const hydra = this.hydra.view();
+    const wraith = this.wraith.view();
+    const tunnel = this.tunnel.view();
+    const thermo = this.thermo.view();
+    const ouroboros = this.ouroboros.view();
     const thought = this.assemble(
       { threat: 0, energy: 0, chaos: 0, novelty: 0, level: this.lastLevel },
       {
-        drumMotor: this.drum.view().motor,
-        hiveMotor: this.hive.view().motor,
-        fold: this.klein.view().headTailCorr,
-        necroVit: this.necro.view().vitality,
-        limbFrac: this.ouroboros.view().limbs / this.ouroboros.capacity(),
-        conflict: this.hydra.view().conflict,
+        drumMotor: drum.motor,
+        hiveMotor: hive.motor,
+        fold: klein.headTailCorr,
+        necroVit: necro.vitality,
+        limbFrac: ouroboros.limbs / this.ouroboros.capacity(),
+        conflict: hydra.conflict,
       },
       this.learn ? this.selfPredErr : 0,
+      thermo.paralysis,
+      ouroboros.deaths,
+      loom.allergy,
     );
     return {
       beat: this.beat,
@@ -2425,16 +2478,16 @@ export class ApexBrain {
       thought,
       meta: this.meta.view(),
       quantum: this.quantum.view(),
-      loom: this.loom.view(),
-      drum: this.drum.view(),
-      necro: this.necro.view(),
-      klein: this.klein.view(),
-      hive: this.hive.view(),
-      hydra: this.hydra.view(),
-      wraith: this.wraith.view(),
-      tunnel: this.tunnel.view(),
-      thermo: this.thermo.view(),
-      ouroboros: this.ouroboros.view(),
+      loom,
+      drum,
+      necro,
+      klein,
+      hive,
+      hydra,
+      wraith,
+      tunnel,
+      thermo,
+      ouroboros,
     };
   }
 

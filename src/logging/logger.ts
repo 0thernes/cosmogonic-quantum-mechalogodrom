@@ -17,6 +17,9 @@ const ring: LogEntry[] = [];
 /** Next slot to overwrite once the ring is full (always points at the oldest entry). */
 let writeIndex = 0;
 
+/** Cached ordered snapshot of the ring buffer; invalidated on every `emit()`. */
+let cachedSnapshot: readonly LogEntry[] | null = null;
+
 /** Append one entry to the shared ring and mirror it to the console. O(1). */
 function emit(level: LogLevel, scope: string, msg: string, data?: unknown): void {
   const entry: LogEntry =
@@ -29,6 +32,7 @@ function emit(level: LogLevel, scope: string, msg: string, data?: unknown): void
     ring[writeIndex] = entry;
     writeIndex = (writeIndex + 1) % RING_CAPACITY;
   }
+  cachedSnapshot = null;
   // Audit #305: debug lines stay in the ring but only reach the console when opted in.
   if (level === 'debug' && !(globalThis as { CQM_DEBUG?: boolean }).CQM_DEBUG) return;
   const line = `[${scope}] ${msg}`;
@@ -59,8 +63,11 @@ export function createLogger(scope: string): Logger {
  * for diagnostics panels and error reports, never for per-frame paths.
  */
 export function getRecentLogs(): readonly LogEntry[] {
-  if (ring.length < RING_CAPACITY) {
-    return ring.slice();
+  if (cachedSnapshot === null) {
+    cachedSnapshot =
+      ring.length < RING_CAPACITY
+        ? ring.slice()
+        : [...ring.slice(writeIndex), ...ring.slice(0, writeIndex)];
   }
-  return [...ring.slice(writeIndex), ...ring.slice(0, writeIndex)];
+  return cachedSnapshot;
 }

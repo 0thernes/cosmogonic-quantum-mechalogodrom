@@ -840,6 +840,7 @@ export class SuperMind {
   // Eshkol consciousness + libirrep sym from corpus - wired via facade
   private tsotchkeModule = 'EshkolConsciousness'; // from godform, for per-Archon specialization from Tsotchke corpus
   private _eshkolProgram = '(define (think state) state)'; // Eshkol .esk program from corpus for this Archon - prefixed for noUnused
+  private readonly _eshkolBytecode: ReturnType<typeof eshkolCompile>;
   get tsotchkeModuleRef() {
     return this.tsotchkeModule;
   } // used to satisfy noUnused
@@ -847,6 +848,25 @@ export class SuperMind {
 
   // ── Reusable scratch (no per-beat allocation) ──
   private readonly senses = new Float32Array(SENSE);
+  private readonly qngOut: [number, number] = [0, 0];
+  private readonly salScratch: Record<SuperPlan, number> = {
+    HUNT: 0,
+    FLEE: 0,
+    DOMINATE: 0,
+    DECEIVE: 0,
+    SPAWN: 0,
+    EXPLORE: 0,
+    REST: 0,
+  };
+  private readonly drivesScratch: Record<SuperPlan, number> = {
+    HUNT: 0,
+    FLEE: 0,
+    DOMINATE: 0,
+    DECEIVE: 0,
+    SPAWN: 0,
+    EXPLORE: 0,
+    REST: 0,
+  };
   /** GWT broadcast inputs, refilled at each use (the broadcast only reads them). */
   private readonly gwtC2 = new Float64Array(2);
   private readonly gwtW2 = new Float64Array(2);
@@ -904,6 +924,7 @@ export class SuperMind {
   // Pre-allocated scratch arrays for tensor operations (avoid .slice() allocations)
   private readonly tensorScratch1 = new Float32Array(4);
   private readonly tensorScratch2 = new Float32Array(4);
+  private readonly tensorScratch3 = new Float32Array(3);
   // V96 · ONLINE LEARNING — the Stratum-X adaptation channel: a seeded, bounded, reward-reinforced
   // per-plan bias. ON by default (the apex mind LEARNS at runtime); setLearning(false) freezes it back to
   // the byte-identical frozen-weight mind. Deterministic (no rng) + bounded (|bias| ≤ 0.5). O(plans).
@@ -976,6 +997,7 @@ export class SuperMind {
     this.eshkolEngine = new EshkolConsciousnessEngine(eshkolL, eshkolI, eshkolW);
     this.tsotchkeModule = module;
     this._eshkolProgram = program;
+    this._eshkolBytecode = eshkolCompile(eshkolParse(this._eshkolProgram));
     this.narrMem = new NarrativeMemory(rng); // GOAL5 init with rng (stream effect same for repro)
     this.cortex = new Subnet(SENSE, 32, LATENT, rng);
     this.organs = Array.from({ length: SUPER_ORGANS }, () => new Subnet(4, 8, 2, rng));
@@ -1240,12 +1262,12 @@ export class SuperMind {
     }
     // Deep Tsotchke-derived local paths: bounded Eshkol VM + Moonlab-style MPO on cadence.
     if (this.cliffordBeat % 17 === 0) {
-      const bc = eshkolCompile(eshkolParse(this._eshkolProgram));
-      const divine = eshkolExecute(bc, this.cons.surprise);
+      const divine = eshkolExecute(this._eshkolBytecode, this.cons.surprise);
       this.cons.workspace = clamp01(this.cons.workspace + divine * 0.012);
+      copyRangeInto(this.tensorScratch1, this.latent, 0, 4);
       const mpoOut = moonlabMPOApply(
         {
-          matrices: [this.latent.subarray(0, 4)],
+          matrices: [this.tensorScratch1],
           bondDimension: 1,
           physicalDimension: LATENT,
         },
@@ -1384,7 +1406,9 @@ export class SuperMind {
     // Quantum Natural Gradient: precondition cognitive gradient with QGT metric for self-optimization (#80)
     // Use 2x2 allocation-free QNG for the mind's two cognition knobs (superposition + entanglement)
     const qngRidge = 1e-3;
-    const qngOut = [0, 0]; // Preallocated array for allocation-free QNG
+    const qngOut = this.qngOut; // Preallocated array for allocation-free QNG
+    qngOut[0] = 0;
+    qngOut[1] = 0;
     // Read the actual Fubini–Study QGT metric components from QuantumMind (blended with cognitive state)
     const [qmG00, qmG01, qmG11] = this.qmind.liveMetric2x2();
     const g00 = 0.5 * qmG00 + 0.5 * (1 + this.cons.surprise * 0.5);
@@ -1646,15 +1670,14 @@ export class SuperMind {
     // ── SPIN-GLASS INSTINCT ── settle the Hopfield/Ising lattice under a situational field so it
     // recalls the behavioural archetype the moment evokes; its dominant attractor biases the matching
     // plan below — a genuine subsymbolic "gut feeling" arbitrating with the MLP's deliberation.
-    const sal: Record<SuperPlan, number> = {
-      HUNT: clamp01(s[5] * 0.6 + s[0] * 0.4),
-      FLEE: clamp01(s[1]),
-      DOMINATE: clamp01(s[4]),
-      DECEIVE: clamp01(s[1] * 0.5 + s[2] * 0.5),
-      SPAWN: clamp01(s[0] * 0.6),
-      EXPLORE: clamp01(s[3] * 0.5 + novelty * 0.5),
-      REST: clamp01(1 - this.arousal),
-    };
+    const sal = this.salScratch;
+    sal.HUNT = clamp01(s[5] * 0.6 + s[0] * 0.4);
+    sal.FLEE = clamp01(s[1]);
+    sal.DOMINATE = clamp01(s[4]);
+    sal.DECEIVE = clamp01(s[1] * 0.5 + s[2] * 0.5);
+    sal.SPAWN = clamp01(s[0] * 0.6);
+    sal.EXPLORE = clamp01(s[3] * 0.5 + novelty * 0.5);
+    sal.REST = clamp01(1 - this.arousal);
     biasPlanSalience(sal, this.attnSchema.snapshot(), surprise, SUPER_PLANS);
     // gwtBroadcast (Tsotchke Eshkol GWT) for more workspace effect on sal drives
     this.gwtC3[0] = sal.HUNT;
@@ -1751,15 +1774,14 @@ export class SuperMind {
     );
 
     // plan (argmax over drive scores; same vocabulary as the V31 mind)
-    const drives: Record<SuperPlan, number> = {
-      HUNT: aggression * (0.5 + 0.5 * s[5]) * (1 - 0.5 * s[1]),
-      FLEE: s[1] * (1 - this.dominance),
-      DOMINATE: domProject * (0.4 + 0.6 * s[4]) * this.dominance,
-      DECEIVE: deception * s[1] * (1 - this.dominance),
-      SPAWN: spawnDesire * s[0] * (this.offspring < 3 ? 1 : 0),
-      EXPLORE: curiosity * (1 - s[1]) * (0.5 + 0.5 * novelty),
-      REST: (1 - this.arousal) * (1 - s[1]) * s[0],
-    };
+    const drives = this.drivesScratch;
+    drives.HUNT = aggression * (0.5 + 0.5 * s[5]) * (1 - 0.5 * s[1]);
+    drives.FLEE = s[1] * (1 - this.dominance);
+    drives.DOMINATE = domProject * (0.4 + 0.6 * s[4]) * this.dominance;
+    drives.DECEIVE = deception * s[1] * (1 - this.dominance);
+    drives.SPAWN = spawnDesire * s[0] * (this.offspring < 3 ? 1 : 0);
+    drives.EXPLORE = curiosity * (1 - s[1]) * (0.5 + 0.5 * novelty);
+    drives.REST = (1 - this.arousal) * (1 - s[1]) * s[0];
     // #71 · VALENCE STEERS BEHAVIOUR — negative affect amplifies withdrawal; positive amplifies approach.
     const vPos = clamp01(this.valence);
     const vNeg = clamp01(-this.valence);
@@ -1898,11 +1920,10 @@ export class SuperMind {
       if (empPlan) {
         // use moonlabTensorContract (Tsotchke Moonlab) + eshkolAD for more tensor/AD in empowerment vote (deeper wiring into mind)
         copyRangeInto(this.tensorScratch1, this.quantumOut, 0, 3);
-        const empT = moonlabTensorContract(
-          this.tensorScratch1,
-          [this.empowerment.empowerment, 0.5, 0.3],
-          2,
-        );
+        this.tensorScratch3[0] = this.empowerment.empowerment;
+        this.tensorScratch3[1] = 0.5;
+        this.tensorScratch3[2] = 0.3;
+        const empT = moonlabTensorContract(this.tensorScratch1, this.tensorScratch3, 2);
         const empAd = eshkolADGradient((x) => x * x, this.empowerment.empowerment);
         drives[empPlan] = clamp01(
           (drives[empPlan] ?? 0) +
@@ -1925,11 +1946,10 @@ export class SuperMind {
     // Length-3 first arg (was [conf,0.5]): a length-2 operand packs to a matrix with a ZERO second row,
     // forcing the contraction product to rank-1 so its truncation ratio is a constant ~1 regardless of
     // the quantum-state operand. The conf·0.5 cross term fills the row so both operands move hrrT.
-    const hrrT = moonlabTensorContract(
-      [this.holographic.confidence, 0.5, this.holographic.confidence * 0.5],
-      this.tensorScratch1,
-      2,
-    );
+    this.tensorScratch3[0] = this.holographic.confidence;
+    this.tensorScratch3[1] = 0.5;
+    this.tensorScratch3[2] = this.holographic.confidence * 0.5;
+    const hrrT = moonlabTensorContract(this.tensorScratch3, this.tensorScratch1, 2);
     const hrrAd = eshkolADGradient((x) => x, this.holographic.confidence);
     if (hrrPlan >= 0) {
       const hp = SUPER_PLANS[hrrPlan];

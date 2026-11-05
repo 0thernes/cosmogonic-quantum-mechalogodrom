@@ -532,8 +532,14 @@ export function buildEntityConsciousnessRecord(
     labExtrasForProfile(profile, labReport.frameworks),
   );
   const present = snapshot.frameworks.filter((f) => f.status !== 'absent');
-  const dominant = present.reduce((best, f) => (f.score > best.score ? f : best), present[0]!);
-  const weakest = present.reduce((worst, f) => (f.score < worst.score ? f : worst), present[0]!);
+  const dominant =
+    present.length > 0
+      ? present.reduce((best, f) => (f.score > best.score ? f : best), present[0]!)
+      : null;
+  const weakest =
+    present.length > 0
+      ? present.reduce((worst, f) => (f.score < worst.score ? f : worst), present[0]!)
+      : null;
   return {
     profile,
     lastSignals,
@@ -543,7 +549,7 @@ export function buildEntityConsciousnessRecord(
     loadBearingFrameworks: snapshot.frameworks
       .filter((f) => f.status === 'loadBearing')
       .map((f) => f.id),
-    dominantFramework: dominant.id,
+    dominantFramework: dominant?.id ?? snapshot.frameworks[0]!.id,
     weakestPresentFramework: weakest?.id ?? null,
     meanFrameworkScore:
       present.length === 0 ? 0 : present.reduce((sum, f) => sum + f.score, 0) / present.length,

@@ -943,6 +943,13 @@ export class AlienFlora {
    */
   private readonly pairStart: Int32Array;
   private readonly pairJ: Int32Array;
+  /** Subset of plants that participate in at least one candidate collision pair. */
+  private readonly collidePlants: Int32Array;
+  /** Subset of plants with at least one outgoing candidate pair (pairStart[i] < pairStart[i + 1]). */
+  private readonly collideSenders: Int32Array;
+  private readonly singleContactSeed: [{ x: number; z: number; strength: number }] = [
+    { x: 0, z: 0, strength: 0 },
+  ];
   private readonly hashOrigin: number;
   private readonly hashN: number;
   private collideAccum = 0;
@@ -1163,6 +1170,23 @@ export class AlienFlora {
       starts[placed] = js.length;
       this.pairStart = starts;
       this.pairJ = Int32Array.from(js);
+      const inPair = new Uint8Array(placed);
+      const senders: number[] = [];
+      for (let i = 0; i < placed; i++) {
+        const p0 = starts[i]!;
+        const p1 = starts[i + 1]!;
+        if (p0 < p1) {
+          inPair[i] = 1;
+          senders.push(i);
+          for (let p = p0; p < p1; p++) inPair[js[p]!] = 1;
+        }
+      }
+      const activePlants: number[] = [];
+      for (let i = 0; i < placed; i++) {
+        if (inPair[i]) activePlants.push(i);
+      }
+      this.collidePlants = Int32Array.from(activePlants);
+      this.collideSenders = Int32Array.from(senders);
     }
 
     // Operational grids: capacity/quality from edaphics; biomass starts at capacity.
@@ -1362,11 +1386,11 @@ export class AlienFlora {
    * Falsifiable: overlapping soft envelopes ⇒ equal-opposite aPush forces.
    */
   private resolvePlantCollisions(t: number, chaos: number, wind: number): void {
-    const n = this.plantX.length;
-    if (n === 0) return;
+    const active = this.collidePlants;
+    const nActive = active.length;
+    if (nActive === 0) return;
     const push = this.plantPush;
-    push.fill(0);
-    // Precompute thrash proxies + biomass-scaled radii once (O(N), pair loop stays hot).
+    // Precompute thrash proxies + biomass-scaled radii only for plants in candidate collision pairs.
     const kin = this.plantKin;
     const thrashScale = COLLIDE_THRASH_AMP * (0.55 + chaos * 0.9 + wind * 0.35);
     const boostR2 = CONTACT_RADIUS * 1.15 * (CONTACT_RADIUS * 1.15);
@@ -1379,7 +1403,11 @@ export class AlienFlora {
     const act = this.activeContact;
     let nAct = 0;
     for (let s = 0; s < FLORA_CONTACT_SLOTS; s++) if (!(cstr[s]! < 0.04)) act[nAct++] = s;
-    for (let i = 0; i < n; i++) {
+    for (let idx = 0; idx < nActive; idx++) {
+      const i = active[idx]!;
+      const i2 = i * 2;
+      push[i2] = 0;
+      push[i2 + 1] = 0;
       const xi = this.plantX[i]!;
       const zi = this.plantZ[i]!;
       const gi = grid[i]!;
@@ -1412,11 +1440,13 @@ export class AlienFlora {
     // float32 rounding per add — bit-identical to the in-place writes.
     const starts = this.pairStart;
     const pairJ = this.pairJ;
+    const senders = this.collideSenders;
+    const nSenders = senders.length;
     const fr = Math.fround;
-    for (let i = 0; i < n; i++) {
+    for (let sIdx = 0; sIdx < nSenders; sIdx++) {
+      const i = senders[sIdx]!;
       const p0 = starts[i]!;
       const p1 = starts[i + 1]!;
-      if (p0 === p1) continue;
       const ki = i * KIN_STRIDE;
       const pxi = kin[ki]!;
       const pzi = kin[ki + 1]!;
@@ -1458,19 +1488,21 @@ export class AlienFlora {
       push[i2] = accX;
       push[i2 + 1] = accZ;
     }
-    // Audit #100: re-upload only meshes whose push values actually changed (most plants sit still).
+    // Audit #100: re-upload only meshes whose push values actually changed beyond sub-millimeter epsilon.
     const dirty = this.pushDirty;
     if (dirty.length !== this.meshes.length) this.pushDirty = new Uint8Array(this.meshes.length);
     this.pushDirty.fill(0);
-    for (let i = 0; i < n; i++) {
+    const eps = t === 0 ? 0 : 1e-3;
+    for (let idx = 0; idx < nActive; idx++) {
+      const i = active[idx]!;
       const mi = this.plantMeshIdx[i]!;
       const ii = this.plantInstIdx[i]!;
       const buf = this.pushAttrs[mi];
       if (!buf) continue;
       const o = ii * 2;
-      const nx = this.plantPush[i * 2] ?? 0;
-      const nz = this.plantPush[i * 2 + 1] ?? 0;
-      if (buf[o] !== nx || buf[o + 1] !== nz) {
+      const nx = push[i * 2] ?? 0;
+      const nz = push[i * 2 + 1] ?? 0;
+      if (Math.abs(buf[o]! - nx) > eps || Math.abs(buf[o + 1]! - nz) > eps) {
         buf[o] = nx;
         buf[o + 1] = nz;
         this.pushDirty[mi] = 1;
@@ -2285,7 +2317,11 @@ export class AlienFlora {
    * Local radius only; never lawn-wide slabs.
    */
   setContact(x: number, z: number, strength: number): void {
-    this.setContacts([{ x, z, strength }]);
+    const seed = this.singleContactSeed[0]!;
+    seed.x = x;
+    seed.z = z;
+    seed.strength = strength;
+    this.setContacts(this.singleContactSeed);
   }
 
   /**

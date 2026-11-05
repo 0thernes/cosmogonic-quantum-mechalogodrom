@@ -35,6 +35,7 @@ export class MechalogodromSatellites {
     const vertexShader = `
       varying vec2 vUv;
       varying vec3 vPos;
+      varying vec3 vLocalPos;
       varying vec3 vNormal;
       varying vec3 vColor;
       uniform float uTime;
@@ -50,17 +51,19 @@ export class MechalogodromSatellites {
         float w3 = sin(position.y * 11.0 + position.x * 5.0 - uTime * 0.75) * 0.15;
         displaced += normal * (w1 + w2 + w3);
 
-        vPos = displaced;
+        vLocalPos = displaced;
+        vec4 mvPosition = modelViewMatrix * instanceMatrix * vec4(displaced, 1.0);
+        vPos = mvPosition.xyz;
         vNormal = normalize(normalMatrix * mat3(instanceMatrix) * normal);
 
-        vec4 mvPosition = instanceMatrix * vec4(displaced, 1.0);
-        gl_Position = projectionMatrix * modelViewMatrix * mvPosition;
+        gl_Position = projectionMatrix * mvPosition;
       }
     `;
 
     const fragmentShader = `
       varying vec2 vUv;
       varying vec3 vPos;
+      varying vec3 vLocalPos;
       varying vec3 vNormal;
       varying vec3 vColor;
       uniform float uTime;
@@ -76,7 +79,7 @@ export class MechalogodromSatellites {
 
       void main() {
         // Kleinian/IFS-style surface folding for the dark-star body.
-        vec3 p = vPos * 1.8;
+        vec3 p = vLocalPos * 1.8;
         for(int i = 0; i < 4; i++) {
           p = abs(p) / dot(p, p) - vec3(0.4 + 0.05 * sin(uTime * 0.25 + float(i)));
         }
@@ -92,7 +95,7 @@ export class MechalogodromSatellites {
         starFire += vColor * fresnel * 0.45; // USER: dimmer rim (was 0.95)
 
         // Bioluminescent ridges.
-        float ridges = sin(vPos.y * 18.0 + uTime * 1.5) * sin(vPos.x * 14.0 - uTime * 1.0);
+        float ridges = sin(vLocalPos.y * 18.0 + uTime * 1.5) * sin(vLocalPos.x * 14.0 - uTime * 1.0);
         ridges = smoothstep(0.2, 0.9, ridges);
         vec3 ridgeColor = vColor * 0.85 + vec3(0.06, 0.16, 0.24); // USER: dimmer ridges (was 1.5 + brighter)
         starFire = mix(starFire, ridgeColor, ridges * 0.5);
@@ -109,7 +112,7 @@ export class MechalogodromSatellites {
 
         vec3 finalColor = starFire + glitch + aberration;
         // Darken the center: a tiny black heart inside each artifact.
-        finalColor *= smoothstep(0.15, 0.85, length(vPos));
+        finalColor *= smoothstep(0.15, 0.85, length(vLocalPos));
 
         // USER: 400 additive knots summed to a blinding WHITE apex halo. Halve the colour AND the additive
         // alpha (~4× dimmer overall) so the swarm reads as a TINY sparkle/shimmer, not an overbearing wash.
