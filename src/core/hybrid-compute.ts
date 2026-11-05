@@ -265,6 +265,7 @@ export function executeHybridEntityBrainBatch(
   seed = 0,
   tick = 0,
   applyCounterJitter = false,
+  hiddenState?: Float32Array,
 ): Float32Array {
   return executeHybridEntityBrainBatchWithReceipt(
     weights,
@@ -274,6 +275,7 @@ export function executeHybridEntityBrainBatch(
     seed,
     tick,
     applyCounterJitter,
+    hiddenState,
   ).outputs;
 }
 
@@ -299,6 +301,7 @@ export function executeHybridEntityBrainBatchWithReceipt(
   seed = 0,
   tick = 0,
   applyCounterJitter = false,
+  hiddenState?: Float32Array,
 ): HybridEntityBrainExecution {
   const count = plan.totalEntities;
   if (
@@ -324,9 +327,13 @@ export function executeHybridEntityBrainBatchWithReceipt(
   }
   if (covered !== count) throw new RangeError('Entity-brain shards do not cover the batch');
   // Audit #274: grow-only module scratch for the hidden layer instead of a fresh count·6 array per call.
+  // When caller supplies a persistent `hiddenState` buffer, preserve recurrent hidden activations across ticks.
+  const usePersistentHidden = hiddenState !== undefined && hiddenState.length >= count * 6;
   const need = Math.max(6, count * 6);
-  if (hybridHiddenScratch.length < need) hybridHiddenScratch = new Float32Array(need);
-  const scratchHidden = hybridHiddenScratch;
+  if (!usePersistentHidden && hybridHiddenScratch.length < need) {
+    hybridHiddenScratch = new Float32Array(need);
+  }
+  const scratchHidden = usePersistentHidden ? hiddenState : hybridHiddenScratch;
   let processedEntities = 0;
 
   for (const shard of plan.shards) {
@@ -334,7 +341,9 @@ export function executeHybridEntityBrainBatchWithReceipt(
     const wSub = weights.subarray(shard.startSlot * 70, shard.endSlot * 70);
     const inSub = inputs.subarray(shard.startSlot * 6, shard.endSlot * 6);
     const hidSub = scratchHidden.subarray(shard.startSlot * 6, shard.endSlot * 6);
-    hidSub.fill(0); // the WASM kernel accumulates into hidden, so a reused scratch must start at 0
+    if (!usePersistentHidden) {
+      hidSub.fill(0); // stateless call: zero shared scratch so repeat calls with no hiddenState are idempotent
+    }
     const outSub = outputs.subarray(shard.startSlot * 4, shard.endSlot * 4);
 
     const processed = zigEntityBrainBatchForward(wSub, inSub, hidSub, outSub, shard.count);

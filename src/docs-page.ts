@@ -81,12 +81,21 @@ function makeZoomable(pre: HTMLElement, svg: SVGSVGElement): void {
   const apply = (): void => {
     stage.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
   };
+  let fitRaf = 0;
+  let fitAttempts = 0;
   const fit = (): void => {
     const vp = viewport.getBoundingClientRect();
     if (!vp.width || !vp.height) {
-      requestAnimationFrame(fit);
+      if (fitRaf === 0 && fitAttempts < 30) {
+        fitAttempts++;
+        fitRaf = requestAnimationFrame(() => {
+          fitRaf = 0;
+          fit();
+        });
+      }
       return;
     }
+    fitAttempts = 0;
     scale = clamp(Math.min(vp.width / w, vp.height / h) * 0.94);
     tx = (vp.width - w * scale) / 2;
     ty = (vp.height - h * scale) / 2;

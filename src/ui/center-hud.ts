@@ -837,7 +837,13 @@ function scheduleNavHeal(doc: Document): void {
   window.setTimeout(tick, delays[i++]);
   // Robust path: adopt the instant a late source mounts, however long that takes; disconnect once done.
   if (typeof MutationObserver === 'undefined') return;
-  const obs = new MutationObserver(() => {
+  const obs = new MutationObserver((records) => {
+    const hasElementChange = records.some(
+      (r) =>
+        Array.from(r.addedNodes).some((n) => n.nodeType === 1) ||
+        Array.from(r.removedNodes).some((n) => n.nodeType === 1),
+    );
+    if (!hasElementChange) return;
     if (heal()) obs.disconnect();
   });
   obs.observe(doc.body, { childList: true, subtree: true });
@@ -1074,6 +1080,7 @@ export function initCenterHud(doc: Document = document): void {
 if (import.meta.hot) {
   import.meta.hot.dispose(() => {
     if (typeof window !== 'undefined') {
+      window.removeEventListener('cqm:open-master-panel', onOpenMasterPanel);
       window.removeEventListener('resize', scheduleFit);
       window.removeEventListener('orientationchange', scheduleFit);
       document.removeEventListener('fullscreenchange', scheduleFit);

@@ -889,7 +889,7 @@ export class SuperMind {
   private readonly spinField = new Float32Array(SPIN_SIZE); // situational drive into the instinct lattice
   /** Bipolar probe buffer for Hopfield recall (no per-beat allocation). */
   private readonly hopProbe = new Float32Array(SPIN_SIZE);
-  private readonly hopState: number[] = new Array<number>(SPIN_SIZE).fill(0);
+  private readonly hopState: number[] = Array.from({ length: SPIN_SIZE }, () => 0);
   private readonly phiMods = new Float32Array(8); // V89: the 8 named module-summary scalars for the Φ proxy
   private readonly pcObsArr: number[] = [0, 0, 0, 0];
   private readonly qualIn = new Float64Array(3);

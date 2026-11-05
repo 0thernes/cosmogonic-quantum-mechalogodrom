@@ -40,8 +40,11 @@ function storage(): Storage | null {
 class OnboardingOverlay {
   private readonly root: HTMLElement;
   private readonly visible: boolean;
+  private readonly onKeydown: ((e: KeyboardEvent) => void) | null = null;
+  private readonly doc: Document;
 
   constructor(doc: Document = document) {
+    this.doc = doc;
     const store = storage();
     this.visible = store ? store.getItem(KEY) !== '1' : false;
 
@@ -70,6 +73,14 @@ class OnboardingOverlay {
       if (again && store) store.setItem(KEY, '1');
       this.close();
     };
+    this.onKeydown = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape' && this.root.getAttribute('aria-hidden') !== 'true') {
+        close();
+      }
+    };
+    if (this.visible) {
+      doc.addEventListener('keydown', this.onKeydown);
+    }
 
     box.appendChild(
       panelHeader({
@@ -113,6 +124,9 @@ class OnboardingOverlay {
   }
 
   close(): void {
+    if (this.onKeydown) {
+      this.doc.removeEventListener('keydown', this.onKeydown);
+    }
     this.root.setAttribute('aria-hidden', 'true');
     this.root.classList.remove('on');
   }

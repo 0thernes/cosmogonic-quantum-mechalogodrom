@@ -8,10 +8,10 @@
  * docs/PHILOSOPHY-2026-06-26.md and docs/adr/0004-deterministic-rng-2026-06-26.md).
  *
  * FREE-LLM PICKER (the user's "free LLMs on the side box"): the provider is chosen per request from
- * a curated table of free, OpenAI-compatible endpoints (docs/research free-LLM report). Two are
- * key-less and always available (Pollinations, LLM7); the rest light up only when their key is
- * present in a SERVER-SIDE env var — keys never reach the browser, and the picker only ever offers
- * a provider the server can actually use. Keyed providers may expose a rolling key pool via
+ * a curated table of free, OpenAI-compatible endpoints (docs/research free-LLM report). Key-less
+ * LLM7 models are available when `COPILOT_ALLOW_KEYLESS=1`; the keyed providers light up only when
+ * their key is present in a SERVER-SIDE env var — keys never reach the browser, and the picker only
+ * ever offers a provider the server can actually use. Keyed providers may expose a rolling key pool via
  * `FOO_API_KEY`, `FOO_API_KEYS` (comma/semicolon/newline separated), and `FOO_API_KEY_2`...
  * `FOO_API_KEY_9`; each key slot is tried as its own recovery step. A request may name a provider;
  * the server resolves it (default-deny: unknown/keyless → the default) and, if the chosen provider
@@ -374,8 +374,8 @@ function defaultProvider(): ResolvedProvider {
 
 /**
  * Every provider the box may offer right now: the env `custom` (if set, first/default), **FreeLLMAPI**
- * (always present now — the primary; defaults to the localhost:3001 proxy), then each curated preset
- * that is callable (key-less or keyed-with-key-present). Labels + ids only — no endpoints or keys leak
+ * (when `FREELLMAPI_BASE` is configured), then each curated preset that is callable (keyed-with-key-present,
+ * plus key-less presets when `COPILOT_ALLOW_KEYLESS=1`). Labels + ids only — no endpoints or keys leak
  * to the client beyond the host.
  */
 export function availableProviders(): { id: string; label: string; def: boolean }[] {

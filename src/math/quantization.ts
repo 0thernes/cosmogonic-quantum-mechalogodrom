@@ -37,8 +37,11 @@ export function fp32ToFp16Bits(value: number): number {
     const subMant = mant | 0x800000;
     const shift = 14 - halfExp;
     let halfMant = subMant >>> shift;
-    const round = (subMant >>> (shift - 1)) & 1;
-    halfMant += round;
+    const roundBit = (subMant >>> (shift - 1)) & 1;
+    const stickyBits = subMant & ((1 << (shift - 1)) - 1);
+    if (roundBit !== 0 && (stickyBits !== 0 || (halfMant & 1) !== 0)) {
+      halfMant++;
+    }
     // halfMant can carry to 0x400 (subnormal rounding up into the smallest NORMAL half, 2^-14).
     // 0x400 is exactly exponent=1, mantissa=0, so letting the carry spill into the exponent field
     // is correct; masking with 0x03ff would drop it and flush the value to zero.
@@ -46,7 +49,7 @@ export function fp32ToFp16Bits(value: number): number {
   }
 
   let halfMant = mant >>> 13;
-  if ((mant & 0x1000) !== 0) {
+  if ((mant & 0x1000) !== 0 && ((mant & 0x0fff) !== 0 || (halfMant & 1) !== 0)) {
     halfMant++;
     if ((halfMant & 0x0400) !== 0) {
       halfMant = 0;

@@ -145,8 +145,8 @@ export class WorkerPool {
         // A test worker may report a queued startup failure before this await continuation. Never
         // resurrect a worker that its error handler already retired.
         if (!this.replacementDepthByWorker.has(worker)) continue;
-        this.workers.push(worker);
-        this.availableWorkers.push(worker);
+        if (!this.workers.includes(worker)) this.workers.push(worker);
+        if (!this.availableWorkers.includes(worker)) this.availableWorkers.push(worker);
       }
     } finally {
       this.initializing = false;
@@ -401,9 +401,11 @@ export class WorkerPool {
     const generation = this.nextTaskGeneration++;
     const useSharedArrayBuffer =
       this.config.useSharedArrayBuffer && typeof SharedArrayBuffer !== 'undefined';
-    const sharedBuffer = useSharedArrayBuffer
-      ? this.acquireSharedBuffer(task.data.byteLength)
-      : null;
+    const requiredBytes =
+      task.type === 'simulation'
+        ? Math.max(task.data.byteLength, 12 * Float32Array.BYTES_PER_ELEMENT)
+        : task.data.byteLength;
+    const sharedBuffer = useSharedArrayBuffer ? this.acquireSharedBuffer(requiredBytes) : null;
     const payload = sharedBuffer ? new Float32Array(sharedBuffer) : new Float32Array(task.data); // caller-owned buffers are never transferred/detached
     if (sharedBuffer) payload.set(task.data);
 

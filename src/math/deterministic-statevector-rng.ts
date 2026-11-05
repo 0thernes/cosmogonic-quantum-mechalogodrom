@@ -645,6 +645,21 @@ export class DeterministicStatevectorRng {
 
   /** Serializable state for exact replay and low-cadence telemetry. */
   snapshot(): DeterministicStatevectorRngSnapshot {
+    const real = Array.from(this.real);
+    const imag = Array.from(this.imag);
+    let norm = 0;
+    for (let i = 0; i < this.dimension; i++) {
+      const r = real[i]!;
+      const j = imag[i]!;
+      norm += r * r + j * j;
+    }
+    if (norm > 0 && Math.abs(norm - 1) > 1e-12 && Math.abs(norm - 1) <= 1e-6) {
+      const inv = 1 / Math.sqrt(norm);
+      for (let i = 0; i < this.dimension; i++) {
+        real[i] = real[i]! * inv;
+        imag[i] = imag[i]! * inv;
+      }
+    }
     return {
       schemaVersion: 1,
       model: 'deterministic-classical-statevector-rng',
@@ -654,8 +669,8 @@ export class DeterministicStatevectorRng {
       dimension: this.dimension,
       evolutionRounds: this.evolutionRounds,
       repetitionCutoff: this.repetitionCutoff,
-      real: Array.from(this.real),
-      imag: Array.from(this.imag),
+      real,
+      imag,
       entropyState: [
         this.entropyState[0] ?? 0,
         this.entropyState[1] ?? 0,

@@ -452,8 +452,12 @@ export class XenomimicPanel {
     this.panel.classList.remove('minimized');
     this.toggle.classList.toggle('on', open);
     this.toggle.setAttribute('aria-expanded', String(open));
-    if (open) this.startLoop();
-    else this.stopLoop();
+    if (open) {
+      if (this.last) this.renderTelemetry(this.last);
+      this.startLoop();
+    } else {
+      this.stopLoop();
+    }
   }
 
   /** Whether the cockpit is live — World gates the (cheap) body sample on this. */
@@ -480,7 +484,16 @@ export class XenomimicPanel {
   /** Refresh DOM readouts and push the sparkline history at the sim cadence. O(species). */
   update(telemetry: XenomimicPanelTelemetry): void {
     this.last = telemetry;
+    // Roll the population/target history ring for the sparkline even while closed so history is continuous.
+    const idx = this.histLen % HISTORY;
+    this.popHist[idx] = telemetry.population;
+    this.tgtHist[idx] = telemetry.growthTarget;
+    this.histLen++;
     if (!this.panel?.classList.contains('open') || this.disposed) return;
+    this.renderTelemetry(telemetry);
+  }
+
+  private renderTelemetry(telemetry: XenomimicPanelTelemetry): void {
     const values = this.idVals;
     values[0]!.textContent = `${telemetry.population}/${telemetry.maxPopulation ?? XENOMIMIC_MAX}`;
     values[1]!.textContent = String(telemetry.pairs);
@@ -499,11 +512,6 @@ export class XenomimicPanel {
     setBar(this.bars[4]!, telemetry.integration, telemetry.integration.toFixed(2));
     setBar(this.bars[5]!, telemetry.freeEnergy, telemetry.freeEnergy.toFixed(2));
     setBar(this.bars[6]!, telemetry.growthTarget / max, String(telemetry.growthTarget));
-    // Roll the population/target history ring for the sparkline.
-    const idx = this.histLen % HISTORY;
-    this.popHist[idx] = telemetry.population;
-    this.tgtHist[idx] = telemetry.growthTarget;
-    this.histLen++;
     if (this.foot) {
       this.foot.textContent =
         `indicator only · ${telemetry.population} live · ${telemetry.pairs} pairs · ` +

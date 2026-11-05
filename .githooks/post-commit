@@ -18,8 +18,12 @@ if git push origin HEAD:main >/dev/null 2>&1; then
 fi
 # Rejected (origin/main moved). Rebase onto it and retry once; abort cleanly on conflict.
 if git pull --rebase --autostash origin main >/dev/null 2>&1; then
-  git push origin HEAD:main >/dev/null 2>&1 \
-    || echo "post-commit: push to main deferred (commit is safe locally; run 'git push origin HEAD:main')."
+  if bun scripts/sync-surfaces.ts --check >/dev/null 2>&1 && bun scripts/gen-filemap.ts --check >/dev/null 2>&1; then
+    git push origin HEAD:main >/dev/null 2>&1 \
+      || echo "post-commit: push to main deferred (commit is safe locally; run 'git push origin HEAD:main')."
+  else
+    echo "post-commit: rebased onto origin/main, but surface/filemap parity changed across the rebase — run 'bun run sync && bun run filemap' and commit before pushing."
+  fi
 else
   git rebase --abort >/dev/null 2>&1
   echo "post-commit: rebase conflict vs origin/main — commit is local; run 'git pull --rebase origin main' then 'git push origin HEAD:main'."

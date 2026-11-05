@@ -289,16 +289,17 @@ const FILE_LIST_FLAG = /^--files0-from(=|$)|^--files-from(=|$)/;
  * attached-value short forms (`-Oid`, `-ofoo`, `-fpat`).
  */
 const BIN_FORBIDDEN_FLAG: Record<string, RegExp> = {
-  git: /^-[oOf]|^--(file|output|open-files-in-pager)(=|$)/,
-  sort: /^-o|^--output(=|$)/,
+  git: /^-[A-Za-z0-9]*[oOf]|^--(file|output|open-files-in-pager)(=|$)/,
+  sort: /^-[A-Za-z0-9]*o|^--output(=|$)/,
   // `grep -f<file>` / `--file=<file>` reads patterns from an arbitrary file (#298 family).
-  grep: /^-f|^--file(=|$)/,
+  grep: /^-[A-Za-z0-9]*f|^--file(=|$)/,
 };
 
 // `-u` is a documented alias for `-p`/`--patch`, and `--patch-with-stat`/`--patch-with-raw` both still
-// emit full patch content alongside the requested extra info — all four must be denied identically to
-// `-p`/`--patch`, or `git log -u` trivially bypasses the "no unconfined history content" invariant below.
-const GIT_PATCH_HISTORY_FLAG = /^-p$|^-u$|^--patch$|^--patch-with-stat$|^--patch-with-raw$/;
+// emit full patch content alongside the requested extra info — all four (plus combined short flags like
+// `-1p`, `-p1`, and pickaxe `-S`/`-G`/`-L`) must be denied on `log`/`reflog`/`shortlog`.
+const GIT_PATCH_HISTORY_FLAG =
+  /^-[0-9A-Za-z]*[puSGL]|^--(patch|patch-with-stat|patch-with-raw)(=|$)/;
 
 /**
  * Validate (default-deny) a raw command string. Returns the parsed argv on success. The check is:
@@ -338,10 +339,13 @@ function validateCommand(raw: string): { ok: true; argv: string[] } | { ok: fals
         return { ok: false, error: 'git show is allowed only for confined <rev>:<path> reads' };
       }
     }
-    if (sub === 'log' && argv.slice(2).some((a) => GIT_PATCH_HISTORY_FLAG.test(a))) {
+    if (
+      (sub === 'log' || sub === 'reflog' || sub === 'shortlog') &&
+      argv.slice(2).some((a) => GIT_PATCH_HISTORY_FLAG.test(a))
+    ) {
       return {
         ok: false,
-        error: 'git log patch output is denied (history contents are not confined)',
+        error: `git ${sub} patch output is denied (history contents are not confined)`,
       };
     }
     if (sub === 'diff' || sub === 'diff-tree') {
@@ -431,23 +435,52 @@ function validateCommand(raw: string): { ok: true; argv: string[] } | { ok: fals
   // `/ \ . isAbsolute` gate skipped them, so `ls legacy` / `grep KEY legacy` enumerated/searched a
   // private dir — audit). echo/pwd take no paths; git keeps `<rev>:<path>` handling and is confined only
   // for path-shaped tokens so a literal like `git grep legacy` is not false-denied.
+  if (bin === 'uniq' && argv.slice(1).filter((a) => !isFlag(a)).length > 1) {
+    return {
+      ok: false,
+      error:
+        'uniq allows at most one file operand (a second positional operand writes an output file)',
+    };
+  }
   const skipPaths = bin === 'echo' || bin === 'pwd';
   const patternTool = bin === 'grep';
+  const gitGrep = bin === 'git' && argv[1] === 'grep';
   let sawPattern = false;
+  let afterDoubleDash = false;
   for (let i = 1; i < argv.length && !skipPaths; i++) {
     const a = argv[i] ?? '';
-    if (isFlag(a)) {
+    if (bin === 'git' && i === 1) continue; // skip the git subcommand token itself
+    if (a === '--') {
+      afterDoubleDash = true;
+      continue;
+    }
+    if (!afterDoubleDash && isFlag(a)) {
+      if (
+        (patternTool || gitGrep) &&
+        (a === '-e' || a === '--regexp' || /^-[A-Za-z0-9]+e$/.test(a))
+      ) {
+        sawPattern = true;
+        i++; // next token is the pattern argument to -e / --regexp
+        continue;
+      }
+      if ((patternTool || gitGrep) && (/^-[A-Za-z0-9]*e.+/.test(a) || a.startsWith('--regexp='))) {
+        sawPattern = true;
+      }
       // Write/exec flags are denied above. A path hidden inside a flag VALUE (`--x=path`) must be
       // confined exactly like a positional (audit #298), so check path-shaped `=` values too.
       const eq = a.indexOf('=');
       if (eq > 0) {
         const val = a.slice(eq + 1);
         const valShaped =
-          val.includes('/') || val.includes('\\') || val.includes('.') || isAbsolute(val);
+          val.includes('/') ||
+          val.includes('\\') ||
+          val.includes('.') ||
+          isAbsolute(val) ||
+          isBlockedTop(val);
         // grep's `--regexp=` value is a pattern, not a path; git option values (`--format=%H`) are
         // confined only when path-shaped; every other tool's `=` value is confined outright so bare
         // private names (`--exclude-from=legacy`) are caught as well.
-        const isPattern = bin === 'grep' && a.startsWith('--regexp=');
+        const isPattern = (bin === 'grep' || gitGrep) && a.startsWith('--regexp=');
         if (val.length > 0 && !isPattern && (bin !== 'git' || valShaped)) {
           const c = confine(val);
           if (!c.ok) return { ok: false, error: `argument "${a}" denied: ${c.error}` };
@@ -455,7 +488,7 @@ function validateCommand(raw: string): { ok: true; argv: string[] } | { ok: fals
       }
       continue;
     }
-    if (patternTool && !sawPattern) {
+    if ((patternTool || gitGrep) && !sawPattern && !afterDoubleDash) {
       sawPattern = true; // the search regex/literal, not a path
       continue;
     }
@@ -464,8 +497,9 @@ function validateCommand(raw: string): { ok: true; argv: string[] } | { ok: fals
       pathPart.includes('/') ||
       pathPart.includes('\\') ||
       pathPart.includes('.') ||
-      isAbsolute(pathPart);
-    if (bin === 'git' && !pathShaped) continue; // git revs/pathspecs/patterns are not paths
+      isAbsolute(pathPart) ||
+      isBlockedTop(pathPart);
+    if (bin === 'git' && !pathShaped && !afterDoubleDash) continue; // git revs/patterns are not paths
     const c = confine(pathPart);
     if (!c.ok) return { ok: false, error: `argument "${a}" denied: ${c.error}` };
   }

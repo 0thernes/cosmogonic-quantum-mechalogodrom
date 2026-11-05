@@ -233,16 +233,21 @@ const STATIC_AI_SYSTEM =
 
 const STATIC_AI_OPT_IN_KEY = 'cqm-cop-llm7-opt-in';
 
+/** True when the user has already granted consent for browser-direct api.llm7.io requests. */
+function hasStaticAiConsent(): boolean {
+  try {
+    return localStorage.getItem(STATIC_AI_OPT_IN_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Explicit, remembered consent before the browser sends the conversation to the third-party
  * api.llm7.io (audit #278). Nothing is sent until the user agrees; declining keeps the chat local.
  */
 function staticAiConsent(): boolean {
-  try {
-    if (localStorage.getItem(STATIC_AI_OPT_IN_KEY) === '1') return true;
-  } catch {
-    /* storage unavailable: ask every time */
-  }
+  if (hasStaticAiConsent()) return true;
   const ok =
     typeof window !== 'undefined' &&
     typeof window.confirm === 'function' &&
@@ -265,10 +270,14 @@ async function askStaticAi(history: readonly Msg[], preferredModel?: string): Pr
   const messages = [{ role: 'system' as const, content: STATIC_AI_SYSTEM }, ...history];
   let lastErr = 'no provider';
   const order: string[] = [];
-  // Audit #280: the picker holds a server preset id ('llm7', 'groq', …) in server mode; only a real
-  // LLM7 model string may be sent as the browser-direct model.
-  if (preferredModel && (STATIC_AI_MODELS as readonly string[]).includes(preferredModel))
-    order.push(preferredModel);
+  // Audit #280: the picker holds a server preset id ('llm7', 'groq', …) in server mode; map any
+  // catalog serverId back to its LLM7 model string before filtering against STATIC_AI_MODELS.
+  const mappedPreferred = preferredModel
+    ? (STATIC_PROVIDER_CATALOG.find((r) => r.serverId === preferredModel || r.id === preferredModel)
+        ?.model ?? preferredModel)
+    : undefined;
+  if (mappedPreferred && (STATIC_AI_MODELS as readonly string[]).includes(mappedPreferred))
+    order.push(mappedPreferred);
   for (const m of STATIC_AI_MODELS) if (!order.includes(m)) order.push(m);
   for (const model of order) {
     try {
@@ -700,8 +709,6 @@ function mount(): void {
   diag.title = 'AI diagnostics — probe provider health + recovery pipeline';
   diag.setAttribute('aria-label', 'Run AI diagnostics');
   head.insertBefore(prov, head.lastElementChild);
-  head.insertBefore(sel, head.lastElementChild);
-  head.insertBefore(diag, head.lastElementChild);
 
   // 50/50 body: the generative answer/conversation on the LEFT, the compose box + options on the RIGHT.
   const body = document.createElement('div');
@@ -1068,30 +1075,38 @@ function mount(): void {
         'No local AI server — the chat answers by calling the free, key-less LLM7 directly in your browser. Probing it:';
       card.append(h2, verdict);
       try {
-        const probes = await probeStaticAi();
-        for (const p of probes) {
-          const row = document.createElement('div');
-          row.className = 'row';
-          const dot = document.createElement('span');
-          dot.className = `dot ${p.reachable ? 'up' : 'down'}`;
-          dot.textContent = p.reachable ? '●' : '○';
-          const name = document.createElement('span');
-          name.textContent = `LLM7 · ${p.model} — ${p.detail}`;
-          const lat = document.createElement('span');
-          lat.className = 'lat';
-          lat.textContent = `${p.latencyMs}ms`;
-          row.append(dot, name, lat);
-          card.appendChild(row);
+        if (!staticAiConsent()) {
+          const declined = document.createElement('div');
+          declined.className = 'verdict';
+          declined.textContent =
+            'Browser probe skipped — third-party api.llm7.io requires your consent. Click ↻ Re-probe to allow.';
+          card.appendChild(declined);
+        } else {
+          const probes = await probeStaticAi();
+          for (const p of probes) {
+            const row = document.createElement('div');
+            row.className = 'row';
+            const dot = document.createElement('span');
+            dot.className = `dot ${p.reachable ? 'up' : 'down'}`;
+            dot.textContent = p.reachable ? '●' : '○';
+            const name = document.createElement('span');
+            name.textContent = `LLM7 · ${p.model} — ${p.detail}`;
+            const lat = document.createElement('span');
+            lat.className = 'lat';
+            lat.textContent = `${p.latencyMs}ms`;
+            row.append(dot, name, lat);
+            card.appendChild(row);
+          }
+          const up = probes.filter((p) => p.reachable).length;
+          const note = document.createElement('div');
+          note.className = 'verdict';
+          note.textContent =
+            up > 0
+              ? `Operational — ${up}/${probes.length} LLM7 models reachable from your browser (≥1 ⇒ the chat answers). Repo tools (/read /ls /grep /run) still need \`bun dev\`.`
+              : `All ${probes.length} LLM7 models unreachable (rate-limited or blocked) — try again shortly. Repo tools need \`bun dev\`.`;
+          card.appendChild(note);
+          prov.textContent = up > 0 ? 'llm7 · static' : prov.textContent;
         }
-        const up = probes.filter((p) => p.reachable).length;
-        const note = document.createElement('div');
-        note.className = 'verdict';
-        note.textContent =
-          up > 0
-            ? `Operational — ${up}/${probes.length} LLM7 models reachable from your browser (≥1 ⇒ the chat answers). Repo tools (/read /ls /grep /run) still need \`bun dev\`.`
-            : `All ${probes.length} LLM7 models unreachable (rate-limited or blocked) — try again shortly. Repo tools need \`bun dev\`.`;
-        card.appendChild(note);
-        prov.textContent = up > 0 ? 'llm7 · static' : prov.textContent;
       } catch (err) {
         const msg = document.createElement('div');
         msg.className = 'verdict';
@@ -1159,10 +1174,12 @@ function mount(): void {
           // never exposes source. When disabled, present a clear notice and lock the input.
           if (d.enabled === false) {
             prov.textContent = 'static · browser-direct';
-            await populateStaticProviders(sel, prov);
+            if (hasStaticAiConsent()) await populateStaticProviders(sel, prov);
+            else populateStaticProviderCatalog(sel, prov);
+            selectedProvider = sel.value;
             addMsg(
               'cqm-cop-sys',
-              'Server agent disabled in this deployment — browser-direct LLM7 still works. Pick a 🟢 provider in OPTIONS.',
+              'Server agent disabled in this deployment — browser-direct LLM7 still works. Pick a provider in OPTIONS or click 🩺 to probe.',
             );
             return;
           }
@@ -1184,18 +1201,21 @@ function mount(): void {
             selectedProvider = saved;
           }
           if (list.length === 0) {
-            await populateStaticProviders(sel, prov);
+            if (hasStaticAiConsent()) await populateStaticProviders(sel, prov);
+            else populateStaticProviderCatalog(sel, prov);
+            selectedProvider = sel.value;
           }
         })
         .catch(async () => {
           // No Bun server (static GitHub Pages, or the local server is down). The chat still works —
           // it calls the free key-less LLM7 directly from the browser. Only the repo tools
           // (/read /ls /grep /run) need `bun dev`. So: NOT a dead end — don't lock the input.
-          await populateStaticProviders(sel, prov);
+          if (hasStaticAiConsent()) await populateStaticProviders(sel, prov);
+          else populateStaticProviderCatalog(sel, prov);
           selectedProvider = sel.value;
           addMsg(
             'cqm-cop-sys',
-            'Static build — browser-direct LLM7. Pick a 🟢 provider above; repo commands (/read /ls /grep /run) need `bun dev`. Click 🩺 to re-probe.',
+            'Static build — browser-direct LLM7. Pick a provider above; repo commands (/read /ls /grep /run) need `bun dev`. Click 🩺 to probe.',
           );
         });
     }

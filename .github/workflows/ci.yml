@@ -230,6 +230,7 @@ jobs:
           tests/vegetation.test.ts tests/alien-flora.test.ts
           tests/monolith-temple.test.ts
           tests/viz-systems.test.ts
+          tests/perf-budget.test.ts
 
       # Build + headless smoke. No `|| echo` mask: if the build or smoke check fails, this step fails.
       - name: Build + headless smoke

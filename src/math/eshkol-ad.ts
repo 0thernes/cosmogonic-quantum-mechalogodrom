@@ -752,7 +752,8 @@ export function adHvp(
         break;
       case AdOpType.AD_POW: {
         const ev = n.saved; // exponent value at forward time
-        d = ev * Math.pow(lv, ev - 1) * lvd;
+        const p1 = lv === 0 && ev < 1 ? 0 : ev * Math.pow(lv, ev - 1);
+        d = p1 * lvd;
         if (R >= 0 && lv > 0) d += n.value * Math.log(lv) * rvd; // variable-exponent term
         break;
       }

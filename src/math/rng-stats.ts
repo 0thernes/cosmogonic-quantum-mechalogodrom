@@ -147,9 +147,9 @@ export function longestRunBits(values: ArrayLike<number>, bits = 8): number {
   let run = 0;
   let prev = -1;
   for (let i = 0; i < n; i++) {
-    const v = Math.trunc(values[i]!);
+    const v = Math.trunc(values[i]!) >>> 0;
     for (let b = bits - 1; b >= 0; b--) {
-      const bit = Math.floor(v / 2 ** b) % 2;
+      const bit = b < 32 ? (v >>> b) & 1 : Math.floor(v / 2 ** b) & 1;
       if (bit === prev) {
         run += 1;
       } else {

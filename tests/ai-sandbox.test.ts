@@ -132,6 +132,17 @@ describe('ai-sandbox: command gate is default-deny and write-free', () => {
     'grep -drecurse KEY .', // attached value
     'grep --directories=recurse KEY .', // long form
     'grep --directories recurse KEY .', // long form, space-separated value
+    // audit 2026-11 — [C-01] sandbox bypass vectors:
+    'uniq README.md package.json', // 2nd positional operand to uniq overwrites output file
+    'grep --regexp=KEY .env', // --regexp= consumes pattern; 1st positional .env must be confined
+    'grep -e KEY .env', // -e consumes next token as pattern; .env must be confined
+    'grep -eKEY .env', // attached -eKEY consumes pattern; .env must be confined
+    'git ls-files legacy', // bare blocked directory name on git subcommand
+    'git status legacy', // bare blocked directory name on git status
+    'git log -- legacy', // bare blocked directory name after -- on git log
+    'git log -1p', // combined short flag -1p emits full patch history
+    'git log -p1', // combined short flag -p1 emits full patch history
+    'git reflog -p', // reflog with -p emits full patch history
   ];
   for (const cmd of denied) {
     test(`denies: ${cmd}`, async () => {

@@ -73,8 +73,13 @@ export function quantumMagic(
   im: ArrayLike<number>,
   nQubits: number,
 ): MagicSnapshot {
+  if (!Number.isInteger(nQubits) || nQubits < 1 || nQubits > 6) {
+    return { qubits: nQubits, magic: 0, magicNorm: 0, stabilizer: true };
+  }
   const dim = 1 << nQubits;
-  if (nQubits < 1) return { qubits: nQubits, magic: 0, magicNorm: 0, stabilizer: true };
+  if (re.length < dim || im.length < dim) {
+    return { qubits: nQubits, magic: 0, magicNorm: 0, stabilizer: true };
+  }
   const total = 4 ** nQubits; // number of Pauli strings
   if (scratchRe.length < dim) {
     scratchRe = new Float64Array(dim);

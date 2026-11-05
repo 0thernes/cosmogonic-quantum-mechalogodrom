@@ -125,6 +125,14 @@ export class Engine {
         // is ever missed). The drawing buffer is still sized to the viewport for a pixel-perfect render.
         this.renderer.setSize(window.innerWidth, window.innerHeight, false);
         if (this.renderer.shadowMap.enabled) this.renderer.shadowMap.needsUpdate = true;
+        if (this.scene.environment) {
+          try {
+            this.scene.environment.dispose();
+            this.scene.environment = buildCosmicEnvironment(this.renderer);
+          } catch {
+            /* keep running without PMREM if rebuild fails */
+          }
+        }
         this.contextLost = false;
       },
       { signal: this.ac.signal },

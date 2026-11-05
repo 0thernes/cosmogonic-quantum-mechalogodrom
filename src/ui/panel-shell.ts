@@ -109,6 +109,7 @@ export function panelHeader(opts: PanelHeaderOptions): HTMLElement {
     const min = doc.createElement('button');
     min.type = 'button';
     min.className = 'cqm-panel-min';
+    min.dataset['min'] = '1';
     min.textContent = '−';
     min.setAttribute('aria-label', opts.minLabel ?? 'Minimize');
     min.addEventListener('click', opts.onMinimize);
@@ -117,6 +118,7 @@ export function panelHeader(opts: PanelHeaderOptions): HTMLElement {
   const close = doc.createElement('button');
   close.type = 'button';
   close.className = 'cqm-panel-x';
+  close.dataset['close'] = '1';
   close.textContent = '✕';
   close.setAttribute('aria-label', opts.closeLabel ?? 'Close');
   close.addEventListener('click', opts.onClose);

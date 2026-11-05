@@ -163,6 +163,7 @@ function mountPanelEdgeToggles(doc: Document = document): void {
     btn.className = `cqm-edge-btn cqm-edge-btn--${side}`;
     btn.textContent = hideLabel;
     btn.setAttribute('aria-label', `Toggle ${side} panels`);
+    btn.setAttribute('aria-expanded', 'true');
     btn.title = `Hide/show ${side} panels`;
     return btn;
   };
@@ -174,12 +175,14 @@ function mountPanelEdgeToggles(doc: Document = document): void {
     const hidden = ui.classList.toggle('col-hidden-left');
     leftBtn.textContent = hidden ? '▶' : '◀';
     leftBtn.setAttribute('aria-expanded', hidden ? 'false' : 'true');
+    doc.defaultView?.dispatchEvent(new Event('resize'));
   });
 
   rightBtn.addEventListener('click', () => {
     const hidden = ui.classList.toggle('col-hidden-right');
     rightBtn.textContent = hidden ? '◀' : '▶';
     rightBtn.setAttribute('aria-expanded', hidden ? 'false' : 'true');
+    doc.defaultView?.dispatchEvent(new Event('resize'));
   });
 
   doc.body.appendChild(leftBtn);

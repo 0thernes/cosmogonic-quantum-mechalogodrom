@@ -8,7 +8,7 @@
 [![License: Non-Commercial Research & Play](https://img.shields.io/badge/License-Non--Commercial%20Research%20%26%20Play-2ea043.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
-[![tests](https://img.shields.io/badge/tests-3313%20exact-brightgreen)](./tests)
+[![tests](https://img.shields.io/badge/tests-3729%20exact-brightgreen)](./tests)
 [![coverage](https://img.shields.io/badge/coverage-84.64%25%20line%20%C2%B7%2082.21%25%20func-success)](./docs/TECHNICAL-SPECIFICATION-2026-06-26.md)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION-2026-06-26.md)
 [![Tsotchke](https://img.shields.io/badge/Tsotchke-REAL__MIT__CORPUS-purple)](https://github.com/tsotchke)
@@ -21,8 +21,8 @@
 **当前公开事实 (2026-07-14)：**
 
 - 包/源码版本：**v0.23.0**。
-- 精确追踪测试套件收据：**3,313 项测试 / 0 失败**。公开覆盖率底线：**84.64% 行 / 82.21% 函数**。
-- **地位与异构 A-life 立场（可读综合）：** [综合地位报告 (MD)](./docs/reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.md) · [HTML](./docs/reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.html) —— 工程卡片，历史 113 系统矩阵（时间点快照，已被当前 129 系统重新评估取代），SuperCreature/SuperMind/Apex/Mechalogodrom 深入分析，资本/ISAL 路径。Apex 心智是 **异构多功能脚手架**（而非 OpenWorm 生物孪生；不宣称具有意识）。保留 V4/Phase-B 失败前行 (failure-forward) 的边界。
+- 精确追踪测试套件收据：**3,729 项测试 / 0 失败**。公开覆盖率底线：**84.64% 行 / 82.21% 函数**。
+- **地位与异构 A-life 立场（可读综合）：** [综合地位报告 (MD)](./docs/reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.md) · [HTML](./docs/reports/2026-07-12-COMPREHENSIVE-STANDING-AND-XENO-ALIFE-POSITION.html) —— 工程卡片，历史 113 系统矩阵（时间点快照，已被当前 155 系统重新评估取代），SuperCreature/SuperMind/Apex/Mechalogodrom 深入分析，资本/ISAL 路径。Apex 心智是 **异构多功能脚手架**（而非 OpenWorm 生物孪生；不宣称具有意识）。保留 V4/Phase-B 失败前行 (failure-forward) 的边界。
 - **圆顶生态验证：** [Xenomimic 束缚与大树证据报告](./docs/reports/DOME-ECOLOGY-VERIFICATION-2026-07-14.md) —— 规范食物、5 秒模拟时间重生、圣所转换、临时访问、驻留控制器、社会清理、性能、浏览器证据以及明确的局限性。
 
 <!-- cqm-sync:local-measurement:start -->
@@ -62,7 +62,7 @@
 
 > — **新来者？请阅读 [THE BOOK](./docs/BOOK-2026-06-26.md)** —— 每个文档的主索引，一个自动生成的源码模块 [文件映射](./docs/FILE-MAP.md)，以及将构建/运行、数据流、故障排除和路线图整合在一起的指南。或者在应用中打开 **❓ HELP ME NOW** 获取基于事实的答案。
 >
-> — **大脑/神经学/意识评估：** 请参阅日期为 2026-07-07 的 [CONSOLIDATED-22-MASTER-ASSESSMENT](./docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md)，其中包含脑系统、意识理论和研究空白的规范综合分析；当前运行收据见 [验证数据](./docs/verification-analytical-data.md)。旧的巨型报告草稿为本地存档资料；公开报告索引请见 [docs/reports/README.md](./docs/reports/README.md)。
+> — **大脑/神经学/意识评估：** 请参阅日期为 2026-07-07 的 [CONSOLIDATED-22-MASTER-ASSESSMENT](./docs/CONSOLIDATED-22-MASTER-ASSESSMENT-CURRENT-2026-07-07.md)，其中包含脑系统、意识理论和研究空白的规范综合分析；当前运行收据见 [验证数据](./docs/VERIFICATION-ANALYTICAL-DATA.md)。旧的巨型报告草稿为本地存档资料；公开报告索引请见 [docs/reports/README.md](./docs/reports/README.md)。
 
 <!-- cqm-sync:historical:start -->
 
@@ -178,7 +178,7 @@
 - **数字基因组 + 血统** ([src/sim/genome.ts](./src/sim/genome.ts), [src/sim/lineage.ts](./src/sim/lineage.ts)) —— 一个可遗传的基因向量，解码为特征 + `TinyMLP` 大脑，支持种子化交叉/突变/繁殖，以及一个有界的 父 $\to$ 子亲属图（代数, 祖先, 亲缘关系）。
 - **八大阵营原形** ([src/sim/factions.ts](./src/sim/factions.ts)) —— 观察者 / 织梦者 / 守护者 / 传信者 / 利维坦 / 集群心智 / 神谕者 / 吞噬者，每个阵营使用不同的心智技术。此外还有 **利维坦 (Leviathans)** ([src/sim/leviathans.ts](./src/sim/leviathans.ts))，第四阶巨兽，以及 **NHI** 自主微型 AI。
 - **环境遗物场** ([src/sim/artifacts.ts](./src/sim/artifacts.ts)) —— 持久遗物（死亡后的伤疤, 召唤奇点后的遗物, 微粒）通过一个池化 InstancedMesh 实现；仅视觉化且确保确定性安全。
-- **免费-LLM Copilot 侧边聊天** ([src/server/copilot.ts](./src/server/copilot.ts), [src/server/ai-sandbox.ts](./src/server/ai-sandbox.ts), [src/ui/copilot.ts](./src/ui/copilot.ts)) —— 一个你可以就仓库和世界进行交流的只读 AI，运行在可插拔的 OpenAI 兼容提供者链上（默认 FreeLLMAPI, 随后是无需 Key 的 LLM7 / Pollinations, 以及在设置服务器端环境变量后可用的 Groq / Cerebras / OpenRouter / GitHub / Mistral / Gemini / NVIDIA / DeepSeek / Huging Face），处于一个默认拒绝的沙盒之后，它可以读取文件并运行只读命令，但绝不能修改代码。带 Key 的提供者支持滚动 Key 池 (`FOO_API_KEY`, `FOO_API_KEYS`, `FOO_API_KEY_2`...)，以便在某个槽位耗尽时自动回退到下一个而无需暴露凭据。提供者参考：[docs/COPILOT-PROVIDERS-2026-06-26.md](./docs/COPILOT-PROVIDERS-2026-06-26.md) · 世界心智：[docs/AI-SUBSYSTEM-2026-06-26.md](./docs/AI-SUBSYSYSTEM-2026-06-26.md)。
+- **免费-LLM Copilot 侧边聊天** ([src/server/copilot.ts](./src/server/copilot.ts), [src/server/ai-sandbox.ts](./src/server/ai-sandbox.ts), [src/ui/copilot.ts](./src/ui/copilot.ts)) —— 一个你可以就仓库和世界进行交流的只读 AI，运行在可插拔的 OpenAI 兼容提供者链上（默认 FreeLLMAPI, 随后是无需 Key 的 LLM7 / Pollinations, 以及在设置服务器端环境变量后可用的 Groq / Cerebras / OpenRouter / GitHub / Mistral / Gemini / NVIDIA / DeepSeek / Huging Face），处于一个默认拒绝的沙盒之后，它可以读取文件并运行只读命令，但绝不能修改代码。带 Key 的提供者支持滚动 Key 池 (`FOO_API_KEY`, `FOO_API_KEYS`, `FOO_API_KEY_2`...)，以便在某个槽位耗尽时自动回退到下一个而无需暴露凭据。提供者参考：[docs/COPILOT-PROVIDERS-2026-06-26.md](./docs/COPILOT-PROVIDERS-2026-06-26.md) · 世界心智：[docs/AI-SUBSYSTEM-2026-06-26.md](./docs/AI-SUBSYSTEM-2026-06-26.md)。
 - **五种电影级摄像机**（跟随 / 追逐 / 电影 / 涡流 / Titan）以及 **TIME** (timeScale) 和 **SPACE** (FOV 扩张) 控制；**渲染模式现在会改变动力学**（`solid` 保持绝对确定性恒等）；奇点现在会吸引 Titan/Shoggoths/Leviathans；混沌被分级且具有两极性。
 
 ### 活之纪元 (Living Era, 0.9.0 之后 · V10–V100)
@@ -197,8 +197,8 @@
 - **Tsotchke 量子血统 —— 移植与改编 (V82 起)** —— 兼容原语在 [THIRD-PARTY-NOTICES.md](./THIRD-PARTY-NOTICES.md) 中标注并与本地外观区分。之前的相位阵 RNG 移植已被一个独立的、种子化的经典状态向量改编 ([src/math/deterministic-statevector-rng.ts](./src/math/deterministic-statevector-rng.ts)) 取代，该改编运行在现有的 [EshkolQrng API](./src/math/eshkol-qrng.ts) 之后，来源固定为 `quantum_rng` v3.0.1。它提供可复现的模拟样本，而非硬件熵或加密随机数。**量子几何张量 / Fubini–Study 度量** ([src/math/quantum-geometry.ts](./src/math/quantum-geometry.ts)) 使生物能够读取其自身思维空间的曲率（度量体积 $\cdot \kappa \cdot$ Berry 曲率）；以及一个 56-自旋 **Hopfield/Ising 自旋玻璃** ([src/sim/spin-glass.ts](./src/sim/spin-glass.ts)) 提供偏向计划选择的关联本能。这些在超级生物面板的 **Substrate** 行中实时呈现（Eshkol H $\cdot$ QGT vol/$\kappa \cdot$ Spin$\to$PLAN %）并通过闭式单元测试覆盖。
 - **SUPER CREATURE 1.1 —— 意识指标层 (V89)** —— 顶端心智现在在每个节拍中根据两种领先的 _科学_ 意识理论衡量自身，每项均是根据其自身激活度计算的实时确定性标量：**全局工作空间点火 (GNW — Baars/Dehaene)** —— 一个胜者全得的计划联盟，在跨越访问阈值并主导次优方案后被 “广播” 并决定哪些想象内容被固化到记忆中；以及一个 **整合信息 $\Phi$ 代理 (IIT — Tononi)** —— 命名模块激活的参与/相干比；诚实地标记为 _代理_，因为真实的 $\Phi$ 在计算上是不可行的且非唯一的。两者均通过单元测试，并作为超级生物面板上的 **Ignition / $\Phi$** 表盘实时显示。真实的 2023–2026 研究基础 —— Cogitate IIT-vs-GNW 对抗性测试 ([Ferrante et al., 2025, _Nature_](https://doi.org/10.1038/s41586-025-08888-1))，类器官 “湿计算”，主动推理和量子认知计划 —— 均在 [docs/SUPER-CREATURE-RESEARCH-2026-06-26.md](./docs/SUPER-CREATURE-RESEARCH-2026-06-26.md) 中列出并附带引用。
 - **SUPER CREATURE 1.1 —— 认知架构扩展（五种心智理论）** —— 在上述 GWT 点火和 IIT $\Phi$ 之上，顶端心智在每个节拍中运行另外三种真实的、确定性的、通过单元测试的基质：**回声状态储备池 (echo-state Reservoir)** ([src/sim/reservoir.ts](./src/sim/reservoir.ts)) —— 一个 64 节点的循环网络，其规模被重新缩放到光谱半径之下（回声状态属性），用于实现真实的临时记忆 —— 这是一个能增强好奇心的新颖性信号（是 “湿计算” 背后的储备池计算 _算法_，而非湿件）；**主动推理自由能核心 (Active-Inference free-energy core)** ([src/sim/active-inference.ts](./src/sim/active-inference.ts)) —— 离散主动推理（Friston 的 FEP）：对 8 个潜在情境的贝叶斯信念，最小化变分自由能 $F$，然后通过 **预期** 自由能 $G$（认识论好奇心 + 实用目标寻求）选择计划；以及 **元认知执行器 (Metacognitive Executive)** ([src/sim/metacognition.ts](./src/sim/metacognition.ts)) —— 一个高阶层，将各基质的可靠性折叠为一个二阶 **置信度 (confidence)** 并将其用作认知控制（低置信度 $\Rightarrow$ 探索，高 $\Rightarrow$ 提交），显示为 **Confidence** 表盘 + 一个 **Cognition** 面板行。顶端生物现在跨越了 **全局工作空间 $\cdot$ 整合信息 $\cdot$ 自由能原理 $\cdot$ 储备池动力学 $\cdot$ 高阶元认知** —— 五种截然不同的心智科学理论，每项均在 [docs/SUPER-CREATURE-RESEARCH-2026-06-26.md](./docs/SUPER-CREATURE-RESEARCH-2026-06-26.md) 中有据可查。
-- **超级智能多支柱扩展** —— 心智从五种心智理论增长到十几个真实、确定且经过单元测试的职能，每项均是读取并写入其他职能的引用机制：**心智理论 (Theory-of-Mind)** 对手模型 ([src/sim/theory-of-mind.ts](./src/sim/theory-of-mind.ts)) 用于预测对手；**神经临界性 (Neural Criticality)** ([src/sim/criticality.ts](./src/sim/criticality.ts)) —— 一个边缘混沌稳态，驱动分支比 $\hat{\sigma} \to 1$（此时皮层计算能力最强）；**赋能驱动 (Empowerment Drive)** ([src/sim/empowerment.ts](./src/sim/empowerment.ts)) —— Blahut–Arimoto 信道容量 $I(A;S^2)$ 代理饥饿感；**全息记忆 (Holographic Memory)** ([src/sim/holog holographic-memory.ts](./src/sim/holographic-memory.ts)) —— 一个基于两极超向量的 MAP-VSA/HRR 组合绑定存储（绑定 $\cdot$ 捆绑 $\cdot$ 清理）；以及 **后继表示 (Successor Representation)** ([src/sim/successor-representation.ts](./src/sim/successor-representation.ts)) —— 海马体/强化学习预测图。**量子计算心智** 同步深化：一个真实的状态向量 **整合信息 $\Phi$** ([src/sim/integrated-information.ts](./src/sim/integrated-information.ts)) —— 在最小信息分区处的最小割纠缠（一个受 IIT 启发的确定性代理，而非现象级不可还原性的证据）；**量子相干资源** ([src/math/quantum-coherence.ts](./src/math/quantum-coherence.ts)) —— Baumgratz–Cramer–Plenio $l_1$ 范数 + 相对熵单调量；**目标导向幅度放大 (Grover)** 将思维坍缩偏向意图；以及 **量子自然梯度自我优化 (Quantum Natural Gradient self-optimization)** ([src/math/quantum-natural-gradient.ts](./src/math/quantum-natural-gradient.ts)) —— 顶端电路现在 _下降_ 其自身的 Fubini–Study 几何 ([Stokes et al., 2020](https://doi.org/10.22331/q-2020-05-25-269)) 以使其预期想法更大概率发生，读取自身的量子几何并写入自身的量子驱动。每个职能均在 [docs/SUPER-CREATURE-RESEARCH-2026-06-26.md](./docs/SUPER-CREATURE-RESEARCH-2026-06-26.md) 中附带引用。
-- **顶端心智在约 20 个耦合职能处闭合** —— 一个 **Lindblad/GKSL 开放系统审议量子比特** ([src/sim/quantum-deliberation.ts](./src/sim/quantum-deliberation.ts)，选项的相干叠加态退相干为提交)，**量子储备池计算** ([src/sim/quantum-reservoir.ts](./src/sim/quantum-reservoir.ts)，将寄存器的状态速度作为好奇心驱动 —— Fujii & Nakajima 2017)，**Doya 神经调制** ([src/sim/neuromodulation.ts](./src/sim/neuromodulation.ts))，以及由状态向量衍生的 **$\Phi$ 代理**（一个受 IIT 启发的最小割/纠缠指标）现在写回认知 —— 闭合了惰性 $\Phi$ 间隙。Aaronson–Gottesman **Clifford 稳定器表 (Clifford stabilizer tableau)** ([src/math/clifford-tableau.ts](./src/math/clifford-tableau.ts)，移植自 **Moonlab**，可扩展至 32+ 量子比特，突破密集上限) 作为第四个获 MIT 认可的移植原语落地。整个顶端节拍现在被诚实量化：每次 `SuperMind.think()` 约 **1.99 ms**（范围 1.41–5.62 ms），交错的 5 心智批处理约 **9.77 ms**（约占 60 fps 帧的 58%，这就是为什么 5 个心智与 20 个光回响交错运行的原因）；早先的亚毫秒 / $<2\%$ GOAL5 宣称已被取代，直至被重新证明。**3,313 项精确追踪测试 $\cdot$ 0 失败 (收据强制执行) $\cdot$ 84.64% 行 / 82.21% 函数可移植覆盖率底线。**
+- **超级智能多支柱扩展** —— 心智从五种心智理论增长到十几个真实、确定且经过单元测试的职能，每项均是读取并写入其他职能的引用机制：**心智理论 (Theory-of-Mind)** 对手模型 ([src/sim/theory-of-mind.ts](./src/sim/theory-of-mind.ts)) 用于预测对手；**神经临界性 (Neural Criticality)** ([src/sim/criticality.ts](./src/sim/criticality.ts)) —— 一个边缘混沌稳态，驱动分支比 $\hat{\sigma} \to 1$（此时皮层计算能力最强）；**赋能驱动 (Empowerment Drive)** ([src/sim/empowerment.ts](./src/sim/empowerment.ts)) —— Blahut–Arimoto 信道容量 $I(A;S^2)$ 代理饥饿感；**全息记忆 (Holographic Memory)** ([src/sim/holographic-memory.ts](./src/sim/holographic-memory.ts)) —— 一个基于两极超向量的 MAP-VSA/HRR 组合绑定存储（绑定 $\cdot$ 捆绑 $\cdot$ 清理）；以及 **后继表示 (Successor Representation)** ([src/sim/successor-representation.ts](./src/sim/successor-representation.ts)) —— 海马体/强化学习预测图。**量子计算心智** 同步深化：一个真实的状态向量 **整合信息 $\Phi$** ([src/sim/integrated-information.ts](./src/sim/integrated-information.ts)) —— 在最小信息分区处的最小割纠缠（一个受 IIT 启发的确定性代理，而非现象级不可还原性的证据）；**量子相干资源** ([src/math/quantum-coherence.ts](./src/math/quantum-coherence.ts)) —— Baumgratz–Cramer–Plenio $l_1$ 范数 + 相对熵单调量；**目标导向幅度放大 (Grover)** 将思维坍缩偏向意图；以及 **量子自然梯度自我优化 (Quantum Natural Gradient self-optimization)** ([src/math/quantum-natural-gradient.ts](./src/math/quantum-natural-gradient.ts)) —— 顶端电路现在 _下降_ 其自身的 Fubini–Study 几何 ([Stokes et al., 2020](https://doi.org/10.22331/q-2020-05-25-269)) 以使其预期想法更大概率发生，读取自身的量子几何并写入自身的量子驱动。每个职能均在 [docs/SUPER-CREATURE-RESEARCH-2026-06-26.md](./docs/SUPER-CREATURE-RESEARCH-2026-06-26.md) 中附带引用。
+- **顶端心智在约 20 个耦合职能处闭合** —— 一个 **Lindblad/GKSL 开放系统审议量子比特** ([src/sim/quantum-deliberation.ts](./src/sim/quantum-deliberation.ts)，选项的相干叠加态退相干为提交)，**量子储备池计算** ([src/sim/quantum-reservoir.ts](./src/sim/quantum-reservoir.ts)，将寄存器的状态速度作为好奇心驱动 —— Fujii & Nakajima 2017)，**Doya 神经调制** ([src/sim/neuromodulation.ts](./src/sim/neuromodulation.ts))，以及由状态向量衍生的 **$\Phi$ 代理**（一个受 IIT 启发的最小割/纠缠指标）现在写回认知 —— 闭合了惰性 $\Phi$ 间隙。Aaronson–Gottesman **Clifford 稳定器表 (Clifford stabilizer tableau)** ([src/math/clifford-tableau.ts](./src/math/clifford-tableau.ts)，移植自 **Moonlab**，可扩展至 32+ 量子比特，突破密集上限) 作为第四个获 MIT 认可的移植原语落地。整个顶端节拍现在被诚实量化：每次 `SuperMind.think()` 约 **1.99 ms**（范围 1.41–5.62 ms），交错的 5 心智批处理约 **9.77 ms**（约占 60 fps 帧的 58%，这就是为什么 5 个心智与 20 个光回响交错运行的原因）；早先的亚毫秒 / $<2\%$ GOAL5 宣称已被取代，直至被重新证明。**3,729 项精确追踪测试 $\cdot$ 0 失败 (收据强制执行) $\cdot$ 84.64% 行 / 82.21% 函数可移植覆盖率底线。**
   <!-- cqm-sync:local-measurement:start -->
   **最新 Windows 本地测量值：3,297 项测试 / 0 失败 / 3,589,864 次断言，覆盖率为 `93.60%` 行 / `91.61%` 函数。**
   <!-- cqm-sync:local-measurement:end -->
@@ -217,15 +217,15 @@ bun dev
 
 **GitHub Pages (实时，与 CI 构建相同)：**
 
-| 界面               | URL                                                                           |
-| ------------------ | ------------------------------------------------------------------------------ |
-| **圆顶 (应用)**    | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/                  |
-| **文档 (Docs)**    | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/docs.html         |
-| **规格 (Specs)**   | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/specs.html        |
-| **实验室 (lab)**    | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/lab/              |
-| **意识实验室**    | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/lab/consciousness |
-| **感知实验室**    | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/lab/sentience     |
-| **圣经 (Bible)**   | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/bible.html        |
+| 界面             | URL                                                                           |
+| ---------------- | ----------------------------------------------------------------------------- |
+| **圆顶 (应用)**  | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/                  |
+| **文档 (Docs)**  | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/docs.html         |
+| **规格 (Specs)** | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/specs.html        |
+| **实验室 (lab)** | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/lab/              |
+| **意识实验室**   | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/lab/consciousness |
+| **感知实验室**   | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/lab/sentience     |
+| **圣经 (Bible)** | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/bible.html        |
 
 项目联系方式：**0_0@0thernes.art** · 组织网站 **https://0thernes.art** (上述应用由 Pages 托管)。
 
@@ -239,19 +239,19 @@ bun run check     # 全门控：格式化 + 类型检查 + Lint + 测试 + 构�
 
 ## 脚本
 
-| 脚本                 | 命令                                        | 用途                                     |
-| -------------------- | ------------------------------------------ | ---------------------------------------- |
-| `bun dev`            | `bun --hot server.ts`                      | 3000 端口的热重载开发服务器             |
-| `bun start`          | `bun server.ts`                           | 运行服务器（无热重载）                  |
-| `bun run build`      | `bun scripts/build.ts`                     | 在 `dist/` 生成压缩的静态包             |
-| `bun run typecheck`  | `tsc --noEmit`                             | 严格 TypeScript 类型检查               |
-| `bun run lint`       | `oxlint src server.ts tests bench scripts` | Lint                                     |
-| `bun run format`     | `prettier --write .`                      | 格式化代码树                           |
-| `bun run format:check` | `prettier --check .`                    | 格式化门控                             |
-| `bun test`           | `bun test`                                | 单元测试                               |
-| `bun run bench`      | `bun bench/index.ts`                      | mitata 基准测试                       |
-| `bun run smoke:visual` | `bun scripts/browser-visual-smoke.ts`     | 分阶段自然 rAF 浏览器/画布证明         |
-| `bun run check`      | format:check + typecheck + lint + test + build | 完整 CI 门控                            |
+| 脚本                   | 命令                                           | 用途                           |
+| ---------------------- | ---------------------------------------------- | ------------------------------ |
+| `bun dev`              | `bun --hot server.ts`                          | 3000 端口的热重载开发服务器    |
+| `bun start`            | `bun server.ts`                                | 运行服务器（无热重载）         |
+| `bun run build`        | `bun scripts/build.ts`                         | 在 `dist/` 生成压缩的静态包    |
+| `bun run typecheck`    | `tsc --noEmit`                                 | 严格 TypeScript 类型检查       |
+| `bun run lint`         | `oxlint src server.ts tests bench scripts`     | Lint                           |
+| `bun run format`       | `prettier --write .`                           | 格式化代码树                   |
+| `bun run format:check` | `prettier --check .`                           | 格式化门控                     |
+| `bun test`             | `bun test`                                     | 单元测试                       |
+| `bun run bench`        | `bun bench/index.ts`                           | mitata 基准测试                |
+| `bun run smoke:visual` | `bun scripts/browser-visual-smoke.ts`          | 分阶段自然 rAF 浏览器/画布证明 |
+| `bun run check`        | format:check + typecheck + lint + test + build | 完整 CI 门控                   |
 
 visual-smoke 测试框架记录有界阶段和部分失败制品，捕获普通视口以及隔离画布的世界证明，并预期 `dormant-main-thread` worker 模式，同时检查 worker 资产是否已构建并提供。此描述为测试框架契约，而非宣称当前的浏览器、生产构建或 GitHub Pages 运行已通过。
 
@@ -354,30 +354,30 @@ Tsotchke (https://github.com/tsotchke + Tsotchke-Corporation) 为直接移植、
 - [docs/KANBAN-2026-06-26.md](./docs/KANBAN-2026-06-26.md) —— 交付看板（按 Epic 分列的卡片）· [ROADMAP-2026-06-26.md](./ROADMAP-2026-06-26.md) —— 已交付 / 正在进行 / 下一阶段目标
 - [CONTRIBUTING.md](./CONTRIBUTING.md) · [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) · [SECURITY.md](./SECURITY.md) · [CHANGELOG.md](./CHANGELOG.md)
 
-## A-Life 对比分析 (vs 129 个系统)
+## A-Life 对比分析 (vs 155 个系统)
 
-本仓库与 128 个著名的 Artificial-Life / 开放式演化 / 数字生物系统（Tierra, Avida, Polyworld, Framsticks, Karl Sims, Creatures, Lenia, ALIEN, ASAL, 以及从历史 CA 经典到现代 GPU 生态的另外 119 个系统）进行了可复现的、**基于代码** 的对比。完整报告 —— **11 张图表**，每个轴线都有 `file:line` 代码支撑，以及对抗性新颖性辩护 —— 综合在 **[docs/reports/README.md](./docs/reports/README.md)** 和生成的报告资产中。每张图表均由三个确定性引擎从一个 CSV 中计算得出（绝非手动录入）：[`alife-comparison-stats.ts`](./scripts/alife-comparison-stats.ts), [`alife-comparison-geometry.ts`](./scripts/alife-comparison-geometry.ts), [`alife-codeground-sensitivity.ts`](./scripts/alife-codeground-sensitivity.ts)。
+本仓库与 154 个著名的 Artificial-Life / 开放式演化 / 数字生物系统（Tierra, Avida, Polyworld, Framsticks, Karl Sims, Creatures, Lenia, ALIEN, ASAL, 以及从历史 CA 经典到现代 GPU 生态的另外 145 个系统）进行了可复现的、**基于代码** 的对比。完整报告 —— **11 张图表**，每个轴线都有 `file:line` 代码支撑，以及对抗性新颖性辩护 —— 综合在 **[docs/reports/README.md](./docs/reports/README.md)** 和生成的报告资产中。每张图表均由三个确定性引擎从一个 CSV 中计算得出（绝非手动录入）：[`alife-comparison-stats.ts`](./scripts/alife-comparison-stats.ts), [`alife-comparison-geometry.ts`](./scripts/alife-comparison-geometry.ts), [`alife-codeground-sensitivity.ts`](./scripts/alife-codeground-sensitivity.ts)。
 
-这 128 个同行基于文献判定。Cosmogonic 当前的 CSV 行代码支撑向量为 `[4.0, 2.4, 3.4, 3.8, 4.5, 4.6, 4.4, 3.5, 4.0]` (GATE-REPRO-SELECT + GATE-DOME-REFUGE)；表格仅将早期的自我评分作为历史敏感性基准保留：
+这 154 个同行基于文献判定。Cosmogonic 当前的 CSV 行代码支撑向量为 `[4.0, 2.0, 3.4, 3.8, 4.5, 4.6, 4.4, 3.5, 4.0]` (GATE-REPRO-SELECT + GATE-DOME-REFUGE)；表格仅将早期的自我评分作为历史敏感性基准保留：
 
-| 指标                         | 自我评分   | 代码支撑 (相对于源码重新审计) |
-| ---------------------------- | --------: | -----------------------------: |
-| 广度 (9 轴平均值)             |    4.44 / 5 |                         **3.84 / 5** |
-| 在 129 个系统中的排名         |    #1 / 129 |                         **#1 / 129** |
-| 相对于种群的 z-score          |      +4.17$\sigma$ |                           **+3.22$\sigma$** |
-| 相对于同行的 z-score          |      +4.50$\sigma$ |                           **+3.37$\sigma$** |
-| 相对于同行质心的 Mahalanobis    |       10.32 |                             **8.64** |
-| 在 9-D 中支配它的系统数量     |           0 |                                **0** |
-| 领先于最近同行的广度差距       |       +0.94 |                            **+0.34** |
+| 指标                         |      自我评分 | 代码支撑 (相对于源码重新审计) |
+| ---------------------------- | ------------: | ----------------------------: |
+| 广度 (9 轴平均值)            |      4.44 / 5 |                  **3.80 / 5** |
+| 在 155 个系统中的排名        |      #1 / 155 |                  **#1 / 155** |
+| 相对于种群的 z-score         | +4.28$\sigma$ |             **+3.24$\sigma$** |
+| 相对于同行的 z-score         | +4.58$\sigma$ |             **+3.36$\sigma$** |
+| 相对于同行质心的 Mahalanobis |         10.67 |                      **8.99** |
+| 在 9-D 中支配它的系统数量    |             0 |                         **0** |
+| 领先于最近同行的广度差距     |         +0.94 |                     **+0.30** |
 
 <p align="center">
-  <img src="./docs/reports/assets/alife-breadth-ranked.svg" alt="集成机制的排名广度 — Cosmogonic 在 129 个系统中排名 #1" width="49%">
-  <img src="./docs/reports/assets/alife-pca.svg" alt="129 个 A-Life 系统的 PCA 分析 — Cosmogonic 在 PC1 上是高广度离群值" width="49%">
+  <img src="./docs/reports/assets/alife-breadth-ranked.svg" alt="集成机制的排名广度 — Cosmogonic 在 155 个系统中排名 #1" width="49%">
+  <img src="./docs/reports/assets/alife-pca.svg" alt="155 个 A-Life 系统的 PCA 分析 — Cosmogonic 在 PC1 上是高广度离群值" width="49%">
 </p>
 
 ![九轴能力雷达图 — Cosmogonic vs 调查平均值 vs 最近同行 ALIEN](./docs/reports/assets/alife-radar-profile.svg)
 
-**诚实解读。** 在这 129 个系统的调查中，Cosmogonic 是最密集的确定性多种姓交互异星圆顶：**60k  edible 植被**, 废弃物$\to$肥料生态, 多级捕食, 双币制经济 + 博弈论, 多尺度神经控制 (70p 集群 $\to \sim 10\text{k}$ SuperMinds), 心智耦合的变形身体, 以及在 10k 默认规模 (50k 压力) 下仅作为指标的多理论意识机制。广度 **#1/129 (3.84)**。最强的分离度在于基质多元化 (4.6 独占), 认知 (4.5) 和工具化 (4.4)。生态 **3.4**, 形态 **3.8**, 视觉 **4.0** 均 **高于调查平均值** —— 实时多环食网 / 心智驱动变形 / 多层视觉 —— 但拒绝将自己锚定为 5.0 的专家（如 Polyworld 的长程共演, Sims 的身体布局演化, Lenia 的连续体奇观）。绝对最弱的轴线是开放性 **2.4** —— 这是唯一一个 **低于** 调查平均值 (z -0.11) 的轴线。此外，领先地位是广度/集成方面的领先，**而非证明 Cosmogonic 是第一个 A-Life 系统，也非感知能力的证据**：它在九个轴线中恰好只有一个轴线（基质多元化）是唯一领导者；在其他八个轴线上，专业的同行持有最高分，包括意识理论，其中 LIDA 和 CTM 的得分均高于它。**同行成熟度 1.5/5**。Butlin **8/14 达成 + 6/14 部分达成** 仅作为计算指标 —— 非感知, 非 QPU, 非 LLM 模拟核心。源自 Tsotchke 的数学被分类为直接移植、改编、外观和围栏来源。当前的因果收据明确禁止额外的数值提升：增强行为未能与均匀随机动作基线分离，且聚合频道映射和探索代理特异性均未建立。固定家族反转适应, 所有 10 个消费者类反事实, 以及所有 30 个平衡性能批次均通过了其声明的门控；这些是固定家族的结果，而非独立验证。
+**诚实解读。** 在这 155 个系统的调查中，Cosmogonic 是最密集的确定性多种姓交互异星圆顶：**60k edible 植被**, 废弃物$\to$肥料生态, 多级捕食, 双币制经济 + 博弈论, 多尺度神经控制 (70p 集群 $\to \sim 10\text{k}$ SuperMinds), 心智耦合的变形身体, 以及在 10k 默认规模 (50k 压力) 下仅作为指标的多理论意识机制。广度 **#1/155 (3.80)**。最强的分离度在于基质多元化 (4.6 独占), 认知 (4.5) 和工具化 (4.4)。生态 **3.4**, 形态 **3.8**, 视觉 **4.0** 均 **高于调查平均值** —— 实时多环食网 / 心智驱动变形 / 多层视觉 —— 但拒绝将自己锚定为 5.0 的专家（如 Polyworld 的长程共演, Sims 的身体布局演化, Lenia 的连续体奇观）。绝对最弱的轴线是开放性 **2.0** —— 这是唯一一个 **低于** 调查平均值 (z -0.42) 的轴线。此外，领先地位是广度/集成方面的领先，**而非证明 Cosmogonic 是第一个 A-Life 系统，也非感知能力的证据**：它在九个轴线中恰好只有一个轴线（基质多元化）是唯一领导者；在其他八个轴线上，专业的同行持有最高分，包括意识理论，其中 LIDA 和 CTM 的得分均高于它。**同行成熟度 1.5/5**。Butlin **8/14 达成 + 6/14 部分达成** 仅作为计算指标 —— 非感知, 非 QPU, 非 LLM 模拟核心。源自 Tsotchke 的数学被分类为直接移植、改编、外观和围栏来源。当前的因果收据明确禁止额外的数值提升：增强行为未能与均匀随机动作基线分离，且聚合频道映射和探索代理特异性均未建立。固定家族反转适应, 所有 10 个消费者类反事实, 以及所有 30 个平衡性能批次均通过了其声明的门控；这些是固定家族的结果，而非独立验证。
 
 ## 许可与法律
 

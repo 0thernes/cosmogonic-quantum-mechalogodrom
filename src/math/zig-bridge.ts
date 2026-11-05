@@ -315,7 +315,16 @@ class ZigKernelBridge {
     dt = 1.0,
   ): number {
     const cells = width * height;
-    if (cells <= 0 || u.length < cells || v.length < cells) return 0;
+    if (
+      width <= 0 ||
+      height <= 0 ||
+      cells <= 0 ||
+      u.length < cells ||
+      v.length < cells ||
+      uOut.length < cells ||
+      vOut.length < cells
+    )
+      return 0;
     const bytesPerGrid = cells * 8;
     this.ensureCapacity(bytesPerGrid * 4);
 
@@ -360,7 +369,14 @@ class ZigKernelBridge {
     dt = 1.0,
   ): { meanV: number; peakV: number } {
     const cells = width * height;
-    if (cells <= 0 || u.length < cells || v.length < cells || pixels.length < cells * 4) {
+    if (
+      width <= 0 ||
+      height <= 0 ||
+      cells <= 0 ||
+      u.length < cells ||
+      v.length < cells ||
+      pixels.length < cells * 4
+    ) {
       return { meanV: 0, peakV: 0 };
     }
     const bytesPerGrid = cells * 4;

@@ -404,11 +404,13 @@ export async function isolatedResponse(inner: Response, head = false): Promise<R
   for (const k in ISOLATION_HEADERS) headers.set(k, ISOLATION_HEADERS[k]!);
   const body = await inner.arrayBuffer();
   if (head) headers.set('content-length', String(body.byteLength));
-  return new Response(head ? null : body, {
-    status: inner.status,
-    statusText: inner.statusText,
-    headers,
-  });
+  return withSecurityHeaders(
+    new Response(head ? null : body, {
+      status: inner.status,
+      statusText: inner.statusText,
+      headers,
+    }),
+  );
 }
 
 /** Stamp {@link SECURITY_HEADERS} onto a response in place and return it. O(1). */
@@ -619,10 +621,14 @@ function serveHtml(path: string): (req: Request) => Promise<Response> {
     const file = Bun.file(new URL(path, HTML_ROOT));
     if (!(await file.exists())) {
       log.warn(`${path} not found in dist/ — run \`bun run build\` first`);
-      return new Response('Not built yet — run `bun run build` first', { status: 503 });
+      return withSecurityHeaders(
+        new Response('Not built yet — run `bun run build` first', { status: 503 }),
+      );
     }
     logRequest(req, 200);
-    return new Response(file, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+    return withSecurityHeaders(
+      new Response(file, { headers: { 'Content-Type': 'text/html; charset=utf-8' } }),
+    );
   };
 }
 
@@ -1028,7 +1034,10 @@ if (import.meta.main) {
         }
       }
       if (p === '/alife-gallery.js') {
-        const file = Bun.file(new URL('./dist/alife-gallery.js', import.meta.url));
+        const distFile = Bun.file(new URL('./dist/alife-gallery.js', import.meta.url));
+        const file = (await distFile.exists())
+          ? distFile
+          : Bun.file(new URL('./alife-gallery.js', import.meta.url));
         if (await file.exists()) {
           logRequest(req, 200);
           return withSecurityHeaders(
@@ -1054,12 +1063,24 @@ if (import.meta.main) {
         );
       }
       if (p.startsWith('/textures/')) {
-        const rel = p.slice('/textures/'.length);
-        if (rel.includes('..') || rel.includes('\\') || rel.includes('\0')) {
+        let rel = p.slice('/textures/'.length);
+        try {
+          rel = decodeURIComponent(rel);
+        } catch {
           logRequest(req, 404);
           return withSecurityHeaders(new Response('Not Found', { status: 404 }));
         }
-        const file = Bun.file(new URL(`./public/textures/${rel}`, import.meta.url));
+        if (rel.length === 0 || rel.includes('..') || rel.includes('\\') || rel.includes('\0')) {
+          logRequest(req, 404);
+          return withSecurityHeaders(new Response('Not Found', { status: 404 }));
+        }
+        const texturesRoot = new URL('./public/textures/', import.meta.url);
+        const texUrl = new URL(`./public/textures/${rel}`, import.meta.url);
+        if (!texUrl.href.startsWith(texturesRoot.href)) {
+          logRequest(req, 404);
+          return withSecurityHeaders(new Response('Not Found', { status: 404 }));
+        }
+        const file = Bun.file(texUrl);
         if (await file.exists()) {
           const ext = rel.split('.').pop()?.toLowerCase() ?? '';
           const ct =

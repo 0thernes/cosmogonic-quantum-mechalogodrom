@@ -137,12 +137,15 @@ GLuint buildProgram() {
 // Write a 24-bit bottom-up BMP (opens natively on Windows). `rgba` is GL_RGBA8,
 // origin lower-left — which matches BMP row order, so no flip is needed.
 bool writeBMP(const std::string& path, int w, int h, const std::vector<uint8_t>& rgba) {
+  if (w <= 0 || h <= 0 || w > 16384 || h > 16384) return false;
+  if (rgba.size() < static_cast<size_t>(w) * static_cast<size_t>(h) * 4u) return false;
   std::ofstream f(path, std::ios::binary);
   if (!f) return false;
-  const int rowRaw = w * 3;
-  const int pad = (4 - (rowRaw % 4)) % 4;
-  const int imgSize = (rowRaw + pad) * h;
-  const int fileSize = 54 + imgSize;
+  const uint64_t rowRaw = static_cast<uint64_t>(w) * 3u;
+  const uint64_t pad = (4u - (rowRaw % 4u)) % 4u;
+  const uint64_t imgSize = (rowRaw + pad) * static_cast<uint64_t>(h);
+  const uint64_t fileSize = 54u + imgSize;
+  if (fileSize > 0xffffffffULL) return false;
   auto u16 = [&](uint16_t v) { f.put(char(v & 0xff)); f.put(char((v >> 8) & 0xff)); };
   auto u32 = [&](uint32_t v) { for (int i = 0; i < 4; i++) f.put(char((v >> (8 * i)) & 0xff)); };
   f.put('B'); f.put('M'); u32(static_cast<uint32_t>(fileSize)); u16(0); u16(0); u32(54);
@@ -258,7 +261,7 @@ int main(int argc, char** argv) {
         shotH = std::atoi(a.c_str() + x + 1);
         // Reject malformed dims (atoi of garbage -> 0/negative) before they reach the FBO/BMP,
         // which would otherwise produce an incomplete framebuffer or a zero-size image.
-        if (shotW < 1 || shotH < 1) { shotW = 1600; shotH = 900; }
+        if (shotW < 1 || shotH < 1 || shotW > 16384 || shotH > 16384) { shotW = 1600; shotH = 900; }
       }
     }
   }

@@ -364,7 +364,7 @@ export class AudioEngine {
       this.visibilityHandler = () => {
         if (!this.ctx) return;
         if (document.hidden) void this.ctx.suspend();
-        else void this.ctx.resume();
+        else if (this._musicOn || this._sfxOn) void this.ctx.resume();
       };
       document.addEventListener('visibilitychange', this.visibilityHandler);
     }
@@ -490,7 +490,12 @@ export class AudioEngine {
       // A social chorus leaves a future restore ramp on this AudioParam. Hold the computed
       // value and cancel that timeline before applying user intent, otherwise the restore can
       // run after an OFF toggle and make a logically disabled SFX bus audible again.
-      this.sfxGain.gain.cancelAndHoldAtTime(t);
+      const g = this.sfxGain.gain as AudioParam & { cancelAndHoldAtTime?: (time: number) => void };
+      if (typeof g.cancelAndHoldAtTime === 'function') {
+        g.cancelAndHoldAtTime(t);
+      } else {
+        g.cancelScheduledValues(t);
+      }
       this.sfxGain.gain.setTargetAtTime(this._sfxOn ? SFX_BASE : 0, t, 0.1);
     }
     return this._sfxOn;
@@ -618,7 +623,12 @@ export class AudioEngine {
     // (possibly mid-ramp) value, which let overlapping choruses ratchet the bus permanently
     // louder and let a queued restore override a mid-chorus toggleSfx. Cancel pending automation
     // first, then pin at the current value so cancelling mid-ramp doesn't click.
-    this.sfxGain.gain.cancelAndHoldAtTime(t);
+    const g = this.sfxGain.gain as AudioParam & { cancelAndHoldAtTime?: (time: number) => void };
+    if (typeof g.cancelAndHoldAtTime === 'function') {
+      g.cancelAndHoldAtTime(t);
+    } else {
+      g.cancelScheduledValues(t);
+    }
     this.sfxGain.gain.linearRampToValueAtTime(Math.min(0.55, SFX_BASE + level * 0.25), t + 0.08);
     this.sfxGain.gain.linearRampToValueAtTime(SFX_BASE, t + 0.45);
     this.playExtra('howl');

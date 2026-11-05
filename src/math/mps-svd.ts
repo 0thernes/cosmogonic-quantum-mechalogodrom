@@ -129,7 +129,7 @@ export function svd(A: Mat): { U: Mat; S: number[]; V: Mat } {
     return { U: Vt, S, V: Ut };
   }
   const U = mat(m, n);
-  const S: number[] = new Array<number>(n).fill(0);
+  const S: number[] = Array.from({ length: n }, () => 0);
   const Vs = mat(n, n);
   svdTallInto(A, U, S, Vs);
   return { U, S, V: Vs };

@@ -129,7 +129,7 @@ export function mlpPredict(net: Mlp, input: ArrayLike<number>): number[] {
     for (let i = 0; i < din; i++) pre = pre + (w1[row + i] ?? 0) * x[i]!;
     hid[j] = Math.tanh(pre);
   }
-  const out: number[] = new Array(dout);
+  const out: number[] = Array.from({ length: dout }, () => 0);
   for (let k = 0; k < dout; k++) {
     let o = net.b2[k] ?? 0;
     const row = k * h;

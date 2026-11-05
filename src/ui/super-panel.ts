@@ -309,13 +309,25 @@ export class SuperPanel {
   private readonly radarShown: number[][] = [];
   private readonly radarColors: string[] = [];
   private readonly doc: Document;
+  private lastArgs:
+    | [
+        SuperSnapshot | null,
+        number,
+        SuperMindSnapshot | null | undefined,
+        EvoView | null | undefined,
+        ArchonInfo[] | null | undefined,
+        PetriTelemetry | null | undefined,
+      ]
+    | null = null;
 
   constructor(doc: Document = document) {
     this.doc = doc;
     doc.getElementById('cqm-sup-toggle')?.remove();
     doc.getElementById('cqm-sup-panel')?.remove();
+    doc.getElementById('cqm-sup-css')?.remove();
     injectPanelBaseCSS(doc);
     const style = doc.createElement('style');
+    style.id = 'cqm-sup-css';
     style.textContent = STYLE;
     doc.head.appendChild(style);
 
@@ -514,7 +526,11 @@ export class SuperPanel {
   private setOpen(v: boolean): void {
     this.open = v;
     this.panel.classList.toggle('open', v);
-    if (!v) this.setNeural(false); // closing the box also stops the observatory's rAF loop
+    if (!v)
+      this.setNeural(false); // closing the box also stops the observatory's rAF loop
+    else if (this.lastArgs) {
+      this.update(...this.lastArgs);
+    }
   }
 
   /** Collapse the Super Creature panel to a compact header bar or restore it. */
@@ -554,6 +570,7 @@ export class SuperPanel {
     archons?: ArchonInfo[] | null,
     petri?: PetriTelemetry | null,
   ): void {
+    this.lastArgs = [snap, netWorth, mind, evo, archons, petri];
     // GOAL5: 5 Archons first-class (all 5 names/archetypes/plans live; prime gets deep + neural; senses/quantum/body via per mind)
     // Feed the deeper neural box FIRST — it animates independently of whether this readout is open.
     this.neural.update(mind ?? null);

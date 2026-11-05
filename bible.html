@@ -756,11 +756,6 @@
           </dd>
           <dt>ACCESS</dt>
           <dd>Cryptographic puzzle terminal; unlocks playable super creature + twin HUD.</dd>
-          <dt>Active Inference</dt>
-          <dd>
-            Friston's framework — agents minimize free energy by updating beliefs and acting to
-            match predictions. Implemented in <code>src/sim/active-inference.ts</code>.
-          </dd>
           <dt>Architect Panel</dt>
           <dd>
             The ⟁ ARCHITECTURE panel — 101 super creatures + brood + the apex ς Quantum Brain.
@@ -864,11 +859,6 @@
             The 16-dimensional internal representation of the super creature's mind — the workspace
             where perception, imagination, and reasoning operate.
           </dd>
-          <dt>Mind Field</dt>
-          <dd>
-            The spatial substrate where cognitive operations happen — a 2D field model in
-            <code>src/sim/mind-field.ts</code>.
-          </dd>
           <dt>Morphotype</dt>
           <dd>
             The geometric body type of an entity — icosahedron, octahedron, dodecahedron,
@@ -879,26 +869,11 @@
             One of the 30 mind organs — handles decay, mortality, and regeneration signals. Part of
             the composite connectome.
           </dd>
-          <dt>Noosphere</dt>
-          <dd>
-            The sphere of human thought — modeled as a collective field in
-            <code>src/sim/noosphere.ts</code>.
-          </dd>
-          <dt>Open-Endedness</dt>
-          <dd>
-            Bedau/Packard metrics for whether the system keeps producing novel, interesting
-            behavior. Tracked in <code>src/sim/open-endedness.ts</code>.
-          </dd>
           <dt>Organ</dt>
           <dd>
             A functional sub-network of the composite mind — 30 organs, each processing a
             4-dimensional slice of the latent. Examples: CORTEX, IMAGITRON, PERCEPTOR, NECRO,
             QUANTUM, DRIVE, SELF.
-          </dd>
-          <dt>Petri Dish</dt>
-          <dd>
-            Each super creature has a petri dish — a sub-ecology of organisms that grow and evolve
-            around it.
           </dd>
           <dt>Phylum</dt>
           <dd>
@@ -910,11 +885,6 @@
             A measure of how quantum-mechanically correlated the super creature's mind is. High
             coherence means the qubits are in a coherent superposition state.
           </dd>
-          <dt>Quantum Reservoir</dt>
-          <dd>
-            A quantum-enhanced reservoir computing layer — uses quantum states as a computational
-            substrate for temporal processing.
-          </dd>
           <dt>Render Mode</dt>
           <dd>
             The entity visual style: SOLID (default), WIRE (wireframe), POINT (point cloud), NIGHT
@@ -925,40 +895,15 @@
             The breeding ceremony in the Architecture panel — two creatures are mated using
             game-theory payoff matrices to produce offspring in the brood.
           </dd>
-          <dt>Super Creature</dt>
-          <dd>
-            The player-controllable entity with a ~10k-parameter composite mind, twin HUD, and
-            superhero mode. Unlocked via ACCESS.
-          </dd>
-          <dt>SuperMindSnapshot</dt>
-          <dd>
-            The read-only telemetry struct pushed to the neural observatory each beat — contains
-            latent, quantum, consciousness, emotion, plan, and param count.
-          </dd>
           <dt>Tesseract</dt>
           <dd>
             A 4D hypercube — the geometric scaffold of the MEGA GODLIKE BRAIN. 16 vertices, 32
             edges, projected through x-w and y-w rotations into 3D.
           </dd>
-          <dt>Theory of Mind (ToM)</dt>
-          <dd>The ability to model another agent's mental state. 25-organ ensemble in the NHSI.</dd>
-          <dt>Thomas Attractor</dt>
-          <dd>A double-scroll strange attractor. One of the 36 WildBeyond tiles.</dd>
           <dt>Titan</dt>
           <dd>
             One of 10 bipolar titan shells that converge and fuse into the Mechalogodrom — the
             central arena organism.
-          </dd>
-          <dt>Tree of Thought</dt>
-          <dd>
-            5 depths × 5 variants = 25 imagined branches; the best branch is kept each depth. The
-            IMAGINE stage's search strategy.
-          </dd>
-          <dt>Tsotchke</dt>
-          <dd>
-            Mixed, ledgered corpus integration: direct ports, deterministic adaptations/facades,
-            harvest/tooling roles, and inert fences at declared depths. Quantum paths execute on
-            classical silicon, not a physical QPU; no blanket gate-for-gate parity is claimed.
           </dd>
           <dt>View Mode</dt>
           <dd>
@@ -969,11 +914,6 @@
           <dd>
             Environmental conditions affecting entity behavior: CLEAR, STORM, FOG, AURORA,
             SINGULARITY. Cycled via the ☁ WEATHER button in settings.
-          </dd>
-          <dt>WildBeyond</dt>
-          <dd>
-            Standalone p5 lab blending Lorenz collapse, Born-rule measurement, and 36 mathematical
-            tiles across 3 boards.
           </dd>
           <dt>Wolfpack</dt>
           <dd>
@@ -998,8 +938,6 @@
             <dd>Superset index over every doc and module.</dd>
             <dt><a href="/docs/RUNBOOK-2026-06-26.md">RUNBOOK — ops &amp; smoke</a></dt>
             <dd>Bootstrap, gate, deploy.</dd>
-            <dt><a href="/docs/AUDIT-LOG.md">AUDIT-LOG.md</a></dt>
-            <dd>Centralized audit history (newest-first).</dd>
             <dt><a href="/docs/PHILOSOPHY-2026-06-26.md">PHILOSOPHY-2026-06-26.md</a></dt>
             <dd>
               The aesthetic constitution: real math under every effect; every system reads AND
@@ -1088,8 +1026,6 @@
               >
             </dt>
             <dd>500-point academic framework vs A-Life field.</dd>
-            <dt><a href="/docs/AI-SUBSYSTEM-2026-06-26.md">AI-SUBSYSTEM-2026-06-26.md</a></dt>
-            <dd>The Copilot architecture + safety posture.</dd>
             <dt>
               <a href="/docs/COPILOT-PROVIDERS-2026-06-26.md">COPILOT-PROVIDERS-2026-06-26.md</a>
             </dt>
@@ -1118,8 +1054,6 @@
               <a href="/docs/VERIFICATION-ANALYTICAL-DATA.md">VERIFICATION-ANALYTICAL-DATA.md</a>
             </dt>
             <dd>Test taxonomy, receipts law, coverage goals, known edges.</dd>
-            <dt><a href="/docs/BENCHMARKS-2026-06-26.md">BENCHMARKS-2026-06-26.md</a></dt>
-            <dd>Frame-budget measurements and hot-path performance truth.</dd>
             <dt>
               <a href="/docs/SECURITY-ARCHITECTURE-2026-07-02.md"
                 >SECURITY-ARCHITECTURE-2026-07-02.md</a
@@ -1175,7 +1109,7 @@
             native C/C++ headers/sources, and generated/static artifacts.
           </li>
           <li>Up to 50,000 agents (10,000 at 60 fps on integrated graphics)</li>
-          <li>Exact tracked receipt: 3,715 tests, zero failures.</li>
+          <li>Exact tracked receipt: 3,729 tests, zero failures.</li>
           <li>Portable coverage floor: 84.64% line / 82.21% func.</li>
           <li>
             <!-- cqm-sync:local-measurement:start -->

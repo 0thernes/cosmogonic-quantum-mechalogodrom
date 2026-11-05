@@ -263,6 +263,7 @@ export class PantheonArchitecturePanel {
     head.appendChild(el(doc, 'b', undefined, '⟁ ARCHITECTURE'));
     this.rankEl = el(doc, 'span', 'rank', '—');
     const close = el(doc, 'button', 'cqm-arch-x', '✕');
+    close.dataset['close'] = '1';
     close.setAttribute('aria-label', 'Close');
     close.addEventListener('click', () => this.setOpen(false));
     head.append(this.rankEl, close);
@@ -550,7 +551,7 @@ export class PantheonArchitecturePanel {
       'BRAIN — PARAMETER BUDGET',
       [
         'designed',
-        this.lineageIdx >= 100
+        this.view === 'lineage' && this.lineageIdx >= 100
           ? `${bigNum(APEX_BRAIN_START_PARAMS)} start · →${bigNum(APEX_BRAIN_ROADMAP_PARAMS)} roadmap`
           : `${bigNum(PANTHEON_GLYPH_BRAIN_PARAMS)} · visual dome swarm`,
       ],

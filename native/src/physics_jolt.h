@@ -73,7 +73,7 @@ class BPLayerInterfaceImpl final : public JPH::BroadPhaseLayerInterface {
   }
   JPH::uint GetNumBroadPhaseLayers() const override { return BroadPhaseLayers::NUM_LAYERS; }
   JPH::BroadPhaseLayer GetBroadPhaseLayer(JPH::ObjectLayer inLayer) const override {
-    return mObjectToBroadPhase[inLayer];
+    return mObjectToBroadPhase[inLayer < Layers::NUM_LAYERS ? inLayer : Layers::MOVING];
   }
 #if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
   const char* GetBroadPhaseLayerName(JPH::BroadPhaseLayer) const override { return "rq"; }
@@ -138,6 +138,10 @@ class ReliquaryPhysics {
     }
     ids_.clear();
     bodies_.clear();
+    prevVel_.clear();
+    fragSeed_ = 9001;
+    maxClose_ = 0.0f;
+    if (n < 0) n = 0;
     if (n > static_cast<int>(kMaxBodies)) n = static_cast<int>(kMaxBodies);
     for (int i = 0; i < n; ++i) {
       Body b;

@@ -4,7 +4,7 @@
 // This file makes Cosmogonic actually BUILD WITH the Tsotchke Repo Folder.
 
 export const TSOTCHKE_HARVEST = {
-  eskCount: 2493,
+  eskCount: 2503,
   eskSamples: [
     'Eshkol/eshkol_repo/bench/pgo_corpus/arithmetic.esk',
     'Eshkol/eshkol_repo/bench/pgo_corpus/autodiff.esk',
@@ -15,8 +15,8 @@ export const TSOTCHKE_HARVEST = {
     'Eshkol/eshkol_repo/benchmarks/activation_bench.esk',
     'Eshkol/eshkol_repo/benchmarks/conv2d_bench.esk',
   ],
-  totalScanned: 5156,
-  timestamp: 'corpus:2493esk/5156files',
+  totalScanned: 5326,
+  timestamp: 'corpus:2503esk/5326files',
   note: 'Local corpus census and filename-derived numeric seeds. This harvester counts files and hashes sampled .esk paths; it does not read or execute Eshkol program contents or establish sentience. Other Tsotchke integrations are documented separately in the integration ledger.',
 } as const;
 

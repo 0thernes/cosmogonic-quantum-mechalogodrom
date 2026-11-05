@@ -88,6 +88,7 @@ if (!FACULTIES || !ARCHONS || !TOM || !EMERGENCE || !BIOFORMS)
 /** Markdown / HTML surfaces that publish shared facts. */
 const SURFACES = [
   'README.md',
+  'README.zh-CN.md',
   'ROADMAP-2026-06-26.md',
   'docs.html',
   'specs.html',
@@ -147,6 +148,14 @@ export function syncReceipts(s: string): string {
     .replace(
       /\b[0-9]{1,3}(?:,[0-9]{3})+\s+exact tracked tests\b/g,
       `${TEST_COMMA} exact tracked tests`,
+    )
+    .replace(
+      /\b[0-9]{1,3}(?:,[0-9]{3})+\s+项(精确追踪)?测试/g,
+      (_m, exact?: string) => `${TEST_COMMA} 项${exact ?? ''}测试`,
+    )
+    .replace(
+      /\b[0-9]{2}\.[0-9]{2}%\s+行\s*\/\s*[0-9]{2}\.[0-9]{2}%\s+函数/g,
+      `${LINE}% 行 / ${FUNC}% 函数`,
     )
     .replace(/(\|\s*Passing tests\s*\|\s*\*\*)[0-9]{1,3}(?:,[0-9]{3})+(\*\*)/g, `$1${TEST_COMMA}$2`)
     // Hyphenated adjective form "N,NNN-test" (e.g. "2,450-test floor"). The mandatory comma-grouped

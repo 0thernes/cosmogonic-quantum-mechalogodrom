@@ -114,8 +114,14 @@ export const hdSqrt = (a: HyperDual): HyperDual => {
 };
 
 /** Power with a constant real exponent n:  f=xⁿ, f'=n·xⁿ⁻¹, f''=n(n-1)·xⁿ⁻². */
-export const hdPow = (a: HyperDual, n: number): HyperDual =>
-  hdUnary(a, Math.pow(a.x, n), n * Math.pow(a.x, n - 1), n * (n - 1) * Math.pow(a.x, n - 2));
+export const hdPow = (a: HyperDual, n: number): HyperDual => {
+  if (n === 0) return hdConst(1);
+  if (n === 1) return { x: a.x, e1: a.e1, e2: a.e2, e12: a.e12 };
+  const f = Math.pow(a.x, n);
+  const df = a.x === 0 && n < 1 ? 0 : n * Math.pow(a.x, n - 1);
+  const ddf = a.x === 0 && n < 2 ? 0 : n * (n - 1) * Math.pow(a.x, n - 2);
+  return hdUnary(a, f, df, ddf);
+};
 
 export const hdTanh = (a: HyperDual): HyperDual => {
   const t = Math.tanh(a.x);

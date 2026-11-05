@@ -26,10 +26,13 @@ export const dVar = (x: number): Dual => ({ x, d: 1 });
 export const dAdd = (a: Dual, b: Dual): Dual => ({ x: a.x + b.x, d: a.d + b.d });
 export const dSub = (a: Dual, b: Dual): Dual => ({ x: a.x - b.x, d: a.d - b.d });
 export const dMul = (a: Dual, b: Dual): Dual => ({ x: a.x * b.x, d: a.d * b.x + a.x * b.d });
-export const dDiv = (a: Dual, b: Dual): Dual => ({
-  x: a.x / b.x,
-  d: (a.d * b.x - a.x * b.d) / (b.x * b.x),
-});
+export const dDiv = (a: Dual, b: Dual): Dual => {
+  const bx = Math.abs(b.x) > AD_EPS ? b.x : b.x < 0 ? -AD_EPS : AD_EPS;
+  return {
+    x: a.x / bx,
+    d: (a.d * bx - a.x * b.d) / (bx * bx),
+  };
+};
 export const dNeg = (a: Dual): Dual => ({ x: -a.x, d: -a.d });
 
 /** Apply a unary differentiable function given f(a.x) and f′(a.x). The forward chain rule. */
@@ -55,8 +58,12 @@ export const dSqrt = (a: Dual): Dual => {
   const s = Math.sqrt(a.x > 0 ? a.x : 0);
   return dUnary(a, s, 0.5 / (s > AD_EPS ? s : AD_EPS));
 };
-export const dPow = (a: Dual, n: number): Dual =>
-  dUnary(a, Math.pow(a.x, n), n * Math.pow(a.x, n - 1));
+export const dPow = (a: Dual, n: number): Dual => {
+  if (n === 0) return dConst(1);
+  if (n === 1) return { x: a.x, d: a.d };
+  const df = a.x === 0 && n < 1 ? 0 : n * Math.pow(a.x, n - 1);
+  return dUnary(a, Math.pow(a.x, n), df);
+};
 export const dTanh = (a: Dual): Dual => {
   const t = Math.tanh(a.x);
   return dUnary(a, t, 1 - t * t);

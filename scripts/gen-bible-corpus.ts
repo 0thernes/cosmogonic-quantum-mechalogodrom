@@ -123,9 +123,12 @@ const EXTRA: Entry[] = [
 
 function render(entries: Entry[]): string {
   const byTier = new Map<string, Entry[]>();
+  const seenHrefs = new Set<string>();
   for (const e of [...EXTRA, ...entries]) {
+    if (seenHrefs.has(e.href)) continue;
+    seenHrefs.add(e.href);
     const list = byTier.get(e.tier) ?? [];
-    if (!list.some((x) => x.href === e.href)) list.push(e);
+    list.push(e);
     byTier.set(e.tier, list);
   }
   const order = ['Start', 'Architecture', 'World', 'Research'];

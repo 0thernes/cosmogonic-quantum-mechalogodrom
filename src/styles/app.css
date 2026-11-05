@@ -1109,6 +1109,8 @@ html.cqm-shell-ready .algo-list:empty::after {
 #cqm-mkt-panel,
 #cqm-arch-panel,
 #cqm-sup-panel,
+#cqm-xenomimic-panel,
+#cqm-xylos-panel,
 #ui > #aP {
   max-height: min(70vh, calc(100vh - var(--cqm-bottom-h, 108px) - 142px)) !important;
 }

@@ -6,8 +6,14 @@ import { mulberry32 } from '../src/math/rng';
 function referenceLoom(n: number, isTwin: (d: number) => boolean) {
   const ei: number[] = [];
   const ej: number[] = [];
-  for (let i = 0; i < n; i++)
-    for (let j = i + 1; j < n; j++) if (isTwin(j - i)) (ei.push(i), ej.push(j));
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      if (isTwin(j - i)) {
+        ei.push(i);
+        ej.push(j);
+      }
+    }
+  }
   const alive = new Uint8Array(ei.length).fill(1);
   const state = new Float64Array(n);
   const next = new Float64Array(n);

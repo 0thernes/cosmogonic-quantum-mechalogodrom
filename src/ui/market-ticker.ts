@@ -208,9 +208,14 @@ export class MarketTicker {
     return this.open;
   }
 
+  private lastSummary: MarketSummary | null = null;
+
   private setOpen(v: boolean): void {
     this.open = v;
     this.panel.classList.toggle('open', v);
+    if (v && this.lastSummary) {
+      this.renderSummary(this.lastSummary);
+    }
   }
 
   /**
@@ -218,13 +223,17 @@ export class MarketTicker {
    * when open, repaint the three sections + readouts. Pure presentation; O(HISTORY) draw. Null-safe.
    */
   update(s: MarketSummary): void {
+    this.lastSummary = s;
     this.fxH[this.head] = s.fx;
     this.pqH[this.head] = s.pQuanta;
     this.piH[this.head] = s.pIchor;
     this.head = (this.head + 1) % HISTORY;
     if (this.len < HISTORY) this.len++;
     if (!this.open) return;
+    this.renderSummary(s);
+  }
 
+  private renderSummary(s: MarketSummary): void {
     // ── Section 1 readouts ──
     const dom = s.dominant;
     const domGlyph = CURRENCY_GLYPH[dom];

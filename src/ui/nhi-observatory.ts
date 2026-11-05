@@ -1019,8 +1019,12 @@ export class NhiObservatory {
   private setOpen(v: boolean): void {
     this.open = v;
     this.panel.classList.toggle('open', v);
-    if (v) this.startLoop();
-    else this.stopLoop();
+    if (v) {
+      this.update(this.snap, this.metaC);
+      this.startLoop();
+    } else {
+      this.stopLoop();
+    }
   }
 
   private cycle(d: number): void {

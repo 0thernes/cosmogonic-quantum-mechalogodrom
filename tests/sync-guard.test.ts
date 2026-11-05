@@ -58,6 +58,7 @@ describe('sync-guard decide() — safe sync policy', () => {
     expect(p.ffPull).toBe(false);
     expect(p.commit).toBe(false);
     expect(p.status).toContain('uncommitted');
+    expect(p.status).toContain('2 commit(s) behind origin/main');
   });
 
   test('ahead + dirty (no --commit) → still pushes the committed-ahead, leaves edits', () => {

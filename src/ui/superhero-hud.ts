@@ -142,14 +142,18 @@ function syncHeroHudGutters(doc: Document): void {
   const root = doc.documentElement;
   if (left instanceof HTMLElement) {
     const r = left.getBoundingClientRect();
-    root.style.setProperty('--cqm-hud-left', `${Math.round(r.right + 8)}px`);
+    if (r.width > 8) {
+      root.style.setProperty('--cqm-hero-left', `${Math.round(r.right + 8)}px`);
+    }
   }
   if (right instanceof HTMLElement) {
     const r = right.getBoundingClientRect();
-    root.style.setProperty(
-      '--cqm-hud-right',
-      `${Math.round(doc.defaultView?.innerWidth ?? 0) - r.left + 8}px`,
-    );
+    if (r.width > 8) {
+      root.style.setProperty(
+        '--cqm-hero-right',
+        `${Math.round(doc.defaultView?.innerWidth ?? 0) - r.left + 8}px`,
+      );
+    }
   }
 }
 

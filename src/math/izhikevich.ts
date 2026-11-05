@@ -64,8 +64,11 @@ export function izhStep(
   let v = s.v;
   let u = s.u;
   v += 0.5 * (0.04 * v * v + 5 * v + 140 - u + I);
-  v += 0.5 * (0.04 * v * v + 5 * v + 140 - u + I);
-  u += p.a * (p.b * v - u);
+  if (v < IZH_THRESHOLD) {
+    v += 0.5 * (0.04 * v * v + 5 * v + 140 - u + I);
+  }
+  const vForU = v > IZH_THRESHOLD ? IZH_THRESHOLD : v;
+  u += p.a * (p.b * vForU - u);
   if (v >= IZH_THRESHOLD) {
     return { state: { v: p.c, u: u + p.d }, spiked: true };
   }

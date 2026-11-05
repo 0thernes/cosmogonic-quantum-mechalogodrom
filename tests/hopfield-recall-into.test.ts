@@ -7,7 +7,7 @@ describe('recallStateInto', () => {
     const bit = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) & 1 ? 1 : -1);
     const pats = Array.from({ length: 5 }, () => Array.from({ length: 24 }, bit));
     const net = storeHebbian(pats);
-    const s: number[] = new Array<number>(24).fill(3);
+    const s: number[] = Array.from({ length: 24 }, () => 3);
     for (let k = 0; k < 300; k++) {
       const probe = Float32Array.from({ length: 24 }, () => (k % 7 === 0 ? 0 : bit()));
       for (const sweeps of [1, 2, 50]) {

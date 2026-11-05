@@ -155,7 +155,7 @@ export function decide(s: SyncState, f: SyncFlags): SyncPlan {
     return {
       ...base,
       push: s.ahead > 0,
-      status: `${s.dirty} uncommitted file(s) — NOT auto-committed (pass --commit to commit+push)${s.ahead > 0 ? `; pushing ${s.ahead} committed-ahead` : ''}`,
+      status: `${s.dirty} uncommitted file(s) — NOT auto-committed (pass --commit to commit+push)${s.ahead > 0 ? `; pushing ${s.ahead} committed-ahead` : ''}${s.behind > 0 ? `; WARNING: ${s.behind} commit(s) behind origin/main — stash/clean or pass --commit to reconcile` : ''}`,
       noop: s.ahead === 0,
     };
   }
@@ -267,6 +267,10 @@ function recoveryRef(): string {
 function run(): void {
   const argv = process.argv.slice(2);
   const quiet = argv.includes('--quiet');
+  if (process.env['CQM_NO_SYNC'] === '1') {
+    if (!quiet) console.log('sync-guard: skipped (CQM_NO_SYNC=1)');
+    process.exit(0);
+  }
   const force = argv.includes('--force');
   const rebase = argv.includes('--rebase');
   const ci = argv.indexOf('--commit');
@@ -400,12 +404,18 @@ function run(): void {
   //    stranded in a stash); a dirty tree is reported + left untouched.
   if (plan.push) {
     if (!gitOk(['push', 'origin', 'HEAD:main'])) {
-      if (isClean() && gitOk(['pull', '--rebase', 'origin', 'main'])) {
+      const headBeforeRebase = tryGit(['rev-parse', 'HEAD']);
+      const raceRef = recoveryRef();
+      const raceSaved =
+        headBeforeRebase !== null &&
+        gitOk(['branch', '-f', raceRef, headBeforeRebase]) &&
+        tryGit(['rev-parse', '--verify', raceRef]) === headBeforeRebase;
+      if (isClean() && raceSaved && gitOk(['pull', '--rebase', 'origin', 'main'])) {
         // Section 6 is warn-and-continue by design (predev must not block `bun dev` offline) — but a
         // failed retry must still be VISIBLE, not silent (same class as the rebasePush fix above).
         if (!gitOk(['push', 'origin', 'HEAD:main'])) {
           log(
-            'push retry after rebase still failed — local commits are safe but NOT on origin/main; re-run `bun run guard`',
+            `push retry after rebase still failed — local commits are safe (preserved at ${raceRef}) but NOT on origin/main; re-run \`bun run guard\``,
           );
         }
       } else {

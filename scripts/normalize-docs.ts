@@ -153,7 +153,8 @@ const TARGETS = [
 async function docFiles(): Promise<string[]> {
   const out = [...TARGETS];
   const seen = new Set(out);
-  const EXCLUDE = /^(legacy|node_modules|dist|coverage|mcps)[/\\]|^\.(git|claude)[/\\]/;
+  const EXCLUDE =
+    /^(legacy|node_modules|dist|coverage|mcps|site|output|verify|agent-tools|terminals)[/\\]|^\.(git|claude|kilo|memory|agents|github|playwright-cli)[/\\]/;
   for (const pattern of ['**/*.md', '**/*.xml']) {
     const glob = new Bun.Glob(pattern);
     for await (const f of glob.scan('.')) {

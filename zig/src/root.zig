@@ -52,10 +52,11 @@ export fn cqm_gray_scott_step(
             const u_c = u_ptr[idx];
             const v_c = v_ptr[idx];
 
-            const lap_u = u_ptr[ym1 * w + x] + u_ptr[yp1 * w + x] +
-                u_ptr[y * w + xm1] + u_ptr[y * w + xp1] - 4.0 * u_c;
-            const lap_v = v_ptr[ym1 * w + x] + v_ptr[yp1 * w + x] +
-                v_ptr[y * w + xm1] + v_ptr[y * w + xp1] - 4.0 * v_c;
+            // 9-point Karl Sims Laplacian (0.2 orthogonal, 0.05 diagonal, -1.0 center)
+            const lap_u = 0.2 * (u_ptr[ym1 * w + x] + u_ptr[yp1 * w + x] + u_ptr[y * w + xm1] + u_ptr[y * w + xp1]) +
+                0.05 * (u_ptr[ym1 * w + xm1] + u_ptr[ym1 * w + xp1] + u_ptr[yp1 * w + xm1] + u_ptr[yp1 * w + xp1]) - u_c;
+            const lap_v = 0.2 * (v_ptr[ym1 * w + x] + v_ptr[yp1 * w + x] + v_ptr[y * w + xm1] + v_ptr[y * w + xp1]) +
+                0.05 * (v_ptr[ym1 * w + xm1] + v_ptr[ym1 * w + xp1] + v_ptr[yp1 * w + xm1] + v_ptr[yp1 * w + xp1]) - v_c;
 
             const uvv = u_c * v_c * v_c;
             const u_next = clamp01(u_c + dt * (du * lap_u - uvv + feed * (1.0 - u_c)));
@@ -123,10 +124,11 @@ export fn cqm_gray_scott_step_rgba_f32(
                 const u_c = cur_u[idx];
                 const v_c = cur_v[idx];
 
-                const lap_u = cur_u[row_up + x] + cur_u[row_dn + x] +
-                    cur_u[row + xm1] + cur_u[row + xp1] - 4.0 * u_c;
-                const lap_v = cur_v[row_up + x] + cur_v[row_dn + x] +
-                    cur_v[row + xm1] + cur_v[row + xp1] - 4.0 * v_c;
+                // 9-point Karl Sims Laplacian (0.2 orthogonal, 0.05 diagonal, -1.0 center)
+                const lap_u = 0.2 * (cur_u[row_up + x] + cur_u[row_dn + x] + cur_u[row + xm1] + cur_u[row + xp1]) +
+                    0.05 * (cur_u[row_up + xm1] + cur_u[row_up + xp1] + cur_u[row_dn + xm1] + cur_u[row_dn + xp1]) - u_c;
+                const lap_v = 0.2 * (cur_v[row_up + x] + cur_v[row_dn + x] + cur_v[row + xm1] + cur_v[row + xp1]) +
+                    0.05 * (cur_v[row_up + xm1] + cur_v[row_up + xp1] + cur_v[row_dn + xm1] + cur_v[row_dn + xp1]) - v_c;
 
                 const uvv = u_c * v_c * v_c;
                 nxt_u[idx] = clamp01f32(u_c + (du * lap_u - uvv + feed * (1.0 - u_c)) * dt);
@@ -160,14 +162,13 @@ export fn cqm_gray_scott_step_rgba_f32(
         sum_v += v_val;
         if (v_val > peak_v) peak_v = v_val;
 
-        const r_f = @min(@as(f32, 255.0), @max(@as(f32, 0.0), @floor(v_val * 700.0)));
-        const g_f = @min(@as(f32, 255.0), @max(@as(f32, 0.0), @floor(u_val * 255.0)));
-        const b_f = @min(@as(f32, 255.0), @max(@as(f32, 0.0), @floor((1.0 - u_val) * 200.0)));
+        const lum_f = @min(@as(f32, 255.0), @max(@as(f32, 0.0), @floor(u_val * 255.0)));
+        const lum: u8 = @intFromFloat(lum_f);
 
         const p = i * 4;
-        rgba_out[p] = @intFromFloat(r_f);
-        rgba_out[p + 1] = @intFromFloat(g_f);
-        rgba_out[p + 2] = @intFromFloat(b_f);
+        rgba_out[p] = lum;
+        rgba_out[p + 1] = lum;
+        rgba_out[p + 2] = lum;
         rgba_out[p + 3] = 255;
     }
 
@@ -192,19 +193,34 @@ export fn cqm_tdse_step(
     const len: usize = @intCast(n);
     const inv_2dx2 = 0.5 / (dx * dx);
 
+    // 1. Half-step imaginary update: im_{1/2} = im_0 - (dt/2) * H(re_0)
     var i: usize = 0;
     while (i < len) : (i += 1) {
         const im1 = if (i == 0) len - 1 else i - 1;
         const ip1 = if (i + 1 == len) 0 else i + 1;
-
         const lap_re = re_ptr[im1] - 2.0 * re_ptr[i] + re_ptr[ip1];
-        const lap_im = im_ptr[im1] - 2.0 * im_ptr[i] + im_ptr[ip1];
-
         const h_re = -inv_2dx2 * lap_re + pot_ptr[i] * re_ptr[i];
-        const h_im = -inv_2dx2 * lap_im + pot_ptr[i] * im_ptr[i];
+        scratch_im[i] = im_ptr[i] - 0.5 * dt * h_re;
+    }
 
+    // 2. Full-step real update: re_1 = re_0 + dt * H(im_{1/2})
+    i = 0;
+    while (i < len) : (i += 1) {
+        const im1 = if (i == 0) len - 1 else i - 1;
+        const ip1 = if (i + 1 == len) 0 else i + 1;
+        const lap_im = scratch_im[im1] - 2.0 * scratch_im[i] + scratch_im[ip1];
+        const h_im = -inv_2dx2 * lap_im + pot_ptr[i] * scratch_im[i];
         scratch_re[i] = re_ptr[i] + dt * h_im;
-        scratch_im[i] = im_ptr[i] - dt * h_re;
+    }
+
+    // 3. Second half-step imaginary update: im_1 = im_{1/2} - (dt/2) * H(re_1)
+    i = 0;
+    while (i < len) : (i += 1) {
+        const im1 = if (i == 0) len - 1 else i - 1;
+        const ip1 = if (i + 1 == len) 0 else i + 1;
+        const lap_re = scratch_re[im1] - 2.0 * scratch_re[i] + scratch_re[ip1];
+        const h_re = -inv_2dx2 * lap_re + pot_ptr[i] * scratch_re[i];
+        scratch_im[i] = scratch_im[i] - 0.5 * dt * h_re;
     }
 
     var norm_sq: f64 = 0.0;
@@ -411,11 +427,11 @@ export fn cqm_moonlab_ising_anneal(
             else => u,
         };
 
-        // 1. Diagonal Ising phase rotation: exp(-i * dt * s * E(z))
-        const diag_dt = dt * s;
+        // 1. Half-step diagonal Ising phase rotation: exp(-i * (dt/2) * s * E(z))
+        const half_diag_dt = 0.5 * dt * s;
         z = 0;
         while (z < dim) : (z += 1) {
-            const theta = -diag_dt * diag_e[z];
+            const theta = -half_diag_dt * diag_e[z];
             const c = @cos(theta);
             const sn = @sin(theta);
             const r = psi_re[z];
@@ -424,7 +440,7 @@ export fn cqm_moonlab_ising_anneal(
             psi_im[z] = r * sn + im * c;
         }
 
-        // 2. Transverse field X rotation on each qubit: exp(i * dt * (1 - s) * X_i)
+        // 2. Full-step transverse field X rotation on each qubit: exp(i * dt * (1 - s) * X_i)
         // exp(i * alpha * X) = cos(alpha) I + i sin(alpha) X
         const alpha = dt * (1.0 - s);
         const ca = @cos(alpha);
@@ -442,14 +458,24 @@ export fn cqm_moonlab_ising_anneal(
                     const r1 = psi_re[partner];
                     const im1 = psi_im[partner];
 
-                    // psi_0' = ca * psi_0 + i * sa * psi_1 = (ca*r0 - sa*im1) + i*(ca*im0 + sa*r1)
-                    // psi_1' = ca * psi_1 + i * sa * psi_0 = (ca*r1 - sa*im0) + i*(ca*im1 + sa*r0)
                     psi_re[z] = ca * r0 - sa * im1;
                     psi_im[z] = ca * im0 + sa * r1;
                     psi_re[partner] = ca * r1 - sa * im0;
                     psi_im[partner] = ca * im1 + sa * r0;
                 }
             }
+        }
+
+        // 3. Second half-step diagonal Ising phase rotation: exp(-i * (dt/2) * s * E(z))
+        z = 0;
+        while (z < dim) : (z += 1) {
+            const theta = -half_diag_dt * diag_e[z];
+            const c = @cos(theta);
+            const sn = @sin(theta);
+            const r = psi_re[z];
+            const im = psi_im[z];
+            psi_re[z] = r * c - im * sn;
+            psi_im[z] = r * sn + im * c;
         }
     }
 
@@ -495,10 +521,16 @@ export fn cqm_qrng_quantum_chaos_step(
     out_samples: [*]f64,
     count: u32,
 ) u64 {
-    var s0 = state_ptr[0] ^ jitter_entropy;
-    var s1 = state_ptr[1] ^ (jitter_entropy *% 0x9E3779B97F4A7C15);
-    var s2 = state_ptr[2] +% 0xD1B54A32D192ED03;
-    var s3 = state_ptr[3] ^ 0x94D049BB133111EB;
+    var s0 = state_ptr[0];
+    var s1 = state_ptr[1];
+    var s2 = state_ptr[2];
+    var s3 = state_ptr[3];
+    if (jitter_entropy != 0) {
+        s0 ^= jitter_entropy;
+        s1 ^= jitter_entropy *% 0x9E3779B97F4A7C15;
+        s2 +%= 0xD1B54A32D192ED03;
+        s3 ^= 0x94D049BB133111EB;
+    }
     if (s0 == 0 and s1 == 0 and s2 == 0 and s3 == 0) {
         s0 = 0x6A09E667F3BCC908;
         s1 = 0xBB67AE8584CAA73B;
@@ -851,11 +883,27 @@ export fn cqm_eshkol_cyclotomic8_mul(
     const b2: i64 = b_ptr[2];
     const b3: i64 = b_ptr[3];
 
-    // Multiplication in Z[x]/(x^4 + 1): x^4 = -1
-    const c0: i64 = a0 * b0 - a1 * b3 - a2 * b2 - a3 * b1;
-    const c1: i64 = a0 * b1 + a1 * b0 - a2 * b3 - a3 * b2;
-    const c2: i64 = a0 * b2 + a1 * b1 + a2 * b0 - a3 * b3;
-    const c3: i64 = a0 * b3 + a1 * b2 + a2 * b1 + a3 * b0;
+    // Multiplication in Z[x]/(x^4 + 1): x^4 = -1 (evaluated in i128 to prevent WASM overflow traps)
+    const a0_w: i128 = a0;
+    const a1_w: i128 = a1;
+    const a2_w: i128 = a2;
+    const a3_w: i128 = a3;
+    const b0_w: i128 = b0;
+    const b1_w: i128 = b1;
+    const b2_w: i128 = b2;
+    const b3_w: i128 = b3;
+
+    const c0_w: i128 = a0_w * b0_w - a1_w * b3_w - a2_w * b2_w - a3_w * b1_w;
+    const c1_w: i128 = a0_w * b1_w + a1_w * b0_w - a2_w * b3_w - a3_w * b2_w;
+    const c2_w: i128 = a0_w * b2_w + a1_w * b1_w + a2_w * b0_w - a3_w * b3_w;
+    const c3_w: i128 = a0_w * b3_w + a1_w * b2_w + a2_w * b1_w + a3_w * b0_w;
+
+    const min_i64: i128 = std.math.minInt(i64);
+    const max_i64: i128 = std.math.maxInt(i64);
+    const c0: i64 = @intCast(std.math.clamp(c0_w, min_i64, max_i64));
+    const c1: i64 = @intCast(std.math.clamp(c1_w, min_i64, max_i64));
+    const c2: i64 = @intCast(std.math.clamp(c2_w, min_i64, max_i64));
+    const c3: i64 = @intCast(std.math.clamp(c3_w, min_i64, max_i64));
 
     out_prod[0] = c0;
     out_prod[1] = c1;
@@ -863,16 +911,17 @@ export fn cqm_eshkol_cyclotomic8_mul(
     out_prod[3] = c3;
 
     // |c|^2 = c * conj(c) = big_a0 + big_a1 * sqrt(2) in Z[sqrt(2)]
-    const big_a0: i64 = c0 * c0 + c1 * c1 + c2 * c2 + c3 * c3;
-    const big_a1: i64 = c0 * c1 - c0 * c3 + c1 * c2 + c2 * c3;
+    const big_a0: i128 = c0_w * c0_w + c1_w * c1_w + c2_w * c2_w + c3_w * c3_w;
+    const big_a1: i128 = c0_w * c1_w - c0_w * c3_w + c1_w * c2_w + c2_w * c3_w;
     // Exact algebraic norm N_{Q(zeta_8)/Q}(c) = big_a0^2 - 2 * big_a1^2
-    const field_norm: i64 = big_a0 * big_a0 - 2 * big_a1 * big_a1;
+    const field_norm_w: i128 = big_a0 * big_a0 - 2 * big_a1 * big_a1;
+    const field_norm: i64 = @intCast(std.math.clamp(field_norm_w, min_i64, max_i64));
 
     const inv_sqrt2: f64 = 0.70710678118654752440;
-    const fc0: f64 = @floatFromInt(c0);
-    const fc1: f64 = @floatFromInt(c1);
-    const fc2: f64 = @floatFromInt(c2);
-    const fc3: f64 = @floatFromInt(c3);
+    const fc0: f64 = @floatFromInt(c0_w);
+    const fc1: f64 = @floatFromInt(c1_w);
+    const fc2: f64 = @floatFromInt(c2_w);
+    const fc3: f64 = @floatFromInt(c3_w);
 
     const re = fc0 + (fc1 - fc3) * inv_sqrt2;
     const im = fc2 + (fc1 + fc3) * inv_sqrt2;
@@ -881,7 +930,7 @@ export fn cqm_eshkol_cyclotomic8_mul(
     out_metrics[0] = re;
     out_metrics[1] = im;
     out_metrics[2] = abs_sq;
-    out_metrics[3] = @floatFromInt(field_norm);
+    out_metrics[3] = @floatFromInt(field_norm_w);
     return field_norm;
 }
 

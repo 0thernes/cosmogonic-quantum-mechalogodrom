@@ -64,6 +64,34 @@ export function beliefPropagation(fg: FactorGraph, iterations = 20): Float64Arra
   const V = fg.cardinalities.length;
   const F = fg.factors.length;
 
+  // Validate factor variable indices, duplicate variables, and potential table lengths up front.
+  for (let v = 0; v < V; v++) {
+    const c = fg.cardinalities[v]!;
+    if (!Number.isInteger(c) || c < 1) {
+      throw new RangeError(`beliefPropagation: invalid cardinality ${c} for variable ${v}`);
+    }
+  }
+  for (let f = 0; f < F; f++) {
+    const fac = fg.factors[f]!;
+    const seen = new Set<number>();
+    let expectedTableLen = 1;
+    for (const v of fac.vars) {
+      if (!Number.isInteger(v) || v < 0 || v >= V) {
+        throw new RangeError(`beliefPropagation: factor ${f} variable index ${v} out of [0, ${V})`);
+      }
+      if (seen.has(v)) {
+        throw new RangeError(`beliefPropagation: factor ${f} contains duplicate variable ${v}`);
+      }
+      seen.add(v);
+      expectedTableLen *= fg.cardinalities[v]!;
+    }
+    if (fac.table.length < expectedTableLen) {
+      throw new RangeError(
+        `beliefPropagation: factor ${f} table length ${fac.table.length} < ${expectedTableLen}`,
+      );
+    }
+  }
+
   // Incident factors per variable.
   const incident: number[][] = Array.from({ length: V }, () => []);
   for (let f = 0; f < F; f++) for (const v of fg.factors[f]!.vars) incident[v]!.push(f);
